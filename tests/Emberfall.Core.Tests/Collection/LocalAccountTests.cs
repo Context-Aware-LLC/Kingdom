@@ -222,5 +222,126 @@ namespace Emberfall.Core.Tests.Collection
             Assert.Throws<ArgumentException>(() => new LocalAccount("", "token"));
             Assert.Throws<ArgumentException>(() => new LocalAccount("id", "  "));
         }
+
+        // ---- identity binding ----------------------------------------------------------
+        //
+        // The reassociation rule. Every case below is silent when it goes wrong: the player either
+        // gets somebody else's collection or is told their own is empty, and nothing throws in
+        // either direction. That is why they are pinned here rather than left to the call site.
+
+        [Test]
+        public void An_account_is_unclaimed_until_an_identity_takes_it()
+        {
+            var account = new LocalAccount("scope-1", "token-1");
+
+            Assert.That(account.IsClaimed, Is.False);
+            Assert.That(account.AuthUserId, Is.Empty);
+        }
+
+        [Test]
+        public void A_claim_round_trips_through_the_registry()
+        {
+            Store().Save(new LocalAccount("scope-1", "token-1").ClaimedBy("supabase-user-1"));
+
+            var read = Store().LoadAll()[0];
+            Assert.That(read.AuthUserId, Is.EqualTo("supabase-user-1"));
+            Assert.That(read.IsClaimed, Is.True);
+        }
+
+        [Test]
+        public void A_registry_written_before_claims_existed_still_loads_as_unclaimed()
+        {
+            // Every accounts.json on every device today has this shape. Refusing it, or defaulting
+            // it to anything but unclaimed, would brick a boot that has nothing wrong with it.
+            File.WriteAllText(Store().FilePath,
+                "{ \"schemaVersion\": 1, \"accounts\": [ { \"id\": \"a\", \"wireToken\": \"a\" } ] }");
+
+            var read = Store().LoadAll()[0];
+            Assert.That(read.IsClaimed, Is.False);
+            Assert.That(read.AuthUserId, Is.Empty);
+        }
+
+        [Test]
+        public void An_unclaimed_registry_writes_the_bytes_it_always_did()
+        {
+            // The field is omitted, not written empty, so arming this costs an untouched device
+            // nothing on disk.
+            Store().Save(new LocalAccount("a", "a"));
+
+            Assert.That(File.ReadAllText(Store().FilePath), Does.Not.Contain("authUserId"));
+        }
+
+        [Test]
+        public void A_returning_identity_is_sent_to_its_own_account_not_the_one_on_screen()
+        {
+            // The whole point of a returning-player path. The device is sitting on account two;
+            // signing in as the identity that owns account one must move them to account one.
+            var accounts = new[]
+            {
+                new LocalAccount("scope-1", "token-1", "user-1"),
+                new LocalAccount("scope-2", "token-2"),
+            };
+
+            var plan = LocalAccountRoster.PlanBinding(accounts, "scope-2", "user-1", out var target);
+
+            Assert.That(plan, Is.EqualTo(LocalAccountRoster.BindingPlan.SwitchToExisting));
+            Assert.That(target!.Id, Is.EqualTo("scope-1"));
+        }
+
+        [Test]
+        public void A_first_sign_in_adopts_the_collection_already_being_played()
+        {
+            // Minting beside it instead would strand the roster and decks built since install behind
+            // a folder nothing points at any more — and it would look exactly like data loss.
+            var accounts = new[] { new LocalAccount(DeviceToken, DeviceToken) };
+
+            var plan = LocalAccountRoster.PlanBinding(accounts, DeviceToken, "user-1", out var target);
+
+            Assert.That(plan, Is.EqualTo(LocalAccountRoster.BindingPlan.AdoptCurrent));
+            Assert.That(target!.Id, Is.EqualTo(DeviceToken));
+        }
+
+        [Test]
+        public void A_second_player_signing_in_on_a_borrowed_device_gets_a_new_account()
+        {
+            // The account on screen belongs to someone else. Adopting it would hand over their
+            // roster; this is the case that must NOT adopt.
+            var accounts = new[] { new LocalAccount("scope-1", "token-1", "user-1") };
+
+            var plan = LocalAccountRoster.PlanBinding(accounts, "scope-1", "user-2", out var target);
+
+            Assert.That(plan, Is.EqualTo(LocalAccountRoster.BindingPlan.MintNew));
+            Assert.That(target, Is.Null);
+        }
+
+        [Test]
+        public void A_fresh_install_with_no_accounts_yet_mints_rather_than_throwing()
+        {
+            var plan = LocalAccountRoster.PlanBinding(Array.Empty<LocalAccount>(), null, "user-1", out var target);
+
+            Assert.That(plan, Is.EqualTo(LocalAccountRoster.BindingPlan.MintNew));
+            Assert.That(target, Is.Null);
+        }
+
+        [Test]
+        public void Re_binding_the_same_identity_is_idempotent()
+        {
+            // Every launch after the first runs this path. It must not write, and it must not throw.
+            var accounts = new[] { new LocalAccount("scope-1", "token-1", "user-1") };
+
+            var plan = LocalAccountRoster.PlanBinding(accounts, "scope-1", "user-1", out var target);
+
+            Assert.That(plan, Is.EqualTo(LocalAccountRoster.BindingPlan.SwitchToExisting));
+            Assert.That(target!.Id, Is.EqualTo("scope-1"));
+        }
+
+        [Test]
+        public void An_account_refuses_to_be_claimed_out_from_under_its_owner()
+        {
+            var claimed = new LocalAccount("scope-1", "token-1", "user-1");
+
+            Assert.Throws<InvalidOperationException>(() => claimed.ClaimedBy("user-2"));
+            Assert.DoesNotThrow(() => claimed.ClaimedBy("user-1"));
+        }
     }
 }

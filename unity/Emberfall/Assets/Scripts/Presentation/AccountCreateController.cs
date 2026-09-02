@@ -123,10 +123,14 @@ namespace Emberfall.Presentation
         /// has nothing left to do and gets out of the way immediately.</summary>
         private void BeginNameStep()
         {
+            // The gate has already bound this device to the signed-in identity, so Local is now the
+            // account that identity owns rather than whichever one the device happened to mint.
             _account = PlayerAccount.Local;
+            RestoreNameFromIdentity();
             if (_account == null || !_account.NeedsDisplayName) { Continue(); return; }
 
             ShowOnly(_nameView);
+            TellTheTruthAboutTheName();
 
             if (_nameField != null)
             {
@@ -144,6 +148,73 @@ namespace Emberfall.Presentation
             SetError("");
         }
 
+        /// <summary>
+        /// Word the name step for the player actually standing in front of it.
+        ///
+        /// <para><b>Reaching this screen as a RETURNING player means their account has no name stored
+        /// against the identity</b> — <see cref="RestoreNameFromIdentity"/> would have taken it and
+        /// skipped the step otherwise. That is every account created before names were written there,
+        /// which today is all of them. Showing those players "choose carefully, it is permanent, to
+        /// change it later you would have to contact support" is the 2026-08-31 finding at its
+        /// sharpest: they have already been told that once, and the reinstall they just did is what
+        /// disproved it.</para>
+        ///
+        /// <para>So the promise is made to new players only, where it is now true — the name goes up
+        /// to the identity in <see cref="ConfirmName"/> and comes back on the next sign-in. Returning
+        /// players get the accurate version, which is that we could not recover the old one.</para>
+        /// </summary>
+        private void TellTheTruthAboutTheName()
+        {
+            if (_signIn == null || !_signIn.PlayerSaidTheyAreReturning) return;
+
+            var title = _root.Q<Label>("name-title");
+            var help = _root.Q<Label>("name-help");
+
+            if (title != null) title.text = "What should we call you?";
+            if (help != null)
+                help.text = "We could not recover the name on this account, so please choose one " +
+                            "again. It travels with your account from now on.";
+        }
+
+        /// <summary>
+        /// Put the name the identity carries back onto this device, when this device has none.
+        ///
+        /// <para><b>This is what makes "returning player" mean something on a reinstalled phone.</b>
+        /// The roster and decks went with the app; the entitlement ledger is server-side and comes
+        /// back on its own. The name sat in neither camp, so a player who signed in with the address
+        /// they had always used was asked to choose a "permanent" name a second time — the exact
+        /// contradiction #329's neighbours turned up on 2026-08-31. It now rides in the token's
+        /// <c>user_metadata</c>; see <see cref="AuthSession.DisplayName"/>.</para>
+        ///
+        /// <para><b>A local name always wins and is never overwritten.</b> The profile on disk is the
+        /// one this player has been playing under, and the token's copy can be stale by a whole
+        /// session — Supabase stamps metadata into a JWT when it mints one, so a name set after the
+        /// current token was issued is not in it. Writing the older value over the newer one would
+        /// silently rename a player who did nothing.</para>
+        ///
+        /// <para>Failure is a no-op by design: an unreadable profile, a token with no metadata, or an
+        /// unconfigured build all end with the name step asking, which is exactly what it did before.</para>
+        /// </summary>
+        private void RestoreNameFromIdentity()
+        {
+            if (_account == null || !_account.NeedsDisplayName) return;
+
+            string fromIdentity = AuthGateway.Provider.Current.DisplayName;
+            if (string.IsNullOrEmpty(fromIdentity)) return;
+
+            NameCheck check = _account.SetDisplayName(fromIdentity);
+            if (check.IsValid)
+            {
+                Debug.Log("[AccountCreate] restored this account's display name from the signed-in identity.");
+                return;
+            }
+
+            // A name the server holds and this build now refuses. Rare, and it must not be fatal:
+            // fall through to the name step and let the player pick a new one.
+            Debug.LogWarning($"[AccountCreate] the display name held against this identity is not valid " +
+                             $"for this build ({check.Reason}); asking for a new one.");
+        }
+
         // async void is correct for a UI handler: SetPasswordAsync resumes on the main thread (it
         // rides UnityWebRequestAuthHttp, same as everywhere else auth touches UI Toolkit), so
         // everything after the await is free to touch elements. The try/catch keeps it honest.
@@ -159,6 +230,15 @@ namespace Emberfall.Presentation
                 SetError(check.Reason);
                 return;
             }
+
+            // Store the name against the IDENTITY as well as this install, so the next device to sign
+            // in as this player gets it back instead of being asked for a "permanent" name a second
+            // time. Deliberately fire-and-forget-ish: the name is already saved locally and the player
+            // is already past this screen in every way that matters, so a network failure here must
+            // not trap them behind a form. It is logged, not surfaced — the cost of losing it is one
+            // extra question on a future reinstall, not a broken account.
+            if (AuthGateway.IsConfigured && AuthGateway.IsSignedIn)
+                PushDisplayNameToIdentity(check.Normalized);
 
             string password = _namePassword?.value ?? "";
             string passwordConfirm = _namePasswordConfirm?.value ?? "";
@@ -194,6 +274,32 @@ namespace Emberfall.Presentation
             }
 
             Continue();
+        }
+
+        /// <summary>
+        /// Write the display name up to the identity, off the critical path.
+        ///
+        /// <para><b>Not awaited by <see cref="ConfirmName"/>, and that is the point.</b> The name is
+        /// already on disk and already valid; the only thing this buys is a future reinstall, so
+        /// blocking the one screen a player cannot skip on a round-trip that might time out would
+        /// trade a real problem for a hypothetical one. <c>async void</c> with a total catch is the
+        /// honest shape for that — there is no caller to hand a failure to.</para>
+        /// </summary>
+        private static async void PushDisplayNameToIdentity(string displayName)
+        {
+            try
+            {
+                AuthResult result = await AuthGateway.Provider.SetDisplayNameAsync(displayName);
+                if (!result.Ok)
+                    Debug.LogWarning($"[AccountCreate] could not store the display name against this " +
+                                     $"identity ({result.Failure}: {result.Detail}); it is saved on this " +
+                                     "device only, so a reinstall will ask for it again.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[AccountCreate] storing the display name against this identity threw " +
+                                 $"({ex.GetType().Name}: {ex.Message}); it is saved on this device only.");
+            }
         }
 
         /// <summary>

@@ -120,6 +120,15 @@ namespace Emberfall.Net.Client.Auth
         /// for a session without another email round-trip. Requires an existing access token — this
         /// authenticates as the user, not the anon key alone.</summary>
         Task<AuthResult> SetPasswordAsync(string accessToken, string password, CancellationToken cancellationToken = default);
+
+        /// <summary>Trade an email and password for a session — the other half of
+        /// <see cref="SetPasswordAsync"/>, missing until now. A wrong password and an unknown address
+        /// are the SAME failure by design; see the implementation.</summary>
+        Task<AuthResult> SignInWithPasswordAsync(string email, string password, CancellationToken cancellationToken = default);
+
+        /// <summary>Store the display name against the identity rather than the install, so a
+        /// returning player gets it back. Requires an existing access token.</summary>
+        Task<AuthResult> SetDisplayNameAsync(string accessToken, string displayName, CancellationToken cancellationToken = default);
     }
 
     /// <summary>
@@ -283,6 +292,42 @@ namespace Emberfall.Net.Client.Auth
             return ReadSession(response);
         }
 
+        /// <summary>
+        /// Trade an email and password for a session — the returning player's path, and the other
+        /// half of <see cref="SetPasswordAsync"/>.
+        ///
+        /// <para><b>This was the missing half, and its absence was invisible.</b> The account-creation
+        /// screen has offered to set a password since NOR-246 and nothing has ever been able to spend
+        /// one: there was no <c>grant_type=password</c> anywhere in this client. A player who set a
+        /// password, reinstalled, and typed it in had no screen to type it into — the field was
+        /// write-only and looked like a working feature from both sides.</para>
+        ///
+        /// <para><b>A wrong password is a 400, which <see cref="Interpret"/> maps to
+        /// <see cref="AuthFailure.Rejected"/> — same as a wrong code.</b> That is deliberate: the
+        /// caller must not be able to tell a wrong password from an unregistered address, because a
+        /// form that can is an account-enumeration oracle. Supabase's own wording ("Invalid login
+        /// credentials") already says both at once; render it verbatim rather than sharpening it.</para>
+        /// </summary>
+        public async Task<AuthResult> SignInWithPasswordAsync(
+            string email, string password, CancellationToken cancellationToken = default)
+        {
+            if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
+            if (string.IsNullOrEmpty(email))
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter your email address.");
+            if (string.IsNullOrEmpty(password))
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter your password.");
+
+            string body = AuthJson.Object(
+                AuthJson.Field("email", email),
+                AuthJson.Field("password", password));
+
+            var response = await _http.PostJsonAsync(
+                Url("token", ("grant_type", "password")), body, Headers(), cancellationToken)
+                .ConfigureAwait(false);
+
+            return ReadSession(response);
+        }
+
         public async Task<AuthResult> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default)
         {
             if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
@@ -330,6 +375,56 @@ namespace Emberfall.Net.Client.Auth
         }
 
         /// <summary>
+        /// Store the player's display name against the identity rather than the install
+        /// (<c>user_metadata.display_name</c>), so a returning player gets it back.
+        ///
+        /// <para><b>Why here and not on our own server.</b> This is the same
+        /// <c>PUT /auth/v1/user</c> that <see cref="SetPasswordAsync"/> already uses, so it needs no
+        /// new endpoint, no schema change and no second authenticated path — the match server has no
+        /// player-data REST surface at all today, only <c>/ws</c>. The name is the one piece of the
+        /// player small enough and low-stakes enough to live in the auth record; the roster and decks
+        /// are not, and this is not the seam to grow them on.</para>
+        ///
+        /// <para><b>It does not refresh the caller's session, and the current token will not carry the
+        /// new name.</b> <c>user_metadata</c> is stamped into a JWT when the JWT is minted, so this
+        /// name appears on the NEXT sign-in or refresh. That is exactly the moment it is needed —
+        /// the device that just set it already has the name on disk — and pretending otherwise would
+        /// mean forcing a refresh to fix a problem nobody has.</para>
+        ///
+        /// <para>The name has already passed <c>PlayerName.Check</c> at every call site, and is
+        /// re-checked server-side on arrival regardless (VULN-002). Nothing here trusts it.</para>
+        /// </summary>
+        public async Task<AuthResult> SetDisplayNameAsync(
+            string accessToken, string displayName, CancellationToken cancellationToken = default)
+        {
+            if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
+            if (string.IsNullOrEmpty(accessToken))
+                return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+            if (string.IsNullOrEmpty(displayName))
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter a name.");
+
+            string body = AuthJson.ObjectWithRaw(
+                "\"data\":" + AuthJson.Object(AuthJson.Field(DisplayNameKey, displayName)));
+
+            var headers = new[]
+            {
+                new KeyValuePair<string, string>("apikey", _config.AnonKey),
+                new KeyValuePair<string, string>("Authorization", "Bearer " + accessToken),
+                new KeyValuePair<string, string>("Content-Type", "application/json"),
+            };
+
+            var response = await _http.PutJsonAsync(Url("user"), body, headers, cancellationToken)
+                .ConfigureAwait(false);
+
+            return response.IsSuccess ? AuthResult.Accepted() : Interpret(response);
+        }
+
+        /// <summary>The <c>user_metadata</c> member the display name lives in. One constant because
+        /// the write and the read are in different methods and a typo in either is silent — the name
+        /// simply never comes back.</summary>
+        internal const string DisplayNameKey = "display_name";
+
+        /// <summary>
         /// Turn a 2xx token reply into a session. Anything missing an access token, a refresh token or
         /// a lifetime is <see cref="AuthFailure.Malformed"/> rather than a half-session — a client
         /// that stores a session with no refresh token has signed the player in for exactly one hour
@@ -351,10 +446,22 @@ namespace Emberfall.Net.Client.Auth
 
             string userId = "";
             string email = "";
+            string displayName = "";
             if (AuthJson.TryReadJwtPayload(accessToken, out var claims))
             {
                 AuthJson.TryString(claims, "sub", out userId);
                 AuthJson.TryString(claims, "email", out email);
+            }
+
+            // user_metadata rides in the access token, so a returning player's name costs no extra
+            // request. It is read from the RAW payload rather than `claims` because that reader skips
+            // nested objects by design — see AuthJson.TryReadNestedObject. Absent is the ordinary
+            // case for every account made before names were written here, and it degrades to the
+            // caller asking for one, exactly as before.
+            if (AuthJson.TryReadJwtPayloadRaw(accessToken, out string payloadJson) &&
+                AuthJson.TryReadNestedObject(payloadJson, "user_metadata", out var metadata))
+            {
+                AuthJson.TryString(metadata, DisplayNameKey, out displayName);
             }
 
             // Expiry is dated against OUR clock, from the reply's expires_in — never from its
@@ -368,6 +475,7 @@ namespace Emberfall.Net.Client.Auth
                 ExpiresAtMs = _clock.NowMs + expiresInSeconds * 1000L,
                 UserId = userId,
                 Email = email,
+                DisplayName = displayName,
             });
         }
 

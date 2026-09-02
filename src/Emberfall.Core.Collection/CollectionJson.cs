@@ -240,6 +240,10 @@ namespace Emberfall.Core.Collection
                     w.WriteStartObject();
                     w.WriteString("id", a.Id);
                     w.WriteString("wireToken", a.WireToken);
+                    // Omitted entirely when unclaimed, rather than written empty: a device that has
+                    // never signed in then produces byte-identical bytes to the registry it had
+                    // before this field existed, so the field costs nothing until it is used.
+                    if (a.IsClaimed) w.WriteString("authUserId", a.AuthUserId);
                     w.WriteEndObject();
                 }
                 w.WriteEndArray();
@@ -249,11 +253,15 @@ namespace Emberfall.Core.Collection
         }
 
         /// <summary>
-        /// Read the registry back. Both fields are <b>required</b> — unlike a character's
-        /// <c>defaultDeckId</c>, neither has a meaningful absent state: an account with no id names no
-        /// folder, and one with no wire token cannot join a match. Defaulting a missing wireToken to
-        /// the id would silently hand a minted account the grandfathered account's shape, and the
-        /// symptom would appear much later, on the wire.
+        /// Read the registry back. <c>id</c> and <c>wireToken</c> are <b>required</b> — unlike a
+        /// character's <c>defaultDeckId</c>, neither has a meaningful absent state: an account with no
+        /// id names no folder, and one with no wire token cannot join a match. Defaulting a missing
+        /// wireToken to the id would silently hand a minted account the grandfathered account's shape,
+        /// and the symptom would appear much later, on the wire.
+        ///
+        /// <para><c>authUserId</c> is the exception and is optional, in the <c>defaultDeckId</c> shape:
+        /// absent means unclaimed, which is every registry written before it existed and every device
+        /// that has never signed in. See <see cref="LocalAccount.AuthUserId"/>.</para>
         /// </summary>
         public static IReadOnlyList<LocalAccount> ReadAccounts(string json)
         {
@@ -264,7 +272,8 @@ namespace Emberfall.Core.Collection
             {
                 string id = Req(el, "id", AccountsProperty, i);
                 string wireToken = Req(el, "wireToken", AccountsProperty, i);
-                result.Add(new LocalAccount(id, wireToken));
+                string authUserId = Str(el, "authUserId") ?? "";
+                result.Add(new LocalAccount(id, wireToken, authUserId));
                 i++;
             }
             return result;

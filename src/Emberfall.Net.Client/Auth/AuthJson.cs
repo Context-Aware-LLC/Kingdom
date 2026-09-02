@@ -66,6 +66,28 @@ namespace Emberfall.Net.Client.Auth
         /// Nested objects and arrays are skipped, not descended into.
         /// </summary>
         public static bool TryReadTopLevel(string json, out IReadOnlyDictionary<string, string> fields)
+            => TryReadTopLevel(json, keepContainers: false, out fields);
+
+        /// <summary>
+        /// A nested object member, parsed with the same reader — <c>user_metadata</c> inside a JWT
+        /// payload, and nothing else so far.
+        ///
+        /// <para>Two passes rather than one recursive reader: the outer pass keeps the member's raw
+        /// text instead of skipping it, and the inner pass is the ordinary top-level read. Costs a
+        /// substring on a payload of a few hundred bytes, once per sign-in, and leaves the reader every
+        /// other caller uses completely unchanged.</para>
+        /// </summary>
+        public static bool TryReadNestedObject(string json, string name,
+                                               out IReadOnlyDictionary<string, string> fields)
+        {
+            fields = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (!TryReadTopLevel(json, keepContainers: true, out var outer)) return false;
+            if (!outer.TryGetValue(name, out string? raw) || string.IsNullOrEmpty(raw)) return false;
+            return TryReadTopLevel(raw!, out fields);
+        }
+
+        private static bool TryReadTopLevel(string json, bool keepContainers,
+                                            out IReadOnlyDictionary<string, string> fields)
         {
             var map = new Dictionary<string, string>(StringComparer.Ordinal);
             fields = map;
@@ -94,7 +116,9 @@ namespace Emberfall.Net.Client.Auth
                 char c = json[pos];
                 if (c == '{' || c == '[')
                 {
+                    int containerStart = pos;
                     if (!SkipContainer(json, ref pos)) return false;
+                    if (keepContainers) map[name] = json.Substring(containerStart, pos - containerStart);
                 }
                 else if (c == '"')
                 {
@@ -147,6 +171,17 @@ namespace Emberfall.Net.Client.Auth
         public static bool TryReadJwtPayload(string jwt, out IReadOnlyDictionary<string, string> claims)
         {
             claims = new Dictionary<string, string>(StringComparer.Ordinal);
+            return TryReadJwtPayloadRaw(jwt, out string json) && TryReadTopLevel(json, out claims);
+        }
+
+        /// <summary>
+        /// The decoded payload of a JWT as its raw JSON text, verifying nothing. For the one claim
+        /// that is a nested object (<c>user_metadata</c>) and so cannot come back through
+        /// <see cref="TryReadJwtPayload"/>; pair it with <see cref="TryReadNestedObject"/>.
+        /// </summary>
+        public static bool TryReadJwtPayloadRaw(string jwt, out string payloadJson)
+        {
+            payloadJson = "";
             if (string.IsNullOrEmpty(jwt)) return false;
 
             int first = jwt.IndexOf('.');
@@ -157,11 +192,10 @@ namespace Emberfall.Net.Client.Auth
             string segment = jwt.Substring(first + 1, second - first - 1);
             if (!TryDecodeBase64Url(segment, out byte[] bytes)) return false;
 
-            string json;
-            try { json = new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes); }
+            try { payloadJson = new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(bytes); }
             catch (ArgumentException) { return false; }
 
-            return TryReadTopLevel(json, out claims);
+            return true;
         }
 
         private static bool TryDecodeBase64Url(string segment, out byte[] bytes)

@@ -72,30 +72,75 @@ namespace Emberfall.Presentation
         /// "gave up".</summary>
         private enum Step
         {
+            /// <summary>New here, or been here before? The first thing a session-less launch sees.
+            /// Not a fourth way to authenticate — both branches end at the same Supabase identity;
+            /// see <see cref="ToChoiceStep"/> for what it actually decides.</summary>
+            Choose,
+
             /// <summary>Asking for an address.</summary>
             Email,
 
             /// <summary>The mail is away; asking for the code that is in it.</summary>
             Code,
+
+            /// <summary>A returning player, asked for the address and the password they set when they
+            /// made the account. Always offers the mailed code as a way out, because the password was
+            /// optional and half the accounts in existence have none.</summary>
+            Password,
         }
 
         private readonly VisualElement _modal;
         private readonly Label _title;
         private readonly Label _help;
         private readonly TextField _emailField;
+        private readonly TextField _passwordField;
         private readonly TextField _codeField;
         private readonly Label _error;
         private readonly Button _primary;
         private readonly Button _back;
         private readonly Button _resend;
         private readonly Button _googleButton;
+        private readonly Button _codeInstead;
         private readonly VisualElement _or;
+        private readonly VisualElement _choice;
+        private readonly Button _newButton;
+        private readonly Button _returningButton;
 
         private readonly AuthTokenProvider _auth;
 
-        private Step _step = Step.Email;
+        private Step _step = Step.Choose;
         private bool _busy;
         private Action _onSignedIn;
+
+        /// <summary>
+        /// True once the player said they had been here before.
+        ///
+        /// <para><b>It steers presentation, never authentication.</b> A returning player who signs in
+        /// with a mailed code takes byte for byte the same call a new one does, and the server cannot
+        /// tell them apart — nor should it, since "new" is a claim the client makes about a person and
+        /// the only fact that exists is which identity the token carries. What it buys is that the
+        /// wording, the credential asked for, and the display-name step all match what the player just
+        /// told us about themselves.</para>
+        /// </summary>
+        private bool _returning;
+
+        /// <summary>
+        /// True when the player said they had been here before — for the screen that runs after this
+        /// one.
+        ///
+        /// <para><b>It exists for the one case this whole change cannot fix: a returning player whose
+        /// account predates names being stored against the identity.</b> They sign in, nothing comes
+        /// back in <c>user_metadata</c>, and the name step fires — telling them, for the second time,
+        /// that the name they are about to choose is permanent. That sentence was already the
+        /// documented lie (2026-08-31); saying it to somebody who has just told us they are returning
+        /// is the worst version of it. <c>AccountCreateController</c> reads this to say something
+        /// true instead.</para>
+        ///
+        /// <para>Instance state and not static, unlike <see cref="Skipped"/>: the screen that asks and
+        /// the screen that reads it are the same scene and the same controller, so there is nothing
+        /// here to outlive.</para>
+        /// </summary>
+        public bool PlayerSaidTheyAreReturning => _returning;
 
         /// <summary>The address the code was actually mailed to. Held rather than re-read from the
         /// field, because Supabase keys the code to the address — a player who edits the field after
@@ -115,13 +160,18 @@ namespace Emberfall.Presentation
             _title = root.Q<Label>("signin-title");
             _help = root.Q<Label>("signin-help");
             _emailField = root.Q<TextField>("signin-email");
+            _passwordField = root.Q<TextField>("signin-password");
             _codeField = root.Q<TextField>("signin-code");
             _error = root.Q<Label>("signin-error");
             _primary = root.Q<Button>("btn-signin-primary");
             _back = root.Q<Button>("btn-signin-back");
             _resend = root.Q<Button>("btn-signin-resend");
+            _codeInstead = root.Q<Button>("btn-signin-code-instead");
             _googleButton = root.Q<Button>("btn-signin-google");
             _or = root.Q<VisualElement>("signin-or");
+            _choice = root.Q<VisualElement>("signin-choice");
+            _newButton = root.Q<Button>("btn-signin-new");
+            _returningButton = root.Q<Button>("btn-signin-returning");
 
             // NOTHING IS LOGGED HERE, and that is deliberate. MainMenu builds one of these against
             // its OWN root purely to read IsRequired, and that root correctly has no sign-in view --
@@ -134,9 +184,15 @@ namespace Emberfall.Presentation
             // Not returning early either: every lookup above is null-safe and every handler below is
             // registered with `?.`, so a partially-authored screen still wires up whatever it has.
             _primary?.RegisterCallback<ClickEvent>(_ => OnPrimary());
-            _back?.RegisterCallback<ClickEvent>(_ => ToEmailStep(""));
+            // Back returns to the fork, not to the email field. A player who took the wrong branch
+            // has no other way to correct it, and the email field they would land on is the one they
+            // just typed into — so "back" that only clears a text field reads as broken.
+            _back?.RegisterCallback<ClickEvent>(_ => ToChoiceStep(""));
             _resend?.RegisterCallback<ClickEvent>(_ => SendCode(_sentTo));
+            _codeInstead?.RegisterCallback<ClickEvent>(_ => SendCode(_emailField?.value ?? ""));
             _googleButton?.RegisterCallback<ClickEvent>(_ => OnGoogleSignIn());
+            _newButton?.RegisterCallback<ClickEvent>(_ => ToEmailStep(returning: false, ""));
+            _returningButton?.RegisterCallback<ClickEvent>(_ => ToEmailStep(returning: true, ""));
 
             if (_emailField != null)
             {
@@ -145,6 +201,15 @@ namespace Emberfall.Presentation
                     if (IsSubmit(evt)) OnPrimary();
                 });
                 _emailField.RegisterValueChangedCallback(_ => SetError(""));
+            }
+
+            if (_passwordField != null)
+            {
+                _passwordField.RegisterCallback<KeyDownEvent>(evt =>
+                {
+                    if (IsSubmit(evt)) OnPrimary();
+                });
+                _passwordField.RegisterValueChangedCallback(_ => SetError(""));
             }
 
             if (_codeField != null)
@@ -278,29 +343,72 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            ToEmailStep("");
+            ToChoiceStep("");
             _modal.RemoveFromClassList("mm-modal--hidden");
-            _emailField?.Focus();
         }
 
         // ── Steps ───────────────────────────────────────────────────────────────────────
 
-        private void ToEmailStep(string message)
+        /// <summary>
+        /// The fork: new here, or been here before.
+        ///
+        /// <para><b>Asking is the only way to know.</b> A device with no session cannot tell a first
+        /// install from a reinstall — the uninstall took <c>PlayerPrefs</c>, the device token and the
+        /// whole collection with it, so every launch looks identical from here. Before this step the
+        /// answer was assumed to be "new", which is why a returning player was walked through account
+        /// creation and handed a fresh empty scope while the account they already owned sat on the
+        /// server, intact and unreachable.</para>
+        /// </summary>
+        private void ToChoiceStep(string message)
         {
-            _step = Step.Email;
+            _step = Step.Choose;
+            _returning = false;
             _sentTo = "";
 
-            if (_title != null) _title.text = "Create your account";
-            if (_help != null)
-                _help.text = "Emberfall needs an account before you can play. Enter your email and we " +
-                             "will send you a six-digit code.";
+            if (_title != null) _title.text = "Welcome to Emberfall";
+            if (_help != null) _help.text = "Have you played before?";
 
-            Display(_emailField, true);
+            Display(_choice, true);
+            Display(_emailField, false);
+            Display(_passwordField, false);
             Display(_codeField, false);
+            Display(_primary, false);
             Display(_back, false);
             Display(_resend, false);
+            Display(_codeInstead, false);
             Display(_googleButton, true);
             Display(_or, true);
+            _passwordField?.SetValueWithoutNotify("");
+            _codeField?.SetValueWithoutNotify("");
+
+            SetError(message);
+        }
+
+        private void ToEmailStep(bool returning, string message)
+        {
+            _step = returning ? Step.Password : Step.Email;
+            _returning = returning;
+            _sentTo = "";
+
+            if (_title != null) _title.text = returning ? "Welcome back" : "Create your account";
+            if (_help != null)
+                _help.text = returning
+                    ? "Sign in with the email and password you used before. No password? We can email " +
+                      "you a code instead."
+                    : "Emberfall needs an account before you can play. Enter your email and we will " +
+                      "send you a six-digit code.";
+
+            Display(_choice, false);
+            Display(_emailField, true);
+            Display(_passwordField, returning);
+            Display(_codeField, false);
+            Display(_primary, true);
+            Display(_back, true);
+            Display(_resend, false);
+            Display(_codeInstead, returning);
+            Display(_googleButton, true);
+            Display(_or, true);
+            _passwordField?.SetValueWithoutNotify("");
             _codeField?.SetValueWithoutNotify("");
 
             SetError(message);
@@ -316,10 +424,14 @@ namespace Emberfall.Presentation
             if (_title != null) _title.text = "Check your email";
             if (_help != null) _help.text = $"We sent a six-digit code to {email}. Enter it below.";
 
+            Display(_choice, false);
             Display(_emailField, false);
+            Display(_passwordField, false);
             Display(_codeField, true);
+            Display(_primary, true);
             Display(_back, true);
             Display(_resend, true);
+            Display(_codeInstead, false);
             Display(_googleButton, false);
             Display(_or, false);
             _codeField?.SetValueWithoutNotify("");
@@ -332,8 +444,36 @@ namespace Emberfall.Presentation
         private void OnPrimary()
         {
             if (_busy) return;
-            if (_step == Step.Email) SendCode(_emailField?.value ?? "");
-            else Verify();
+            switch (_step)
+            {
+                case Step.Choose: return;                                   // the two buttons are the input
+                case Step.Email: SendCode(_emailField?.value ?? ""); return;
+                case Step.Password: SignInWithPassword(); return;
+                default: Verify(); return;
+            }
+        }
+
+        /// <summary>
+        /// Everything a successful sign-in has to do, on every path that can produce one.
+        ///
+        /// <para><b>It is one method because the binding below must not be possible to forget.</b>
+        /// There are four ways into a session here — a typed code, a tapped link on a cold start, a
+        /// tapped link on a running process, and Google — and each one used to hide the modal and call
+        /// the continuation itself. A fifth (the password) has just been added. A path that skipped
+        /// <see cref="DeviceAccounts.TryBindToIdentity"/> would sign the player in and then hand them
+        /// somebody else's scope, or a blank one, with nothing logged and nothing to catch it.</para>
+        /// </summary>
+        private void Succeed()
+        {
+            // Bind BEFORE the continuation: AccountCreateController's next act is to read
+            // PlayerAccount.Local to decide whether a display name is still owed, and that read has to
+            // land in the account this identity actually owns.
+            DeviceAccounts.TryBindToIdentity(_auth.Current.UserId);
+
+            _modal?.AddToClassList("mm-modal--hidden");
+            Action done = _onSignedIn;
+            _onSignedIn = null;   // the continuation runs once, never on a later re-open
+            done?.Invoke();
         }
 
         // ── Calls ───────────────────────────────────────────────────────────────────────
@@ -370,6 +510,52 @@ namespace Emberfall.Presentation
             }
         }
 
+        /// <summary>
+        /// The returning player's path: an email and the password they set when they made the account.
+        ///
+        /// <para><b>A refusal here is never sharpened.</b> Supabase answers a wrong password and an
+        /// address it has never seen with the same "Invalid login credentials", and that is rendered
+        /// verbatim — telling the two apart would make this form an account-enumeration oracle. The
+        /// help text carries the useful half instead: the password was always optional, so "no
+        /// password" is a legitimate state and the code route stays on screen throughout.</para>
+        /// </summary>
+        private async void SignInWithPassword()
+        {
+            string email = (_emailField?.value ?? "").Trim();
+            string password = _passwordField?.value ?? "";
+
+            if (email.Length == 0) { SetError("Enter your email address."); return; }
+            if (!LooksLikeAnEmail(email)) { SetError("That does not look like an email address."); return; }
+            if (password.Length == 0)
+            {
+                SetError("Enter your password, or use \"Email me a code instead\".");
+                return;
+            }
+
+            SetBusy(true, "Signing in…");
+            try
+            {
+                AuthResult result = await _auth.SignInWithPasswordAsync(email, password);
+                SetBusy(false, null);
+
+                if (result.Ok) { Succeed(); return; }
+
+                // The email survives; only the password is cleared. Retyping an address you got right
+                // is the most annoying possible response to a mistyped password.
+                _passwordField?.SetValueWithoutNotify("");
+                RefreshPrimary();
+                _passwordField?.Focus();
+                Debug.LogWarning($"[SignIn] SignInWithPasswordAsync failed: {result.Failure} — {result.Detail}");
+                SetError(Explain(result, "We could not sign you in with that password."));
+            }
+            catch (Exception ex)
+            {
+                SetBusy(false, null);
+                Debug.LogError($"[SignIn] signing in with a password threw: {ex}");
+                SetError("Something went wrong signing in. Try again.");
+            }
+        }
+
         private async void Verify()
         {
             string code = EmailCode.Normalize(_codeField?.value ?? "");
@@ -383,10 +569,7 @@ namespace Emberfall.Presentation
 
                 if (result.Ok)
                 {
-                    _modal?.AddToClassList("mm-modal--hidden");
-                    Action done = _onSignedIn;
-                    _onSignedIn = null;   // the continuation runs once, never on a later re-open
-                    done?.Invoke();
+                    Succeed();
                     return;
                 }
 
@@ -448,10 +631,7 @@ namespace Emberfall.Presentation
 
                 if (result.Ok)
                 {
-                    _modal?.AddToClassList("mm-modal--hidden");
-                    Action done = _onSignedIn;
-                    _onSignedIn = null;   // the continuation runs once, never on a later re-open
-                    done?.Invoke();
+                    Succeed();
                     return;
                 }
 
@@ -500,8 +680,11 @@ namespace Emberfall.Presentation
         private async void CompleteFromOAuth(string oauthCode)
         {
             SetBusy(true, "Signing in with Google…");
-            // Show the email step as the backing UI (email field is hidden while busy).
-            if (_step != Step.Email) ToEmailStep("");
+            // Show the email step as the backing UI (email field is hidden while busy). Google is
+            // offered on both branches and answers "new or returning" by itself — the identity either
+            // exists already or it does not — so the flag it is given here is arbitrary and only
+            // decides the heading behind a busy panel.
+            if (_step != Step.Email) ToEmailStep(returning: false, "");
             _primary?.SetEnabled(false);
 
             try
@@ -511,10 +694,7 @@ namespace Emberfall.Presentation
 
                 if (result.Ok)
                 {
-                    _modal?.AddToClassList("mm-modal--hidden");
-                    Action done = _onSignedIn;
-                    _onSignedIn = null;
-                    done?.Invoke();
+                    Succeed();
                     return;
                 }
 
@@ -627,13 +807,23 @@ namespace Emberfall.Presentation
             }
             _back?.SetEnabled(!busy);
             _resend?.SetEnabled(!busy);
+            _codeInstead?.SetEnabled(!busy);
             _googleButton?.SetEnabled(!busy);
+            _newButton?.SetEnabled(!busy);
+            _returningButton?.SetEnabled(!busy);
             _emailField?.SetEnabled(!busy);
+            _passwordField?.SetEnabled(!busy);
             _codeField?.SetEnabled(!busy);
         }
 
+        /// <summary>
+        /// Whether the primary button does anything yet. Only the code step gates on content — a
+        /// six-digit field either holds six digits or it does not, and a dead "Sign in" is clearer
+        /// than one that refuses. Email and password are validated on submit instead, because a
+        /// button that stays disabled cannot say WHY.
+        /// </summary>
         private bool CanSubmit()
-            => _step == Step.Email || EmailCode.IsComplete(_codeField?.value ?? "");
+            => _step != Step.Code || EmailCode.IsComplete(_codeField?.value ?? "");
 
         private void RefreshPrimary()
         {

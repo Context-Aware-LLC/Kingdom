@@ -133,6 +133,30 @@ namespace Emberfall.Net.Client.Tests.Auth
             LastPassword = password;
             return Task.FromResult(SetPasswordResult);
         }
+
+        public AuthResult PasswordSignInResult { get; set; } = AuthResult.Failed(AuthFailure.Rejected, "Invalid login credentials");
+        public int PasswordSignInCalls { get; private set; }
+        public string? LastPasswordSignInEmail { get; private set; }
+        public string? LastPasswordSignInPassword { get; private set; }
+
+        public Task<AuthResult> SignInWithPasswordAsync(string email, string password, CancellationToken cancellationToken = default)
+        {
+            PasswordSignInCalls++;
+            LastPasswordSignInEmail = email;
+            LastPasswordSignInPassword = password;
+            return Task.FromResult(PasswordSignInResult);
+        }
+
+        public AuthResult SetDisplayNameResult { get; set; } = AuthResult.Accepted();
+        public string? LastDisplayNameAccessToken { get; private set; }
+        public string? LastDisplayName { get; private set; }
+
+        public Task<AuthResult> SetDisplayNameAsync(string accessToken, string displayName, CancellationToken cancellationToken = default)
+        {
+            LastDisplayNameAccessToken = accessToken;
+            LastDisplayName = displayName;
+            return Task.FromResult(SetDisplayNameResult);
+        }
     }
 
     internal static class Jwt
@@ -145,6 +169,15 @@ namespace Emberfall.Net.Client.Tests.Auth
 
         public static string ForUser(string sub, string email)
             => WithPayload("{\"sub\":\"" + sub + "\",\"email\":\"" + email + "\",\"aud\":\"authenticated\"}");
+
+        /// <summary>A token carrying the shape a real Supabase JWT has: <c>user_metadata</c> is a
+        /// nested object sitting between the scalar claims, so a reader that only walks the top level
+        /// has to step over it and a reader that wants the name has to descend into it.</summary>
+        public static string ForUserNamed(string sub, string email, string displayName)
+            => WithPayload("{\"sub\":\"" + sub + "\",\"email\":\"" + email + "\"," +
+                           "\"app_metadata\":{\"provider\":\"email\"}," +
+                           "\"user_metadata\":{\"email_verified\":true,\"display_name\":\"" + displayName + "\"}," +
+                           "\"aud\":\"authenticated\"}");
 
         private static string Base64Url(string text)
             => Convert.ToBase64String(Encoding.UTF8.GetBytes(text))

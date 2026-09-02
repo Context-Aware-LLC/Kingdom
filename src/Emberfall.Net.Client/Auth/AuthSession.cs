@@ -64,6 +64,29 @@ namespace Emberfall.Net.Client.Auth
         /// <summary>The address the player signed in with. Display only — see the type remarks.</summary>
         public string Email { get; init; } = "";
 
+        /// <summary>
+        /// The display name Supabase holds for this user (<c>user_metadata.display_name</c>), or empty
+        /// when it holds none.
+        ///
+        /// <para><b>This is the only piece of the player that survives a reinstall today.</b> The
+        /// roster, the decks and the profile are files under
+        /// <c>persistentDataPath</c> and go with the app; the entitlement ledger is server-side and
+        /// keyed on the authenticated subject. The name sat in neither camp — which is why a returning
+        /// player was asked to choose one again, on a screen that calls it permanent. Carrying it in
+        /// the token puts it on the same side of the line as the ledger, at the cost of one nested
+        /// read and no extra request.</para>
+        ///
+        /// <para><b>Display only, like <see cref="UserId"/> and <see cref="Email"/> — and here it
+        /// matters more.</b> The claim is unverified client-side, and the name a player presents in a
+        /// match is re-checked server-side on arrival regardless (VULN-002, <c>MatchGate</c>). Nothing
+        /// downstream may trust this string; it is a better default than an empty field, and that is
+        /// all it is.</para>
+        ///
+        /// <para>Empty is ordinary, not a failure: every account created before this was written has
+        /// no metadata name, and the caller's answer is to ask for one exactly as it always did.</para>
+        /// </summary>
+        public string DisplayName { get; init; } = "";
+
         /// <summary>True when this device believes it is signed in. Says nothing about whether the
         /// server will accept the token.</summary>
         public bool IsPresent => AccessToken.Length > 0;
