@@ -103,7 +103,13 @@ namespace Emberfall.Net.Client.Tests
                 c0.Dispose();
                 c1.Dispose();
                 await app.StopAsync();
-                if (Directory.Exists(replays)) Directory.Delete(replays, recursive: true);
+                // Training capture copies a completed game's .jsonl on a background task that
+                // StopAsync does not await, so the file can still be open here. A temp dir we
+                // could not clean is not a test failure -- the same guard the bot-fill
+                // fixtures already carry. Identified 2026-09-02: this is the
+                // ClientDeckSubmissionTests flake, an IOException out of Directory.Delete.
+                try { if (Directory.Exists(replays)) Directory.Delete(replays, recursive: true); }
+                catch (IOException) { }
             }
         }
 
