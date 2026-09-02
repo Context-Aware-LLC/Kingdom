@@ -52,12 +52,6 @@ namespace Emberfall.Net.Server.Accounts
         /// deliberately no un-set: clearing it would replay character creation for a player who
         /// already has characters, which is the exact failure the flag exists to prevent. Returns null
         /// if <paramref name="playerId"/> names no account.
-        ///
-        /// <para><b>Nothing calls this yet.</b> The transition belongs to whatever first persists a
-        /// character server-side — that is what "onboarded" means, and setting it anywhere earlier
-        /// (at signup, or when the onboarding grant is written) makes it true before it is true.
-        /// RETIREMENT TRIGGER: the commit that lands the character-create route calls this and
-        /// deletes this paragraph.</para>
         /// </summary>
         Task<Account?> MarkOnboardedAsync(string playerId, CancellationToken ct = default);
     }

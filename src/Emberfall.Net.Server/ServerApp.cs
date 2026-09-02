@@ -504,6 +504,28 @@ namespace Emberfall.Net.Server
                 }, statusCode: result.HttpStatus);
             });
 
+            // POST /onboarding/complete — the terminal write of the onboarding flow. The ONLY route
+            // that sets onboarded; runs at the end, after the entitlement grant has landed. Same
+            // auth pairing as /session and /roster. Idempotent — a retried call after a dropped
+            // response still answers 200, never an error.
+            app.MapPost("/onboarding/complete", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                OnboardingCompleteResult result = await OnboardingCompleteEndpoint.CompleteAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "completed" | "unauthenticated" | "unavailable".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                }, statusCode: result.HttpStatus);
+            });
+
             // GET /collection — what the signed-in player owns, read down from the entitlement
             // ledger. This is the wire that makes a reinstall recoverable: the ledger has been the
             // authority since 2026-09-01 and the client had no way to read it, so a player who signed
