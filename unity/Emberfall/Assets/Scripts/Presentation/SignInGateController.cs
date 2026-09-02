@@ -112,6 +112,16 @@ namespace Emberfall.Presentation
         private bool _busy;
         private Action _onSignedIn;
 
+        /// <summary>True between opening the Google consent page and the redirect coming back.
+        /// <see cref="OnFocusChanged"/> is what ends it when the redirect never arrives.</summary>
+        private bool _awaitingOAuth;
+
+        /// <summary>How long after regaining focus to wait for the OAuth redirect before deciding the
+        /// player cancelled. Long enough that a successful sign-in never shows "cancelled" — the deep
+        /// link and the focus change race with no ordering guarantee — and short enough that a real
+        /// cancel does not feel like a hang.</summary>
+        private const long OAuthReturnGraceMs = 1500;
+
         /// <summary>
         /// True once the player said they had been here before.
         ///
@@ -239,16 +249,56 @@ namespace Emberfall.Presentation
             // OS launched us fresh off the link) is caught separately in Open(), because this event
             // does not fire for the launch that is already in progress when it is subscribed.
             Application.deepLinkActivated += OnDeepLinkActivated;
+
+            // And the other half of the same story: the player coming BACK from the browser without
+            // having completed anything. See OnFocusChanged.
+            Application.focusChanged += OnFocusChanged;
         }
 
-        /// <summary>Drop the deep-link subscription. Must be called when the owning screen is
-        /// disabled/destroyed — <see cref="Application.deepLinkActivated"/> is a static event, so an
-        /// instance that never unsubscribes outlives its modal and keeps handling links for a UI that
-        /// is gone. Scene reloads (<see cref="DeviceAccounts.SwitchTo"/>) make a fresh instance on
-        /// every re-enable, so this is not optional.</summary>
+        /// <summary>Drop the static subscriptions. Must be called when the owning screen is
+        /// disabled/destroyed — <see cref="Application.deepLinkActivated"/> and
+        /// <see cref="Application.focusChanged"/> are static events, so an instance that never
+        /// unsubscribes outlives its modal and keeps handling links for a UI that is gone. Scene
+        /// reloads (<see cref="DeviceAccounts.SwitchTo"/>) make a fresh instance on every re-enable,
+        /// so this is not optional.</summary>
         public void Close()
         {
             Application.deepLinkActivated -= OnDeepLinkActivated;
+            Application.focusChanged -= OnFocusChanged;
+        }
+
+        /// <summary>
+        /// The player came back from the browser. If they did not bring a code with them, give them
+        /// the screen back.
+        ///
+        /// <para><b>Cancelling Google sign-in used to brick the launch.</b>
+        /// <see cref="OnGoogleSignIn"/> sets the busy state and deliberately leaves it on while the
+        /// player is away — re-enabling the UI mid-flight only invites a second tap. Nothing cleared
+        /// it if they swiped back out of the consent screen instead of finishing: the gate is
+        /// unskippable, so the player returned to a greyed-out screen with no button that did
+        /// anything and no way forward except force-quitting the app. Measured on a device
+        /// 2026-09-02.</para>
+        ///
+        /// <para><b>The grace period is the whole difficulty.</b> On a successful sign-in the app
+        /// ALSO regains focus — the redirect brings it to the foreground — and the deep link may
+        /// arrive fractionally before or after that, with no ordering guarantee. Clearing
+        /// immediately would flash "cancelled" over a sign-in that is about to succeed. So this
+        /// waits, and only takes the busy state down if the code still has not arrived; the deep
+        /// link clears <see cref="_awaitingOAuth"/> the moment it lands, which is what makes the
+        /// late check a no-op on the happy path.</para>
+        /// </summary>
+        private void OnFocusChanged(bool focused)
+        {
+            if (!focused || !_awaitingOAuth || _modal == null) return;
+
+            _modal.schedule.Execute(() =>
+            {
+                if (!_awaitingOAuth) return;   // the redirect landed; nothing to recover
+
+                _awaitingOAuth = false;
+                SetBusy(false, null);
+                SetError("Google sign-in was cancelled.");
+            }).ExecuteLater(OAuthReturnGraceMs);
         }
 
         /// <summary>
@@ -680,6 +730,7 @@ namespace Emberfall.Presentation
         {
             if (_busy) return;
             SetBusy(true, null);
+            SetError("");
 
             PendingSignIn pending = _auth.BeginOAuth("google");
             if (!pending.IsStarted)
@@ -689,9 +740,13 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            // Armed BEFORE the browser opens, because the app can lose and regain focus faster than
+            // anything after OpenURL would run.
+            _awaitingOAuth = true;
             Application.OpenURL(pending.AuthorizeUrl);
             // The app will receive the redirect asynchronously. SetBusy stays on — the player is now
-            // in the browser; re-enabling the UI while they are away only invites a second tap.
+            // in the browser; re-enabling the UI while they are away only invites a second tap. If
+            // they come back WITHOUT a code, OnFocusChanged is what gives the screen back.
         }
 
         /// <summary>
@@ -700,6 +755,8 @@ namespace Emberfall.Presentation
         /// </summary>
         private async void CompleteFromOAuth(string oauthCode)
         {
+            // The redirect arrived, so the return-from-browser recovery must not fire behind it.
+            _awaitingOAuth = false;
             SetBusy(true, "Signing in with Google…");
             // Show the email step as the backing UI (email field is hidden while busy). Google is
             // offered on both branches and answers "new or returning" by itself — the identity either

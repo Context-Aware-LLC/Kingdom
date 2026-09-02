@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Custom main (unityLibrary) manifest, PlayerSettings.Android.useCustomMainManifest = true.
+     Base content copied verbatim from Unity's own last generated build
+     (Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/src/main/AndroidManifest.xml, Unity
+     6000.5.1f1, GameActivity) so every attribute Unity depends on — the activity class, the IL2CPP
+     lib name, the theme — stays exactly what Unity would have produced itself.
+
+     THIS FILE DOES NOT WIN AGAINST PlayerSettings, AND IT USED TO SAY IT DID (corrected
+     2026-08-30). `useCustomMainManifest` makes this the BASE Unity copies into the Gradle
+     project — it then OVERWRITES every attribute and <meta-data> it owns from PlayerSettings on
+     the way through. Only ADDITIVE elements (a new intent-filter, an attribute Unity never
+     writes) survive. Measured against the last build's output,
+     Library/Bee/.../unityLibrary/src/main/AndroidManifest.xml:
+
+       this file                                       what Unity actually built
+       screenOrientation="sensorLandscape"          -> "reverseLandscape"   (defaultInterfaceOrientation)
+       requested-visible-insets=""                  -> "StatusBars|NavigationBars"  (androidRequestedVisibleInsets)
+       run-without-focus="false"                    -> "true"
+
+     So: to change anything Unity owns, change it in PlayerSettings. Editing it here is inert and
+     reads as if it worked. Diff this file against that generated one after any Android build.
+
+     There are exactly THREE deliberate deviations from that base. Anything else is drift:
+       1. The second intent-filter below, for the emberfall://auth deep link (NOR-246). ADDITIVE,
+          and confirmed present in the built manifest.
+       2. android:screenOrientation="sensorLandscape" on the activity, which the base had as
+          "fullUser" (NOR-283). INERT — see the table above; the build takes reverseLandscape from
+          PlayerSettings.defaultInterfaceOrientation. Landscape boot works because BOTH values are
+          landscape, not because of this line. Keep them in agreement, but fix orientation in
+          PlayerSettings.
+       3. android:allowBackup="false" on <application>, which the base does not set at all
+          (2026-08-29). The reason is on the tag itself. Additive, so it should survive — but it
+          post-dates the last build and is UNVERIFIED against a built manifest.
+     Regenerate this base by re-running an Android build if the Unity/Android Gradle version ever
+     changes and this drifts from what Unity would generate on its own — and re-apply all three
+     deviations above by hand when you do. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-feature android:glEsVersion="0x00030000" />
+  <uses-feature android:name="android.hardware.vulkan.version" android:required="false" />
+  <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+  <uses-feature android:name="android.hardware.touchscreen.multitouch" android:required="false" />
+  <uses-feature android:name="android.hardware.touchscreen.multitouch.distinct" android:required="false" />
+  <!-- allowBackup=false is the THIRD deliberate deviation from Unity's base (2026-08-29).
+       Unset, Android defaults it ON, and Auto Backup covers getExternalFilesDir() — which is
+       exactly where the collection lives. A reinstall then RESTORES a save from the Google
+       account, and on 2026-08-29 that resurrected a decks.json written before card ids became
+       numbers; CollectionJson.ReadDecks threw straight through MainMenuController.OnEnable and
+       the menu never built. A save that outlives the schema it was written for is the hazard,
+       and pre-1.0 the schema moves. It is an ATTRIBUTE ON <application>, not a <meta-data>
+       entry — the meta-data form parses and does nothing. Nothing else sets it (the generated
+       launcher manifest has no allowBackup), so no tools:replace is needed; confirm after a
+       build with: adb shell dumpsys package com.ContextAware.Emberfall | grep ALLOW_BACKUP -->
+  <application android:allowBackup="false" android:appCategory="game" android:enableOnBackInvokedCallback="true" android:extractNativeLibs="true">
+    <meta-data android:name="unity.splash-mode" android:value="0" />
+    <meta-data android:name="unity.splash-enable" android:value="True" />
+    <!-- IMMERSIVE. Empty value = no system bars visible at boot, which is what gives the game the
+         whole 1080 device px of a Pixel 5a instead of ~943. BOTH OF THESE ARE INERT HERE — Unity
+         writes them from PlayerSettings.Android.requestedVisibleInsets / .systemBarsBehavior.
+         b762f4e8 ("Added gold/crystal icons + various minor edits", 2026-08-23) flipped
+         requestedVisibleInsets 0 -> 3 (StatusBars|NavigationBars) and cost ~52dp of every vertical
+         budget in the USS until 2026-08-30. If the bars come back, read PlayerSettings, not this. -->
+    <meta-data android:name="unity.requested-visible-insets" android:value="" />
+    <meta-data android:name="unity.system-bars-behavior" android:value="ShowTransientBarsBySwipe" />
+    <meta-data android:name="unity.render-outside-safearea" android:value="True" />
+    <meta-data android:name="notch.config" android:value="portrait|landscape" />
+    <meta-data android:name="unity.auto-report-fully-drawn" android:value="true" />
+    <meta-data android:name="unity.strip-engine-code" android:value="true" />
+    <meta-data android:name="unity.run-without-focus" android:value="false" />
+    <meta-data android:name="unity.auto-set-game-state" android:value="true" />
+    <activity android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|layoutDirection|density" android:enabled="true" android:exported="true" android:hardwareAccelerated="false" android:launchMode="singleTask" android:name="com.unity3d.player.UnityPlayerGameActivity" android:resizeableActivity="true" android:screenOrientation="sensorLandscape" android:theme="@style/BaseUnityGameActivityTheme">
+      <intent-filter>
+        <category android:name="android.intent.category.LAUNCHER" />
+        <action android:name="android.intent.action.MAIN" />
+      </intent-filter>
+      <!-- NOR-246: the magic-link deep link. A separate intent-filter from MAIN/LAUNCHER above is
+           deliberate — Android's own guidance is to never combine MAIN with a VIEW/BROWSABLE filter,
+           since a combined filter can make the app appear as a chooser option for unrelated links.
+           SignInGateController listens for this via Application.deepLinkActivated / absoluteURL. -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="emberfall" android:host="auth" />
+      </intent-filter>
+      <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
+      <meta-data android:name="android.app.lib_name" android:value="game" />
+      <meta-data android:name="WindowManagerPreference:FreeformWindowSize" android:value="@string/FreeformWindowSize_maximize" />
+      <meta-data android:name="WindowManagerPreference:FreeformWindowOrientation" android:value="@string/FreeformWindowOrientation_landscape" />
+      <meta-data android:name="notch_support" android:value="true" />
+      <layout android:minHeight="300px" android:minWidth="400px" />
+    </activity>
+  </application>
+</manifest>
