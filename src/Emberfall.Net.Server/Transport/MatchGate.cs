@@ -62,6 +62,13 @@ namespace Emberfall.Net.Server.Transport
         /// </summary>
         private readonly OnboardingGrantService? _onboarding;
 
+        /// <summary>
+        /// The ownership authority for L6 on a submitted deck. Null when no economy is configured,
+        /// which <see cref="AccountOwnedCounts.ForAsync"/> reads as "ownership unknown, do not
+        /// constrain" — the behaviour every box had before the ledger existed.
+        /// </summary>
+        private readonly IEntitlementLedger? _entitlementLedger;
+
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
         private readonly Dictionary<string, WaitingPlayer> _waiting =
@@ -82,7 +89,8 @@ namespace Emberfall.Net.Server.Transport
             IBotPool? botPool = null, IRatingStore? ratingStore = null,
             IRankedMatchSink? rankedMatchSink = null,
             ITrainingEpisodeStore? trainingEpisodes = null,
-            OnboardingGrantService? onboarding = null)
+            OnboardingGrantService? onboarding = null,
+            IEntitlementLedger? entitlementLedger = null)
             : this(
                 opts,
                 time,
@@ -98,7 +106,8 @@ namespace Emberfall.Net.Server.Transport
                 ratingStore,
                 rankedMatchSink,
                 trainingEpisodes,
-                onboarding)
+                onboarding,
+                entitlementLedger)
         {
         }
 
@@ -110,7 +119,8 @@ namespace Emberfall.Net.Server.Transport
             IBotPool? botPool = null, IRatingStore? ratingStore = null,
             IRankedMatchSink? rankedMatchSink = null,
             ITrainingEpisodeStore? trainingEpisodes = null,
-            OnboardingGrantService? onboarding = null)
+            OnboardingGrantService? onboarding = null,
+            IEntitlementLedger? entitlementLedger = null)
         {
             _opts = opts;
             _time = time;
@@ -127,6 +137,7 @@ namespace Emberfall.Net.Server.Transport
             _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
             _trainingEpisodes = trainingEpisodes;
             _onboarding = onboarding;
+            _entitlementLedger = entitlementLedger;
         }
 
         public int LiveSessions
@@ -222,9 +233,9 @@ namespace Emberfall.Net.Server.Transport
             //    attaching to an account, and this ticket attaches none. See security.md §Latent.
             AccountId account;
             // The durable Account behind this seat, when one was resolved through the store. It carries
-            // the AccountKind that AccountOwnedCounts.For reads to gate L6 on a submitted deck (NOR-313);
-            // null on every path that never touches the store (guest, or authenticated with no store),
-            // which is the "ownership unknown, do not constrain" case DeckValidator L6 already ships.
+            // the AccountKind and the player_id that AccountOwnedCounts.ForAsync reads to gate L6 on a
+            // submitted deck (NOR-313); null on every path that never touches the store (guest, or
+            // authenticated with no store), which is the "ownership unknown, do not constrain" case.
             Account? deckOwnerAccount = null;
             if (!string.IsNullOrEmpty(hello.AuthToken))
             {
@@ -339,7 +350,8 @@ namespace Emberfall.Net.Server.Transport
                     await conn.PumpTask;
                     return;
                 }
-                var outcome = DeckSubmission.Validate(deckMsg, _db, AccountOwnedCounts.For(deckOwnerAccount));
+                var outcome = DeckSubmission.Validate(
+                    deckMsg, _db, await AccountOwnedCounts.ForAsync(deckOwnerAccount, _entitlementLedger, ct));
                 if (!outcome.Accepted)
                 {
                     Console.Error.WriteLine("[gate] refused player_id={0}: deck rejected: {1}",

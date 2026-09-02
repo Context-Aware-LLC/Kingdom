@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
@@ -209,6 +210,86 @@ namespace Emberfall.Net.Server.Tests
                     Assert.That(await ledger.HistoryAsync(AccountId.FromDeviceToken(token).Value), Is.Empty,
                         "a guest seat never reaches the account store, so nothing can be granted to it");
             }, ledger);
+        }
+
+        // ── 5. L6 is no longer inert ─────────────────────────────────────────────
+
+        /// <summary>
+        /// The end-to-end assertion this whole change exists for: with a ledger configured, an
+        /// authenticated account is REFUSED a deck containing a card it does not own.
+        ///
+        /// <para><b>Stated as a differential, because the absolute is not the interesting part.</b>
+        /// The identical deck, the identical account and the identical socket sequence are accepted
+        /// with no ledger and refused with one — so what this pins is precisely the branch that
+        /// stopped returning null, and it cannot pass for some unrelated reason like an off-class
+        /// card or a bad count.</para>
+        ///
+        /// <para>The unowned card is a RARE. The onboarding grant's commons half gives one copy of
+        /// every collectible common, and the starter packs are granted as an UNOPENED balance, so a
+        /// freshly-onboarded account provably owns no rare at all.</para>
+        /// </summary>
+        [Test]
+        [CancelAfter(60_000)]
+        public async Task An_Unowned_Card_Is_Refused_Only_When_A_Ledger_Is_Configured()
+        {
+            List<DeckCardLine> lines = DeckWithOneUnownedRare();
+
+            Assert.That(await SubmitIsRefusedAsync(lines, ledger: null), Is.False,
+                "with no ledger, ownership is unknown and the deck must be seated — today's behaviour");
+
+            Assert.That(await SubmitIsRefusedAsync(lines, ledger: new InMemoryEntitlementLedger()), Is.True,
+                "with a ledger, the account owns no rare and the deck must be refused at the handshake");
+        }
+
+        /// <summary>
+        /// A legal 30 for the pairing with exactly one line swapped for a same-class RARE, keeping the
+        /// deck legal on L1–L5 so a refusal is attributable to L6 and nothing else.
+        /// </summary>
+        private static List<DeckCardLine> DeckWithOneUnownedRare()
+        {
+            var character = new Character("c", "Test", CardClass.GRAVEKEEP, CardClass.VERDANT);
+            var deck = DefaultDeckGenerator.Generate(
+                character, SessionHarness.Db, new DeterministicRandom(0xD00DUL), "test-deck");
+            var lines = deck.Entries.Select(e => new DeckCardLine(e.CardId, e.Count)).ToList();
+
+            var rare = SessionHarness.Db.AllCollectible()
+                .Where(d => d.Rarity == Rarity.RARE && d.Class == CardClass.GRAVEKEEP)
+                .OrderBy(d => d.Id)
+                .First();
+
+            // Replace, preserving the count so the deck stays exactly thirty cards.
+            int slot = lines.FindIndex(l => l.CardId != rare.Id);
+            Assert.That(slot, Is.GreaterThanOrEqualTo(0));
+            lines[slot] = new DeckCardLine(rare.Id, lines[slot].Count);
+            return lines;
+        }
+
+        /// <summary>
+        /// Drive one authenticated <c>?deck=1</c> socket with this decklist and report whether the
+        /// server closed it. Returns false if the socket was seated instead.
+        /// </summary>
+        private static async Task<bool> SubmitIsRefusedAsync(List<DeckCardLine> lines, IEntitlementLedger? ledger)
+        {
+            var verifier = new StubVerifier(TokenVerificationResult.Ok(
+                new VerifiedIdentity(Subject, Email, EmailVerified: true)));
+            var store = new InMemoryAccountStore(new FakeTime());
+            bool refused = false;
+
+            await WithServerAsync(verifier, store, async (wsUri, gate) =>
+            {
+                using var ws = new ClientWebSocket();
+                await ws.ConnectAsync(new Uri(wsUri + "?deck=1"), CancellationToken.None);
+                await SendHelloAsync(ws, DeviceToken, authToken: "valid.token.here");
+                await ws.SendAsync(
+                    ProtocolCodec.Encode(
+                        new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.VERDANT, lines),
+                        ProtocolCodec.PreMatch, 1),
+                    WebSocketMessageType.Text, true, CancellationToken.None);
+
+                refused = await WaitForCloseAsync(ws, TimeSpan.FromSeconds(10));
+            }, ledger);
+
+            return refused;
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────

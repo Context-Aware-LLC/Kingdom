@@ -299,7 +299,8 @@ namespace Emberfall.Net.Server
                 cfg.MatchmakingRatingForAccount is null ? ratingStore : null,
                 ratingWorker,
                 trainingEpisodes,
-                onboarding);
+                onboarding,
+                cfg.EntitlementLedger);
 
             var app = builder.Build();
             app.UseWebSockets();
