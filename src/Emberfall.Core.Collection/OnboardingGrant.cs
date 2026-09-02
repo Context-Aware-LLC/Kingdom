@@ -7,8 +7,9 @@ namespace Emberfall.Core.Collection
 {
     /// <summary>
     /// What a brand-new account is given, once, the first time it creates a character
-    /// (<b>Sam, 2026-08-12</b>). Two halves: a copy of every collectible <b>common</b> in the launch
-    /// pairing, and <see cref="StarterPackCount"/> boosted booster packs.
+    /// (<b>Sam, 2026-08-12</b>; rares added 2026-09-02). Two halves: a copy of every collectible
+    /// <b>common and rare</b> in the launch pairing, and <see cref="StarterPackCount"/> boosted
+    /// booster packs.
     ///
     /// <para><b>This is the product decision <see cref="IOwnedCardStore"/> used to say nobody had
     /// made.</b> That paragraph is gone; this type is where the answer lives, in the collection
@@ -44,21 +45,29 @@ namespace Emberfall.Core.Collection
     /// is a per-<i>character</i> choice, and 93% of this set's non-commons are class-locked (56/60
     /// rares, 19/21 epics, 11/11 legendaries). Seeding would therefore concentrate an account's only
     /// gift into whichever two classes a new player picked in their first minute, and every character
-    /// after that would get nothing. The commons half already covers 22–29 of a 30-card deck for any
-    /// pairing, so the first deck does not need the packs to be legal — they are spice, not
-    /// legality.</para>
+    /// after that would get nothing.</para>
+    ///
+    /// <para><b>The packs are spice, not legality — and that is now TRUE, which it was not.</b> This
+    /// paragraph used to argue it from "the commons half already covers 22–29 of a 30-card deck",
+    /// a sentence that refutes itself: 22–29 is short of 30. Measured against the live card data on
+    /// 2026-09-02, commons alone left 7 of the 28 pairings unable to field a legal deck, and a player
+    /// on CLOCKWRIGHT+STONEWARDEN owned every card they could use and reached 28. Since the packs
+    /// arrive as an unopened balance, legality depended on a step the player might never take. The
+    /// card half now grants every COMMON <i>and</i> RARE (<see cref="CardGrant"/>), which puts every
+    /// pairing at 45–60 — so the claim above holds on its own arithmetic rather than in spite of
+    /// it.</para>
     /// </summary>
     public static class OnboardingGrant
     {
         /// <summary>
-        /// The expansion half of the pairing the grant is defined against. The commons half and the
+        /// The expansion half of the pairing the grant is defined against. The card half and the
         /// starter packs both read it, so they cannot drift apart.
         ///
-        /// <para>RETIREMENT TRIGGER: THE SECOND EXPANSION SHIPS. "Every common in the launch set" is a
+        /// <para>RETIREMENT TRIGGER: THE SECOND EXPANSION SHIPS. "Every common and rare in the launch set" is a
         /// launch-shaped answer. The commit that adds a third <see cref="SetId"/> member intended for
-        /// sale must decide what a new account gets then — every common in every set, or only the
+        /// sale must decide what a new account gets then — every common and rare in every set, or only the
         /// current one — and update this constant, the XML above, and
-        /// <c>OnboardingGrantTests.GrantIsEveryCollectibleCommonInThePairing</c>
+        /// <c>OnboardingGrantTests.GrantIsEveryCollectibleCommonAndRareInThePairing</c>
         /// (<c>tests/Emberfall.Core.Tests/Collection/OnboardingGrantTests.cs</c>). Leaving it pointing
         /// at EMBERFALL is a decision, not a default, and should be a deliberate one.</para>
         /// </summary>
@@ -83,9 +92,15 @@ namespace Emberfall.Core.Collection
         /// possible version of the moment the packs exist to create. Over 40 cards these odds give
         /// roughly 22 commons, 13.6 rares, 3.4 epics and 1.0 legendaries: a legendary in expectation.</para>
         ///
-        /// <para>Weight moves off COMMON deliberately. The commons half of this same grant means the
-        /// player already holds one of every common in the pairing, so a common slot can only ever top
-        /// them up toward the deck limit — real value, but never a discovery.</para>
+        /// <para>Weight moves off COMMON deliberately. The card half of this same grant means the player
+        /// already holds one of every common in the pairing, so a common slot can only ever top them
+        /// up toward the deck limit — real value, but never a discovery.</para>
+        ///
+        /// <para><b>OPEN, and these odds have NOT been re-tuned for it (2026-09-02).</b> The card half
+        /// now grants every RARE as well, so the same argument applies to the 340 weight on RARE: a
+        /// rare slot is now a top-up too, and only EPIC and LEGENDARY are still discoveries. Whether
+        /// to shift weight further up is a design call, not a mechanical consequence, so it is raised
+        /// here rather than taken.</para>
         ///
         /// <para><b>Contained to onboarding.</b> Live pack odds are untouched:
         /// <see cref="BoosterPack.All"/> still builds retail packs on the default odds.</para>
@@ -108,30 +123,52 @@ namespace Emberfall.Core.Collection
             => new BoosterPack(LaunchExpansion, StarterPackCardCount, StarterOdds, BoosterPack.StarterSku);
 
         /// <summary>
-        /// Every card id the commons half grants one copy of — <b>sorted by id</b>, for the same
-        /// reason <see cref="BoosterPack.Pool"/> sorts: <see cref="ICardDatabase.AllCollectible"/>
-        /// promises no order, and a grant whose order depends on a dictionary walk writes a different
-        /// <c>owned-cards.json</c> on two machines that own identical collections.
+        /// Every card id the card half grants one copy of — <b>every collectible COMMON and RARE in
+        /// the launch pairing</b>, sorted by id.
+        ///
+        /// <para><b>Rares were added 2026-09-02 (Sam), and the reason is deck legality.</b> Commons
+        /// alone leave <b>7 of the 28 pairings unable to field a legal 30</b> — measured against the
+        /// live card data, range 27–35, with CLOCKWRIGHT+STONEWARDEN at 28. That is not a corner
+        /// case: a new player on one of those pairings puts every card they own into their first deck
+        /// and is still short, with nothing telling them why. Commons plus rares moves the range to
+        /// <b>45–60 with no pairing under 30</b>, which is margin rather than a near miss.</para>
+        ///
+        /// <para><b>This is what the packs were wrongly assumed to cover.</b> The claim used to be
+        /// that the commons half "covers 22–29 of a 30-card deck … so the first deck does not need
+        /// the packs to be legal" — a sentence that contradicts itself, since 22–29 is short of 30.
+        /// The packs were in fact load-bearing for legality on a quarter of all pairings, and they
+        /// arrive as an unopened BALANCE the player may not have opened yet, so the first deck could
+        /// be unbuildable through no fault of the player. Legality now comes from the card half,
+        /// which is granted outright; the packs are genuinely spice again.</para>
+        ///
+        /// <para><b>Sorted by id</b>, for the same reason <see cref="BoosterPack.Pool"/> sorts:
+        /// <see cref="ICardDatabase.AllCollectible"/> promises no order, and a grant whose order
+        /// depends on a dictionary walk writes a different <c>owned-cards.json</c> on two machines
+        /// that own identical collections.</para>
         ///
         /// <para>Membership is <see cref="BoosterPack.Contains"/> on the starter pack, not a literal
-        /// set list, so the commons granted and the pool the packs draw from are the same two sets by
-        /// construction. CORE is in the pairing, so its collectible commons are included — the CORE
-        /// rows that are <i>not</i> are hero powers and tokens, which are not collectible and were
-        /// never ownable.</para>
+        /// set list, so the cards granted and the pool the packs draw from are the same two sets by
+        /// construction.</para>
         /// </summary>
-        public static IReadOnlyList<int> CommonGrant(ICardDatabase db)
+        public static IReadOnlyList<int> CardGrant(ICardDatabase db)
         {
             if (db == null) throw new ArgumentNullException(nameof(db));
 
             var pack = StarterPack();
             var ids = new List<int>();
             foreach (var card in db.AllCollectible())
-                if (card != null && card.Rarity == Rarity.COMMON && pack.Contains(card.SetId))
+                if (card != null && IsGranted(card.Rarity) && pack.Contains(card.SetId))
                     ids.Add(card.Id);
 
             ids.Sort();
             return ids;
         }
+
+        /// <summary>The rarities the card half grants outright. EPIC and LEGENDARY are deliberately
+        /// NOT here — they are what the packs are for, and a grant that handed them over would leave
+        /// a pack with nothing left to be exciting about.</summary>
+        private static bool IsGranted(Rarity rarity)
+            => rarity == Rarity.COMMON || rarity == Rarity.RARE;
 
         /// <summary>
         /// The whole grant, resolved: the commons to add and the packs to open, in one value, so a
@@ -141,20 +178,20 @@ namespace Emberfall.Core.Collection
         {
             var packs = new List<BoosterPack>(StarterPackCount);
             for (int i = 0; i < StarterPackCount; i++) packs.Add(StarterPack());
-            return new OnboardingGrantPlan(CommonGrant(db), packs);
+            return new OnboardingGrantPlan(CardGrant(db), packs);
         }
 
         /// <summary>
-        /// Apply the commons half to a counts record — one copy each, <b>added to</b> whatever is
+        /// Apply the card half to a counts record — one copy each, <b>added to</b> whatever is
         /// there rather than assigned, so calling it against a record that already holds copies cannot
         /// silently reduce a player's collection.
         /// </summary>
-        public static void ApplyCommons(OnboardingGrantPlan plan, OwnedCardCounts owned)
+        public static void ApplyGrantedCards(OnboardingGrantPlan plan, OwnedCardCounts owned)
         {
             if (plan == null) throw new ArgumentNullException(nameof(plan));
             if (owned == null) throw new ArgumentNullException(nameof(owned));
 
-            var ids = plan.CommonCardIds;
+            var ids = plan.GrantedCardIds;
             for (int i = 0; i < ids.Count; i++)
                 owned.Set(ids[i], owned.CopiesOwned(ids[i]) + 1);
         }
@@ -163,20 +200,20 @@ namespace Emberfall.Core.Collection
     /// <summary>The resolved onboarding grant: what to add, and what to open.</summary>
     public sealed class OnboardingGrantPlan
     {
-        /// <summary>One copy of each, sorted by id.</summary>
-        public IReadOnlyList<int> CommonCardIds { get; }
+        /// <summary>One copy of each collectible common and rare in the pairing, sorted by id.</summary>
+        public IReadOnlyList<int> GrantedCardIds { get; }
 
         /// <summary>The starter packs, unopened. The caller supplies the seed and the pity state.</summary>
         public IReadOnlyList<BoosterPack> Packs { get; }
 
-        public OnboardingGrantPlan(IReadOnlyList<int> commonCardIds, IReadOnlyList<BoosterPack> packs)
+        public OnboardingGrantPlan(IReadOnlyList<int> grantedCardIds, IReadOnlyList<BoosterPack> packs)
         {
-            CommonCardIds = commonCardIds ?? Array.Empty<int>();
+            GrantedCardIds = grantedCardIds ?? Array.Empty<int>();
             Packs = packs ?? Array.Empty<BoosterPack>();
         }
 
         /// <summary>Cards granted outright, before a single pack is opened.</summary>
-        public int CommonCount => CommonCardIds.Count;
+        public int GrantedCardCount => GrantedCardIds.Count;
 
         /// <summary>Cards the packs will yield in total.</summary>
         public int PackCardCount

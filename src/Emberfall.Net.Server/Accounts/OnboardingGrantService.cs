@@ -98,12 +98,12 @@ namespace Emberfall.Net.Server.Accounts
             EconomyAccountPolicy.RequireDurable(account);
 
             OnboardingGrantPlan plan = OnboardingGrant.Resolve(_cards);
-            var deltas = new List<EntitlementDelta>(plan.CommonCardIds.Count + 1);
+            var deltas = new List<EntitlementDelta>(plan.GrantedCardIds.Count + 1);
 
-            IReadOnlyList<int> commons = plan.CommonCardIds;
-            for (int i = 0; i < commons.Count; i++)
+            IReadOnlyList<int> granted = plan.GrantedCardIds;
+            for (int i = 0; i < granted.Count; i++)
                 deltas.Add(new EntitlementDelta(
-                    BoosterPackGrantService.CardItemPrefix + commons[i], 1, GrantSource));
+                    BoosterPackGrantService.CardItemPrefix + granted[i], 1, GrantSource));
 
             // ONE delta for the packs, not one per pack: an unopened pack is a fungible balance the
             // opener debits one at a time, so five rows of +1 and one row of +5 are the same

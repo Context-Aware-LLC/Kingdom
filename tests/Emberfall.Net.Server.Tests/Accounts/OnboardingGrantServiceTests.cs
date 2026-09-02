@@ -101,7 +101,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That(await Service(ledger, cards).EnsureGrantedAsync(account),
                         Is.EqualTo(OnboardingOutcome.Granted));
 
-            IReadOnlyList<int> commons = OnboardingGrant.CommonGrant(cards);
+            IReadOnlyList<int> commons = OnboardingGrant.CardGrant(cards);
             Assert.That(commons, Is.Not.Empty, "the fixture corpus has no grantable commons");
             foreach (int cardId in commons)
                 Assert.That(await ledger.BalanceAsync(account.PlayerId, CardItem(cardId)), Is.EqualTo(1),
@@ -116,7 +116,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var account = Authenticated();
             await Service(ledger, cards).EnsureGrantedAsync(account);
 
-            var granted = new HashSet<int>(OnboardingGrant.CommonGrant(cards));
+            var granted = new HashSet<int>(OnboardingGrant.CardGrant(cards));
             foreach (CardDefinition card in cards.AllCollectible())
                 if (!granted.Contains(card.Id))
                     Assert.That(await ledger.BalanceAsync(account.PlayerId, CardItem(card.Id)), Is.Zero,
@@ -173,7 +173,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             OnboardingOutcome second = await service.EnsureGrantedAsync(account);
 
             Assert.That(second, Is.EqualTo(OnboardingOutcome.AlreadyGranted));
-            int cardId = OnboardingGrant.CommonGrant(cards)[0];
+            int cardId = OnboardingGrant.CardGrant(cards)[0];
             Assert.That(await ledger.BalanceAsync(account.PlayerId, CardItem(cardId)), Is.EqualTo(1),
                         "the grant is once per account, not once per call");
         }
@@ -192,7 +192,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var account = Authenticated();
             await service.EnsureGrantedAsync(account);
 
-            foreach (int cardId in OnboardingGrant.CommonGrant(cards))
+            foreach (int cardId in OnboardingGrant.CardGrant(cards))
                 await ledger.GrantAsync(new EntitlementGrant(
                     account.PlayerId, CardItem(cardId), -1, "test_spend",
                     $"spend:{account.PlayerId}:{cardId}",
@@ -201,7 +201,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That(await service.EnsureGrantedAsync(account),
                         Is.EqualTo(OnboardingOutcome.AlreadyGranted));
 
-            int first = OnboardingGrant.CommonGrant(cards)[0];
+            int first = OnboardingGrant.CardGrant(cards)[0];
             Assert.That(await ledger.BalanceAsync(account.PlayerId, CardItem(first)), Is.Zero,
                         "an emptied collection stays empty; it is not refilled");
         }
@@ -218,7 +218,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That(await service.EnsureGrantedAsync(Authenticated("account-b")),
                         Is.EqualTo(OnboardingOutcome.Granted),
                         "the transaction id is keyed on the player, not global");
-            int cardId = OnboardingGrant.CommonGrant(cards)[0];
+            int cardId = OnboardingGrant.CardGrant(cards)[0];
             Assert.That(await ledger.BalanceAsync("account-b", CardItem(cardId)), Is.EqualTo(1));
         }
 

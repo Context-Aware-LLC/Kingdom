@@ -8,7 +8,7 @@ namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
     /// The guard <see cref="OnboardingGrant"/>'s <c>LaunchExpansion</c> RETIREMENT TRIGGER names —
-    /// <c>GrantIsEveryCollectibleCommonInThePairing</c>. It was named there before it existed: this
+    /// <c>GrantIsEveryCollectibleCommonAndRareInThePairing</c>. It was named there before it existed: this
     /// repo has never held a file called <c>OnboardingGrantTests</c>, so the trigger had nothing to
     /// point at and the second expansion would have landed against no check at all.
     ///
@@ -16,8 +16,8 @@ namespace Emberfall.Core.Tests.Collection
     /// The grant's size is a RECORD of the corpus at the moment someone counted it, never a target
     /// for it (CLAUDE.md), so an assertion like "71 commons" would convert a content decision into a
     /// test failure and invite somebody to work backwards from the number. What these tests actually
-    /// pin is the RELATION — the grant is exactly the collectible commons of the pairing, in id
-    /// order — which cannot go stale as cards are added.</para>
+    /// pin is the RELATION — the grant is exactly the collectible commons and rares of the pairing,
+    /// in id order — which cannot go stale as cards are added.</para>
     ///
     /// <para>Uses <see cref="LiveCardSet"/> for the same reason its own doc gives: deck legality and
     /// the grant are precisely the things that should be re-checked against the real pool rather than
@@ -29,36 +29,55 @@ namespace Emberfall.Core.Tests.Collection
         private static ICardDatabase Db => LiveCardSet.Db;
 
         /// <summary>
-        /// The commons half is every collectible COMMON in the pairing — no more, no less, and in the
-        /// same order. This is the assertion the retirement trigger sends the second expansion's
-        /// author to: it fails the moment "the launch pairing" stops meaning "what a new account
-        /// gets", which is the decision that must not be made by default.
+        /// The card half is every collectible COMMON and RARE in the pairing — no more, no less, and
+        /// in the same order. This is the assertion the retirement trigger sends the second
+        /// expansion's author to: it fails the moment "the launch pairing" stops meaning "what a new
+        /// account gets", which is the decision that must not be made by default.
+        ///
+        /// <para><b>Rares joined the grant 2026-09-02 (Sam).</b> Commons alone left 7 of the 28
+        /// pairings unable to field a legal 30 — measured range 27–35, with a real player stuck at
+        /// 28 on CLOCKWRIGHT+STONEWARDEN. Commons plus rares is 45–60, none under 30.</para>
         /// </summary>
         [Test]
-        public void GrantIsEveryCollectibleCommonInThePairing()
+        public void GrantIsEveryCollectibleCommonAndRareInThePairing()
         {
             BoosterPack pack = OnboardingGrant.StarterPack();
 
             var expected = new List<int>();
             foreach (CardDefinition card in Db.AllCollectible())
-                if (card != null && card.Rarity == Rarity.COMMON && pack.Contains(card.SetId))
+                if (card != null && pack.Contains(card.SetId) &&
+                    (card.Rarity == Rarity.COMMON || card.Rarity == Rarity.RARE))
                     expected.Add(card.Id);
             expected.Sort();
 
-            Assert.That(expected, Is.Not.Empty, "the live pairing has no collectible commons at all");
-            Assert.That(OnboardingGrant.CommonGrant(Db), Is.EqualTo(expected));
+            Assert.That(expected, Is.Not.Empty, "the live pairing has no collectible commons or rares");
+            Assert.That(OnboardingGrant.CardGrant(Db), Is.EqualTo(expected));
+        }
+
+        /// <summary>Nothing above RARE is granted outright. The packs have to stay the only way an
+        /// epic or a legendary arrives, or opening one has nothing left to give — which is the whole
+        /// argument for the boosted odds.</summary>
+        [Test]
+        public void GrantContainsNoEpicsOrLegendaries()
+        {
+            var granted = new HashSet<int>(OnboardingGrant.CardGrant(Db));
+
+            foreach (CardDefinition card in Db.AllCollectible())
+                if (card != null && granted.Contains(card.Id))
+                    Assert.That(card.Rarity, Is.AnyOf(Rarity.COMMON, Rarity.RARE),
+                        $"'{card.Name}' is {card.Rarity} and must not be granted outright.");
         }
 
         /// <summary>
         /// Strictly ascending, which is stronger than "sorted": it also proves no id is granted twice.
         /// The order matters because <c>AllCollectible</c> promises none, and a grant that walked a
         /// dictionary would write a different collection record on two machines that own identical
-        /// collections — the reason <see cref="OnboardingGrant.CommonGrant"/> sorts at all.
+        /// collections — the reason <see cref="OnboardingGrant.CardGrant"/> sorts at all.
         /// </summary>
         [Test]
-        public void CommonGrantIsStrictlyAscendingSoTwoMachinesWriteTheSameRecord()
+        public void CardGrantIsStrictlyAscendingSoTwoMachinesWriteTheSameRecord()
         {
-            IReadOnlyList<int> ids = OnboardingGrant.CommonGrant(Db);
+            IReadOnlyList<int> ids = OnboardingGrant.CardGrant(Db);
 
             for (int i = 1; i < ids.Count; i++)
                 Assert.That(ids[i], Is.GreaterThan(ids[i - 1]),
@@ -73,7 +92,7 @@ namespace Emberfall.Core.Tests.Collection
         [Test]
         public void GrantExcludesRowsThatAreNotCollectible()
         {
-            var granted = new HashSet<int>(OnboardingGrant.CommonGrant(Db));
+            var granted = new HashSet<int>(OnboardingGrant.CardGrant(Db));
 
             foreach (CardDefinition card in LiveCardSet.Cards)
                 if (card != null && !card.Collectible)
@@ -88,12 +107,12 @@ namespace Emberfall.Core.Tests.Collection
         /// as the commons, and that the packs are the launch pairing at the starter shape.
         /// </summary>
         [Test]
-        public void ResolveHandsBackTheCommonsAndTheStarterPacksTogether()
+        public void ResolveHandsBackTheCardsAndTheStarterPacksTogether()
         {
             OnboardingGrantPlan plan = OnboardingGrant.Resolve(Db);
 
-            Assert.That(plan.CommonCardIds, Is.EqualTo(OnboardingGrant.CommonGrant(Db)));
-            Assert.That(plan.CommonCount, Is.EqualTo(plan.CommonCardIds.Count));
+            Assert.That(plan.GrantedCardIds, Is.EqualTo(OnboardingGrant.CardGrant(Db)));
+            Assert.That(plan.GrantedCardCount, Is.EqualTo(plan.GrantedCardIds.Count));
             Assert.That(plan.Packs, Has.Count.EqualTo(OnboardingGrant.StarterPackCount));
             Assert.That(plan.PackCardCount,
                 Is.EqualTo(OnboardingGrant.StarterPackCount * OnboardingGrant.StarterPackCardCount));
@@ -107,23 +126,23 @@ namespace Emberfall.Core.Tests.Collection
         }
 
         /// <summary>
-        /// <see cref="OnboardingGrant.ApplyCommons"/> ADDS. Its doc says so and the reason is that
+        /// <see cref="OnboardingGrant.ApplyGrantedCards"/> ADDS. Its doc says so and the reason is that
         /// assigning would silently reduce a collection that already held copies — the failure mode
         /// nobody would notice, because the card is still there, just fewer of it.
         /// </summary>
         [Test]
-        public void ApplyCommonsAddsToWhatIsThereRatherThanAssigning()
+        public void ApplyGrantedCardsAddsToWhatIsThereRatherThanAssigning()
         {
             OnboardingGrantPlan plan = OnboardingGrant.Resolve(Db);
             var owned = new OwnedCardCounts();
-            int first = plan.CommonCardIds[0];
+            int first = plan.GrantedCardIds[0];
             owned.Set(first, 2);
 
-            OnboardingGrant.ApplyCommons(plan, owned);
+            OnboardingGrant.ApplyGrantedCards(plan, owned);
 
             Assert.That(owned.CopiesOwned(first), Is.EqualTo(3),
                 "applying the grant must never reduce a collection");
-            Assert.That(owned.CopiesOwned(plan.CommonCardIds[1]), Is.EqualTo(1),
+            Assert.That(owned.CopiesOwned(plan.GrantedCardIds[1]), Is.EqualTo(1),
                 "a card with no prior copies gets exactly one");
         }
 
