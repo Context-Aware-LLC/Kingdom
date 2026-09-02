@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/MainMenu/mainmenu.uss?fileID=7433441132597879392&amp;guid=a7ebbdf5907b4c844915adc374612cc8&amp;type=3#mainmenu"/>
-    <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden">
+    <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden mm-root--entering">
         <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim emb-bleed" style="background-image: none;"/>
         <ui:Label name="shard-balance" text="Shards  —" picking-mode="Ignore" class="mm-shard-balance emb-edge"/>
         <ui:VisualElement name="identity" picking-mode="Ignore" class="mm-identity emb-edge">
@@ -11,15 +11,17 @@
                 <ui:Label name="identity-deck" text="" class="mm-identity__deck"/>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="brand" class="mm-brand">
-            <ui:Label text="EMBERFALL" class="mm-wordmark"/>
-            <ui:Label text="A duel of embers" class="mm-tagline"/>
-        </ui:VisualElement>
-        <ui:VisualElement name="menu" class="mm-menu">
-            <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
-            <ui:Button name="btn-collection" text="Collection" class="mm-button"/>
-            <ui:Button name="btn-store" text="Store" class="mm-button"/>
-            <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button"/>
+        <ui:VisualElement name="command" class="mm-command emb-edge">
+            <ui:VisualElement name="brand" class="mm-brand">
+                <ui:Label text="EMBERFALL" class="mm-wordmark"/>
+                <ui:Label text="A duel of embers" class="mm-tagline"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="menu" class="mm-menu">
+                <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
+                <ui:Button name="btn-collection" text="Collection" class="mm-button mm-button--secondary"/>
+                <ui:Button name="btn-store" text="Store" class="mm-button mm-button--secondary"/>
+                <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button mm-button--secondary"/>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="footer" class="mm-footer emb-edge">
             <ui:Label name="version-label" text="—" class="mm-version"/>
