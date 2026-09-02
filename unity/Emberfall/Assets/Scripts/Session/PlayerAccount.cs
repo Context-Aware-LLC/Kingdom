@@ -437,29 +437,24 @@ namespace Emberfall.Session
         /// safe because <c>RosterSnapshot.ShouldReplaceLocal</c> is false for every outcome that is
         /// not an answer — a failed read never reaches this method.</para>
         ///
-        /// <para>Deletes before it saves, and computes the deletions against what is on disk right
-        /// now rather than against a cached list: a character the server no longer has must go, and
-        /// leaving it would resurrect it on every subsequent read.</para>
+        /// <para><b>A wholesale overwrite, and it NEVER READS THE FILES IT REPLACES.</b> The obvious
+        /// implementation — load what is there, delete what the server no longer has, save the rest —
+        /// makes the local cache able to block its own repair: a <c>decks.json</c> this build's
+        /// reader refuses is exactly the file that most needs replacing, and every read-modify-write
+        /// path throws on it. Measured on a device 2026-09-02, where an Android auto-backup restored
+        /// a pre-numeric-migration <c>decks.json</c>; the deck drawer threw, and no sync could clear
+        /// it because clearing it started by reading it. <c>ReplaceAll</c> exists for this.</para>
+        ///
+        /// <para>Decks first, then characters — the mirror of creation's order (deck, then
+        /// character), and for the same reason: a deck with no character is the survivable half.</para>
         /// </summary>
         public void ReplaceRoster(IReadOnlyList<Character> characters, IReadOnlyList<DeckList> decks)
         {
             if (characters == null) throw new ArgumentNullException(nameof(characters));
             if (decks == null) throw new ArgumentNullException(nameof(decks));
 
-            var keepCharacters = new HashSet<string>(StringComparer.Ordinal);
-            foreach (Character c in characters) keepCharacters.Add(c.Id);
-            var keepDecks = new HashSet<string>(StringComparer.Ordinal);
-            foreach (DeckList d in decks) keepDecks.Add(d.Id);
-
-            // Decks first, then characters — the mirror of creation's order (deck, then character),
-            // and for the same reason: a deck with no character is the survivable half.
-            foreach (DeckList existing in _decks.LoadAll())
-                if (!keepDecks.Contains(existing.Id)) _decks.Delete(existing.Id);
-            foreach (Character existing in _characters.LoadAll())
-                if (!keepCharacters.Contains(existing.Id)) _characters.Delete(existing.Id);
-
-            foreach (DeckList deck in decks) _decks.Save(deck);
-            foreach (Character character in characters) _characters.Save(character);
+            _decks.ReplaceAll(decks);
+            _characters.ReplaceAll(characters);
         }
 
         // ── Identity minting ────────────────────────────────────────────────────────────

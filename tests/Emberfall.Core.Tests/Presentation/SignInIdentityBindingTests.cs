@@ -82,6 +82,44 @@ namespace Emberfall.Core.Tests.Presentation
                 + "exact opposite of the truth, with nothing anywhere reporting a problem.");
         }
 
+        private static string Menu() => File.ReadAllText(Path.Combine(
+            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation",
+            "MainMenuController.cs"));
+
+        /// <summary>
+        /// A launch that is ALREADY signed in restores the player's data too.
+        ///
+        /// <para><b>The gate's path covers the sign-in TRANSITION and nothing else.</b> It runs when
+        /// the gate was shown — the first launch after installing — and never again, so for every
+        /// subsequent launch, which is the normal case, binding and both syncs simply did not
+        /// happen. Measured on a device 2026-09-02: a launch with a restored session produced no
+        /// <c>[SignIn]</c>, <c>[Roster]</c> or <c>[Collection]</c> line at all, the collection wall
+        /// rendered the full pool off an absent ownership record, and the server's roster stayed on
+        /// the server.</para>
+        ///
+        /// <para><b>It fails silently, which is why it is pinned in source.</b> Exactly like the
+        /// binding above: nothing throws, nothing logs, and the result is a screen that looks
+        /// populated. The cheap check is that the menu's boot still names the two gateways.</para>
+        ///
+        /// <para><b>RETIREMENT TRIGGER:</b> when the client blocks the boot on <c>GET /session</c>
+        /// (spec <c>login-handshake.md</c> §2), the resume moves there and this fixture's subject
+        /// changes with it — update the path this reads, or delete this one assertion if the menu
+        /// stops owning the boot.</para>
+        /// </summary>
+        [Test]
+        public void An_already_signed_in_launch_binds_and_syncs_before_the_menu_appears()
+        {
+            string menu = Menu();
+
+            Assert.That(menu, Does.Match(
+                @"(?s)DeviceAccounts\.TryBindToIdentity\([^)]*\);.*?"
+                + @"CollectionGateway\.SyncAsync\(.*?RosterGateway\.SyncAsync\(.*?BeginFirstRun\(\)"),
+                "MainMenuController must bind the identity and run both syncs before it hands the "
+                + "player the menu. Without it only the very first launch after an install ever "
+                + "restores anything: every launch after that reaches the right identity with a "
+                + "stale local cache, and an absent ownership record renders as owning every card.");
+        }
+
         /// <summary>The one path binds, and binds before it hands control on — the continuation's
         /// first act is to read <c>PlayerAccount.Local</c> to decide whether a display name is still
         /// owed, and that read has to land in the bound account.</summary>

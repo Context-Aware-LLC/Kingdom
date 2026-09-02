@@ -331,5 +331,83 @@ namespace Emberfall.Core.Tests.Collection
             Assert.That(File.Exists(custom), Is.True, "The store creates directories it was pointed at.");
             Assert.That(new JsonCharacterStore(custom).LoadAll().Single().Id, Is.EqualTo("chr-1"));
         }
+
+        // ── ReplaceAll: the cache must never be able to block its own repair ─────────────
+
+        /// <summary>
+        /// The failure this was added for, in the shape it actually arrived in.
+        ///
+        /// <para><b>Measured on a device, 2026-09-02.</b> An Android auto-backup restored a
+        /// <c>decks.json</c> written before card ids became numbers. Every read-modify-write path —
+        /// <c>Save</c>, <c>Delete</c>, and the roster sync's own "load what is there, then delete
+        /// what the server no longer has" — begins by reading, so every one of them threw. The
+        /// server held the authoritative answer and there was no way to write it down: the local
+        /// cache was blocking the only thing that could have repaired it.</para>
+        /// </summary>
+        [Test]
+        public void ReplaceAll_Overwrites_A_File_That_LoadAll_Refuses_To_Read()
+        {
+            var decks = Decks();
+            string path = decks.FilePath;
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+
+            // A real pre-migration deck: the card id is a HANDLE, which this build's reader rejects
+            // by design so a stale id can never be silently dropped.
+            File.WriteAllText(path,
+                "{\"schemaVersion\":1,\"decks\":[{\"id\":\"d-old\",\"characterId\":\"chr-1\"," +
+                "\"name\":\"Old\",\"cards\":[{\"id\":\"clock_mainspring_halberd\",\"count\":1}]}]}");
+
+            Assert.That(() => decks.LoadAll(), Throws.TypeOf<CollectionFormatException>(),
+                "precondition: the file is exactly the kind this store refuses to read");
+
+            var replacement = new DeckList { Id = "d-new", CharacterId = "chr-1", Name = "From the server" };
+            replacement.Entries.Add(new DeckEntry(1001, 2));
+
+            Assert.That(() => decks.ReplaceAll(new[] { replacement }), Throws.Nothing,
+                "ReplaceAll must not read the file it replaces — that is the whole reason it exists");
+
+            var after = decks.LoadAll();
+            Assert.That(after.Count, Is.EqualTo(1));
+            Assert.That(after[0].Id, Is.EqualTo("d-new"));
+            Assert.That(after[0].CountOf(1001), Is.EqualTo(2));
+        }
+
+        [Test]
+        public void ReplaceAll_Removes_Rows_That_Are_Not_In_The_New_Set()
+        {
+            var decks = Decks();
+            decks.Save(new DeckList { Id = "d-1", CharacterId = "chr-1", Name = "One" });
+            decks.Save(new DeckList { Id = "d-2", CharacterId = "chr-1", Name = "Two" });
+
+            decks.ReplaceAll(new[] { new DeckList { Id = "d-2", CharacterId = "chr-1", Name = "Two" } });
+
+            Assert.That(decks.LoadAll().Single().Id, Is.EqualTo("d-2"),
+                "a deck the server no longer has must go, or it resurrects on the next read");
+        }
+
+        [Test]
+        public void ReplaceAll_With_Nothing_Empties_The_Store()
+        {
+            var characters = Characters();
+            characters.Save(Rotbloom());
+
+            characters.ReplaceAll(Array.Empty<Character>());
+
+            Assert.That(characters.LoadAll(), Is.Empty,
+                "an empty roster from the server is a real answer — a player who deleted their last " +
+                "character must not have it restored by the next sign-in");
+        }
+
+        [Test]
+        public void ReplaceAll_Refuses_Null_Rather_Than_Emptying_The_Store()
+        {
+            var decks = Decks();
+            decks.Save(new DeckList { Id = "d-1", CharacterId = "chr-1", Name = "One" });
+
+            Assert.That(() => decks.ReplaceAll(null!), Throws.ArgumentNullException,
+                "null is a caller bug, and treating it as 'replace with nothing' would delete a " +
+                "roster on a mistake that costs nothing to catch");
+            Assert.That(decks.LoadAll().Count, Is.EqualTo(1));
+        }
     }
 }

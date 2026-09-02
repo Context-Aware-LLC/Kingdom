@@ -12,6 +12,11 @@ namespace Emberfall.Core.Collection
         IReadOnlyList<Character> LoadAll();
         void Save(Character character);
         void Delete(string characterId);
+
+        /// <summary>Overwrite the whole file with exactly these characters, without reading it first.
+        /// See <see cref="IDeckStore.ReplaceAll"/> for why that matters — it is the same rule and the
+        /// same single caller.</summary>
+        void ReplaceAll(IReadOnlyList<Character> characters);
     }
 
     /// <summary>
@@ -24,6 +29,22 @@ namespace Emberfall.Core.Collection
         IReadOnlyList<DeckList> LoadAll();
         void Save(DeckList deck);
         void Delete(string deckId);
+
+        /// <summary>
+        /// Overwrite the whole file with exactly these decks. <b>Does not read what is there first,
+        /// and that is the entire point.</b>
+        ///
+        /// <para><see cref="Save"/> and <see cref="Delete"/> are read-modify-write, so a file this
+        /// reader refuses — a deck written before card ids became numbers, a truncated write, a
+        /// restored backup from an older build — makes every one of them throw. That means the local
+        /// cache can BLOCK ITS OWN REPAIR: the roster sync holds the server's authoritative answer
+        /// and still cannot write it down. Measured on a device 2026-09-02, where an Android
+        /// auto-backup restored a pre-migration <c>decks.json</c> that no code path could clear.</para>
+        ///
+        /// <para>For the server-authoritative sync ONLY. Everything else edits, and an edit has to
+        /// know what it is editing.</para>
+        /// </summary>
+        void ReplaceAll(IReadOnlyList<DeckList> decks);
     }
 
     /// <summary>

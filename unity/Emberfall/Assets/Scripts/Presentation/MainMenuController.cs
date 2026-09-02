@@ -104,6 +104,57 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            ResumeThenFinishBootstrap();
+        }
+
+        /// <summary>
+        /// Pull the player's data down for a session that is ALREADY signed in, then carry on with
+        /// the boot exactly as before.
+        ///
+        /// <para><b>The defect this fixes: the syncs only ever ran on the sign-in TRANSITION.</b>
+        /// <c>SignInGateController.Succeed</c> was the one caller of the binding and of both
+        /// gateways, and it runs only when the gate was shown — that is, on the first launch after
+        /// installing, and never again. Every subsequent launch, which is the normal case, restored
+        /// nothing: no collection, so the wall rendered the full pool from an absent ownership
+        /// record; no roster, so the server's characters and decks stayed on the server. Measured on
+        /// a device 2026-09-02 — a launch with a restored session produced no <c>[SignIn]</c>,
+        /// <c>[Roster]</c> or <c>[Collection]</c> line at all.</para>
+        ///
+        /// <para><b>Binding first, then the syncs, then re-reading the account</b> — the same order
+        /// and the same reasons as the gate's own path (see <c>SignInGateController.Succeed</c>).
+        /// <c>TryBindToIdentity</c> can SWITCH the active local account, which invalidates
+        /// <c>PlayerAccount.Local</c>, so the field captured above is re-read afterwards or the rest
+        /// of this screen talks to the account the device happened to mint.</para>
+        ///
+        /// <para><b>async void is correct here and only here</b>, the same rule the gate follows: a
+        /// Unity lifecycle method cannot be awaited, and the try/catch is what keeps it honest. The
+        /// boot plate is still up for the duration, which is exactly the moment a player expects to
+        /// wait — and nothing below is skipped on a failure, because a bad network must not stop the
+        /// menu appearing.</para>
+        /// </summary>
+        private async void ResumeThenFinishBootstrap()
+        {
+            try
+            {
+                if (_signIn != null && !_signIn.IsRequired && AuthGateway.IsSignedIn)
+                {
+                    AuthSession session = AuthGateway.Provider.Current;
+                    DeviceAccounts.TryBindToIdentity(session.UserId);
+
+                    await CollectionGateway.SyncAsync(session.AccessToken);
+                    await RosterGateway.SyncAsync(session.AccessToken);
+
+                    // The bind may have switched accounts underneath the field captured in OnEnable.
+                    _account = PlayerAccount.Local;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MainMenu] could not restore this session's player data " +
+                                 $"({ex.GetType().Name}: {ex.Message}); continuing with whatever " +
+                                 "this device already had.");
+            }
+
             BeginFirstRun();
             FinishBootstrap();
         }

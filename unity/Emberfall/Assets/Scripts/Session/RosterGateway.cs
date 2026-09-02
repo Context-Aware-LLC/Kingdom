@@ -149,10 +149,29 @@ namespace Emberfall.Session
         {
             if (snapshot.Characters.Count > 0) return false;
 
-            IReadOnlyList<Character> localCharacters = PlayerAccount.Local.Roster();
+            // READING THE LOCAL ROSTER MUST NOT BE ABLE TO ABORT THE SYNC. A cache this build's
+            // reader refuses is the one that most needs replacing, and it throws here first: a
+            // pre-numeric-migration decks.json restored by Android auto-backup did exactly that on
+            // 2026-09-02, and the throw propagated out to SyncAsync, which logged "offline" and left
+            // the bad file in place for ever. Unreadable means there is nothing to adopt — fall
+            // through and let the server's answer overwrite it.
+            IReadOnlyList<Character> localCharacters;
+            IReadOnlyList<DeckList> localDecks;
+            try
+            {
+                localCharacters = PlayerAccount.Local.Roster();
+                localDecks = PlayerAccount.Local.Decks();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Roster] this device's roster will not read ({ex.GetType().Name}: " +
+                                 $"{ex.Message}); there is nothing to adopt, so the server's answer " +
+                                 "replaces it.");
+                return false;
+            }
+
             if (localCharacters.Count == 0) return false;
 
-            IReadOnlyList<DeckList> localDecks = PlayerAccount.Local.Decks();
             Debug.Log($"[Roster] the server has no characters for this account and this device has " +
                       $"{localCharacters.Count}. Uploading them rather than deleting them.");
 

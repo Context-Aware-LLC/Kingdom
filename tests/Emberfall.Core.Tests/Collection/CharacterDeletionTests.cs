@@ -188,6 +188,8 @@ namespace Emberfall.Core.Tests.Collection
                 if (++_deletes > 1) throw new IOException("disk went away mid-cascade");
                 _inner.Delete(deckId);
             }
+
+            public void ReplaceAll(IReadOnlyList<DeckList> decks) => _inner.ReplaceAll(decks);
         }
     }
 }

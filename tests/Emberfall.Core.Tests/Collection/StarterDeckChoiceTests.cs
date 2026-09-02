@@ -185,6 +185,7 @@ namespace Emberfall.Core.Tests.Collection
             public IReadOnlyList<Character> LoadAll() => Array.Empty<Character>();
             public void Save(Character character) => throw new IOException("disk went away");
             public void Delete(string characterId) { }
+            public void ReplaceAll(IReadOnlyList<Character> characters) { }
         }
     }
 }

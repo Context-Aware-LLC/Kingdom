@@ -97,6 +97,13 @@ namespace Emberfall.Core.Collection
             JsonStoreFile.Write(_filePath, CollectionJson.WriteCharacters(all));
         }
 
+        /// <summary>No <see cref="LoadAll"/> — see <see cref="IDeckStore.ReplaceAll"/>.</summary>
+        public void ReplaceAll(IReadOnlyList<Character> characters)
+        {
+            if (characters == null) throw new ArgumentNullException(nameof(characters));
+            JsonStoreFile.Write(_filePath, CollectionJson.WriteCharacters(characters));
+        }
+
         private static int IndexOf(List<Character> all, string id)
         {
             for (int i = 0; i < all.Count; i++)
@@ -158,6 +165,14 @@ namespace Emberfall.Core.Collection
             if (existing < 0) return;
             all.RemoveAt(existing);
             JsonStoreFile.Write(_filePath, CollectionJson.WriteDecks(all));
+        }
+
+        /// <summary>No <see cref="LoadAll"/> — see <see cref="IDeckStore.ReplaceAll"/>. Reading here
+        /// would reintroduce the exact deadlock this exists to break.</summary>
+        public void ReplaceAll(IReadOnlyList<DeckList> decks)
+        {
+            if (decks == null) throw new ArgumentNullException(nameof(decks));
+            JsonStoreFile.Write(_filePath, CollectionJson.WriteDecks(decks));
         }
 
         private static int IndexOf(List<DeckList> all, string id)
