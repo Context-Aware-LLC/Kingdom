@@ -466,6 +466,9 @@ namespace Emberfall.Core.Tests.Presentation
         {
             string wall = Asset("Scripts", "Presentation", "CardWall.cs");
             string controller = Asset("Scripts", "Presentation", "CollectionController.cs");
+            string styles = Asset("UI", "Collection", "collection.uss");
+            Match firstBakeCompleted = Regex.Match(controller,
+                @"(?s)private void OnFirstBakeCompleted\(\)\s*\{(?<body>.*?)\n\s*\}");
 
             Assert.Multiple(() =>
             {
@@ -488,6 +491,23 @@ namespace Emberfall.Core.Tests.Presentation
                     "A full-screen plate with no timeout is a hang with no message.");
                 Assert.That(controller, Does.Contain("_wall.BakePassCompleted -= OnFirstBakeCompleted;"),
                     "The wall outlives the first pass and raises this again on every resize.");
+                Assert.That(controller, Does.Contain("_loading.OnFadedOut += RevealScreen;"),
+                    "Screen Space Overlay rows paint above the world-space loading plate, so the "
+                    + "collection must stay hidden until the plate's fade has actually finished.");
+                Assert.That(firstBakeCompleted.Success, Is.True);
+                Assert.That(firstBakeCompleted.Groups["body"].Value,
+                    Does.Not.Contain("RevealScreen();"),
+                    "Completing the first two rows starts the plate fade; revealing here puts those "
+                    + "rows on top of the transition while it is still running.");
+                Assert.That(styles, Does.Match(
+                    @"(?s)#collection-list\s+\.unity-collection-view__item:hover\s*,\s*#collection-list\s+\.unity-list-view__item:hover\s*\{.*?background-color:\s*rgba\(0,\s*0,\s*0,\s*0\);"),
+                    "ListView's built-in item hover paints one highlight behind the complete "
+                    + "four-card row. The named-list selector must cover both UI Toolkit item "
+                    + "class generations and outrank Unity's built-in theme.");
+                Assert.That(controller, Does.Match(
+                    @"(?s)private void OnEnable\(\)\s*\{.*?_ownedScope\s*=\s*true;.*?LoadOwnership\(\);"),
+                    "Every collection entry must begin in Owned scope. A field initializer only "
+                    + "covers first construction, not a controller that is disabled and reused.");
             });
         }
 

@@ -155,6 +155,15 @@
     justify-content: flex-start;
     width: 100%;
 }
+/* ListView still paints its item :hover state when selectionType is None. One item is one
+ * four-card row here, so that default reads as a fifth interaction surface spanning unrelated
+ * cards. CardWall owns the individual tile gestures; the recycling wrapper stays invisible.
+ * The ID is deliberate: Unity's theme uses a compound selector and beat the former class-scoped
+ * override. Both item class names cover the BaseVerticalCollectionView and ListView generations. */
+#collection-list .unity-collection-view__item:hover,
+#collection-list .unity-list-view__item:hover {
+    background-color: rgba(0, 0, 0, 0);
+}
 /* The two opacities allowed on the wall, both per-CARD facts and never the wall's state — the
  * no-dimming ruling that removed .card-tile--disabled was about a full deck greying out all ~90
  * tiles at once, which neither of these can do (Sam, 2026-08-07). See

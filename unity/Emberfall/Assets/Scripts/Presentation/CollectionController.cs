@@ -214,6 +214,9 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            // OnEnable can run again on the same controller after deck editing parked browse on All.
+            // Every fresh collection entry starts from the player's cards; All remains opt-in.
+            _ownedScope = true;
             LoadOwnership();
 
             _collectionList = _root.Q<ListView>("collection-list");
@@ -435,6 +438,7 @@ namespace Emberfall.Presentation
             (string plate, string orb) = NextPlate();
             _loading = LoadingOverlay.Create(Camera.main, plate, orb);
             if (_loading == null) return;   // no camera: the wall just paints in as it bakes
+            _loading.OnFadedOut += RevealScreen;
             _loadingSince = Time.realtimeSinceStartup;
 
             // THE PLATE IS BEHIND THIS UI, ALWAYS. LoadingOverlay is world-space geometry parented
@@ -479,10 +483,8 @@ namespace Emberfall.Presentation
         private void OnFirstBakeCompleted()
         {
             if (_wall != null) _wall.BakePassCompleted -= OnFirstBakeCompleted;
-            // Revealed as the plate BEGINS its fade, not after it: the wall is finished underneath,
-            // and waiting for OnFadedOut would show a fully faded plate over a blank screen for the
-            // length of the fade.
-            RevealScreen();
+            // The wall is ready underneath, but Screen Space Overlay UI paints above this
+            // world-space plate. Keep it hidden until OnFadedOut or the first rows cover the fade.
             _loading?.NotifyReady();
         }
 
@@ -500,7 +502,6 @@ namespace Emberfall.Presentation
             _loadingSince = -1f;
             Debug.LogWarning($"[Collection] wall did not finish baking within {LoadingPlateTimeout:F0}s — "
                              + "lifting the loading plate anyway; tiles will fill in as they bake.");
-            RevealScreen();
             _loading.NotifyReady();
         }
 
@@ -509,7 +510,11 @@ namespace Emberfall.Presentation
             if (_wall != null) _wall.BakePassCompleted -= OnFirstBakeCompleted;
             // Parented to the camera, so leaving the scene takes it. Leaving only the SCREEN —
             // the document disabled under a live camera — would otherwise strand it on top.
-            if (_loading != null) Destroy(_loading.gameObject);
+            if (_loading != null)
+            {
+                _loading.OnFadedOut -= RevealScreen;
+                Destroy(_loading.gameObject);
+            }
             _loading = null;
             _loadingSince = -1f;
             // The document is reused across visits, so an invisible root would persist into the
