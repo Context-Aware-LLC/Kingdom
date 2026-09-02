@@ -129,3 +129,44 @@ create index if not exists ladder_match_p1_idx on ladder_match (p1_player_id, en
 -- no rows; the game reads the deliberately narrow Kestrel projection instead.
 alter table ladder_player enable row level security;
 alter table ladder_match enable row level security;
+
+-- A player's characters. One row per character; player_id is the account's stable id.
+--
+-- The pairing is a PERMANENT identity decision with no legal repair (Sam, 2026-07-26), so nothing
+-- updates primary_class or secondary_class — only default_deck_id and name are ever rewritten.
+-- No foreign key to account, same reasoning as entitlement_grant: insert ORDER must not be a
+-- correctness condition.
+create table if not exists character (
+  character_id     text        primary key,
+  player_id        text        not null,
+  name             text        not null,
+  primary_class    text        not null,
+  secondary_class  text        not null,
+  default_deck_id  text        not null default '',
+  created_at       timestamptz not null,
+  updated_at       timestamptz not null
+);
+
+create index if not exists character_player_idx on character (player_id);
+
+-- A player's decks. body is the deck as canonical JSON (CollectionJson.WriteDecks' element shape),
+-- NOT a row per card.
+--
+-- WHY A BLOB. Nothing server-side ever queries inside a decklist: balance is measured in house by
+-- ML bot self-play, not by mining player decks (Sam, 2026-09-01). Rows would be structure with no
+-- consumer, and CollectionJson already round-trips this shape on both sides of the wire. If a
+-- metagame projection is ever wanted, add it beside this — do not shred the blob.
+--
+-- AN ILLEGAL DECK IS STORED. Drafts are a legitimate named state; validation happens on QUEUE.
+-- Refusing a write would delete a player's work-in-progress the moment a balance patch or a spent
+-- card made it illegal.
+create table if not exists deck (
+  deck_id      text        primary key,
+  player_id    text        not null,
+  character_id text        not null,
+  body         text        not null,
+  created_at   timestamptz not null,
+  updated_at   timestamptz not null
+);
+
+create index if not exists deck_player_idx on deck (player_id);
