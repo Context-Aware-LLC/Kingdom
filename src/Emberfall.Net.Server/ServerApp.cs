@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Emberfall.Core.Collection;
 using Emberfall.Net.Server.Accounts;
 using Emberfall.Net.Server.Bots;
 using Emberfall.Net.Server.Data;
@@ -80,6 +81,16 @@ namespace Emberfall.Net.Server
         public IAccountStore? AccountStore { get; init; }
 
         /// <summary>
+        /// The characters-and-decks store (Task 2) that <c>GET /roster</c> reads. Null → the route
+        /// answers <see cref="Accounts.RosterResultStatus.Unavailable"/> rather than an empty roster,
+        /// same absence-is-visible posture as <see cref="AccountStore"/>. Populated from
+        /// <c>EMBERFALL_ACCOUNTS_DB</c> in production — the same connection string as
+        /// <see cref="AccountStore"/>, since <c>character</c> and <c>deck</c> are rows in that same
+        /// database; injected directly in tests.
+        /// </summary>
+        public IPlayerDataStore? PlayerDataStore { get; init; }
+
+        /// <summary>
         /// The append-only entitlement ledger (EF-072) — where card, pack and currency ownership
         /// actually lives. <b>Null → ownership stays UNKNOWN</b> and <see cref="AccountOwnedCounts"/>
         /// keeps handing L6 the "do not constrain" null for standard accounts, which is a normal and
@@ -137,6 +148,11 @@ namespace Emberfall.Net.Server
             IAccountStore? accountStore = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresAccountStore(accountsDb!, new SystemTimeSource());
+            // GET /roster's store — same connection as accounts, since character/deck are rows in
+            // that same database. Null-when-unconfigured mirrors accountStore exactly.
+            IPlayerDataStore? playerDataStore = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new PostgresPlayerDataStore(accountsDb!);
             IRatingStore? ratingStore = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresRatingStore(accountsDb!);
@@ -163,6 +179,7 @@ namespace Emberfall.Net.Server
                 TelemetryDrain = drain,
                 TokenVerifier = tokenVerifier,
                 AccountStore = accountStore,
+                PlayerDataStore = playerDataStore,
                 EntitlementLedger = entitlementLedger,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
@@ -367,6 +384,34 @@ namespace Emberfall.Net.Server
                     playerId = result.PlayerId,
                     email = result.Email,
                     onboarded = result.Onboarded,
+                }, statusCode: result.HttpStatus);
+            });
+
+            // GET /roster — the characters and decks read down after the handshake. Same auth
+            // pairing as /session; does NOT fire the onboarding grant, which /session already owns.
+            //
+            // Cache-Control: no-store. A roster is per-identity and changes on every character or
+            // deck save; a proxy that cached one player's would serve it to the next bearer.
+            app.MapGet("/roster", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                RosterResult result = await RosterEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                return Results.Json(new
+                {
+                    // "known" | "unauthenticated" | "unavailable". The client branches on this
+                    // string, never on the character/deck count — see RosterResultStatus.Known.
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    characters = CollectionJson.WriteCharacters(result.Roster.Characters),
+                    decks = CollectionJson.WriteDecks(result.Roster.Decks),
                 }, statusCode: result.HttpStatus);
             });
 
