@@ -32,9 +32,10 @@ namespace Emberfall.Net.Server.Accounts
         /// method for the full "why" (Fly suspend/resume killing a pooled socket).
         ///
         /// <para>PRECONDITION: every caller must be idempotent, because a retry re-runs the whole
-        /// unit. Every operation here is — both saves are upserts and the delete is a plain filtered
-        /// delete — so this store satisfies it. Do not add a non-idempotent operation without
-        /// re-reading this comment.</para>
+        /// unit. Every operation here is — both saves are upserts, both deletes are filtered
+        /// deletes, and <see cref="DeleteCharacterAsync"/> wraps its two statements in a transaction
+        /// so a retry after a half-applied attempt finds nothing left to do. Do not add a
+        /// non-idempotent operation without re-reading this comment.</para>
         /// </summary>
         private async Task<T> WithConnectionAsync<T>(
             Func<NpgsqlConnection, Task<T>> work, CancellationToken ct)
@@ -173,6 +174,53 @@ namespace Emberfall.Net.Server.Accounts
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, deckId));
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
                 return await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false) != 0;
+            }, ct);
+
+        /// <summary>
+        /// The character and its decks, in ONE transaction. Two statements outside a transaction
+        /// would leave a window where the decks are gone and the character is not — and, on the
+        /// retry this store is built to survive, could delete the decks twice while the character
+        /// delete never lands at all.
+        ///
+        /// <para><b>The deck delete filters on <c>player_id</c> as well as <c>character_id</c>,</b>
+        /// even though it runs only after this player's own character row was matched. The
+        /// redundancy is the point: <c>character_id</c> on <c>deck</c> is a plain text column with
+        /// no foreign key, so nothing but this predicate stops a row another player wrote under the
+        /// same character id from being swept up.</para>
+        ///
+        /// <para>Idempotent, as <see cref="WithConnectionAsync"/> requires: a second run finds no
+        /// character row, deletes nothing, and returns false.</para>
+        /// </summary>
+        public Task<bool> DeleteCharacterAsync(string playerId, string characterId, CancellationToken ct = default)
+            => WithConnectionAsync(async conn =>
+            {
+                await using var tx = await conn.BeginTransactionAsync(ct).ConfigureAwait(false);
+
+                await using (var chars = new NpgsqlCommand(
+                    "delete from character where character_id=$1 and player_id=$2", conn, tx))
+                {
+                    chars.Parameters.Add(P(NpgsqlDbType.Text, characterId));
+                    chars.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                    if (await chars.ExecuteNonQueryAsync(ct).ConfigureAwait(false) == 0)
+                    {
+                        // Nothing of this player's to delete. Roll back rather than commit an empty
+                        // transaction, and never touch the decks — a character id this player does
+                        // not own must not reach the cascade.
+                        await tx.RollbackAsync(ct).ConfigureAwait(false);
+                        return false;
+                    }
+                }
+
+                await using (var decks = new NpgsqlCommand(
+                    "delete from deck where character_id=$1 and player_id=$2", conn, tx))
+                {
+                    decks.Parameters.Add(P(NpgsqlDbType.Text, characterId));
+                    decks.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                    await decks.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+                }
+
+                await tx.CommitAsync(ct).ConfigureAwait(false);
+                return true;
             }, ct);
 
         private static NpgsqlParameter P(NpgsqlDbType type, object? value)

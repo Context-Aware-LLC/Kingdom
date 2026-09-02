@@ -58,6 +58,20 @@ namespace Emberfall.Net.Server.Accounts
 
         /// <summary>True if a deck was removed; false if this player has no such deck.</summary>
         Task<bool> DeleteDeckAsync(string playerId, string deckId, CancellationToken ct = default);
+
+        /// <summary>
+        /// Remove a character <b>and every deck bound to it</b>. True if the character existed for
+        /// this player; false if it did not.
+        ///
+        /// <para><b>The cascade is not a convenience.</b> Deleting a character deletes its decks is
+        /// a ruling, not an implementation detail — a deck cannot be played without its character
+        /// (L5), so keeping one preserves something unusable, and the client's confirm dialog names
+        /// the count it is about to destroy. Doing it as one call rather than a character delete
+        /// followed by N deck deletes is what stops a drop between them leaving decks bound to a
+        /// character that no longer exists: those would read back down on the next sync and appear
+        /// in a chooser with nothing to open them.</para>
+        /// </summary>
+        Task<bool> DeleteCharacterAsync(string playerId, string characterId, CancellationToken ct = default);
     }
 
     /// <summary>In-memory implementation — the default for tests and single-box dev. Held to the
@@ -152,6 +166,35 @@ namespace Emberfall.Net.Server.Accounts
                 if (removed)
                     _deckOwner.Remove(deckId);
                 return Task.FromResult(removed);
+            }
+        }
+
+        public Task<bool> DeleteCharacterAsync(string playerId, string characterId, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                bool removed = _characters.TryGetValue(playerId, out var bag) && bag.Remove(characterId);
+                if (!removed)
+                    return Task.FromResult(false);
+
+                _characterOwner.Remove(characterId);
+
+                // The cascade, inside the same lock, so no reader ever sees a deck whose character
+                // has already gone. Postgres gets the same atomicity from one transaction.
+                if (_decks.TryGetValue(playerId, out var deckBag))
+                {
+                    var bound = deckBag.Values
+                        .Where(d => string.Equals(d.CharacterId, characterId, StringComparison.Ordinal))
+                        .Select(d => d.Id)
+                        .ToList();
+                    foreach (string deckId in bound)
+                    {
+                        deckBag.Remove(deckId);
+                        _deckOwner.Remove(deckId);
+                    }
+                }
+
+                return Task.FromResult(true);
             }
         }
     }

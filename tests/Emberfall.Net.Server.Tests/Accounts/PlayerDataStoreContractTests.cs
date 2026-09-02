@@ -172,6 +172,84 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That(p1Deck.Name, Is.EqualTo("Aggro"));
             Assert.That(p1Deck.CountOf(1001), Is.EqualTo(2));
         }
+
+        [Test]
+        public async Task Deleting_A_Character_Deletes_The_Decks_Bound_To_It()
+        {
+            await Store.SaveCharacterAsync("p1", NewCharacter());
+            await Store.SaveDeckAsync("p1", NewDeck("d1"));
+            await Store.SaveDeckAsync("p1", NewDeck("d2"));
+
+            bool deleted = await Store.DeleteCharacterAsync("p1", "c1");
+
+            Assert.That(deleted, Is.True);
+            PlayerRoster roster = await Store.ReadAsync("p1");
+            Assert.That(roster.Characters, Is.Empty);
+            Assert.That(roster.Decks, Is.Empty,
+                "a deck cannot be played without its character, so keeping one preserves something " +
+                "unusable — and it would read straight back down on the next GET /roster");
+        }
+
+        [Test]
+        public async Task Deleting_A_Character_Leaves_Another_Characters_Decks_Alone()
+        {
+            await Store.SaveCharacterAsync("p1", NewCharacter("c1"));
+            await Store.SaveCharacterAsync("p1", new Character(
+                "c2", "Bryn", CardClass.VERDANT, CardClass.NIGHTVEIL));
+            await Store.SaveDeckAsync("p1", NewDeck("d1", "c1"));
+            await Store.SaveDeckAsync("p1", NewDeck("d2", "c2"));
+
+            await Store.DeleteCharacterAsync("p1", "c1");
+
+            PlayerRoster roster = await Store.ReadAsync("p1");
+            Assert.That(roster.Characters.Count, Is.EqualTo(1));
+            Assert.That(roster.Characters[0].Id, Is.EqualTo("c2"));
+            Assert.That(roster.Decks.Count, Is.EqualTo(1), "the cascade is scoped to ONE character");
+            Assert.That(roster.Decks[0].Id, Is.EqualTo("d2"));
+        }
+
+        [Test]
+        public async Task Deleting_An_Unknown_Character_Is_False()
+            => Assert.That(await Store.DeleteCharacterAsync("p1", "no-such-character"), Is.False);
+
+        // The delete that must not reach across the identity boundary. character_id on `deck` is a
+        // plain text column with no foreign key, so nothing but the player_id predicate stops the
+        // cascade from sweeping up a row another player wrote under the same character id.
+        [Test]
+        public async Task One_Player_Cannot_Delete_Anothers_Character_Or_Its_Decks()
+        {
+            await Store.SaveCharacterAsync("p1", NewCharacter("c1"));
+            await Store.SaveDeckAsync("p1", NewDeck("d1", "c1"));
+
+            bool deleted = await Store.DeleteCharacterAsync("p2", "c1");
+
+            Assert.That(deleted, Is.False,
+                "character_id is globally unique, so the delete must ALSO match on player_id");
+            PlayerRoster victim = await Store.ReadAsync("p1");
+            Assert.That(victim.Characters.Count, Is.EqualTo(1));
+            Assert.That(victim.Decks.Count, Is.EqualTo(1), "and the cascade must not have run either");
+        }
+
+        // p2 owns a character with the SAME id as p1's deck binding. The cascade must delete only
+        // p2's own rows — the pair (character_id, player_id), never character_id alone.
+        [Test]
+        public async Task The_Cascade_Does_Not_Cross_Players_On_A_Shared_Character_Id()
+        {
+            await Store.SaveCharacterAsync("p1", NewCharacter("c1"));
+            await Store.SaveDeckAsync("p1", NewDeck("d1", "c1"));
+
+            // p2 cannot own "c1" (the id is taken), so p2 gets their own character and a deck that
+            // points at p1's character id — the shape a forged or buggy client would produce.
+            await Store.SaveCharacterAsync("p2", new Character(
+                "c2", "Bryn", CardClass.VERDANT, CardClass.NIGHTVEIL));
+            await Store.SaveDeckAsync("p2", NewDeck("d2", "c1"));
+
+            await Store.DeleteCharacterAsync("p2", "c2");
+
+            PlayerRoster victim = await Store.ReadAsync("p1");
+            Assert.That(victim.Characters.Count, Is.EqualTo(1), "p1's character is not p2's to delete");
+            Assert.That(victim.Decks.Count, Is.EqualTo(1), "nor p1's deck, whatever p2's rows point at");
+        }
     }
 
     /// <summary>The in-memory implementation against the shared contract. Always runs.</summary>

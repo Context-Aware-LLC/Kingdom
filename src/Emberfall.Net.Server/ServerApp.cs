@@ -481,6 +481,29 @@ namespace Emberfall.Net.Server
                 }, statusCode: result.HttpStatus);
             });
 
+            // DELETE /characters/{id} — remove a character AND every deck bound to it, in one
+            // atomic store call. Same auth pairing as /session and /roster. Without this route a
+            // character deleted on the device came straight back down on the next GET /roster,
+            // decks and all — see CharacterDeleteEndpoint.
+            app.MapDelete("/characters/{id}", async (HttpContext context, string id) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                CharacterDeleteResult result = await CharacterDeleteEndpoint.DeleteAsync(
+                    bearer, id, cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore,
+                    context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "deleted" | "notfound" | "unauthenticated" | "unavailable" | "invalidid".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                }, statusCode: result.HttpStatus);
+            });
+
             // PUT /decks/{id} — upsert a deck. Same auth pairing as /session and /roster. DECKS ARE
             // STORED, NEVER REFUSED for their CONTENTS — see DeckWriteEndpoint for why an illegal
             // deck is still saved. What IS refused is a write that cannot be ATTRIBUTED: a body that
