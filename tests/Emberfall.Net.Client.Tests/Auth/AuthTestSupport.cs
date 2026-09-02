@@ -27,7 +27,11 @@ namespace Emberfall.Net.Client.Tests.Auth
     {
         private readonly Queue<AuthHttpResponse> _replies = new Queue<AuthHttpResponse>();
 
-        public List<(string Url, string Body)> Requests { get; } = new List<(string, string)>();
+        /// <summary>Headers ride along because for <c>GET /collection</c> the bearer IS the request —
+        /// a call that reached the right URL without it would look identical here and be a different
+        /// call entirely.</summary>
+        public List<(string Url, string? Body, IReadOnlyList<KeyValuePair<string, string>> Headers)>
+            Requests { get; } = new List<(string, string?, IReadOnlyList<KeyValuePair<string, string>>)>();
 
         public FakeAuthHttp Reply(int status, string body)
         {
@@ -46,18 +50,26 @@ namespace Emberfall.Net.Client.Tests.Auth
             string jsonBody,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
-            => Send(url, jsonBody);
+            => Send(url, jsonBody, headers);
+
+        /// <summary>Recorded with a null body, which is what tells a test the GET went out as a GET.</summary>
+        public Task<AuthHttpResponse> GetAsync(
+            string url,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default)
+            => Send(url, null, headers);
 
         public Task<AuthHttpResponse> PutJsonAsync(
             string url,
             string jsonBody,
             IReadOnlyList<KeyValuePair<string, string>> headers,
             CancellationToken cancellationToken = default)
-            => Send(url, jsonBody);
+            => Send(url, jsonBody, headers);
 
-        private Task<AuthHttpResponse> Send(string url, string jsonBody)
+        private Task<AuthHttpResponse> Send(
+            string url, string? jsonBody, IReadOnlyList<KeyValuePair<string, string>>? headers)
         {
-            Requests.Add((url, jsonBody));
+            Requests.Add((url, jsonBody, headers ?? new List<KeyValuePair<string, string>>()));
             if (_replies.Count == 0)
                 throw new InvalidOperationException("FakeAuthHttp ran out of scripted replies for " + url);
             return Task.FromResult(_replies.Dequeue());

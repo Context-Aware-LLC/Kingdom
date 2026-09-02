@@ -682,15 +682,14 @@ namespace Emberfall.Net.Server.Transport
         }
 
         /// <summary>16 hex bytes (128 bits) of SHA-256. Same shape as <see cref="AccountId"/>'s value.
-        /// Used to hash the Supabase subject and email before they touch a log line (§4.5).</summary>
-        private static string HashCredential(string value)
-        {
-            Span<byte> digest = stackalloc byte[32];
-            SHA256.HashData(Encoding.UTF8.GetBytes(value), digest);
-            var sb = new StringBuilder(32);
-            for (int i = 0; i < 16; i++) sb.Append(digest[i].ToString("x2"));
-            return sb.ToString();
-        }
+        /// Used to hash the Supabase subject and email before they touch a log line (§4.5).
+        ///
+        /// <para><b>Moved to <see cref="CredentialHash"/> and delegated here (2026-09-01), not
+        /// copied.</b> <c>GET /collection</c> authenticates the same player through the same
+        /// <c>IAccountStore</c> lookup, and the subject hash IS the lookup key — so a second
+        /// implementation that ever drifted from this one would resolve one human to two accounts,
+        /// one holding their collection and one empty, silently.</para></summary>
+        private static string HashCredential(string value) => CredentialHash.Of(value);
 
         /// <summary>A WebSocket close reason is capped at 123 UTF-8 bytes (RFC 6455). A validator reason
         /// naming a card can approach that, so it is truncated defensively — the close still carries the

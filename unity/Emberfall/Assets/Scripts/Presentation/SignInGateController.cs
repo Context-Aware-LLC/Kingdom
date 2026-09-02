@@ -466,16 +466,24 @@ namespace Emberfall.Presentation
         /// <see cref="DeviceAccounts.TryBindToIdentity"/> would sign the player in and then hand them
         /// somebody else's scope, or a blank one, with nothing logged and nothing to catch it.</para>
         /// </summary>
-        private void Succeed()
+        private async void Succeed()
         {
-            // Bind BEFORE the continuation: AccountCreateController's next act is to read
-            // PlayerAccount.Local to decide whether a display name is still owed, and that read has to
-            // land in the account this identity actually owns.
+            // Bind BEFORE anything else: both the sync below and AccountCreateController's first act
+            // read PlayerAccount.Local, and both have to land in the account this identity owns.
             DeviceAccounts.TryBindToIdentity(_auth.Current.UserId);
 
-            _modal?.AddToClassList("mm-modal--hidden");
             Action done = _onSignedIn;
             _onSignedIn = null;   // the continuation runs once, never on a later re-open
+
+            // Then pull the collection down, still behind the modal. This is the half that makes a
+            // reinstall recoverable: binding finds the folder, this is what puts anything back in it.
+            // It cannot fail the sign-in — CollectionGateway swallows every outcome into a status and
+            // leaves the local record alone on all of them but one — so there is no branch here.
+            SetBusy(true, "Restoring your collection…");
+            await CollectionGateway.SyncAsync(_auth.Current.AccessToken);
+            SetBusy(false, null);
+
+            _modal?.AddToClassList("mm-modal--hidden");
             done?.Invoke();
         }
 

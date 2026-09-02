@@ -56,6 +56,32 @@ namespace Emberfall.Core.Tests.Presentation
                 + "data loss this replaced, and reports nothing.");
         }
 
+        /// <summary>
+        /// The one path also pulls the collection down, between binding and handing control on.
+        ///
+        /// <para><b>Binding finds the folder; this is what puts anything back in it.</b> They are
+        /// separate halves of the same promise and they fail identically — a sign-in that binds but
+        /// never syncs lands the player in the correct, empty scope, which renders as <i>owns
+        /// everything</i> and reports nothing. Order matters for the same reason the binding's does:
+        /// the sync writes through <c>PlayerAccount.Local</c>, so a sync before the bind writes the
+        /// server's answer into whichever scope the device happened to mint.</para>
+        ///
+        /// <para><b>RETIREMENT TRIGGER:</b> if the collection stops being synced at sign-in — moved
+        /// to app start, to the collection screen, or to a push — delete this one assertion with that
+        /// change. The other two pin the binding and outlive it.</para>
+        /// </summary>
+        [Test]
+        public void The_one_path_syncs_the_collection_between_binding_and_handing_control_on()
+        {
+            Assert.That(Gate(), Does.Match(
+                @"(?s)DeviceAccounts\.TryBindToIdentity\([^)]*\);.*?"
+                + @"CollectionGateway\.SyncAsync\(.*?done\?\.Invoke\(\)"),
+                "The gate must sync the collection after binding and before invoking the "
+                + "continuation. Without the sync a reinstalled player reaches the right identity and "
+                + "an empty local scope, which the collection wall renders as owning every card — the "
+                + "exact opposite of the truth, with nothing anywhere reporting a problem.");
+        }
+
         /// <summary>The one path binds, and binds before it hands control on — the continuation's
         /// first act is to read <c>PlayerAccount.Local</c> to decide whether a display name is still
         /// owed, and that read has to land in the bound account.</summary>

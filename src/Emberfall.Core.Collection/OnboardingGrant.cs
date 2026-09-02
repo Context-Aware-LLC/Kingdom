@@ -31,8 +31,10 @@ namespace Emberfall.Core.Collection
     /// <para><b>This key used to be the absence of an ownership record</b>, back when the client's
     /// <c>owned-cards.json</c> was the authority — see <see cref="IOwnedCardStore"/>, whose null still
     /// means "ownership unknown" and still governs what an unsynced client shows.
-    /// <see cref="IsDue"/> remains for that client-local question and is no longer what decides a
-    /// grant. The crash argument is unchanged in substance and now rests on the batch rather than on
+    /// A client-side <c>IsDue</c> answered that question until slice 3 gave the client a real
+    /// projection to mirror; it was deleted then, per its own retirement trigger, rather than left in
+    /// this assembly looking like a grant check.
+    /// The crash argument is unchanged in substance and now rests on the batch rather than on
     /// write ordering: an entitlement batch is all-or-nothing, so a crash mid-grant leaves the account
     /// un-granted and the next resolve simply lands it. That is still why <see cref="Resolve"/>
     /// returns everything at once instead of a grant per step.</para>
@@ -89,25 +91,6 @@ namespace Emberfall.Core.Collection
         /// <see cref="BoosterPack.All"/> still builds retail packs on the default odds.</para>
         /// </summary>
         public static readonly PackRarityOdds StarterOdds = new PackRarityOdds(550, 340, 85, 25);
-
-        /// <summary>
-        /// Does this device hold no ownership record at all? True exactly when
-        /// <see cref="IOwnedCardStore.Load"/> returns null.
-        ///
-        /// <para><b>This is no longer what decides a grant, and must not be used as one.</b> The
-        /// server owns that decision and keys it on the ledger transaction id <c>signup:{playerId}</c>
-        /// (see the type remarks). What survives here is the client-local question — "has this device
-        /// ever synced a collection?" — whose answer still selects between showing the full pool and
-        /// constraining to a real one. RETIREMENT TRIGGER: the commit that makes the client mirror the
-        /// server's projection (spec slice 3) decides whether this method has any caller left; if it
-        /// does not, delete it rather than leaving a plausible-looking grant check in the collection
-        /// assembly.</para>
-        /// </summary>
-        public static bool IsDue(IOwnedCardStore store)
-        {
-            if (store == null) throw new ArgumentNullException(nameof(store));
-            return store.Load() == null;
-        }
 
         /// <summary>
         /// The pack a starter pack is: launch pairing, <see cref="StarterPackCardCount"/> cards,

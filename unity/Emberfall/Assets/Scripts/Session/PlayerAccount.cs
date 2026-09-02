@@ -199,6 +199,26 @@ namespace Emberfall.Session
         public IOwnedCardCounts OwnedCards() => _ownedCards.Load();
 
         /// <summary>
+        /// Replace this account's ownership record with what the server just said it owns.
+        ///
+        /// <para><b>Only <see cref="CollectionGateway"/> may call this, and only on a Synced answer.</b>
+        /// Since 2026-09-01 this file is a CACHE of the entitlement ledger, not the record — so the
+        /// only legitimate writer is the one holding a server answer. Writing an empty record from any
+        /// other source asserts "this player owns nothing" and turns every deck on the device into a
+        /// draft; the local game has no way to know that, which is why there is no other caller and no
+        /// convenience overload that mints one.</para>
+        ///
+        /// <para>An empty <paramref name="owned"/> is legal and meaningful — the server does say
+        /// "you own nothing" — which is exactly why the caller, not this method, decides whether the
+        /// answer was real. See <see cref="IOwnedCardStore"/> for the absent/empty distinction.</para>
+        /// </summary>
+        public void SaveOwnedCards(OwnedCardCounts owned)
+        {
+            if (owned == null) throw new ArgumentNullException(nameof(owned));
+            _ownedCards.Save(owned);
+        }
+
+        /// <summary>
         /// The roster panel's rows for one character (<c>DeckQuery.ForCharacter</c>) — default first,
         /// then stored order, each carrying its queue-eligibility. One disk read for both files.
         ///

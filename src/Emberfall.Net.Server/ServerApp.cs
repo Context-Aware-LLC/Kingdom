@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
@@ -284,6 +286,13 @@ namespace Emberfall.Net.Server
                 ? null
                 : new OnboardingGrantService(cfg.EntitlementLedger, db, time);
 
+            // Only GET /collection reads this today, and only for the wallet half of its reply. It is
+            // constructed here rather than inside the route so that slice 5's purchase endpoints get
+            // the same instance rather than minting a second one over the same ledger.
+            EconomyService? economy = cfg.EntitlementLedger is null
+                ? null
+                : new EconomyService(cfg.EntitlementLedger, time);
+
             var gate = new MatchGate(
                 cfg.Options,
                 time,
@@ -329,6 +338,52 @@ namespace Emberfall.Net.Server
                     ratingSystem = "elo",
                     entries,
                 });
+            });
+
+            // GET /collection — what the signed-in player owns, read down from the entitlement
+            // ledger. This is the wire that makes a reinstall recoverable: the ledger has been the
+            // authority since 2026-09-01 and the client had no way to read it, so a player who signed
+            // back into the right identity still landed on an empty local scope. See
+            // CollectionEndpoint for the auth pairing and why it fires the onboarding grant.
+            //
+            // Cache-Control: no-store. A collection is per-identity and changes on every pack open;
+            // a proxy that cached one player's would serve it to the next bearer.
+            app.MapGet("/collection", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                CollectionResult result = await CollectionEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, cfg.EntitlementLedger,
+                    economy, onboarding, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                // The card list is an OBJECT keyed by card id, not an array of pairs: the client's
+                // reader (AuthJson.TryReadNestedObject) reads a flat object of scalars and skips
+                // nested structure whole, so an array of {id, copies} would decode to nothing.
+                var cards = new Dictionary<string, long>(result.Cards.Count);
+                foreach (var row in result.Cards)
+                    cards[row.Key.ToString(CultureInfo.InvariantCulture)] = row.Value;
+
+                return Results.Json(new
+                {
+                    // "known" | "unconstrained" | "unauthenticated" | "unavailable" — the client
+                    // branches on this string, never on the card count, because an empty collection
+                    // and an unknown one are different answers that would otherwise look identical.
+                    ownership = result.Status.ToString().ToLowerInvariant(),
+                    playerId = result.PlayerId,
+                    cards,
+                    wallet = new
+                    {
+                        gold = result.Wallet.Gold,
+                        gems = result.Wallet.Gems,
+                        shards = result.Wallet.Shards,
+                    },
+                }, statusCode: result.HttpStatus);
             });
 
             app.Map("/ws", async context =>

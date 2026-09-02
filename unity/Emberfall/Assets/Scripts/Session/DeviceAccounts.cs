@@ -172,6 +172,9 @@ namespace Emberfall.Session
             // The Supabase session is stored per local account (EF-074e), so a switch that left the
             // provider cached would hand seat two seat one's sign-in.
             AuthGateway.Invalidate();
+            // The sync writes into PlayerAccount.Local, which is scoped to the signed-in account — a
+            // gateway that outlived a switch would write one player's collection into another's folder.
+            CollectionGateway.Invalidate();
         }
 
         /// <summary>

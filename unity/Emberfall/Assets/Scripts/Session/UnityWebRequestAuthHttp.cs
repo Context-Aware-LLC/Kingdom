@@ -47,6 +47,15 @@ namespace Emberfall.Session
             CancellationToken cancellationToken = default)
             => SendJsonAsync(UnityWebRequest.kHttpVerbPUT, url, jsonBody, headers, cancellationToken);
 
+        /// <summary>The one non-Supabase call on this transport: <c>GET /collection</c> off Emberfall's
+        /// own server. A null body is what distinguishes it — <c>UnityWebRequest</c> will happily
+        /// attach an upload handler to a GET, and some proxies drop the request when it does.</summary>
+        public Task<AuthHttpResponse> GetAsync(
+            string url,
+            IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default)
+            => SendJsonAsync(UnityWebRequest.kHttpVerbGET, url, null, headers, cancellationToken);
+
         private Task<AuthHttpResponse> SendJsonAsync(
             string verb,
             string url,
@@ -61,10 +70,15 @@ namespace Emberfall.Session
             {
                 request = new UnityWebRequest(url, verb)
                 {
-                    uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody ?? "{}")),
                     downloadHandler = new DownloadHandlerBuffer(),
                     timeout = _timeoutSeconds,
                 };
+
+                // A null body means GET. Attaching an UploadHandlerRaw anyway sends a
+                // Content-Length on a request that has no entity, which some proxies reject
+                // outright — so the handler is omitted rather than given an empty buffer.
+                if (jsonBody != null)
+                    request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
 
                 if (headers != null)
                     foreach (var header in headers)
