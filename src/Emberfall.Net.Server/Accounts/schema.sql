@@ -52,7 +52,14 @@ alter table account add column if not exists kind text not null default 'standar
 create table if not exists entitlement_grant (
   external_txn_id  text        primary key,  -- globally-unique; a replayed receipt conflicts here
   player_id        text        not null,
-  item             text        not null,     -- pack_core | gold | dust | card_<id> | ...
+  -- Item ids are OWNED BY THE CODE, not by this comment; the constants are canonical and this line
+  -- has drifted from them once already (it said card_<id> while the code wrote card:). Shapes today:
+  --   card:<numeric card id>        BoosterPackGrantService.CardItemPrefix
+  --   pack.<expansion>              BoosterPack.Id — retail, saleable
+  --   pack.<expansion>.starter      BoosterPack.Id with StarterSku — granted at signup, never sold
+  --   pack_opened:<pack id>         completion marker; pack_seed:<pack id> the replayable roll seed
+  --   gold | gems | shards          EconomyItems
+  item             text        not null,
   qty              bigint      not null,      -- signed: > 0 grant, < 0 refund/clawback
   source           text        not null,      -- play_billing | apple | web | promo | signup | refund | ...
   created_at       timestamptz not null

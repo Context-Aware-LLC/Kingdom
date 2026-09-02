@@ -20,15 +20,22 @@ namespace Emberfall.Core.Collection
     /// server resolves the opens (ADR-0004: the client never speculates one), and both sides get the
     /// same answer from the same card database.</para>
     ///
-    /// <para><b>Account-level and once only, keyed on the absence of an ownership record.</b> There
-    /// is no first-run flag and deliberately no new facet file: <see cref="IOwnedCardStore.Load"/>
-    /// returning null already means <i>ownership unknown</i>, which is precisely "nothing has ever
-    /// granted this account cards". Writing the record is what discharges the grant. A player who
-    /// reduces their entire collection to shards holds an <i>empty but present</i> record and is not
-    /// re-granted, which is the same distinction L6 already turns on. A crash between opening the
-    /// packs and writing the record leaves the account un-granted and it simply happens again — the
-    /// one ordering that has no half-granted state, and the reason <see cref="Resolve"/> returns
-    /// everything at once instead of a grant per step.</para>
+    /// <para><b>Account-level and once only, keyed on the ledger transaction id
+    /// <c>signup:{playerId}</c></b> (2026-09-01; spec <c>docs/dev-docs/specs/card-ownership.md</c>,
+    /// slice 1). <c>OnboardingGrantService</c> writes the whole grant as one atomic entitlement batch
+    /// under that id, so a replay conflicts on the derived row keys and writes nothing — the grant is
+    /// attempted on every account resolve and there is deliberately no due-check for two resolves to
+    /// race. A player who reduces their entire collection to shards is still never re-granted, because
+    /// the ledger keeps the original grant rows forever: a zero balance is not an absent grant.</para>
+    ///
+    /// <para><b>This key used to be the absence of an ownership record</b>, back when the client's
+    /// <c>owned-cards.json</c> was the authority — see <see cref="IOwnedCardStore"/>, whose null still
+    /// means "ownership unknown" and still governs what an unsynced client shows.
+    /// <see cref="IsDue"/> remains for that client-local question and is no longer what decides a
+    /// grant. The crash argument is unchanged in substance and now rests on the batch rather than on
+    /// write ordering: an entitlement batch is all-or-nothing, so a crash mid-grant leaves the account
+    /// un-granted and the next resolve simply lands it. That is still why <see cref="Resolve"/>
+    /// returns everything at once instead of a grant per step.</para>
     ///
     /// <para><b>Why the packs are not seeded to the character's classes.</b> Sam weighed both and
     /// ruled unseeded on 2026-08-12. The grant fires once per <i>account</i>, while a class pairing
@@ -84,8 +91,17 @@ namespace Emberfall.Core.Collection
         public static readonly PackRarityOdds StarterOdds = new PackRarityOdds(550, 340, 85, 25);
 
         /// <summary>
-        /// Is this account owed the grant? True exactly when it has no ownership record at all.
-        /// See the type remarks: absent means never granted, empty means granted then spent.
+        /// Does this device hold no ownership record at all? True exactly when
+        /// <see cref="IOwnedCardStore.Load"/> returns null.
+        ///
+        /// <para><b>This is no longer what decides a grant, and must not be used as one.</b> The
+        /// server owns that decision and keys it on the ledger transaction id <c>signup:{playerId}</c>
+        /// (see the type remarks). What survives here is the client-local question — "has this device
+        /// ever synced a collection?" — whose answer still selects between showing the full pool and
+        /// constraining to a real one. RETIREMENT TRIGGER: the commit that makes the client mirror the
+        /// server's projection (spec slice 3) decides whether this method has any caller left; if it
+        /// does not, delete it rather than leaving a plausible-looking grant check in the collection
+        /// assembly.</para>
         /// </summary>
         public static bool IsDue(IOwnedCardStore store)
         {

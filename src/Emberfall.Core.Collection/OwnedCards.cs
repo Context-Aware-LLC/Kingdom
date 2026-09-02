@@ -72,13 +72,20 @@ namespace Emberfall.Core.Collection
     /// the full-pool alpha the game runs today. An <i>empty but present</i> record is a different thing
     /// and means what it says: this player owns nothing, and every deck they hold is a draft.</para>
     ///
-    /// <para><b>The absence is also the once-only key for the starter grant</b> (Sam, 2026-08-12 —
-    /// <see cref="OnboardingGrant"/>). What a new account starts out owning is no longer an open product
-    /// decision, but the answer still does not live here: this interface stores a record, it does not
-    /// decide one. <see cref="OnboardingGrant.IsDue"/> reads the null, and the Save that follows is what
-    /// marks the account granted — so there is no first-run flag and no extra facet file. Note the
-    /// consequence: an <i>empty but present</i> record is a granted account that spent everything, and is
-    /// correctly never re-granted, while an absent one is granted on sight.</para>
+    /// <para><b>The once-only key for the starter grant no longer lives here</b> (2026-09-01; spec
+    /// <c>docs/dev-docs/specs/card-ownership.md</c>, slice 1). It used to be this record's absence:
+    /// <see cref="OnboardingGrant.IsDue"/> read the null and the Save that followed marked the account
+    /// granted. With the server's entitlement ledger as the authority, the key is the ledger
+    /// transaction id <c>signup:{playerId}</c> — a replay writes nothing, so the grant is attempted on
+    /// every account resolve and lands exactly once.</para>
+    ///
+    /// <para>The distinction that key was drawing survives and is stronger for the move.
+    /// <i>Granted then spent</i> is still never re-granted, now because the ledger keeps the original
+    /// grant rows forever: a balance falling to zero cannot be mistaken for never having received one,
+    /// and no convention about empty-versus-absent files has to be honoured by every future writer.
+    /// <b>What has NOT changed is this record's own null</b> — it still means "ownership unknown, do
+    /// not constrain", every consumer still depends on that, and it is the reason a client that has
+    /// never synced shows the full pool rather than an empty collection.</para>
     ///
     /// <para><b>No Delete.</b> Same shape as <see cref="IProfileStore"/> and for the same reason: there
     /// is one record per scope, so there is nothing to enumerate, and clearing it is a Save of an empty
