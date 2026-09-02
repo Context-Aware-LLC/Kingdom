@@ -47,13 +47,40 @@
     background-color: rgba(11, 14, 19, 0.42);
 }
 
+/* ---------- Command assembly ----------
+ * Phase one of the character-led lobby: navigation owns the left third and the right side remains
+ * a cinematic stage. A selected character can be added to that stage later without moving any of
+ * today's controls. The command field itself stays clear so the backdrop remains the page; the
+ * full-material controls provide the mass until the later character-stage art arrives. */
+.mm-command {
+    position: absolute;
+    left: 11%;
+    top: 14%;
+    bottom: 12%;
+    width: 460px;
+    flex-shrink: 0;
+    align-items: stretch;
+    justify-content: center;
+    padding: 0;
+    background-color: rgba(8, 11, 16, 0);
+    opacity: 1;
+    translate: 0 0;
+    transition-property: opacity, translate;
+    transition-duration: 0.36s;
+    transition-timing-function: ease-out;
+}
+.mm-root--entering .mm-command {
+    opacity: 0;
+    translate: -32px 0;
+}
+
 /* ---------- Brand ---------- */
 .mm-brand {
     align-items: center;
     /* 24dp, not --space-16's 64dp. 64 was authored when the panel scaled by pixel count and the
        column had far more vertical room; at referenceDpi 160 it was 64 of the 411dp the whole
        screen gets. See the budget note on .mm-menu (#249). */
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-8);
 }
 /* 72px HARDCODED was the last survivor of the pre-refDpi-160 authoring, and it is the same
    artifact the margin note above records: at referenceDpi 160 one authored px is one Android dp,
@@ -62,75 +89,76 @@
    other. It was also a raw px, so it was the one piece of type on this screen that did NOT step
    with the screen classes. Now a token, and part of the run. */
 .mm-wordmark {
-    font-size: var(--type-wordmark);
+    font-size: 58px;
     -unity-font-style: bold;
-    color: var(--ink-1);
-    letter-spacing: 4px;
+    color: rgb(244, 239, 228);
+    letter-spacing: 6px;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(11, 14, 19, 0.9);
 }
 .mm-tagline {
     font-size: var(--type-h2);
-    color: var(--accent);
+    color: rgb(238, 168, 67);
     margin-top: var(--space-2);
-    letter-spacing: 2px;
+    letter-spacing: 3px;
 }
 
-/* ---------- Menu column ----------
- * One carved control, not five floating buttons. The column is a single slab with a
- * dimmed-accent frame and rounded corners; the buttons are slats that touch edge-to-edge
- * and clip to the group's rounded corners (overflow: hidden). A dark hairline between
- * slats reads as a groove cut into the stone. (Version A — segmented tablet.)
- */
+/* ---------- Menu column ---------- */
 .mm-menu {
     align-items: stretch;
-    min-width: 300px;
-    /* flex-shrink:0 IS LOAD-BEARING, and its absence deleted two buttons from the front door.
-       At referenceDpi 160 a 1080-tall landscape panel is 411dp. The column asked for ~432dp
-       (96 padding + ~112 brand + 64 brand margin + 4 slats x 64), so this group -- the only
-       shrinkable thing in the column -- absorbed the whole ~117dp overflow, and `overflow: hidden`
-       below then clipped the last two slats to nothing. Store and Leaderboards were in the UXML,
-       wired in the controller, laid out, and invisible, with no warning anywhere. Measured on a
-       Pixel 5a, 2026-08-23 (#249).
-       The padding and brand margin below were cut in the same change to make the column fit;
-       whoever grows either one back must re-check that four slats still fit in 411dp. */
+    min-width: 0;
+    width: 100%;
     flex-shrink: 0;
-    border-width: 1px;
-    border-color: rgba(11, 14, 19, 0.35);        /* dark inscribed edge — reads as carved, not glowing */
-    border-radius: var(--space-3);
-    overflow: hidden;                            /* slats clip to the rounded group */
 }
 .mm-button {
-    font-size: var(--type-h2);                   /* 22dp. Was bumped to 30px on 2026-08-21 to
-                                                    survive the reference-resolution scale; the
-                                                    panels are physical-size now and the token
-                                                    lands at its stated size. */
+    font-size: var(--type-h2);
     -unity-font-style: bold;
     color: var(--ink-1);
-    background-color: rgba(30, 37, 48, 0);      /*fully transparent — backdrop shows straight through (styling base) */
+    background-color: rgba(18, 23, 31, 0.98);
     border-width: 0;
-    
-    border-radius: 0;                            /* the group owns the shape, not the slat */
-    border-top-width: 1px;                       /* groove between slats */
-    border-top-color: rgba(11, 14, 19, 0.55);
-    height: 56px;                                /* 56dp — still 8dp over Android's 48dp touch floor.
-                                                    88 -> 64 when the scale was corrected (#233);
-                                                    64 -> 56 to close the last 32dp of the 117dp
-                                                    landscape overflow that was eating two slats
-                                                    (#249). Do not go below 48. */
-    margin-bottom: 0;                            /* slats touch */
-    padding: 0 var(--space-6);
-    letter-spacing: 1px;
+    border-radius: 0;
+    height: 68px;
+    margin-bottom: var(--space-3);
+    padding: 0 var(--space-8);
+    letter-spacing: 2px;
+    -unity-background-image-tint-color: rgb(222, 227, 234);
+    transition-property: -unity-background-image-tint-color, translate;
+    transition-duration: 0.12s;
+    transition-timing-function: ease-out;
 }
 .mm-button:hover {
-    background-color: rgba(42, 51, 64, 0.45);   /* --surface-3, light wash — backdrop still reads through */
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+    translate: 5px 0;
 }
 .mm-button:active {
-    background-color: rgba(20, 25, 34, 0.95);   /* --surface-1 */
+    -unity-background-image-tint-color: rgb(192, 198, 207);
+    translate: 2px 1px;
 }
-/* Find Game — visually identical to the other slats on arrival (no ember fill). The only
- * override is positional: it's the top of the stack, so it carries no groove hairline under
- * the frame's top edge. Hover/active fall through to the shared .mm-button states. */
+.mm-button--secondary {
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.62px;
+}
 .mm-button--cta {
-    border-top-width: 0;
+    height: 88px;
+    margin-bottom: var(--space-5);
+    background-color: rgba(29, 17, 9, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_primary_ember.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 34;
+    -unity-slice-bottom: 34;
+    -unity-slice-scale: 0.72px;
+    color: rgb(255, 226, 179);
+    font-size: var(--type-h1);
+    letter-spacing: 3px;
+    -unity-background-image-tint-color: rgb(255, 236, 205);
+}
+.mm-button--cta:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 
 /* ---------- Shard balance ----------
@@ -150,11 +178,16 @@
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: var(--ink-1);
-    background-color: rgba(20, 25, 34, 0.55);
-    border-width: 1px;
-    border-color: rgba(11, 14, 19, 0.7);
-    border-radius: var(--space-2);
-    padding: var(--space-2) var(--space-4);
+    background-color: rgba(10, 14, 20, 0.94);
+    background-image: url("/Assets/Art/UI/Chrome/ui_input_recessed_slate.png");
+    -unity-slice-left: 48;
+    -unity-slice-right: 48;
+    -unity-slice-top: 28;
+    -unity-slice-bottom: 28;
+    -unity-slice-scale: 0.42px;
+    border-width: 0;
+    border-radius: 0;
+    padding: var(--space-3) var(--space-6);
 }
 
 /* ---------- Identity plate ----------
@@ -169,11 +202,16 @@
     left: var(--space-6);
     flex-direction: row;
     align-items: center;
-    background-color: rgba(20, 25, 34, 0.55);
-    border-width: 1px;
-    border-color: rgba(11, 14, 19, 0.7);
-    border-radius: var(--space-2);
-    padding: var(--space-2) var(--space-4);
+    background-color: rgba(10, 14, 20, 0.94);
+    background-image: url("/Assets/Art/UI/Chrome/ui_panel_recessed_slate.png");
+    -unity-slice-left: 56;
+    -unity-slice-right: 56;
+    -unity-slice-top: 56;
+    -unity-slice-bottom: 56;
+    -unity-slice-scale: 0.34px;
+    border-width: 0;
+    border-radius: 0;
+    padding: var(--space-4) var(--space-6);
 }
 .mm-identity__showcase {
     width: 72px;

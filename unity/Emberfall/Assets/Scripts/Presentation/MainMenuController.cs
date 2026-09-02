@@ -213,6 +213,11 @@ namespace Emberfall.Presentation
         private void RevealMenu()
         {
             _root.RemoveFromClassList("mm-root--hidden");
+            // Let the revealed tree paint once at its entrance pose before transitioning the
+            // command assembly into place. Removing both classes in the same layout pass snaps
+            // directly to the final state and makes the transition invisible.
+            _root.schedule.Execute(() => _root.RemoveFromClassList("mm-root--entering"))
+                .ExecuteLater(16);
         }
 
         // System.Action explicitly: Emberfall.Core.Contracts has an Action type of its own (a card
@@ -250,7 +255,17 @@ namespace Emberfall.Presentation
         private void BindBuildStamp()
         {
             var label = _root.Q<Label>("version-label");
-            if (label != null) label.text = BuildStamp.Display;
+            if (label == null) return;
+
+            if (Debug.isDebugBuild)
+            {
+                label.text = BuildStamp.Display;
+                return;
+            }
+
+            // Useful evidence in Editor and development players; presentation noise everywhere
+            // else. Release builds retain BuildStamp in logs without painting it over the artwork.
+            label.style.display = DisplayStyle.None;
         }
 
         // ── Shard balance ──────────────────────────────────────────────────────────────
