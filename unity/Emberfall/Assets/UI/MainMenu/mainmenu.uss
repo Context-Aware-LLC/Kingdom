@@ -85,8 +85,8 @@
 /* 72px HARDCODED was the last survivor of the pre-refDpi-160 authoring, and it is the same
    artifact the margin note above records: at referenceDpi 160 one authored px is one Android dp,
    so 72 was 72 of the 411dp the landscape panel gets, and 'EMBERFALL' plus 8dp of tracking ran
-   about 57% of the 920dp width — over the identity plate on one side and the shard pill on the
-   other. It was also a raw px, so it was the one piece of type on this screen that did NOT step
+   about 57% of the 920dp width — into the edge chrome on both sides. It was also a raw px, so it
+   was the one piece of type on this screen that did NOT step
    with the screen classes. Now a token, and part of the run. */
 .mm-wordmark {
     font-size: 58px;
@@ -162,9 +162,8 @@
 }
 
 /* ---------- Shard balance ----------
- * Top-right, mirroring the identity plate. These percentages are the no-inset fallback; the
- * controller adds Screen.safeArea's normalized top/right inset at runtime and keeps this plate
- * inside cutouts and system bars as they change.
+ * These percentages are the no-inset fallback; the controller adds Screen.safeArea's normalized
+ * top/right inset at runtime and keeps this plate inside cutouts and system bars as they change.
  */
 .mm-shard-balance {
     position: absolute;
@@ -188,53 +187,6 @@
     border-width: 0;
     border-radius: 0;
     padding: var(--space-3) var(--space-6);
-}
-
-/* ---------- Identity plate ----------
- * Top-left: who you are on this device, with your active character and deck. It was a Button
- * while renaming was its one affordance; names are permanent now (NOR-287), so it is a plain
- * VisualElement with no hover state — nothing about it should read as pressable.
- * Row layout: showcase image left, name+deck text stack right (NOR-289).
- */
-.mm-identity {
-    position: absolute;
-    top: var(--space-6);                         /* clearance is .emb-edge's, not this rule's */
-    left: var(--space-6);
-    flex-direction: row;
-    align-items: center;
-    background-color: rgba(10, 14, 20, 0.94);
-    background-image: url("/Assets/Art/UI/Chrome/ui_panel_recessed_slate.png");
-    -unity-slice-left: 56;
-    -unity-slice-right: 56;
-    -unity-slice-top: 56;
-    -unity-slice-bottom: 56;
-    -unity-slice-scale: 0.34px;
-    border-width: 0;
-    border-radius: 0;
-    padding: var(--space-4) var(--space-6);
-}
-.mm-identity__showcase {
-    width: 72px;
-    height: 90px;
-    border-radius: var(--space-1);
-    -unity-background-scale-mode: scale-and-crop;
-    background-color: rgba(11, 14, 19, 0.55);
-    flex-shrink: 0;
-    margin-right: var(--space-3);
-}
-.mm-identity__text {
-    flex-direction: column;
-    align-items: flex-start;
-}
-.mm-identity__name {
-    font-size: var(--type-label);                /* 16dp. Was --type-h2 to survive the old scale. */
-    -unity-font-style: bold;
-    color: var(--ink-1);
-}
-.mm-identity__deck {
-    font-size: var(--type-caption);
-    color: var(--ink-2);
-    margin-top: var(--space-1);
 }
 
 /* ---------- Account switcher rows ---------- */

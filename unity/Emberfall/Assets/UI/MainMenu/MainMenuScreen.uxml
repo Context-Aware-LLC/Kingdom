@@ -4,13 +4,6 @@
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden mm-root--entering">
         <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim emb-bleed" style="background-image: none;"/>
         <ui:Label name="shard-balance" text="Shards  —" picking-mode="Ignore" class="mm-shard-balance emb-edge"/>
-        <ui:VisualElement name="identity" picking-mode="Ignore" class="mm-identity emb-edge">
-            <ui:VisualElement name="identity-showcase" class="mm-identity__showcase"/>
-            <ui:VisualElement class="mm-identity__text">
-                <ui:Label name="identity-name" text="Unnamed player" class="mm-identity__name"/>
-                <ui:Label name="identity-deck" text="" class="mm-identity__deck"/>
-            </ui:VisualElement>
-        </ui:VisualElement>
         <ui:VisualElement name="command" class="mm-command emb-edge">
             <ui:VisualElement name="brand" class="mm-brand">
                 <ui:Label text="EMBERFALL" class="mm-wordmark"/>

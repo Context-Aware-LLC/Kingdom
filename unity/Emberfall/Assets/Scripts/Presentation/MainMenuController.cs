@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
 using Emberfall.Net.Client.Auth;
 using Emberfall.Net.Client.Shop;
 using Emberfall.Session;
@@ -22,10 +18,9 @@ namespace Emberfall.Presentation
     /// intent. Nothing but the shard plate outlives a departure — every screen rebinds from
     /// <c>ShopRuntime</c>/<c>AuthGateway</c> on arrival rather than being handed state.</para>
     ///
-    /// <para><b>This screen is also where identity begins.</b> A device that has never been named is
-    /// asked once here — <b>once</b> being the whole of it: a display name is permanent (NOR-287), so the
-    /// nameplate top-left only reports it and the client carries no rename flow at all.
-    /// Character creation lives on the roster screen, never on this menu.</para>
+    /// <para><b>This screen is also where account setup begins.</b> A device that has never been
+    /// named is routed through the one-time account flow before the menu is used. Character and
+    /// deck context live on the roster and collection surfaces rather than in menu chrome.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// MainMenuScreen.uxml and whose Panel Settings is MainMenuPanelSettings.
@@ -43,14 +38,6 @@ namespace Emberfall.Presentation
         private Label _leaderboardStatus;
         private Label _leaderboardUpdated;
         private CancellationTokenSource _leaderboardRequest;
-
-        private Label _identityName;
-        private VisualElement _identityShowcase;
-        private Label _identityDeck;
-
-        private ICardDatabase _db;
-        private IArtProvider _art;
-        private IUiSpriteProvider _uiSprites;
 
         private Label _shardBalance;
         private Rect _lastSafeArea;
@@ -98,7 +85,6 @@ namespace Emberfall.Presentation
             BindShardBalance();
             RefreshShardBalance();
 
-            BindIdentity();
             MountSettingsOverlay();
             _signIn = new SignInGateController(_root, AuthGateway.Provider);
 
@@ -114,20 +100,10 @@ namespace Emberfall.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[MainMenu] could not open this device's collection: {ex.Message}");
-                SetIdentity("Collection unreadable");
                 FinishBootstrap();
                 return;
             }
 
-            try { _db = CardDatabaseLoader.Load(); }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[MainMenu] card database unavailable — showcase art will not load: {ex.Message}");
-            }
-            _art = new AddressableArtProvider();
-            _uiSprites = CardBackCatalog.NewProvider();
-
-            RefreshIdentity();
             BeginFirstRun();
             FinishBootstrap();
         }
@@ -220,30 +196,11 @@ namespace Emberfall.Presentation
                 .ExecuteLater(16);
         }
 
-        // System.Action explicitly: Emberfall.Core.Contracts has an Action type of its own (a card
-        // effect), and both namespaces are in scope here.
         private void Wire(string name, System.Action onClick)
         {
             var button = _root.Q<Button>(name);
             if (button == null) { Debug.LogWarning($"[MainMenu] Button '{name}' not found in UXML."); return; }
             button.RegisterCallback<ClickEvent>(_ => onClick());
-        }
-
-        // ── Identity plate ──────────────────────────────────────────────────────────────
-
-        /// <summary>The plate reports; it does not act (NOR-287). Nothing is wired to it.</summary>
-        private void BindIdentity()
-        {
-            _identityName = _root.Q<Label>("identity-name");
-            _identityShowcase = _root.Q<VisualElement>("identity-showcase");
-            _identityDeck = _root.Q<Label>("identity-deck");
-            // Hidden until a character+deck is resolved; shown in RefreshIdentity when one exists.
-            SetVisible(_identityShowcase, false);
-        }
-
-        private void SetIdentity(string name)
-        {
-            if (_identityName != null) _identityName.text = name;
         }
 
         // ── Build stamp ────────────────────────────────────────────────────────────────
@@ -352,112 +309,6 @@ namespace Emberfall.Presentation
                 Mathf.Min(100f, rightInsetPercent + ShardSafeAreaMarginPercent));
             _shardBalance.style.top = Length.Percent(
                 Mathf.Min(100f, topInsetPercent + ShardSafeAreaMarginPercent));
-        }
-
-        /// <summary>
-        /// Redraw the plate from disk. The name comes off the profile; the character and deck sub-line
-        /// resolves from last-played, falling back to the first roster character and its default deck
-        /// (NOR-289, Sam 2026-08-23).
-        /// </summary>
-        private void RefreshIdentity()
-        {
-            if (_account == null) return;
-
-            // "Unnamed player" rather than an invented default: a saved default is indistinguishable
-            // from a chosen name, and the prompt would never fire again (PlayerAccount.DisplayNameOr).
-            SetIdentity(_account.DisplayNameOr("Unnamed player"));
-
-            IReadOnlyList<Character> roster = _account.Roster();
-            if (roster.Count == 0)
-            {
-                SetDeckLine("No characters yet — open Collection");
-                SetVisible(_identityShowcase, false);
-                return;
-            }
-
-            IReadOnlyList<DeckList> decks = _account.Decks();
-
-            // Primary: last character and deck actually submitted into a match.
-            Character character = CharacterQuery.ById(roster, _account.LastPlayedCharacterId);
-            DeckList deck = FindDeckById(decks, _account.LastPlayedDeckId);
-
-            // Fallback: first roster character and its default deck (or any deck it owns).
-            if (character == null || deck == null)
-            {
-                character = roster[0];
-                deck = CharacterQuery.DefaultDeckOf(character, decks)
-                    ?? FindFirstDeckFor(character.Id, decks);
-            }
-
-            SetDeckLine(deck != null
-                ? $"{character.Name} · {deck.Name}"
-                : character.Name);
-
-            if (deck != null)
-            {
-                SetVisible(_identityShowcase, true);
-                LoadShowcaseArt(deck);
-            }
-            else
-            {
-                SetVisible(_identityShowcase, false);
-            }
-        }
-
-        private void SetDeckLine(string text)
-        {
-            if (_identityDeck != null) _identityDeck.text = text;
-        }
-
-        /// <summary>
-        /// Paint the deck's showcase card art onto the identity plate. Applies the card back
-        /// immediately as a synchronous fallback, then overwrites with the card art once the
-        /// Addressables load completes. Pattern mirrors CharacterRosterController.ShowcaseArt.
-        /// </summary>
-        private void LoadShowcaseArt(DeckList deck)
-        {
-            if (_identityShowcase == null) return;
-
-            if (_uiSprites != null)
-            {
-                Sprite back = CardBackCatalog.SpriteFor(deck.CardBackId, _uiSprites);
-                if (back != null)
-                    _identityShowcase.style.backgroundImage = new StyleBackground(back);
-            }
-
-            if (_db == null || _art == null || deck.ShowcaseCardId <= 0) return;
-            if (!_db.TryGet(deck.ShowcaseCardId, out CardDefinition showcase)) return;
-            if (string.IsNullOrEmpty(showcase.ArtId)) return;
-
-            _art.LoadArt(showcase.ArtId, sprite =>
-            {
-                if (sprite != null && _identityShowcase != null)
-                    _identityShowcase.style.backgroundImage = new StyleBackground(sprite);
-            });
-        }
-
-        private static DeckList FindDeckById(IReadOnlyList<DeckList> decks, string id)
-        {
-            if (string.IsNullOrEmpty(id) || decks == null) return null;
-            foreach (DeckList d in decks)
-                if (d?.Id == id) return d;
-            return null;
-        }
-
-        private static DeckList FindFirstDeckFor(string characterId, IReadOnlyList<DeckList> decks)
-        {
-            if (string.IsNullOrEmpty(characterId) || decks == null) return null;
-            foreach (DeckList d in decks)
-                if (d?.CharacterId == characterId) return d;
-            return null;
-        }
-
-        /// <summary>Show or hide by display, not visibility: a hidden element must not keep spending
-        /// its layout box. Lived in the name-modal region until that moved to AccountCreate
-        /// (2026-08-25); four callers here still need it.</summary>
-        private static void SetVisible(VisualElement element, bool shown)
-        {
-            if (element != null) element.style.display = shown ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         // ── Settings overlay (C-G1-3 / decision 23 §5, mounted here too since Sam 2026-08-09) ──
