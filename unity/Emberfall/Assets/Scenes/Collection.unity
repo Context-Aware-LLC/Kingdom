@@ -241,6 +241,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 963aba3459628b74aa58a8a34261a4a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CollectionController
+  cardRowTemplate: {fileID: 9197481963319205126, guid: e617ac4a78d14df58c6e36a0eab81a2b, type: 3}
 --- !u!114 &862559917
 MonoBehaviour:
   m_ObjectHideFlags: 0

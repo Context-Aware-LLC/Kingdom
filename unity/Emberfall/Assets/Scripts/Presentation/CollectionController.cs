@@ -65,6 +65,7 @@ namespace Emberfall.Presentation
         private PlayerAccount _account;
         private ICardDatabase _db;
         private CardFaceBaker _faceBaker;
+        [SerializeField] private VisualTreeAsset cardRowTemplate;
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
 
         /// <summary>The optional deck-edit context. Null means the drawer is browsing deck choices.</summary>
@@ -94,7 +95,7 @@ namespace Emberfall.Presentation
         // trade visibility.
         private VisualElement _root;
         private VisualElement _plate;
-        private VisualElement _grid;
+        private ListView _collectionList;
         private CardWall _wall;
         private CardQueryBar _query;
         private Label _emptyLabel;
@@ -215,12 +216,17 @@ namespace Emberfall.Presentation
 
             LoadOwnership();
 
-            _grid = _root.Q<VisualElement>("collection-grid");
-            if (_grid == null)
+            _collectionList = _root.Q<ListView>("collection-list");
+            if (_collectionList == null)
             {
-                Debug.LogError("[Collection] 'collection-grid' not found in the UXML. If the whole " +
+                Debug.LogError("[Collection] 'collection-list' not found in the UXML. If the whole " +
                                "screen is empty, check the UXML for a double dash inside a comment " +
                                "— that fails the import silently.");
+                return;
+            }
+            if (cardRowTemplate == null)
+            {
+                Debug.LogError("[Collection] CardRowTemplate.uxml is not assigned on CollectionController.");
                 return;
             }
 
@@ -393,12 +399,11 @@ namespace Emberfall.Presentation
             _faceBaker.Initialize(_db);
         }
 
-        // The tile building, the bake, the per-row gutter solve and the Yoga-safe deferred layout all
-        // live in CardWall (Sam, 2026-08-07), so every drawer state renders the same wall. What stays here is
-        // the part that is genuinely about a DECK: what a tap does, and which tiles are at their cap.
+        // Row batching, ListView recycling, baking and responsive tile geometry all live in CardWall.
+        // What stays here is genuinely about a deck: what a tap does and which tiles are at their cap.
         private void BuildWall()
         {
-            _wall = new CardWall(_grid, _faceBaker);
+            _wall = new CardWall(_collectionList, cardRowTemplate, _faceBaker);
 
             // Subscribed BEFORE SetPool, which is what starts the first bake pass. A cache-warm
             // wall can complete that pass in the same frame it begins it.
@@ -1007,7 +1012,7 @@ namespace Emberfall.Presentation
 
             // No visible scrollbars anywhere (Sam, 2026-08-01 ruling). ListView doesn't expose
             // verticalScrollerVisibility itself — only its internal ScrollView does — so this can't be
-            // set from UXML like collection-scroll's.
+            // set from UXML like a standalone ScrollView's.
             var innerScroll = _deckList.Q<ScrollView>();
             if (innerScroll != null)
             {
@@ -1195,7 +1200,7 @@ namespace Emberfall.Presentation
         // NavigationCancelEvent. The gesture closes the drawer first, then exits Collection on the
         // next invocation, regardless of wall scroll position.
         //
-        // The DEVELOPMENT_BUILD block logs the data the issue asks for: scroll offset, grid content
+        // The DEVELOPMENT_BUILD block logs the data the issue asks for: scroll offset, list content
         // height, and layout call count sampled every 500ms. On a loop-free build the layout count
         // should only tick up on resize or filter changes, not while idle or during a scroll gesture.
         private void WireCollectionScroll()
@@ -1203,13 +1208,13 @@ namespace Emberfall.Presentation
             _root.RegisterCallback<NavigationCancelEvent>(_ => HandleBack());
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-            var scroll = _root.Q<ScrollView>("collection-scroll");
-            if (scroll != null && _wall != null && _grid != null)
+            var scroll = _collectionList?.Q<ScrollView>();
+            if (scroll != null && _wall != null)
             {
                 scroll.schedule.Execute(() =>
                 {
                     Debug.Log($"[NOR-360] offset={scroll.scrollOffset.y:F1} " +
-                              $"content.h={_grid.resolvedStyle.height:F1} " +
+                              $"content.h={scroll.contentContainer.resolvedStyle.height:F1} " +
                               $"layouts={_wall.LayoutCount}");
                 }).Every(500);
             }

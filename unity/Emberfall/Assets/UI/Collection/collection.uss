@@ -7,7 +7,7 @@
  * silently inverted that on every selector the two sheets both touch.
  *
  * THE CARD SIZE LIVES IN THIS FILE — see the --card-tile-width/--card-tile-height block on
- * .db-grid below. CardWall reads those two and may only shrink them to fit whole rows.
+ * .collection-list below. CardWall reads those two and may only shrink them to fit whole rows.
  * --------------------------------------------------------------------------------------------- */
 
 /*
@@ -98,12 +98,6 @@
 
 /* ---------- Collection wall (§2.9 wall tile — the REAL card, baked by CardFaceBaker, not a
  * UI Toolkit re-implementation of the card front) ---------- */
-/* justify-content is flex-start ON PURPOSE and must stay that way. CardWall.Layout computes the
- * column count, the bounded gutter and the outer breathing room itself and writes them as per-tile
- * margins; any other value here re-distributes the surplus it already spent, and the two solves
- * compose into neither. `space-between` did exactly that -- it pushed a sparse row's cards apart
- * into islands and, with the outer margin landing only on the left, sat the row flush against the
- * right edge. */
 /* ---------------------------------------------------------------------------------------------
  * THE CARD TILE SIZE. This is the authoring surface — change the card size here, not in C#.
  *
@@ -125,11 +119,9 @@
  * The breakpoints are ScreenClass's, keyed on the panel's SHORT axis: compact < 600dp (phones),
  * medium 600-840dp, expanded 840dp+. See the SCREEN CLASSES block in Common/theme.uss.
  * ------------------------------------------------------------------------------------------- */
-.db-grid {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-content: flex-start;
-    justify-content: flex-start;
+.collection-list {
+    flex-grow: 1;
+    min-height: 0;
 
     /* Phones. Solved from a Pixel 5a's measured 350.9dp wall viewport: two rows plus the 8dp
      * flat margin. Every phone-sized panel lands here regardless of pixel count, because the
@@ -137,11 +129,11 @@
     --card-tile-width: 114;
     --card-tile-height: 160;
 }
-.collection.emb-sw-medium .db-grid {
+.collection.emb-sw-medium .collection-list {
     --card-tile-width: 182;
     --card-tile-height: 256;
 }
-.collection.emb-sw-expanded .db-grid {
+.collection.emb-sw-expanded .collection-list {
     --card-tile-width: 274;
     --card-tile-height: 384;
 }
@@ -156,6 +148,12 @@
     background-color: var(--surface-3);   /* shows through until the bake resolves */
     -unity-background-scale-mode: scale-to-fit;
     border-radius: var(--space-2);
+}
+.collection-card-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
 }
 /* The two opacities allowed on the wall, both per-CARD facts and never the wall's state — the
  * no-dimming ruling that removed .card-tile--disabled was about a full deck greying out all ~90
@@ -695,9 +693,6 @@
 }
 
 /* ---------- Wall ---------- */
-.col-scroll {
-    flex-grow: 1;
-}
 
 /* Shown by CollectionController only when a query matches nothing. A wall that goes blank with no
  * text reads as a broken screen rather than an empty result. */
@@ -1071,19 +1066,19 @@
     background-color: rgba(18, 23, 31, 0.96);
     overflow: hidden;
 }
-.collection .col-scroll.chrome-panel--recessed {
+.collection .collection-list.chrome-panel--recessed {
     padding: 0 12px;
 }
 .collection.emb-sw-medium .db-collection.chrome-panel--outer {
     padding: 0 16px;
 }
-.collection.emb-sw-medium .col-scroll.chrome-panel--recessed {
+.collection.emb-sw-medium .collection-list.chrome-panel--recessed {
     padding: 0 20px;
 }
 .collection.emb-sw-expanded .db-collection.chrome-panel--outer {
     padding: 0 20px;
 }
-.collection.emb-sw-expanded .col-scroll.chrome-panel--recessed {
+.collection.emb-sw-expanded .collection-list.chrome-panel--recessed {
     padding: 0 20px;
 }
 /* NO PADDING HERE. This selector outranks `.deck-drawer`, so a padding written here silently

@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="card-row" class="collection-card-row">
+        <ui:VisualElement name="card-0" class="card-tile"/>
+        <ui:VisualElement name="card-1" class="card-tile"/>
+        <ui:VisualElement name="card-2" class="card-tile"/>
+        <ui:VisualElement name="card-3" class="card-tile"/>
+    </ui:VisualElement>
+</ui:UXML>

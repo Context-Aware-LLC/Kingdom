@@ -15,9 +15,7 @@
         </ui:VisualElement>
         <ui:VisualElement name="body" class="db-body" style="transform-origin: 25%; justify-content: flex-start; overflow: visible;">
             <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
-                <ui:ScrollView name="collection-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="col-scroll chrome-panel chrome-panel--recessed">
-                    <ui:VisualElement name="collection-grid" class="db-grid"/>
-                </ui:ScrollView>
+                <ui:ListView name="collection-list" class="collection-list chrome-panel chrome-panel--recessed"/>
                 <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
             </ui:VisualElement>
         </ui:VisualElement>

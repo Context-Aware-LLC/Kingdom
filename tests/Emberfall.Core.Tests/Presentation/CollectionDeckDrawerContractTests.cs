@@ -55,13 +55,23 @@ namespace Emberfall.Core.Tests.Presentation
                 .Single(element => (string?)element.Attribute("name") == "query-scrim");
             XElement body = screenRoot.Elements()
                 .Single(element => (string?)element.Attribute("name") == "body");
+            XElement collectionPanel = body.Elements()
+                .Single(element => (string?)element.Attribute("name") == "collection-panel");
             XElement toolbar = screenRoot.Elements().Single(element =>
                 ((string?)element.Attribute("class"))?.Split(' ')
                     .Contains("col-query-toolbar") == true);
 
             Assert.Multiple(() =>
             {
-                Assert.That(uxml, Does.Contain("name=\"collection-grid\""));
+                Assert.That(collectionPanel.Elements().Any(element =>
+                    element.Name.LocalName == "ListView"
+                    && (string?)element.Attribute("name") == "collection-list"), Is.True,
+                    "The collection shell should own one virtualized card-row list.");
+                Assert.That(collectionPanel.Elements().Any(element =>
+                    (string?)element.Attribute("name") == "collection-empty"), Is.True,
+                    "The empty state belongs beside the virtualized list, not inside recycled content.");
+                Assert.That(uxml, Does.Not.Contain("name=\"collection-grid\""));
+                Assert.That(uxml, Does.Not.Contain("name=\"collection-scroll\""));
                 Assert.That(uxml, Does.Contain("name=\"decks-button\" text=\"Decks\""));
                 Assert.That(uxml, Does.Contain("name=\"back-button\" text=\"← Back\""));
                 Assert.That(uxml, Does.Not.Contain("name=\"collection-header\""));
@@ -117,17 +127,26 @@ namespace Emberfall.Core.Tests.Presentation
         public void Collection_assets_keep_the_visual_tree_styles_and_wall_binding_valid()
         {
             string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
+            string rowTemplate = Asset("UI", "Collection", "CardRowTemplate.uxml");
             string styles = Asset("UI", "Collection", "collection.uss");
             string controller = Asset("Scripts", "Presentation", "CollectionController.cs");
+            string scene = Asset("Scenes", "Collection.unity");
+            XDocument rowDocument = XDocument.Parse(rowTemplate);
+            XElement row = rowDocument.Descendants()
+                .Single(element => (string?)element.Attribute("name") == "card-row");
 
             Assert.Multiple(() =>
             {
                 Assert.That(() => XDocument.Parse(uxml), Throws.Nothing,
                     "Malformed UXML makes Unity reject the complete collection visual tree.");
-                Assert.That(Regex.Matches(uxml, "name=\"collection-grid\"").Count, Is.EqualTo(1));
+                Assert.That(Regex.Matches(uxml, "name=\"collection-list\"").Count, Is.EqualTo(1));
                 Assert.That(Regex.Matches(uxml, "name=\"deck-list\"").Count, Is.EqualTo(1));
                 Assert.That(Regex.Matches(uxml, "name=\"curve-strip\"").Count, Is.EqualTo(1));
                 Assert.That(Regex.Matches(uxml, "name=\"count-label\"").Count, Is.EqualTo(1));
+                Assert.That(() => XDocument.Parse(rowTemplate), Throws.Nothing);
+                Assert.That(row.Elements().Count(element =>
+                    ((string?)element.Attribute("class"))?.Split(' ').Contains("card-tile") == true),
+                    Is.EqualTo(4), "The reusable row template must expose exactly four card slots.");
 
                 Assert.That(styles, Does.Contain(".col-scope {"));
                 Assert.That(styles, Does.Contain(".col-button {"));
@@ -137,11 +156,16 @@ namespace Emberfall.Core.Tests.Presentation
                     "One incomplete declaration makes Unity discard the entire USS file.");
 
                 Assert.That(controller, Does.Match(
-                    @"(?m)^\s*_grid\s*=\s*_root\.Q<VisualElement>\(""collection-grid""\);$"));
+                    @"(?m)^\s*_collectionList\s*=\s*_root\.Q<ListView>\(""collection-list""\);$"));
                 Assert.That(controller, Does.Not.Contain("collection-count"));
                 Assert.That(controller, Does.Match(
-                    @"(?s)_grid\s*=\s*_root\.Q<VisualElement>\(""collection-grid""\);\s*if \(_grid == null\).*?return;"),
-                    "CardWall must never be constructed with a null collection-grid host.");
+                    @"(?s)_collectionList\s*=\s*_root\.Q<ListView>\(""collection-list""\);\s*if \(_collectionList == null\).*?return;"),
+                    "CardWall must never be constructed with a null collection-list host.");
+                Assert.That(controller, Does.Contain(
+                    "new CardWall(_collectionList, cardRowTemplate, _faceBaker)"));
+                Assert.That(scene, Does.Contain(
+                    "cardRowTemplate: {fileID: 9197481963319205126, guid: e617ac4a78d14df58c6e36a0eab81a2b, type: 3}"),
+                    "The scene must assign the row template instead of relying on a runtime path lookup.");
                 Assert.That(controller, Does.Contain(
                     "_queryScrim?.RegisterCallback<ClickEvent>(_ => SetQueryDrawerOpen(false));"));
                 Assert.That(controller, Does.Contain(
@@ -345,11 +369,11 @@ namespace Emberfall.Core.Tests.Presentation
 
             Assert.Multiple(() =>
             {
-                Assert.That(collectionStyles, Does.Match(@"(?s)\.db-grid\s*\{.*?--card-tile-width:\s*\d+;.*?--card-tile-height:\s*\d+;"),
-                    "The phone tile size must be declared on .db-grid — that is the authoring surface.");
-                Assert.That(collectionStyles, Does.Match(@"(?s)\.collection\.emb-sw-expanded \.db-grid\s*\{.*?--card-tile-height:\s*\d+;"),
+                Assert.That(collectionStyles, Does.Match(@"(?s)\.collection-list\s*\{.*?--card-tile-width:\s*\d+;.*?--card-tile-height:\s*\d+;"),
+                    "The phone tile size must be declared on .collection-list — that is the authoring surface.");
+                Assert.That(collectionStyles, Does.Match(@"(?s)\.collection\.emb-sw-expanded \.collection-list\s*\{.*?--card-tile-height:\s*\d+;"),
                     "A larger screen class must be able to author a larger card.");
-                Assert.That(collectionStyles, Does.Not.Match(@"(?s)\.card-tile\s*\{[^}]*?width:"),
+                Assert.That(collectionStyles, Does.Not.Match(@"(?s)\.card-tile\s*\{[^}]*?\bwidth:"),
                     "A width on .card-tile is overwritten inline by Layout every pass. Declaring one "
                     + "there is how this file came to carry three different tile widths, none read.");
 
@@ -362,10 +386,16 @@ namespace Emberfall.Core.Tests.Presentation
 
                 Assert.That(wall, Does.Not.Match(@"const\s+float\s+(Medium|Desktop)Tile(Width|Height)"),
                     "The fixed tier table was deleted because no viewport could select it.");
-                Assert.That(wall, Does.Not.Match(@"bool\s+TierFits"));
+                Assert.That(wall, Does.Not.Match(@"\bbool\s+TierFits\b"));
 
                 Assert.That(wall, Does.Contain("private const float MaxGutter = 32f;"));
-                Assert.That(wall, Does.Contain("private const int MaxColumns = 5;"));
+                Assert.That(wall, Does.Contain("public const int CardsPerRow = 4;"));
+                Assert.That(wall, Does.Contain(
+                    "_list.virtualizationMethod = CollectionVirtualizationMethod.FixedHeight;"));
+                Assert.That(wall, Does.Contain("_list.makeItem = MakeRow;"));
+                Assert.That(wall, Does.Contain("_list.bindItem = BindRow;"));
+                Assert.That(wall, Does.Not.Contain("Dictionary<int, VisualElement>"),
+                    "A virtualized wall must not treat one persistent element as each card's identity.");
                 Assert.That(wall, Does.Contain("_baker.SetFaceSize(Mathf.RoundToInt(tileWidth)"),
                     "A larger tile must be freshly baked at its display resolution, not upscaled.");
             });
@@ -391,15 +421,15 @@ namespace Emberfall.Core.Tests.Presentation
             string collectionStyles = Asset("UI", "Collection", "collection.uss");
             string wall = Asset("Scripts", "Presentation", "CardWall.cs");
 
-            // The bare .db-grid block, which is the compact declaration: the screen-class variants
-            // are `.collection.emb-sw-* .db-grid` and do not match this.
-            Match grid = Regex.Match(collectionStyles, @"(?m)^\.db-grid\s*\{(?<body>[^}]*)\}");
-            Assert.That(grid.Success, Is.True, "collection.uss must declare a bare .db-grid block.");
+            // The bare .collection-list block is the compact declaration; screen-class variants
+            // have a .collection.emb-sw-* prefix and do not match this anchor.
+            Match list = Regex.Match(collectionStyles, @"(?m)^\.collection-list\s*\{(?<body>[^}]*)\}");
+            Assert.That(list.Success, Is.True, "collection.uss must declare a bare .collection-list block.");
 
             float UssVar(string name)
             {
-                Match m = Regex.Match(grid.Groups["body"].Value, name + @":\s*(?<v>[0-9.]+)\s*;");
-                Assert.That(m.Success, Is.True, $"{name} must be declared on .db-grid.");
+                Match m = Regex.Match(list.Groups["body"].Value, name + @":\s*(?<v>[0-9.]+)\s*;");
+                Assert.That(m.Success, Is.True, $"{name} must be declared on .collection-list.");
                 return float.Parse(m.Groups["v"].Value, CultureInfo.InvariantCulture);
             }
 
@@ -424,9 +454,8 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         /// <summary>
-        /// The wall reports when it has finished baking, and the Collection holds a loading plate
-        /// until it does (Sam, 2026-09-01). The bake queue is serial and art-gated, so the pool
-        /// arrives over seconds; uncovered, the screen reads as broken rather than loading.
+        /// The wall reports when its initially visible page has finished baking, and the Collection
+        /// holds a loading plate until it does. Further virtualized rows bake lazily as they bind.
         ///
         /// <para>The TIMEOUT is the part worth a guard. The plate covers the whole screen, so any
         /// path that never delivers the completion signal is a hang with no message — and the
@@ -441,11 +470,16 @@ namespace Emberfall.Core.Tests.Presentation
             Assert.Multiple(() =>
             {
                 Assert.That(wall, Does.Contain("public event Action BakePassCompleted;"));
-                Assert.That(wall, Does.Match(@"_bakesOutstanding\s*=\s*_pool\.Count;"),
+                Assert.That(wall, Does.Match(@"_bakesOutstanding\s*=\s*initialCardCount;"),
                     "The outstanding count must be seeded before the loop: a cached face delivers "
                     + "synchronously, so counting up from zero completes on the first card.");
-                Assert.That(wall, Does.Match(@"if\s*\(generation\s*!=\s*_bakeGeneration\)\s*return;"),
+                Assert.That(wall, Does.Contain("generation != _bakeGeneration"),
                     "A superseded pass's callbacks still arrive and must not complete the current one.");
+                Assert.That(wall, Does.Contain("visibleRows * CardsPerRow"),
+                    "Loading must wait for the visible page, not eagerly bake the complete pool.");
+                Assert.That(wall, Does.Match(
+                    @"binding\.Version\s*!=\s*version\s*\|\|\s*binding\.Card\?\.Id\s*!=\s*cardId"),
+                    "A recycled slot must reject an asynchronous face from its previous card.");
 
                 Assert.That(controller, Does.Contain("_wall.BakePassCompleted += OnFirstBakeCompleted;"));
                 Assert.That(controller, Does.Contain("ShowLoadingPlate();  // before the wall"),

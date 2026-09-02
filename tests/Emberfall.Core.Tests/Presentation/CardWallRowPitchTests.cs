@@ -71,9 +71,11 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(wall, Does.Match(@"int\s+rows\s*=\s*Mathf\.Max\(\s*MinVisibleRows\s*,"),
                     "The row count must be DERIVED from the authored height, not fixed. Fixing it "
                     + "is what made a taller viewport grow the cards instead of adding a row.");
-                Assert.That(wall, Does.Match(@"tile\.style\.marginTop\s*=\s*verticalMargin\s*\*\s*0\.5f"),
+                Assert.That(wall, Does.Match(@"tile\.style\.marginTop\s*=\s*_activeVerticalMargin\s*\*\s*0\.5f"),
                     "Layout must actually write the solved pitch onto the tiles.");
-                Assert.That(wall, Does.Match(@"tile\.style\.marginBottom\s*=\s*verticalMargin\s*\*\s*0\.5f"));
+                Assert.That(wall, Does.Match(@"tile\.style\.marginBottom\s*=\s*_activeVerticalMargin\s*\*\s*0\.5f"));
+                Assert.That(wall, Does.Match(@"_list\.fixedItemHeight\s*=\s*rowHeight"),
+                    "The ListView's virtualization pitch must match the solved row geometry.");
             });
         }
 
