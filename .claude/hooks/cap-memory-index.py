@@ -47,6 +47,24 @@ INDEX_PARENT = "memory"
 # session. Prefer moving the line behind a trigger.
 CAP_BYTES = 10000
 
+# Written by memory_retire.py. Read, never run: the checks shell out and some hit the
+# network, and a PreToolUse hook that blocks on `git ls-remote` taxes every write in
+# the session. So this reports what was dead AS OF THE LAST SWEEP, and says so -- a
+# stale "nothing dead" must not read as "nothing to retire".
+RETIRE_CACHE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    ".agent", "memory-retire.json",
+)
+
+
+def already_dead():
+    """Pages whose declared retirement condition was satisfied at the last sweep."""
+    try:
+        with open(RETIRE_CACHE, encoding="utf-8") as fh:
+            return [p for p in json.load(fh).get("DEAD", []) if isinstance(p, str)]
+    except Exception:
+        return []
+
 
 def targets_index(path):
     if not isinstance(path, str) or not path:
@@ -105,6 +123,20 @@ def main():
     if size is None or size <= CAP_BYTES:
         return 0
 
+    dead = already_dead()
+    if dead:
+        evidence = (
+            "ALREADY DEAD as of the last sweep -- their own retire_check passed:\n"
+            + "".join("     - %s\n" % p for p in dead)
+            + "   Re-sweep to confirm: python .claude/hooks/memory_retire.py\n"
+        )
+    else:
+        evidence = (
+            "No page is currently known-dead. Sweep before you guess which line goes:\n"
+            "     python .claude/hooks/memory_retire.py\n"
+            "   (an empty or missing cache is NOT evidence that nothing is stale)\n"
+        )
+
     sys.stderr.write(
         "[memory-index] This write leaves MEMORY.md at %d bytes, over its %d cap.\n"
         "It is auto-loaded into EVERY session, so every byte is paid for ~19x a day.\n"
@@ -112,10 +144,11 @@ def main():
         "  1. Retire a line. A memory that says \"X was broken, now FIXED\" is a record,\n"
         "     and records live in git -- delete it once nobody holds the old belief.\n"
         "     That is the single biggest source of regrowth.\n"
+        "     %s"
         "  2. Move the line into index-layout.md, index-unity.md or index-cards.md.\n"
         "     Those are uncapped and cost nothing until somebody matches their trigger.\n"
         "Raising the cap is a decision for Sam, not a way past this message.\n"
-        % (size, CAP_BYTES)
+        % (size, CAP_BYTES, evidence)
     )
     return 2
 
