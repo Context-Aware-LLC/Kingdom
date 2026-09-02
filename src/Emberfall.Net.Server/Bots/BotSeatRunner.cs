@@ -55,6 +55,16 @@ namespace Emberfall.Net.Server.Bots
         /// player memory and seeded sampling state, so it must not be shared between seats.</param>
         public BotSeatRunner(string botUsername, string botDisplayName, ISeatPolicy policy)
         {
+            // RETIREMENT TRIGGER — THIS LINE IS THE ONLY THING KEEPING GUEST IDENTITY ALIVE.
+            // No AuthToken, so every bot seat connects on the guest path (MatchGate's absent-token
+            // branch). Guest is walking-skeleton scaffolding that was never intended to ship and is
+            // retired by ruling (Sam, 2026-09-01) — but deleting the branch before this line changes
+            // takes down every opponent in the game, because bots are the only opponents there are.
+            //
+            // The order is: give bots real accounts here first (BotAccountProvisioner exists, and
+            // AccountKind.Superuser was added for exactly these identities), THEN make an absent
+            // auth token refuse the connect. Discharge this trigger in the commit that does the
+            // first half, and update AccountOwnedCounts.ForAsync's "No account" branch with it.
             _clientOptions = new ClientOptions
             {
                 DeviceToken = "bot-internal-" + botUsername,

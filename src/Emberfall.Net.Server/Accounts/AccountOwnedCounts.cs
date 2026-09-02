@@ -28,7 +28,15 @@ namespace Emberfall.Net.Server.Accounts
         ///     the ledger is not even consulted.</item>
         ///   <item><b>No account</b> → null. Every seat resolved without the account store — a guest, or
         ///     an authenticated connect on a box with none configured. Their ownership is genuinely
-        ///     unknown, which is not the same as owning nothing.</item>
+        ///     unknown, which is not the same as owning nothing.
+        ///     <para><b>RETIREMENT TRIGGER — half this justification is being deleted.</b> Guest
+        ///     identity is walking-skeleton scaffolding that was never intended to ship, and is
+        ///     retired by ruling (Sam, 2026-09-01).
+        ///     When the connect refuses an absent auth token, "a guest" stops being a way to reach
+        ///     this branch and only the unconfigured-box case remains. Re-read then whether null is
+        ///     still the right answer, or whether an accountless seat should be refused outright —
+        ///     null here means UNCONSTRAINED, so this branch is the one that hands out the full pool.
+        ///     Do not widen it in the meantime.</para></item>
         ///   <item><b>No ledger</b> → null. A dev box running without an economy is a supported
         ///     configuration and must not suddenly start refusing decks.</item>
         ///   <item><b>Otherwise</b> → <see cref="LedgerOwnedCounts"/>. This branch is what makes L6
