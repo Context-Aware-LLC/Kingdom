@@ -340,11 +340,24 @@ namespace Emberfall.Presentation
                 // — which, once every rarity had real frame art, meant it was suppressed always
                 // and Sam's gem art was drawing nowhere (2026-08-19). The frames were built with
                 // an empty socket waiting for it the whole time.
-                Sprite gem = _ui?.Get(FrameRarityCatalog.GemSprite(_def.Rarity));
+                string gemKey = FrameRarityCatalog.GemSprite(_def.Rarity);
+                Sprite gem = _ui?.Get(gemKey);
                 gemRenderer.gameObject.SetActive(true);
                 SpriteMaterials.Set(gemRenderer, gem);
                 // Tint white when a real gem sprite is present; else tint the blank sprite by rarity.
                 gemRenderer.color = gem != null ? Color.white : FrameRarityCatalog.GemColor(_def.Rarity);
+
+                // SAY SO WHEN THE GEM DOES NOT RESOLVE. Without this the card front is simply
+                // built without its rarity read and nothing anywhere reports it — the same silent
+                // shape #295 named for the stat sockets ("No log, no exception. The digits simply
+                // sit bare, which is why nothing reported it. The same shape hides the gem
+                // bezel."), which is how #341 reached a device unnoticed. Once per rarity: a wall
+                // of ninety cards must not print ninety lines.
+                if (gem == null && s_reportedMissingGems.Add(gemKey))
+                    Debug.LogWarning($"[CardPresenter] no sprite for '{gemKey}' — every {_def.Rarity} " +
+                                     "card front is being built WITHOUT its rarity gem, on the board " +
+                                     "and in the collection alike. The renderer is left tinted by " +
+                                     "rarity, which is the fallback look, not the finished one.");
 
                 if (_hasPaintedFrame) PlaceGem(gem);
             }
@@ -561,6 +574,11 @@ namespace Emberfall.Presentation
         }
 
         private bool _hasPaintedFrame;
+
+        /// <summary>Gem keys already reported as unresolvable, so the warning in
+        /// <see cref="ApplyFrame"/> is once per rarity rather than once per card. Static because
+        /// the collection wall rebinds ONE presenter for every card it bakes.</summary>
+        private static readonly HashSet<string> s_reportedMissingGems = new HashSet<string>();
 
         private void RebuildKeywords()
         {

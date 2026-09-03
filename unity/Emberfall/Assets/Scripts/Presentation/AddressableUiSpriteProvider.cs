@@ -38,6 +38,11 @@ namespace Emberfall.Presentation
         private const string AddressPrefix = "ui/";
 
         private static readonly Dictionary<string, Sprite> _cache = new();
+
+        /// <summary>Keys already reported as a cached miss, so the warning is once per key rather
+        /// than once per card on a wall of ninety.</summary>
+        private static readonly HashSet<string> _reportedMisses = new();
+
         private static bool _prewarmed;
 
         public AddressableUiSpriteProvider() => Prewarm();
@@ -45,7 +50,25 @@ namespace Emberfall.Presentation
         public Sprite Get(string key)
         {
             if (string.IsNullOrEmpty(key)) return null;
-            if (_cache.TryGetValue(key, out Sprite cached)) return cached;
+            if (_cache.TryGetValue(key, out Sprite cached))
+            {
+                // A CACHED NULL IS A FAILURE THAT ALREADY HAPPENED, AND IT USED TO RETURN IN
+                // SILENCE. Prewarm caches its misses (deliberately — see below), so a sprite that
+                // failed to load at boot answers every later Get with null and no word said. The
+                // consumer then fails silently too: CardPresenter.PlaceSocket hides the renderer,
+                // the gem simply does not draw, and the card front comes back missing a piece with
+                // nothing anywhere naming it. That shape was written up in #295 and predicted the
+                // gem would go the same way; it did, as #341.
+                //
+                // Once per key, so a wall of ninety cards asking for gem_common ninety times says
+                // it once.
+                if (cached == null && _reportedMisses.Add(key))
+                    Debug.LogWarning($"[AddressableUiSpriteProvider] '{AddressPrefix}{key}' is cached " +
+                                     "as MISSING and every request for it will return null. Whatever " +
+                                     "draws it will be absent from the card front with no further " +
+                                     "error. Check the prewarm line above for the original failure.");
+                return cached;
+            }
 
             // Reached only for a key the catalog sweep did not cover — a miss, or a prewarm that
             // failed. Still synchronous, and still the reentrancy hazard above if it happens to
@@ -73,7 +96,8 @@ namespace Emberfall.Presentation
             if (_prewarmed) return;
             _prewarmed = true;
 
-            int loaded = 0, missed = 0;
+            int loaded = 0;
+            var failed = new List<string>();
             try
             {
                 // ResourceLocators is empty until the catalog is up, and Get's callers cannot be
@@ -103,7 +127,7 @@ namespace Emberfall.Presentation
                         Sprite sprite = handle.WaitForCompletion();
                         bool ok = handle.Status == AsyncOperationStatus.Succeeded;
                         _cache[key] = ok ? sprite : null;
-                        if (ok) loaded++; else missed++;
+                        if (ok) loaded++; else failed.Add(key);
                     }
                 }
             }
@@ -117,7 +141,19 @@ namespace Emberfall.Presentation
             }
 
             Debug.Log($"[AddressableUiSpriteProvider] prewarmed {loaded} UI sprite(s)" +
-                      (missed > 0 ? $", {missed} failed to load" : ""));
+                      (failed.Count > 0 ? $", {failed.Count} failed to load" : ""));
+
+            // NAME THEM. A count is not a diagnosis: "4 failed to load" was true on every device
+            // run and told nobody WHICH four, while each one is a piece of chrome that will be
+            // silently absent from a screen. The keys are the whole value of this line, and they
+            // are sorted so two runs can be diffed.
+            if (failed.Count > 0)
+            {
+                failed.Sort(StringComparer.Ordinal);
+                Debug.LogWarning("[AddressableUiSpriteProvider] these UI sprites are MISSING and " +
+                                 "whatever draws them will not appear: " +
+                                 string.Join(", ", failed));
+            }
         }
 
         // Domain reload is what normally clears a static; with "Enter Play Mode Options" set to
@@ -126,6 +162,7 @@ namespace Emberfall.Presentation
         private static void ResetStatics()
         {
             _cache.Clear();
+            _reportedMisses.Clear();
             _prewarmed = false;
         }
     }
