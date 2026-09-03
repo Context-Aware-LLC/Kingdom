@@ -57,7 +57,7 @@
     left: 11%;
     top: 14%;
     bottom: 12%;
-    width: 460px;
+    width: 568px;
     flex-shrink: 0;
     align-items: stretch;
     justify-content: center;
@@ -101,6 +101,27 @@
     color: rgb(238, 168, 67);
     margin-top: var(--space-2);
     letter-spacing: 3px;
+}
+
+/* ---------- Navigation plate ----------
+ * The vault is deliberately a different control category from the four-row menu: the plate owns
+ * both regions, while the round socket and portrait art give the vault its own silhouette and hit
+ * target. This is also why the socket reserves a column instead of becoming a fifth .mm-button. */
+.mm-nav-plate {
+    position: relative;
+    width: 100%;
+    flex-shrink: 0;
+    padding-top: var(--space-4);
+    padding-right: 124px;
+    padding-bottom: var(--space-1);
+    padding-left: var(--space-4);
+    background-color: rgba(8, 11, 16, 0.84);
+    background-image: url("/Assets/Art/UI/Chrome/ui_panel_outer_forged.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 64;
+    -unity-slice-bottom: 64;
+    -unity-slice-scale: 0.55px;
 }
 
 /* ---------- Menu column ---------- */
@@ -159,6 +180,85 @@
 }
 .mm-button--cta:hover {
     -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+/* ---------- Card Vault socket ----------
+ * TEMP ART: this is an existing pack illustration cropped into the socket, not the eventual pack
+ * object/sigil. Keep the URL isolated here so replacing it is one line when that art lands. */
+.mm-vault-dock {
+    position: absolute;
+    right: var(--space-3);
+    top: 108px;
+    width: 104px;
+    align-items: center;
+}
+.mm-vault-dock--hidden {
+    display: none;
+}
+.mm-vault-button {
+    width: 104px;
+    height: 104px;
+    min-width: 104px;
+    min-height: 104px;
+    flex-shrink: 0;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--surface-0);
+    border-width: 6px;
+    border-color: rgb(86, 93, 104);
+    border-radius: 52px;
+    overflow: hidden;
+    transition-property: border-color, scale;
+    transition-duration: 0.12s;
+    transition-timing-function: ease-out;
+}
+.mm-vault-art {
+    width: 54px;
+    height: 82px;
+    flex-shrink: 0;
+    background-image: url("/Assets/Art/Shop/Packs/EMBERFALL/pack_ef_01_pyra_cinderbound_4.png");
+    -unity-background-scale-mode: scale-to-fit;
+    -unity-background-image-tint-color: rgb(222, 227, 234);
+    border-radius: var(--space-1);
+    transition-property: -unity-background-image-tint-color;
+    transition-duration: 0.12s;
+}
+.mm-vault-button:hover {
+    border-color: var(--accent);
+    scale: 1.05 1.05;
+}
+.mm-vault-button:hover .mm-vault-art {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.mm-vault-button:active {
+    border-color: rgb(194, 116, 37);
+    scale: 0.98 0.98;
+}
+.mm-vault-button:active .mm-vault-art {
+    -unity-background-image-tint-color: rgb(210, 210, 210);
+}
+.mm-vault-count {
+    position: absolute;
+    right: -6px;
+    top: -6px;
+    padding: var(--space-1) var(--space-2);
+    color: var(--surface-0);
+    background-color: var(--accent);
+    border-width: 2px;
+    border-color: rgb(255, 226, 179);
+    border-radius: 999px;
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+.mm-vault-label {
+    margin-top: var(--space-2);
+    color: var(--ink-1);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    letter-spacing: 1px;
 }
 
 /* ---------- Shard balance ----------

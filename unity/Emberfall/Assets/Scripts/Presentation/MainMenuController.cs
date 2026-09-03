@@ -1,5 +1,7 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
+using Emberfall.Core.Collection;
 using Emberfall.Net.Client.Auth;
 using Emberfall.Net.Client.Shop;
 using Emberfall.Session;
@@ -13,9 +15,9 @@ namespace Emberfall.Presentation
     /// A UI Toolkit meta-screen in the deckbuilder's lineage: theme.uss tokens, a UIDocument
     /// host, elements queried by name and wired in <see cref="OnEnable"/>.
     ///
-    /// <para>Each destination has a named handler so a scene-loader drops straight in. Store, Collection
-    /// and the roster are scenes of their own; the remaining unfinished destinations still log their
-    /// intent. Nothing but the shard plate outlives a departure — every screen rebinds from
+    /// <para>Each destination has a named handler so a scene-loader drops straight in. Store,
+    /// Collection, the pack vault and the roster are scenes of their own; the remaining unfinished
+    /// destinations still log their intent. Nothing but the shard plate outlives a departure — every screen rebinds from
     /// <c>ShopRuntime</c>/<c>AuthGateway</c> on arrival rather than being handed state.</para>
     ///
     /// <para><b>This screen is also where account setup begins.</b> A device that has never been
@@ -40,11 +42,14 @@ namespace Emberfall.Presentation
         private CancellationTokenSource _leaderboardRequest;
 
         private Label _shardBalance;
+        private VisualElement _vaultDock;
+        private Label _vaultPackCount;
         private Rect _lastSafeArea;
         private int _lastSafeAreaScreenWidth = -1;
         private int _lastSafeAreaScreenHeight = -1;
 
         private const float ShardSafeAreaMarginPercent = 2f;
+        private static readonly string StarterPackId = OnboardingGrant.StarterPack().Id;
 
 
         private SignInGateController _signIn;
@@ -77,6 +82,7 @@ namespace Emberfall.Presentation
             Wire("btn-collection", OnCollection);
             Wire("btn-store", OnStore);
             Wire("btn-leaderboards", OnLeaderboards);
+            Wire("btn-card-vault", OnCardVault);
             Wire("btn-leaderboard-close", CloseLeaderboard);
             BindLeaderboard();
 
@@ -84,14 +90,15 @@ namespace Emberfall.Presentation
 
             BindShardBalance();
             RefreshShardBalance();
+            BindVaultEntry();
 
             MountSettingsOverlay();
             _signIn = new SignInGateController(_root, AuthGateway.Provider);
 
             // A corrupt collection file must not brick the front door. The stores throw rather than
             // reporting an empty collection (so the next save cannot overwrite something
-            // recoverable), which means the failure surfaces HERE, on a screen whose other four
-            // buttons still work.
+            // recoverable), which means the failure surfaces HERE without bricking the rest of the
+            // menu.
             try
             {
                 _account = PlayerAccount.Local;
@@ -155,7 +162,7 @@ namespace Emberfall.Presentation
                                  "this device already had.");
             }
 
-            BeginFirstRun();
+            await BeginFirstRun();
             FinishBootstrap();
         }
 
@@ -184,18 +191,18 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// First-run prompts, in the order Sam ruled on 2026-08-08: register, then name yourself.
+        /// First-run routing: register, name yourself, then surface any unopened starter gift.
         ///
         /// <para><b>Registration comes first and cannot be skipped.</b> The two prompts are chained
         /// rather than shown together — the sign-in gate calls back once a session exists, and only
         /// then does the name prompt open. Opening both would stack two modals on a player who has not
         /// seen the game yet, and the name is the smaller of the two questions.</para>
         ///
-        /// <para><b>The menu is revealed underneath either way.</b> Sam asked for the registration
-        /// prompt as an overlay ON the main menu, not instead of it, and the gate's own scrim is what
-        /// stops the buttons behind it being reachable.</para>
+        /// <para><b>The starter balance routes; the marker does not.</b> Every launch that still holds
+        /// starter packs returns to the vault. <see cref="FirstRunMarkers.Gift"/> only suppresses the
+        /// one-time congratulations treatment after the player has actually opened their first pack.</para>
         /// </summary>
-        private void BeginFirstRun()
+        private async Task BeginFirstRun()
         {
             // FIRST RUN IS A SCENE NOW (Sam, 2026-08-25). The sign-in gate and the name step were
             // two .mm-modal overlays on this screen; they are AccountCreate, and this is the only
@@ -210,7 +217,28 @@ namespace Emberfall.Presentation
             // the player on itself — to CharacterRoster on an empty roster, back here otherwise.
             bool needsAccount = _signIn != null && _signIn.IsRequired;
             bool needsName = _account != null && _account.NeedsDisplayName;
-            if (needsAccount || needsName) Go("AccountCreate");
+            if (needsAccount || needsName)
+            {
+                Go("AccountCreate");
+                return;
+            }
+
+            if (!AuthGateway.IsSignedIn) return;
+
+            // The ledger balance owns this route. The local marker only decides whether the vault
+            // wears its congratulations face, so quitting after one open cannot strand the rest of
+            // the starter packs behind a marker that has already been written.
+            var snapshot = await PackGateway.ReadShelfAsync(
+                AuthGateway.Provider.Current.AccessToken);
+            RenderVaultEntry(snapshot);
+            if (snapshot.PackCount(StarterPackId) <= 0) return;
+
+            PackVaultController.ReturnScene = "MainMenu";
+            PackVaultController.Pending = null;
+            PackVaultController.Mode = FirstRunMarkers.Has(FirstRunMarkers.Gift)
+                ? PackVaultMode.Vault
+                : PackVaultMode.Gift;
+            Go("PackVault");
         }
 
         /// <summary>Bootstrap (identity/account) is done. Reveal the menu once the boot plate has
@@ -452,6 +480,40 @@ namespace Emberfall.Presentation
         {
             ShopScreenController.ReturnScene = "MainMenu";
             Go("Shop");
+        }
+
+        /// <summary>Open the player's unopened packs as a first-class destination. The round menu
+        /// socket is intentionally outside the row-button group, but navigation uses the same
+        /// caller-writes-its-way-home contract as the store and collection.</summary>
+        private void OnCardVault()
+        {
+            PackVaultController.ReturnScene = "MainMenu";
+            PackVaultController.Pending = null;
+            PackVaultController.Mode = PackVaultMode.Vault;
+            Go("PackVault");
+        }
+
+        /// <summary>The vault sigil is inventory chrome, not an empty destination: it appears only
+        /// while this player holds unopened packs and reports their total on its own badge.</summary>
+        private void BindVaultEntry()
+        {
+            _vaultDock = _root.Q<VisualElement>("vault-dock");
+            _vaultPackCount = _root.Q<Label>("vault-pack-count");
+            _vaultDock?.AddToClassList("mm-vault-dock--hidden");
+        }
+
+        private void RenderVaultEntry(Emberfall.Net.Client.Collection.CollectionSnapshot snapshot)
+        {
+            if (_vaultDock == null || _vaultPackCount == null || snapshot == null) return;
+
+            long total = 0;
+            foreach (long count in snapshot.Packs.Values)
+            {
+                if (count > 0) total += count;
+            }
+
+            _vaultDock.EnableInClassList("mm-vault-dock--hidden", total <= 0);
+            _vaultPackCount.text = total > 99 ? "× 99+" : $"× {total}";
         }
 
         private void BindLeaderboard()

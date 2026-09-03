@@ -9,11 +9,20 @@
                 <ui:Label text="EMBERFALL" class="mm-wordmark"/>
                 <ui:Label text="A duel of embers" class="mm-tagline"/>
             </ui:VisualElement>
-            <ui:VisualElement name="menu" class="mm-menu">
-                <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
-                <ui:Button name="btn-collection" text="Collection" class="mm-button mm-button--secondary"/>
-                <ui:Button name="btn-store" text="Store" class="mm-button mm-button--secondary"/>
-                <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button mm-button--secondary"/>
+            <ui:VisualElement name="nav-plate" class="mm-nav-plate">
+                <ui:VisualElement name="menu" class="mm-menu">
+                    <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
+                    <ui:Button name="btn-collection" text="Collection" class="mm-button mm-button--secondary"/>
+                    <ui:Button name="btn-store" text="Store" class="mm-button mm-button--secondary"/>
+                    <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button mm-button--secondary"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="vault-dock" class="mm-vault-dock mm-vault-dock--hidden">
+                    <ui:Button name="btn-card-vault" text="" tooltip="Open Card Vault" class="mm-vault-button">
+                        <ui:VisualElement picking-mode="Ignore" class="mm-vault-art"/>
+                    </ui:Button>
+                    <ui:Label name="vault-pack-count" text="" picking-mode="Ignore" class="mm-vault-count"/>
+                    <ui:Label text="CARD VAULT" picking-mode="Ignore" class="mm-vault-label"/>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="footer" class="mm-footer emb-edge">
