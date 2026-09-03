@@ -1,0 +1,162 @@
+/* The pack vault — the shelf of unopened packs, and the chrome around the reveal.
+ *
+ * The reveal itself is NOT styled here. `packreveal.uss` owns every `.reveal-*` rule and this
+ * screen links it alongside this sheet, the same way ShopScreen.uxml does. That sheet was pulled
+ * out of shop.uss in 2026-08-20 precisely so a second host could exist; this is that host.
+ *
+ * `.emb-root` (theme.uss) is the only other dependency, and only for the design tokens. */
+
+.pack-vault-screen {
+    flex-grow: 1;
+    background-color: var(--surface-0);
+}
+
+/* Carries .emb-bleed in the markup, so the horizontal clearance is the theme's and the padding
+ * below is vertical only. Do not add a horizontal padding here: a class rule in this sheet ties
+ * theme.uss on specificity and wins on sheet order, so it would silently defeat --edge-safe.
+ * (The same defeat packreveal.uss documents for .reveal-overlay.) */
+.vault-shell {
+    flex-grow: 1;
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+}
+
+/* ONE BAR, the same shape the store settled on 2026-08-31: what you act on, in a single row.
+ * A screen you reached by opening your packs does not need a header telling you so, and on a
+ * 411dp landscape phone a title/subtitle pair plus its own padding is most of a shelf row. */
+.vault-bar {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-3);
+}
+
+.vault-title {
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+}
+
+.vault-subtitle {
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    margin-left: var(--space-3);
+}
+
+.vault-bar__gap {
+    flex-grow: 1;
+}
+
+.vault-back {
+    min-height: var(--touch-min);
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+    color: var(--ink-1);
+    background-color: var(--surface-2);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-2);
+    font-size: var(--type-label);
+}
+
+.vault-back:active {
+    background-color: var(--surface-3);
+}
+
+/* A WRAPPING ROW, NOT A ScrollView. UI Toolkit's ScrollView content lays out correctly and PAINTS
+ * above its viewport on Android (#285, #307) — a renderer fault no stylesheet can reach. The shelf
+ * holds five packs at the gift and ten at its cap, so it does not need one, and inheriting that
+ * bug for a surface this small is a bad trade. PackVaultController counts the overflow instead.
+ * RETIREMENT TRIGGER: when #285 and #307 close, a ScrollView here becomes the ordinary answer and
+ * the tile cap can go with it. */
+.vault-shelf {
+    flex-grow: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    justify-content: center;
+}
+
+/* Three up on a phone, and sized off the row rather than a min-width: the store learned on
+ * 2026-08-31 that a floor can only ever fight the percentage, and clamps a tile UP into a layout
+ * that then leaves dead width beside it. 31% plus the 1% margins fills the row exactly. */
+.vault-pack {
+    width: 31%;
+    flex-shrink: 0;
+    margin: 1%;
+    padding: var(--space-3);
+    align-items: stretch;
+    background-color: var(--surface-1);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-3);
+}
+
+.vault-pack:active {
+    border-color: var(--accent);
+}
+
+.vault-pack:disabled {
+    opacity: 0.45;
+}
+
+/* A booster is a portrait object. 0.7 is the reveal card's ratio, so a pack and the cards it
+ * becomes read as the same family — and it is the ratio the starter pack's art is authored at
+ * (1024x1536, spec §6.1). `aspect-ratio` IS supported; the claim that it is not was true once and
+ * is not now — see the note in shop.uss. */
+.vault-pack__face {
+    width: 100%;
+    aspect-ratio: 0.7;
+    flex-shrink: 0;
+    margin-bottom: var(--space-2);
+    background-color: var(--surface-2);
+    border-radius: var(--space-2);
+    -unity-background-scale-mode: scale-and-crop;
+    overflow: hidden;
+}
+
+/* Only once art actually resolved. A set whose art has not been drawn yet is the normal state
+ * (PackArtProvider says so out loud), so an artless pack keeps the plain plate above rather than
+ * reading as a picture that failed to load. Assets/Art/Shop/Packs/STARTER/ does not exist yet. */
+.vault-pack__face--art {
+    background-color: rgba(11, 14, 19, 0.35);
+}
+
+.vault-pack__name {
+    color: var(--ink-1);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.vault-pack__hint {
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    -unity-text-align: middle-center;
+}
+
+/* The tail of a shelf too long to draw. A count, not a tile: the packs it stands for are real and
+ * openable, they are just not on screen until the ones in front of them are gone. */
+.vault-pack__overflow {
+    width: 31%;
+    margin: 1%;
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    -unity-text-align: middle-center;
+    -unity-font-style: bold;
+}
+
+.vault-status {
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-top: var(--space-3);
+    min-height: var(--space-8);
+}
+
+/* Collapsed rather than blanked, so an empty status does not hold a band of dead space above the
+ * bottom edge while the shelf is full. */
+.vault-status--empty {
+    display: none;
+}

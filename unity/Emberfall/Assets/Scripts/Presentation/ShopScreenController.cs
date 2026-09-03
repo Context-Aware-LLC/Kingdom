@@ -15,8 +15,8 @@ namespace Emberfall.Presentation
     /// scene load untouched, so this screen binds the same transport the menu would have.</para>
     ///
     /// <para>The purchase flow itself stays entirely in <see cref="ShopPanelController"/>. This
-    /// type owns only what a scene adds: where Back goes, opening on arrival, and — since the
-    /// PackReveal scene landed — where a bought pack goes to be opened.</para>
+    /// type owns only what a scene adds: where Back goes, opening on arrival, and — since
+    /// <see cref="PackVaultController"/> landed — where a bought pack goes to be opened.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// ShopScreen.uxml and whose Panel Settings is MainMenuPanelSettings.
@@ -58,10 +58,16 @@ namespace Emberfall.Presentation
 
         private void Exit() => Go(ReturnScene);
 
-        /// <summary>Send a freshly bought pack to the PackReveal scene rather than opening it over
-        /// the store. Returns false without touching anything if that scene cannot be loaded, which
+        /// <summary>Send a freshly bought pack to the pack vault rather than opening it over the
+        /// store. Returns false without touching anything if that scene cannot be loaded, which
         /// hands the reveal back to the store's own overlay — a receipt is already-purchased cards,
         /// so the one unacceptable outcome is showing it nowhere.
+        ///
+        /// <para><b>The vault shows a handed-in receipt and then comes STRAIGHT BACK here</b>, which
+        /// is the same trip PackReveal made; it does not drop the player onto its shelf. A player
+        /// mid-shopping has a wallet open behind them, and the packs on that shelf are a different
+        /// errand. <see cref="PackVaultController"/> decides that from the fact that the receipt
+        /// arrived on <c>Pending</c> rather than from an open it performed.</para>
         ///
         /// <para><c>Pending</c> is written only after the scene is known to be loadable. Setting it
         /// first and failing the load would leave a receipt armed for whatever lands on that scene
@@ -70,19 +76,19 @@ namespace Emberfall.Presentation
         {
             if (receipt == null) return false;
 
-            const string revealScene = "PackReveal";
-            if (!Application.CanStreamedLevelBeLoaded(revealScene))
+            const string vaultScene = "PackVault";
+            if (!Application.CanStreamedLevelBeLoaded(vaultScene))
             {
-                Debug.LogError($"[Shop] Scene '{revealScene}' is not in the build list, so the pack " +
+                Debug.LogError($"[Shop] Scene '{vaultScene}' is not in the build list, so the pack " +
                                "is being opened over the store instead. Run Emberfall/Build/Sync Scene List.");
                 return false;
             }
 
             // Come back to the store, not to whatever opened the store: the player is mid-shopping
             // and the wallet they just spent from is here.
-            PackRevealScreenController.ReturnScene = "Shop";
-            PackRevealScreenController.Pending = receipt;
-            UnityEngine.SceneManagement.SceneManager.LoadScene(revealScene);
+            PackVaultController.ReturnScene = "Shop";
+            PackVaultController.Pending = receipt;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(vaultScene);
             return true;
         }
 

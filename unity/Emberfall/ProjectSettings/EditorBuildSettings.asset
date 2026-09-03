@@ -27,8 +27,8 @@ EditorBuildSettings:
     path: Assets/Scenes/Shop.unity
     guid: b1274d1ace024924ba54353b0bd57ebb
   - enabled: 1
-    path: Assets/Scenes/PackReveal.unity
-    guid: 23d428df61f809147b199545abd6e86a
+    path: Assets/Scenes/PackVault.unity
+    guid: 0d2d1dd80b1048a0b9c3f14222fc1951
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: a6afa5fa55134f34289bfcda204fe64d, type: 2}
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}

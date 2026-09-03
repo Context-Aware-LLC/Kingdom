@@ -28,7 +28,7 @@ namespace Emberfall.Editor
         // keeps the Store button alive: this array is also what SyncSceneList writes, so a scene
         // missing from it is missing from the Editor build list too, however the .asset reads.
         private const string ShopScenePath = "Assets/Scenes/Shop.unity";
-        private const string PackRevealScenePath = "Assets/Scenes/PackReveal.unity";
+        private const string PackVaultScenePath = "Assets/Scenes/PackVault.unity";
 
         /// <summary>
         /// EVERY shipped scene, in build order — index 0 is the boot scene.
@@ -48,7 +48,7 @@ namespace Emberfall.Editor
         private static readonly string[] AllScenes =
         {
             MenuScenePath, ScenePath, RosterScenePath, CreateScenePath, AccountScenePath,
-            CollectionScenePath, ShopScenePath, PackRevealScenePath,
+            CollectionScenePath, ShopScenePath, PackVaultScenePath,
         };
         private const string OutputPath = "Builds/Windows/Emberfall.exe";
         private const string DevOutputPath = "Builds/WindowsDev/Emberfall.exe";

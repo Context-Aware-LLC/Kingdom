@@ -1,0 +1,37 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
+    <Style src="project://database/Assets/UI/PackVault/packvault.uss?fileID=7433441132597879392&amp;guid=36eac866b4624b47af05d928f36743f1&amp;type=3#packvault"/>
+    <Style src="project://database/Assets/UI/PackReveal/packreveal.uss?fileID=7433441132597879392&amp;guid=a201f4cb62914110a1d96762b261bb3d&amp;type=3#packreveal"/>
+    <!-- The pack vault. The shelf is authored empty; PackVaultController fills it from the pack
+         balance on GET /collection, one tile per unopened pack.
+
+         THE reveal-* TREE IS THE STORE'S, VERBATIM, AND MUST STAY THAT WAY. PackRevealPanel
+         queries these NAMES out of whatever root it is handed, which is the whole reason it was
+         split out of the store in 2026-08-20. Renaming one here does not break a build; it makes
+         a pack open to a blank screen after the entitlement is already spent.
+         (No double dash anywhere in this comment. An XML comment may not contain one, and Unity
+         does not report the parse failure: the whole screen renders EMPTY.) -->
+    <ui:VisualElement name="root" class="emb-root pack-vault-screen">
+        <ui:VisualElement name="vault-shell" class="vault-shell emb-bleed">
+            <ui:VisualElement name="vault-bar" class="vault-bar">
+                <ui:Label text="Packs" class="vault-title"/>
+                <ui:Label name="vault-subtitle" text="" class="vault-subtitle"/>
+                <ui:VisualElement picking-mode="Ignore" class="vault-bar__gap"/>
+                <ui:Button name="btn-vault-back" text="← Back" class="vault-back emb-back"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="vault-shelf" class="vault-shelf"/>
+            <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
+        </ui:VisualElement>
+        <!-- emb-back on Done as well as on Back, so Android's back gesture dismisses the reveal
+             before it leaves the screen. BackNavigation clicks the TOPMOST visible back control,
+             and a modal declared after the content it covers is topmost by document order. -->
+        <ui:VisualElement name="reveal-overlay" class="reveal-overlay reveal-overlay--hidden emb-bleed">
+            <ui:VisualElement class="reveal-shell">
+                <ui:Label name="reveal-title" text="Pack opened" class="reveal-title"/>
+                <ui:Label name="reveal-summary" text="" class="reveal-summary"/>
+                <ui:VisualElement name="reveal-cards" class="reveal-cards"/>
+                <ui:Button name="btn-reveal-done" text="Add to collection" class="reveal-done emb-back"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

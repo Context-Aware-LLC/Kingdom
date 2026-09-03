@@ -13,9 +13,11 @@ namespace Emberfall.Presentation
     ///
     /// <para><b>Host-agnostic, and that is the whole point of the split.</b> It queries its
     /// <c>reveal-*</c> elements out of whatever root it is handed, so the same panel serves the
-    /// store's overlay and <see cref="PackRevealScreenController"/>'s standalone screen. A pack
-    /// opened anywhere other than the store — the onboarding grant is the one already waiting —
-    /// could not have had a reveal at all while this lived inside the store's controller.</para>
+    /// store's overlay and <see cref="PackVaultController"/>'s screen. A pack opened anywhere other
+    /// than the store — the onboarding grant is the one already waiting — could not have had a
+    /// reveal at all while this lived inside the store's controller. That prediction came true on
+    /// 2026-09-03: the vault opens granted packs, and the frame this used to name
+    /// (<c>PackRevealScreenController</c>) was deleted in the same commit.</para>
     ///
     /// <para><b>Not <see cref="CardRevealController"/>.</b> That is EF-049, the in-match hover
     /// reveal: MonoBehaviours, TextMeshPro, board colliders. Same word, unrelated subsystem. The

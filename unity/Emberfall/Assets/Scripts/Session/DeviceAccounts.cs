@@ -177,6 +177,9 @@ namespace Emberfall.Session
             CollectionGateway.Invalidate();
             // Same hazard, worse consequence: the roster gateway REPLACES characters and decks.
             RosterGateway.Invalidate();
+            // Nothing of this one's is written to disk, but it holds a transport pointed at a host that
+            // BaseUrl can move underneath it, and it spends entitlements.
+            PackGateway.Invalidate();
         }
 
         /// <summary>

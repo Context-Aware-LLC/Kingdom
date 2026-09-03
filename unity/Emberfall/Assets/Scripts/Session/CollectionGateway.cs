@@ -70,32 +70,57 @@ namespace Emberfall.Session
         public static async Task<CollectionSyncStatus> SyncAsync(
             string accessToken, CancellationToken cancellationToken = default)
         {
+            CollectionSnapshot snapshot = await FetchAsync(accessToken, cancellationToken);
+
+            if (!snapshot.ShouldReplaceCache)
+            {
+                // Deliberately not a warning for Unconstrained: a superuser having no cached list
+                // is the correct outcome, not a degraded one.
+                if (snapshot.Status != CollectionSyncStatus.Unconstrained)
+                    Debug.LogWarning($"[Collection] not synced ({snapshot.Status}): {snapshot.Detail}. " +
+                                     "Keeping whatever this device already had.");
+                return snapshot.Status;
+            }
+
+            PlayerAccount.Local.SaveOwnedCards(snapshot.Cards);
+            Debug.Log($"[Collection] synced {snapshot.Cards.RecordedCards} card row(s) " +
+                      $"for the signed-in account.");
+            return snapshot.Status;
+        }
+
+        /// <summary>
+        /// Read this identity's collection and hand back the whole answer, <b>writing nothing</b>.
+        ///
+        /// <para><b>Why a read that does not cache.</b> <see cref="SyncAsync"/> is about the ownership
+        /// record and deliberately discards everything else the route returns. The wallet and the pack
+        /// balances are not ownership and have no local record to be stale against — they are read
+        /// live, at the moment a screen needs them, by whoever needs them. <c>PackVaultController</c>
+        /// is the first such caller (spec
+        /// <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>, slice 1).</para>
+        ///
+        /// <para><b>This is the only place the collection gateway is constructed</b>, which is why the
+        /// read lives here rather than in <c>PackGateway</c>: two owners of one route would be two
+        /// caches to invalidate on an account switch, and only one of them would be wired to
+        /// <see cref="DeviceAccounts.Invalidate"/>.</para>
+        ///
+        /// <para>Never throws — same contract as <see cref="SyncAsync"/>, and now the single place
+        /// that keeps it.</para>
+        /// </summary>
+        public static async Task<CollectionSnapshot> FetchAsync(
+            string accessToken, CancellationToken cancellationToken = default)
+        {
             try
             {
-                CollectionSnapshot snapshot = await Gateway.FetchAsync(accessToken, cancellationToken);
-
-                if (!snapshot.ShouldReplaceCache)
-                {
-                    // Deliberately not a warning for Unconstrained: a superuser having no cached list
-                    // is the correct outcome, not a degraded one.
-                    if (snapshot.Status != CollectionSyncStatus.Unconstrained)
-                        Debug.LogWarning($"[Collection] not synced ({snapshot.Status}): {snapshot.Detail}. " +
-                                         "Keeping whatever this device already had.");
-                    return snapshot.Status;
-                }
-
-                PlayerAccount.Local.SaveOwnedCards(snapshot.Cards);
-                Debug.Log($"[Collection] synced {snapshot.Cards.RecordedCards} card row(s) " +
-                          $"for the signed-in account.");
-                return snapshot.Status;
+                return await Gateway.FetchAsync(accessToken, cancellationToken);
             }
             catch (Exception ex)
             {
                 // The gateway is written not to throw, and the sign-in path must not be the place that
                 // finds out it was wrong about that.
-                Debug.LogWarning($"[Collection] sync threw ({ex.GetType().Name}: {ex.Message}); " +
-                                 "keeping the local record.");
-                return CollectionSyncStatus.Offline;
+                Debug.LogWarning($"[Collection] fetch threw ({ex.GetType().Name}: {ex.Message}); " +
+                                 "reporting it as offline.");
+                return CollectionSnapshot.Failed(CollectionSyncStatus.Offline,
+                                                 $"{ex.GetType().Name}: {ex.Message}");
             }
         }
     }

@@ -268,7 +268,7 @@ GameObject:
   - component: {fileID: 1360996464}
   - component: {fileID: 1360996463}
   m_Layer: 0
-  m_Name: PackReveal
+  m_Name: PackVault
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -283,9 +283,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1360996462}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 972e0b744e60442da13d63ba369d7820, type: 3}
+  m_Script: {fileID: 11500000, guid: 5e9e2e0fed23420394e8da76ee6ec702, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.PackRevealScreenController
+  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.PackVaultController
 --- !u!114 &1360996464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -300,7 +300,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
   m_PanelSettings: {fileID: 11400000, guid: 996a15cc540fe1741af8fb9dbdb5dbe8, type: 2}
   m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: 6df45036c08741118ec7424a994d26c6, type: 3}
+  sourceAsset: {fileID: 9197481963319205126, guid: f5bf0584046745669a320022d65957cf, type: 3}
   m_SortingOrder: 0
   m_Position: 0
   m_WorldSpaceSizeMode: 1
