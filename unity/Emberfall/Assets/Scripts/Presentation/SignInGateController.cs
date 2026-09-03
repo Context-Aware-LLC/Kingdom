@@ -532,10 +532,16 @@ namespace Emberfall.Presentation
             //
             // The collection first and the roster second, because a deck restored before the cards it
             // names would render as a draft for as long as the second call takes.
+            // The token comes from TokenForConnectAsync, not from the session just stored. Here it is
+            // seconds old and the refresh is a no-op, so this buys nothing TODAY — it buys that there
+            // is ONE way to get a token for a request and no second one to copy. The boot path copied
+            // the other one and 401'd on every launch an hour after sign-in; see
+            // MainMenuController.ResumeThenFinishBootstrap.
+            string accessToken = await AuthGateway.TokenForConnectAsync();
             SetBusy(true, "Restoring your collection…");
-            await CollectionGateway.SyncAsync(_auth.Current.AccessToken);
+            await CollectionGateway.SyncAsync(accessToken);
             SetBusy(true, "Restoring your characters…");
-            await RosterGateway.SyncAsync(_auth.Current.AccessToken);
+            await RosterGateway.SyncAsync(accessToken);
             SetBusy(false, null);
 
             _modal?.AddToClassList("mm-modal--hidden");

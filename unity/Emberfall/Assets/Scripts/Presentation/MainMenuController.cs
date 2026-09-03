@@ -148,8 +148,21 @@ namespace Emberfall.Presentation
                     AuthSession session = AuthGateway.Provider.Current;
                     DeviceAccounts.TryBindToIdentity(session.UserId);
 
-                    await CollectionGateway.SyncAsync(session.AccessToken);
-                    await RosterGateway.SyncAsync(session.AccessToken);
+                    // REFRESHED, never the stored token. `session.AccessToken` is whatever was last
+                    // written to disk, and a Supabase access token lives an hour — so on the launch
+                    // this method exists to serve, a returning player's, it is usually expired.
+                    // Both routes then answer 401, both syncs take the "keep whatever this device
+                    // already had" branch, and the failure surfaces nowhere near here: the ownership
+                    // record stays absent, absent means "do not constrain", the wall and the deck
+                    // builder offer the full pool, and the socket closes at the queue with
+                    // "deck rejected: You don't own X" — because CONNECT refreshes and this did not.
+                    // Measured 2026-09-03: GET /collection and GET /roster both 401 at boot, then
+                    // `[auth] authenticated` on the /ws hello eleven minutes later, same identity.
+                    // TokenForConnectAsync is the one accessor that answers a token the server will
+                    // take right now; PackVaultController already uses it for its HTTP calls.
+                    string accessToken = await AuthGateway.TokenForConnectAsync();
+                    await CollectionGateway.SyncAsync(accessToken);
+                    await RosterGateway.SyncAsync(accessToken);
 
                     // The bind may have switched accounts underneath the field captured in OnEnable.
                     _account = PlayerAccount.Local;
@@ -228,8 +241,12 @@ namespace Emberfall.Presentation
             // The ledger balance owns this route. The local marker only decides whether the vault
             // wears its congratulations face, so quitting after one open cannot strand the rest of
             // the starter packs behind a marker that has already been written.
+            // Refreshed, for the reason spelled out in ResumeThenFinishBootstrap — and self-sufficient
+            // rather than reusing that method's token, because the gift must not depend on the order
+            // two boot steps happen to run in. A 401 here reads as "no starter packs" and strands the
+            // gift silently; TokenForConnectAsync is a no-op when the token is already fresh.
             var snapshot = await PackGateway.ReadShelfAsync(
-                AuthGateway.Provider.Current.AccessToken);
+                await AuthGateway.TokenForConnectAsync());
             RenderVaultEntry(snapshot);
             if (snapshot.PackCount(StarterPackId) <= 0) return;
 
