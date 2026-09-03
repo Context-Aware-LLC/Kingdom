@@ -39,6 +39,24 @@ namespace Emberfall.Net.Server.Accounts
         /// <summary>Empty unless <see cref="Status"/> is <see cref="CollectionResultStatus.Known"/>.</summary>
         public IReadOnlyList<KeyValuePair<int, int>> Cards { get; }
 
+        /// <summary>
+        /// Unopened packs the player holds, by pack line — the balance of every item
+        /// <see cref="PackCatalog.IsPackItem"/> recognises, with zero and negative lines dropped.
+        ///
+        /// <para><b>Carried for RESUME, not for browsing</b> (spec
+        /// <c>first-run-and-pack-opening.md</c>, slice 2). The gift routes on this number being above
+        /// zero, which is what makes the five starter packs unstrandable: a player who opens two and
+        /// quits still lands on the rest next launch, without needing the menu entry that is waiting
+        /// on the main-menu overhaul.</para>
+        ///
+        /// <para><b>Populated for <see cref="CollectionResultStatus.Unconstrained"/> as well as
+        /// <see cref="CollectionResultStatus.Known"/></b>, unlike <see cref="Cards"/>. A superuser has
+        /// no card list because there is nothing to enumerate — but their packs are real ledger rows
+        /// with a real balance, and Sam's own account being unable to open its starter packs would
+        /// make the gift untestable on the one device it is developed on.</para>
+        /// </summary>
+        public IReadOnlyList<KeyValuePair<string, long>> Packs { get; }
+
         public WalletBalances Wallet { get; }
 
         /// <summary>Diagnostic only, and never the raw subject — <see cref="CredentialHash"/>'s output.
@@ -48,12 +66,14 @@ namespace Emberfall.Net.Server.Accounts
         public CollectionResult(CollectionResultStatus status,
                                 IReadOnlyList<KeyValuePair<int, int>>? cards = null,
                                 WalletBalances wallet = default,
-                                string playerId = "")
+                                string playerId = "",
+                                IReadOnlyList<KeyValuePair<string, long>>? packs = null)
         {
             Status = status;
             Cards = cards ?? Array.Empty<KeyValuePair<int, int>>();
             Wallet = wallet;
             PlayerId = playerId ?? "";
+            Packs = packs ?? Array.Empty<KeyValuePair<string, long>>();
         }
 
         /// <summary>The HTTP status this maps to, kept beside the enum so a new member cannot be added
@@ -152,10 +172,14 @@ namespace Emberfall.Net.Server.Accounts
             // ForAsync returns AllCardsOwnedCounts for a superuser and never enumerates it — there is
             // nothing to enumerate. Saying so explicitly is what stops the client caching an empty
             // list for Sam's own account and undecking him.
+            IReadOnlyList<KeyValuePair<string, long>> packs =
+                await PacksOf(ledger, account, ct).ConfigureAwait(false);
+
             if (owned is AllCardsOwnedCounts)
                 return new CollectionResult(CollectionResultStatus.Unconstrained,
                     wallet: await WalletOf(economy, account, ct).ConfigureAwait(false),
-                    playerId: account.PlayerId);
+                    playerId: account.PlayerId,
+                    packs: packs);
 
             // Null here means the ledger is configured but ForAsync still declined — today only when
             // the account is null, which cannot happen on this path. Treated as Unavailable rather
@@ -167,7 +191,62 @@ namespace Emberfall.Net.Server.Accounts
                 CollectionResultStatus.Known,
                 counts.Entries(),
                 await WalletOf(economy, account, ct).ConfigureAwait(false),
-                account.PlayerId);
+                account.PlayerId,
+                packs);
+        }
+
+        /// <summary>
+        /// The player's unopened packs, by line. Every ledger balance filtered through
+        /// <see cref="PackCatalog"/>, so only real pack lines reach the client and an item shape this
+        /// build does not recognise is skipped rather than shown as an unopenable tile.
+        ///
+        /// <para><b>Balances at or below zero are dropped.</b> A pack the player has opened leaves a
+        /// zero row behind — the ledger is append-only, so the reservation debit does not delete the
+        /// grant — and a zero-count shelf entry is a tile that cannot be tapped.</para>
+        ///
+        /// <para><b>A pack read failure costs the packs, not the answer</b>, the same posture
+        /// <see cref="WalletOf"/> takes — a shelf empty for one launch is a missed gift, while a throw
+        /// is a 500 on the screen the player just opened. <b>Its reach is narrower than it looks,
+        /// though, and saying so is the point:</b> for a standard account
+        /// <c>LedgerOwnedCounts</c> has already run this same <c>BalancesAsync</c> to build the card
+        /// list, so a broken sweep has thrown before this is ever reached. It is a
+        /// <see cref="AccountKind.Superuser"/> — who skips the card projection entirely — whose read
+        /// this catch actually saves.</para>
+        ///
+        /// <para><b>That shared call is a second round trip.</b> One ledger sweep answers both
+        /// projections and this endpoint makes it twice, because the card half is reached through
+        /// <c>AccountOwnedCounts.ForAsync</c>, which owns its own read and is also called from
+        /// <c>MatchGate</c>. Threading one balance snapshot through both is a change to that
+        /// signature and to its other caller, which is more than this slice should move.</para>
+        /// </summary>
+        private static async Task<IReadOnlyList<KeyValuePair<string, long>>> PacksOf(
+            IEntitlementLedger ledger, Account account, CancellationToken ct)
+        {
+            try
+            {
+                IReadOnlyDictionary<string, long> balances =
+                    await ledger.BalancesAsync(account.PlayerId, ct).ConfigureAwait(false);
+
+                var packs = new List<KeyValuePair<string, long>>();
+                foreach (KeyValuePair<string, long> row in balances)
+                {
+                    if (row.Value <= 0) continue;
+                    if (!PackCatalog.IsPackItem(row.Key)) continue;
+                    packs.Add(row);
+                }
+
+                // Sorted by id for the same reason OnboardingGrant.CardGrant sorts: a dictionary walk
+                // has no promised order, and a shelf that reshuffles between two identical launches
+                // reads as a bug to the player looking at it.
+                packs.Sort(static (a, b) => string.CompareOrdinal(a.Key, b.Key));
+                return packs;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("[collection] pack balance read failed for player_id={0}: {1}",
+                    account.PlayerId, ex.Message);
+                return Array.Empty<KeyValuePair<string, long>>();
+            }
         }
 
         /// <summary>The wallet, or zeroes on a box with no economy service. A missing wallet must not

@@ -86,6 +86,57 @@ namespace Emberfall.Net.Client.Auth
             return TryReadTopLevel(raw!, out fields);
         }
 
+        /// <summary>
+        /// A nested member that is an ARRAY OF OBJECTS, each read with the ordinary top-level reader —
+        /// <c>awards</c> in a pack-open receipt, and nothing else so far.
+        ///
+        /// <para><b>Why an array here when <c>cards</c> and <c>packs</c> are objects.</b> Those two are
+        /// maps: a card id to a count, a pack line to a balance, where the key is the identity and the
+        /// order carries nothing. A pack's slots are a SEQUENCE — the reveal animates them in the order
+        /// the server rolled them, and two slots can legally be the same card — so keying them by
+        /// anything would be inventing an identity they do not have.</para>
+        ///
+        /// <para>Returns false when the member is absent or is not an array. An array containing
+        /// anything that is not an object is rejected whole rather than partially read: half a pack is
+        /// not a smaller pack, it is a receipt that lies about what the player was given.</para>
+        /// </summary>
+        public static bool TryReadObjectArray(string json, string name,
+                                              out IReadOnlyList<IReadOnlyDictionary<string, string>> items)
+        {
+            var list = new List<IReadOnlyDictionary<string, string>>();
+            items = list;
+
+            if (!TryReadTopLevel(json, keepContainers: true, out var outer)) return false;
+            if (!outer.TryGetValue(name, out string? raw) || string.IsNullOrEmpty(raw)) return false;
+
+            int pos = 0;
+            SkipWhitespace(raw!, ref pos);
+            if (pos >= raw!.Length || raw[pos] != '[') return false;
+            pos++;
+
+            SkipWhitespace(raw, ref pos);
+            if (pos < raw.Length && raw[pos] == ']') return true;
+
+            while (pos < raw.Length)
+            {
+                SkipWhitespace(raw, ref pos);
+                if (pos >= raw.Length || raw[pos] != '{') return false;
+
+                int start = pos;
+                if (!SkipContainer(raw, ref pos)) return false;
+                if (!TryReadTopLevel(raw.Substring(start, pos - start), out var element)) return false;
+                list.Add(element);
+
+                SkipWhitespace(raw, ref pos);
+                if (pos >= raw.Length) return false;
+                if (raw[pos] == ',') { pos++; continue; }
+                if (raw[pos] == ']') return true;
+                return false;
+            }
+
+            return false;
+        }
+
         private static bool TryReadTopLevel(string json, bool keepContainers,
                                             out IReadOnlyDictionary<string, string> fields)
         {

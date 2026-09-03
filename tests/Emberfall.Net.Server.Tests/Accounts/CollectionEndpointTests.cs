@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Emberfall.Core.Cards;
+using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Server.Accounts;
 using Emberfall.Net.Server.Identity;
@@ -275,6 +276,148 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 onboarding: new OnboardingGrantService(ledger, Cards(), new FixedTime()));
 
             Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Known));
+        }
+
+        // ── Unopened packs ──────────────────────────────────────────────────────────────
+        //
+        // Carried for RESUME, not for browsing (first-run-and-pack-opening.md, slice 2). Until this
+        // landed the five starter packs were a ledger balance nothing on the wire reported, so the
+        // client could not know they existed and the gift had no way to route — #346, measured on a
+        // device as a first deck stuck at 28 of 30.
+
+        [Test]
+        public async Task The_starter_packs_the_grant_wrote_come_back_on_the_wire()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var store = new InMemoryAccountStore(new FixedTime());
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger, economy: null,
+                onboarding: new OnboardingGrantService(ledger, Cards(), new FixedTime()));
+
+            string starter = OnboardingGrant.StarterPack().Id;
+            Assert.That(result.Packs, Is.EqualTo(new[]
+            {
+                new KeyValuePair<string, long>(starter, OnboardingGrant.StarterPackCount),
+            }));
+        }
+
+        [Test]
+        public async Task A_spent_pack_line_is_dropped_rather_than_reported_as_zero()
+        {
+            // The ledger is append-only, so opening every pack leaves a zero row behind rather than
+            // deleting the grant. A zero-count shelf entry is a tile that cannot be tapped, and — more
+            // to the point — the gift routes on "> 0", so a zero that reached the client as a present
+            // key would be one bug away from replaying the congratulations beat for ever.
+            var ledger = new InMemoryEntitlementLedger();
+            var store = new InMemoryAccountStore(new FixedTime());
+            Account account = await store.ResolveOrCreateAsync(
+                "supabase", CredentialHash.Of(Subject), "player@example.com");
+
+            string starter = OnboardingGrant.StarterPack().Id;
+            await ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, starter, 2, "test", "txn-packs", Now));
+            await ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, starter, -2, "test", "txn-opened-both", Now));
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger, economy: null, onboarding: null);
+
+            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Known));
+            Assert.That(result.Packs, Is.Empty);
+        }
+
+        [Test]
+        public async Task Only_pack_lines_reach_the_shelf()
+        {
+            // Every balance is filtered through PackCatalog. A card row or a currency arriving as a
+            // "pack" would render as an unopenable tile, and POST /packs/open would refuse it.
+            var ledger = new InMemoryEntitlementLedger();
+            var store = new InMemoryAccountStore(new FixedTime());
+            Account account = await store.ResolveOrCreateAsync(
+                "supabase", CredentialHash.Of(Subject), "player@example.com");
+
+            await ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, CardItem(1001), 3, "test", "txn-cards", Now));
+            await ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, EconomyItems.Gold, 500, "test", "txn-gold", Now));
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger, economy: null, onboarding: null);
+
+            Assert.That(result.Packs, Is.Empty);
+        }
+
+        [Test]
+        public async Task A_superuser_gets_no_card_list_but_does_get_their_packs()
+        {
+            // Unlike the cards, where there is nothing to enumerate. Sam's own account is the one the
+            // gift is developed on, and a superuser who could not open their starter packs would make
+            // the whole first-run flow untestable on the only device it is built on.
+            var ledger = new InMemoryEntitlementLedger();
+            var store = new InMemoryAccountStore(new FixedTime());
+            Account account = await store.ResolveOrCreateAsync(
+                "supabase", CredentialHash.Of(Subject), "player@example.com");
+            await store.SetKindAsync(account.PlayerId, AccountKind.Superuser);
+
+            string starter = OnboardingGrant.StarterPack().Id;
+            await ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, starter, 5, "test", "txn-packs", Now));
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger, economy: null, onboarding: null);
+
+            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Unconstrained));
+            Assert.That(result.Cards, Is.Empty);
+            Assert.That(result.Packs, Is.EqualTo(new[]
+            {
+                new KeyValuePair<string, long>(starter, 5),
+            }));
+        }
+
+        [Test]
+        public async Task A_pack_read_that_throws_costs_the_packs_and_not_the_answer()
+        {
+            // Same posture as the wallet: a shelf coming back empty for one launch is a missed gift,
+            // while a throw would be a 500 on the screen the player just opened.
+            //
+            // A SUPERUSER, deliberately, because that is the one path where this catch is the only
+            // thing standing between a bad sweep and a failed read. For a standard account
+            // LedgerOwnedCounts already ran the same BalancesAsync to build the card list and would
+            // have thrown first — the two projections share one ledger call and this endpoint makes
+            // it twice. Superusers skip the card projection entirely (AccountOwnedCounts.ForAsync
+            // never consults the ledger for one), so the pack sweep is their only one.
+            var ledger = new ThrowsOnBalances();
+            var store = new InMemoryAccountStore(new FixedTime());
+            Account account = await store.ResolveOrCreateAsync(
+                "supabase", CredentialHash.Of(Subject), "player@example.com");
+            await store.SetKindAsync(account.PlayerId, AccountKind.Superuser);
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger, economy: null, onboarding: null);
+
+            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Unconstrained));
+            Assert.That(result.Packs, Is.Empty);
+        }
+
+        /// <summary>A ledger whose grants and history work and whose balance sweep does not — the one
+        /// fault shape that isolates the pack read.</summary>
+        private sealed class ThrowsOnBalances : IEntitlementLedger
+        {
+            private readonly InMemoryEntitlementLedger _inner = new InMemoryEntitlementLedger();
+
+            public Task<GrantResult> GrantAsync(EntitlementGrant grant, CancellationToken ct = default)
+                => _inner.GrantAsync(grant, ct);
+            public Task<EntitlementBatchResult> ApplyBatchAsync(EntitlementBatch batch, CancellationToken ct = default)
+                => _inner.ApplyBatchAsync(batch, ct);
+            public Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(string playerId, CancellationToken ct = default)
+                => _inner.AcquirePlayerMutationLockAsync(playerId, ct);
+            public Task<long> BalanceAsync(string playerId, string item, CancellationToken ct = default)
+                => _inner.BalanceAsync(playerId, item, ct);
+            public Task<IReadOnlyDictionary<string, long>> BalancesAsync(string playerId, CancellationToken ct = default)
+                => throw new InvalidOperationException("balance sweep is down");
+            public Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(string playerId, CancellationToken ct = default)
+                => _inner.HistoryAsync(playerId, ct);
         }
     }
 }

@@ -69,11 +69,12 @@ namespace Emberfall.Net.Server.Accounts
         public const string GrantSource = "signup";
 
         /// <summary>
-        /// The credential kind that identifies a guest. Matches
-        /// <see cref="EconomyAccountPolicy.RequireDurable"/>'s own check, which throws on it — the two
-        /// must agree, or this service would hand an account to a policy that rejects it.
+        /// The credential kind that identifies a guest. <b>The same constant</b>
+        /// <see cref="EconomyAccountPolicy.RequireDurable"/> throws on, rather than a second copy of
+        /// the string — the two have to agree, or this service would hand an account to a policy that
+        /// rejects it, and two spellings is how that stops being true.
         /// </summary>
-        private const string GuestCredentialKind = "device_token";
+        private const string GuestCredentialKind = EconomyAccountPolicy.GuestCredentialKind;
 
         private readonly IEntitlementLedger _ledger;
         private readonly ICardDatabase _cards;

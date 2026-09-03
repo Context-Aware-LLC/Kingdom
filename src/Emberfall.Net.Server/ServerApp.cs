@@ -109,6 +109,22 @@ namespace Emberfall.Net.Server
         public IEntitlementLedger? EntitlementLedger { get; init; }
 
         /// <summary>
+        /// Where a pack open gets its seed. Null (default) reads
+        /// <see cref="HmacPackSeedSource.SecretEnvVar"/> from the environment, and if that is unset
+        /// too the pack line is DISABLED rather than seeded with a default — see the composition root
+        /// for why a default secret is a published one. Injected directly in tests, where
+        /// <see cref="FixedPackSeedSource"/> makes an open reproducible.
+        /// </summary>
+        public IPackSeedSource? PackSeedSource { get; init; }
+
+        /// <summary>
+        /// Where booster pity counters live. Null (default) uses
+        /// <see cref="InMemoryPackPityStore"/> — the only implementation that exists, so pity does not
+        /// survive a restart. The composition root carries the retirement trigger for that.
+        /// </summary>
+        public IPackPityStore? PackPityStore { get; init; }
+
+        /// <summary>
         /// The off-box drain that ships the JSONL buffer into durable Postgres (C-G1-8; step 5). Null
         /// unless <c>EMBERFALL_TELEMETRY_DB</c> is set — the JSONL buffer is written either way, so a box
         /// with no DB is a visible "buffered, not shipped", never a silent drop. <see cref="ServerApp"/>
@@ -311,6 +327,46 @@ namespace Emberfall.Net.Server
             EconomyService? economy = cfg.EntitlementLedger is null
                 ? null
                 : new EconomyService(cfg.EntitlementLedger, time);
+
+            // The pack line. Two things have to be present for a pack to be openable at all, and
+            // BOTH absences are configuration rather than failure — the route answers 503 and the
+            // rest of the server is unaffected:
+            //
+            //   a ledger        — there is nothing to debit a pack from;
+            //   a seed secret   — HmacPackSeedSource.FromEnvironment() returns null when
+            //                     EMBERFALL_PACK_SEED_SECRET is unset, ON PURPOSE. A default secret
+            //                     is a published secret, and a predictable seed lets a client
+            //                     compute its own pack contents before opening them.
+            //
+            // Logged loudly rather than silently skipped: an unset secret in production is a
+            // deployment that grants five starter packs and cannot open one, which on the client
+            // looks like the gift screen being broken (#346) rather than like a missing env var.
+            IPackSeedSource? packSeeds = cfg.PackSeedSource ?? HmacPackSeedSource.FromEnvironment();
+            BoosterPackGrantService? packOpener = null;
+            if (cfg.EntitlementLedger is not null)
+            {
+                if (packSeeds is null)
+                {
+                    Console.Error.WriteLine(
+                        "[packs] {0} is unset — POST /packs/open is DISABLED and every granted pack " +
+                        "is unopenable. Set it to enable the pack line.",
+                        HmacPackSeedSource.SecretEnvVar);
+                }
+                else
+                {
+                    // RETIREMENT TRIGGER — THE PITY STORE IS IN-MEMORY AND THIS IS THE ONLY PLACE
+                    // THAT SAYS SO. InMemoryPackPityStore is the only IPackPityStore that exists, so
+                    // a restart forgets every player's rare floor and epic/legendary pity clocks;
+                    // the ledger keeps the CARDS, but a player mid-way to a pity legendary starts
+                    // that clock again. Tolerable for the five-pack gift, which is opened in one
+                    // sitting. NOT tolerable once packs are sold. The commit that adds a durable
+                    // adapter (a `pack_pity` table beside `entitlement_grant`) replaces the line
+                    // below and deletes this comment.
+                    packOpener = new BoosterPackGrantService(
+                        cfg.EntitlementLedger, cfg.PackPityStore ?? new InMemoryPackPityStore(),
+                        packSeeds, db, time);
+                }
+            }
 
             var gate = new MatchGate(
                 cfg.Options,
@@ -616,6 +672,18 @@ namespace Emberfall.Net.Server
                 foreach (var row in result.Cards)
                     cards[row.Key.ToString(CultureInfo.InvariantCulture)] = row.Value;
 
+                // Unopened packs, by line — an OBJECT keyed by pack id for exactly the reason above,
+                // and NOT the array of {id, count} the spec draft drew: this client reader cannot see
+                // inside an array. The spec was corrected to match rather than the other way round.
+                //
+                // Always present under "known" and "unconstrained", including when empty. The client
+                // treats a missing `packs` as Malformed, because a body that has lost the field and a
+                // player who has opened everything must not be the same answer — the first is a
+                // captive portal, the second is a finished gift.
+                var packs = new Dictionary<string, long>(result.Packs.Count);
+                foreach (var row in result.Packs)
+                    packs[row.Key] = row.Value;
+
                 return Results.Json(new
                 {
                     // "known" | "unconstrained" | "unauthenticated" | "unavailable" — the client
@@ -624,12 +692,76 @@ namespace Emberfall.Net.Server
                     ownership = result.Status.ToString().ToLowerInvariant(),
                     playerId = result.PlayerId,
                     cards,
+                    packs,
                     wallet = new
                     {
                         gold = result.Wallet.Gold,
                         gems = result.Wallet.Gems,
                         shards = result.Wallet.Shards,
                     },
+                }, statusCode: result.HttpStatus);
+            });
+
+            // POST /packs/open — the verb the ledger has been missing. Body is {"packId": "..."} and
+            // NOTHING ELSE: the instance id that anchors the open is minted server-side, and a client
+            // that could choose it could replay one pack into unbounded opens. See PackOpenEndpoint.
+            //
+            // Cache-Control: no-store, for the same reason /collection sets it, and more so — this
+            // response is a one-time reveal of cards that are now spent.
+            app.MapPost("/packs/open", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                // Read by hand rather than through a bound DTO, because a DTO is precisely how a
+                // `packInstanceId` property gets re-added "for convenience" later. There is exactly
+                // one field, and anything else in the body is ignored by construction.
+                string? packId = null;
+                try
+                {
+                    using var body = await System.Text.Json.JsonDocument
+                        .ParseAsync(context.Request.Body, cancellationToken: context.RequestAborted)
+                        .ConfigureAwait(false);
+                    if (body.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                        body.RootElement.TryGetProperty("packId", out var packIdElement) &&
+                        packIdElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                        packId = packIdElement.GetString();
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    // An unparseable body names no pack line, which is the same answer as naming an
+                    // unknown one. Left to the endpoint so there is one place that decides it.
+                }
+
+                PackOpenEndpointResult result = await PackOpenEndpoint.OpenAsync(
+                    bearer, packId, cfg.TokenVerifier, cfg.AccountStore, cfg.EntitlementLedger,
+                    packOpener, onboarding, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                var awards = new List<object>(result.Awards.Count);
+                foreach (PackSlotAward award in result.Awards)
+                    awards.Add(new
+                    {
+                        cardId = award.CardId,
+                        rarity = award.Rarity.ToString(),
+                        // "none" | "rarefloor" | "epicpity" | "legendarypity" — reveal chrome, and on
+                        // an AlreadyOpened replay always "none": which guarantee fired is not an
+                        // entitlement and the ledger deliberately does not record it.
+                        upgrade = award.Upgrade.ToString().ToLowerInvariant(),
+                    });
+
+                return Results.Json(new
+                {
+                    // "opened" | "alreadyopened" | "unknownpack" | "noneowned" | "conflict" |
+                    // "unauthenticated" | "unavailable".
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    packId = result.PackId,
+                    packInstanceId = result.PackInstanceId,
+                    awards,
                 }, statusCode: result.HttpStatus);
             });
 

@@ -31,7 +31,7 @@ namespace Emberfall.Net.Client.Tests.Collection
         [Test]
         public async Task The_fetch_is_a_get_carrying_the_bearer()
         {
-            var http = new FakeAuthHttp().Reply(200, "{\"ownership\":\"known\",\"cards\":{}}");
+            var http = new FakeAuthHttp().Reply(200, "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}}");
 
             await Gateway(http).FetchAsync("jwt-token");
 
@@ -72,7 +72,7 @@ namespace Emberfall.Net.Client.Tests.Collection
         public async Task A_known_collection_comes_back_as_counts()
         {
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"playerId\":\"abc\"," +
+                "{\"ownership\":\"known\",\"playerId\":\"abc\",\"packs\":{}," +
                 "\"cards\":{\"1001\":2,\"1042\":1}," +
                 "\"wallet\":{\"gold\":150,\"gems\":0,\"shards\":40}}");
 
@@ -92,7 +92,7 @@ namespace Emberfall.Net.Client.Tests.Collection
         {
             // The load-bearing one. "known" with no cards means this player owns nothing, and it MUST
             // be written — that is what makes their decks read as drafts instead of silently legal.
-            var http = new FakeAuthHttp().Reply(200, "{\"ownership\":\"known\",\"cards\":{}}");
+            var http = new FakeAuthHttp().Reply(200, "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}}");
 
             CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
 
@@ -107,7 +107,7 @@ namespace Emberfall.Net.Client.Tests.Collection
             // Same posture as LedgerOwnedCounts server-side: a row written under a future or foreign
             // item shape must not take the rest of the collection with it.
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"cards\":{\"1001\":2,\"not-a-card\":3,\"1042\":\"x\",\"1077\":-4,\"1099\":1}}");
+                "{\"ownership\":\"known\",\"packs\":{},\"cards\":{\"1001\":2,\"not-a-card\":3,\"1042\":\"x\",\"1077\":-4,\"1099\":1}}");
 
             CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
 
@@ -128,7 +128,7 @@ namespace Emberfall.Net.Client.Tests.Collection
             // There is no list to cache and inventing an empty one would undeck Sam's own account.
             // Leaving the device with no record is what produces the full pool.
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"unconstrained\",\"cards\":{},\"wallet\":{\"gold\":0,\"gems\":0,\"shards\":0}}");
+                "{\"ownership\":\"unconstrained\",\"cards\":{},\"packs\":{},\"wallet\":{\"gold\":0,\"gems\":0,\"shards\":0}}");
 
             CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
 
@@ -184,6 +184,84 @@ namespace Emberfall.Net.Client.Tests.Collection
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Malformed));
             Assert.That(snapshot.ShouldReplaceCache, Is.False);
+        }
+
+        // ── Unopened packs ──────────────────────────────────────────────────────────────
+
+        [Test]
+        public async Task Unopened_packs_come_back_with_the_collection()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"cards\":{}," +
+                "\"packs\":{\"pack.emberfall.starter\":5,\"pack.emberfall\":1}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
+            Assert.That(snapshot.PackCount("pack.emberfall.starter"), Is.EqualTo(5));
+            Assert.That(snapshot.PackCount("pack.emberfall"), Is.EqualTo(1));
+            Assert.That(snapshot.PackCount("pack.rekindling"), Is.EqualTo(0),
+                "a line the player holds nothing of is 0, not a missing key the caller has to handle");
+        }
+
+        [Test]
+        public async Task A_superuser_still_gets_their_packs()
+        {
+            // Unlike the cards, which are deliberately absent. The gift is developed on a superuser
+            // account, so one that could not see its own starter packs would make the whole first-run
+            // flow untestable on the only device it is built on.
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"unconstrained\",\"packs\":{\"pack.emberfall.starter\":5}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Unconstrained));
+            Assert.That(snapshot.Cards, Is.Null);
+            Assert.That(snapshot.PackCount("pack.emberfall.starter"), Is.EqualTo(5));
+        }
+
+        [Test]
+        public async Task A_known_body_with_no_packs_field_is_malformed_not_an_empty_shelf()
+        {
+            // The contract test the spec asks for, and the same dangerous decode as the missing
+            // ownership word one level up. "No packs field" and "this player has opened everything"
+            // arrive as the same absence and route the first run differently: one is a proxy or a
+            // server change, the other is a finished gift. Silently reading the first as the second
+            // is how five granted packs go missing with nothing reporting a fault.
+            var http = new FakeAuthHttp().Reply(200, "{\"ownership\":\"known\",\"cards\":{\"1001\":2}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Malformed));
+            Assert.That(snapshot.ShouldReplaceCache, Is.False);
+        }
+
+        [Test]
+        public async Task An_empty_packs_object_is_a_real_answer()
+        {
+            // The other half of the pair: present and empty means the shelf is genuinely bare, which
+            // is what every launch after the gift looks like.
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"cards\":{\"1001\":2},\"packs\":{}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
+            Assert.That(snapshot.Packs, Is.Empty);
+        }
+
+        [Test]
+        public async Task A_pack_row_that_does_not_parse_costs_only_that_row()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"cards\":{}," +
+                "\"packs\":{\"pack.emberfall.starter\":3,\"pack.broken\":\"x\",\"pack.spent\":0}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
+            Assert.That(snapshot.PackCount("pack.emberfall.starter"), Is.EqualTo(3));
+            Assert.That(snapshot.Packs.Count, Is.EqualTo(1));
         }
     }
 }

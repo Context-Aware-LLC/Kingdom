@@ -70,28 +70,56 @@ namespace Emberfall.Net.Client.Collection
         /// constrain — never "owns nothing".</summary>
         public OwnedCardCounts? Cards { get; }
 
+        /// <summary>
+        /// Unopened packs this player holds, by pack line. Present on
+        /// <see cref="CollectionSyncStatus.Synced"/> <b>and</b>
+        /// <see cref="CollectionSyncStatus.Unconstrained"/> — a superuser has no card list to
+        /// enumerate but does hold real packs — and empty on every failure, which is a statement about
+        /// nothing rather than about an empty shelf.
+        ///
+        /// <para><b>This is the first-run routing input.</b> The gift routes on a starter balance
+        /// above zero rather than on a local marker, which is what makes granted packs
+        /// unstrandable: a player who opens two and quits lands back on the remaining three. See
+        /// <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c> §4 slice 2.</para>
+        /// </summary>
+        public IReadOnlyDictionary<string, long> Packs { get; }
+
         public WalletSnapshot Wallet { get; }
 
         /// <summary>Diagnostic text for a log line. Never shown to a player.</summary>
         public string Detail { get; }
 
+        private static readonly IReadOnlyDictionary<string, long> NoPacks =
+            new Dictionary<string, long>(StringComparer.Ordinal);
+
         private CollectionSnapshot(CollectionSyncStatus status, OwnedCardCounts? cards,
-                                   WalletSnapshot wallet, string detail)
+                                   WalletSnapshot wallet, string detail,
+                                   IReadOnlyDictionary<string, long>? packs = null)
         {
             Status = status;
             Cards = cards;
             Wallet = wallet;
             Detail = detail ?? "";
+            Packs = packs ?? NoPacks;
         }
 
-        public static CollectionSnapshot Synced(OwnedCardCounts cards, WalletSnapshot wallet)
-            => new CollectionSnapshot(CollectionSyncStatus.Synced, cards, wallet, "");
+        public static CollectionSnapshot Synced(OwnedCardCounts cards, WalletSnapshot wallet,
+                                                IReadOnlyDictionary<string, long>? packs = null)
+            => new CollectionSnapshot(CollectionSyncStatus.Synced, cards, wallet, "", packs);
 
-        public static CollectionSnapshot Unconstrained(WalletSnapshot wallet)
-            => new CollectionSnapshot(CollectionSyncStatus.Unconstrained, null, wallet, "");
+        public static CollectionSnapshot Unconstrained(WalletSnapshot wallet,
+                                                       IReadOnlyDictionary<string, long>? packs = null)
+            => new CollectionSnapshot(CollectionSyncStatus.Unconstrained, null, wallet, "", packs);
 
         public static CollectionSnapshot Failed(CollectionSyncStatus status, string detail)
             => new CollectionSnapshot(status, null, default, detail);
+
+        /// <summary>How many unopened packs of one line this player holds; 0 when the line is absent.
+        /// One accessor rather than a lookup at each call site, because the routing decision in
+        /// <c>MainMenuController.BeginFirstRun</c> is "> 0" and a missing key is not a different
+        /// answer from a zero balance.</summary>
+        public long PackCount(string packId)
+            => packId is not null && Packs.TryGetValue(packId, out long count) ? count : 0;
 
         /// <summary>True only when this result may be written to the local cache. One property rather
         /// than a status comparison at each call site, because the wrong comparison here is exactly
@@ -193,10 +221,21 @@ namespace Emberfall.Net.Client.Collection
 
             WalletSnapshot wallet = ReadWallet(body);
 
-            if (ownership.Equals("unconstrained", StringComparison.OrdinalIgnoreCase))
-                return CollectionSnapshot.Unconstrained(wallet);
+            bool known = ownership.Equals("known", StringComparison.OrdinalIgnoreCase);
+            bool unconstrained = ownership.Equals("unconstrained", StringComparison.OrdinalIgnoreCase);
 
-            if (!ownership.Equals("known", StringComparison.OrdinalIgnoreCase))
+            // A body that answered with ownership but carries no `packs` member is MALFORMED, not a
+            // player with an empty shelf — the two would route the first run differently, and the
+            // gift is the thing that would go missing. Required under both ownership words the server
+            // sends packs with, so a field lost to a proxy or a rewrite cannot degrade quietly.
+            IReadOnlyDictionary<string, long>? packs = null;
+            if ((known || unconstrained) && !TryReadPacks(body, out packs))
+                return CollectionSnapshot.Failed(CollectionSyncStatus.Malformed, "no packs field");
+
+            if (unconstrained)
+                return CollectionSnapshot.Unconstrained(wallet, packs);
+
+            if (!known)
                 return CollectionSnapshot.Failed(CollectionSyncStatus.Unavailable, ownership);
 
             var cards = new OwnedCardCounts();
@@ -219,7 +258,35 @@ namespace Emberfall.Net.Client.Collection
                 }
             }
 
-            return CollectionSnapshot.Synced(cards, wallet);
+            return CollectionSnapshot.Synced(cards, wallet, packs);
+        }
+
+        /// <summary>
+        /// The <c>packs</c> object: pack line → unopened balance. False only when the member is
+        /// absent or is not an object at all — which is the Malformed case, not an empty shelf.
+        ///
+        /// <para>An empty object is a legal, meaningful answer: this player has no unopened packs.
+        /// Individual rows that do not parse are skipped rather than failing the read, the same
+        /// posture the card rows take — a line written under a future item shape must not cost the
+        /// player the packs they can actually open.</para>
+        /// </summary>
+        private static bool TryReadPacks(string body, out IReadOnlyDictionary<string, long> packs)
+        {
+            var map = new Dictionary<string, long>(StringComparer.Ordinal);
+            packs = map;
+
+            if (!AuthJson.TryReadNestedObject(body, "packs", out var rows)) return false;
+
+            foreach (KeyValuePair<string, string> row in rows)
+            {
+                if (!long.TryParse(row.Value, NumberStyles.Integer, CultureInfo.InvariantCulture,
+                                   out long count))
+                    continue;
+                if (count <= 0) continue;
+                map[row.Key] = count;
+            }
+
+            return true;
         }
 
         private static WalletSnapshot ReadWallet(string body)
