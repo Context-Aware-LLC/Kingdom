@@ -197,6 +197,47 @@
     -unity-background-scale-mode: stretch-to-fill;
 }
 
+/* ---- Class -> hero-power art -------------------------------------------------------------------
+ * One image per class, and THE FILE NAMES DO NOT MATCH THE ENUM. `tempest` is `storm_hp`,
+ * `clockwright` is `clock_hp`, `nightveil` is `night_hp`, `gravekeep` is `grave_hp`,
+ * `tidecaller` is `tide_hp`, `stonewarden` is `stone_hp`, `emberward` is `ember_hp`. Nothing
+ * derives one from the other and nothing can -- `storm` is not a prefix of `tempest` -- so this
+ * block IS the map, and it lives here rather than in a screen's sheet because two screens need it:
+ * the collection's class rail and the character-create picker's plate.
+ *
+ * Keyed on the ENUM MEMBER LOWERCASED, like every other per-class token run in this file. A class
+ * added to the enum needs a row here or its glyph is simply absent -- there is no fallback, by
+ * design, because a wrong hero power drawn confidently is worse than a missing one.
+ *
+ * The selector name is the collection's, kept deliberately: moving the rules was meant to remove a
+ * copy, not to force an edit to CollectionScreen.uxml and CollectionController on the way past.
+ * RETIREMENT TRIGGER: if the collection's class rail is ever removed, rename these to something
+ * that does not say "tab" -- the character-create picker will be the only caller left. */
+.class-tab_art-emberward {
+    background-image: url("/Assets/Art/UI/hptabs/ember_hp.png");
+}
+.class-tab_art-tempest {
+    background-image: url("/Assets/Art/UI/hptabs/storm_hp.png");
+}
+.class-tab_art-stonewarden {
+    background-image: url("/Assets/Art/UI/hptabs/stone_hp.png");
+}
+.class-tab_art-nightveil {
+    background-image: url("/Assets/Art/UI/hptabs/night_hp.png");
+}
+.class-tab_art-verdant {
+    background-image: url("/Assets/Art/UI/hptabs/verdant_hp.png");
+}
+.class-tab_art-gravekeep {
+    background-image: url("/Assets/Art/UI/hptabs/grave_hp.png");
+}
+.class-tab_art-clockwright {
+    background-image: url("/Assets/Art/UI/hptabs/clock_hp.png");
+}
+.class-tab_art-tidecaller {
+    background-image: url("/Assets/Art/UI/hptabs/tide_hp.png");
+}
+
 .unity-base-dropdown__label {
     color: var(--unity-colors-dropdown-text);
 }

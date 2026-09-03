@@ -253,6 +253,24 @@ namespace Emberfall.Presentation
             body.Add(power);
             plate.Add(body);
 
+            // The hero power's own socket ring, holding the class's hero-power art (#312). Both
+            // halves already existed and neither was reachable from this screen: the ring is the
+            // IronEmber cut Sam split out of the board's hero frame, and the eight glyphs are the
+            // collection class rail's. The ring is the board's vocabulary, which is the point —
+            // this is where you choose the power you then look at inside that frame all match.
+            //
+            // THE GLYPH'S CLASS COMES FROM theme.uss, NOT FROM A MAP HERE. The file names do not
+            // match the enum (TEMPEST is storm_hp, CLOCKWRIGHT is clock_hp), and that map already
+            // had one home; a second copy in C# is how the two drift apart. A class with no row
+            // there draws an empty ring rather than the wrong power.
+            var ring = new VisualElement { pickingMode = PickingMode.Ignore };
+            ring.AddToClassList("hero-choice-ring");
+            var glyph = new VisualElement { pickingMode = PickingMode.Ignore };
+            glyph.AddToClassList("hero-choice-glyph");
+            glyph.AddToClassList("class-tab_art-" + heroClass.ToString().ToLowerInvariant());
+            ring.Add(glyph);
+            plate.Add(ring);
+
             if (selected)
             {
                 var badge = new Label((order + 1).ToString()) { pickingMode = PickingMode.Ignore };

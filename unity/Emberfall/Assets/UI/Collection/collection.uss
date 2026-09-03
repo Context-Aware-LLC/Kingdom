@@ -971,30 +971,12 @@
     overflow: hidden;
     -unity-background-scale-mode: scale-and-crop;
 }
-.class-tab_art-emberward {
-    background-image: url("/Assets/Art/UI/hptabs/ember_hp.png");
-}
-.class-tab_art-tempest {
-    background-image: url("/Assets/Art/UI/hptabs/storm_hp.png");
-}
-.class-tab_art-stonewarden {
-    background-image: url("/Assets/Art/UI/hptabs/stone_hp.png");
-}
-.class-tab_art-nightveil {
-    background-image: url("/Assets/Art/UI/hptabs/night_hp.png");
-}
-.class-tab_art-verdant {
-    background-image: url("/Assets/Art/UI/hptabs/verdant_hp.png");
-}
-.class-tab_art-gravekeep {
-    background-image: url("/Assets/Art/UI/hptabs/grave_hp.png");
-}
-.class-tab_art-clockwright {
-    background-image: url("/Assets/Art/UI/hptabs/clock_hp.png");
-}
-.class-tab_art-tidecaller {
-    background-image: url("/Assets/Art/UI/hptabs/tide_hp.png");
-}
+/* THE CLASS -> HERO-POWER-ART MAP MOVED TO Common/theme.uss (2026-09-03). It is not a collection
+ * concern: the character-create picker needs the same eight images to put a class's hero power on
+ * its plate, and a second copy of a map whose keys do not match its values -- TEMPEST is storm_hp,
+ * CLOCKWRIGHT is clock_hp -- is the exact shape of thing that drifts. The selector names are
+ * unchanged, so this screen's UXML and CollectionController.WireClassTabs need no edit; theme.uss
+ * loads before this file on every screen that has both. */
 .class-tab_art-neutral {
     background-color: var(--class-neutral);
 }
