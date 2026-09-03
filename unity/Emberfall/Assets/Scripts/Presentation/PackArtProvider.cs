@@ -6,6 +6,8 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// Reads <c>Assets/Art/Shop/Packs/&lt;setId&gt;/</c> — the manifest, then the sprites it names.
+    /// SKU-qualified products reuse their expansion folder: <c>pack.emberfall.starter</c> and
+    /// <c>pack.emberfall</c> both resolve <c>EMBERFALL</c> through <see cref="PackArtSet"/>.
     /// Addressables in a build, AssetDatabase in the Editor, the same two-path shape
     /// <see cref="CardDatabaseLoader"/> uses so tools work before a catalog has been built.
     ///

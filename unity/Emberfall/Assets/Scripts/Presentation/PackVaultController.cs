@@ -411,12 +411,13 @@ namespace Emberfall.Presentation
 
             // The face gets the set's first piece of art if the set has any. A set whose art has not
             // been drawn yet is the normal state and says nothing — see PackArtProvider — so an
-            // artless pack reads as a pack without a picture, never as a picture that failed.
-            // The starter set is exactly this today: Assets/Art/Shop/Packs/STARTER/ does not exist.
+            // artless pack reads as a pack without a picture, never as a picture that failed. A
+            // SKU-qualified starter pack reuses its expansion's art; PackArtSet deliberately
+            // ignores the product suffix when resolving the folder.
             _packArt?.LoadPackArt(packId, pieces =>
             {
                 if (pieces == null || pieces.Count == 0) return;
-                face.style.backgroundImage = new StyleBackground(pieces[0].Sprite);
+                PackWrapperBaker.ApplyTo(face, pieces[0].Sprite);
                 face.AddToClassList("vault-pack__face--art");
             });
 
@@ -432,8 +433,8 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>A pack line as a player should read it. <c>pack.emberfall.starter</c> is
-        /// "Starter Pack" — the last segment is the only part that distinguishes one line from
-        /// another, which is the same rule <see cref="PackArtSet.SetIdFor"/> follows.</summary>
+        /// "Starter Pack" — the last segment is the only part that distinguishes one inventory
+        /// line from another. Packaging resolution separately uses the expansion segment.</summary>
         private static string PackDisplayName(string packId)
         {
             string token = TokenText.Pretty(packId);

@@ -283,7 +283,7 @@ namespace Emberfall.Presentation
             var slot = new VisualElement { name = piece.Id };
             slot.AddToClassList("shop-pack__art-slot");
             slot.AddToClassList("shop-pack__art-slot--loaded");
-            slot.style.backgroundImage = new StyleBackground(piece.Sprite);
+            PackWrapperBaker.ApplyTo(slot, piece.Sprite);
 
             // NO PAINTED CAPTION (Sam, 2026-08-31). The title used to render as a bold plate over
             // the bottom of the art; it covered the part of the picture the crop is composed
