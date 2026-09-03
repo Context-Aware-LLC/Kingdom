@@ -681,7 +681,35 @@
 }
 
 /* ---- Character creation ---------------------------------------------------------------------- */
-/* THIS SCREEN AUTHORS ITS OWN VERTICAL GUTTER, and has to. `.emb-bleed` is its only inset and
+/* THE PANEL IS 2400 x 1080 UNITS AT 1.000x, ONE UNIT PER DEVICE PIXEL — NOT 914 x 411dp.
+ * `EmberfallPanelSettings.m_ScaleMode` went 1 -> 2 (ConstantPhysicalSize -> ScaleWithScreenSize)
+ * in 02048077 on 2026-09-01, against a 1920x1080 reference matched on HEIGHT. referenceDpi is
+ * still 160 in the asset and is now INERT — ScaleWithScreenSize does not read it — so a comment
+ * anywhere in this project that reasons from "411dp" or "one authored px is one Android dp" is
+ * describing a panel that no longer exists. Measured on the live panel 2026-09-02:
+ *
+ *     panel  2400.0 x 1080.0 dp   scale=1.000x
+ *     .emb-root classes: emb-root character-create-screen emb-bleed emb-sw-expanded
+ *
+ * Note the screen class: EXPANDED, not compact. Every `.emb-sw-compact` rule in this project is
+ * now dead on a phone, and the compact branch of every breakpoint is what a phone used to get.
+ *
+ * WHAT THAT DID TO THIS SCREEN. Everything authored against 411 is now ~2.6x too small: the two
+ * picker columns are capped at 420 units and sat in the middle of a 2296-unit row, leaving 1456
+ * units of nothing, and the plates were 84 units tall on a 1080-unit screen. The sizes below are
+ * re-authored for the real panel and are deliberately EXPLICIT PIXELS rather than tokens, which
+ * is the same call collection.uss makes for the one thing it has to get right at this scale
+ * (`--card-tile-width: 274; --card-tile-height: 384` — a card tile is 36% of the screen's height).
+ * The spacing and type tokens are still 411-era values and are used below only where something
+ * genuinely is small (a gutter, a caption).
+ *
+ * NEVER WRITE A TOKEN GLOB AS `--space-<star>/--type-<star>` IN A USS COMMENT. That sequence
+ * contains the comment terminator, so it ends the comment early, the prose after it is parsed as
+ * declarations, and UI Toolkit DROPS THE ENTIRE STYLESHEET with no error. Measured 2026-09-02: the
+ * picker came back as two full-width stacked columns with 0-height portraits and 24-unit text —
+ * every rule in this 900-line file gone, including ones nobody had touched in weeks.
+ *
+ * THIS SCREEN AUTHORS ITS OWN VERTICAL GUTTER, and has to. `.emb-bleed` is its only inset and
  * `.emb-bleed` is `0 var(--edge-safe)` since 568d6b33 -- the cutout is on a SIDE, so the class
  * deliberately no longer imposes a top or bottom (see the token's note in theme.uss). Nothing
  * else in the picker column has a top margin, so without these two the Cancel button in
@@ -715,16 +743,20 @@
     align-items: center;
 }
 
+/* --type-h1 is 36 at the expanded screen class, which is a caption on a 1080-unit panel, not a
+ * screen title. Sized here rather than by moving the token because .delete-title is worn by the
+ * detail and confirm views and by the roster's own dialogs. */
 .create-picker-heading #create-pass-title {
+    font-size: 52px;
     margin-bottom: 0;
 }
 
-/* The pairing explanation (#312). --type-caption, not --type-body: this line is the second thing
- * in a header that is already competing with eight plates for a 411dp panel, and every dp it
- * takes comes straight off .hero-choice's height. white-space: normal so a long second-pass
- * sentence wraps inside the heading column rather than pushing Cancel off the row. */
+/* The pairing explanation (#312). Sized under the title rather than beside the tokens: every unit
+ * this line takes comes straight off .hero-choice's height, and the header is already competing
+ * with eight plates. white-space: normal so a long second-pass sentence wraps inside the heading
+ * column rather than pushing Cancel off the row. */
 .create-pass-help {
-    font-size: var(--type-caption);
+    font-size: 30px;
     color: var(--ink-2);
     white-space: normal;
     -unity-text-align: middle-center;
@@ -758,12 +790,23 @@
 }
 
 /* space-evenly, not center (Sam, 2026-08-30). Four content-sized buttons centred in a full-height
- * column left the surplus as one ~65dp band above and ~110dp below -- dead space at the top and
+ * column left the surplus as one band above and a bigger one below -- dead space at the top and
  * bottom of the screen rather than air between the things you are choosing between. Evenly spends
- * it as equal gaps, including the outer two, so the column reads as a list rather than a clump. */
+ * it as equal gaps, including the outer two, so the column reads as a list rather than a clump.
+ *
+ * THE CAP WAS 420 AND THE ROW IS 2296, so the two columns used 840 units and left 1456 of nothing
+ * either side — the single loudest symptom of the scale change at the top of this section. 1150
+ * lets the pair fill the row and still stops a wide desktop stretching a plate into a banner;
+ * `.db-collection` makes the same call by filling to a 24-unit inset rather than centring. */
+/* flex-basis: 0 IS WHAT MAKES THE TWO COLUMNS THE SAME WIDTH. `flex-grow: 1` alone leaves the
+ * basis at `auto`, so each column starts from its own INTRINSIC width — the widest plate in it —
+ * and grows from there. The plates differ only in their hero-power text, so Tempest's "Chain Spark
+ * · Deal 1 damage twice to random enemies." made its column start wider and finish wider:
+ * measured 1114 against 1150, a 36-unit step between two things meant to be a matched pair. */
 .hero-choice-column {
     flex-grow: 1;
-    max-width: 420px;
+    flex-basis: 0;
+    max-width: 1150px;
     margin-left: var(--space-2);
     margin-right: var(--space-2);
     justify-content: space-evenly;
@@ -786,15 +829,18 @@
  * better but the space is what it is, so this spends the surplus rather than chasing a size.
  *
  * THE max-height IS WHAT LEAVES ANY GAPS AT ALL. flex-grow and the column's space-evenly compete
- * for the same surplus and flex-grow resolves first: uncapped, four buttons eat the column's ~367dp
- * whole, land at ~92dp each, touch edge to edge, and space-evenly distributes nothing.
+ * for the same surplus and flex-grow resolves first: uncapped, four plates eat the column's 963
+ * units whole, land at ~240 each and touch edge to edge, and space-evenly distributes nothing.
  *
- * 72 -> 84 WITH THE ART (#312), spending ~48dp of the gap budget on the plates. 72 was chosen when
- * every choice was an identical grey box and the air between them was the only thing keeping the
- * column from reading as one block; a plate carrying its own portrait separates itself, so the
- * trade the old note describes ("the air between the choices for taller choices") now falls the
- * other way. 84 - 2x--space-1 padding = a 76dp square portrait, which is what .hero-choice-portrait
- * is sized to. Move one and move the other.
+ * 84 -> 212, WHICH IS THE SCALE CORRECTION AND NOT A TASTE CHANGE. 72 was authored when the
+ * column was ~367 units tall; 84 was that number nudged for the art. The column is 963 units, so
+ * both were about a fifth of the size the screen was actually offering — measured, four 84s and
+ * five 126-unit bands of nothing. 4 x 212 = 848 of 963, leaving 115 for space-evenly to spend as
+ * five 23-unit gaps.
+ *
+ * 212 - 2x--space-1 padding = a 204-unit square portrait, which is what .hero-choice-portrait is
+ * sized to. MOVE ONE AND MOVE THE OTHER — the portrait's height comes from align-self: stretch,
+ * so only its width is written and only this rule decides whether it is square.
  *
  * min-height stays as the floor for a screen with no surplus; margin-bottom is gone because
  * space-evenly owns the gaps now and the two would compound. */
@@ -802,7 +848,7 @@
     align-self: stretch;
     flex-grow: 1;
     flex-basis: 0;
-    max-height: 84px;
+    max-height: 212px;
     min-height: var(--touch-min);
     flex-direction: row;
     align-items: center;
@@ -813,8 +859,12 @@
     padding: var(--space-1);
     color: var(--ink-1);
     background-color: var(--surface-2);
-    border-left-width: 6px;
+    /* 6 -> 14 and 4 -> 12 for the same reason every other number in this block moved: `.unity-button`
+     * supplies a 4-unit radius that was a soft corner on an 84-unit plate and is a hard one on a
+     * 212-unit plate, and a 6-unit spine beside a 204-unit portrait is a hairline. */
+    border-left-width: 14px;
     border-left-color: var(--class-neutral);
+    border-radius: 12px;
     -unity-text-align: middle-left;
 }
 
@@ -822,45 +872,34 @@
     background-color: var(--surface-3);
 }
 
-/* The full-bleed wash and its scrim, in the shape .craft-illustration/.craft-illustration-scrim
- * already use: art layer, flat rgba over it. USS HAS NO GRADIENTS, so the scrim is uniform rather
- * than a ramp — see the note on .emb-scroll-fade in theme.uss.
+/* THE FULL-PLATE ART WASH WAS TRIED AND CUT, and the reason is worth keeping because it is the
+ * obvious thing to reach for again. Each plate carried its own hero art full-bleed at 0.22 under a
+ * flat scrim — the .craft-illustration/.craft-illustration-scrim shape. Rendered at 2400x1080 on
+ * 2026-09-02 it failed on two counts a mock-up would not show:
  *
- * DELIBERATELY NOT overflow: hidden on the plate. The wash's square corners do poke ~4dp past
- * .unity-button's radius, and the fix for that would be a shrinkable flex child that clips, which
- * is how the main menu lost two whole buttons with nothing logged
- * (flex-shrink defaults to 1; a clipping child pays a column's overflow in whole children). A
- * visible 4dp corner is the cheaper of the two failures by a wide margin. */
-.hero-choice-wash {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    -unity-background-scale-mode: scale-and-crop;
-    opacity: 0.22;
-}
-
-.hero-choice-scrim {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(11, 14, 19, 0.42);
-}
+ *   1. A 1124x212 plate is a 5:1 letterbox, so the wash is a CROP THROUGH THE MIDDLE of a square
+ *      full-body portrait — a torso and a background, never a face. It is noise, not subject.
+ *   2. The eight source images have wildly different values. Stonewarden's bright sky washed to a
+ *      pale grey block with a hard crop edge; Gravekeep's and Verdant's dark art vanished into
+ *      --surface-2 entirely. Eight plates meant to read as one set read as eight different
+ *      treatments, and the bright ones looked like a rendering fault rather than a design.
+ *
+ * A flat plate plus one well-cropped square portrait is what the collection wall does with far
+ * more art on screen, and it is the discipline this screen was missing. If a ground is wanted
+ * later it should be ONE authored backdrop shared by all eight, or per-class art cropped for a
+ * 5:1 band on purpose — not the square portrait stretched into a letterbox. */
 
 /* align-self: stretch rather than a height, so the portrait is always exactly the plate's content
- * height and stays square at the 84dp cap without either number being written twice. flex-shrink: 0
+ * height and stays square at the 212 cap without either number being written twice. flex-shrink: 0
  * because a narrow column must eat into the TEXT, never into the likeness. */
 .hero-choice-portrait {
     align-self: stretch;
-    width: 76px;
+    width: 204px;
     flex-shrink: 0;
-    border-radius: var(--space-1);
+    border-radius: var(--space-2);
     background-color: var(--surface-3);
     -unity-background-scale-mode: scale-and-crop;
-    margin-right: var(--space-3);
+    margin-right: var(--space-6);
 }
 
 .hero-choice-body {
@@ -869,16 +908,21 @@
     justify-content: center;
 }
 
+/* EXPLICIT, NOT --type-h2. The token is 26 at the expanded screen class — set when 26 authored
+ * units were 26dp of a 411-unit panel, i.e. 6% of its height. The same 26 is now 2.4% of 1080 and
+ * reads as a caption beside a 204-unit portrait. 56 restores the proportion the token was chosen
+ * for. Same reasoning for the power line below. */
 .hero-choice-name {
-    font-size: var(--type-h2);
+    font-size: 56px;
     -unity-font-style: bold;
     color: var(--ink-1);
 }
 
-/* white-space: normal so the two long powers (Chain Spark, Backstab) wrap to a second line inside
- * the ~50dp left under the name rather than being cut mid-word. */
+/* white-space: normal so the two long powers (Chain Spark, Backstab) wrap to a second line rather
+ * than being cut mid-word. There is room for it now: 56 + 2 x ~40 = 136 of the 204 the plate has,
+ * where at the old size a two-line power measured 45 against 38 of remaining space and clipped. */
 .hero-choice-power {
-    font-size: var(--type-caption);
+    font-size: 32px;
     color: var(--ink-2);
     white-space: normal;
 }
@@ -891,14 +935,14 @@
  * which put the ordinal where the eye reads the class NAME. */
 .hero-choice-badge {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    border-radius: 16px;
-    margin-left: var(--space-2);
-    margin-right: var(--space-1);
+    width: 72px;
+    height: 72px;
+    border-radius: 36px;
+    margin-left: var(--space-4);
+    margin-right: var(--space-3);
     background-color: var(--accent);
     color: var(--surface-0);
-    font-size: var(--type-label);
+    font-size: 40px;
     -unity-font-style: bold;
     -unity-text-align: middle-center;
 }

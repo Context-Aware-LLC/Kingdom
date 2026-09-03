@@ -222,32 +222,18 @@ namespace Emberfall.Presentation
             plate.AddToClassList("hero-choice--" + heroClass.ToString().ToLowerInvariant());
             plate.EnableInClassList("hero-choice--selected", selected);
 
-            // The art twice, deliberately: once as a full-bleed wash behind the whole plate so the
-            // row reads as the class rather than as a list item, and once as the square portrait
-            // that carries the actual likeness. The wash is a CROP THROUGH THE MIDDLE of a
-            // full-body portrait — a torso, not a face — which is exactly why it is dimmed to a
-            // texture and the square beside it is what the player actually reads. USS has no
-            // background-position here, so this is composition rather than a crop offset.
-            var wash = new VisualElement { pickingMode = PickingMode.Ignore };
-            wash.AddToClassList("hero-choice-wash");
-            plate.Add(wash);
-
-            var scrim = new VisualElement { pickingMode = PickingMode.Ignore };
-            scrim.AddToClassList("hero-choice-scrim");
-            plate.Add(scrim);
-
+            // ONE square portrait, and no full-plate wash behind it. The wash was built, rendered
+            // and cut the same day — see the note in character-roster.uss for what it looked like
+            // at 2400x1080 and why "the class art as the ground" is the wrong shape for a 5:1
+            // plate. The square crop is the whole of a square source image, so every class gets a
+            // face rather than a torso.
             var portrait = new VisualElement { pickingMode = PickingMode.Ignore };
             portrait.AddToClassList("hero-choice-portrait");
             plate.Add(portrait);
 
-            // One art id, two elements. The provider caches its handles, so the second call for the
-            // same class costs a dictionary hit — this is not eight loads becoming sixteen.
             _art.LoadArt("hero_" + ClassSlug(heroClass), sprite =>
             {
-                if (sprite == null) return;
-                var image = new StyleBackground(sprite);
-                portrait.style.backgroundImage = image;
-                wash.style.backgroundImage = image;
+                if (sprite != null) portrait.style.backgroundImage = new StyleBackground(sprite);
             });
 
             var body = new VisualElement { pickingMode = PickingMode.Ignore };
