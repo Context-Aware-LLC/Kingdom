@@ -129,6 +129,7 @@ namespace Emberfall.Core.Tests.Presentation
             string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
             string rowTemplate = Asset("UI", "Collection", "CardRowTemplate.uxml");
             string styles = Asset("UI", "Collection", "collection.uss");
+            string themeStyles = Asset("UI", "Common", "theme.uss");
             string controller = Asset("Scripts", "Presentation", "CollectionController.cs");
             string scene = Asset("Scenes", "Collection.unity");
             XDocument rowDocument = XDocument.Parse(rowTemplate);
@@ -154,7 +155,14 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(styles, Does.Contain(".col-scope {"));
                 Assert.That(styles, Does.Contain(".col-button {"));
                 Assert.That(styles, Does.Contain(".col-button--decks {"));
-                Assert.That(styles, Does.Contain(".class-tab_art-verdant {"));
+                // MOVED TO theme.uss ON 2026-09-03 (Sam, 6b65de82 line of work). The class-tab art
+                // is shared chrome, not collection chrome, so it belongs in the theme both screens
+                // link. What this assertion is really for is that the element
+                // CollectionScreen.uxml carries has a rule SOMEWHERE the screen loads — so it
+                // follows the rule rather than pinning the file it used to live in.
+                Assert.That(themeStyles, Does.Contain(".class-tab_art-verdant {"),
+                    "CollectionScreen.uxml still carries a class-tab_art-verdant element; a rule " +
+                    "that exists in neither sheet it links renders an untextured tab silently.");
                 Assert.That(styles, Does.Not.Match(@"background-image:\s*url\([^\r\n]+\)(?!\s*;)"),
                     "One incomplete declaration makes Unity discard the entire USS file.");
 

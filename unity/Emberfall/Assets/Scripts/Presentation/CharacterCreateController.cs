@@ -65,6 +65,7 @@ namespace Emberfall.Presentation
         private Label _powerName, _powerDesc, _confirmSummary, _nameError;
         private Button _detailSelect;
         private TextField _nameField;
+        private FirstRunTidbit _tidbit;
 
         private void OnEnable()
         {
@@ -103,6 +104,17 @@ namespace Emberfall.Presentation
             _nameField?.SetValueWithoutNotify("");
             SetNameError("");
             ShowView(CreateView.Picker);
+
+            // THE ONE TIDBIT THAT SHIPS (spec §4, slice 4). It fires BEFORE the first pick, not
+            // after, because it explains the choice this screen is about to ask for — the two tail
+            // tidbits sit after the gift for the mirror-image reason, and are still held.
+            //
+            // Deliberately below the two early returns above: a player looking at "Collection
+            // unavailable" has a problem to read, not a lesson. FirstRunTidbit itself decides
+            // whether there is anything to show, so a returning player sees nothing and no marker
+            // is consulted here.
+            _tidbit = new FirstRunTidbit(_root);
+            _tidbit.Show(TidbitTrigger.CharacterCreateArrival);
         }
 
         private void CacheElements()

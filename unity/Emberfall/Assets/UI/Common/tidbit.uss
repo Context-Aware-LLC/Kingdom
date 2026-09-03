@@ -1,0 +1,71 @@
+/* ============================================================================
+   FIRST-RUN TIDBIT — the one-card overlay
+   Slice 4 of docs/dev-docs/specs/first-run-and-pack-opening.md.
+
+   This sheet is DELIBERATELY THIN. The surface, border, radius, padding, header
+   and button styling all come from the design system (Overlays.uss, Buttons.uss,
+   Typography.uss) exactly as the spec rules — "no frame asset: .ds-modal already
+   carries the surface". What is here is only what the design system cannot know:
+   the hidden state, and the landscape shape of this particular card.
+
+   ⚠ A HOST THAT LINKS THIS SHEET MUST ALSO LINK DesignTokens.uss AND Overlays.uss.
+   No screen in this project linked the design system before this one, and
+   theme.uss carries only 6 of the ~30 variables .ds-modal and .ds-backdrop read
+   (--color-surface, --color-overlay, --color-border, --border-thin, --radius-lg
+   are all missing from it). Link the tokens and the card is styled; link only
+   this file and .ds-modal resolves to an unstyled, borderless, transparent box —
+   which renders, so nothing errors. The six names the two sheets share hold
+   identical values, so there is no palette collision to manage.
+   ============================================================================ */
+
+/* Display, not opacity: an overlay left at opacity 0 still eats every touch on the
+   screen behind it, and this one sits over a screen whose only job is to be
+   tapped. */
+.tidbit-overlay--hidden {
+    display: none;
+}
+
+/* .ds-backdrop already carries absolute-inset-0 and centres its child, so this
+   sheet adds nothing for the overlay itself. UI Toolkit has no z-index: the
+   overlay covers the screen because it is the LAST child of the root, and moving
+   it up the tree is what would put a screen on top of it.
+
+   If it ever needs inset from the screen edge, use MARGIN on .tidbit-card and not
+   padding on the root — #237, padding does not reach absolute children and fails
+   by doing nothing.
+
+   Wider than .ds-modal's portrait-era 320px. The panel is 914dp x 411dp in
+   landscape (refDpi 160, so 1 authored px = 1 dp), so a 320dp card is a third of
+   the width with an illustration stacked above the copy and no room left for it.
+   460 x ~200 sits inside the height with the art beside the words instead. */
+.tidbit-card {
+    width: 460px;
+    max-width: 90%;
+}
+
+/* Art left, copy right. Two lines of body against a 4:3 illustration is the whole
+   card, so nothing here scrolls and nothing measures. */
+.tidbit-body-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* 4:3, matching the 800x600 source in spec §6.5. FirstRunTidbit.Render sets
+   display: none on this element when the sprite does not resolve, so the copy
+   takes the full width rather than sitting beside a hole. */
+.tidbit-art {
+    width: 176px;
+    height: 132px;
+    margin-right: var(--space-3);
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* flex-basis 0 with grow, so the label wraps to the space left rather than sizing
+   itself to its text and pushing the art out of the card. No overflow: hidden —
+   a shrinkable flex child with it deletes its children outright in UI Toolkit. */
+.tidbit-copy {
+    flex-grow: 1;
+    flex-basis: 0;
+    white-space: normal;
+}

@@ -41,6 +41,14 @@ namespace Emberfall.Session
         public const string Gift = "gift";
 
         /// <summary>
+        /// The marker for one first-run tidbit, namespaced so a catalog id can never collide with
+        /// <see cref="Gift"/> or with a marker added later. The id half is
+        /// <c>Presentation.Tidbit.Id</c>, which is why that field is documented as stable across
+        /// releases: renaming one replays a card the player has already dismissed.
+        /// </summary>
+        public static string Tidbit(string id) => string.IsNullOrEmpty(id) ? null : "tidbit:" + id;
+
+        /// <summary>
         /// <c>first-run.json</c>, in the scope directory beside <c>owned-cards.json</c> and
         /// <c>decks.json</c>.
         ///

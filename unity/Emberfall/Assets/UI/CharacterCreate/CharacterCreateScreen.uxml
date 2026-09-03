@@ -2,6 +2,20 @@
     <Style src="../Common/theme.uss" />
     <Style src="../CharacterRoster/character-roster.uss" />
     <!--
+      THE FIRST SCREEN IN THIS PROJECT TO LINK THE DESIGN SYSTEM, and the two sheets below
+      are a pair: Overlays.uss is what `.ds-backdrop`/`.ds-modal` mean, DesignTokens.uss is
+      where the variables they read live. theme.uss carries only 6 of them — omit the tokens
+      and the tidbit card renders as an unstyled transparent box with no border, silently.
+      The six names the two sheets share hold identical values, so there is no collision.
+
+      Buttons.uss is deliberately NOT linked: it also styles `.back-btn`, which is nothing to
+      do with this screen. The tidbit's one control wears this screen's own button classes,
+      the same way each host of PackRevealPanel styles its own Done.
+    -->
+    <Style src="../../DesignSystem/Styles/DesignTokens.uss" />
+    <Style src="../../DesignSystem/Styles/Overlays.uss" />
+    <Style src="../Common/tidbit.uss" />
+    <!--
       Character creation, as a SCENE (Sam, 2026-08-23). It was three views inside a
       `.delete-modal` overlay in CharacterRosterScreen.uxml until then. Same call the Store
       got on 2026-08-20 and for the same reason: it is full-screen, opaque and a destination,
@@ -81,6 +95,35 @@
             <ui:VisualElement class="delete-actions">
                 <ui:Button name="create-change" text="Change something" class="roster-button roster-button--ghost" />
                 <ui:Button name="create-continue" text="Create Character" class="roster-button roster-button--cta" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- TIDBIT: the first-run card, driven by FirstRunTidbit. LAST CHILD ON PURPOSE —
+             UI Toolkit has no z-index, so document order is the only thing putting this over
+             the three views. It starts hidden in the markup AND FirstRunTidbit hides it again
+             in its constructor, because a backdrop left up is a screen the player cannot use.
+
+             The tree is copied per host, the shape PackRevealPanel established: the panel
+             queries `tidbit-*` out of whatever root it is handed, so a host styles the Got it
+             control in its own screen's language without the panel knowing.
+
+             NOTE FOR ANYONE EDITING THIS COMMENT: a doubled hyphen is illegal inside an XML
+             comment and voids the whole document. Naming a BEM modifier class here is what
+             does it, so refer to them in prose. It fails by emptying the screen. -->
+        <ui:VisualElement name="tidbit-overlay" class="ds-backdrop tidbit-overlay tidbit-overlay--hidden">
+            <ui:VisualElement name="tidbit-card" class="ds-modal tidbit-card">
+                <ui:VisualElement class="ds-modal__header">
+                    <ui:Label name="tidbit-title" text="" class="ds-modal__title" />
+                </ui:VisualElement>
+                <ui:VisualElement class="ds-modal__body tidbit-body-row">
+                    <!-- Hidden by FirstRunTidbit.Render until the art exists; see its
+                         retirement trigger and spec §6.5, file 15. -->
+                    <ui:VisualElement name="tidbit-art" class="tidbit-art" picking-mode="Ignore" />
+                    <ui:Label name="tidbit-body" text="" class="ds-modal__body-text tidbit-copy" />
+                </ui:VisualElement>
+                <ui:VisualElement class="ds-modal__actions">
+                    <ui:Button name="btn-tidbit-done" text="Got it" class="roster-button roster-button--cta" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 
