@@ -53,6 +53,15 @@ namespace Emberfall.Net.Server.Accounts
     /// write itself to <see cref="IAccountStore.MarkOnboardedAsync"/>, which is one-way and
     /// idempotent by design — calling this endpoint twice (a client retrying a dropped response)
     /// returns <see cref="OnboardingCompleteStatus.Completed"/> both times, never an error.</para>
+    ///
+    /// <para><b>There is deliberately NO roster precondition, and asking for one misreads the flag</b>
+    /// (Sam, 2026-09-03, closing #344). <c>Onboarded</c> is unrelated to character creation: it
+    /// records that the onboarding FLOW completed, and the thing it is really guarding is the
+    /// entitlement grant, which fires from <see cref="SessionEndpoint"/> and
+    /// <see cref="CollectionEndpoint"/> without a character existing. Requiring at least one
+    /// character before the flag may be set would bind a one-way account flag to a per-character
+    /// fact and would refuse a legitimate completion for a player who has one and deleted it. Do not
+    /// add the check; the client is what knows the flow finished.</para>
     /// </summary>
     public static class OnboardingCompleteEndpoint
     {
