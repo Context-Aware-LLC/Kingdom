@@ -162,10 +162,30 @@ namespace Emberfall.Presentation
 
             seat.HeroAnchor = MakeAnchor($"{prefix}_Hero",
                 new Vector3(xSign * HeroX, ySign * HeroY, 0f));
+            // SCREEN-RIGHT / SCREEN-LEFT, NOT INBOARD / OUTBOARD. The x offset is deliberately NOT
+            // multiplied by xSign, for the same reason SocketDrop is not multiplied by ySign: the
+            // sprites are upright and unmirrored, so their left and right are screen-absolute while
+            // the seats are mirrored (p0 xSign -1, p1 xSign +1).
+            //
+            // WHICH SIDE IS WHICH IS DECIDED BY THE ART, not by taste. The two rings are cut as a
+            // MIRRORED PAIR: the hero power's molten wreath sits on its lower-RIGHT with its rivets
+            // on the left, the weapon's blades sit on its LEFT with its rivets on the right. The
+            // sockets overlap (centres 2 x SocketOffsetX apart, frames FrameSize wide), so there is
+            // exactly one arrangement in which they interlock — ornament flaring outward on both
+            // sides, rivets meeting in the middle over the hero frame's bottom crown. Swap them and
+            // the weapon's blades cut straight across the power ring's aperture. Rendered both ways
+            // before choosing (2026-09-03).
+            //
+            // This leaves p0 exactly where it was and moves p1's two sockets, which had been
+            // mirrored into the wrong arrangement and looked fine only because the retired frames
+            // were near-symmetrical.
+            //
+            // RETIREMENT TRIGGER: if either socket ring is ever re-cut symmetrical, or mirrored
+            // per seat, this stops being a constraint and the offset can go back to xSign.
             seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower",
-                new Vector3(xSign * (HeroX - SocketOffsetX), ySign * HeroY - SocketDrop, 0f));
+                new Vector3(xSign * HeroX + SocketOffsetX, ySign * HeroY - SocketDrop, 0f));
             seat.WeaponAnchor = MakeAnchor($"{prefix}_Weapon",
-                new Vector3(xSign * (HeroX + SocketOffsetX), ySign * HeroY - SocketDrop, 0f));
+                new Vector3(xSign * HeroX - SocketOffsetX, ySign * HeroY - SocketDrop, 0f));
             seat.ManaTrayAnchor = MakeAnchor($"{prefix}_ManaTray",
                 new Vector3(xSign * -ManaGridX, ySign * ManaGridY, 0f));
             seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -DeckX,     ySign * DeckY,      0f));

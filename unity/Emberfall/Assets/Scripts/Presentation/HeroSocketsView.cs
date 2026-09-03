@@ -13,24 +13,65 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class HeroSocketsView : MonoBehaviour
     {
-        /// <summary>Maximum side of either hand-cut socket frame in world units. The old frame's
+        /// <summary>Maximum side of either socket frame in world units. The old frame's
         /// visible ring was 1.008 units; these read about 30% larger.</summary>
         public const float FrameSize = 1.32f;
         public const float HitDiameter = 1.12f;
-        private const float SocketDiameter = 0.64f;
-        // The hand-cut frames keep their full blades, so their apertures are not at the canvas
-        // pivots. Measured from the supplied 620 px exports at FrameSize 1.32:
-        // hero-power.png is about (+5, -40) source pixels from centre; weapon-frame.png is
-        // about (+15, +25). The semantic roles below are intentionally swapped from the names.
-        // RETIREMENT TRIGGER: replacing either PNG in place requires remeasuring its aperture
-        // centre and revisiting these two offsets before the new art ships.
-        internal static readonly Vector2 PowerApertureOffset = new Vector2(0.03f, -0.052f);
-        private static readonly Vector2 WeaponApertureOffset = new Vector2(0.01f, 0.085f);
-        private const float StatDiameterFraction = 0.22f;
-        // Sam's live read: the double-bladed export reads as a weapon, while the molten round
-        // export reads as a power. Asset filenames predate that decision, so map by visual role.
-        private const string PowerFrameKey = "weapon-frame";
-        private const string WeaponFrameKey = "hero-power";
+
+        // BOTH RINGS ARE CO-REGISTERED, AND EVERY NUMBER BELOW DEPENDS ON THAT.
+        // `tooling/scripts/align_socket_rings.py` writes the pair onto one square canvas with each
+        // ring's APERTURE CENTRE pinned at the canvas centre and both apertures scaled to one
+        // diameter. That is the only reason a single SocketDiameter draws the same circle in both
+        // frames and a single zero offset centres it — before alignment the two apertures differed
+        // by 6% in size and 30 source pixels in position, so each frame carried its own hand-measured
+        // fudge and swapping one for the other moved the art.
+        //
+        // Run of 2026-09-03 on Sam's re-cuts (docs/sam/shots/{hp,weapon}-frame.png), canvas 1424:
+        //     hero-power.png    aperture 730 x 747   ap/canvas 0.5126
+        //     weapon-frame.png  aperture 716 x 759   ap/canvas 0.5028
+        //
+        // RETIREMENT TRIGGER: re-cutting either ring means re-running that script over BOTH of them
+        // and updating ApertureFraction (take the SMALLER ap/canvas) and the bolt fractions below
+        // in the same commit. Installing one ring alone silently breaks the co-registration these
+        // constants assume, and nothing renders an error — the art just sits off-centre.
+        private const float ApertureFraction = 0.5028f;
+        // The illustration is inset a hair inside the smaller aperture so a little metal always
+        // overlaps it, rather than art and rim meeting on a seam.
+        private const float ArtInset = 0.96f;
+        private const float SocketDiameter = FrameSize * ApertureFraction * ArtInset;
+
+        // Zero BY CONSTRUCTION, not by measurement — see the alignment note above. Kept as named
+        // constants because ClickableHeroPower positions its collider from the power one, and a
+        // future non-aligned ring would need them back.
+        internal static readonly Vector2 PowerApertureOffset = Vector2.zero;
+        private static readonly Vector2 WeaponApertureOffset = Vector2.zero;
+
+        // Filenames match their roles again. They did not: the first exports had the blades on
+        // `hero-power.png` and the molten ring on `weapon-frame.png`, so this view mapped them
+        // crosswise. Sam's 2026-09-03 re-cut fixed the art, and the two files were overwritten in
+        // place (guids, and therefore the Addressables entries, preserved).
+        private const string PowerFrameKey = "hero-power";
+        private const string WeaponFrameKey = "weapon-frame";
+
+        // WHERE THE NUMERALS GO, AND WHY THEY ARE NOT ON THE OLD BOSSES.
+        // The retired frames carried big square plaques at bottom-left and bottom-right (0.30/0.70
+        // across, 0.76 down), each sized to hold a digit. The re-cut rings do not: each carries two
+        // small brass rivets stacked vertically on ONE side, and bottom-left/bottom-right now lands
+        // on bare rim or on the ornament. Rivet centres measured off the aligned 1424 canvases;
+        // canvas fractions, top-left origin, which is the convention MakeStat consumes. The rivet
+        // plate is ~0.115 of the canvas.
+        private static readonly Vector2 WeaponAtkBolt  = new Vector2(0.8034f, 0.3996f);
+        private static readonly Vector2 WeaponDuraBolt = new Vector2(0.8006f, 0.5878f);
+
+        // THE HERO-POWER COST DOES NOT GO ON A RIVET, and that is not an oversight.
+        // Both rings wear their rivets on the side that faces the OTHER socket, so all four sit in
+        // the narrow gap between the two frames. Put the cost on either of the power ring's and it
+        // lands a digit's width from the weapon's attack, in the same size, reading as a third
+        // weapon stat. Rendered all three ways at board scale before choosing (2026-09-03): on the
+        // lower rim it clears the weapon entirely, and it is outside the aperture radius
+        // (ApertureFraction * 0.5 = 0.251 from centre, against 0.28 here) so it never covers the
+        // power's own art.
+        private static readonly Vector2 PowerCostAt = new Vector2(0.50f, 0.78f);
 
         // The sockets are bottom-docked in world space but must composite over the hero plate.
         // HeroPlateView occupies orders 8..10; sharing those values made overlap depend on
@@ -43,8 +84,16 @@ namespace Emberfall.Presentation
         // still smooth if the frames are ever drawn larger for a bake-off sheet.
         private const int DiscSegments = 64;
 
-        /// <summary>Numeral em height as a fraction of its notional stat boss.</summary>
-        private const float DigitEmFrac = 0.61f;
+        /// <summary>Numeral em height as a fraction of <see cref="FrameSize"/>.
+        ///
+        /// STATED DIRECTLY, not as a fraction of the boss it sits on, because the boss is now
+        /// smaller than the numeral wants to be. It used to be 0.61 of a 0.22 plate — 0.134 of the
+        /// frame — and the rivet it now sits on is only 0.115 across. Left as a fraction OF THE
+        /// PLATE it would have shrunk the digits by a third for a reason that is invisible in the
+        /// number. 0.11 was chosen against a render at true board scale (a 1.32-unit socket is
+        /// about 155 px on a 1080-tall board): it reads, and it overhangs the rivet just enough to
+        /// look struck into it rather than etched on it.</summary>
+        private const float DigitEmFrac = 0.11f;
 
         private static readonly Color PowerReady = new Color(1.00f, 1.00f, 1.00f);
         private static readonly Color PowerSpent = new Color(0.42f, 0.42f, 0.48f);
@@ -95,8 +144,7 @@ namespace Emberfall.Presentation
                 _powerRing = MakeFrame(powerAnchor, "PowerFrame", uiSprites, PowerFrameKey);
                 _powerArt = MakeSocketArt(powerAnchor, "PowerArt", SocketDiameter,
                                            PowerApertureOffset);
-                _powerCost = MakeStat(powerAnchor, "PowerCost", new Vector2(0.5f, 0.78f),
-                                      StatDiameterFraction, Color.white);
+                _powerCost = MakeStat(powerAnchor, "PowerCost", PowerCostAt, Color.white);
             }
 
             if (weaponAnchor != null)
@@ -110,10 +158,8 @@ namespace Emberfall.Presentation
                 _weaponArt = MakeSocketArt(wt, "WeaponArt", SocketDiameter,
                                             WeaponApertureOffset);
 
-                _weaponAttack = MakeStat(wt, "Attack", new Vector2(0.30f, 0.76f),
-                                         StatDiameterFraction, AttackText);
-                _weaponDurability = MakeStat(wt, "Durability", new Vector2(0.70f, 0.76f),
-                                             StatDiameterFraction, DuraText);
+                _weaponAttack     = MakeStat(wt, "Attack",     WeaponAtkBolt,  AttackText);
+                _weaponDurability = MakeStat(wt, "Durability", WeaponDuraBolt, DuraText);
 
                 _weaponRoot.SetActive(false);
             }
@@ -270,12 +316,11 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>A numeral centred on a measured boss. <paramref name="frac"/> is the boss
-        /// centre in canvas fractions with a top-left origin, which is how the splitter reports
-        /// it; y flips because world space grows upward.</summary>
+        /// centre in canvas fractions with a top-left origin, which is how both the splitter and
+        /// the alignment run report it; y flips because world space grows upward.</summary>
         private static TextMeshPro MakeStat(Transform parent, string goName, Vector2 frac,
-                                            float diameterFrac, Color color)
+                                            Color color)
         {
-            float d = FrameSize * diameterFrac;
             var go = new GameObject(goName);
             go.transform.SetParent(parent, false);
             go.transform.localPosition = new Vector3(
@@ -296,7 +341,7 @@ namespace Emberfall.Presentation
             // quarter of the size of the digits on the cards (Sam spotted it on screen,
             // 2026-07-25). A numeral is one or two characters; it never needs to reflow.
             tmp.enableAutoSizing = false;
-            tmp.fontSize         = DigitEmFrac * d * 10f;
+            tmp.fontSize         = DigitEmFrac * FrameSize * 10f;
             tmp.rectTransform.sizeDelta = new Vector2(0.5f, 0.35f);
 
             var mr = tmp.GetComponent<MeshRenderer>();
