@@ -61,7 +61,7 @@ namespace Emberfall.Presentation
         private VisualElement _pickerView, _detailView, _confirmView;
         private VisualElement _heroColumnLeft, _heroColumnRight;
         private VisualElement _detailPortrait, _detailBullets, _powerBlock;
-        private Label _passTitle, _detailName, _detailPass;
+        private Label _passTitle, _passHelp, _detailName, _detailPass;
         private Label _powerName, _powerDesc, _confirmSummary, _nameError;
         private Button _detailSelect;
         private TextField _nameField;
@@ -112,6 +112,7 @@ namespace Emberfall.Presentation
             _confirmView = _root.Q<VisualElement>("create-confirm-view");
 
             _passTitle = _root.Q<Label>("create-pass-title");
+            _passHelp = _root.Q<Label>("create-pass-help");
             _heroColumnLeft = _root.Q<VisualElement>("create-hero-column-left");
             _heroColumnRight = _root.Q<VisualElement>("create-hero-column-right");
 
@@ -165,10 +166,14 @@ namespace Emberfall.Presentation
             if (ChoosingPrimary)
             {
                 if (_passTitle != null) _passTitle.text = "Choose your hero";
+                if (_passHelp != null)
+                    _passHelp.text = "A character is TWO classes. This first pick decides your Hero Power.";
             }
             else
             {
                 if (_passTitle != null) _passTitle.text = "Choose a second class";
+                if (_passHelp != null)
+                    _passHelp.text = $"Your Hero Power stays {Pretty(_picks[0])}'s — this pick only adds its cards.";
             }
 
             int split = (PairableClasses.Length + 1) / 2;
@@ -180,30 +185,114 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// One ordinary button per class. Keeping the picker to buttons avoids the former
-        /// portrait-tile hierarchy, runtime geometry callbacks, and per-element size writes.
-        /// The class detail view still owns the single portrait shown after a choice is opened.
+        /// One PLATE per class (#312): the class portrait, the class name, and the class's hero
+        /// power on a line beneath it, so the pick is no longer blind. Before this the plate was
+        /// the class name and nothing else — eight labels in boxes, distinguished only by a
+        /// coloured spine.
+        ///
+        /// <para><b>Art is back; the SOLVER is not, and that distinction is the whole point.</b>
+        /// What 7cc7c9f5 tore out was a wrapping grid that measured its own box in a
+        /// <c>GeometryChangedEvent</c> and wrote a solved portrait size onto every tile — an
+        /// unresolved box is NaN, every guard against it compared with <c>&lt;= 0f</c>, and the
+        /// relayout ran away until the kernel killed the app for thrashing. Nothing here measures
+        /// anything: the plate is a flex row, the portrait is a USS width, and the columns are
+        /// fixed at four. Adding a geometry callback or an inline size write to this method
+        /// reopens that bug, and it will not look like this file when it does.</para>
+        ///
+        /// <para>The plate stays ONE Button — one hit target, one tap — with every decorative
+        /// child set to <see cref="PickingMode.Ignore"/> so nothing inside it can swallow the
+        /// tap. The Button's own text is empty; the labels below are its children.</para>
         /// </summary>
         private Button BuildHeroChoice(CardClass heroClass)
         {
             int order = _picks.IndexOf(heroClass);   // -1 = unpicked, 0 = primary, 1 = secondary
             bool selected = order >= 0;
             string prettyName = Pretty(heroClass);
-            string label = selected ? $"{order + 1} · {prettyName}" : prettyName;
 
-            var choice = new Button(() => OpenHeroDetail(heroClass))
+            var plate = new Button(() => OpenHeroDetail(heroClass))
             {
-                text = label,
+                text = string.Empty,
                 tooltip = $"View {prettyName}"
             };
-            choice.AddToClassList("roster-button");
-            choice.AddToClassList("hero-choice");
+            plate.AddToClassList("roster-button");
+            plate.AddToClassList("hero-choice");
             // The enum member lowercased, matching character-roster.uss's .hero-choice--* rows and
             // the .character-row--* spine they mirror. No name map on either side: a class whose
             // token has no row simply gets the neutral spine.
-            choice.AddToClassList("hero-choice--" + heroClass.ToString().ToLowerInvariant());
-            choice.EnableInClassList("hero-choice--selected", selected);
-            return choice;
+            plate.AddToClassList("hero-choice--" + heroClass.ToString().ToLowerInvariant());
+            plate.EnableInClassList("hero-choice--selected", selected);
+
+            // The art twice, deliberately: once as a full-bleed wash behind the whole plate so the
+            // row reads as the class rather than as a list item, and once as the square portrait
+            // that carries the actual likeness. The wash is a CROP THROUGH THE MIDDLE of a
+            // full-body portrait — a torso, not a face — which is exactly why it is dimmed to a
+            // texture and the square beside it is what the player actually reads. USS has no
+            // background-position here, so this is composition rather than a crop offset.
+            var wash = new VisualElement { pickingMode = PickingMode.Ignore };
+            wash.AddToClassList("hero-choice-wash");
+            plate.Add(wash);
+
+            var scrim = new VisualElement { pickingMode = PickingMode.Ignore };
+            scrim.AddToClassList("hero-choice-scrim");
+            plate.Add(scrim);
+
+            var portrait = new VisualElement { pickingMode = PickingMode.Ignore };
+            portrait.AddToClassList("hero-choice-portrait");
+            plate.Add(portrait);
+
+            // One art id, two elements. The provider caches its handles, so the second call for the
+            // same class costs a dictionary hit — this is not eight loads becoming sixteen.
+            _art.LoadArt("hero_" + ClassSlug(heroClass), sprite =>
+            {
+                if (sprite == null) return;
+                var image = new StyleBackground(sprite);
+                portrait.style.backgroundImage = image;
+                wash.style.backgroundImage = image;
+            });
+
+            var body = new VisualElement { pickingMode = PickingMode.Ignore };
+            body.AddToClassList("hero-choice-body");
+
+            var name = new Label(prettyName) { pickingMode = PickingMode.Ignore };
+            name.AddToClassList("hero-choice-name");
+            body.Add(name);
+
+            var power = new Label(HeroPowerLine(heroClass)) { pickingMode = PickingMode.Ignore };
+            power.AddToClassList("hero-choice-power");
+            // On pass 2 the power line is still WORTH SHOWING and no longer TRUE of this pick: the
+            // secondary class contributes cards only. Dimming says "this is information about the
+            // class, not about what you are choosing" without making the plates change shape
+            // between the two passes.
+            power.EnableInClassList("hero-choice-power--muted", !ChoosingPrimary);
+            body.Add(power);
+            plate.Add(body);
+
+            if (selected)
+            {
+                var badge = new Label((order + 1).ToString()) { pickingMode = PickingMode.Ignore };
+                badge.AddToClassList("hero-choice-badge");
+                plate.Add(badge);
+            }
+
+            return plate;
+        }
+
+        /// <summary>
+        /// "Searing Bolt · Deal 1 damage." — the class's hero power, read off the power CARD by way
+        /// of <see cref="HeroPowers.ForClass"/>, the same seam the detail view and match start use.
+        /// A class with no power card yields an empty line rather than a placeholder.
+        ///
+        /// <para><b>Unstyled on purpose, unlike the detail view's copy of the same string.</b>
+        /// <c>CardTextStyling.Style</c> wraps keywords in <c>&lt;size=120%&gt;</c>, which grows the
+        /// line box — on a plate with ~50dp of room under the class name that is the difference
+        /// between two lines fitting and the second one being clipped. The emphasis is worth its
+        /// height in the detail panel and is not worth it here.</para>
+        /// </summary>
+        private string HeroPowerLine(CardClass heroClass)
+        {
+            int powerId = HeroPowers.ForClass(heroClass);
+            if (_db == null || powerId <= 0 || !_db.TryGet(powerId, out CardDefinition power)) return "";
+            return string.IsNullOrEmpty(power.Text) ? power.Name : $"{power.Name} · {power.Text}";
         }
         /// <summary>
         /// Add or remove a hero from the picks. Selecting appends (primary first, then secondary);

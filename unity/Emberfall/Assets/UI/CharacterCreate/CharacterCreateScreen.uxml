@@ -8,17 +8,31 @@
       so the overlay was hosting rather than design.
 
       The three views are siblings, shown one at a time by CharacterCreateController. They keep
-      their styling in character-roster.uss. The picker deliberately uses two fixed columns of
-      ordinary buttons: there is no wrapping portrait grid, runtime sizing pass, or picker art.
+      their styling in character-roster.uss.
+
+      THE PICKER HAS ART AGAIN (#312), AND STILL HAS NO SOLVER. What 7cc7c9f5 deleted was a
+      WRAPPING grid whose portrait size was solved at runtime off GeometryChangedEvent — that is
+      what NaN'd, thrashed and OOM-killed Android, not the presence of pictures. The shape here is
+      two fixed columns of four plates, sized entirely by USS: no wrapping, no geometry callback,
+      no per-element size write, nothing measured. Each plate is one Button carrying decorative
+      children (`picking-mode="Ignore"`), so it is still ONE hit target per class.
+      UxmlIntegrityCheck enforces the columns-and-no-grid boundary; keep it.
     -->
     <ui:VisualElement name="root" class="emb-root character-create-screen emb-bleed">
 
-        <!-- PICKER: one ordinary button per real class, fixed at four choices per column. -->
+        <!-- PICKER: one plate per real class, fixed at four choices per column. The plates
+             themselves are built in CharacterCreateController.BuildHeroChoice. -->
         <ui:VisualElement name="create-picker-view">
             <ui:VisualElement class="create-picker-header">
                 <ui:VisualElement class="create-picker-header-spacer" />
                 <ui:VisualElement class="create-picker-heading">
                     <ui:Label name="create-pass-title" text="Choose your hero" class="delete-title" />
+                    <!-- THE ONLY PLACE THE PAIRING IS EXPLAINED BEFORE IT IS MADE (#312). A
+                         character is two classes and the picker asks for them one at a time, so
+                         without this line the second pass reads as "pick another hero" and the
+                         player has no way to learn that the first pick is the one that decides the
+                         Hero Power. Filled per pass by BuildHeroChoices. -->
+                    <ui:Label name="create-pass-help" text="" class="create-pass-help" />
                 </ui:VisualElement>
                 <ui:Button name="create-cancel" text="Cancel" class="roster-button roster-button--ghost emb-back" />
             </ui:VisualElement>

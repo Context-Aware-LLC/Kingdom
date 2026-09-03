@@ -719,6 +719,18 @@
     margin-bottom: 0;
 }
 
+/* The pairing explanation (#312). --type-caption, not --type-body: this line is the second thing
+ * in a header that is already competing with eight plates for a 411dp panel, and every dp it
+ * takes comes straight off .hero-choice's height. white-space: normal so a long second-pass
+ * sentence wraps inside the heading column rather than pushing Cancel off the row. */
+.create-pass-help {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin-top: var(--space-1);
+}
+
 #create-detail-view,
 #create-confirm-view {
     align-self: center;
@@ -757,22 +769,32 @@
     justify-content: space-evenly;
 }
 
-/* The colours are HERE, not on a --ghost modifier, because these buttons carry `roster-button`
+/* THE PLATE (#312). Portrait, class name, hero power line — a flex ROW, laid out entirely by the
+ * declarations below. Nothing in the picker measures anything; see BuildHeroChoice's note on why
+ * that is the load-bearing property of this design and not an implementation detail.
+ *
+ * The colours are HERE, not on a --ghost modifier, because these buttons carry `roster-button`
  * and nothing else — and `roster-button` sets no colour of its own (see the note on it above).
  * Without these two properties the eight hero choices rendered as Unity's default grey button:
  * #311, #314 and #315 are all that one omission, and #325 called it a missing stylesheet.
  *
- * The class-coloured spine is the same language a character row uses, and it is the only thing
- * distinguishing one choice from another until the picker gets art (#312). */
+ * The class-coloured spine stays. It was the only thing distinguishing one choice from another
+ * before the art landed; it is now the thing that still says which class this is at a glance when
+ * the portrait is a dark silhouette, and it is the same language a character row speaks. */
 /* flex-grow: 1 with flex-basis: 0 -- the buttons take an equal share of the column's height rather
  * than sizing to their label, so the surplus goes INTO the targets. Sam, 2026-08-30: bigger is
  * better but the space is what it is, so this spends the surplus rather than chasing a size.
  *
  * THE max-height IS WHAT LEAVES ANY GAPS AT ALL. flex-grow and the column's space-evenly compete
  * for the same surplus and flex-grow resolves first: uncapped, four buttons eat the column's ~367dp
- * whole, land at ~92dp each, touch edge to edge, and space-evenly distributes nothing. 72 is 1.5x
- * --touch-min, so the buttons grow half again and ~79dp is left for space-evenly to spend as five
- * equal gaps. Raise this and you are trading the air between the choices for taller choices.
+ * whole, land at ~92dp each, touch edge to edge, and space-evenly distributes nothing.
+ *
+ * 72 -> 84 WITH THE ART (#312), spending ~48dp of the gap budget on the plates. 72 was chosen when
+ * every choice was an identical grey box and the air between them was the only thing keeping the
+ * column from reading as one block; a plate carrying its own portrait separates itself, so the
+ * trade the old note describes ("the air between the choices for taller choices") now falls the
+ * other way. 84 - 2x--space-1 padding = a 76dp square portrait, which is what .hero-choice-portrait
+ * is sized to. Move one and move the other.
  *
  * min-height stays as the floor for a screen with no surplus; margin-bottom is gone because
  * space-evenly owns the gaps now and the two would compound. */
@@ -780,8 +802,15 @@
     align-self: stretch;
     flex-grow: 1;
     flex-basis: 0;
-    max-height: 72px;
+    max-height: 84px;
     min-height: var(--touch-min);
+    flex-direction: row;
+    align-items: center;
+    /* SHORTHAND ON PURPOSE, and it is the opposite call from .character-create-screen's. That rule
+     * uses longhands so it cannot clobber the horizontal padding .emb-bleed supplies; this one is
+     * here precisely TO clobber `.roster-button`'s 16dp left/right, which would otherwise push the
+     * portrait 16dp off the spine and cost the text the same again on the other side. */
+    padding: var(--space-1);
     color: var(--ink-1);
     background-color: var(--surface-2);
     border-left-width: 6px;
@@ -791,6 +820,87 @@
 
 .hero-choice:hover {
     background-color: var(--surface-3);
+}
+
+/* The full-bleed wash and its scrim, in the shape .craft-illustration/.craft-illustration-scrim
+ * already use: art layer, flat rgba over it. USS HAS NO GRADIENTS, so the scrim is uniform rather
+ * than a ramp — see the note on .emb-scroll-fade in theme.uss.
+ *
+ * DELIBERATELY NOT overflow: hidden on the plate. The wash's square corners do poke ~4dp past
+ * .unity-button's radius, and the fix for that would be a shrinkable flex child that clips, which
+ * is how the main menu lost two whole buttons with nothing logged
+ * (flex-shrink defaults to 1; a clipping child pays a column's overflow in whole children). A
+ * visible 4dp corner is the cheaper of the two failures by a wide margin. */
+.hero-choice-wash {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    -unity-background-scale-mode: scale-and-crop;
+    opacity: 0.22;
+}
+
+.hero-choice-scrim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(11, 14, 19, 0.42);
+}
+
+/* align-self: stretch rather than a height, so the portrait is always exactly the plate's content
+ * height and stays square at the 84dp cap without either number being written twice. flex-shrink: 0
+ * because a narrow column must eat into the TEXT, never into the likeness. */
+.hero-choice-portrait {
+    align-self: stretch;
+    width: 76px;
+    flex-shrink: 0;
+    border-radius: var(--space-1);
+    background-color: var(--surface-3);
+    -unity-background-scale-mode: scale-and-crop;
+    margin-right: var(--space-3);
+}
+
+.hero-choice-body {
+    flex-grow: 1;
+    flex-shrink: 1;
+    justify-content: center;
+}
+
+.hero-choice-name {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+}
+
+/* white-space: normal so the two long powers (Chain Spark, Backstab) wrap to a second line inside
+ * the ~50dp left under the name rather than being cut mid-word. */
+.hero-choice-power {
+    font-size: var(--type-caption);
+    color: var(--ink-2);
+    white-space: normal;
+}
+
+.hero-choice-power--muted {
+    opacity: 0.5;
+}
+
+/* 1 or 2 — which slot this class filled. It replaces the "1 · " prefix the label used to carry,
+ * which put the ordinal where the eye reads the class NAME. */
+.hero-choice-badge {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    margin-left: var(--space-2);
+    margin-right: var(--space-1);
+    background-color: var(--accent);
+    color: var(--surface-0);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
 }
 
 /* One per CardClass, keyed on the ENUM MEMBER LOWERCASED — `tempest`, `stonewarden`, never
@@ -806,9 +916,19 @@
 .hero-choice--nightveil   { border-left-color: var(--class-nightveil); }
 
 /* Border-width on all four sides would replace the spine, so the selected state is carried by the
- * fill and the text instead — the spine keeps saying which class this is. */
+ * fill and the text instead — the spine keeps saying which class this is.
+ *
+ * THE NAME IS TINTED BY ITS OWN RULE, not by inheritance. `color` on the plate reaches the Button's
+ * own text, and since #312 the Button's text is empty — every word on the plate is a child Label
+ * with a `color` of its own, and an explicit declaration beats an inherited one. The plate's
+ * `color` is left in place for the same reason `-unity-text-align` is: it costs nothing and it is
+ * what a plain roster-button still expects. */
 .hero-choice--selected {
     background-color: var(--surface-3);
+    color: var(--accent);
+}
+
+.hero-choice--selected .hero-choice-name {
     color: var(--accent);
 }
 /* ---- Detail overlay ---- */
