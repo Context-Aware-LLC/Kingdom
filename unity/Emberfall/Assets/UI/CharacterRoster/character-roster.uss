@@ -933,17 +933,22 @@
 
 /* The hero power's socket ring, on the right of the plate where there was dead space (#312).
  *
- * ITS SIZE IS DERIVED FROM THE SPRITE, NOT PICKED. HeroPower_IronEmber.png is 1270x1270 with a
- * 730x746 aperture, so the hole is 0.5748 of the file. Drawn at 180 the hole is ~104 across, and
- * the glyph inside is sized to 96 so a little metal always overlaps it rather than the two
- * meeting on a seam. Change the sprite and both numbers move — align_socket_rings.py prints the
- * ap/canvas figure the 0.5748 comes from.
+ * ITS SIZE IS DERIVED FROM THE SPRITE, NOT PICKED, AND THE DERIVATION IS THE MAINTENANCE BURDEN.
+ * HeroPower_IronEmber.png is 1424x1424 with a 730x747 aperture, so the hole is 0.5126 of the file.
+ * Drawn at 200 the hole is ~103 across, and the glyph inside is sized to 92 so a little metal
+ * always overlaps it rather than the two meeting on a seam.
+ *
+ * BOTH NUMBERS MOVE WHEN THE SPRITE IS RE-CUT, and nothing warns. This ring has already been
+ * re-exported twice: the first install was ap/canvas 0.5748, where 200 would have given a 115 hole
+ * and left the 92 glyph swimming in it. `align_socket_rings.py` prints the ap/canvas figure on
+ * every run — read it off the run that produced the file you are installing, and update the two
+ * numbers below in the same commit.
  *
  * The ring is a plain background-image, not a 9-slice: it is round, and slicing a circle stretches
  * its middle into a capsule. Fixed size and scale-to-fit are the only correct treatment. */
 .hero-choice-ring {
-    width: 180px;
-    height: 180px;
+    width: 200px;
+    height: 200px;
     flex-shrink: 0;
     align-self: center;
     margin-left: var(--space-4);
@@ -956,9 +961,9 @@
 /* scale-to-fit, NOT scale-and-crop: the hero-power arts are square and full-bleed, and cropping
  * one into the ring's circle would cut the glyph rather than frame it. */
 .hero-choice-glyph {
-    width: 96px;
-    height: 96px;
-    border-radius: 48px;
+    width: 92px;
+    height: 92px;
+    border-radius: 46px;
     -unity-background-scale-mode: scale-to-fit;
 }
 
