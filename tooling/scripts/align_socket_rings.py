@@ -4,10 +4,11 @@
 WHY THIS EXISTS. The two IronEmber rings are hand-cut in GIMP from one source frame, and two
 things go wrong every time that happens:
 
-  1. The matte comes back speckled — isolated half-transparent pixels inside the aperture and
-     around the silhouette. Measured on weapon-frame-2.png: 66,425 partial-alpha pixels (5.25%
-     of the image) and an aperture only 0.934 solid. That renders as dirt in the hole and
-     fringing on the edge, over whatever art sits behind it.
+  1. The matte comes back with debris and haze. Measured on weapon-frame-2.png: 382 separate
+     islands (2,080 px of flecks), and 65,868 partial-alpha pixels of which only 13.7% sit
+     against a solid pixel — so the rest is a faint haze through the field rather than ordinary
+     anti-aliasing. hp_frame-2.png by contrast is clean: 142 px of debris, and 83.3% of its
+     partial alpha is a real edge.
   2. The two rings end up with different aperture diameters and different aperture CENTRES.
      Measured: 731x742 at (605.0, 506.5) against 686x700 at (630.5, 475.5) — 6% smaller and
      30px off. Scale cannot fix that, because it is wrong at every scale: a glyph placed inside
@@ -57,23 +58,20 @@ def despeckle(rgba, label):
     """Drop everything that is not the ring, and report what went.
 
     This removes ISOLATED islands and nothing else. On weapon-frame-2.png that is real work —
-    382 components, 381 of them dropped, 2,080 px of white flecks and dithered dirt gone.
+    382 components, 381 of them dropped, 2,080 px of flecks gone. On hp_frame-2.png it is nearly
+    a no-op: 19 components, 142 px.
 
-    IT DOES NOT REMOVE THE VISIBLE DIAGONAL STREAKS, and that is not a bug to fix here. The
-    streaks left by the GIMP cut are CONTIGUOUS with the ornament, not islands bridged by a
-    hairline. An erode-then-dilate opening was written to sever such a bridge and then MEASURED
-    against radii 2, 4, 6, 8, 10, 12 and 16 on both rings:
+    DO NOT ADD A MORPHOLOGICAL OPENING HERE. One was written, on the theory that long diagonal
+    streaks were bridged onto the ring by a hairline of faint pixels — and the streaks did not
+    exist. They were an artifact of previewing an RGBA image on a WHITE background, where a
+    transparent field and a white slash look identical. Composited onto magenta both rings are
+    clean. The opening was then measured "failing" to remove them at r=2..16, which is exactly
+    what a filter does when its target is not there, and that non-result nearly shipped in this
+    docstring as a fact about the art.
 
-        hp_frame-2       junk beyond the ornament: 2398 px before
-                         after opening at r=2..16:  2389, 2389, 2389, 2389, 2389, 2386, 2384
-        weapon-frame-2   junk beyond the ornament: 17034 px before
-                         after opening at r=2..16: 16987, 16974, 16932, 16742, 16679, 16565, 16384
+    **Check an alpha claim against a non-white matte before believing it.** The one-liner:
 
-    Flat at every radius, while the ring itself lost up to 2,492 px. The streaks are part of the
-    same blob as the art, so no connectivity or morphology rule can tell them apart from a thin
-    blade — the two are the same shape. **They have to be cut in GIMP.** The opening was deleted
-    rather than left in at some tuned radius, because a filter that costs real pixels and removes
-    0.6% of what it targets is worse than none: it looks like the problem is handled.
+        Image.alpha_composite(Image.new('RGBA', im.size, (255,0,255,255)), im)
     """
     alpha = rgba[..., 3]
     on = alpha > ALPHA_ON
