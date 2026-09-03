@@ -32,6 +32,34 @@
             <ui:VisualElement name="vault-shelf" class="vault-shelf"/>
             <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
         </ui:VisualElement>
+        <!-- THE TEAR. Declared BEFORE the reveal and after the shelf, which is its z order: it covers
+             the shelf it was launched from and is covered by the reveal it hands off to.
+             PackTearAnimator queries these names out of the root, the same host-agnostic contract
+             PackRevealPanel uses, so a host that omits this whole block still opens packs (IsBound
+             goes false and the tear hands straight through).
+             Every image this wants is unbuilt: files 3, 4 and 5 of spec 6.1 and file 6 of 6.2. The
+             elements exist anyway so that landing the art is a background-image on a rule that is
+             already here, rather than a markup change. -->
+        <ui:VisualElement name="tear-overlay" class="tear-overlay tear-overlay--hidden emb-bleed">
+            <ui:VisualElement name="tear-stage" class="tear-stage">
+                <ui:VisualElement name="tear-burst" picking-mode="Ignore" class="tear-burst"/>
+                <!-- THREE VIEWS OF ONE PACK, baked by the crimp shader (Sol, 2026-09-03): the intact
+                     sealed wrapper, a top piece carrying the top crimp, and a bottom piece carrying
+                     the bottom crimp. Both pieces have an irregular TRANSPARENT torn edge, which is
+                     why the intact wrapper exists as its own element and sits last (topmost): the
+                     pieces overlap by about 8% and their torn edges are alpha, so a sealed pack
+                     showing them directly would show the seam through itself. The wrapper covers
+                     them until the tear, then hides and hands the stage to the two pieces. -->
+                <ui:VisualElement name="tear-pack" class="tear-pack">
+                    <ui:VisualElement name="tear-pack-top" picking-mode="Ignore" class="tear-pack-half tear-pack-half_top"/>
+                    <ui:VisualElement name="tear-pack-bottom" picking-mode="Ignore" class="tear-pack-half tear-pack-half_bottom"/>
+                    <ui:VisualElement name="tear-pack-face" picking-mode="Ignore" class="tear-pack-face"/>
+                    <ui:VisualElement name="tear-strip" picking-mode="Ignore" class="tear-strip"/>
+                </ui:VisualElement>
+                <ui:Label name="tear-hint" text="Tap or pull down to open" class="tear-hint"/>
+                <ui:Button name="btn-tear-skip" text="Skip" class="tear-skip emb-back"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
         <!-- emb-back on Done as well as on Back, so Android's back gesture dismisses the reveal
              before it leaves the screen. BackNavigation clicks the TOPMOST visible back control,
              and a modal declared after the content it covers is topmost by document order. -->

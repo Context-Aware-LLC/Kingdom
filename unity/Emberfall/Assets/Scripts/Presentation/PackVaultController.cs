@@ -121,6 +121,7 @@ namespace Emberfall.Presentation
         private VisualElement _banner;
         private Button _back;
         private PackRevealPanel _reveal;
+        private PackTearAnimator _tear;
         private IPackArtProvider _packArt;
 
         private string _returnScene = "MainMenu";
@@ -182,6 +183,7 @@ namespace Emberfall.Presentation
             _banner = root.Q<VisualElement>("vault-banner");
             _packArt = new PackArtProvider();
             _reveal = new PackRevealPanel(root, RevealDismissed);
+            _tear = new PackTearAnimator(root);
             _cancel = new CancellationTokenSource();
 
             _back = root.Q<Button>("btn-vault-back");
@@ -482,11 +484,16 @@ namespace Emberfall.Presentation
                     // loses it to one. Written on a Vault-mode open too: a player who has opened a
                     // pack has had the moment, whichever door they came through, and marking it here
                     // means there is exactly one site that can.
+                    // Read BEFORE the release, because the release is what stops it being the first.
+                    // Spec §8: no skip on the gift's first pack, everything after it is skippable.
+                    bool firstGiftPack = _mode == PackVaultMode.Gift && _giftLocked;
+
                     MarkGiftSeen();
                     ReleaseGiftLock();
 
                     SetStatus("");
-                    _reveal.Show(result.Receipt);
+                    PackOpenReceipt receipt = result.Receipt;
+                    _tear.Play(receipt, () => _reveal.Show(receipt), allowSkip: !firstGiftPack);
                     return;
                 }
 
