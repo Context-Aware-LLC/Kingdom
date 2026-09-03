@@ -62,6 +62,61 @@
     background-color: var(--surface-3);
 }
 
+/* ── The gift banner ─────────────────────────────────────────────────────────────────────────
+ *
+ * Gift mode only (PackVaultMode.Gift), and only once a non-empty shelf has rendered. It is TEXT ON
+ * A PLATE, not an image: `gift_ribbon.png` is specified (spec §6.3 #10) and does not exist, and a
+ * banner that waits for art is a banner that ships blank. When the ribbon lands it becomes a
+ * background-image on this rule and nothing else moves.
+ * RETIREMENT TRIGGER: when Assets/Art/UI/Chrome/PackVault/gift_ribbon.png is placed, set it here
+ * as a 9-sliced background and drop the border. */
+.vault-banner {
+    margin-bottom: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--surface-1);
+    border-width: 1px;
+    border-color: var(--accent);
+    border-radius: var(--space-3);
+    align-items: center;
+
+    /* The entrance. Both properties are transitioned here rather than on the --enter rule, so the
+     * animation runs in BOTH directions off one declaration and a class that is only ever removed
+     * still animates. Duration matches the tile stagger's step. */
+    opacity: 1;
+    translate: 0 0;
+    transition-property: opacity, translate;
+    transition-duration: 260ms, 260ms;
+    transition-timing-function: ease-out, ease-out;
+}
+
+.vault-banner__title {
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.vault-banner__body {
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+/* Vault mode's resting state, and the authored default in the UXML — a returning player must never
+ * be congratulated for arriving. `display: none` rather than opacity, so it holds no height. */
+.vault-banner--hidden {
+    display: none;
+}
+
+/* Staged. PackVaultController adds this at show time and schedules its removal, at which point the
+ * transition above runs. */
+.vault-banner--enter {
+    opacity: 0;
+    translate: 0 -12px;
+}
+
 /* A WRAPPING ROW, NOT A ScrollView. UI Toolkit's ScrollView content lays out correctly and PAINTS
  * above its viewport on Android (#285, #307) — a renderer fault no stylesheet can reach. The shelf
  * holds five packs at the gift and ten at its cap, so it does not need one, and inheriting that
@@ -89,10 +144,31 @@
     border-width: 1px;
     border-color: var(--surface-3);
     border-radius: var(--space-3);
+
+    /* Rest state for the gift entrance (.vault-pack--enter). Harmless in Vault mode, which never
+     * stages the tile and so never transitions it. */
+    opacity: 1;
+    translate: 0 0;
+    transition-property: opacity, translate;
+    transition-duration: 260ms, 260ms;
+    transition-timing-function: ease-out, ease-out;
 }
 
 .vault-pack:active {
     border-color: var(--accent);
+}
+
+/* The gift's entrance. Applied at BUILD time by PackVaultController and scheduled off one tile at a
+ * time, so the packs arrive in sequence rather than all at once — five objects landing on a shelf,
+ * which is the thing the beat is about.
+ *
+ * Selected on the modifier alone (not `.vault-pack.vault-pack--enter`) so the overflow label, which
+ * is not a `.vault-pack`, stages and releases with the tiles it stands for.
+ *
+ * The transition lives on `.vault-pack` and `.vault-pack__overflow`, not here — see the banner. */
+.vault-pack--enter {
+    opacity: 0;
+    translate: 0 16px;
 }
 
 .vault-pack:disabled {
@@ -144,6 +220,13 @@
     font-size: var(--type-label);
     -unity-text-align: middle-center;
     -unity-font-style: bold;
+
+    /* Stages and releases with the tiles — see .vault-pack--enter. */
+    opacity: 1;
+    translate: 0 0;
+    transition-property: opacity, translate;
+    transition-duration: 260ms, 260ms;
+    transition-timing-function: ease-out, ease-out;
 }
 
 .vault-status {

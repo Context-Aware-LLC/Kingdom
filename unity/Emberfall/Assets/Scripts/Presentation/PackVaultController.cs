@@ -10,8 +10,23 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
+    /// Which of the vault's two faces is being shown. <b>One scene, not two</b> — two would mean two
+    /// copies of the tear, the reveal and the balance read, and would put the "congratulations" beat
+    /// somewhere a returning player could route back into.
+    /// </summary>
+    public enum PackVaultMode
+    {
+        /// <summary>The unopened-pack surface: the shelf immediately, Back always, no banner.</summary>
+        Vault = 0,
+
+        /// <summary>The onboarding gift: a banner, a scripted entrance, and no way out until the
+        /// first pack is open.</summary>
+        Gift = 1,
+    }
+
+    /// <summary>
     /// The pack vault: every unopened pack this player holds, and the verb that spends one.
-    /// Slice 1 of <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>.
+    /// Slices 1 and 2 of <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>.
     ///
     /// <para><b>It replaces the PackReveal scene rather than sitting beside it.</b> That screen said
     /// of itself that it was "a frame, not a finished screen … meant to be replaced rather than
@@ -24,6 +39,18 @@ namespace Emberfall.Presentation
     /// out of the store in 2026-08-20 precisely so a pack opened somewhere other than the store could
     /// have one, and it queries its <c>reveal-*</c> elements out of whatever root it is handed. Do not
     /// write a second reveal.</para>
+    ///
+    /// <para><b>Two modes, one screen</b> (<see cref="PackVaultMode"/>). <see cref="PackVaultMode.Gift"/>
+    /// is the onboarding beat: it opens with a banner and a staggered entrance, it hides Back until a
+    /// pack has actually been opened, and it always goes home to the main menu. Everything else about
+    /// it — the shelf, the open, the reveal — is the vault's, unchanged. The mode is set by the caller
+    /// (<c>MainMenuController.BeginFirstRun</c>) and consumed on arrival.</para>
+    ///
+    /// <para><b>The BALANCE routes; the MARKER only picks the mode.</b> That split is what makes
+    /// starter packs unstrandable, and it is the reason <see cref="FirstRunMarkers.Gift"/> is written
+    /// HERE — on the first pack opened — rather than by whatever routed the player in. A player who
+    /// force-quits the instant this scene loads has not had their gift yet, and must get it on the
+    /// next launch.</para>
     ///
     /// <para><b>Two ways in, and they go home differently.</b> A receipt written to
     /// <see cref="Pending"/> by someone else — a store purchase — is shown on arrival and returns to
@@ -61,6 +88,17 @@ namespace Emberfall.Presentation
         public static PackOpenReceipt Pending;
 
         /// <summary>
+        /// Which face to wear, set by whoever opened the vault. <b>Consumed on arrival and reset to
+        /// <see cref="PackVaultMode.Vault"/></b>, exactly as <see cref="ReturnScene"/> is: the gift is
+        /// a once-ever beat, and a caller that forgets to set this must not inherit it from the launch
+        /// that did.
+        ///
+        /// <para>A static rather than a scene reference for the same reason <see cref="Pending"/> is
+        /// one — the caller is in another scene and is gone by the time this one enables.</para>
+        /// </summary>
+        public static PackVaultMode Mode = PackVaultMode.Vault;
+
+        /// <summary>
         /// How many pack tiles the shelf draws before it stops and counts the rest.
         ///
         /// <para>The shelf does not scroll (see the type remarks), so an unbounded balance would
@@ -70,13 +108,43 @@ namespace Emberfall.Presentation
         /// </summary>
         private const int MaxTilesShown = 10;
 
+        /// <summary>How long after a render the banner settles, and the step between tiles behind it.
+        /// The same shape as <see cref="PackRevealPanel"/>'s <c>140 + i*170</c> card stagger, a little
+        /// quicker: these are five identical objects arriving, not five things to read.</summary>
+        private const int EntranceBannerMs = 60;
+        private const int EntranceFirstTileMs = 220;
+        private const int EntranceTileStepMs = 90;
+
         private VisualElement _shelf;
         private Label _status;
         private Label _subtitle;
+        private VisualElement _banner;
+        private Button _back;
         private PackRevealPanel _reveal;
         private IPackArtProvider _packArt;
 
         private string _returnScene = "MainMenu";
+
+        /// <summary>This visit's mode, read off <see cref="Mode"/> once on arrival.</summary>
+        private PackVaultMode _mode = PackVaultMode.Vault;
+
+        /// <summary>
+        /// True while the gift is holding the player on this screen — Gift mode, before any pack has
+        /// been opened. It hides Back, which is the whole of "no skip on the gift's first pack".
+        ///
+        /// <para><b>It is released by every dead end, not only by a successful open.</b> The gate
+        /// exists to stop a player skipping a pack they have; where there is no pack to open there is
+        /// nothing to gate, and a screen with no packs on it and no way off it is a trap. The two
+        /// reachable dead ends are a server that refuses the open — <c>Unavailable</c>, which is what
+        /// an unset <c>EMBERFALL_PACK_SEED_SECRET</c> produces on every request — and a session the
+        /// server no longer accepts. <see cref="Fail"/> and a zero-total render both release it.</para>
+        /// </summary>
+        private bool _giftLocked;
+
+        /// <summary>The entrance is an arrival, so it plays on the first shelf this visit draws and
+        /// never again — the shelf is re-rendered after every open, and re-staggering the tiles the
+        /// player just watched a pack leave would read as a glitch, not a flourish.</summary>
+        private bool _entrancePlayed;
 
         /// <summary>True while the reveal on screen belongs to somebody else's open. Decides where
         /// Done goes, and nothing else.</summary>
@@ -98,18 +166,30 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            _mode = Mode;
+            Mode = PackVaultMode.Vault;
+
             _returnScene = string.IsNullOrEmpty(ReturnScene) ? "MainMenu" : ReturnScene;
             ReturnScene = "MainMenu";
+
+            // The gift goes home to the menu whatever the last caller left in ReturnScene. It is the
+            // tail of first run, not a detour out of some screen the player chose to be on.
+            if (_mode == PackVaultMode.Gift) _returnScene = "MainMenu";
 
             _shelf = root.Q<VisualElement>("vault-shelf");
             _status = root.Q<Label>("vault-status");
             _subtitle = root.Q<Label>("vault-subtitle");
+            _banner = root.Q<VisualElement>("vault-banner");
             _packArt = new PackArtProvider();
             _reveal = new PackRevealPanel(root, RevealDismissed);
             _cancel = new CancellationTokenSource();
 
-            Button back = root.Q<Button>("btn-vault-back");
-            if (back != null) back.clicked += Exit;
+            _back = root.Q<Button>("btn-vault-back");
+            if (_back != null) _back.clicked += Exit;
+
+            _entrancePlayed = false;
+            _giftLocked = _mode == PackVaultMode.Gift;
+            ApplyGiftLock();
 
             PackOpenReceipt handedIn = Pending;
             Pending = null;
@@ -118,7 +198,11 @@ namespace Emberfall.Presentation
             {
                 // Somebody else's open. The shelf underneath is never drawn: Done leaves, so a fetch
                 // would be a round trip to render a screen nobody sees.
+                //
+                // A handed-in receipt is a purchase, never the gift, so nothing here is gated: if a
+                // caller managed to set both, the receipt wins and the lock comes off with it.
                 _revealWasHandedIn = true;
+                ReleaseGiftLock();
                 SetSubtitle("");
                 SetStatus("");
                 _reveal.Show(handedIn);
@@ -231,6 +315,11 @@ namespace Emberfall.Presentation
 
             if (total == 0)
             {
+                // Nothing to hold the player on, so the gift stops holding them. Reachable in Gift
+                // mode: the balance that routed them here was read on another screen, and another
+                // device may have spent it since.
+                ReleaseGiftLock();
+                ShowBanner(false);
                 SetSubtitle("");
                 SetStatus("No packs waiting.");
                 return;
@@ -252,7 +341,48 @@ namespace Emberfall.Presentation
             {
                 var more = new Label($"+{hidden} more");
                 more.AddToClassList("vault-pack__overflow");
+                if (WillPlayEntrance) more.AddToClassList("vault-pack--enter");
                 _shelf.Add(more);
+            }
+
+            // The banner belongs to the shelf, not to the screen: it says "here is a gift", and it
+            // must not be the thing on screen while the fetch is still running or after it failed.
+            ShowBanner(_mode == PackVaultMode.Gift);
+            if (_mode == PackVaultMode.Gift && !_entrancePlayed)
+            {
+                _entrancePlayed = true;
+                PlayEntrance();
+            }
+        }
+
+        /// <summary>
+        /// Stagger the banner and the tiles in. <b>USS does the animation</b> — every element is built
+        /// carrying an <c>--enter</c> class that holds it faded and displaced, and this only schedules
+        /// the class coming off, at which point the transition on the base rule runs. Same mechanism as
+        /// <see cref="PackRevealPanel"/>'s card stagger, for the same reason: a transition is one
+        /// declaration and a hand-driven lerp is a frame loop that has to be cancelled on scene exit.
+        ///
+        /// <para><c>schedule</c> is owned by the element, so a scene change drops the callbacks with
+        /// the panel and there is nothing here to unhook.</para>
+        /// </summary>
+        private void PlayEntrance()
+        {
+            if (_banner != null)
+                _banner.schedule
+                       .Execute(() => _banner.RemoveFromClassList("vault-banner--enter"))
+                       .StartingIn(EntranceBannerMs);
+
+            if (_shelf == null) return;
+
+            int i = 0;
+            foreach (VisualElement child in _shelf.Children())
+            {
+                VisualElement tile = child;
+                int delay = EntranceFirstTileMs + (i * EntranceTileStepMs);
+                tile.schedule
+                    .Execute(() => tile.RemoveFromClassList("vault-pack--enter"))
+                    .StartingIn(delay);
+                i++;
             }
         }
 
@@ -269,6 +399,11 @@ namespace Emberfall.Presentation
             var tile = new Button(() => Open(packId));
             tile.AddToClassList("vault-pack");
             tile.SetEnabled(!_busy);
+
+            // Staged displaced, for PlayEntrance to release. Applied at BUILD time rather than after
+            // the fact because a class added in the same frame the element is created transitions from
+            // the staged value; one added afterwards would flash the tile at rest first.
+            if (WillPlayEntrance) tile.AddToClassList("vault-pack--enter");
 
             var face = new VisualElement();
             face.AddToClassList("vault-pack__face");
@@ -341,6 +476,15 @@ namespace Emberfall.Presentation
                     // apart.
                     _revealWasHandedIn = false;
                     retained = true;
+
+                    // THE GIFT IS SPENT THE MOMENT A PACK OPENS, not when the player arrived and not
+                    // when they leave. Anything earlier loses the gift to a force-quit; anything later
+                    // loses it to one. Written on a Vault-mode open too: a player who has opened a
+                    // pack has had the moment, whichever door they came through, and marking it here
+                    // means there is exactly one site that can.
+                    MarkGiftSeen();
+                    ReleaseGiftLock();
+
                     SetStatus("");
                     _reveal.Show(result.Receipt);
                     return;
@@ -419,6 +563,74 @@ namespace Emberfall.Presentation
 
         // ── Chrome ──────────────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Record that the gift has been seen, so the next launch holding starter packs lands in
+        /// <see cref="PackVaultMode.Vault"/> rather than replaying the beat.
+        ///
+        /// <para><b>It cannot fail loudly and must not fail the open.</b> The marker is a presentation
+        /// fact on local disk (<see cref="FirstRunMarkers"/>) — a write that does not land costs one
+        /// replayed animation, while an exception escaping here would cost the player the reveal for a
+        /// pack the ledger has already spent.</para>
+        /// </summary>
+        private static void MarkGiftSeen()
+        {
+            try
+            {
+                FirstRunMarkers.Mark(FirstRunMarkers.Gift);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[PackVault] could not record the gift as seen " +
+                                 $"({ex.GetType().Name}: {ex.Message}); it may play once more.");
+            }
+        }
+
+        /// <summary>True while this render's elements should be staged for <see cref="PlayEntrance"/>.
+        /// Read during the build, so it must be the same question the render asks afterwards.</summary>
+        private bool WillPlayEntrance => _mode == PackVaultMode.Gift && !_entrancePlayed;
+
+        /// <summary>
+        /// Show or hide the gift banner. Vault mode never shows it, so the default in the UXML is
+        /// hidden and only the gift turns it on — a returning player must not be congratulated for
+        /// arriving.
+        /// </summary>
+        private void ShowBanner(bool shown)
+        {
+            if (_banner == null) return;
+
+            // Staged before it is unhidden, in that order: the displaced state has to be the one the
+            // element is first laid out in, or the banner appears at rest and then jumps back to
+            // animate in. Same reason BuildTile stages a tile at construction.
+            if (shown && WillPlayEntrance) _banner.AddToClassList("vault-banner--enter");
+            if (!shown) _banner.RemoveFromClassList("vault-banner--enter");
+
+            _banner.EnableInClassList("vault-banner--hidden", !shown);
+        }
+
+        /// <summary>
+        /// Hide Back while the gift holds the player, show it otherwise.
+        ///
+        /// <para><b>Hidden, not disabled.</b> <c>emb-back</c> makes this the target of Android's back
+        /// gesture (<c>BackNavigation</c> clicks the topmost visible back control), so a merely
+        /// disabled button would still be found and the system gesture would land on a dead control.
+        /// Removing it from the tree lets the gesture fall through to the reveal's Done when a reveal
+        /// is up, and to nothing when it is not — which is the intent.</para>
+        /// </summary>
+        private void ApplyGiftLock()
+        {
+            if (_back == null) return;
+            _back.style.display = _giftLocked ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
+        /// <summary>The gift stops holding the player. Idempotent — called from the first open and
+        /// from every dead end, and more than one of those can happen in a visit.</summary>
+        private void ReleaseGiftLock()
+        {
+            if (!_giftLocked) return;
+            _giftLocked = false;
+            ApplyGiftLock();
+        }
+
         private void SetBusy(bool busy)
         {
             _busy = busy;
@@ -445,6 +657,13 @@ namespace Emberfall.Presentation
         /// statuses is evidence of.</summary>
         private void Fail(string message)
         {
+            // A dead end is not something to hold the player on. Every one of these leaves a screen
+            // with no openable pack on it, and the gift's lock exists only to stop a pack being
+            // skipped — so without this, a server that will not open packs is a screen with nothing
+            // to press. Reachable today: an unset EMBERFALL_PACK_SEED_SECRET makes the route 503 for
+            // everyone, which arrives here as Unavailable on the very first pack of first run.
+            ReleaseGiftLock();
+            ShowBanner(false);
             _shelf?.Clear();
             SetSubtitle("");
             SetStatus(message);

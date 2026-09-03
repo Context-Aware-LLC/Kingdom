@@ -19,6 +19,16 @@
                 <ui:VisualElement picking-mode="Ignore" class="vault-bar__gap"/>
                 <ui:Button name="btn-vault-back" text="← Back" class="vault-back emb-back"/>
             </ui:VisualElement>
+            <!-- Gift mode only, and hidden here so Vault mode never has to turn it off. It is shown
+                 by PackVaultController once a shelf with packs on it has actually rendered: a banner
+                 saying "here is a gift" over a spinner, or over "could not reach the server", is
+                 worse than no banner at all. The staged entrance modifier is added at show time and
+                 is deliberately not authored here.
+                 (No double dash anywhere in this comment either, for the reason above.) -->
+            <ui:VisualElement name="vault-banner" class="vault-banner vault-banner--hidden">
+                <ui:Label name="vault-banner-title" text="A gift to start you off" class="vault-banner__title"/>
+                <ui:Label name="vault-banner-body" text="Open them and keep everything inside." class="vault-banner__body"/>
+            </ui:VisualElement>
             <ui:VisualElement name="vault-shelf" class="vault-shelf"/>
             <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
         </ui:VisualElement>
