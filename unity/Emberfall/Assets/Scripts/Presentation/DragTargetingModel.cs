@@ -217,6 +217,35 @@ namespace Emberfall.Presentation
             return default;
         }
 
+        /// <summary>
+        /// Whether pressing our own hero portrait starts an attack gesture at all (Sam,
+        /// 2026-09-04: "only while they have an attack left of course"). Mirrors
+        /// <c>CommandProcessor.ValidateAttack</c>'s hero branch exactly — weapon equipped, not
+        /// frosted, attacks remaining, DOUBLESTRIKE granting a second.
+        ///
+        /// <para>This REFUSES a gesture, which the class doctrine above says to avoid — but the
+        /// exception it names is the one that applies: every field read here is fully visible in
+        /// the mirror and none of it is hidden information, exactly like hand-card affordability.
+        /// The affordance is what makes it worth checking: the hero now lifts and follows the
+        /// pointer when it can swing, so starting a gesture that the server is certain to reject
+        /// would show the player a pick-up for an attack that cannot happen.</para>
+        ///
+        /// <para>RETIREMENT TRIGGER: a hero attack that does not come from a weapon (an
+        /// attack-granting effect, a claws-style hero power) makes the weapon test wrong here and
+        /// in <c>ValidateAttack</c> together.</para>
+        /// </summary>
+        public bool HeroCanAttack()
+        {
+            if (State == null) return false;
+            PlayerState ps = null;
+            foreach (PlayerState p in State.Players)
+                if (p.Id == _p0Id) { ps = p; break; }
+            if (ps?.Weapon == null) return false;
+            if (ps.Hero.IsFrosted()) return false;
+            int maxAttacks = ps.Weapon.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
+            return ps.HeroAttacksUsedThisTurn < maxAttacks;
+        }
+
         public PlayerId EnemyId()
         {
             if (State == null) return default;
@@ -246,9 +275,8 @@ namespace Emberfall.Presentation
                     return DragSource.None;
 
                 case PointerSubjectKind.Hero:
-                    // Our hero is an attacker when armed (engine: ValidateAttack IsHero + weapon).
-                    // A weaponless swing is the validator's to reject, not ours to pre-empt.
                     if (pressed.Owner != _p0Id) return DragSource.None;
+                    if (!HeroCanAttack()) return DragSource.None;
                     return new DragSource(DragSourceKind.Attacker, HeroIdOf(_p0Id), true);
 
                 case PointerSubjectKind.HeroPower:

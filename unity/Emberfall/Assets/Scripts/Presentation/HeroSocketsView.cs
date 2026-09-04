@@ -6,10 +6,12 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The enlarged hero-power and weapon sockets docked across the lower edge of the hero
-    /// portrait. They remain separate objects because the weapon disappears when unequipped and
-    /// the hero power owns its own input collider. Circular art fills each transparent opening
-    /// and stays inside the gold aperture.
+    /// The enlarged hero-power and weapon sockets — an interlocked pair, sitting in the lane
+    /// between the hand fan and the hero portrait (they were docked across the portrait's lower
+    /// edge until 2026-09-04, where they covered the picture; see ProceduralBoardSetup for why the
+    /// pair went inboard rather than one ring to each side). They remain separate objects because
+    /// the weapon disappears when unequipped and the hero power owns its own input collider.
+    /// Circular art fills each transparent opening and stays inside the gold aperture.
     /// </summary>
     public sealed class HeroSocketsView : MonoBehaviour
     {
