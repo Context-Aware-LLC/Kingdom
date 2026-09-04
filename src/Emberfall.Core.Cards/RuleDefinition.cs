@@ -338,10 +338,23 @@ namespace Emberfall.Core.Cards
         public GainArmorAction(int amount) => Amount = amount;
     }
 
+    /// <summary>
+    /// Offer the controller a choice of one card from <see cref="Options"/> drawn at random from the
+    /// eligible pool.
+    ///
+    /// <para><b>The offer size is FIXED and deliberately not authored</b> (Sam, 2026-09-04).
+    /// Unearth is one mechanic — "choose one of three" — and a number on the action made it a family
+    /// of them. Two shipped cards proved why that is worse than it looks: one carried
+    /// <c>count: 1</c>, which is a choice prompt with a single button, and the face read "Unearth 1"
+    /// as though that were a variant rather than a degenerate case. With the count gone the face
+    /// reads "Unearth", one string for one behaviour, and a card whose text lies about its offer
+    /// size can no longer be authored.</para>
+    /// </summary>
     public sealed class UnearthAction : RuleAction
     {
-        public int Count { get; }
-        public UnearthAction(int count) => Count = count;
+        /// <summary>How many cards an Unearth offers to choose between. The pool is sampled without
+        /// replacement, so a pool smaller than this offers whatever it has.</summary>
+        public const int Options = 3;
     }
 
     /// <summary>Exhaustive semantics shared by validation, runtime targeting and presentation.</summary>

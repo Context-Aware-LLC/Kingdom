@@ -846,8 +846,14 @@ namespace Emberfall.Editor
                 case EditableRuleActionKind.Draw:
                 case EditableRuleActionKind.Summon:
                 case EditableRuleActionKind.AddToHand:
-                case EditableRuleActionKind.Unearth:
                     rule.Count = EditorGUILayout.IntField("action.count", rule.Count);
+                    break;
+                case EditableRuleActionKind.Unearth:
+                    // Unearth draws NO fields. Its offer size is fixed at UnearthAction.Options and
+                    // is not the author's to set — a count box here would be a control that changes
+                    // nothing, which is worse than no control at all.
+                    EditorGUILayout.LabelField("action",
+                        $"choose 1 of {UnearthAction.Options} — not authorable");
                     break;
             }
 

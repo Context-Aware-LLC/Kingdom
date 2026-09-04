@@ -485,19 +485,18 @@ namespace Emberfall.Core
     {
         public void Execute(in EffectContext ctx)
         {
-            var action = (UnearthAction)ctx.Rule.Action;
             PlayerState chooser = ctx.State.PlayerOf(ctx.Source.Controller);
 
-            // Never overwrite an unresolved choice or open a choice that cannot be completed.
-            // Invalid authored counts and an empty eligible pool fail closed without consuming RNG.
-            if (action.Count <= 0 || ctx.State.PendingChoice != null ||
-                chooser.Hand.Count >= MatchEngine.HandCap)
+            // Never overwrite an unresolved choice or open a choice that cannot be completed. An
+            // empty eligible pool fails closed without consuming RNG. There is no longer an authored
+            // count to be invalid — the offer size is UnearthAction.Options.
+            if (ctx.State.PendingChoice != null || chooser.Hand.Count >= MatchEngine.HandCap)
                 return;
 
             List<int> remaining = CanonicalEligiblePool(ctx.Db);
             if (remaining.Count == 0) return;
 
-            int offerCount = System.Math.Min(action.Count, remaining.Count);
+            int offerCount = System.Math.Min(UnearthAction.Options, remaining.Count);
             var pending = new PendingChoice
             {
                 Chooser = chooser.Id,

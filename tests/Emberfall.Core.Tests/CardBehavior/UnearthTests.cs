@@ -26,11 +26,12 @@ namespace Emberfall.Core.Tests.CardBehavior
 
             Assert.Multiple(() =>
             {
-                Assert.That(gearCache.Text, Is.EqualTo("Unearth 3."));
+                // No number on the face: the offer size is UnearthAction.Options, not the card's
+                // to choose, so printing it would restate a constant as though it were authored.
+                Assert.That(gearCache.Text, Is.EqualTo("Unearth."));
                 Assert.That(rule.Activation, Is.TypeOf<TriggeredActivation>());
                 Assert.That(((TriggeredActivation)rule.Activation).Trigger, Is.EqualTo(Trigger.ON_CAST));
                 Assert.That(rule.Action, Is.TypeOf<UnearthAction>());
-                Assert.That(((UnearthAction)rule.Action).Count, Is.EqualTo(3));
             });
         }
 
@@ -43,8 +44,11 @@ namespace Emberfall.Core.Tests.CardBehavior
             CardDefinition z = Card(FixtureCard.Id("z"));
             CardDefinition notCollectible = Card(FixtureCard.Id("token"), collectible: false);
             CardDefinition held = Card(FixtureCard.Id("held"), collectible: false);
+            // FOUR eligible rows against an offer of three, so the sample is a strict subset and
+            // this still exercises "stop at Options" as well as the order. The pool being larger
+            // than the offer is the case that used to be reached by authoring count: 5.
             var db = new PoolDatabase(new[] { z, held, c, b, notCollectible, a, c });
-            var (state, processor, source) = Ready(db, count: 5, seed: 1UL);
+            var (state, processor, source) = Ready(db, seed: 1UL);
             var expectedRng = new DeterministicRandom(1UL);
             // Sorted, because the canonical pool is NUMERIC order. It used to be the ordinal order
             // of the handles, where "a","b","c","z" was already canonical and the sort was invisible
@@ -53,7 +57,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             var remaining = FixtureCard.Ids("a", "b", "c", "z");
             remaining.Sort();
             var expected = new List<int>();
-            while (remaining.Count > 0)
+            while (expected.Count < UnearthAction.Options && remaining.Count > 0)
             {
                 int index = expectedRng.NextInt(remaining.Count);
                 expected.Add(remaining[index]);
@@ -82,23 +86,27 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(state.PendingChoice.ChoiceSequence, Is.EqualTo(offered.Sequence));
         }
 
+        /// <summary>
+        /// A pool SMALLER than the offer still opens a choice, of whatever the pool has. This is
+        /// what remains of `Invalid_Count_Fails_Closed_Without_Rng_Or_Offer`, deleted 2026-09-04
+        /// with the authored count it tested: there is no longer a number on the card that can be
+        /// zero or negative, so the only way the offer can come up short is the pool, and coming up
+        /// short is legal rather than a failure. Empty is the fail-closed case, covered below.
+        /// </summary>
         [Test]
-        public void Invalid_Count_Fails_Closed_Without_Rng_Or_Offer()
+        public void A_Pool_Smaller_Than_The_Offer_Offers_What_It_Has()
         {
-            foreach (int count in new[] { -1, 0 })
-            {
-                var db = new PoolDatabase(new[] { Card(FixtureCard.Id("eligible")) });
-                var (state, processor, source) = Ready(db, count, seed: 91UL);
-                ulong rngBefore = state.Rng.RawState;
+            var db = new PoolDatabase(new[] { Card(FixtureCard.Id("eligible")) });
+            var (state, processor, source) = Ready(db, seed: 91UL);
 
-                CommandResult result = processor.Execute(state,
-                    new PlayCardIntent(P0, source.Id, 0, Array.Empty<TargetRef>()));
+            CommandResult result = processor.Execute(state,
+                new PlayCardIntent(P0, source.Id, 0, Array.Empty<TargetRef>()));
 
-                Assert.That(result.Accepted, Is.True);
-                Assert.That(state.PendingChoice, Is.Null);
-                Assert.That(state.Rng.RawState, Is.EqualTo(rngBefore));
-                Assert.That(result.Events.Any(e => e.Kind == GameEventKind.UnearthOffered), Is.False);
-            }
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(state.PendingChoice, Is.Not.Null);
+            Assert.That(state.PendingChoice!.Options, Has.Count.EqualTo(1),
+                "one eligible row means a one-option offer, not a refusal");
+            Assert.That(result.Events.Count(e => e.Kind == GameEventKind.UnearthOffered), Is.EqualTo(1));
         }
 
         [Test]
@@ -109,7 +117,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 Card(FixtureCard.Id("not_collectible"), collectible: false),
                 Card(FixtureCard.Id("held"), collectible: false),
             });
-            var (state, processor, source) = Ready(db, count: 3, seed: 92UL);
+            var (state, processor, source) = Ready(db, seed: 92UL);
             ulong rngBefore = state.Rng.RawState;
 
             CommandResult result = processor.Execute(state,
@@ -125,7 +133,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void Choice_Sequence_Is_Monotonic_Across_Offers()
         {
             var db = new PoolDatabase(new[] { Card(FixtureCard.Id("a")), Card(FixtureCard.Id("b")), Card(FixtureCard.Id("c")) });
-            var (state, processor, firstSource) = Ready(db, count: 2, seed: 2UL);
+            var (state, processor, firstSource) = Ready(db, seed: 2UL);
             CommandResult firstOffer = processor.Execute(state,
                 new PlayCardIntent(P0, firstSource.Id, 0, Array.Empty<TargetRef>()));
             ulong firstSequence = state.PendingChoice!.ChoiceSequence;
@@ -177,7 +185,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             Func<GameState, UnearthChoiceIntent> intentFactory, RejectReason expectedReason)
         {
             var db = new PoolDatabase(new[] { Card(FixtureCard.Id("a")), Card(FixtureCard.Id("b")), Card(FixtureCard.Id("c")) });
-            var (state, processor, source) = Ready(db, count: 2, seed: 3UL);
+            var (state, processor, source) = Ready(db, seed: 3UL);
             Assert.That(processor.Execute(state,
                 new PlayCardIntent(P0, source.Id, 0, Array.Empty<TargetRef>())).Accepted, Is.True);
             string before = GameStateHasher.Hash(state);
@@ -227,7 +235,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void Accepted_Choice_Creates_Exact_Card_Clears_Pending_And_Projects_Privately()
         {
             var db = new PoolDatabase(new[] { Card(FixtureCard.Id("a")), Card(FixtureCard.Id("b")), Card(FixtureCard.Id("c")) });
-            var (state, processor, source) = Ready(db, count: 3, seed: 5UL);
+            var (state, processor, source) = Ready(db, seed: 5UL);
             Assert.That(processor.Execute(state,
                 new PlayCardIntent(P0, source.Id, 0, Array.Empty<TargetRef>())).Accepted, Is.True);
             int chosen = state.PendingChoice!.Options[1];
@@ -257,7 +265,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void Pending_Choice_Locks_Unrelated_Commands_Including_EndTurn()
         {
             var db = new PoolDatabase(new[] { Card(FixtureCard.Id("a")), Card(FixtureCard.Id("b")) });
-            var (state, processor, source) = Ready(db, count: 2, seed: 7UL);
+            var (state, processor, source) = Ready(db, seed: 7UL);
             Assert.That(processor.Execute(state,
                 new PlayCardIntent(P0, source.Id, 0, Array.Empty<TargetRef>())).Accepted, Is.True);
             PlayerIntent[] unrelated =
@@ -285,7 +293,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void AutoConfirm_Selects_First_Offer_Without_Ending_Turn()
         {
             var db = new PoolDatabase(new[] { Card(FixtureCard.Id("a")), Card(FixtureCard.Id("b")), Card(FixtureCard.Id("c")) });
-            var (state, processor, source) = Ready(db, count: 3, seed: 11UL);
+            var (state, processor, source) = Ready(db, seed: 11UL);
             Assert.That(processor.Execute(state,
                 new PlayCardIntent(P0, source.Id, 0, Array.Empty<TargetRef>())).Accepted, Is.True);
             int first = state.PendingChoice!.Options[0];
@@ -336,7 +344,7 @@ namespace Emberfall.Core.Tests.CardBehavior
                 Card(FixtureCard.Id("hidden_option_beta_842")),
                 Card(FixtureCard.Id("hidden_option_gamma_953")),
             });
-            var (state, processor, source) = Ready(db, count: 3, seed: 19UL);
+            var (state, processor, source) = Ready(db, seed: 19UL);
             CommandResult result = processor.Execute(state,
                 new PlayCardIntent(P0, source.Id, 0, Array.Empty<TargetRef>()));
             Assert.That(result.Accepted, Is.True);
@@ -368,10 +376,10 @@ namespace Emberfall.Core.Tests.CardBehavior
         }
 
         private static (GameState state, CommandProcessor processor, CardInstance source) Ready(
-            PoolDatabase db, int count, ulong seed)
+            PoolDatabase db, ulong seed)
         {
             CardDefinition sourceDefinition = Card(FixtureCard.Id("unearth_source"), CardType.SPELL,
-                rules: new[] { Rule("unearth", Trigger.ON_CAST, new UnearthAction(count)) });
+                rules: new[] { Rule("unearth", Trigger.ON_CAST, new UnearthAction()) });
             db.Register(sourceDefinition);
             GameState state = MainState(seed);
             var source = new CardInstance(state.NextInstanceId(), sourceDefinition.Id, P0) { Zone = Zone.Hand };

@@ -1351,8 +1351,7 @@
           "type": "ONE_SHOT"
         },
         "action": {
-          "type": "UNEARTH",
-          "count": 3
+          "type": "UNEARTH"
         }
       }
     ]

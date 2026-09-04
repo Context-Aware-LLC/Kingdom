@@ -509,11 +509,11 @@ namespace Emberfall.Core.Cards
                 // C24 — interactive choices need a positive offer and a command path that is
                 // already waiting for player input. Observer cascades cannot suspend and resume
                 // the interpreter, so authoring Unearth there would continue past an open choice.
-                if (rule.Action is UnearthAction unearth)
+                // C24-UNEARTH-COUNT is gone with the count itself (2026-09-04): the offer size is
+                // the constant UnearthAction.Options, so there is no authored number left to be
+                // out of range. What remains is the half that was never about the number.
+                if (rule.Action is UnearthAction)
                 {
-                    if (unearth.Count <= 0)
-                        Err("C24-UNEARTH-COUNT", $"{prefix}.action.count",
-                            "UNEARTH count must be greater than zero.");
                     if (!PlayerTargetedTriggers.Contains(trigger))
                         Err("C24-UNEARTH-TRIGGER", $"{prefix}.action",
                             $"UNEARTH requires an ON_PLAY or ON_CAST player-command path; '{trigger}' cannot pause for input.");

@@ -260,8 +260,11 @@ namespace Emberfall.Core.Cards
                     Fields(element, type, "amount");
                     return new GainArmorAction(Amount(element));
                 case "UNEARTH":
-                    Fields(element, type, "count");
-                    return new UnearthAction(Count(element));
+                    // No fields. `count` was removed 2026-09-04 and is now REJECTED rather than
+                    // ignored, so a row still carrying one fails loudly at load instead of quietly
+                    // meaning something it no longer says. Greenfield: conform the content.
+                    Fields(element, type);
+                    return new UnearthAction();
                 default:
                     throw new FormatException($"Unknown rule action type '{type}'.");
             }

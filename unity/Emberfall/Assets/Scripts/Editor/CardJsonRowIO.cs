@@ -218,7 +218,9 @@ namespace Emberfall.Editor
             else if (action is EquipAction equip) { Type(w, "EQUIP"); w.WriteNumber("cardId", equip.CardId); }
             else if (action is GainManaAction mana) { Type(w, "GAIN_MANA"); Amount(w, mana.Amount); w.WriteString("manaKind", mana.Kind.ToString()); }
             else if (action is BackdraftAction backdraft) { Type(w, "BACKDRAFT"); Amount(w, backdraft.Amount); }
-            else if (action is UnearthAction unearth) { Type(w, "UNEARTH"); Count(w, unearth.Count); }
+            // Type only. Writing a count here would be writing back a field CardJson now REJECTS,
+            // so the window would save rows it could not reload.
+            else if (action is UnearthAction) { Type(w, "UNEARTH"); }
             else if (action is GainArmorAction armor) { Type(w, "GAIN_ARMOR"); Amount(w, armor.Amount); }
             else throw Unknown("action", action);
             w.WriteEndObject();

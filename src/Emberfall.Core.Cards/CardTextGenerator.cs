@@ -1009,7 +1009,9 @@ namespace Emberfall.Core.Cards
                 // No parentheses — trialling the bare number to see how it reads (Sam, 2026-08-11).
                 BackdraftAction a => $"{Name(Keyword.BACKDRAFT)} {a.Amount}.",
                 GainArmorAction a => $"Gain {a.Amount} Armor.",
-                UnearthAction a => $"{UnearthLabel} {a.Count}.",
+                // No number: the offer size is fixed by UnearthAction.Options, so printing it would
+                // be restating a constant as though the card chose it.
+                UnearthAction _ => $"{UnearthLabel} a card.",
                 _ => throw UnsupportedNode("action", action),
             };
 

@@ -386,7 +386,9 @@ namespace Emberfall.Editor
                 case EditableRuleActionKind.Equip: return new EquipAction(CardId);
                 case EditableRuleActionKind.GainMana: return new GainManaAction(Amount, ManaKind);
                 case EditableRuleActionKind.Backdraft: return new BackdraftAction(Amount);
-                case EditableRuleActionKind.Unearth: return new UnearthAction(Count);
+                // Takes nothing: the offer size is UnearthAction.Options, so the authoring form has
+                // no Count field to read for this kind (see DrawActionFields).
+                case EditableRuleActionKind.Unearth: return new UnearthAction();
                 case EditableRuleActionKind.GainArmor: return new GainArmorAction(Amount);
                 default: throw Unknown("editable action", ActionKind);
             }
@@ -411,7 +413,7 @@ namespace Emberfall.Editor
             else if (action is EquipAction equip) { ActionKind = EditableRuleActionKind.Equip; CardId = equip.CardId; }
             else if (action is GainManaAction mana) { ActionKind = EditableRuleActionKind.GainMana; Amount = mana.Amount; ManaKind = mana.Kind; }
             else if (action is BackdraftAction backdraft) { ActionKind = EditableRuleActionKind.Backdraft; Amount = backdraft.Amount; }
-            else if (action is UnearthAction unearth) { ActionKind = EditableRuleActionKind.Unearth; Count = unearth.Count; }
+            else if (action is UnearthAction) { ActionKind = EditableRuleActionKind.Unearth; }
             else if (action is GainArmorAction armor) { ActionKind = EditableRuleActionKind.GainArmor; Amount = armor.Amount; }
             else throw Unknown("action", action);
         }

@@ -673,7 +673,7 @@ namespace Emberfall.Core.Cards
             string frost = CardTextGenerator.FrostVerb + " ";
             string silence = CardTextGenerator.DescribeKeyword(Keyword.SILENCE) + " ";
             string backdraft = CardTextGenerator.DescribeKeyword(Keyword.BACKDRAFT) + " ";
-            string unearth = CardTextGenerator.UnearthLabel + " ";
+            // No trailing space: Unearth prints as a bare word, so the whole clause IS the label.
 
             foreach (TargetSpec spec in Specs(clause, cost))
             {
@@ -723,8 +723,14 @@ namespace Emberfall.Core.Cards
                         yield return new GainManaAction(amount, kind);
                 }
                 if (Verb(backdraft)) yield return new BackdraftAction(amount);
-                if (Verb(unearth)) yield return new UnearthAction(amount);
             }
+
+            // Unearth carries no number, so it is proposed OUTSIDE the amount loop — inside it, a
+            // clause with no digits yields nothing to iterate and the verb would never be reached.
+            // It is also the whole clause rather than a head, so this is an equality test and not a
+            // StartsWith: "Unearth" is the entire sentence.
+            if (string.Equals(clause.TrimEnd('.'), CardTextGenerator.UnearthLabel, StringComparison.Ordinal))
+                yield return new UnearthAction();
 
             // The verbs that name another card. Nothing here reads the noun phrase — the count and
             // the article and the plural are all the renderer's business, so every id in the pool is
