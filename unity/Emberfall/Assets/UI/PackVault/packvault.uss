@@ -192,7 +192,7 @@
 
 /* Only once art actually resolved. A set whose art has not been drawn yet is the normal state
  * (PackArtProvider says so out loud), so an artless pack keeps the plain plate above rather than
- * reading as a picture that failed to load. Assets/Art/Shop/Packs/STARTER/ does not exist yet. */
+ * reading as a picture that failed to load. */
 .vault-pack__face--art {
     background-color: rgba(11, 14, 19, 0.35);
 }
@@ -245,240 +245,128 @@
 }
 
 /* ============================================================================================
- * THE TEAR (slice 3). PackTearAnimator drives every rule below by adding and removing a modifier;
- * there is no keyframe anywhere, because USS has none — each beat is a transition on the base rule
- * that a scheduled class toggle releases. Read PackTearAnimator's remarks before changing a
- * duration here: the C# schedule and these transitions are one clock, and moving only one half
- * makes the burst land after the split instead of between the strip and it.
+ * THE TEAR (slice 3), IN PLACE. Every rule below is a child of `.vault-pack__face` — the tile the
+ * player tapped. There is no stage, no overlay and no second render of the pack; PackTearAnimator's
+ * remarks say why, and the UXML carries the same note where the stage used to be.
  *
- * THE TORN HALVES ARE NO LONGER PLACEHOLDERS (2026-09-03). PackWrapperBaker bakes them, and the
- * intact face, from one source sprite across a shared procedural tear line, so it assigns a
- * background-image to .tear-half-top and .tear-half-bottom at runtime. The colours those two rules
- * carry are the ARTLESS-SET fallback — a set with no art still tears — not art waiting to arrive.
- * Files 4 and 5 of spec §6.1 were never needed; that table is corrected.
+ * PackTearAnimator drives all of this by adding a modifier; there is no keyframe anywhere, because
+ * USS has none — each beat is a transition on the base rule that a scheduled class toggle releases.
+ * Read that class's remarks before changing a duration: the C# schedule and these transitions are
+ * one clock, and moving only one half lands the burst after the split instead of between the recoil
+ * and it.
  *
- * PLACEHOLDER ART, still. The foil strip (§6.1 file 3) and the burst sheet (§6.2 file 6) do not
- * exist; both are flat colour and become correct by gaining a background-image on the rule they
- * already have.
- * RETIREMENT TRIGGER: when Assets/Art/VFX/Pack/fx_pack_burst.png lands, replace .tear-burst's glow
- * and drop it from this paragraph; likewise pack_tear_strip.png and .tear-strip. When both are in,
- * drop this paragraph. */
+ * THE TORN PIECES ARE BAKED. PackWrapperBaker renders them, and the intact face, from one source
+ * sprite across a shared procedural tear line, so files 4 and 5 of spec §6.1 were never art anybody
+ * had to produce — that table is corrected. There is no fallback colour on the pieces: a bake that
+ * cannot run means there is no picture to tear, and the animator fades the tile instead.
+ *
+ * THE FOIL STRIP IS GONE (Sam, 2026-09-03). It was a flat placeholder band laid across the pack art
+ * and it read as exactly that — a block of yellow over the picture. A strip only makes sense as a
+ * thing you pull, and there is no pull gesture any more. If pack_tear_strip.png is ever drawn, it
+ * belongs baked INTO the wrapper by the crimp shader, not painted over it by a rule here.
+ *
+ * RETIREMENT TRIGGER: when Assets/Art/VFX/Pack/fx_pack_burst.png lands, .tear-burst's glow becomes a
+ * background-image on that same rule and this paragraph goes with it. */
 
-.tear-overlay {
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(11, 14, 19, 0.92);
+/* The tile while it is coming apart. `overflow: hidden` is off so the pieces can travel past the
+ * tile's own bounds — a tear clipped to the pack it came out of reads as a wipe. */
+.vault-pack__face--tearing {
+    overflow: visible;
+    background-color: rgba(0, 0, 0, 0);
 }
 
-.tear-overlay--hidden {
-    display: none;
+/* The artless degrade: nothing to tear, so the pack goes. See PackTearAnimator's remarks on why
+ * this branch exists rather than parting two blank plates. */
+.vault-pack__face--spent {
+    opacity: 0;
+    scale: 0.94 0.94;
+    transition-property: opacity, scale;
+    transition-duration: 320ms, 320ms;
+    transition-timing-function: ease-out, ease-out;
 }
 
-.tear-stage {
-    width: 100%;
-    height: 100%;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Behind the pack, and picking-mode Ignore in the markup so it can never eat the gesture that opens
- * it. Sized generously: a burst that stops at the pack's edge reads as a highlight. */
+/* Behind both pieces, and picking-mode Ignore from script so it can never eat a gesture. Sized past
+ * the tile on every side: a burst that stops at the pack's edge reads as a highlight. */
 .tear-burst {
     position: absolute;
-    width: 520px;
-    height: 520px;
-    border-radius: 260px;
+    left: -25%;
+    right: -25%;
+    top: -25%;
+    bottom: -25%;
+    /* Clamped to a circle by UI Toolkit; a length rather than a percentage because the
+     * element has no intrinsic size of its own to resolve one against. */
+    border-radius: 400px;
     background-color: rgba(255, 214, 148, 0);
     opacity: 0;
     scale: 0.4 0.4;
     transition-property: opacity, scale, background-color;
-    transition-duration: 300ms, 300ms, 300ms;
+    transition-duration: 280ms, 280ms, 280ms;
     transition-timing-function: ease-out, ease-out, ease-out;
 }
 
 .tear-burst--fired {
-    background-color: rgba(255, 214, 148, 0.45);
+    background-color: rgba(255, 214, 148, 0.42);
     opacity: 1;
     scale: 1.15 1.15;
-}
-
-/* 0.7 is the ratio the shelf tile and the reveal card both use, so the object the player tapped on
- * the shelf is the object that arrives here. */
-.tear-pack {
-    width: 260px;
-    aspect-ratio: 0.7;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--surface-2);
-    border-width: 1px;
-    border-color: var(--surface-3);
-    border-radius: var(--space-3);
-    scale: 1 1;
-    transition-property: scale;
-    transition-duration: 220ms;
-    transition-timing-function: ease-out;
-}
-
-/* The idle breath: a class the animator TOGGLES on an interval, not a keyframe loop, because USS
- * has none. The transition on .tear-pack is what makes the flip a breath rather than a jump. */
-.tear-pack--breathe {
-    scale: 1.035 1.035;
-}
-
-/* Struck — a beat of recoil before the halves part, so the split reads as caused. */
-.tear-pack--opening {
-    scale: 1.06 1.06;
-}
-
-/* The two halves of the pack face. Absolute, so parting them cannot reflow the stage around them:
- * a layout-driven split would emit a GeometryChangedEvent every frame, which is the same reason
- * collection.uss animates its drawers on translate and never on width. */
-/* THE INTACT SEALED WRAPPER — the third of the crimp shader's three baked views, and the only one
- * visible before the tear. It covers the two pieces underneath because their torn edges are alpha
- * and they overlap: without it the seam reads through an unopened pack. Topmost by document order,
- * and it fades rather than vanishing so the strip leaving and the wrapper going are one gesture. */
-.tear-pack-face {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    background-color: var(--surface-2);
-    border-radius: var(--space-3);
-    opacity: 1;
-    transition-property: opacity;
-    transition-duration: 200ms;
-    transition-timing-function: ease-out;
-}
-
-.tear-pack-face--gone {
-    opacity: 0;
 }
 
 /* NOT TWO HALVES, and the art is what says so. Spec §6.1 sizes pack_torn_top at 1024 × 640 and
  * pack_torn_bottom at 1024 × 1024 against a 1024 × 1536 front: 41.7% and 66.7%, overlapping by
  * ~8% at the tear line. That is how a pack actually opens — you tear the crimped end OFF, you do
- * not halve it — and it is also what lets a crimp shader live on the OUTER edge of each piece and
- * never cross the tear. Each height is set on the piece's own rule below; do not collapse them
- * back to 50% without changing the art brief with it. */
-.tear-pack-half {
+ * not halve it — and it is also what lets the crimp shader live on the OUTER edge of each piece and
+ * never cross the tear. Each height is set on the piece's own rule below; do not collapse them back
+ * to 50% without changing the art brief with it.
+ *
+ * Absolute, so parting them cannot reflow the shelf around them: a layout-driven split would emit a
+ * GeometryChangedEvent every frame, which is the same reason collection.uss animates its drawers on
+ * translate and never on width. */
+.tear-half {
     position: absolute;
     left: 0;
     right: 0;
-    background-color: var(--surface-1);
+    /* No scale mode here: PackWrapperBaker sets background-size Contain inline on both
+     * pieces, which is what keeps them aligned with the intact face they replace. */
     translate: 0 0;
     rotate: 0deg;
     opacity: 1;
     transition-property: translate, rotate, opacity;
-    transition-duration: 380ms, 380ms, 380ms;
+    transition-duration: 360ms, 360ms, 360ms;
     transition-timing-function: ease-in-out, ease-in-out, ease-in-out;
 }
 
 /* 640 / 1536. The torn edge is its BOTTOM edge; the crimp is its top. */
-.tear-pack-half_top {
+.tear-half--top {
     top: 0;
     height: 41.7%;
-    border-top-left-radius: var(--space-3);
-    border-top-right-radius: var(--space-3);
 }
 
-/* 1024 / 1536. The torn edge is its TOP edge; the crimp is its bottom. It overlaps the top piece
- * by design — the two torn edges interlock rather than meeting on a line, which is what stops a
- * seam showing through the pack before it is opened. */
-.tear-pack-half_bottom {
+/* 1024 / 1536. The torn edge is its TOP edge; the crimp is its bottom. It overlaps the top piece by
+ * design — the two torn edges interlock rather than meeting on a line, which is what stops a seam
+ * showing through the pack in the frame before it parts. */
+.tear-half--bottom {
     bottom: 0;
     height: 66.7%;
-    border-bottom-left-radius: var(--space-3);
-    border-bottom-right-radius: var(--space-3);
 }
 
-/* Parted. The modifier alone carries what both halves share; the direction comes from each half's
- * own rule below — one class, two directions. */
-.tear-pack-half--parted {
-    opacity: 0;
-}
-
-/* They rotate as well as travel, in OPPOSITE directions. Two pieces sliding straight apart read as
- * a door; a torn wrapper falls away off-axis. The shader bakes each piece as its own texture so the
- * rotation costs nothing and never distorts the source image (Sol, 2026-09-03). */
-.tear-pack-half_top.tear-pack-half--parted {
-    translate: 0 -120px;
-    rotate: -4deg;
-}
-
-.tear-pack-half_bottom.tear-pack-half--parted {
-    translate: 0 120px;
-    rotate: 5deg;
-}
-
-/* The foil strip: sits across the tear line and leaves first, revealing it. Flat foil colour today;
- * it becomes pack_tear_strip.png (1024 × 192, alpha on both long edges) with no other change.
+/* Parted. The modifier alone carries what both pieces share; the direction comes from each piece's
+ * own rule below — one class, two directions.
  *
- * CENTRED ON 37.5%, WHICH IS DERIVED, NOT CHOSEN. The top piece spans 0 to 41.7% and the bottom
- * spans 33.3% to 100%, so they overlap over 33.3-41.7% and the shared tear line is that band's
- * midpoint: 37.5% (confirmed against the crimp baker's own crop math, 2026-09-03). The strip is
- * 12.5% tall (192 / 1536), so it starts at 37.5 - 6.25 = 31.25%. If the baker's tear line ever
- * moves, this number and the two piece heights move together — they are three views of one seam. */
-.tear-strip {
-    position: absolute;
-    left: -4%;
-    right: -4%;
-    top: 31.25%;
-    height: 12.5%;
-    background-color: rgba(226, 200, 142, 0.9);
-    border-radius: var(--space-1);
-    translate: 0 0;
-    opacity: 1;
-    rotate: 0deg;
-    transition-property: translate, opacity, rotate;
-    transition-duration: 320ms, 320ms, 320ms;
-    transition-timing-function: ease-in, ease-in, ease-in;
-}
-
-.tear-strip--away {
-    translate: 0 26px;
+ * They rotate as well as travel, in OPPOSITE directions. Two pieces sliding straight apart read as
+ * a door; a torn wrapper falls away off-axis. The shader bakes each piece as its own texture so the
+ * rotation costs nothing and never distorts the source image (Sol, 2026-09-03).
+ *
+ * Travel is in PERCENT, not pixels: the tile is 31% of a shelf whose width is the screen's, so a
+ * fixed 120px throw that clears a phone tile barely moves a tablet one. */
+.tear-half--parted {
     opacity: 0;
-    rotate: 3deg;
 }
 
-/* A pull earns more travel than a tap — the player's own gesture already moved it, so the strip
- * carries on the way they threw it. Declared after --away so it wins on sheet order. */
-.tear-strip--pulled {
-    translate: 0 64px;
-    rotate: 7deg;
+.tear-half--top.tear-half--parted {
+    translate: 0 -60%;
+    rotate: -5deg;
 }
 
-.tear-hint {
-    position: absolute;
-    bottom: 18%;
-    color: var(--ink-2);
-    font-size: var(--type-label);
-    -unity-text-align: middle-center;
-    white-space: normal;
-}
-
-/* Hidden outright on the gift's first pack (spec §8), never merely disabled: emb-back makes this a
- * target for Android's back gesture, and a disabled button would still be found by it. */
-.tear-skip {
-    position: absolute;
-    top: var(--space-4);
-    right: var(--space-4);
-    min-height: var(--touch-min);
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
-    color: var(--ink-2);
-    background-color: var(--surface-2);
-    border-width: 1px;
-    border-color: var(--surface-3);
-    border-radius: var(--space-2);
-    font-size: var(--type-label);
-}
-
-.tear-skip:active {
-    background-color: var(--surface-3);
+.tear-half--bottom.tear-half--parted {
+    translate: 0 60%;
+    rotate: 6deg;
 }

@@ -183,7 +183,8 @@ namespace Emberfall.Presentation
             _banner = root.Q<VisualElement>("vault-banner");
             _packArt = new PackArtProvider();
             _reveal = new PackRevealPanel(root, RevealDismissed);
-            _tear = new PackTearAnimator(root);
+            // No root: the tear runs on the tile it is handed, not on a stage in this markup.
+            _tear = new PackTearAnimator();
             _cancel = new CancellationTokenSource();
 
             _back = root.Q<Button>("btn-vault-back");
@@ -400,7 +401,12 @@ namespace Emberfall.Presentation
         /// see the art block below.</param>
         private VisualElement BuildTile(string packId, int index)
         {
-            var tile = new Button(() => Open(packId, index));
+            var face = new VisualElement();
+            face.AddToClassList("vault-pack__face");
+
+            // The face is built before the button so the click can carry it: the tear happens ON this
+            // element, and it is the only handle to the pack the player actually touched.
+            var tile = new Button(() => Open(packId, index, face));
             tile.AddToClassList("vault-pack");
             tile.SetEnabled(!_busy);
 
@@ -409,8 +415,6 @@ namespace Emberfall.Presentation
             // the staged value; one added afterwards would flash the tile at rest first.
             if (WillPlayEntrance) tile.AddToClassList("vault-pack--enter");
 
-            var face = new VisualElement();
-            face.AddToClassList("vault-pack__face");
             tile.Add(face);
 
             // ONE FACE PER TILE, NOT ONE PER SET. A set ships several pieces precisely so a shelf of
@@ -489,7 +493,9 @@ namespace Emberfall.Presentation
         /// tears is the one the player touched. Without it the tear would always wear the set's first
         /// face while the tile under the finger wore its own — the mismatch a shelf of five distinct
         /// faces makes visible.</param>
-        private async void Open(string packId, int artIndex)
+        /// <param name="face">That tile's own face element. The tear runs ON it rather than on a
+        /// stage — see <see cref="PackTearAnimator"/> — so this is the pack, not a picture of it.</param>
+        private async void Open(string packId, int artIndex, VisualElement face)
         {
             if (_busy) return;
 
@@ -529,17 +535,20 @@ namespace Emberfall.Presentation
                     // loses it to one. Written on a Vault-mode open too: a player who has opened a
                     // pack has had the moment, whichever door they came through, and marking it here
                     // means there is exactly one site that can.
-                    // Read BEFORE the release, because the release is what stops it being the first.
-                    // Spec §8: no skip on the gift's first pack, everything after it is skippable.
-                    bool firstGiftPack = _mode == PackVaultMode.Gift && _giftLocked;
-
                     MarkGiftSeen();
                     ReleaseGiftLock();
 
                     SetStatus("");
                     PackOpenReceipt receipt = result.Receipt;
-                    _tear.Play(receipt, FaceSpriteOrNull(packId, artIndex),
-                               () => _reveal.Show(receipt), allowSkip: !firstGiftPack);
+
+                    // NO SKIP CONTROL, and spec §8 is satisfied by its absence rather than by a flag.
+                    // The rule was "no skip on the gift's first pack; everything after it is
+                    // skippable", written when the tear was a stage the player had to sit through and
+                    // tap a second time. The tear is now half a second on the tile they just touched,
+                    // with nothing between them and the cards — there is no wait to skip, so there is
+                    // no control to hide, and `allowSkip` went with the stage.
+                    _tear.Play(receipt, face, FaceSpriteOrNull(packId, artIndex),
+                               () => _reveal.Show(receipt));
                     return;
                 }
 
