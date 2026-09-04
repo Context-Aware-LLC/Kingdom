@@ -161,6 +161,23 @@ namespace Emberfall.Net.Client.Tests.Collection
             Assert.That(noLedger.ShouldReplaceCache, Is.False);
         }
 
+        /// <summary>
+        /// A 500 is a FAULT, not a configuration, and telling the player "this server has no pack
+        /// economy" over one is a lie that reads as permanent. It cost Sam his onboarding gift on
+        /// 2026-09-04: an overflowing ledger sum 500'd /collection and the pack vault rendered the
+        /// Unavailable copy. Offline is the honest mapping — it says nothing about ownership, so it
+        /// still cannot overwrite the cache, and every screen already words it as "try again".
+        /// </summary>
+        [Test]
+        public async Task A_five_hundred_is_a_fault_not_a_server_without_an_economy()
+        {
+            var faulted = await Gateway(new FakeAuthHttp().Reply(500, "")).FetchAsync("jwt");
+
+            Assert.That(faulted.Status, Is.EqualTo(CollectionSyncStatus.Offline));
+            Assert.That(faulted.ShouldReplaceCache, Is.False);
+            Assert.That(faulted.Cards, Is.Null);
+        }
+
         [Test]
         public async Task A_two_hundred_with_no_ownership_word_is_malformed_not_an_empty_collection()
         {

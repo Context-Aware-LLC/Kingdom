@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Core.Cards;
@@ -120,9 +121,47 @@ namespace Emberfall.Net.Server.Accounts
 
         /// <summary>
         /// Source prefix for the seed row. The pack index (the value of <see cref="PackPityState.PacksOpened"/>
-        /// at roll time) follows the colon: <c>pack_open_seed:7</c>.
+        /// at roll time) and then the unsigned seed follow, colon-separated:
+        /// <c>pack_open_seed:7:14421760983122550784</c>. Read them back with
+        /// <see cref="TryReadSeedRow"/>.
+        ///
+        /// <para><b>The seed lives in this string and NEVER in <see cref="EntitlementGrant.Qty"/>.</b>
+        /// A qty is a quantity: the ledger's whole projection is <c>sum(qty) group by item</c>, and
+        /// every seed row on a pack line shares one item key. A 64-bit seed parked there summed with
+        /// the next one, and Postgres answers <c>sum</c> of a <c>bigint</c> as unbounded
+        /// <c>numeric</c> — so the sum left <see cref="long"/> after a handful of opens and
+        /// <c>GET /collection</c> began throwing <c>OverflowException</c> for that player, forever.
+        /// It cost Sam his onboarding gift on the fifth pack (2026-09-04, live on Fly): the shelf
+        /// 500'd, the client rendered it as "this server has no pack economy", and the account could
+        /// not read its collection again. Nothing that is not a countable quantity goes in
+        /// <see cref="EntitlementGrant.Qty"/>.</para>
         /// </summary>
         public const string SeedSourcePrefix = "pack_open_seed:";
+
+        /// <summary>Every seed row carries this quantity. One row per open, so the balance of a
+        /// <see cref="SeedItemPrefix"/> item is a count of opens — small, bounded, and summable.</summary>
+        public const long SeedRowQty = 1;
+
+        /// <summary>
+        /// Read a seed row's <see cref="EntitlementGrant.Source"/> back into the two values a disputed
+        /// open is re-rolled from. False when the string is not one this service wrote.
+        /// </summary>
+        public static bool TryReadSeedRow(string? source, out ulong seed, out int packIndex)
+        {
+            seed = 0;
+            packIndex = 0;
+            if (source is null) return false;
+            if (!source.StartsWith(SeedSourcePrefix, StringComparison.Ordinal)) return false;
+
+            string tail = source.Substring(SeedSourcePrefix.Length);
+            int split = tail.IndexOf(':');
+            if (split <= 0) return false;
+
+            return int.TryParse(tail.Substring(0, split), NumberStyles.Integer,
+                                CultureInfo.InvariantCulture, out packIndex)
+                && ulong.TryParse(tail.Substring(split + 1), NumberStyles.Integer,
+                                  CultureInfo.InvariantCulture, out seed);
+        }
 
         private readonly IEntitlementLedger _ledger;
         private readonly IPackPityStore _pity;
@@ -212,12 +251,16 @@ namespace Emberfall.Net.Server.Accounts
 
             // 3a — record the seed and pack index so a disputed open can be re-rolled from the ledger.
             //      Written before the slot rows so it is present whenever any slot is durable.
+            //
+            //      BOTH VALUES GO IN `source`, and the qty is a plain 1 — see SeedSourcePrefix for
+            //      what putting a 64-bit seed in a summed column did to a live account.
             await _ledger.GrantAsync(
                 new EntitlementGrant(
                     playerId,
                     SeedItemPrefix + pack.Id,
-                    (long)seed,
-                    SeedSourcePrefix + packIndex,
+                    SeedRowQty,
+                    SeedSourcePrefix + packIndex.ToString(CultureInfo.InvariantCulture)
+                        + ":" + seed.ToString(CultureInfo.InvariantCulture),
                     instanceTxnPrefix + "seed",
                     now),
                 ct).ConfigureAwait(false);

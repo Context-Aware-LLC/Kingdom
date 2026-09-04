@@ -150,8 +150,14 @@ namespace Emberfall.Net.Client.Collection
                 return PackOpenResult.Failed(PackOpenStatus.UnknownPack, response.Body);
             if (response.StatusCode == 409)
                 return Parse409(response.Body);
+            // 503 is the server saying it has no pack economy at all — a configuration, not a fault.
+            // Any other failure is a fault, and it must NOT be reported as "packs cannot be opened on
+            // this server": the open may well have committed before the response died, which is
+            // precisely what Offline means here. Same correction as HttpCollectionGateway's.
+            if (response.StatusCode == 503)
+                return PackOpenResult.Failed(PackOpenStatus.Unavailable, "Server returned 503");
             if (!response.IsSuccess)
-                return PackOpenResult.Failed(PackOpenStatus.Unavailable,
+                return PackOpenResult.Failed(PackOpenStatus.Offline,
                     "Server returned " + response.StatusCode.ToString(CultureInfo.InvariantCulture));
 
             return Parse(response.Body);

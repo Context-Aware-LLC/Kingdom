@@ -185,6 +185,43 @@ namespace Emberfall.Net.Server.Tests.Accounts
             }
         }
 
+        /// <summary>
+        /// THE FIFTH-PACK BUG (2026-09-04, live on Fly). Five starter packs, four opened fine, and the
+        /// fifth left the player's collection unreadable forever: the seed row parked a 64-bit seed in
+        /// <c>qty</c>, every seed row on a pack line shares one item key, and a ledger balance is
+        /// <c>sum(qty) group by item</c>. Postgres answers that sum as unbounded <c>numeric</c>, so
+        /// after a handful of opens it left <see cref="long"/> and <c>GET /collection</c> threw
+        /// <c>OverflowException</c> — a 500 the client rendered as "this server has no pack economy".
+        ///
+        /// <para><b>The assertion is on the SHAPE of a balance, not on a number.</b> The in-memory
+        /// ledger sums <c>long</c> and would have wrapped silently rather than thrown, so a test that
+        /// only opened packs and looked for an exception would have stayed green through the whole
+        /// outage. What is actually wrong is a value that is not a quantity sitting in the quantity
+        /// column, and that is visible here.</para>
+        /// </summary>
+        [Test]
+        public async Task Repeated_Opens_Never_Put_A_Seed_Sized_Value_In_A_Balance()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var service = Service(ledger, new InMemoryPackPityStore(), Cards());
+
+            for (int i = 1; i <= 5; i++)
+            {
+                await GrantPackAsync(ledger, Player, Pack, "inst-" + i);
+                await service.OpenAsync(AuthenticatedAccount(), Pack, "inst-" + i);
+            }
+
+            // Generous by orders of magnitude: no legitimate ledger item — cards, packs, gold — is
+            // ever counted in millions, and a seed is ~10^19.
+            const long SaneCeiling = 1_000_000;
+            var balances = await ledger.BalancesAsync(Player);
+            foreach (KeyValuePair<string, long> row in balances)
+                Assert.That(Math.Abs(row.Value), Is.LessThan(SaneCeiling),
+                    $"Ledger item '{row.Key}' has a balance of {row.Value}. That is not a quantity — " +
+                    "something that is not countable was written to qty, and a real Postgres sum " +
+                    "of it overflows Int64 and 500s GET /collection.");
+        }
+
         // ── idempotency (§5) ─────────────────────────────────────────────────────────────────
 
         [Test]
@@ -352,9 +389,17 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 if (history[i].ExternalTxnId == seedTxnId) { seedRow = history[i]; break; }
             Assert.That(seedRow, Is.Not.Null, "No seed row found in ledger history.");
 
-            ulong recordedSeed = (ulong)seedRow!.Qty;
-            int recordedPackIndex = int.Parse(
-                seedRow.Source.Substring(BoosterPackGrantService.SeedSourcePrefix.Length));
+            // THE SEED IS NOT A QUANTITY. A ledger balance is sum(qty) group by item and every seed
+            // row on a pack line shares one item key, so a 64-bit seed here summed with the next
+            // one and left Int64 — which is a permanent 500 on GET /collection for that player, not
+            // a wrong number. See BoosterPackGrantService.SeedSourcePrefix.
+            Assert.That(seedRow!.Qty, Is.EqualTo(BoosterPackGrantService.SeedRowQty),
+                "The seed row's qty must be a plain count; the seed belongs in its source.");
+
+            Assert.That(BoosterPackGrantService.TryReadSeedRow(
+                            seedRow.Source, out ulong recordedSeed, out int recordedPackIndex),
+                        Is.True, "The seed row's source did not read back.");
+            Assert.That(recordedSeed, Is.EqualTo(Seed));
 
             // Re-roll from the recorded values. The player owned nothing before their first open.
             var rerolled = BoosterPackOpener.Open(

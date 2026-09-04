@@ -191,6 +191,21 @@ namespace Emberfall.Net.Client.Tests.Collection
             Assert.That(noLine.Status, Is.EqualTo(PackOpenStatus.Unavailable));
         }
 
+        /// <summary>
+        /// A 500 is Offline, not Unavailable. The open commits before the response is written, so a
+        /// faulted reply may have spent the pack — which is exactly what Offline means here, and it
+        /// routes the caller to re-read the shelf instead of telling the player packs cannot be
+        /// opened on this server at all. Same correction as the collection gateway's.
+        /// </summary>
+        [Test]
+        public async Task A_five_hundred_is_offline_not_a_server_without_packs()
+        {
+            var faulted = await Gateway(new FakeAuthHttp().Reply(500, "")).OpenAsync(Starter, "jwt");
+
+            Assert.That(faulted.Status, Is.EqualTo(PackOpenStatus.Offline));
+            Assert.That(faulted.HasReveal, Is.False);
+        }
+
         [Test]
         public async Task An_empty_pack_id_never_leaves_the_device()
         {

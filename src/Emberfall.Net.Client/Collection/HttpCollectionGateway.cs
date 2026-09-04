@@ -195,8 +195,18 @@ namespace Emberfall.Net.Client.Collection
 
             if (response.StatusCode == 401)
                 return CollectionSnapshot.Failed(CollectionSyncStatus.Unauthenticated, response.Body);
-            if (!response.IsSuccess)
+
+            // 503 is the ONLY status that means "this box has no economy" — the server chooses it
+            // deliberately, for a configuration the player cannot act on. Every other failure is a
+            // fault, and calling one Unavailable told Sam's client "this server has no pack economy"
+            // while a 500 was losing him his onboarding gift (2026-09-04). Offline is the honest
+            // answer: it says nothing about ownership, so it cannot overwrite the cache, and it reads
+            // to the player as "try again", which is exactly what a 500 deserves.
+            if (response.StatusCode == 503)
                 return CollectionSnapshot.Failed(CollectionSyncStatus.Unavailable,
+                    "Server returned 503");
+            if (!response.IsSuccess)
+                return CollectionSnapshot.Failed(CollectionSyncStatus.Offline,
                     "Server returned " + response.StatusCode.ToString(CultureInfo.InvariantCulture));
 
             return Parse(response.Body);

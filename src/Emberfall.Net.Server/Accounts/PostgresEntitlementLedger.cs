@@ -114,7 +114,7 @@ namespace Emberfall.Net.Server.Accounts
                     conn, tx);
                 balance.Parameters.Add(P(NpgsqlDbType.Text, batch.PlayerId));
                 balance.Parameters.Add(P(NpgsqlDbType.Text, batch.Requirement.Item));
-                long current = Convert.ToInt64(await balance.ExecuteScalarAsync(ct));
+                long current = Saturate(Convert.ToDecimal(await balance.ExecuteScalarAsync(ct)));
                 if (current < batch.Requirement.Minimum)
                 {
                     await tx.RollbackAsync(ct);
@@ -175,7 +175,7 @@ namespace Emberfall.Net.Server.Accounts
             cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
             cmd.Parameters.Add(P(NpgsqlDbType.Text, item));
             object? result = await cmd.ExecuteScalarAsync(ct);
-            return Convert.ToInt64(result);
+            return Saturate(Convert.ToDecimal(result));
         }
 
         public async Task<IReadOnlyDictionary<string, long>> BalancesAsync(string playerId, CancellationToken ct = default)
@@ -189,7 +189,7 @@ namespace Emberfall.Net.Server.Accounts
             var acc = new Dictionary<string, long>(StringComparer.Ordinal);
             await using var r = await cmd.ExecuteReaderAsync(ct);
             while (await r.ReadAsync(ct))
-                acc[r.GetString(0)] = r.GetInt64(1);
+                acc[r.GetString(0)] = Saturate(r.GetFieldValue<decimal>(1));
             return acc;
         }
 
@@ -209,6 +209,30 @@ namespace Emberfall.Net.Server.Accounts
                     r.GetString(0), r.GetString(1), r.GetInt64(2), r.GetString(3), r.GetString(4),
                     new DateTimeOffset(DateTime.SpecifyKind(r.GetDateTime(5), DateTimeKind.Utc))));
             return rows;
+        }
+
+        /// <summary>
+        /// Clamp a <c>sum(qty)</c> into <see cref="long"/> instead of throwing.
+        ///
+        /// <para><b>Postgres answers <c>sum</c> of a <c>bigint</c> column as unbounded
+        /// <c>numeric</c></b>, so the projection has a range the column does not, and
+        /// <c>NpgsqlDataReader.GetInt64</c> throws <see cref="OverflowException"/> the moment one
+        /// player's total leaves it. That throw travelled all the way out as a 500 on
+        /// <c>GET /collection</c> and took the player's entire collection with it, permanently —
+        /// every subsequent read hit the same rows (2026-09-04, live; the cause was a 64-bit pack
+        /// seed written as a qty, fixed at its write site in
+        /// <see cref="BoosterPackGrantService.SeedSourcePrefix"/>).</para>
+        ///
+        /// <para>Saturating is the right answer even though no legitimate balance can reach it: a
+        /// balance that far out is already a ledger bug, and the choice is between one nonsensical
+        /// number on one item and losing every other item the player owns. Same posture
+        /// <see cref="LedgerOwnedCounts"/> takes on a row it cannot parse.</para>
+        /// </summary>
+        private static long Saturate(decimal sum)
+        {
+            if (sum > long.MaxValue) return long.MaxValue;
+            if (sum < long.MinValue) return long.MinValue;
+            return (long)sum;
         }
 
         private static NpgsqlParameter P(NpgsqlDbType type, object? value)
