@@ -334,7 +334,7 @@ namespace Emberfall.Presentation
             foreach (KeyValuePair<string, long> line in lines)
             {
                 for (long i = 0; i < line.Value && drawn < MaxTilesShown; i++, drawn++)
-                    _shelf.Add(BuildTile(line.Key));
+                    _shelf.Add(BuildTile(line.Key, drawn));
                 if (drawn >= MaxTilesShown) break;
             }
 
@@ -396,7 +396,9 @@ namespace Emberfall.Presentation
         /// focus, the disabled state the busy guard needs, and keyboard activation, all of which a
         /// hand-rolled <c>ClickEvent</c> handler would have to grow.</para>
         /// </summary>
-        private VisualElement BuildTile(string packId)
+        /// <param name="index">This tile's position on the shelf, which is what picks its art —
+        /// see the art block below.</param>
+        private VisualElement BuildTile(string packId, int index)
         {
             var tile = new Button(() => Open(packId));
             tile.AddToClassList("vault-pack");
@@ -411,14 +413,28 @@ namespace Emberfall.Presentation
             face.AddToClassList("vault-pack__face");
             tile.Add(face);
 
-            // The face gets the set's first piece of art if the set has any. A set whose art has not
-            // been drawn yet is the normal state and says nothing — see PackArtProvider — so an
-            // artless pack reads as a pack without a picture, never as a picture that failed.
-            // The starter set is exactly this today: Assets/Art/Shop/Packs/STARTER/ does not exist.
+            // ONE FACE PER TILE, NOT ONE PER SET. A set ships several pieces precisely so a shelf of
+            // five packs is five different objects rather than the same picture five times — which is
+            // the whole reason the shelf draws a tile per PACK (see this method's summary). Taking
+            // pieces[0] for every tile would have quietly thrown away every piece but the first.
+            //
+            // Keyed on shelf POSITION because the client has no pack instance identity to key on: the
+            // instance id is minted server-side inside PackOpenEndpoint and never travels to us
+            // (deliberately — a client that picks it can replay one grant into many opens). Position
+            // is stable for as long as the shelf is, which is all this needs; opening a pack
+            // re-renders and the remaining tiles simply re-take the low indices.
+            //
+            // The modulo is not decoration — a set may hold fewer pieces than the player holds packs,
+            // and MaxTilesShown is 10 while STARTER ships 5.
+            //
+            // A set whose art has not been drawn yet is the normal state and says nothing — see
+            // PackArtProvider — so an artless pack reads as a pack without a picture, never as a
+            // picture that failed.
             _packArt?.LoadPackArt(packId, pieces =>
             {
                 if (pieces == null || pieces.Count == 0) return;
-                face.style.backgroundImage = new StyleBackground(pieces[0].Sprite);
+                face.style.backgroundImage =
+                    new StyleBackground(pieces[index % pieces.Count].Sprite);
                 face.AddToClassList("vault-pack__face--art");
             });
 

@@ -1,0 +1,29 @@
+{
+  "pieces": [
+    {
+      "id": "starter_kira",
+      "file": "pack_starter_01_kira_first_muster",
+      "title": "First Muster"
+    },
+    {
+      "id": "starter_aric",
+      "file": "pack_starter_02_aric_open_gate",
+      "title": "Open Gate"
+    },
+    {
+      "id": "starter_aldric",
+      "file": "pack_starter_03_aldric_stormwall",
+      "title": "Stormwall"
+    },
+    {
+      "id": "starter_solen",
+      "file": "pack_starter_04_solen_new_growth",
+      "title": "New Growth"
+    },
+    {
+      "id": "starter_seraphine",
+      "file": "pack_starter_05_seraphine_whisper_network",
+      "title": "Whisper Network"
+    }
+  ]
+}
