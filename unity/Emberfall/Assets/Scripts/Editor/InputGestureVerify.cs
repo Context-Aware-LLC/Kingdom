@@ -647,8 +647,30 @@ namespace Emberfall.Editor
                 m.BeginSource(PointerSubject.OfCard(herald, P0, Zone.Hand)).NeedsTarget);
             Check("press on our board minion starts an Attacker drag",
                 m.BeginSource(PointerSubject.OfCard(mine, P0, Zone.Board)).Kind == DragSourceKind.Attacker);
-            Check("press on our hero starts an Attacker drag",
+            // THE HERO IS AN ATTACKER ONLY WHEN IT IS ARMED (Sam, 2026-09-04). This used to assert
+            // the opposite — that a press on our weaponless hero armed a gesture the server was
+            // certain to reject — on the model's "err toward submitting" doctrine. It flipped when
+            // the portrait started LIFTING and following the pointer: an unarmed press now shows
+            // the player a pick-up for an attack that cannot happen, which is a worse lie than a
+            // silent press. Every field this reads is in the mirror, so no hidden information is
+            // being guessed at. Mirrors CommandProcessor.ValidateAttack's hero branch.
+            Check("press on our UNARMED hero starts nothing",
+                m.BeginSource(PointerSubject.OfHero(m.HeroIdOf(P0), P0)).Kind == DragSourceKind.None);
+
+            s.Players[0].Weapon = new CardInstance(new InstanceId(15), Vanilla, P0)
+            {
+                Zone = Zone.Weapon, CurrentAttack = 3, CurrentDurability = 2,
+            };
+            Check("press on our ARMED hero starts an Attacker drag",
                 m.BeginSource(PointerSubject.OfHero(m.HeroIdOf(P0), P0)).Kind == DragSourceKind.Attacker);
+
+            s.Players[0].HeroAttacksUsedThisTurn = 1;
+            Check("press on our hero starts nothing once its swing is spent",
+                m.BeginSource(PointerSubject.OfHero(m.HeroIdOf(P0), P0)).Kind == DragSourceKind.None);
+            s.Players[0].HeroAttacksUsedThisTurn = 0;
+
+            s.Players[0].Weapon = null;
+
             Check("press on our hero power starts a HeroPower gesture",
                 m.BeginSource(PointerSubject.OfHeroPower(P0)).Kind == DragSourceKind.HeroPower);
 
