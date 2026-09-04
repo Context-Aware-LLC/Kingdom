@@ -7,7 +7,8 @@
             <ui:VisualElement name="shop-shell" class="shop-shell">
                 <!-- ONE BAR, NOT A HEADER (Sam, 2026-08-31). The store's title and subtitle are
                      gone: a screen you reached by pressing "Shop" does not need to tell you it is
-                     the shop, and on a 411dp landscape phone that pair plus its own padding was
+                     the shop, and on the 411-unit landscape panel this was decided against
+                     (pre-#349) that pair plus its own padding was
                      ~96dp of the ~280dp the two sections had to share. What survives is what you
                      act on: the two tabs, the wallet, and Back, in a single row.
                      (No double dash anywhere in this comment. An XML comment may not contain one,

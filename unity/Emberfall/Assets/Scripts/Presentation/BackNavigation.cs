@@ -34,10 +34,9 @@ namespace Emberfall.Presentation
     /// content it covers in every one of these screens; visibility is checked up the whole ancestor
     /// chain, since a hidden modal's buttons are still in the tree with a live class list.</para>
     ///
-    /// <para><b>SELF-INSTALLING</b>, the same as <see cref="DevicePerfCapture"/> and
-    /// <see cref="ScreenClass"/> and for the same reason: a mechanism that needs a scene edit cannot
-    /// be landed by anyone who does not hold the Unity Editor seat, and this would otherwise need a
-    /// component in six scenes.</para>
+    /// <para><b>SELF-INSTALLING</b>, the same as <see cref="DevicePerfCapture"/> and for the same
+    /// reason: a mechanism that needs a scene edit cannot be landed by anyone who does not hold the
+    /// Unity Editor seat, and this would otherwise need a component in six scenes.</para>
     ///
     /// <para><b>The new Input System, not <c>Input.GetKeyDown</c>.</b> The project is
     /// <c>activeInputHandler: 1</c> (new only), where the legacy API throws rather than returning

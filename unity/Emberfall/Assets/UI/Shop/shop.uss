@@ -1,3 +1,8 @@
+/* UNITS: every "dp" in the comments below that predates 2026-09-01 is a PRE-#349 unit, when
+ * the panel ran ConstantPhysicalSize and was 914 x 411. It is 2400 x 1080 authored px now —
+ * see the unit block at the top of Common/theme.uss. Those passages are kept because the
+ * DECISIONS they record still stand; their arithmetic is history, not a live budget. */
+
 /* The store's own scene root. `.emb-root` carries only design tokens, so — exactly like
  * `.main-menu` and `.collection` do for their screens — the sizing lives here: the two overlays
  * below are absolutely positioned against it and need a parent that actually fills the panel. */

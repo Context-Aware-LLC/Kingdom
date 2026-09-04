@@ -34,10 +34,14 @@
    padding on the root — #237, padding does not reach absolute children and fails
    by doing nothing.
 
-   Wider than .ds-modal's portrait-era 320px. The panel is 914dp x 411dp in
-   landscape (refDpi 160, so 1 authored px = 1 dp), so a 320dp card is a third of
-   the width with an illustration stacked above the copy and no room left for it.
-   460 x ~200 sits inside the height with the art beside the words instead. */
+   Wider than .ds-modal's portrait-era 320px, which stacked the illustration above
+   the copy and left no room for it. 460 puts the art beside the words instead.
+
+   460 HAS NOT BEEN RE-MEASURED SINCE THE PANEL CHANGED (#349). It was chosen against
+   a 914 x 411 panel, where it was half the width; the panel is 2400 x 1080 authored px
+   now, so the same 460 is a fifth of it. The card is the tidbit's whole content, so
+   check it on a device before shipping the first tidbit rather than trusting this
+   number — it is the older of the two units, not a decision anyone has re-made. */
 .tidbit-card {
     width: 460px;
     max-width: 90%;

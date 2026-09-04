@@ -8,7 +8,9 @@
 
       WHY IT HAD TO MOVE, AND WHY "IT ALREADY WAS A ROW" WAS NOT ENOUGH. mainmenu.uss records a
       2026-08-23 measurement that split the pitch from the form because "the gate lands near 276dp
-      and the name modal near 358dp, against 411 available". The budget in that sentence is wrong:
+      and the name modal near 358dp, against 411 available" (pre-#349 units, when the panel was
+      914 x 411 rather than today's 2400 x 1080). The budget in that sentence is wrong even in its
+      own units:
       both modals carried `.emb-bleed`, which pads by the `edge-safe` var — 52dp PER EDGE — and
       `git merge-base` (is-ancestor) confirms `.emb-bleed` was already on them when it was written.
       The real box was 411 - 104 = 307dp, so the gate fitted with 31dp to spare and THE NAME STEP

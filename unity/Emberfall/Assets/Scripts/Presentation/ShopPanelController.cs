@@ -350,10 +350,10 @@ namespace Emberfall.Presentation
         /// The status line, and it COLLAPSES when it has nothing to say.
         ///
         /// <para>An empty Label still reserves its box: measured on the Pixel 5a rig, this one held
-        /// 32dp of a 411dp panel permanently, taken straight off the content area the sections
-        /// have to fit inside. That is the same band CharacterRoster collapsed in <c>32dfdb81</c>
-        /// for the same reason, and the reason it matters more here is that the store's viewport is
-        /// the tighter of the two.</para>
+        /// 32 of a 411-unit panel permanently (pre-#349 units), taken straight off the content area
+        /// the sections have to fit inside. That is the same band CharacterRoster collapsed in
+        /// <c>32dfdb81</c> for the same reason. The panel is 1080 now, so the 32 costs proportionally
+        /// less — but a band that reserves height for nothing is wrong at any scale.</para>
         ///
         /// <para>Null-or-whitespace, not null: <see cref="SetWalletUnavailable"/> and the disconnected
         /// path both clear this by assigning "".</para>
@@ -378,8 +378,8 @@ namespace Emberfall.Presentation
         /// Puts exactly one of the two sections on screen and marks the tab that selected it.
         ///
         /// <para>Both halves matter and they are one call on purpose. When the Store stacked both
-        /// sections on a 411dp landscape panel, the packs section alone came to ~304dp and Gem
-        /// Bundles began below the fold. Tabs replaced that layout, and the obsolete ScrollView was
+        /// sections on the 411-unit landscape panel of the day (pre-#349), the packs section alone
+        /// came to ~304 and Gem Bundles began below the fold. Tabs replaced that layout, and the obsolete ScrollView was
         /// later retired because it allowed empty-range overscroll. The section that is not selected
         /// still has to cost NO height, which is what
         /// <c>.shop-section--hidden</c>'s `display: none` buys.</para>

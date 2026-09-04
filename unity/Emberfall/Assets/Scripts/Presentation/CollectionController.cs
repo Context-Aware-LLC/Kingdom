@@ -871,8 +871,10 @@ namespace Emberfall.Presentation
             _deckEditor?.EnableInClassList("deck-editor--hidden", !editor);
             // "Manage Characters & Decks" leaves the collection entirely, so it belongs to the
             // CHOOSER pane, not to editing one deck's thirty. Editing already has two ways out
-            // ("<- All decks" and Close), and on a 411dp landscape panel this button plus its
-            // margin was 68dp -- most of the height the deck list itself was missing.
+            // ("<- All decks" and Close), and on the 411-unit landscape panel this was authored
+            // against (pre-#349) the button plus its margin was 68 -- most of the height the deck
+            // list itself was missing. The panel is 1080 now and that pressure is off; the button
+            // still belongs to the chooser, which is the reason that did not depend on the unit.
             if (_manageDecksButton != null)
                 _manageDecksButton.style.display = editor ? DisplayStyle.None : DisplayStyle.Flex;
             if (_drawerTitle != null) _drawerTitle.text = editor ? "Editing Deck" : "Decks";

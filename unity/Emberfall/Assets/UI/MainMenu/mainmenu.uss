@@ -1,3 +1,8 @@
+/* UNITS: every "dp" in the comments below that predates 2026-09-01 is a PRE-#349 unit, when
+ * the panel ran ConstantPhysicalSize and was 914 x 411. It is 2400 x 1080 authored px now —
+ * see the unit block at the top of Common/theme.uss. Those passages are kept because the
+ * DECISIONS they record still stand; their arithmetic is history, not a live budget. */
+
 /*
  * mainmenu.uss — S1 front door styles. Consumes tokens from theme.uss only (no literal
  * colors/sizes a token already names). dev-docs/ui/client-surfaces.md:22.
@@ -82,12 +87,12 @@
        screen gets. See the budget note on .mm-menu (#249). */
     margin-bottom: var(--space-8);
 }
-/* 72px HARDCODED was the last survivor of the pre-refDpi-160 authoring, and it is the same
-   artifact the margin note above records: at referenceDpi 160 one authored px is one Android dp,
-   so 72 was 72 of the 411dp the landscape panel gets, and 'EMBERFALL' plus 8dp of tracking ran
-   about 57% of the 920dp width — into the edge chrome on both sides. It was also a raw px, so it
-   was the one piece of type on this screen that did NOT step
-   with the screen classes. Now a token, and part of the run. */
+/* 72px HARDCODED was the last survivor of the pre-refDpi-160 authoring: on the 914 x 411 panel
+   of the day, 'EMBERFALL' at 72 plus 8 of tracking ran about 57% of the width and into the edge
+   chrome on both sides. A token now, so it moves with the rest of the type scale.
+
+   THE SCREEN-CLASS RUN THIS ONCE JOINED IS GONE (#349) — there is one type scale, not three. The
+   reason to keep it a token is unchanged: a raw px here is a number nothing else can find. */
 .mm-wordmark {
     font-size: 58px;
     -unity-font-style: bold;

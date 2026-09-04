@@ -26,6 +26,11 @@ namespace Emberfall.Presentation
     /// rather than a cosmetic problem. Here the root IS the panel: one edge clearance, and no
     /// <c>.mm-modal__panel</c> padding inside an already-inset box.</para>
     ///
+    /// <para><b>THOSE NUMBERS ARE PRE-#349 UNITS.</b> The panel was 914 x 411 when they were
+    /// measured; it is 2400 x 1080 authored px now, so nothing here is a live budget. The
+    /// structural conclusion — one clearance, no padding nested inside it — is what survives, and
+    /// it did not depend on the unit. THIS SCREEN HAS NOT BEEN RE-MEASURED since the change.</para>
+    ///
     /// <para><b><see cref="SignInGateController"/> is reused verbatim.</b> It takes an arbitrary
     /// root and resolves everything by element name, so moving the markup cost it nothing — this
     /// controller and the UXML are the only things that know the flow moved. Its ruling still
@@ -81,7 +86,7 @@ namespace Emberfall.Presentation
         private void OnDisable() => _signIn?.Close();
 
         /// <summary>Exactly one view is in the tree at a time. They are siblings rather than a stack
-        /// of overlays, so nothing can end up layered on a 411dp panel.</summary>
+        /// of overlays, so nothing can end up layered on a screen this short.</summary>
         private void ShowOnly(VisualElement view)
         {
             Show(_signInView, ReferenceEquals(view, _signInView));

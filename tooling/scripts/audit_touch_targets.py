@@ -1,16 +1,30 @@
 #!/usr/bin/env python3
 """Find UI Toolkit controls authored smaller than Android's 48dp touch floor.
 
-#244 asked for `.ms-gear` to go 44 -> 48 and for a sweep of everything else now readable
-as a dp. This is that sweep, kept as a script rather than done once by eye, because the
-thing that makes it checkable is new and easy to lose again:
+#244 asked for `.ms-gear` to go 44 -> 48 and for a sweep of everything else. This is that
+sweep, kept as a script rather than done once by eye.
 
-    Since 99b179b1 the panels run ConstantPhysicalSize at referenceDpi 160, so ONE
-    AUTHORED PIXEL IS ONE ANDROID dp. Before that no USS number was comparable to
-    Google's 48dp guidance and this audit could not have been written at all.
+AN AUTHORED PIXEL IS NOT A dp, AND THE CONVERSION IS THIS SCRIPT'S WHOLE POINT.
+
+    It was one, once. Between 99b179b1 and 02048077 the panels ran ConstantPhysicalSize
+    at referenceDpi 160 and an authored px WAS an Android dp, so `48` in a sheet could be
+    read straight against Google's guidance. That world is gone (#349): the panels run
+    ScaleWithScreenSize against 1920x1080 matched on HEIGHT, so the panel is 1080 authored
+    px tall on every device and an authored px is a FRACTION OF THE SCREEN, not a length.
+
+    Converting back needs only the screen's physical short side, and nothing else:
+
+        authored px = dp * (1080 / 160) / short_side_inches = dp * 6.75 / inches
+
+    because the pixel count and the density cancel. On the reference device — a Pixel 5a,
+    2.60" of short side — Android's 48dp floor is 48 * 6.75 / 2.60 = 125 AUTHORED PX.
+    That number, not 48, is what a sheet has to clear.
+
+    So a rule reading `height: 56px` is 21dp of finger target, not 56dp. FLOOR_PX below is
+    computed rather than typed so that the two can never be confused again.
 
 WHAT IT CHECKS. A rule that sets an explicit `width`/`height`/`min-*` in bare px, on a
-selector this script believes is INTERACTIVE, where the value is under 48.
+selector this script believes is INTERACTIVE, where the value is under FLOOR_PX.
 
 HOW IT DECIDES A SELECTOR IS INTERACTIVE. Never by name — `.mm-footer` and `.ms-gear`
 read the same to a substring match, and guessing wrong in either direction makes the
@@ -27,10 +41,10 @@ audit worthless. Three pieces of real evidence, any one of which counts:
 Anything with no evidence is listed separately as UNCLASSIFIED rather than dropped, so a
 control the heuristics cannot see is visible as a gap instead of counted as a pass.
 
-BORDER-BOX. UI Toolkit sizes border-box, so an authored 48 IS 48dp of touch target with
-no adjustment for the rule's own border-width. (#244's fix note said `.ms-gear` carried
-3px borders; the sheet reads 1px. Neither figure changes the fix, and neither belongs in
-the arithmetic.)
+BORDER-BOX. UI Toolkit sizes border-box, so an authored value is the whole touch target
+with no adjustment for the rule's own border-width. (#244's fix note said `.ms-gear`
+carried 3px borders; the sheet reads 1px. Neither figure changes the fix, and neither
+belongs in the arithmetic.)
 
 TWO PARSER BUGS THIS FILE HAS ALREADY HAD, both of which produced a confident green:
 
@@ -59,17 +73,40 @@ SCRIPTS = REPO / "unity" / "Emberfall" / "Assets" / "Scripts"
 
 FLOOR_DP = 48
 
+# The panel's authored height, from EmberfallPanelSettings' 1920x1080 reference matched on
+# height. Every authored px is 1/1080 of the screen's short side, on every device.
+PANEL_SHORT_AXIS = 1080
+
+# The reference device: a Pixel 5a, 2400 x 1080 in a 6.34" diagonal at 20:9, which puts
+# 1080 px across 2.60" of glass. A SMALLER phone than this needs a LARGER authored number
+# for the same finger, so the reference has to be the smallest device supported, not a
+# typical one. RETIREMENT TRIGGER: if a smaller phone is supported, this number moves and
+# every sheet has to be re-checked against the new floor.
+REFERENCE_SHORT_SIDE_INCHES = 2.60
+
+# dp -> authored px. See the module docstring: the pixel count and the density cancel, so
+# only the physical short side survives. 48dp is 125 authored px on the reference device.
+FLOOR_PX = round(FLOOR_DP * (PANEL_SHORT_AXIS / 160.0) / REFERENCE_SHORT_SIDE_INCHES)
+
+
+def to_dp(authored_px: float) -> float:
+    """The physical size, in Android dp, of an authored USS number on the reference device."""
+    return authored_px * 160.0 * REFERENCE_SHORT_SIDE_INCHES / PANEL_SHORT_AXIS
+
+
 # A control deliberately under the floor records WHY here, keyed by the full selector as
 # it appears in the sheet, rather than in a comment the audit cannot read. Exemptions are
 # PRINTED, not silently skipped — an allowlist nobody reads is how the 44s survived.
 EXEMPT: dict[str, str] = {
     ".hero-tile-badge__disc":
         "not the touch target — the VISIBLE disc inside .hero-tile-badge, which is a "
-        "transparent 48dp box that catches the tap. It is 28dp because the portrait it "
-        "sits on is only 64dp square on a landscape phone and a 48dp disc covered 56% of "
-        "the hero's face. The evidence that flags it is a :hover rule on the PARENT "
+        "transparent box that catches the tap. It is smaller than the box because the "
+        "portrait it sits on is small on a landscape phone and a full-floor disc covered "
+        "56% of the hero's face. The evidence that flags it is a :hover rule on the PARENT "
         "(.hero-tile-badge:hover .hero-tile-badge__disc), which is correct — the parent is "
-        "interactive, this is its paint.",
+        "interactive, this is its paint. NOTE: the sizes in this exemption's reasoning were "
+        "authored in the pre-#349 world where an authored px was a dp; the RELATION it "
+        "describes still holds, the absolute numbers do not.",
 }
 
 
@@ -88,12 +125,18 @@ def token_values() -> list[tuple[str, float]]:
     itself has to be checked, or the whole sweep could be undone by editing one line that
     nothing looks at.
 
-    #247 then made it a RUN rather than a single value: the base in `:root` is the phone, and
-    `.emb-sw-medium` / `.emb-sw-expanded` step up from it. Reading only the first declaration
-    would check the phone and silently ignore the other two — the safe direction, but not the
-    whole answer, and "safe direction" is how an audit rots. ALL of them must clear the floor.
+    #247 briefly made it a RUN of three, one per screen class. #349 deleted the screen classes
+    (the panel's short axis became a constant, so only one branch could ever fire) and folded
+    the live step back into the base, so there is one declaration again. This still reads ALL
+    of them rather than the first: a second one reappearing silently is exactly the shape of
+    the bug that made the run unreadable in the first place.
     """
-    text = read(THEME)
+    # COMMENTS ARE BLANKED, NOT REMOVED — same bug as parser bug 2 in the module docstring,
+    # which was fixed for the sheet scan and never for this function. Prose inside a `/* */`
+    # can contain a `{`, and the "nearest selector above" search then reported the token as
+    # living under a fragment of a sentence. Blanking rather than deleting keeps every offset
+    # aligned with the original text, so m.start() still means what it says.
+    text = COMMENT.sub(lambda m: re.sub(r"[^\n]", " ", m.group(0)), read(THEME))
     out: list[tuple[str, float]] = []
     for m in re.finditer(r"--touch-min\s*:\s*(\d+(?:\.\d+)?)px\s*;", text):
         # Nearest selector opening a block above this declaration.
@@ -247,8 +290,10 @@ def main() -> int:
     sheets = len(list(UI.rglob("*.uss")))
 
     print(f"#244 · TOUCH TARGETS vs Android's {FLOOR_DP}dp floor")
-    print("An authored px has been one Android dp since 99b179b1 (ConstantPhysicalSize,")
-    print("referenceDpi 160), so the sheet reads directly against Google's guidance.")
+    print(f"AN AUTHORED px IS NOT A dp (#349). The panel is {PANEL_SHORT_AXIS} authored px across")
+    print(f"{REFERENCE_SHORT_SIDE_INCHES}\" of glass on the reference phone, so {FLOOR_DP}dp of finger is "
+          f"{FLOOR_PX} AUTHORED px.")
+    print(f"Everything below is measured against {FLOOR_PX}, with the dp it works out to in brackets.")
     print()
     print(f"  {len(sized)} selector(s) set an explicit px size across {sheets} sheet(s)")
     print(f"  interactivity evidence: {len(pseudo)} by pseudo-class, "
@@ -263,22 +308,22 @@ def main() -> int:
         print("     sized by it collapses. This is a failure, not a missing nicety.")
         token_bad = True
     else:
-        print(f"  --touch-min declarations ({len(toks)} — one per screen class since #247):")
+        print(f"  --touch-min declarations ({len(toks)}):")
         for where, val in toks:
-            ok = val >= FLOOR_DP
+            ok = val >= FLOOR_PX
             token_bad = token_bad or not ok
-            flag = "" if ok else f"   <<< BELOW the {FLOOR_DP}dp floor it exists to name"
-            print(f"     {where:<20} {val:g}px{flag}")
+            flag = "" if ok else f"   <<< BELOW the {FLOOR_PX}px ({FLOOR_DP}dp) floor it exists to name"
+            print(f"     {where:<20} {val:g}px  = {to_dp(val):.0f}dp{flag}")
         if not token_bad:
-            print(f"     all at or over {FLOOR_DP}dp, so every var(--touch-min) site below is")
-            print( "     compliant by construction, on every screen class.")
+            print(f"     at or over {FLOOR_PX}px, so every var(--touch-min) site below is")
+            print( "     compliant by construction.")
     print()
 
     under, over, unclassified, exempted = [], [], [], []
     for sel, (bs, hits) in sorted(sized.items()):
         why = [w for w, src in (("pseudo", pseudo), ("uxml", from_uxml), ("code", from_code))
                if any(b in src for b in bs)]
-        small = [h for h in hits if h[3] < FLOOR_DP]
+        small = [h for h in hits if h[3] < FLOOR_PX]
         smallest = min(h[3] for h in hits)
         row = (sel, smallest, small or hits, ",".join(why))
         if small and sel in EXEMPT:
@@ -294,13 +339,13 @@ def main() -> int:
     if exempted:
         print("DELIBERATELY UNDER THE FLOOR — declared in EXEMPT " + "=" * 39)
         for sel, smallest, hits, why in sorted(exempted, key=lambda r: r[0]):
-            print(f"  {sel}  ({smallest:g}dp)")
+            print(f"  {sel}  ({smallest:g}px = {to_dp(smallest):.0f}dp)")
             for line in EXEMPT[sel].split(". "):
                 if line.strip():
                     print(f"      {line.strip().rstrip('.')}.")
         print()
 
-    print(f"UNDER THE FLOOR — interactive and smaller than {FLOOR_DP}dp " + "=" * 33)
+    print(f"UNDER THE FLOOR — interactive and smaller than {FLOOR_PX}px ({FLOOR_DP}dp) " + "=" * 22)
     if not under:
         print("  none")
     for sel, smallest, hits, why in sorted(under, key=lambda r: (r[1], r[0])):
@@ -322,16 +367,16 @@ def main() -> int:
     if args.all:
         print("AT OR OVER THE FLOOR " + "=" * 67)
         for sel, smallest, hits, why in sorted(over, key=lambda r: (r[1], r[0])):
-            print(f"  {sel:<40} {smallest:>6.0f}dp   [{why}]")
+            print(f"  {sel:<40} {smallest:>6.0f}px = {to_dp(smallest):>3.0f}dp   [{why}]")
         print()
 
     if under or token_bad:
         if under:
-            print(f"FAIL — {len(under)} interactive rule(s) under {FLOOR_DP}dp.")
+            print(f"FAIL — {len(under)} interactive rule(s) under {FLOOR_PX}px ({FLOOR_DP}dp).")
         if token_bad:
             print("FAIL — --touch-min does not hold the floor.")
         return 1
-    print(f"PASS — every --touch-min step holds at or over {FLOOR_DP}dp, and no rule this "
+    print(f"PASS — every --touch-min step holds at or over {FLOOR_PX}px, and no rule this "
           f"audit can identify as interactive is under it in bare pixels.")
     return 0
 

@@ -22,8 +22,10 @@
 }
 
 /* ONE BAR, the same shape the store settled on 2026-08-31: what you act on, in a single row.
- * A screen you reached by opening your packs does not need a header telling you so, and on a
- * 411dp landscape phone a title/subtitle pair plus its own padding is most of a shelf row. */
+ * A screen you reached by opening your packs does not need a header telling you so, and on the
+ * 914 x 411 panel this was authored against a title/subtitle pair plus its own padding was most
+ * of a shelf row. The panel is 2400 x 1080 now (#349) and that pair would fit — the bar stays a
+ * single row because the first reason is the real one, not because of the budget. */
 .vault-bar {
     flex-direction: row;
     align-items: center;

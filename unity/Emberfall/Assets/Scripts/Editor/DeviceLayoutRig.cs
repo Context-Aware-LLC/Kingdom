@@ -10,59 +10,51 @@ using UnityEngine.UIElements;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Makes the Editor's Game View reproduce the PHONE's dp budget, so a layout question that is
-    /// about running out of vertical dp can be answered here instead of by building an APK.
+    /// Points the Editor's Game View at the reference device's resolution and measures what the
+    /// live panel actually laid out, so a layout question can be answered here instead of by
+    /// building an APK.
     ///
-    /// <para><b>Why this exists at all.</b> <c>PanelSettings</c> runs ConstantPhysicalSize against
-    /// <c>Screen.dpi</c>, which is ~420 on the phone and <b>96</b> in the Editor. From the same
-    /// 1080-tall screen that is a <b>411dp</b> panel on the device and an <b>1800dp</b> panel here
-    /// — the Editor hands a layout <b>4.4x more vertical budget than the phone has</b>, and
-    /// nothing warns you. Every bug that is about running out of dp is invisible at default
-    /// settings. Three wrong guesses on <c>feat/character-create-scene</c> are attributable to it.</para>
+    /// <para><b>WAS `DeviceDpRig`, AND THE RENAME IS THE POINT (#349).</b> This file used to exist
+    /// because the Editor could not reproduce the device: the panels ran ConstantPhysicalSize
+    /// against <c>Screen.dpi</c>, which is ~420 on the phone and 96 in the Editor, so one 1080-tall
+    /// screen was a 411dp panel on the device and an 1800dp panel here — 4.4x more vertical budget
+    /// than the phone had, with nothing warning you. The rig's job was to close that gap by
+    /// swapping every UIDocument onto a clone carrying <c>referenceDpi = 160 * 96 / 420</c>.</para>
     ///
-    /// <para><b><c>fallbackDpi</c> is NOT the lever.</b> <c>Screen.dpi</c> is non-zero (96) in the
-    /// Editor, so the fallback never applies; setting it only dirties a tracked asset.
-    /// <c>referenceDpi</c> is the lever:</para>
-    /// <code>
-    /// referenceDpi = 160 * 96 / 420 = 36.571
-    ///   -&gt; Screen 2400x1080, panel 914.3 x 411.4, scale 2.625x   (device measures 2.61x, 411dp)
-    /// </code>
+    /// <para><b>THAT GAP IS CLOSED IN THE ASSET NOW, AND THE CLONE IS DELETED.</b> The panels run
+    /// ScaleWithScreenSize against 1920x1080 matched on HEIGHT, so a panel is 1080 authored px tall
+    /// in the Editor, on the phone, on a tablet and on a desktop — identically, with no dpi in the
+    /// arithmetic anywhere. <c>referenceDpi</c> is still 160 in the asset and is INERT;
+    /// ScaleWithScreenSize does not read it, so writing it achieved nothing. Setting the Game View
+    /// to 2400x1080 is now the whole of the rig: the same resolution gives the same panel.</para>
     ///
-    /// <para><b>The clone is load-bearing.</b> A play-mode write to a tracked ScriptableObject
-    /// serialises back out to disk — doing this the direct way once dirtied
-    /// <c>m_FallbackDpi 160 -&gt; 420</c> in the committed PanelSettings. This never touches the
-    /// asset; it swaps each UIDocument onto an in-memory copy that dies with play mode.</para>
+    /// <para><b>What is left is the half that always mattered</b> — <see cref="Measure"/> and
+    /// <see cref="MeasureWallPacking"/>, which read <c>worldBound</c> off the live tree. They were
+    /// never about dp and are unaffected.</para>
     ///
     /// <para><b>Do not judge shape from a Game View capture.</b> The capture letterboxes to
     /// 1280x720, so a 2400x1080 view comes back horizontally squashed and circles read as ovals.
     /// Measure <c>worldBound</c>.</para>
     ///
-    /// <para>RETIREMENT TRIGGER: if the project stops running ConstantPhysicalSize, or
-    /// <c>ScreenClass</c> stops keying on the panel's short axis in dp, the arithmetic above is
-    /// wrong and this file is misleading rather than merely stale. Delete it with that change.</para>
+    /// <para>RETIREMENT TRIGGER: if <c>EmberfallPanelSettings</c> leaves ScaleWithScreenSize, or its
+    /// reference resolution stops being 1920x1080 matched on height, then the Editor stops
+    /// reproducing the device by resolution alone and this file needs its scale half back. The
+    /// deleted version is in git at 2026-09-03.</para>
     /// </summary>
-    public static class DeviceDpRig
+    public static class DeviceLayoutRig
     {
         /// <summary>Pixel 5a, the reference device.</summary>
         public const int DeviceWidth = 2400;
         public const int DeviceHeight = 1080;
-        public const float DeviceDpi = 420f;
-
-        /// <summary>The Editor's own reported dpi. Read, not assumed — a HiDPI monitor changes it.</summary>
-        private static float EditorDpi => Screen.dpi > 0f ? Screen.dpi : 96f;
 
         private const string SizeLabel = "Emberfall Device (2400x1080)";
 
-        [MenuItem("Emberfall/Debug/Device DP Rig/Apply (Pixel 5a, 411dp)")]
+        [MenuItem("Emberfall/Debug/Device Layout Rig/Apply (Pixel 5a, 2400x1080)")]
         public static void Apply()
         {
-            string sized = SetGameViewSize();
-            int swapped = SwapPanelsOntoClones();
-            Debug.Log($"[DeviceDpRig] {sized}; {swapped} panel(s) cloned to referenceDpi {ReferenceDpi():F3}.");
+            Debug.Log($"[DeviceLayoutRig] {SetGameViewSize()}. The panel matches the device by "
+                    + "resolution alone — ScaleWithScreenSize, so there is no dpi to correct.");
         }
-
-        /// <summary>referenceDpi that makes THIS Editor produce the device's panel scale.</summary>
-        public static float ReferenceDpi() => 160f * EditorDpi / DeviceDpi;
 
         // ---- Game View sizing ----------------------------------------------------------------
         //
@@ -121,41 +113,11 @@ namespace Emberfall.Editor
             return -1;
         }
 
-        // ---- Panel scale -----------------------------------------------------------------------
-
-        /// <summary>
-        /// Swaps every live UIDocument onto an in-memory clone of its PanelSettings carrying the
-        /// device referenceDpi. Play mode only — outside it there is nothing to swap and a write
-        /// would reach the asset.
-        /// </summary>
-        public static int SwapPanelsOntoClones()
-        {
-            if (!Application.isPlaying) return 0;
-            var seen = new Dictionary<PanelSettings, PanelSettings>();
-            int n = 0;
-            foreach (var doc in UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None))
-            {
-                PanelSettings src = doc.panelSettings;
-                if (src == null) continue;
-                if (src.name.EndsWith("(DeviceDpRig)")) { n++; continue; }
-                if (!seen.TryGetValue(src, out PanelSettings clone))
-                {
-                    clone = UnityEngine.Object.Instantiate(src);
-                    clone.name = src.name + " (DeviceDpRig)";
-                    clone.referenceDpi = ReferenceDpi();
-                    seen[src] = clone;
-                }
-                doc.panelSettings = clone;
-                n++;
-            }
-            return n;
-        }
-
         // ---- Measurement -----------------------------------------------------------------------
 
         /// <summary>
-        /// Dumps the live panel's dp budget and the worldBound of every element matching one of the
-        /// given class or name selectors. Returns text, so it reads the same through
+        /// Dumps the live panel's authored-px size and the worldBound of every element matching one
+        /// of the given class or name selectors. Returns text, so it reads the same through
         /// <c>unity command eval</c> as it does in the console.
         /// </summary>
         public static string Measure(params string[] selectors)
@@ -169,9 +131,11 @@ namespace Emberfall.Editor
                 VisualElement root = doc.rootVisualElement;
                 if (root == null) continue;
                 sb.AppendLine($"--- {doc.gameObject.name}   panelSettings={doc.panelSettings?.name}");
-                sb.AppendLine($"    Screen {Screen.width}x{Screen.height}  Screen.dpi={Screen.dpi}  referenceDpi={doc.panelSettings?.referenceDpi:F3}");
+                sb.AppendLine($"    Screen {Screen.width}x{Screen.height}  Screen.dpi={Screen.dpi}");
                 float ph = root.worldBound.height;
-                sb.AppendLine($"    panel  {root.worldBound.width:F1} x {ph:F1} dp   scale={(Screen.height / Mathf.Max(1f, ph)):F3}x");
+                // AUTHORED px, NOT dp. A panel height that is not ~1080 means the panel is not on
+                // ScaleWithScreenSize/1920x1080/match-height and every number below is off-scale.
+                sb.AppendLine($"    panel  {root.worldBound.width:F1} x {ph:F1} authored px   scale={(Screen.height / Mathf.Max(1f, ph)):F3}x");
 
                 VisualElement embRoot = root.Q(className: "emb-root");
                 if (embRoot != null)
@@ -226,12 +190,12 @@ namespace Emberfall.Editor
                 float cardWidth = rows[0].Sum(t => t.worldBound.width);
 
                 sb.AppendLine($"--- wall packing ({doc.gameObject.name})");
-                sb.AppendLine($"    viewport      {vp.width,7:F1} x {vp.height,7:F1} dp");
-                sb.AppendLine($"    tile          {t0.width,7:F1} x {t0.height,7:F1} dp   aspect={t0.width / t0.height:F3}");
+                sb.AppendLine($"    viewport      {vp.width,7:F1} x {vp.height,7:F1} px");
+                sb.AppendLine($"    tile          {t0.width,7:F1} x {t0.height,7:F1} px   aspect={t0.width / t0.height:F3}");
                 sb.AppendLine($"    columns       {cols}    rows laid out {rows.Count}    rows fully in view {inView.Count}");
                 sb.AppendLine($"    tiles in view {tilesInView}  of {tiles.Count} laid out");
-                sb.AppendLine($"    row span      {rowSpan,7:F1} dp of {vp.width,7:F1} = {100f * rowSpan / vp.width,5:F1}%  (cards + gutters)");
-                sb.AppendLine($"    card width    {cardWidth,7:F1} dp of {vp.width,7:F1} = {100f * cardWidth / vp.width,5:F1}%  (cards only)");
+                sb.AppendLine($"    row span      {rowSpan,7:F1} px of {vp.width,7:F1} = {100f * rowSpan / vp.width,5:F1}%  (cards + gutters)");
+                sb.AppendLine($"    card width    {cardWidth,7:F1} px of {vp.width,7:F1} = {100f * cardWidth / vp.width,5:F1}%  (cards only)");
                 sb.AppendLine($"    CARD AREA     {100f * tilesInView * t0.width * t0.height / (vp.width * vp.height),5:F1}%  of the viewport is card");
             }
             return sb.Length == 0 ? "no .db-grid in any live panel" : sb.ToString();

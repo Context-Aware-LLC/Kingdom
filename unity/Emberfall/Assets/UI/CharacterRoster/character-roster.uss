@@ -56,9 +56,11 @@
     flex-direction: row;
 }
 
-/* 8dp all round. The vertical is the constrained axis -- this panel's height is the viewport
- * LayoutDeckStrip divides between rows, so every dp here is deck picture on a 411dp landscape
- * phone -- and the horizontal came down to match on 2026-08-31 (Sam). */
+/* 8 all round. The vertical is the constrained axis -- this panel's height is the viewport
+ * LayoutDeckStrip divides between rows, so every unit here is deck picture -- and the horizontal
+ * came down to match on 2026-08-31 (Sam). (Authored when the panel was 411 tall, where 8 was a
+ * real share of it. On the 1080 panel of #349 it is not; the value is left alone because it is
+ * the sheet's spacing rhythm, but the row solve above it has NOT been re-measured.) */
 .roster-panel {
     background-color: var(--surface-2);
     border-radius: var(--space-2);
@@ -156,12 +158,16 @@
 /* The name band over the decks. It holds the name on the left and Delete on the right, and it is
  * the only thing in the row that is not deck art — which is the point: one line of height buys the
  * strip the row's whole width, where the old left-hand column charged 18% of it forever. */
-/* EVERY dp in this band is a dp the deck picture does not get. RowChrome in
+/* EVERY unit in this band is one the deck picture does not get. RowChrome in
  * CharacterRosterController is the sum of this padding, the name's line, the strip's padding, the
  * plate's own chrome and the row's bottom margin — and it is subtracted from `viewport / rows`
- * before the plate is sized. At 411dp of landscape height (#324) the old 112dp of chrome was 55%
- * of a two-row screen, which is why the pictures came out ~90dp inside a mostly empty panel.
- * Tightened 2026-08-30. KEEP RowChrome IN STEP — the constant carries the arithmetic. */
+ * before the plate is sized. It was tightened 112 -> 90 -> 70 on 2026-08-30 because the panel was
+ * 411 tall then (#324) and 112 of chrome was 55% of a two-row screen.
+ *
+ * THE PRESSURE IS OFF AND THE TIGHTENING IS NOT WRONG (#349): the panel is 1080 tall now, so 70
+ * is ~13% of a two-row screen rather than 55% and the solver is no longer pinned to its floor.
+ * KEEP RowChrome IN STEP ANYWAY — it is a SUM OF THE VALUES IN THIS SHEET, which did not move,
+ * so it is still correct and still breaks silently if this band is edited without it. */
 .character-row-header {
     flex-direction: row;
     align-items: center;
@@ -688,11 +694,14 @@
  * anywhere in this project that reasons from "411dp" or "one authored px is one Android dp" is
  * describing a panel that no longer exists. Measured on the live panel 2026-09-02:
  *
- *     panel  2400.0 x 1080.0 dp   scale=1.000x
+ *     panel  2400.0 x 1080.0    scale=1.000x
  *     .emb-root classes: emb-root character-create-screen emb-bleed emb-sw-expanded
  *
- * Note the screen class: EXPANDED, not compact. Every `.emb-sw-compact` rule in this project is
- * now dead on a phone, and the compact branch of every breakpoint is what a phone used to get.
+ * That trailing `emb-sw-expanded` is why the screen classes are GONE (#349, 2026-09-03). The
+ * panel's short axis is now a constant 1080 on every device, the classes keyed on that axis
+ * against 600/840, so `expanded` was the only one that could ever be applied. Its values are
+ * folded into the base blocks and the other two branches are deleted. A measurement taken today
+ * prints `emb-root character-create-screen emb-bleed` and nothing more.
  *
  * WHAT THAT DID TO THIS SCREEN. Everything authored against 411 is now ~2.6x too small: the two
  * picker columns are capped at 420 units and sat in the middle of a 2296-unit row, leaving 1456
@@ -700,8 +709,9 @@
  * re-authored for the real panel and are deliberately EXPLICIT PIXELS rather than tokens, which
  * is the same call collection.uss makes for the one thing it has to get right at this scale
  * (`--card-tile-width: 274; --card-tile-height: 384` — a card tile is 36% of the screen's height).
- * The spacing and type tokens are still 411-era values and are used below only where something
- * genuinely is small (a gutter, a caption).
+ * The spacing and type tokens are still 411-era values — #349 retired the screen-class run they
+ * stepped in, but not the values themselves — and are used below only where something genuinely
+ * is small (a gutter, a caption).
  *
  * NEVER WRITE A TOKEN GLOB AS `--space-<star>/--type-<star>` IN A USS COMMENT. That sequence
  * contains the comment terminator, so it ends the comment early, the prose after it is parsed as
@@ -908,8 +918,9 @@
     justify-content: center;
 }
 
-/* EXPLICIT, NOT --type-h2. The token is 26 at the expanded screen class — set when 26 authored
- * units were 26dp of a 411-unit panel, i.e. 6% of its height. The same 26 is now 2.4% of 1080 and
+/* EXPLICIT, NOT --type-h2. The token is 26 — set when 26 authored units were 26dp of a 411-unit
+ * panel, i.e. 6% of its height. (It was the `expanded` step of a screen-class run; #349 deleted
+ * the run and folded that step into the base, so 26 is simply the value now.) The same 26 is 2.4% of 1080 and
  * reads as a caption beside a 204-unit portrait. 56 restores the proportion the token was chosen
  * for. Same reasoning for the power line below. */
 .hero-choice-name {

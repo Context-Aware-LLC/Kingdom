@@ -105,35 +105,26 @@
  * whole rows fit a short viewport; it never grows them. So the number below is the number on
  * screen on every device tall enough for two rows of it, which is every phone and every desktop.
  *
- * UNITLESS ON PURPOSE, twice over. A CustomStyleProperty<float> reads a number, not a length, so
- * `160px` would not resolve. And the unit is already unambiguous: this panel runs
- * ConstantPhysicalSize at referenceDpi 160, so one authored px IS one Android dp — 160 here means
- * 160dp, which is 420 device px on a Pixel 5a and a bit more on a denser phone of the same
- * physical size. A landscape phone panel is about 411dp TALL IN TOTAL, so a phone tile is a
- * ~100-200 number. If you find yourself typing 400 or 900 you are thinking in screen pixels; that
- * exact confusion is what put a 477dp tile on a 291dp viewport in #177.
+ * UNITLESS ON PURPOSE. A CustomStyleProperty<float> reads a number, not a length, so `384px`
+ * would not resolve.
+ *
+ * THE UNIT IS PANEL px, AND THE PANEL IS 1080 TALL ON EVERY DEVICE. It runs ScaleWithScreenSize
+ * against 1920x1080 matched on height, so a landscape panel is 1080 tall and 1080 * aspect wide
+ * — 2400 x 1080 on a Pixel 5a. A tile is therefore a several-hundred number, not a ~150 one.
+ * (It WAS ~150: until #349 the panel ran ConstantPhysicalSize and one authored px was one
+ * Android dp, which made a phone panel 411 units tall. Every number in this file predating
+ * 2026-09-01 was authored against that and reads ~2.6x too small.)
  *
  * Aspect is preserved from whatever pair is authored here, so keep width/height near 0.712 (the
  * card frame's own proportions) unless the frame art changes too.
- *
- * The breakpoints are ScreenClass's, keyed on the panel's SHORT axis: compact < 600dp (phones),
- * medium 600-840dp, expanded 840dp+. See the SCREEN CLASSES block in Common/theme.uss.
  * ------------------------------------------------------------------------------------------- */
 .collection-list {
     flex-grow: 1;
     min-height: 0;
 
-    /* Phones. Solved from a Pixel 5a's measured 350.9dp wall viewport: two rows plus the 8dp
-     * flat margin. Every phone-sized panel lands here regardless of pixel count, because the
-     * panel is sized physically — a 1080p and a 1440p phone both resolve to ~411dp tall. */
-    --card-tile-width: 114;
-    --card-tile-height: 160;
-}
-.collection.emb-sw-medium .collection-list {
-    --card-tile-width: 182;
-    --card-tile-height: 256;
-}
-.collection.emb-sw-expanded .collection-list {
+    /* Was the `expanded` step of a three-step screen-class run; #349 retired the run, because
+     * the panel's short axis is now a constant 1080 and only that step could ever fire. These
+     * are the values that were actually rendering on every device. */
     --card-tile-width: 274;
     --card-tile-height: 384;
 }
@@ -320,15 +311,11 @@
     background-color: var(--surface-0);
     background-image: url("/Assets/Art/Backgrounds/CollectionPlate_Vault.png");
     -unity-background-scale-mode: scale-and-crop;
-    /* The compact wall spends its full short axis. Medium and expanded restore progressively deeper
-     * bottom framing below; the controls are an overlay and never consume flow space at any class. */
+    /* The wall spends its full short axis: no bottom framing. The controls are an overlay and
+     * never consume flow space. (A screen-class run once stepped a padding-bottom in here; its
+     * only reachable step had that declaration commented out, so retiring the run in #349
+     * changed nothing.) */
     padding: 0 var(--space-6) 0;
-}
-.collection.emb-sw-medium {
-    padding-bottom: var(--space-4);
-}
-.collection.emb-sw-expanded {
-    /* padding-bottom: var(--space-6); */
 }
 
 /* Owned vs All is runtime state: CollectionController is the only writer of the visible modifier. */
@@ -365,9 +352,9 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 132px;
-    height: 56px;
-    min-height: 56px;
+    width: 176px;
+    height: 72px;
+    min-height: 72px;
     padding: var(--space-2) var(--space-3) var(--space-1);
     border-left-width: 2px;
     border-right-width: 2px;
@@ -377,16 +364,6 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-}
-.collection.emb-sw-medium .col-button--filters {
-    width: 152px;
-    height: 64px;
-    min-height: 64px;
-}
-.collection.emb-sw-expanded .col-button--filters {
-    width: 176px;
-    height: 72px;
-    min-height: 72px;
 }
 .col-button--filters-on {
     -unity-background-image-tint-color: rgb(255, 255, 255);
@@ -540,7 +517,7 @@
 }
 .col-query-actions {
     position: absolute;
-    top: var(--space-1);
+    top: var(--space-3);
     right: 0;
     flex-direction: row;
     align-items: center;
@@ -553,12 +530,6 @@
 }
 .col-query-actions .col-button--decks {
     min-width: 96px;
-}
-.collection.emb-sw-medium .col-query-actions {
-    top: var(--space-2);
-}
-.collection.emb-sw-expanded .col-query-actions {
-    top: var(--space-3);
 }
 /* `max-width: 58%` is gone with the row: it kept the search field from swallowing a full-width
  * drawer's line. In a column it would cap the field at 58% of ~370dp and leave the sort control
@@ -595,8 +566,8 @@
 }
 
 .collection .db-chip {
-    min-height: 52px;
-    height: 52px;
+    min-height: 56px;
+    height: 56px;
     padding: 0 var(--space-6);
     border-width: 0;
     border-radius: 0;
@@ -613,14 +584,6 @@
     transition-property: -unity-background-image-tint-color, color, opacity, translate;
     transition-duration: 0.1s;
     transition-timing-function: ease-out;
-}
-.collection.emb-sw-medium .db-chip {
-    min-height: 54px;
-    height: 54px;
-}
-.collection.emb-sw-expanded .db-chip {
-    min-height: 56px;
-    height: 56px;
 }
 .collection .db-chip:hover,
 .collection .db-chip:focus {
@@ -646,31 +609,17 @@
 
 #query-rarities .db-chip,
 #query-types .db-chip {
-    width: 128px;
+    width: 132px;
     padding-left: 0;
     padding-right: 0;
     -unity-text-align: middle-center;
-}
-.collection.emb-sw-medium #query-rarities .db-chip,
-.collection.emb-sw-medium #query-types .db-chip {
-    width: 130px;
-}
-.collection.emb-sw-expanded #query-rarities .db-chip,
-.collection.emb-sw-expanded #query-types .db-chip {
-    width: 132px;
 }
 
 #query-costs .db-chip {
-    width: 60px;
+    width: 64px;
     padding-left: 0;
     padding-right: 0;
     -unity-text-align: middle-center;
-}
-.collection.emb-sw-medium #query-costs .db-chip {
-    width: 62px;
-}
-.collection.emb-sw-expanded #query-costs .db-chip {
-    width: 64px;
 }
 
 /* ---------- Active-deck pairing + cost chip sizing (#160) ----------
@@ -935,9 +884,12 @@
 
 /* The class strip is a centred row of nine compact portrait controls (Sam, 2026-09-01).
  *
- * WHY IT IS HORIZONTAL. It was a 130px column on the left of `body`; nine tabs sharing a 411dp
- * panel came to 45.7dp each, below the 48dp touch floor, and 9 x 48 cannot fit that axis. Across
- * the top, nine 56x60dp controls fit comfortably and remain close to square without becoming a
+ * WHY IT IS HORIZONTAL. It was a 130px column on the left of `body`; on the 411-tall panel it was
+ * authored against, nine tabs sharing that axis came to 45.7 each, under the touch floor, and
+ * 9 x 48 could not fit. THAT ARITHMETIC NO LONGER FORCES IT (#349): nine tabs share 1080 now. It
+ * stays horizontal because a nine-item rail down the side of a card wall spends the axis the wall
+ * needs, which is the reason that did not depend on the unit. Across the top, nine 56x60 controls
+ * fit comfortably and remain close to square without becoming a
  * second row of cards. The explicit size also stops a wide monitor stretching portraits into
  * banners. A centred 600dp rail distributes its 96dp remainder between the eight internal gaps:
  * 12dp apiece, with no artificial inset on the first or last tab. That spacing also leaves a clean
@@ -1053,23 +1005,11 @@
  * empty ledge below the final card row is not useful chrome. CardWall keeps its separate 8dp
  * rounding reserve so the final row still cannot clip on device pixels. */
 .collection .db-collection.chrome-panel--outer {
-    padding: 0 12px;
+    padding: 0 20px;
     background-color: rgba(18, 23, 31, 0.96);
     overflow: hidden;
 }
 .collection .collection-list.chrome-panel--recessed {
-    padding: 0 12px;
-}
-.collection.emb-sw-medium .db-collection.chrome-panel--outer {
-    padding: 0 16px;
-}
-.collection.emb-sw-medium .collection-list.chrome-panel--recessed {
-    padding: 0 20px;
-}
-.collection.emb-sw-expanded .db-collection.chrome-panel--outer {
-    padding: 0 20px;
-}
-.collection.emb-sw-expanded .collection-list.chrome-panel--recessed {
     padding: 0 20px;
 }
 /* NO PADDING HERE. This selector outranks `.deck-drawer`, so a padding written here silently
@@ -1152,12 +1092,12 @@
 }
 
 .chrome-input {
-    min-height: 52px;
-    height: 52px;
+    min-height: 56px;
+    height: 56px;
 }
 .chrome-input > .unity-base-text-field__input,
 .chrome-input .unity-base-popup-field__input {
-    min-height: 52px;
+    min-height: 56px;
     padding-left: 18px;
     padding-right: 18px;
     border-width: 0;
@@ -1172,22 +1112,6 @@
     -unity-background-image-tint-color: rgb(224, 229, 236);
     color: var(--ink-1);
     font-size: var(--type-body);
-}
-.collection.emb-sw-medium .chrome-input {
-    min-height: 54px;
-    height: 54px;
-}
-.collection.emb-sw-medium .chrome-input > .unity-base-text-field__input,
-.collection.emb-sw-medium .chrome-input .unity-base-popup-field__input {
-    min-height: 54px;
-}
-.collection.emb-sw-expanded .chrome-input {
-    min-height: 56px;
-    height: 56px;
-}
-.collection.emb-sw-expanded .chrome-input > .unity-base-text-field__input,
-.collection.emb-sw-expanded .chrome-input .unity-base-popup-field__input {
-    min-height: 56px;
 }
 .chrome-input > .unity-base-text-field__input:hover,
 .chrome-input .unity-base-popup-field__input:hover {

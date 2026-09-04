@@ -1,3 +1,32 @@
+/* ================================================================================================
+ * WHAT ONE AUTHORED PIXEL IS. Read this before trusting any number in any sheet in this project.
+ *
+ * THE PANEL IS 1080 AUTHORED px TALL ON EVERY DEVICE, AND ALWAYS EXACTLY 1080.
+ * All three PanelSettings run ScaleWithScreenSize against a 1920x1080 reference matched on HEIGHT
+ * (m_ScaleMode: 2, m_ScreenMatchMode: 0, m_Match: 1), so `scale = screenHeight / 1080` and the
+ * panel's own height is that constant. Its WIDTH is 1080 * aspect — 2400 on a 20:9 phone, ~1440 on
+ * a 4:3 tablet — and is the only dimension with any variation left in it.
+ *
+ * SO AN AUTHORED px IS A FRACTION OF THE SCREEN, NOT A LENGTH. It has no physical size until you
+ * name a device. On a Pixel 5a (1080 px across 2.60" of glass) it is 0.148 Android dp, so:
+ *
+ *     an authored 56  =  21dp of finger        Android's 48dp touch floor  =  125 authored px
+ *
+ * `referenceDpi: 160` is still in the assets and is INERT — ScaleWithScreenSize never reads it.
+ *
+ * IT WAS NOT ALWAYS THIS. Between 99b179b1 and 02048077 (2026-09-01) the panels ran
+ * ConstantPhysicalSize at referenceDpi 160, where one authored px WAS one Android dp and a
+ * landscape phone panel was 914 x 411. EVERY NUMBER AND EVERY COMMENT IN THIS PROJECT AUTHORED
+ * BEFORE 2026-09-01 IS IN THOSE UNITS and reads about 2.6x too small. A comment that says "411dp"
+ * or "one authored px is one Android dp" is describing a panel that no longer exists; where one
+ * has been left standing deliberately it says so, because the DECISION it records is usually still
+ * sound even though the arithmetic under it moved.
+ *
+ * HOW TO CHECK RATHER THAN ASSUME: `Emberfall/Debug/Device Layout Rig` sets the Game View to
+ * 2400x1080, which now reproduces the device exactly (same resolution, same panel — there is no
+ * dpi left to correct for), then `DeviceLayoutRig.Measure(...)` prints worldBound off the live
+ * tree. Issue #349 is the full account.
+ * ============================================================================================= */
 .emb-root {
     --space-1: 4px;
     --space-2: 8px;
@@ -13,7 +42,15 @@
        Not part of the 4px spacing run above -- it is not a design rhythm, it is a
        hardware clearance, and it is deliberately blunt.
 
-       THE UNIT CHANGED UNDER THIS NUMBER, and that is the whole story of its history.
+       52 IS WRONG AS OF 2026-09-01 AND ISSUE #350 OWNS THE FIX. Everything below is
+       correct arithmetic in the OLD units, where an authored px was an Android dp. It is
+       not any more (see the block at the top of this file), so the cutout's 136 DEVICE px
+       needs ~136 AUTHORED px on a 1080p phone and this token supplies 52. Content anchored
+       to a side is being clipped by real hardware. Left at 52 deliberately: moving it moves
+       eight screens' horizontal insets at once and that belongs in one change with eyes on
+       a device, not as a side effect of #349's vocabulary sweep.
+
+       THE UNIT CHANGED UNDER THIS NUMBER TWICE, and that is the whole story of its history.
        Authored as 150 when the panels scaled by pixel count, so 150 authored px was about
        150 DEVICE px and cleared the cutout. At referenceDpi 160 one authored px is one dp,
        so 150 became 150dp = 394 device px -- 73% of a 1080-tall landscape screen (#243).
@@ -64,40 +101,52 @@
        down, and tooling/scripts/audit_edge_safety.py fails if either class loses its body. */
     --edge-safe: 52px;
 
-    /* THE SMALLEST A CONTROL A FINGER HAS TO HIT MAY BE. Android's floor, and since
-       99b179b1 an authored px IS one Android dp, so 48 here is literally Google's 48dp —
-       before that change no USS number was comparable to that guidance at all and this
-       token could not have existed.
+    /* THE SMALLEST A CONTROL A FINGER HAS TO HIT MAY BE.
 
-       A token rather than 48 written thirteen times, because thirteen copies is how the
+       ONE AUTHORED px IS ONE PANEL px, AND THE PANEL IS ALWAYS 1080 TALL. The panel runs
+       ScaleWithScreenSize against 1920x1080 matched on height, so `scale = screenHeight /
+       1080` and an authored px is a constant fraction of the screen's height on every
+       device. That is what makes a single number defensible: 56 is 5.2% of the short axis
+       whether the screen is 1080p or 1440p, so there is nothing left for it to step with.
+
+       IT IS NO LONGER 48 = ANDROID's 48dp. Under ConstantPhysicalSize (retired #349) an
+       authored px WAS one Android dp and 48 was literally Google's guidance. It is not any
+       more, and the comparison is gone rather than adjusted: 56 is what actually rendered
+       for every device once `.emb-sw-expanded` became the only reachable screen class, and
+       it is ~21 physical dp on a Pixel 5a's 411dp of height — comfortably above the floor.
+
+       A token rather than 56 written thirteen times, because thirteen copies is how the
        old ones drifted: the sweep for #244 found .ms-gear at 44, .db-chip at 32,
        .hero-tile-badge at 34 and .new-character-button at 40, every one of them authored
-       under the old scale where the number meant nothing checkable.
+       under a scale where the number meant nothing checkable.
 
        USE THIS, NOT A BARE PIXEL, on anything pressed. tooling/scripts/audit_touch_targets.py
-       flags a bare px under 48 on any selector it can prove is interactive, and reads this
-       token's own value so the token cannot quietly drop below the floor it names.
+       reads this token's own value and flags a bare px below it on any selector it can prove
+       is interactive.
 
        UI Toolkit sizes BORDER-BOX, so this is the touch target with no adjustment for the
-       rule's own border-width.
+       rule's own border-width. */
+    --touch-min: 56px;
 
-       RETIREMENT TRIGGER: #247 wants element sizes to step per screen class. When that
-       lands this stops being one number and becomes the smallest step in a run — update
-       the audit with it, since the audit currently assumes a single value. */
-    --touch-min: 48px;
+    /* THE TYPE SCALE — ONE STEP, NOT A RUN (#349, #247 closed with it).
 
-    /* THE COMPACT STEP OF THE TYPE SCALE. These are the PHONE's values, and they are the base
-       because the phone is the floor — every other screen class steps UP from here, at the
-       bottom of this file. See "SCREEN CLASSES" there before changing any of them: a value
-       edited here moves the phone only, and its medium/expanded partners have to move with it
-       or the run stops being a run. */
-    --type-wordmark: 44px;
-    --type-display: 36px;
-    --type-h1: 30px;
+       These were the `.emb-sw-expanded` values until 2026-09-03. There were three steps
+       keyed by screen class, and after the panel moved to ScaleWithScreenSize the panel's
+       short axis became a constant 1080 on every device, so `expanded` was the only branch
+       that could ever fire and the other two were dead. Folding the live branch into the
+       base leaves rendering identical and takes the dead vocabulary with it.
+
+       DO NOT REINTRODUCE A PER-DEVICE STEP HERE without re-reading #349. The panel already
+       scales uniformly with screen height; a token that ALSO steps would be scaling twice.
+       If a future breakpoint is wanted it has to key on the panel's WIDTH, which is the only
+       axis that still varies (1440 authored px on a 4:3 tablet, 2400 on a 20:9 phone). */
+    --type-wordmark: 56px;
+    --type-display: 44px;
+    --type-h1: 36px;
     --type-h2: 26px;
     --type-body: 22px;
     --type-label: 20px;
-    --type-caption: 18px;
+    --type-caption: 16px;
     --surface-0: rgb(11, 14, 19);
     --surface-1: rgb(20, 25, 34);
     --surface-2: rgb(30, 37, 48);
@@ -242,82 +291,32 @@
     color: var(--unity-colors-dropdown-text);
 }
 
-/* ── SCREEN CLASSES — how big an element is, by how big the screen is (#247) ───────────────
-   Sam, 2026-08-23: "we need breakpoints on some of the elements, specifically the SIZE of the
-   elements. So far, we only have breakpoints on layout, not on the size of buttons."
+/* ── SCREEN CLASSES ARE GONE (#247, retired by #349 on 2026-09-03) ─────────────────────────
+   `.emb-sw-compact` / `-medium` / `-expanded` and the ScreenClass.cs that applied them were
+   deleted here. Their values now live in the base `.emb-root` block at the top of this file.
 
-   He was being generous. There were no breakpoints at all — what existed was per-component
-   solves (CardWall promoting tiles by available width, LayoutHeroGrid solving a column count)
-   and one content-driven modifier. Nothing keyed on the screen, so every element shipped one
-   size for every device.
+   WHY, in one line: the panel stopped being sized in physical units, so the axis they keyed
+   on stopped varying. `EmberfallPanelSettings` runs ScaleWithScreenSize against 1920x1080
+   matched on HEIGHT, which makes the panel's authored height exactly 1080 on every device
+   and in every Game View. The classes keyed on the SHORT axis with Material 3's thresholds
+   (600 / 840), so 1080 landed in `expanded` always and unconditionally — one branch of three
+   was reachable and the other two were dead code that read as live design.
 
-   THE KEY IS THE SHORT AXIS, IN dp. Android calls it smallest width; here the game is
-   landscape-locked (NOR-283) so it is always the panel's HEIGHT, and it is always the scarce
-   one. The Pixel 5a gives 411dp of it against 914dp of width — height is what runs out, so
-   height is what decides. Measured, not assumed: see the recipe in
-   ~/.claude/projects/.../memory/editor-game-view-does-not-reproduce-device-dp.md, because the
-   Editor's own Game View reports 1800dp here and would put every desk test in `expanded`.
+   IF YOU WANT BREAKPOINTS BACK, key them on the panel's WIDTH. That is the only axis with
+   any variation left: 1080 * aspect, so ~1440 authored px on a 4:3 tablet against 2400 on a
+   20:9 phone. Height cannot tell you anything — it is a constant.
 
-   THE BREAKPOINTS ARE MATERIAL 3's, deliberately not invented:
-       compact    sw < 600     the phone. Pixel 5a = 411
-       medium     600..839     large phones, small tablets
-       expanded   sw >= 840    tablets, and the Editor/desktop at 1800
+   TWO THINGS THAT SURVIVED THE DELETION, because they are about USS and not about dp:
 
-   ONE MULTIPLIER IS IMPOSSIBLE, so the scale steps token by token. #247 asked whether sizes
-   should step per-breakpoint or scale as a group from one number. That is not a preference
-   here — it is a constraint, measured in a live panel 2026-08-25:
+   1. USS SILENTLY DROPS calc(). Measured in a live panel 2026-08-25:
+          calc(var(--probe-base) * 2)   resolved width = 4000.00   <- declaration DROPPED
+          var(--probe-base)             resolved width = 10.00
+      4000 was the panel width, i.e. the element fell back to `auto`. So a token run can
+      never be `calc(var(--type-body) * var(--ui-scale))`; every step has to be written out.
 
-       calc(var(--probe-base) * 2)   resolved width = 4000.00   <- declaration DROPPED
-       var(--probe-base)             resolved width = 10.00
-
-   4000 is the panel width, i.e. the element fell back to `auto`. USS parses calc() and then
-   discards it, silently, which is the worst of both. So `font-size: calc(var(--type-body) *
-   var(--ui-scale))` cannot work and the runs below are written out in full. DO NOT "simplify"
-   this into a multiplier without re-running that probe.
-
-   THE BASE IS COMPACT, above, and these two blocks only ever step UP. Mobile-first: a phone
-   that never matches a class still gets a complete, correct scale, so a bug in the applier
-   degrades to "the phone size everywhere" rather than to nothing.
-
-   WHAT PARTICIPATES: the type scale and the touch floor, which is what #247's acceptance asks
-   for. THE SPACING RUN DELIBERATELY DOES NOT — --space-* is what buys the room the bigger type
-   spends, several layout solves are written against it (LayoutHeroGrid's HeroGutter and
-   HeroChrome are literal copies of --space-2 and its border), and moving both at once would
-   make any regression impossible to attribute. Left for a follow-up with its own evidence.
-
-   APPLIED BY: ScreenClass.cs, which installs itself and needs no scene edit. Exactly one of
-   these three classes is on .emb-root at any time.
-
-   THESE BLOCKS MUST STAY BELOW `.emb-root`, and that is load-bearing rather than tidy. The
-   base tokens are declared on `.emb-root` — a single class — and so are these. Equal
-   specificity, same element, so SOURCE ORDER is the only thing deciding the winner. Move
-   either block above the other and the screen classes silently stop applying: no error, no
-   warning, every screen just renders at phone size forever.
-
-   RETIREMENT TRIGGER: audit_touch_targets.py reads --touch-min and assumes a SINGLE value.
-   It now has three. If that audit is not taught the run, it is checking the phone only —
-   which is the safe direction, but not the whole answer. */
-.emb-sw-medium {
-    --type-wordmark: 50px;
-    --type-display: 40px;
-    --type-h1: 32px;
-    --type-h2: 24px;
-    --type-body: 20px;
-    --type-label: 18px;
-    --type-caption: 15px;
-    --touch-min: 52px;
-}
-
-.emb-sw-expanded {
-    --type-wordmark: 56px;
-    --type-display: 44px;
-    --type-h1: 36px;
-    --type-h2: 26px;
-    --type-body: 22px;
-    --type-label: 20px;
-    --type-caption: 16px;
-    --touch-min: 56px;
-}
+   2. --space-* IS NOT A TYPE TOKEN and never stepped with them. Several layout solves are
+      written against it — LayoutHeroGrid's HeroGutter and HeroChrome are literal copies of
+      --space-2 and its border — so it moves only with its own evidence. */
 
 /* ================================================================================================
  * NO VISIBLE SCROLLBARS, ANYWHERE (Sam, 2026-08-01 ruling — [[no-visible-scrollbars-ruling]]).

@@ -1179,10 +1179,10 @@ namespace Emberfall.Presentation
         /// kept in step with character-roster.uss.
         ///
         /// <para>112f until 2026-08-30 (#324), then 90f, now 70f. This is subtracted from
-        /// <c>viewport / rows</c>, so on the real device — 411dp of landscape height, not the Editor
-        /// Game View's ~1800dp — it was consuming 55% of a two-row screen and leaving the deck
-        /// picture the remainder. The band it measures is tightened rather than the row count
-        /// reduced, because one character row per screen stops the list reading as a list.</para>
+        /// <c>viewport / rows</c>, and on the 411-unit landscape panel of the day it was consuming
+        /// 55% of a two-row screen and leaving the deck picture the remainder. The band it measures
+        /// is tightened rather than the row count reduced, because one character row per screen
+        /// stops the list reading as a list.</para>
         ///
         /// <para>Current sum: header padding-top 8 + an h2 name line ~27 + strip padding 4 top and
         /// 8 bottom + plate padding 8 and border 4 + row margin 8 = 67, rounded up to 70 for the
@@ -1190,15 +1190,23 @@ namespace Emberfall.Presentation
         /// change; both live in character-roster.uss and both carry a comment pointing back here.
         /// </para>
         ///
-        /// <para>WHY IT HAD TO COME DOWN AGAIN, and the arithmetic to redo if any of it moves. At
-        /// 90f the solver sat permanently on <see cref="MinPlate"/>: the roster viewport was
-        /// 411 − 48 root padding − 64 header − 32 panel padding − 32 for an EMPTY status label
-        /// = 235dp, so <c>235/2 − 90 = 27</c>, well under the 64 floor, and the rendered picture was
-        /// ~43dp. Two rows also came to exactly the viewport, which is why row 2 clipped instead of
-        /// scrolling. Collapsing the empty status band and halving the panel's vertical padding put
-        /// the viewport at 283dp; <c>283/2 − 70 = 71.5</c> clears the floor, and two rows at 138.5
-        /// leave 6dp spare. The root's vertical padding came down 24 -> 8 each on 2026-08-31, which
-        /// buys another 32: <c>315/2 − 70 = 87.5</c>.</para>
+        /// <para>WHY IT HAD TO COME DOWN AGAIN — HISTORY, IN PRE-#349 UNITS. At 90f the solver sat
+        /// permanently on <see cref="MinPlate"/>: the roster viewport was 411 − 48 root padding −
+        /// 64 header − 32 panel padding − 32 for an EMPTY status label = 235, so
+        /// <c>235/2 − 90 = 27</c>, well under the 64 floor, and the rendered picture was ~43. Two
+        /// rows also came to exactly the viewport, which is why row 2 clipped instead of scrolling.
+        /// Collapsing the empty status band and halving the panel's vertical padding put the
+        /// viewport at 283; <c>283/2 − 70 = 71.5</c> clears the floor, and two rows at 138.5 leave 6
+        /// spare. The root's vertical padding came down 24 -> 8 each on 2026-08-31: <c>315/2 − 70 =
+        /// 87.5</c>.</para>
+        ///
+        /// <para><b>REDO IT WITH 1080, NOT 411 (#349).</b> The panel stopped being 411 units tall on
+        /// 2026-09-01; every subtraction above is an authored px and none of them moved, so the
+        /// viewport is now roughly <c>1080 − 48 − 64 − 32 = 936</c> and <c>936/2 − 70 = 398</c>. The
+        /// solver is nowhere near <see cref="MinPlate"/> any more and this constant is no longer
+        /// under any pressure — but <see cref="MinPlate"/> ITSELF is still 64, which was a floor in
+        /// dp and is ~24dp of real glass now. THIS SCREEN HAS NOT BEEN RE-MEASURED. Do that before
+        /// treating any figure in this paragraph as settled.</para>
         ///
         /// <para>NONE OF THOSE SUBTRACTIONS IS AN INPUT. <c>viewport</c> is read off the ScrollView's
         /// resolvedStyle, so this arithmetic is here to be checked against, not to be kept true by
