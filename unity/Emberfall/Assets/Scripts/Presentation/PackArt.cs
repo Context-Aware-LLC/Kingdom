@@ -47,7 +47,8 @@ namespace Emberfall.Presentation
 
     /// <summary>
     /// The one place that knows how a pack id and an art folder find each other: the folder is
-    /// named for the LAST SEGMENT of the pack id, uppercased — <c>pack.emberfall</c> reads
+    /// named for the EXPANSION segment of the pack id, uppercased — both <c>pack.emberfall</c> and
+    /// its SKU-qualified <c>pack.emberfall.starter</c> read
     /// <c>Assets/Art/Shop/Packs/EMBERFALL/</c>.
     ///
     /// <para>Matching <c>Assets/Art/Cards/&lt;setId&gt;/</c> is the point: one convention for where a
@@ -58,8 +59,14 @@ namespace Emberfall.Presentation
         public static string SetIdFor(string packId)
         {
             if (string.IsNullOrEmpty(packId)) return "";
-            int split = packId.LastIndexOf('.');
-            string token = split >= 0 ? packId.Substring(split + 1) : packId;
+            string[] segments = packId.Split('.');
+            // BoosterPack.Id is pack.<expansion>[.<sku>]. The optional SKU distinguishes ledger
+            // products and opening odds, not the expansion whose printed packaging they share.
+            // Keep the old one-token fallback for authoring tools that pass a bare set id.
+            string token = segments.Length >= 2
+                && string.Equals(segments[0], "pack", StringComparison.OrdinalIgnoreCase)
+                    ? segments[1]
+                    : segments[segments.Length - 1];
             return token.ToUpperInvariant();
         }
     }

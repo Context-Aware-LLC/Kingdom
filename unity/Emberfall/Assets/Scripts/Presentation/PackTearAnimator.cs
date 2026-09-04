@@ -27,14 +27,19 @@ namespace Emberfall.Presentation
     /// <see cref="UnityEngine.Update"/> lerp would be a frame loop to cancel on scene exit; an
     /// element's own <c>schedule</c> dies with the panel.</para>
     ///
-    /// <para><b>Every piece of art this wants is unbuilt, and it degrades rather than waits.</b>
-    /// Files 3, 4 and 5 of spec §6.1 (the foil strip and the two torn halves) and file 6 of §6.2 (the
-    /// burst sheet) do not exist. The stage is authored so that dropping them in is a background-image
-    /// on an existing rule; until then the strip is a foil-coloured band and the burst is a USS glow.
-    /// A tear that waited for art would be a feature that could not be seen at all.
-    /// <b>RETIREMENT TRIGGER:</b> when <c>Assets/Art/Shop/Packs/STARTER/</c> carries
-    /// <c>pack_tear_strip.png</c>, <c>pack_torn_top.png</c> and <c>pack_torn_bottom.png</c>, this
-    /// paragraph and the placeholder rules in <c>packvault.uss</c> go together.</para>
+    /// <para><b>The torn halves are BAKED, never drawn</b> (2026-09-03). <see cref="PackWrapperBaker"/>
+    /// renders the intact face and both torn pieces from ONE source sprite across a shared procedural
+    /// tear line, so files 4 and 5 of spec §6.1 were never art anybody had to produce — that table is
+    /// corrected. Handing the baker the same face the tapped tile wears is why <see cref="Play"/>
+    /// takes a sprite.</para>
+    ///
+    /// <para><b>What is still unbuilt degrades rather than waits.</b> The foil strip (§6.1 file 3) is
+    /// a foil-coloured band and the burst (§6.2 file 6, <c>fx_pack_burst.png</c>) is a USS glow. The
+    /// stage is authored so dropping either in is a background-image on an existing rule; a tear that
+    /// waited for art would be a feature that could not be seen at all.
+    /// <b>RETIREMENT TRIGGER:</b> when <c>fx_pack_burst.png</c> lands under
+    /// <c>Assets/Art/VFX/Pack/</c>, this paragraph and the <c>tear-burst</c> placeholder rule in
+    /// <c>packvault.uss</c> go together.</para>
     /// </summary>
     public sealed class PackTearAnimator
     {
@@ -70,6 +75,10 @@ namespace Emberfall.Presentation
         private readonly VisualElement _face;
         private readonly Label _hint;
         private readonly Button _skip;
+
+        /// <summary>The face this tear is of, handed in by <see cref="Play"/> and consumed by the bake
+        /// in <see cref="Tear"/>. Null means the set has no art.</summary>
+        private Sprite _source;
 
         private IVisualElementScheduledItem _breath;
         private Action _onComplete;
@@ -123,10 +132,15 @@ namespace Emberfall.Presentation
         /// that swallowed the handoff would strand a player on a spent entitlement, which is the one
         /// failure on this screen that costs something real.</para>
         /// </summary>
+        /// <param name="source">The pack face being torn — the SAME sprite the tile the player tapped
+        /// is wearing, which is why the caller resolves it by shelf index. It is what
+        /// <see cref="PackWrapperBaker"/> bakes the two torn halves from. Null is legal and means the
+        /// set has no art: the halves stay flat plates and the beat still runs.</param>
         /// <param name="allowSkip">False on the gift's first pack (spec §8: "no skip on the gift's
         /// first pack; everything after it is skippable"). It hides the control — a disabled one would
         /// still take the Android back gesture through <c>emb-back</c>.</param>
-        public void Play(PackOpenReceipt receipt, Action onComplete, bool allowSkip = true)
+        public void Play(PackOpenReceipt receipt, Sprite source, Action onComplete,
+                         bool allowSkip = true)
         {
             if (!IsBound || receipt == null)
             {
@@ -138,6 +152,7 @@ namespace Emberfall.Presentation
             _running = true;
             _torn = false;
             _onComplete = onComplete;
+            _source = source;
 
             ResetStage();
             if (_skip != null) _skip.style.display = allowSkip ? DisplayStyle.Flex : DisplayStyle.None;
@@ -199,19 +214,19 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // THE BAKE GOES HERE, BEFORE ANYTHING SEPARATES. The crimp shader bakes three views of
-            // one wrapper — the intact face and the two torn pieces, sharing one procedural tear line
-            // — and the call that installs them on these elements is:
+            // THE BAKE GOES HERE, BEFORE ANYTHING SEPARATES. The crimp shader bakes three views of one
+            // wrapper — the intact face and the two torn pieces, sharing one procedural tear line — so
+            // the halves must be painted while they are still stacked and invisible. Painting them
+            // after the split would swap the texture under a running transition.
             //
-            //     PackWrapperBaker.ApplyTornHalves(_topHalf, _bottomHalf, sprite);
+            // ApplyTornHalves assigns BOTH halves or NEITHER, so a failed bake leaves the flat
+            // placeholder plates rather than one baked half beside one plate. The return value is
+            // unchecked for exactly that reason — there is nothing to do about false that the
+            // placeholder is not already doing.
             //
-            // It is commented out because PackWrapperBaker does not exist yet (Sol, 2026-09-03, is
-            // producing the textures and the intact surface; motion stays owned here). Uncomment it
-            // in the same commit that lands the baker — the two halves are flat plates until then,
-            // which is why the placeholder rules in packvault.uss carry their own retirement trigger.
-            // RETIREMENT TRIGGER: when PackWrapperBaker lands, this comment becomes that one line,
-            // and Play() grows the source sprite parameter it needs to pass.
-            //
+            // A null _source is the artless set, which is a normal state, not a fault.
+            PackWrapperBaker.ApplyTornHalves(_topHalf, _bottomHalf, _source);
+
             // A pull earns a longer strip travel than a tap, because the player's own gesture already
             // moved it. Everything after the strip is identical either way.
             _pack.AddToClassList("tear-pack--opening");

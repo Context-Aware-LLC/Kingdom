@@ -251,11 +251,18 @@
  * duration here: the C# schedule and these transitions are one clock, and moving only one half
  * makes the burst land after the split instead of between the strip and it.
  *
- * PLACEHOLDER ART. Files 3, 4 and 5 of spec §6.1 (strip, torn top, torn bottom) and file 6 of §6.2
- * (the burst sheet) do not exist. Every element that wants one is a flat colour today and becomes
- * correct by gaining a background-image on the rule it already has.
- * RETIREMENT TRIGGER: when those files land in Assets/Art/Shop/Packs/STARTER/ and
- * Assets/Art/VFX/Pack/, replace the flat colours here and drop this paragraph. */
+ * THE TORN HALVES ARE NO LONGER PLACEHOLDERS (2026-09-03). PackWrapperBaker bakes them, and the
+ * intact face, from one source sprite across a shared procedural tear line, so it assigns a
+ * background-image to .tear-half-top and .tear-half-bottom at runtime. The colours those two rules
+ * carry are the ARTLESS-SET fallback — a set with no art still tears — not art waiting to arrive.
+ * Files 4 and 5 of spec §6.1 were never needed; that table is corrected.
+ *
+ * PLACEHOLDER ART, still. The foil strip (§6.1 file 3) and the burst sheet (§6.2 file 6) do not
+ * exist; both are flat colour and become correct by gaining a background-image on the rule they
+ * already have.
+ * RETIREMENT TRIGGER: when Assets/Art/VFX/Pack/fx_pack_burst.png lands, replace .tear-burst's glow
+ * and drop it from this paragraph; likewise pack_tear_strip.png and .tear-strip. When both are in,
+ * drop this paragraph. */
 
 .tear-overlay {
     position: absolute;

@@ -400,7 +400,7 @@ namespace Emberfall.Presentation
         /// see the art block below.</param>
         private VisualElement BuildTile(string packId, int index)
         {
-            var tile = new Button(() => Open(packId));
+            var tile = new Button(() => Open(packId, index));
             tile.AddToClassList("vault-pack");
             tile.SetEnabled(!_busy);
 
@@ -427,14 +427,18 @@ namespace Emberfall.Presentation
             // The modulo is not decoration — a set may hold fewer pieces than the player holds packs,
             // and MaxTilesShown is 10 while STARTER ships 5.
             //
-            // A set whose art has not been drawn yet is the normal state and says nothing — see
-            // PackArtProvider — so an artless pack reads as a pack without a picture, never as a
-            // picture that failed.
+            // PackWrapperBaker wraps the flat illustration into a sealed foil pack. Its return value
+            // is deliberately unchecked: false means it already fell back to painting the raw Sprite,
+            // so the face carries art either way and the class below stays true.
+            //
+            // A SKU-qualified starter pack reuses its expansion's art; PackArtSet deliberately
+            // ignores the product suffix when resolving the folder. A set whose art has not been
+            // drawn yet is the normal state and says nothing — see PackArtProvider — so an artless
+            // pack reads as a pack without a picture, never as a picture that failed.
             _packArt?.LoadPackArt(packId, pieces =>
             {
                 if (pieces == null || pieces.Count == 0) return;
-                face.style.backgroundImage =
-                    new StyleBackground(pieces[index % pieces.Count].Sprite);
+                PackWrapperBaker.ApplyTo(face, pieces[index % pieces.Count].Sprite);
                 face.AddToClassList("vault-pack__face--art");
             });
 
@@ -450,8 +454,8 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>A pack line as a player should read it. <c>pack.emberfall.starter</c> is
-        /// "Starter Pack" — the last segment is the only part that distinguishes one line from
-        /// another, which is the same rule <see cref="PackArtSet.SetIdFor"/> follows.</summary>
+        /// "Starter Pack" — the last segment is the only part that distinguishes one inventory
+        /// line from another. Packaging resolution separately uses the expansion segment.</summary>
         private static string PackDisplayName(string packId)
         {
             string token = TokenText.Pretty(packId);
@@ -460,7 +464,31 @@ namespace Emberfall.Presentation
 
         // ── Opening ─────────────────────────────────────────────────────────────────────
 
-        private async void Open(string packId)
+        /// <summary>
+        /// The face a tile at <paramref name="index"/> is wearing, or null when the set has no art.
+        /// The same expression <see cref="BuildTile"/> paints with, so the tear cannot disagree with
+        /// the tile it grew out of.
+        ///
+        /// <para><see cref="IPackArtProvider.LoadPackArt"/> is synchronous by contract — both the
+        /// Addressables and the AssetDatabase path resolve inline, and the callback shape is kept only
+        /// for a future streamed loader — which is what makes assigning out of it and returning
+        /// legal here.</para>
+        /// </summary>
+        private Sprite FaceSpriteOrNull(string packId, int index)
+        {
+            Sprite face = null;
+            _packArt?.LoadPackArt(packId, pieces =>
+            {
+                if (pieces != null && pieces.Count > 0) face = pieces[index % pieces.Count].Sprite;
+            });
+            return face;
+        }
+
+        /// <param name="artIndex">The shelf position of the tile that was tapped, so the pack that
+        /// tears is the one the player touched. Without it the tear would always wear the set's first
+        /// face while the tile under the finger wore its own — the mismatch a shelf of five distinct
+        /// faces makes visible.</param>
+        private async void Open(string packId, int artIndex)
         {
             if (_busy) return;
 
@@ -509,7 +537,8 @@ namespace Emberfall.Presentation
 
                     SetStatus("");
                     PackOpenReceipt receipt = result.Receipt;
-                    _tear.Play(receipt, () => _reveal.Show(receipt), allowSkip: !firstGiftPack);
+                    _tear.Play(receipt, FaceSpriteOrNull(packId, artIndex),
+                               () => _reveal.Show(receipt), allowSkip: !firstGiftPack);
                     return;
                 }
 

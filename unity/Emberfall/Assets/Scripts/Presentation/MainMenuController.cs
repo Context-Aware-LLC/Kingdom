@@ -43,7 +43,9 @@ namespace Emberfall.Presentation
 
         private Label _shardBalance;
         private VisualElement _vaultDock;
+        private VisualElement _vaultArt;
         private Label _vaultPackCount;
+        private IPackArtProvider _vaultArtProvider;
         private Rect _lastSafeArea;
         private int _lastSafeAreaScreenWidth = -1;
         private int _lastSafeAreaScreenHeight = -1;
@@ -515,7 +517,9 @@ namespace Emberfall.Presentation
         private void BindVaultEntry()
         {
             _vaultDock = _root.Q<VisualElement>("vault-dock");
+            _vaultArt = _root.Q<VisualElement>(className: "mm-vault-art");
             _vaultPackCount = _root.Q<Label>("vault-pack-count");
+            _vaultArtProvider = ShopRuntime.PackArt ?? new PackArtProvider();
             _vaultDock?.AddToClassList("mm-vault-dock--hidden");
         }
 
@@ -531,6 +535,31 @@ namespace Emberfall.Presentation
 
             _vaultDock.EnableInClassList("mm-vault-dock--hidden", total <= 0);
             _vaultPackCount.text = total > 99 ? "× 99+" : $"× {total}";
+            if (total > 0) RenderVaultArt(snapshot);
+        }
+
+        /// <summary>Use one pack the player actually owns for the socket miniature. The fallback
+        /// image remains in USS if that product has no declared art or the shader cannot render;
+        /// a missing optional treatment must never turn the navigation target blank.</summary>
+        private void RenderVaultArt(
+            Emberfall.Net.Client.Collection.CollectionSnapshot snapshot)
+        {
+            if (_vaultArt == null || _vaultArtProvider == null) return;
+
+            string packId = null;
+            foreach (var line in snapshot.Packs)
+            {
+                if (line.Value <= 0) continue;
+                if (packId == null || string.CompareOrdinal(line.Key, packId) < 0)
+                    packId = line.Key;
+            }
+            if (packId == null) return;
+
+            _vaultArtProvider.LoadPackArt(packId, pieces =>
+            {
+                if (_vaultArt == null || pieces == null || pieces.Count == 0) return;
+                PackWrapperBaker.ApplyTo(_vaultArt, pieces[0].Sprite);
+            });
         }
 
         private void BindLeaderboard()
