@@ -135,6 +135,20 @@
     letter-spacing: 1px;
 }
 
+/* The illustration. flex-grow takes the space between the rarity line and the name, which is
+   exactly the hole the card shape already had. `scale-and-crop` rather than `scale-to-fit`: card
+   art is drawn to its own aspect and the tile is 0.7, so fitting would letterbox every card
+   against the surface colour. Painted from script — a card whose art has not been generated yet
+   keeps this rule's background and simply reads as a card without a picture. */
+.reveal-card__art {
+    flex-grow: 1;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-2);
+    background-color: rgba(0, 0, 0, 0.25);
+    border-radius: var(--space-1);
+    -unity-background-scale-mode: scale-and-crop;
+}
+
 .reveal-card__name {
     color: var(--ink-1);
     font-size: var(--type-label);

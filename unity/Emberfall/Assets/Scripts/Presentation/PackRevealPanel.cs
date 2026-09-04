@@ -37,6 +37,14 @@ namespace Emberfall.Presentation
         private readonly Action _onDone;
 
         private ICardDatabase _cards;
+        private IArtProvider _art;
+
+        /// <summary>Bumped by every <see cref="Show"/>. An art callback carrying a stale generation
+        /// is painting onto a card that has already been cleared off the row — the same version
+        /// guard <see cref="CardWall"/> keeps, and for the same reason: <see cref="IArtProvider"/>
+        /// may answer synchronously or frames later, and a second pack opened during the wait would
+        /// otherwise take the first one's illustrations.</summary>
+        private int _generation;
 
         /// <param name="root">Any element the <c>reveal-*</c> tree sits under.</param>
         /// <param name="onDone">What Done does after hiding. Null for a host that owns its own
@@ -68,6 +76,7 @@ namespace Emberfall.Presentation
         {
             if (receipt == null || !IsBound) return;
             _cardRow.Clear();
+            _generation++;
             if (_title != null) _title.text = TokenText.Pretty(receipt.PackId) + " opened";
             if (_summary != null)
                 _summary.text = receipt.Awards.Count == 1
@@ -95,6 +104,8 @@ namespace Emberfall.Presentation
 
         private VisualElement BuildRevealCard(PackCardAward award)
         {
+            CardDefinition definition = Definition(award.CardId);
+
             var card = new VisualElement();
             card.AddToClassList("reveal-card");
             card.AddToClassList(RarityClass(award.Rarity));
@@ -107,7 +118,19 @@ namespace Emberfall.Presentation
             rarity.AddToClassList("reveal-card__rarity");
             card.Add(rarity);
 
-            var name = new Label(CardName(award.CardId));
+            // THE ILLUSTRATION, not a baked card face. CardFaceBaker photographs the whole printed
+            // front — frame, stats, rules text — off a 3D rig, and it needs that rig, a capture
+            // camera and the CardCapture layer present in the scene. The reveal is its own card
+            // shape drawn in USS (border by rarity, rarity line, name), so it wants the picture
+            // alone; asking for a baked face would bind this host-agnostic panel to a scene it may
+            // not be in. RETIREMENT TRIGGER: if the reveal is ever restyled to show real printed
+            // cards, this is where it swaps to CardFaceBaker — and PackVault's scene grows a rig.
+            var art = new VisualElement();
+            art.AddToClassList("reveal-card__art");
+            card.Add(art);
+            PaintArt(art, definition);
+
+            var name = new Label(definition != null ? definition.Name : $"Card {award.CardId}");
             name.AddToClassList("reveal-card__name");
             card.Add(name);
 
@@ -125,20 +148,45 @@ namespace Emberfall.Presentation
             return card;
         }
 
-        private string CardName(int cardId)
+        /// <summary>The printed card behind an award, or null when the database will not open. Both
+        /// the name and the illustration come off it, so one lookup answers both — and a card that
+        /// cannot be resolved falls back to "Card {id}" rather than pretending to be a name.</summary>
+        private CardDefinition Definition(int cardId)
         {
             try
             {
                 _cards ??= CardDatabaseLoader.Load();
-                if (_cards.TryGet(cardId, out CardDefinition definition)) return definition.Name;
+                if (_cards.TryGet(cardId, out CardDefinition definition)) return definition;
             }
             catch (Exception ex)
             {
-                UnityEngine.Debug.LogWarning($"[PackReveal] card names unavailable: {ex.GetType().Name}: {ex.Message}");
+                UnityEngine.Debug.LogWarning($"[PackReveal] card database unavailable: {ex.GetType().Name}: {ex.Message}");
             }
-            // TokenText.Pretty turned a handle into a display name. A number has no prettier
-            // form, so the fallback says what it is rather than pretending to be a name.
-            return $"Card {cardId}";
+            return null;
+        }
+
+        /// <summary>
+        /// Paint one card's illustration, if it has one.
+        ///
+        /// <para><b>A card with no art is not a failure.</b> The element keeps its USS background and
+        /// the card reads as a card without a picture — the same posture <c>CardFaceBaker</c> takes,
+        /// because art lands per card and lags authoring by design.</para>
+        /// </summary>
+        private void PaintArt(VisualElement target, CardDefinition definition)
+        {
+            if (definition == null || string.IsNullOrEmpty(definition.ArtId)) return;
+
+#if UNITY_EDITOR
+            _art ??= new EditorArtProvider();
+#else
+            _art ??= new AddressableArtProvider();
+#endif
+            int generation = _generation;
+            _art.LoadArt(definition.ArtId, sprite =>
+            {
+                if (sprite == null || generation != _generation) return;
+                target.style.backgroundImage = new StyleBackground(sprite);
+            });
         }
 
         private static string RarityClass(Rarity rarity) => rarity switch
