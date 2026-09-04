@@ -1377,7 +1377,8 @@ namespace Emberfall.Presentation
         /// </summary>
         private void RefreshNewDeckPane()
         {
-            bool canGenerate = _menuCharacter != null && DefaultDeckGenerator.CanGenerate(_menuCharacter, _db);
+            bool canGenerate = _menuCharacter != null
+                               && DefaultDeckGenerator.CanGenerate(_menuCharacter, _db, _owned);
             _deckNewGenerated?.SetEnabled(canGenerate);
             if (_deckNewNote != null)
                 _deckNewNote.text = canGenerate

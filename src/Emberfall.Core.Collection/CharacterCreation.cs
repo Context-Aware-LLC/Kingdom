@@ -52,12 +52,16 @@ namespace Emberfall.Core.Collection
         /// <param name="deckId">Caller-supplied id for the starter deck.</param>
         /// <param name="rng">Seeded by the caller — the same seed produces the same starter deck. Unused when <paramref name="starter"/> is <see cref="StarterDeck.Blank"/>.</param>
         /// <param name="starter">Generated or blank (§2.11). The default is what the first character always gets.</param>
+        /// <param name="owned">
+        /// What this account owns, so a generated starter deck is one it can actually queue with
+        /// (L6). Null means "ownership unknown, do not constrain" — see <see cref="DefaultDeckGenerator"/>.
+        /// </param>
         /// <exception cref="ArgumentException">The pairing is invalid (see <see cref="Character.IsValidPairing"/>).</exception>
         /// <exception cref="DeckGenerationException">The pool cannot supply a legal 30.</exception>
         public static Character Create(
             ICharacterStore characterStore, IDeckStore deckStore, ICardDatabase db, DeterministicRandom rng,
             string characterId, string name, CardClass primary, CardClass secondary, string deckId,
-            StarterDeck starter = StarterDeck.Generated)
+            StarterDeck starter = StarterDeck.Generated, IOwnedCardCounts? owned = null)
         {
             if (characterStore == null) throw new ArgumentNullException(nameof(characterStore));
             if (deckStore == null) throw new ArgumentNullException(nameof(deckStore));
@@ -76,7 +80,7 @@ namespace Emberfall.Core.Collection
             // thin to generate 30 can still hold a deck you build by hand.
             var deck = starter == StarterDeck.Blank
                 ? NewEmptyDeck(characterId, deckId)
-                : DefaultDeckGenerator.Generate(character, db, rng, deckId, name + " Starter");
+                : DefaultDeckGenerator.Generate(character, db, rng, deckId, name + " Starter", owned);
 
             deckStore.Save(deck);
             character.DefaultDeckId = deck.Id;

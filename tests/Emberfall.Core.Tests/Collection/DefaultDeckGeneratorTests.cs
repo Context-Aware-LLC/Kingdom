@@ -16,6 +16,14 @@ namespace Emberfall.Core.Tests.Collection
     /// output passes L1-L5, the curve is actually biased cheap, and the same seed produces the same
     /// deck. The fourth — a thin pool fails loudly — is the one that cannot be provoked from the live
     /// set today, so it gets a deliberately starved database.</para>
+    ///
+    /// <para><b>The fifth arrived from a live failure (2026-09-03): the deck has to be one the
+    /// player can QUEUE with.</b> Passing L1-L5 is not that. The generator drew from the whole
+    /// collectible pool while a new account is granted only the CORE+EMBERFALL commons and rares,
+    /// so 31-46% of every pairing's draw weight was a card the player had never been given — and the
+    /// deck it handed them died at the socket with "deck rejected: You don't own Repair Drone."
+    /// <see cref="Every_Pairing_Generates_A_Deck_The_Signup_Grant_Can_Queue_With"/> is that failure
+    /// mode, asserted against the real grant rather than a literal.</para>
     /// </summary>
     [TestFixture]
     [Category("Collection")]
@@ -169,6 +177,98 @@ namespace Emberfall.Core.Tests.Collection
             // pool, this fails here rather than at a player's Create button.
             foreach (var character in AllPairings())
                 Assert.That(DefaultDeckGenerator.CanGenerate(character, LiveCardSet.Db), Is.True, character.Name);
+        }
+
+        // ---- ownership: the deck has to be one this account can actually queue -----------
+
+        /// <summary>What a freshly signed-up account holds — one copy of each card the grant lists.</summary>
+        private static OwnedCardCounts SignupGrant()
+        {
+            var owned = new OwnedCardCounts();
+            OnboardingGrant.ApplyGrantedCards(OnboardingGrant.Resolve(LiveCardSet.Db), owned);
+            return owned;
+        }
+
+        [Test]
+        public void Every_Pairing_Generates_A_Deck_The_Signup_Grant_Can_Queue_With()
+        {
+            // THE failure mode, not a property. A starter deck that is legal but unowned is rejected
+            // by the server at match start, which is the furthest possible point from where it was
+            // built and the one place the player can do nothing about it.
+            var owned = SignupGrant();
+
+            foreach (var character in AllPairings())
+            {
+                var deck = DefaultDeckGenerator.Generate(character, LiveCardSet.Db, Rng(), "deck-1", null, owned);
+                var queue = QueueEligibility.Check(deck, character, LiveCardSet.Db, owned);
+
+                Assert.That(queue.IsEligible, Is.True, $"{character.Name}: {queue.Reason}");
+            }
+        }
+
+        [Test]
+        public void No_Entry_Exceeds_The_Copies_The_Account_Owns()
+        {
+            // The cap is min(format cap, copies held), so a common owned once may appear once even
+            // though L2 would allow two. Asserted per entry rather than trusting the validator, since
+            // the validator is the thing this generator has to satisfy.
+            var owned = SignupGrant();
+            var character = Rotbloom();
+
+            var deck = DefaultDeckGenerator.Generate(character, LiveCardSet.Db, Rng(7), "deck-1", null, owned);
+
+            foreach (var entry in deck.Entries)
+                Assert.That(entry.Count, Is.LessThanOrEqualTo(owned.CopiesOwned(entry.CardId)),
+                    $"card {entry.CardId}: drew {entry.Count}, owns {owned.CopiesOwned(entry.CardId)}");
+        }
+
+        [Test]
+        public void A_Null_Ownership_Record_Still_Means_Do_Not_Constrain()
+        {
+            // The reading IOwnedCardStore.Load's null carries everywhere else: unknown, not empty.
+            // Soak runs, bots and tests generate against no record and must keep the whole pool —
+            // and the two calls must agree, or "unknown" would quietly mean two different pools.
+            var character = Rotbloom();
+
+            var implicitNull = DefaultDeckGenerator.Generate(character, LiveCardSet.Db, Rng(5), "deck-1");
+            var explicitNull = DefaultDeckGenerator.Generate(character, LiveCardSet.Db, Rng(5), "deck-1", null, null);
+
+            Assert.That(explicitNull.Entries.Select(e => (e.CardId, e.Count)),
+                Is.EqualTo(implicitNull.Entries.Select(e => (e.CardId, e.Count))));
+            var grant = SignupGrant();
+            Assert.That(implicitNull.Entries.Any(e => grant.CopiesOwned(e.CardId) == 0), Is.True,
+                "The unconstrained draw should still reach cards the signup grant does not include — " +
+                "if it no longer can, this test has stopped guarding anything.");
+        }
+
+        [Test]
+        public void An_Account_That_Owns_Too_Little_Is_Refused_Up_Front_And_Says_Why()
+        {
+            // The create affordance asks CanGenerate before offering "Generated", so an ownership
+            // shortfall has to answer false there rather than throwing halfway through creation —
+            // and the message has to name ownership, or the reader goes hunting in the card data.
+            var character = Rotbloom();
+            var thin = new OwnedCardCounts();
+            foreach (var def in LiveCardSet.Collectible(CardClass.GRAVEKEEP).Take(5))
+                thin.Set(def.Id, 1);
+
+            Assert.That(DefaultDeckGenerator.CanGenerate(character, LiveCardSet.Db, thin), Is.False);
+            Assert.That(DefaultDeckGenerator.CanGenerate(character, LiveCardSet.Db), Is.True,
+                "The same pairing generates fine unconstrained — the shortfall is ownership, not the pool.");
+
+            var ex = Assert.Throws<DeckGenerationException>(
+                () => DefaultDeckGenerator.Generate(character, LiveCardSet.Db, Rng(), "deck-1", null, thin));
+            Assert.That(ex!.Message, Does.Contain("OWNERSHIP"));
+        }
+
+        [Test]
+        public void An_Empty_Ownership_Record_Draws_Nothing_Rather_Than_Everything()
+        {
+            // Present-and-empty means "owns nothing", which is a different statement from null. A
+            // generator that folded the two together would hand the full pool to the one account that
+            // provably cannot play any of it.
+            Assert.That(DefaultDeckGenerator.CanGenerate(Rotbloom(), LiveCardSet.Db, new OwnedCardCounts()),
+                Is.False);
         }
 
         [Test]
