@@ -286,7 +286,7 @@ namespace Emberfall.Core.Cards
 
                 string prefix = TriggerMarker(rule.Activation) +
                     CostScope(rule.Condition, costPrefix) +
-                    ConditionPrefix(rule.Condition) + LifetimePrefix(rule.Lifetime);
+                    ConditionPrefix(rule.Condition) + LifetimePrefix(rule.Lifetime, rule.Activation);
                 if (groupActions.Count > 0 && prefix != groupPrefix)
                 {
                     lines.Add(Line(groupPrefix, JoinActions(groupActions, pool, groupPronoun)));
@@ -909,14 +909,45 @@ namespace Emberfall.Core.Cards
         };
 
         /// <summary>Renders the clause bounding how long a rule applies, ahead of its effects.</summary>
-        private static string LifetimePrefix(RuleLifetime lifetime)
+        /// <remarks>
+        /// <b>The same lifetime node reads differently on an aura, because it counts a different
+        /// thing.</b> On a triggered rule <c>uses</c> is FIRINGS — the count falls when the rule
+        /// resolves. An aura never resolves; it is aged one turn at a time by its controller's turn
+        /// end (<c>CommandProcessor.ExpireControllerAuras</c>). One field, two clocks, and the text
+        /// has to name the right one: "For its next 3 uses" on a continuous effect would promise a
+        /// player three firings of something that never fires.
+        ///
+        /// <para>PERMANENT prints nothing on an aura. "Aura: " has already told the player it is
+        /// continuous, and a permanent aura simply has no end to announce — the same empty prefix a
+        /// minion's SOURCE_BOUND aura gets, which is right, because to a player they read the same:
+        /// it is on until something takes it away.</para>
+        /// </remarks>
+        private static string LifetimePrefix(RuleLifetime lifetime, RuleActivation activation)
         {
+            if (activation is AuraActivation) return AuraLifetimePrefix(lifetime);
             if (lifetime is SourceBoundLifetime || lifetime is OneShotLifetime) return "";
             if (lifetime is PermanentLifetime) return "Permanently, ";
             if (lifetime is FiniteLifetime finite)
             {
                 if (finite.Uses <= 0) throw Requires("a positive finite lifetime");
                 return finite.Uses == 1 ? "For its next use, " : $"For its next {finite.Uses} uses, ";
+            }
+            throw UnsupportedNode("lifetime", lifetime);
+        }
+
+        /// <summary>The duration clause for a continuous effect, counted in TURNS.</summary>
+        private static string AuraLifetimePrefix(RuleLifetime lifetime)
+        {
+            // A minion's aura, and a spell aura with no declared end. Neither has a duration to
+            // print: the first ends when the minion leaves, the second does not end.
+            if (lifetime is SourceBoundLifetime || lifetime is PermanentLifetime) return "";
+            // One tick, taken at the caster's own turn end — so it lasts exactly the turn it was
+            // cast on, which is what a player means by "this turn".
+            if (lifetime is OneShotLifetime) return "This turn, ";
+            if (lifetime is FiniteLifetime finite)
+            {
+                if (finite.Uses <= 0) throw Requires("a positive finite lifetime");
+                return finite.Uses == 1 ? "This turn, " : $"For {finite.Uses} turns, ";
             }
             throw UnsupportedNode("lifetime", lifetime);
         }

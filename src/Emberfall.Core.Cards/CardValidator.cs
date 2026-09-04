@@ -197,10 +197,13 @@ namespace Emberfall.Core.Cards
 
                 if (rule.Activation is AuraActivation && !AuraCapabilities.Supports(def.Type, rule))
                     Err("C21-AURA-UNSUPPORTED", $"{prefix}.activation",
-                        "AURA currently supports only unsilenced board-minion MODIFY_STATS rules with " +
-                        "ALWAYS, SOURCE_BOUND and automatic minion selectors. A tribe filter is " +
-                        "allowed; a damaged filter is not, because a stat aura writes the health it " +
-                        "would be selecting on.");
+                        "AURA supports MODIFY_STATS rules with ALWAYS and an automatic minion " +
+                        "selector, on a board MINION with SOURCE_BOUND, or on a SPELL with " +
+                        "ONE_SHOT, FINITE or PERMANENT — a spell must declare its own end because " +
+                        "it does not stay on the board to bound one. SELF and BESIDE are minion-only: " +
+                        "a spell's aura has no board position for them to resolve against. A tribe " +
+                        "filter is allowed; a damaged filter is not, because a stat aura writes the " +
+                        "health it would be selecting on.");
 
                 // C9 — stable, card-scoped identity. The same syntax as a card id keeps rule ids
                 // portable across JSON, logs and deterministic snapshots.

@@ -7,9 +7,9 @@ namespace Emberfall.Core.Cards
     {
         public static bool Supports(CardType sourceType, RuleDefinition rule)
         {
-            if (sourceType != CardType.MINION || !(rule.Activation is AuraActivation) ||
-                !(rule.Condition is AlwaysCondition) || !(rule.Lifetime is SourceBoundLifetime) ||
+            if (!(rule.Activation is AuraActivation) || !(rule.Condition is AlwaysCondition) ||
                 !(rule.Action is ModifyStatsAction)) return false;
+            if (!LifetimeFits(sourceType, rule.Lifetime)) return false;
 
             var target = ((ModifyStatsAction)rule.Action).Target;
             // An aura is a continuous fold over a whole set, so the plain sweep is the only
@@ -19,7 +19,38 @@ namespace Emberfall.Core.Cards
                 target.Binding.Length != 0 || target.DistinctFrom.Length != 0) return false;
             if (!IsFoldableFilter(target.Filter)) return false;
 
-            return IsAutomaticMinionSet(target.Selector);
+            return IsAutomaticMinionSet(target.Selector, sourceType);
+        }
+
+        /// <summary>
+        /// How long an aura lasts, as a function of WHAT IS CASTING IT.
+        ///
+        /// <para>This is the whole of the spell-aura widening: a minion's aura lives exactly as long
+        /// as the minion is on the board, and a spell — which resolves and is gone — must instead
+        /// declare its own end. Rather than mint a lifetime node for a duration the model already
+        /// expresses, the existing carrierless-observer lifetimes carry it, and the same three that
+        /// <see cref="RuleLifetimeCapabilities.Allows"/> admits for every other ongoing spell rule
+        /// are admitted here. There is deliberately no fourth case: a WEAPON or HERO_POWER aura has
+        /// no runtime that folds it, so it fails closed like any unlisted pair.</para>
+        ///
+        /// <para>The three read, on an aura: ONE_SHOT is "this turn", FINITE n is "n of your turns",
+        /// PERMANENT is the rest of the game. They mean turns rather than firings because an aura
+        /// never resolves — see the tick site in <c>CommandProcessor.ApplyEndTurn</c>, which is the
+        /// only thing that ages one.</para>
+        /// </summary>
+        private static bool LifetimeFits(CardType sourceType, RuleLifetime lifetime)
+        {
+            if (lifetime == null) return false;
+            switch (sourceType)
+            {
+                case CardType.MINION:
+                    return lifetime is SourceBoundLifetime;
+                case CardType.SPELL:
+                    return lifetime is OneShotLifetime || lifetime is PermanentLifetime ||
+                           lifetime is FiniteLifetime finite && finite.Uses > 0;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
@@ -83,9 +114,20 @@ namespace Emberfall.Core.Cards
         /// hero-inclusive domain stays out because a stat aura on a hero means nothing;
         /// <c>TriggerSource</c> stays out because a continuous fold has no trigger to read.</para>
         /// </summary>
-        private static bool IsAutomaticMinionSet(string selector)
+        private static bool IsAutomaticMinionSet(string selector, CardType sourceType)
         {
             if (!TargetQueries.TryGet(selector, out TargetQuery query)) return false;
+
+            // SELF and BESIDE are POSITIONAL — they answer "the source" and "next to the source",
+            // which only mean something for a thing standing in a board slot. A spell's aura is
+            // carried by an OngoingEffectInstance, which has an id and a controller and no position
+            // at all, so `Targeting` resolves either of them to the EMPTY SET and reports no error.
+            // That is precisely the silent shape the 2026-08-20 collapse onto one relation existed
+            // to delete — an aura that validates and affects nobody — so refuse them here, where the
+            // refusal is visible, rather than letting the resolver return nothing.
+            if (query.Relation == SourceRelation.Self || query.Relation == SourceRelation.Beside)
+                if (sourceType != CardType.MINION) return false;
+
             // The source itself, wherever it is. SELF states no criteria — the relation names the
             // entity — so there is nothing else on the query to check.
             if (query.Relation == SourceRelation.Self) return true;

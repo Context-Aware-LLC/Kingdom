@@ -29,20 +29,40 @@ namespace Emberfall.Core
                     foreach (RuleDefinition rule in definition.Rules)
                     {
                         if (!AuraCapabilities.Supports(definition.Type, rule)) continue;
-                        Apply(state, db, source, (ModifyStatsAction)rule.Action);
+                        Apply(state, db, source.Id, source.Controller, (ModifyStatsAction)rule.Action);
                     }
+                }
+            }
+
+            // Then the carrierless spell auras, after every board minion so that a minion aura and a
+            // spell aura landing on the same target stack in a fixed order. `OngoingEffects` is
+            // append-ordered and its ids are monotonic, which is the same stable tie-breaker the
+            // trigger walk uses — no separate sort is needed to make this replay-stable.
+            //
+            // Note what is NOT here: an expiry branch. A spell aura ends by being REMOVED from
+            // OngoingEffects (CommandProcessor.ApplyEndTurn) and this fold simply stops finding it.
+            // RemoveAuras above has already stripped its enchantments this pass, so the effect
+            // reverses itself with no un-apply path anywhere.
+            foreach (OngoingEffectInstance effect in state.OngoingEffects)
+            {
+                CardDefinition definition = db.Get(effect.SourceDefinitionId);
+                foreach (RuleDefinition rule in definition.Rules)
+                {
+                    if (rule.Id.Value != effect.RuleId) continue;
+                    if (!AuraCapabilities.Supports(definition.Type, rule)) continue;
+                    Apply(state, db, effect.Id, effect.Controller, (ModifyStatsAction)rule.Action);
                 }
             }
         }
 
-        private static void Apply(GameState state, ICardDatabase db, CardInstance source,
-            ModifyStatsAction action)
+        private static void Apply(GameState state, ICardDatabase db, InstanceId sourceId,
+            PlayerId controller, ModifyStatsAction action)
         {
-            foreach (CardInstance target in Targets(state, db, source, action))
+            foreach (CardInstance target in Targets(state, db, sourceId, controller, action))
             {
                 target.Enchantments.Add(new Enchantment
                 {
-                    Source = source.Id,
+                    Source = sourceId,
                     AttackDelta = action.AttackDelta,
                     HealthDelta = action.HealthDelta,
                     IsAura = true,
@@ -68,11 +88,17 @@ namespace Emberfall.Core
         /// land WITHIN one target is fixed by the source loop in <see cref="Recompute"/>, not by
         /// this one.</para>
         /// </summary>
+        /// <param name="sourceId">
+        /// The aura's provenance — a board minion's instance id, or the id of the
+        /// <see cref="OngoingEffectInstance"/> a spell left behind. Both are <see cref="InstanceId"/>
+        /// and <see cref="Enchantment.Source"/> is already one, so a spell aura needs NO new field on
+        /// any state type, and therefore moves neither the canonical hash nor the codec.
+        /// </param>
         private static IEnumerable<CardInstance> Targets(GameState state, ICardDatabase db,
-            CardInstance source, ModifyStatsAction action)
+            InstanceId sourceId, PlayerId controller, ModifyStatsAction action)
         {
             foreach (TargetCandidate candidate in Targeting.ResolutionCandidates(
-                         state, db, source.Controller, action.Target, action, source.Id))
+                         state, db, controller, action.Target, action, sourceId))
                 if (candidate.Card != null)
                     yield return candidate.Card;
         }

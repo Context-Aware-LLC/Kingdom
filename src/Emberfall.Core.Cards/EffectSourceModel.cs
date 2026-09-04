@@ -96,6 +96,12 @@ namespace Emberfall.Core.Cards
                     Trigger.ON_TURN_END,
                     Trigger.ON_FRIENDLY_SUMMON,
                     Trigger.ON_SPELL_CAST,
+                    // AURA is admitted here to give a SPELL's aura a carrier, and it is the one
+                    // member of this set that is never RAISED. No `RaiseObservers` site passes
+                    // Trigger.AURA, so admitting it buys persistence — a lifetime, a controller and
+                    // an id that survive the spell — without ever enqueuing an effect. The fold that
+                    // reads it is AuraEngine.Recompute, which walks OngoingEffects directly.
+                    Trigger.AURA,
                 },
             };
 

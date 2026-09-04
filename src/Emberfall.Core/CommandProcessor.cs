@@ -297,9 +297,69 @@ namespace Emberfall.Core
             foreach (var m in activePs.Board)
                 EffectList.ExpireControllerTurnEnd(m.Effects);
 
+            // A spell aura ages on the SAME clock as the turn-scoped effects just above, and for the
+            // same reason: it costs a FULL turn of its controller's, never a partial one. Filtering
+            // to the ending player is what makes `uses: 3` mean three of YOUR turns — both seats are
+            // walked at every turn boundary, so an unfiltered tick would spend a duration in a turn
+            // and a half and the number on the card would be a lie.
+            //
+            // This is the ONLY thing that ages an aura. `uses` is decremented from the resolution
+            // path (EffectInterpreter.ConsumeOngoingEffect) for every other ongoing rule, and an
+            // aura never resolves — it is folded, continuously, and Trigger.AURA has no raise site —
+            // so without this site a FINITE aura would be a PERMANENT one wearing a number.
+            if (ExpireControllerAuras(state, activePs.Id, buf))
+                AuraEngine.Recompute(state, _db);
+
             var nextSeat = activeSeat == 0 ? 1 : 0;
             state.ActivePlayer = state.Players[nextSeat].Id;
             StartTurnSequence(state, state.ActivePlayer, buf);
+        }
+
+        /// <summary>
+        /// Ages every AURA ongoing effect controlled by <paramref name="controller"/> by one turn,
+        /// dropping the ones that reach zero. Returns whether the set changed, so the caller only
+        /// pays for a fold when one actually expired.
+        /// </summary>
+        /// <remarks>
+        /// <b>Only AURA effects are aged here.</b> Every other ongoing rule ticks when it resolves,
+        /// so ticking one here as well would spend two uses for one firing.
+        ///
+        /// <para>The removal is the whole of expiry. <c>DerivedStats.RemoveAuras</c> is
+        /// provenance-blind — it strips every aura enchantment on every pass and the fold re-lays
+        /// them from live sources — so an aura that is gone from this list simply stops being
+        /// re-applied. There is no un-apply path to write, and deliberately none to maintain.</para>
+        /// </remarks>
+        private bool ExpireControllerAuras(GameState state, PlayerId controller, EventBuffer buf)
+        {
+            bool changed = false;
+            for (int i = state.OngoingEffects.Count - 1; i >= 0; i--)
+            {
+                OngoingEffectInstance effect = state.OngoingEffects[i];
+                if (!effect.Controller.Equals(controller)) continue;
+                if (!IsAuraEffect(effect)) continue;
+
+                if (!RuleLifetimeCapabilities.ConsumeOngoingEffect(effect.Lifetime,
+                        effect.RemainingUses, out int? remainingUses))
+                {
+                    effect.RemainingUses = remainingUses;
+                    continue;
+                }
+                effect.RemainingUses = remainingUses;
+                buf.Emit(GameEventKind.OngoingEffectExpired, source: effect.Id);
+                state.OngoingEffects.RemoveAt(i);
+                changed = true;
+            }
+            return changed;
+        }
+
+        /// <summary>Whether a carrierless effect is the aura kind, read off its authored rule.</summary>
+        private bool IsAuraEffect(OngoingEffectInstance effect)
+        {
+            CardDefinition definition = _db.Get(effect.SourceDefinitionId);
+            foreach (RuleDefinition rule in definition.Rules)
+                if (rule.Id.Value == effect.RuleId)
+                    return RuleSemantics.TriggerOf(rule) == Trigger.AURA;
+            return false;
         }
 
         private void ApplyConcede(GameState state, ConcedeIntent c, EventBuffer buf)

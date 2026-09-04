@@ -41,6 +41,7 @@ namespace Emberfall.Core
         public int CreateOngoingEffects(CardDefinition spell, PlayerId controller)
         {
             int created = 0;
+            bool createdAura = false;
             for (int i = 0; i < spell.Rules.Count; i++)
             {
                 RuleDefinition rule = spell.Rules[i];
@@ -56,7 +57,19 @@ namespace Emberfall.Core
                 _state.OngoingEffects.Add(instance);
                 _buf.Emit(GameEventKind.OngoingEffectCreated, source: instance.Id);
                 created++;
+                createdAura |= trigger == Trigger.AURA;
             }
+
+            // An aura begins folding the moment it exists, and NOTHING ELSE ON THIS PATH WILL FOLD
+            // IT. Every other way a source appears goes on to move the board — a summon, a death —
+            // and the aura fold rides along on that. A spell that only creates an ongoing effect
+            // changes no zone and kills nobody, so it reaches no existing recompute site, and the
+            // aura would sit inert until something unrelated happened to disturb the board.
+            //
+            // The failure this prevents is asymmetric and would have been very hard to read: a
+            // minion summoned AFTER the spell gets buffed (its own summon recomputes), while the
+            // minions that were already standing there do not. Half a working card.
+            if (createdAura) AuraEngine.Recompute(_state, _db);
             return created;
         }
 
