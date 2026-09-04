@@ -35,11 +35,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 20a7ca0fd3b8a9a4781b6229d1a0b5d8
-    m_Address: ui/frame_epic
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 23c42332aa507fb48bfdbb99665010e2
     m_Address: materials/Wood
     m_ReadOnly: 0
@@ -50,11 +45,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3268a7e202c268741874aa7e3f21d022
-    m_Address: ui/frame_legendary
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 361d1e44f342b58459b738cdbeb5e3ce
     m_Address: ui/Orb_Confluence
     m_ReadOnly: 0
@@ -62,11 +52,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 467ef0cab3a3404db7b6336508fe1b72
     m_Address: ui/socket_stat
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4995c8a52bd79f04796b75112514cdb5
-    m_Address: ui/frame_common_spell
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -105,18 +90,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6655ee59b2a438248aff6468bbedcb03
-    m_Address: ui/frame_rare_spell
+  - m_GUID: 64e81dc0c85219242ab77fdd070c609e
+    m_Address: ui/HeroPower_IronEmber
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6e0d23c5f7ab48bfa96410e8c4d19b14
     m_Address: ui/ui_button_secondary_slate
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6f1e6a3119a3bed44952a895206ce486
-    m_Address: ui/frame_epic_spell
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -180,11 +160,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a583df270921f774cb11d34aee2fcdb4
-    m_Address: ui/frame_common
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ab4e54501ebe4781ba0b3d37290aa542
     m_Address: materials/M_Frost
     m_ReadOnly: 0
@@ -230,11 +205,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d4a3c736ffdf81d4dab9e57a5b4ad9c5
-    m_Address: ui/frame_legendary_spell
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d7f26e4d524b0a54792b43bb5cd8678b
     m_Address: materials/M_Dissolve
     m_ReadOnly: 0
@@ -262,11 +232,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6444f22790c48b2ae717e6eb2aa444d
     m_Address: ui/ui_scroll_fade
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f8a5e05cc5fd825448ad3bccbc7fb7dd
-    m_Address: ui/frame_rare
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

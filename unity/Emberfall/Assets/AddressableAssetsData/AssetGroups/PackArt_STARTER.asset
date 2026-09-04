@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: PackArt_STARTER
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: PackArt_STARTER
+  m_GUID: cd054937844b07744a858b48b69d2c72
+  m_SerializeEntries:
+  - m_GUID: 1c5019be850a49e68ba506e7f2a3113a
+    m_Address: pack_art/pack_starter_02_aric_open_gate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 50f6c2a6316f480596ed1bc79a027638
+    m_Address: pack_art/pack_starter_01_kira_first_muster
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5f02cc4c1fb840a39568836e21d7b02e
+    m_Address: pack_art/pack_starter_05_seraphine_whisper_network
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7b63cda6924d44c7b568db770da45ecc
+    m_Address: pack_art/STARTER.manifest
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 868755a3a13f4a5bb976d486dbca2687
+    m_Address: pack_art/pack_starter_03_aldric_stormwall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc0471e2666645deaf27036802898c72
+    m_Address: pack_art/pack_starter_04_solen_new_growth
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 6ba0beb8565834b449bad3e16f1f9b99, type: 2}
+    - {fileID: 11400000, guid: 1b8c81042cf121c4287e6b68ca3a0b90, type: 2}
