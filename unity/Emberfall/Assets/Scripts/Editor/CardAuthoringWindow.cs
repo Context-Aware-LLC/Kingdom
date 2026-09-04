@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Emberfall.Core.Cards;
@@ -316,25 +317,35 @@ namespace Emberfall.Editor
             for (int i = 0; i < _cards.Count; i++)
             {
                 var card = _cards[i];
-                // Searches the HANDLE and the name — the two things a human can actually type.
-                // The number is shown but not searched; nobody remembers 1049.
+                // Searches the HANDLE, the name, and the ID. The id is in because it is the only
+                // field that is unique — when two rows print the same name, typing the number is
+                // the only way to reach a specific one, and until 2026-09-04 there was no way at
+                // all. Substring rather than exact so a partial number narrows as you type.
                 if (!string.IsNullOrEmpty(_search)
                     && card.Handle.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0
-                    && card.Name.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0)
+                    && card.Name.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0
+                    && card.Id.ToString(CultureInfo.InvariantCulture)
+                        .IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0)
                     continue;
 
                 var (core, lint) = Validate(card);
                 string badge = BadgeFor(core, lint);
                 string dirtyMark = _dirtyIds.Contains(card.Id) ? "*" : "";
                 var style = i == _selected ? EditorStyles.helpBox : GUI.skin.label;
-                // The display NAME alone (Sam, 2026-08-23). The number and the handle are both
-                // identifiers, and neither is what a designer scanning this list is looking for —
-                // they are on the row itself, under Identity, once a card is selected.
+                // The display name AND THE ID (Sam, 2026-09-04, reversing "name alone" of
+                // 2026-08-23). The earlier reasoning was that a number is not what a designer
+                // scanning this list is looking for, which is true right up until two rows print
+                // the same name — and then the name alone is not an identifier at all and the list
+                // cannot tell them apart.
                 //
-                // Two rows CAN print the same name and this list cannot tell them apart; that is
-                // the same lossiness CardNameIndex reports rather than resolves. Search still
-                // matches the handle, so a duplicate name stays reachable by typing the handle
-                // even though the handle is no longer shown.
+                // That is not hypothetical: it cost card 1029. `grave_custodian` was duplicated
+                // twice, so three rows read "Gravekeep Custodian", the ORIGINAL was deleted instead
+                // of the copies, and a shipped id silently became 1192 — orphaning every saved deck
+                // and ownership row holding 1029. The delete dialog named the handle and id
+                // correctly; the LIST is where the wrong row got picked.
+                //
+                // The id is also the only unique field, so showing it is what makes the search box
+                // above worth pointing at a number.
                 // Only OPEN comments mark a row. A resolved one is a record, and a marker that
                 // never clears degrades to "this card has ever been discussed", which nobody can
                 // act on. Same rule the web grid's badge follows.
@@ -346,7 +357,7 @@ namespace Emberfall.Editor
                     if (open > 0) commentMark = $"  ({open})";
                 }
 
-                if (GUILayout.Button($"{badge} {card.Name}{dirtyMark}{commentMark}", style))
+                if (GUILayout.Button($"{badge} {card.Name}{dirtyMark} · {card.Id}{commentMark}", style))
                     _selected = i;
             }
             EditorGUILayout.EndScrollView();
