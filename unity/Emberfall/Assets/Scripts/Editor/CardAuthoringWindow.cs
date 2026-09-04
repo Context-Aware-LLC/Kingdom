@@ -469,9 +469,9 @@ namespace Emberfall.Editor
             _editScroll = EditorGUILayout.BeginScrollView(_editScroll);
 
             // The face first: what the card SAYS, and the art it says it over. Everything below is
-            // the machinery behind it. Authoring reads top-down as a result, and the text field —
-            // the authored source of the rules since the 2026-08-16 reversal — is no longer the
-            // last thing on the page.
+            // the machinery behind it, so authoring reads top-down. The text itself is DERIVED from
+            // that machinery and read-only here (see DrawCardText) — it leads the pane as the thing
+            // being aimed at, not as the first thing to fill in.
             EditorGUI.BeginChangeCheck();
 
             EditorGUILayout.LabelField("Text", EditorStyles.boldLabel);
@@ -607,46 +607,102 @@ namespace Emberfall.Editor
         }
 
         /// <summary>
-        /// The authored card face, plus what the rules under it read as when the two disagree.
+        /// The card face, DERIVED from the keywords and rules above it and shown read-only.
         /// </summary>
         /// <remarks>
-        /// This field used to be a read-only <c>generatedText</c> label — the author watched the
-        /// sentence appear and could not touch it. Under the 2026-08-16 text-direction reversal the
-        /// text is the authored thing and the rendering is the check, so the two swap places: the
-        /// field is editable and the generator's output only appears when it disagrees.
+        /// <b>In this window the text is not authored — it is rendered.</b> C26 compares
+        /// <see cref="CardDefinition.Text"/> to <c>CardTextGenerator.Generate</c> with
+        /// <see cref="StringComparison.Ordinal"/>, so the only value the field may legally hold is
+        /// the generated one. A hand-typed field whose sole correct value is computable is not an
+        /// input; it is a quiz with one answer, and every way of getting it wrong — a trailing
+        /// space, a doubled space after a period, a keyword sentence that belongs in front, a rule
+        /// left over from the last version of the card — fails identically and looks identical on
+        /// screen. Sam, 2026-09-04, after an <c>AEGIS</c> carrier keyword put one word at the front
+        /// of a sentence he had already matched character for character: <i>"if this thing is going
+        /// to work this way and refuse to accept a card's text for reasons as nitty gritty as
+        /// punctuation or word order and leave 0 wiggle room for an author to manipulate the
+        /// text..... just make it fill out the field."</i>
         ///
-        /// <para>The "use it" button is the whole ergonomics of the reversal for a NEW card: author
-        /// the rules, take the rendering as a first draft, then edit the prose freely. What it is
-        /// NOT is a sync button — pressing it on an existing card overwrites a sentence somebody
-        /// wrote, which is why it sits behind a visible disagreement rather than running on save.</para>
+        /// <para>So the field fills itself on every repaint. This is a reversal of the window's half
+        /// of the 2026-08-16 text-direction change — which made the sentence the authored thing and
+        /// the rendering the check — and ONLY of the window's half. <b>The engine direction is
+        /// unchanged:</b> <c>text</c> is still the canonical field on disk, still what a player
+        /// reads, and C26 is still an exact-match error in CI. Nothing here waives a rule; it stops
+        /// asking a human to type a string the machine already knows.</para>
+        ///
+        /// <para><b>Unrenderable is the one case that still needs a person</b>, and it is now the
+        /// only thing this method can report. A rule shape with no phrasing cannot be derived from,
+        /// so the stale text is left exactly as it was and the box says to report the gap rather
+        /// than re-shape the card to fit — which is the whole point C26 was defending, and the only
+        /// signal that was ever worth an author's attention.</para>
+        ///
+        /// <para>Rendered through <c>SelectableLabel</c>, not a disabled <c>TextField</c>: a
+        /// disabled field cannot be selected, so its contents cannot be copied out of the window.
+        /// That is how the sentence gets into a bug report.</para>
+        ///
+        /// <para><b>RETIREMENT TRIGGER:</b> if rules are ever parsed FROM the sentence — the
+        /// forcing function named in <c>CardValidator</c>'s C26 block — the field becomes a real
+        /// input again and this method goes back to being a two-way editor.</para>
         /// </remarks>
         private void DrawCardText(EditableCard card)
         {
-            card.Text = EditorGUILayout.TextField("text", card.Text);
-
             var divergence = CardTextGenerator.Check(card.ToDefinition(), LiveDb(), out string expected);
-            if (divergence == CardTextDivergence.None) return;
 
             if (divergence == CardTextDivergence.Unrenderable)
             {
+                DrawDerivedText(card.Text);
                 EditorGUILayout.HelpBox(
-                    "C26: these rules are a shape with no phrasing, so 'text' cannot be checked against them.",
+                    "C26: these rules are a shape with no phrasing, so no text can be derived for them. " +
+                    "The text below is whatever was last saved. This is a grammar gap — report the " +
+                    "card rather than re-shaping it to fit.",
                     MessageType.Error);
                 return;
             }
 
-            EditorGUILayout.HelpBox(
-                divergence == CardTextDivergence.Orphaned
-                    ? "C26: this card has no keywords or rules, so it should carry no text."
-                    : $"C26: the rules read as \"{expected}\".",
-                MessageType.Error);
+            // Assigning outside a control means GUI.changed does not fire, so the enclosing change
+            // check will not mark the row unsaved on its own — and a row whose stored text no longer
+            // matches its rules is exactly the row that must be written back. Mark it here.
+            if (!string.Equals(card.Text, expected, StringComparison.Ordinal))
+            {
+                card.Text = expected;
+                _dirtyIds.Add(card.Id);
+                Invalidate(card.Id);
+            }
 
-            using (new EditorGUI.DisabledScope(divergence == CardTextDivergence.Orphaned))
-                if (GUILayout.Button("Use what the rules read as"))
-                {
-                    card.Text = expected;
-                    GUI.FocusControl(null);
-                }
+            DrawDerivedText(card.Text);
+        }
+
+        /// <summary>Read-only, wrapped, and selectable so it can be copied out of the window.</summary>
+        private static void DrawDerivedText(string text)
+        {
+            text = text ?? "";
+            GUIStyle style = DerivedTextStyle;
+
+            // CalcHeight needs the width the label will actually get: the pane minus the prefix
+            // column and the surrounding padding. Floored so a narrow window cannot ask for a
+            // negative height, which throws inside the layout system rather than drawing badly.
+            float width = Mathf.Max(60f, EditorGUIUtility.currentViewWidth - EditorGUIUtility.labelWidth - 32f);
+            float height = Mathf.Max(EditorGUIUtility.singleLineHeight,
+                style.CalcHeight(new GUIContent(text), width));
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("text");
+            EditorGUILayout.SelectableLabel(text, style, GUILayout.Height(height));
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private static GUIStyle _derivedTextStyle;
+
+        private static GUIStyle DerivedTextStyle
+        {
+            get
+            {
+                // Built on demand rather than in a field initialiser: EditorStyles is null until the
+                // first OnGUI, so touching it during construction returns a style with no font.
+                if (_derivedTextStyle == null)
+                    _derivedTextStyle = new GUIStyle(EditorStyles.textField) { wordWrap = true };
+                return _derivedTextStyle;
+            }
         }
 
         private void DrawStatFields(EditableCard card)
