@@ -710,9 +710,17 @@ namespace Emberfall.Presentation
             RebuildRoster();
         }
 
-        /// <summary>Make this deck the character's default — what the roster marks and what the queue
-        /// reaches for. Writes the deck before the pointer, so the id can never name something that
-        /// is not on disk yet.</summary>
+        /// <summary>Make this deck the character's default — what the roster marks and what the
+        /// character opens on. Writes the deck before the pointer, so the id can never name
+        /// something that is not on disk yet.
+        ///
+        /// <para><b>The queue does NOT read this.</b> Entering a match is an explicit per-match pick:
+        /// <c>MatchDeckSelection.BeginChoosing</c> turns this screen into a picker,
+        /// <see cref="PickForMatch"/> arms <c>_pickedDeckId</c> — which starts empty and is never
+        /// seeded from <see cref="Character.DefaultDeckId"/> — and Continue stays disabled until the
+        /// player taps something. The default's only effect on that flow is positional: it sorts to
+        /// the front of the switcher and wears the star, so it is the easiest plate to reach. This
+        /// summary claimed the queue reached for it until 2026-09-04; it never did.</para></summary>
         private void SetDefaultDeck()
         {
             if (_menuCharacter == null || _menuDeck == null) return;

@@ -739,9 +739,14 @@
  * 2026-08-08 ruling — this stops being a whole screen and the .mm-modal rules above come back
  * into play. Neither this block nor AccountCreateController survives that change unread. */
 /* TOP-JUSTIFIED, NOT CENTRED (Sam, 2026-08-30). Both views carry a text field, so the IME is open
- * on this screen more often than not, and on the Pixel 5a its top edge sits at about 119dp of the
- * 411dp panel -- centring spends the free height putting content UNDER the keyboard. Everything
+ * on this screen more often than not, and on the Pixel 5a its top edge sits at about 29% of the
+ * panel height -- centring spends the free height putting content UNDER the keyboard. Everything
  * that has to be read while typing belongs in that top band.
+ *
+ * Measured as "119dp of the 411dp panel" and restated as a FRACTION on 2026-09-04, because the
+ * panel stopped being sized in dp on 2026-09-01 (see the block at the top of theme.uss) and this
+ * is a live justification, not a record. 29% of today's 1080 authored px is about 313. The ratio
+ * is what the argument rests on and it survives the next unit change too.
  *
  * BOTH rules, and the inner one is the one that mattered: the views are flex-grow: 1 so they fill
  * the root either way, which means the root's own justify-content had nothing left to distribute
