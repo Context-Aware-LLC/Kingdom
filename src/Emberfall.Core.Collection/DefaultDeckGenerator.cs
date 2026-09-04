@@ -29,6 +29,22 @@ namespace Emberfall.Core.Collection
     /// <see cref="ICardDatabase.AllCollectible"/> makes no ordering promise — a dictionary's
     /// enumeration order is not a contract, and a generator seeded identically must produce an
     /// identical deck or the tests are theatre.</para>
+    ///
+    /// <para><b>It draws from what the player OWNS, not from the pool (2026-09-03).</b> Until this
+    /// date it drew from <see cref="ICardDatabase.AllCollectible"/> unfiltered, and the deck it
+    /// handed a brand-new character was therefore illegal for that character to queue with: the
+    /// signup grant is every common and rare in the CORE+EMBERFALL pairing
+    /// (<see cref="OnboardingGrant"/>), while the collectible pool is that plus all of REKINDLING
+    /// plus every epic and legendary. Measured against the live card data, <b>31–46% of every
+    /// pairing's draw weight was a card the account had never been granted</b>, so effectively
+    /// every generated starter deck failed L6 — and it failed it nowhere the player could see it,
+    /// because the generator validates L1–L5 only. The error arrived at the queue as a closed
+    /// socket reading "deck rejected: You don't own Repair Drone."</para>
+    ///
+    /// <para><b>A null <paramref name="owned"/> still means "do not constrain"</b>, the same reading
+    /// <see cref="IOwnedCardStore"/> and <see cref="DeckValidator"/> L6 give it — a test, a bot and
+    /// a soak run all generate against no ownership record and must keep getting the whole pool.
+    /// Every real player-facing call site passes one.</para>
     /// </summary>
     public static class DefaultDeckGenerator
     {
@@ -44,8 +60,10 @@ namespace Emberfall.Core.Collection
         /// real (EMBERWARD has 9 collectible rows, 17 copies, and only clears 30 because every
         /// character also gets NEUTRAL and a second class).
         /// </summary>
-        public static bool CanGenerate(Character character, ICardDatabase db)
-            => character != null && db != null && Capacity(Candidates(character, db)) >= DeckValidator.DeckSize;
+        public static bool CanGenerate(Character character, ICardDatabase db,
+                                       IOwnedCardCounts? owned = null)
+            => character != null && db != null
+               && Capacity(Candidates(character, db, owned), owned) >= DeckValidator.DeckSize;
 
         /// <summary>
         /// A legal 30-card deck for <paramref name="character"/>, drawn from
@@ -60,7 +78,8 @@ namespace Emberfall.Core.Collection
         /// <param name="rng">Seeded by the caller; the same seed yields the same deck.</param>
         /// <exception cref="DeckGenerationException">The pool cannot supply 30 legal copies.</exception>
         public static DeckList Generate(Character character, ICardDatabase db, DeterministicRandom rng,
-                                        string deckId, string? deckName = null)
+                                        string deckId, string? deckName = null,
+                                        IOwnedCardCounts? owned = null)
         {
             if (character == null) throw new ArgumentNullException(nameof(character));
             if (db == null) throw new ArgumentNullException(nameof(db));
@@ -68,13 +87,24 @@ namespace Emberfall.Core.Collection
             if (string.IsNullOrWhiteSpace(deckId))
                 throw new ArgumentException("Generated deck needs an id from the caller.", nameof(deckId));
 
-            var candidates = Candidates(character, db);
-            int capacity = Capacity(candidates);
+            var candidates = Candidates(character, db, owned);
+            int capacity = Capacity(candidates, owned);
             if (capacity < DeckValidator.DeckSize)
                 throw new DeckGenerationException(
                     $"{character.PrimaryClass}/{character.SecondaryClass} can supply only {capacity} legal " +
-                    $"copies from {candidates.Count} collectible cards — {DeckValidator.DeckSize} are needed. " +
-                    "This is a card-pool shortfall, not a generator failure.");
+                    $"copies from {candidates.Count} " +
+                    (owned == null ? "collectible cards" : "cards this account owns") +
+                    $" — {DeckValidator.DeckSize} are needed. " +
+                    (owned == null
+                        ? "This is a card-pool shortfall, not a generator failure."
+                        : "This is an OWNERSHIP shortfall, not a card-pool one: the pairing may hold plenty " +
+                          "of cards this account has never been granted. Offer a blank deck instead."));
+
+            // The per-card ceiling, resolved once: the format cap (L2/L3) and, when ownership is known,
+            // the copies actually held (L6). Hoisted out of the draw loop, which reads it up to 30
+            // times per card and would otherwise probe the ownership source that many times.
+            var caps = new int[candidates.Count];
+            for (int i = 0; i < candidates.Count; i++) caps[i] = CapFor(candidates[i], owned);
 
             var counts = new int[candidates.Count];
             int total = 0;
@@ -86,7 +116,7 @@ namespace Emberfall.Core.Collection
                 // that an incrementally-maintained weight total would need to get exactly right.
                 int weightSum = 0;
                 for (int i = 0; i < candidates.Count; i++)
-                    if (counts[i] < DeckValidator.MaxCopies(candidates[i].Rarity))
+                    if (counts[i] < caps[i])
                         weightSum += Weight(candidates[i].Cost);
 
                 // Unreachable while capacity >= 30, and cheap to assert rather than loop forever if
@@ -99,7 +129,7 @@ namespace Emberfall.Core.Collection
                 int roll = rng.NextInt(weightSum);
                 for (int i = 0; i < candidates.Count; i++)
                 {
-                    if (counts[i] >= DeckValidator.MaxCopies(candidates[i].Rarity)) continue;
+                    if (counts[i] >= caps[i]) continue;
                     roll -= Weight(candidates[i].Cost);
                     if (roll < 0)
                     {
@@ -120,34 +150,57 @@ namespace Emberfall.Core.Collection
             for (int i = 0; i < candidates.Count; i++)
                 if (counts[i] > 0) deck.Entries.Add(new DeckEntry(candidates[i].Id, counts[i]));
 
-            var check = DeckValidator.Validate(deck, character, db);
+            // Validated WITH ownership, so L6 is checked by the code that claims it — the same reason
+            // the L1-L5 check was here already. A generated deck the player cannot queue with is the
+            // defect this guards, and it has to surface at creation rather than at the socket.
+            var check = DeckValidator.Validate(deck, character, db, owned);
             if (!check.IsValid)
             {
                 var reasons = new List<string>();
                 foreach (var v in check.Violations) reasons.Add($"{v.Rule}: {v.Message}");
                 throw new DeckGenerationException(
-                    "Generated deck failed L1-L5, which is a generator bug: " + string.Join("; ", reasons));
+                    "Generated deck failed validation, which is a generator bug: " + string.Join("; ", reasons));
             }
 
             return deck;
         }
 
-        /// <summary>Collectible cards legal for this character, ordered by id so draws are reproducible.</summary>
-        private static List<CardDefinition> Candidates(Character character, ICardDatabase db)
+        /// <summary>
+        /// Collectible cards legal for this character, ordered by id so draws are reproducible — and,
+        /// when <paramref name="owned"/> is given, only the ones the account holds a copy of. A card
+        /// owned zero times is dropped rather than carried at cap 0, so it costs nothing in the draw
+        /// loop and cannot be reached by a later edit that forgets to consult the cap.
+        /// </summary>
+        private static List<CardDefinition> Candidates(Character character, ICardDatabase db,
+                                                       IOwnedCardCounts? owned = null)
         {
             var list = new List<CardDefinition>();
             if (character == null || db == null) return list;
             foreach (var def in db.AllCollectible())
-                if (character.AllowsClass(def.Class)) list.Add(def);
+                if (character.AllowsClass(def.Class) && CapFor(def, owned) > 0) list.Add(def);
             list.Sort((a, b) => a.Id.CompareTo(b.Id));
             return list;
         }
 
-        /// <summary>Total copies the pool can legally supply (L2/L3 caps summed).</summary>
-        private static int Capacity(List<CardDefinition> candidates)
+        /// <summary>
+        /// Copies of one card a deck may legally hold: the format cap (L2/L3), and no more than the
+        /// copies owned (L6) once ownership is known. A negative count from a badly-behaved source is
+        /// floored at 0 — the same reading <see cref="DeckValidator"/> gives it.
+        /// </summary>
+        private static int CapFor(CardDefinition def, IOwnedCardCounts? owned)
+        {
+            int max = DeckValidator.MaxCopies(def.Rarity);
+            if (owned == null) return max;
+            int have = owned.CopiesOwned(def.Id);
+            if (have < 0) have = 0;
+            return have < max ? have : max;
+        }
+
+        /// <summary>Total copies the candidates can legally supply (L2/L3 caps, and L6 when known).</summary>
+        private static int Capacity(List<CardDefinition> candidates, IOwnedCardCounts? owned = null)
         {
             int n = 0;
-            foreach (var def in candidates) n += DeckValidator.MaxCopies(def.Rarity);
+            foreach (var def in candidates) n += CapFor(def, owned);
             return n;
         }
     }

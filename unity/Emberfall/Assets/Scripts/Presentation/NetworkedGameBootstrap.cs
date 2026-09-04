@@ -294,7 +294,12 @@ namespace Emberfall.Presentation
             if (deck == null)
                 throw new InvalidOperationException("The selected deck no longer exists.");
 
-            QueueCheck queue = QueueEligibility.Check(deck, selected, db);
+            // WITH ownership — this is the last gate before the socket, and until 2026-09-03 it was
+            // the only Check on the client that did not pass one. The roster's own badge (which does)
+            // would call these decks drafts, so an L6 failure walked straight past this line and came
+            // back as a closed socket reading "deck rejected: You don't own X." A client gate that is
+            // laxer than the server's is not a gate.
+            QueueCheck queue = QueueEligibility.Check(deck, selected, db, account.OwnedCards());
             if (!queue.IsEligible)
                 throw new InvalidOperationException("The selected deck is no longer queue ready: " + queue.Reason);
 

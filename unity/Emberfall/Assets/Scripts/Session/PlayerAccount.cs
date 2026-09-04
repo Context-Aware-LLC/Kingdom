@@ -235,9 +235,10 @@ namespace Emberfall.Session
         /// a legal 30 refuses up front instead of throwing halfway through creation
         /// (<c>DefaultDeckGenerator.CanGenerate</c>). Real today: not every pairing can fill a deck.
         /// </summary>
-        public static bool CanCreate(CardClass primary, CardClass secondary, ICardDatabase db)
+        public static bool CanCreate(CardClass primary, CardClass secondary, ICardDatabase db,
+                                    IOwnedCardCounts? owned = null)
             => Character.IsValidPairing(primary, secondary)
-               && DefaultDeckGenerator.CanGenerate(new Character("probe", "probe", primary, secondary), db);
+               && DefaultDeckGenerator.CanGenerate(new Character("probe", "probe", primary, secondary), db, owned);
 
         /// <summary>
         /// Whether the create form offers the blank-or-generated choice — false for the very first
@@ -266,7 +267,7 @@ namespace Emberfall.Session
 
             Character created = CharacterCreation.Create(_characters, _decks, db, rng,
                                                          characterId, name, primary, secondary,
-                                                         deckId, starter);
+                                                         deckId, starter, OwnedCards());
 
             // One chained push rather than two independent ones, so the character reaches the server
             // before the deck that names it. Nothing on the server enforces that — deck.character_id
@@ -325,7 +326,8 @@ namespace Emberfall.Session
 
             string deckId = NewId();
             DeckList deck = kind == StarterDeck.Generated
-                ? DefaultDeckGenerator.Generate(character, db, new DeterministicRandom(SeedFrom(deckId)), deckId, name)
+                ? DefaultDeckGenerator.Generate(character, db, new DeterministicRandom(SeedFrom(deckId)),
+                                                deckId, name, OwnedCards())
                 : new DeckList { Id = deckId, CharacterId = character.Id, Name = name };
 
             // Generate() builds the deck already bound (L5), but a blank one is bound here — and the
