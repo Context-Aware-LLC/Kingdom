@@ -1004,11 +1004,22 @@ namespace Emberfall.Presentation
             go.transform.localRotation = Quaternion.identity;
 
             var tmp = go.AddComponent<TextMeshPro>();
-            // TMP Settings globally enables autoSizeTextContainer, which rewrites a label's
-            // RectTransform from its text. Card labels have authored card-relative rectangles;
-            // only the FONT may auto-fit inside them. Leaving both systems active made ellipsis
-            // operate on TMP's rewritten width and back up to a word boundary, visibly discarding
-            // usable title-band space (Sam's collection-wall audit, 2026-09-01).
+            // AUTHORED RECT WINS; ONLY THE FONT MAY AUTO-FIT INSIDE IT. Belt to the braces of
+            // `m_autoSizeTextContainer: 0` in TMP Settings — kept because the failure it prevents
+            // is invisible: `autoSizeTextContainer` makes TMP_Text.Rebuild write
+            // `sizeDelta = GetPreferredValues(Infinity, Infinity)` every frame, so the label
+            // renders at its natural UNBOUNDED width, wrapping never triggers and auto-sizing
+            // never shrinks. Every TextMeshPro in this project is built in code with an authored
+            // rect, and none of them wants that.
+            //
+            // It shipped on for months: it clipped card titles by making ellipsis operate on the
+            // rewritten width (Sam's collection-wall audit, 2026-09-01, fixed here for the six
+            // labels this method builds), and it was still running the rules band off the sides of
+            // the card until the global went off (Sam, 2026-09-04) — that label is built inline
+            // below, not through here, so the local fix never reached it.
+            //
+            // RETIREMENT TRIGGER: turning `m_autoSizeTextContainer` back on in TMP Settings
+            // re-arms it for the twelve other runtime label sites that carry no local guard.
             tmp.autoSizeTextContainer = false;
             // Labels draw after the frame sprite EXPLICITLY. Inside the card's SortingGroup
             // everything shares order 0 and the tie-break is hierarchy order, which the Visual

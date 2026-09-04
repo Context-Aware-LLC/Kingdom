@@ -225,10 +225,12 @@ namespace Emberfall.Presentation
             // fallback for touch players who prefer one continuous interaction vocabulary.
             if (_gesture == Gesture.AwaitingEffectDrag)
             {
-                if (IsActiveTarget(subject))
+                // The click half of targeting gets the same fat-finger radius the drop half does.
+                PointerSubject aimed = SnapToTarget(screenPos, subject);
+                if (IsActiveTarget(aimed))
                 {
                     _gesture = Gesture.AwaitingEffectClick;
-                    SetTargetFocus(subject.Id);
+                    SetTargetFocus(aimed.Id);
                     return;
                 }
                 if (!IsGestureSource(subject)) return;
@@ -241,10 +243,17 @@ namespace Emberfall.Presentation
 
             _source          = src;
             _sourcePresenter = presenter;
-            _sourceTransform = hitTransform;
             _sourceIsOwnHero = subject.Kind == PointerSubjectKind.Hero;
+            // THE PLATE MOVES, THE COLLIDER DOES NOT. Probe hands back the hero ANCHOR, which is
+            // where ClickableHero's box lives; dragging that would carry the box under the pointer
+            // and every release would then raycast our own hero first — an illegal target, so
+            // every hero swing would cancel itself. HeroPlateView's own transform is a child of
+            // the anchor, so moving it lifts the portrait and leaves the hitbox at home.
+            _sourceTransform = _sourceIsOwnHero
+                ? (_p0HeroPlate != null ? _p0HeroPlate.transform : null)
+                : hitTransform;
             _gesture         = Gesture.Pressed;
-            CaptureSourceRestPose(hitTransform);
+            CaptureSourceRestPose(_sourceTransform);
         }
 
         private void OnPointerHeld(Vector2 screenPos)
@@ -273,12 +282,21 @@ namespace Emberfall.Presentation
         /// the gesture (Sam, 2026-08-16). #173/#174 removed every other drag-in-progress cue — the
         /// aim line and the picked-up card's own selection glow — leaving nothing on screen that
         /// distinguished an active drag from a completed tap, on a card with no legal-target set to
-        /// glow cyan (a plain vanilla minion, say). Hero and hero-power sources are excluded: they
-        /// carry other UI this has never been asked to move.
+        /// glow cyan (a plain vanilla minion, say).
+        ///
+        /// <para>OUR HERO MOVES TOO, since 2026-09-04 — "you could pick up your hero and drag it
+        /// to a target the same way you do with a minion" (Sam). It was excluded until then, and
+        /// the gold selection tint that stood in for the lift was not enough to tell an armed
+        /// swing from a press that did nothing. What moves is the PORTRAIT, not the anchor: see
+        /// OnPointerPressed. The two sockets stay docked where they are — they are on their own
+        /// anchors, and they are not what you are swinging.</para>
+        ///
+        /// <para>The hero power is still excluded. It is a socket, not a character, and an
+        /// untargeted power is a tap.</para>
         /// </summary>
         private void FollowPointer(Vector2 screenPos)
         {
-            if (_sourceTransform == null || _sourceIsOwnHero) return;
+            if (_sourceTransform == null) return;
             if (_source.Kind == DragSourceKind.HeroPower) return;
 
             Camera cam = Camera.main;
@@ -297,7 +315,8 @@ namespace Emberfall.Presentation
             if (IsMulliganActive()) return;   // the toggle already happened on press
             if (_gesture == Gesture.None) return;
 
-            PointerSubject subject = Probe(screenPos, out _, out _, skipGestureSource: true);
+            PointerSubject subject =
+                SnapToTarget(screenPos, Probe(screenPos, out _, out _, skipGestureSource: true));
 
             if (_gesture == Gesture.AwaitingEffectClick)
             {
@@ -409,7 +428,11 @@ namespace Emberfall.Presentation
         {
             _sourcePresenter?.SetSelectionHighlight(false);
             _p0HeroPlate?.SetSelected(false);
-            if (restoreVisual) RestoreSourceVisual();
+            // A SUCCESSFUL HERO SWING STILL PUTS THE PORTRAIT BACK, unlike a card's. The card is
+            // left at the drop point because the snapshot that is already on its way relocates it
+            // for real; nothing ever relocates a hero, so leaving the plate at the release point
+            // strands the portrait in the middle of the board until the scene is rebuilt.
+            if (restoreVisual || _sourceIsOwnHero) RestoreSourceVisual();
             _sourcePresenter = null;
             _sourceTransform = null;
             _sourceIsOwnHero = false;
@@ -422,8 +445,9 @@ namespace Emberfall.Presentation
                 _model.Phase = DragTargetingModel.TargetingPhase.Direct;
         }
 
-        /// <summary>Undoes <see cref="FollowPointer"/> — puts a source card back exactly where it
-        /// was picked up from. A no-op for hero/hero-power sources, which FollowPointer never moved.</summary>
+        /// <summary>Undoes <see cref="FollowPointer"/> — puts the source card, or our own hero's
+        /// portrait, back exactly where it was picked up from. A no-op for a hero-power source,
+        /// which FollowPointer never moves.</summary>
         private void RestoreSourceVisual()
         {
             if (_sourceTransform == null) return;
@@ -484,6 +508,48 @@ namespace Emberfall.Presentation
                 : DropPoint.Board(world.x);
         }
 
+        /// <summary>
+        /// How far a release may miss a legal target and still land on it. The opponent's half of
+        /// the board is drawn in PERSPECTIVE and is therefore physically smaller on screen than
+        /// ours, so the enemy hero — the thing most often aimed at — is the hardest target to hit
+        /// exactly (Sam, 2026-09-04). Screen-height relative, so it is the same fraction of a
+        /// thumb's travel on every device.
+        /// </summary>
+        private static float TargetSnapPx => Mathf.Max(40f, Screen.height * 0.075f);
+
+        /// <summary>
+        /// Widens a legal target from its collider to its collider plus <see cref="TargetSnapPx"/>,
+        /// by re-probing a ring around a release that hit nothing.
+        ///
+        /// <para>It only fires when the raw probe found NO character. Releasing on a real character
+        /// that merely is not legal — a BULWARK-blocked minion, a SHROUD, our own board — means
+        /// that character, and quietly redirecting the swing to its neighbour would be worse than
+        /// refusing it. So this rescues fat-finger misses and dead space, never a deliberate aim.
+        /// </para>
+        /// </summary>
+        private PointerSubject SnapToTarget(Vector2 screenPos, PointerSubject raw)
+        {
+            // The headless verifier's probe ignores the screen point, so a ring around it would
+            // return the same subject sixteen times and prove nothing.
+            if (InjectableProbe != null) return raw;
+            if (_activeTargets == null || _activeTargets.Count == 0) return raw;
+            if (raw.Kind == PointerSubjectKind.Card || raw.Kind == PointerSubjectKind.Hero) return raw;
+
+            const int Spokes = 8;
+            for (int ring = 1; ring <= 2; ring++)
+            {
+                float radius = TargetSnapPx * ring / 2f;
+                for (int i = 0; i < Spokes; i++)
+                {
+                    float a = 2f * Mathf.PI * i / Spokes;
+                    Vector2 probeAt = screenPos + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * radius;
+                    PointerSubject s = Probe(probeAt, out _, out _, skipGestureSource: true);
+                    if (IsActiveTarget(s)) return s;
+                }
+            }
+            return raw;
+        }
+
         private PointerSubject Probe(Vector2 screenPos, out Transform hitTransform,
                                      out CardPresenter presenter, bool skipGestureSource = false)
         {
@@ -533,6 +599,15 @@ namespace Emberfall.Presentation
                 var power = hit.collider.GetComponentInParent<ClickableHeroPower>();
                 if (power != null)
                 {
+                    // THE OPPONENT'S SOCKET IS NOT A SUBJECT, IT IS AN OBSTRUCTION. A hero power is
+                    // never a drag target (IsActiveTarget accepts Card and Hero only) and never a
+                    // source but ours, so returning the enemy's here could only ever cancel a
+                    // gesture. Its collider is 1.12 square, sits at z -0.1 in FRONT of the hero
+                    // plate and centres on the enemy portrait's lower half — so a card or an attack
+                    // released on the fattest part of the enemy hero resolved as "their hero power"
+                    // and died there (Sam, 2026-09-04). Both seats keep the descriptor: ownership is
+                    // read off it, not implied by which ones exist.
+                    if (power.OwnerId != _p0Id) continue;
                     hitTransform = power.transform;
                     return PointerSubject.OfHeroPower(power.OwnerId);
                 }

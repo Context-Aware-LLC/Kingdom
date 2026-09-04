@@ -73,8 +73,11 @@ namespace Emberfall.Presentation
             _portrait.gameObject.SetActive(false);
             artProvider?.LoadArt($"hero_{heroClass.ToString().ToLowerInvariant()}", SetPortrait);
 
-            // HP sits inside the portrait's right edge. The two enlarged sockets now own the
-            // entire lower skirt, so the old bottom-right position would land on the power frame.
+            // HP sits inside the portrait's right edge. It was driven there by the two enlarged
+            // sockets owning the entire lower skirt; they moved inboard of the plate on
+            // 2026-09-04 and the skirt is clear again, so bottom-right is available if the
+            // composition ever wants it back. Left here because it reads well, not because it
+            // has to be.
             _hpLabel = MakeLabel(transform, "HP",
                 new Vector3(0.648f, 0.162f, -0.02f), 6.345f, HpFull);
         }
