@@ -46,28 +46,43 @@ namespace Emberfall.Presentation
     }
 
     /// <summary>
-    /// The one place that knows how a pack id and an art folder find each other: the folder is
-    /// named for the EXPANSION segment of the pack id, uppercased — both <c>pack.emberfall</c> and
-    /// its SKU-qualified <c>pack.emberfall.starter</c> read
-    /// <c>Assets/Art/Shop/Packs/EMBERFALL/</c>.
+    /// The one place that knows how a pack id and an art folder find each other. <c>BoosterPack.Id</c>
+    /// is <c>pack.&lt;expansion&gt;[.&lt;sku&gt;]</c>, and it names its candidate folders MOST
+    /// SPECIFIC FIRST: <c>pack.emberfall.starter</c> offers <c>STARTER</c> then <c>EMBERFALL</c>,
+    /// while <c>pack.emberfall</c> offers only <c>EMBERFALL</c>.
+    ///
+    /// <para><b>The fallback is what makes a SKU's packaging optional.</b> A product that has been
+    /// drawn its own gets it; one that has not falls through to its expansion's, so a new SKU stays
+    /// a ledger change rather than an art commission. Resolving the expansion ONLY — which this did
+    /// until 2026-09-03 — made a folder drawn for a SKU inert on disk with nothing anywhere
+    /// reporting it, because a folder nobody reads cannot be missing. The five STARTER faces shipped
+    /// that way and the shelf wore EMBERFALL's.</para>
     ///
     /// <para>Matching <c>Assets/Art/Cards/&lt;setId&gt;/</c> is the point: one convention for where a
     /// set's art lives, whichever kind of art it is.</para>
     /// </summary>
     public static class PackArtSet
     {
-        public static string SetIdFor(string packId)
+        /// <summary>Folder names to try, in order. Empty only for an empty id. The caller takes the
+        /// first that has a manifest — see <see cref="PackArtProvider"/>.</summary>
+        public static IReadOnlyList<string> SetIdsFor(string packId)
         {
-            if (string.IsNullOrEmpty(packId)) return "";
+            if (string.IsNullOrEmpty(packId)) return Array.Empty<string>();
             string[] segments = packId.Split('.');
-            // BoosterPack.Id is pack.<expansion>[.<sku>]. The optional SKU distinguishes ledger
-            // products and opening odds, not the expansion whose printed packaging they share.
+
             // Keep the old one-token fallback for authoring tools that pass a bare set id.
-            string token = segments.Length >= 2
-                && string.Equals(segments[0], "pack", StringComparison.OrdinalIgnoreCase)
-                    ? segments[1]
-                    : segments[segments.Length - 1];
-            return token.ToUpperInvariant();
+            bool qualified = segments.Length >= 2
+                && string.Equals(segments[0], "pack", StringComparison.OrdinalIgnoreCase);
+            if (!qualified)
+                return new[] { segments[segments.Length - 1].ToUpperInvariant() };
+
+            string expansion = segments[1].ToUpperInvariant();
+            if (segments.Length < 3 || segments[2].Length == 0) return new[] { expansion };
+
+            // The SKU distinguishes ledger products and opening odds. It MAY also carry its own
+            // packaging; when it does not, the expansion's is the right answer.
+            string sku = segments[2].ToUpperInvariant();
+            return sku == expansion ? new[] { expansion } : new[] { sku, expansion };
         }
     }
 

@@ -431,10 +431,11 @@ namespace Emberfall.Presentation
             // is deliberately unchecked: false means it already fell back to painting the raw Sprite,
             // so the face carries art either way and the class below stays true.
             //
-            // A SKU-qualified starter pack reuses its expansion's art; PackArtSet deliberately
-            // ignores the product suffix when resolving the folder. A set whose art has not been
-            // drawn yet is the normal state and says nothing — see PackArtProvider — so an artless
-            // pack reads as a pack without a picture, never as a picture that failed.
+            // A SKU-qualified starter pack takes its OWN folder when one has been drawn and its
+            // expansion's when one has not; PackArtSet ranks the candidates, PackArtProvider takes
+            // the first with a manifest. A set whose art has not been drawn yet is the normal state
+            // and says nothing — see PackArtProvider — so an artless pack reads as a pack without a
+            // picture, never as a picture that failed.
             _packArt?.LoadPackArt(packId, pieces =>
             {
                 if (pieces == null || pieces.Count == 0) return;

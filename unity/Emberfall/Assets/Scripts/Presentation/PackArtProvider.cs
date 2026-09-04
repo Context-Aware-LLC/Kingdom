@@ -6,10 +6,18 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// Reads <c>Assets/Art/Shop/Packs/&lt;setId&gt;/</c> — the manifest, then the sprites it names.
-    /// SKU-qualified products reuse their expansion folder: <c>pack.emberfall.starter</c> and
-    /// <c>pack.emberfall</c> both resolve <c>EMBERFALL</c> through <see cref="PackArtSet"/>.
+    /// <see cref="PackArtSet"/> offers the candidate folders most specific first, and THE FIRST ONE
+    /// WITH A MANIFEST WINS: <c>pack.emberfall.starter</c> takes <c>STARTER</c> when that folder has
+    /// been drawn and falls through to <c>EMBERFALL</c> when it has not.
     /// Addressables in a build, AssetDatabase in the Editor, the same two-path shape
     /// <see cref="CardDatabaseLoader"/> uses so tools work before a catalog has been built.
+    ///
+    /// <para><b>The fall-through is silent, and in a player it can hide a packaging step.</b> A set
+    /// folder that exists on disk but was never registered as Addressable has no manifest AT
+    /// RUNTIME, so a build quietly wears the expansion's art while the Editor wears the SKU's. That
+    /// is the same divergence <c>AddressablesSetup</c> exists to close — re-run
+    /// <c>Emberfall/Addressables/Setup Groups + Migrate Card Data</c> after adding a folder — but
+    /// with a fallback in front of it there is now no missing picture to notice.</para>
     ///
     /// <para><b>Adding an expansion's art is a content drop, not a code change.</b> Drop the folder,
     /// write its manifest, re-run <c>Emberfall/Addressables/Setup Groups + Migrate Card Data</c>.
@@ -20,7 +28,7 @@ namespace Emberfall.Presentation
     /// expansion, not a fault. A manifest entry whose file will not resolve DOES warn: something
     /// declared that piece, so its absence is a mistake rather than an absence.</para>
     ///
-    /// <para>Results are cached per set, misses included — a pack tile re-renders on every wallet
+    /// <para>Results are cached per PACK ID, misses included — a pack tile re-renders on every wallet
     /// refresh and on every busy-state flip, and re-hitting Addressables for each is wasted work.
     /// The cache is per instance and per session; there is no invalidation, because art does not
     /// change under a running player. In the Editor it means a newly imported file needs a domain
@@ -38,17 +46,10 @@ namespace Emberfall.Presentation
         {
             if (onLoaded == null) return;
 
-            string setId = PackArtSet.SetIdFor(packId);
-            if (setId.Length == 0)
+            if (!_cache.TryGetValue(packId ?? "", out IReadOnlyList<PackArtPiece> pieces))
             {
-                onLoaded(Array.Empty<PackArtPiece>());
-                return;
-            }
-
-            if (!_cache.TryGetValue(setId, out IReadOnlyList<PackArtPiece> pieces))
-            {
-                pieces = Resolve(setId);
-                _cache[setId] = pieces;
+                pieces = Resolve(PackArtSet.SetIdsFor(packId));
+                _cache[packId ?? ""] = pieces;
             }
 
             // Synchronous by contract, like IBoosterPackagingArtProvider before it: both paths
@@ -56,10 +57,22 @@ namespace Emberfall.Presentation
             onLoaded(pieces);
         }
 
-        private static IReadOnlyList<PackArtPiece> Resolve(string setId)
+        /// <summary>Take the first candidate folder that has a manifest. A manifest present but
+        /// EMPTY still wins — the folder has spoken, and falling through would paint another set's
+        /// art over a deliberate blank.</summary>
+        private static IReadOnlyList<PackArtPiece> Resolve(IReadOnlyList<string> setIds)
         {
-            PackArtManifest manifest = LoadManifest(setId);
-            if (manifest == null || manifest.pieces == null || manifest.pieces.Count == 0)
+            for (int i = 0; i < setIds.Count; i++)
+            {
+                PackArtManifest manifest = LoadManifest(setIds[i]);
+                if (manifest != null) return Build(setIds[i], manifest);
+            }
+            return Array.Empty<PackArtPiece>();
+        }
+
+        private static IReadOnlyList<PackArtPiece> Build(string setId, PackArtManifest manifest)
+        {
+            if (manifest.pieces == null || manifest.pieces.Count == 0)
                 return Array.Empty<PackArtPiece>();
 
             var pieces = new List<PackArtPiece>(manifest.pieces.Count);
