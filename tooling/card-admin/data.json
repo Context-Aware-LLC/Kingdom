@@ -5,7 +5,7 @@
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 293,
-  "corpusDigest": "e49e217ff220273b",
+  "corpusDigest": "9470d12ecfd82cdf",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -32,13 +32,13 @@
       "HERO_POWER": 8
     },
     "keywordFrequency": {
-      "BULWARK": 46,
+      "BULWARK": 45,
       "SKIRMISH": 16,
       "SHROUD": 14,
       "OVERWHELM": 11,
+      "AEGIS": 10,
       "DOUBLESTRIKE": 10,
       "VENOM": 10,
-      "AEGIS": 9,
       "REKINDLE": 9,
       "VANGUARD": 9,
       "FERVOR": 7,
@@ -47,7 +47,7 @@
       "FROST": 5
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 71,
+      "ANY_FRIENDLY_MINION": 70,
       "ANY_MINION": 29,
       "ANY_ENEMY_MINION": 24,
       "ANY_ENEMY": 22,
@@ -59,8 +59,8 @@
     },
     "costDistribution": {
       "0": 8,
-      "1": 34,
-      "2": 68,
+      "1": 33,
+      "2": 69,
       "3": 71,
       "4": 52,
       "5": 22,
@@ -81,28 +81,28 @@
       "UNDEAD": 21,
       "ELEMENTAL": 19,
       "SPIRIT": 13,
-      "HUMAN": 6,
+      "HUMAN": 7,
       "DRAGON": 5
     },
     "minionCount": 190,
     "attackDistribution": {
       "0": 3,
-      "1": 37,
-      "2": 53,
-      "3": 39,
-      "4": 23,
+      "1": 36,
+      "2": 54,
+      "3": 38,
+      "4": 24,
       "5": 17,
       "6": 13,
       "7": 4,
       "10": 1
     },
     "healthDistribution": {
-      "1": 25,
-      "2": 36,
+      "1": 24,
+      "2": 37,
       "3": 27,
       "4": 38,
-      "5": 29,
-      "6": 18,
+      "5": 28,
+      "6": 19,
       "7": 8,
       "8": 6,
       "10": 2,
@@ -134,8 +134,8 @@
       },
       "costDistribution": {
         "0": 1,
-        "1": 3,
-        "2": 5,
+        "1": 2,
+        "2": 6,
         "3": 9,
         "4": 7,
         "5": 2,
@@ -348,20 +348,20 @@
       },
       "minionCount": 35,
       "attackDistribution": {
-        "1": 11,
-        "2": 11,
-        "3": 7,
-        "4": 3,
+        "1": 10,
+        "2": 12,
+        "3": 6,
+        "4": 4,
         "5": 2,
         "6": 1
       },
       "healthDistribution": {
-        "1": 7,
-        "2": 9,
+        "1": 6,
+        "2": 10,
         "3": 7,
         "4": 5,
-        "5": 5,
-        "6": 1,
+        "5": 4,
+        "6": 2,
         "7": 1
       }
     },
@@ -434,14 +434,14 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 13,
+        "BULWARK": 12,
         "OVERWHELM": 3,
-        "AEGIS": 1,
+        "AEGIS": 2,
         "REKINDLE": 1,
         "VANGUARD": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 15,
+        "ANY_FRIENDLY_MINION": 14,
         "FRIENDLY_HERO": 4,
         "ANY_ENEMY_MINION": 3,
         "ANY_MINION": 1
@@ -464,7 +464,8 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "CONSTRUCT": 12
+        "CONSTRUCT": 12,
+        "HUMAN": 1
       },
       "minionCount": 19,
       "attackDistribution": {
@@ -1054,7 +1055,7 @@
       "name": "Emberling Pup",
       "type": "MINION",
       "cost": 1,
-      "attack": 1,
+      "attack": 2,
       "health": 1,
       "durability": null,
       "class": "NEUTRAL",
@@ -1599,7 +1600,7 @@
       "sourceFile": "Emberfall.cards.json"
     },
     {
-      "id": 1192,
+      "id": 1029,
       "name": "Gravekeep Custodian",
       "type": "MINION",
       "cost": 4,
@@ -2473,7 +2474,7 @@
       "id": 1061,
       "name": "Gear Imp",
       "type": "MINION",
-      "cost": 1,
+      "cost": 2,
       "attack": 1,
       "health": 2,
       "durability": null,
@@ -3701,13 +3702,14 @@
       "name": "Ironclad Bulwark",
       "type": "MINION",
       "cost": 5,
-      "attack": 3,
-      "health": 5,
+      "attack": 4,
+      "health": 6,
       "durability": null,
       "class": "NEUTRAL",
       "rarity": "EPIC",
       "keywords": [
-        "AEGIS"
+        "AEGIS",
+        "BULWARK"
       ],
       "selectors": [],
       "tribe": "CONSTRUCT",
@@ -3764,9 +3766,7 @@
       "durability": null,
       "class": "NEUTRAL",
       "rarity": "COMMON",
-      "keywords": [
-        "BULWARK"
-      ],
+      "keywords": [],
       "selectors": [
         "ANY_FRIENDLY_MINION"
       ],
@@ -3782,7 +3782,7 @@
       "type": "MINION",
       "cost": 1,
       "attack": 1,
-      "health": 1,
+      "health": 2,
       "durability": null,
       "class": "NEUTRAL",
       "rarity": "COMMON",
@@ -5894,13 +5894,12 @@
       "class": "STONEWARDEN",
       "rarity": "LEGENDARY",
       "keywords": [
-        "BULWARK"
+        "AEGIS"
       ],
       "selectors": [
-        "ANY_FRIENDLY_MINION",
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "stone_aldric_the_fortifier",
@@ -6116,7 +6115,7 @@
     },
     {
       "id": 1179,
-      "name": "1",
+      "name": "Storm Bolt Rider",
       "type": "MINION",
       "cost": 3,
       "attack": 3,
