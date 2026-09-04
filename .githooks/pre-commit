@@ -88,4 +88,26 @@ fi
 # What DOES gate card rows is CI Stage 6 — Emberfall.Tools.CardCi over every row of every set — plus
 # Stage 6b's trigger/selector drift guard. Neither needs a commit hook. If you want the local
 # equivalent before pushing: python tooling/scripts/rebake_card_data.py --check
+
+# ── Addressables groups ──────────────────────────────────────────────────────────────────────
+#
+# A new art SET FOLDER under Assets/Art/Shop/Packs/ or Assets/Art/Cards/ is INERT until the
+# Addressables menu item is re-run: the art resolves through AssetDatabase in the Editor and
+# through Addressables in a player, so it renders perfectly here and SHIPS EMPTY. Nothing else
+# catches it — AddressablesGuard reported 9/9 ALL PASS on 2026-09-03 while the STARTER set had
+# five faces, a valid manifest and no group.
+#
+# REPORTS AND BLOCKS; IT DOES NOT RUN THE SETUP FOR YOU, and the temptation is real because the
+# menu item takes about a second. See the hard rule at the top of this file: a hook's `git add`
+# lands in whoever's commit is running, via the temp index a partial commit uses, and the setup
+# run rewrites AddressableAssetSettings.asset plus every group asset it touches — shared files,
+# so a fixer here would reproduce the 2026-08-11 bug with a bigger blast radius. It also needs an
+# Editor, which means it would fail exactly when someone has one open.
+#
+# Scoped to commits that stage something under a set root, so it is free on every other commit.
+# The reasoning lives in the script's docstring; keep the two together.
+if command -v python >/dev/null 2>&1; then
+    PYTHONIOENCODING=utf-8 python tooling/scripts/check_addressable_groups.py || exit 1
+fi
+
 exit 0
