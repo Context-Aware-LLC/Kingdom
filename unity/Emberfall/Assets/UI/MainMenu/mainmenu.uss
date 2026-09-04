@@ -197,9 +197,6 @@
     width: 104px;
     align-items: center;
 }
-.mm-vault-dock--hidden {
-    display: none;
-}
 .mm-vault-button {
     width: 104px;
     height: 104px;

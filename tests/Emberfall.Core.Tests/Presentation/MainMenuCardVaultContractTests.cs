@@ -41,10 +41,15 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(dock.Descendants().Any(
                     element => (string?)element.Attribute("name") == "btn-card-vault"), Is.True,
                     "The vault image needs its own socket and hit target.");
-                Assert.That((string?)dock.Attribute("class"), Does.Contain("mm-vault-dock--hidden"));
+                Assert.That((string?)dock.Attribute("class"), Does.Not.Contain("mm-vault-dock--hidden"),
+                    "The vault is a permanent destination, including when its balance is zero.");
                 Assert.That(dock.Descendants().Any(
                     element => (string?)element.Attribute("name") == "vault-pack-count"), Is.True,
                     "The socket owns its count badge rather than borrowing unrelated HUD chrome.");
+                Assert.That(dock.Descendants().Single(
+                    element => (string?)element.Attribute("name") == "vault-pack-count")
+                    .Attribute("text")?.Value, Is.EqualTo("× 0"),
+                    "The permanent entry must have an honest pre-fetch empty state.");
                 Assert.That(styles, Does.Contain(".mm-nav-plate {")
                     .And.Contain("ui_panel_outer_forged.png"));
                 Assert.That(styles, Does.Contain(".mm-vault-button {")
@@ -56,7 +61,8 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(controller, Does.Contain("Wire(\"btn-card-vault\", OnCardVault);")
                     .And.Contain("PackVaultController.ReturnScene = \"MainMenu\";")
                     .And.Contain("RenderVaultEntry(snapshot);")
-                    .And.Contain("Go(\"PackVault\");"));
+                    .And.Contain("Go(\"PackVault\");")
+                    .And.Not.Contain("mm-vault-dock--hidden"));
                 Assert.That(buildSettings, Does.Contain("path: Assets/Scenes/PackVault.unity")
                     .And.Contain("enabled: 1"),
                     "A live menu button must not target a scene absent from the player.");

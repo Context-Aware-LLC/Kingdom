@@ -42,7 +42,6 @@ namespace Emberfall.Presentation
         private CancellationTokenSource _leaderboardRequest;
 
         private Label _shardBalance;
-        private VisualElement _vaultDock;
         private VisualElement _vaultArt;
         private Label _vaultPackCount;
         private IPackArtProvider _vaultArtProvider;
@@ -512,28 +511,29 @@ namespace Emberfall.Presentation
             Go("PackVault");
         }
 
-        /// <summary>The vault sigil is inventory chrome, not an empty destination: it appears only
-        /// while this player holds unopened packs and reports their total on its own badge.</summary>
+        /// <summary>The vault sigil is a permanent first-class destination. Its badge reports the
+        /// live unopened-pack total, including zero; the vault already owns an honest empty state.</summary>
         private void BindVaultEntry()
         {
-            _vaultDock = _root.Q<VisualElement>("vault-dock");
             _vaultArt = _root.Q<VisualElement>(className: "mm-vault-art");
             _vaultPackCount = _root.Q<Label>("vault-pack-count");
             _vaultArtProvider = ShopRuntime.PackArt ?? new PackArtProvider();
-            _vaultDock?.AddToClassList("mm-vault-dock--hidden");
+            if (_vaultPackCount != null) _vaultPackCount.text = "× 0";
         }
 
         private void RenderVaultEntry(Emberfall.Net.Client.Collection.CollectionSnapshot snapshot)
         {
-            if (_vaultDock == null || _vaultPackCount == null || snapshot == null) return;
+            if (_vaultPackCount == null) return;
 
             long total = 0;
-            foreach (long count in snapshot.Packs.Values)
+            if (snapshot != null)
             {
-                if (count > 0) total += count;
+                foreach (long count in snapshot.Packs.Values)
+                {
+                    if (count > 0) total += count;
+                }
             }
 
-            _vaultDock.EnableInClassList("mm-vault-dock--hidden", total <= 0);
             _vaultPackCount.text = total > 99 ? "× 99+" : $"× {total}";
             if (total > 0) RenderVaultArt(snapshot);
         }

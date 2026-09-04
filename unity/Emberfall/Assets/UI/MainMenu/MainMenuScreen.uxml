@@ -16,11 +16,11 @@
                     <ui:Button name="btn-store" text="Store" class="mm-button mm-button--secondary"/>
                     <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button mm-button--secondary"/>
                 </ui:VisualElement>
-                <ui:VisualElement name="vault-dock" class="mm-vault-dock mm-vault-dock--hidden">
+                <ui:VisualElement name="vault-dock" class="mm-vault-dock">
                     <ui:Button name="btn-card-vault" text="" tooltip="Open Card Vault" class="mm-vault-button">
                         <ui:VisualElement picking-mode="Ignore" class="mm-vault-art"/>
                     </ui:Button>
-                    <ui:Label name="vault-pack-count" text="" picking-mode="Ignore" class="mm-vault-count"/>
+                    <ui:Label name="vault-pack-count" text="× 0" picking-mode="Ignore" class="mm-vault-count"/>
                     <ui:Label text="CARD VAULT" picking-mode="Ignore" class="mm-vault-label"/>
                 </ui:VisualElement>
             </ui:VisualElement>
