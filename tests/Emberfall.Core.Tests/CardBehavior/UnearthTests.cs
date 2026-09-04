@@ -22,16 +22,22 @@ namespace Emberfall.Core.Tests.CardBehavior
         public void Gear_Cache_Is_The_First_Shipped_Unearth_Card()
         {
             CardDefinition gearCache = ShippedCards.Db.Get(ShippedCards.Id("clock_gear_cache"));
-            RuleDefinition rule = gearCache.Rules.Single();
+            // Single() was right until the card gained a second rule. Selecting the UNEARTH rule by
+            // its action keeps this about Unearth rather than about how many rules the card has —
+            // the latter is a balance decision and not this fixture's business.
+            RuleDefinition rule = gearCache.Rules.Single(r => r.Action is UnearthAction);
 
             Assert.Multiple(() =>
             {
-                // No number on the face: the offer size is UnearthAction.Options, not the card's
-                // to choose, so printing it would restate a constant as though it were authored.
-                Assert.That(gearCache.Text, Is.EqualTo("Unearth."));
+                // NO NUMBER on the face, and a NOUN. The offer size is UnearthAction.Options, so
+                // printing it would restate a constant as though the card chose it; the object is
+                // printed anyway because the clause has to compose — this card's own text is the
+                // proof, since "Unearth and draw a card" is not English.
+                Assert.That(gearCache.Text, Does.StartWith("Unearth a card"));
+                Assert.That(gearCache.Text, Does.Not.Match(@"Unearth\s+\d"),
+                    "the offer size is a constant and must never reach the face");
                 Assert.That(rule.Activation, Is.TypeOf<TriggeredActivation>());
                 Assert.That(((TriggeredActivation)rule.Activation).Trigger, Is.EqualTo(Trigger.ON_CAST));
-                Assert.That(rule.Action, Is.TypeOf<UnearthAction>());
             });
         }
 

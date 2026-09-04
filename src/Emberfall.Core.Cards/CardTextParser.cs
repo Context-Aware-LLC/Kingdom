@@ -729,7 +729,7 @@ namespace Emberfall.Core.Cards
             // clause with no digits yields nothing to iterate and the verb would never be reached.
             // It is also the whole clause rather than a head, so this is an equality test and not a
             // StartsWith: "Unearth" is the entire sentence.
-            if (string.Equals(clause.TrimEnd('.'), CardTextGenerator.UnearthLabel, StringComparison.Ordinal))
+            if (string.Equals(clause.TrimEnd('.'), CardTextGenerator.UnearthClause, StringComparison.Ordinal))
                 yield return new UnearthAction();
 
             // The verbs that name another card. Nothing here reads the noun phrase — the count and

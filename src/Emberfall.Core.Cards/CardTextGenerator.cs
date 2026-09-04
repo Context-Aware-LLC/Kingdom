@@ -658,6 +658,20 @@ namespace Emberfall.Core.Cards
         public const string UnearthLabel = "Unearth";
 
         /// <summary>
+        /// The whole clause UNEARTH prints, without its terminator.
+        ///
+        /// <para><b>It takes a noun, and that is what lets it compose</b> (Sam, 2026-09-04). The bare
+        /// label was tried first and reads fine alone — "Unearth." — but a card that unearths AND
+        /// does something else has to join two clauses, and "Unearth and draw a card." is broken
+        /// English. Gear Cache is exactly that card. So the object is printed even though the
+        /// mechanic implies it.</para>
+        ///
+        /// <para>Public, and read by <c>CardTextParser</c>, for the same reason
+        /// <see cref="FrostVerb"/> is: the two halves of the round trip spell it once.</para>
+        /// </summary>
+        public const string UnearthClause = UnearthLabel + " a card";
+
+        /// <summary>
         /// The verb the FROST <b>action</b> prints — "Freeze a minion." The keyword prints "Frost".
         ///
         /// <para><b>Two words for two mechanics, deliberately</b> (Sam, 2026-08-25). The action
@@ -1011,7 +1025,7 @@ namespace Emberfall.Core.Cards
                 GainArmorAction a => $"Gain {a.Amount} Armor.",
                 // No number: the offer size is fixed by UnearthAction.Options, so printing it would
                 // be restating a constant as though the card chose it.
-                UnearthAction _ => $"{UnearthLabel} a card.",
+                UnearthAction _ => $"{UnearthClause}.",
                 _ => throw UnsupportedNode("action", action),
             };
 
