@@ -1,5 +1,27 @@
 """EF-062 · Resolution, aspect and safe area — the measurement, not the reasoning.
 
+!!  THE CAMERA THIS SCRIPT MEASURES WAS RETIRED ON 2026-08-28. Everything below models an
+!!  ORTHOGRAPHIC board — it even reads `orthographic size` out of BoardNetworked.unity, which is
+!!  a dead authored value. `f121a591` replaced the board camera with the perspective tabletop rig
+!!  in `BoardCameraRig`, and `BoardCameraRig.Configure` sets `orthographic = false` before
+!!  `SafeAreaCamera` is ever added, so `SafeAreaCamera`'s orthographic branch — and every part of
+!!  `DeviceLayout.Solve` it consumes — is unreachable.
+!!
+!!  So the horizontal figures here, the MinAspect reasoning, and issue #235's clipping table are
+!!  all answers to a question about a camera that no longer runs. They are WRONG, not merely
+!!  stale, and they are wrong in the dangerous direction: under the perspective rig the design box
+!!  is a FLOOR on what must be visible, not a ceiling on what may exist, and a 16:9 screen shows
+!!  |x| 11.235 at the bottom row against the box's 7.88.
+!!
+!!  Use `tooling/scripts/board_camera_fit.py` for anything about what is on screen.
+!!
+!!  What is still good here: the CARD PIXEL SIZE and font work. Those depend on the short edge and
+!!  the card's own world size, and the cap-height measurement off the shipping .ttf is unaffected
+!!  by the projection. Read those; do not read the framing.
+!!
+!!  RETIREMENT TRIGGER: if this script is ever ported to the perspective rig, delete this banner
+!!  and the pointer in board_camera_fit.py's header together.
+
 Prints the phone aspect range, the safe-area budget, and the TRUE pixel size of a card
 in hand on the smallest supported device, then re-checks EF-050's body font against
 that number instead of the desktop / collection-wall one.

@@ -46,10 +46,27 @@ namespace Emberfall.Presentation
         public const float DesignHalfWidth = 7.88f;
 
         /// <summary>
-        /// Narrowest landscape aspect at which the hero cluster still fits on screen: 1.71304.
-        /// 16:9 (1.7778) clears it by 0.298 world units — 35 px on a 1080p panel, which is the
-        /// entire horizontal safe-area budget at that aspect. 16:10 (1.6) and 4:3 (1.333) do
-        /// not clear it at all.
+        /// <b>THIS DESCRIBES THE ORTHOGRAPHIC CAMERA, WHICH WAS RETIRED ON 2026-08-28. Do not
+        /// reason about on-screen framing from it.</b> The claim it used to carry — "narrowest
+        /// landscape aspect at which the hero cluster still fits: 1.71304; 16:10 and 4:3 do not
+        /// clear it" — was true while <see cref="Solve"/> drove the board camera. `f121a591`
+        /// replaced that camera with the perspective tabletop rig, and <c>BoardCameraRig.Configure</c>
+        /// sets <c>orthographic = false</c> before <c>SafeAreaCamera</c> is added (it is authored in
+        /// no scene), so <c>SafeAreaCamera</c>'s orthographic branch and everything of
+        /// <see cref="Solve"/> it consumes are unreachable.
+        ///
+        /// <para>Under the live rig <c>BoardCameraRig.ApplySafeArea</c> fits the eight corners of
+        /// the design box by RETREATING, so the box is a FLOOR on what must be visible rather than
+        /// a ceiling on what may exist — and the fit does not leave its <c>CompositionRetreat</c>
+        /// floor until aspect 1.295, narrower than 4:3. Measured half-width at the bottom row:
+        /// 8.43 at 4:3, 11.24 at 16:9, 14.04 at 20:9, against this box's 7.88. Run
+        /// <c>tooling/scripts/board_camera_fit.py</c>; it reads these constants and prints the
+        /// solve.</para>
+        ///
+        /// <para>Still referenced by <see cref="Solve"/> and by <see cref="SelfCheck"/>'s aspect
+        /// assertions, which is why it is corrected rather than deleted — retiring it means
+        /// retiring that whole orthographic path, and #235 has to be re-decided against the real
+        /// camera first.</para>
         /// </summary>
         public const float MinAspect = DesignHalfWidth / DesignHalfHeight;
 
