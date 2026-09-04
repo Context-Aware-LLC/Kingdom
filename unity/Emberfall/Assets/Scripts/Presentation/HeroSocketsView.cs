@@ -6,12 +6,11 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The enlarged hero-power and weapon sockets — an interlocked pair, sitting in the lane
-    /// between the hand fan and the hero portrait (they were docked across the portrait's lower
-    /// edge until 2026-09-04, where they covered the picture; see ProceduralBoardSetup for why the
-    /// pair went inboard rather than one ring to each side). They remain separate objects because
-    /// the weapon disappears when unequipped and the hero power owns its own input collider.
-    /// Circular art fills each transparent opening and stays inside the gold aperture.
+    /// The enlarged hero-power and weapon sockets, one flanking each side of the hero portrait
+    /// (they were docked across its lower edge until 2026-09-04, where they covered the picture).
+    /// They remain separate objects because the weapon disappears when unequipped and the hero
+    /// power owns its own input collider. Circular art fills each transparent opening and stays
+    /// inside the gold aperture.
     /// </summary>
     public sealed class HeroSocketsView : MonoBehaviour
     {
@@ -66,13 +65,16 @@ namespace Emberfall.Presentation
         private static readonly Vector2 WeaponDuraBolt = new Vector2(0.8006f, 0.5878f);
 
         // THE HERO-POWER COST DOES NOT GO ON A RIVET, and that is not an oversight.
-        // Both rings wear their rivets on the side that faces the OTHER socket, so all four sit in
-        // the narrow gap between the two frames. Put the cost on either of the power ring's and it
-        // lands a digit's width from the weapon's attack, in the same size, reading as a third
-        // weapon stat. Rendered all three ways at board scale before choosing (2026-09-03): on the
-        // lower rim it clears the weapon entirely, and it is outside the aperture radius
-        // (ApertureFraction * 0.5 = 0.251 from centre, against 0.28 here) so it never covers the
-        // power's own art.
+        // The original reason has expired and is recorded because it reads as still-live: the four
+        // rivets used to sit in the narrow gap between two abutting frames, so a cost on the
+        // power's rivet landed a digit's width from the weapon's attack and read as a third weapon
+        // stat. The portrait sits between the two rings since 2026-09-04 — they are 2 x 1.59 apart
+        // — and that collision is impossible now.
+        //
+        // What survives is the reason the lower rim WORKS: it is outside the aperture radius
+        // (ApertureFraction * 0.5 = 0.251 from centre, against 0.28 here), so the cost never covers
+        // the power's own art, which a rivet 0.115 across cannot promise. Moving it onto a rivet is
+        // an open option now rather than a blocked one — a look, not a fix.
         private static readonly Vector2 PowerCostAt = new Vector2(0.50f, 0.78f);
 
         // The sockets are bottom-docked in world space but must composite over the hero plate.

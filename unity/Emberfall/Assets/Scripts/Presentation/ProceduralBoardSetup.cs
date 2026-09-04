@@ -66,48 +66,51 @@ namespace Emberfall.Presentation
         // Signs are applied in BuildSeat: x is negated for the hero side, positive for the
         // rail/deck side, then multiplied by the seat sign.
         //
-        // THE SOCKET PAIR MOVED OFF THE PORTRAIT (Sam, 2026-09-04: "these need to be outside of
-        // the hero frame not top of it ... the images must not be rendering on top of each
-        // other"). It used to straddle the hero's centre line at ±0.57, which put both 1.32-wide
-        // frames wholly inside a 2.16-wide plate and drew them across the lower half of the hero's
-        // picture. The pair keeps its internal spacing — the two rings are cut to interlock at
-        // exactly 2 x SocketOffsetX and nothing about that changed — and slides INBOARD as one
-        // unit until it clears the portrait's oval aperture.
+        // ONE RING EACH SIDE OF THE PORTRAIT (Sam, 2026-09-04, twice: "these need to be outside of
+        // the hero frame not top of it", then "should be on opposite sides of the hero frame").
+        // They used to straddle the hero's centre line at ±0.57, which put both 1.32-wide frames
+        // wholly inside a 2.16-wide plate and drew them across the lower half of the hero's
+        // picture. Each now clears the plate's edge but for a SocketOverlap: metal touches metal,
+        // no art covers art.
         //
-        // ONE RING EACH SIDE OF THE PORTRAIT DOES NOT FIT, AND THE NUMBER THAT SETTLES IT IS 0.45.
-        // The oval's outer edge is |x| 7.583 and the design box ends at 7.88, so there are 0.45
-        // units of board outboard of the hero's picture and a ring is 1.32 wide. Widening the box
-        // is not available either: DesignHalfWidth/DesignHalfHeight IS MinAspect, so spending
-        // width there narrows the range of screens the layout is guaranteed on, and 16:9 is inside
-        // it. So an outboard ring can only be bought by moving the hero inboard, and the exposed
-        // width it gains is taken one-for-one out of the board row's outermost slot — a 7-minion
-        // row already reaches |x| 5.618 against a plate edge at 5.72. Both rings inboard costs
-        // nothing instead, because the lane between the hand fan and the portrait was empty.
+        // THE THREE NUMBERS ARE ONE SOLVE, not three choices:
+        //     SocketOffsetX = PlateW/2 + FrameSize/2 - SocketOverlap = 1.08 + 0.66 - 0.15
+        //     HeroX         = 7.88 - SocketOffsetX - FrameSize/2     (the design edge, unmoved)
+        // so HeroClusterOuterEdge stays exactly 7.88 and DeviceLayout.DesignHalfWidth — which the
+        // camera frames the whole board by — does not move. The outboard socket owned the design
+        // edge before and still does, so nothing outside this block had to change.
         //
-        // THE LANE, and how the pair is centred in it:
-        //     hand fan's widest reach   |x| 3.325   (Footprint 6.0 -> outer centre 2.157,
-        //                                            plus a MaxTiltDeg corner at 1.168)
-        //     portrait oval inner edge  |x| 6.017   (HeroX - PortraitW/2)
-        //     lane 2.692 wide, pair 2.46 wide (2 x SocketOffsetX + FrameSize) -> 0.116 each side
-        // giving inner ring inner edge 3.44 and outer ring outer edge 5.90. The outer ring
-        // overlaps the PLATE by 0.18 and clears the PICTURE by 0.12, which is the distinction Sam
-        // drew: metal may touch metal.
+        // WHAT IT COSTS, AND THE THRESHOLD IS EXACTLY SEVEN. The hero moved 1.02 INBOARD to pay
+        // for the outboard ring, and that width comes out of the board row's outermost slot. With
+        // N minions the outermost centre is ((N-1)/2) * SlotSpacing, so its outer edge passes the
+        // portrait's oval (|x| 4.847) only at N = 7:
         //
-        // RETIREMENT TRIGGER: HeroPlateView.PortraitW/PortraitH, HandFanLayout.Footprint/MaxTiltDeg
-        // and HeroSocketsView.FrameSize are all inputs to that centring. Change any of them and
-        // re-solve SocketPairInboard here; nothing checks the two clearances above.
-        internal const float SocketOffsetX = 0.57f;
-        internal const float SocketPairInboard = 2.13f;
-
-        // 6.65 -> 6.80 so the PLATE lands exactly on the design edge. The outboard socket used to
-        // own that edge and does not exist out there any more, so without this the widest built
-        // element would be 7.73 and DeviceLayout.DesignHalfWidth would have had to follow it —
-        // rescaling the entire board by 1.9% for a hero-frame fix. The 0.15 also buys the lane
-        // above its margin. Kept a LITERAL: deriving it from DesignHalfWidth would make
-        // DeviceLayout.SelfCheck's "design half-width == the widest thing the board builds"
-        // assertion tautological, and that assertion is this block's retirement trigger.
-        internal const float HeroX = 6.80f;
-        internal const float HeroClusterOuterEdge = HeroX + HeroPlateView.PlateW * 0.5f;
+        //      6 minions  outer edge 4.808   clears the oval by 0.039
+        //      7 minions  outer edge 5.618   laps the frame by 1.068, the PICTURE by 0.771
+        //
+        // Structural, not a tuning miss: the exposed width of an outboard ring is taken one-for-one
+        // out of that slot. Raising SocketOverlap moves the hero back out, but it buries the ring
+        // at the same rate — clearing the oval outright needs overlap 0.921 of a 1.32 ring, i.e.
+        // 70% of it under the plate.
+        //
+        // The other lever, if a full board matters more than the rings do: BoardRowGeometry
+        // .SlotSpacing 1.62 -> 1.363 clears the picture at seven, and costs 0.156 of overlap
+        // between adjacent minions (they currently carry 0.104 of air). NOT TAKEN — it reshapes
+        // every board in the game to fix a hero frame, and that is Sam's call, not this file's.
+        //
+        // RETIREMENT TRIGGER: HeroPlateView.PlateW and HeroSocketsView.FrameSize are inputs to the
+        // solve above. Change either and re-solve HeroX in the same commit; DeviceLayout.SelfCheck
+        // fails on the mismatch rather than letting it ship.
+        private const float SocketOverlap = 0.15f;
+        internal const float SocketOffsetX =
+            HeroPlateView.PlateW * 0.5f + HeroSocketsView.FrameSize * 0.5f - SocketOverlap;
+        // A LITERAL, though it is 7.88 - SocketOffsetX - FrameSize/2 to four places. Deriving it
+        // from DesignHalfWidth would make DeviceLayout.SelfCheck's "design half-width == the widest
+        // thing the board builds" assertion tautological — it would pass by construction after any
+        // resize instead of reporting that the solve needs redoing.
+        internal const float HeroX = 5.63f;
+        internal const float HeroClusterOuterEdge =
+            HeroX + SocketOffsetX + HeroSocketsView.FrameSize * 0.5f;
 
         // Two columns of five mana orbs stand inboard of the deck pile. The 0.31-unit gap from
         // the grid's outer edge at 6.22 to the pile's inner edge at 6.53 keeps them distinct.
@@ -121,10 +124,10 @@ namespace Emberfall.Presentation
         private const float Baseline = 4.45f; // frame crown/bottom remains 0.15 inside y +/-4.6
         internal const float HeroY = Baseline - HeroPlateView.PlateH * 0.5f;
 
-        // How far below the hero's centre the pair rides. Unchanged by the 2026-09-04 move, and it
-        // is what keeps the pair out of the BOARD ROW now that it sits inboard rather than tucked
-        // under the portrait: the rings span |y| 2.86..4.18 and a minion reaches |y| 2.479
-        // (RowY + CardH/2), so the clearance is 0.38. Raising this spends that.
+        // How far below the hero's centre each ring rides. Unchanged when they moved out from
+        // under the portrait ("right where they are", Sam), so they still straddle its lower third
+        // at |y| 2.86..4.18. That band is also what keeps the INBOARD ring clear of the board row,
+        // which reaches |y| 2.479 (RowY + CardH/2) — 0.38 of clearance, and raising this spends it.
         //
         // Screen-down is deliberate rather than multiplied by the seat sign: every portrait is
         // upright, so the opponent's rings ride toward the battlefield while the local ones ride
@@ -211,26 +214,20 @@ namespace Emberfall.Presentation
             // WHICH SIDE IS WHICH IS DECIDED BY THE ART, not by taste. The two rings are cut as a
             // MIRRORED PAIR: the hero power's molten wreath sits on its lower-RIGHT with its rivets
             // on the left, the weapon's blades sit on its LEFT with its rivets on the right. The
-            // sockets overlap (centres 2 x SocketOffsetX apart, frames FrameSize wide), so there is
-            // exactly one arrangement in which they interlock — ornament flaring outward on both
-            // sides, rivets meeting in the middle. Swap them and the weapon's blades cut straight
-            // across the power ring's aperture. Rendered both ways before choosing (2026-09-03).
-            //
-            // The 2026-09-04 move slid the interlocked pair inboard as one unit and did not touch
-            // this: the pair's internal arrangement is the same, only where it sits changed.
+            // rings now sit one to each side of the portrait, and power screen-RIGHT with weapon
+            // screen-LEFT is the arrangement that flares both ornaments AWAY from it and turns both
+            // sets of rivets — which carry the numerals — back toward it. Swap them and the
+            // weapon's blades cut straight across the plate. Rendered both ways 2026-09-03, when
+            // the two frames still abutted under the portrait and the argument was about which of
+            // them the other's ornament crossed; the conclusion survived the 2026-09-04 split
+            // because it never depended on the gap, only on which way each ornament points.
             //
             // RETIREMENT TRIGGER: if either socket ring is ever re-cut symmetrical, or mirrored
             // per seat, this stops being a constraint and the offset can go back to xSign.
-            // SocketPairInboard IS multiplied by xSign and SocketOffsetX is NOT, and that pair of
-            // decisions is the whole placement. The shift moves the pair toward the board's centre
-            // line, which is a different direction per seat; the ±offset separates the two rings,
-            // which is a screen-absolute arrangement decided by the art. Multiply the wrong one and
-            // one seat's pair lands under its own portrait again.
-            float pairCentreX = xSign * (HeroX - SocketPairInboard);
             seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower",
-                new Vector3(pairCentreX + SocketOffsetX, ySign * HeroY - SocketDrop, 0f));
+                new Vector3(xSign * HeroX + SocketOffsetX, ySign * HeroY - SocketDrop, 0f));
             seat.WeaponAnchor = MakeAnchor($"{prefix}_Weapon",
-                new Vector3(pairCentreX - SocketOffsetX, ySign * HeroY - SocketDrop, 0f));
+                new Vector3(xSign * HeroX - SocketOffsetX, ySign * HeroY - SocketDrop, 0f));
             seat.ManaTrayAnchor = MakeAnchor($"{prefix}_ManaTray",
                 new Vector3(xSign * -ManaGridX, ySign * ManaGridY, 0f));
             seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -DeckX,     ySign * DeckY,      0f));

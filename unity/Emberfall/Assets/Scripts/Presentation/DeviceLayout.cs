@@ -34,10 +34,9 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// Half the world width the bottom row actually needs, in world units. Set by the
-        /// widest element of the seat cluster: the hero PORTRAIT's outer edge, which is
-        /// <c>ProceduralBoardSetup.HeroClusterOuterEdge</c> 7.88. The deck pile is second at 7.83.
-        /// It used to be an outboard socket, with the portrait inset behind the pair; the sockets
-        /// moved inboard of the portrait on 2026-09-04 and the plate inherited the edge.
+        /// widest element of the seat cluster: the outboard hero socket, whose edge is
+        /// <c>ProceduralBoardSetup.HeroClusterOuterEdge</c> 7.88. The deck pile is second at
+        /// 7.83; the narrower portrait is deliberately inset between its two sockets.
         ///
         /// RETIREMENT TRIGGER: if you move the hero cluster, DeckX or PileW outboard, this number
         /// and <see cref="MinAspect"/> move with them, and CLAUDE.md / the device-layout spec
@@ -289,9 +288,7 @@ namespace Emberfall.Presentation
                 $"mana grid edge |y| {manaEdgeY:F3} <= design edge {DesignHalfHeight:F2}");
 
             // 1c. The enlarged local sockets intentionally consume the remaining vertical
-            //     budget, but must never cross the safe-area design edge. Still the binding
-            //     vertical check after they moved inboard of the portrait — SocketDrop did not
-            //     change, so the pair still reaches |y| 4.18.
+            //     budget, but must never cross the safe-area design edge.
             float socketEdgeY = ProceduralBoardSetup.HeroY + ProceduralBoardSetup.SocketDrop
                                 + HeroSocketsView.FrameSize * 0.5f;
             ok &= Line(sb, socketEdgeY <= DesignHalfHeight + 0.001f,
