@@ -260,11 +260,18 @@ namespace Emberfall.Editor
         private void DrawToolbar()
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-            if (GUILayout.Button("New", EditorStyles.toolbarButton, GUILayout.Width(50))) OnNew();
-            if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton, GUILayout.Width(70))) OnDuplicate();
-            if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(50))) OnDelete();
-            GUILayout.Space(8);
-            if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(110))) SaveAll();
+
+            // NOTHING THAT CHANGES THE LIBRARY SITS ON THE LEFT, and that is the whole point of this
+            // layout. The search field is the first control in the 240px list column immediately
+            // below (DrawLibraryList), so the toolbar's left edge is the strip a hand travels
+            // through on its way to the search box. New/Duplicate/Delete lived there and were hit by
+            // accident; on 2026-09-03 that cost card 1029 (`grave_custodian`) — duplicated twice
+            // reaching for search, then the ORIGINALS deleted, which silently renumbered a shipped
+            // card to 1192 and orphaned every saved deck and ownership row holding 1029. It was
+            // found by a test, days later, and not by anything in this window.
+            //
+            // So the left of the toolbar carries read-only controls only, and the mutating group
+            // moves right, past the flexible space, where no control below it invites a click.
             if (GUILayout.Button("Validate All", EditorStyles.toolbarButton, GUILayout.Width(80))) CardSetValidator.RunAndLog();
             // The selected card's state, beside the button that checks all of them, so it is on
             // screen whatever the editor pane is scrolled to. The messages stay in the pinned panel
@@ -273,7 +280,18 @@ namespace Emberfall.Editor
             GUILayout.Label(SelectedStatus(), EditorStyles.miniLabel);
 
             GUILayout.FlexibleSpace();
+
             GUILayout.Label(_dirtyIds.Count > 0 ? $"● {_dirtyIds.Count} unsaved" : "saved", EditorStyles.miniLabel);
+            GUILayout.Space(12);
+            if (GUILayout.Button("New", EditorStyles.toolbarButton, GUILayout.Width(50))) OnNew();
+            if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton, GUILayout.Width(70))) OnDuplicate();
+            // Delete is separated from Duplicate deliberately. The 1029 loss took BOTH — a stray
+            // Duplicate and then a Delete aimed at the wrong row — and they are the two whose
+            // adjacency turns one slip into two.
+            GUILayout.Space(16);
+            if (GUILayout.Button("Delete", EditorStyles.toolbarButton, GUILayout.Width(50))) OnDelete();
+            GUILayout.Space(16);
+            if (GUILayout.Button("Save", EditorStyles.toolbarButton, GUILayout.Width(110))) SaveAll();
             EditorGUILayout.EndHorizontal();
         }
 
