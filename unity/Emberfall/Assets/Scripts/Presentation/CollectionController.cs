@@ -25,7 +25,8 @@ namespace Emberfall.Presentation
     /// <list type="bullet">
     /// <item>No ownership record (<see cref="PlayerAccount.OwnedCards"/> returns null) — nobody has told
     /// this account what it owns. The wall shows the full collectible pool and the scope toggle stays
-    /// hidden. This is every machine today.</item>
+    /// hidden. True for a machine that has never synced (<see cref="Session.CollectionGateway"/>,
+    /// landed 2026-09-01) — a stale build predating that sync will never leave this state.</item>
     /// <item>A record, scoped to it — the wall shows only cards with at least one copy, and Owned is
     /// highlighted. This is the default the moment a grant path writes that record.</item>
     /// <item>A record, showing everything anyway — the Owned/All toggle (#146). Same wall as the first
