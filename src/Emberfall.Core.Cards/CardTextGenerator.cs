@@ -1009,6 +1009,7 @@ namespace Emberfall.Core.Cards
                 // NOT named through the keyword — see FrostVerb. This was `Name(Keyword.FROST)` until
                 // 2026-08-25, which is what made the action and the carrier print the same word.
                 FrostAction a => $"{FrostVerb} {Target(a.Target, sourcePronoun)}.",
+                DrownAction a => $"{Name(Keyword.DROWN)} {Target(a.Target, sourcePronoun)}.",
                 TakeControlAction a => $"Take control of {Target(a.Target, sourcePronoun)}.",
                 // The trigger's own label is the noun — "Toll" comes from TriggerLabel, not from a
                 // second spelling here, so a card face and a timing marker cannot drift apart. Reads

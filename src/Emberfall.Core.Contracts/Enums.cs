@@ -36,9 +36,10 @@ namespace Emberfall.Core.Contracts
     /// Canonical keyword wire enum. Trigger labels such as Herald and Toll are derived from normalized
     /// rule activation and deliberately have no enum member.
     ///
-    /// <para>SILENCE, BACKDRAFT and REINFORCE are not carrier behavior and must never enter keyword
-    /// state — SILENCE and BACKDRAFT because typed actions derive their markers, REINFORCE because it
-    /// names nothing at all. Numeric values are explicit so a member's wire spelling cannot drift.</para>
+    /// <para>SILENCE, BACKDRAFT, REINFORCE and DROWN are not carrier behavior and must never enter
+    /// keyword state — SILENCE, BACKDRAFT and DROWN because typed actions derive their markers,
+    /// REINFORCE because it names nothing at all. Numeric values are explicit so a member's wire
+    /// spelling cannot drift.</para>
     ///
     /// <para><b>Do not renumber in this fork.</b> The hasher sorts keyword sets by enum int and writes
     /// that int into the digest, so changing a value moves every digest holding more than one keyword.
@@ -54,6 +55,7 @@ namespace Emberfall.Core.Contracts
         REKINDLE = 14,
         OVERWHELM = 15, VANGUARD = 16, // GDD §1e v1.1 — combat resolver handles both
         REINFORCE = 17,
+        DROWN = 18,
     }
 
     /// <summary>When an effect fires (dev-docs/specs/card-schema.md §5.1).

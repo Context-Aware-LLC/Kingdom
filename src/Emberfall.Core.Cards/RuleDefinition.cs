@@ -257,6 +257,17 @@ namespace Emberfall.Core.Cards
         public FrostAction(TargetSpec target) : base(target) { }
     }
 
+    /// <summary>
+    /// One-shot damage, not a persistent status — same shape as <see cref="SilenceAction"/>, not
+    /// <see cref="FrostAction"/>. Deals half the target minion's CURRENT health rounded up, or a flat
+    /// 2 to a hero (Sam, 2026-09-05). Unlike every other damage source it bypasses Aegis entirely —
+    /// see <c>DamagePipeline.ApplyDamage</c>'s <c>ignoresAegis</c> parameter and <c>DrownHandler</c>.
+    /// </summary>
+    public sealed class DrownAction : TargetedRuleAction
+    {
+        public DrownAction(TargetSpec target) : base(target) { }
+    }
+
     /// <summary>Transfers a minion or equipped weapon to the rule controller.</summary>
     public sealed class TakeControlAction : TargetedRuleAction
     {
@@ -478,6 +489,7 @@ namespace Emberfall.Core.Cards
                 case DamageAction _:
                 case HealAction _:
                 case FrostAction _:
+                case DrownAction _:
                     return new TargetShape(TargetZones.Board, TargetTypes.Hero | TargetTypes.Minion);
                 case ModifyStatsAction _:
                 case GrantKeywordAction _:

@@ -4,15 +4,15 @@ namespace Emberfall.Core.Cards
 {
     /// <summary>
     /// Separates live carrier behavior from enum slots that hold a wire/hash ordinal and nothing else.
-    /// BACKDRAFT and SILENCE are typed actions whose presentation markers derive from those actions;
-    /// REINFORCE names nothing. All three answer the same way here — not carrier behavior, and never
-    /// admissible in runtime keyword state — which is the only question this class is asked.
+    /// BACKDRAFT, SILENCE and DROWN are typed actions whose presentation markers derive from those
+    /// actions; REINFORCE names nothing. All four answer the same way here — not carrier behavior, and
+    /// never admissible in runtime keyword state — which is the only question this class is asked.
     /// </summary>
     public static class KeywordSemantics
     {
         public static bool IsActionMarker(Keyword keyword)
             => keyword == Keyword.BACKDRAFT || keyword == Keyword.REINFORCE ||
-               keyword == Keyword.SILENCE;
+               keyword == Keyword.SILENCE || keyword == Keyword.DROWN;
 
         public static bool IsCarrierBehavior(Keyword keyword)
             => System.Enum.IsDefined(typeof(Keyword), keyword) && !IsActionMarker(keyword);

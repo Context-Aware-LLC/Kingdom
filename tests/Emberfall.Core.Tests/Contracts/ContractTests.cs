@@ -90,12 +90,13 @@ namespace Emberfall.Core.Tests.Contracts
         }
 
         [Test]
-        public void Keyword_Enum_Keeps_The_16_Stable_Wire_Slots()
+        public void Keyword_Enum_Keeps_The_17_Stable_Wire_Slots()
         {
             // dev-docs/specs/card-schema.md §4 v1.3: ECHO formally cut by M2 decision 2 (signed 2026-07-12).
             // Herald and Toll were removed before the later explicit ordinals. SILENCE, BACKDRAFT,
-            // and REINFORCE now remain as reserved action-marker slots rather than runtime keywords.
-            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(16));
+            // REINFORCE and DROWN now remain as reserved action-marker slots rather than runtime
+            // keywords. DROWN appended 2026-09-05 (Sam) — a one-shot damage action, never a carrier.
+            Assert.That(Enum.GetValues(typeof(Keyword)).Length, Is.EqualTo(17));
             Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("ECHO"),
                 "ECHO must not quietly return — re-adding it is a charter-level decision.");
             Assert.That(Enum.GetNames(typeof(Keyword)), Does.Not.Contain("HERALD"));
@@ -114,12 +115,14 @@ namespace Emberfall.Core.Tests.Contracts
                 Assert.That((int)Keyword.OVERWHELM, Is.EqualTo(15));
                 Assert.That((int)Keyword.VANGUARD, Is.EqualTo(16));
                 Assert.That((int)Keyword.REINFORCE, Is.EqualTo(17));
+                Assert.That((int)Keyword.DROWN, Is.EqualTo(18));
             });
             Assert.Multiple(() =>
             {
                 Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.SILENCE), Is.False);
                 Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.BACKDRAFT), Is.False);
                 Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.REINFORCE), Is.False);
+                Assert.That(KeywordSemantics.IsCarrierBehavior(Keyword.DROWN), Is.False);
             });
         }
 

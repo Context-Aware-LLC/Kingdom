@@ -388,7 +388,7 @@ namespace Emberfall.Core.Tests.Combat
             };
             var actionMarkers = new[]
             {
-                Keyword.SILENCE, Keyword.BACKDRAFT, Keyword.REINFORCE,
+                Keyword.SILENCE, Keyword.BACKDRAFT, Keyword.REINFORCE, Keyword.DROWN,
             };
             var unsupported = new[]
             {

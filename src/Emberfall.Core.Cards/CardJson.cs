@@ -235,6 +235,9 @@ namespace Emberfall.Core.Cards
                 case "FROST":
                     Fields(element, type, "target");
                     return new FrostAction(TargetFromElement(element));
+                case "DROWN":
+                    Fields(element, type, "target");
+                    return new DrownAction(TargetFromElement(element));
                 case "TAKE_CONTROL":
                     Fields(element, type, "target");
                     return new TakeControlAction(TargetFromElement(element));

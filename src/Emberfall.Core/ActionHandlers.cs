@@ -37,6 +37,7 @@ namespace Emberfall.Core
                 case UnearthAction _: new UnearthHandler().Execute(context); return;
                 case FrostAction _: new FrostHandler().Execute(context); return;
                 case BackdraftAction _: new BackdraftHandler().Execute(context); return;
+                case DrownAction _: new DrownHandler().Execute(context); return;
                 default:
                     throw new System.InvalidOperationException(
                         $"Rule action '{context.Rule.Action.GetType().Name}' has no runtime handler.");
@@ -595,6 +596,26 @@ namespace Emberfall.Core
             var ps = ctx.State.PlayerOf(ctx.Source.Controller);
             ps.NextTurnBackdraftLock += amount;
             // Backdraft is a crystal-lock; no VFX event in M1 (the mana tray handles the visual).
+        }
+    }
+
+    // ── DROWN ────────────────────────────────────────────────────────────────────
+    /// <summary>Half a minion's CURRENT health rounded up, or a flat 2 to a hero. Bypasses Aegis
+    /// entirely (<c>ignoresAegis: true</c>) — see <see cref="DrownAction"/>.</summary>
+    internal sealed class DrownHandler : IActionHandler
+    {
+        public void Execute(in EffectContext ctx)
+        {
+            foreach (var t in ctx.Targets)
+            {
+                if (t.IsHero)
+                    DamagePipeline.ApplyDamage(ctx.Interpreter, t.Character, 2, ctx.Source, ignoresAegis: true);
+                else if (t.IsMinion)
+                {
+                    int half = (t.Minion!.CurrentHealth + 1) / 2; // integer ceil-division for positive health
+                    DamagePipeline.ApplyDamage(ctx.Interpreter, t.Character, half, ctx.Source, ignoresAegis: true);
+                }
+            }
         }
     }
 }

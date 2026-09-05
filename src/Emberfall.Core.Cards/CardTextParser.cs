@@ -606,6 +606,7 @@ namespace Emberfall.Core.Cards
             yield return new TriggerTollAction(target);
             yield return new FrostAction(target);
             yield return new SilenceAction(target);
+            yield return new DrownAction(target);
         }
 
         /// <summary>
@@ -674,6 +675,7 @@ namespace Emberfall.Core.Cards
             string frost = CardTextGenerator.FrostVerb + " ";
             string silence = CardTextGenerator.DescribeKeyword(Keyword.SILENCE) + " ";
             string backdraft = CardTextGenerator.DescribeKeyword(Keyword.BACKDRAFT) + " ";
+            string drown = CardTextGenerator.DescribeKeyword(Keyword.DROWN) + " ";
             // No trailing space: Unearth prints as a bare word, so the whole clause IS the label.
 
             foreach (TargetSpec spec in Specs(clause, cost))
@@ -713,6 +715,7 @@ namespace Emberfall.Core.Cards
                 if (Verb("Trigger ")) yield return new TriggerTollAction(spec);
                 if (Verb(frost)) yield return new FrostAction(spec);
                 if (Verb(silence)) yield return new SilenceAction(spec);
+                if (Verb(drown)) yield return new DrownAction(spec);
             }
 
             foreach (int amount in Amounts(clause))

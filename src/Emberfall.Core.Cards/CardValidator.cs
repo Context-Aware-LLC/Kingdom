@@ -633,6 +633,7 @@ namespace Emberfall.Core.Cards
                 case SilenceAction _: return "SILENCE";
                 case TransformAction _: return "TRANSFORM";
                 case FrostAction _: return "FROST";
+                case DrownAction _: return "DROWN";
                 case TakeControlAction _: return "TAKE_CONTROL";
                 case TriggerTollAction _: return "TRIGGER_TOLL";
                 case DrawAction _: return "DRAW";

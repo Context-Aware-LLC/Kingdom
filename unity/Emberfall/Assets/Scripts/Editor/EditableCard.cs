@@ -105,6 +105,7 @@ namespace Emberfall.Editor
         Silence,
         Transform,
         Frost,
+        Drown,
         TakeControl,
         TriggerToll,
         Draw,
@@ -279,6 +280,7 @@ namespace Emberfall.Editor
             || ActionKind == EditableRuleActionKind.Silence
             || ActionKind == EditableRuleActionKind.Transform
             || ActionKind == EditableRuleActionKind.Frost
+            || ActionKind == EditableRuleActionKind.Drown
             || ActionKind == EditableRuleActionKind.TakeControl
             || ActionKind == EditableRuleActionKind.TriggerToll;
 
@@ -394,6 +396,7 @@ namespace Emberfall.Editor
                 case EditableRuleActionKind.Silence: return new SilenceAction(target);
                 case EditableRuleActionKind.Transform: return new TransformAction(CardId, target);
                 case EditableRuleActionKind.Frost: return new FrostAction(target);
+                case EditableRuleActionKind.Drown: return new DrownAction(target);
                 case EditableRuleActionKind.TakeControl: return new TakeControlAction(target);
                 case EditableRuleActionKind.TriggerToll: return new TriggerTollAction(target);
                 case EditableRuleActionKind.Draw: return new DrawAction(Count);
@@ -422,6 +425,7 @@ namespace Emberfall.Editor
             else if (action is SilenceAction silence) { ActionKind = EditableRuleActionKind.Silence; ReadTarget(silence); }
             else if (action is TransformAction transform) { ActionKind = EditableRuleActionKind.Transform; CardId = transform.CardId; ReadTarget(transform); }
             else if (action is FrostAction frost) { ActionKind = EditableRuleActionKind.Frost; ReadTarget(frost); }
+            else if (action is DrownAction drownAction) { ActionKind = EditableRuleActionKind.Drown; ReadTarget(drownAction); }
             else if (action is TakeControlAction takeControl) { ActionKind = EditableRuleActionKind.TakeControl; ReadTarget(takeControl); }
             else if (action is TriggerTollAction triggerToll) { ActionKind = EditableRuleActionKind.TriggerToll; ReadTarget(triggerToll); }
             else if (action is DrawAction draw) { ActionKind = EditableRuleActionKind.Draw; Count = draw.Count; }

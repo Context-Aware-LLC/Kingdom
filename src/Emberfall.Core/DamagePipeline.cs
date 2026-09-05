@@ -6,7 +6,8 @@ namespace Emberfall.Core
     /// <summary>
     /// The single damage/heal door (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §7 combat, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1 keyword
     /// hooks). The fixed order is: <b>Aegis absorb → health/armor → Lifedrain heal → Venom lethality
-    /// → Frost frost</b>.
+    /// → Frost frost</b>. The one exception: <c>ignoresAegis</c> (DROWN only) skips the Aegis step
+    /// entirely rather than reordering it — the shield is never spent, just irrelevant to that hit.
     /// Both DEAL_DAMAGE effects (spells/battlecries) and the Attack command (step 2) route through here so
     /// the keyword interactions resolve identically and deterministically. Integer-only. Death is NOT
     /// resolved here — characters dropped to ≤0 are settled as a batch by the interpreter's DeathCheck.
@@ -56,13 +57,13 @@ namespace Emberfall.Core
 
         /// <summary>Effect damage consumes only immutable source facts captured at enqueue time.</summary>
         public static void ApplyDamage(EffectInterpreter interp, CharacterRef target, int amount,
-            EffectSourceContext source)
+            EffectSourceContext source, bool ignoresAegis = false)
             => ApplyDamage(interp, target, amount, source.Identity, source.SourceKeywords,
-                source.Controller);
+                source.Controller, ignoresAegis);
 
         private static void ApplyDamage(EffectInterpreter interp, CharacterRef target, int amount,
             InstanceId? source, IReadOnlyCollection<Keyword>? sourceKeywords,
-            PlayerId? sourceController)
+            PlayerId? sourceController, bool ignoresAegis = false)
         {
             if (amount <= 0) return;
 
@@ -70,8 +71,11 @@ namespace Emberfall.Core
             var buf = interp.Events;
 
             // Aegis (AEGIS) absorbs the whole hit, then clears — no health lost, no on-hit riders,
-            // and (returning here) no ON_DAMAGED: an absorbed hit is not "damaged" (R-2(c) no-riders precedent).
-            if (target.IsMinion && target.Minion!.HasAegisShield)
+            // and (returning here) no ON_DAMAGED: an absorbed hit is not "damaged" (R-2(c) no-riders
+            // precedent). DROWN is the one exception (Sam, 2026-09-05: "divine shield can't protect
+            // you against drowning") — ignoresAegis skips this branch entirely, so the shield is
+            // never even spent; it is simply irrelevant to this hit, still up for the next one.
+            if (!ignoresAegis && target.IsMinion && target.Minion!.HasAegisShield)
             {
                 target.Minion.HasAegisShield = false;
                 buf.Emit(GameEventKind.DamageApplied, source: source, target: target.Id, amount: 0, flags: EventFlags.AegisAbsorbed);
