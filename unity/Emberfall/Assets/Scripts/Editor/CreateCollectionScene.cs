@@ -28,9 +28,27 @@ namespace Emberfall.Editor
         private const string UxmlPath = "Assets/UI/Collection/CollectionScreen.uxml";
         private const string PanelPath = "Assets/UI/Common/EmberfallPanelSettings.asset";
 
-        [MenuItem("Emberfall/UI/Rebuild Collection Scene")]
+        // MOVED OUT OF "Emberfall/UI/" AND GATED 2026-09-04 (Sam: "so they aren't liable to be
+        // accidentally triggered"). This sits one item away from Check UXML Integrity, which is a
+        // read-only check — and it is not: NewScene(EmptyScene, Single) followed by SaveScene over
+        // ScenePath discards whatever is in that scene, with no undo. The submenu keeps it off the
+        // path of a stray click; the dialog below is what actually stops it.
+        [MenuItem("Emberfall/Rebuild Scene — OVERWRITES/Collection")]
         public static void Build()
         {
+            // Interactive only. A -batchmode caller asked for this by name and has no one to
+            // answer a dialog; leaving it unguarded there would trade a silent overwrite for a
+            // ten-minute CI hang, which is the worse of the two. Nothing calls Build() headlessly
+            // today — this is so that adding such a caller does not deadlock.
+            if (!Application.isBatchMode && !EditorUtility.DisplayDialog(
+                    "Rebuild the Collection scene?",
+                    $"This REPLACES {ScenePath} with a freshly generated scene.\n\n"
+                    + "Anything hand-authored in it — objects, components, inspector values — is "
+                    + "discarded and cannot be undone. The UXML and PanelSettings it builds from "
+                    + "are not touched.\n\nRebuild it?",
+                    "Rebuild — discard the current scene", "Cancel"))
+                return;
+
             AssetDatabase.ImportAsset(UxmlPath,
                 ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 

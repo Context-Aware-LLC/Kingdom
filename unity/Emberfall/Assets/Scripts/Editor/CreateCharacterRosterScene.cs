@@ -22,9 +22,22 @@ namespace Emberfall.Editor
         private const string UxmlPath = "Assets/UI/CharacterRoster/CharacterRosterScreen.uxml";
         private const string PanelPath = "Assets/UI/Common/EmberfallPanelSettings.asset";
 
-        [MenuItem("Emberfall/UI/Rebuild Character Roster Scene")]
+        // MOVED OUT OF "Emberfall/UI/" AND GATED 2026-09-04 — see the note on the sibling in
+        // CreateCollectionScene. Same hazard: NewScene(EmptyScene, Single) then SaveScene over
+        // ScenePath, no undo, one menu item away from read-only checks.
+        [MenuItem("Emberfall/Rebuild Scene — OVERWRITES/Character Roster")]
         public static void Build()
         {
+            // Interactive only — see the sibling in CreateCollectionScene for why batchmode skips it.
+            if (!Application.isBatchMode && !EditorUtility.DisplayDialog(
+                    "Rebuild the Character Roster scene?",
+                    $"This REPLACES {ScenePath} with a freshly generated scene.\n\n"
+                    + "Anything hand-authored in it — objects, components, inspector values — is "
+                    + "discarded and cannot be undone. The UXML and PanelSettings it builds from "
+                    + "are not touched.\n\nRebuild it?",
+                    "Rebuild — discard the current scene", "Cancel"))
+                return;
+
             AssetDatabase.ImportAsset(UxmlPath,
                 ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
 
