@@ -13,11 +13,16 @@ namespace Emberfall.Net.Client.Tests.Collection
     /// <c>docs/dev-docs/specs/login-handshake.md</c>).
     ///
     /// <para><b>What every read test here guards is one distinction:</b> a roster that came back
-    /// EMPTY and a roster that did not come back. They arrive as the same absence of characters,
-    /// they are opposite statements about the player, and only one of them may replace what is on
-    /// the device. Treat a failed read as "no characters" and a returning player is walked through
-    /// character creation a second time while their real roster is overwritten with nothing.
+    /// EMPTY and a roster that did not come back. They arrive as the same absence of decks, they are
+    /// opposite statements about the player, and only one of them may replace what is on the device.
+    /// Treat a failed read as "no decks" and a returning player is walked through deck creation a
+    /// second time while their real decks are overwritten with nothing.
     /// <see cref="RosterSnapshot.ShouldReplaceLocal"/> is the single place that call is made.</para>
+    ///
+    /// <para><b>The characters half of this wire is gone (ADR-0009).</b> <c>POST /characters</c> and
+    /// <c>DELETE /characters/{id}</c> had a test each and both went with the routes; the
+    /// <c>characters</c> member of a <c>known</c> body went with them. The distinction above is
+    /// unchanged — it was never about characters specifically, only about an absence.</para>
     /// </summary>
     [TestFixture]
     [Category("Unit")]
@@ -28,25 +33,20 @@ namespace Emberfall.Net.Client.Tests.Collection
         private static HttpRosterGateway Gateway(FakeAuthHttp http)
             => new HttpRosterGateway(Base, http);
 
-        private static Character NewCharacter(string id = "c1")
-            => new Character(id, "Ashe", CardClass.EMBERWARD, CardClass.TIDECALLER);
-
-        private static DeckList NewDeck(string id = "d1", string characterId = "c1")
+        private static DeckList NewDeck(string id = "d1")
         {
-            var deck = new DeckList { Id = id, CharacterId = characterId, Name = "Aggro" };
+            var deck = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = id, Name = "Aggro" };
             deck.Entries.Add(new DeckEntry(1001, 2));
             return deck;
         }
 
-        /// <summary>A <c>known</c> body in exactly the shape the server emits: the two rosters are
-        /// JSON documents carried as STRING members, because the wire shape and the storage shape are
-        /// the same <c>CollectionJson</c> text on both sides.</summary>
-        private static string KnownBody(Character[] characters, DeckList[] decks)
+        /// <summary>A <c>known</c> body in exactly the shape the server emits: the roster is a JSON
+        /// document carried as a STRING member, because the wire shape and the storage shape are the
+        /// same <c>CollectionJson</c> text on both sides.</summary>
+        private static string KnownBody(DeckList[] decks)
         {
-            string charactersJson = CollectionJson.WriteCharacters(characters);
             string decksJson = CollectionJson.WriteDecks(decks);
             return "{\"status\":\"known\"," +
-                   "\"characters\":" + Quote(charactersJson) + "," +
                    "\"decks\":" + Quote(decksJson) + "}";
         }
 
@@ -59,7 +59,7 @@ namespace Emberfall.Net.Client.Tests.Collection
         [Test]
         public async Task The_fetch_is_a_get_carrying_the_bearer()
         {
-            var http = new FakeAuthHttp().Reply(200, KnownBody(new Character[0], new DeckList[0]));
+            var http = new FakeAuthHttp().Reply(200, KnownBody(new DeckList[0]));
 
             await Gateway(http).FetchAsync("jwt-token");
 
@@ -95,33 +95,34 @@ namespace Emberfall.Net.Client.Tests.Collection
         // ── The distinction the whole handshake exists for ──────────────────────────────
 
         [Test]
-        public async Task A_known_roster_round_trips_its_characters_and_decks()
+        public async Task A_known_roster_round_trips_its_decks_and_their_pairings()
         {
-            var http = new FakeAuthHttp().Reply(200,
-                KnownBody(new[] { NewCharacter() }, new[] { NewDeck() }));
+            var http = new FakeAuthHttp().Reply(200, KnownBody(new[] { NewDeck() }));
 
             RosterSnapshot snapshot = await Gateway(http).FetchAsync("jwt-token");
 
             Assert.That(snapshot.Status, Is.EqualTo(RosterSyncStatus.Known));
             Assert.That(snapshot.ShouldReplaceLocal, Is.True);
-            Assert.That(snapshot.Characters!.Count, Is.EqualTo(1));
-            Assert.That(snapshot.Characters[0].Id, Is.EqualTo("c1"));
-            Assert.That(snapshot.Characters[0].PrimaryClass, Is.EqualTo(CardClass.EMBERWARD));
             Assert.That(snapshot.Decks!.Count, Is.EqualTo(1));
+            Assert.That(snapshot.Decks[0].Id, Is.EqualTo("d1"));
             Assert.That(snapshot.Decks[0].CountOf(1001), Is.EqualTo(2));
+            // The pairing came down the wire inside the deck. It arrived on a separate `characters`
+            // member until ADR-0009, which is what made a half-arrived roster expressible at all.
+            Assert.That(snapshot.Decks[0].PrimaryClass, Is.EqualTo(CardClass.EMBERWARD));
+            Assert.That(snapshot.Decks[0].SecondaryClass, Is.EqualTo(CardClass.TIDECALLER));
         }
 
         [Test]
         public async Task A_genuinely_empty_roster_is_known_and_DOES_replace_the_local_one()
         {
-            var http = new FakeAuthHttp().Reply(200, KnownBody(new Character[0], new DeckList[0]));
+            var http = new FakeAuthHttp().Reply(200, KnownBody(new DeckList[0]));
 
             RosterSnapshot snapshot = await Gateway(http).FetchAsync("jwt-token");
 
             Assert.That(snapshot.Status, Is.EqualTo(RosterSyncStatus.Known));
-            Assert.That(snapshot.Characters, Is.Empty);
+            Assert.That(snapshot.Decks, Is.Empty);
             Assert.That(snapshot.ShouldReplaceLocal, Is.True,
-                "a real empty is an ANSWER — a player who deleted their last character on another " +
+                "a real empty is an ANSWER — a player who deleted their last deck on another " +
                 "device must not have it restored by this one");
         }
 
@@ -134,7 +135,7 @@ namespace Emberfall.Net.Client.Tests.Collection
 
             Assert.That(snapshot.Status, Is.EqualTo(RosterSyncStatus.Offline));
             Assert.That(snapshot.ShouldReplaceLocal, Is.False);
-            Assert.That(snapshot.Characters, Is.Null, "null is 'unknown', never 'none'");
+            Assert.That(snapshot.Decks, Is.Null, "null is 'unknown', never 'none'");
         }
 
         [Test]
@@ -159,11 +160,11 @@ namespace Emberfall.Net.Client.Tests.Collection
             Assert.That(snapshot.ShouldReplaceLocal, Is.False);
         }
 
-        // The server omits the roster fields on anything but "known" precisely so an absent field
+        // The server omits the roster field on anything but "known" precisely so an absent field
         // cannot be misread as an empty one. This is the same failure arriving with a 200 on it: a
         // body that CLAIMS known and carries nothing must not decode as "this player has nothing".
         [Test]
-        public async Task A_known_body_with_no_roster_fields_is_malformed_not_empty()
+        public async Task A_known_body_with_no_roster_field_is_malformed_not_empty()
         {
             var http = new FakeAuthHttp().Reply(200, "{\"status\":\"known\"}");
 
@@ -176,7 +177,7 @@ namespace Emberfall.Net.Client.Tests.Collection
         [Test]
         public async Task A_200_with_no_status_word_is_malformed()
         {
-            var http = new FakeAuthHttp().Reply(200, "{\"characters\":\"[]\",\"decks\":\"[]\"}");
+            var http = new FakeAuthHttp().Reply(200, "{\"decks\":\"[]\"}");
 
             RosterSnapshot snapshot = await Gateway(http).FetchAsync("jwt-token");
 
@@ -188,13 +189,13 @@ namespace Emberfall.Net.Client.Tests.Collection
         public async Task A_known_body_whose_roster_will_not_parse_is_malformed()
         {
             var http = new FakeAuthHttp().Reply(200,
-                "{\"status\":\"known\",\"characters\":\"not json at all\",\"decks\":\"[]\"}");
+                "{\"status\":\"known\",\"decks\":\"not json at all\"}");
 
             RosterSnapshot snapshot = await Gateway(http).FetchAsync("jwt-token");
 
             Assert.That(snapshot.Status, Is.EqualTo(RosterSyncStatus.Malformed));
             Assert.That(snapshot.ShouldReplaceLocal, Is.False,
-                "half a roster written over the local one destroys the half that did not arrive");
+                "an unreadable roster written over the local one destroys what was there");
         }
 
         [Test]
@@ -209,21 +210,9 @@ namespace Emberfall.Net.Client.Tests.Collection
 
         // ── Writes ──────────────────────────────────────────────────────────────────────
 
-        [Test]
-        public async Task Creating_a_character_posts_the_pairing_by_name()
-        {
-            var http = new FakeAuthHttp().Reply(200, "{\"status\":\"created\"}");
-
-            RosterWriteStatus status = await Gateway(http)
-                .CreateCharacterAsync("jwt-token", NewCharacter());
-
-            Assert.That(status, Is.EqualTo(RosterWriteStatus.Ok));
-            Assert.That(http.Requests[0].Url, Is.EqualTo("https://emberfall.fly.dev/characters"));
-            Assert.That(http.Requests[0].Verb, Is.EqualTo("POST"));
-            Assert.That(http.Requests[0].Body, Does.Contain("\"characterId\":\"c1\""));
-            Assert.That(http.Requests[0].Body, Does.Contain("\"primaryClass\":\"EMBERWARD\""));
-            Assert.That(http.Requests[0].Body, Does.Contain("\"secondaryClass\":\"TIDECALLER\""));
-        }
+        // Creating_a_character_posts_the_pairing_by_name stood here until ADR-0009. The pairing is
+        // still posted by NAME and never by ordinal — a renumbered enum must not repoint a stored
+        // deck — but it rides inside the deck body now, which is what the test below asserts.
 
         [Test]
         public async Task Saving_a_deck_puts_it_at_its_own_id()
@@ -239,13 +228,21 @@ namespace Emberfall.Net.Client.Tests.Collection
             // one thing — the server reads it with ReadDecks.
             Assert.That(CollectionJson.ReadDecks(http.Requests[0].Body!)[0].CountOf(1001),
                         Is.EqualTo(2));
+            // By NAME, never by ordinal: inserting a class into the enum must not repoint a deck
+            // already stored on the server.
+            Assert.That(http.Requests[0].Body, Does.Contain("\"primaryClass\": \"EMBERWARD\""));
+            Assert.That(http.Requests[0].Body, Does.Contain("\"secondaryClass\": \"TIDECALLER\""));
         }
 
         [Test]
         public async Task An_illegal_deck_is_still_sent()
         {
             var http = new FakeAuthHttp().Reply(200, "{\"status\":\"saved\"}");
-            var draft = new DeckList { Id = "d-draft", CharacterId = "c1", Name = "Work in progress" };
+            var draft = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER)
+            {
+                Id = "d-draft",
+                Name = "Work in progress",
+            };
             draft.Entries.Add(new DeckEntry(1001, 1));   // nowhere near a legal 30
 
             RosterWriteStatus status = await Gateway(http).SaveDeckAsync("jwt-token", draft);
@@ -279,20 +276,6 @@ namespace Emberfall.Net.Client.Tests.Collection
             Assert.That(http.Requests[0].Url, Is.EqualTo("https://emberfall.fly.dev/decks/d1"));
             Assert.That(http.Requests[0].Verb, Is.EqualTo("DELETE"),
                 "a GET to the same URL would record identically and read the deck instead");
-        }
-
-        [Test]
-        public async Task Deleting_a_character_is_a_delete_and_does_not_also_delete_its_decks()
-        {
-            var http = new FakeAuthHttp().Reply(200, "{\"status\":\"deleted\"}");
-
-            RosterWriteStatus status = await Gateway(http).DeleteCharacterAsync("jwt-token", "c1");
-
-            Assert.That(status, Is.EqualTo(RosterWriteStatus.Ok));
-            Assert.That(http.Requests.Count, Is.EqualTo(1),
-                "the server cascades to the character's decks in one atomic call");
-            Assert.That(http.Requests[0].Url, Is.EqualTo("https://emberfall.fly.dev/characters/c1"));
-            Assert.That(http.Requests[0].Verb, Is.EqualTo("DELETE"));
         }
 
         [Test]
@@ -338,11 +321,7 @@ namespace Emberfall.Net.Client.Tests.Collection
 
             Assert.That(await Gateway(http).SaveDeckAsync("", NewDeck()),
                         Is.EqualTo(RosterWriteStatus.Unauthenticated));
-            Assert.That(await Gateway(http).CreateCharacterAsync("", NewCharacter()),
-                        Is.EqualTo(RosterWriteStatus.Unauthenticated));
             Assert.That(await Gateway(http).DeleteDeckAsync("", "d1"),
-                        Is.EqualTo(RosterWriteStatus.Unauthenticated));
-            Assert.That(await Gateway(http).DeleteCharacterAsync("", "c1"),
                         Is.EqualTo(RosterWriteStatus.Unauthenticated));
             Assert.That(http.Requests, Is.Empty);
         }
@@ -354,9 +333,8 @@ namespace Emberfall.Net.Client.Tests.Collection
 
             Assert.That(await Gateway(http).DeleteDeckAsync("jwt-token", "  "),
                         Is.EqualTo(RosterWriteStatus.Rejected));
-            Assert.That(await Gateway(http).DeleteCharacterAsync("jwt-token", ""),
-                        Is.EqualTo(RosterWriteStatus.Rejected));
-            Assert.That(await Gateway(http).SaveDeckAsync("jwt-token", new DeckList { Id = "" }),
+            Assert.That(await Gateway(http).SaveDeckAsync("jwt-token",
+                            new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "" }),
                         Is.EqualTo(RosterWriteStatus.Rejected));
             Assert.That(http.Requests, Is.Empty,
                 "a row keyed on \"\" is a row nothing can address again — the server refuses it too, " +

@@ -24,7 +24,6 @@ namespace Emberfall.Net.Client.Tests
         {
             var transport = new RecordingTransport();
             var deck = new SubmitDeckMsg(
-                "character-7",
                 CardClass.GRAVEKEEP,
                 CardClass.VERDANT,
                 new[] { new DeckCardLine(FixtureCard.Id("M1-GRAVEKEEP-01"), 2) });
@@ -53,7 +52,6 @@ namespace Emberfall.Net.Client.Tests
                 Assert.That(hello.Seq, Is.Zero);
                 Assert.That(submitted.Ok, Is.True, submitted.Detail);
                 Assert.That(submitted.Seq, Is.EqualTo(1));
-                Assert.That(decodedDeck.CharacterId, Is.EqualTo(deck.CharacterId));
                 Assert.That(decodedDeck.PrimaryClass, Is.EqualTo(deck.PrimaryClass));
                 Assert.That(decodedDeck.SecondaryClass, Is.EqualTo(deck.SecondaryClass));
                 Assert.That(decodedDeck.Cards, Has.Count.EqualTo(1));
@@ -93,8 +91,8 @@ namespace Emberfall.Net.Client.Tests
             });
             await app.StartAsync();
 
-            using var c0 = SessionWithDeck("device-0", "character-0", CardClass.GRAVEKEEP, CardClass.VERDANT, 7);
-            using var c1 = SessionWithDeck("device-1", "character-1", CardClass.TIDECALLER, CardClass.EMBERWARD, 11);
+            using var c0 = SessionWithDeck("device-0", "0", CardClass.GRAVEKEEP, CardClass.VERDANT, 7);
+            using var c1 = SessionWithDeck("device-1", "1", CardClass.TIDECALLER, CardClass.EMBERWARD, 11);
             try
             {
                 var baseUri = new Uri(app.Urls.First());
@@ -121,12 +119,15 @@ namespace Emberfall.Net.Client.Tests
             }
         }
 
+        /// <param name="deckId">Was a characterId until ADR-0009, and was the id the submission
+        /// carried on the wire. <c>SubmitDeckMsg</c> has no id member at all now — its own doc had
+        /// always said the one it carried "is not an identity the server trusts" — so this is only a
+        /// local handle for the generated deck and the seed it is named after.</param>
         private static NetworkedMatchSession SessionWithDeck(
-            string deviceToken, string characterId, CardClass primary, CardClass secondary, ulong seed)
+            string deviceToken, string deckId, CardClass primary, CardClass secondary, ulong seed)
         {
-            var character = new Character(characterId, "Test", primary, secondary);
             DeckList deck = DefaultDeckGenerator.Generate(
-                character, LoopbackServerPeer.Db, new DeterministicRandom(seed), "deck-" + characterId);
+                primary, secondary, LoopbackServerPeer.Db, new DeterministicRandom(seed), "deck-" + deckId);
             var lines = new List<DeckCardLine>(deck.Entries.Count);
             foreach (DeckEntry entry in deck.Entries)
                 lines.Add(new DeckCardLine(entry.CardId, entry.Count));
@@ -134,7 +135,7 @@ namespace Emberfall.Net.Client.Tests
             return new NetworkedMatchSession(new WebSocketTransport(), new ClientOptions
             {
                 DeviceToken = deviceToken,
-                DeckSubmission = new SubmitDeckMsg(characterId, primary, secondary, lines),
+                DeckSubmission = new SubmitDeckMsg(primary, secondary, lines),
                 InboundSilenceMs = 600_000,
             });
         }

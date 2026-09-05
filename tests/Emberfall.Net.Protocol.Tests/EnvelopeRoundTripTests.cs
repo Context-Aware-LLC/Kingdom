@@ -89,8 +89,10 @@ namespace Emberfall.Net.Protocol.Tests
                 new DeckCardLine(FixtureCard.Id("neutral_stoneback_sentry"), 1),
             };
             var m = RoundTrip<SubmitDeckMsg>(
-                new SubmitDeckMsg("char-7", CardClass.GRAVEKEEP, CardClass.VERDANT, cards));
-            Assert.That(m.CharacterId, Is.EqualTo("char-7"));
+                new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT, cards));
+            // The CharacterId member was asserted here until ADR-0009. It is gone from the
+            // record, and the message's own doc had always said it "is not an identity the
+            // server trusts" -- the pairing below is what the server actually reads.
             Assert.That(m.PrimaryClass, Is.EqualTo(CardClass.GRAVEKEEP));
             Assert.That(m.SecondaryClass, Is.EqualTo(CardClass.VERDANT));
             Assert.That(m.Cards, Has.Count.EqualTo(2));
@@ -104,7 +106,7 @@ namespace Emberfall.Net.Protocol.Tests
             // Strict enum-name parse (WirePrimitives): a class the server does not define is a BadField,
             // never a silent default. Belt-and-braces with the server-side legality check.
             var bytes = ProtocolCodec.Encode(
-                new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.VERDANT,
+                new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT,
                     new List<DeckCardLine> { new DeckCardLine(FixtureCard.Id("x"), 1) }), M, Seq);
             string json = Encoding.UTF8.GetString(bytes).Replace("\"primaryClass\":\"GRAVEKEEP\"", "\"primaryClass\":\"WIZARD\"");
             var res = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));

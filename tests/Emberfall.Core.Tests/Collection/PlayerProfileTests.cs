@@ -255,22 +255,24 @@ namespace Emberfall.Core.Tests.Collection
         }
 
         // ---- last-played pointer (Sam, 2026-08-09: Find Game pre-arms its pick from this) ----
+        //
+        // IT WAS A PAIR OF IDS UNTIL ADR-0009 -- lastPlayedCharacterId beside lastPlayedDeckId --
+        // and the character half went with the type. The deck carries the pairing now, so the deck
+        // id is the whole of the selection and there is no second field that could disagree with it.
 
         [Test]
         public void Load_on_first_run_has_no_last_played_pointer()
         {
             var profile = Store().Load();
-            Assert.That(profile.LastPlayedCharacterId, Is.Empty);
             Assert.That(profile.LastPlayedDeckId, Is.Empty);
         }
 
         [Test]
         public void Save_then_load_round_trips_the_last_played_pointer()
         {
-            Store().Save(new PlayerProfile("Sam", "char-1", "deck-1"));
+            Store().Save(new PlayerProfile("Sam", "deck-1"));
 
             var loaded = Store().Load();
-            Assert.That(loaded.LastPlayedCharacterId, Is.EqualTo("char-1"));
             Assert.That(loaded.LastPlayedDeckId, Is.EqualTo("deck-1"));
         }
 
@@ -278,12 +280,11 @@ namespace Emberfall.Core.Tests.Collection
         public void Saving_a_display_name_does_not_wipe_the_last_played_pointer()
         {
             var store = Store();
-            store.Save(new PlayerProfile("Sam", "char-1", "deck-1"));
-            store.Save(new PlayerProfile("Sam Renamed", "char-1", "deck-1"));
+            store.Save(new PlayerProfile("Sam", "deck-1"));
+            store.Save(new PlayerProfile("Sam Renamed", "deck-1"));
 
             var loaded = store.Load();
             Assert.That(loaded.DisplayName, Is.EqualTo("Sam Renamed"));
-            Assert.That(loaded.LastPlayedCharacterId, Is.EqualTo("char-1"));
             Assert.That(loaded.LastPlayedDeckId, Is.EqualTo("deck-1"));
         }
 
@@ -292,8 +293,23 @@ namespace Emberfall.Core.Tests.Collection
         {
             var profile = CollectionJson.ReadProfile(
                 $"{{ \"schemaVersion\": {CollectionJson.SchemaVersion}, \"profile\": {{ \"displayName\": \"Sam\" }} }}");
-            Assert.That(profile.LastPlayedCharacterId, Is.Empty);
             Assert.That(profile.LastPlayedDeckId, Is.Empty);
+        }
+
+        [Test]
+        public void A_Profile_Written_Before_ADR_0009_Loads_And_Drops_The_Character_Half()
+        {
+            // Every profile.json on every device carries lastPlayedCharacterId. An unknown field must
+            // not be a read error -- unlike a deck's missing pairing, nothing here is unsafe to
+            // ignore: the deck id beside it is still the whole answer, and the worst case is a pick
+            // that is not pre-armed once.
+            var profile = CollectionJson.ReadProfile(
+                $"{{ \"schemaVersion\": {CollectionJson.SchemaVersion}, \"profile\": " +
+                "{ \"displayName\": \"Sam\", \"lastPlayedCharacterId\": \"chr-1\", " +
+                "\"lastPlayedDeckId\": \"deck-1\" } }");
+
+            Assert.That(profile.DisplayName, Is.EqualTo("Sam"));
+            Assert.That(profile.LastPlayedDeckId, Is.EqualTo("deck-1"));
         }
     }
 }

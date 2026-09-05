@@ -8,8 +8,13 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Tools.CollectionSelfCheck
 {
     /// <summary>
-    /// EF-046 DONE-WHEN: create a character, build a legal 30-card deck, save, reload it from disk
+    /// EF-046 DONE-WHEN: create a deck, build a legal 30 into it, save, reload it from disk
     /// <b>in a fresh session</b>, and report queue-eligible.
+    ///
+    /// <para>It created a CHARACTER first until ADR-0009, then resolved the deck through that
+    /// character's <c>DefaultDeckId</c> — which made the pointer's round trip part of what this
+    /// proved. The deck is the top-level object now, so it is looked up by its own id and the
+    /// pairing it carries is what the reload has to bring back.</para>
     ///
     /// <para>Two phases, meant to be run as two separate processes against one <c>--root</c>:
     /// <c>--phase build</c> writes, <c>--phase verify</c> re-reads. Nothing is carried between them
@@ -23,9 +28,14 @@ namespace Emberfall.Tools.CollectionSelfCheck
         // Fixed so the two phases agree without passing state between them. The account layer mints
         // real GUIDs (PlayerAccount.NewId); this check pins them so `verify` knows what to look for.
         private const string StorageKey = "ef046-selfcheck";
-        private const string CharacterId = "ef046-character";
         private const string DeckId = "ef046-deck";
-        private const string CharacterName = "Selfcheck Ashwarden";
+        private const string DeckName = "Selfcheck Ashwarden";
+
+        // The pairing the deck is built on. EMBERWARD/TIDECALLER is the THINNEST real pairing in the
+        // live set, which is deliberate: if any pairing is going to fail to fill a legal 30, it is
+        // this one, and a self-check that only ever exercised a comfortable pool would not say so.
+        private const CardClass Primary = CardClass.EMBERWARD;
+        private const CardClass Secondary = CardClass.TIDECALLER;
 
         // The name `build` writes and `verify` must read back — proves rename persistence, which the
         // deckbuilder's name field relies on (CollectionController.WireChrome -> SaveDeck).
@@ -85,10 +95,9 @@ namespace Emberfall.Tools.CollectionSelfCheck
             return 2;
         }
 
-        // Stores are constructed per phase and never shared. JsonCharacterStore/JsonDeckStore take a
-        // file path; CollectionPaths derives it exactly as PlayerAccount does, so this writes the
-        // same layout the game reads.
-        private static ICharacterStore Characters(string root) => new JsonCharacterStore(CollectionPaths.Characters(root, StorageKey));
+        // The store is constructed per phase and never shared. JsonDeckStore takes a file path;
+        // CollectionPaths derives it exactly as PlayerAccount does, so this writes the same layout
+        // the game reads.
         private static IDeckStore Decks(string root) => new JsonDeckStore(CollectionPaths.Decks(root, StorageKey));
 
         // ---------------------------------------------------------------- build
@@ -97,18 +106,17 @@ namespace Emberfall.Tools.CollectionSelfCheck
         {
             Console.WriteLine("== phase: build ==");
 
-            var characterStore = Characters(root);
             var deckStore = Decks(root);
 
-            // Same call the character-create screen makes: mints the character, generates a legal 30
-            // from the pairing's pool, saves the deck, points DefaultDeckId at it, saves the character.
-            var character = CharacterCreation.Create(
-                characterStore, deckStore, db, new DeterministicRandom(Seed),
-                CharacterId, CharacterName, CardClass.EMBERWARD, CardClass.TIDECALLER, DeckId);
+            // Same call the create screen makes: generates a legal 30 from the pairing's pool and
+            // saves it. ONE write — it was three (deck, then character, then the default pointer)
+            // until ADR-0009.
+            var created = DeckCreation.Create(
+                deckStore, db, new DeterministicRandom(Seed),
+                DeckId, DeckName, Primary, Secondary);
 
-            Console.WriteLine($"created character : {character.Name} [{character.Id}]");
-            Console.WriteLine($"  pairing         : {character.PrimaryClass}/{character.SecondaryClass}");
-            Console.WriteLine($"  DefaultDeckId   : {character.DefaultDeckId}");
+            Console.WriteLine($"created deck      : {created.Name} [{created.Id}]");
+            Console.WriteLine($"  pairing         : {created.PrimaryClass}/{created.SecondaryClass}");
 
             var generated = FindDeck(deckStore.LoadAll(), DeckId);
             if (generated == null) return Fail($"generator did not persist a deck with id '{DeckId}'.");
@@ -128,7 +136,7 @@ namespace Emberfall.Tools.CollectionSelfCheck
             foreach (var def in Ordered(db.AllCollectible()))
             {
                 if (def.Id == victim.CardId) continue;
-                if (!DeckValidator.CanAdd(generated, character, def)) continue;
+                if (!DeckValidator.CanAdd(generated, def)) continue;
                 replacement = def;
                 break;
             }
@@ -139,7 +147,7 @@ namespace Emberfall.Tools.CollectionSelfCheck
             generated.Entries.Add(new DeckEntry(replacement.Id, 1));
             Console.WriteLine($"added 1x (CanAdd) : {replacement.Id} -> {generated.TotalCount} cards");
 
-            var edited = DeckValidator.Validate(generated, character, db);
+            var edited = DeckValidator.Validate(generated, db);
             if (!edited.IsValid)
                 return Fail("the edited deck does not validate — the swap produced an illegal deck.");
             Console.WriteLine($"edited deck       : LEGAL at {generated.TotalCount} cards");
@@ -150,7 +158,7 @@ namespace Emberfall.Tools.CollectionSelfCheck
             deckStore.Save(generated);
             Console.WriteLine($"renamed + saved   : '{generated.Name}'");
 
-            var check = QueueEligibility.Check(generated, character, db);
+            var check = QueueEligibility.Check(generated, db);
             Console.WriteLine($"eligibility (pre-reload): {(check.IsEligible ? "ELIGIBLE" : "DRAFT — " + check.Reason)}");
 
             Console.WriteLine();
@@ -169,30 +177,26 @@ namespace Emberfall.Tools.CollectionSelfCheck
         {
             Console.WriteLine("== phase: verify (fresh process, nothing carried over but the files) ==");
 
-            // Brand new store objects in a brand new process: everything below came off disk.
-            var character = FindCharacter(Characters(root).LoadAll(), CharacterId);
-            if (character == null)
-                return Fail($"no character '{CharacterId}' on disk — did --phase build run against this --root?");
-
-            Console.WriteLine($"loaded character  : {character.Name} [{character.Id}]");
-            Console.WriteLine($"  pairing         : {character.PrimaryClass}/{character.SecondaryClass}");
-            Console.WriteLine($"  DefaultDeckId   : {character.DefaultDeckId}");
-
-            // Resolve the deck through DefaultDeckId rather than the constant, so this also proves the
-            // pointer the character carries is the one that actually round-tripped.
-            var deck = FindDeck(Decks(root).LoadAll(), character.DefaultDeckId);
-            if (deck == null) return Fail($"character's DefaultDeckId '{character.DefaultDeckId}' resolves to no deck on disk.");
+            // A brand new store object in a brand new process: everything below came off disk.
+            var deck = FindDeck(Decks(root).LoadAll(), DeckId);
+            if (deck == null)
+                return Fail($"no deck '{DeckId}' on disk — did --phase build run against this --root?");
 
             Console.WriteLine($"loaded deck       : '{deck.Name}' — {deck.TotalCount} cards, {deck.Entries.Count} distinct");
-            Console.WriteLine($"  CharacterId     : {deck.CharacterId}");
+            Console.WriteLine($"  pairing         : {deck.PrimaryClass}/{deck.SecondaryClass}");
 
             var failures = new List<string>();
 
             if (deck.Name != RenamedTo)
                 failures.Add($"rename did not persist: expected '{RenamedTo}', got '{deck.Name}'.");
 
-            if (deck.CharacterId != character.Id)
-                failures.Add($"deck belongs to '{deck.CharacterId}', not '{character.Id}' (L5).");
+            // THE PAIRING'S ROUND TRIP, which is what replaced the DefaultDeckId one. It rides inside
+            // the same blob as the cards and is REQUIRED on read (CollectionJson.ReadDecks), so a
+            // regression here does not degrade quietly — but it would degrade at load time on a
+            // player's device rather than here, which is the reason to check it here.
+            if (deck.PrimaryClass != Primary || deck.SecondaryClass != Secondary)
+                failures.Add($"pairing did not persist: expected {Primary}/{Secondary}, " +
+                             $"got {deck.PrimaryClass}/{deck.SecondaryClass}.");
 
             if (deck.TotalCount != DeckValidator.DeckSize)
                 failures.Add($"deck is {deck.TotalCount} cards, expected {DeckValidator.DeckSize}.");
@@ -202,17 +206,17 @@ namespace Emberfall.Tools.CollectionSelfCheck
             foreach (var e in deck.Entries)
             {
                 if (!db.TryGet(e.CardId, out var def)) { failures.Add($"card '{e.CardId}' is not in the live set."); continue; }
-                if (!character.AllowsClass(def.Class)) failures.Add($"'{def.Name}' ({def.Class}) is off-pairing for {character.PrimaryClass}/{character.SecondaryClass}.");
+                if (!deck.AllowsClass(def.Class)) failures.Add($"'{def.Name}' ({def.Class}) is off-pairing for {deck.PrimaryClass}/{deck.SecondaryClass}.");
             }
 
-            var validation = DeckValidator.Validate(deck, character, db);
+            var validation = DeckValidator.Validate(deck, db);
             Console.WriteLine();
             Console.WriteLine($"DeckValidator     : {(validation.IsValid ? "LEGAL" : "ILLEGAL")}");
             foreach (var v in validation.Violations) Console.WriteLine($"  violation       : {v.Message}");
             if (!validation.IsValid) failures.Add("deck did not validate after reload.");
 
             // Reason only speaks for a draft; an eligible deck has nothing to explain.
-            var check = QueueEligibility.Check(deck, character, db);
+            var check = QueueEligibility.Check(deck, db);
             Console.WriteLine($"QueueEligibility  : {(check.IsEligible ? "ELIGIBLE" : "DRAFT — " + check.Reason)}");
             if (!check.IsEligible) failures.Add($"deck is not queue-eligible after reload: {check.Reason}");
 
@@ -224,7 +228,7 @@ namespace Emberfall.Tools.CollectionSelfCheck
                 return 1;
             }
 
-            Console.WriteLine("SELF-CHECK PASSED — character created, legal 30 built, saved, reloaded from disk");
+            Console.WriteLine("SELF-CHECK PASSED — deck created, legal 30 built, saved, reloaded from disk");
             Console.WriteLine("                    in a fresh process, and queue-eligible.");
             return 0;
         }
@@ -241,12 +245,6 @@ namespace Emberfall.Tools.CollectionSelfCheck
             var list = new List<CardDefinition>(defs);
             list.Sort((a, b) => a.Id.CompareTo(b.Id));
             return list;
-        }
-
-        private static Character? FindCharacter(IReadOnlyList<Character> roster, string id)
-        {
-            foreach (var c in roster) if (c.Id == id) return c;
-            return null;
         }
 
         private static DeckList? FindDeck(IReadOnlyList<DeckList> decks, string? id)

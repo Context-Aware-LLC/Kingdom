@@ -22,9 +22,11 @@ namespace Emberfall.Core.Tests.Collection
     /// <para><b>Premise correction (recorded, not silently reconciled).</b> The EF-031 brief and
     /// LAUNCH-WORKPLAN.md both say "Nine classes." The <see cref="CardClass"/> enum says otherwise:
     /// four real classes plus NEUTRAL. Nine is a Hearthstone class count that Emberfall does not
-    /// share. A class also never seats a deck alone - a deck is bound to a dual-class
-    /// <see cref="Character"/> and draws from <c>Primary u Secondary u NEUTRAL</c> - so "every
-    /// class" is satisfied by sweeping every valid pairing, which is how a class becomes deck-able.
+    /// share. A class also never seats a deck alone - a deck carries a dual-class PAIRING and draws
+    /// from <c>Primary u Secondary u NEUTRAL</c> - so "every class" is satisfied by sweeping every
+    /// valid pairing, which is how a class becomes deck-able. (The pairing lived on a
+    /// <c>Character</c> the deck was bound to until ADR-0009; it is on the deck itself now, and
+    /// nothing about this sweep changed with it.)
     /// <see cref="There_Are_Four_Real_Classes_Not_Nine"/> pins the count so the day a fifth class is
     /// added this fails and the sweep is re-read rather than silently under-covering.</para>
     /// </summary>
@@ -36,14 +38,16 @@ namespace Emberfall.Core.Tests.Collection
         private static CardClass[] RealClasses() =>
             Enum.GetValues(typeof(CardClass)).Cast<CardClass>().Where(c => c != CardClass.NEUTRAL).ToArray();
 
-        /// <summary>Every ordered pairing of two distinct real classes - the full space the generator serves.</summary>
-        private static IEnumerable<Character> AllPairings()
+        /// <summary>Every ordered pairing of two distinct real classes - the full space the generator
+        /// serves. It yielded a <c>Character</c> carrying each pairing until ADR-0009; the pairing is
+        /// the whole of what the sweep ever needed, so it is now the whole of what it yields.</summary>
+        private static IEnumerable<(CardClass Primary, CardClass Secondary)> AllPairings()
         {
             var classes = RealClasses();
             foreach (var p in classes)
                 foreach (var s in classes)
                     if (p != s)
-                        yield return new Character($"chr-{p}-{s}", $"{p}/{s}", p, s);
+                        yield return (p, s);
         }
 
         [Test]
@@ -51,24 +55,26 @@ namespace Emberfall.Core.Tests.Collection
         {
             var covered = new HashSet<CardClass>();
 
-            foreach (var character in AllPairings())
+            foreach (var (primary, secondary) in AllPairings())
             {
+                string name = $"{primary}/{secondary}";
+
                 // Fixed seed: this is a legality gate, not a distribution test - it must fail on a
                 // pool shortfall, never flap on a lucky or unlucky draw.
                 var deck = DefaultDeckGenerator.Generate(
-                    character, LiveCardSet.Db, new DeterministicRandom(1), "deck-1");
-                var result = DeckValidator.Validate(deck, character, LiveCardSet.Db);
+                    primary, secondary, LiveCardSet.Db, new DeterministicRandom(1), "deck-1");
+                var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
                 Assert.That(deck.TotalCount, Is.EqualTo(DeckValidator.DeckSize),
-                    $"L1 size - {character.Name}");
+                    $"L1 size - {name}");
                 Assert.That(result.IsValid, Is.True,
-                    $"{character.Name} failed L1-L5: " +
+                    $"{name} failed L1-L5: " +
                     string.Join("; ", result.Violations.Select(v => $"{v.Rule}: {v.Message}")));
-                Assert.That(deck.CharacterId, Is.EqualTo(character.Id),
-                    $"L5 binding is set by the generator - {character.Name}");
+                Assert.That((deck.PrimaryClass, deck.SecondaryClass), Is.EqualTo((primary, secondary)),
+                    $"The generated deck carries the pairing it was asked for - {name}");
 
-                covered.Add(character.PrimaryClass);
-                covered.Add(character.SecondaryClass);
+                covered.Add(primary);
+                covered.Add(secondary);
             }
 
             // "Every class" made explicit: no real class slipped through the pairing sweep unseated.
