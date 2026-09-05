@@ -32,7 +32,7 @@ namespace Emberfall.Core.Cards
 
         private static readonly HashSet<string> FilterProperties = new HashSet<string>(StringComparer.Ordinal)
         {
-            "damaged", "tribe", "maxCost", "keyword"
+            "damaged", "tribe", "negateTribe", "maxCost", "negateCost", "keyword", "negateKeyword"
         };
 
         private static readonly HashSet<string> RuleProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -330,6 +330,7 @@ namespace Emberfall.Core.Cards
                         throw new FormatException("Card JSON target.filter.tribe must be a string.");
                     tribe = (Tribe)Enum.Parse(typeof(Tribe), tribeValue.GetString()!, ignoreCase: false);
                 }
+                bool negateTribe = OptionalBool(f, "negateTribe", "target.filter.negateTribe");
                 int? maxCost = null;
                 if (f.TryGetProperty("maxCost", out var maxCostValue))
                 {
@@ -338,6 +339,7 @@ namespace Emberfall.Core.Cards
                         throw new FormatException("Card JSON target.filter.maxCost must be an integer.");
                     maxCost = parsedMaxCost;
                 }
+                bool negateCost = OptionalBool(f, "negateCost", "target.filter.negateCost");
                 Keyword? keyword = null;
                 if (f.TryGetProperty("keyword", out var keywordValue))
                 {
@@ -345,7 +347,9 @@ namespace Emberfall.Core.Cards
                         throw new FormatException("Card JSON target.filter.keyword must be a string.");
                     keyword = (Keyword)Enum.Parse(typeof(Keyword), keywordValue.GetString()!, ignoreCase: false);
                 }
-                filter = new TargetFilterDef(damaged, tribe, maxCost, keyword);
+                bool negateKeyword = OptionalBool(f, "negateKeyword", "target.filter.negateKeyword");
+                filter = new TargetFilterDef(damaged, tribe, negateTribe, maxCost, negateCost,
+                    keyword, negateKeyword);
             }
             // A cost is spelled out rather than flagged: "required" and "optional" are two
             // different cards, and a boolean would have to name one of them by its absence.
@@ -417,6 +421,17 @@ namespace Emberfall.Core.Cards
         {
             if (!el.TryGetProperty(name, out var v)) return null;
             return v.ValueKind == JsonValueKind.True ? true : v.ValueKind == JsonValueKind.False ? false : (bool?)null;
+        }
+
+        /// <summary>An optional boolean that, unlike <see cref="Bool"/>, rejects a wrong-shaped value
+        /// rather than silently reading it as absent — for fields like the filter negate bits, where
+        /// a malformed value is an authoring mistake worth surfacing at load.</summary>
+        private static bool OptionalBool(JsonElement el, string name, string path)
+        {
+            if (!el.TryGetProperty(name, out var v)) return false;
+            if (v.ValueKind != JsonValueKind.True && v.ValueKind != JsonValueKind.False)
+                throw new FormatException($"Card JSON {path} must be a boolean.");
+            return v.GetBoolean();
         }
 
         private static T ReqEnum<T>(JsonElement el, string name) where T : struct, System.Enum

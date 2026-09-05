@@ -502,26 +502,32 @@ namespace Emberfall.Core
             }
             if (filter.Tribe.HasValue)
             {
-                if (candidate.DefinitionId <= 0 ||
-                    !db.TryGet(candidate.DefinitionId, out CardDefinition def) ||
-                    def.Tribe != filter.Tribe.Value) return false;
+                if (candidate.DefinitionId <= 0 || !db.TryGet(candidate.DefinitionId, out CardDefinition def))
+                    return false;
+                bool matchesTribe = def.Tribe == filter.Tribe.Value;
+                if (matchesTribe == filter.NegateTribe) return false;
             }
             // The PRINTED cost, which is the only one there is -- no effect modifies a card's cost,
             // so there is no live value to prefer and a candidate with no definition behind it (a
             // hero) simply fails rather than passing by default.
             if (filter.MaxCost.HasValue)
             {
-                if (candidate.DefinitionId <= 0 ||
-                    !db.TryGet(candidate.DefinitionId, out CardDefinition costDef) ||
-                    costDef.Cost > filter.MaxCost.Value) return false;
+                if (candidate.DefinitionId <= 0 || !db.TryGet(candidate.DefinitionId, out CardDefinition costDef))
+                    return false;
+                bool withinBound = filter.NegateCost
+                    ? costDef.Cost >= filter.MaxCost.Value
+                    : costDef.Cost <= filter.MaxCost.Value;
+                if (!withinBound) return false;
             }
             // The LIVE keyword set, base union granted -- see TargetFilterDef.Keyword for why this
             // axis reads the instance while the two above it read the printed row. A hero carries no
-            // card keywords, so it fails, which is the same fail-closed answer tribe and cost give.
+            // card keywords, so a positive check fails and a negated one passes -- the same
+            // fail-closed answer tribe and cost give a candidate with no definition at all.
             if (filter.Keyword.HasValue)
             {
                 CardInstance? card = candidate.Card ?? candidate.Minion;
-                if (card == null || !card.Keywords.Contains(filter.Keyword.Value)) return false;
+                bool carriesKeyword = card != null && card.Keywords.Contains(filter.Keyword.Value);
+                if (carriesKeyword == filter.NegateKeyword) return false;
             }
             return true;
         }

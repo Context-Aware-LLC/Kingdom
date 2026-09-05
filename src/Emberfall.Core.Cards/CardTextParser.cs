@@ -862,7 +862,7 @@ namespace Emberfall.Core.Cards
 
         /// <summary>
         /// The traits a target can be narrowed by. A small space — one nullable flag, one nullable
-        /// tribe and one nullable cost ceiling — so it is enumerated like every other axis rather
+        /// tribe and one nullable cost bound — so it is enumerated like every other axis rather
         /// than read out of the noun phrase. No filter is yielded first, which keeps an untraited
         /// phrase resolving to an untraited spec.
         ///
@@ -872,12 +872,17 @@ namespace Emberfall.Core.Cards
         /// this to a cross product only with a measurement in hand — every yield here multiplies the
         /// whole selector x selection enumeration above it.</para>
         ///
-        /// <para><b>The cost ceiling is the exception: it is read out of the clause</b>, the same
+        /// <para><b>Tribe and Keyword each propose their negated form alongside the positive one</b>
+        /// (Sam, 2026-09-05) — "non-Construct"/"non-Shroud" round-trip through the SAME word search
+        /// as their positive spellings, so doubling the yield is the whole cost.</para>
+        ///
+        /// <para><b>The cost bound is the exception: it is read out of the clause</b>, the same
         /// way <see cref="Amounts"/> reads a damage number, because it is a NUMBER and enumerating
         /// the authorable range would multiply the search by twenty-six for a value the sentence is
         /// already holding. Over-generating stays free — a wrong number cannot survive the
-        /// re-render — so every numeral in the clause is offered and the round trip settles which
-        /// one was the cost.</para>
+        /// re-render — so every numeral in the clause is offered against whichever side ("or less"
+        /// / "or more") the clause actually holds, and the round trip settles which one was the
+        /// cost.</para>
         /// </summary>
         private static IEnumerable<TargetFilterDef?> Filters(string clause)
         {
@@ -888,23 +893,35 @@ namespace Emberfall.Core.Cards
             {
                 if (tribe == Tribe.NONE) continue;
                 yield return new TargetFilterDef(tribe: tribe);
+                yield return new TargetFilterDef(tribe: tribe, negateTribe: true);
             }
             // Same reason as the cost ceiling below: proposed only when the clause is holding the
             // word. Enumerating the whole Keyword enum against every selector and selection would
             // multiply the search by fourteen to proffer thirteen names the sentence does not
             // contain. A clause naming Shroud proposes exactly the Shroud filter -- and also the
             // Shroud GRANT, which is the ambiguity the round trip is there to settle.
+            //
+            // The negated candidate rides the SAME substring check: "non-Shroud" still contains
+            // "Shroud", so a clause holding either form proposes both and the re-render settles
+            // which one the author actually wrote.
             foreach (Keyword keyword in (Keyword[])Enum.GetValues(typeof(Keyword)))
             {
                 if (KeywordSemantics.IsActionMarker(keyword)) continue;
                 if (clause.IndexOf(CardTextGenerator.DescribeKeyword(keyword), StringComparison.Ordinal) < 0) continue;
                 yield return new TargetFilterDef(keyword: keyword);
+                yield return new TargetFilterDef(keyword: keyword, negateKeyword: true);
             }
 
-            if (clause.IndexOf(" or less", StringComparison.Ordinal) < 0) yield break;
+            bool atMost = clause.IndexOf(" or less", StringComparison.Ordinal) >= 0;
+            bool atLeast = clause.IndexOf(" or more", StringComparison.Ordinal) >= 0;
+            if (!atMost && !atLeast) yield break;
             var offered = new HashSet<int>();
-            foreach (int maxCost in InOrder(clause))
-                if (offered.Add(maxCost)) yield return new TargetFilterDef(maxCost: maxCost);
+            foreach (int cost in InOrder(clause))
+            {
+                if (!offered.Add(cost)) continue;
+                if (atMost) yield return new TargetFilterDef(maxCost: cost);
+                if (atLeast) yield return new TargetFilterDef(maxCost: cost, negateCost: true);
+            }
         }
 
         /// <summary>

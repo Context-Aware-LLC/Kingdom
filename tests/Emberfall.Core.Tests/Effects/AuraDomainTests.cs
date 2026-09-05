@@ -183,6 +183,11 @@ namespace Emberfall.Core.Tests.Effects
                 Assert.That(AuraCapabilities.Supports(CardType.MINION,
                     Filtered(new TargetFilterDef(damaged: true, tribe: Tribe.CONSTRUCT))), Is.False,
                     "damaged rides in alongside a tribe");
+                // NegateTribe is a new facet of the one foldable axis and nobody has ruled it safe
+                // to recompute continuously yet -- the whitelist fails it closed (Sam, 2026-09-05).
+                Assert.That(AuraCapabilities.Supports(CardType.MINION,
+                    Filtered(new TargetFilterDef(tribe: Tribe.CONSTRUCT, negateTribe: true))), Is.False,
+                    "negated tribe");
             });
         }
 

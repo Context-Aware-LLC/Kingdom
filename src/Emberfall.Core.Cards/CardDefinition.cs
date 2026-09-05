@@ -614,10 +614,25 @@ namespace Emberfall.Core.Cards
     public sealed class TargetFilterDef
     {
         public bool? Damaged { get; }
+
         public Tribe? Tribe { get; }
 
         /// <summary>
-        /// The most a candidate's card may cost, inclusive — "an enemy minion that costs 4 or less".
+        /// Flips <see cref="Tribe"/> from "must match" to "must not match" — "any minion that is
+        /// NOT a Beast". Meaningless while <see cref="Tribe"/> is null; <c>CardValidator</c> refuses
+        /// that combination rather than authoring a bit that does nothing (Sam, 2026-09-05).
+        /// </summary>
+        public bool NegateTribe { get; }
+
+        /// <summary>
+        /// A candidate's cost bound, inclusive — paired with <see cref="NegateCost"/> to say which
+        /// side: "an enemy minion that costs 4 or less" (the default) or "... 4 or more".
+        ///
+        /// <para>Named <c>MaxCost</c> rather than <c>Cost</c> deliberately: the JSON key
+        /// (<c>maxCost</c>) is a stable authored contract, and only one shipped card uses the axis
+        /// at all today, so renaming it to fit the new direction bit would buy a tidier name at the
+        /// cost of a card-data migration for zero behavior change. <see cref="NegateCost"/> flips
+        /// the READING of the same stored bound rather than the bound getting a new name.</para>
         ///
         /// <para>It reads the DEFINITION's printed cost, because that is the only cost this engine
         /// has: nothing modifies a card's cost at runtime, so there is no "current cost" to consult
@@ -629,7 +644,15 @@ namespace Emberfall.Core.Cards
         public int? MaxCost { get; }
 
         /// <summary>
-        /// A keyword the candidate must be carrying — "all friendly Shroud minions".
+        /// Flips <see cref="MaxCost"/> from "at most" to "at least". Meaningless while
+        /// <see cref="MaxCost"/> is null; refused in combination the same way
+        /// <see cref="NegateTribe"/> is.
+        /// </summary>
+        public bool NegateCost { get; }
+
+        /// <summary>
+        /// A keyword the candidate must be carrying (or, with <see cref="NegateKeyword"/>, must
+        /// lack) — "all friendly Shroud minions" / "all friendly minions without Shroud".
         ///
         /// <para><b>This one reads the INSTANCE, not the definition</b>, and it is the only axis
         /// that does. <c>Damaged</c> reads live health, <c>Tribe</c> and <c>MaxCost</c> read the
@@ -639,18 +662,31 @@ namespace Emberfall.Core.Cards
         /// not what any card face says.</para>
         ///
         /// <para>An action marker (<c>SILENCE</c>, <c>BACKDRAFT</c>, <c>REINFORCE</c>) is never
-        /// carried, so filtering on one selects nobody; <c>CardValidator</c> C14L refuses it rather
-        /// than letting a row read as a constraint that matches nothing.</para>
+        /// carried, so filtering on one selects nobody (and negating one selects everybody);
+        /// <c>CardValidator</c> C14L refuses it rather than letting a row read as a constraint that
+        /// does not do what it says.</para>
         /// </summary>
         public Keyword? Keyword { get; }
 
-        public TargetFilterDef(bool? damaged = null, Tribe? tribe = null, int? maxCost = null,
-            Keyword? keyword = null)
+        /// <summary>Flips <see cref="Keyword"/> from "must carry" to "must lack".</summary>
+        public bool NegateKeyword { get; }
+
+        /// <summary>
+        /// <see cref="Damaged"/> takes no negate bit of its own — it is already a tri-state
+        /// (<c>true</c>/<c>false</c>/unset says damaged/undamaged/either), so "negated" would only
+        /// ever mean "the value the author would have written directly instead."
+        /// </summary>
+        public TargetFilterDef(bool? damaged = null, Tribe? tribe = null, bool negateTribe = false,
+            int? maxCost = null, bool negateCost = false, Keyword? keyword = null,
+            bool negateKeyword = false)
         {
             Damaged = damaged;
             Tribe = tribe;
+            NegateTribe = negateTribe;
             MaxCost = maxCost;
+            NegateCost = negateCost;
             Keyword = keyword;
+            NegateKeyword = negateKeyword;
         }
     }
 

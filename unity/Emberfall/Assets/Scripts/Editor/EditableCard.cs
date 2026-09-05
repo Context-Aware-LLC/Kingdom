@@ -138,14 +138,21 @@ namespace Emberfall.Editor
     /// Every axis keeps its own field rather than sharing one boxed value, so switching the
     /// dropdown back and forth does not destroy what the other arms held. Only the arm the Kind
     /// names is read.
+    ///
+    /// <para><b>Negate has no field of its own for <c>Damaged</c></b> — that axis is already a
+    /// boolean, so the window edits it directly ("damaged" vs. "undamaged") instead of doubling up
+    /// a negate bit that would only ever restate the same choice (Sam, 2026-09-05).</para>
     /// </remarks>
     public sealed class EditableFilter
     {
         public EditableFilterKind Kind = EditableFilterKind.Damaged;
         public bool Damaged = true;
         public Tribe Tribe = Tribe.CONSTRUCT;
+        public bool NegateTribe;
         public int MaxCost = 1;
+        public bool NegateCost;
         public Keyword Keyword = Keyword.SHROUD;
+        public bool NegateKeyword;
 
         /// <summary>Unfolds a definition-side filter into one clause per axis it carries.</summary>
         public static List<EditableFilter> From(TargetFilterDef? filter)
@@ -155,11 +162,14 @@ namespace Emberfall.Editor
             if (filter.Damaged is { } damaged)
                 clauses.Add(new EditableFilter { Kind = EditableFilterKind.Damaged, Damaged = damaged });
             if (filter.Tribe is { } tribe)
-                clauses.Add(new EditableFilter { Kind = EditableFilterKind.Tribe, Tribe = tribe });
+                clauses.Add(new EditableFilter
+                    { Kind = EditableFilterKind.Tribe, Tribe = tribe, NegateTribe = filter.NegateTribe });
             if (filter.MaxCost is { } maxCost)
-                clauses.Add(new EditableFilter { Kind = EditableFilterKind.MaxCost, MaxCost = maxCost });
+                clauses.Add(new EditableFilter
+                    { Kind = EditableFilterKind.MaxCost, MaxCost = maxCost, NegateCost = filter.NegateCost });
             if (filter.Keyword is { } keyword)
-                clauses.Add(new EditableFilter { Kind = EditableFilterKind.Keyword, Keyword = keyword });
+                clauses.Add(new EditableFilter
+                    { Kind = EditableFilterKind.Keyword, Keyword = keyword, NegateKeyword = filter.NegateKeyword });
             return clauses;
         }
 
@@ -174,16 +184,19 @@ namespace Emberfall.Editor
         public static TargetFilterDef? Fold(List<EditableFilter> clauses)
         {
             if (clauses == null || clauses.Count == 0) return null;
-            bool? damaged = null; Tribe? tribe = null; int? maxCost = null; Keyword? keyword = null;
+            bool? damaged = null; Tribe? tribe = null; bool negateTribe = false;
+            int? maxCost = null; bool negateCost = false;
+            Keyword? keyword = null; bool negateKeyword = false;
             foreach (EditableFilter clause in clauses)
                 switch (clause.Kind)
                 {
                     case EditableFilterKind.Damaged: damaged = clause.Damaged; break;
-                    case EditableFilterKind.Tribe: tribe = clause.Tribe; break;
-                    case EditableFilterKind.MaxCost: maxCost = clause.MaxCost; break;
-                    case EditableFilterKind.Keyword: keyword = clause.Keyword; break;
+                    case EditableFilterKind.Tribe: tribe = clause.Tribe; negateTribe = clause.NegateTribe; break;
+                    case EditableFilterKind.MaxCost: maxCost = clause.MaxCost; negateCost = clause.NegateCost; break;
+                    case EditableFilterKind.Keyword:
+                        keyword = clause.Keyword; negateKeyword = clause.NegateKeyword; break;
                 }
-            return new TargetFilterDef(damaged, tribe, maxCost, keyword);
+            return new TargetFilterDef(damaged, tribe, negateTribe, maxCost, negateCost, keyword, negateKeyword);
         }
     }
 

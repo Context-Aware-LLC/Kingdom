@@ -240,8 +240,11 @@ namespace Emberfall.Editor
                 w.WriteStartObject("filter");
                 if (filter.Damaged is { } damaged) w.WriteBoolean("damaged", damaged);
                 if (filter.Tribe is { } tribe) w.WriteString("tribe", tribe.ToString());
-                if (filter.MaxCost is { } maxCost) w.WriteNumber("maxCost", maxCost);
+                if (filter.NegateTribe) w.WriteBoolean("negateTribe", true);
+                if (filter.MaxCost is { } filterMaxCost) w.WriteNumber("maxCost", filterMaxCost);
+                if (filter.NegateCost) w.WriteBoolean("negateCost", true);
                 if (filter.Keyword is { } filterKeyword) w.WriteString("keyword", filterKeyword.ToString());
+                if (filter.NegateKeyword) w.WriteBoolean("negateKeyword", true);
                 w.WriteEndObject();
             }
             if (!string.IsNullOrEmpty(target.Binding)) w.WriteString("binding", target.Binding);

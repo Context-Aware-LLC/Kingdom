@@ -994,21 +994,29 @@ namespace Emberfall.Editor
                     switch (clause.Kind)
                     {
                         case EditableFilterKind.Damaged:
+                            // No negate toggle here: Damaged is already the two-valued choice
+                            // itself, so this toggle IS "negative" (Sam, 2026-09-05).
                             clause.Damaged = EditorGUILayout.Toggle(clause.Damaged);
                             EditorGUILayout.LabelField(clause.Damaged ? "damaged" : "undamaged");
                             break;
                         case EditableFilterKind.Tribe:
                             clause.Tribe = (Tribe)EditorGUILayout.EnumPopup(clause.Tribe);
+                            clause.NegateTribe = EditorGUILayout.ToggleLeft(
+                                "negative", clause.NegateTribe, GUILayout.Width(70));
                             break;
                         case EditableFilterKind.MaxCost:
                             clause.MaxCost = Mathf.Clamp(EditorGUILayout.IntField(clause.MaxCost), 0, 25);
-                            EditorGUILayout.LabelField("or less");
+                            clause.NegateCost = EditorGUILayout.ToggleLeft(
+                                "negative", clause.NegateCost, GUILayout.Width(70));
+                            EditorGUILayout.LabelField(clause.NegateCost ? "or more" : "or less");
                             break;
                         case EditableFilterKind.Keyword:
                             // The same popup a carrier keyword uses, so an action marker is not
                             // offered here either — C14L would reject it, and a filter naming one
-                            // selects nobody.
+                            // (negated or not) would either select nobody or everybody.
                             clause.Keyword = DrawCarrierKeywordPopup(clause.Keyword);
+                            clause.NegateKeyword = EditorGUILayout.ToggleLeft(
+                                "negative", clause.NegateKeyword, GUILayout.Width(70));
                             break;
                     }
 

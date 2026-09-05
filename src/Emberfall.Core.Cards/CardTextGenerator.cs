@@ -619,8 +619,10 @@ namespace Emberfall.Core.Cards
         private static bool SameFilter(TargetFilterDef? first, TargetFilterDef? second)
         {
             if (first == null || second == null) return first == null && second == null;
-            return first.Damaged == second.Damaged && first.Tribe == second.Tribe &&
-                first.MaxCost == second.MaxCost && first.Keyword == second.Keyword;
+            return first.Damaged == second.Damaged &&
+                first.Tribe == second.Tribe && first.NegateTribe == second.NegateTribe &&
+                first.MaxCost == second.MaxCost && first.NegateCost == second.NegateCost &&
+                first.Keyword == second.Keyword && first.NegateKeyword == second.NegateKeyword;
         }
 
         /// <summary>
@@ -1359,15 +1361,28 @@ namespace Emberfall.Core.Cards
             // and would say "all Shroud friendly minions" -- and it runs before the tribe so that
             // both together read "all friendly Shroud Constructs", the tribe still replacing the noun
             // this has just qualified.
+            // A negated axis reuses its positive machinery unchanged and only swaps the word that
+            // goes into it for a "non-" compound -- "non-Shroud minions", "all friendly
+            // non-Constructs" -- so the plural/article handling ReplaceHeadNoun and
+            // InsertBeforeHeadNoun already carry needs no negation-aware branch of its own
+            // (Sam, 2026-09-05).
             if (filter.Keyword.HasValue)
-                description = InsertBeforeHeadNoun(description, Name(filter.Keyword.Value.ToString()));
+            {
+                string keywordWord = Name(filter.Keyword.Value.ToString());
+                if (filter.NegateKeyword) keywordWord = "non-" + keywordWord;
+                description = InsertBeforeHeadNoun(description, keywordWord);
+            }
 
             // The tribe REPLACES the noun rather than qualifying it (Sam, 2026-08-11): "all friendly
             // Constructs", not "all friendly Construct minions". Splicing it after the determiner
             // produced "all Construct friendly minions", which is not English — a classifying noun
             // has to sit against the head noun, and once it does it has already said "minion".
             if (filter.Tribe.HasValue)
-                description = ReplaceHeadNoun(description, Name(filter.Tribe.Value.ToString()));
+            {
+                string tribeWord = Name(filter.Tribe.Value.ToString());
+                if (filter.NegateTribe) tribeWord = "non-" + tribeWord;
+                description = ReplaceHeadNoun(description, tribeWord);
+            }
 
             // "damaged" is an ordinary adjective and keeps its place after the determiner.
             if (filter.Damaged.HasValue)
@@ -1381,7 +1396,8 @@ namespace Emberfall.Core.Cards
             // the rest of the vocabulary (Sam, 2026-08-11).
             if (filter.MaxCost.HasValue)
                 description += " that " + CostVerb(description) + " " +
-                    filter.MaxCost.Value.ToString(CultureInfo.InvariantCulture) + " or less";
+                    filter.MaxCost.Value.ToString(CultureInfo.InvariantCulture) +
+                    (filter.NegateCost ? " or more" : " or less");
 
             return description;
         }

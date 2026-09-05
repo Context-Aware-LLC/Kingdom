@@ -448,22 +448,35 @@ namespace Emberfall.Core.Cards
                     // unpaid: an automatic or RANDOM spec takes whatever exists and never asks, so
                     // the flag could not gate anything there. Fail closed rather than let a row read
                     // as a sacrifice it never enforces.
-                    // C14K — a cost ceiling outside the authorable cost range narrows to
+                    // C14K — a cost bound outside the authorable cost range narrows to
                     // everything or to nothing, and both spellings read on the card face as a real
-                    // constraint. The range is C7's, deliberately: the ceiling is compared against a
+                    // constraint. The range is C7's, deliberately: the bound is compared against a
                     // printed cost, so anything C7 refuses to print cannot be met or missed.
-                    if (target.Filter?.MaxCost is int maxCost && (maxCost < 0 || maxCost > 25))
+                    if (target.Filter?.MaxCost is int filterMaxCost && (filterMaxCost < 0 || filterMaxCost > 25))
                         Err("C14K-TARGET-MAXCOST-RANGE", $"{prefix}.action.target.filter.maxCost",
                             "target.filter.maxCost must be 0-25, the same range a cost is printed in.");
                     // C14L — an action marker is never CARRIED (its behaviour comes from a typed
                     // action, and CardValidator refuses it as a carrier or granted keyword), so a
-                    // filter naming one selects nobody on every board there has ever been. It reads
-                    // on the card face as a narrowing; it is an empty set.
+                    // filter naming one selects nobody on every board there has ever been (and a
+                    // negated one selects everybody). It reads on the card face as a narrowing; it
+                    // is a set with only one honest membership.
                     if (target.Filter?.Keyword is Keyword filterKeyword &&
                         KeywordSemantics.IsActionMarker(filterKeyword))
                         Err("C14L-TARGET-FILTER-ACTION-MARKER", $"{prefix}.action.target.filter.keyword",
                             $"target.filter.keyword '{filterKeyword}' is an action marker, which no " +
-                            "card ever carries — the filter would select nobody.");
+                            "card ever carries — the filter would select nobody (or, negated, everybody).");
+                    // C14M/N/O — a negate bit with nothing to negate is an authored no-op: it sits
+                    // on the row doing nothing, which is the same "reads as a constraint it does not
+                    // enforce" failure C14H and C14L exist to catch (Sam, 2026-09-05).
+                    if (target.Filter is { Tribe: null, NegateTribe: true })
+                        Err("C14M-TARGET-FILTER-NEGATE-TRIBE-EMPTY", $"{prefix}.action.target.filter.negateTribe",
+                            "target.filter.negateTribe is set with no target.filter.tribe to negate.");
+                    if (target.Filter is { MaxCost: null, NegateCost: true })
+                        Err("C14N-TARGET-FILTER-NEGATE-COST-EMPTY", $"{prefix}.action.target.filter.negateCost",
+                            "target.filter.negateCost is set with no target.filter.maxCost to negate.");
+                    if (target.Filter is { Keyword: null, NegateKeyword: true })
+                        Err("C14O-TARGET-FILTER-NEGATE-KEYWORD-EMPTY", $"{prefix}.action.target.filter.negateKeyword",
+                            "target.filter.negateKeyword is set with no target.filter.keyword to negate.");
                     if (target.IsCost && !TargetSpec.IsPlayerChosen(target))
                         Err("C14H-TARGET-COST-AUTOMATIC", $"{prefix}.action.target.cost",
                             "target.cost is meaningful only on a player-chosen target — an " +

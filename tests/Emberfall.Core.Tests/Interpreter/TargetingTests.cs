@@ -181,6 +181,25 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { damagedConstruct.Id }));
         }
 
+        /// <summary>NegateTribe flips the same predicate rather than adding a new one — a Beast
+        /// passes a "not Construct" filter, a Construct fails it.</summary>
+        [Test]
+        public void NegateTribe_Selects_Every_Definition_Backed_Candidate_Except_The_Named_Tribe()
+        {
+            var construct = Minion(FixtureCard.Id("construct"), Tribe.CONSTRUCT);
+            var beast = Minion(FixtureCard.Id("beast"), Tribe.BEAST);
+            var db = new FakeCardDatabase().Register(construct).Register(beast);
+            var state = State();
+            Board(state, 0, construct);
+            CardInstance keptBeast = Board(state, 0, beast);
+
+            IReadOnlyList<TargetCandidate> candidates = Engine.Candidates(state, db,
+                state.Players[0].Id, new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.AllOf("ANY_FRIENDLY_MINION"),
+                    filter: new TargetFilterDef(tribe: Tribe.CONSTRUCT, negateTribe: true)));
+
+            Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { keptBeast.Id }));
+        }
+
         /// <summary>
         /// The cost ceiling is inclusive, and it reads the DEFINITION's printed cost rather than
         /// anything on the instance — which is what "Take control of an enemy minion that costs 4
@@ -229,6 +248,29 @@ namespace Emberfall.Core.Tests.Interpreter
                     filter: new TargetFilterDef(maxCost: 25)));
 
             Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { minion.Id }));
+        }
+
+        /// <summary>NegateCost flips the bound from "at most" to "at least" — the same three
+        /// definitions as the inclusive test above, read from the other side.</summary>
+        [Test]
+        public void NegateCost_Filter_Narrows_To_At_Least_The_Printed_Cost()
+        {
+            var cheap = MinionCosting(FixtureCard.Id("cheap"), 2);
+            var atTheFloor = MinionCosting(FixtureCard.Id("at_floor"), 4);
+            var dear = MinionCosting(FixtureCard.Id("dear"), 5);
+            var db = new FakeCardDatabase().Register(cheap).Register(atTheFloor).Register(dear);
+            var state = State();
+            Board(state, 1, cheap);
+            CardInstance exact = Board(state, 1, atTheFloor);
+            CardInstance costly = Board(state, 1, dear);
+
+            IReadOnlyList<TargetCandidate> candidates = Engine.Candidates(state, db,
+                state.Players[0].Id,
+                new TargetSpec("ANY_ENEMY_MINION", TargetSelection.AllOf("ANY_ENEMY_MINION"),
+                    filter: new TargetFilterDef(maxCost: 4, negateCost: true)));
+
+            Assert.That(candidates.Select(c => c.Instance),
+                Is.EqualTo(new[] { exact.Id, costly.Id }));
         }
 
         /// <summary>
@@ -284,6 +326,25 @@ namespace Emberfall.Core.Tests.Interpreter
                     filter: new TargetFilterDef(keyword: Keyword.SHROUD)));
 
             Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { kept.Id }));
+        }
+
+        /// <summary>NegateKeyword selects the candidates that LACK the keyword, still reading the
+        /// live instance set rather than the printed row.</summary>
+        [Test]
+        public void NegateKeyword_Filter_Selects_A_Minion_That_Lacks_The_Keyword()
+        {
+            var plain = Minion(FixtureCard.Id("plain"));
+            var db = new FakeCardDatabase().Register(plain);
+            var state = State();
+            Board(state, 0, plain).Keywords.Add(Keyword.SHROUD);
+            CardInstance unshrouded = Board(state, 0, plain);
+
+            IReadOnlyList<TargetCandidate> candidates = Engine.Candidates(state, db,
+                state.Players[0].Id,
+                new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.AllOf("ANY_FRIENDLY_MINION"),
+                    filter: new TargetFilterDef(keyword: Keyword.SHROUD, negateKeyword: true)));
+
+            Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { unshrouded.Id }));
         }
 
         [Test]
