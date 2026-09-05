@@ -21,6 +21,115 @@ namespace Emberfall.Net.Server.Tests.Bots
         private static readonly PlayerId P0 = new PlayerId("p0");
         private static readonly PlayerId P1 = new PlayerId("p1");
 
+        [Test]
+        public async Task Mulligan_And_First_Turn_Draw_Preserve_The_Deck_Multiset()
+        {
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            var processor = new CommandProcessor(db);
+            var host = new LocalMatchHost(processor, db, setup);
+            host.BeginMatch(new MatchId("deck-memory-mulligan"), P0, P1, 17UL);
+            PlayerId viewer = host.State.ActivePlayer;
+            int viewerSeat = host.State.SeatOf(viewer);
+            var scorer = new FakeScorer(count => new double[count]);
+            var policy = new CheckpointSeatPolicy(scorer, db, processor,
+                viewerSeat == 0 ? setup.P0Deck : setup.P1Deck, CheckpointSelection.Argmax, new string('a', 64));
+            foreach (PlayerId player in new[] { P0, P1 })
+            {
+                GameState before = GameStateProjector.Project(host.State, viewer);
+                var replace = host.State.PlayerOf(player).Hand.ConvertAll(card => card.Id);
+                CommandResult result = host.Submit(new MulliganIntent(player, replace));
+                Assert.That(result.Accepted, Is.True);
+                policy.ObserveTransition(before,
+                    GameStateProjector.ProjectEvents(result.Events, processor.LastEventVisibility, viewerSeat),
+                    GameStateProjector.Project(host.State, viewer), viewer);
+            }
+            _ = await policy.ChooseAsync(GameStateProjector.Project(host.State, viewer), viewer);
+            var expected = host.State.PlayerOf(viewer).Deck.ConvertAll(card => card.DefinitionId);
+            expected.Sort();
+            var actual = new List<int>();
+            foreach (JsonElement id in scorer.LastMemory.GetProperty("selfRemainingDeck").EnumerateArray())
+                actual.Add(id.GetInt32());
+            Assert.That(actual, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public async Task Opponent_Bounce_Followed_By_Draw_Removes_Only_The_Drawn_Definition()
+        {
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            GameState before = ProjectOpeningState(db, setup);
+            before.Phase = TurnPhase.Main;
+            before.ActivePlayer = P1;
+            PlayerState self = before.PlayerOf(P0);
+            self.Hand.Clear();
+            self.Deck.Clear();
+            self.Deck.Add(new CardInstance(new InstanceId(0), 0, P0) { Zone = Zone.Deck });
+            self.Deck.Add(new CardInstance(new InstanceId(0), 0, P0) { Zone = Zone.Deck });
+            self.Board.Add(new CardInstance(new InstanceId(300), 10, P0) { Zone = Zone.Board });
+            var scorer = new FakeScorer(count => new double[count]);
+            var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
+                new[] { 10, 20 }, CheckpointSelection.Argmax, new string('a', 64));
+            GameState bounced = GameStateProjector.Project(before, P0);
+            bounced.PlayerOf(P0).Board.Clear();
+            bounced.PlayerOf(P0).Hand.Add(new CardInstance(new InstanceId(301), 10, P0) { Zone = Zone.Hand });
+            policy.ObserveTransition(before, new[]
+            {
+                new GameEvent(GameEventKind.CardBounced, 1, null, new InstanceId(301), null, EventFlags.None),
+            }, bounced, P0);
+            Assert.That(await policy.ChooseAsync(bounced, P0), Is.Null);
+
+            GameState after = GameStateProjector.Project(bounced, P0);
+            after.PlayerOf(P0).Deck.RemoveAt(0);
+            after.PlayerOf(P0).Hand.Add(new CardInstance(new InstanceId(302), 20, P0) { Zone = Zone.Hand });
+            policy.ObserveTransition(bounced, new[]
+            {
+                new GameEvent(GameEventKind.CardDrawn, 2, new InstanceId(302), null, null, EventFlags.None),
+            }, after, P0);
+            // Use mulligan to inspect scoring memory independently of these synthetic definitions.
+            after.Phase = TurnPhase.Mulligan;
+            _ = await policy.ChooseAsync(after, P0);
+            JsonElement deck = scorer.LastMemory.GetProperty("selfRemainingDeck");
+            Assert.That(deck.GetArrayLength(), Is.EqualTo(1));
+            Assert.That(deck[0].GetInt32(), Is.EqualTo(10));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task Draw_Event_Distinguishes_Generated_Cards_And_Overdraw(bool overdraw)
+        {
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            GameState before = ProjectOpeningState(db, setup);
+            PlayerState self = before.PlayerOf(P0);
+            self.Hand.Clear();
+            self.Deck.Clear();
+            self.Deck.Add(new CardInstance(new InstanceId(0), 0, P0) { Zone = Zone.Deck });
+            self.Deck.Add(new CardInstance(new InstanceId(0), 0, P0) { Zone = Zone.Deck });
+            var scorer = new FakeScorer(count => new double[count]);
+            var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
+                new[] { 10, 20 }, CheckpointSelection.Argmax, new string('a', 64));
+            _ = await policy.ChooseAsync(before, P0);
+
+            GameState after = GameStateProjector.Project(before, P0);
+            after.PlayerOf(P0).Deck.RemoveAt(0);
+            var drawn = new CardInstance(new InstanceId(400), 20, P0) { Zone = overdraw ? Zone.Graveyard : Zone.Hand };
+            if (overdraw) after.PlayerOf(P0).Graveyard.Add(drawn);
+            else after.PlayerOf(P0).Hand.Add(drawn);
+            // Generated card also occurs in the starting deck, but was NOT drawn from it.
+            after.PlayerOf(P0).Hand.Add(new CardInstance(new InstanceId(401), 10, P0) { Zone = Zone.Hand });
+            policy.ObserveTransition(before, new[]
+            {
+                new GameEvent(GameEventKind.CardDrawn, 1, drawn.Id, null, null,
+                    overdraw ? EventFlags.Overdraw : EventFlags.None),
+            }, after, P0);
+            _ = await policy.ChooseAsync(after, P0);
+
+            JsonElement deck = scorer.LastMemory.GetProperty("selfRemainingDeck");
+            Assert.That(deck.GetArrayLength(), Is.EqualTo(1));
+            Assert.That(deck[0].GetInt32(), Is.EqualTo(10));
+        }
+
         [TestCase("off-turn")]
         [TestCase("mulligan-done")]
         [TestCase("opponent-choice")]
