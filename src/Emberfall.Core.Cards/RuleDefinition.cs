@@ -574,7 +574,6 @@ namespace Emberfall.Core.Cards
                 case Trigger.ON_DEATH:
                     return new TargetShape(TargetZones.Graveyard, TargetTypes.AnyCard);
                 case Trigger.ON_ATTACK:
-                    return new TargetShape(TargetZones.Weapon, TargetTypes.Weapon);
                 case Trigger.ON_PLAY:
                 case Trigger.ON_CAST:
                     return SourceShape(sourceType, trigger);

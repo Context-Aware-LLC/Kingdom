@@ -92,9 +92,10 @@ namespace Emberfall.Core.Contracts
         // "this minion is in the graveyard" at any site reachable from one.
         ON_DEATH,
 
-        // LIVE, BUT WEAPONS ONLY. CommandProcessor gates the raise on
-        // `attacker.IsHero && ps.Weapon != null`, and fires it with an EMPTY target list — so
-        // "the minion this hits" is not addressable. On a MINION this trigger is dead.
+        // LIVE ON EQUIPPED WEAPONS AND BOARD MINIONS (Sam, 2026-09-05) — CommandProcessor.ApplyAttack
+        // raises it via RaiseSelf on whichever carrier is attacking, and fires it with an EMPTY
+        // target list either way — so "the minion this hits" is not addressable. Dead on SPELL and
+        // HERO_POWER: neither ever attacks.
         ON_ATTACK,
 
         // LIVE — DamagePipeline raises this for minions that actually take damage (not Aegis absorbs).

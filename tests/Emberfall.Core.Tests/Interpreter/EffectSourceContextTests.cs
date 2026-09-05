@@ -175,7 +175,10 @@ namespace Emberfall.Core.Tests.Interpreter
                 Assert.That(EffectSourceCapabilities.Supports(
                     EffectSourceKind.EquippedWeapon, Trigger.ON_TURN_START), Is.True);
                 Assert.That(EffectSourceCapabilities.Supports(
-                    EffectSourceKind.BoardMinion, Trigger.ON_ATTACK), Is.False);
+                    EffectSourceKind.BoardMinion, Trigger.ON_ATTACK), Is.True,
+                    "ON_ATTACK is live on minions too, since 2026-09-05");
+                Assert.That(EffectSourceCapabilities.Supports(
+                    EffectSourceKind.BoardMinion, Trigger.ON_CAST), Is.False);
                 Assert.That(EffectSourceCapabilities.Supports(
                     (EffectSourceKind)999, Trigger.ON_TURN_START), Is.False);
                 Assert.That(EffectSourceCapabilities.Supports(
@@ -183,12 +186,12 @@ namespace Emberfall.Core.Tests.Interpreter
             });
 
             GameState state = State();
-            RuleDefinition weaponOnly = Rule("attack", Trigger.ON_ATTACK);
-            CardDefinition malformed = Card(FixtureCard.Id("malformed"), CardType.MINION, weaponOnly);
+            RuleDefinition castOnly = Rule("cast", Trigger.ON_CAST);
+            CardDefinition malformed = Card(FixtureCard.Id("malformed"), CardType.MINION, castOnly);
             var db = new FakeCardDatabase().Register(malformed);
             PutBoard(state, 0, malformed.Id, 20);
 
-            Assert.That(OrderedTriggerSources.Snapshot(state, db, P0, Trigger.ON_ATTACK), Is.Empty,
+            Assert.That(OrderedTriggerSources.Snapshot(state, db, P0, Trigger.ON_CAST), Is.Empty,
                 "enumeration must use the same capability policy that validation uses");
         }
 
@@ -197,8 +200,8 @@ namespace Emberfall.Core.Tests.Interpreter
         {
             CardDefinition weapon = Card(FixtureCard.Id("turn_weapon"), CardType.WEAPON,
                 Rule("turn_start", Trigger.ON_TURN_START));
-            CardDefinition invalidMinion = Card(FixtureCard.Id("attack_minion"), CardType.MINION,
-                Rule("attack", Trigger.ON_ATTACK));
+            CardDefinition invalidMinion = Card(FixtureCard.Id("cast_minion"), CardType.MINION,
+                Rule("cast", Trigger.ON_CAST));
             var db = new FakeCardDatabase().Register(weapon).Register(invalidMinion);
 
             ValidationReport weaponReport = new CardValidator().Validate(weapon, db);
@@ -213,11 +216,11 @@ namespace Emberfall.Core.Tests.Interpreter
             Assert.Multiple(() =>
             {
                 Assert.That(weaponReport.Issues.Any(i =>
-                    i.Code == "C21-TRIGGER-WEAPON-ONLY"), Is.False,
+                    i.Code == "C21-TRIGGER-SOURCE-UNSUPPORTED"), Is.False,
                     "a capability enumerated at runtime must also be accepted by validation; got: " +
                     string.Join(", ", weaponReport.Issues.Select(i => i.Code + " " + i.Message)));
                 Assert.That(minionReport.Issues.Any(i =>
-                    i.Code == "C21-TRIGGER-WEAPON-ONLY"), Is.True,
+                    i.Code == "C21-TRIGGER-SOURCE-UNSUPPORTED"), Is.True,
                     "a capability rejected at runtime must also be rejected by validation");
             });
         }

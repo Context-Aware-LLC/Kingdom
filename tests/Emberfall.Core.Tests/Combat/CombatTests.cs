@@ -296,6 +296,36 @@ namespace Emberfall.Core.Tests.Combat
             Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(22), "weapon's on-attack heal restored 2");
         }
 
+        // ON_ATTACK is now live on minions too (Sam, 2026-09-05) — same shape as the weapon path:
+        // RaiseSelf on the attacking carrier, empty target list.
+        [Test]
+        public void Minion_ON_ATTACK_Effect_Fires_When_A_Minion_Attacks()
+        {
+            var attackerDef = new CardDefinition(
+                id: FixtureCard.Id("striking_minion"), handle: "striking_minion", name: "Striking Minion",
+                type: CardType.MINION, cost: 3,
+                attack: 3, health: 4, durability: null,
+                @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
+                keywords: System.Array.Empty<Keyword>(),
+                rules: new[] { TestRules.Rule("rule_1", Trigger.ON_ATTACK,
+                    new HealAction(2, new TargetSpec("FRIENDLY_HERO", TargetSelection.Of(1)))) },
+                flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
+                collectible: true, tribe: null, factionId: "");
+
+            var db = new Support.FakeCardDatabase().Register(attackerDef);
+            var proc = new CommandProcessor(db);
+
+            var s = MainPhase();
+            s.Players[0].Hero.CurrentHealth = 20; // below max so the heal is observable
+            var atk = Board(s, 0, attackerDef);
+            var def = Board(s, 1, Minion(FixtureCard.Id("target"), 0, 10)); // 0 attack: no retaliation to muddy the heal
+
+            var r = proc.Execute(s, Attack(s, atk.Id, def.Id));
+
+            Assert.That(r.Accepted, Is.True);
+            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(22), "minion's on-attack heal restored 2");
+        }
+
         [Test]
         public void Weapon_Destroyed_When_Durability_Reaches_Zero()
         {

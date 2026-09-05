@@ -650,10 +650,14 @@ namespace Emberfall.Core
 
             buf.Emit(GameEventKind.AttackDeclared, source: attacker.Id, target: defender.Id);
 
-            // Weapon "whenever this attacks" effects (e.g. Grasping Thornvine's heal) resolve from
-            // the equipped card itself, preserving its identity and runtime source state.
+            // "Whenever this attacks" effects (e.g. Grasping Thornvine's heal) resolve from the
+            // attacking carrier itself, preserving its identity and runtime source state — the
+            // equipped weapon on a hero attack, the minion itself on a minion attack. Empty target
+            // list either way: the defender is not addressable from ON_ATTACK (Sam, 2026-09-05).
             if (attacker.IsHero && ps.Weapon != null)
                 interp.RaiseSelf(ps.Weapon, Trigger.ON_ATTACK, System.Array.Empty<TargetRef>());
+            else if (attacker.IsMinion)
+                interp.RaiseSelf(attacker.Minion!, Trigger.ON_ATTACK, System.Array.Empty<TargetRef>());
 
             // Phase 1: attacker hits defender
             DamagePipeline.ApplyDamage(interp, defender, attackerAtk, attacker.Id, attackerKws);

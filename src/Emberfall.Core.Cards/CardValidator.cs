@@ -19,9 +19,10 @@ namespace Emberfall.Core.Cards
 
         // The ONLY two triggers that carry player-chosen targets. Verified against every RaiseSelf
         // call site: CommandProcessor.cs:346/354/386/454 pass the player's `targets`; ON_ATTACK
-        // (CommandProcessor.cs:560), ON_DAMAGED (DamagePipeline.cs:128), the weapon ON_DEATH
-        // (RulesEngine.cs:110), the minion ON_DEATH (EffectInterpreter.cs:154) and every observer
-        // trigger (EffectInterpreter.RaiseObservers) all pass Array.Empty.
+        // (CommandProcessor.cs's ApplyAttack, weapon AND minion carriers), ON_DAMAGED
+        // (DamagePipeline.cs:128), the weapon ON_DEATH (RulesEngine.cs:110), the minion ON_DEATH
+        // (EffectInterpreter.cs:154) and every observer trigger (EffectInterpreter.RaiseObservers)
+        // all pass Array.Empty.
         private static readonly HashSet<Trigger> PlayerTargetedTriggers = new HashSet<Trigger>
         {
             Trigger.ON_PLAY, Trigger.ON_CAST,
@@ -228,8 +229,8 @@ namespace Emberfall.Core.Cards
                     }
                     else if (trigger == Trigger.ON_ATTACK)
                     {
-                        Err("C21-TRIGGER-WEAPON-ONLY", $"{prefix}.activation",
-                            $"trigger '{trigger}' is raised for weapons only (CommandProcessor.cs:557-560) — it is dead on a {def.Type}.");
+                        Err("C21-TRIGGER-ATTACK-ONLY", $"{prefix}.activation",
+                            $"trigger '{trigger}' is raised for weapons and minions only (CommandProcessor.cs's ApplyAttack) — it is dead on a {def.Type}.");
                     }
                     else if (trigger == Trigger.ON_HEAL)
                     {

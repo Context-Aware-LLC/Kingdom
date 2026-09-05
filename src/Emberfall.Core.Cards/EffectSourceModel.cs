@@ -64,6 +64,7 @@ namespace Emberfall.Core.Cards
                 {
                     Trigger.ON_PLAY,
                     Trigger.ON_DEATH,
+                    Trigger.ON_ATTACK,
                     Trigger.ON_DAMAGED,
                     Trigger.ON_HEAL,
                     Trigger.ON_TURN_START,
