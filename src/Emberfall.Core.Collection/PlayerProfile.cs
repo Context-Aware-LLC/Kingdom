@@ -43,23 +43,23 @@ namespace Emberfall.Core.Collection
         public string DisplayName { get; set; }
 
         /// <summary>
-        /// The character and deck actually submitted into the most recent match (Sam, 2026-08-09) —
+        /// The deck actually submitted into the most recent match (Sam, 2026-08-09) —
         /// what Find Game pre-arms so a player is not forced to re-pick a queue-ready deck every
         /// time. Empty until the first match ships a deck. Deliberately not re-validated here: a
-        /// character or deck deleted since, or a deck that has fallen out of queue eligibility, is
-        /// the reader's problem to check against a fresh roster, the same way <see cref="Character.DefaultDeckId"/>'s
+        /// deck deleted since, or one that has fallen out of queue eligibility, is
+        /// the reader's problem to check against a fresh deck list, the same way a dangling id's
         /// dangling-id contract works — this field just remembers what was picked, not whether it is
         /// still pickable.
         /// </summary>
-        public string LastPlayedCharacterId { get; set; }
-
-        /// <summary>The deck half of <see cref="LastPlayedCharacterId"/>.</summary>
+        /// <para><b><c>LastPlayedCharacterId</c> sat beside this until 2026-09-04</b> and went with
+        /// characters (ADR-0009). It was only ever needed to disambiguate WHICH character's deck
+        /// this id belonged to; a deck id is unique across the account on its own, so keeping both
+        /// would be two keys for one fact and the second one would go stale quietly.</para>
         public string LastPlayedDeckId { get; set; }
 
-        public PlayerProfile(string displayName = "", string lastPlayedCharacterId = "", string lastPlayedDeckId = "")
+        public PlayerProfile(string displayName = "", string lastPlayedDeckId = "")
         {
             DisplayName = displayName ?? "";
-            LastPlayedCharacterId = lastPlayedCharacterId ?? "";
             LastPlayedDeckId = lastPlayedDeckId ?? "";
         }
 

@@ -202,8 +202,8 @@ namespace Emberfall.Core.Collection
         /// Which saved decks hold <paramref name="cardId"/>, and which of them stop being backed once
         /// the player is down to <paramref name="copiesAfter"/> copies (GH#158).
         ///
-        /// <para><b>Every deck, not just this character's.</b> A card is owned by the account and a
-        /// deck is bound to a character, so a Reduce reaches decks the player is not looking at — which
+        /// <para><b>Every deck, not just the open one.</b> A card is owned by the account while a
+        /// deck spends it, so a Reduce reaches decks the player is not looking at — which
         /// is exactly the case a confirmation exists to surface. Filter afterwards if a surface wants
         /// less; it cannot recover a deck this never returned.</para>
         ///

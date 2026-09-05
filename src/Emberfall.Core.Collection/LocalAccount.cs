@@ -133,8 +133,7 @@ namespace Emberfall.Core.Collection
         /// Forget an account. Idempotent.
         ///
         /// <para><b>Removes the registry row only — it does not touch the account's files.</b> That is
-        /// deliberate and it is not the same trade as <see cref="CharacterDeletion"/>, which cascades
-        /// because a character's decks are worthless without it. A forgotten account's collection is
+        /// deliberate. A forgotten account's collection is
         /// still a collection, and the row can be written back to reach it again; deleting the folder
         /// would make a mis-click on a testing affordance destroy a real roster.</para>
         /// </summary>
@@ -153,7 +152,7 @@ namespace Emberfall.Core.Collection
         ///
         /// <para><b>Grandfathering, not migrating.</b> A device that has been played already has a
         /// collection at <c>&lt;root&gt;/&lt;device token&gt;/</c> — on Sam's machine that is
-        /// <c>MrSoNord</c> and the character <c>Perdition</c>. Writing a registry row that points at
+        /// <c>MrSoNord</c> and the deck <c>Perdition</c>. Writing a registry row that points at
         /// that folder costs nothing; moving the folder to a tidier key would put the only real
         /// collection in existence at risk to buy consistency. So the first account keeps the device
         /// token as both its id and its wire token, permanently, and

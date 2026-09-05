@@ -5,19 +5,19 @@ using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core.Collection
 {
-    /// <summary>Raised when a character's pool cannot supply a legal 30-card deck. Never a partial deck.</summary>
+    /// <summary>Raised when a pairing's pool cannot supply a legal 30-card deck. Never a partial deck.</summary>
     public sealed class DeckGenerationException : Exception
     {
         public DeckGenerationException(string message) : base(message) { }
     }
 
     /// <summary>
-    /// Builds the starter deck a brand-new <see cref="Character"/> opens on (Sam, 2026-07-26).
+    /// Builds the starter deck a brand-new <see cref="DeckList"/> is generated as (Sam, 2026-07-26).
     ///
     /// <para><b>Explicitly a placeholder</b> — it stands in until hand-authored default decks are
     /// worth the time. It is not a deckbuilding AI and does not try to be: there is no synergy model,
-    /// no removal count, no tribal awareness. It draws a legal, curve-weighted 30 so that a new
-    /// character is immediately playable instead of empty.</para>
+    /// no removal count, no tribal awareness. It draws a legal, curve-weighted 30 so that a new deck
+    /// is immediately playable instead of empty.</para>
     ///
     /// <para><b>Curve weighting is the one piece of judgement in here, and it is load-bearing.</b> A
     /// uniform draw over the pool produces a deck whose average cost is the pool's average cost —
@@ -32,7 +32,7 @@ namespace Emberfall.Core.Collection
     ///
     /// <para><b>It draws from what the player OWNS, not from the pool (2026-09-03).</b> Until this
     /// date it drew from <see cref="ICardDatabase.AllCollectible"/> unfiltered, and the deck it
-    /// handed a brand-new character was therefore illegal for that character to queue with: the
+    /// handed a brand-new player was therefore illegal for that player to queue with: the
     /// signup grant is every common and rare in the CORE+EMBERFALL pairing
     /// (<see cref="OnboardingGrant"/>), while the collectible pool is that plus all of REKINDLING
     /// plus every epic and legendary. Measured against the live card data, <b>31–46% of every
@@ -55,18 +55,18 @@ namespace Emberfall.Core.Collection
         public static int Weight(int cost) => cost >= 8 ? 1 : 9 - cost;
 
         /// <summary>
-        /// Can this character's pool supply 30 legal copies at all? Lets the UI refuse a pairing up
+        /// Can this pairing's pool supply 30 legal copies at all? Lets the UI refuse a pairing up
         /// front rather than catching an exception from <see cref="Generate"/> — the thin-pool case is
         /// real (EMBERWARD has 9 collectible rows, 17 copies, and only clears 30 because every
-        /// character also gets NEUTRAL and a second class).
+        /// pairing also gets NEUTRAL and a second class).
         /// </summary>
-        public static bool CanGenerate(Character character, ICardDatabase db,
+        public static bool CanGenerate(CardClass primary, CardClass secondary, ICardDatabase db,
                                        IOwnedCardCounts? owned = null)
-            => character != null && db != null
-               && Capacity(Candidates(character, db, owned), owned) >= DeckValidator.DeckSize;
+            => db != null
+               && Capacity(Candidates(primary, secondary, db, owned), owned) >= DeckValidator.DeckSize;
 
         /// <summary>
-        /// A legal 30-card deck for <paramref name="character"/>, drawn from
+        /// A legal 30-card deck for the given pairing, drawn from
         /// <c>NEUTRAL ∪ Primary ∪ Secondary</c> and weighted toward cheap cards.
         ///
         /// <para>The result is run through <see cref="DeckValidator.Validate"/> before it is returned.
@@ -77,21 +77,25 @@ namespace Emberfall.Core.Collection
         /// <param name="deckId">Caller-supplied so this assembly mints no ambient identity.</param>
         /// <param name="rng">Seeded by the caller; the same seed yields the same deck.</param>
         /// <exception cref="DeckGenerationException">The pool cannot supply 30 legal copies.</exception>
-        public static DeckList Generate(Character character, ICardDatabase db, DeterministicRandom rng,
-                                        string deckId, string? deckName = null,
+        public static DeckList Generate(CardClass primary, CardClass secondary, ICardDatabase db,
+                                        DeterministicRandom rng, string deckId, string? deckName = null,
                                         IOwnedCardCounts? owned = null)
         {
-            if (character == null) throw new ArgumentNullException(nameof(character));
             if (db == null) throw new ArgumentNullException(nameof(db));
             if (rng == null) throw new ArgumentNullException(nameof(rng));
             if (string.IsNullOrWhiteSpace(deckId))
                 throw new ArgumentException("Generated deck needs an id from the caller.", nameof(deckId));
+            if (!DeckList.IsValidPairing(primary, secondary))
+                throw new ArgumentException(
+                    $"'{primary}/{secondary}' is not a valid pairing — two distinct real classes are " +
+                    "required. Generating against it would produce a deck that fails L5 on its own face.",
+                    nameof(primary));
 
-            var candidates = Candidates(character, db, owned);
+            var candidates = Candidates(primary, secondary, db, owned);
             int capacity = Capacity(candidates, owned);
             if (capacity < DeckValidator.DeckSize)
                 throw new DeckGenerationException(
-                    $"{character.PrimaryClass}/{character.SecondaryClass} can supply only {capacity} legal " +
+                    $"{primary}/{secondary} can supply only {capacity} legal " +
                     $"copies from {candidates.Count} " +
                     (owned == null ? "collectible cards" : "cards this account owns") +
                     $" — {DeckValidator.DeckSize} are needed. " +
@@ -124,7 +128,7 @@ namespace Emberfall.Core.Collection
                 if (weightSum <= 0)
                     throw new DeckGenerationException(
                         $"Ran out of addable cards at {total}/{DeckValidator.DeckSize} for " +
-                        $"{character.PrimaryClass}/{character.SecondaryClass}.");
+                        $"{primary}/{secondary}.");
 
                 int roll = rng.NextInt(weightSum);
                 for (int i = 0; i < candidates.Count; i++)
@@ -140,11 +144,13 @@ namespace Emberfall.Core.Collection
                 }
             }
 
-            var deck = new DeckList
+            // The fallback name is the pairing itself. It used to be the character's name plus
+            // " Starter", and there is no character to ask any more — every player-facing call site
+            // passes a real name, so this is what a test or a tool gets rather than what a player sees.
+            var deck = new DeckList(primary, secondary)
             {
                 Id = deckId,
-                CharacterId = character.Id,
-                Name = string.IsNullOrWhiteSpace(deckName) ? character.Name + " Starter" : deckName!,
+                Name = string.IsNullOrWhiteSpace(deckName) ? $"{primary}/{secondary} Starter" : deckName!,
             };
             // Emitted in candidate order, not draw order, so the same seed writes a byte-identical file.
             for (int i = 0; i < candidates.Count; i++)
@@ -153,7 +159,7 @@ namespace Emberfall.Core.Collection
             // Validated WITH ownership, so L6 is checked by the code that claims it — the same reason
             // the L1-L5 check was here already. A generated deck the player cannot queue with is the
             // defect this guards, and it has to surface at creation rather than at the socket.
-            var check = DeckValidator.Validate(deck, character, db, owned);
+            var check = DeckValidator.Validate(deck, db, owned);
             if (!check.IsValid)
             {
                 var reasons = new List<string>();
@@ -166,18 +172,18 @@ namespace Emberfall.Core.Collection
         }
 
         /// <summary>
-        /// Collectible cards legal for this character, ordered by id so draws are reproducible — and,
+        /// Collectible cards legal for this pairing, ordered by id so draws are reproducible — and,
         /// when <paramref name="owned"/> is given, only the ones the account holds a copy of. A card
         /// owned zero times is dropped rather than carried at cap 0, so it costs nothing in the draw
         /// loop and cannot be reached by a later edit that forgets to consult the cap.
         /// </summary>
-        private static List<CardDefinition> Candidates(Character character, ICardDatabase db,
-                                                       IOwnedCardCounts? owned = null)
+        private static List<CardDefinition> Candidates(CardClass primary, CardClass secondary,
+                                                       ICardDatabase db, IOwnedCardCounts? owned = null)
         {
             var list = new List<CardDefinition>();
-            if (character == null || db == null) return list;
+            if (db == null) return list;
             foreach (var def in db.AllCollectible())
-                if (character.AllowsClass(def.Class) && CapFor(def, owned) > 0) list.Add(def);
+                if (DeckList.AllowsClass(primary, secondary, def.Class) && CapFor(def, owned) > 0) list.Add(def);
             list.Sort((a, b) => a.Id.CompareTo(b.Id));
             return list;
         }

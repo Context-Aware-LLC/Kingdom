@@ -18,12 +18,20 @@ namespace Emberfall.Core.Collection
     /// </summary>
     public static class CollectionPaths
     {
+        /// <summary>
+        /// The LEGACY roster file. Nothing writes it any more (ADR-0009, 2026-09-04) and nothing
+        /// reads it but <see cref="CollectionMigration"/>, which needs the name in order to find
+        /// the file, inherit its pairings onto the decks, and delete it.
+        ///
+        /// RETIREMENT TRIGGER: delete this and <see cref="Characters"/> when the migration goes.
+        /// They have no other caller and a path helper for a file nothing produces is a trap.
+        /// </summary>
         public const string CharactersFileName = "characters.json";
         public const string DecksFileName = "decks.json";
 
         /// <summary>
         /// The player behind the roster (<see cref="PlayerProfile"/>). A third file rather than a
-        /// header in <c>characters.json</c>: the roster is rewritten on every character save, and a
+        /// header in <c>decks.json</c>: the deck list is rewritten on every deck save, and a
         /// name has no reason to be at risk of a roster write.
         /// </summary>
         public const string ProfileFileName = "profile.json";

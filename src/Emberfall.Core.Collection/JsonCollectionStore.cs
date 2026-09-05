@@ -6,12 +6,17 @@ using System.Text;
 namespace Emberfall.Core.Collection
 {
     /// <summary>
-    /// JSON-file implementations of <see cref="ICharacterStore"/> and <see cref="IDeckStore"/>
+    /// JSON-file implementations of <see cref="IDeckStore"/> and <see cref="IProfileStore"/>
     /// (dev-docs/data/player-data-and-telemetry.md:11).
+    ///
+    /// <para><b><c>JsonCharacterStore</c> stood first in this file until 2026-09-04</b> and was
+    /// deleted with the type it persisted (ADR-0009). The rationale below was written as its doc
+    /// and pointed at from the other two stores; it is unchanged and now leads the file, because
+    /// it was never about characters.</para>
     ///
     /// <para><b>The path is a constructor argument, not a lookup.</b> That is the whole reason this
     /// compiles without UnityEngine: the Unity side composes
-    /// <c>CollectionPaths.Characters(Application.persistentDataPath, DeviceIdentity.Token)</c> and
+    /// <c>CollectionPaths.Decks(Application.persistentDataPath, DeviceIdentity.Token)</c> and
     /// hands the result in. Tests hand in a temp directory. Neither the assembly nor the store knows
     /// which it got.</para>
     ///
@@ -24,103 +29,14 @@ namespace Emberfall.Core.Collection
     /// killed mid-write leaves the previous collection intact rather than a truncated file that
     /// reads as corrupt on next launch.</para>
     /// </summary>
-    public sealed class JsonCharacterStore : ICharacterStore
-    {
-        private readonly string _filePath;
-
-        public JsonCharacterStore(string filePath)
-        {
-            if (string.IsNullOrWhiteSpace(filePath))
-                throw new ArgumentException("Character store needs a file path.", nameof(filePath));
-            _filePath = filePath;
-        }
-
-        /// <summary>Convenience for the common composition: a root directory scoped by identity key.</summary>
-        public static JsonCharacterStore InDirectory(string rootDirectory, string storageKey)
-            => new JsonCharacterStore(CollectionPaths.Characters(rootDirectory, storageKey));
-
-        public string FilePath => _filePath;
-
-        /// <summary>
-        /// Every stored character, in stored order. A missing file is an empty roster (first run),
-        /// not an error; an unreadable file throws <see cref="CollectionFormatException"/> rather
-        /// than returning empty, because "empty" would be erased by the next Save.
-        /// </summary>
-        public IReadOnlyList<Character> LoadAll()
-        {
-            string? json = JsonStoreFile.ReadOrNull(_filePath);
-            return json == null ? Array.Empty<Character>() : CollectionJson.ReadCharacters(json);
-        }
-
-        /// <summary>
-        /// Upsert by <see cref="Character.Id"/>, replacing in place so the roster keeps its order.
-        ///
-        /// <para>Rejects an invalid pairing. <see cref="Character.IsValidPairing"/> leaves the call to
-        /// its callers, and this caller's answer is no: persisting a Pyra+Pyra character writes a
-        /// state with no legal repair — pairing is immutable by design, so the player could only
-        /// delete it. Loading such a row still works (see <see cref="CollectionJson"/>); the check
-        /// belongs where the mistake is still fixable.</para>
-        /// </summary>
-        public void Save(Character character)
-        {
-            if (character == null) throw new ArgumentNullException(nameof(character));
-            if (string.IsNullOrWhiteSpace(character.Id))
-                throw new ArgumentException("Character needs a non-empty Id to be stored.", nameof(character));
-            if (!Character.IsValidPairing(character.PrimaryClass, character.SecondaryClass))
-                throw new ArgumentException(
-                    $"'{character.PrimaryClass}/{character.SecondaryClass}' is not a valid pairing " +
-                    "(both classes must be real and distinct).", nameof(character));
-
-            var all = new List<Character>(LoadAll());
-            int existing = IndexOf(all, character.Id);
-            if (existing >= 0) all[existing] = character; else all.Add(character);
-            JsonStoreFile.Write(_filePath, CollectionJson.WriteCharacters(all));
-        }
-
-        /// <summary>
-        /// Remove a character. Deleting one that isn't there is a no-op, not an error — Delete is
-        /// idempotent so a retried or double-clicked confirm cannot fail.
-        ///
-        /// <para>Touches the roster only — this store never reaches into the deck store. Deleting a
-        /// character DOES destroy its decks (§3, Sam 2026-07-26), but that cascade is a composition
-        /// over both stores and lives in <see cref="CharacterDeletion.Delete"/>, which is what a
-        /// caller should be using. Calling this directly leaves the decks orphaned, reportable as
-        /// L5-invalid, and sweepable by a later <see cref="CharacterDeletion.Delete"/> on the same id.</para>
-        /// </summary>
-        public void Delete(string characterId)
-        {
-            if (string.IsNullOrEmpty(characterId)) return;
-            var all = new List<Character>(LoadAll());
-            int existing = IndexOf(all, characterId);
-            if (existing < 0) return;
-            all.RemoveAt(existing);
-            JsonStoreFile.Write(_filePath, CollectionJson.WriteCharacters(all));
-        }
-
-        /// <summary>No <see cref="LoadAll"/> — see <see cref="IDeckStore.ReplaceAll"/>.</summary>
-        public void ReplaceAll(IReadOnlyList<Character> characters)
-        {
-            if (characters == null) throw new ArgumentNullException(nameof(characters));
-            JsonStoreFile.Write(_filePath, CollectionJson.WriteCharacters(characters));
-        }
-
-        private static int IndexOf(List<Character> all, string id)
-        {
-            for (int i = 0; i < all.Count; i++)
-                if (all[i].Id == id) return i;
-            return -1;
-        }
-    }
-
     /// <summary>
-    /// JSON-file <see cref="IDeckStore"/>. Same shape and same guarantees as
-    /// <see cref="JsonCharacterStore"/> — see that type for the path, caching and atomicity rationale.
+    /// JSON-file <see cref="IDeckStore"/>. Path, caching and atomicity are the file-level doc above.
     ///
-    /// <para><b>The store never validates a deck.</b> It stores what it is given and returns what it
-    /// stored, including decks that reference a deleted character or a card a balance patch removed.
-    /// That is §3's explicit requirement: those decks must surface as invalid on open, which they can
-    /// only do if they survive the trip. Legality is <see cref="DeckValidator"/>'s job, and it is the
-    /// caller's job to run it.</para>
+    /// <para><b>The store never validates a deck's CONTENTS.</b> It stores what it is given and
+    /// returns what it stored, including decks holding a card a balance patch removed. That is
+    /// §3's explicit requirement: those decks must surface as invalid on open, which they can only
+    /// do if they survive the trip. Legality is <see cref="DeckValidator"/>'s job, and it is the
+    /// caller's job to run it. The PAIRING is the one exception — see <see cref="Save"/>.</para>
     /// </summary>
     public sealed class JsonDeckStore : IDeckStore
     {
@@ -144,12 +60,25 @@ namespace Emberfall.Core.Collection
             return json == null ? Array.Empty<DeckList>() : CollectionJson.ReadDecks(json);
         }
 
-        /// <summary>Upsert by <see cref="DeckList.Id"/>, replacing in place so saved decks keep their order.</summary>
+        /// <summary>
+        /// Upsert by <see cref="DeckList.Id"/>, replacing in place so saved decks keep their order.
+        ///
+        /// <para><b>Rejects an invalid pairing</b> — the one guard this store applies to a deck, and
+        /// it moved here from <c>JsonCharacterStore.Save</c> with the pairing itself (ADR-0009). The
+        /// reasoning is unchanged: persisting a Pyra+Pyra deck writes a state with no legal repair,
+        /// because the pairing is immutable by design and the player could only delete the deck.
+        /// Loading such a row still works (see <see cref="CollectionJson"/>); the check belongs where
+        /// the mistake is still fixable, which is on the way in.</para>
+        /// </summary>
         public void Save(DeckList deck)
         {
             if (deck == null) throw new ArgumentNullException(nameof(deck));
             if (string.IsNullOrWhiteSpace(deck.Id))
                 throw new ArgumentException("Deck needs a non-empty Id to be stored.", nameof(deck));
+            if (!deck.HasValidPairing)
+                throw new ArgumentException(
+                    $"'{deck.PrimaryClass}/{deck.SecondaryClass}' is not a valid pairing " +
+                    "(both classes must be real and distinct).", nameof(deck));
 
             var all = new List<DeckList>(LoadAll());
             int existing = IndexOf(all, deck.Id);
@@ -185,7 +114,7 @@ namespace Emberfall.Core.Collection
 
     /// <summary>
     /// JSON-file <see cref="IProfileStore"/> — one object in one file. Same path, caching and
-    /// atomicity story as <see cref="JsonCharacterStore"/>; see that type.
+    /// atomicity story as the rest of this file; see the file-level doc.
     /// </summary>
     public sealed class JsonProfileStore : IProfileStore
     {
@@ -220,7 +149,7 @@ namespace Emberfall.Core.Collection
         /// (empty) is allowed and means "ask me again" — it is the one non-name this accepts.
         ///
         /// <para>Validating here rather than trusting the caller is the same call
-        /// <see cref="JsonCharacterStore.Save"/> makes about a pairing: this is the last point at
+        /// <see cref="JsonDeckStore.Save"/> makes about a pairing: this is the last point at
         /// which the mistake is still fixable. It also means every future writer — a settings screen,
         /// an import, a migration — is gated by construction instead of by remembering.</para>
         /// </summary>
@@ -250,7 +179,6 @@ namespace Emberfall.Core.Collection
             // same name hold different bytes, and a later uniqueness check would call them different.
             var stored = new PlayerProfile(
                 profile.HasDisplayName ? check.Normalized : "",
-                profile.LastPlayedCharacterId,
                 profile.LastPlayedDeckId);
             JsonStoreFile.Write(_filePath, CollectionJson.WriteProfile(stored));
 
@@ -261,8 +189,8 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// JSON-file <see cref="ILocalAccountStore"/>. Same caching and atomicity story as
-    /// <see cref="JsonCharacterStore"/>; see that type.
+    /// JSON-file <see cref="ILocalAccountStore"/>. Same caching and atomicity story as the rest of
+    /// this file; see the file-level doc.
     ///
     /// <para><b>The one store built from a root alone</b> — <see cref="InRoot"/> takes no storage key,
     /// because this file is what the storage keys come from. That asymmetry is the whole reason the
@@ -302,7 +230,7 @@ namespace Emberfall.Core.Collection
         ///
         /// <para>Refuses to let a second account claim an existing account's wire token. Nothing in
         /// this file's format prevents it and the caller mints both values, so this is the last point
-        /// at which the mistake is fixable — the same call <see cref="JsonCharacterStore.Save"/> makes
+        /// at which the mistake is fixable — the same call <see cref="JsonDeckStore.Save"/> makes
         /// about a pairing. Two accounts sharing a token would present as one account to the server
         /// and defeat the entire point of the second seat, while looking correct on disk.</para>
         /// </summary>
@@ -347,10 +275,10 @@ namespace Emberfall.Core.Collection
 
     /// <summary>
     /// JSON-file <see cref="IOwnedCardStore"/> — one record in one file. Same path, caching and
-    /// atomicity story as <see cref="JsonCharacterStore"/>; see that type.
+    /// atomicity story as the rest of this file; see the file-level doc.
     ///
     /// <para><b>The one store whose Load can return null, and it must stay that way.</b> Every sibling
-    /// here turns a missing file into an empty-but-valid value, because "no characters" and "no decks"
+    /// here turns a missing file into an empty-but-valid value, because "no decks" and "no profile"
     /// are the same statement as "none stored". Ownership is not: an absent file means nobody has ever
     /// told this account what it owns, while an empty file means it owns nothing and every deck it holds
     /// is a draft. Collapsing the two would make the first launch after L6 landed lock every player out

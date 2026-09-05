@@ -6,7 +6,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Collection
 {
     /// <summary>
-    /// What a brand-new account is given, once, the first time it creates a character
+    /// What a brand-new account is given, once, the first time its session resolves
     /// (<b>Sam, 2026-08-12</b>; rares added 2026-09-02). Two halves: a copy of every collectible
     /// <b>common and rare</b> in the launch pairing, and <see cref="StarterPackCount"/> boosted
     /// booster packs.
@@ -40,11 +40,11 @@ namespace Emberfall.Core.Collection
     /// un-granted and the next resolve simply lands it. That is still why <see cref="Resolve"/>
     /// returns everything at once instead of a grant per step.</para>
     ///
-    /// <para><b>Why the packs are not seeded to the character's classes.</b> Sam weighed both and
+    /// <para><b>Why the packs are not seeded to a deck's classes.</b> Sam weighed both and
     /// ruled unseeded on 2026-08-12. The grant fires once per <i>account</i>, while a class pairing
-    /// is a per-<i>character</i> choice, and 93% of this set's non-commons are class-locked (56/60
+    /// is a per-<i>deck</i> choice, and 93% of this set's non-commons are class-locked (56/60
     /// rares, 19/21 epics, 11/11 legendaries). Seeding would therefore concentrate an account's only
-    /// gift into whichever two classes a new player picked in their first minute, and every character
+    /// gift into whichever two classes a new player picked in their first minute, and every deck
     /// after that would get nothing.</para>
     ///
     /// <para><b>The packs are spice, not legality — and that is now TRUE, which it was not.</b> This

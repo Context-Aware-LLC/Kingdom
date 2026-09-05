@@ -13,17 +13,17 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// The on-disk format for a player's profile, characters and decks (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3).
-    /// One class for all three so the <c>schemaVersion</c> ceiling has one definition and one guard,
+    /// The on-disk format for a player's profile, decks and owned cards (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/collection-deckbuilder.md §3).
+    /// One class for all of them so the <c>schemaVersion</c> ceiling has one definition and one guard,
     /// however many files the scope directory grows.
     ///
     /// <para><b>Hand-written, like <c>CardJson</c>.</b> Reflection-based serializers are the obvious
     /// choice and the wrong one here: field order becomes implicit, IL2CPP strips the members it
-    /// cannot see a call to, and an enum renumbering silently rewrites every saved character. Reading
+    /// cannot see a call to, and an enum renumbering silently rewrites every saved deck. Reading
     /// and writing each field by name costs a page and makes all three of those impossible.</para>
     ///
     /// <para><b>Strict on classes, tolerant on card ids.</b> An unparseable <c>CardClass</c> is fatal
-    /// — the pairing *is* the class, so a character we cannot read is not a character we can guess at.
+    /// — the pairing *is* the class, so a deck we cannot read is not a deck we can guess at.
     /// A card id, by contrast, is just a string until the database resolves it, so a row naming a card
     /// that a balance patch deleted loads intact and surfaces as an L4 violation when the deck is
     /// opened. That is the §3 rule ("surface as invalid, never silently drop or auto-repair")
@@ -37,63 +37,10 @@ namespace Emberfall.Core.Collection
         /// <summary>Bumped when the shape changes incompatibly; a reader refuses a version it predates.</summary>
         public const int SchemaVersion = 1;
 
-        private const string CharactersProperty = "characters";
         private const string DecksProperty = "decks";
         private const string ProfileProperty = "profile";
         private const string AccountsProperty = "accounts";
         private const string OwnedCardsProperty = "ownedCards";
-
-        // ---- characters ----------------------------------------------------------------
-
-        public static string WriteCharacters(IEnumerable<Character> characters)
-        {
-            var buffer = new System.IO.MemoryStream();
-            using (var w = new Utf8JsonWriter(buffer, new JsonWriterOptions { Indented = true }))
-            {
-                w.WriteStartObject();
-                w.WriteNumber("schemaVersion", SchemaVersion);
-                w.WriteStartArray(CharactersProperty);
-                foreach (var c in characters)
-                {
-                    w.WriteStartObject();
-                    w.WriteString("id", c.Id);
-                    w.WriteString("name", c.Name);
-                    w.WriteString("primaryClass", c.PrimaryClass.ToString());
-                    w.WriteString("secondaryClass", c.SecondaryClass.ToString());
-                    w.WriteString("defaultDeckId", c.DefaultDeckId);
-                    w.WriteEndObject();
-                }
-                w.WriteEndArray();
-                w.WriteEndObject();
-            }
-            return System.Text.Encoding.UTF8.GetString(buffer.ToArray());
-        }
-
-        public static IReadOnlyList<Character> ReadCharacters(string json)
-        {
-            var result = new List<Character>();
-            using var doc = ParseEnvelope(json, CharactersProperty, out var rows);
-            int i = 0;
-            foreach (var el in rows.EnumerateArray())
-            {
-                string id = Req(el, "id", CharactersProperty, i);
-                string name = Str(el, "name") ?? id;
-                var primary = ReqEnum<CardClass>(el, "primaryClass", CharactersProperty, i);
-                var secondary = ReqEnum<CardClass>(el, "secondaryClass", CharactersProperty, i);
-                // Optional, and additive rather than a schema bump: a roster written before default
-                // decks existed reads back with no default, which is the same state as "the deck it
-                // pointed at was deleted" and is handled identically (CharacterQuery.DefaultDeckOf).
-                // Not validated against the deck store here — the stores are independent files and a
-                // reader that demanded they agree could not open either one alone.
-                string defaultDeckId = Str(el, "defaultDeckId") ?? "";
-                // Deliberately NOT gated on IsValidPairing: a stored character is reported as it was
-                // stored. Rejecting happens on the way in (JsonCharacterStore.Save), where the caller
-                // can still fix it — not on the way out, where the only options are lie or crash.
-                result.Add(new Character(id, name, primary, secondary, defaultDeckId));
-                i++;
-            }
-            return result;
-        }
 
         // ---- decks ---------------------------------------------------------------------
 
@@ -109,7 +56,8 @@ namespace Emberfall.Core.Collection
                 {
                     w.WriteStartObject();
                     w.WriteString("id", d.Id);
-                    w.WriteString("characterId", d.CharacterId);
+                    w.WriteString("primaryClass", d.PrimaryClass.ToString());
+                    w.WriteString("secondaryClass", d.SecondaryClass.ToString());
                     w.WriteString("name", d.Name);
                     w.WriteString("cardBackId", d.CardBackId);
                     w.WriteNumber("showcaseCardId", d.ShowcaseCardId);
@@ -137,7 +85,21 @@ namespace Emberfall.Core.Collection
             int i = 0;
             foreach (var el in rows.EnumerateArray())
             {
-                var deck = new DeckList
+                // REQUIRED, not defaulted (ADR-0009). A deck's pairing decides its whole legal pool,
+                // so there is no safe reading of an absent one: NEUTRAL/NEUTRAL would silently make
+                // every card in the deck off-class, and guessing a pairing would hand the player a
+                // deck they never built. A file written before 2026-09-04 carries `characterId`
+                // instead and is converted by CollectionMigration BEFORE it reaches here — this
+                // reader deliberately has no fallback, so a missed migration is a loud read error
+                // rather than a roster of decks that are quietly illegal.
+                var primary = ReqEnum<CardClass>(el, "primaryClass", DecksProperty, i);
+                var secondary = ReqEnum<CardClass>(el, "secondaryClass", DecksProperty, i);
+
+                // Deliberately NOT gated on IsValidPairing, the same call ReadCharacters made: a
+                // stored deck is reported as it was stored. Rejecting happens on the way in, where
+                // the caller can still fix it — not on the way out, where the only options are lie
+                // or crash. DeckValidator L5 is what refuses to queue it.
+                var deck = new DeckList(primary, secondary)
                 {
                     Id = Req(el, "id", DecksProperty, i),
                     // VULN-001 (security/known-vulnerabilities, LATENT — trigger row "Client-supplied
@@ -148,7 +110,6 @@ namespace Emberfall.Core.Collection
                     // become attacker-authored card identities. Read VULN-001 §4 before wiring that:
                     // resolve with TryGet and never Get, and validate against the owned/legal set,
                     // not merely against the database.
-                    CharacterId = Str(el, "characterId") ?? "",
                     Name = Str(el, "name") ?? "New Deck",
                     // Optional and additive, the same shape as a character's defaultDeckId: a deck
                     // written before card backs existed reads back with none, which is the same state
@@ -191,7 +152,6 @@ namespace Emberfall.Core.Collection
                 w.WriteNumber("schemaVersion", SchemaVersion);
                 w.WriteStartObject(ProfileProperty);
                 w.WriteString("displayName", profile.DisplayName);
-                w.WriteString("lastPlayedCharacterId", profile.LastPlayedCharacterId);
                 w.WriteString("lastPlayedDeckId", profile.LastPlayedDeckId);
                 w.WriteEndObject();
                 w.WriteEndObject();
@@ -212,11 +172,14 @@ namespace Emberfall.Core.Collection
                 throw new CollectionFormatException($"Collection file has no '{ProfileProperty}' object.");
 
             // Absent is the same as never-named, which is a legitimate state (IProfileStore) — so a
-            // missing displayName is empty rather than fatal, unlike a character's required id. Same
+            // missing displayName is empty rather than fatal, unlike a deck's required pairing. Same
             // treatment for the last-played pointer: absent means "never shipped a deck yet", not corrupt.
+            //
+            // A `lastPlayedCharacterId` written before 2026-09-04 is simply not read (ADR-0009). It is
+            // the one legacy field with nothing to migrate — the deck id beside it already names what
+            // was played — so it is dropped on the next profile write rather than converted.
             return new PlayerProfile(
                 Str(el, "displayName") ?? "",
-                Str(el, "lastPlayedCharacterId") ?? "",
                 Str(el, "lastPlayedDeckId") ?? "");
         }
 
