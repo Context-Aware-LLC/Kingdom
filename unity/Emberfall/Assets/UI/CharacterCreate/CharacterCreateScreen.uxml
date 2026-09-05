@@ -107,7 +107,7 @@
             <ui:Label name="create-starter-note" text="" class="create-help create-help--starter" />
             <ui:Label name="create-error" text="" class="create-error" />
             <ui:VisualElement class="delete-actions">
-                <ui:Button name="create-change" text="Change something" class="roster-button roster-button--ghost" />
+                <ui:Button name="create-change" text="Wait!" class="roster-button roster-button--ghost" />
                 <ui:Button name="create-blank" text="Start blank" class="roster-button roster-button--ghost" />
                 <ui:Button name="create-generated" text="Generate a queue-ready deck" class="roster-button roster-button--cta" />
             </ui:VisualElement>
