@@ -176,9 +176,12 @@ namespace Emberfall.Core.Tests.CardBehavior
         [Test]
         public void OnSpellCast_Fires_On_Both_Players_Casts()
         {
-            // The scope decision: RaiseObservers sweeps BOTH boards, so the trigger is "whenever ANY spell
-            // is cast", not "whenever YOU cast a spell" — the name carries no FRIENDLY_ qualifier the way
-            // ON_FRIENDLY_SUMMON does. If this ever becomes controller-scoped, this test changes deliberately.
+            // The scope decision: this trigger is "whenever ANY spell is cast", not "whenever YOU cast a
+            // spell" — the name carries no FRIENDLY_ qualifier the way ON_FRIENDLY_SUMMON does, and the
+            // card grammar says so too. Since #272 that is an explicit `false` in
+            // OrderedTriggerSources.IsControllerScoped rather than the sweep's only behaviour: the
+            // sibling trigger took the filter and this one was left both-sided on purpose. Flipping that
+            // arm is what would change this test, and it would be a ruling, not a fix.
             var (host, s) = Match(Db(), MixedDeck(), seed: 23UL);
             int first = s.SeatOf(s.ActivePlayer);
             int second = 1 - first;

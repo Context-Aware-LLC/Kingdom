@@ -22,6 +22,10 @@ namespace Emberfall.Core.Tests.Interpreter
     /// <para>The two assertions that matter are the pair: the buff reaches the minion that caused
     /// the trigger, and NOT the observer that carries the rule. Those are one instance apart and a
     /// resolver that confused them would still look right in every log and every card face.</para>
+    ///
+    /// <para>The lower half of the file is the SIDE the trigger sweeps, which was both of them
+    /// until #272 (Sam, 2026-09-04). Those tests were pins recording a defect and are now
+    /// assertions guarding the ruling: same fixtures, inverted expectations.</para>
     /// </summary>
     [TestFixture]
     [Category("Unit")]
@@ -73,30 +77,24 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         /// <summary>
-        /// <b>ON_FRIENDLY_SUMMON FIRES ON BOTH PLAYERS' SUMMONS. The word "Friendly" in the name
-        /// is enforced by nothing.</b> Measured 2026-08-27, and this test is the record of it.
+        /// <b>ON_FRIENDLY_SUMMON IS CONFINED TO THE SUMMONER'S SIDE.</b> The word "Friendly" was
+        /// enforced by nothing until #272 (Sam, 2026-09-04); this test is the failure mode, not the
+        /// feature.
         ///
-        /// <para><c>OrderedTriggerSources.Snapshot</c> appends BOTH sides unconditionally — it is
+        /// <para><c>OrderedTriggerSources.Snapshot</c> appended BOTH sides unconditionally — it is
         /// the engine's single observer sweep, shared with <c>ON_TURN_END</c> (EF-012) and
-        /// <c>ON_SPELL_CAST</c> (EF-016), both of which are documented as both-sides. This trigger
-        /// inherited the same sweep and was never given a controller filter; <c>excluded</c> only
-        /// removes the summoned card itself. So the name is the only thing claiming a side.</para>
+        /// <c>ON_SPELL_CAST</c> (EF-016), which ARE both-sided by decision. This trigger inherited
+        /// the same walk and was never given a controller filter; <c>excluded</c> only removes the
+        /// summoned card itself, so the name was the only thing claiming a side.</para>
         ///
-        /// <para><b>Two live consequences, both a ruling for Sam rather than something to patch
-        /// underneath a shipped card.</b> 1159 Cogsworth, The Grand Rebuilder reads "Whenever you
-        /// summon a minion, give all friendly minions +1/+1" and also fires on the OPPONENT's
-        /// summons — see the sibling test. And a <c>TRIGGER_SOURCE</c> effect is worse than merely
-        /// generous: on an enemy summon the trigger source IS the enemy's minion, so the card
-        /// buffs the opponent. That is what took 1015 Grove Mender's draft form out of the corpus
-        /// and cost Thornwake 7.8 points across a 1000-match ladder run.</para>
-        ///
-        /// <para>Pinned rather than asserted-against, because the fix is a decision: give the
-        /// trigger a controller filter (which changes a shipped legendary), or rename it and admit
-        /// the scope in the card grammar. <c>card-schema.md</c> currently claims the narrow
-        /// reading, and the code wins.</para>
+        /// <para><b>The consequence this assertion guards is the expensive one.</b> On an enemy
+        /// summon the trigger source IS the enemy's minion, so a <c>TRIGGER_SOURCE</c> effect
+        /// buffed the OPPONENT. That is what took 1015 Grove Mender's draft form out of the corpus
+        /// and cost Thornwake 7.8 points across a 1000-match ladder run — and it is invisible to a
+        /// rendering test, because the card face was right and only the landing was wrong.</para>
         /// </summary>
         [Test]
-        public void An_enemy_summon_ALSO_raises_it_and_a_trigger_source_effect_buffs_the_enemy()
+        public void An_enemy_summon_does_not_raise_it_so_a_trigger_source_effect_cannot_buff_the_enemy()
         {
             (GameState state, FakeCardDatabase db) = Board();
             Play(state, db, FixtureCard.Id("ts_observer"));
@@ -111,19 +109,20 @@ namespace Emberfall.Core.Tests.Interpreter
                 new PlayCardIntent(state.Players[1].Id, enemy.Id, 0, Array.Empty<TargetRef>()));
 
             Assert.That(result.Accepted, Is.True);
-            Assert.That(Stats(enemy), Is.EqualTo("3/3"),
-                "NOT what the name says: our observer buffed the OPPONENT's minion, because the "
-                + "sweep visits both boards and the trigger source is whoever just arrived");
+            Assert.That(Stats(enemy), Is.EqualTo("2/2"),
+                "the sweep no longer visits the other board, so our observer never sees the "
+                + "opponent's arrival and the enemy 2/2 stays a 2/2");
         }
 
         /// <summary>
-        /// The shipped-card half of the finding above, so the claim about 1159 Cogsworth is
-        /// evidence rather than inference. Its target is <c>ANY_FRIENDLY_MINION</c>, so an enemy
-        /// summon does not buff the enemy — it buffs OUR board, off the opponent's tempo. Strictly
-        /// a bonus rather than a hazard, and still not what the card says.
+        /// The shipped-card half: 1159 Cogsworth, The Grand Rebuilder reads "Whenever you summon a
+        /// minion, give all friendly minions +1/+1" and now means it. Its target is
+        /// <c>ANY_FRIENDLY_MINION</c>, so the old bug buffed OUR board off the opponent's tempo — a
+        /// bonus rather than a hazard, and still not what the card said. Asserted with the shipped
+        /// shape rather than the pronoun one so the claim about the legendary is evidence.
         /// </summary>
         [Test]
-        public void The_shipped_Cogsworth_shape_fires_off_the_opponents_summon_too()
+        public void The_shipped_Cogsworth_shape_ignores_the_opponents_summon()
         {
             var db = new FakeCardDatabase()
                 .Register(Minion(FixtureCard.Id("ts_cogsworth"), TestRules.Rule("wide",
@@ -136,6 +135,7 @@ namespace Emberfall.Core.Tests.Interpreter
             Play(state, db, FixtureCard.Id("ts_cogsworth"));
             CardInstance mine = Play(state, db, FixtureCard.Id("ts_body"));
             string afterOwnSummon = Stats(mine);
+            Assert.That(afterOwnSummon, Is.EqualTo("3/3"), "our own summon still fires it");
 
             var enemy = new CardInstance(state.NextInstanceId(), FixtureCard.Id("ts_body"),
                 state.Players[1].Id)
@@ -145,9 +145,57 @@ namespace Emberfall.Core.Tests.Interpreter
             new CommandProcessor(db).Execute(state,
                 new PlayCardIntent(state.Players[1].Id, enemy.Id, 0, Array.Empty<TargetRef>()));
 
-            Assert.That(Stats(mine), Is.Not.EqualTo(afterOwnSummon),
-                "our board grew again on the OPPONENT's summon — 1159 Cogsworth reads "
-                + "\"Whenever you summon a minion\" and does not mean it");
+            Assert.That(Stats(mine), Is.EqualTo(afterOwnSummon),
+                "our board did NOT grow again on the OPPONENT's summon — 1159 Cogsworth reads "
+                + "\"Whenever you summon a minion\" and since #272 it means it");
+        }
+
+        /// <summary>
+        /// <b>The scope is measured from the SUMMONED CARD, never from the active player.</b> A
+        /// summon can happen on the opponent's turn — a toll, an ongoing effect — and an
+        /// implementation that read <c>_state.ActivePlayer</c> would pass every other test in this
+        /// file and quietly sweep the wrong board here. Both raise sites therefore name the
+        /// controller explicitly, and <c>RaiseObservers</c> throws for a controller-scoped trigger
+        /// that arrives without one.
+        /// </summary>
+        [Test]
+        public void An_off_turn_summon_is_measured_from_the_summoner_not_the_active_player()
+        {
+            (GameState state, FakeCardDatabase db) = Board();
+            Play(state, db, FixtureCard.Id("ts_observer"));
+
+            // Hand the turn to the opponent, then summon for P0 anyway — the shape a toll firing
+            // during the enemy's turn produces.
+            state.ActivePlayer = state.Players[1].Id;
+
+            var token = new CardInstance(state.NextInstanceId(), FixtureCard.Id("ts_body"),
+                state.Players[0].Id);
+            Assert.That(RulesEngine.EnterBoard(state, token, db.Get(token.DefinitionId),
+                    seat: 0, atIndex: -1, db), Is.True);
+
+            var interpreter = new EffectInterpreter(state, db, new EventBuffer(state));
+            interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: token,
+                triggerSource: token.Id, observerController: token.Controller);
+            interpreter.Drain();
+
+            Assert.That(Stats(token), Is.EqualTo("3/3"),
+                "P0's observer saw P0's off-turn summon: the sweep starts at the summoner's seat, "
+                + "which is not the active player's");
+        }
+
+        /// <summary>
+        /// The forcing function for a future raise site. A controller-scoped trigger with no
+        /// controller is a mistake the compiler cannot catch and a default would hide — silently
+        /// sweeping the active player's board, which is right often enough to ship.
+        /// </summary>
+        [Test]
+        public void A_controller_scoped_raise_without_a_controller_throws()
+        {
+            (GameState state, FakeCardDatabase db) = Board();
+            var interpreter = new EffectInterpreter(state, db, new EventBuffer(state));
+
+            Assert.That(() => interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: null),
+                Throws.InstanceOf<InvalidOperationException>());
         }
 
         // ── Fixture ──────────────────────────────────────────────────────────

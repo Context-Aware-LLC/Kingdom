@@ -106,8 +106,10 @@ namespace Emberfall.Core
                 var token = new CardInstance(ctx.State.NextInstanceId(), def.Id, ctx.Source.Controller);
                 if (!RulesEngine.EnterBoard(ctx.State, token, def, seat, -1, ctx.Db)) break; // board full → stop
                 ctx.Events.Emit(GameEventKind.CardSummoned, source: token.Id, flags: EventFlags.IsToken);
+                // The token's controller, not the active player: a toll or an ongoing effect can
+                // summon on the OPPONENT's turn, and "friendly" is measured from the token (#272).
                 ctx.Interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: token,
-                    triggerSource: token.Id);
+                    triggerSource: token.Id, observerController: token.Controller);
             }
         }
     }

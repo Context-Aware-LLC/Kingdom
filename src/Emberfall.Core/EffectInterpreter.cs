@@ -115,12 +115,30 @@ namespace Emberfall.Core
         /// Enqueue every persistent source subscribed to <paramref name="trigger"/> in the shared
         /// deterministic board-minion, equipped-weapon, future-ongoing order.
         /// Conditions qualify effects while this snapshot is built, before queue/cap accounting.
+        ///
+        /// <para><paramref name="observerController"/> is REQUIRED for a trigger
+        /// <see cref="OrderedTriggerSources.IsControllerScoped"/> answers true for, and meaningless
+        /// otherwise. It names the side the sweep is confined to — for ON_FRIENDLY_SUMMON, whoever
+        /// summoned. It is a separate parameter from <paramref name="excluded"/> and NOT derived
+        /// from it, because a summon is not always the active player's: a toll firing on the
+        /// opponent's turn summons a token, and <c>_state.ActivePlayer</c> would name the wrong
+        /// board. Omitting it throws rather than defaulting, so a future raise site cannot inherit
+        /// a scope it never chose — the mistake #272 existed to record.</para>
         /// </summary>
         public void RaiseObservers(Trigger trigger, CardInstance? excluded,
             TriggerEventContext context = default,
-            InstanceId? triggerSource = null)
+            InstanceId? triggerSource = null,
+            PlayerId? observerController = null)
         {
-            PlayerId firstPlayer = context.IncomingTurnPlayer ?? _state.ActivePlayer;
+            bool controllerScoped = OrderedTriggerSources.IsControllerScoped(trigger);
+            if (controllerScoped && observerController == null)
+                throw new System.InvalidOperationException(
+                    $"{trigger} is controller-scoped: its raise site must name the controller whose " +
+                    "permanents observe it. See OrderedTriggerSources.IsControllerScoped.");
+
+            PlayerId firstPlayer = controllerScoped
+                ? observerController!.Value
+                : context.IncomingTurnPlayer ?? _state.ActivePlayer;
 
             // ONE context, built once, used at BOTH gates (docs/effect-model-scheduling.md §5).
             // Two gates exist on purpose — §1's "reconsider, not act" rule needs the dequeue-time

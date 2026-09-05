@@ -777,21 +777,19 @@ namespace Emberfall.Core.Cards
         /// to be explained is not doing a label's job, and inventing a shorter word for it only
         /// moves the problem. Prose states the same timing with nothing left to infer.</para>
         ///
-        /// <para><b>THIS CLAUSE IS NOT TRUE OF THE ENGINE, and that is a known finding rather
-        /// than a wording choice (measured 2026-08-27).</b> It says "you"; the trigger fires on
-        /// BOTH players' summons. <c>OrderedTriggerSources.Snapshot</c> appends both sides
-        /// unconditionally — it is the one observer sweep, shared with <c>ON_TURN_END</c> (EF-012)
-        /// and <c>ON_SPELL_CAST</c> (EF-016), both of which are documented as both-sides — and this
-        /// trigger inherited it without ever being given a controller filter. <c>excluded</c>
-        /// removes only the summoned card itself, which IS the ordinary reading and needs no
-        /// clause.</para>
+        /// <para><b>The "you" in this clause was false for six weeks, and the ENGINE was corrected
+        /// to match it rather than the other way round</b> (#272, Sam, 2026-09-04). The trigger
+        /// fired on both players' summons because <c>OrderedTriggerSources.Snapshot</c> appended
+        /// both sides unconditionally and this trigger inherited that walk without ever being given
+        /// a controller filter. It now has one — <c>OrderedTriggerSources.IsControllerScoped</c> —
+        /// so the clause is true and so is 1159 Cogsworth's face. The alternative on the table was
+        /// re-wording this to "Whenever a minion is summoned"; it lost because every piece of
+        /// authored intent (the enum name, both card texts, the schema doc) said friendly-only and
+        /// only the implementation disagreed.</para>
         ///
-        /// <para>So 1159 Cogsworth ships saying something it does not do, and a
-        /// <c>TRIGGER_SOURCE</c> effect under this trigger buffs the OPPONENT'S minion on their
-        /// summon — which is why 1015 Grove Mender is not authored that way.
-        /// <c>TriggerSourceTargetTests</c> pins both. The wording stays until Sam rules, because
-        /// the alternative — "Whenever a minion is summoned" — is only correct if the scope is
-        /// meant to be both-sided, and that is the open question, not this sentence.</para>
+        /// <para>Bearing on the arm below: this clause is what licenses <c>TRIGGER_SOURCE</c> to
+        /// print as the pronoun "it", and until #272 that pronoun could refer to the OPPONENT'S
+        /// minion. If this trigger ever goes back to both sides, the pronoun goes with it.</para>
         ///
         /// <para><b>RETIREMENT TRIGGER:</b> a second labelless-but-spoken trigger. This is a switch
         /// with one live arm on purpose — it is a table, not a special case, so the next one adds a

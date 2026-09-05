@@ -89,9 +89,10 @@ namespace Emberfall.Core.Tests.TurnLoop
         [Test]
         public void OnTurnEnd_Fires_On_Both_Players_Turn_Ends()
         {
-            // The scope decision: RaiseObservers sweeps BOTH boards, so a turn-end effect is "at the end
-            // of ANY turn", not "at the end of YOUR turn". If this ever becomes controller-scoped, this
-            // test is the one that must change, deliberately.
+            // The scope decision: a turn-end effect is "at the end of ANY turn", not "at the end of YOUR
+            // turn". Since #272 that is an explicit `false` in OrderedTriggerSources.IsControllerScoped
+            // rather than the sweep's only behaviour — ON_FRIENDLY_SUMMON took the controller filter and
+            // this trigger deliberately did not. Flipping that arm is what would change this test.
             var (host, s) = Match(Db(), Toller, seed: 12UL);
             int firstSeat = s.SeatOf(s.ActivePlayer);
             int secondSeat = 1 - firstSeat;

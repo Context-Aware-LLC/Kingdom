@@ -118,7 +118,13 @@ namespace Emberfall.Core.Contracts
         // seat flip (EF-012). Fires for BOTH players' permanents, not just the active player's.
         ON_TURN_END,
 
-        // LIVE — ActionHandlers + CommandProcessor.
+        // LIVE — ActionHandlers.SummonHandler (tokens) + CommandProcessor.ApplyPlayCard's MINION arm.
+        // CONTROLLER-SCOPED, and the only observer trigger that is: it fires on the SUMMONER'S
+        // permanents only, so "Friendly" means what it says. That is a ruling (#272, Sam,
+        // 2026-09-04) and not the shape of the sweep — it was both-sided by inheritance until then,
+        // which made 1159 Cogsworth's text false and made a TRIGGER_SOURCE effect under it buff the
+        // OPPONENT. Enforced in one place, OrderedTriggerSources.IsControllerScoped; both raise
+        // sites must name the controller and RaiseObservers throws if one does not.
         ON_FRIENDLY_SUMMON,
 
         // LIVE — CommandProcessor.ApplyPlayCard raises it from the CardType.SPELL arm only, right after

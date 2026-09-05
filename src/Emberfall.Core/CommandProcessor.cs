@@ -270,10 +270,12 @@ namespace Emberfall.Core
             // EF-012: ON_TURN_END fires here — the active player still owns the turn and the phase is
             // EndOfTurn, so a turn-end effect sees the board the turn actually ended on.
             //
-            // SCOPE IS BOTH SIDES, not just the active player's permanents. GDD §1b step 3 says "fire all
-            // ON_TURN_END effects", and RaiseObservers is the engine's one observer sweep — the same call
-            // that carries ON_FRIENDLY_SUMMON — so a controller filter here would be a new, unspecified
-            // rule. `excluded: null` because nothing "causes" a turn to end; unlike a summon there is no
+            // SCOPE IS BOTH SIDES, not just the active player's permanents, and since #272 that is a
+            // POSITIVE ENTRY in OrderedTriggerSources.IsControllerScoped rather than the sweep's only
+            // behaviour — ON_FRIENDLY_SUMMON now takes one side and this still takes two. GDD §1b step 3
+            // says "fire all ON_TURN_END effects", and nothing about the name or the card grammar
+            // ("Turn End:") claims a side.
+            // `excluded: null` because nothing "causes" a turn to end; unlike a summon there is no
             // source card to leave out. Order is RaiseObservers' canonical active-side-first, board
             // left→right sweep, which is what makes this replay-stable.
             interp.RaiseObservers(Trigger.ON_TURN_END, excluded: null);
@@ -424,8 +426,12 @@ namespace Emberfall.Core
                     RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot, _db);
                     buf.Emit(GameEventKind.CardPlayed, source: card.Id);
                     interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // Herald
+                    // SCOPE IS THE SUMMONER'S SIDE ONLY (#272, Sam, 2026-09-04) — unlike the two
+                    // sweep triggers below, and by decision rather than by inheritance. The
+                    // controller is named explicitly because the sweep cannot infer it: this arm
+                    // could be reached off-turn and ActivePlayer would name the wrong board.
                     interp.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card,
-                        triggerSource: card.Id);
+                        triggerSource: card.Id, observerController: card.Controller);
                     break;
 
                 case CardType.SPELL:
@@ -445,8 +451,10 @@ namespace Emberfall.Core
                     // deliberately whether it belongs here; do NOT move this into EffectInterpreter.RaiseSelf.
                     //
                     // SCOPE IS BOTH SIDES, matching ON_TURN_END (EF-012): the name carries no FRIENDLY_
-                    // qualifier the way ON_FRIENDLY_SUMMON does, and RaiseObservers is the engine's one
-                    // observer sweep, so a controller filter here would be a new, unspecified rule.
+                    // qualifier the way ON_FRIENDLY_SUMMON does, and the card grammar says "whenever a
+                    // spell is cast". Since #272 that is an explicit `false` in
+                    // OrderedTriggerSources.IsControllerScoped, not the sweep's only behaviour — the
+                    // sibling trigger took the filter and this one deliberately did not.
                     // `excluded: null` because the spell is in the graveyard by now and OrderedTriggerSources
                     // only walks boards — it cannot observe its own cast whatever we pass.
                     interp.RaiseObservers(Trigger.ON_SPELL_CAST, excluded: null, triggerSource: card.Id);
