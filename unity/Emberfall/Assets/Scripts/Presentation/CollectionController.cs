@@ -43,10 +43,11 @@ namespace Emberfall.Presentation
     /// and <see cref="CardQueryBar.Reset"/> deliberately leaves it alone — resetting the filters should
     /// not silently move you between your collection and the game.</para>
     ///
-    /// <para><b>Deck editing widens ownership scope to All while it is active</b>, preserving #150's
-    /// visible-but-spent rule for unowned cards. Closing the editor restores the scope the player had
-    /// before opening it. The query object itself stays mounted, so search, sort and facet selections
-    /// survive the round trip.</para>
+    /// <para><b>Deck editing defaults ownership scope to Owned, same as browse</b> (#353) — All is a
+    /// manual widen inside the editor, not the entry state. #150's visible-but-spent dimming for
+    /// unowned-but-eligible cards still applies once the player switches to All by hand. Closing the
+    /// editor restores the scope the player had before opening it. The query object itself stays
+    /// mounted, so search, sort and facet selections survive the round trip.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// CollectionScreen.uxml.
@@ -320,11 +321,11 @@ namespace Emberfall.Presentation
         /// <summary>
         /// The wall's pool, scoped by the optional edit context.
         ///
-        /// <para><b>Editing</b> — the character's pairing plus neutral. Opening an editor switches
-        /// ownership scope to All, so
-        /// an unowned card stays on the wall and <see cref="AddCopy"/> refuses it at the copy cap,
-        /// because the copy limit is already <c>min(MaxCopies, copies owned)</c>. Removing it from the
-        /// pool instead would make a card you nearly own invisible, and #150 wants it dimmed.</para>
+        /// <para><b>Editing</b> — the character's pairing plus neutral, scoped to Owned by default
+        /// (#353) same as browse. If the player widens to All, an unowned card stays on the wall and
+        /// <see cref="AddCopy"/> refuses it at the copy cap, because the copy limit is already
+        /// <c>min(MaxCopies, copies owned)</c>. Removing it from the pool instead would make a card
+        /// you nearly own invisible, and #150 wants it dimmed.</para>
         ///
         /// <para><b>At rest</b> — every card this account owns a copy of, or, when it has no ownership
         /// record or the player has asked for All (#146), every collectible card in the game.</para>
@@ -926,7 +927,9 @@ namespace Emberfall.Presentation
             if (EditingDeck) SaveDeck();
 
             _scopeBeforeEditing = _ownedScope;
-            _ownedScope = false; // #150: unowned eligible cards stay visible-but-spent while editing.
+            _ownedScope = true; // #353: the editor defaults to Owned, same as browse — All stays a
+                                 // manual widen, not the entry state. #150's visible-but-spent dimming
+                                 // for unowned cards still applies once the player switches to All.
 
             // A deck opens on its whole pairing, not on whatever class the player happened to be
             // browsing — which is usually one this deck cannot play anyway, and would open the
