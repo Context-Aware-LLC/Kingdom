@@ -180,8 +180,9 @@ namespace Emberfall.Training.Corpus.Tests
             }
         }
 
-        [Test]
-        public void Builder_replays_validates_and_emits_hidden_information_safe_decisions()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void Builder_replays_validates_and_emits_hidden_information_safe_decisions(bool excludeConcede)
         {
             string root = TempDirectory();
             try
@@ -214,8 +215,9 @@ namespace Emberfall.Training.Corpus.Tests
                          })
                 {
                     string before = GameStateHasher.Hash(GameStateProjector.Project(host.State, intent.Player));
+                    bool? allowsConcede = excludeConcede && intent is not ConcedeIntent ? false : null;
                     IReadOnlyList<PlayerIntent> actions = legal.Enumerate(
-                        host.State, intent.Player, includeConcede: true);
+                        host.State, intent.Player, includeConcede: allowsConcede ?? true);
                     byte[] encodedIntent = ProtocolCodec.Encode(
                         new IntentMsg(0UL, intent), id, 0UL);
                     int chosenIndex = actions.ToList().FindIndex(action =>
@@ -235,7 +237,8 @@ namespace Emberfall.Training.Corpus.Tests
                         0.25,
                         0.75,
                         chosenIndex,
-                        actions.Count));
+                        actions.Count,
+                        allowsConcede));
                 }
                 replay.Complete(id, host.State.Outcome);
 
@@ -290,6 +293,8 @@ namespace Emberfall.Training.Corpus.Tests
                 using JsonDocument first = JsonDocument.Parse(decisions[0]);
                 JsonElement row = first.RootElement;
                 Assert.That(row.GetProperty("chosenActionIndex").GetInt32(), Is.GreaterThanOrEqualTo(0));
+                Assert.That(row.GetProperty("legalActions").EnumerateArray().Any(action =>
+                    action.GetProperty("$type").GetString() == "concede"), Is.EqualTo(!excludeConcede));
                 JsonElement opponentHand = row.GetProperty("observation").GetProperty("players")[1].GetProperty("hand");
                 Assert.That(opponentHand.GetArrayLength(), Is.GreaterThan(0));
                 foreach (JsonElement card in opponentHand.EnumerateArray())

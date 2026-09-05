@@ -78,7 +78,8 @@ namespace Emberfall.Training.Corpus
                                       || decision.BehaviorPredictedValue.HasValue
                                       || decision.BehaviorTemperature.HasValue
                                       || decision.BehaviorChosenActionIndex.HasValue
-                                      || decision.BehaviorLegalActionCount.HasValue;
+                                      || decision.BehaviorLegalActionCount.HasValue
+                                      || decision.BehaviorAllowsConcede.HasValue;
                 bool hasAllBehavior = decision.BehaviorCheckpointSha256 is not null
                                       && decision.BehaviorLogProbability.HasValue
                                       && decision.BehaviorPredictedValue.HasValue
@@ -153,5 +154,7 @@ namespace Emberfall.Training.Corpus
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         int? BehaviorChosenActionIndex = null,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        int? BehaviorLegalActionCount = null);
+        int? BehaviorLegalActionCount = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        bool? BehaviorAllowsConcede = null);
 }

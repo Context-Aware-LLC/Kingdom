@@ -22,6 +22,24 @@ namespace Emberfall.Net.Server.Tests.Bots
         private static readonly PlayerId P1 = new PlayerId("p1");
 
         [Test]
+        public async Task Concession_Is_Not_Offered_To_The_Checkpoint()
+        {
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            var scorer = new FakeScorer(count =>
+            {
+                var logits = new double[count];
+                logits[0] = 1000.0;
+                return logits;
+            });
+            var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
+                setup.P0Deck, CheckpointSelection.Argmax, new string('a', 64));
+            PlayerIntent? intent = await policy.ChooseAsync(ProjectOpeningState(db, setup), P0);
+            Assert.That(intent, Is.TypeOf<MulliganIntent>(), "Concede must not be an exploration action");
+            Assert.That(policy.LastDecision!.AllowsConcede, Is.False);
+        }
+
+        [Test]
         public async Task Mulligan_And_First_Turn_Draw_Preserve_The_Deck_Multiset()
         {
             FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
