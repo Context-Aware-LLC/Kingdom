@@ -33,9 +33,13 @@ namespace Emberfall.Editor
             ok &= CheckPerspectiveRig();
             ok &= CheckBackdropSize();
 
-            Debug.Log($"[DeviceLayoutVerify] {(ok ? "PASS" : "FAIL")} — supported landscape "
-                      + $"aspect {DeviceLayout.MinAspect:F5}..{DeviceLayout.MaxAspect:F5}, "
-                      + "perspective board bounds remain inside every tested safe area.");
+            // No MinAspect here any more: the live rig frames a narrow screen rather than clipping
+            // it, so there is no lower bound to report. MaxAspect still bounds the backdrop art.
+            Debug.Log($"[DeviceLayoutVerify] {(ok ? "PASS" : "FAIL")} — design box "
+                      + $"{DeviceLayout.DesignHalfWidth:F2} x {DeviceLayout.DesignHalfHeight:F2} on "
+                      + $"backdrop covering |x| <= {DeviceLayout.MaxAspect * DeviceLayout.DesignHalfHeight:F4} "
+                      + $"(MaxAspect {DeviceLayout.MaxAspect:F5}), perspective board bounds remain "
+                      + "inside every tested safe area.");
         }
 
         private static bool CheckPerspectiveRig()

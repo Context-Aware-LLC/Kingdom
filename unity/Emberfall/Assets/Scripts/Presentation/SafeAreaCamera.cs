@@ -90,12 +90,15 @@ namespace Emberfall.Presentation
             if (_logged) return;
             _logged = true;
 
+            // ONLY MaxAspect IS TESTED (2026-09-04). This used to report a screen narrower than
+            // MinAspect as unsupported, which was true of the orthographic camera and is false of
+            // the live rig: BoardCameraRig fits the design box by retreating, so a narrow screen
+            // is framed, not clipped. MaxAspect is a different kind of claim — it is where the
+            // BACKDROP ART runs out, and no amount of fitting paints more floor.
             float aspect = _lastHeight > 0 ? (float)_lastWidth / _lastHeight : 0f;
-            string range = aspect < DeviceLayout.MinAspect
-                ? "BELOW MinAspect — zoomed out to fit, unsupported"
-                : aspect > DeviceLayout.MaxAspect
-                    ? "ABOVE MaxAspect — bare edge past the backdrop bleed"
-                    : "in range";
+            string range = aspect > DeviceLayout.MaxAspect
+                ? "ABOVE MaxAspect — bare edge past the backdrop bleed"
+                : "in range";
 
             string cameraSolve = _authoredOrthographic
                 ? $"orthoSize {DeviceLayout.DesignHalfHeight:F2}->{s.OrthoSize:F4} "

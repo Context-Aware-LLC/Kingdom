@@ -125,18 +125,35 @@ namespace Emberfall.Presentation
         private const float SocketOverlap = 0.34f;
         internal const float SocketOffsetX =
             HeroPlateView.PlateW * 0.5f + HeroSocketsView.FrameSize * 0.5f - SocketOverlap;
-        // A LITERAL, though it is 7.88 - SocketOffsetX - FrameSize/2 to four places. Deriving it
+        // A LITERAL, though it is 8.90 - SocketOffsetX - FrameSize/2 to four places. Deriving it
         // from DesignHalfWidth would make DeviceLayout.SelfCheck's "design half-width == the widest
         // thing the board builds" assertion tautological — it would pass by construction after any
         // resize instead of reporting that the solve needs redoing.
-        internal const float HeroX = 5.63f;
+        //
+        // 5.63 -> 6.65 on 2026-09-04, SPENDING SPACE THAT WAS ALWAYS THERE. Everything above about
+        // the row's outermost slot was an argument about a budget the orthographic camera imposed,
+        // and that camera was retired by f121a591 on 2026-08-28. Under the live perspective rig the
+        // design box is a FLOOR on what must be visible, not a ceiling on what may exist, so the
+        // fix for the seven-minion collision is to move the cluster OUT rather than to shrink the
+        // row or bury the rings. The number is set by the INBOARD RING, not the portrait: its drawn
+        // inner edge sits 0.930 inboard of HeroX, so clearing a 7-minion row's outer edge at 5.618
+        // needs HeroX >= 6.548. 6.65 clears it by 0.102 and is where the cluster sat before
+        // fbd2dfcd moved it in to solve this same collision the other way.
+        internal const float HeroX = 6.65f;
         internal const float HeroClusterOuterEdge =
             HeroX + SocketOffsetX + HeroSocketsView.FrameSize * 0.5f;
 
         // Two columns of five mana orbs stand inboard of the deck pile. The 0.31-unit gap from
-        // the grid's outer edge at 6.22 to the pile's inner edge at 6.53 keeps them distinct.
-        internal const float ManaGridX = 5.76f;
-        internal const float DeckX     = 7.18f;
+        // the grid's outer edge to the pile's inner edge keeps them distinct, and is preserved
+        // through the move below.
+        //
+        // BOTH MOVED OUT WITH THE HERO on 2026-09-04, to keep the two halves of the bottom row
+        // symmetric: the deck pile's outer edge is pinned to HeroClusterOuterEdge 8.90, and the
+        // rail follows it inboard at the same 0.31 gap. This was not cosmetic — the rail's inner
+        // edge was at 5.30 and a 7-minion row reaches 5.618, so the rail was lapped by the row for
+        // 0.279 units of shared band exactly as the hero was. It now clears by 0.752.
+        internal const float ManaGridX = 6.83f;   // rail 6.37..7.29
+        internal const float DeckX     = 8.25f;   // pile 7.60..8.90
 
         // ── Vertical (§1.3) ─────────────────────────────────────────────────────────────
         // §1.1 is an x-budget only. Everything in it rests on one baseline 0.15 above the

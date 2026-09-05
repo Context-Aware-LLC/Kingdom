@@ -35,15 +35,26 @@ namespace Emberfall.Presentation
         /// <summary>
         /// Half the world width the bottom row actually needs, in world units. Set by the
         /// widest element of the seat cluster: the outboard hero socket, whose edge is
-        /// <c>ProceduralBoardSetup.HeroClusterOuterEdge</c> 7.88. The deck pile is second at
-        /// 7.83; the narrower portrait is deliberately inset between its two sockets.
+        /// <c>ProceduralBoardSetup.HeroClusterOuterEdge</c> 8.90. The deck pile is now pinned to
+        /// the same edge; the narrower portrait is deliberately inset between its two sockets.
         ///
-        /// RETIREMENT TRIGGER: if you move the hero cluster, DeckX or PileW outboard, this number
-        /// and <see cref="MinAspect"/> move with them, and CLAUDE.md / the device-layout spec
-        /// state a 16:9 floor that stops being true. DeviceLayoutVerify fails on the mismatch
-        /// rather than letting it ship silently.
+        /// <para>7.88 -> 8.90 on 2026-09-04. Under the live perspective rig this is a FLOOR on
+        /// what must be visible, not a ceiling on what may exist, so widening it does not shrink
+        /// anything on screen — the fit stays at its <c>CompositionRetreat</c> floor at every
+        /// aspect the game ships to. What it buys is room for the hero cluster and the mana rail
+        /// to stop overlapping the minion row.</para>
+        ///
+        /// <para>THE REAL CEILING IS THE BACKDROP ART, NOT THE VIEWPORT. Past
+        /// <c>MaxAspect * DesignHalfHeight</c> = 10.1996 the arena plate stops and bare camera
+        /// background shows, however much viewport there is — 11.24 of visible half-width at 16:9
+        /// and 14.04 at 20:9 are both larger than the floor you can stand furniture on.
+        /// <see cref="SelfCheck"/> asserts that ceiling.</para>
+        ///
+        /// RETIREMENT TRIGGER: if you move the hero cluster, DeckX or PileW outboard again, this
+        /// number moves with them and the device-layout spec's §2 table restates it.
+        /// DeviceLayoutVerify fails on the mismatch rather than letting it ship silently.
         /// </summary>
-        public const float DesignHalfWidth = 7.88f;
+        public const float DesignHalfWidth = 8.90f;
 
         /// <summary>
         /// <b>THIS DESCRIBES THE ORTHOGRAPHIC CAMERA, WHICH WAS RETIRED ON 2026-08-28. Do not
@@ -63,12 +74,19 @@ namespace Emberfall.Presentation
         /// <c>tooling/scripts/board_camera_fit.py</c>; it reads these constants and prints the
         /// solve.</para>
         ///
-        /// <para>Still referenced by <see cref="Solve"/> and by <see cref="SelfCheck"/>'s aspect
-        /// assertions, which is why it is corrected rather than deleted — retiring it means
-        /// retiring that whole orthographic path, and #235 has to be re-decided against the real
-        /// camera first.</para>
+        /// <para>NO LONGER DERIVED FROM <see cref="DesignHalfWidth"/>, and no longer asserted
+        /// (2026-09-04). It was <c>DesignHalfWidth / DesignHalfHeight</c>, which under the
+        /// orthographic camera really was the narrowest aspect that fitted. Widening the design
+        /// box to 8.90 would have pushed that ratio to 1.935 and made <see cref="SafeAreaCamera"/>
+        /// log a 16:9 screen as "BELOW MinAspect — unsupported", which is false: the box is a
+        /// floor now, so widening it constrains NOTHING on a real device. The value is frozen at
+        /// the figure the retired camera produced, purely so <see cref="Solve"/> — itself
+        /// unreachable — still compiles and reads as it did.</para>
+        ///
+        /// <para>The live ceiling is <see cref="MaxAspect"/> and the backdrop art behind it. That
+        /// is what <see cref="SelfCheck"/> asserts now.</para>
         /// </summary>
-        public const float MinAspect = DesignHalfWidth / DesignHalfHeight;
+        public const float MinAspect = 1.71304f;
 
         /// <summary>
         /// Widest aspect the backdrop art covers. BoardPlate_Master.png is 4612 x 2080, which
@@ -311,12 +329,18 @@ namespace Emberfall.Presentation
             ok &= Line(sb, socketEdgeY <= DesignHalfHeight + 0.001f,
                 $"local socket edge |y| {socketEdgeY:F3} <= design edge {DesignHalfHeight:F2}");
 
-            // 2. 16:9 is inside the declared range; 16:10 is outside it. Those two facts are
-            //    what docs/dev-docs/ui/device-layout.md §2 promises, so they are what is checked.
-            ok &= Line(sb, MinAspect <= 16f / 9f,
-                $"MinAspect {MinAspect:F5} <= 16:9 {16f / 9f:F5} — 16:9 is supported");
-            ok &= Line(sb, MinAspect > 1.6f,
-                $"MinAspect {MinAspect:F5} > 16:10 1.60000 — 16:10 is correctly out of range");
+            // 2. THE DESIGN BOX STAYS ON THE ARENA FLOOR. Replaces the two MinAspect assertions
+            //    (2026-09-04), which asked whether 16:9 and 16:10 cleared a box aspect under the
+            //    ORTHOGRAPHIC camera retired by f121a591 — a question the live rig does not ask,
+            //    because it fits the box by retreating and every shipped aspect sits at the
+            //    CompositionRetreat floor. What can still go wrong is the opposite: furniture
+            //    pushed outboard past the backdrop art, where it draws over bare camera
+            //    background. That ceiling is real, it is art-derived, and nothing else guards it.
+            float backdropHalfWidth = MaxAspect * DesignHalfHeight;
+            ok &= Line(sb, DesignHalfWidth <= backdropHalfWidth + 0.001f,
+                $"DesignHalfWidth {DesignHalfWidth:F4} <= backdrop coverage {backdropHalfWidth:F4} "
+                + $"(BoardPlate_Master {BackdropTexWidth}x{BackdropTexHeight}) — the bottom row "
+                + $"stands on painted floor, {backdropHalfWidth - DesignHalfWidth:F4} to spare");
 
             // 3. MaxAspect is the backdrop's real coverage, not a wish.
             float plateAspect = BackdropTexWidth / (float)BackdropTexHeight;
