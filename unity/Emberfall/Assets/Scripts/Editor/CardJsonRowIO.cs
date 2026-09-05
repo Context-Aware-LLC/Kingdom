@@ -207,6 +207,7 @@ namespace Emberfall.Editor
             else if (action is GrantKeywordAction grant) { Type(w, "GRANT_KEYWORD"); w.WriteString("keyword", grant.Keyword.ToString()); Target(w, grant.Target); }
             else if (action is DestroyAction destroy) { Type(w, "DESTROY"); Target(w, destroy.Target); }
             else if (action is ReturnToHandAction returnToHand) { Type(w, "RETURN_TO_HAND"); Target(w, returnToHand.Target); }
+            else if (action is ReanimateAction reanimate) { Type(w, "REANIMATE"); Target(w, reanimate.Target); }
             else if (action is SilenceAction silence) { Type(w, "SILENCE"); Target(w, silence.Target); }
             else if (action is TransformAction transform) { Type(w, "TRANSFORM"); w.WriteNumber("cardId", transform.CardId); Target(w, transform.Target); }
             else if (action is FrostAction frost) { Type(w, "FROST"); Target(w, frost.Target); }

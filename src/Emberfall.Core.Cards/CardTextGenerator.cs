@@ -1003,6 +1003,7 @@ namespace Emberfall.Core.Cards
                 // "to hand" is jargon — a rules-text shorthand that assumes the reader already knows
                 // whose hand. Naming the owner works for one minion and for a board of them alike.
                 ReturnToHandAction a => $"Return {Target(a.Target, sourcePronoun)} to {BounceDestination(a.Target)}.",
+                ReanimateAction a => $"Reanimate {Target(a.Target, sourcePronoun)}.",
                 SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target, sourcePronoun)}.",
                 TransformAction a => $"Transform {Target(a.Target, sourcePronoun)} into {NamedCard(a.CardId, pool)}.",
                 // NOT named through the keyword — see FrostVerb. This was `Name(Keyword.FROST)` until
@@ -1284,6 +1285,9 @@ namespace Emberfall.Core.Cards
             "FRIENDLY_GRAVEYARD" => Say("a card in your graveyard", "cards in your graveyard"),
             "ENEMY_GRAVEYARD" => Say("a card in the enemy graveyard", "cards in the enemy graveyard"),
             "ANY_GRAVEYARD_CARD" => Say("a graveyard card", "graveyard cards"),
+            "FRIENDLY_GRAVEYARD_MINION" => Say("a minion in your graveyard", "minions in your graveyard"),
+            "ENEMY_GRAVEYARD_MINION" => Say("a minion in the enemy graveyard", "minions in the enemy graveyard"),
+            "ANY_GRAVEYARD_MINION" => Say("a graveyard minion", "graveyard minions"),
             _ => throw Unsupported("target selector", selector),
         };
 

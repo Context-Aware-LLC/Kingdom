@@ -285,6 +285,12 @@ namespace Emberfall.Core.Cards
             ["FRIENDLY_GRAVEYARD"] = new TargetQuery(TargetSide.Friendly, TargetZones.Graveyard, TargetTypes.AnyCard),
             ["ENEMY_GRAVEYARD"] = new TargetQuery(TargetSide.Enemy, TargetZones.Graveyard, TargetTypes.AnyCard),
             ["ANY_GRAVEYARD_CARD"] = new TargetQuery(TargetSide.Both, TargetZones.Graveyard, TargetTypes.AnyCard),
+
+            // Minion-only graveyard reads, for REANIMATE -- raising a dead spell or weapon has no
+            // meaning, so this narrows the type axis the way ANY_FRIENDLY_MINION narrows Board.
+            ["FRIENDLY_GRAVEYARD_MINION"] = new TargetQuery(TargetSide.Friendly, TargetZones.Graveyard, TargetTypes.Minion),
+            ["ENEMY_GRAVEYARD_MINION"] = new TargetQuery(TargetSide.Enemy, TargetZones.Graveyard, TargetTypes.Minion),
+            ["ANY_GRAVEYARD_MINION"] = new TargetQuery(TargetSide.Both, TargetZones.Graveyard, TargetTypes.Minion),
         };
 
         /// <summary>The known selector names -- the table's own keys, so knowing a name and knowing

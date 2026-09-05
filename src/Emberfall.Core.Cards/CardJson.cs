@@ -222,6 +222,9 @@ namespace Emberfall.Core.Cards
                 case "RETURN_TO_HAND":
                     Fields(element, type, "target");
                     return new ReturnToHandAction(TargetFromElement(element));
+                case "REANIMATE":
+                    Fields(element, type, "target");
+                    return new ReanimateAction(TargetFromElement(element));
                 case "SILENCE":
                     Fields(element, type, "target");
                     return new SilenceAction(TargetFromElement(element));

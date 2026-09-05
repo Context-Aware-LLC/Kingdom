@@ -25,6 +25,7 @@ namespace Emberfall.Core
                 case GrantKeywordAction _: new GiveKeywordHandler().Execute(context); return;
                 case DestroyAction _: new DestroyHandler().Execute(context); return;
                 case ReturnToHandAction _: new ReturnToHandHandler().Execute(context); return;
+                case ReanimateAction _: new ReanimateHandler().Execute(context); return;
                 case SilenceAction _: new SilenceHandler().Execute(context); return;
                 case GainManaAction _: new GainManaHandler().Execute(context); return;
                 case GainArmorAction _: new GainArmorHandler().Execute(context); return;
@@ -110,6 +111,29 @@ namespace Emberfall.Core
                 // summon on the OPPONENT's turn, and "friendly" is measured from the token (#272).
                 ctx.Interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: token,
                     triggerSource: token.Id, observerController: token.Controller);
+            }
+        }
+    }
+
+    // ── REANIMATE ────────────────────────────────────────────────────────────────
+    /// <summary>Moves a graveyard minion onto the board as the same instance -- its id is already
+    /// public (it died in the open), so unlike <see cref="ReturnToHandHandler"/> there is no hidden
+    /// zone to mint a fresh id for. Stops rather than skips once the board is full: every remaining
+    /// target would fail the same <c>RulesEngine.EnterBoard</c> check.</summary>
+    internal sealed class ReanimateHandler : IActionHandler
+    {
+        public void Execute(in EffectContext ctx)
+        {
+            foreach (var t in ctx.Targets)
+            {
+                if (t.Zone != Zone.Graveyard || t.Card == null) continue;
+                if (!ctx.Db.TryGet(t.Card.DefinitionId, out CardDefinition def)) continue;
+                CardInstance card = t.Card;
+                if (!RulesEngine.EnterBoard(ctx.State, card, def, t.Seat, -1, ctx.Db)) break;
+                ctx.State.Players[t.Seat].Graveyard.Remove(card);
+                ctx.Events.Emit(GameEventKind.CardSummoned, source: card.Id);
+                ctx.Interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card,
+                    triggerSource: card.Id, observerController: card.Controller);
             }
         }
     }

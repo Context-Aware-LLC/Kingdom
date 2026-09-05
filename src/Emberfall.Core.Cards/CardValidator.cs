@@ -629,6 +629,7 @@ namespace Emberfall.Core.Cards
                 case GrantKeywordAction _: return "GRANT_KEYWORD";
                 case DestroyAction _: return "DESTROY";
                 case ReturnToHandAction _: return "RETURN_TO_HAND";
+                case ReanimateAction _: return "REANIMATE";
                 case SilenceAction _: return "SILENCE";
                 case TransformAction _: return "TRANSFORM";
                 case FrostAction _: return "FROST";

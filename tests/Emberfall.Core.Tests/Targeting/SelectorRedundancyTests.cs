@@ -128,9 +128,8 @@ namespace Emberfall.Core.Tests.Targeting
 
         private static (IReadOnlyList<string> Partition, IReadOnlyList<string> UnderDetermined) AxisPartition()
         {
-            GameState state = BoardOfFour();
+            (GameState state, FakeCardDatabase db) = BoardOfFour();
             PlayerId controller = state.Players[0].Id;
-            FakeCardDatabase db = new FakeCardDatabase().DeclareWeapons(state);
             InstanceId source = state.Players[0].Board[1].Id;
             InstanceId trigger = state.Players[1].Board[0].Id;
 
@@ -176,9 +175,8 @@ namespace Emberfall.Core.Tests.Targeting
 
         private static IReadOnlyList<string[]> RedundantGroups(bool PlayerChoiceSeam)
         {
-            GameState state = BoardOfFour();
+            (GameState state, FakeCardDatabase db) = BoardOfFour();
             PlayerId controller = state.Players[0].Id;
-            FakeCardDatabase db = new FakeCardDatabase().DeclareWeapons(state);
             InstanceId source = state.Players[0].Board[1].Id;
             InstanceId trigger = state.Players[1].Board[0].Id;
 
@@ -228,7 +226,16 @@ namespace Emberfall.Core.Tests.Targeting
                 .Select(g => string.Join(" == ", g.OrderBy(n => n, System.StringComparer.Ordinal)))
                 .OrderBy(line => line, System.StringComparer.Ordinal));
 
-        private static GameState BoardOfFour()
+        /// <summary>
+        /// Seeds every zone on both sides, PLUS one non-minion in each graveyard. Without that
+        /// second type, <c>FakeCardDatabase.Get</c> fabricates a MINION row for every id here (see
+        /// its own doc comment), so a graveyard holding only minions makes the new AnyCard/Minion
+        /// selector pairs (<c>*_GRAVEYARD</c> vs <c>*_GRAVEYARD_MINION</c>) look redundant for a
+        /// reason that has nothing to do with the selectors — exactly the fixture-artifact failure
+        /// mode <see cref="No_two_selectors_resolve_to_the_same_candidate_set"/>'s own doc warns
+        /// about, and the one the weapon slot already needed <c>DeclareWeapons</c> for.
+        /// </summary>
+        private static (GameState State, FakeCardDatabase Db) BoardOfFour()
         {
             var p0Id = new PlayerId("p0");
             var p1Id = new PlayerId("p1");
@@ -237,6 +244,7 @@ namespace Emberfall.Core.Tests.Targeting
             var p0 = new PlayerState(p0Id, new HeroInstance(new InstanceId(nextId++), p0Id, CardClass.EMBERWARD, 30));
             var p1 = new PlayerState(p1Id, new HeroInstance(new InstanceId(nextId++), p1Id, CardClass.TIDECALLER, 30));
 
+            var graveyardSpellIds = new List<int>();
             foreach (PlayerState player in new[] { p0, p1 })
             {
                 for (int i = 0; i < 4; i++)
@@ -251,15 +259,31 @@ namespace Emberfall.Core.Tests.Targeting
                 {
                     player.Hand.Add(Card(ref nextId, player.Id, Zone.Hand));
                     player.Deck.Add(Card(ref nextId, player.Id, Zone.Deck));
-                    player.Graveyard.Add(Card(ref nextId, player.Id, Zone.Graveyard));
                 }
+                CardInstance graveyardMinion = Card(ref nextId, player.Id, Zone.Graveyard);
+                player.Graveyard.Add(graveyardMinion);
+                CardInstance graveyardSpell = Card(ref nextId, player.Id, Zone.Graveyard);
+                player.Graveyard.Add(graveyardSpell);
+                graveyardSpellIds.Add(graveyardSpell.DefinitionId);
             }
 
-            return new GameState(new MatchId("m-selector-redundancy"), new DeterministicRandom(0xC0FFEEUL), p0, p1)
+            var state = new GameState(new MatchId("m-selector-redundancy"), new DeterministicRandom(0xC0FFEEUL), p0, p1)
             {
                 Phase = TurnPhase.Main,
                 NextInstanceCounter = nextId,
             };
+
+            FakeCardDatabase db = new FakeCardDatabase().DeclareWeapons(state);
+            foreach (int spellDefId in graveyardSpellIds)
+                db.Register(new CardDefinition(
+                    id: spellDefId, handle: $"s{spellDefId}", name: $"s{spellDefId}", type: CardType.SPELL,
+                    cost: 1, attack: null, health: null, durability: null,
+                    @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
+                    keywords: System.Array.Empty<Keyword>(), rules: System.Array.Empty<RuleDefinition>(),
+                    flavorText: "", artId: $"s{spellDefId}", setId: SetId.CORE,
+                    collectible: true, tribe: null, factionId: ""));
+
+            return (state, db);
         }
 
         private static CardInstance Card(ref int nextId, PlayerId controller, Zone zone)

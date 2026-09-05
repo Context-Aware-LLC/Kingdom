@@ -231,6 +231,15 @@ namespace Emberfall.Core.Cards
         public ReturnToHandAction(TargetSpec target) : base(target) { }
     }
 
+    /// <summary>Moves a graveyard minion onto the board as itself -- see
+    /// <see cref="Emberfall.Core.RulesEngine.EnterBoard"/> for what "as itself" means (printed
+    /// stats, summoning sickness; damage and buffs do not survive the graveyard any more than they
+    /// survive a bounce to hand).</summary>
+    public sealed class ReanimateAction : TargetedRuleAction
+    {
+        public ReanimateAction(TargetSpec target) : base(target) { }
+    }
+
     public sealed class SilenceAction : TargetedRuleAction
     {
         public SilenceAction(TargetSpec target) : base(target) { }
@@ -490,6 +499,8 @@ namespace Emberfall.Core.Cards
                     return new TargetShape(
                         TargetZones.Board | TargetZones.Weapon | TargetZones.Deck | TargetZones.Graveyard,
                         TargetTypes.AnyCard);
+                case ReanimateAction _:
+                    return new TargetShape(TargetZones.Graveyard, TargetTypes.Minion);
                 case SilenceAction _:
                 case TransformAction _:
                 case TakeControlAction _:

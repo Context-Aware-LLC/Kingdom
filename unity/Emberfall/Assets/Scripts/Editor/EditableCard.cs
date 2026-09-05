@@ -101,6 +101,7 @@ namespace Emberfall.Editor
         GrantKeyword,
         Destroy,
         ReturnToHand,
+        Reanimate,
         Silence,
         Transform,
         Frost,
@@ -274,6 +275,7 @@ namespace Emberfall.Editor
             || ActionKind == EditableRuleActionKind.GrantKeyword
             || ActionKind == EditableRuleActionKind.Destroy
             || ActionKind == EditableRuleActionKind.ReturnToHand
+            || ActionKind == EditableRuleActionKind.Reanimate
             || ActionKind == EditableRuleActionKind.Silence
             || ActionKind == EditableRuleActionKind.Transform
             || ActionKind == EditableRuleActionKind.Frost
@@ -388,6 +390,7 @@ namespace Emberfall.Editor
                 case EditableRuleActionKind.GrantKeyword: return new GrantKeywordAction(Keyword, target);
                 case EditableRuleActionKind.Destroy: return new DestroyAction(target);
                 case EditableRuleActionKind.ReturnToHand: return new ReturnToHandAction(target);
+                case EditableRuleActionKind.Reanimate: return new ReanimateAction(target);
                 case EditableRuleActionKind.Silence: return new SilenceAction(target);
                 case EditableRuleActionKind.Transform: return new TransformAction(CardId, target);
                 case EditableRuleActionKind.Frost: return new FrostAction(target);
@@ -415,6 +418,7 @@ namespace Emberfall.Editor
             else if (action is GrantKeywordAction grant) { ActionKind = EditableRuleActionKind.GrantKeyword; Keyword = grant.Keyword; ReadTarget(grant); }
             else if (action is DestroyAction destroy) { ActionKind = EditableRuleActionKind.Destroy; ReadTarget(destroy); }
             else if (action is ReturnToHandAction returnToHand) { ActionKind = EditableRuleActionKind.ReturnToHand; ReadTarget(returnToHand); }
+            else if (action is ReanimateAction reanimate) { ActionKind = EditableRuleActionKind.Reanimate; ReadTarget(reanimate); }
             else if (action is SilenceAction silence) { ActionKind = EditableRuleActionKind.Silence; ReadTarget(silence); }
             else if (action is TransformAction transform) { ActionKind = EditableRuleActionKind.Transform; CardId = transform.CardId; ReadTarget(transform); }
             else if (action is FrostAction frost) { ActionKind = EditableRuleActionKind.Frost; ReadTarget(frost); }
