@@ -14,17 +14,17 @@ namespace Emberfall.Net.Client.Collection
     /// only <see cref="Known"/> may replace what is on the device.</b>
     ///
     /// <para>This is the same distinction <see cref="CollectionSyncStatus"/> exists to carry, and it
-    /// is sharper here: an empty roster is the shape of a brand new player, so a failed read that
-    /// decoded as "no characters" would walk a player who owns forty cards through character
-    /// creation a second time. The server refuses to make that mistake possible — it OMITS the
-    /// <c>characters</c> and <c>decks</c> fields entirely on anything but <c>known</c> — and this
-    /// enum is the client half of the same guarantee.</para>
+    /// is sharper here: an empty deck list is the shape of a brand new player, so a failed read
+    /// that decoded as "no decks" would walk a player who owns forty cards through deck creation
+    /// a second time. The server refuses to make that mistake possible — it OMITS the
+    /// <c>decks</c> field entirely on anything but <c>known</c> — and this enum is the client
+    /// half of the same guarantee.</para>
     /// </summary>
     public enum RosterSyncStatus
     {
-        /// <summary>The roster was read. <see cref="RosterSnapshot.Characters"/> and
-        /// <see cref="RosterSnapshot.Decks"/> are authoritative — <b>including when they are
-        /// empty</b>, which means this player genuinely has no characters yet.</summary>
+        /// <summary>The roster was read. <see cref="RosterSnapshot.Decks"/> is authoritative —
+        /// <b>including when it is empty</b>, which means this player genuinely has no decks
+        /// yet.</summary>
         Known,
 
         /// <summary>The request never completed. Transient, says nothing about the roster.</summary>
@@ -81,44 +81,39 @@ namespace Emberfall.Net.Client.Collection
         public RosterSyncStatus Status { get; }
 
         /// <summary>Non-null <b>only</b> for <see cref="RosterSyncStatus.Known"/>. Null is "I could
-        /// not find out", never "this player has no characters".</summary>
-        public IReadOnlyList<Character>? Characters { get; }
-
-        /// <summary>Non-null <b>only</b> for <see cref="RosterSyncStatus.Known"/>.</summary>
+        /// not find out", never "this player has no decks".</summary>
         public IReadOnlyList<DeckList>? Decks { get; }
 
         /// <summary>Diagnostic text for a log line. Never shown to a player.</summary>
         public string Detail { get; }
 
-        private RosterSnapshot(RosterSyncStatus status, IReadOnlyList<Character>? characters,
-                               IReadOnlyList<DeckList>? decks, string detail)
+        private RosterSnapshot(RosterSyncStatus status, IReadOnlyList<DeckList>? decks, string detail)
         {
             Status = status;
-            Characters = characters;
             Decks = decks;
             Detail = detail ?? "";
         }
 
-        public static RosterSnapshot Known(IReadOnlyList<Character> characters, IReadOnlyList<DeckList> decks)
-            => new RosterSnapshot(RosterSyncStatus.Known, characters, decks, "");
+        public static RosterSnapshot Known(IReadOnlyList<DeckList> decks)
+            => new RosterSnapshot(RosterSyncStatus.Known, decks, "");
 
         public static RosterSnapshot Failed(RosterSyncStatus status, string detail)
-            => new RosterSnapshot(status, null, null, detail);
+            => new RosterSnapshot(status, null, detail);
 
         /// <summary>True only when this result may replace the device's roster. One property rather
         /// than a status comparison at each call site, because the wrong comparison here is the bug
-        /// that deletes somebody's characters.</summary>
+        /// that deletes somebody's decks.</summary>
         public bool ShouldReplaceLocal => Status == RosterSyncStatus.Known;
     }
 
     /// <summary>
-    /// Characters and decks over HTTP — the client half of the login handshake's roster routes
+    /// Decks over HTTP — the client half of the login handshake's roster routes
     /// (spec <c>docs/dev-docs/specs/login-handshake.md</c>).
     ///
     /// <para><b>What this makes true.</b> Card ownership already survived a reinstall: the
     /// entitlement ledger is keyed on the authenticated <c>player_id</c> and
-    /// <see cref="HttpCollectionGateway"/> reads it down. The roster did not — characters and decks
-    /// lived only in <c>characters.json</c> / <c>decks.json</c> under the local scope, which the OS
+    /// <see cref="HttpCollectionGateway"/> reads it down. The roster did not — decks
+    /// lived only in <c>decks.json</c> under the local scope, which the OS
     /// deletes with the app. This is the wire that fixes that, in both directions: <see cref="FetchAsync"/>
     /// reads the server's copy down, and the four write calls keep it current.</para>
     ///
@@ -150,7 +145,7 @@ namespace Emberfall.Net.Client.Collection
         // ── Read ────────────────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Fetch this identity's characters and decks.
+        /// Fetch this identity's decks.
         ///
         /// <para><b>An empty <paramref name="accessToken"/> is Unauthenticated, not a request</b> —
         /// the same rule as <see cref="HttpCollectionGateway.FetchAsync"/>.</para>
@@ -182,10 +177,10 @@ namespace Emberfall.Net.Client.Collection
         /// Read the reply.
         ///
         /// <para><b>The status word is the authority, never the field's presence.</b> The server
-        /// omits <c>characters</c> and <c>decks</c> on anything but <c>known</c> precisely so an
-        /// absent field cannot be misread as an empty one — but a client that branched on presence
-        /// would re-introduce the confusion the omission exists to prevent, because a
-        /// <c>known</c> roster with genuinely no characters is a legal answer that looks identical.
+        /// omits <c>decks</c> on anything but <c>known</c> precisely so an absent field cannot be
+        /// misread as an empty one — but a client that branched on presence would re-introduce the
+        /// confusion the omission exists to prevent, because a <c>known</c> roster with genuinely
+        /// no decks is a legal answer that looks identical.
         /// So: branch on the word, and then require the fields.</para>
         /// </summary>
         private static RosterSnapshot Parse(string body)
@@ -201,19 +196,17 @@ namespace Emberfall.Net.Client.Collection
             if (!status.Equals("known", StringComparison.OrdinalIgnoreCase))
                 return RosterSnapshot.Failed(RosterSyncStatus.Unavailable, status);
 
-            // Under "known" both fields are promised. A body claiming known without them is
-            // MALFORMED, not an empty roster — treating it as empty is the exact failure the whole
-            // handshake exists to prevent, arriving through a shape rather than through a status.
-            if (!AuthJson.TryString(fields, "characters", out string charactersJson) ||
-                !AuthJson.TryString(fields, "decks", out string decksJson))
+            // Under "known" the field is promised. A body claiming known without it is MALFORMED,
+            // not an empty roster — treating it as empty is the exact failure the whole handshake
+            // exists to prevent, arriving through a shape rather than through a status.
+            if (!AuthJson.TryString(fields, "decks", out string decksJson))
                 return RosterSnapshot.Failed(RosterSyncStatus.Malformed,
-                    "status was known but the roster fields were absent");
+                    "status was known but the decks field was absent");
 
             try
             {
-                IReadOnlyList<Character> characters = CollectionJson.ReadCharacters(charactersJson);
                 IReadOnlyList<DeckList> decks = CollectionJson.ReadDecks(decksJson);
-                return RosterSnapshot.Known(characters, decks);
+                return RosterSnapshot.Known(decks);
             }
             catch (CollectionFormatException ex)
             {
@@ -224,50 +217,6 @@ namespace Emberfall.Net.Client.Collection
         }
 
         // ── Writes ──────────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// <c>POST /characters</c>. The pairing is permanent, so this is a create and never an edit —
-        /// there is no character update route (see the spec's route table, and issue #343 for the one
-        /// mutable field that consequently has no wire).
-        /// </summary>
-        public async Task<RosterWriteStatus> CreateCharacterAsync(
-            string accessToken, Character character, CancellationToken cancellationToken = default)
-        {
-            if (character is null) throw new ArgumentNullException(nameof(character));
-
-            if (!IsConfigured) return RosterWriteStatus.Unavailable;
-            if (string.IsNullOrEmpty(accessToken)) return RosterWriteStatus.Unauthenticated;
-
-            string body = AuthJson.Object(
-                AuthJson.Field("characterId", character.Id),
-                AuthJson.Field("name", character.Name),
-                AuthJson.Field("primaryClass", character.PrimaryClass.ToString()),
-                AuthJson.Field("secondaryClass", character.SecondaryClass.ToString()));
-
-            AuthHttpResponse response = await _http
-                .PostJsonAsync(_baseUrl + "/characters", body, Headers(accessToken), cancellationToken)
-                .ConfigureAwait(false);
-
-            return Classify(response);
-        }
-
-        /// <summary><c>DELETE /characters/{id}</c>. The server cascades to that character's decks, so
-        /// a caller that has just run the local <c>CharacterDeletion</c> does NOT also delete its
-        /// decks over the wire.</summary>
-        public async Task<RosterWriteStatus> DeleteCharacterAsync(
-            string accessToken, string characterId, CancellationToken cancellationToken = default)
-        {
-            if (!IsConfigured) return RosterWriteStatus.Unavailable;
-            if (string.IsNullOrEmpty(accessToken)) return RosterWriteStatus.Unauthenticated;
-            if (string.IsNullOrWhiteSpace(characterId)) return RosterWriteStatus.Rejected;
-
-            AuthHttpResponse response = await _http
-                .DeleteAsync(_baseUrl + "/characters/" + Uri.EscapeDataString(characterId),
-                             Headers(accessToken), cancellationToken)
-                .ConfigureAwait(false);
-
-            return Classify(response);
-        }
 
         /// <summary>
         /// <c>PUT /decks/{id}</c> — an upsert.

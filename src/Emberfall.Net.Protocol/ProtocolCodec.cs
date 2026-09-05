@@ -93,7 +93,6 @@ namespace Emberfall.Net.Protocol
                     break;
                 case SubmitDeckMsg m:
                     w.BeginObject();
-                    w.Name("characterId"); w.Str(m.CharacterId);
                     w.Name("primaryClass"); w.Str(m.PrimaryClass.ToString());
                     w.Name("secondaryClass"); w.Str(m.SecondaryClass.ToString());
                     w.Name("cards");
@@ -331,8 +330,6 @@ namespace Emberfall.Net.Protocol
         /// </summary>
         private static DecodeResult ReadSubmitDeck(JVal body, MatchId matchId, ulong seq)
         {
-            if (!body.TryGet("characterId", out var cidVal) || !cidVal.TryStr(out string characterId))
-                return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'characterId'", matchId, seq);
             if (!body.TryGet("primaryClass", out var pcVal) || !pcVal.TryStr(out string pcs)
                 || !WirePrimitives.TryEnum(pcs, out CardClass primary))
                 return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'primaryClass'", matchId, seq);
@@ -352,7 +349,7 @@ namespace Emberfall.Net.Protocol
                 cards.Add(new DeckCardLine(cardId, count));
             }
 
-            return DecodeResult.Success(new SubmitDeckMsg(characterId, primary, secondary, cards), matchId, seq);
+            return DecodeResult.Success(new SubmitDeckMsg(primary, secondary, cards), matchId, seq);
         }
 
         private static DecodeResult ReadReconnect(JVal body, MatchId matchId, ulong seq)

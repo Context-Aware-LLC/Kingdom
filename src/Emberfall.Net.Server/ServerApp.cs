@@ -467,7 +467,7 @@ namespace Emberfall.Net.Server
                 // never on the character/deck count — see RosterResultStatus.Known.
                 string status = result.Status.ToString().ToLowerInvariant();
 
-                // characters and decks are OMITTED on anything but "known". RosterResult falls back
+                // decks is OMITTED on anything but "known". RosterResult falls back
                 // to PlayerRoster.Empty as a placeholder, and serialising that placeholder would ship
                 // a well-formed empty roster alongside a 401 or a 503 — "I could not find out" made
                 // readable as "this player has nothing", which is the exact confusion this whole
@@ -478,87 +478,15 @@ namespace Emberfall.Net.Server
                 return Results.Json(new
                 {
                     status,
-                    characters = CollectionJson.WriteCharacters(result.Roster.Characters),
                     decks = CollectionJson.WriteDecks(result.Roster.Decks),
                 }, statusCode: result.HttpStatus);
             });
 
-            // POST /characters — creates a character. Same auth pairing as /session and /roster;
-            // does NOT fire the onboarding grant and does NOT set onboarded — see
-            // CharacterCreateEndpoint for why that would strand a player who drops before the grant.
-            app.MapPost("/characters", async (HttpContext context) =>
-            {
-                string? bearer = null;
-                string? header = context.Request.Headers["Authorization"];
-                if (!string.IsNullOrEmpty(header) &&
-                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                    bearer = header.Substring("Bearer ".Length).Trim();
-
-                // AUTH BEFORE PARSE. This route is the only one that has to read a body before it
-                // can call its endpoint, and parsing first meant an unauthenticated caller with a bad
-                // body got 400 where every other route gives 401 — and that JsonDocument.ParseAsync
-                // ran over an unbounded body for a caller nobody had authenticated yet.
-                if (!await CharacterCreateEndpoint.IsAuthenticatedAsync(
-                        bearer, cfg.TokenVerifier, context.RequestAborted))
-                {
-                    return Results.Json(
-                        new { status = CharacterCreateStatus.Unauthenticated.ToString().ToLowerInvariant() },
-                        statusCode: new CharacterCreateResult(CharacterCreateStatus.Unauthenticated).HttpStatus);
-                }
-
-                string characterId, name;
-                CardClass primary, secondary;
-                try
-                {
-                    using var body = await JsonDocument.ParseAsync(context.Request.Body, cancellationToken: context.RequestAborted);
-                    var root = body.RootElement;
-                    characterId = root.GetProperty("characterId").GetString() ?? "";
-                    name = root.TryGetProperty("name", out var nameEl) ? nameEl.GetString() ?? "" : "";
-                    if (!CharacterCreateEndpoint.TryParseClass(root.GetProperty("primaryClass").GetString(), out primary) ||
-                        !CharacterCreateEndpoint.TryParseClass(root.GetProperty("secondaryClass").GetString(), out secondary))
-                    {
-                        return Results.Json(new { error = "invalid class" }, statusCode: StatusCodes.Status400BadRequest);
-                    }
-                }
-                catch (Exception ex) when (ex is JsonException || ex is KeyNotFoundException || ex is InvalidOperationException)
-                {
-                    return Results.Json(new { error = "malformed body" }, statusCode: StatusCodes.Status400BadRequest);
-                }
-
-                CharacterCreateResult result = await CharacterCreateEndpoint.CreateAsync(
-                    bearer, characterId, name, primary, secondary,
-                    cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore, context.RequestAborted);
-
-                return Results.Json(new
-                {
-                    // "created" | "unauthenticated" | "unavailable" | "invalidpairing" |
-                    // "invalidid" | "duplicateid".
-                    status = result.Status.ToString().ToLowerInvariant(),
-                }, statusCode: result.HttpStatus);
-            });
-
-            // DELETE /characters/{id} — remove a character AND every deck bound to it, in one
-            // atomic store call. Same auth pairing as /session and /roster. Without this route a
-            // character deleted on the device came straight back down on the next GET /roster,
-            // decks and all — see CharacterDeleteEndpoint.
-            app.MapDelete("/characters/{id}", async (HttpContext context, string id) =>
-            {
-                string? bearer = null;
-                string? header = context.Request.Headers["Authorization"];
-                if (!string.IsNullOrEmpty(header) &&
-                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                    bearer = header.Substring("Bearer ".Length).Trim();
-
-                CharacterDeleteResult result = await CharacterDeleteEndpoint.DeleteAsync(
-                    bearer, id, cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore,
-                    context.RequestAborted);
-
-                return Results.Json(new
-                {
-                    // "deleted" | "notfound" | "unauthenticated" | "unavailable" | "invalidid".
-                    status = result.Status.ToString().ToLowerInvariant(),
-                }, statusCode: result.HttpStatus);
-            });
+            // POST /characters and DELETE /characters/{id} stood here until 2026-09-04 and went
+            // with characters (ADR-0009). Nothing replaces them: a deck is created by PUT
+            // /decks/{id} like any other deck, and deleted by DELETE /decks/{id}. The delete
+            // route's cascade — a character delete destroying its decks — has nothing left to
+            // cascade to, because deleting a deck now destroys exactly the thing named.
 
             // PUT /decks/{id} — upsert a deck. Same auth pairing as /session and /roster. DECKS ARE
             // STORED, NEVER REFUSED for their CONTENTS — see DeckWriteEndpoint for why an illegal
