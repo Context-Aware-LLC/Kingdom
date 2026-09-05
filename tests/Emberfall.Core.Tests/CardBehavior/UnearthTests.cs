@@ -315,8 +315,14 @@ namespace Emberfall.Core.Tests.CardBehavior
         }
 
         [Test]
-        public void Full_Hand_Rejects_Choice_Without_Mutation()
+        public void Full_Hand_Fizzles_The_Choice_Instead_Of_Deadlocking()
         {
+            // A trigger elsewhere in the SAME event cascade can fill the last hand slot after the
+            // offer already checked (fail-closed) it had room — RaiseObservers has no PendingChoice
+            // awareness and keeps cascading. Rejecting the choice at that point would deadlock the
+            // match: UnearthChoiceIntent and AutoConfirmIntent are the only two intents CanExecute
+            // still allows while a choice is pending, and both would reject forever. Measured
+            // 2026-09-05 in the EMBERWARD vs CLOCKWRIGHT matrix soak.
             var db = new PoolDatabase(new[] { Card(FixtureCard.Id("a")) });
             var state = MainState(13UL);
             for (int i = 0; i < MatchEngine.HandCap; i++)
@@ -330,15 +336,15 @@ namespace Emberfall.Core.Tests.CardBehavior
                 ChoiceSequence = 17,
                 Options = { FixtureCard.Id("a") },
             };
-            string before = GameStateHasher.Hash(state);
 
             CommandResult result = new CommandProcessor(db).Execute(state,
                 new UnearthChoiceIntent(P0, FixtureCard.Id("a"), 17));
 
-            Assert.That(result.Accepted, Is.False);
-            Assert.That(result.Reason, Is.EqualTo(RejectReason.HandFull));
+            Assert.That(result.Accepted, Is.True);
             Assert.That(result.Events, Is.Empty);
-            Assert.That(GameStateHasher.Hash(state), Is.EqualTo(before));
+            Assert.That(state.PendingChoice, Is.Null);
+            Assert.That(state.Players[0].Hand.Count, Is.EqualTo(MatchEngine.HandCap));
+            Assert.That(state.Players[0].Hand.Any(c => c.DefinitionId == FixtureCard.Id("a")), Is.False);
         }
 
         [Test]

@@ -107,8 +107,6 @@ namespace Emberfall.Core
                 { reason = RejectReason.NotChoiceOwner; return false; }
                 if (pending.Options.Count == 0 || !_db.TryGet(pending.Options[0], out _))
                 { reason = RejectReason.InvalidChoice; return false; }
-                if (state.PlayerOf(a.Player).Hand.Count >= MatchEngine.HandCap)
-                { reason = RejectReason.HandFull; return false; }
                 return true;
             }
             int seat = state.SeatOf(a.Player);
@@ -133,9 +131,14 @@ namespace Emberfall.Core
             { reason = RejectReason.NotChoiceOwner; return false; }
             if (pending.ChoiceSequence != choice.ChoiceSequence)
             { reason = RejectReason.StaleChoice; return false; }
-            if (state.PlayerOf(choice.Player).Hand.Count >= MatchEngine.HandCap)
-            { reason = RejectReason.HandFull; return false; }
 
+            // Deliberately NOT gated on hand space: the offer already fails closed on a full hand
+            // (UnearthHandler.Execute), but a LATER trigger in the same event cascade can still fill
+            // the last slot before the player answers — see the fizzle in ApplyUnearthChoice below.
+            // Hand space can never make an otherwise-valid choice illegal; that would leave the only
+            // two intents this pending choice accepts (this one and AutoConfirm) both rejecting and
+            // the match deadlocked until the intent cap trips it (measured 2026-09-05, EMBERWARD vs
+            // CLOCKWRIGHT matrix soak).
             bool offered = false;
             for (int i = 0; i < pending.Options.Count; i++)
             {
@@ -393,13 +396,20 @@ namespace Emberfall.Core
         private void ApplyUnearthChoice(GameState state, UnearthChoiceIntent choice, EventBuffer buf)
         {
             PlayerState chooser = state.PlayerOf(choice.Player);
+            state.PendingChoice = null;
+
+            // Fizzle, not reject: the offer already failed closed on a full hand (UnearthHandler),
+            // but a later trigger in the same cascade can still fill the last slot before the player
+            // answers. Nothing else can clear this pending choice, so silently minting nothing is the
+            // only option that doesn't deadlock the match.
+            if (chooser.Hand.Count >= MatchEngine.HandCap) return;
+
             CardDefinition definition = _db.Get(choice.ChosenCardId);
             var created = new CardInstance(state.NextInstanceId(), definition.Id, chooser.Id)
             {
                 Zone = Zone.Hand,
             };
             chooser.Hand.Add(created);
-            state.PendingChoice = null;
 
             // The newly minted instance id is the immutable event identity. Emit after the card
             // enters hand so EventBuffer captures owner-only visibility at the point of truth.
