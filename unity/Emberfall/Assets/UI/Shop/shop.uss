@@ -261,6 +261,7 @@
 }
 
 .shop-section {
+    flex-grow: 1;
     margin-bottom: var(--space-6);
 }
 
@@ -283,36 +284,30 @@
     display: none;
 }
 
-.shop-pack-list,
 .shop-gem-list {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: stretch;
 }
 
-/* THE GUTTER IS space-between, NOT A TRAILING MARGIN. Two tiles at 49% plus a 2% margin each
- * comes to 102% and wraps to one per row; dropping the last one's margin needs a `:last-child`
- * USS does not have. Letting the row distribute the 2% leaves no trailing margin to overflow and
- * no floating-point tie at exactly 100% -- the failure CharacterRosterController.RowSafetyMargin
- * exists for, one row down. */
+/* STACKED, NOT SIDE BY SIDE (Sam, 2026-09-05). Replaces "two up, as big as the row allows"
+ * (2026-08-31): at 49% width the row-wrap layout sized each pack off its art-rail's fixed
+ * aspect ratio and stopped there, leaving roughly half of .shop-section's height empty below
+ * it. Column flow plus flex-grow on both the list and each pack (below) lets the two packs
+ * split whatever height the section actually has, on any device, with no ratio to re-measure. */
 .shop-pack-list {
-    justify-content: space-between;
+    flex-direction: column;
+    flex-grow: 1;
+    align-items: stretch;
 }
 
-/* TWO UP, AS BIG AS THE ROW ALLOWS (Sam, 2026-08-31): "we just display it like the card wall,
- * 2 packs per row, big as possible basically."
- *
- * This was `width: 31%` with `min-width: 260px` from the 2026-08-30 pass, whose comment claimed
- * three per row. It never got three: 31% of the 777.9dp list this measures on a Pixel 5a is
- * 241.3, BELOW the 260 floor, so the floor clamped it UP and two tiles sat in 551 of 777.9 with
- * 227dp of dead width on their right. The floors are gone because the percentage is now the whole
- * answer -- a min-width can only ever fight it.
- *
- * The vertical is paid for in .shop-pack__art-rail's ratio, which is the term that moves when this
- * width does. Read the arithmetic there before changing either. */
+/* FULL WIDTH, FLEX-GROWN HEIGHT (Sam, 2026-09-05). `flex-basis: 0` with `flex-grow: 1` splits
+ * .shop-pack-list's height evenly between the two packs instead of sizing each to its content
+ * and stranding the rest of the section blank. */
 .shop-pack {
-    width: 49%;
-    flex-shrink: 0;
+    width: 100%;
+    flex-grow: 1;
+    flex-basis: 0;
     background-color: var(--surface-0);
     border-width: 1px;
     border-color: var(--surface-3);
@@ -327,34 +322,18 @@
     border-radius: var(--space-2);
 }
 
-/* `aspect-ratio` IS supported — it is in the Dimensions block of the USS supported-properties
- * table for 6000.5.1f1, and Unity's own shadergraph package uses it. It was briefly replaced with
- * a hardcoded height on 2026-08-30 on the strength of a STALE comment in collection.uss claiming
- * the property does not exist; that claim was true once and is not now. Restored.
- *
- * `flex-shrink: 0` is kept: the ratio gives the rail a height, and without this the rail can still
- * surrender it when the tile's column is over-subscribed.
- *
- * THE RATIO IS WHAT PAYS FOR `.shop-pack`'s WIDTH, and 3.8 is measured, not chosen. The tile went
- * 31%-clamped-to-260dp -> 49% on 2026-08-31, which is what Sam asked for -- two per row, as big as
- * the row allows -- and a wider tile makes a `width: 100%` rail TALLER at a fixed ratio. At the
- * inherited 3.2 the rail came to 99.4dp and the packs tab overflowed its viewport by 19.0. On the
- * Pixel 5a rig, after 3.2 -> 3.8 and three 12dp gaps going to 8:
- *
- *      viewport 323.4   content 316.2   FITS (7.2 spare)
- *      tile 381.3 x 245.7      art-rail 326.5 x 85.7
- *
- * The rail is BIGGER than it was despite the flatter ratio -- 326.5x85.7 against the old
- * 236x73.75, 61% more picture -- because the width grew faster than the ratio took back.
- *
- * KEEP THE 7dp. It is not slack to spend: the help label above wraps at this width, and a third
- * line of it costs ~17. If you widen `.shop-pack` again, this number moves with it; verify the
- * Store content area at the target resolution. */
+/* THE RAIL FILLS WHATEVER HEIGHT THE PACK HAS (Sam, 2026-09-05), replacing the measured
+ * `aspect-ratio: 3.8` from 2026-08-31. That ratio was tuned for a 49%-wide tile sitting in a
+ * content area that stopped short of the section's real height; stacking the packs made it
+ * meaningless on sight, since the tile is now full width and `.shop-section` is flex-grown to
+ * fill its parent. `flex-grow: 1` with `min-height: 0` lets the rail take whatever is left after
+ * the name, detail and buttons below it claim their content height -- no ratio to re-measure
+ * when the tile's size changes again. */
 .shop-pack__art-rail {
     flex-direction: row;
     width: 100%;
-    aspect-ratio: 3.8;
-    flex-shrink: 0;
+    flex-grow: 1;
+    min-height: 0;
     margin-bottom: var(--space-2);
 }
 
