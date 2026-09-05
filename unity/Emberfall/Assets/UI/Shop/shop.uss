@@ -363,16 +363,15 @@
     -unity-font-style: bold;
 }
 
-.shop-pack__detail {
-    color: var(--ink-2);
-    font-size: var(--type-caption);
-    white-space: normal;
-    margin-bottom: var(--space-2);
+/* THE WHOLE TILE IS THE TAP TARGET (Sam, 2026-09-05): the buy buttons and the "5 cards..." line
+ * moved into #pack-detail-overlay, opened by tapping anywhere on the tile. The hover tint is the
+ * only affordance a plain VisualElement gets for free -- it is not a Button. */
+.shop-pack:hover {
+    background-color: var(--surface-2);
 }
 
-.shop-pack__actions {
-    flex-direction: row;
-    flex-shrink: 0;
+#shop-overlay .shop-pack:hover {
+    background-color: rgba(11, 14, 19, 0.92);
 }
 
 .shop-pack__buy {
@@ -460,4 +459,92 @@
  * 32dfdb81. */
 .shop-status--empty {
     display: none;
+}
+
+/* ---------- Pack detail (Sam, 2026-09-05) ----------
+ * Same nested overlay/shell shape as #shop-overlay and .reveal-overlay above: one hidden class
+ * toggles the whole thing, and the shell centers itself inside the scrim. */
+.pack-detail-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(11, 14, 19, 0.94);
+}
+
+.pack-detail-overlay--hidden {
+    display: none;
+}
+
+.pack-detail-shell {
+    width: 96%;
+    height: 94%;
+    flex-direction: column;
+    background-color: var(--surface-1);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-3);
+    padding: var(--space-4);
+}
+
+.pack-detail-bar {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: var(--space-3);
+}
+
+.pack-detail-title {
+    flex-grow: 1;
+    color: var(--ink-1);
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.pack-detail-close {
+    min-width: var(--space-12);
+    min-height: var(--space-12);
+    color: var(--ink-1);
+    background-color: var(--surface-2);
+    border-width: 0;
+    border-radius: 999px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.pack-detail-close:hover {
+    background-color: var(--surface-3);
+}
+
+/* FILLS WHATEVER IS LEFT, same technique as .shop-pack__art-rail above: a fixed ratio would need
+ * re-measuring for a shell this much bigger than the tile it replaces. */
+.pack-detail-art-rail {
+    flex-direction: row;
+    width: 100%;
+    flex-grow: 1;
+    min-height: 0;
+    margin-bottom: var(--space-3);
+}
+
+.pack-detail-note {
+    flex-shrink: 0;
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    white-space: normal;
+    margin-bottom: var(--space-3);
+}
+
+.pack-detail-actions {
+    flex-direction: row;
+    flex-shrink: 0;
+}
+
+/* Bigger than the tile's own buy buttons -- the detail shell has the room the tile never did. */
+.pack-detail-actions .shop-pack__buy {
+    min-height: var(--space-12);
+    font-size: var(--type-h2);
 }

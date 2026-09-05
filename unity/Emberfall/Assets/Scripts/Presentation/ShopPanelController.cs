@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Emberfall.Core.Collection;
 using Emberfall.Net.Client.Shop;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -61,6 +62,11 @@ namespace Emberfall.Presentation
         private readonly Label _gold;
         private readonly Label _gems;
         private readonly Label _status;
+        private readonly VisualElement _detailOverlay;
+        private readonly VisualElement _detailArtRail;
+        private readonly VisualElement _detailActions;
+        private readonly Label _detailTitle;
+        private readonly Label _detailNote;
         private readonly PackRevealPanel _reveal;
         private readonly ShopFlow _flow;
         private readonly IPackArtProvider _packArt;
@@ -86,6 +92,11 @@ namespace Emberfall.Presentation
             _gold = root.Q<Label>("shop-gold-balance");
             _gems = root.Q<Label>("shop-gem-balance");
             _status = root.Q<Label>("shop-status");
+            _detailOverlay = root.Q<VisualElement>("pack-detail-overlay");
+            _detailArtRail = root.Q<VisualElement>("pack-detail-art-rail");
+            _detailActions = root.Q<VisualElement>("pack-detail-actions");
+            _detailTitle = root.Q<Label>("pack-detail-title");
+            _detailNote = root.Q<Label>("pack-detail-note");
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packArt = packArt;
             _onClose = onClose;
@@ -96,6 +107,12 @@ namespace Emberfall.Presentation
             _reveal = new PackRevealPanel(root);
 
             Wire(root, "btn-shop-close", Close);
+            Wire(root, "pack-detail-close", CloseDetail);
+            // The shell stops its own click from bubbling to the overlay's close-on-scrim handler
+            // below -- otherwise every tap on the panel would close it, the same trap CraftModal's
+            // craft-scrim comment documents.
+            root.Q<VisualElement>("pack-detail-shell")?.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
+            _detailOverlay?.RegisterCallback<ClickEvent>(_ => CloseDetail());
 
             _packSection = root.Q<VisualElement>("shop-section-packs");
             _gemSection = root.Q<VisualElement>("shop-section-gems");
@@ -152,6 +169,7 @@ namespace Emberfall.Presentation
         private async void Buy(string packId, ShopCurrency currency)
         {
             if (_flow == null || _busy) return;
+            CloseDetail();
             SetBusy(true);
             SetStatus("Purchasing and opening on the server...");
             try
@@ -229,15 +247,10 @@ namespace Emberfall.Presentation
                 name.AddToClassList("shop-pack__name");
                 tile.Add(name);
 
-                var detail = new Label("5 cards · Core + expansion · Rare or better guaranteed");
-                detail.AddToClassList("shop-pack__detail");
-                tile.Add(detail);
-
-                var actions = new VisualElement();
-                actions.AddToClassList("shop-pack__actions");
-                actions.Add(BuyButton(offer, ShopCurrency.Gold, wallet));
-                actions.Add(BuyButton(offer, ShopCurrency.Gems, wallet));
-                tile.Add(actions);
+                // THE WHOLE TILE IS THE TAP TARGET (Sam, 2026-09-05): buying moved into
+                // #pack-detail-overlay, which OpenDetail populates from this same offer and
+                // wallet. wallet is captured per-render, same as BuyButton below already did.
+                tile.RegisterCallback<ClickEvent>(_ => OpenDetail(offer, wallet));
 
                 _packList.Add(tile);
             }
@@ -314,6 +327,58 @@ namespace Emberfall.Presentation
                     : wallet.Value.Gems >= price);
             button.SetEnabled(_flow != null && !_busy && canAfford);
             return button;
+        }
+
+        /// <summary>
+        /// Populates and shows #pack-detail-overlay for one tile's tap. The card count comes off
+        /// <see cref="BoosterPack.DefaultCardCount"/> rather than a value carried on
+        /// <see cref="PackOffer"/> — Presentation already references
+        /// <c>Emberfall.Core.Collection</c> directly elsewhere, and every pack the disconnected
+        /// catalog offers uses that one authoritative count, so a second copy of the same fact on
+        /// the transport DTO would only be real once a server gateway ships packs of varying size.
+        /// </summary>
+        private void OpenDetail(PackOffer offer, WalletBalances? wallet)
+        {
+            if (_detailOverlay == null) return;
+
+            if (_detailTitle != null)
+                _detailTitle.text = $"{BoosterPack.DefaultCardCount} {ShortName(offer.DisplayName)} cards for your collection";
+            if (_detailNote != null)
+                _detailNote.text = "Core + expansion · Rare or better guaranteed";
+
+            _detailArtRail?.Clear();
+            if (_detailArtRail != null)
+            {
+                _packArt?.LoadPackArt(offer.PackId, pieces =>
+                {
+                    if (pieces == null || pieces.Count == 0) return;
+                    foreach (PackArtPiece piece in FirstPerFace(pieces, ArtFacesShown))
+                        _detailArtRail.Add(BuildArtSlot(piece));
+                });
+            }
+
+            _detailActions?.Clear();
+            if (_detailActions != null)
+            {
+                _detailActions.Add(BuyButton(offer, ShopCurrency.Gold, wallet));
+                _detailActions.Add(BuyButton(offer, ShopCurrency.Gems, wallet));
+            }
+
+            _detailOverlay.RemoveFromClassList("pack-detail-overlay--hidden");
+        }
+
+        private void CloseDetail() => _detailOverlay?.AddToClassList("pack-detail-overlay--hidden");
+
+        /// <summary>The catalog's display names all end in " Pack" (e.g. "Emberfall Pack"); the
+        /// detail title already supplies the word via "... cards for your collection", so a
+        /// literal "Emberfall Pack cards" would double it. Falls back to the full name for
+        /// anything that does not end that way rather than mangling it.</summary>
+        private static string ShortName(string displayName)
+        {
+            const string suffix = " Pack";
+            return !string.IsNullOrEmpty(displayName) && displayName.EndsWith(suffix, StringComparison.Ordinal)
+                ? displayName.Substring(0, displayName.Length - suffix.Length)
+                : displayName;
         }
 
         private void RenderGemBundles(IReadOnlyList<GemBundleOffer> bundles)

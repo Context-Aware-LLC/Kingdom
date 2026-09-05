@@ -48,5 +48,21 @@
                 <ui:Button name="btn-reveal-done" text="Add to collection" class="reveal-done"/>
             </ui:VisualElement>
         </ui:VisualElement>
+        <!-- Opened by tapping a tile in shop-pack-list (Sam, 2026-09-05): the buy buttons that
+             used to sit on the tile live here instead, at the bottom, under a title stating what
+             the pack actually gives you. pack-detail-shell stops its own ClickEvent from
+             bubbling, so a tap on the panel does not fall through to this overlay's
+             close-on-scrim handler — the same trap CraftModal's craft-scrim documents. -->
+        <ui:VisualElement name="pack-detail-overlay" class="pack-detail-overlay pack-detail-overlay--hidden emb-bleed">
+            <ui:VisualElement name="pack-detail-shell" class="pack-detail-shell">
+                <ui:VisualElement name="pack-detail-bar" class="pack-detail-bar">
+                    <ui:Label name="pack-detail-title" text="" class="pack-detail-title"/>
+                    <ui:Button name="pack-detail-close" text="✕" class="pack-detail-close"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="pack-detail-art-rail" class="pack-detail-art-rail"/>
+                <ui:Label name="pack-detail-note" text="" class="pack-detail-note"/>
+                <ui:VisualElement name="pack-detail-actions" class="pack-detail-actions"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

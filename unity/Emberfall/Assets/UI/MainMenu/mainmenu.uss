@@ -192,8 +192,8 @@
  * object/sigil. Keep the URL isolated here so replacing it is one line when that art lands. */
 .mm-vault-dock {
     position: absolute;
-    right: var(--space-3);
-    top: 108px;
+    left: var(--space-1);
+    bottom: 60px;
     width: 104px;
     align-items: center;
 }
