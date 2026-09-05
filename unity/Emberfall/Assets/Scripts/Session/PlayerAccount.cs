@@ -297,7 +297,20 @@ namespace Emberfall.Session
             return deck;
         }
 
-        /// <summary>Persist a deck. Never legality-gated — a draft is a savable deck (§1).</summary>
+        /// <summary>Prepare an unsaved candidate for server-confirmed creation.</summary>
+        public DeckList PrepareDeck(ICardDatabase db, string name, CardClass primary, CardClass secondary,
+                                    StarterDeck kind)
+        {
+            string deckId = NewId();
+            return DeckCreation.Prepare(db, new DeterministicRandom(SeedFrom(deckId)),
+                deckId, name, primary, secondary, kind, OwnedCards());
+        }
+
+        /// <summary>Only an accepted server write may put a newly created deck in the cache.</summary>
+        public Task<RosterWriteStatus> ConfirmNewDeckAsync(string accessToken, DeckList deck) =>
+            RosterGateway.ConfirmNewDeckAsync(accessToken, deck, _decks);
+
+        /// <summary>Persist an edit. Never legality-gated — a draft is a savable deck (§1).</summary>
         public void Save(DeckList deck)
         {
             _decks.Save(deck);

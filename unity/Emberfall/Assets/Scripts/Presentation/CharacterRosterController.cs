@@ -591,8 +591,7 @@ namespace Emberfall.Presentation
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[DeckRoster] deck read failed: {ex.Message}");
-                SetStatus("Decks unavailable — see the console.", isError: true);
+                ReportDeckReadFailure(ex);
                 return;
             }
 
@@ -930,15 +929,33 @@ namespace Emberfall.Presentation
         /// </summary>
         private void NewDeck()
         {
-            if (_account != null && !_account.CanCreateDeck())
+            try
             {
-                SetStatus($"{DeckCreation.MaxPerAccount} decks is the limit. Delete one to make room.",
-                          isError: true);
+                if (_account == null) return;
+                if (!_account.CanCreateDeck())
+                {
+                    SetStatus($"{DeckCreation.MaxPerAccount} decks is the limit. Delete one to make room.",
+                              isError: true);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                ReportDeckReadFailure(ex);
                 return;
             }
 
             CharacterCreateController.ReturnScene = "CharacterRoster";
             Go("CharacterCreate");
+        }
+
+        private void ReportDeckReadFailure(Exception ex)
+        {
+            Debug.LogError($"[DeckRoster] deck read failed: {ex.Message}");
+            _newDeckButton?.SetEnabled(false);
+            _rosterList?.Clear();
+            if (_emptyState != null) _emptyState.style.display = DisplayStyle.None;
+            SetStatus("Your saved decks could not be loaded.", isError: true);
         }
 
         // Both doors lead to one controller (#152) in one scene (#154): handing it a deck is what

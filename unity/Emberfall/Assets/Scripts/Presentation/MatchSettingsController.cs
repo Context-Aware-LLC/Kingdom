@@ -224,7 +224,7 @@ namespace Emberfall.Presentation
                 email.Length > 0 ? $"Sign out of {email}?" : "Sign out?",
                 // Says what survives, because the whole point of the roster work is that the answer
                 // changed: signing out is no longer anything like losing the account.
-                "Your cards, characters and decks stay on your account. You will need to sign in " +
+                "Your cards and decks stay on your account. You will need to sign in " +
                 "again to play.",
                 "Sign out",
                 danger: false,

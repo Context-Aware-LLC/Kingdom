@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
+using Emberfall.Net.Client.Collection;
 using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -76,6 +77,12 @@ namespace Emberfall.Presentation
         private Button _detailSelect, _createGenerated, _createBlank;
         private Label _starterNote;
         private FirstRunTidbit _tidbit;
+        private bool _creating;
+        private DeckList _pendingDeck;
+        private StarterDeck _pendingKind;
+        private int _visit;
+
+        private void OnDisable() => _visit++;
 
         private void OnEnable()
         {
@@ -468,33 +475,49 @@ namespace Emberfall.Presentation
         /// <summary>
         /// Create the deck from the two picks and go STRAIGHT INTO THE DECK BUILDER.
         ///
-        /// <para><b>The cap is checked here as well as on the "+" plate that opened this screen.</b>
-        /// Not belt-and-braces: this scene is reachable with a stale <c>ReturnScene</c> from a roster
-        /// drawn before another surface saved a deck, and the alternative to checking is minting a
-        /// ninth deck the server will then refuse on push — a local deck that silently never syncs is
-        /// the worst of the three outcomes.</para>
+        /// <para>The server accepts the new deck before it enters the cache or opens the builder.
+        /// Its deck limit is authoritative; failures stay on this view with a retryable candidate.</para>
         ///
         /// <para><b>It goes to the deck builder even for a generated deck.</b> A generated deck needs
         /// no editing, but the player asked for a deck and landing back on a roster to find it is the
         /// detour #204 removed from the old flow.</para>
         /// </summary>
-        private void CommitCreate(StarterDeck kind)
+        private async void CommitCreate(StarterDeck kind)
         {
-            if (_account == null || _picks.Count < 2) return;
-
-            if (!_account.CanCreateDeck())
-            {
-                SetCreateError($"You already have {DeckCreation.MaxPerAccount} decks. " +
-                               "Delete one to make room.");
-                return;
-            }
+            if (_creating || _account == null || _picks.Count < 2) return;
 
             CardClass primary = _picks[0];
             CardClass secondary = _picks[1];
+            int visit = _visit;
+            PlayerAccount account = _account;
+            _creating = true;
+            _root.SetEnabled(false);
+            SetCreateError("Creating deck…");
 
             try
             {
-                DeckList created = _account.CreateDeck(_db, UnusedDeckName(), primary, secondary, kind);
+                if (_pendingDeck == null || _pendingKind != kind ||
+                    _pendingDeck.PrimaryClass != primary || _pendingDeck.SecondaryClass != secondary)
+                {
+                    _pendingDeck = account.PrepareDeck(_db, UnusedDeckName(), primary, secondary, kind);
+                    _pendingKind = kind;
+                }
+                // Keep this candidate's id on retry: a lost response may still mean the PUT landed.
+                DeckList created = _pendingDeck;
+                RosterWriteStatus status = await account.ConfirmNewDeckAsync(RosterGateway.AccessToken, created);
+                if (this == null || visit != _visit || !ReferenceEquals(account, PlayerAccount.Local)) return;
+                if (status != RosterWriteStatus.Ok)
+                {
+                    SetCreateError(status switch
+                    {
+                        RosterWriteStatus.Unauthenticated => "Sign in again to create a deck.",
+                        RosterWriteStatus.Conflict => $"The server could not add this deck. You may have reached the {DeckCreation.MaxPerAccount}-deck limit. Return to your decks and try again.",
+                        RosterWriteStatus.Rejected => "The server could not accept this deck. Choose your classes again.",
+                        _ => "Could not confirm your deck with the server. Check your connection and try again."
+                    });
+                    return;
+                }
+                _pendingDeck = null;
                 Debug.Log($"[DeckCreate] created {kind} deck '{created.Name}' " +
                           $"pairing={created.PrimaryClass}/{created.SecondaryClass} " +
                           $"({created.TotalCount} cards); opening deck builder.");
@@ -516,7 +539,13 @@ namespace Emberfall.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[DeckCreate] deck creation could not be saved: {ex.Message}");
-                SetCreateError("The deck could not be saved — see the console.");
+                if (this != null && visit == _visit)
+                    SetCreateError("Could not finish creating your deck. Try again, or sign in again to refresh your decks.");
+            }
+            finally
+            {
+                _creating = false;
+                if (this != null && visit == _visit) _root.SetEnabled(true);
             }
         }
 

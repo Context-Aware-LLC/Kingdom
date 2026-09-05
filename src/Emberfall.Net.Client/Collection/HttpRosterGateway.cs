@@ -266,6 +266,19 @@ namespace Emberfall.Net.Client.Collection
 
         // ── Shared ──────────────────────────────────────────────────────────────────────
 
+        /// <summary>Commit a new deck to the server before exposing it in the device cache.
+        /// Retry with the same deck id when a response is lost; PUT is an upsert.</summary>
+        public async Task<RosterWriteStatus> SaveDeckAndCacheAsync(
+            string accessToken, DeckList deck, IDeckStore cache,
+            CancellationToken cancellationToken = default)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+            RosterWriteStatus status = await SaveDeckAsync(accessToken, deck, cancellationToken)
+                .ConfigureAwait(false);
+            if (status == RosterWriteStatus.Ok) cache.Save(deck);
+            return status;
+        }
+
         /// <summary>
         /// One HTTP answer to one write status.
         ///

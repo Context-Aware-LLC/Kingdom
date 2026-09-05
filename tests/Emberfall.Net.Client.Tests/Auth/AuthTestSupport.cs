@@ -25,7 +25,7 @@ namespace Emberfall.Net.Client.Tests.Auth
     /// </summary>
     internal sealed class FakeAuthHttp : IAuthHttp
     {
-        private readonly Queue<AuthHttpResponse> _replies = new Queue<AuthHttpResponse>();
+        private readonly Queue<Task<AuthHttpResponse>> _replies = new Queue<Task<AuthHttpResponse>>();
 
         /// <summary>Headers ride along because for <c>GET /collection</c> the bearer IS the request —
         /// a call that reached the right URL without it would look identical here and be a different
@@ -39,14 +39,21 @@ namespace Emberfall.Net.Client.Tests.Auth
 
         public FakeAuthHttp Reply(int status, string body)
         {
-            _replies.Enqueue(AuthHttpResponse.Completed(status, body));
+            _replies.Enqueue(Task.FromResult(AuthHttpResponse.Completed(status, body)));
             return this;
         }
 
         public FakeAuthHttp ReplyTransportFailure(string detail = "no route to host")
         {
-            _replies.Enqueue(AuthHttpResponse.TransportFailure(detail));
+            _replies.Enqueue(Task.FromResult(AuthHttpResponse.TransportFailure(detail)));
             return this;
+        }
+
+        public TaskCompletionSource<AuthHttpResponse> HoldReply()
+        {
+            var reply = new TaskCompletionSource<AuthHttpResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _replies.Enqueue(reply.Task);
+            return reply;
         }
 
         public Task<AuthHttpResponse> PostJsonAsync(
@@ -83,7 +90,7 @@ namespace Emberfall.Net.Client.Tests.Auth
             Requests.Add((url, jsonBody, headers ?? new List<KeyValuePair<string, string>>(), verb));
             if (_replies.Count == 0)
                 throw new InvalidOperationException("FakeAuthHttp ran out of scripted replies for " + url);
-            return Task.FromResult(_replies.Dequeue());
+            return _replies.Dequeue();
         }
     }
 

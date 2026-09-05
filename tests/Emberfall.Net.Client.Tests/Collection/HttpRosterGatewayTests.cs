@@ -1,8 +1,11 @@
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Client.Collection;
+using Emberfall.Net.Client.Auth;
 using Emberfall.Net.Client.Tests.Auth;
 using NUnit.Framework;
 
@@ -28,6 +31,49 @@ namespace Emberfall.Net.Client.Tests.Collection
     [Category("Unit")]
     public sealed class HttpRosterGatewayTests
     {
+        [Test]
+        public async Task Creation_waits_for_server_ack_before_caching_and_retry_uses_the_same_id()
+        {
+            string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+            try
+            {
+                var cache = new JsonDeckStore(path);
+                var http = new FakeAuthHttp();
+                var reply = http.HoldReply();
+                var gateway = Gateway(http);
+                var deck = NewDeck();
+                Task<RosterWriteStatus> pending = gateway.SaveDeckAndCacheAsync("jwt-token", deck, cache);
+                Assert.That(pending.IsCompleted, Is.False);
+                Assert.That(File.Exists(path), Is.False, "No deck may be visible before the server answers.");
+                reply.SetResult(AuthHttpResponse.TransportFailure("response lost"));
+                Assert.That(await pending, Is.EqualTo(RosterWriteStatus.Offline));
+                Assert.That(File.Exists(path), Is.False);
+                http.Reply(200, "{}");
+                Assert.That(await gateway.SaveDeckAndCacheAsync("jwt-token", deck, cache), Is.EqualTo(RosterWriteStatus.Ok));
+                Assert.That(cache.LoadAll().Single().Id, Is.EqualTo(deck.Id));
+                Assert.That(http.Requests[1].Url, Is.EqualTo(http.Requests[0].Url));
+                Assert.That(http.Requests[1].Body, Is.EqualTo(http.Requests[0].Body));
+            }
+            finally { if (File.Exists(path)) File.Delete(path); }
+        }
+
+        [TestCase(400)]
+        [TestCase(401)]
+        [TestCase(409)]
+        [TestCase(503)]
+        public async Task Refused_creation_does_not_leave_a_local_deck(int code)
+        {
+            string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+            try
+            {
+                var cache = new JsonDeckStore(path);
+                await Gateway(new FakeAuthHttp().Reply(code, "{}"))
+                    .SaveDeckAndCacheAsync("jwt-token", NewDeck(), cache);
+                Assert.That(File.Exists(path), Is.False);
+            }
+            finally { if (File.Exists(path)) File.Delete(path); }
+        }
+
         private const string Base = "https://emberfall.fly.dev";
 
         private static HttpRosterGateway Gateway(FakeAuthHttp http)

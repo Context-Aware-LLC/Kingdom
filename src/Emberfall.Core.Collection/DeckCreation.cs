@@ -103,6 +103,17 @@ namespace Emberfall.Core.Collection
             StarterDeck starter = StarterDeck.Generated, IOwnedCardCounts? owned = null)
         {
             if (deckStore == null) throw new ArgumentNullException(nameof(deckStore));
+            DeckList deck = Prepare(db, rng, deckId, name, primary, secondary, starter, owned);
+            deckStore.Save(deck);
+            return deck;
+        }
+
+        /// <summary>Build a candidate without persisting it. Online creation saves only after server acknowledgement.</summary>
+        public static DeckList Prepare(
+            ICardDatabase db, DeterministicRandom rng,
+            string deckId, string name, CardClass primary, CardClass secondary,
+            StarterDeck starter = StarterDeck.Generated, IOwnedCardCounts? owned = null)
+        {
             if (string.IsNullOrWhiteSpace(deckId))
                 throw new ArgumentException("A new deck needs an id from the caller.", nameof(deckId));
 
@@ -120,7 +131,6 @@ namespace Emberfall.Core.Collection
                 ? new DeckList(primary, secondary) { Id = deckId, Name = NameOrDefault(name) }
                 : DefaultDeckGenerator.Generate(primary, secondary, db, rng, deckId, NameOrDefault(name), owned);
 
-            deckStore.Save(deck);
             return deck;
         }
 
