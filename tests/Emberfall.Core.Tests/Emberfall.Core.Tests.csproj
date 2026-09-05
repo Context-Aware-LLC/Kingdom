@@ -28,6 +28,11 @@
     <ProjectReference Include="..\..\src\Emberfall.Core.Cards\Emberfall.Core.Cards.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Core\Emberfall.Core.csproj" />
     <ProjectReference Include="..\..\src\Emberfall.Core.Collection\Emberfall.Core.Collection.csproj" />
+
+    <!-- The ADR-0009 migration TOOL, referenced for its pure Plan() only. It is what decides what
+         happens to a player's only copy of their decks, so it is tested here rather than trusted;
+         nothing else in this assembly touches it, and it comes out with the tool. -->
+    <ProjectReference Include="..\..\src\Emberfall.Tools.CollectionMigrate\Emberfall.Tools.CollectionMigrate.csproj" />
     <!-- A5: referenced so the firewall/banned-API scans can Assembly.Load the wire assembly. -->
     <ProjectReference Include="..\..\src\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
   </ItemGroup>

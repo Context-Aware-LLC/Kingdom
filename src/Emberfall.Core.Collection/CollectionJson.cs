@@ -89,9 +89,13 @@ namespace Emberfall.Core.Collection
                 // so there is no safe reading of an absent one: NEUTRAL/NEUTRAL would silently make
                 // every card in the deck off-class, and guessing a pairing would hand the player a
                 // deck they never built. A file written before 2026-09-04 carries `characterId`
-                // instead and is converted by CollectionMigration BEFORE it reaches here — this
-                // reader deliberately has no fallback, so a missed migration is a loud read error
-                // rather than a roster of decks that are quietly illegal.
+                // instead and is converted by the CollectionMigrate TOOL
+                // (src/Emberfall.Tools.CollectionMigrate) BEFORE it reaches here — this reader
+                // deliberately has no fallback, so a missed migration is a loud read error rather
+                // than a roster of decks that are quietly illegal.
+                //
+                // CollectionMigrationTests pins BOTH halves of that: that this throws on a legacy
+                // file, and that the tool's output loads. Adding a fallback here breaks the first.
                 var primary = ReqEnum<CardClass>(el, "primaryClass", DecksProperty, i);
                 var secondary = ReqEnum<CardClass>(el, "secondaryClass", DecksProperty, i);
 

@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Emberfall.Tools.CollectionMigrate — ADR-0009 ruling 3, as a command.
+
+    Each deck inherits its character's class pairing; the characters are then dropped. Local JSON
+    and Postgres, run independently.
+
+    A TOOL AND NOT A SHIM, which is the ruling. The greenfield rule is "conform the content, do not
+    add back-compat"; this conversion is its one deliberate exception and is one-shot, so nothing in
+    the shipped reader knows about the old shape. CollectionJson.ReadDecks therefore REQUIRES the
+    pairing and throws on a file written before 2026-09-04 — deliberately, so a missed migration is
+    a loud read error rather than a roster of decks that quietly defaulted to NEUTRAL/NEUTRAL and
+    became illegal. That loudness is only defensible because this exists to run.
+
+    NO REFERENCE TO Emberfall.Core.Collection, AND THAT IS THE POINT. This reads and writes the
+    legacy shape, which that assembly's reader is built to refuse. Coupling them would either make
+    the tool unable to open the files it exists for, or force a back-compat path back into the
+    shipped reader — the exact thing the ruling avoids. It works in raw JSON instead, which also
+    makes it lossless for fields added after it was written.
+
+    RETIREMENT TRIGGER: delete this project, its solution entry, CollectionPaths.CharactersFileName
+    and CollectionPaths.Characters once no device and no database still carries a pre-ADR-0009
+    decks.json. Those two helpers exist only for this tool and carry the same marker.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Emberfall.Tools.CollectionMigrate</AssemblyName>
+    <RootNamespace>Emberfall.Tools.CollectionMigrate</RootNamespace>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="9.0.3" />
+  </ItemGroup>
+
+</Project>

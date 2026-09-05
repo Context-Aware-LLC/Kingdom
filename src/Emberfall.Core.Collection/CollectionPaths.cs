@@ -19,12 +19,13 @@ namespace Emberfall.Core.Collection
     public static class CollectionPaths
     {
         /// <summary>
-        /// The LEGACY roster file. Nothing writes it any more (ADR-0009, 2026-09-04) and nothing
-        /// reads it but <see cref="CollectionMigration"/>, which needs the name in order to find
-        /// the file, inherit its pairings onto the decks, and delete it.
+        /// The LEGACY roster file. Nothing writes it any more (ADR-0009, 2026-09-04) and nothing in
+        /// this assembly reads it at all — the one reader left is the <c>CollectionMigrate</c> TOOL
+        /// (<c>src/Emberfall.Tools.CollectionMigrate</c>), which needs the name in order to find the
+        /// file, inherit its pairings onto the decks, and delete it.
         ///
-        /// RETIREMENT TRIGGER: delete this and <see cref="Characters"/> when the migration goes.
-        /// They have no other caller and a path helper for a file nothing produces is a trap.
+        /// RETIREMENT TRIGGER: delete this and <see cref="Characters"/> when that tool goes. They
+        /// have no other caller, and a path helper for a file nothing produces is a trap.
         /// </summary>
         public const string CharactersFileName = "characters.json";
         public const string DecksFileName = "decks.json";
