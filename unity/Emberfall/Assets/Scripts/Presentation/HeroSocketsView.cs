@@ -15,9 +15,22 @@ namespace Emberfall.Presentation
     public sealed class HeroSocketsView : MonoBehaviour
     {
         /// <summary>Maximum side of either socket frame in world units. The old frame's
-        /// visible ring was 1.008 units; these read about 30% larger.</summary>
-        public const float FrameSize = 1.32f;
-        public const float HitDiameter = 1.12f;
+        /// visible ring was 1.008 units; these read about 30% larger.
+        ///
+        /// <para>THIS IS THE QUAD, NOT THE RING. Both sprites carry transparent margin, and the
+        /// ring's widest point spans only 0.7149 of the quad — so the drawn ring is 1.0795 units
+        /// here, not 1.51. Every "how big does it look" and "does it touch the plate" question is
+        /// answered against that fraction, never against this constant; see
+        /// <c>ProceduralBoardSetup.SocketOverlap</c>, which pays for the margin.</para>
+        ///
+        /// <para>Raised 1.32 -> 1.51 on 2026-09-04 (Sam: bigger, and touching the hero frame).
+        /// SocketOverlap absorbed the growth, so HeroX did not move and the cluster's outer edge
+        /// is still exactly DesignHalfWidth.</para></summary>
+        public const float FrameSize = 1.51f;
+
+        /// <summary>The hero power's tap target. Tracks the DRAWN ring rather than the quad —
+        /// 1.19x the ring's widest point, the ratio the 1.32/1.12 pair carried.</summary>
+        public const float HitDiameter = 1.28f;
 
         // BOTH RINGS ARE CO-REGISTERED, AND EVERY NUMBER BELOW DEPENDS ON THAT.
         // `tooling/scripts/align_socket_rings.py` writes the pair onto one square canvas with each

@@ -68,13 +68,13 @@ namespace Emberfall.Presentation
         //
         // ONE RING EACH SIDE OF THE PORTRAIT (Sam, 2026-09-04, twice: "these need to be outside of
         // the hero frame not top of it", then "should be on opposite sides of the hero frame").
-        // They used to straddle the hero's centre line at ±0.57, which put both 1.32-wide frames
-        // wholly inside a 2.16-wide plate and drew them across the lower half of the hero's
+        // They used to straddle the hero's centre line at ±0.57, which put both frames (1.32 wide
+        // at the time) wholly inside a 2.16-wide plate and drew them across the lower half of the
         // picture. Each now clears the plate's edge but for a SocketOverlap: metal touches metal,
         // no art covers art.
         //
         // THE THREE NUMBERS ARE ONE SOLVE, not three choices:
-        //     SocketOffsetX = PlateW/2 + FrameSize/2 - SocketOverlap = 1.08 + 0.66 - 0.15
+        //     SocketOffsetX = PlateW/2 + FrameSize/2 - SocketOverlap = 1.08 + 0.755 - 0.34
         //     HeroX         = 7.88 - SocketOffsetX - FrameSize/2     (the design edge, unmoved)
         // so HeroClusterOuterEdge stays exactly 7.88 and DeviceLayout.DesignHalfWidth — which the
         // camera frames the whole board by — does not move. The outboard socket owned the design
@@ -89,9 +89,25 @@ namespace Emberfall.Presentation
         //      7 minions  outer edge 5.618   laps the frame by 1.068, the PICTURE by 0.771
         //
         // Structural, not a tuning miss: the exposed width of an outboard ring is taken one-for-one
-        // out of that slot. Raising SocketOverlap moves the hero back out, but it buries the ring
-        // at the same rate — clearing the oval outright needs overlap 0.921 of a 1.32 ring, i.e.
-        // 70% of it under the plate.
+        // out of that slot. Raising SocketOverlap moves the hero back out — but NOT, as this block
+        // claimed until 2026-09-04, burying the ring at the same rate.
+        //
+        // THE FIRST ~0.15 OF OVERLAP IS FREE, because SocketOffsetX is solved against the sprite
+        // QUAD and both rings are drawn well inside theirs. Measured off the alpha channel at the
+        // ring's widest point (mid-row), quad-local:
+        //
+        //     hero-frame.png    -0.4590 .. +0.4658   (the plate essentially fills its quad)
+        //     hero-power.png    -0.3406 .. +0.3743
+        //     weapon-frame.png  -0.4958 .. +0.3343   (cut wider, and seated left in its quad)
+        //
+        // So at overlap 0.15 the rings did not touch the plate at all: 0.134 of clear air on the
+        // power side and 0.157 on the weapon side, ~12 px on a 1080p phone, which is the gap Sam
+        // saw. Overlap spent below those figures buys hero-x back for nothing. Above them it does
+        // start eating the ring, at 1.0 per 1.0.
+        //
+        // The asymmetry is the ART, not this file — one dial cannot close both gaps exactly, and
+        // the weapon side is the binding one. Re-cutting either ring moves these numbers; they come
+        // from the alpha bbox, so re-measure rather than adjusting by eye.
         //
         // The other lever, if a full board matters more than the rings do: BoardRowGeometry
         // .SlotSpacing 1.62 -> 1.363 clears the picture at seven, and costs 0.156 of overlap
@@ -101,7 +117,12 @@ namespace Emberfall.Presentation
         // RETIREMENT TRIGGER: HeroPlateView.PlateW and HeroSocketsView.FrameSize are inputs to the
         // solve above. Change either and re-solve HeroX in the same commit; DeviceLayout.SelfCheck
         // fails on the mismatch rather than letting it ship.
-        private const float SocketOverlap = 0.15f;
+        // 0.15 -> 0.34 on 2026-09-04, paying for HeroSocketsView.FrameSize 1.32 -> 1.51 (Sam:
+        // bigger, and touching the hero frame). 0.157 of it closes the transparent gap above and
+        // the rest is real overlap, so the drawn rings now meet the plate: -0.001 on the weapon
+        // side, -0.025 on the power side. HeroX did NOT have to move — the pair was solved to hold
+        // HeroClusterOuterEdge at 7.8800, which is what DeviceLayout.SelfCheck asserts.
+        private const float SocketOverlap = 0.34f;
         internal const float SocketOffsetX =
             HeroPlateView.PlateW * 0.5f + HeroSocketsView.FrameSize * 0.5f - SocketOverlap;
         // A LITERAL, though it is 7.88 - SocketOffsetX - FrameSize/2 to four places. Deriving it

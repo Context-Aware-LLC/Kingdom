@@ -602,8 +602,8 @@ namespace Emberfall.Presentation
                     // THE OPPONENT'S SOCKET IS NOT A SUBJECT, IT IS AN OBSTRUCTION. A hero power is
                     // never a drag target (IsActiveTarget accepts Card and Hero only) and never a
                     // source but ours, so returning the enemy's here could only ever cancel a
-                    // gesture. Its collider is 1.12 square, sits at z -0.1 in FRONT of the hero
-                    // plate and centres on the enemy portrait's lower half — so a card or an attack
+                    // gesture. Its collider is HeroSocketsView.HitDiameter square, sits at z -0.1 in
+                    // FRONT of the hero plate and rides the portrait's lower third — so a card or an attack
                     // released on the fattest part of the enemy hero resolved as "their hero power"
                     // and died there (Sam, 2026-09-04). Both seats keep the descriptor: ownership is
                     // read off it, not implied by which ones exist.
