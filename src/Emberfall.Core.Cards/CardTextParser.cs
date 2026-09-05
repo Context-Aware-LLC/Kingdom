@@ -875,8 +875,11 @@ namespace Emberfall.Core.Cards
         /// whole selector x selection enumeration above it.</para>
         ///
         /// <para><b>Tribe and Keyword each propose their negated form alongside the positive one</b>
-        /// (Sam, 2026-09-05) — "non-Construct"/"non-Shroud" round-trip through the SAME word search
-        /// as their positive spellings, so doubling the yield is the whole cost.</para>
+        /// (Sam, 2026-09-05) — doubling the yield is the whole cost, and the re-render settles which
+        /// form a clause actually holds. They render differently on purpose: "non-Shroud minions" is
+        /// a compound the keyword's own word carries, while a negated tribe trails as its own clause
+        /// ("a minion other than Constructs" — Sam, 2026-09-06) rather than compounding onto the noun
+        /// it replaces, because that compound could not even pluralize Undead.</para>
         ///
         /// <para><b>The cost bound is the exception: it is read out of the clause</b>, the same
         /// way <see cref="Amounts"/> reads a damage number, because it is a NUMBER and enumerating
@@ -943,8 +946,13 @@ namespace Emberfall.Core.Cards
         /// </summary>
         private const string SharedPick = "target";
 
-        /// <summary>Rank 0 is every candidate, 1-3 are small chosen counts, 4-6 the random ones.</summary>
-        private const int LastSelectionRank = 6;
+        /// <summary>Rank 0 is every candidate, 1-7 are chosen counts (7 is <c>MatchEngine.BoardCap</c>
+        /// — a card choosing more than a full board is not a shape this game authors), 8-10 the
+        /// random ones. Widened from a 1-3 ceiling when Mass Rebirth's "reanimate up to 7" (Sam,
+        /// 2026-09-06) was the first row to author an explicit chosen count above 3 — on an
+        /// UNBOUNDED selector (a graveyard), where "every candidate" was never an option to fall
+        /// back to.</summary>
+        private const int LastSelectionRank = 10;
 
         /// <summary>
         /// The selection at one rank for one selector, or nothing where that rank cannot exist.
@@ -964,9 +972,9 @@ namespace Emberfall.Core.Cards
             selection = default;
             int? max = TargetQueries.Get(selector).MaxCandidates;
 
-            if (rank >= 4)
+            if (rank >= 8)
             {
-                selection = TargetSelection.RandomOf(rank - 3);
+                selection = TargetSelection.RandomOf(rank - 7);
                 return true;
             }
             if (rank == 0)

@@ -8,18 +8,20 @@ using NUnit.Framework;
 namespace Emberfall.Core.Tests.Targeting
 {
     /// <summary>
-    /// The negate bit on Tribe/MaxCost/Keyword (Sam, 2026-09-05) reuses the positive axis's own
-    /// English and round-trip machinery — see the "non-" compound note on
-    /// <c>CardTextGenerator.Filter</c> — so what needs proving here is narrow: the generated face
-    /// reads as English, and the parser recovers the exact flag rather than just noticing a filter
-    /// was present.
+    /// The negate bit on Tribe/MaxCost/Keyword (Sam, 2026-09-05). MaxCost and Keyword reuse the
+    /// positive axis's own English and round-trip machinery unchanged — see the "non-" compound
+    /// note on <c>CardTextGenerator.Filter</c>. Tribe does not: a negated tribe trails as its own
+    /// clause instead of compounding onto the noun it would otherwise replace, because that
+    /// compound could not even pluralize Undead (Sam, 2026-09-06). What needs proving here is
+    /// narrow either way: the generated face reads as English, and the parser recovers the exact
+    /// flag rather than just noticing a filter was present.
     /// </summary>
     [TestFixture]
     public sealed class NegatedFilterTests
     {
         [TestCase(false, "Destroy a Construct.")]
-        [TestCase(true, "Destroy a non-Construct.")]
-        public void NegateTribe_Reads_As_A_Non_Compound_And_Round_Trips(bool negate, string expectedText)
+        [TestCase(true, "Destroy a minion other than Constructs.")]
+        public void NegateTribe_Trails_As_Its_Own_Clause_And_Round_Trips(bool negate, string expectedText)
         {
             CardDefinition card = Card(new DestroyAction(new TargetSpec("ANY_MINION", TargetSelection.Of(1),
                 filter: new TargetFilterDef(tribe: Tribe.CONSTRUCT, negateTribe: negate))));
@@ -32,6 +34,26 @@ namespace Emberfall.Core.Tests.Targeting
             TargetFilterDef? filter = RuleSemantics.TargetOf(rules[0].Action)?.Filter;
             Assert.That(filter?.Tribe, Is.EqualTo(Tribe.CONSTRUCT));
             Assert.That(filter?.NegateTribe, Is.EqualTo(negate));
+        }
+
+        /// <summary>
+        /// Undead is its own plural, the way "sheep" is -- "Destroy 3 Undeads." shipped on
+        /// grave_wailing_chorus before this was caught (Sam, 2026-09-06), proving the generic
+        /// orthographic pluralizer's "+s" default is wrong for this one tribe on BOTH the replacing
+        /// (positive) and trailing (negated) shape, not just the negated one Mass Rebirth exposed it
+        /// through.
+        /// </summary>
+        [TestCase(false, "Destroy 3 Undead.")]
+        [TestCase(true, "Destroy 3 minions other than Undead.")]
+        public void NegateTribe_Undead_Does_Not_Pluralize_Either_Way(bool negate, string expectedText)
+        {
+            CardDefinition card = Card(new DestroyAction(new TargetSpec("ANY_MINION", TargetSelection.Of(3),
+                filter: new TargetFilterDef(tribe: Tribe.UNDEAD, negateTribe: negate))));
+
+            Assert.That(card.Text, Is.EqualTo(expectedText));
+            Assert.That(CardTextParser.TryParse(card, out IReadOnlyList<RuleDefinition> rules, out string reason),
+                Is.True, $"refused: {reason}");
+            Assert.That(CardTextGenerator.Generate(rules, CardTextGenerator.NoPool.Instance), Is.EqualTo(card.Text));
         }
 
         [TestCase(false, "or less")]

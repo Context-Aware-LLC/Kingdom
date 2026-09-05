@@ -1365,11 +1365,10 @@ namespace Emberfall.Core.Cards
             // and would say "all Shroud friendly minions" -- and it runs before the tribe so that
             // both together read "all friendly Shroud Constructs", the tribe still replacing the noun
             // this has just qualified.
-            // A negated axis reuses its positive machinery unchanged and only swaps the word that
-            // goes into it for a "non-" compound -- "non-Shroud minions", "all friendly
-            // non-Constructs" -- so the plural/article handling ReplaceHeadNoun and
-            // InsertBeforeHeadNoun already carry needs no negation-aware branch of its own
-            // (Sam, 2026-09-05).
+            // A negated KEYWORD reuses its positive machinery unchanged and only swaps the word
+            // that goes into it for a "non-" compound -- "non-Shroud minions" -- so the
+            // plural/article handling InsertBeforeHeadNoun already carries needs no
+            // negation-aware branch of its own (Sam, 2026-09-05).
             if (filter.Keyword.HasValue)
             {
                 string keywordWord = Name(filter.Keyword.Value.ToString());
@@ -1381,11 +1380,19 @@ namespace Emberfall.Core.Cards
             // Constructs", not "all friendly Construct minions". Splicing it after the determiner
             // produced "all Construct friendly minions", which is not English — a classifying noun
             // has to sit against the head noun, and once it does it has already said "minion".
+            //
+            // A negated tribe does NOT reuse that compound -- "non-Undead" tried to and could not
+            // even pluralize (Sam, 2026-09-06: "reanimate 7 graveyard minions... except undead").
+            // It trails as its own clause instead, the same shape MaxCost's "or less"/"or more"
+            // already uses below, and always in the tribe's plural/class form regardless of the
+            // spec's own count -- "a minion other than Constructs" excludes the category, not one
+            // member of it.
             if (filter.Tribe.HasValue)
             {
-                string tribeWord = Name(filter.Tribe.Value.ToString());
-                if (filter.NegateTribe) tribeWord = "non-" + tribeWord;
-                description = ReplaceHeadNoun(description, tribeWord);
+                if (filter.NegateTribe)
+                    description += " other than " + Plural(Name(filter.Tribe.Value.ToString()));
+                else
+                    description = ReplaceHeadNoun(description, Name(filter.Tribe.Value.ToString()));
             }
 
             // "damaged" is an ordinary adjective and keeps its place after the determiner.
@@ -1590,6 +1597,12 @@ namespace Emberfall.Core.Cards
             int start = cardName.LastIndexOf(' ') + 1;   // 0 when the name is a single word
             string head = cardName.Substring(0, start);
             string noun = cardName.Substring(start);
+
+            // Undead is its own plural, the way "sheep" and "deer" are -- the tribe this game ships
+            // whose ordinary "+s" spelling rule is simply wrong for it, not merely a class the rules
+            // below don't cover. Caught when Mass Rebirth's "non-Undeads" (Sam, 2026-09-06) turned
+            // out to be the second card, not the first, to print the same wrong word.
+            if (string.Equals(noun, "Undead", StringComparison.Ordinal)) return head + noun;
 
             // A sibilant ending takes "es", because the extra syllable is actually spoken: Ash,
             // Torch, Fox. Tested first — "sh" and "ch" would otherwise fall through to plain "s".
