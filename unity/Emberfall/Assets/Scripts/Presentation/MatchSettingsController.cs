@@ -12,8 +12,8 @@ namespace Emberfall.Presentation
     /// (Sam, 2026-08-09). A UI Toolkit meta-surface with a persistent corner button that opens a
     /// modal panel. In-match the top item is CONCEDE, behind a confirm ("leaving IS forfeiting");
     /// <see cref="Init"/> hides that row on a menu mount, where there is no match to concede.
-    /// Sound / Video are deferred — they will land as rows in #view-menu without touching this
-    /// wiring. Switch account (dev/testing only) lives here too now — see <see cref="BindAccountModal"/>.
+    /// Sound landed 2026-09-05 — see <see cref="BindAudioSettings"/> and <see cref="AudioSettings"/>.
+    /// Video is still deferred. Switch account (dev/testing only) lives here too now — see <see cref="BindAccountModal"/>.
     /// It is hidden in-match (Sam, 2026-08-09): switching accounts mid-match reloads the scene and
     /// ejects the player, so the bootstraps pass <c>allowAccountSwitch: false</c> into <see cref="Init"/>.
     ///
@@ -108,6 +108,7 @@ namespace Emberfall.Presentation
             Wire(root, "btn-cancel", ShowMenu);
             Wire(root, "btn-quit", OnQuit);
 
+            BindAudioSettings(root);
             BindSignOut(root);
 
             // Click-out closes the overlay. It never concedes — closing is always safe.
@@ -171,6 +172,47 @@ namespace Emberfall.Presentation
         private void ConfirmConcede()
             => ShowConfirm("Concede this match?", "This counts as a loss.", "Concede", danger: true,
                            onConfirm: () => { _onConcede?.Invoke(); Close(); });
+
+        // ── Audio (Sam, 2026-09-05) ─────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Wire the mute toggle and the two volume sliders to <see cref="AudioSettings"/>. Reads the
+        /// CURRENT applied state on every Init rather than trusting a cached value — this panel is
+        /// rebuilt on every scene load, and <see cref="AudioSettings"/> is a static that outlives it.
+        /// </summary>
+        private void BindAudioSettings(VisualElement root)
+        {
+            var mute  = root.Q<Toggle>("toggle-mute");
+            var music = root.Q<Slider>("slider-music");
+            var sfx   = root.Q<Slider>("slider-sfx");
+            if (mute == null || music == null || sfx == null)
+            {
+                Debug.LogWarning("[MatchSettings] audio controls not found in UXML.");
+                return;
+            }
+
+            AudioSettings.EnsureLoaded();
+            mute.SetValueWithoutNotify(AudioSettings.Muted);
+            music.SetValueWithoutNotify(AudioSettings.MusicVolume);
+            sfx.SetValueWithoutNotify(AudioSettings.SfxVolume);
+            music.SetEnabled(!AudioSettings.Muted);
+            sfx.SetEnabled(!AudioSettings.Muted);
+            // .ms-toggle--on drives the checkmark fill (matchsettings.uss) — set explicitly rather
+            // than trusting UI Toolkit's ":checked" pseudo-state, which needs the class as a hook.
+            mute.EnableInClassList("ms-toggle--on", AudioSettings.Muted);
+
+            // Sliders stay enabled-but-dimmed rather than hidden while muted (.ms-slider:disabled)
+            // so the player can still see what they are set to.
+            mute.RegisterValueChangedCallback(e =>
+            {
+                AudioSettings.SetMuted(e.newValue);
+                music.SetEnabled(!e.newValue);
+                sfx.SetEnabled(!e.newValue);
+                mute.EnableInClassList("ms-toggle--on", e.newValue);
+            });
+            music.RegisterValueChangedCallback(e => AudioSettings.SetMusicVolume(e.newValue));
+            sfx.RegisterValueChangedCallback(e => AudioSettings.SetSfxVolume(e.newValue));
+        }
 
         // ── Sign out ────────────────────────────────────────────────────────────────────
 

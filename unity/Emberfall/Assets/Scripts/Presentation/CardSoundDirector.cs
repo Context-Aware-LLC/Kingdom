@@ -24,6 +24,7 @@ namespace Emberfall.Presentation
             source.playOnAwake = false;
             source.loop = false;
             source.spatialBlend = 0f;
+            source.outputAudioMixerGroup = AudioSettings.SfxGroup;
             _player = new AddressableSoundEffectPlayer(source);
         }
 

@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   MatchSettingsScreen.uxml — in-match settings overlay (C-G1-3 / decision 23 §5).
-  A persistent corner "menu" button that opens a modal panel. In-match, the top (and, for
-  now, only) item is CONCEDE, gated behind a confirm because leaving IS forfeiting. Sound /
-  Video are deferred — they land later as rows in #view-menu without touching this wiring.
+  A persistent corner "menu" button that opens a modal panel. In-match, the top item is
+  CONCEDE, gated behind a confirm because leaving IS forfeiting. Sound landed 2026-09-05 as
+  the mute toggle + music/SFX sliders in #audio-settings, bound by
+  MatchSettingsController.BindAudioSettings and applied through Emberfall.Presentation.AudioSettings.
+  Video is still deferred.
 
   Loaded at runtime by the bootstraps AND by MainMenuController (Sam, 2026-08-09 — the gear is
   reachable from the main menu now, not just in-match) via Resources and bound by
@@ -42,6 +44,11 @@
                 <!-- Menu view -->
                 <ui:VisualElement name="view-menu" class="ms-view">
                     <ui:Label text="Menu" class="ms-title" />
+                    <ui:VisualElement name="audio-settings" class="ms-audio">
+                        <ui:Toggle name="toggle-mute" label="Mute" class="ms-toggle" />
+                        <ui:Slider name="slider-music" label="Music" low-value="0" high-value="1" class="ms-slider" />
+                        <ui:Slider name="slider-sfx" label="SFX" low-value="0" high-value="1" class="ms-slider" />
+                    </ui:VisualElement>
                     <ui:Button name="btn-concede" text="Concede" class="ms-item ms-item--danger" />
                     <ui:Button name="btn-close" text="Close" class="ms-item emb-back" />
                     <!-- Dev/testing only (Sam, moved off the main menu identity plate 2026-08-09) —

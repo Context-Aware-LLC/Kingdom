@@ -87,6 +87,55 @@
     margin-bottom: var(--space-6);
 }
 
+/* ---------- Audio (Sam, 2026-09-05: mute + separate music/SFX volume) ----------
+ * Sits inside its own surface so it reads as one settings group rather than two more menu items —
+ * .ms-item below is a full-width button; a label+control row needs its own row layout instead. */
+.ms-audio {
+    background-color: var(--surface-2);
+    border-radius: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    margin-top: var(--space-2);
+}
+.ms-toggle,
+.ms-slider {
+    flex-direction: row;
+    margin-top: var(--space-2);
+}
+.ms-toggle:first-child,
+.ms-slider:first-child { margin-top: 0; }
+.ms-toggle > .unity-toggle__input,
+.ms-toggle .unity-base-field__label,
+.ms-slider .unity-base-field__label {
+    color: var(--ink-1);
+    font-size: var(--type-label);
+    min-width: 90px;
+}
+.ms-toggle .unity-toggle__checkmark {
+    background-color: var(--surface-3);
+    border-width: 0;
+    border-radius: var(--space-1);
+}
+/* Sam, 2026-09-05: the fill wasn't showing — ":checked" is a UI Toolkit pseudo-state, not a class,
+ * and ".unity-toggle--checked" (what this said before) matches nothing. MatchSettingsController
+ * drives .ms-toggle--on explicitly instead of trusting the pseudo-state, matching .db-chip--on's
+ * pattern elsewhere in this project. */
+.ms-toggle--on .unity-toggle__checkmark {
+    background-color: var(--mana);
+}
+.ms-slider .unity-base-slider__tracker {
+    background-color: var(--surface-3);
+    border-width: 0;
+    border-radius: 999px;
+}
+.ms-slider .unity-base-slider__dragger {
+    background-color: var(--mana);
+    border-width: 0;
+    border-radius: 999px;
+}
+/* Dimmed rather than hidden while muted (MatchSettingsController.SetEnabled) — the values are
+ * still there to look at, just not adjustable until unmuted. */
+.ms-slider:disabled { opacity: 0.4; }
+
 /* ---------- Menu items ---------- */
 .ms-item {
     font-size: var(--type-h2);
