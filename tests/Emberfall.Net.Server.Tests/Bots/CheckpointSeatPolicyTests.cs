@@ -21,6 +21,64 @@ namespace Emberfall.Net.Server.Tests.Bots
         private static readonly PlayerId P0 = new PlayerId("p0");
         private static readonly PlayerId P1 = new PlayerId("p1");
 
+        [TestCase("off-turn")]
+        [TestCase("mulligan-done")]
+        [TestCase("opponent-choice")]
+        [TestCase("finished")]
+        public async Task Idle_Seat_Does_Not_Score_Or_Concede(string scenario)
+        {
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            GameState state = ProjectOpeningState(db, setup);
+            var scorer = new FakeScorer(count => new double[count]);
+            var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
+                setup.P0Deck, CheckpointSelection.Argmax, new string('a', 64));
+            _ = await policy.ChooseAsync(state, P0);
+            int calls = scorer.Calls;
+            switch (scenario)
+            {
+                case "off-turn":
+                    state.Phase = TurnPhase.Main;
+                    state.ActivePlayer = P1;
+                    break;
+                case "mulligan-done": state.Mulligan0Done = true; break;
+                case "opponent-choice":
+                    state.PendingChoice = new PendingChoice { Chooser = P1 };
+                    break;
+                case "finished": state.Outcome = MatchOutcome.Player1Win; break;
+            }
+
+            Assert.That(await policy.ChooseAsync(state, P0), Is.Null);
+            Assert.That(scorer.Calls, Is.EqualTo(calls));
+            Assert.That(policy.LastDecision, Is.Null);
+        }
+
+        [Test]
+        public async Task Own_Pending_Choice_Is_Answered_Off_Turn()
+        {
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            GameState state = ProjectOpeningState(db, setup);
+            state.Phase = TurnPhase.Main;
+            state.ActivePlayer = P1;
+            state.PendingChoice = new PendingChoice
+            {
+                Chooser = P0,
+                ChoiceSequence = 51,
+                Options = { setup.P0Deck[0] },
+            };
+            var scorer = new FakeScorer(count =>
+            {
+                var logits = new double[count];
+                logits[count - 1] = 10;
+                return logits;
+            });
+            var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
+                setup.P0Deck, CheckpointSelection.Argmax, new string('a', 64));
+            Assert.That(await policy.ChooseAsync(state, P0), Is.TypeOf<UnearthChoiceIntent>());
+            Assert.That(scorer.Calls, Is.EqualTo(1));
+        }
+
         [Test]
         public async Task Argmax_Maps_The_Selected_Logit_Back_To_The_Exact_Legal_Intent()
         {
