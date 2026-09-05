@@ -15,9 +15,9 @@ namespace Emberfall.Presentation
     /// query bar, card wall, background or scene, so the old deckbuilder is no longer visible
     /// to the player as a second screen wearing shared controls.
     ///
-    /// <para><see cref="PendingCharacterId"/> and <see cref="PendingDeckId"/> are only navigation
-    /// conveniences for an existing roster doorway. They request that the drawer open after the
-    /// Collection shell is live; they do not decide the screen's shape. Both are consumed once.</para>
+    /// <para><see cref="PendingDeckId"/> is only a navigation convenience for an existing roster
+    /// doorway. It requests that the drawer open after the Collection shell is live; it does not
+    /// decide the screen's shape. It is consumed once.</para>
     ///
     /// <para><b>It shows what you own when the account knows, and the whole pool when it doesn't.</b>
     /// Ownership has three states, not two:</para>
@@ -56,10 +56,11 @@ namespace Emberfall.Presentation
         /// <summary>Where the persistent screen's Back control returns. Set by the caller.</summary>
         public static string ReturnScene = "MainMenu";
 
-        /// <summary>Which character to build a deck for, or empty to browse. Consumed on read.</summary>
-        public static string PendingCharacterId;
-
-        /// <summary>Which saved deck to open, or empty to use that character's normal opening deck.</summary>
+        /// <summary>Which saved deck to open, or empty to browse. Consumed on read.
+        ///
+        /// <para>A <c>PendingCharacterId</c> sat beside this until ADR-0009 and was the one that
+        /// mattered: the deckbuilder reached a decklist only THROUGH a character, so this field was
+        /// the optional half. A deck is reachable on its own now.</para></summary>
         public static string PendingDeckId;
 
         private PlayerAccount _account;
@@ -68,8 +69,11 @@ namespace Emberfall.Presentation
         [SerializeField] private VisualTreeAsset cardRowTemplate;
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
 
-        /// <summary>The optional deck-edit context. Null means the drawer is browsing deck choices.</summary>
-        private Character _character;
+        /// <summary>The optional deck-edit context. Null means the drawer is browsing deck choices.
+        ///
+        /// <para>A <c>_character</c> sat beside this until ADR-0009 and supplied the class pairing
+        /// every pool question below is asked against. The deck supplies it now, so the pair of
+        /// fields that could disagree is one field.</para></summary>
         private DeckList _deck;
 
         /// <summary>
@@ -85,7 +89,7 @@ namespace Emberfall.Presentation
         /// which is the predicate everything reads.
         ///
         /// <para><b>Per visit, and deliberately not static.</b> A remembered scope is exactly the shape
-        /// of the <see cref="PendingCharacterId"/> failure this screen already guards: a browse visit
+        /// of the <see cref="PendingDeckId"/> failure this screen already guards: a browse visit
         /// that silently shows the game because of a choice made on a previous one. You arrive at your
         /// collection; All is a thing you ask for.</para>
         /// </summary>
@@ -149,7 +153,7 @@ namespace Emberfall.Presentation
         /// <summary>The classes the current pool actually holds a card of — see <see cref="BuildPool"/>.</summary>
         private readonly HashSet<CardClass> _availableClasses = new HashSet<CardClass>();
 
-        private bool EditingDeck => _character != null && _deck != null;
+        private bool EditingDeck => _deck != null;
 
         /// <summary>The crafting modal. Declared on the same plate in both modes; see <see cref="BuildCraftModal"/>.</summary>
         private CraftModal _craftModal;
@@ -252,43 +256,31 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Consume the legacy roster handoff after the Collection shell is fully live. A broken id
-        /// leaves the player on the truthful collection wall rather than producing a half-open drawer.
+        /// Consume the roster handoff after the Collection shell is fully live. A broken id leaves
+        /// the player on the truthful collection wall rather than producing a half-open drawer.
+        ///
+        /// <para>It took a character id AND a deck id until ADR-0009, and resolved the character
+        /// first because a deck could only be reached through one. The deck id is the whole handoff
+        /// now, and a deck that does not resolve is the only failure left — there is no second
+        /// lookup that can succeed while the first one fails.</para>
         /// </summary>
         private void OpenPendingDeckIfAny()
         {
-            string pendingCharacter = PendingCharacterId;
-            PendingCharacterId = "";
             string pendingDeck = PendingDeckId;
             PendingDeckId = "";
-            if (string.IsNullOrEmpty(pendingCharacter)) return;
+            if (string.IsNullOrEmpty(pendingDeck)) return;
 
-            Character character = null;
-            IReadOnlyList<Character> roster = _account.Roster();
-            foreach (var c in roster)
-                if (c.Id == pendingCharacter) { character = c; break; }
-
-            if (character == null)
-            {
-                Debug.LogWarning($"[Collection] no character '{pendingCharacter}' on this account; " +
-                                 "leaving the deck drawer closed.");
-                return;
-            }
-
-            CharacterDecks characterDecks = DeckQuery.ForCharacter(
-                character, _account.Decks(), _db, _owned);
-            DeckList deck = FindDeck(characterDecks.Decks, pendingDeck)
-                            ?? characterDecks.Opening?.Deck;
+            DeckList deck = FindDeck(_account.DeckRows(_db), pendingDeck);
             if (deck == null)
             {
-                Debug.LogWarning($"[Collection] '{character.Name}' has no deck to open; " +
+                Debug.LogWarning($"[Collection] no deck '{pendingDeck}' on this account; " +
                                  "opening the deck chooser instead.");
                 OpenDeckDrawer();
                 return;
             }
 
             OpenDeckDrawer();
-            OpenDeckEditor(character, deck);
+            OpenDeckEditor(deck);
         }
 
         private static DeckList FindDeck(IReadOnlyList<DeckSummary> decks, string deckId)
@@ -348,7 +340,7 @@ namespace Emberfall.Presentation
             _availableClasses.Clear();
             foreach (var def in _db.AllCollectible())
             {
-                if (EditingDeck && !_character.AllowsClass(def.Class)) continue;
+                if (EditingDeck && !_deck.AllowsClass(def.Class)) continue;
                 if (OwnedOnly && _owned.CopiesOwned(def.Id) <= 0) continue;
 
                 _pool.Add(def);
@@ -714,9 +706,9 @@ namespace Emberfall.Presentation
         private void WireCollectionFilters()
         {
             _filterPrimaryButton?.RegisterCallback<ClickEvent>(_ =>
-                TogglePairingClass(_character?.PrimaryClass));
+                TogglePairingClass(_deck?.PrimaryClass));
             _filterSecondaryButton?.RegisterCallback<ClickEvent>(_ =>
-                TogglePairingClass(_character?.SecondaryClass));
+                TogglePairingClass(_deck?.SecondaryClass));
             _filterNeutralButton?.RegisterCallback<ClickEvent>(_ =>
                 TogglePairingClass(EditingDeck ? CardClass.NEUTRAL : (CardClass?)null));
         }
@@ -726,9 +718,9 @@ namespace Emberfall.Presentation
             if (!EditingDeck) return;
 
             if (_filterPrimaryButton != null)
-                _filterPrimaryButton.text = ClassLabel(_character.PrimaryClass);
+                _filterPrimaryButton.text = ClassLabel(_deck.PrimaryClass);
             if (_filterSecondaryButton != null)
-                _filterSecondaryButton.text = ClassLabel(_character.SecondaryClass);
+                _filterSecondaryButton.text = ClassLabel(_deck.SecondaryClass);
             if (_filterNeutralButton != null)
                 _filterNeutralButton.text = ClassLabel(CardClass.NEUTRAL);
             StampClassSelection();
@@ -768,8 +760,8 @@ namespace Emberfall.Presentation
             }
 
             if (!EditingDeck) return;
-            _filterPrimaryButton?.EnableInClassList("db-chip--on", _selectedClasses.Contains(_character.PrimaryClass));
-            _filterSecondaryButton?.EnableInClassList("db-chip--on", _selectedClasses.Contains(_character.SecondaryClass));
+            _filterPrimaryButton?.EnableInClassList("db-chip--on", _selectedClasses.Contains(_deck.PrimaryClass));
+            _filterSecondaryButton?.EnableInClassList("db-chip--on", _selectedClasses.Contains(_deck.SecondaryClass));
             _filterNeutralButton?.EnableInClassList("db-chip--on", _selectedClasses.Contains(CardClass.NEUTRAL));
         }
 
@@ -869,7 +861,7 @@ namespace Emberfall.Presentation
         {
             _deckChooserFrame?.EnableInClassList("deck-chooser--hidden", editor);
             _deckEditor?.EnableInClassList("deck-editor--hidden", !editor);
-            // "Manage Characters & Decks" leaves the collection entirely, so it belongs to the
+            // "Manage Decks" leaves the collection entirely, so it belongs to the
             // CHOOSER pane, not to editing one deck's thirty. Editing already has two ways out
             // ("<- All decks" and Close), and on the 411-unit landscape panel this was authored
             // against (pre-#349) the button plus its margin was 68 -- most of the height the deck
@@ -887,76 +879,66 @@ namespace Emberfall.Presentation
             if (_deckChooserList == null) return;
             _deckChooserList.Clear();
 
-            IReadOnlyList<Character> characters = _account.Roster();
-            IReadOnlyList<DeckList> decks = _account.Decks();
-            int choices = 0;
+            // ONE FLAT LIST (ADR-0009). It was grouped by character — a name, the pairing under it,
+            // then that character's decks — and the grouping is what went away, not the information:
+            // each row now carries its own pairing, because each deck now has one.
+            IReadOnlyList<DeckSummary> rows = _account.DeckRows(_db);
 
-            foreach (Character character in characters)
+            foreach (DeckSummary summary in rows)
             {
-                CharacterDecks characterDecks = DeckQuery.ForCharacter(character, decks, _db, _owned);
-                if (characterDecks.Count == 0) continue;
+                DeckList capturedDeck = summary.Deck;
 
                 var group = new VisualElement();
                 group.AddToClassList("deck-choice-group");
 
-                var characterName = new Label(character.Name);
-                characterName.AddToClassList("deck-choice-character");
-                group.Add(characterName);
-
                 var pairing = new Label(
-                    $"{ClassLabel(character.PrimaryClass)} + {ClassLabel(character.SecondaryClass)}");
+                    $"{ClassLabel(capturedDeck.PrimaryClass)} + {ClassLabel(capturedDeck.SecondaryClass)}");
                 pairing.AddToClassList("deck-choice-pairing");
                 group.Add(pairing);
 
-                foreach (DeckSummary summary in characterDecks.Decks)
+                var button = new Button(() => OpenDeckEditor(capturedDeck))
                 {
-                    DeckList capturedDeck = summary.Deck;
-                    Character capturedCharacter = character;
-                    string defaultMark = summary.IsDefault ? " · Default" : "";
-                    var button = new Button(() => OpenDeckEditor(capturedCharacter, capturedDeck))
-                    {
-                        text = $"{capturedDeck.Name}  ·  {summary.TotalCount}/{DeckValidator.DeckSize}"
-                    };
-                    button.AddToClassList("deck-choice");
-                    button.AddToClassList(ClassEdgeClass(character.PrimaryClass));
-                    group.Add(button);
-                    choices++;
-                }
+                    text = $"{capturedDeck.Name}  ·  {summary.TotalCount}/{DeckValidator.DeckSize}"
+                };
+                button.AddToClassList("deck-choice");
+                button.AddToClassList(ClassEdgeClass(capturedDeck.PrimaryClass));
+                group.Add(button);
 
                 _deckChooserList.Add(group);
             }
 
             if (_deckChooserEmpty != null)
             {
-                _deckChooserEmpty.text = choices == 0
-                    ? "No decks yet — manage characters and decks to create one."
+                _deckChooserEmpty.text = rows.Count == 0
+                    ? "No decks yet — manage your decks to create one."
                     : "";
-                _deckChooserEmpty.EnableInClassList("deck-chooser__empty--on", choices == 0);
+                _deckChooserEmpty.EnableInClassList("deck-chooser__empty--on", rows.Count == 0);
             }
         }
 
-        private void OpenDeckEditor(Character character, DeckList deck)
+        private void OpenDeckEditor(DeckList deck)
         {
-            if (character == null || deck == null) return;
+            if (deck == null) return;
             if (EditingDeck) SaveDeck();
 
             _scopeBeforeEditing = _ownedScope;
             _ownedScope = false; // #150: unowned eligible cards stay visible-but-spent while editing.
 
-            // A character opens on its whole pairing, not on whatever class the player happened to be
-            // browsing — which is usually one this character cannot play anyway, and would open the
+            // A deck opens on its whole pairing, not on whatever class the player happened to be
+            // browsing — which is usually one this deck cannot play anyway, and would open the
             // editor on a blank wall. Parked rather than dropped so closing gives the browse back
             // unchanged; StampClassTabs would otherwise have deselected it for being out of pool.
             _classesBeforeEditing.Clear();
             _classesBeforeEditing.UnionWith(_selectedClasses);
             _selectedClasses.Clear();
-            _character = character;
             _deck = deck;
 
+            // The character's name led this line until ADR-0009. What is left is the pairing, which
+            // is what the line was actually FOR — it tells the player which pool the wall beside it
+            // is showing.
             if (_deckCharacterName != null)
-                _deckCharacterName.text = $"{character.Name} · " +
-                                          $"{ClassLabel(character.PrimaryClass)} + " +
-                                          ClassLabel(character.SecondaryClass);
+                _deckCharacterName.text = $"{ClassLabel(deck.PrimaryClass)} + " +
+                                          ClassLabel(deck.SecondaryClass);
             if (_deckName != null) _deckName.text = deck.Name;
 
             ConfigureCollectionFilters();
@@ -974,7 +956,6 @@ namespace Emberfall.Presentation
         {
             if (!EditingDeck) return;
 
-            _character = null;
             _deck = null;
             _selectedClasses.Clear();
             _selectedClasses.UnionWith(_classesBeforeEditing);
@@ -999,7 +980,7 @@ namespace Emberfall.Presentation
             _plate?.EnableInClassList("collection--editing", EditingDeck);
         }
 
-        private void ManageCharactersAndDecks()
+        private void ManageDecks()
         {
             if (EditingDeck) SaveDeck();
             CharacterRosterController.ReturnScene = "Collection";
@@ -1170,7 +1151,7 @@ namespace Emberfall.Presentation
         {
             if (!EditingDeck) return;
             // L1 ceiling / L2/L3 cap / L4 off-class / L6 you don't own another copy.
-            if (!DeckValidator.CanAdd(_deck, _character, def, _owned)) return;
+            if (!DeckValidator.CanAdd(_deck, def, _owned)) return;
             int i = _deck.Entries.FindIndex(x => x.CardId == def.Id);
             if (i >= 0) _deck.Entries[i] = _deck.Entries[i].With(_deck.Entries[i].Count + 1);
             else        _deck.Entries.Add(new DeckEntry(def.Id, 1));
@@ -1241,7 +1222,7 @@ namespace Emberfall.Presentation
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ => HandleBack());
             _root.Q<Button>("deck-drawer-close")?.RegisterCallback<ClickEvent>(_ => CloseDeckDrawer());
             _root.Q<Button>("choose-another-deck")?.RegisterCallback<ClickEvent>(_ => ShowDeckChooser());
-            _root.Q<Button>("manage-decks-button")?.RegisterCallback<ClickEvent>(_ => ManageCharactersAndDecks());
+            _root.Q<Button>("manage-decks-button")?.RegisterCallback<ClickEvent>(_ => ManageDecks());
         }
 
         private void HandleBack()
@@ -1287,7 +1268,7 @@ namespace Emberfall.Presentation
         {
             if (!EditingDeck) return;
             _account.Save(_deck);
-            Debug.Log($"[Collection] Saved '{_deck.Name}' ({_deck.TotalCount} cards) for {_character.Name}.");
+            Debug.Log($"[Collection] Saved '{_deck.Name}' ({_deck.TotalCount} cards).");
         }
 
         /// <summary>Load a scene by name, reporting the one failure mode that is otherwise silent
@@ -1430,7 +1411,7 @@ namespace Emberfall.Presentation
                 foreach (var def in _pool)
                 {
                     if (_deck.TotalCount >= target) break;
-                    if (DeckValidator.CanAdd(_deck, _character, def, _owned)) { AddCopy(def); progressed = true; }
+                    if (DeckValidator.CanAdd(_deck, def, _owned)) { AddCopy(def); progressed = true; }
                 }
             }
         }

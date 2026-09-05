@@ -10,8 +10,14 @@ using UnityEngine;
 namespace Emberfall.Session
 {
     /// <summary>
-    /// The player, on this device: their name, their characters, and their decks
+    /// The player, on this device: their name and their decks
     /// (dev-docs/data/player-data-and-telemetry.md:11).
+    ///
+    /// <para><b>There is no roster any more (ADR-0009, Sam 2026-09-04).</b> <c>Character</c> held a
+    /// class pairing and nothing else the game needed, so it was deleted and the pairing moved onto
+    /// <see cref="DeckList"/>. What this class lost with it is a whole store — <c>characters.json</c>
+    /// and every method that read, wrote or cascaded through it. A deck is now the top-level thing a
+    /// player owns, and <see cref="DeckCreation.MaxPerAccount"/> is how many of them they may have.</para>
     ///
     /// <para><b>This class is the missing wire, and it is the only reason it exists.</b>
     /// <c>Emberfall.Core.Collection</c> shipped complete and green, and until now nothing under
@@ -49,11 +55,10 @@ namespace Emberfall.Session
 
         /// <summary>
         /// Drop the cached account. Called by <see cref="DeviceAccounts.SwitchTo"/> — a stale
-        /// <see cref="Local"/> after a switch would write one player's character into another's file.
+        /// <see cref="Local"/> after a switch would write one player's deck into another's file.
         /// </summary>
         public static void InvalidateLocal() => _local = null;
 
-        private readonly ICharacterStore _characters;
         private readonly IDeckStore _decks;
         private readonly IProfileStore _profiles;
         private readonly IOwnedCardStore _ownedCards;
@@ -72,7 +77,6 @@ namespace Emberfall.Session
 
             RootDirectory = rootDirectory;
             StorageKey = storageKey;   // CollectionPaths.SanitizeKey rejects an empty one for us
-            _characters = JsonCharacterStore.InDirectory(rootDirectory, storageKey);
             _decks = JsonDeckStore.InDirectory(rootDirectory, storageKey);
             _profiles = JsonProfileStore.InDirectory(rootDirectory, storageKey);
             _ownedCards = JsonOwnedCardStore.InDirectory(rootDirectory, storageKey);
@@ -150,37 +154,36 @@ namespace Emberfall.Session
             return check;
         }
 
-        /// <summary>The character half of the last deck actually submitted into a match, or empty if none yet.</summary>
-        public string LastPlayedCharacterId => Profile.LastPlayedCharacterId;
-
-        /// <summary>The deck half of the last deck actually submitted into a match, or empty if none yet.</summary>
+        /// <summary>The last deck actually submitted into a match, or empty if none yet.</summary>
         public string LastPlayedDeckId => Profile.LastPlayedDeckId;
 
         /// <summary>
-        /// Remember the character/deck a match was just started with, so Find Game can pre-arm the
-        /// same pick next time instead of forcing a fresh Select (Sam, 2026-08-09). Call this once the
-        /// pair is known good — this stores it as-is, with no eligibility check of its own.
+        /// Remember the deck a match was just started with, so Find Game can pre-arm the same pick
+        /// next time instead of forcing a fresh Select (Sam, 2026-08-09). Call this once the deck is
+        /// known good — this stores it as-is, with no eligibility check of its own.
+        ///
+        /// <para>It took a character id alongside the deck id until 2026-09-04 (ADR-0009); the deck
+        /// is the whole of the selection now, because the deck carries the pairing.</para>
         /// </summary>
-        public void RecordLastPlayed(string characterId, string deckId)
+        public void RecordLastPlayed(string deckId)
         {
-            if (string.IsNullOrEmpty(characterId) || string.IsNullOrEmpty(deckId)) return;
+            if (string.IsNullOrEmpty(deckId)) return;
 
             var profile = Profile;
-            profile.LastPlayedCharacterId = characterId;
             profile.LastPlayedDeckId = deckId;
             _profiles.Save(profile);
         }
 
-        // ── Roster and decks ────────────────────────────────────────────────────────────
+        // ── Decks ───────────────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Every character, fresh off disk. Not cached, deliberately — the deckbuilder writes the
-        /// roster from more than one screen and a stale list is how a created character fails to
-        /// appear (see <see cref="Profile"/> for where the line is drawn).
+        /// Every saved deck, fresh off disk — including drafts (§3: a store never filters).
+        ///
+        /// <para>Not cached, deliberately: decks are written from more than one screen and a stale
+        /// list is how a created deck fails to appear (see <see cref="Profile"/> for where the line
+        /// is drawn). An <i>orphan</i> used to be in this list too; ADR-0009 made the state
+        /// unreachable rather than merely unqueried.</para>
         /// </summary>
-        public IReadOnlyList<Character> Roster() => _characters.LoadAll();
-
-        /// <summary>Every saved deck, fresh off disk — including drafts and orphans (§3: a store never filters).</summary>
         public IReadOnlyList<DeckList> Decks() => _decks.LoadAll();
 
         /// <summary>
@@ -221,157 +224,78 @@ namespace Emberfall.Session
         }
 
         /// <summary>
-        /// The roster panel's rows for one character (<c>DeckQuery.ForCharacter</c>) — default first,
-        /// then stored order, each carrying its queue-eligibility. One disk read for both files.
+        /// This account's deck rows in stored order, each carrying its queue-eligibility
+        /// (<see cref="DeckQuery.ForAccount"/>). One disk read.
         ///
         /// <para>Ownership rides along so the switcher's draft badge and the queue gate answer with the
         /// same rule (NOR-238). It changes nothing until this account has a record.</para>
         /// </summary>
-        public CharacterDecks DecksOf(Character character, ICardDatabase db)
-            => DeckQuery.ForCharacter(character, _decks.LoadAll(), db, OwnedCards());
+        public IReadOnlyList<DeckSummary> DeckRows(ICardDatabase db)
+            => DeckQuery.ForAccount(_decks.LoadAll(), db, OwnedCards());
 
         /// <summary>
-        /// Whether the create affordance should be offered for a pairing at all — a pool too thin for
-        /// a legal 30 refuses up front instead of throwing halfway through creation
+        /// Whether a generated deck can be offered for a pairing at all — a pool too thin for a legal
+        /// 30 refuses up front instead of throwing halfway through creation
         /// (<c>DefaultDeckGenerator.CanGenerate</c>). Real today: not every pairing can fill a deck.
+        ///
+        /// <para>This is about the POOL, never about how many decks the account already holds — that
+        /// is <see cref="CanCreateDeck"/>, and the two refuse for reasons a player would phrase
+        /// differently.</para>
         /// </summary>
         public static bool CanCreate(CardClass primary, CardClass secondary, ICardDatabase db,
                                     IOwnedCardCounts? owned = null)
-            => Character.IsValidPairing(primary, secondary)
-               && DefaultDeckGenerator.CanGenerate(new Character("probe", "probe", primary, secondary), db, owned);
+            => DeckList.IsValidPairing(primary, secondary)
+               && DefaultDeckGenerator.CanGenerate(primary, secondary, db, owned);
 
         /// <summary>
-        /// Whether the create form offers the blank-or-generated choice — false for the very first
-        /// character, which always gets a playable deck (§2.11). Delegates rather than re-deriving:
+        /// Has this account room for another deck (<see cref="DeckCreation.MaxPerAccount"/>)? What the
+        /// "+" plate is disabled by. Delegates rather than re-deriving: the cap the client draws and
+        /// the cap the deck write route refuses on have to be the same number.
+        /// </summary>
+        public bool CanCreateDeck() => DeckCreation.CanCreate(Decks());
+
+        /// <summary>
+        /// Whether the create flow offers the blank-or-generated choice — false for the very first
+        /// deck, which always gets a playable one (§2.11). Delegates rather than re-deriving:
         /// a policy the UI re-implements is a policy that drifts.
         /// </summary>
-        public bool OffersStarterChoice() => CharacterCreation.OffersStarterChoice(Roster());
+        public bool OffersStarterChoice() => DeckCreation.OffersStarterChoice(Decks());
 
         /// <summary>
-        /// Create a character with a starter deck and persist both (deck first — see
-        /// <see cref="CharacterCreation"/> for why the order is load-bearing).
-        /// </summary>
-        /// <exception cref="ArgumentException">The pairing is invalid.</exception>
-        /// <exception cref="DeckGenerationException">The pool cannot supply a legal 30.</exception>
-        public Character CreateCharacter(string name, CardClass primary, CardClass secondary,
-                                         ICardDatabase db, StarterDeck starter = StarterDeck.Generated)
-        {
-            string characterId = NewId();
-            string deckId = NewId();
-
-            // Seeded from the character's own id rather than a clock, so the starter deck is a
-            // function of the character and re-running a crashed creation cannot produce a different
-            // 30. Unity has a clock and the core assembly does not — using it here anyway would put
-            // the one unreproducible input into the one place it is avoidable.
-            var rng = new DeterministicRandom(SeedFrom(characterId));
-
-            Character created = CharacterCreation.Create(_characters, _decks, db, rng,
-                                                         characterId, name, primary, secondary,
-                                                         deckId, starter, OwnedCards());
-
-            // One chained push rather than two independent ones, so the character reaches the server
-            // before the deck that names it. Nothing on the server enforces that — deck.character_id
-            // carries no foreign key — but a roster read between the two arrivals would otherwise
-            // show a deck bound to a character that is not there yet.
-            var starterDecks = CharacterDeletion.DecksOf(characterId, _decks.LoadAll());
-            Push(async t =>
-            {
-                RosterWriteStatus status = await RosterGateway.PushCharacterCreatedAsync(t, created);
-                foreach (DeckList deck in starterDecks)
-                    status = await RosterGateway.PushDeckSavedAsync(t, deck);
-                return status;
-            });
-
-            return created;
-        }
-
-        /// <summary>
-        /// Create a character with <b>no deck</b> and persist just the roster row (NOR-278). The
-        /// portrait-grid creation flow picks only the pairing and a name; the first deck is chosen
-        /// later from the roster's "+" plate, so the character lands as the same lone-"+" row a
-        /// character whose decks were all deleted already shows.
+        /// Create a deck for a pairing and persist it, generated or blank.
         ///
-        /// <para>Unlike <see cref="CreateCharacter"/> this consults no card pool and needs no
-        /// <see cref="ICardDatabase"/> or seed: a deckless character is always creatable for any valid
-        /// pairing, however thin that pairing's pool is. Whether the pool can supply a legal 30 is the
-        /// "+" plate's concern (<see cref="DefaultDeckGenerator.CanGenerate"/>), not creation's.</para>
-        /// </summary>
-        /// <exception cref="ArgumentException">The pairing is invalid.</exception>
-        public Character CreateCharacterWithoutDeck(string name, CardClass primary, CardClass secondary)
-        {
-            Character created = CharacterCreation.CreateWithoutDeck(
-                _characters, NewId(), name, primary, secondary);
-            Push(t => RosterGateway.PushCharacterCreatedAsync(t, created));
-            return created;
-        }
-
-        /// <summary>
-        /// Add a deck to an existing character and persist it, generated or blank.
+        /// <para>The one create path there is (ADR-0009). <c>CreateCharacter</c>,
+        /// <c>CreateCharacterWithoutDeck</c> and the roster's per-character <c>CreateDeck</c> all
+        /// collapsed into this: a deck is the top-level thing now, so there is nothing to create it
+        /// against and nothing to bind it to afterwards.</para>
         ///
-        /// <para>The sibling of <see cref="CreateCharacter"/> for the roster's "+" plate, and here for
-        /// the same reason that one is: the core assembly mints no ids and holds no clock, so
-        /// somebody has to know that an id is a GUID and that the seed comes from it. Seeding from
-        /// the deck's own id rather than a clock keeps a generated deck a function of its identity —
-        /// re-running a crashed create cannot produce a different 30.</para>
+        /// <para>Here rather than in the core assembly for the reason every other mint is: that
+        /// assembly holds no clock and mints no identity, so somebody has to know that an id is a
+        /// GUID and that the seed comes from it. Seeding from the deck's own id rather than a clock
+        /// keeps a generated deck a function of its identity — re-running a crashed create cannot
+        /// produce a different 30.</para>
         ///
-        /// <para>Check <see cref="DefaultDeckGenerator.CanGenerate"/> before asking for
-        /// <see cref="StarterDeck.Generated"/>; a pool too thin for a legal 30 throws rather than
-        /// returning something illegal.</para>
+        /// <para><b>The cap is NOT enforced here.</b> <see cref="CanCreateDeck"/> is what the "+"
+        /// plate consults, and <c>PUT /decks/{id}</c> is what actually refuses the ninth. A throw
+        /// from this method would turn a full roster into an error dialog on a screen that should
+        /// simply not have offered the plate.</para>
+        ///
+        /// <para>Check <see cref="CanCreate"/> before asking for <see cref="StarterDeck.Generated"/>;
+        /// a pool too thin for a legal 30 throws rather than returning something illegal.</para>
         /// </summary>
+        /// <exception cref="ArgumentException">The pairing is invalid (see <see cref="DeckList.IsValidPairing"/>).</exception>
         /// <exception cref="DeckGenerationException">Generated was asked for and the pool cannot supply a legal 30.</exception>
-        public DeckList CreateDeck(Character character, ICardDatabase db, string name,
+        public DeckList CreateDeck(ICardDatabase db, string name, CardClass primary, CardClass secondary,
                                    StarterDeck kind = StarterDeck.Blank)
         {
-            if (character == null) throw new ArgumentNullException(nameof(character));
-
             string deckId = NewId();
-            DeckList deck = kind == StarterDeck.Generated
-                ? DefaultDeckGenerator.Generate(character, db, new DeterministicRandom(SeedFrom(deckId)),
-                                                deckId, name, OwnedCards())
-                : new DeckList { Id = deckId, CharacterId = character.Id, Name = name };
+            DeckList deck = DeckCreation.Create(
+                _decks, db, new DeterministicRandom(SeedFrom(deckId)),
+                deckId, name, primary, secondary, kind, OwnedCards());
 
-            // Generate() builds the deck already bound (L5), but a blank one is bound here — and the
-            // binding is the whole reason a deck cannot be created anywhere but against a character.
-            deck.CharacterId = character.Id;
-
-            _decks.Save(deck);
             Push(t => RosterGateway.PushDeckSavedAsync(t, deck));
             return deck;
         }
-
-        /// <summary>
-        /// The decks a delete would destroy — what the confirm dialog must name before the player
-        /// authorises the cascade (§2.6). Call this, then <see cref="DeleteCharacter"/>.
-        /// </summary>
-        public IReadOnlyList<DeckList> DecksLostWith(string characterId)
-            => CharacterDeletion.DecksOf(characterId, _decks.LoadAll());
-
-        /// <summary>
-        /// Delete a character and every deck bound to it, returning the deck count destroyed.
-        /// Goes through <see cref="CharacterDeletion"/>, not the store — the store deletes only the
-        /// roster row and would leave the decks orphaned.
-        /// </summary>
-        public int DeleteCharacter(string characterId)
-        {
-            int destroyed = CharacterDeletion.Delete(_characters, _decks, characterId);
-
-            // ONE call. The server cascades to that character's decks inside a single transaction,
-            // so pushing a delete per deck as well would be N redundant round trips racing the
-            // cascade — and each would answer 404 on the row it had already removed.
-            Push(t => RosterGateway.PushCharacterDeletedAsync(t, characterId));
-            return destroyed;
-        }
-
-        /// <summary>
-        /// Persist a character (rename, or "Set as default" writing <c>DefaultDeckId</c>).
-        ///
-        /// <para><b>The server has no character UPDATE route</b>, so this one does not push. The
-        /// pairing is permanent and the name is set at creation, which leaves <c>DefaultDeckId</c> as
-        /// the only field a re-save moves — and it is the one piece of roster state that therefore
-        /// does not survive a reinstall. Tracked as issue #343; the fix is a route, not a call
-        /// here.</para>
-        /// </summary>
-        public void Save(Character character) => _characters.Save(character);
 
         /// <summary>Persist a deck. Never legality-gated — a draft is a savable deck (§1).</summary>
         public void Save(DeckList deck)
@@ -393,7 +317,7 @@ namespace Emberfall.Session
         ///
         /// <para><b>This is what keeps an editor tool off the wire.</b> The constructor stays public
         /// so a tool or a test scene can point at a scratch directory, and every one of those would
-        /// otherwise mirror its throwaway characters into the signed-in player's real server roster —
+        /// otherwise mirror its throwaway decks into the signed-in player's real server roster —
         /// a self-check that quietly adds "Ashen Vow" to somebody's account and then deletes it
         /// again. Reference equality against the static rather than a flag, so it cannot be set
         /// wrongly.</para>
@@ -429,13 +353,13 @@ namespace Emberfall.Session
         ///
         /// <para><b>Only <see cref="RosterGateway"/> may call this, and only on a Known answer</b> —
         /// the same rule, for the same reason, as <see cref="SaveOwnedCards"/>. Since the login
-        /// handshake landed, <c>characters.json</c> and <c>decks.json</c> are a CACHE of the
-        /// server-side player data store, not the record. There is no offline mode, so there is no
+        /// handshake landed, <c>decks.json</c> is a CACHE of the server-side player data store, not
+        /// the record. There is no offline mode, so there is no
         /// merge and no last-write-wins: a Known answer replaces, and every other answer leaves the
         /// files exactly as they are.</para>
         ///
         /// <para><b>An empty roster here is a real answer and DOES empty the device.</b> A player who
-        /// deleted their last character must not have it restored by the next sign-in. That is only
+        /// deleted their last deck must not have it restored by the next sign-in. That is only
         /// safe because <c>RosterSnapshot.ShouldReplaceLocal</c> is false for every outcome that is
         /// not an answer — a failed read never reaches this method.</para>
         ///
@@ -447,16 +371,16 @@ namespace Emberfall.Session
         /// a pre-numeric-migration <c>decks.json</c>; the deck drawer threw, and no sync could clear
         /// it because clearing it started by reading it. <c>ReplaceAll</c> exists for this.</para>
         ///
-        /// <para>Decks first, then characters — the mirror of creation's order (deck, then
-        /// character), and for the same reason: a deck with no character is the survivable half.</para>
+        /// <para><b>One store, one call, since ADR-0009.</b> This used to write decks first and then
+        /// characters — the mirror of creation's order, so a failure between the two left a deck with
+        /// no character rather than the reverse. There is no second write to order against any more,
+        /// and no half-replaced state to reason about.</para>
         /// </summary>
-        public void ReplaceRoster(IReadOnlyList<Character> characters, IReadOnlyList<DeckList> decks)
+        public void ReplaceRoster(IReadOnlyList<DeckList> decks)
         {
-            if (characters == null) throw new ArgumentNullException(nameof(characters));
             if (decks == null) throw new ArgumentNullException(nameof(decks));
 
             _decks.ReplaceAll(decks);
-            _characters.ReplaceAll(characters);
         }
 
         // ── Identity minting ────────────────────────────────────────────────────────────

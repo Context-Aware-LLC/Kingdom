@@ -260,32 +260,20 @@ namespace Emberfall.Presentation
 
         private static SubmitDeckMsg ConsumeSelectedDeck(ICardDatabase db)
         {
-            MatchDeckChoice choice = MatchDeckSelection.Take();
-            if (string.IsNullOrEmpty(choice.CharacterId) || string.IsNullOrEmpty(choice.DeckId))
+            string chosenDeckId = MatchDeckSelection.Take();
+            if (string.IsNullOrEmpty(chosenDeckId))
             {
                 Debug.LogWarning("[NetworkedGameBootstrap] no match deck was selected; using the server's prebuilt fallback.");
                 return null;
             }
 
             PlayerAccount account = PlayerAccount.Local;
-            Character selected = null;
-            IReadOnlyList<Character> roster = account.Roster();
-            for (int i = 0; i < roster.Count; i++)
-            {
-                if (roster[i].Id == choice.CharacterId)
-                {
-                    selected = roster[i];
-                    break;
-                }
-            }
-            if (selected == null)
-                throw new InvalidOperationException("The selected character no longer exists.");
 
             DeckList deck = null;
             IReadOnlyList<DeckList> decks = account.Decks();
             for (int i = 0; i < decks.Count; i++)
             {
-                if (decks[i].Id == choice.DeckId && decks[i].CharacterId == selected.Id)
+                if (decks[i].Id == chosenDeckId)
                 {
                     deck = decks[i];
                     break;
@@ -299,14 +287,14 @@ namespace Emberfall.Presentation
             // would call these decks drafts, so an L6 failure walked straight past this line and came
             // back as a closed socket reading "deck rejected: You don't own X." A client gate that is
             // laxer than the server's is not a gate.
-            QueueCheck queue = QueueEligibility.Check(deck, selected, db, account.OwnedCards());
+            QueueCheck queue = QueueEligibility.Check(deck, db, account.OwnedCards());
             if (!queue.IsEligible)
                 throw new InvalidOperationException("The selected deck is no longer queue ready: " + queue.Reason);
 
             // Remembered here, not at the roster's Select/Continue click: this is the one point that
             // is guaranteed to be an actual match start with a re-validated, queue-ready deck (Sam,
             // 2026-08-09) — what Find Game pre-arms its pick from next time.
-            account.RecordLastPlayed(selected.Id, deck.Id);
+            account.RecordLastPlayed(deck.Id);
 
             var lines = new List<DeckCardLine>(deck.Entries.Count);
             for (int i = 0; i < deck.Entries.Count; i++)
@@ -314,7 +302,11 @@ namespace Emberfall.Presentation
                 DeckEntry entry = deck.Entries[i];
                 lines.Add(new DeckCardLine(entry.CardId, entry.Count));
             }
-            return new SubmitDeckMsg(selected.Id, selected.PrimaryClass, selected.SecondaryClass, lines);
+            // The pairing comes off the DECK now (ADR-0009). It came off the character the deck was
+            // bound to, and SubmitDeckMsg carried that character's id alongside it — an id the
+            // message's own doc said "is not an identity the server trusts", which is why removing it
+            // cost the wire nothing.
+            return new SubmitDeckMsg(deck.PrimaryClass, deck.SecondaryClass, lines);
         }
 
         private void WireMatch(ICardDatabase db)

@@ -3,16 +3,23 @@
     <Style src="character-roster.uss" />
     <ui:VisualElement name="root" class="emb-root character-roster emb-bleed">
         <!--
+          A FLAT LIST OF DECKS (ADR-0009, 2026-09-04). This screen was a roster of characters, each
+          drawn as a row with its own deck strip inside it; the character menu overlay and the
+          delete-character modal that used to sit at the bottom of this file went with the type.
+          What is left is one grid of deck plates, built by CharacterRosterController.
+
           The create FORM is gone (NOR-278). The name field, class dropdowns, swap-order and
           starter-deck dropdown, and the Create button that used to fill a right-hand panel are
-          replaced by the "New Character" button below and the portrait-grid overlay at the bottom
-          of this file. This is the game-wide "eliminate forms" principle: no dropdowns, no
-          multi-field forms — the choice is made by tapping a picture.
+          replaced by the "New Deck" button below and the class-picker scene it opens. This is the
+          game-wide "eliminate forms" principle: no dropdowns, no multi-field forms — the choice is
+          made by tapping a picture.
         -->
         <ui:VisualElement class="roster-header">
             <ui:VisualElement class="roster-header-left">
-                <!-- The one way INTO character creation, top-left (NOR-278). -->
-                <ui:Button name="new-character" text="+ New Character" class="roster-button roster-button--cta new-character-button" />
+                <!-- One of the two ways into deck creation; the grid's trailing "+" is the other,
+                     and both load the class picker. The name is kept so the USS rule and the
+                     controller's Q both keep matching. -->
+                <ui:Button name="new-character" text="+ New Deck" class="roster-button roster-button--cta new-character-button" />
             </ui:VisualElement>
             <ui:VisualElement class="roster-header-actions">
                 <!-- The way to the whole card pool, with no deck panel and no class filter (Sam,
@@ -27,16 +34,17 @@
             <ui:VisualElement class="roster-panel roster-panel--list">
                 <ui:ScrollView name="roster-scroll" mode="Vertical" class="roster-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
                     <ui:VisualElement name="roster-list" class="roster-list" />
-                    <ui:Label name="empty-state" text="No characters yet — tap New Character to make your first." class="roster-empty" />
+                    <ui:Label name="empty-state" text="No decks yet — tap + to build your first." class="roster-empty" />
                 </ui:ScrollView>
                 <ui:Label name="status" text="" class="roster-status" />
             </ui:VisualElement>
         </ui:VisualElement>
 
         <!--
-          Find Game's third step. The first two — pick a character, pick one of its decks — are the
-          same rows the deck-management door draws; this bar is the only thing that door does not
-          have. Hidden entirely outside a match pick.
+          Find Game's second step. The first — pick a deck — is the same grid the deck-management
+          door draws; this bar is the only thing that door does not have. Hidden entirely outside a
+          match pick. (It was the THIRD step until ADR-0009, when picking a character stopped being
+          a step at all.)
         -->
         <ui:VisualElement name="match-bar" class="match-bar">
             <ui:Button name="match-continue" text="Continue" class="roster-button roster-button--cta" />
@@ -66,22 +74,20 @@
                     <ui:Button name="deck-image" text="Deck image" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-rename" text="Rename deck" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-change-back" text="Change card back" class="roster-button roster-button--ghost deck-action" />
-                    <ui:Button name="deck-set-default" text="Set as default" class="roster-button roster-button--ghost deck-action" />
+                    <!-- "Set as default" was here until ADR-0009. It answered "which of this
+                         character's decks do I open on"; a flat deck list does not ask it, and the
+                         queue never read the answer anyway (#343). -->
                     <ui:Button name="deck-delete" text="Delete deck" class="roster-button roster-button--danger deck-action" />
                     <ui:Label text="Double tap the deck to edit it." class="deck-edit-hint" />
                 </ui:VisualElement>
 
                 <!--
-                  What "+" opens. The same two starter shapes character creation offers, for the
-                  same reason: a blank deck is 30 decisions away from playable, and a player who
-                  came here from Find Game wants one they can queue with.
+                  The new-deck pane was here until ADR-0009: two buttons, generated or blank. A
+                  deck's class pairing is permanent from the moment it exists, so creating one now
+                  begins with choosing that pairing — a full screen of choice, not a pane — and "+"
+                  loads the class-picker scene. The two starter shapes are still offered, on that
+                  screen's confirm view.
                 -->
-                <ui:VisualElement name="deck-new-pane" class="deck-pane">
-                    <ui:Button name="deck-new-generated" text="Generate a queue-ready deck" class="roster-button roster-button--cta deck-action" />
-                    <ui:Button name="deck-new-blank" text="Start blank" class="roster-button roster-button--ghost deck-action" />
-                    <ui:Label name="deck-new-note" text="" class="create-help create-help--starter" />
-                </ui:VisualElement>
-
                 <ui:VisualElement name="deck-image-pane" class="deck-pane">
                     <ui:ScrollView name="deck-image-scroll" mode="Vertical" class="deck-image-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
                         <ui:VisualElement name="deck-image-grid" class="deck-back-grid" />
@@ -111,30 +117,10 @@
         </ui:VisualElement>
 
         <!--
-          What a character's NAME opens. Not a modal: a small card anchored under the name, over a
-          transparent scrim that catches the click that dismisses it. The row used to carry a
-          standing Delete button, which spent permanent width on the one action nobody wants to
-          reach for by accident (Sam, 2026-08-07).
+          Two overlays stood here until ADR-0009 and both went with the type they were about: the
+          character menu (a card anchored under a row's name, holding Delete character) and the
+          delete-character modal with its cascade warning. Deleting a deck is confirmed on the deck
+          dialog's own Delete pane, which is where every other thing done to a deck already lives.
         -->
-        <ui:VisualElement name="character-menu" class="character-menu character-menu--hidden emb-bleed">
-            <ui:VisualElement name="character-menu-scrim" class="character-menu-scrim emb-bleed" />
-            <ui:VisualElement name="character-menu-card" class="character-menu-card">
-                <ui:Label name="character-menu-title" text="" class="character-menu-title" />
-                <ui:Button name="character-menu-delete" text="Delete character" class="roster-button roster-button--danger deck-action" />
-            </ui:VisualElement>
-        </ui:VisualElement>
-
-
-        <ui:VisualElement name="delete-modal" class="delete-modal delete-modal--hidden emb-bleed">
-            <ui:VisualElement class="delete-dialog">
-                <ui:Label text="Delete character?" class="delete-title" />
-                <ui:Label name="delete-message" text="" class="delete-message" />
-                <ui:Label name="delete-error" text="" class="create-error" />
-                <ui:VisualElement class="delete-actions">
-                    <ui:Button name="cancel-delete" text="Cancel" class="roster-button roster-button--ghost emb-back" />
-                    <ui:Button name="confirm-delete" text="Delete character" class="roster-button roster-button--danger" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

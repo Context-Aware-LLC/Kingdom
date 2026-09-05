@@ -10,14 +10,23 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Character creation, as a scene (Sam, 2026-08-23). Three sequential views over one class
-    /// picker: pick the primary class (its Hero Power), pick the secondary (cards only), then name
-    /// the character and create it with NO deck — it lands in the roster as a lone "+" row, the
-    /// same empty state a character whose decks were all deleted already shows.
+    /// Deck creation, as a scene. Three sequential views over one class picker: pick the primary
+    /// class (its Hero Power), pick the secondary (cards only), then choose whether the deck arrives
+    /// generated or blank — and the deck is created carrying that pairing for good.
     ///
-    /// <para>It was a <c>.delete-modal</c> overlay inside <c>CharacterRosterScreen.uxml</c> until
-    /// then. Same call the Store got on 2026-08-20 and for the same reason: full-screen, opaque,
-    /// and a destination — the overlay was hosting rather than design.</para>
+    /// <para><b>This screen created CHARACTERS until 2026-09-04 (ADR-0009).</b> The ADR listed it as
+    /// deleted outright, and that was wrong in one respect the ADR's own ruling 1 makes plain:
+    /// <i>"a deck's pairing is immutable, so New Deck opens on a class picker."</i> This screen IS
+    /// that picker. Deleting it would have meant rebuilding the class plates (#312), the hero-power
+    /// block read off the power card (NOR-291) and the trait bullets (NOR-281) inside a modal pane.
+    /// So the flow was repurposed rather than replaced: the two passes and everything they draw are
+    /// unchanged, and only the thing at the end of them is different.</para>
+    ///
+    /// <para><b>The name field is gone with the character.</b> A character was named at creation
+    /// because its name was immutable; a deck's is not, and the roster renames one from its own
+    /// plate. Asking for it here would be a form standing between the player and a playable deck,
+    /// which is the shape this flow exists to avoid. The new deck takes <c>New Deck</c>, then
+    /// <c>New Deck 2</c>.</para>
     ///
     /// <para><b>Navigation is the caller-writes-its-own-way-home shape</b> that
     /// <c>ShopScreenController.ReturnScene</c> and <c>CollectionController.ReturnScene</c> use: the
@@ -31,9 +40,10 @@ namespace Emberfall.Presentation
         public static string ReturnScene = "CharacterRoster";
 
         /// <summary>
-        /// Every real class is pairable; NEUTRAL is not a class a character can be. A pairing whose
-        /// pool is too thin to generate a 30 is caught downstream by
-        /// <see cref="PlayerAccount.CanCreate"/>, not here — this screen creates without a deck.
+        /// Every real class is pairable; NEUTRAL is not a class a deck can be built on. A pairing
+        /// whose pool is too thin to generate a 30 is caught on the confirm view by
+        /// <see cref="PlayerAccount.CanCreate"/>, which disables Generate and leaves Blank — thin is
+        /// a reason to build by hand, never a reason to refuse the pairing.
         /// </summary>
         private static readonly CardClass[] PairableClasses = BuildPairableClasses();
 
@@ -62,9 +72,9 @@ namespace Emberfall.Presentation
         private VisualElement _heroColumnLeft, _heroColumnRight;
         private VisualElement _detailPortrait, _detailBullets, _powerBlock;
         private Label _passTitle, _passHelp, _detailName, _detailPass;
-        private Label _powerName, _powerDesc, _confirmSummary, _nameError;
-        private Button _detailSelect;
-        private TextField _nameField;
+        private Label _powerName, _powerDesc, _confirmSummary, _createError;
+        private Button _detailSelect, _createGenerated, _createBlank;
+        private Label _starterNote;
         private FirstRunTidbit _tidbit;
 
         private void OnEnable()
@@ -75,7 +85,7 @@ namespace Emberfall.Presentation
             _root = GetComponent<UIDocument>().rootVisualElement?.Q<VisualElement>("root");
             if (_root == null)
             {
-                Debug.LogError("[CharacterCreate] No rootVisualElement — is the UXML assigned?");
+                Debug.LogError("[DeckCreate] No rootVisualElement — is the UXML assigned?");
                 return;
             }
 
@@ -95,14 +105,13 @@ namespace Emberfall.Presentation
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[CharacterCreate] could not open this device's collection: {ex.Message}");
-                SetNameError("Collection unavailable — see the console.");
+                Debug.LogError($"[DeckCreate] could not open this device's collection: {ex.Message}");
+                SetCreateError("Collection unavailable — see the console.");
                 return;
             }
 
             _picks.Clear();
-            _nameField?.SetValueWithoutNotify("");
-            SetNameError("");
+            SetCreateError("");
             ShowView(CreateView.Picker);
 
             // THE ONE TIDBIT THAT SHIPS (spec §4, slice 4). It fires BEFORE the first pick, not
@@ -138,8 +147,10 @@ namespace Emberfall.Presentation
             _detailSelect = _root.Q<Button>("create-detail-select");
 
             _confirmSummary = _root.Q<Label>("create-confirm-summary");
-            _nameField = _root.Q<TextField>("create-name-field");
-            _nameError = _root.Q<Label>("create-name-error");
+            _starterNote = _root.Q<Label>("create-starter-note");
+            _createGenerated = _root.Q<Button>("create-generated");
+            _createBlank = _root.Q<Button>("create-blank");
+            _createError = _root.Q<Label>("create-error");
         }
 
         private void Wire()
@@ -148,8 +159,8 @@ namespace Emberfall.Presentation
             _root.Q<Button>("create-detail-back")?.RegisterCallback<ClickEvent>(_ => ShowView(CreateView.Picker));
             _detailSelect?.RegisterCallback<ClickEvent>(_ => TogglePick(_detailClass));
             _root.Q<Button>("create-change")?.RegisterCallback<ClickEvent>(_ => ChangeSecondary());
-            _root.Q<Button>("create-continue")?.RegisterCallback<ClickEvent>(_ => CommitCreate());
-            _nameField?.RegisterValueChangedCallback(_ => SetNameError(""));
+            _createGenerated?.RegisterCallback<ClickEvent>(_ => CommitCreate(StarterDeck.Generated));
+            _createBlank?.RegisterCallback<ClickEvent>(_ => CommitCreate(StarterDeck.Blank));
         }
 
         /// <summary>True while pass 1 is live — nothing picked yet, so the next pick is the primary.</summary>
@@ -179,7 +190,7 @@ namespace Emberfall.Presentation
             {
                 if (_passTitle != null) _passTitle.text = "Choose your hero";
                 if (_passHelp != null)
-                    _passHelp.text = "A character is TWO classes. This first pick decides your Hero Power.";
+                    _passHelp.text = "A deck is TWO classes. This first pick decides your Hero Power.";
             }
             else
             {
@@ -310,9 +321,10 @@ namespace Emberfall.Presentation
             if (_db == null || powerId <= 0 || !_db.TryGet(powerId, out CardDefinition power)) return "";
             return string.IsNullOrEmpty(power.Text) ? power.Name : $"{power.Name} · {power.Text}";
         }
+
         /// <summary>
-        /// Add or remove a hero from the picks. Selecting appends (primary first, then secondary);
-        /// re-selecting a picked hero removes it. The moment both slots are full the flow
+        /// Add or remove a class from the picks. Selecting appends (primary first, then secondary);
+        /// re-selecting a picked class removes it. The moment both slots are full the flow
         /// auto-advances to the confirm view.
         /// </summary>
         private void TogglePick(CardClass heroClass)
@@ -329,7 +341,7 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// The per-hero detail view: portrait, name, a pass-specific line, the class's hero power,
+        /// The per-class detail view: portrait, name, a pass-specific line, the class's hero power,
         /// and the traits block.
         ///
         /// <para><b>The hero power block is READ OFF THE CARD, never written here (NOR-291).</b> Its
@@ -352,7 +364,7 @@ namespace Emberfall.Presentation
             if (_detailName != null) _detailName.text = Pretty(heroClass);
             if (_detailPass != null)
                 _detailPass.text = ChoosingPrimary
-                    ? "Selecting this hero locks in its Hero Power."
+                    ? "Selecting this class locks in its Hero Power."
                     : $"Selecting this class adds its cards to your pool. Your Hero Power stays {Pretty(_picks[0])}'s.";
 
             FillTraitBullets(heroClass);
@@ -396,18 +408,53 @@ namespace Emberfall.Presentation
             if (_powerDesc != null) _powerDesc.text = found ? CardTextStyling.Style(power.Text) : "";
         }
 
-        /// <summary>The confirm view, reached once both classes are picked.</summary>
+        /// <summary>
+        /// The confirm view, reached once both classes are picked. It states the pairing and offers
+        /// the two starter shapes (§2.11).
+        ///
+        /// <para><b>The first deck is not asked</b> — <see cref="DeckCreation.OffersStarterChoice"/>
+        /// is false for an account with none, because a player with nothing has nothing to build
+        /// from and an empty deck is a worse introduction than a playable one. Blank is hidden
+        /// rather than disabled in that case: a control that can never be pressed on this visit is
+        /// a question the player has to answer and then discover was not being asked.</para>
+        ///
+        /// <para><b>Generated is disabled, never hidden, when the pool is thin.</b> That is a fact
+        /// about the pairing the player just chose, and they can act on it by going back — so it
+        /// has to stay visible with the reason beside it.</para>
+        /// </summary>
         private void RefreshConfirm()
         {
             if (_picks.Count < 2) { ShowView(CreateView.Picker); return; }
 
             CardClass primary = _picks[0];
             CardClass secondary = _picks[1];
+            SetCreateError("");
+
             if (_confirmSummary != null)
                 _confirmSummary.text =
                     $"{Pretty(primary)} + {Pretty(secondary)} — {Pretty(primary)}'s Hero Power, cards " +
-                    "from both. Choose a name to continue.";
-            SetNameError("");
+                    "from both. This pairing is permanent.";
+
+            bool offersChoice = _account != null && _account.OffersStarterChoice();
+            bool canGenerate = _account != null
+                               && PlayerAccount.CanCreate(primary, secondary, _db, _account.OwnedCards());
+
+            Show(_createBlank, offersChoice);
+            _createGenerated?.SetEnabled(canGenerate);
+            if (_createGenerated != null)
+                _createGenerated.text = offersChoice ? "Generate a queue-ready deck" : "Build my first deck";
+
+            if (_starterNote != null)
+                _starterNote.text = !canGenerate
+                    ? $"{Pretty(primary)} + {Pretty(secondary)} doesn't have enough cards for a full deck " +
+                      "yet, so only a blank draft is available."
+                    : offersChoice
+                        ? "A generated deck is legal and playable straight away. A blank one is yours to build."
+                        : "";
+
+            // A first deck on a pairing too thin to generate would leave this view with no live
+            // control at all. Blank is the honest way out of that, so it comes back.
+            if (!canGenerate) Show(_createBlank, true);
         }
 
         /// <summary>"Change something" drops the SECONDARY pick only and returns to the grid on
@@ -419,32 +466,26 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Create the character from the two picks and the confirmed name, then go STRAIGHT INTO
-        /// THE DECK BUILDER on a new blank deck.
+        /// Create the deck from the two picks and go STRAIGHT INTO THE DECK BUILDER.
         ///
-        /// <para><b>The name carries VULN-002's validation with it.</b> <see cref="PlayerName.Check"/>
-        /// is the same predicate the server's <c>MatchGate</c> enforces on the wire, so this reuses
-        /// that gate rather than re-implementing it — a bare text field with no check is exactly what
-        /// the vulnerability index forbids. The character is created NAMED (its name is immutable),
-        /// which is why the field lives here at the one moment the character is constructed rather
-        /// than as a deferred rename surface.</para>
+        /// <para><b>The cap is checked here as well as on the "+" plate that opened this screen.</b>
+        /// Not belt-and-braces: this scene is reachable with a stale <c>ReturnScene</c> from a roster
+        /// drawn before another surface saved a deck, and the alternative to checking is minting a
+        /// ninth deck the server will then refuse on push — a local deck that silently never syncs is
+        /// the worst of the three outcomes.</para>
         ///
-        /// <para><b>A deck, and no stop at the roster</b> (#204). This used to land the character as
-        /// a lone "+" row and return here, so creating one meant scrolling back through the roster to
-        /// find it and entering the deck builder by hand — "it's assumed that you would like to enter
-        /// the deck" (Sam). It now mints a blank deck, sets it as the default, and hands off through
-        /// <see cref="OpenDeckForEdit"/>, which parks CharacterRoster as the return scene so Back
-        /// still comes here. <c>CreateCharacterWithoutDeck</c> keeps its name because the account API
-        /// still constructs the two separately; only this flow joins them.</para>
+        /// <para><b>It goes to the deck builder even for a generated deck.</b> A generated deck needs
+        /// no editing, but the player asked for a deck and landing back on a roster to find it is the
+        /// detour #204 removed from the old flow.</para>
         /// </summary>
-        private void CommitCreate()
+        private void CommitCreate(StarterDeck kind)
         {
             if (_account == null || _picks.Count < 2) return;
 
-            NameCheck name = PlayerName.Check(_nameField?.value ?? "");
-            if (!name.IsValid)
+            if (!_account.CanCreateDeck())
             {
-                SetNameError(name.Reason);
+                SetCreateError($"You already have {DeckCreation.MaxPerAccount} decks. " +
+                               "Delete one to make room.");
                 return;
             }
 
@@ -453,32 +494,37 @@ namespace Emberfall.Presentation
 
             try
             {
-                Character created = _account.CreateCharacterWithoutDeck(name.Normalized, primary, secondary);
-                Debug.Log($"[CharacterCreate] created character id={created.Id} " +
-                          $"pairing={created.PrimaryClass}/{created.SecondaryClass} (no deck)");
-                DeckList newDeck = _account.CreateDeck(created, _db, UnusedDeckName(created), StarterDeck.Blank);
-                created.DefaultDeckId = newDeck.Id;
-                _account.Save(created);
-                Debug.Log($"[CharacterCreate] created blank deck '{newDeck.Name}' for {created.Name}; opening deck builder.");
-                OpenDeckForEdit(created.Id, newDeck.Id);
+                DeckList created = _account.CreateDeck(_db, UnusedDeckName(), primary, secondary, kind);
+                Debug.Log($"[DeckCreate] created {kind} deck '{created.Name}' " +
+                          $"pairing={created.PrimaryClass}/{created.SecondaryClass} " +
+                          $"({created.TotalCount} cards); opening deck builder.");
+                OpenDeckForEdit(created.Id);
+            }
+            catch (DeckGenerationException ex)
+            {
+                // Reachable despite CanCreate: ownership can change under a screen the player left
+                // open, and the generator is the only thing that knows for certain.
+                Debug.LogError($"[DeckCreate] could not generate a deck: {ex.Message}");
+                SetCreateError("That pairing can't fill a deck right now. Start blank instead.");
+                Show(_createBlank, true);
             }
             catch (ArgumentException ex)
             {
-                Debug.LogError($"[CharacterCreate] character creation failed: {ex.Message}");
-                SetNameError(ex.Message);
+                Debug.LogError($"[DeckCreate] deck creation refused: {ex.Message}");
+                SetCreateError(ex.Message);
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[CharacterCreate] character creation could not be saved: {ex.Message}");
-                SetNameError("Character could not be saved — see the console.");
+                Debug.LogError($"[DeckCreate] deck creation could not be saved: {ex.Message}");
+                SetCreateError("The deck could not be saved — see the console.");
             }
         }
 
-        private void SetNameError(string message)
+        private void SetCreateError(string message)
         {
-            if (_nameError == null) return;
-            _nameError.text = message ?? "";
-            Show(_nameError, !string.IsNullOrEmpty(message));
+            if (_createError == null) return;
+            _createError.text = message ?? "";
+            Show(_createError, !string.IsNullOrEmpty(message));
         }
 
         private static void Show(VisualElement element, bool visible)
@@ -495,17 +541,14 @@ namespace Emberfall.Presentation
 
         private static string ClassSlug(CardClass c) => c.ToString().ToLowerInvariant();
 
-        // ---- Ported with the flow (#161/#250): CommitCreate hands the new character
-        // straight to the deck builder, which is the behaviour the modal had. Both of these
-        // were CharacterRosterController's and stay identical to it on purpose.
-
         /// <summary>"New Deck", then "New Deck 2" — a duplicate name is legal but indistinguishable
-        /// in a strip of otherwise identical card backs.</summary>
-        private string UnusedDeckName(Character character)
+        /// in a grid of otherwise identical card backs. Account-wide since ADR-0009; it used to be
+        /// scoped to one character's decks.</summary>
+        private string UnusedDeckName()
         {
             const string root = "New Deck";
             var taken = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (DeckList deck in DeckQuery.BoundTo(character.Id, _account.Decks()))
+            foreach (DeckList deck in _account.Decks())
                 taken.Add(deck.Name);
 
             if (!taken.Contains(root)) return root;
@@ -516,13 +559,12 @@ namespace Emberfall.Presentation
             }
         }
 
-        // Both doors lead to one controller (#152) in one scene (#154): handing it a character is
-        // what puts it in deckbuild mode, and View Collection above hands it none. Both call
-        // Go("Collection"); the only difference between the two doors is the pending character.
-        private void OpenDeckForEdit(string characterId, string deckId)
+        // Both doors lead to one controller (#152) in one scene (#154): handing it a deck is what
+        // puts it in deckbuild mode, and View Collection hands it none. Both call Go("Collection");
+        // the only difference between the two doors is the pending deck.
+        private void OpenDeckForEdit(string deckId)
         {
             CollectionController.ReturnScene = "CharacterRoster";
-            CollectionController.PendingCharacterId = characterId;
             CollectionController.PendingDeckId = deckId;
             Go("Collection");
         }
@@ -531,7 +573,7 @@ namespace Emberfall.Presentation
         {
             if (!UnityEngine.Application.CanStreamedLevelBeLoaded(sceneName))
             {
-                Debug.LogError($"[CharacterCreate] Scene '{sceneName}' is not in the build list. " +
+                Debug.LogError($"[DeckCreate] Scene '{sceneName}' is not in the build list. " +
                                "Run Emberfall/Build/Sync Scene List, and remember that menu item does " +
                                "not reach EditorBuildSettings.asset on disk — hand-edit it to match.");
                 return;

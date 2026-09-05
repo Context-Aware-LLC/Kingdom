@@ -10,14 +10,14 @@ namespace Emberfall.Session
 {
     /// <summary>
     /// The game's one <see cref="HttpRosterGateway"/>, and the only place a server answer is allowed
-    /// to replace this device's characters and decks.
+    /// to replace this device's decks.
     ///
     /// <para><b>What this makes true.</b> Card ownership already survived a reinstall — the
     /// entitlement ledger is keyed on the authenticated <c>player_id</c> and
-    /// <see cref="CollectionGateway"/> reads it down. The roster did not: characters and decks live
-    /// only in <c>characters.json</c> / <c>decks.json</c> under the local scope, and the OS deletes
-    /// those with the app. Signing back into the right identity therefore restored a player's cards
-    /// and left them with no characters to play them with. This is the other half of that wire.</para>
+    /// <see cref="CollectionGateway"/> reads it down. Decks did not: they live only in
+    /// <c>decks.json</c> under the local scope, and the OS deletes that with the app. Signing back
+    /// into the right identity therefore restored a player's cards and left them with nothing to
+    /// play them with. This is the other half of that wire.</para>
     ///
     /// <para><b>Both directions, and they are not symmetrical.</b> <see cref="SyncAsync"/> replaces
     /// the local files from the server and is the only caller of
@@ -78,8 +78,8 @@ namespace Emberfall.Session
         // ── Read down ───────────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Pull this identity's characters and decks down and replace the local copy. Returns what
-        /// happened, for a log line; callers do not need to branch on it.
+        /// Pull this identity's decks down and replace the local copy. Returns what happened, for a
+        /// log line; callers do not need to branch on it.
         ///
         /// <para><b>Never throws, and never leaves a half-written roster.</b> A sign-in must not fail
         /// because a roster did not arrive — the player is authenticated either way, and the screens
@@ -103,9 +103,8 @@ namespace Emberfall.Session
                 if (await AdoptLocalRosterAsync(accessToken, snapshot, cancellationToken))
                     return RosterSyncStatus.Known;
 
-                PlayerAccount.Local.ReplaceRoster(snapshot.Characters, snapshot.Decks);
-                Debug.Log($"[Roster] synced {snapshot.Characters.Count} character(s) and " +
-                          $"{snapshot.Decks.Count} deck(s) for the signed-in account.");
+                PlayerAccount.Local.ReplaceRoster(snapshot.Decks);
+                Debug.Log($"[Roster] synced {snapshot.Decks.Count} deck(s) for the signed-in account.");
                 return snapshot.Status;
             }
             catch (Exception ex)
@@ -119,25 +118,25 @@ namespace Emberfall.Session
         }
 
         /// <summary>
-        /// The one-time adoption of a roster that predates the wire, and the ONLY place a local
-        /// character is treated as more authoritative than the server's answer.
+        /// The one-time adoption of a roster that predates the wire, and the ONLY place a local deck
+        /// is treated as more authoritative than the server's answer.
         ///
         /// <para><b>Why it exists.</b> Every device that ran this game before the roster routes landed
-        /// has characters and decks in its local scope that the server has never seen. The
-        /// server-authoritative rule would delete them on the first sign-in — silently, permanently,
-        /// and for data that is by construction the only copy in existence. Pushing them up instead
-        /// costs one round trip per row and loses nothing.</para>
+        /// has decks in its local scope that the server has never seen. The server-authoritative rule
+        /// would delete them on the first sign-in — silently, permanently, and for data that is by
+        /// construction the only copy in existence. Pushing them up instead costs one round trip per
+        /// row and loses nothing.</para>
         ///
         /// <para><b>Why it is narrow.</b> It fires only when the server answered <c>known</c> with
-        /// NO characters at all while this device has some. Once anything of this player's is on the
+        /// NO decks at all while this device has some. Once anything of this player's is on the
         /// server, the server is the record and a local row the server does not have is a deletion,
         /// not an orphan.</para>
         ///
         /// <para><b>RETIREMENT TRIGGER — this method must be gated or deleted the moment a second
         /// device can hold one account's roster.</b> With two devices, "server empty, device
         /// non-empty" stops meaning "never uploaded" and starts meaning "deleted on the other
-        /// device", and this would resurrect it — the same defect <c>DELETE /characters/{id}</c> was
-        /// added to fix, one level up. The gate to use is <c>onboarded</c> from <c>GET /session</c>:
+        /// device", and this would resurrect it — the same defect <c>DELETE /decks/{id}</c> exists to
+        /// make expressible. The gate to use is <c>onboarded</c> from <c>GET /session</c>:
         /// adopt only when it is false. That flag is already on the wire and the client does not read
         /// it yet, so this comment is the thing that connects them. Whoever makes the client block on
         /// <c>/session</c> discharges this.</para>
@@ -147,7 +146,7 @@ namespace Emberfall.Session
         private static async Task<bool> AdoptLocalRosterAsync(
             string accessToken, RosterSnapshot snapshot, CancellationToken cancellationToken)
         {
-            if (snapshot.Characters.Count > 0) return false;
+            if (snapshot.Decks.Count > 0) return false;
 
             // READING THE LOCAL ROSTER MUST NOT BE ABLE TO ABORT THE SYNC. A cache this build's
             // reader refuses is the one that most needs replacing, and it throws here first: a
@@ -155,38 +154,30 @@ namespace Emberfall.Session
             // 2026-09-02, and the throw propagated out to SyncAsync, which logged "offline" and left
             // the bad file in place for ever. Unreadable means there is nothing to adopt — fall
             // through and let the server's answer overwrite it.
-            IReadOnlyList<Character> localCharacters;
+            //
+            // AN UNMIGRATED decks.json IS EXACTLY THAT CASE SINCE ADR-0009. CollectionJson.ReadDecks
+            // now REQUIRES the pairing and throws on a file written before it, which is deliberate —
+            // that throw is what stops a pre-ADR deck being adopted with no classes on it. The
+            // migration tool is what rescues those decks; this path correctly declines to.
             IReadOnlyList<DeckList> localDecks;
             try
             {
-                localCharacters = PlayerAccount.Local.Roster();
                 localDecks = PlayerAccount.Local.Decks();
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[Roster] this device's roster will not read ({ex.GetType().Name}: " +
+                Debug.LogWarning($"[Roster] this device's decks will not read ({ex.GetType().Name}: " +
                                  $"{ex.Message}); there is nothing to adopt, so the server's answer " +
                                  "replaces it.");
                 return false;
             }
 
-            if (localCharacters.Count == 0) return false;
+            if (localDecks.Count == 0) return false;
 
-            Debug.Log($"[Roster] the server has no characters for this account and this device has " +
-                      $"{localCharacters.Count}. Uploading them rather than deleting them.");
+            Debug.Log($"[Roster] the server has no decks for this account and this device has " +
+                      $"{localDecks.Count}. Uploading them rather than deleting them.");
 
             bool complete = true;
-            foreach (Character character in localCharacters)
-            {
-                RosterWriteStatus status = await Gateway
-                    .CreateCharacterAsync(accessToken, character, cancellationToken);
-                if (status != RosterWriteStatus.Ok)
-                {
-                    complete = false;
-                    Debug.LogWarning($"[Roster] could not upload character {character.Id}: {status}.");
-                }
-            }
-
             foreach (DeckList deck in localDecks)
             {
                 RosterWriteStatus status = await Gateway
@@ -208,20 +199,6 @@ namespace Emberfall.Session
         }
 
         // ── Push up ─────────────────────────────────────────────────────────────────────
-
-        /// <summary>Tell the server about a character this device just created. Call AFTER the local
-        /// write, never instead of it.</summary>
-        public static Task<RosterWriteStatus> PushCharacterCreatedAsync(
-            string accessToken, Character character, CancellationToken cancellationToken = default)
-            => PushAsync("create character " + character?.Id,
-                         () => Gateway.CreateCharacterAsync(accessToken, character, cancellationToken));
-
-        /// <summary>Tell the server about a character this device just deleted. The server cascades
-        /// to that character's decks, so do NOT also push a delete for each of them.</summary>
-        public static Task<RosterWriteStatus> PushCharacterDeletedAsync(
-            string accessToken, string characterId, CancellationToken cancellationToken = default)
-            => PushAsync("delete character " + characterId,
-                         () => Gateway.DeleteCharacterAsync(accessToken, characterId, cancellationToken));
 
         /// <summary>Tell the server about a deck this device just saved — an upsert, and never
         /// legality-gated: a draft is a savable deck, so it is a pushable one.</summary>
@@ -267,8 +244,8 @@ namespace Emberfall.Session
         /// without reaching the network, which is the right answer for a device that is not signed in.
         ///
         /// <para>Guarded because it is read from ordinary UI handlers: composing the provider touches
-        /// the settings asset and player prefs, and a throw there must not take down a character
-        /// creation that has already been saved locally.</para>
+        /// the settings asset and player prefs, and a throw there must not take down a deck creation
+        /// that has already been saved locally.</para>
         /// </summary>
         public static string AccessToken
         {
