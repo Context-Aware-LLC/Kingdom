@@ -51,7 +51,7 @@ namespace Emberfall.Editor
         // --surface-1, the screen background the wall sits on (UI/Common/theme.uss).
         private static readonly Color Surface1 = new Color32(20, 25, 34, 255);
 
-        [MenuItem("Emberfall/Preview Card Faces (offscreen)")]
+        [MenuItem("Emberfall/Preview (offscreen)/Card Faces")]
         public static void Render()
         {
             ICardDatabase db = CardDatabaseLoader.Load();
@@ -142,22 +142,13 @@ namespace Emberfall.Editor
                       string.Join("\n  ", ids));
         }
 
-        /// <summary>
-        /// The twelve EMBERWARD/TIDECALLER cards imported 2026-07-26
-        /// (hist-docs/source-snapshots/2026-07-31-pre-reorganization/tooling/unity-import-emberward-tidecaller.md §4 step 3). Two of them carry a keyword
-        /// no card has ever carried before — VANGUARD on Ashfall Wyrm, LIFEDRAIN on Emberdrinker —
-        /// so their pill has never rendered, and this sheet is where that shows up or doesn't.
-        /// The weapon, Deepfrost Spear, is the highest-risk face in the batch: the engine supports
-        /// weapons fully and Unity has never drawn one.
-        /// </summary>
-        [MenuItem("Emberfall/Preview Card Faces — EMBERWARD/TIDECALLER batch (offscreen)")]
-        public static void RenderEmberwardTidecaller() => RenderIds(new[]
-        {
-             167 /*ember_stoke_the_coals*/,  1056 /*ember_emberdrinker*/,     1051 /*ember_slagshell_bulwark*/,
-            1055 /*ember_kiln_warden*/,      1052 /*ember_forgeheart_colossus*/, 1054 /*ember_ashfall_wyrm*/,
-             169 /*tide_hoarfrost_lash*/,     168 /*tide_fathom_crush*/,        54 /*tide_deepfrost_spear*/,
-            1058 /*tide_hollowshell_warden*/,1057 /*tide_drowned_titan*/,     1053 /*tide_glacial_leviathan*/,
-        }, "card_faces_emberward_tidecaller");
+        // THE EMBERWARD/TIDECALLER BATCH MENU ITEM WAS REMOVED 2026-09-04 (Sam, auditing the
+        // Emberfall menu: "so many of those are one offs and have no future use"). It was a fixed
+        // list of the twelve cards imported on 2026-07-26, kept to prove that VANGUARD and
+        // LIFEDRAIN pills and the first weapon face rendered at all. They have rendered for weeks,
+        // both keywords ship on more cards than those two, and the id list could only ever go
+        // stale. RenderIds below is the general form and outlived it — call it from a scratch
+        // menu item with whatever ids the question is actually about.
 
         // ── Spread ──────────────────────────────────────────────────────────────────
 

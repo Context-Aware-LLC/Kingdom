@@ -41,12 +41,12 @@ namespace Emberfall.Editor
 
         public void OnPreprocessBuild(BuildReport report) => Write();
 
-        [MenuItem("Emberfall/Build/Write Build Stamp (what a tester sees)")]
-        public static void WriteFromMenu()
-        {
-            string text = Write();
-            Debug.Log("[BuildStamp] " + AssetPath + " = " + text);
-        }
+        // NO MENU ITEM (removed 2026-09-04, Sam auditing the Emberfall menu). There was a
+        // "Build/Write Build Stamp (what a tester sees)" entry here, and it was redundant the day
+        // it was written: this class is an IPreprocessBuildWithReport, so OnPreprocessBuild above
+        // stamps EVERY build with no one having to remember. The menu item's only distinct effect
+        // was to write a stamp OUTSIDE a build — i.e. to leave Assets/Resources holding a stamp
+        // for a build that was never made, which is worse than no stamp at all.
 
         private static string Write()
         {

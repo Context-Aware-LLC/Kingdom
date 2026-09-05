@@ -45,7 +45,7 @@ namespace Emberfall.Editor
         // parchment and stat bosses rather than a flat quad.
         private const int CardId = 1003;   // ember_cinder_drake
 
-        [MenuItem("Emberfall/Preview Card Frost (offscreen)")]
+        [MenuItem("Emberfall/Preview (offscreen)/Card Frost")]
         public static void Render()
         {
             Directory.CreateDirectory(OutDir);

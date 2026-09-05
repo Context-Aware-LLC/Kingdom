@@ -44,7 +44,7 @@ namespace Emberfall.Editor
         // frame, gem, keyword icons and six TMP labels rather than a bare body quad.
         private const int CardId = 1003;   // ember_cinder_drake
 
-        [MenuItem("Emberfall/Preview Card Dissolve (offscreen)")]
+        [MenuItem("Emberfall/Preview (offscreen)/Card Dissolve")]
         public static void Render()
         {
             Directory.CreateDirectory(OutDir);

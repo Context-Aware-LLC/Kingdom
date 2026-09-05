@@ -34,7 +34,7 @@ namespace Emberfall.Editor
         // 30-card opening deck, the last card, and empty.
         private static readonly int[] Counts = { 30, 26, 21, 16, 11, 6, 3, 1, 0 };
 
-        [MenuItem("Emberfall/Preview Deck Pile (offscreen)")]
+        [MenuItem("Emberfall/Preview (offscreen)/Deck Pile")]
         public static void Render()
         {
             string outDir = Path.Combine(RepoRoot(), "artifacts", "deck-pile-preview");

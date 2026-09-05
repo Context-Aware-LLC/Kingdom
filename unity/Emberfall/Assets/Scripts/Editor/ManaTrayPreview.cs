@@ -10,9 +10,10 @@ namespace Emberfall.Editor
     /// <summary>
     /// Renders the mana grid through the real <see cref="ManaTrayView"/> for a spread of ManaPool
     /// states and writes one PNG per state to <c>artifacts/mana-tray-preview/</c>, at the pixel
-    /// size the rail actually occupies on a 1080p screen. Sibling in spirit to
-    /// <see cref="TurnClockVerify"/> and <see cref="B3TransportVerify"/>: a named one-click check
-    /// of a slice the .NET tests cannot show.
+    /// size the rail actually occupies on a 1080p screen. A named one-click check of a slice the
+    /// .NET tests cannot show — they prove the binder computes the right count, only the engine
+    /// shows the crystals. (This used to cite TurnClockVerify and B3TransportVerify as siblings;
+    /// both were deleted in the 2026-09-04 Emberfall-menu audit as spent one-offs.)
     ///
     /// Why the states below and not a single sample: the rail was previously signed off from one
     /// offscreen render at Max = 10, which is the only cap at which the old binder's divide-by-Max
@@ -55,7 +56,7 @@ namespace Emberfall.Editor
             new Case("cap-full",         10, 10, 0, 0, 0),
         };
 
-        [MenuItem("Emberfall/Preview Mana Tray (offscreen)")]
+        [MenuItem("Emberfall/Preview (offscreen)/Mana Tray")]
         public static void Render()
         {
             string outDir = Path.Combine(RepoRoot(), "artifacts", "mana-tray-preview");
