@@ -61,9 +61,10 @@ namespace Emberfall.Core.Collection
         /// pairing also gets NEUTRAL and a second class).
         /// </summary>
         public static bool CanGenerate(CardClass primary, CardClass secondary, ICardDatabase db,
-                                       IOwnedCardCounts? owned = null)
+                                       IOwnedCardCounts? owned = null, bool excludeSecondary = false)
             => db != null
-               && Capacity(Candidates(primary, secondary, db, owned), owned) >= DeckValidator.DeckSize;
+               && Capacity(Candidates(primary, secondary, db, owned, excludeSecondary), owned)
+                  >= DeckValidator.DeckSize;
 
         /// <summary>
         /// A legal 30-card deck for the given pairing, drawn from
@@ -76,10 +77,20 @@ namespace Emberfall.Core.Collection
         /// </summary>
         /// <param name="deckId">Caller-supplied so this assembly mints no ambient identity.</param>
         /// <param name="rng">Seeded by the caller; the same seed yields the same deck.</param>
+        /// <param name="excludeSecondary">
+        /// Draw from Primary ∪ NEUTRAL only — the pairing is still recorded as
+        /// <paramref name="primary"/>/<paramref name="secondary"/> (L5 only requires the pairing be
+        /// two distinct classes, not that both actually appear; L4 already permits an empty half), but
+        /// no <paramref name="secondary"/> card can be drawn. For a real player's starter deck this
+        /// stays false: dual-class is the shipped format, and a starter should show both halves of the
+        /// pairing. It exists for a caller measuring PRIMARY's own card power — NetSoak's matrix, whose
+        /// deck otherwise came out majority the OPPONENT'S class (measured 2026-09-05, EMBERWARD vs
+        /// GRAVEKEEP: 7 of 30 cards were the class the cell was named for).
+        /// </param>
         /// <exception cref="DeckGenerationException">The pool cannot supply 30 legal copies.</exception>
         public static DeckList Generate(CardClass primary, CardClass secondary, ICardDatabase db,
                                         DeterministicRandom rng, string deckId, string? deckName = null,
-                                        IOwnedCardCounts? owned = null)
+                                        IOwnedCardCounts? owned = null, bool excludeSecondary = false)
         {
             if (db == null) throw new ArgumentNullException(nameof(db));
             if (rng == null) throw new ArgumentNullException(nameof(rng));
@@ -91,7 +102,7 @@ namespace Emberfall.Core.Collection
                     "required. Generating against it would produce a deck that fails L5 on its own face.",
                     nameof(primary));
 
-            var candidates = Candidates(primary, secondary, db, owned);
+            var candidates = Candidates(primary, secondary, db, owned, excludeSecondary);
             int capacity = Capacity(candidates, owned);
             if (capacity < DeckValidator.DeckSize)
                 throw new DeckGenerationException(
@@ -178,12 +189,16 @@ namespace Emberfall.Core.Collection
         /// loop and cannot be reached by a later edit that forgets to consult the cap.
         /// </summary>
         private static List<CardDefinition> Candidates(CardClass primary, CardClass secondary,
-                                                       ICardDatabase db, IOwnedCardCounts? owned = null)
+                                                       ICardDatabase db, IOwnedCardCounts? owned = null,
+                                                       bool excludeSecondary = false)
         {
             var list = new List<CardDefinition>();
             if (db == null) return list;
             foreach (var def in db.AllCollectible())
+            {
+                if (excludeSecondary && def.Class == secondary) continue;
                 if (DeckList.AllowsClass(primary, secondary, def.Class) && CapFor(def, owned) > 0) list.Add(def);
+            }
             list.Sort((a, b) => a.Id.CompareTo(b.Id));
             return list;
         }
