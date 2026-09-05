@@ -508,6 +508,10 @@ namespace Emberfall.Presentation
                 if (this == null || visit != _visit || !ReferenceEquals(account, PlayerAccount.Local)) return;
                 if (status != RosterWriteStatus.Ok)
                 {
+                    // Unlike RosterGateway.PushAsync, ConfirmNewDeckAsync is a bare passthrough with no
+                    // logging of its own — every non-Ok status reached this screen and nothing else,
+                    // so a real failure and "no console line at all" were the same symptom (#361).
+                    Debug.LogWarning($"[DeckCreate] server did not confirm the new deck ({status}).");
                     SetCreateError(status switch
                     {
                         RosterWriteStatus.Unauthenticated => "Sign in again to create a deck.",
