@@ -106,24 +106,12 @@ namespace Emberfall.Net.Server.Accounts
                 if (!_decks.TryGetValue(playerId, out var bag))
                     _decks[playerId] = bag = new Dictionary<string, DeckList>(StringComparer.Ordinal);
 
-                // The pairing is immutable: a re-save may move everything else and must move
-                // NEITHER class. Postgres gets this from its upsert's `do update set`, which does
-                // not list the class columns; here it is by hand, because a plain `bag[id] = deck`
-                // replaces every field. Inherited from SaveCharacterAsync (ADR-0009).
-                if (bag.TryGetValue(deck.Id, out var stored)
-                    && (stored.PrimaryClass != deck.PrimaryClass
-                        || stored.SecondaryClass != deck.SecondaryClass))
-                {
-                    var kept = new DeckList(stored.PrimaryClass, stored.SecondaryClass)
-                    {
-                        Id = deck.Id,
-                        Name = deck.Name,
-                        CardBackId = deck.CardBackId,
-                        ShowcaseCardId = deck.ShowcaseCardId,
-                    };
-                    kept.Entries.AddRange(deck.Entries);
-                    deck = kept;
-                }
+                // The pairing is immutable: a re-save may move everything else and must move NEITHER
+                // class (ADR-0009 ruling 1). Through DeckPairing rather than by hand here, so this
+                // store and Postgres cannot answer differently — see that file for why the character
+                // table's "leave the columns out of the do-update-set" trick did not transfer.
+                bag.TryGetValue(deck.Id, out var stored);
+                deck = DeckPairing.Preserve(stored, deck);
 
                 bag[deck.Id] = deck;
                 _deckOwner[deck.Id] = playerId;

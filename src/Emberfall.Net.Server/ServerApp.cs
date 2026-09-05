@@ -493,6 +493,11 @@ namespace Emberfall.Net.Server
             // deck is still saved. What IS refused is a write that cannot be ATTRIBUTED: a body that
             // will not parse (400, Malformed), an empty/whitespace deck id (400, InvalidId), or an
             // id another player already owns (409, DuplicateId).
+            //
+            // AND ONE REFUSAL ABOUT THE ACCOUNT, NOT THE DECK: a NEW deck on an account already
+            // holding DeckCreation.MaxPerAccount of them (409, AtCapacity). That is the server half
+            // of ADR-0009's cap, and it is the half that makes it a cap — the client's disabled "+"
+            // plate is the courtesy. Editing a deck the account already holds is never refused.
             app.MapPut("/decks/{id}", async (HttpContext context, string id) =>
             {
                 string? bearer = null;
@@ -501,10 +506,9 @@ namespace Emberfall.Net.Server
                     header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                     bearer = header.Substring("Bearer ".Length).Trim();
 
-                // AUTH BEFORE READ. Same defect, same fix as POST /characters (see
-                // CharacterCreateEndpoint.IsAuthenticatedAsync): reading the whole body before
-                // authenticating lets an unauthenticated caller make the server buffer an unbounded
-                // body for free.
+                // AUTH BEFORE READ. Reading the whole body before authenticating lets an
+                // unauthenticated caller make the server buffer an unbounded body for free. POST
+                // /characters carried the same guard for the same reason until ADR-0009 deleted it.
                 if (!await DeckWriteEndpoint.IsAuthenticatedAsync(
                         bearer, cfg.TokenVerifier, context.RequestAborted))
                 {
@@ -523,7 +527,7 @@ namespace Emberfall.Net.Server
                 return Results.Json(new
                 {
                     // "saved" | "unauthenticated" | "unavailable" | "malformed" | "invalidid" |
-                    // "duplicateid".
+                    // "duplicateid" | "atcapacity".
                     status = result.Status.ToString().ToLowerInvariant(),
                 }, statusCode: result.HttpStatus);
             });

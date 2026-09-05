@@ -49,9 +49,18 @@ namespace Emberfall.Core.Collection
         /// make. Flattening the roster removed that incidental bound, so this is a real new rule and
         /// not a moved one.</para>
         ///
-        /// <para><b>Spend it on BOTH sides.</b> A cap only the client holds is not a cap: the deck
-        /// write route has to refuse the ninth as well, for the same reason <c>QueueEligibility</c>
-        /// re-runs server-side. See the callers.</para>
+        /// <para><b>Spent on BOTH sides, and it has to be.</b> A cap only the client holds is not a
+        /// cap, for the same reason <c>QueueEligibility</c> re-runs server-side. The two enforcement
+        /// points, both reading this constant through <see cref="CanCreate"/>:</para>
+        ///
+        /// <list type="bullet">
+        /// <item>the client, disabling the roster's "+" plate and its header twin
+        /// (<c>PlayerAccount.CanCreateDeck</c>) — a courtesy, so the player is told before they
+        /// spend a screen choosing a pairing;</item>
+        /// <item><c>PUT /decks/{id}</c>, answering <c>AtCapacity</c> (409) to a NEW deck on a full
+        /// account — the one that actually holds. A re-save of a deck the account already has is
+        /// never refused, at any count, or a player at the limit could not edit what they own.</item>
+        /// </list>
         /// </summary>
         public const int MaxPerAccount = 8;
 

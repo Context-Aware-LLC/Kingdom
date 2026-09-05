@@ -11,10 +11,10 @@ using NpgsqlTypes;
 namespace Emberfall.Net.Server.Accounts
 {
     /// <summary>
-    /// The durable player-data store — characters and decks, modelled on
-    /// <see cref="PostgresAccountStore"/>. Same retry posture, same reasons: this deployment runs
-    /// with <c>auto_stop_machines = "suspend"</c>, so the pool's first query after an idle resume can
-    /// land on a socket the far end already closed.
+    /// The durable player-data store — decks, modelled on <see cref="PostgresAccountStore"/>. Same
+    /// retry posture, same reasons: this deployment runs with <c>auto_stop_machines = "suspend"</c>,
+    /// so the pool's first query after an idle resume can land on a socket the far end already
+    /// closed.
     /// </summary>
     public sealed class PostgresPlayerDataStore : IPlayerDataStore
     {
@@ -32,9 +32,9 @@ namespace Emberfall.Net.Server.Accounts
         /// method for the full "why" (Fly suspend/resume killing a pooled socket).
         ///
         /// <para>PRECONDITION: every caller must be idempotent, because a retry re-runs the whole
-        /// unit. Every operation here is — both saves are upserts, both deletes are filtered
-        /// deletes, and <see cref="DeleteCharacterAsync"/> wraps its two statements in a transaction
-        /// so a retry after a half-applied attempt finds nothing left to do. Do not add a
+        /// unit. Every operation here is — the delete is a filtered delete, and
+        /// <see cref="SaveDeckAsync"/> is a read-merge-upsert inside one transaction, so a retry
+        /// after a half-applied attempt re-reads and merges to the same answer. Do not add a
         /// non-idempotent operation without re-reading this comment.</para>
         /// </summary>
         private async Task<T> WithConnectionAsync<T>(
@@ -104,33 +104,76 @@ namespace Emberfall.Net.Server.Accounts
                 return new PlayerRoster(decks);
             }, ct);
 
-        /// <summary>Upsert, guarded by <c>where deck.player_id = excluded.player_id</c>. When that
-        /// guard fails the statement matches zero rows and reports <c>INSERT 0 0</c> — the write did
-        /// not happen, so this returns false rather than letting a refusal read as a save. The
-        /// refusal is about ATTRIBUTION, never about the deck being legal.
+        /// <summary>
+        /// Upsert one deck, keeping the pairing the stored row already has.
         ///
-        /// <para><b>The pairing rides inside <c>body</c></b> (ADR-0009), which is replaced wholesale
-        /// on every save — so unlike the old <c>character</c> table, immutability cannot be enforced
-        /// by leaving a column out of the <c>do update set</c>. <see cref="DeckWriteEndpoint"/> owns
-        /// that check, because it is the only layer that sees the incoming and stored pairings
-        /// together.</para></summary>
+        /// <para>Guarded by <c>where deck.player_id = excluded.player_id</c>. When that guard fails
+        /// the statement matches zero rows and reports <c>INSERT 0 0</c> — the write did not happen,
+        /// so this returns false rather than letting a refusal read as a save. That refusal is about
+        /// ATTRIBUTION, never about the deck being legal.</para>
+        ///
+        /// <para><b>READ-THEN-MERGE, IN A TRANSACTION, AND IT HAS TO BE.</b> The obvious
+        /// implementation is the one this had until 2026-09-04: a bare
+        /// <c>do update set body = excluded.body</c>. That was correct while the pairing lived in its
+        /// own <c>character</c> columns — leaving them out of the update list made them physically
+        /// immutable at no cost. The pairing rides INSIDE <c>deck.body</c> now, so replacing the blob
+        /// replaces the pairing with it, and this store would have silently allowed a change that
+        /// <see cref="InMemoryPlayerDataStore"/> refuses. The <c>select … for update</c> is what makes
+        /// the read and the write one decision rather than a race between two devices.</para>
+        ///
+        /// <para>Still idempotent, which <see cref="WithConnectionAsync"/> requires: a retry re-reads
+        /// the row it may have just written and merges to the same answer.</para>
+        /// </summary>
         public Task<bool> SaveDeckAsync(string playerId, DeckList deck, CancellationToken ct = default)
         {
-            string body = CollectionJson.WriteDecks(new[] { deck });
             var now = DateTimeOffset.UtcNow;
             return WithConnectionAsync(async conn =>
             {
-                await using var cmd = new NpgsqlCommand(
+                await using var tx = await conn.BeginTransactionAsync(ct).ConfigureAwait(false);
+
+                DeckList? stored = null;
+                await using (var read = new NpgsqlCommand(
+                    "select body from deck where deck_id=$1 and player_id=$2 for update", conn, tx))
+                {
+                    read.Parameters.Add(P(NpgsqlDbType.Text, deck.Id));
+                    read.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                    var existing = await read.ExecuteScalarAsync(ct).ConfigureAwait(false) as string;
+                    if (!string.IsNullOrEmpty(existing))
+                    {
+                        // A row this build's reader refuses is a row whose pairing cannot be honoured.
+                        // Treating that as "no stored pairing" lets the incoming one through, which is
+                        // the only outcome that does not strand the player's deck for ever.
+                        try
+                        {
+                            var parsed = CollectionJson.ReadDecks(existing!);
+                            stored = parsed.Count > 0 ? parsed[0] : null;
+                        }
+                        catch (CollectionFormatException)
+                        {
+                            stored = null;
+                        }
+                    }
+                }
+
+                string body = CollectionJson.WriteDecks(new[] { DeckPairing.Preserve(stored, deck) });
+
+                int written;
+                await using (var cmd = new NpgsqlCommand(
                     "insert into deck (deck_id, player_id, body, created_at, updated_at) " +
                     "values ($1,$2,$3,$4,$4) " +
                     "on conflict (deck_id) do update set body = excluded.body, " +
                     "  updated_at = excluded.updated_at " +
-                    "where deck.player_id = excluded.player_id", conn);
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, deck.Id));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, body));
-                cmd.Parameters.Add(P(NpgsqlDbType.TimestampTz, now.UtcDateTime));
-                return await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false) != 0;
+                    "where deck.player_id = excluded.player_id", conn, tx))
+                {
+                    cmd.Parameters.Add(P(NpgsqlDbType.Text, deck.Id));
+                    cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                    cmd.Parameters.Add(P(NpgsqlDbType.Text, body));
+                    cmd.Parameters.Add(P(NpgsqlDbType.TimestampTz, now.UtcDateTime));
+                    written = await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+                }
+
+                await tx.CommitAsync(ct).ConfigureAwait(false);
+                return written != 0;
             }, ct);
         }
 

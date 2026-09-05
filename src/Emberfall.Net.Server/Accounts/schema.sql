@@ -160,8 +160,10 @@ alter table ladder_match enable row level security;
 -- are fields of the JSON, for the same reason the cards are: nothing server-side queries on them.
 -- The consequence is worth knowing before you write an UPDATE — the pairing is immutable, and that
 -- CANNOT be enforced here by leaving a column out of an upsert's `do update set`, the way the old
--- character table enforced it. `body` is replaced wholesale on every save, so DeckWriteEndpoint is
--- the only layer that can compare an incoming pairing against the stored one.
+-- character table enforced it. `body` is replaced wholesale on every save. So
+-- PostgresPlayerDataStore.SaveDeckAsync does a `select body ... for update`, merges through
+-- DeckPairing.Preserve and writes the result, all in one transaction. A hand-written UPDATE against
+-- this table bypasses that and can move a pairing the application refuses to move.
 --
 -- `character_id text not null` was a column here until 2026-09-04. Its readers were the cascade
 -- delete and the roster join, both gone. A live database still has it; the migration drops it.
