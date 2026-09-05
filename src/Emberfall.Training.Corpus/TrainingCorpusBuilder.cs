@@ -141,8 +141,9 @@ namespace Emberfall.Training.Corpus
                 GameState projectedBeforeP0 = GameStateProjector.Project(host.State, p0);
                 GameState projectedBeforeP1 = GameStateProjector.Project(host.State, p1);
                 GameState projectedBefore = intent.Player == p0 ? projectedBeforeP0 : projectedBeforeP1;
+                EpisodeDecisionHash expectedHashes = episode.DecisionHashes[index];
                 IReadOnlyList<PlayerIntent> actions = legal.Enumerate(host.State, intent.Player,
-                    includeConcede: true);
+                    includeConcede: expectedHashes.BehaviorAllowsConcede ?? true);
                 List<JsonElement> actionJson = EncodeActions(actions, new MatchId(episode.MatchId));
                 PlayerIntent normalizedIntent = NormalizeIntent(host.State, intent);
                 JsonElement chosenJson = EncodeIntent(normalizedIntent, new MatchId(episode.MatchId));
@@ -152,7 +153,6 @@ namespace Emberfall.Training.Corpus
                         $"Episode '{episode.MatchId}' intent {index} ({intent.GetType().Name}) was not in the legal action set.");
 
                 string beforeHash = GameStateHasher.Hash(projectedBefore);
-                EpisodeDecisionHash expectedHashes = episode.DecisionHashes[index];
                 if (expectedHashes.BehaviorChosenActionIndex.HasValue
                     && (expectedHashes.BehaviorChosenActionIndex.Value != chosenIndex
                         || expectedHashes.BehaviorLegalActionCount != actions.Count))
