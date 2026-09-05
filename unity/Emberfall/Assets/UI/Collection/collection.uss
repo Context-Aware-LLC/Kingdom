@@ -1000,17 +1000,21 @@
 }
 
 /* The two nested panel sprites replace the former flat wall while keeping the responsive card
- * contract untouched. Their horizontal inset still steps with screen class, but their vertical
- * padding is deliberately zero (Sam, 2026-09-01): the class rail now spends that space, and an
- * empty ledge below the final card row is not useful chrome. CardWall keeps its separate 8dp
- * rounding reserve so the final row still cannot clip on device pixels. */
+ * contract untouched. Vertical padding here was zero from 2026-09-01 until 2026-09-05 (Sam: the
+ * class rail spends the space, an empty ledge below the final row is not useful chrome), but zero
+ * meant the ListView had nothing reserving the top/bottom border art from its own scrolled rows —
+ * both frames' 9-slice borders sit ON TOP of card content the instant a row scrolls under them
+ * (Sam, 2026-09-05: "cards go up and over the chrome"). --space-2/3 are fractions of the panel's
+ * own height (see the authored-px note above `.collection-list`), not a device unit, so this is a
+ * small clip margin, not the old ledge back. Bottom runs one step bigger than top (--space-3 vs
+ * --space-2) — Sam, 2026-09-05, the last row still wanted a touch more room than the first.*/
 .collection .db-collection.chrome-panel--outer {
-    padding: 0 20px;
+    padding: var(--space-2) 20px var(--space-3) 20px;
     background-color: rgba(18, 23, 31, 0.96);
     overflow: hidden;
 }
 .collection .collection-list.chrome-panel--recessed {
-    padding: 0 20px;
+    padding: var(--space-2) 20px var(--space-3) 20px;
 }
 /* NO PADDING HERE. This selector outranks `.deck-drawer`, so a padding written here silently
  * replaces the whole edge-clearance shorthand that rule authors -- which is exactly what
