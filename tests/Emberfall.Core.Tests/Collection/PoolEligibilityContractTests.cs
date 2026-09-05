@@ -69,9 +69,11 @@ namespace Emberfall.Core.Tests.Collection
             rows.Add(Card(FixtureCard.Id("excluded_row"), collectible: false));
 
             var db = new PoolDatabase(rows);
-            var character = new Character("chr-1", "Test", CardClass.NEUTRAL, CardClass.NEUTRAL);
 
-            var deck = DefaultDeckGenerator.Generate(character, db, new DeterministicRandom(1234), "d");
+            // A real pairing, because a generated deck must have one (ADR-0009 L5) — the rows above
+            // are all NEUTRAL, so which two classes these are does not change what is drawn.
+            var deck = DefaultDeckGenerator.Generate(
+                CardClass.GRAVEKEEP, CardClass.VERDANT, db, new DeterministicRandom(1234), "d");
 
             Assert.That(deck.TotalCount, Is.EqualTo(30), "sanity: the pool was wide enough to build.");
             Assert.That(deck.CountOf(FixtureCard.Id("excluded_row")), Is.Zero,

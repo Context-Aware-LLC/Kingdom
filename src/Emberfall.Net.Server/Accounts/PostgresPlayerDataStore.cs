@@ -11,10 +11,10 @@ using NpgsqlTypes;
 namespace Emberfall.Net.Server.Accounts
 {
     /// <summary>
-    /// The durable player-data store — characters and decks, modelled on
-    /// <see cref="PostgresAccountStore"/>. Same retry posture, same reasons: this deployment runs
-    /// with <c>auto_stop_machines = "suspend"</c>, so the pool's first query after an idle resume can
-    /// land on a socket the far end already closed.
+    /// The durable player-data store — decks, modelled on <see cref="PostgresAccountStore"/>. Same
+    /// retry posture, same reasons: this deployment runs with <c>auto_stop_machines = "suspend"</c>,
+    /// so the pool's first query after an idle resume can land on a socket the far end already
+    /// closed.
     /// </summary>
     public sealed class PostgresPlayerDataStore : IPlayerDataStore
     {
@@ -32,9 +32,9 @@ namespace Emberfall.Net.Server.Accounts
         /// method for the full "why" (Fly suspend/resume killing a pooled socket).
         ///
         /// <para>PRECONDITION: every caller must be idempotent, because a retry re-runs the whole
-        /// unit. Every operation here is — both saves are upserts, both deletes are filtered
-        /// deletes, and <see cref="DeleteCharacterAsync"/> wraps its two statements in a transaction
-        /// so a retry after a half-applied attempt finds nothing left to do. Do not add a
+        /// unit. Every operation here is — the delete is a filtered delete, and
+        /// <see cref="SaveDeckAsync"/> is a read-merge-upsert inside one transaction, so a retry
+        /// after a half-applied attempt re-reads and merges to the same answer. Do not add a
         /// non-idempotent operation without re-reading this comment.</para>
         /// </summary>
         private async Task<T> WithConnectionAsync<T>(
@@ -87,23 +87,10 @@ namespace Emberfall.Net.Server.Accounts
         public Task<PlayerRoster> ReadAsync(string playerId, CancellationToken ct = default)
             => WithConnectionAsync(async conn =>
             {
-                var characters = new List<Character>();
-                await using (var cmd = new NpgsqlCommand(
-                    "select character_id, name, primary_class, secondary_class, default_deck_id " +
-                    "from character where player_id=$1", conn))
-                {
-                    cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-                    await using var r = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
-                    while (await r.ReadAsync(ct).ConfigureAwait(false))
-                    {
-                        characters.Add(new Character(
-                            r.GetString(0), r.GetString(1),
-                            Enum.Parse<CardClass>(r.GetString(2)),
-                            Enum.Parse<CardClass>(r.GetString(3)),
-                            r.GetString(4)));
-                    }
-                }
-
+                // One query where there were two (ADR-0009). The character table it also read is
+                // gone, and the pairing it supplied now arrives inside `body` — so the join that
+                // used to reconstruct a deck's legal pool from a second table is not simplified,
+                // it is absent.
                 var decks = new List<DeckList>();
                 await using (var cmd = new NpgsqlCommand(
                     "select body from deck where player_id=$1", conn))
@@ -114,55 +101,79 @@ namespace Emberfall.Net.Server.Accounts
                         decks.Add(CollectionJson.ReadDecks(r.GetString(0))[0]);
                 }
 
-                return new PlayerRoster(characters, decks);
+                return new PlayerRoster(decks);
             }, ct);
 
-        /// <summary>Upsert, guarded by <c>where character.player_id = excluded.player_id</c>. When
-        /// that guard fails the statement matches zero rows and reports <c>INSERT 0 0</c> — the write
-        /// did not happen, so this returns false rather than letting a refusal read as a save.</summary>
-        public Task<bool> SaveCharacterAsync(string playerId, Character character, CancellationToken ct = default)
-        {
-            var now = DateTimeOffset.UtcNow;
-            return WithConnectionAsync(async conn =>
-            {
-                await using var cmd = new NpgsqlCommand(
-                    "insert into character (character_id, player_id, name, primary_class, secondary_class, default_deck_id, created_at, updated_at) " +
-                    "values ($1,$2,$3,$4,$5,$6,$7,$7) " +
-                    "on conflict (character_id) do update set name = excluded.name, " +
-                    "  default_deck_id = excluded.default_deck_id, updated_at = excluded.updated_at " +
-                    "where character.player_id = excluded.player_id", conn);
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, character.Id));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, character.Name));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, character.PrimaryClass.ToString()));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, character.SecondaryClass.ToString()));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, character.DefaultDeckId));
-                cmd.Parameters.Add(P(NpgsqlDbType.TimestampTz, now.UtcDateTime));
-                return await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false) != 0;
-            }, ct);
-        }
-
-        /// <summary>Upsert, guarded by <c>where deck.player_id = excluded.player_id</c>. Same
-        /// zero-rows-means-not-written rule as <see cref="SaveCharacterAsync"/>; the refusal is about
-        /// ATTRIBUTION, never about the deck being legal.</summary>
+        /// <summary>
+        /// Upsert one deck, keeping the pairing the stored row already has.
+        ///
+        /// <para>Guarded by <c>where deck.player_id = excluded.player_id</c>. When that guard fails
+        /// the statement matches zero rows and reports <c>INSERT 0 0</c> — the write did not happen,
+        /// so this returns false rather than letting a refusal read as a save. That refusal is about
+        /// ATTRIBUTION, never about the deck being legal.</para>
+        ///
+        /// <para><b>READ-THEN-MERGE, IN A TRANSACTION, AND IT HAS TO BE.</b> The obvious
+        /// implementation is the one this had until 2026-09-04: a bare
+        /// <c>do update set body = excluded.body</c>. That was correct while the pairing lived in its
+        /// own <c>character</c> columns — leaving them out of the update list made them physically
+        /// immutable at no cost. The pairing rides INSIDE <c>deck.body</c> now, so replacing the blob
+        /// replaces the pairing with it, and this store would have silently allowed a change that
+        /// <see cref="InMemoryPlayerDataStore"/> refuses. The <c>select … for update</c> is what makes
+        /// the read and the write one decision rather than a race between two devices.</para>
+        ///
+        /// <para>Still idempotent, which <see cref="WithConnectionAsync"/> requires: a retry re-reads
+        /// the row it may have just written and merges to the same answer.</para>
+        /// </summary>
         public Task<bool> SaveDeckAsync(string playerId, DeckList deck, CancellationToken ct = default)
         {
-            string body = CollectionJson.WriteDecks(new[] { deck });
             var now = DateTimeOffset.UtcNow;
             return WithConnectionAsync(async conn =>
             {
-                await using var cmd = new NpgsqlCommand(
-                    "insert into deck (deck_id, player_id, character_id, body, created_at, updated_at) " +
-                    "values ($1,$2,$3,$4,$5,$5) " +
+                await using var tx = await conn.BeginTransactionAsync(ct).ConfigureAwait(false);
+
+                DeckList? stored = null;
+                await using (var read = new NpgsqlCommand(
+                    "select body from deck where deck_id=$1 and player_id=$2 for update", conn, tx))
+                {
+                    read.Parameters.Add(P(NpgsqlDbType.Text, deck.Id));
+                    read.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                    var existing = await read.ExecuteScalarAsync(ct).ConfigureAwait(false) as string;
+                    if (!string.IsNullOrEmpty(existing))
+                    {
+                        // A row this build's reader refuses is a row whose pairing cannot be honoured.
+                        // Treating that as "no stored pairing" lets the incoming one through, which is
+                        // the only outcome that does not strand the player's deck for ever.
+                        try
+                        {
+                            var parsed = CollectionJson.ReadDecks(existing!);
+                            stored = parsed.Count > 0 ? parsed[0] : null;
+                        }
+                        catch (CollectionFormatException)
+                        {
+                            stored = null;
+                        }
+                    }
+                }
+
+                string body = CollectionJson.WriteDecks(new[] { DeckPairing.Preserve(stored, deck) });
+
+                int written;
+                await using (var cmd = new NpgsqlCommand(
+                    "insert into deck (deck_id, player_id, body, created_at, updated_at) " +
+                    "values ($1,$2,$3,$4,$4) " +
                     "on conflict (deck_id) do update set body = excluded.body, " +
-                    "  character_id = excluded.character_id, updated_at = excluded.updated_at " +
-                    "where deck.player_id = excluded.player_id", conn);
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, deck.Id));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, deck.CharacterId));
-                cmd.Parameters.Add(P(NpgsqlDbType.Text, body));
-                cmd.Parameters.Add(P(NpgsqlDbType.TimestampTz, now.UtcDateTime));
-                return await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false) != 0;
+                    "  updated_at = excluded.updated_at " +
+                    "where deck.player_id = excluded.player_id", conn, tx))
+                {
+                    cmd.Parameters.Add(P(NpgsqlDbType.Text, deck.Id));
+                    cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                    cmd.Parameters.Add(P(NpgsqlDbType.Text, body));
+                    cmd.Parameters.Add(P(NpgsqlDbType.TimestampTz, now.UtcDateTime));
+                    written = await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+                }
+
+                await tx.CommitAsync(ct).ConfigureAwait(false);
+                return written != 0;
             }, ct);
         }
 
@@ -174,53 +185,6 @@ namespace Emberfall.Net.Server.Accounts
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, deckId));
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
                 return await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false) != 0;
-            }, ct);
-
-        /// <summary>
-        /// The character and its decks, in ONE transaction. Two statements outside a transaction
-        /// would leave a window where the decks are gone and the character is not — and, on the
-        /// retry this store is built to survive, could delete the decks twice while the character
-        /// delete never lands at all.
-        ///
-        /// <para><b>The deck delete filters on <c>player_id</c> as well as <c>character_id</c>,</b>
-        /// even though it runs only after this player's own character row was matched. The
-        /// redundancy is the point: <c>character_id</c> on <c>deck</c> is a plain text column with
-        /// no foreign key, so nothing but this predicate stops a row another player wrote under the
-        /// same character id from being swept up.</para>
-        ///
-        /// <para>Idempotent, as <see cref="WithConnectionAsync"/> requires: a second run finds no
-        /// character row, deletes nothing, and returns false.</para>
-        /// </summary>
-        public Task<bool> DeleteCharacterAsync(string playerId, string characterId, CancellationToken ct = default)
-            => WithConnectionAsync(async conn =>
-            {
-                await using var tx = await conn.BeginTransactionAsync(ct).ConfigureAwait(false);
-
-                await using (var chars = new NpgsqlCommand(
-                    "delete from character where character_id=$1 and player_id=$2", conn, tx))
-                {
-                    chars.Parameters.Add(P(NpgsqlDbType.Text, characterId));
-                    chars.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-                    if (await chars.ExecuteNonQueryAsync(ct).ConfigureAwait(false) == 0)
-                    {
-                        // Nothing of this player's to delete. Roll back rather than commit an empty
-                        // transaction, and never touch the decks — a character id this player does
-                        // not own must not reach the cascade.
-                        await tx.RollbackAsync(ct).ConfigureAwait(false);
-                        return false;
-                    }
-                }
-
-                await using (var decks = new NpgsqlCommand(
-                    "delete from deck where character_id=$1 and player_id=$2", conn, tx))
-                {
-                    decks.Parameters.Add(P(NpgsqlDbType.Text, characterId));
-                    decks.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-                    await decks.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
-                }
-
-                await tx.CommitAsync(ct).ConfigureAwait(false);
-                return true;
             }, ct);
 
         private static NpgsqlParameter P(NpgsqlDbType type, object? value)

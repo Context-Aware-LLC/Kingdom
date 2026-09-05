@@ -67,7 +67,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 Token, Accepts(), new InMemoryAccountStore(new FixedTime()), new InMemoryPlayerDataStore());
 
             Assert.That(r.Status, Is.EqualTo(RosterResultStatus.Known));
-            Assert.That(r.Roster.Characters, Is.Empty,
+            Assert.That(r.Roster.Decks, Is.Empty,
                 "empty is a REAL answer, distinct from Unavailable — this is the whole point");
         }
 
@@ -77,13 +77,15 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var accounts = new InMemoryAccountStore(new FixedTime());
             var data = new InMemoryPlayerDataStore();
             Account mine = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
-            await data.SaveCharacterAsync(mine.PlayerId, new Character("c1", "Ashe", CardClass.EMBERWARD, CardClass.TIDECALLER));
-            await data.SaveCharacterAsync("somebody-else", new Character("c2", "Nope", CardClass.VERDANT, CardClass.NIGHTVEIL));
+            await data.SaveDeckAsync(mine.PlayerId,
+                new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "d1", Name = "Ashe" });
+            await data.SaveDeckAsync("somebody-else",
+                new DeckList(CardClass.VERDANT, CardClass.NIGHTVEIL) { Id = "d2", Name = "Nope" });
 
             RosterResult r = await RosterEndpoint.ReadAsync(Token, Accepts(), accounts, data);
 
-            Assert.That(r.Roster.Characters.Count, Is.EqualTo(1));
-            Assert.That(r.Roster.Characters[0].Id, Is.EqualTo("c1"));
+            Assert.That(r.Roster.Decks.Count, Is.EqualTo(1));
+            Assert.That(r.Roster.Decks[0].Id, Is.EqualTo("d1"));
         }
     }
 }

@@ -36,6 +36,24 @@ namespace Emberfall.Net.Server.Accounts
         /// and this must not report a save that did not happen. A refusal to ATTRIBUTE, not a refusal
         /// to store — the deck itself was never judged. 409.</summary>
         DuplicateId,
+
+        /// <summary>
+        /// This account already holds <see cref="DeckCreation.MaxPerAccount"/> decks and this write
+        /// would be a NEW one. 409.
+        ///
+        /// <para><b>The one refusal here that is about the account rather than the deck</b>, and the
+        /// only one a player can act on — delete a deck and try again. It is emphatically not the
+        /// "decks are stored, never refused" rule breaking: that rule is about LEGALITY, and this
+        /// says nothing about whether the deck is legal. A re-save of a deck the account already
+        /// holds is never refused, however full the account is, because it adds nothing.</para>
+        ///
+        /// <para><b>RETIREMENT TRIGGER — if the cap ever becomes per-account data</b> (a purchased
+        /// deck slot, a subscription tier), this stops being a constant and the check below stops
+        /// being able to read it off <c>DeckCreation</c>. Move the constant's home in the same commit
+        /// that gives an account its own limit, and update <c>DeckCreation.MaxPerAccount</c>'s
+        /// docstring, which currently claims one flat number for everyone.</para>
+        /// </summary>
+        AtCapacity,
     }
 
     /// <summary>The deck-write answer, before it becomes JSON.</summary>
@@ -58,6 +76,7 @@ namespace Emberfall.Net.Server.Accounts
             DeckWriteStatus.Malformed => 400,
             DeckWriteStatus.InvalidId => 400,
             DeckWriteStatus.DuplicateId => 409,
+            DeckWriteStatus.AtCapacity => 409,
             _ => 500,
         };
     }
@@ -65,9 +84,13 @@ namespace Emberfall.Net.Server.Accounts
     /// <summary>
     /// <c>PUT /decks/{id}</c> and <c>DELETE /decks/{id}</c>. Spec: <c>docs/dev-docs/specs/login-handshake.md</c>.
     ///
-    /// <para>Resolves the account exactly as <see cref="SessionEndpoint"/>, <see cref="RosterEndpoint"/>
-    /// and <see cref="CharacterCreateEndpoint"/> do — verifier, then
-    /// <c>CredentialHash.Of(identity.Subject)</c>, then <c>ResolveOrCreateAsync</c>.</para>
+    /// <para>Resolves the account exactly as <see cref="SessionEndpoint"/> and
+    /// <see cref="RosterEndpoint"/> do — verifier, then <c>CredentialHash.Of(identity.Subject)</c>,
+    /// then <c>ResolveOrCreateAsync</c>.</para>
+    ///
+    /// <para><b>THE DECK CAP LIVES HERE</b> (ADR-0009 ruling 2). It is the only refusal on this route
+    /// that is about the ACCOUNT rather than the deck, and the only one the player can do anything
+    /// about. See <see cref="DeckWriteStatus.AtCapacity"/>.</para>
     ///
     /// <para><b>DECKS ARE STORED, NEVER REFUSED.</b> Validation is a QUEUE-time concern
     /// (<c>DeckSubmission.Validate</c> / <c>DeckValidator</c>), not a write-time one — an illegal
@@ -83,11 +106,13 @@ namespace Emberfall.Net.Server.Accounts
     public static class DeckWriteEndpoint
     {
         /// <summary>
-        /// Route-level pre-auth for <c>PUT /decks/{id}</c>, mirroring
-        /// <see cref="CharacterCreateEndpoint.IsAuthenticatedAsync"/>. That route is the other one
-        /// whose body has to be read before <see cref="SaveAsync"/> can be called at all — an
-        /// unbounded <c>ReadToEndAsync</c> over a body from a caller nobody has authenticated yet.
-        /// So the route asks this first and answers 401 before touching the body.
+        /// Route-level pre-auth for <c>PUT /decks/{id}</c>. This route's body has to be read before
+        /// <see cref="SaveAsync"/> can be called at all — an unbounded <c>ReadToEndAsync</c> over a
+        /// body from a caller nobody has authenticated yet. So the route asks this first and answers
+        /// 401 before touching the body.
+        ///
+        /// <para><c>CharacterCreateEndpoint.IsAuthenticatedAsync</c> was its twin and had the same
+        /// reason; ADR-0009 deleted that route, so this is now the only one that needs the gate.</para>
         ///
         /// <para><see cref="SaveAsync"/> still verifies for itself: it is callable without a route,
         /// and its refusal is the one that decides the answer. This is a gate, not the check.</para>
@@ -151,6 +176,19 @@ namespace Emberfall.Net.Server.Accounts
             // One authority for the id, or a client could write to an id it did not address.
             deck.Id = deckId;
 
+            // THE CAP, SERVER SIDE (ADR-0009 ruling 2). The client disables its "+" plate at
+            // DeckCreation.MaxPerAccount and that is not a cap: a cap only the client holds is a
+            // suggestion. Both halves read the same constant, so they cannot drift.
+            //
+            // Counted against a fresh read rather than trusted from the client, and scoped to NEW
+            // decks: a re-save of a deck this account already holds occupies no additional slot and
+            // must never be refused, or a player at the limit could not edit the decks they have.
+            // A draft counts, exactly as it does client-side — the cap is about how many decks are
+            // kept, not how many are legal.
+            PlayerRoster existing = await playerDataStore.ReadAsync(account.PlayerId, ct).ConfigureAwait(false);
+            if (!DeckCreation.CanCreate(existing.Decks) && !HoldsDeck(existing, deckId))
+                return new DeckWriteResult(DeckWriteStatus.AtCapacity);
+
             bool saved = await playerDataStore.SaveDeckAsync(account.PlayerId, deck, ct).ConfigureAwait(false);
 
             // The store refuses an id another player owns. Reporting 200 for a row that was never
@@ -191,6 +229,16 @@ namespace Emberfall.Net.Server.Accounts
 
             bool removed = await playerDataStore.DeleteDeckAsync(account.PlayerId, deckId, ct).ConfigureAwait(false);
             return new DeckWriteResult(removed ? DeckWriteStatus.Deleted : DeckWriteStatus.NotFound);
+        }
+
+        /// <summary>Does this roster already carry that deck id? What separates an edit from a new
+        /// deck, and therefore what the cap is applied to.</summary>
+        private static bool HoldsDeck(PlayerRoster roster, string deckId)
+        {
+            for (int i = 0; i < roster.Decks.Count; i++)
+                if (string.Equals(roster.Decks[i].Id, deckId, System.StringComparison.Ordinal))
+                    return true;
+            return false;
         }
     }
 }

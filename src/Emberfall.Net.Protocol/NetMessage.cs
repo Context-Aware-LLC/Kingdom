@@ -87,13 +87,18 @@ namespace Emberfall.Net.Protocol
     /// unknown id is a rejection, never an exception and never a mutation (VULN-001 §4 rule 1). An
     /// illegal deck is refused at the handshake and no id in it ever reaches match state.</para>
     ///
-    /// <para><see cref="PrimaryClass"/>/<see cref="SecondaryClass"/> are the character's pairing, needed
-    /// for the L4 class-membership check; the match's hero (and hero power) is the PRIMARY class
-    /// (dual-class ruling — one hero power, from the primary). <see cref="CharacterId"/> is the L5
-    /// binding, echoed for the validator's reason copy; it is not an identity the server trusts.</para>
+    /// <para><see cref="PrimaryClass"/>/<see cref="SecondaryClass"/> are the deck's pairing, needed
+    /// for the L4 class-membership check and for L5, which is now the pairing's own
+    /// well-formedness; the match's hero (and hero power) is the PRIMARY class (dual-class ruling
+    /// — one hero power, from the primary).</para>
+    ///
+    /// <para><b><c>CharacterId</c> was the first field until 2026-09-04</b> (ADR-0009). Its own
+    /// doc said it was "not an identity the server trusts", and it was true: the server echoed it
+    /// into a throwaway <c>Character</c> built only so the validator's signature lined up. The
+    /// deck carries its pairing now, so the object being validated and the deck being played are
+    /// one thing rather than two that happened to agree.</para>
     /// </summary>
     public sealed record SubmitDeckMsg(
-        string CharacterId,
         CardClass PrimaryClass,
         CardClass SecondaryClass,
         IReadOnlyList<DeckCardLine> Cards) : NetMessage;

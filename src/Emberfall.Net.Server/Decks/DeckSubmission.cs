@@ -76,12 +76,10 @@ namespace Emberfall.Net.Server.Decks
         {
             if (msg is null) return DeckSubmissionResult.Rejected("No deck submitted.");
 
-            // A pairing must be two distinct real classes (Character.IsValidPairing): a NEUTRAL "hero"
-            // has no hero power, and Pyra+Pyra is not a pairing. Checked before L4 so the class-membership
-            // reason below is always spoken by a well-formed character.
-            if (!Character.IsValidPairing(msg.PrimaryClass, msg.SecondaryClass))
-                return DeckSubmissionResult.Rejected(
-                    $"Invalid class pairing {msg.PrimaryClass}/{msg.SecondaryClass}.");
+            // The pairing check that stood here is now DeckValidator L5 (ADR-0009). It ran before L4
+            // for the same reason L5 does inside the validator — the class-membership message is
+            // phrased in terms of the pairing, so a malformed one has to be caught first — and it is
+            // one predicate now rather than the same rule spelled twice, which is the point.
 
             // Canonicalize the UNTRUSTED wire list into the one-entry-per-id shape DeckValidator assumes.
             // DeckValidator checks the copy cap per Entry, so two entries of the same id (each within the
@@ -97,12 +95,14 @@ namespace Emberfall.Net.Server.Decks
                 summed[line.CardId] = have + line.Count;
             }
 
-            var deck = new DeckList { Id = "submitted", CharacterId = msg.CharacterId, Name = "Submitted" };
+            // ONE object where there were two. This used to build a DeckList and, beside it, a
+            // throwaway Character carrying the same two enums, purely so the validator's signature
+            // lined up — which meant the pairing being validated and the pairing the deck would be
+            // played with were two things that happened to agree (ADR-0009).
+            var deck = new DeckList(msg.PrimaryClass, msg.SecondaryClass) { Id = "submitted", Name = "Submitted" };
             foreach (var id in order) deck.Entries.Add(new DeckEntry(id, summed[id]));
 
-            var character = new Character(msg.CharacterId, "Submitted", msg.PrimaryClass, msg.SecondaryClass);
-
-            var check = QueueEligibility.Check(deck, character, db, owned);
+            var check = QueueEligibility.Check(deck, db, owned);
             if (!check.IsEligible) return DeckSubmissionResult.Rejected(check.Reason);
 
             // Expand to the pre-shuffle ordered list MatchSetup wants (BeginMatch shuffles with the seed,

@@ -130,24 +130,19 @@ create index if not exists ladder_match_p1_idx on ladder_match (p1_player_id, en
 alter table ladder_player enable row level security;
 alter table ladder_match enable row level security;
 
--- A player's characters. One row per character; player_id is the account's stable id.
+-- The `character` table stood here until 2026-09-04 (ADR-0009). The pairing it held moved onto the
+-- deck, where it rides inside `deck.body` rather than in columns of its own — see below.
 --
--- The pairing is a PERMANENT identity decision with no legal repair (Sam, 2026-07-26), so nothing
--- updates primary_class or secondary_class — only default_deck_id and name are ever rewritten.
--- No foreign key to account, same reasoning as entitlement_grant: insert ORDER must not be a
--- correctness condition.
-create table if not exists character (
-  character_id     text        primary key,
-  player_id        text        not null,
-  name             text        not null,
-  primary_class    text        not null,
-  secondary_class  text        not null,
-  default_deck_id  text        not null default '',
-  created_at       timestamptz not null,
-  updated_at       timestamptz not null
-);
-
-create index if not exists character_player_idx on character (player_id);
+-- NOT DROPPED HERE, DELIBERATELY. This file is `create table if not exists` throughout: it is run
+-- on every server start to bring a fresh database up, so it is idempotent by construction and must
+-- stay that way. A `drop table character` in it would be neither — it would run on every start
+-- forever, and on the one start where a migration had half-completed it would destroy the rows the
+-- migration still needed. Dropping the table is the migration's job, once, and the migration is
+-- what carries the inheritance the drop makes irreversible.
+--
+-- RETIREMENT TRIGGER: delete this note once the production database has been migrated and the
+-- table is gone. Until then it is the only record in the schema of why `character` exists in a
+-- live database and in no code.
 
 -- A player's decks. body is the deck as canonical JSON (CollectionJson.WriteDecks' element shape),
 -- NOT a row per card.
@@ -160,10 +155,21 @@ create index if not exists character_player_idx on character (player_id);
 -- AN ILLEGAL DECK IS STORED. Drafts are a legitimate named state; validation happens on QUEUE.
 -- Refusing a write would delete a player's work-in-progress the moment a balance patch or a spent
 -- card made it illegal.
+--
+-- THE PAIRING IS IN `body`, NOT IN COLUMNS (ADR-0009, 2026-09-04). `primaryClass`/`secondaryClass`
+-- are fields of the JSON, for the same reason the cards are: nothing server-side queries on them.
+-- The consequence is worth knowing before you write an UPDATE — the pairing is immutable, and that
+-- CANNOT be enforced here by leaving a column out of an upsert's `do update set`, the way the old
+-- character table enforced it. `body` is replaced wholesale on every save. So
+-- PostgresPlayerDataStore.SaveDeckAsync does a `select body ... for update`, merges through
+-- DeckPairing.Preserve and writes the result, all in one transaction. A hand-written UPDATE against
+-- this table bypasses that and can move a pairing the application refuses to move.
+--
+-- `character_id text not null` was a column here until 2026-09-04. Its readers were the cascade
+-- delete and the roster join, both gone. A live database still has it; the migration drops it.
 create table if not exists deck (
   deck_id      text        primary key,
   player_id    text        not null,
-  character_id text        not null,
   body         text        not null,
   created_at   timestamptz not null,
   updated_at   timestamptz not null

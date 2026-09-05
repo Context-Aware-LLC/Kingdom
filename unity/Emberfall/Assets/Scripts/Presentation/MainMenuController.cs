@@ -21,8 +21,8 @@ namespace Emberfall.Presentation
     /// <c>ShopRuntime</c>/<c>AuthGateway</c> on arrival rather than being handed state.</para>
     ///
     /// <para><b>This screen is also where account setup begins.</b> A device that has never been
-    /// named is routed through the one-time account flow before the menu is used. Character and
-    /// deck context live on the roster and collection surfaces rather than in menu chrome.</para>
+    /// named is routed through the one-time account flow before the menu is used. Deck context
+    /// lives on the roster and collection surfaces rather than in menu chrome.</para>
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// MainMenuScreen.uxml and whose Panel Settings is MainMenuPanelSettings.
@@ -124,7 +124,7 @@ namespace Emberfall.Presentation
         /// gateways, and it runs only when the gate was shown — that is, on the first launch after
         /// installing, and never again. Every subsequent launch, which is the normal case, restored
         /// nothing: no collection, so the wall rendered the full pool from an absent ownership
-        /// record; no roster, so the server's characters and decks stayed on the server. Measured on
+        /// record; no roster, so the server's decks stayed on the server. Measured on
         /// a device 2026-09-02 — a launch with a restored session produced no <c>[SignIn]</c>,
         /// <c>[Roster]</c> or <c>[Collection]</c> line at all.</para>
         ///
@@ -443,9 +443,12 @@ namespace Emberfall.Presentation
         /// <summary>
         /// Find Game → <c>CharacterRoster</c> → <c>BoardNetworked</c>.
         ///
-        /// <para>The existing character roster is the deck-selection step: it already shows each
-        /// character's default deck and queue eligibility. A queue-ready choice then loads the board,
-        /// whose network bootstrap submits that exact deck before pairing.</para>
+        /// <para>The deck roster IS the deck-selection step: it already shows every deck and its
+        /// queue eligibility. A queue-ready choice then loads the board, whose network bootstrap
+        /// submits that exact deck before pairing.</para>
+        ///
+        /// <para>It was a two-step pick until ADR-0009 — a character, then one of its decks. The
+        /// first step is gone with the container.</para>
         /// </summary>
         private void OnFindGame()
         {
@@ -480,13 +483,12 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// Collection is the one home for the card wall and deck editing. The deck drawer starts
-        /// closed; character/deck management remains one explicit doorway inside it.
+        /// closed; deck management remains one explicit doorway inside it.
         /// </summary>
         private void OnCollection()
         {
             MatchDeckSelection.Cancel();
             CollectionController.ReturnScene = "MainMenu";
-            CollectionController.PendingCharacterId = "";
             CollectionController.PendingDeckId = "";
             Go("Collection");
         }

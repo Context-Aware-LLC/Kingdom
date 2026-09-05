@@ -18,22 +18,32 @@ namespace Emberfall.Core.Tests.Collection
     /// <c>NEUTRAL ∪ Primary ∪ Secondary</c> when the pairing ruling landed (Sam, 2026-07-26), and L5
     /// changed from "a hero class" to "exactly one Character" — the two rules that had no test
     /// because the predicate they replaced was only ever called by an editor spike.</para>
+    ///
+    /// <para><b>L5 changed AGAIN on 2026-09-04 (ADR-0009).</b> The pairing moved onto the deck, so
+    /// "bound to exactly one Character" cannot fail — a deck cannot fail to be bound to itself. The
+    /// slot is <c>L5_PairingWellFormed</c> now and asks the question the container used to answer for
+    /// free: are these two classes real and distinct? The wire can supply NEUTRAL/NEUTRAL, so it is a
+    /// live question and not a formality.</para>
     /// </summary>
     [TestFixture]
     [Category("Collection")]
     public sealed class DeckValidatorDualClassTests
     {
-        private static Character Gravedant() => new Character("chr-1", "Rotbloom", CardClass.GRAVEKEEP, CardClass.VERDANT);
+        /// <summary>The pairing every deck below is built on. It was a <c>Character</c> holding
+        /// these two classes until ADR-0009; the deck holds them itself now, so the helper returns a
+        /// deck rather than something to bind one to.</summary>
+        private static DeckList Gravedant(string id = "deck-1") =>
+            new DeckList(CardClass.GRAVEKEEP, CardClass.VERDANT) { Id = id, Name = "Test Deck" };
 
         /// <summary>
         /// A legal 30-card deck for a character, filled from the live pool at the maximum copies each
         /// card allows. Built rather than hardcoded so a balance patch cannot make it stale, and so a
         /// class that drops below a buildable 30 fails loudly here.
         /// </summary>
-        private static DeckList LegalDeck(Character c, string id = "deck-1")
+        private static DeckList LegalDeck(DeckList c, string id = "deck-1")
         {
-            var deck = new DeckList { Id = id, CharacterId = c.Id, Name = "Test Deck" };
-            foreach (var def in LiveCardSet.Cards.Where(d => d.Collectible && c.AllowsClass(d.Class)))
+            var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = id, Name = "Test Deck" };
+            foreach (var def in LiveCardSet.Cards.Where(d => d.Collectible && deck.AllowsClass(d.Class)))
             {
                 if (deck.TotalCount >= DeckValidator.DeckSize) break;
                 int want = System.Math.Min(DeckValidator.MaxCopies(def.Rarity),
@@ -54,7 +64,7 @@ namespace Emberfall.Core.Tests.Collection
         public void A_Filled_Dual_Class_Deck_Is_Valid()
         {
             var c = Gravedant();
-            var result = DeckValidator.Validate(LegalDeck(c), c, LiveCardSet.Db);
+            var result = DeckValidator.Validate(LegalDeck(c), LiveCardSet.Db);
 
             Assert.That(result.IsValid, Is.True,
                 "Unexpected violations: " + string.Join("; ", result.Violations.Select(v => $"{v.Rule}: {v.Message}")));
@@ -70,7 +80,7 @@ namespace Emberfall.Core.Tests.Collection
             var last = deck.Entries[deck.Entries.Count - 1];
             deck.Entries[deck.Entries.Count - 1] = last.With(last.Count - 1);
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
             Assert.That(result.IsValid, Is.False);
             Assert.That(RulesIn(result), Is.EqualTo(new[] { DeckRule.L1_Size }));
@@ -85,7 +95,7 @@ namespace Emberfall.Core.Tests.Collection
             var extra = LiveCardSet.Collectible(CardClass.NEUTRAL).First(d => deck.CountOf(d.Id) == 0);
             deck.Entries.Add(new DeckEntry(extra.Id, 1));
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
             Assert.That(RulesIn(result), Is.EqualTo(new[] { DeckRule.L1_Size }));
         }
@@ -97,7 +107,7 @@ namespace Emberfall.Core.Tests.Collection
             var deck = LegalDeck(c);
             var unused = LiveCardSet.Collectible(CardClass.NEUTRAL).First(d => deck.CountOf(d.Id) == 0);
 
-            Assert.That(DeckValidator.CanAdd(deck, c, unused), Is.False,
+            Assert.That(DeckValidator.CanAdd(deck, unused), Is.False,
                 "30 is a hard ceiling — §1 prevents the 31st add rather than reporting it.");
         }
 
@@ -108,17 +118,17 @@ namespace Emberfall.Core.Tests.Collection
         {
             var c = Gravedant();
             var common = LiveCardSet.Cards.First(d => d.Collectible && d.Class == CardClass.GRAVEKEEP && d.Rarity != Rarity.LEGENDARY);
-            var deck = new DeckList { Id = "d", CharacterId = c.Id };
+            var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "d" };
             deck.Entries.Add(new DeckEntry(common.Id, 3));
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
             Assert.That(RulesIn(result), Does.Contain(DeckRule.L2_CopyCap));
             Assert.That(RulesIn(result), Does.Not.Contain(DeckRule.L3_LegendaryCap));
 
-            var atCap = new DeckList { Id = "d", CharacterId = c.Id };
+            var atCap = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "d" };
             atCap.Entries.Add(new DeckEntry(common.Id, 2));
-            Assert.That(DeckValidator.CanAdd(atCap, c, common), Is.False, "The +copy control disables at the cap.");
+            Assert.That(DeckValidator.CanAdd(atCap, common), Is.False, "The +copy control disables at the cap.");
         }
 
         [Test]
@@ -126,10 +136,10 @@ namespace Emberfall.Core.Tests.Collection
         {
             var c = Gravedant();
             var legendary = LiveCardSet.AnyCollectible(CardClass.GRAVEKEEP, Rarity.LEGENDARY);
-            var deck = new DeckList { Id = "d", CharacterId = c.Id };
+            var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "d" };
             deck.Entries.Add(new DeckEntry(legendary.Id, 2));
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
             Assert.That(RulesIn(result), Does.Contain(DeckRule.L3_LegendaryCap));
             Assert.That(RulesIn(result), Does.Not.Contain(DeckRule.L2_CopyCap),
@@ -146,13 +156,13 @@ namespace Emberfall.Core.Tests.Collection
             foreach (var cls in new[] { CardClass.NEUTRAL, CardClass.GRAVEKEEP, CardClass.VERDANT })
             {
                 var card = LiveCardSet.AnyCollectible(cls);
-                var deck = new DeckList { Id = "d", CharacterId = c.Id };
+                var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "d" };
                 deck.Entries.Add(new DeckEntry(card.Id, 1));
 
-                var result = DeckValidator.Validate(deck, c, LiveCardSet.Db);
+                var result = DeckValidator.Validate(deck, LiveCardSet.Db);
                 Assert.That(RulesIn(result), Does.Not.Contain(DeckRule.L4_ClassMembership),
                     $"{cls} is inside NEUTRAL ∪ {c.PrimaryClass} ∪ {c.SecondaryClass}.");
-                Assert.That(DeckValidator.CanAdd(new DeckList { Id = "d" }, c, card), Is.True);
+                Assert.That(DeckValidator.CanAdd(new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "d" }, card), Is.True);
             }
         }
 
@@ -166,7 +176,7 @@ namespace Emberfall.Core.Tests.Collection
             // Secondary-only cannot reach 30 on today's pool (VERDANT has 15 collectible rows = 29
             // copies), so neutrals fill the tail. That is the honest shape of the deck anyway.
             var c = Gravedant();
-            var deck = new DeckList { Id = "d", CharacterId = c.Id };
+            var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "d" };
             var pool = LiveCardSet.Collectible(CardClass.VERDANT).Concat(LiveCardSet.Collectible(CardClass.NEUTRAL));
             foreach (var def in pool)
             {
@@ -179,7 +189,7 @@ namespace Emberfall.Core.Tests.Collection
                 "The deck must actually contain secondary-class cards for this to test anything.");
             Assert.That(deck.Entries.Any(e => LiveCardSet.Db.Get(e.CardId).Class == c.PrimaryClass), Is.False);
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
             Assert.That(result.IsValid, Is.True,
                 "Unexpected violations: " + string.Join("; ", result.Violations.Select(v => $"{v.Rule}: {v.Message}")));
         }
@@ -195,11 +205,11 @@ namespace Emberfall.Core.Tests.Collection
             var replaced = deck.Entries[0];
             deck.Entries[0] = new DeckEntry(offClass.Id, replaced.Count);
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
             Assert.That(RulesIn(result), Is.EqualTo(new[] { DeckRule.L4_ClassMembership }));
             Assert.That(result.Violations[0].Message, Does.Contain(offClass.Name));
-            Assert.That(DeckValidator.CanAdd(new DeckList { Id = "d" }, c, offClass), Is.False,
+            Assert.That(DeckValidator.CanAdd(new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "d" }, offClass), Is.False,
                 "§1: off-class cards are not shown as addable.");
         }
 
@@ -214,7 +224,7 @@ namespace Emberfall.Core.Tests.Collection
             var replaced = deck.Entries[0];
             deck.Entries[0] = new DeckEntry(FixtureCard.Id("card_deleted_by_a_balance_patch"), replaced.Count);
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
             Assert.That(result.IsValid, Is.False);
             Assert.That(RulesIn(result), Is.EqualTo(new[] { DeckRule.L4_ClassMembership }));
@@ -223,34 +233,46 @@ namespace Emberfall.Core.Tests.Collection
             Assert.That(deck.TotalCount, Is.EqualTo(DeckValidator.DeckSize), "Validation never mutates the deck.");
         }
 
-        // ---- L5 character binding ------------------------------------------------------
+        // ---- L5 pairing well-formedness -------------------------------------------------
+        //
+        // This slot was L5_CharacterBound until ADR-0009 — two tests, one for a deck bound to
+        // nothing and one for a deck whose character had been deleted. Neither state exists: a deck
+        // carries its own pairing, so it cannot fail to be bound to itself and there is no second
+        // object to go missing. What replaced them is the question the container used to answer for
+        // free, and it is a live one because the WIRE can supply a pairing this type's constructor
+        // would never be given by a screen.
 
         [Test]
-        public void L5_Fires_When_No_Character_Is_Bound()
+        public void L5_Fires_On_A_Pairing_That_Is_Not_Two_Real_Classes()
         {
-            var deck = LegalDeck(Gravedant());
+            // NEUTRAL/NEUTRAL is what an empty SubmitDeckMsg deserializes to. It is not a pairing.
+            var deck = new DeckList(CardClass.NEUTRAL, CardClass.NEUTRAL) { Id = "deck-1" };
 
-            var result = DeckValidator.Validate(deck, null!, LiveCardSet.Db);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
             Assert.That(result.IsValid, Is.False);
-            Assert.That(RulesIn(result), Is.EqualTo(new[] { DeckRule.L5_CharacterBound }),
-                "With no character there is no pool to judge L4 against, so L5 reports alone.");
+            Assert.That(RulesIn(result), Is.EqualTo(new[] { DeckRule.L5_PairingWellFormed }),
+                "A malformed pairing is checked FIRST and returns: every L4 message is phrased in " +
+                "terms of the pairing, so reporting L4 against nonsense produces nonsense.");
         }
 
         [Test]
-        public void L5_Fires_For_A_Deck_Whose_Character_Was_Deleted()
+        public void L5_Fires_On_A_Class_Paired_With_Itself()
         {
-            // The real L5 path end to end: the deck stores an id, the roster no longer has it,
-            // CharacterQuery.ById returns null, and Validate turns that null into the violation.
-            var roster = new[] { Gravedant() };
-            var orphan = LegalDeck(Gravedant());
-            orphan.CharacterId = "chr-deleted";
+            var deck = new DeckList(CardClass.GRAVEKEEP, CardClass.GRAVEKEEP) { Id = "deck-1" };
 
-            var bound = CharacterQuery.ById(roster, orphan.CharacterId);
-            Assert.That(bound, Is.Null);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
-            var result = DeckValidator.Validate(orphan, bound!, LiveCardSet.Db);
-            Assert.That(RulesIn(result), Is.EqualTo(new[] { DeckRule.L5_CharacterBound }));
+            Assert.That(RulesIn(result), Is.EqualTo(new[] { DeckRule.L5_PairingWellFormed }),
+                "Gravekeep+Gravekeep is one class twice, not a pairing.");
+        }
+
+        [Test]
+        public void A_Well_Formed_Pairing_Never_Reports_L5()
+        {
+            var result = DeckValidator.Validate(LegalDeck(Gravedant()), LiveCardSet.Db);
+
+            Assert.That(RulesIn(result), Does.Not.Contain(DeckRule.L5_PairingWellFormed));
         }
 
         // ---- composition ---------------------------------------------------------------
@@ -262,11 +284,11 @@ namespace Emberfall.Core.Tests.Collection
             var legendary = LiveCardSet.AnyCollectible(CardClass.GRAVEKEEP, Rarity.LEGENDARY);
             var offClass = LiveCardSet.AnyCollectible(CardClass.TIDECALLER);
 
-            var deck = new DeckList { Id = "d", CharacterId = c.Id };
+            var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "d" };
             deck.Entries.Add(new DeckEntry(legendary.Id, 2));   // L3
             deck.Entries.Add(new DeckEntry(offClass.Id, 1));    // L4
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db);
 
             Assert.That(RulesIn(result), Is.EqualTo(new[]
             {
@@ -282,9 +304,11 @@ namespace Emberfall.Core.Tests.Collection
             var c = Gravedant();
             var card = LiveCardSet.AnyCollectible(CardClass.GRAVEKEEP);
 
-            Assert.That(DeckValidator.CanAdd(null!, c, card), Is.False);
-            Assert.That(DeckValidator.CanAdd(new DeckList { Id = "d" }, null!, card), Is.False);
-            Assert.That(DeckValidator.CanAdd(new DeckList { Id = "d" }, c, null!), Is.False);
+            // Two arguments, not three: the Character that used to sit between them is gone, and
+            // with it the "no character to judge against" case. What is left is the deck and the
+            // card, and a null of either is unreasonable-about.
+            Assert.That(DeckValidator.CanAdd(null!, card), Is.False);
+            Assert.That(DeckValidator.CanAdd(new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "d" }, null!), Is.False);
         }
     }
 }

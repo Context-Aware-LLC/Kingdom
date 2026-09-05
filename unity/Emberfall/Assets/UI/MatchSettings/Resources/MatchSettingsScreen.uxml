@@ -82,7 +82,7 @@
         <ui:VisualElement name="account-modal" class="mm-modal mm-modal--hidden">
             <ui:VisualElement name="account-panel" class="mm-modal__panel">
                 <ui:Label name="account-title" text="Accounts on this device" class="mm-modal__title"/>
-                <ui:Label name="account-help" text="Local testing only — each account has its own name, characters and decks, and joins matches as its own player. Switching reloads the scene." class="mm-modal__help"/>
+                <ui:Label name="account-help" text="Local testing only — each account has its own name and decks, and joins matches as its own player. Switching reloads the scene." class="mm-modal__help"/>
                 <ui:VisualElement name="account-list" class="mm-accounts"/>
                 <ui:Label name="account-error" text=" " class="mm-modal__error"/>
                 <ui:VisualElement class="mm-modal__actions">

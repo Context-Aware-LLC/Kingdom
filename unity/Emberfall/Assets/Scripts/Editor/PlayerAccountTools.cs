@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
@@ -10,7 +11,7 @@ using UnityEngine;
 namespace Emberfall.Editor
 {
     /// <summary>
-    /// Editor tools for the player account — the profile + character roster + decks that
+    /// Editor tools for the player account — the profile + decks that
     /// <see cref="PlayerAccount"/> writes under <c>Application.persistentDataPath</c>.
     ///
     /// <para><b>Why these exist.</b> A collection is a few files in a folder no player ever opens,
@@ -47,15 +48,11 @@ namespace Emberfall.Editor
             report.AppendLine($"  exists     : {Directory.Exists(account.ScopeDirectory)}");
             report.AppendLine($"  name       : {(account.NeedsDisplayName ? "(never set)" : account.Profile.DisplayName)}");
 
-            var roster = account.Roster();
             var decks = account.Decks();
-            report.AppendLine($"  characters : {roster.Count}");
-            report.AppendLine($"  decks      : {decks.Count}");
-            foreach (Character c in roster)
-                report.AppendLine($"    · {c.Name} ({c.PrimaryClass}/{c.SecondaryClass}) " +
-                                  $"id={c.Id} default={(string.IsNullOrEmpty(c.DefaultDeckId) ? "(none)" : c.DefaultDeckId)}");
+            report.AppendLine($"  decks      : {decks.Count} / {DeckCreation.MaxPerAccount}");
             foreach (DeckList d in decks)
-                report.AppendLine($"    · deck '{d.Name}' {d.TotalCount}/30 character={d.CharacterId} id={d.Id}");
+                report.AppendLine($"    · '{d.Name}' ({d.PrimaryClass}/{d.SecondaryClass}) " +
+                                  $"{d.TotalCount}/30 id={d.Id}");
 
             // The token itself is deliberately NOT printed: it is a bearer identity, and a console log
             // is the easiest thing in the project to paste into a bug report.
@@ -91,8 +88,13 @@ namespace Emberfall.Editor
 
         /// <summary>
         /// Exercise the whole account path in a scratch directory: name refusal, name normalization,
-        /// character creation with a generated starter deck, queue eligibility, and the delete cascade.
+        /// deck creation with a generated starter, queue eligibility, and deletion.
         /// Logs an error and stops at the first thing that is not what the code claims.
+        ///
+        /// <para>It exercised a DELETE CASCADE until ADR-0009 — deleting a character took its decks
+        /// with it, and getting that count wrong was the failure worth a self-check. There is no
+        /// cascade now, and the assertion that replaced it is the opposite one: deleting the LAST
+        /// deck succeeds, where the old roster refused it.</para>
         /// </summary>
         [MenuItem("Emberfall/Player Account/Self-Check (scratch directory)")]
         public static void SelfCheck()
@@ -136,7 +138,8 @@ namespace Emberfall.Editor
                 ICardDatabase db = CardDatabaseLoader.Load();
 
                 if (!Check(log, !account.OffersStarterChoice(),
-                           "the FIRST character is never offered the blank-deck choice")) return;
+                           "the FIRST deck is never offered the blank-deck choice")) return;
+                if (!Check(log, account.CanCreateDeck(), "an empty account has room for a deck")) return;
 
                 const CardClass primary = CardClass.EMBERWARD;
                 const CardClass secondary = CardClass.TIDECALLER;
@@ -145,32 +148,29 @@ namespace Emberfall.Editor
                 if (!Check(log, !PlayerAccount.CanCreate(primary, primary, db),
                            "a class cannot be paired with itself")) return;
 
-                Character created = account.CreateCharacter("Ashen Vow", primary, secondary, db);
+                DeckList created = account.CreateDeck(db, "Ashen Vow", primary, secondary,
+                                                      StarterDeck.Generated);
                 log.AppendLine($"  created '{created.Name}' ({created.PrimaryClass}/{created.SecondaryClass})");
-                log.AppendLine($"    character id = {created.Id}");
-                log.AppendLine($"    default deck = {created.DefaultDeckId}");
-                if (!Check(log, !string.IsNullOrEmpty(created.Id) && !string.IsNullOrEmpty(created.DefaultDeckId),
-                           "creation minted both ids")) return;
+                log.AppendLine($"    deck id = {created.Id}");
+                if (!Check(log, !string.IsNullOrEmpty(created.Id), "creation minted an id")) return;
 
-                CharacterDecks decks = account.DecksOf(created, db);
-                DeckSummary? opening = decks.Opening;
-                if (!Check(log, decks.Count == 1 && decks.DefaultResolved && opening.HasValue,
-                           "the new character opens on its resolved starter deck")) return;
-                log.AppendLine($"    starter deck = {opening.Value.TotalCount}/30, " +
-                               $"queue-eligible={opening.Value.Queue.IsEligible} ({opening.Value.Queue.Reason})");
-                if (!Check(log, opening.Value.TotalCount == 30 && opening.Value.Queue.IsEligible,
+                IReadOnlyList<DeckSummary> rows = account.DeckRows(db);
+                if (!Check(log, rows.Count == 1, "the account holds exactly the deck just made")) return;
+                DeckSummary row = rows[0];
+                log.AppendLine($"    starter deck = {row.TotalCount}/30, " +
+                               $"queue-eligible={row.Queue.IsEligible} ({row.Queue.Reason})");
+                if (!Check(log, row.TotalCount == 30 && row.Queue.IsEligible,
                            "the generated starter is a queue-eligible 30")) return;
 
                 if (!Check(log, account.OffersStarterChoice(),
-                           "the SECOND character onward is offered the choice")) return;
+                           "the SECOND deck onward is offered the choice")) return;
 
                 foreach (string f in Directory.GetFiles(account.ScopeDirectory))
                     log.AppendLine($"  wrote {Path.GetFileName(f)} ({new FileInfo(f).Length} bytes)");
 
-                int destroyed = account.DeleteCharacter(created.Id);
-                log.AppendLine($"  delete cascade destroyed {destroyed} deck(s)");
-                if (!Check(log, destroyed == 1 && account.Roster().Count == 0 && account.Decks().Count == 0,
-                           "deleting a character takes its decks with it")) return;
+                account.DeleteDeck(created.Id);
+                if (!Check(log, account.Decks().Count == 0,
+                           "deleting the last deck leaves an empty account, not a refusal")) return;
 
                 log.AppendLine("[SelfCheck] PASS");
                 Debug.Log(log.ToString());

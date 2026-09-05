@@ -20,7 +20,19 @@ namespace Emberfall.Core.Collection
         L2_CopyCap,
         L3_LegendaryCap,
         L4_ClassMembership,
-        L5_CharacterBound,
+
+        /// <summary>
+        /// The deck's own pairing is not two distinct real classes (ADR-0009).
+        ///
+        /// <para><b>This slot used to be <c>L5_CharacterBound</c></b> — "the deck is bound to exactly
+        /// one Character". Characters were eliminated on 2026-09-04 and the pairing moved onto the
+        /// deck, so a deck can no longer fail to be bound to itself and that rule had nothing left to
+        /// check. The slot is REPURPOSED rather than removed, and not to preserve numbering (nothing
+        /// serializes this enum): the well-formedness the old rule got for free from
+        /// <c>Character.IsValidPairing</c> is now a property of the deck, and a wire-supplied deck can
+        /// carry NEUTRAL/NEUTRAL or Pyra/Pyra. It is a real rule that needs a real slot.</para>
+        /// </summary>
+        L5_PairingWellFormed,
 
         /// <summary>You used more copies of a card than you own (NOR-238).</summary>
         L6_Ownership,
@@ -50,16 +62,23 @@ namespace Emberfall.Core.Collection
     /// match-join (never trust the client). Pure and UnityEngine-free by design.
     ///
     /// Ported from the original Unity-only Emberfall.Data.DeckValidator (C-G0-5 spike). L1-L3
-    /// unchanged; L4/L5 updated for the dual-class Character ruling (Sam, 2026-07-26): a card is
-    /// legal if it's NEUTRAL or either half of the character's pairing (not just one hero class).
+    /// unchanged; L4 follows the dual-class ruling (Sam, 2026-07-26): a card is legal if it's NEUTRAL
+    /// or either half of the pairing, not just one hero class.
     ///
     /// Rules L1-L6:
     ///   L1  deck size == 30
     ///   L2  max 2 copies (COMMON/RARE/EPIC)
     ///   L3  max 1 copy (LEGENDARY)
-    ///   L4  every card is NEUTRAL or one of the character's two classes
-    ///   L5  the deck is bound to exactly one Character
+    ///   L4  every card is NEUTRAL or one of the deck's two classes
+    ///   L5  the deck's pairing is two distinct real classes
     ///   L6  you own at least the copies used  — only when an ownership source is supplied
+    ///
+    /// <para><b>The pairing is read off the deck (ADR-0009, 2026-09-04).</b> Every entry point here
+    /// used to take a <c>Character</c> alongside the deck, purely to reach two enums; the deck now
+    /// carries them and the parameter is gone. Server-side this removes a real hazard rather than
+    /// just a parameter — <c>DeckSubmission</c> was constructing a throwaway <c>Character</c> from
+    /// wire fields so that the shapes lined up, which meant the pairing being validated and the
+    /// pairing the deck would be played with were two objects that happened to agree.</para>
     ///
     /// <para><b>L6 is opt-in at the call, and a null ownership source is the game as it ships today.</b>
     /// Every entry point here takes an optional <see cref="IOwnedCardCounts"/>; null means "ownership is
@@ -104,12 +123,11 @@ namespace Emberfall.Core.Collection
         /// off has a better surface than a returned reason code — the wall's fade for the copy limit,
         /// the pool for off-class, the count for the 31st.</para>
         /// </summary>
-        public static bool CanAdd(DeckList deck, Character character, CardDefinition def,
-                                  IOwnedCardCounts? owned = null)
+        public static bool CanAdd(DeckList deck, CardDefinition def, IOwnedCardCounts? owned = null)
         {
-            if (deck == null || character == null || def == null) return false;
+            if (deck == null || def == null) return false;
             if (deck.TotalCount >= DeckSize) return false;                      // L1 ceiling
-            if (!character.AllowsClass(def.Class)) return false;                // L4
+            if (!deck.AllowsClass(def.Class)) return false;                     // L4
             return deck.CountOf(def.Id) < CopyLimit(def.Rarity, owned, def.Id); // L2 / L3 / L6
         }
 
@@ -120,16 +138,22 @@ namespace Emberfall.Core.Collection
         /// Validation never mutates and never repairs — a deck that has become unownable (a card dusted,
         /// an account restored) reports it and stays a perfectly savable draft (§1).</para>
         /// </summary>
-        public static DeckValidation Validate(DeckList? deck, Character? character, ICardDatabase db,
+        public static DeckValidation Validate(DeckList? deck, ICardDatabase db,
                                               IOwnedCardCounts? owned = null)
         {
             var violations = new List<DeckViolation>();
             if (deck == null)
                 return new DeckValidation(false, violations);
 
-            if (character == null)
+            // L5 — the pairing itself. Checked first and returned on, because every L4 message below
+            // is spoken IN TERMS of the pairing ("not a PYRA/MAREN card"), and a malformed one would
+            // make that sentence nonsense at the exact moment the player most needs it to be clear.
+            // Unreachable from the deckbuilder, whose picker offers valid pairings only; reachable
+            // from the wire, which is the whole reason it is a rule rather than an assumption.
+            if (!deck.HasValidPairing)
             {
-                violations.Add(new DeckViolation(DeckRule.L5_CharacterBound, "Deck has no character bound."));
+                violations.Add(new DeckViolation(DeckRule.L5_PairingWellFormed,
+                    $"Invalid class pairing {deck.PrimaryClass}/{deck.SecondaryClass}."));
                 return new DeckValidation(false, violations);
             }
 
@@ -158,9 +182,9 @@ namespace Emberfall.Core.Collection
                         $"Only {max} of {def.Name}."));
 
                 // L4 — class membership (either half of the pairing, or NEUTRAL).
-                if (!character.AllowsClass(def.Class))
+                if (!deck.AllowsClass(def.Class))
                     violations.Add(new DeckViolation(DeckRule.L4_ClassMembership,
-                        $"{def.Name} is not a {character.PrimaryClass}/{character.SecondaryClass} card."));
+                        $"{def.Name} is not a {deck.PrimaryClass}/{deck.SecondaryClass} card."));
 
                 // L6 — ownership. Reported independently of L2/L3: three copies of a common you own one
                 // of is over the format cap AND past what you hold, and both sentences are true. Folding

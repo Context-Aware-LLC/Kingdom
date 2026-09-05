@@ -47,7 +47,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
 
         private static string BodyFor(string id)
         {
-            var deck = new DeckList { Id = id, CharacterId = "c1", Name = "D" };
+            var deck = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = id, Name = "D" };
             deck.Entries.Add(new DeckEntry(1001, 2));
             return CollectionJson.WriteDecks(new[] { deck });
         }
@@ -57,7 +57,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var accounts = new InMemoryAccountStore(new FixedTime());
             var data = new InMemoryPlayerDataStore();
-            var draft = new DeckList { Id = "d1", CharacterId = "c1", Name = "Draft" };
+            var draft = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "d1", Name = "Draft" };
             draft.Entries.Add(new DeckEntry(1001, 1));
 
             DeckWriteResult r = await DeckWriteEndpoint.SaveAsync(
@@ -156,7 +156,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var accounts = new InMemoryAccountStore(new FixedTime());
             var data = new InMemoryPlayerDataStore();
-            var deck = new DeckList { Id = "body-says-this", CharacterId = "c1", Name = "D" };
+            var deck = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "body-says-this", Name = "D" };
 
             await DeckWriteEndpoint.SaveAsync(
                 Token, "route-says-this", CollectionJson.WriteDecks(new[] { deck }),
@@ -173,7 +173,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var accounts = new InMemoryAccountStore(new FixedTime());
             var data = new InMemoryPlayerDataStore();
-            var deck = new DeckList { Id = "d1", CharacterId = "c1", Name = "D" };
+            var deck = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "d1", Name = "D" };
             await DeckWriteEndpoint.SaveAsync(
                 Token, "d1", CollectionJson.WriteDecks(new[] { deck }), Accepts(), accounts, data);
 

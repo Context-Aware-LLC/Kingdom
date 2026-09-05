@@ -66,8 +66,8 @@ namespace Emberfall.Core.Collection
     /// <para><b>Load returns null on a device that has no record, and that null is the whole design.</b>
     /// It is not an error and it is not "owns nothing": it means <i>ownership is unknown here</i>, which
     /// is the state every account is in until something grants it cards. Every consumer of L6 —
-    /// <see cref="DeckValidator.Validate(DeckList, Character, Emberfall.Core.Contracts.ICardDatabase, IOwnedCardCounts)"/>,
-    /// <see cref="DeckValidator.CanAdd(DeckList, Character, Emberfall.Core.Cards.CardDefinition, IOwnedCardCounts)"/>,
+    /// <see cref="DeckValidator.Validate(DeckList, Emberfall.Core.Contracts.ICardDatabase, IOwnedCardCounts)"/>,
+    /// <see cref="DeckValidator.CanAdd(DeckList, Emberfall.Core.Cards.CardDefinition, IOwnedCardCounts)"/>,
     /// the collection wall — takes a null ownership source to mean "do not constrain", which is exactly
     /// the full-pool alpha the game runs today. An <i>empty but present</i> record is a different thing
     /// and means what it says: this player owns nothing, and every deck they hold is a draft.</para>

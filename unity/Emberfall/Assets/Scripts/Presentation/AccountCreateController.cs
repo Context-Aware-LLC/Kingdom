@@ -308,14 +308,18 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Leave, and never come back. A brand-new account has no character, and every button on the
+        /// Leave, and never come back. A brand-new account has no deck, and every button on the
         /// Main Menu needs one — so an empty roster goes to CharacterRoster rather than the menu.
         /// This is the continuation the old <c>MainMenuController.ConfirmName</c> ended with, moved
         /// intact.
+        ///
+        /// <para>It asked for characters until ADR-0009. The condition is unchanged in substance:
+        /// the thing you need before the menu is useful is a DECK, and a character was only ever
+        /// the container one arrived in.</para>
         /// </summary>
         private void Continue()
         {
-            if (_account != null && _account.Roster().Count == 0)
+            if (_account != null && _account.Decks().Count == 0)
             {
                 CharacterRosterController.ReturnScene = "MainMenu";
                 Go("CharacterRoster");

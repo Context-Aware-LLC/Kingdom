@@ -247,9 +247,9 @@ namespace Emberfall.Net.Server.Tests
         /// </summary>
         private static List<DeckCardLine> DeckWithOneUnownedRare()
         {
-            var character = new Character("c", "Test", CardClass.GRAVEKEEP, CardClass.VERDANT);
             var deck = DefaultDeckGenerator.Generate(
-                character, SessionHarness.Db, new DeterministicRandom(0xD00DUL), "test-deck");
+                CardClass.GRAVEKEEP, CardClass.VERDANT, SessionHarness.Db,
+                new DeterministicRandom(0xD00DUL), "test-deck");
             var lines = deck.Entries.Select(e => new DeckCardLine(e.CardId, e.Count)).ToList();
 
             var rare = SessionHarness.Db.AllCollectible()
@@ -282,7 +282,7 @@ namespace Emberfall.Net.Server.Tests
                 await SendHelloAsync(ws, DeviceToken, authToken: "valid.token.here");
                 await ws.SendAsync(
                     ProtocolCodec.Encode(
-                        new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.VERDANT, lines),
+                        new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT, lines),
                         ProtocolCodec.PreMatch, 1),
                     WebSocketMessageType.Text, true, CancellationToken.None);
 

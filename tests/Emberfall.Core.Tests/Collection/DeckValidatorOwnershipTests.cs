@@ -28,14 +28,16 @@ namespace Emberfall.Core.Tests.Collection
     [Category("Collection")]
     public sealed class DeckValidatorOwnershipTests
     {
-        private static Character Gravedant() =>
-            new Character("chr-1", "Rotbloom", CardClass.GRAVEKEEP, CardClass.VERDANT);
+        /// <summary>The pairing every deck below is built on. A <c>Character</c> held these two
+        /// classes until ADR-0009; the deck holds them itself now.</summary>
+        private static DeckList Gravedant(string id = "deck-1") =>
+            new DeckList(CardClass.GRAVEKEEP, CardClass.VERDANT) { Id = id, Name = "Test Deck" };
 
         /// <summary>A legal 30 for a character, at max copies per card — the shape L6 is applied on top of.</summary>
-        private static DeckList LegalDeck(Character c, string id = "deck-1")
+        private static DeckList LegalDeck(DeckList c, string id = "deck-1")
         {
-            var deck = new DeckList { Id = id, CharacterId = c.Id, Name = "Test Deck" };
-            foreach (var def in LiveCardSet.Cards.Where(d => d.Collectible && c.AllowsClass(d.Class)))
+            var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = id, Name = "Test Deck" };
+            foreach (var def in LiveCardSet.Cards.Where(d => d.Collectible && deck.AllowsClass(d.Class)))
             {
                 if (deck.TotalCount >= DeckValidator.DeckSize) break;
                 int want = System.Math.Min(DeckValidator.MaxCopies(def.Rarity),
@@ -58,7 +60,7 @@ namespace Emberfall.Core.Tests.Collection
 
         private static IReadOnlyList<DeckRule> RulesIn(DeckValidation v) => v.Violations.Select(x => x.Rule).ToList();
 
-        private static CardDefinition AnyCollectibleFor(Character c) =>
+        private static CardDefinition AnyCollectibleFor(DeckList c) =>
             LiveCardSet.Cards.First(d => d.Collectible && c.AllowsClass(d.Class));
 
         // ---- the null contract: no record means no constraint ---------------------------
@@ -70,8 +72,8 @@ namespace Emberfall.Core.Tests.Collection
             var deck = LegalDeck(c);
 
             // Both spellings of "no record": the parameter omitted, and passed explicitly as null.
-            Assert.That(DeckValidator.Validate(deck, c, LiveCardSet.Db).IsValid, Is.True);
-            Assert.That(DeckValidator.Validate(deck, c, LiveCardSet.Db, null).IsValid, Is.True,
+            Assert.That(DeckValidator.Validate(deck, LiveCardSet.Db).IsValid, Is.True);
+            Assert.That(DeckValidator.Validate(deck, LiveCardSet.Db, null).IsValid, Is.True,
                 "A null ownership source must mean 'ownership unknown, do not constrain'. Reading it as " +
                 "'owns nothing' would make every deck on every machine illegal the day L6 landed.");
         }
@@ -82,7 +84,7 @@ namespace Emberfall.Core.Tests.Collection
             var c = Gravedant();
             var deck = LegalDeck(c);
 
-            var withNone = DeckValidator.Validate(deck, c, LiveCardSet.Db, new OwnedCardCounts());
+            var withNone = DeckValidator.Validate(deck, LiveCardSet.Db, new OwnedCardCounts());
 
             Assert.That(withNone.IsValid, Is.False,
                 "An empty-but-present record asserts the player owns nothing, which is a real state and " +
@@ -98,7 +100,7 @@ namespace Emberfall.Core.Tests.Collection
             var c = Gravedant();
             var deck = LegalDeck(c);
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db, Exactly(deck));
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db, Exactly(deck));
 
             Assert.That(result.IsValid, Is.True,
                 "Unexpected violations: " + string.Join("; ", result.Violations.Select(v => $"{v.Rule}: {v.Message}")));
@@ -112,7 +114,7 @@ namespace Emberfall.Core.Tests.Collection
             var owned = Exactly(deck);
             foreach (var e in deck.Entries) owned.Set(e.CardId, e.Count + 5);
 
-            Assert.That(DeckValidator.Validate(deck, c, LiveCardSet.Db, owned).IsValid, Is.True);
+            Assert.That(DeckValidator.Validate(deck, LiveCardSet.Db, owned).IsValid, Is.True);
         }
 
         [Test]
@@ -127,7 +129,7 @@ namespace Emberfall.Core.Tests.Collection
             owned.Set(twoCopies.CardId, twoCopies.Count - 1);
             LiveCardSet.Db.TryGet(twoCopies.CardId, out var def);
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db, owned);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db, owned);
 
             Assert.That(RulesIn(result), Is.EqualTo(new[] { DeckRule.L6_Ownership }));
             Assert.That(result.Violations[0].Message, Is.EqualTo($"You own {twoCopies.Count - 1} of {def.Name}."));
@@ -143,7 +145,7 @@ namespace Emberfall.Core.Tests.Collection
             owned.Set(first.CardId, 0);
             LiveCardSet.Db.TryGet(first.CardId, out var def);
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db, owned);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db, owned);
 
             Assert.That(result.Violations[0].Message, Is.EqualTo($"You don't own {def.Name}."),
                 "'You own 0 of X' is a sentence no human writes.");
@@ -153,7 +155,7 @@ namespace Emberfall.Core.Tests.Collection
         public void L6_And_The_Copy_Cap_Are_Reported_Independently()
         {
             var c = Gravedant();
-            var deck = new DeckList { Id = "deck-1", CharacterId = c.Id, Name = "Over" };
+            var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "deck-1", Name = "Over" };
             var def = AnyCollectibleFor(c);
             var owned = new OwnedCardCounts();
             owned.Set(def.Id, 1);
@@ -161,7 +163,7 @@ namespace Emberfall.Core.Tests.Collection
             // Three copies of a card you own one of: over the format cap AND past what you hold.
             deck.Entries.Add(new DeckEntry(def.Id, 3));
 
-            var rules = RulesIn(DeckValidator.Validate(deck, c, LiveCardSet.Db, owned));
+            var rules = RulesIn(DeckValidator.Validate(deck, LiveCardSet.Db, owned));
 
             Assert.That(rules, Does.Contain(DeckRule.L6_Ownership));
             Assert.That(rules, Does.Contain(def.Rarity == Rarity.LEGENDARY
@@ -181,12 +183,12 @@ namespace Emberfall.Core.Tests.Collection
             var c = Gravedant();
             foreach (var def in LiveCardSet.Cards.Where(d => d.Collectible && c.AllowsClass(d.Class)))
             {
-                var deck = new DeckList { Id = "deck-1", CharacterId = c.Id, Name = "One card" };
+                var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "deck-1", Name = "One card" };
                 deck.Entries.Add(new DeckEntry(def.Id, 1));
                 var owned = new OwnedCardCounts();
                 owned.Set(def.Id, 1);
 
-                var l6 = DeckValidator.Validate(deck, c, LiveCardSet.Db, owned)
+                var l6 = DeckValidator.Validate(deck, LiveCardSet.Db, owned)
                     .Violations.Where(v => v.Rule == DeckRule.L6_Ownership).ToList();
 
                 Assert.That(l6, Is.Empty, $"{def.Id} ({def.Name}) is owned at 1 copy and used once, yet L6 refused it.");
@@ -199,19 +201,19 @@ namespace Emberfall.Core.Tests.Collection
         public void CanAdd_Refuses_A_Copy_You_Cannot_Back_With_A_Card()
         {
             var c = Gravedant();
-            var deck = new DeckList { Id = "deck-1", CharacterId = c.Id, Name = "Empty" };
+            var deck = new DeckList(c.PrimaryClass, c.SecondaryClass) { Id = "deck-1", Name = "Empty" };
             var def = AnyCollectibleFor(c);
 
             var ownNone = new OwnedCardCounts();
             var ownOne = new OwnedCardCounts();
             ownOne.Set(def.Id, 1);
 
-            Assert.That(DeckValidator.CanAdd(deck, c, def), Is.True, "no record: unconstrained");
-            Assert.That(DeckValidator.CanAdd(deck, c, def, ownNone), Is.False, "owns none");
-            Assert.That(DeckValidator.CanAdd(deck, c, def, ownOne), Is.True, "owns one, using none");
+            Assert.That(DeckValidator.CanAdd(deck, def), Is.True, "no record: unconstrained");
+            Assert.That(DeckValidator.CanAdd(deck, def, ownNone), Is.False, "owns none");
+            Assert.That(DeckValidator.CanAdd(deck, def, ownOne), Is.True, "owns one, using none");
 
             deck.Entries.Add(new DeckEntry(def.Id, 1));
-            Assert.That(DeckValidator.CanAdd(deck, c, def, ownOne), Is.False, "owns one, already using it");
+            Assert.That(DeckValidator.CanAdd(deck, def, ownOne), Is.False, "owns one, already using it");
         }
 
         // ---- CopyLimit: what the deckbuilder's fade reads --------------------------------
@@ -249,13 +251,13 @@ namespace Emberfall.Core.Tests.Collection
             var deck = LegalDeck(c);
             var owned = Exactly(deck);
 
-            Assert.That(QueueEligibility.IsEligible(deck, c, LiveCardSet.Db, owned), Is.True);
+            Assert.That(QueueEligibility.IsEligible(deck, LiveCardSet.Db, owned), Is.True);
 
             // ... and then a copy is dusted.
             var first = deck.Entries[0];
             owned.Set(first.CardId, first.Count - 1);
 
-            var check = QueueEligibility.Check(deck, c, LiveCardSet.Db, owned);
+            var check = QueueEligibility.Check(deck, LiveCardSet.Db, owned);
             Assert.That(check.IsEligible, Is.False);
             Assert.That(check.IsDraft, Is.True, "It is a draft — a legitimate saved state, denied only the queue.");
             Assert.That(check.Reason, Is.Not.Empty, "The row has to be able to say why.");
@@ -270,8 +272,8 @@ namespace Emberfall.Core.Tests.Collection
             var entriesBefore = deck.Entries.Select(e => (e.CardId, e.Count)).ToList();
 
             // Validation is the only thing that judges a deck, and it must not repair one.
-            DeckValidator.Validate(deck, c, LiveCardSet.Db, new OwnedCardCounts());
-            QueueEligibility.Check(deck, c, LiveCardSet.Db, new OwnedCardCounts());
+            DeckValidator.Validate(deck, LiveCardSet.Db, new OwnedCardCounts());
+            QueueEligibility.Check(deck, LiveCardSet.Db, new OwnedCardCounts());
 
             Assert.That(deck.TotalCount, Is.EqualTo(before));
             Assert.That(deck.Entries.Select(e => (e.CardId, e.Count)).ToList(), Is.EqualTo(entriesBefore),
@@ -301,7 +303,7 @@ namespace Emberfall.Core.Tests.Collection
             var c = Gravedant();
             var deck = LegalDeck(c);
 
-            var result = DeckValidator.Validate(deck, c, LiveCardSet.Db, AllCardsOwnedCounts.Instance);
+            var result = DeckValidator.Validate(deck, LiveCardSet.Db, AllCardsOwnedCounts.Instance);
 
             Assert.That(result.IsValid, Is.True,
                 "Unexpected violations: " + string.Join("; ", result.Violations.Select(v => $"{v.Rule}: {v.Message}")));

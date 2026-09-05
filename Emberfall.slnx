@@ -9,6 +9,7 @@
     <Project Path="src/Emberfall.Net.Protocol/Emberfall.Net.Protocol.csproj" />
     <Project Path="src/Emberfall.Net.Server/Emberfall.Net.Server.csproj" />
     <Project Path="src/Emberfall.Tools.CardCi/Emberfall.Tools.CardCi.csproj" />
+    <Project Path="src/Emberfall.Tools.CollectionMigrate/Emberfall.Tools.CollectionMigrate.csproj" />
     <Project Path="src/Emberfall.Tools.CollectionSelfCheck/Emberfall.Tools.CollectionSelfCheck.csproj" />
     <Project Path="src/Emberfall.Tools.DeterminismGate/Emberfall.Tools.DeterminismGate.csproj" />
     <Project Path="src/Emberfall.Tools.NetSoak/Emberfall.Tools.NetSoak.csproj" />

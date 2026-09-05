@@ -16,10 +16,14 @@
     <Style src="../../DesignSystem/Styles/Overlays.uss" />
     <Style src="../Common/tidbit.uss" />
     <!--
-      Character creation, as a SCENE (Sam, 2026-08-23). It was three views inside a
-      `.delete-modal` overlay in CharacterRosterScreen.uxml until then. Same call the Store
-      got on 2026-08-20 and for the same reason: it is full-screen, opaque and a destination,
-      so the overlay was hosting rather than design.
+      DECK creation, as a SCENE. It made CHARACTERS until 2026-09-04; ADR-0009 deleted the
+      container and the picker survived, because a deck's pairing is permanent and so "New Deck"
+      opens on exactly this. The file, the scene and this folder still carry the old name — that
+      is naming debt, not a second screen.
+
+      It was three views inside a `.delete-modal` overlay in CharacterRosterScreen.uxml until
+      2026-08-23. Same call the Store got on 2026-08-20 and for the same reason: it is
+      full-screen, opaque and a destination, so the overlay was hosting rather than design.
 
       The three views are siblings, shown one at a time by CharacterCreateController. They keep
       their styling in character-roster.uss.
@@ -83,18 +87,29 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <!-- CONFIRM: reached automatically once both classes are picked. Carries the ONE
-             text field in the whole flow — the character's name — validated by
-             PlayerName.Check, the same predicate the server's MatchGate enforces on the
-             wire (VULN-002). "Change something" drops the secondary pick only. -->
+        <!-- CONFIRM: reached automatically once both classes are picked. It states the pairing,
+             which is PERMANENT from the moment the deck exists (ADR-0009 ruling 1), and offers
+             the two starter shapes. "Change something" drops the secondary pick only.
+
+             THE NAME FIELD IS GONE (ADR-0009). It was here because a character's name was
+             immutable and had to be settled at creation; a deck's is not, and the roster renames
+             one from its own plate. It carried PlayerName.Check with it, which is not a loss:
+             that predicate guards the DISPLAY NAME an opponent sees on the wire (VULN-002), and
+             a deck name is never shown to anyone but its owner.
+
+             There is no single "Create" here on purpose. The starter shape is the last decision
+             and it is a fork, so it is two buttons rather than a control above one — the same
+             call the deck dialog's own new-deck pane makes. RefreshConfirm hides Blank for the
+             very first deck, which always gets a playable one. -->
         <ui:VisualElement name="create-confirm-view">
             <ui:Label text="Ready to build" class="delete-title" />
             <ui:Label name="create-confirm-summary" text="" class="create-help" />
-            <ui:TextField name="create-name-field" label="Name" max-length="16" class="roster-field" />
-            <ui:Label name="create-name-error" text="" class="create-error" />
+            <ui:Label name="create-starter-note" text="" class="create-help create-help--starter" />
+            <ui:Label name="create-error" text="" class="create-error" />
             <ui:VisualElement class="delete-actions">
                 <ui:Button name="create-change" text="Change something" class="roster-button roster-button--ghost" />
-                <ui:Button name="create-continue" text="Create Character" class="roster-button roster-button--cta" />
+                <ui:Button name="create-blank" text="Start blank" class="roster-button roster-button--ghost" />
+                <ui:Button name="create-generated" text="Generate a queue-ready deck" class="roster-button roster-button--cta" />
             </ui:VisualElement>
         </ui:VisualElement>
 

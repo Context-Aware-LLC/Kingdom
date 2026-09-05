@@ -57,7 +57,7 @@ namespace Emberfall.Net.Server.Tests
             // through TryGet, never a KeyNotFoundException and never a mutation that reaches match state.
             var lines = LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT);
             lines[0] = new DeckCardLine(FixtureCard.Id("no_such_card_zzz"), lines[0].Count);
-            var msg = new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
+            var msg = new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
 
             DeckSubmissionResult result = default;
             Assert.DoesNotThrow(() => result = DeckSubmission.Validate(msg, Db));
@@ -70,7 +70,7 @@ namespace Emberfall.Net.Server.Tests
         {
             var lines = LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT);
             lines.RemoveAt(lines.Count - 1);   // now < 30
-            var msg = new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
+            var msg = new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
 
             var result = DeckSubmission.Validate(msg, Db);
             Assert.That(result.Accepted, Is.False, "an under-size deck is a draft, not queue-eligible");
@@ -84,7 +84,7 @@ namespace Emberfall.Net.Server.Tests
             int offClass = FirstCollectibleOfClass(CardClass.EMBERWARD);
             var lines = LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT);
             lines[0] = new DeckCardLine(offClass, lines[0].Count);
-            var msg = new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
+            var msg = new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
 
             var result = DeckSubmission.Validate(msg, Db);
             Assert.That(result.Accepted, Is.False, "an EMBERWARD card is illegal for a GRAVEKEEP/VERDANT character");
@@ -109,7 +109,7 @@ namespace Emberfall.Net.Server.Tests
             // Total across entries is 2+2+26 = 30, so WITHOUT the merge this passes L1 and per-entry L2.
             Assert.That(lines.Sum(l => l.Count), Is.EqualTo(DeckValidator.DeckSize));
 
-            var msg = new SubmitDeckMsg("c", CardClass.EMBERWARD, CardClass.TIDECALLER, lines);
+            var msg = new SubmitDeckMsg(CardClass.EMBERWARD, CardClass.TIDECALLER, lines);
             var result = DeckSubmission.Validate(msg, Db);
             Assert.That(result.Accepted, Is.False, "four copies smuggled across two entries must be rejected");
         }
@@ -119,8 +119,8 @@ namespace Emberfall.Net.Server.Tests
         {
             var lines = LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT);
             // Same class twice is not a pairing; a NEUTRAL "hero" has no hero power.
-            var samePair = new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.GRAVEKEEP, lines);
-            var neutralPrimary = new SubmitDeckMsg("c", CardClass.NEUTRAL, CardClass.VERDANT, lines);
+            var samePair = new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.GRAVEKEEP, lines);
+            var neutralPrimary = new SubmitDeckMsg(CardClass.NEUTRAL, CardClass.VERDANT, lines);
 
             Assert.That(DeckSubmission.Validate(samePair, Db).Accepted, Is.False);
             Assert.That(DeckSubmission.Validate(neutralPrimary, Db).Accepted, Is.False);
@@ -131,7 +131,7 @@ namespace Emberfall.Net.Server.Tests
         {
             var lines = LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT);
             lines.Add(new DeckCardLine(lines[0].CardId, -5));
-            var msg = new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
+            var msg = new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
 
             var result = DeckSubmission.Validate(msg, Db);
             Assert.That(result.Accepted, Is.False, "a negative count cannot underflow the total past the gate");
@@ -208,7 +208,7 @@ namespace Emberfall.Net.Server.Tests
                 var lines = LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT);
                 lines[0] = new DeckCardLine(FixtureCard.Id("no_such_card_zzz"), lines[0].Count);
                 await SendAsync(attacker, ProtocolCodec.Encode(
-                    new SubmitDeckMsg("c", CardClass.GRAVEKEEP, CardClass.VERDANT, lines), ProtocolCodec.PreMatch, 1));
+                    new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT, lines), ProtocolCodec.PreMatch, 1));
 
                 bool closed = await WaitForCloseAsync(attacker, TimeSpan.FromSeconds(10));
                 Assert.That(closed, Is.True, "an illegal deck must be refused at the handshake, never seated");
@@ -245,16 +245,20 @@ namespace Emberfall.Net.Server.Tests
 
         // ── Deck construction ─────────────────────────────────────────────────────
 
+        /// <summary>The submission carried a character id as its first member until ADR-0009. The
+        /// message's own doc had always said that id "is not an identity the server trusts", which is
+        /// why removing it cost the wire nothing — the pairing was already the only part of it the
+        /// server read.</summary>
         private static SubmitDeckMsg LegalSubmission(CardClass primary, CardClass secondary)
-            => new SubmitDeckMsg("c", primary, secondary, LegalLines(primary, secondary));
+            => new SubmitDeckMsg(primary, secondary, LegalLines(primary, secondary));
 
         /// <summary>A legal 30-card decklist for the pairing, as wire lines. Generated (not hand-authored)
-        /// via the same <see cref="DefaultDeckGenerator"/> a new character opens on, so it always passes
+        /// via the same <see cref="DefaultDeckGenerator"/> a new deck opens on, so it always passes
         /// L1–L5 and the test asserts the SERVER'S verdict, not the generator's.</summary>
         private static List<DeckCardLine> LegalLines(CardClass primary, CardClass secondary)
         {
-            var character = new Character("c", "Test", primary, secondary);
-            var deck = DefaultDeckGenerator.Generate(character, Db, new DeterministicRandom(0xD00DUL), "test-deck");
+            var deck = DefaultDeckGenerator.Generate(
+                primary, secondary, Db, new DeterministicRandom(0xD00DUL), "test-deck");
             return deck.Entries.Select(e => new DeckCardLine(e.CardId, e.Count)).ToList();
         }
 
@@ -296,7 +300,7 @@ namespace Emberfall.Net.Server.Tests
             await SendAsync(ws, ProtocolCodec.Encode(
                 new HelloMsg(token, ProtocolContract.Version, "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
             await SendAsync(ws, ProtocolCodec.Encode(
-                new SubmitDeckMsg("c", primary, secondary, LegalLines(primary, secondary)), ProtocolCodec.PreMatch, 1));
+                new SubmitDeckMsg(primary, secondary, LegalLines(primary, secondary)), ProtocolCodec.PreMatch, 1));
         }
 
         private static Task SendAsync(ClientWebSocket ws, byte[] frame)

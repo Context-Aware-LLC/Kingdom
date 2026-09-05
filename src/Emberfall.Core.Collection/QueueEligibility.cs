@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Emberfall.Core.Contracts;
 
 namespace Emberfall.Core.Collection
@@ -12,7 +11,7 @@ namespace Emberfall.Core.Collection
     /// </summary>
     public readonly struct QueueCheck
     {
-        /// <summary>The full L1–L5 result, for a caller that wants every violation rather than the first.</summary>
+        /// <summary>The full L1–L6 result, for a caller that wants every violation rather than the first.</summary>
         public readonly DeckValidation Validation;
 
         public QueueCheck(DeckValidation validation) { Validation = validation; }
@@ -62,39 +61,28 @@ namespace Emberfall.Core.Collection
     /// </summary>
     public static class QueueEligibility
     {
-        /// <summary>The gate, with its reason. One evaluation serves both the badge and the copy.</summary>
-        public static QueueCheck Check(DeckList? deck, Character? character, ICardDatabase db,
-                                       IOwnedCardCounts? owned = null) =>
-            new QueueCheck(DeckValidator.Validate(deck, character, db, owned));
-
         /// <summary>
-        /// The gate for a caller holding a roster rather than a resolved character — match-join, which
-        /// receives a deck and looks its owner up. A <see cref="DeckList.CharacterId"/> that resolves
-        /// to nothing yields the L5 violation, which is the orphaned-deck case reporting itself
-        /// (§3): the deck is denied the queue and says why, and nothing is repaired.
+        /// The gate, with its reason. One evaluation serves both the badge and the copy.
+        ///
+        /// <para><b>There used to be a second overload of each of these</b>, taking an
+        /// <c>IEnumerable&lt;Character&gt;</c> roster and resolving the deck's owner out of it — the
+        /// shape match-join needed, since it received a deck and had to look its pairing up. Deleted
+        /// with characters (ADR-0009): the deck carries its own pairing, so there is nothing left to
+        /// resolve and no way for the lookup to fail. The orphaned-deck case those overloads reported
+        /// through L5 cannot occur.</para>
         /// </summary>
-        public static QueueCheck Check(DeckList? deck, IEnumerable<Character> roster, ICardDatabase db,
+        public static QueueCheck Check(DeckList? deck, ICardDatabase db,
                                        IOwnedCardCounts? owned = null) =>
-            Check(deck, CharacterQuery.ById(roster, deck?.CharacterId ?? ""), db, owned);
+            new QueueCheck(DeckValidator.Validate(deck, db, owned));
 
         /// <summary>Bool-only convenience for a caller that has no use for the reason.</summary>
-        public static bool IsEligible(DeckList? deck, Character? character, ICardDatabase db,
+        public static bool IsEligible(DeckList? deck, ICardDatabase db,
                                       IOwnedCardCounts? owned = null) =>
-            Check(deck, character, db, owned).IsEligible;
-
-        /// <summary>Bool-only convenience for a caller that has no use for the reason.</summary>
-        public static bool IsEligible(DeckList? deck, IEnumerable<Character> roster, ICardDatabase db,
-                                      IOwnedCardCounts? owned = null) =>
-            Check(deck, roster, db, owned).IsEligible;
+            Check(deck, db, owned).IsEligible;
 
         /// <summary>True iff this deck is a draft — listed everywhere, selectable nowhere.</summary>
-        public static bool IsDraft(DeckList? deck, Character? character, ICardDatabase db,
+        public static bool IsDraft(DeckList? deck, ICardDatabase db,
                                    IOwnedCardCounts? owned = null) =>
-            Check(deck, character, db, owned).IsDraft;
-
-        /// <summary>True iff this deck is a draft — listed everywhere, selectable nowhere.</summary>
-        public static bool IsDraft(DeckList? deck, IEnumerable<Character> roster, ICardDatabase db,
-                                   IOwnedCardCounts? owned = null) =>
-            Check(deck, roster, db, owned).IsDraft;
+            Check(deck, db, owned).IsDraft;
     }
 }

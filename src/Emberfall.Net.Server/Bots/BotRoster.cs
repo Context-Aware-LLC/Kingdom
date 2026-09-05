@@ -105,7 +105,7 @@ namespace Emberfall.Net.Server.Bots
                     throw new InvalidOperationException(
                         $"Bot roster '{path}': duplicate displayName '{displayName}'.");
 
-                if (!Character.IsValidPairing(dto.PrimaryClass, dto.SecondaryClass))
+                if (!DeckList.IsValidPairing(dto.PrimaryClass, dto.SecondaryClass))
                     throw new InvalidOperationException(
                         $"Bot roster '{path}': entry '{dto.AccountUsername}' has an invalid class " +
                         $"pairing {dto.PrimaryClass}/{dto.SecondaryClass}.");
@@ -138,11 +138,14 @@ namespace Emberfall.Net.Server.Bots
                     summed[cardId] = have + 1;
                 }
 
-                var deck = new DeckList { Id = "bot:" + dto.AccountUsername, CharacterId = dto.AccountUsername, Name = dto.AccountUsername };
+                var deck = new DeckList(dto.PrimaryClass, dto.SecondaryClass)
+                {
+                    Id = "bot:" + dto.AccountUsername,
+                    Name = dto.AccountUsername,
+                };
                 foreach (var id in order) deck.Entries.Add(new DeckEntry(id, summed[id]));
-                var character = new Character(dto.AccountUsername, dto.AccountUsername, dto.PrimaryClass, dto.SecondaryClass);
 
-                var check = QueueEligibility.Check(deck, character, db);
+                var check = QueueEligibility.Check(deck, db);
                 if (!check.IsEligible)
                     throw new InvalidOperationException(
                         $"Bot roster '{path}': entry '{dto.AccountUsername}' has an illegal deck: {check.Reason}");
