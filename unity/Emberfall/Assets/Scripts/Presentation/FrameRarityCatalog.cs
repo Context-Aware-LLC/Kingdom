@@ -138,9 +138,11 @@ namespace Emberfall.Presentation
         public static readonly Vector2 GemSocket = new(0.5f, 0.947754f); // 728, 1941
         public const float GemHeight = 0.075684f; // 155 — O155 stone in the O170 well
 
-        // §4: SILENCE is an effect, not a card-face keyword — it has no icon.
-        public static string KeywordIcon(Keyword keyword) =>
-            keyword == Keyword.SILENCE ? null : $"icon_kw_{keyword.ToString().ToLowerInvariant()}";
+        // NO KeywordIcon HERE ANY MORE (removed 2026-09-04, Sam: "we aren't doing keyword icons").
+        // It minted "icon_kw_<keyword>" addresses and had no callers at all — StatusMarkCatalog
+        // was the one the renderer actually used, and that is gone too. No icon_kw_*.png ever
+        // existed outside the deleted placeholder generator, so every such address resolved to
+        // null and drew nothing. Keywords read from the card's body text.
 
         public static bool HasFoil(Rarity rarity) => rarity == Rarity.EPIC || rarity == Rarity.LEGENDARY;
 

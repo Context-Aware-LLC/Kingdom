@@ -27,7 +27,6 @@ namespace Emberfall.Presentation
         // Frame/rarity layer (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md D2) — sprites resolved by name through _ui.
         [SerializeField] private SpriteRenderer frameRenderer;
         [SerializeField] private SpriteRenderer gemRenderer;
-        [SerializeField] private SpriteRenderer[] keywordIcons;
         // The three digit sockets and the gem bezel are composited over the frame rather than
         // painted into it (2026-08-19) — that is what lets one frame serve every card type, since
         // a spell just leaves the two stat sockets undrawn.
@@ -80,14 +79,15 @@ namespace Emberfall.Presentation
 
         // Frame/rarity layer wiring (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/frame-rarity-system.md D2). Separate from Setup() so the
         // sprite composition is optional — a card still renders (art + labels) without it.
+        // The SpriteRenderer[] icons parameter was removed 2026-09-04 with the keyword-icon
+        // feature. It is a positional signature change with one caller (BoardController).
         public void SetupFrameLayer(SpriteRenderer frame, SpriteRenderer gem,
-                                    SpriteRenderer[] icons, IUiSpriteProvider ui,
+                                    IUiSpriteProvider ui,
                                     SpriteRenderer costSocket = null, SpriteRenderer attackSocket = null,
                                     SpriteRenderer healthSocket = null, SpriteRenderer gemSocket = null)
         {
             frameRenderer        = frame;
             gemRenderer          = gem;
-            keywordIcons         = icons;
             _ui                  = ui;
             costSocketRenderer   = costSocket;
             attackSocketRenderer = attackSocket;
@@ -160,9 +160,6 @@ namespace Emberfall.Presentation
             if (bodyLabel != null)       bodyLabel.gameObject.SetActive(false);
             if (artRenderer != null)     artRenderer.gameObject.SetActive(false);
             if (gemRenderer != null)     gemRenderer.gameObject.SetActive(false);
-            if (keywordIcons != null)
-                foreach (var icon in keywordIcons)
-                    if (icon != null) icon.gameObject.SetActive(false);
             if (tooltipBanner != null)   tooltipBanner.SetActive(false);
 
             // Back sprite if authored ("card_back" atlas key); otherwise the frame stays empty
@@ -598,43 +595,20 @@ namespace Emberfall.Presentation
             if (_hasPaintedFrame)
             {
                 if (keywordLabel != null) keywordLabel.gameObject.SetActive(false);
-                if (keywordIcons != null)
-                    foreach (var icon in keywordIcons)
-                        if (icon != null) icon.gameObject.SetActive(false);
                 ApplyBodyText();
                 return;
             }
 
-            // Preferred: one atlas icon per keyword (§4), laid out left-to-right, capped at the
-            // strip's slot count. StatusMarkCatalog owns the registry (plan decision 15, EF-044):
-            // null means either intentionally absent (s_noIcon — silent) or unknown keyword
-            // (warns in the catalog). A registered address missing from the atlas warns here.
-            if (keywordIcons != null && keywordIcons.Length > 0 && _ui != null)
-            {
-                if (keywordLabel != null) keywordLabel.gameObject.SetActive(false);
-
-                int slot = 0;
-                foreach (Keyword kw in _kwScratch)
-                {
-                    if (slot >= keywordIcons.Length) break;
-                    string addr = StatusMarkCatalog.KeywordIconAddress(kw);
-                    if (addr == null) continue;  // intentionally absent or unknown (catalog warns)
-                    Sprite icon = _ui.Get(addr);
-                    if (icon == null)
-                    {
-                        Debug.LogWarning($"[CardPresenter] keyword icon registered but missing from atlas: {addr}");
-                        continue;
-                    }
-                    SpriteMaterials.SetPreservingSize(keywordIcons[slot], icon);
-                    keywordIcons[slot].gameObject.SetActive(true);
-                    slot++;
-                }
-                for (int i = slot; i < keywordIcons.Length; i++)
-                    keywordIcons[i].gameObject.SetActive(false);
-                return;
-            }
-
-            // Fallback: text keyword strip (icons not wired / atlas absent).
+            // THE ICON STRIP IS GONE (2026-09-04, Sam: "we aren't doing keyword icons"). It read
+            // StatusMarkCatalog for an "icon_kw_<keyword>" address and drew up to four sprites
+            // below the art window. No icon_kw_*.png ever existed outside the placeholder
+            // generator deleted the same day, so every lookup returned null and every slot stayed
+            // hidden — and it could not have rendered anyway, because the painted-frame branch
+            // above returns first and every card has a painted frame since 2026-08-19.
+            //
+            // What remains is the text strip, which is the no-frame path only: a degraded state
+            // where frame_card.png failed to load. Keywords on a real card read from the body
+            // text, as the §3.1 bold lead.
             if (keywordLabel == null) return;
             var sb = new StringBuilder();
             foreach (Keyword kw in _kwScratch)

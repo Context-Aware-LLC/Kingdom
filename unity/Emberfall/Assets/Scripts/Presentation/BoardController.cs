@@ -793,20 +793,12 @@ namespace Emberfall.Presentation
             healthSocket.gameObject.SetActive(false);
             gemSocket.gameObject.SetActive(false);
 
-            // Keyword icon strip — up to 4 icons laid left-to-right just below the art window.
-            // Sprites (icon_kw_*) assigned from live keywords by RebuildKeywords (§4).
-            const int kIconSlots = 4;
-            float iconSize = CardW * 0.15f;
-            float iconGap  = iconSize * 1.05f;
-            float iconY    = -CardH * 0.20f;
-            var keywordIcons = new SpriteRenderer[kIconSlots];
-            for (int i = 0; i < kIconSlots; i++)
-            {
-                float x = (i - (kIconSlots - 1) * 0.5f) * iconGap;
-                keywordIcons[i] = MakeSprite(root.transform, $"Kw{i}",
-                    new Vector3(x, iconY, -0.012f), new Vector2(iconSize, iconSize));
-                keywordIcons[i].gameObject.SetActive(false);
-            }
+            // NO KEYWORD ICON STRIP (removed 2026-09-04, Sam: "we aren't doing keyword icons").
+            // This built four SpriteRenderers per card below the art window, immediately
+            // SetActive(false), for CardPresenter to fill from StatusMarkCatalog. It never filled
+            // any: no icon_kw_*.png existed, and the painted-frame branch returned before the
+            // strip was reached. Four GameObjects plus four renderers on every card — a whole
+            // collection wall's worth — to stay invisible.
 
             // BoxCollider on root for OnMouseDown — sized to card face.
             var col = root.AddComponent<BoxCollider>();
@@ -916,7 +908,7 @@ namespace Emberfall.Presentation
 
             var presenter = root.AddComponent<CardPresenter>();
             presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer, bodyLabel);
-            presenter.SetupFrameLayer(frameRenderer, gemRenderer, keywordIcons, _uiSprites,
+            presenter.SetupFrameLayer(frameRenderer, gemRenderer, _uiSprites,
                                       costSocket, attackSocket, healthSocket, gemSocket);
             presenter.SetupTooltip(tooltipBgGo, tooltipLabel, _flavorPanel);
 
