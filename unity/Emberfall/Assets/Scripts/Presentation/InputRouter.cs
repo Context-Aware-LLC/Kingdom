@@ -91,6 +91,14 @@ namespace Emberfall.Presentation
         private bool ChoiceBlocksInput => _currentState?.PendingChoice != null;
         public bool BlocksInput => ChoiceBlocksInput || (UiBlocksInput != null && UiBlocksInput());
 
+        // True from the moment a card is pressed through to release (Pressed, Dragging and both
+        // Awaiting* states). CardRevealController reads this to keep the hover/hold inspect panel
+        // from popping up mid-drag: the hover timer starts on OnMouseEnter, which happens before
+        // the press, so a press that becomes a drag can still cross HoverDelaySeconds while the
+        // card is being carried across the board (Sam, 2026-09-05 — the panel was opening under a
+        // drag and obscuring the drop).
+        public bool GestureInProgress => _gesture != Gesture.None;
+
         // EDITOR/TEST ONLY: injectable probe for headless verification. Overrides raycast behavior.
         public System.Func<Vector2, (PointerSubject subject, Transform hitTransform, CardPresenter presenter)> InjectableProbe;
 

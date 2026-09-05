@@ -35,8 +35,12 @@ namespace Emberfall.Presentation
     internal sealed class HoverRevealModel
     {
         /// <summary>Long enough that sweeping the pointer across the fan on the way somewhere else
-        /// does not strobe a panel on and off over every card it crosses.</summary>
-        internal const float HoverDelaySeconds = 0.45f;
+        /// does not strobe a panel on and off over every card it crosses.
+        ///
+        /// <para>0.45 -> 0.75 on 2026-09-05 (Sam: pops up too readily, wants a longer pause before
+        /// it appears). Mirrors the earlier HoldSeconds bump for the same complaint on touch —
+        /// see below.</para></summary>
+        internal const float HoverDelaySeconds = 0.75f;
 
         /// <summary>Long enough to be unmistakably deliberate against a tap-to-select, short enough
         /// that a player who wants to read a card does not think the gesture failed.

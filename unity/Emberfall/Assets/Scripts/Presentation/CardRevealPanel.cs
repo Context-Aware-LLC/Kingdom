@@ -99,29 +99,46 @@ namespace Emberfall.Presentation
             float pad = PanelW * 0.06f;
             float inner = PanelW - pad * 2f;
 
+            // Sam, 2026-09-05: the plate's text read as tiny against how much room the plate has.
+            // It was: the on-card label sizes (CardPresenter's NameEm/BodyEm * CardH * 10) copied
+            // straight onto THIS box's fontSize/fontSizeMax/fontSizeMin without noticing this plate
+            // is not a card — inner is 3.4026 world units wide against the on-card body box's
+            // 1.292, a 2.63x difference nothing here accounted for. Values below are the old ones
+            // rescaled by that factor, with autosizing added throughout so a short name/rules line
+            // actually grows to fill the box instead of sitting at a card-sized glyph in a
+            // plate-sized frame.
+
             _title = MakeText("Title", new Vector3(DetailX, PanelH * 0.40f, -0.01f),
-                              new Vector2(inner, PanelH * 0.14f), 1.5f, Color.white,
+                              new Vector2(inner, PanelH * 0.14f), 3.0f, Color.white,
                               TextAlignmentOptions.Center, wrap: false);
+            _title.enableAutoSizing = true;
+            _title.fontSizeMax      = 3.0f;
+            _title.fontSizeMin      = 1.8f; // NameEmFloor * CardH * 10 * PlateScale, rounded
+            _title.overflowMode     = TextOverflowModes.Ellipsis;
             // The card NAME is the one string on this panel that is a title rather than prose, so
             // it takes the display face; everything below is the text face (EF-050's two roles).
             TMP_FontAsset display = BoardController.CardFont();
             if (display != null) _title.font = display;
 
             _subtitle = MakeText("Subtitle", new Vector3(DetailX, PanelH * 0.28f, -0.01f),
-                                 new Vector2(inner, PanelH * 0.10f), 0.85f,
+                                 new Vector2(inner, PanelH * 0.10f), 1.8f,
                                  new Color(0.72f, 0.76f, 0.84f),
                                  TextAlignmentOptions.Center, wrap: false);
+            _subtitle.enableAutoSizing = true;
+            _subtitle.fontSizeMax      = 1.8f;
+            _subtitle.fontSizeMin      = 1.0f;
+            _subtitle.overflowMode     = TextOverflowModes.Ellipsis;
 
             _body = MakeText("Body", new Vector3(DetailX, -PanelH * 0.06f, -0.01f),
-                             new Vector2(inner, PanelH * 0.58f), 0.90f,
+                             new Vector2(inner, PanelH * 0.58f), 2.4f,
                              new Color(0.94f, 0.94f, 0.94f),
                              TextAlignmentOptions.Top, wrap: true);
-            // Autosize floors at 0.55: below that the body drops under the acuity margin the
-            // 265 px phone card already runs at, and an unreadable panel is worse than a clipped
-            // one because nothing tells the player they are missing a line.
+            // BodyEm/BodyEmFloor * CardH * 10 * PlateScale (0.90, 0.55 pre-rescale) — see PlateScale
+            // above. The floor is still a real one for the longest shipped rules text; only the
+            // scale it was applied at was wrong.
             _body.enableAutoSizing = true;
-            _body.fontSizeMax      = 0.90f;
-            _body.fontSizeMin      = 0.55f;
+            _body.fontSizeMax      = 2.4f;
+            _body.fontSizeMin      = 1.3f;
             _body.overflowMode     = TextOverflowModes.Ellipsis;
         }
 

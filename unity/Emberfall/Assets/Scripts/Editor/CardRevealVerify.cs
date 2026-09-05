@@ -166,8 +166,9 @@ namespace Emberfall.Editor
             m.PointerEnter(Card(2), 0f);
             m.Tick(HoverRevealModel.HoverDelaySeconds);
             m.PointerDown(Card(3), HoverRevealModel.PointerKind.Touch, HoverRevealModel.HoverDelaySeconds);
-            // Step a hair past the boundary: 0.45f + 0.35f cannot represent both operands exactly,
-            // and subtracting them at the threshold can land one float ULP below HoldSeconds.
+            // Step a hair past the boundary: HoverDelaySeconds + HoldSeconds cannot represent both
+            // operands exactly, and subtracting them at the threshold can land one float ULP below
+            // HoldSeconds.
             m.Tick(HoverRevealModel.HoverDelaySeconds + HoverRevealModel.HoldSeconds + 0.01f);
 
             if (m.Source != HoverRevealModel.RevealSource.Hold)

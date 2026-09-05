@@ -177,6 +177,10 @@ namespace Emberfall.Presentation
         // Unearth surface do not block Unity physics, so while either modal owns input the board's
         // colliders remain live. Reading the router's combined gate keeps gestures and reveals on
         // one modal truth instead of creating a third wiring site that can silently drift.
-        private bool Blocked() => _router != null && _router.BlocksInput;
+        //
+        // GestureInProgress is folded in here rather than left to expire on its own: a card being
+        // dragged is still "hovered" as far as OnMouseEnter is concerned, so without this the
+        // inspect panel would pop open mid-drag and sit over the drop target.
+        private bool Blocked() => _router != null && (_router.BlocksInput || _router.GestureInProgress);
     }
 }
