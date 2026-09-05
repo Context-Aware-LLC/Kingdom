@@ -501,12 +501,8 @@ namespace Emberfall.Presentation
             // there is no scene wiring. IsBlockingInput gates board clicks (UITK won't block physics).
             if (inputRouter != null)
             {
-                var uiGo = new GameObject("MatchSettingsUI");
-                var doc  = uiGo.AddComponent<UIDocument>();
-                doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
-                doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchSettingsScreen");
-                var settings = uiGo.AddComponent<MatchSettingsController>();
-                settings.Init(inputRouter.OnConcedeClicked, allowAccountSwitch: false);
+                var settings = MatchSettingsController.Mount(inputRouter.OnConcedeClicked,
+                                                              showConcede: true, allowAccountSwitch: false);
                 inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
             }
 

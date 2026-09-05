@@ -167,6 +167,9 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).
+            MatchSettingsController.Mount();
+
             _mode = Mode;
             Mode = PackVaultMode.Vault;
 

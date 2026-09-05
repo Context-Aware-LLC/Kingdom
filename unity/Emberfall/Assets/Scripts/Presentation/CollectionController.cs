@@ -208,6 +208,9 @@ namespace Emberfall.Presentation
             _root = GetComponent<UIDocument>().rootVisualElement;
             if (_root == null) { Debug.LogError("[Collection] No rootVisualElement — is the UXML assigned?"); return; }
 
+            // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).
+            MatchSettingsController.Mount();
+
             try
             {
                 _account = PlayerAccount.Local;

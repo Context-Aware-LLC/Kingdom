@@ -418,12 +418,7 @@ namespace Emberfall.Presentation
         /// </summary>
         private void MountSettingsOverlay()
         {
-            var uiGo = new GameObject("MatchSettingsUI");
-            var doc  = uiGo.AddComponent<UIDocument>();
-            doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
-            doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchSettingsScreen");
-            var settings = uiGo.AddComponent<MatchSettingsController>();
-            settings.Init(onConcede: null, showConcede: false);
+            MatchSettingsController.Mount(onConcede: null, showConcede: false);
         }
 
         // ── Shared modal plumbing ───────────────────────────────────────────────────────

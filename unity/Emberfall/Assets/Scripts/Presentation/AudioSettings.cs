@@ -77,16 +77,23 @@ namespace Emberfall.Presentation
             Apply();
         }
 
-        /// <summary>Read persisted values and push them to the mixer. Safe to call more than once —
-        /// idempotent, and the settings panel calls it on open to read the current applied state
-        /// rather than assuming its own last write is still current.</summary>
+        /// <summary>Read persisted values (once) and push them to the mixer (every call). Genuinely
+        /// idempotent — re-applying costs nothing — because the first push, made whenever a scene's
+        /// settings panel first touches this class, can race the mixer's own native init and be
+        /// silently dropped. Nothing else ever retries it: without this, a session where that race
+        /// is lost stays unmuted until the player manually toggles Mute, since <see cref="_loaded"/>
+        /// would otherwise gate <see cref="Apply"/> to a single attempt for the whole process
+        /// lifetime. Every scene's settings mount calling this on Init is what gives the value
+        /// another chance to stick.</summary>
         public static void EnsureLoaded()
         {
-            if (_loaded) return;
-            _loaded = true;
-            _muted       = PlayerPrefs.GetInt(MutedKey, 0) != 0;
-            _musicVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(MusicVolumeKey, 1f));
-            _sfxVolume   = Mathf.Clamp01(PlayerPrefs.GetFloat(SfxVolumeKey, 1f));
+            if (!_loaded)
+            {
+                _loaded = true;
+                _muted       = PlayerPrefs.GetInt(MutedKey, 0) != 0;
+                _musicVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(MusicVolumeKey, 1f));
+                _sfxVolume   = Mathf.Clamp01(PlayerPrefs.GetFloat(SfxVolumeKey, 1f));
+            }
             Apply();
         }
 

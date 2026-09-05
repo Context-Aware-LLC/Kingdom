@@ -49,12 +49,39 @@ namespace Emberfall.Presentation
         private bool _accountModalOpen;
         private bool _pointerOverGear;
 
+        // One overlay per scene. Several of Mount's callers (CollectionController among them) can
+        // run OnEnable more than once on the same live GameObject without a scene reload between —
+        // a second Mount() there must hand back the existing gear rather than stack a duplicate one
+        // on top of it.
+        private static MatchSettingsController _current;
+
         /// <summary>True while the overlay or the account modal is open, or the pointer is over the
         /// corner button. InputRouter suppresses board input for the duration (UI Toolkit won't do
         /// it for us).</summary>
         public bool IsBlockingInput => _isOpen || _accountModalOpen || _pointerOverGear;
 
         private bool _allowAccountSwitch;
+
+        /// <summary>
+        /// Build and bind the settings overlay the same way on every screen that wants one — the
+        /// corner gear, the modal panel, sound and sign-out. Every top-level destination should call
+        /// this (main menu, an in-match bootstrap, collection, roster, store, pack vault); a modal or
+        /// sub-flow entered from one of those is fine without it (Sam, 2026-09-05).
+        /// </summary>
+        public static MatchSettingsController Mount(Action onConcede = null, bool showConcede = false,
+                                                      bool allowAccountSwitch = true)
+        {
+            if (_current != null) return _current;
+
+            var uiGo = new GameObject("MatchSettingsUI");
+            var doc  = uiGo.AddComponent<UIDocument>();
+            doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
+            doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchSettingsScreen");
+            var settings = uiGo.AddComponent<MatchSettingsController>();
+            settings.Init(onConcede, showConcede, allowAccountSwitch);
+            _current = settings;
+            return settings;
+        }
 
         /// <param name="onConcede">Forfeit callback. Pass null on a menu mount — there is no match
         /// to concede, and <paramref name="showConcede"/> hides the row that would call it.</param>
@@ -327,6 +354,11 @@ namespace Emberfall.Presentation
             _isOpen = false;
             _accountModalOpen = false;
             _pointerOverGear = false;
+        }
+
+        private void OnDestroy()
+        {
+            if (_current == this) _current = null;
         }
 
         // ── Account switcher (testing) ──────────────────────────────────────────────────

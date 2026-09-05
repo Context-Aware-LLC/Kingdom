@@ -44,6 +44,9 @@ namespace Emberfall.Presentation
                 return;
             }
 
+            // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).
+            MatchSettingsController.Mount();
+
             // PackArt stays an override seam (a test or a future streamed loader can set it); with
             // nobody overriding it the rails come from the art folders on disk. The gateway has no
             // such default on purpose — an unbound wallet must read as unavailable, never as zero.
