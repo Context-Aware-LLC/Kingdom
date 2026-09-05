@@ -35,7 +35,8 @@ namespace Emberfall.Net.Client.Tests.Auth
         /// both carry a null body, so a roster gateway that deleted a deck when it meant to read one
         /// would record exactly the same tuple.</para></summary>
         public List<(string Url, string? Body, IReadOnlyList<KeyValuePair<string, string>> Headers, string Verb)>
-            Requests { get; } = new List<(string, string?, IReadOnlyList<KeyValuePair<string, string>>, string)>();
+            Requests
+        { get; } = new List<(string, string?, IReadOnlyList<KeyValuePair<string, string>>, string)>();
 
         public FakeAuthHttp Reply(int status, string body)
         {

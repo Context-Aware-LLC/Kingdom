@@ -99,7 +99,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var store = new InMemoryAccountStore(new FixedTime());
 
-            SessionResult first  = await SessionEndpoint.ReadAsync(Token, Accepts(), store, null);
+            SessionResult first = await SessionEndpoint.ReadAsync(Token, Accepts(), store, null);
             SessionResult second = await SessionEndpoint.ReadAsync(Token, Accepts(), store, null);
 
             Assert.That(second.PlayerId, Is.EqualTo(first.PlayerId),
