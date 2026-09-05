@@ -7,7 +7,6 @@
         <ui:VisualElement name="command" class="mm-command emb-edge">
             <ui:VisualElement name="brand" class="mm-brand">
                 <ui:Label text="EMBERFALL" class="mm-wordmark"/>
-                <ui:Label text="A duel of embers" class="mm-tagline"/>
             </ui:VisualElement>
             <ui:VisualElement name="nav-plate" class="mm-nav-plate">
                 <ui:VisualElement name="menu" class="mm-menu">
