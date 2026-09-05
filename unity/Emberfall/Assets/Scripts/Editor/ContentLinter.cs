@@ -26,7 +26,6 @@ namespace Emberfall.Editor
     {
         int VanillaStatBudget(int cost);
         float ManaValueOf(RuleAction action, bool aoe);
-        int MaxSimultaneousPersistentAuras();
         int PerTurnActionCap();
         bool IsHighFrequencyTrigger(Trigger t);
     }
@@ -62,7 +61,6 @@ namespace Emberfall.Editor
     {
         public int VanillaStatBudget(int cost) => cost * 2 + 1;
         public float ManaValueOf(RuleAction action, bool aoe) => aoe ? 1.0f : 1.5f;
-        public int MaxSimultaneousPersistentAuras() => 14;
         public int PerTurnActionCap() => 30;
         public bool IsHighFrequencyTrigger(Trigger t) => t == Trigger.ON_ATTACK || t == Trigger.ON_DAMAGED;
     }
@@ -96,12 +94,6 @@ namespace Emberfall.Editor
                     Warn("E3-STAT-BUDGET", "attack/health",
                         $"(attack+health)={actual} deviates from the vanilla budget {budget} for cost {def.Cost}.");
             }
-
-            // E5: aura-cap warning — cards that grant a persistent-aura keyword via GIVE_KEYWORD
-            var auraKeywords = new HashSet<Keyword> { Keyword.BULWARK, Keyword.SHROUD, Keyword.AEGIS };
-            foreach (var rule in def.Rules)
-                if (rule.Action is GrantKeywordAction grant && auraKeywords.Contains(grant.Keyword))
-                    Warn("E5-AURA-CAP", "rules", $"grants persistent aura keyword {grant.Keyword} — check against the {guardrails.MaxSimultaneousPersistentAuras()}-aura board cap (guardrails §5).");
 
             // E7: the authored card text is the sole presentation text source. Length is a lint, not
             // legality — C26 already holds the sentence against the rules; this is about the frame it
