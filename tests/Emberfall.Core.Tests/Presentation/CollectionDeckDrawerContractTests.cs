@@ -184,8 +184,15 @@ namespace Emberfall.Core.Tests.Presentation
             });
         }
 
+        /// <summary>
+        /// Was <c>..._and_steps_with_screen_class</c>. The stepping half died with #349
+        /// (<c>a81a321d</c>), which deleted <c>.emb-sw-compact/-medium/-expanded</c> and
+        /// ScreenClass.cs because the panel's short axis became a constant and only
+        /// <c>expanded</c> could ever match. The four assertions that pinned the ladder's rungs
+        /// went with it; what is left is the overlay geometry, which is what the test was for.
+        /// </summary>
         [Test]
-        public void Collection_chrome_overlays_the_wall_and_steps_with_screen_class()
+        public void Collection_chrome_overlays_the_wall_without_covering_the_class_rail()
         {
             string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
             string styles = Asset("UI", "Collection", "collection.uss");
@@ -211,7 +218,7 @@ namespace Emberfall.Core.Tests.Presentation
                 // Hangs from the top-LEFT, the edge its drawer now arrives from. It was centred
                 // (left: 50%; translate: -50% 0) while the drawer came down across the full width.
                 Assert.That(ribbon.Groups["body"].Value, Does.Contain("left: 0"));
-                Assert.That(ribbon.Groups["body"].Value, Does.Contain("height: 56px"));
+                Assert.That(ribbon.Groups["body"].Value, Does.Contain("height: 72px"));
                 Assert.That(toolbar.Success, Is.True);
                 Assert.That(toolbar.Groups["body"].Value, Does.Contain("position: absolute"));
                 Assert.That(toolbar.Groups["body"].Value, Does.Contain("left: var(--edge-safe)"));
@@ -222,34 +229,33 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(toolbar.Groups["body"].Value, Does.Contain("top: var(--touch-min)"),
                     "The toolbar overlay must clear the in-flow class rail, not paint over it.");
                 Assert.That(styles, Does.Match(
-                    @"(?s)\.collection\.emb-sw-medium \.col-button--filters\s*\{.*?height:\s*64px;"));
-                Assert.That(styles, Does.Match(
-                    @"(?s)\.collection\.emb-sw-expanded \.col-button--filters\s*\{.*?height:\s*72px;"));
-                Assert.That(styles, Does.Match(
                     @"(?s)\.collection\s*\{.*?padding:\s*0 var\(--space-6\) 0;"),
-                    "Compact must not reserve the old 24dp bottom gutter.");
-                Assert.That(styles, Does.Match(
-                    @"(?s)\.collection\.emb-sw-medium\s*\{.*?padding-bottom:\s*var\(--space-4\);"));
-                Assert.That(styles, Does.Match(
-                    @"(?s)\.collection\.emb-sw-expanded\s*\{.*?padding-bottom:\s*var\(--space-6\);"));
+                    "The screen must not reserve a bottom gutter it no longer steps.");
+                Assert.That(styles, Does.Not.Contain(".emb-sw-"),
+                    "#349 deleted the screen classes because the panel's short axis is a constant "
+                    + "and only .emb-sw-expanded could ever match. A selector reappearing here is "
+                    + "dead style, not a breakpoint — breakpoints, if wanted again, key on WIDTH.");
             });
         }
 
         /// <summary>
-        /// <para>THE SCROLLVIEW IS THE WHOLE POINT OF THIS TEST. Stacked in a ~420dp column the
-        /// filter controls come to roughly 668dp against a 411dp panel, so the drawer overflows by
-        /// more than half a screen and the bottom chip families are simply unreachable without a
-        /// scroll. On a desk-sized Game View the drawer is short enough to look finished, which is
-        /// exactly how a deleted ScrollView would survive review.</para>
-        /// <para>This test used to assert the OPPOSITE and it was right to: while the drawer slid
-        /// down across the full width, the rows were laid out ACROSS it, came to at most 332dp, and
-        /// the 79dp remainder was the outside-tap target that closed it. Both the 56px group margins
-        /// that centred those rows in the forged brackets' bay, and the brackets themselves, went
-        /// with the top drawer on 2026-08-31 — see collection.uss. The outside-tap target is now the
-        /// wall to the RIGHT of the drawer, which needs no arithmetic to stay true.</para>
+        /// <para>THE HEIGHT ARGUMENT IS GONE AND IT IS NOT COMING BACK. This test used to prove the
+        /// ScrollView was load-bearing by arithmetic: stacked in a ~420dp column the controls came
+        /// to ~668dp against a 411dp panel, so the bottom chip families were unreachable without a
+        /// scroll. Both halves of that died. The panel is 1080 authored px tall on every device as
+        /// of 2026-09-01 (see the header of theme.uss), and the UXML no longer holds the sort /
+        /// sort-dir / reset stack the model counted. Re-derived in live units — drawer 20% of a
+        /// 2400-wide panel = 480, less --edge-safe 52 and --space-6 24 = 404 of content, controls
+        /// at --touch-min 56 — the same model comes to 712 against 1080. IT FITS, with room to
+        /// spare, and the test's own guard said that means it is measuring nothing.</para>
+        /// <para>So the arithmetic is deleted rather than rebased onto numbers nobody has put on
+        /// glass since #349. What survives is what was never about the height: the chip families
+        /// must be wide enough to read as ROWS, and the two UI Toolkit traps below — a fade that
+        /// scrolls away because it was made a child, and a ScrollView that floors on its content
+        /// without min-height:0 — which are bugs whether or not today's content overflows.</para>
         /// </summary>
         [Test]
-        public void Collection_left_query_drawer_must_scroll_because_its_rows_overflow_the_panel()
+        public void Collection_left_query_drawer_scrolls_and_signals_that_it_has_more()
         {
             string uxml = Asset("UI", "Collection", "CollectionScreen.uxml");
             string styles = Asset("UI", "Collection", "collection.uss");
@@ -258,38 +264,28 @@ namespace Emberfall.Core.Tests.Presentation
             XElement queryBar = document.Descendants()
                 .Single(element => (string?)element.Attribute("name") == "query-bar");
 
-            const float phonePanelHeight = 411.4f;
-            const float drawerMinWidth = 420f;
+            // The panel is 1080 authored px tall and 1080 * aspect wide — 2400 on the 20:9 phone
+            // this game is landscape-locked to. .col-query takes 20% of that, pays --edge-safe on
+            // the left (it is a screen edge) and --space-6 on the right (interior).
+            const float panelWidth = 2400f;
+            const float drawerWidthFraction = 0.20f;
             const float edgeSafe = 52f;
             const float interiorGutter = 24f;
-            const float compactControlHeight = 52f;
-            const float rowMarginBottom = 8f;
-            const float drawerVerticalPadding = 32f;
+            const float chipMarginRight = 8f;   // --space-2 on .db-chip
 
-            // Chips wrap inside the drawer's content width rather than running off a full-width bar.
-            float contentWidth = drawerMinWidth - edgeSafe - interiorGutter;
-            float wideChipsPerRow = MathF.Floor(contentWidth / (128f + 8f));
-            float costChipsPerRow = MathF.Floor(contentWidth / (60f + 8f));
-            float rarityRows = MathF.Ceiling(4f / wideChipsPerRow);
-            float typeRows = MathF.Ceiling(3f / wideChipsPerRow);
-            float costRows = MathF.Ceiling(8f / costChipsPerRow);
-
-            // search + sort + sort-dir + reset now stack, then the scope row, then three chip groups.
-            float stackedHeight = drawerVerticalPadding
-                + 5f * (compactControlHeight + rowMarginBottom)
-                + (rarityRows + typeRows + costRows) * compactControlHeight
-                + 3f * rowMarginBottom;
+            // .col-chip-row wraps, so a family's content width is what decides row vs column.
+            float contentWidth = panelWidth * drawerWidthFraction - edgeSafe - interiorGutter;
+            float wideChipsPerRow = MathF.Floor(contentWidth / (132f + chipMarginRight));
 
             Assert.Multiple(() =>
             {
                 Assert.That(wideChipsPerRow, Is.GreaterThanOrEqualTo(2f),
                     "A chip family that cannot fit two chips per row is a column of chips, not a row.");
-                Assert.That(stackedHeight, Is.GreaterThan(phonePanelHeight),
-                    "If the rows ever fit the panel, this drawer no longer needs its ScrollView "
-                    + "and this test is measuring nothing.");
                 Assert.That(queryBar.Elements().Any(element =>
                     (string?)element.Attribute("name") == "query-scroll"), Is.True,
-                    "The overflowing rows must live in a ScrollView or the last chip family is unreachable.");
+                    "The rows must live in a ScrollView. They fit the panel today with room to "
+                    + "spare (see the summary), so nothing on screen would report its deletion "
+                    + "until a facet grows and the last chip family goes quietly unreachable.");
                 Assert.That(queryBar.Elements().Any(element =>
                     ((string?)element.Attribute("class"))?.Split(' ')
                         .Contains("emb-scroll-fade") == true), Is.True,
@@ -302,14 +298,18 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(styles, Does.Match(
                     @"(?s)\.col-query__fade\s*\{.*?-unity-background-image-tint-color:"),
                     "The shared fade ramp is white; untinted it fades the filter list to white.");
+                // [^}]*? rather than (?s).*? on purpose: the lazy any-char form matches a number
+                // in a LATER rule when this block's own value drifts, so it reports green while
+                // pinning nothing. That is how the 52 below outlived the unit it was authored in.
                 Assert.That(styles, Does.Match(
-                    @"(?s)\.collection \.db-chip\s*\{.*?min-height:\s*52px;.*?height:\s*52px;"));
+                    @"\.collection \.db-chip\s*\{[^}]*?min-height:\s*56px;[^}]*?height:\s*56px;"));
                 Assert.That(styles, Does.Match(
-                    @"(?s)#query-rarities \.db-chip,\s*#query-types \.db-chip\s*\{\s*width:\s*128px;"));
+                    @"#query-rarities \.db-chip,\s*#query-types \.db-chip\s*\{\s*width:\s*132px;"),
+                    "The wideChipsPerRow arithmetic above reads this number; drift makes it fiction.");
                 Assert.That(styles, Does.Match(
-                    @"(?s)#query-costs \.db-chip\s*\{\s*width:\s*60px;"));
+                    @"#query-costs \.db-chip\s*\{\s*width:\s*64px;"));
                 Assert.That(styles, Does.Match(
-                    @"(?s)\.chrome-input\s*\{.*?min-height:\s*52px;.*?height:\s*52px;"));
+                    @"\.chrome-input\s*\{[^}]*?min-height:\s*56px;[^}]*?height:\s*56px;"));
                 Assert.That(controller, Does.Contain(
                     "_queryScrim?.RegisterCallback<ClickEvent>(_ => SetQueryDrawerOpen(false));"));
             });
@@ -382,8 +382,6 @@ namespace Emberfall.Core.Tests.Presentation
             {
                 Assert.That(collectionStyles, Does.Match(@"(?s)\.collection-list\s*\{.*?--card-tile-width:\s*\d+;.*?--card-tile-height:\s*\d+;"),
                     "The phone tile size must be declared on .collection-list — that is the authoring surface.");
-                Assert.That(collectionStyles, Does.Match(@"(?s)\.collection\.emb-sw-expanded \.collection-list\s*\{.*?--card-tile-height:\s*\d+;"),
-                    "A larger screen class must be able to author a larger card.");
                 Assert.That(collectionStyles, Does.Not.Match(@"(?s)\.card-tile\s*\{[^}]*?\bwidth:"),
                     "A width on .card-tile is overwritten inline by Layout every pass. Declaring one "
                     + "there is how this file came to carry three different tile widths, none read.");
@@ -413,7 +411,13 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         /// <summary>
-        /// CardWall's fallback pair must equal the COMPACT declaration in collection.uss.
+        /// CardWall's fallback pair must equal the ONE declaration in collection.uss.
+        ///
+        /// <para>It said COMPACT until #349 (<c>a81a321d</c>) deleted the compact and medium rungs
+        /// of the three-tier ladder from that file and left the C# mirroring compact. The wall then
+        /// laid out its first frame at 114x384-authored — 42% of the authored tile — and baked a
+        /// RenderTexture that size before the first CustomStyleResolvedEvent corrected it. This
+        /// test caught exactly that, and had been red since.</para>
         ///
         /// <para>They are two copies of one number and nothing made them agree. The fallback is
         /// real — it is what the wall uses before the first <c>CustomStyleResolvedEvent</c>, and
@@ -427,13 +431,13 @@ namespace Emberfall.Core.Tests.Presentation
         /// and the offscreen verifier now reads this one.</para>
         /// </summary>
         [Test]
-        public void The_card_wall_fallback_size_matches_the_compact_size_authored_in_uss()
+        public void The_card_wall_fallback_size_matches_the_size_authored_in_uss()
         {
             string collectionStyles = Asset("UI", "Collection", "collection.uss");
             string wall = Asset("Scripts", "Presentation", "CardWall.cs");
 
-            // The bare .collection-list block is the compact declaration; screen-class variants
-            // have a .collection.emb-sw-* prefix and do not match this anchor.
+            // The bare .collection-list block is the only declaration; the anchor stays ^-bound so
+            // a descendant rule (.collection .collection-list.chrome-panel--recessed) cannot match.
             Match list = Regex.Match(collectionStyles, @"(?m)^\.collection-list\s*\{(?<body>[^}]*)\}");
             Assert.That(list.Success, Is.True, "collection.uss must declare a bare .collection-list block.");
 
@@ -454,13 +458,13 @@ namespace Emberfall.Core.Tests.Presentation
             Assert.Multiple(() =>
             {
                 Assert.That(CsConst("TileWidth"), Is.EqualTo(UssVar("--card-tile-width")),
-                    "CardWall.TileWidth is the pre-style fallback and must be the compact size "
+                    "CardWall.TileWidth is the pre-style fallback and must be the size "
                     + "authored in collection.uss. It is what the wall lays out with until the "
                     + "first CustomStyleResolvedEvent arrives and what CardFaceBaker sizes its "
                     + "first RenderTexture from, so a drift here is a wrong first paint and a "
                     + "wasted bake pass, on the frame a player actually sees.");
                 Assert.That(CsConst("TileHeight"), Is.EqualTo(UssVar("--card-tile-height")),
-                    "CardWall.TileHeight must be the compact --card-tile-height.");
+                    "CardWall.TileHeight must be the authored --card-tile-height.");
             });
         }
 

@@ -20,10 +20,15 @@ namespace Emberfall.Presentation
     {
         // These are pre-style fallbacks shared with CardFaceBaker; the authored values live on
         // .collection-list in collection.uss and are read through OnCustomStyleResolved.
+        // They MIRROR that block and must equal it: until the first CustomStyleResolvedEvent the
+        // wall lays out with these and CardFaceBaker seeds its first RenderTexture from them, so a
+        // drift is a wrong first paint plus a wasted bake, on a frame the player sees.
+        // They were 114/160 — the COMPACT rung of the three-tier ladder — until #349 (a81a321d)
+        // deleted the compact and medium rungs from collection.uss and left these behind.
         // RETIREMENT TRIGGER: if the wall stops reading those custom properties, these become the
         // authored size again — update this note and collection.uss together.
-        public const float TileWidth = 114f;
-        public const float TileHeight = 160f;
+        public const float TileWidth = 274f;
+        public const float TileHeight = 384f;
         public const int CardsPerRow = 5;
 
         private static readonly CustomStyleProperty<float> AuthoredWidthProp =
@@ -36,6 +41,13 @@ namespace Emberfall.Presentation
         private const int MinVisibleRows = 2;
         private const float VerticalTileMargin = 8f;
         private const float TileQuantum = 16f;
+        // THE LEGIBILITY FLOOR IS STILL IN THE RETIRED UNIT AND IS DELIBERATELY LEFT THERE.
+        // Authored 2026-08-30 as 112dp — 70% of the 160dp tile it floored, and 294 device px on a
+        // Pixel 5a. TileHeight is now 384 authored px, so this floors a tile at 29% of its authored
+        // height: a floor that no viewport can reach and that would not be legible if it did.
+        // Not rescaled here on purpose — a legibility floor is a MEASUREMENT, and #349's sweep left
+        // the whole panel un-re-measured. Fix it with eyes on glass, alongside --edge-safe (#350),
+        // not as a side effect of a unit conversion.
         private const float MinTileHeight = 112f;
         private const float TileDragThreshold = 10f;
         private const float RowSafetyMargin = 2f;
