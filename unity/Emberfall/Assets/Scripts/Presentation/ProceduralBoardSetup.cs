@@ -135,10 +135,33 @@ namespace Emberfall.Presentation
         // and that camera was retired by f121a591 on 2026-08-28. Under the live perspective rig the
         // design box is a FLOOR on what must be visible, not a ceiling on what may exist, so the
         // fix for the seven-minion collision is to move the cluster OUT rather than to shrink the
-        // row or bury the rings. The number is set by the INBOARD RING, not the portrait: its drawn
-        // inner edge sits 0.930 inboard of HeroX, so clearing a 7-minion row's outer edge at 5.618
-        // needs HeroX >= 6.548. 6.65 clears it by 0.102 and is where the cluster sat before
-        // fbd2dfcd moved it in to solve this same collision the other way.
+        // row or bury the rings. 6.65 is where the cluster sat before fbd2dfcd moved it in to solve
+        // this same collision the other way.
+        //
+        // DO NOT SOLVE THIS IN WORLD X. The board is drawn in PERSPECTIVE and the hero sits at a
+        // different y from the minion row, so the two are at different distances from the camera
+        // and screen position is x/depth, not x. Comparing world-space extents between them — which
+        // this comment did until it was corrected on 2026-09-04 — silently answers the wrong
+        // question, and it is wrong in OPPOSITE DIRECTIONS for the two seats:
+        //
+        //     P0 (local)     row depth 20.318   hero depth 19.913   hero is NEARER -> projects WIDER
+        //     P1 (opponent)  row depth 21.124   hero depth 21.530   hero is FURTHER -> projects NARROWER
+        //
+        // So identical world geometry clears on our side and collides on theirs. Measured at
+        // 2400x1080 with seven minions, outermost card corner against hero-cluster corner:
+        //
+        //     P0   ring clear (on Y — it leaves the row's band entirely)   portrait clear 16 px
+        //          hero plate OVERLAP 12 px
+        //     P1   ring OVERLAP 103 px    hero plate OVERLAP 28 px    portrait OVERLAP 2 px
+        //
+        // The opponent's side is worse for two further reasons, both of which are constants that
+        // deliberately do NOT take the seat sign: SocketOffsetX (so the INBOARD ring is the hero
+        // power for us and the WEAPON for them, and the weapon art is cut 0.12 wider on that edge)
+        // and SocketDrop (so their rings ride toward the battlefield, into the row's y band, while
+        // ours ride toward the bottom edge and out of it). Both are documented as deliberate below.
+        //
+        // BOARD SLOT COUNT IS NOT AFFECTED AND NEVER WAS — BoardSlotCount is 7 for both seats and
+        // slot x is not seat-signed. This is a drawing overlap, not a capacity difference.
         internal const float HeroX = 6.65f;
         internal const float HeroClusterOuterEdge =
             HeroX + SocketOffsetX + HeroSocketsView.FrameSize * 0.5f;
