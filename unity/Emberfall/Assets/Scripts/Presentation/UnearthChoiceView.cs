@@ -8,7 +8,8 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// Snapshot-driven Unearth surface. The chooser receives real card-definition faces in the
-    /// server's option order; the opponent receives only a passive status with no inferred count.
+    /// server's option order; the opponent sees a fixed OpponentBackCount of face-down cards,
+    /// never a count inferred from the (redacted) real options.
     /// Reconnect needs no event replay because every snapshot is sufficient to rebuild this view.
     /// </summary>
     public sealed class UnearthChoiceView : MonoBehaviour
@@ -19,6 +20,10 @@ namespace Emberfall.Presentation
         private const float CardGap = 0.28f;
         private const float MaxOfferWidth = 10.8f;
         private const float MaxCardScale = 0.76f;
+
+        // Unearth is always "choose one of three" (card-schema.md "Interactive Unearth choices");
+        // the opponent's back count is this constant, never a real option count.
+        private const int OpponentBackCount = 3;
 
         private PlayerId _localPlayer;
         private InputRouter _router;
@@ -68,6 +73,7 @@ namespace Emberfall.Presentation
                 {
                     ClearOffer();
                     _title.text = "OPPONENT IS UNEARTHING…";
+                    BuildOpponentBacks();
                 }
                 _audience = UnearthChoiceAudience.Opponent;
                 return;
@@ -122,12 +128,6 @@ namespace Emberfall.Presentation
         {
             if (_board == null || _database == null || options == null || options.Count == 0) return;
 
-            float unscaledWidth = options.Count * BoardController.CardW
-                + (options.Count - 1) * CardGap;
-            float cardScale = Mathf.Min(MaxCardScale, MaxOfferWidth / unscaledWidth);
-            float step = (BoardController.CardW + CardGap) * cardScale;
-            float firstX = -0.5f * step * (options.Count - 1);
-
             // Options order is authoritative RNG/replay order. Deliberately enumerate by index and
             // never sort or project through a keyed collection.
             for (int index = 0; index < options.Count; index++)
@@ -139,12 +139,9 @@ namespace Emberfall.Presentation
                     continue;
                 }
 
-                var anchor = new GameObject($"Option_{index}_{cardDefinitionId}");
-                anchor.transform.SetParent(_cardsRoot.transform, false);
-                anchor.transform.localPosition = new Vector3(firstX + index * step, 0f, 0f);
-                anchor.transform.localScale = Vector3.one * cardScale;
+                Transform anchor = PlaceCardSlot(index, options.Count, $"Option_{index}_{cardDefinitionId}");
 
-                CardPresenter card = _board.BuildDetachedCard(anchor.transform);
+                CardPresenter card = _board.BuildDetachedCard(anchor);
                 card.gameObject.name = "Card";
                 card.Bind(definition, new CardLiveState(new InstanceId(-(index + 1))));
                 card.gameObject.AddComponent<UnearthChoiceCardButton>()
@@ -156,8 +153,38 @@ namespace Emberfall.Presentation
                         if (card != null) card.SetArt(sprite);
                     });
 
-                _cards.Add(anchor);
+                _cards.Add(anchor.gameObject);
             }
+        }
+
+        // Never derived from a real option count (UnearthChoiceModel redacts it from the
+        // opponent) — always OpponentBackCount, the fixed "choose one of three" offer shape.
+        private void BuildOpponentBacks()
+        {
+            if (_board == null) return;
+
+            for (int index = 0; index < OpponentBackCount; index++)
+            {
+                Transform anchor = PlaceCardSlot(index, OpponentBackCount, $"Back_{index}");
+                CardPresenter card = _board.BuildDetachedCard(anchor);
+                card.gameObject.name = "Back";
+                card.SetHidden();
+                _cards.Add(anchor.gameObject);
+            }
+        }
+
+        private Transform PlaceCardSlot(int index, int count, string name)
+        {
+            float unscaledWidth = count * BoardController.CardW + (count - 1) * CardGap;
+            float cardScale = Mathf.Min(MaxCardScale, MaxOfferWidth / unscaledWidth);
+            float step = (BoardController.CardW + CardGap) * cardScale;
+            float firstX = -0.5f * step * (count - 1);
+
+            var anchor = new GameObject(name);
+            anchor.transform.SetParent(_cardsRoot.transform, false);
+            anchor.transform.localPosition = new Vector3(firstX + index * step, 0f, 0f);
+            anchor.transform.localScale = Vector3.one * cardScale;
+            return anchor.transform;
         }
 
         private void ClearOffer()

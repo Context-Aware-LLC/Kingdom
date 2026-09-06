@@ -638,8 +638,11 @@ namespace Emberfall.Core
                 ? new HashSet<Keyword>(attacker.Minion!.Keywords)
                 : new HashSet<Keyword>(ps.Weapon!.Keywords);
 
-            bool overwhelm = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.OVERWHELM);
-            bool vanguard = attacker.IsMinion && attacker.Minion!.Keywords.Contains(Keyword.VANGUARD);
+            // attackerKws already resolves minion-vs-weapon (line above), so OVERWHELM/VANGUARD
+            // read off it too rather than re-deriving from attacker.Minion — a weapon carrying
+            // either now gets the same combat-resolver behavior a minion carrier does.
+            bool overwhelm = attackerKws.Contains(Keyword.OVERWHELM);
+            bool vanguard = attackerKws.Contains(Keyword.VANGUARD);
 
             // Shroud breaks the moment the attacker declares
             if (attacker.IsMinion) attacker.Minion!.Keywords.Remove(Keyword.SHROUD);

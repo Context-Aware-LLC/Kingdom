@@ -325,6 +325,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8e3d1eda789291e408ee4ce0c2abc4a0
+    m_Address: card_art/grave_silent_reaper
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8fbed46db01d47cbb5e52cfb8f39ac73
     m_Address: card_art/grave_risen_champion
     m_ReadOnly: 0
@@ -377,6 +382,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aaa5b5b5b0694af8b2aed662e5adf46b
     m_Address: card_art/night_veilborn_spy
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad7807676d6d432449f1344aa707d51b
+    m_Address: card_art/grave_hushwight
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

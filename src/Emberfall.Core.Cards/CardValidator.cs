@@ -44,16 +44,16 @@ namespace Emberfall.Core.Cards
             [Keyword.VENOM] = WeaponKeywordReach.Live,
             [Keyword.FROST] = WeaponKeywordReach.Live,
             [Keyword.DOUBLESTRIKE] = WeaponKeywordReach.Live,
+            [Keyword.ARCANE_SURGE] = WeaponKeywordReach.Live,
+            [Keyword.OVERWHELM] = WeaponKeywordReach.Live,
+            [Keyword.VANGUARD] = WeaponKeywordReach.Live,
 
             [Keyword.BULWARK] = WeaponKeywordReach.Unsupported,
             [Keyword.FERVOR] = WeaponKeywordReach.Unsupported,
             [Keyword.SKIRMISH] = WeaponKeywordReach.Unsupported,
             [Keyword.AEGIS] = WeaponKeywordReach.Unsupported,
             [Keyword.SHROUD] = WeaponKeywordReach.Unsupported,
-            [Keyword.ARCANE_SURGE] = WeaponKeywordReach.Unsupported,
             [Keyword.REKINDLE] = WeaponKeywordReach.Unsupported,
-            [Keyword.OVERWHELM] = WeaponKeywordReach.Unsupported,
-            [Keyword.VANGUARD] = WeaponKeywordReach.Unsupported,
         };
 
         public ValidationReport Validate(CardDefinition def, ICardDatabase db)

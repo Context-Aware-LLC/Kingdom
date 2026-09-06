@@ -45,13 +45,19 @@ namespace Emberfall.Core
             }
         }
 
-        /// <summary>+1 arcane surge per friendly ARCANE_SURGE minion in play (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).</summary>
+        /// <summary>+1 arcane surge per friendly ARCANE_SURGE carrier in play: board minions and,
+        /// since 2026-09-06, the equipped weapon (card-schema.md "What a weapon can and cannot
+        /// do") (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).</summary>
         internal static int SpellDamageBonus(GameState state, PlayerId controller)
         {
-            var board = state.PlayerOf(controller).Board;
+            PlayerState player = state.PlayerOf(controller);
+            var board = player.Board;
             int bonus = 0;
             for (int i = 0; i < board.Count; i++)
                 if (!board[i].IsSilenced && board[i].Keywords.Contains(Keyword.ARCANE_SURGE)) bonus++;
+            CardInstance? weapon = player.Weapon;
+            if (weapon != null && !weapon.IsSilenced && weapon.Keywords.Contains(Keyword.ARCANE_SURGE))
+                bonus++;
             return bonus;
         }
     }

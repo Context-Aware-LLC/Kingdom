@@ -59,14 +59,16 @@ namespace Emberfall.Core.Tests.Combat
             return ci;
         }
 
-        private static void EquipWeapon(GameState s, int seat, int atk, int durability)
+        private static void EquipWeapon(GameState s, int seat, int atk, int durability, params Keyword[] keywords)
         {
-            s.Players[seat].Weapon = new CardInstance(s.NextInstanceId(), FixtureCard.Id("weapon"), s.Players[seat].Id)
+            var weapon = new CardInstance(s.NextInstanceId(), FixtureCard.Id("weapon"), s.Players[seat].Id)
             {
                 Zone = Zone.Weapon,
                 CurrentAttack = atk,
                 CurrentDurability = durability,
             };
+            foreach (var k in keywords) weapon.Keywords.Add(k);
+            s.Players[seat].Weapon = weapon;
         }
 
         private static CardDefinition Minion(int id, int atk, int hp, params Keyword[] kws)
@@ -373,6 +375,31 @@ namespace Emberfall.Core.Tests.Combat
             Proc().Execute(s, Attack(s, atk.Id, def.Id));
 
             Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(26), "hero took 4 overflow");
+        }
+
+        [Test]
+        public void OVERWHELM_On_A_Weapon_Also_Carries_Excess_Damage_To_Enemy_Hero()
+        {
+            var s = MainPhase();
+            EquipWeapon(s, 0, atk: 7, durability: 2, Keyword.OVERWHELM);
+            var def = Board(s, 1, Minion(FixtureCard.Id("fodder"), 1, 3)); // 3 health; 7−3 = 4 overflow to hero
+
+            Proc().Execute(s, Attack(s, s.Players[0].Hero.Id, def.Id));
+
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(26), "weapon-carried OVERWHELM overflows too");
+        }
+
+        [Test]
+        public void VANGUARD_On_A_Weapon_Skips_Retaliation_If_Target_Dies()
+        {
+            var s = MainPhase();
+            EquipWeapon(s, 0, atk: 5, durability: 2, Keyword.VANGUARD);
+            var def = Board(s, 1, Minion(FixtureCard.Id("weak"), 3, 3)); // 3 health, weapon hits for 5 → dead
+
+            Proc().Execute(s, Attack(s, s.Players[0].Hero.Id, def.Id));
+
+            Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(30),
+                "hero took no retaliation — weapon-carried VANGUARD killed first");
         }
 
         [Test]

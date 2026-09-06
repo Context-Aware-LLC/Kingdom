@@ -715,6 +715,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1e483cbd6f102a489dc29056f4bdf77
+    m_Address: card_art/neutral_token_shade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c1f9ae42b8bf648419f6db364b72bc78
     m_Address: card_art/night_shadow_walk
     m_ReadOnly: 0

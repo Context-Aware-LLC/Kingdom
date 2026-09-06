@@ -17,6 +17,7 @@ namespace Emberfall.Core.Tests.Combat
         private static readonly int Venomed = FixtureCard.Id("weapon_identity_venomed");
         private static readonly int Froster = FixtureCard.Id("weapon_identity_froster");
         private static readonly int Doublestrike = FixtureCard.Id("weapon_identity_doublestrike");
+        private static readonly int Surger = FixtureCard.Id("weapon_identity_arcane_surge");
         private static readonly int RiderStack = FixtureCard.Id("weapon_identity_rider_stack");
         private static readonly int Swapper = FixtureCard.Id("weapon_identity_swapper");
         private static readonly int Toll = FixtureCard.Id("weapon_identity_toll");
@@ -41,6 +42,7 @@ namespace Emberfall.Core.Tests.Combat
             .Register(Weapon(Venomed, 1, 3, new[] { Keyword.VENOM }))
             .Register(Weapon(Froster, 2, 3, new[] { Keyword.FROST, Keyword.DOUBLESTRIKE }))
             .Register(Weapon(Doublestrike, 1, 3, new[] { Keyword.DOUBLESTRIKE }))
+            .Register(Weapon(Surger, 1, 3, new[] { Keyword.ARCANE_SURGE }))
             .Register(Weapon(RiderStack, 3, 4, new[]
             {
                 Keyword.LIFEDRAIN, Keyword.VENOM, Keyword.FROST, Keyword.DOUBLESTRIKE,
@@ -186,6 +188,17 @@ namespace Emberfall.Core.Tests.Combat
 
             Assert.That(result.Accepted, Is.True);
             Assert.That(state.Players[0].Hero.CurrentHealth, Is.EqualTo(23));
+        }
+
+        [Test]
+        public void ArcaneSurge_Weapon_Grants_The_Same_Spell_Damage_Bonus_As_A_Minion()
+        {
+            var db = Db();
+            var state = MainPhase();
+            PlayWeapon(state, db, Surger);
+
+            Assert.That(ActionHandlers.SpellDamageBonus(state, state.Players[0].Id), Is.EqualTo(1),
+                "an equipped ARCANE_SURGE weapon counts exactly like a board minion carrier");
         }
 
         [Test]
@@ -339,6 +352,9 @@ namespace Emberfall.Core.Tests.Combat
         [TestCase(Keyword.VENOM)]
         [TestCase(Keyword.FROST)]
         [TestCase(Keyword.DOUBLESTRIKE)]
+        [TestCase(Keyword.ARCANE_SURGE)]
+        [TestCase(Keyword.OVERWHELM)]
+        [TestCase(Keyword.VANGUARD)]
         public void Live_Riders_Are_Legal_On_Weapons(Keyword keyword)
         {
             var def = Weapon(FixtureCard.Id("weapon_keyword_legal"), 1, 1, new[] { keyword });
@@ -366,10 +382,7 @@ namespace Emberfall.Core.Tests.Combat
         [TestCase(Keyword.SKIRMISH)]
         [TestCase(Keyword.AEGIS)]
         [TestCase(Keyword.SHROUD)]
-        [TestCase(Keyword.ARCANE_SURGE)]
         [TestCase(Keyword.REKINDLE)]
-        [TestCase(Keyword.OVERWHELM)]
-        [TestCase(Keyword.VANGUARD)]
         public void Unsupported_Weapon_Keywords_Fail_Closed(Keyword keyword)
         {
             var def = Weapon(FixtureCard.Id("weapon_keyword_dead"), 1, 1, new[] { keyword });
@@ -385,6 +398,7 @@ namespace Emberfall.Core.Tests.Combat
             var supported = new[]
             {
                 Keyword.LIFEDRAIN, Keyword.VENOM, Keyword.FROST, Keyword.DOUBLESTRIKE,
+                Keyword.ARCANE_SURGE, Keyword.OVERWHELM, Keyword.VANGUARD,
             };
             var actionMarkers = new[]
             {
@@ -393,8 +407,7 @@ namespace Emberfall.Core.Tests.Combat
             var unsupported = new[]
             {
                 Keyword.BULWARK, Keyword.FERVOR, Keyword.SKIRMISH, Keyword.AEGIS,
-                Keyword.SHROUD, Keyword.ARCANE_SURGE, Keyword.REKINDLE, Keyword.OVERWHELM,
-                Keyword.VANGUARD,
+                Keyword.SHROUD, Keyword.REKINDLE,
             };
 
             Assert.That(supported.Concat(actionMarkers).Concat(unsupported).Distinct(),
