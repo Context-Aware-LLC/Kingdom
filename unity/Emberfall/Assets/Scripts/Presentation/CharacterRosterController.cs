@@ -355,9 +355,9 @@ namespace Emberfall.Presentation
 
         private void AddClassBadge(CardClass c)
         {
-            var badge = new Label(Pretty(c));
+            var badge = new Label(CardClassTokens.Label(c));
             badge.AddToClassList("deck-modal-class-badge");
-            badge.AddToClassList("deck-modal-class-badge--" + ClassSlug(c));
+            badge.AddToClassList("deck-modal-class-badge--" + CardClassTokens.Slug(c));
             _deckModalClasses.Add(badge);
         }
 
@@ -654,7 +654,7 @@ namespace Emberfall.Presentation
             // The pairing is on the tooltip rather than the plate. It used to be the coloured spine
             // of the character row this plate sat inside, and that row is gone; painting it back
             // onto the picture is what the "the deck is its image" ruling refuses.
-            string pairing = $"{Pretty(deck.PrimaryClass)} → {Pretty(deck.SecondaryClass)}";
+            string pairing = $"{CardClassTokens.Label(deck.PrimaryClass)} → {CardClassTokens.Label(deck.SecondaryClass)}";
             art.tooltip = summary.Queue.IsEligible
                 ? $"{deck.Name} · {pairing} — {deck.TotalCount} / {DeckValidator.DeckSize}"
                 : $"{deck.Name} · {pairing} — {summary.Queue.Reason}";
@@ -1100,12 +1100,5 @@ namespace Emberfall.Presentation
             _status.EnableInClassList("roster-status--error", isError);
         }
 
-        private static string Pretty(CardClass c)
-        {
-            string raw = c.ToString().ToLowerInvariant();
-            return char.ToUpperInvariant(raw[0]) + raw.Substring(1);
-        }
-
-        private static string ClassSlug(CardClass c) => c.ToString().ToLowerInvariant();
     }
 }

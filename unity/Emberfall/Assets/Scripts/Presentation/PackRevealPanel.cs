@@ -108,7 +108,7 @@ namespace Emberfall.Presentation
 
             var card = new VisualElement();
             card.AddToClassList("reveal-card");
-            card.AddToClassList(RarityClass(award.Rarity));
+            card.AddToClassList(CardClassTokens.RarityToken(award.Rarity, "reveal-card--"));
 
             var flourish = new VisualElement();
             flourish.AddToClassList("reveal-card__flourish");
@@ -188,14 +188,6 @@ namespace Emberfall.Presentation
                 target.style.backgroundImage = new StyleBackground(sprite);
             });
         }
-
-        private static string RarityClass(Rarity rarity) => rarity switch
-        {
-            Rarity.RARE => "reveal-card--rare",
-            Rarity.EPIC => "reveal-card--epic",
-            Rarity.LEGENDARY => "reveal-card--legendary",
-            _ => "reveal-card--common",
-        };
 
         private static string UpgradeLabel(PackUpgradeReason upgrade) => upgrade switch
         {

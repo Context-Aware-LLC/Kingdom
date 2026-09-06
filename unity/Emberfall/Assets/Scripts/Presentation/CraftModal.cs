@@ -146,7 +146,7 @@ namespace Emberfall.Presentation
             // The rarity accent is the one colour on this panel that varies, and it is the fastest
             // read of what a card costs to make — the price and the colour say the same thing.
             foreach (string cls in RarityClasses) _cardRarity.RemoveFromClassList(cls);
-            _cardRarity.AddToClassList(RarityClassOf(def.Rarity));
+            _cardRarity.AddToClassList(CardClassTokens.RarityToken(def.Rarity, "craft-rarity--"));
 
             _shardBalance.text = shardBalance.ToString();
             _copiesOwned.text = render.CopyCap > 0
@@ -256,17 +256,6 @@ namespace Emberfall.Presentation
         {
             "craft-rarity--common", "craft-rarity--rare", "craft-rarity--epic", "craft-rarity--legendary",
         };
-
-        private static string RarityClassOf(Rarity r)
-        {
-            switch (r)
-            {
-                case Rarity.RARE: return "craft-rarity--rare";
-                case Rarity.EPIC: return "craft-rarity--epic";
-                case Rarity.LEGENDARY: return "craft-rarity--legendary";
-                default: return "craft-rarity--common";
-            }
-        }
 
         private static string RarityWord(Rarity r)
         {
