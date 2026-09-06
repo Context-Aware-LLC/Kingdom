@@ -5,7 +5,7 @@
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 296,
-  "corpusDigest": "fbc926e90c40e9e8",
+  "corpusDigest": "13a5ae5b355fd286",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -1706,46 +1706,6 @@
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "grave_bell_novice",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": 1192,
-      "name": "Hushwight",
-      "type": "MINION",
-      "cost": 2,
-      "attack": 2,
-      "health": 1,
-      "durability": null,
-      "class": "GRAVEKEEP",
-      "rarity": "COMMON",
-      "keywords": [],
-      "selectors": [
-        "ANY_MINION"
-      ],
-      "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
-      "collectible": true,
-      "artId": "grave_hushwight",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": 1193,
-      "name": "Silent Reaper",
-      "type": "MINION",
-      "cost": 4,
-      "attack": 3,
-      "health": 4,
-      "durability": null,
-      "class": "GRAVEKEEP",
-      "rarity": "RARE",
-      "keywords": [],
-      "selectors": [
-        "ANY_ENEMY_MINION"
-      ],
-      "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
-      "collectible": true,
-      "artId": "grave_silent_reaper",
       "sourceFile": "Emberfall.cards.json"
     },
     {
@@ -5155,6 +5115,46 @@
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "grave_memorial_wisp",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1192,
+      "name": "Hushwight",
+      "type": "MINION",
+      "cost": 2,
+      "attack": 2,
+      "health": 1,
+      "durability": null,
+      "class": "GRAVEKEEP",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_MINION"
+      ],
+      "tribe": "UNDEAD",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "grave_hushwight",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1193,
+      "name": "Silent Reaper",
+      "type": "MINION",
+      "cost": 4,
+      "attack": 3,
+      "health": 4,
+      "durability": null,
+      "class": "GRAVEKEEP",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_ENEMY_MINION"
+      ],
+      "tribe": "UNDEAD",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "grave_silent_reaper",
       "sourceFile": "Rekindling.cards.json"
     },
     {

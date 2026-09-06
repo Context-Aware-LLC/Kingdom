@@ -412,17 +412,5 @@
     "perspective": "Low, ground-level, side-on — emphasize speed and horizontal motion, not height.",
     "background": "An open stretch of pale blue-grey dawn mist over chalky ground, cool and understated, with no dense green foliage behind the beast. The spare, high-key setting cleanly separates the warm russet-root and fern-gold body.",
     "notes": "Palette priority: pale blue-grey and chalk background; warm russet, fern-gold, and muted olive subject; a faint honey-gold healing glow trails from its footfalls. Restore 2 Health to your hero on play, so the glow stays small and easy to miss, not a spectacle."
-  },
-  "1192": {
-    "subject": "A gaunt, child-sized undead figure wrapped in a grey burial shroud, its lower face bound shut with a strip of pale linen. One thin grey hand is raised, palm out, fingers slightly spread in a hushing gesture. A single raven is caught mid-flight just beside the hand, wings frozen wide, its beak open on a cry that never finishes—a thin curl of pale mist is being drawn out of the open beak toward the wight's raised palm.",
-    "perspective": "Level, close three-quarter view at the wight's own small height, the raised hand and the frozen raven centred together in the middle of the frame.",
-    "background": "A flat, cold slate-blue graveyard mist with no headstones or ground detail, opposing the shroud's bone-grey and the mist-white thread with a single cool hue so the small silhouette stays legible.",
-    "notes": "The cheap, immediate half of the pair with 1193 Silent Reaper—keep this one small, quiet and still, not dramatic. No visible mouth, no glowing eyes, no runes or magic circles. The stopped raven mid-cry is the only sign anything is happening."
-  },
-  "1193": {
-    "subject": "A tall, robed reaper-figure mid-stride through a wide scything sweep of a long bone-white scythe, its trailing edge already dissolving into a spreading arc of pale ash and grey moths. Two small enemy silhouettes at the far edges of the arc have their mouths and eyes fading to blank, featureless grey where the ash-moths have touched them. The reaper's own cloak and hands are visibly crumbling to the same ash from the shoulder down, already mid-dissolve as it completes the swing.",
-    "perspective": "Wide low three-quarter view, camera at knee height looking up along the scythe's arc, the reaper's crumbling form on one side and the ash-touched silhouettes at the far edge of frame, all inside the middle 70%.",
-    "background": "A dim iron-grey dusk with a faint sickly green undertone far behind, kept empty and out of focus so the pale ash arc and bone-white scythe are the brightest values in the frame.",
-    "notes": "The reaper dissolving as it swings IS the Toll—it only casts this on its own death, so the art should read as one continuous motion where dying and casting are the same gesture, not a healthy figure attacking. The two silenced silhouettes must stay small, generic and non-specific—not a recognisable card, just 'an enemy'. No skull face, no glowing eyes, no readable text or runes."
   }
 }
