@@ -667,7 +667,7 @@ namespace Emberfall.Core.Cards
         /// "your Shroud minions" quietly mean "the ones that were PRINTED with Shroud", which is
         /// not what any card face says.</para>
         ///
-        /// <para>An action marker (<c>SILENCE</c>, <c>BACKDRAFT</c>, <c>REINFORCE</c>) is never
+        /// <para>An action marker (<c>SILENCE</c>, <c>BACKDRAFT</c>,) is never
         /// carried, so filtering on one selects nobody (and negating one selects everybody);
         /// <c>CardValidator</c> C14L refuses it rather than letting a row read as a constraint that
         /// does not do what it says.</para>
