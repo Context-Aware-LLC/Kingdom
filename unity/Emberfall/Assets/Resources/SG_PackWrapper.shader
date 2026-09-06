@@ -14,7 +14,7 @@ Shader "Emberfall/SG_PackWrapper"
         _SealFraction     ("Heat Seal Height", Range(0.06, 0.18)) = 0.105
         _CrimpCount       ("Crimp Ridge Count", Range(12, 48)) = 30
         _CrimpStrength    ("Crimp Strength", Range(0, 0.5)) = 0.28
-        _FoilStrength     ("Foil Highlight", Range(0, 0.5)) = 0.20
+        _FoilStrength     ("Foil Highlight", Range(0, 0.5)) = 0.06
         _EdgeDarkening    ("Edge Fold Strength", Range(0, 0.6)) = 0.34
         _SerrationTeeth   ("Cut Teeth", Range(8, 40)) = 24
         _SerrationDepth   ("Cut Depth", Range(0, 0.025)) = 0.009
@@ -141,7 +141,7 @@ Shader "Emberfall/SG_PackWrapper"
                 // washing out the illustration.
                 float centered = localX * 2.0 - 1.0;
                 float edge = pow(saturate(abs(centered)), 2.4);
-                float bodyLight = 1.04 - edge * _EdgeDarkening;
+                float bodyLight = 1.0 - edge * _EdgeDarkening;
                 float edgeFlash = exp2(-pow((localX - 0.105) * 31.0, 2.0))
                                 + exp2(-pow((localX - 0.895) * 31.0, 2.0));
 
