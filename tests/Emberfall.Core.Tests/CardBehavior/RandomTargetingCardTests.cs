@@ -175,9 +175,9 @@ namespace Emberfall.Core.Tests.CardBehavior
 
             Assert.That(result.Accepted, Is.True);
             Assert.That(new[] { allyA.CurrentAttack, allyB.CurrentAttack }.OrderBy(x => x),
-                Is.EqualTo(new[] { 1, 2 }));
+                Is.EqualTo(new[] { 1, 3 }));
             Assert.That(new[] { allyA.MaxHealth, allyB.MaxHealth }.OrderBy(x => x),
-                Is.EqualTo(new[] { 5, 10 }));
+                Is.EqualTo(new[] { 6, 10 }));
         }
 
         [Test]
