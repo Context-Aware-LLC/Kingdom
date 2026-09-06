@@ -5,7 +5,7 @@
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 293,
-  "corpusDigest": "4dc7a9f84111cfcf",
+  "corpusDigest": "ff7bfefbc80e2a8c",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -32,27 +32,27 @@
       "HERO_POWER": 8
     },
     "keywordFrequency": {
-      "BULWARK": 43,
+      "BULWARK": 42,
       "SKIRMISH": 16,
       "SHROUD": 15,
       "AEGIS": 10,
       "DOUBLESTRIKE": 10,
       "OVERWHELM": 10,
       "REKINDLE": 10,
+      "VANGUARD": 10,
       "VENOM": 10,
-      "VANGUARD": 9,
+      "ARCANE_SURGE": 7,
       "FERVOR": 7,
       "LIFEDRAIN": 7,
-      "ARCANE_SURGE": 6,
       "FROST": 6
     },
     "selectorFrequency": {
       "ANY_FRIENDLY_MINION": 69,
       "ANY_MINION": 28,
-      "ANY_ENEMY_MINION": 25,
-      "ANY_ENEMY": 22,
+      "ANY_ENEMY": 25,
+      "ANY_ENEMY_MINION": 23,
       "FRIENDLY_HERO": 17,
-      "ENEMY_HERO": 9,
+      "ENEMY_HERO": 10,
       "ANY_CHARACTER": 4,
       "ANY_FRIENDLY": 1,
       "ANY_GRAVEYARD_MINION": 1,
@@ -60,13 +60,13 @@
     },
     "costDistribution": {
       "0": 8,
-      "1": 33,
+      "1": 31,
       "2": 72,
-      "3": 69,
+      "3": 71,
       "4": 50,
       "5": 22,
-      "6": 18,
-      "7": 16,
+      "6": 19,
+      "7": 15,
       "8": 4,
       "9": 1
     },
@@ -81,27 +81,27 @@
       "BEAST": 24,
       "UNDEAD": 21,
       "ELEMENTAL": 19,
-      "HUMAN": 11,
+      "HUMAN": 13,
       "SPIRIT": 11,
       "DRAGON": 5
     },
     "minionCount": 190,
     "attackDistribution": {
       "0": 3,
-      "1": 32,
-      "2": 52,
-      "3": 44,
+      "1": 31,
+      "2": 51,
+      "3": 45,
       "4": 22,
       "5": 19,
-      "6": 13,
+      "6": 14,
       "7": 4,
       "10": 1
     },
     "healthDistribution": {
       "1": 23,
-      "2": 39,
+      "2": 38,
       "3": 28,
-      "4": 37,
+      "4": 38,
       "5": 27,
       "6": 19,
       "7": 8,
@@ -448,7 +448,8 @@
         "ANY_FRIENDLY_MINION": 14,
         "FRIENDLY_HERO": 4,
         "ANY_ENEMY_MINION": 3,
-        "ANY_ENEMY": 1
+        "ANY_ENEMY": 1,
+        "ENEMY_HERO": 1
       },
       "costDistribution": {
         "0": 1,
@@ -562,30 +563,31 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 7,
+        "BULWARK": 6,
         "FROST": 4,
+        "VANGUARD": 2,
         "AEGIS": 1,
+        "ARCANE_SURGE": 1,
         "REKINDLE": 1,
         "SKIRMISH": 1,
-        "VANGUARD": 1,
         "VENOM": 1
       },
       "selectorFrequency": {
-        "ANY_ENEMY_MINION": 9,
+        "ANY_ENEMY": 7,
+        "ANY_ENEMY_MINION": 7,
         "ANY_MINION": 7,
-        "ANY_ENEMY": 4,
         "ANY_FRIENDLY_MINION": 4,
         "ANY_FRIENDLY": 1
       },
       "costDistribution": {
         "0": 1,
-        "1": 3,
+        "1": 1,
         "2": 9,
-        "3": 8,
+        "3": 10,
         "4": 5,
         "5": 2,
-        "6": 3,
-        "7": 3
+        "6": 4,
+        "7": 2
       },
       "rarityBreakdown": {
         "COMMON": 15,
@@ -596,24 +598,24 @@
       "tribeBreakdown": {
         "SPIRIT": 5,
         "ELEMENTAL": 4,
-        "BEAST": 2,
-        "HUMAN": 2
+        "HUMAN": 4,
+        "BEAST": 2
       },
       "minionCount": 20,
       "attackDistribution": {
         "0": 1,
-        "1": 4,
-        "2": 5,
-        "3": 3,
+        "1": 3,
+        "2": 4,
+        "3": 4,
         "4": 3,
         "5": 3,
-        "6": 1
+        "6": 2
       },
       "healthDistribution": {
         "1": 1,
-        "2": 5,
+        "2": 4,
         "3": 1,
-        "4": 5,
+        "4": 6,
         "5": 3,
         "6": 4,
         "8": 1
@@ -941,15 +943,17 @@
       "id": 1004,
       "name": "Tide Initiate",
       "type": "MINION",
-      "cost": 1,
-      "attack": 1,
-      "health": 2,
+      "cost": 3,
+      "attack": 3,
+      "health": 4,
       "durability": null,
       "class": "TIDECALLER",
       "rarity": "COMMON",
-      "keywords": [],
+      "keywords": [
+        "ARCANE_SURGE"
+      ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_initiate",
@@ -969,7 +973,7 @@
         "BULWARK"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_oracle",
@@ -987,7 +991,8 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [
-        "ANY_ENEMY_MINION"
+        "ANY_ENEMY_MINION",
+        "ANY_ENEMY"
       ],
       "tribe": null,
       "setId": "EMBERFALL",
@@ -1352,7 +1357,7 @@
       "id": 155,
       "name": "Frostbind",
       "type": "SPELL",
-      "cost": 1,
+      "cost": 2,
       "attack": null,
       "health": null,
       "durability": null,
@@ -1372,7 +1377,7 @@
       "id": 156,
       "name": "Undertow",
       "type": "SPELL",
-      "cost": 2,
+      "cost": 3,
       "attack": null,
       "health": null,
       "durability": null,
@@ -1392,7 +1397,7 @@
       "id": 1021,
       "name": "Hollow Tide Siren",
       "type": "MINION",
-      "cost": 7,
+      "cost": 6,
       "attack": 4,
       "health": 5,
       "durability": null,
@@ -1400,7 +1405,7 @@
       "rarity": "EPIC",
       "keywords": [],
       "selectors": [
-        "ANY_ENEMY_MINION"
+        "ANY_ENEMY"
       ],
       "tribe": null,
       "setId": "EMBERFALL",
@@ -2398,7 +2403,7 @@
       "name": "Hollowshell Warden",
       "type": "MINION",
       "cost": 4,
-      "attack": 2,
+      "attack": 3,
       "health": 4,
       "durability": null,
       "class": "TIDECALLER",
@@ -3083,7 +3088,8 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [
-        "ANY_FRIENDLY_MINION"
+        "ANY_FRIENDLY_MINION",
+        "ENEMY_HERO"
       ],
       "tribe": null,
       "setId": "EMBERFALL",
@@ -4067,7 +4073,7 @@
       "name": "Icecrown Herald",
       "type": "MINION",
       "cost": 5,
-      "attack": 3,
+      "attack": 5,
       "health": 5,
       "durability": null,
       "class": "TIDECALLER",
@@ -4111,17 +4117,17 @@
       "name": "Maren's Avatar",
       "type": "MINION",
       "cost": 7,
-      "attack": 5,
+      "attack": 6,
       "health": 8,
       "durability": null,
       "class": "TIDECALLER",
       "rarity": "LEGENDARY",
       "keywords": [
         "AEGIS",
-        "BULWARK"
+        "VANGUARD"
       ],
       "selectors": [
-        "ANY_ENEMY_MINION"
+        "ANY_ENEMY"
       ],
       "tribe": "ELEMENTAL",
       "setId": "EMBERFALL",
@@ -4994,7 +5000,7 @@
       "rarity": "RARE",
       "keywords": [],
       "selectors": [
-        "ANY_ENEMY"
+        "ANY_ENEMY_MINION"
       ],
       "tribe": null,
       "setId": "REKINDLING",
@@ -5035,7 +5041,7 @@
       "rarity": "EPIC",
       "keywords": [],
       "selectors": [
-        "ANY_ENEMY_MINION",
+        "ANY_ENEMY",
         "ANY_FRIENDLY_MINION"
       ],
       "tribe": null,
