@@ -30,7 +30,10 @@ namespace Emberfall.Core.Contracts
     /// reaches no canonical state — GameStateSerializer never walks it — so unlike Keyword this
     /// enum is not hash-canonical and carries no rebaseline cost.
     /// </summary>
-    public enum Tribe { NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT, HUMAN }
+    public enum Tribe
+    {
+        NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT, HUMAN, FEY, MERFOLK
+    }
 
     /// <summary>
     /// Canonical keyword wire enum. Trigger labels such as Herald and Toll are derived from normalized

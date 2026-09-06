@@ -5,7 +5,7 @@
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 296,
-  "corpusDigest": "13a5ae5b355fd286",
+  "corpusDigest": "509a150778f7b553",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -33,18 +33,18 @@
     },
     "keywordFrequency": {
       "BULWARK": 42,
-      "SKIRMISH": 16,
+      "SKIRMISH": 17,
       "SHROUD": 15,
+      "REKINDLE": 11,
       "AEGIS": 10,
-      "DOUBLESTRIKE": 10,
       "OVERWHELM": 10,
-      "REKINDLE": 10,
       "VANGUARD": 10,
       "VENOM": 10,
+      "DOUBLESTRIKE": 9,
+      "FERVOR": 8,
       "ARCANE_SURGE": 7,
-      "FERVOR": 7,
-      "LIFEDRAIN": 7,
-      "FROST": 6
+      "FROST": 6,
+      "LIFEDRAIN": 6
     },
     "selectorFrequency": {
       "ANY_FRIENDLY_MINION": 69,
@@ -78,30 +78,32 @@
       "LEGENDARY": 18
     },
     "tribeBreakdown": {
-      "CONSTRUCT": 43,
-      "BEAST": 24,
-      "UNDEAD": 23,
-      "ELEMENTAL": 19,
-      "HUMAN": 13,
-      "SPIRIT": 11,
-      "DRAGON": 5
+      "CONSTRUCT": 45,
+      "HUMAN": 41,
+      "UNDEAD": 24,
+      "ELEMENTAL": 23,
+      "BEAST": 22,
+      "FEY": 15,
+      "SPIRIT": 13,
+      "DRAGON": 6,
+      "MERFOLK": 2
     },
     "minionCount": 193,
     "attackDistribution": {
       "0": 3,
-      "1": 31,
-      "2": 53,
+      "1": 29,
+      "2": 54,
       "3": 46,
-      "4": 22,
+      "4": 23,
       "5": 19,
       "6": 14,
       "7": 4,
       "10": 1
     },
     "healthDistribution": {
-      "1": 24,
+      "1": 23,
       "2": 39,
-      "3": 28,
+      "3": 29,
       "4": 39,
       "5": 27,
       "6": 19,
@@ -151,7 +153,8 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "CONSTRUCT": 19
+        "CONSTRUCT": 19,
+        "FEY": 1
       },
       "minionCount": 20,
       "attackDistribution": {
@@ -183,8 +186,8 @@
       "keywordFrequency": {
         "FERVOR": 4,
         "BULWARK": 3,
+        "SKIRMISH": 3,
         "OVERWHELM": 2,
-        "SKIRMISH": 2,
         "VANGUARD": 2,
         "AEGIS": 1,
         "ARCANE_SURGE": 1,
@@ -216,23 +219,24 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "CONSTRUCT": 5,
+        "HUMAN": 8,
         "ELEMENTAL": 5,
+        "CONSTRUCT": 4,
         "DRAGON": 4
       },
       "minionCount": 21,
       "attackDistribution": {
         "2": 6,
-        "3": 4,
-        "4": 4,
+        "3": 3,
+        "4": 5,
         "5": 3,
         "6": 3,
         "7": 1
       },
       "healthDistribution": {
         "1": 3,
-        "2": 4,
-        "3": 2,
+        "2": 3,
+        "3": 3,
         "4": 4,
         "5": 3,
         "6": 3,
@@ -248,9 +252,9 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "REKINDLE": 5,
+        "REKINDLE": 6,
         "BULWARK": 4,
-        "LIFEDRAIN": 3,
+        "LIFEDRAIN": 2,
         "AEGIS": 1,
         "FROST": 1,
         "SHROUD": 1,
@@ -348,24 +352,26 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "BEAST": 9,
-        "UNDEAD": 6,
+        "HUMAN": 9,
+        "BEAST": 8,
+        "UNDEAD": 7,
         "CONSTRUCT": 5,
-        "HUMAN": 2,
-        "DRAGON": 1
+        "SPIRIT": 4,
+        "DRAGON": 1,
+        "ELEMENTAL": 1
       },
       "minionCount": 36,
       "attackDistribution": {
-        "1": 10,
+        "1": 9,
         "2": 13,
-        "3": 6,
+        "3": 7,
         "4": 4,
         "5": 2,
         "6": 1
       },
       "healthDistribution": {
-        "1": 7,
-        "2": 10,
+        "1": 6,
+        "2": 11,
         "3": 7,
         "4": 5,
         "5": 4,
@@ -412,8 +418,9 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "SPIRIT": 5,
+        "HUMAN": 8,
         "BEAST": 4,
+        "SPIRIT": 4,
         "CONSTRUCT": 1
       },
       "minionCount": 18,
@@ -472,8 +479,8 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "CONSTRUCT": 12,
-        "HUMAN": 1
+        "CONSTRUCT": 15,
+        "HUMAN": 4
       },
       "minionCount": 19,
       "attackDistribution": {
@@ -507,9 +514,9 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "DOUBLESTRIKE": 8,
+        "DOUBLESTRIKE": 7,
+        "FERVOR": 3,
         "SKIRMISH": 3,
-        "FERVOR": 2,
         "ARCANE_SURGE": 1,
         "BULWARK": 1
       },
@@ -536,14 +543,16 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "ELEMENTAL": 10,
-        "HUMAN": 2,
-        "BEAST": 1
+        "ELEMENTAL": 9,
+        "HUMAN": 3,
+        "BEAST": 1,
+        "CONSTRUCT": 1,
+        "SPIRIT": 1
       },
       "minionCount": 15,
       "attackDistribution": {
-        "1": 2,
-        "2": 5,
+        "1": 1,
+        "2": 6,
         "3": 5,
         "4": 1,
         "6": 2
@@ -600,10 +609,12 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "SPIRIT": 5,
-        "ELEMENTAL": 4,
-        "HUMAN": 4,
-        "BEAST": 2
+        "ELEMENTAL": 7,
+        "HUMAN": 5,
+        "SPIRIT": 3,
+        "BEAST": 2,
+        "MERFOLK": 2,
+        "DRAGON": 1
       },
       "minionCount": 20,
       "attackDistribution": {
@@ -668,8 +679,9 @@
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "BEAST": 7,
-        "CONSTRUCT": 1
+        "FEY": 14,
+        "BEAST": 6,
+        "ELEMENTAL": 1
       },
       "minionCount": 21,
       "attackDistribution": {
@@ -877,9 +889,11 @@
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "COMMON",
-      "keywords": [],
+      "keywords": [
+        "SKIRMISH"
+      ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_recruit",
@@ -891,7 +905,7 @@
       "type": "MINION",
       "cost": 2,
       "attack": 2,
-      "health": 2,
+      "health": 3,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "COMMON",
@@ -899,7 +913,7 @@
         "FERVOR"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_zealot",
@@ -1017,7 +1031,7 @@
       "selectors": [
         "ANY_ENEMY_MINION"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_wave_caller",
@@ -1048,14 +1062,14 @@
       "name": "Wandering Scout",
       "type": "MINION",
       "cost": 2,
-      "attack": 1,
-      "health": 1,
+      "attack": 2,
+      "health": 2,
       "durability": null,
       "class": "NEUTRAL",
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": "BEAST",
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_wandering_scout",
@@ -1075,7 +1089,7 @@
         "FERVOR"
       ],
       "selectors": [],
-      "tribe": "BEAST",
+      "tribe": "ELEMENTAL",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_emberling_pup",
@@ -1095,7 +1109,7 @@
         "BULWARK"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "BEAST",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_stoneback_sentry",
@@ -1113,7 +1127,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": null,
+      "tribe": "SPIRIT",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_hollow_acolyte",
@@ -1131,7 +1145,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": null,
+      "tribe": "SPIRIT",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_lantern_bearer",
@@ -1151,7 +1165,7 @@
         "AEGIS"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "SPIRIT",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_aegis_templar",
@@ -1191,7 +1205,7 @@
       "selectors": [
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_grove_mender",
@@ -1211,7 +1225,7 @@
         "ARCANE_SURGE"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_arclight_adept",
@@ -1410,7 +1424,7 @@
       "selectors": [
         "ANY_ENEMY"
       ],
-      "tribe": null,
+      "tribe": "MERFOLK",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_hollow_tide_siren",
@@ -1466,7 +1480,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": null,
+      "tribe": "SPIRIT",
       "setId": "EMBERFALL",
       "collectible": false,
       "artId": "neutral_token_wisp",
@@ -1484,7 +1498,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": null,
+      "tribe": "UNDEAD",
       "setId": "EMBERFALL",
       "collectible": false,
       "artId": "neutral_token_shade",
@@ -1504,7 +1518,7 @@
         "BULWARK"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "SPIRIT",
       "setId": "EMBERFALL",
       "collectible": false,
       "artId": "tide_token_wisp",
@@ -1561,7 +1575,7 @@
       "class": "GRAVEKEEP",
       "rarity": "COMMON",
       "keywords": [
-        "LIFEDRAIN"
+        "REKINDLE"
       ],
       "selectors": [],
       "tribe": "UNDEAD",
@@ -1862,7 +1876,7 @@
         "LIFEDRAIN"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_bramblehide_guardian",
@@ -1901,7 +1915,7 @@
       "rarity": "RARE",
       "keywords": [],
       "selectors": [],
-      "tribe": "CONSTRUCT",
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_elderroot_colossus",
@@ -1919,7 +1933,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_canopy_seer",
@@ -1939,7 +1953,7 @@
         "VANGUARD"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_ironbark_elder",
@@ -1959,7 +1973,7 @@
         "OVERWHELM"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_world_root_behemoth",
@@ -1980,7 +1994,7 @@
         "OVERWHELM"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_thalens_ancient",
@@ -2038,7 +2052,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_rootweaver",
@@ -2254,7 +2268,7 @@
         "BULWARK"
       ],
       "selectors": [],
-      "tribe": "CONSTRUCT",
+      "tribe": "ELEMENTAL",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_slagshell_bulwark",
@@ -2512,7 +2526,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [],
-      "tribe": "CONSTRUCT",
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "clock_gear_imp",
@@ -3032,7 +3046,7 @@
       "selectors": [
         "ENEMY_HERO"
       ],
-      "tribe": "SPIRIT",
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "night_kira_blade_of_shadows",
@@ -3330,13 +3344,13 @@
       "name": "Spark Imp",
       "type": "MINION",
       "cost": 1,
-      "attack": 1,
+      "attack": 2,
       "health": 1,
       "durability": null,
       "class": "TEMPEST",
       "rarity": "COMMON",
       "keywords": [
-        "DOUBLESTRIKE"
+        "FERVOR"
       ],
       "selectors": [],
       "tribe": "ELEMENTAL",
@@ -3612,7 +3626,7 @@
       "name": "Galewind Runner",
       "type": "MINION",
       "cost": 2,
-      "attack": 2,
+      "attack": 3,
       "health": 1,
       "durability": null,
       "class": "NEUTRAL",
@@ -3661,7 +3675,7 @@
         "SHROUD"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_phantom_duelist",
@@ -3722,7 +3736,7 @@
         "ARCANE_SURGE"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_spellwarden",
@@ -3850,7 +3864,7 @@
       "name": "Blazewing",
       "type": "MINION",
       "cost": 3,
-      "attack": 3,
+      "attack": 4,
       "health": 2,
       "durability": null,
       "class": "EMBERWARD",
@@ -3881,7 +3895,7 @@
       "selectors": [
         "ANY_MINION"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_scalded_striker",
@@ -4044,7 +4058,7 @@
         "FROST"
       ],
       "selectors": [],
-      "tribe": "SPIRIT",
+      "tribe": "ELEMENTAL",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_frostwhisper",
@@ -4064,7 +4078,7 @@
         "FROST"
       ],
       "selectors": [],
-      "tribe": "SPIRIT",
+      "tribe": "DRAGON",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_icescale_whelp",
@@ -4107,7 +4121,7 @@
       "selectors": [
         "ANY_ENEMY"
       ],
-      "tribe": null,
+      "tribe": "ELEMENTAL",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_icecrown_herald",
@@ -4399,7 +4413,7 @@
         "ARCANE_SURGE"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_greatroot_speaker",
@@ -4441,7 +4455,7 @@
         "OVERWHELM"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_world_titan",
@@ -4482,7 +4496,7 @@
       "selectors": [
         "FRIENDLY_HERO"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "neutral_reclaimed_scout",
@@ -4581,7 +4595,7 @@
         "LIFEDRAIN"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "night_bridge_warden",
@@ -4622,7 +4636,7 @@
         "ANY_FRIENDLY_MINION",
         "FRIENDLY_HERO"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "neutral_aric_first_among_equals",
@@ -4642,7 +4656,7 @@
         "SKIRMISH"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "ember_vanguard_conscript",
@@ -4662,7 +4676,7 @@
         "ARCANE_SURGE"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "ember_brazier_keeper",
@@ -4682,7 +4696,7 @@
       "selectors": [
         "ANY_MINION"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "ember_forge_warden",
@@ -4742,7 +4756,7 @@
       "selectors": [
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": null,
+      "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "clock_nameless_bell",
@@ -4762,7 +4776,7 @@
       "selectors": [
         "FRIENDLY_HERO"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "stone_heartstone_herald",
@@ -4800,7 +4814,7 @@
       "rarity": "EPIC",
       "keywords": [],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "neutral_forge_striker",
@@ -4840,7 +4854,7 @@
       "selectors": [
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "verdant_seedling_guard",
@@ -4882,7 +4896,7 @@
         "ANY_ENEMY_MINION",
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "ember_pyre_commander",
@@ -4925,7 +4939,7 @@
         "ENEMY_HERO",
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": "ELEMENTAL",
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "ember_general_kira_flame_reunified",
@@ -4985,7 +4999,7 @@
         "REKINDLE"
       ],
       "selectors": [],
-      "tribe": "SPIRIT",
+      "tribe": "ELEMENTAL",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "tide_reef_reclaimer",
@@ -5026,7 +5040,7 @@
       "selectors": [
         "ANY_ENEMY_MINION"
       ],
-      "tribe": null,
+      "tribe": "MERFOLK",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "tide_tidal_emissary",
@@ -5332,7 +5346,7 @@
       "selectors": [
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": "BEAST",
+      "tribe": "FEY",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "verdant_sapling_tender",
@@ -5390,7 +5404,7 @@
       "selectors": [
         "FRIENDLY_HERO"
       ],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "verdant_overgrowth_dryad",
@@ -5430,7 +5444,7 @@
       "selectors": [
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": null,
+      "tribe": "FEY",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "verdant_rootswell_champion",
@@ -5474,7 +5488,7 @@
       "selectors": [
         "FRIENDLY_HERO"
       ],
-      "tribe": null,
+      "tribe": "ELEMENTAL",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "verdant_praxis_seed_of_new_ages",
@@ -5655,7 +5669,7 @@
         "ARCANE_SURGE"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "night_shadow_scout",
@@ -5718,7 +5732,7 @@
       "selectors": [
         "ANY_MINION"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "night_veilborn_spy",
@@ -5760,7 +5774,7 @@
       "selectors": [
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "night_network_operative",
@@ -5782,7 +5796,7 @@
       "selectors": [
         "ANY_ENEMY_MINION"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "night_double_agent",
@@ -5805,7 +5819,7 @@
         "ANY_FRIENDLY_MINION",
         "ANY_FRIENDLY_MINION"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "night_seraphine_whisper_queen",
@@ -5845,7 +5859,7 @@
         "REKINDLE"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "stone_quarry_worker",
@@ -5888,7 +5902,7 @@
       "selectors": [
         "FRIENDLY_HERO"
       ],
-      "tribe": null,
+      "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "stone_boulder_sentinel",
@@ -5929,7 +5943,7 @@
         "OVERWHELM"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "stone_fortified_colossus",
@@ -5991,7 +6005,7 @@
         "SKIRMISH"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "SPIRIT",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "storm_static_wisp",
@@ -6011,7 +6025,7 @@
       "selectors": [
         "ANY_ENEMY"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "storm_chain_caller",
@@ -6073,7 +6087,7 @@
       "selectors": [
         "ANY_ENEMY"
       ],
-      "tribe": "HUMAN",
+      "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "storm_voltaic_sentinel",
@@ -6200,7 +6214,7 @@
         "FERVOR"
       ],
       "selectors": [],
-      "tribe": "ELEMENTAL",
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "storm_bolt_rider",
@@ -6380,7 +6394,7 @@
         "SHROUD"
       ],
       "selectors": [],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "night_nightfall_rogue",
@@ -6481,7 +6495,7 @@
       "selectors": [
         "FRIENDLY_HERO"
       ],
-      "tribe": null,
+      "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "stone_fortress_keeper",
@@ -6503,7 +6517,7 @@
       "selectors": [
         "FRIENDLY_HERO"
       ],
-      "tribe": null,
+      "tribe": "CONSTRUCT",
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "stone_granite_behemoth",
