@@ -8,9 +8,8 @@ namespace Emberfall.Presentation
     /// in PlayerPrefs and pushed to <c>Resources/Audio/MasterMixer.mixer</c>'s exposed parameters.
     /// Bound by <see cref="MatchSettingsController.BindAudioSettings"/> (Sam, 2026-09-05).
     ///
-    /// <para><b>Music has no player yet</b> (nothing in this repo loops a music track), so
-    /// <see cref="MusicGroup"/>/<see cref="MusicVolume"/> exist and persist correctly but reach no
-    /// audible sound today. SFX is live: <see cref="SfxGroup"/> is what CardSoundDirector and
+    /// <para><see cref="MusicGroup"/> is what <see cref="MusicDirector"/> routes its looping
+    /// ambient-track player through; <see cref="SfxGroup"/> is what CardSoundDirector and
     /// HeroVoiceDirector route their AudioSources through.</para>
     ///
     /// <para>A missing mixer asset must cost volume control, never sound itself — every accessor
@@ -67,6 +66,7 @@ namespace Emberfall.Presentation
             EnsureLoaded();
             _muted = muted;
             PlayerPrefs.SetInt(MutedKey, muted ? 1 : 0);
+            PlayerPrefs.Save();
             Apply();
         }
 
@@ -75,6 +75,7 @@ namespace Emberfall.Presentation
             EnsureLoaded();
             _musicVolume = Mathf.Clamp01(linear01);
             PlayerPrefs.SetFloat(MusicVolumeKey, _musicVolume);
+            PlayerPrefs.Save();
             Apply();
         }
 
@@ -83,6 +84,7 @@ namespace Emberfall.Presentation
             EnsureLoaded();
             _sfxVolume = Mathf.Clamp01(linear01);
             PlayerPrefs.SetFloat(SfxVolumeKey, _sfxVolume);
+            PlayerPrefs.Save();
             Apply();
         }
 
@@ -110,14 +112,8 @@ namespace Emberfall.Presentation
         {
             EnsureMixer();
             if (_mixer == null) return;
-            bool musicOk = _mixer.SetFloat(MusicParam, _muted ? SilenceDb : LinearToDb(_musicVolume));
-            bool sfxOk   = _mixer.SetFloat(SfxParam,   _muted ? SilenceDb : LinearToDb(_sfxVolume));
-            // Temporary (Sam, 2026-09-05): the mute/volume fix this guards has failed once already
-            // for a reason nothing in this file's own logic explains. musicOk/sfxOk false would mean
-            // MusicParam/SfxParam don't match what's actually exposed on the mixer asset — remove
-            // once a real launch log confirms or rules that out.
-            Debug.Log($"[AudioSettings] Apply: muted={_muted} music={_musicVolume:F2} sfx={_sfxVolume:F2} " +
-                      $"musicSetOk={musicOk} sfxSetOk={sfxOk}");
+            _mixer.SetFloat(MusicParam, _muted ? SilenceDb : LinearToDb(_musicVolume));
+            _mixer.SetFloat(SfxParam,   _muted ? SilenceDb : LinearToDb(_sfxVolume));
         }
 
         private static void EnsureMixer()
