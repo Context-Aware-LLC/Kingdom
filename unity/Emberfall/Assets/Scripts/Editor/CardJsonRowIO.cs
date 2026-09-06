@@ -212,6 +212,7 @@ namespace Emberfall.Editor
             else if (action is TransformAction transform) { Type(w, "TRANSFORM"); w.WriteNumber("cardId", transform.CardId); Target(w, transform.Target); }
             else if (action is FrostAction frost) { Type(w, "FROST"); Target(w, frost.Target); }
             else if (action is DrownAction drown) { Type(w, "DROWN"); Target(w, drown.Target); }
+            else if (action is CopyAction copy) { Type(w, "COPY"); Target(w, copy.Target); }
             else if (action is TakeControlAction takeControl) { Type(w, "TAKE_CONTROL"); Target(w, takeControl.Target); }
             else if (action is TriggerTollAction triggerToll) { Type(w, "TRIGGER_TOLL"); Target(w, triggerToll.Target); }
             else if (action is DrawAction draw) { Type(w, "DRAW"); Count(w, draw.Count); }

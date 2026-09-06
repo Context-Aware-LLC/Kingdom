@@ -1010,6 +1010,7 @@ namespace Emberfall.Core.Cards
                 // 2026-08-25, which is what made the action and the carrier print the same word.
                 FrostAction a => $"{FrostVerb} {Target(a.Target, sourcePronoun)}.",
                 DrownAction a => $"{Name(Keyword.DROWN)} {Target(a.Target, sourcePronoun)}.",
+                CopyAction a => $"Summon an exact copy of {Target(a.Target, sourcePronoun)}.",
                 TakeControlAction a => $"Take control of {Target(a.Target, sourcePronoun)}.",
                 // The trigger's own label is the noun — "Toll" comes from TriggerLabel, not from a
                 // second spelling here, so a card face and a timing marker cannot drift apart. Reads

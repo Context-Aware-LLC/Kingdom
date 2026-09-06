@@ -607,6 +607,7 @@ namespace Emberfall.Core.Cards
             yield return new FrostAction(target);
             yield return new SilenceAction(target);
             yield return new DrownAction(target);
+            yield return new CopyAction(target);
         }
 
         /// <summary>
@@ -716,6 +717,7 @@ namespace Emberfall.Core.Cards
                 if (Verb(frost)) yield return new FrostAction(spec);
                 if (Verb(silence)) yield return new SilenceAction(spec);
                 if (Verb(drown)) yield return new DrownAction(spec);
+                if (Verb("Summon an exact copy of ")) yield return new CopyAction(spec);
             }
 
             foreach (int amount in Amounts(clause))

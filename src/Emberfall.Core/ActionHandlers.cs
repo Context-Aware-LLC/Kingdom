@@ -38,6 +38,7 @@ namespace Emberfall.Core
                 case FrostAction _: new FrostHandler().Execute(context); return;
                 case BackdraftAction _: new BackdraftHandler().Execute(context); return;
                 case DrownAction _: new DrownHandler().Execute(context); return;
+                case CopyAction _: new CopyHandler().Execute(context); return;
                 default:
                     throw new System.InvalidOperationException(
                         $"Rule action '{context.Rule.Action.GetType().Name}' has no runtime handler.");
@@ -615,6 +616,53 @@ namespace Emberfall.Core
                     int half = (t.Minion!.CurrentHealth + 1) / 2; // integer ceil-division for positive health
                     DamagePipeline.ApplyDamage(ctx.Interpreter, t.Character, half, ctx.Source, ignoresAegis: true);
                 }
+            }
+        }
+    }
+
+    // ── COPY ─────────────────────────────────────────────────────────────────────
+    /// <summary>See <see cref="CopyAction"/> for the shape this fills in.</summary>
+    internal sealed class CopyHandler : IActionHandler
+    {
+        public void Execute(in EffectContext ctx)
+        {
+            int seat = ctx.State.SeatOf(ctx.Source.Controller);
+            foreach (var t in ctx.Targets)
+            {
+                if (!t.IsMinion) continue;
+                CardInstance original = t.Minion!;
+                if (!ctx.Db.TryGet(original.DefinitionId, out CardDefinition def)) continue;
+
+                var copy = new CardInstance(ctx.State.NextInstanceId(), original.DefinitionId, ctx.Source.Controller);
+                // EnterBoard does the topology work (board-cap check, insert, reindex, first aura
+                // pass) and seeds the printed form -- which the lines below then override with the
+                // target's CURRENT stats and keywords, "exact copy" rather than a fresh printed one.
+                if (!RulesEngine.EnterBoard(ctx.State, copy, def, seat, -1, ctx.Db)) break; // board full → stop, mirrors SummonHandler
+
+                copy.Keywords.Clear();
+                foreach (var k in original.Keywords) copy.Keywords.Add(k);
+                copy.HasAegisShield = original.HasAegisShield;
+
+                // The buffed delta becomes the copy's OWN (non-aura) enchantment rather than a raw
+                // number, so a later DerivedStats.Recompute -- any board change triggers one -- folds
+                // it back in instead of silently discarding it (EF-017a: stats are def + Enchantments,
+                // never a stored total).
+                int attackDelta = original.CurrentAttack - DerivedStats.BaseAttack(def);
+                int healthDelta = original.MaxHealth - DerivedStats.BaseMaxHealth(def);
+                if (attackDelta != 0 || healthDelta != 0)
+                {
+                    copy.Enchantments.Add(new Enchantment
+                    {
+                        Source = copy.Id,
+                        AttackDelta = attackDelta,
+                        HealthDelta = healthDelta,
+                    });
+                    DerivedStats.Recompute(copy, def);
+                }
+
+                ctx.Events.Emit(GameEventKind.CardSummoned, source: copy.Id, flags: EventFlags.IsToken);
+                ctx.Interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: copy,
+                    triggerSource: copy.Id, observerController: copy.Controller);
             }
         }
     }

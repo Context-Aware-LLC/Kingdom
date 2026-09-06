@@ -268,6 +268,19 @@ namespace Emberfall.Core.Cards
         public DrownAction(TargetSpec target) : base(target) { }
     }
 
+    /// <summary>
+    /// Summons a fresh minion under the RULE CONTROLLER'S board (never the target's), carrying the
+    /// target's CURRENT stats and keywords (Sam, 2026-09-05) -- buffs and all, not the printed form
+    /// <see cref="RulesEngine.EnterBoard"/> would otherwise seed. It arrives whole regardless of the
+    /// target's current wounds, same "a summon arrives undamaged" rule every other entry follows.
+    /// See <c>ActionHandlers.CopyHandler</c> for how the snapshot survives a later
+    /// <see cref="Emberfall.Core.DerivedStats"/> recompute without being read back off the target.
+    /// </summary>
+    public sealed class CopyAction : TargetedRuleAction
+    {
+        public CopyAction(TargetSpec target) : base(target) { }
+    }
+
     /// <summary>Transfers a minion or equipped weapon to the rule controller.</summary>
     public sealed class TakeControlAction : TargetedRuleAction
     {
@@ -499,6 +512,7 @@ namespace Emberfall.Core.Cards
                 // the two shapes an author could mean by that -- with or without breaking it -- have
                 // no wording that tells them apart. A minion has no such second reading.
                 case TriggerTollAction _:
+                case CopyAction _:
                     return new TargetShape(TargetZones.Board, TargetTypes.Minion);
                 // The hand is type-agnostic here and always was: the fused `HandCard` named a zone
                 // and said nothing about type, so destroying a spell in hand was already legal.
