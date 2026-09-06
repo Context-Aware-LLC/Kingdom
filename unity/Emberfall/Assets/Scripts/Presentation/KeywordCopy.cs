@@ -115,6 +115,12 @@ namespace Emberfall.Presentation
             Keyword.BACKDRAFT =>
                 "Locks that much of your mana on your next turn.",
 
+            // ActionHandlers.DrownHandler: half the target's CURRENT health rounded up to a
+            // minion, a flat 2 to a hero. DamagePipeline runs it with ignoresAegis: true (Sam,
+            // 2026-09-05: "divine shield can't protect you against drowning").
+            Keyword.DROWN =>
+                "Deals half this minion's Health, rounded up — 2 to a hero. Ignores Aegis.",
+
             // EffectInterpreter.Resummon: the copy comes back at exactly 1 health, in the same
             // board slot, and can never rekindle again.
             Keyword.REKINDLE =>
