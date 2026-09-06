@@ -15,7 +15,7 @@ screen size, commonly 48-192px, occasionally larger in a store listing. Few
 large shapes, strong value contrast, nothing thin survives. No text, no
 wordmark — platforms already print the app name next to the icon.
 
-Generated square at EDGE x EDGE (gen_card_art.py's Gemini client + 1:1 aspect,
+Generated square at EDGE x EDGE (gen_card_art.py's single-provider client,
 imported rather than reimplemented — same JPEG->PNG transcode and square
 conform logic as the card-art pipeline). Full bleed, subject fills the frame —
 the OS applies its own mask (rounded square / circle / squircle), so do not
@@ -34,7 +34,7 @@ import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
-from gen_card_art import EDGE, REPO, _conform, _post_gemini  # noqa: E402
+from gen_card_art import EDGE, ENV_KEY, MODEL, REPO, _conform, _post  # noqa: E402
 
 OUT = REPO / "art-pipeline" / "ui" / "brand" / "icons"
 
@@ -119,13 +119,13 @@ def build_prompt(variant: str) -> str:
 
 def generate(name: str, key: str) -> bool:
     prompt = build_prompt(name)
-    print(f"[{name}] requesting {EDGE}x{EDGE} from gemini ...", flush=True)
+    print(f"[{name}] requesting {EDGE}x{EDGE} from {MODEL} ...", flush=True)
     t0 = time.time()
-    raw, err = _post_gemini(prompt, key)
+    raw, err = _post(prompt, key)
     if raw is None:
         print(f"[{name}] FAILED {err}", flush=True)
         return False
-    dest = OUT / f"LauncherIcon_{name}_gemini.png"
+    dest = OUT / f"LauncherIcon_{name}.png"
     dest.write_bytes(raw)
     dims = _conform(dest, name)
     print(f"[{name}] -> {dest.name}  ({len(raw)/1e6:.1f} MB, {dims}, {time.time()-t0:.0f}s)",
@@ -136,13 +136,13 @@ def generate(name: str, key: str) -> bool:
 def main() -> int:
     import os
 
-    key = os.environ.get("GEMINI_API_KEY")
+    key = os.environ.get(ENV_KEY)
     if not key:
-        print("GEMINI_API_KEY is not set in THIS process. A User env var set "
+        print(f"{ENV_KEY} is not set in THIS process. A User env var set "
               "after the shell started is not visible here; pull it in the "
               "same command:\n"
-              "  $env:GEMINI_API_KEY = [Environment]::GetEnvironmentVariable("
-              "'GEMINI_API_KEY','User'); python ...", file=sys.stderr)
+              f"  $env:{ENV_KEY} = [Environment]::GetEnvironmentVariable("
+              f"'{ENV_KEY}','User'); python ...", file=sys.stderr)
         return 2
 
     names = sys.argv[1:] or list(VARIANTS)

@@ -21,10 +21,10 @@ WHAT IS AUTO-GENERATED, and is NOT precious:
     table by the card's `class`. Never hardcoded here — parsed at runtime so it cannot drift.
   - World tone, from dev-docs/art/descriptors/world.md (base + REKINDLING section when relevant).
   - Output path + canonical filename, from setId/artId. ONE rule, no per-class exceptions:
-    art-pipeline/card-art/<setId>/<artId>/<artId>.png. The PNG stem repeats the enclosing
-    leaf-directory name exactly. gen_card_art.py used to key candidates by a CLASS group
-    instead, which put a card's draft and its candidates in different directories for 92 of
-    260 cards; that split was retired 2026-08-06 and both are keyed by setId now.
+    art-pipeline/card-art/<setId>/<artId>.png, with the prompt beside it as <artId>.md.
+    That is the same name the game ships the file under, so art that comes back correctly
+    named is promoted by a copy and never a rename. See delivery_block() for why the
+    per-card leaf directory that used to sit in that path is gone.
   - SCALE and VISUAL POWER clauses, FOR MINIONS ONLY, derived from mana cost and body size (see
     `scale_clause`). These directly fix the failure mode where a cheap card renders as a titanic
     boss or battlefield-wide catastrophe: the model's default register is maximalist, so lower
@@ -86,7 +86,8 @@ DELIVERY_TMPL = """DELIVERY
 - 1024x1024 PNG in sRGB.
 - Output Path: {out_dir}
 - Canonical filename: {filename}.
-- The PNG filename must exactly match its enclosing directory name, plus .png."""
+- Save it under exactly that name. It is the name the game ships it under, so a file
+  that comes back correctly named needs no rename to be promoted."""
 
 
 def art_file(card):
@@ -175,11 +176,22 @@ def seed_key_index(cards):
 def delivery_block(card):
     """Build the one canonical editor/generation destination for a card.
 
-    Keep this shared between the CLI brief generator and browser editor so neither can
-    accidentally omit the per-card leaf directory again.
+    Keep this shared between the CLI brief generator and browser editor so the two
+    cannot drift apart on where a card's work lands.
+
+    FLAT, one directory per expansion (Sam, 2026-09-05). Every card used to get its own
+    leaf directory `<setId>/<artId>/<artId>.png`, which existed for one reason: the
+    prompt file was called `draft.txt` in every one of them, so only a directory could
+    tell two prompts apart. Naming the prompt after its card removes that reason, and
+    the directory it justified was actively harmful — it hid the art one level down,
+    so a set folder listed as a wall of directory names instead of the pictures.
+    Prompt and picture are now adjacent and sort together:
+
+        art-pipeline/card-art/<setId>/<artId>.png
+        art-pipeline/card-art/<setId>/<artId>.md
     """
     stem = art_file(card)
-    out_dir = OUT_ROOT / card["setId"] / stem
+    out_dir = OUT_ROOT / card["setId"]
     return DELIVERY_TMPL.format(out_dir=f"{out_dir}{os.sep}", filename=f"{stem}.png")
 
 # Reworded from dev-docs/specs/card-generation-prompt.md — see module docstring for why.

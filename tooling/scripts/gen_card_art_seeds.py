@@ -12,7 +12,7 @@ cards still needing art were seeded.
 
 TWO SOURCES, IN PRIORITY ORDER.
 
-  1. SCRAPE. docs/design/card-drafts-<class>.md carries a hand-authored prose prompt per card
+  1. SCRAPE. The frozen drafts corpus (see PROSE_CORPUS) carries a hand-authored prose prompt per card
      from the original art passes. That is real authored direction and it outranks anything
      invented here. It is prose, not fields, so it is RESTRUCTURED into the seed schema rather
      than parsed - the model is asked to split existing words into subject/perspective/
@@ -130,12 +130,18 @@ _DRAFT_BG = re.compile(r"^- Background palette and setting:\s*(.+)$", re.M)
 
 
 def load_draft_seeds():
-    """card id -> seed, scraped DETERMINISTICALLY from art-pipeline/**/draft.txt.
+    """card id -> seed, scraped DETERMINISTICALLY from art-pipeline/card-art/<setId>/<artId>.md.
 
     These are briefs an art lead already filled in and generated from, so the direction is real
     and previously used - no model call, no tokens, and nothing invented. The three fields are
     already labelled in the file; only the subject needs slicing out of the SUBJECT section,
     whose leading SCALE/VISUAL POWER lines are computed boilerplate rather than direction.
+
+    The prompt used to be `draft.txt` inside a per-card leaf directory. It is named after its
+    card and sits beside the picture now (Sam, 2026-09-05) - see
+    gen_card_prompt_briefs.delivery_block. The glob below matched the old name only, so this
+    stage silently scraped ZERO after that move; the card id is read from the file's own text
+    rather than its path, so nothing else here depended on the layout.
 
     art-pipeline/ is gitignored and disposable, so this is opportunistic: a missing or
     malformed draft is skipped, never fatal.
@@ -143,7 +149,7 @@ def load_draft_seeds():
     out, skipped = {}, 0
     if not DRAFTS_ROOT.exists():
         return out, 0
-    for fp in sorted(DRAFTS_ROOT.rglob("draft.txt")):
+    for fp in sorted(DRAFTS_ROOT.rglob("*.md")):
         try:
             text = fp.read_text(encoding="utf-8", errors="replace")
         except OSError:
@@ -174,7 +180,9 @@ def load_draft_seeds():
             constraints.insert(0, sentences.pop())
         if sentences:
             subject = " ".join(sentences)
-        provenance = f"Scraped from the draft brief this card was generated from ({fp.parent.name})."
+        # fp.stem is the card's artId now; it used to be fp.parent.name, the per-card leaf
+        # directory. After the flatten that would have named the EXPANSION on every seed.
+        provenance = f"Scraped from the draft brief this card was generated from ({fp.stem})."
         seed = {"subject": subject, "perspective": " ".join(p.group(1).split()),
                 "background": " ".join(b.group(1).split()),
                 "notes": " ".join(constraints + [provenance])}
@@ -188,32 +196,77 @@ def load_draft_seeds():
     return out, skipped
 
 
-def load_prose_prompts():
-    """card id -> the hand-authored prose prompt from docs/design/card-drafts-*.md.
+# The prose corpus is FROZEN HISTORY, and this is the only thing that still reads it.
+#
+# These files were `docs/design/card-drafts-*.md` until the 2026-07-31 documentation
+# reorganisation moved them under hist-docs/. Nothing repointed the reader, so the scrape
+# stage silently harvested nothing from then until 2026-09-05 — it printed "missing - skipped"
+# per file and returned an empty dict, which is indistinguishable from "already fully scraped".
+# Measured when it was fixed: 162 card ids carry prose here, and 36 of them belong to rows that
+# still have NO seed. That is hand-authored direction, and it outranks anything a model drafts.
+#
+# The parser used to be imported out of gen_card_art.py. It lives here now because this is its
+# only consumer, and gen_card_art.py no longer composes from this corpus at all.
+#
+# RETIREMENT TRIGGER: when every id in this corpus has a seed under tooling/card-art-seeds/,
+# the --scrape stage and this constant are spent — delete both rather than leaving a stage that
+# reads frozen history forever. `--scrape` prints the remaining count on every run.
+PROSE_CORPUS = (
+    REPO / "docs" / "hist-docs" / "source-snapshots"
+    / "2026-07-31-pre-reorganization" / "design"
+)
 
-    Read through gen_card_art.py so there is ONE parser for that corpus. It fails closed on a
-    design JSON row with no prompt, which is a real gap worth surfacing - so a parse failure
-    here is reported and skipped rather than being allowed to abort the whole seed run.
+
+def _art_section(md: str) -> str:
+    """The closing 'Art prompts' section of a card-drafts .md."""
+    m = re.search(r"^##\s+\d+\.\s*Art prompts\s*$", md, re.M)
+    if not m:
+        raise ValueError("no '## N. Art prompts' heading")
+    tail = md[m.end():]
+    nxt = re.search(r"^##\s", tail, re.M)
+    return tail[: nxt.start()] if nxt else tail
+
+
+def _card_prompts(section: str) -> dict[str, tuple[str, str]]:
+    """id -> (head-of-first-line, prompt body) for each entry in the fence."""
+    fences = re.findall(r"```[a-z]*\n(.*?)```", section, re.S)
+    if not fences:
+        raise ValueError("no fenced prompt block")
+    out: dict[str, tuple[str, str]] = {}
+    for chunk in re.split(r"\n\s*\n", "\n".join(fences)):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        first, _, rest = chunk.partition("\n")
+        m = re.match(r"^([a-z0-9_]+)\s*[—–-]\s*(.*)$", first)
+        if not m:
+            continue
+        cid, head = m.group(1), m.group(2).strip()
+        out[cid] = (head, " ".join(rest.split()))
+    return out
+
+
+def load_prose_prompts():
+    """card handle -> the hand-authored prose prompt from the frozen drafts corpus.
+
+    A parse failure on one file is reported and skipped rather than aborting the seed run:
+    this corpus is history and will never be edited to satisfy a parser.
     """
-    try:
-        art = _load("gen_card_art", "gen_card_art.py")
-    except Exception as e:
-        print(f"  ! could not load gen_card_art.py ({type(e).__name__}: {e}) - "
-              f"scrape stage unavailable", file=sys.stderr)
+    if not PROSE_CORPUS.is_dir():
+        print(f"  ! prose corpus not found at {PROSE_CORPUS} - scrape stage unavailable",
+              file=sys.stderr)
         return {}
     out = {}
-    for cls, stem in art.CLASSES.items():
-        md = art.DESIGN / f"{stem}.md"
-        if not md.exists():
-            print(f"  ! {md} missing - skipped", file=sys.stderr)
-            continue
+    files = sorted(PROSE_CORPUS.glob("card-drafts-*.md"))
+    for md in files:
         try:
-            parsed = art._card_prompts(art._art_section(md.read_text(encoding="utf-8")))
-        except Exception as e:
-            print(f"  ! {md.name}: {type(e).__name__}: {e} - skipped", file=sys.stderr)
+            parsed = _card_prompts(_art_section(md.read_text(encoding="utf-8", errors="replace")))
+        except ValueError as e:
+            print(f"  ! {md.name}: {e} - skipped", file=sys.stderr)
             continue
         for cid, (head, body) in parsed.items():
             out[cid] = (head + " " + body).strip() if head else body
+    print(f"  prose corpus: {len(files)} file(s), {len(out)} card id(s) with authored direction")
     return out
 
 
@@ -411,10 +464,10 @@ def parse_seed(raw):
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--from-drafts", action="store_true",
-                    help="stage 0: scrape art-pipeline/**/draft.txt deterministically. NO API "
+                    help="stage 0: scrape art-pipeline/card-art/**/<artId>.md deterministically. NO API "
                          "CALL, no tokens - the fields are already labelled in the file")
     ap.add_argument("--scrape", action="store_true",
-                    help="stage 1: restructure hand-authored docs/design prompts into seeds")
+                    help="stage 1: restructure the frozen corpus's hand-authored prompts into seeds")
     ap.add_argument("--draft", action="store_true",
                     help="stage 2: draft seeds for cards with no prompt, few-shot off stage 1")
     ap.add_argument("--set", dest="set_id", help="limit to one setId")
@@ -445,7 +498,7 @@ def main() -> int:
     # have been re-drafted over. See briefs.seed_key for both rounds and the ruling that ended it.
     #
     # The two LEGACY inputs below still speak the handle and are not ours to rewrite -- the
-    # docs/design prose corpus and the scraped draft.txt files -- so both are translated
+    # frozen prose corpus and the scraped <artId>.md briefs -- so both are translated
     # through briefs.seed_key_index on the way in, and nothing downstream sees a name.
     rows_by_id = {briefs.seed_key(c): c for c in rows if c.get("artId")}
     to_key = briefs.seed_key_index(rows)
@@ -465,17 +518,17 @@ def main() -> int:
     written = collections.Counter()
     failures = []
 
-    # STAGE 0, before anything costs a token: every draft.txt already carries filled-in
+    # STAGE 0, before anything costs a token: every scraped brief already carries filled-in
     # direction, so those cards are seeded for free and then serve as exemplars for the rest.
     from_drafts = {}
     if args.from_drafts:
         scraped, skipped = load_draft_seeds()
         in_scope = {briefs.seed_key(c) for c in targets}
-        # draft.txt names the card by a NAME -- handle or artId; translate before the scope test,
+        # a brief names the card by a NAME -- handle or artId; translate before the scope test,
         # or every scraped draft for a renamed card is silently discarded as out of scope.
         scraped = {to_key[k]: v for k, v in scraped.items() if k in to_key}
         from_drafts = {cid: s for cid, s in scraped.items() if cid in in_scope}
-        print(f"stage 0 FROM-DRAFTS: {len(scraped)} draft.txt parsed "
+        print(f"stage 0 FROM-DRAFTS: {len(scraped)} brief(s) parsed "
               f"({skipped} unusable), {len(from_drafts)} of them unseeded and in scope")
         for cid, seed in from_drafts.items():
             set_id = rows_by_id[cid].get("setId", "EMBERFALL")

@@ -7,21 +7,15 @@ Reuses gen_card_prompt_briefs.py for everything that script already gets right: 
 text, class palette lookup, world tone, the scale clause, and the background-opposition hint.
 This file adds only the browser UI and per-card draft persistence on top.
 
-Drafts are saved as plain text to art-pipeline/card-art/<setId>/<art_file>/draft.txt — genuinely
-next to where that card's generated candidates land, so art you like has its prompt beside it.
-Untracked, same as the rest of art-pipeline/ (2026-08-02: an earlier version of this file kept
-drafts under tooling/card-art-seeds/drafts/ for safety; the DRAFTS subdirectory was never tracked,
-which is what made that location no safer than this one. The seed corpus itself IS tracked and
-always has been — `git log -- tooling/card-art-seeds/` — so do not read the note above as a claim
-about the seeds; corrected 2026-08-27).
+Prompts are saved as art-pipeline/card-art/<setId>/<artId>.md, directly beside that card's
+picture at <artId>.png — same directory, same stem, so the two sort together and a set folder
+lists as the art it contains. Untracked, same as the rest of art-pipeline/ (2026-08-02: an
+earlier version of this file kept drafts under tooling/card-art-seeds/drafts/ for safety; the
+DRAFTS subdirectory was never tracked, which is what made that location no safer than this one.
+The seed corpus itself IS tracked and always has been — `git log -- tooling/card-art-seeds/` —
+so do not read the note above as a claim about the seeds; corrected 2026-08-27).
 
-That adjacency was a claim, not a fact, until 2026-08-06: drafts were keyed by setId while
-gen_card_art.py keyed candidates by a CLASS group, so for 92 of 260 cards the prompt sat in a
-different directory from the art it produced. Both are keyed by setId now — directory is the
-expansion, class lives in the filename.
-
-<art_file> is the row's artId with "/" flattened to "_", READ from the row rather than rebuilt
-as "art_<cardId>". See art_file().
+<artId> is READ from the row, not rebuilt as "art_<cardId>" — see art_file().
 
 "Has art" means promoted art OR a candidate waiting to be picked — a card with candidates on
 disk does not need a brief written again.
@@ -54,8 +48,8 @@ from gen_card_prompt_briefs import (  # noqa: E402
 )
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-# Drafts AND candidates, same tree, same key: art-pipeline/card-art/<setId>/<art_file>/.
-# One constant, because they are one directory - that is the point of the 2026-08-06 change.
+# Prompts AND pictures, same directory, same stem: art-pipeline/card-art/<setId>/<artId>.{md,png}.
+# One constant, because they are one directory - that is the point.
 CANDIDATES_DIR = REPO / "art-pipeline" / "card-art"
 PROMOTED_ART_DIR = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
 HTML_PATH = pathlib.Path(__file__).resolve().parent / "card_art_editor.html"
@@ -88,11 +82,12 @@ def list_sets_cached():
     return _sets_cache["sets"]
 
 def draft_path(card):
-    """Drafts live beside that card's candidates. Both are keyed by setId — the directory is
-    the expansion, the class lives in the filename (Sam, 2026-08-06). Before that, candidates
-    were keyed by a class group while drafts were keyed by setId, so for 92 of 260 cards the
-    prompt sat in a different folder from the art it produced."""
-    return CANDIDATES_DIR / card["setId"] / art_file(card) / "draft.txt"
+    """The prompt sits beside the picture it produced, named after the same card.
+
+    One directory per expansion, no per-card leaf (Sam, 2026-09-05) — see
+    gen_card_prompt_briefs.delivery_block for why the leaf directory is gone.
+    """
+    return CANDIDATES_DIR / card["setId"] / f"{art_file(card)}.md"
 
 
 def has_art(card):
@@ -101,8 +96,9 @@ def has_art(card):
     stem = art_file(card)
     if (PROMOTED_ART_DIR / card["setId"] / f"{stem}.png").exists():
         return True
-    cand_dir = CANDIDATES_DIR / card["setId"] / stem
-    return cand_dir.is_dir() and any(cand_dir.glob("cand_*.png"))
+    setdir = CANDIDATES_DIR / card["setId"]
+    # `<artId>.png` is the pick; `<artId>__<variant>.png` is a candidate beside it.
+    return (setdir / f"{stem}.png").exists() or any(setdir.glob(f"{stem}__*.png"))
 
 
 def compose_blank(card, class_descriptors, world_tone):

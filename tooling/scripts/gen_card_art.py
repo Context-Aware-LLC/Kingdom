@@ -1,68 +1,51 @@
-"""Generate the card illustrations for the 22 Gravekeep/Verdant draft cards.
+"""Generate card illustrations from the reviewed seed corpus.
 
-Single Provider. Gpt Images 2.0
+SINGLE PROVIDER: gpt-image-2. The two-provider gemini/openai split, its fallback policy
+and its per-provider style blocks were removed 2026-09-05 (Sam) — they described a process
+nobody runs any more. Anything you find elsewhere that still mentions a provider choice for
+card art is stale.
 
-WHERE THE PROMPT COMES FROM. Nothing here is invented. Each prompt is composed,
-in this order, from three sources on disk:
+ONE PROMPT COMPOSER IN THIS REPO, and it is not this file. `gen_card_prompt_briefs.compose_brief`
+builds the prompt: delivery, composition, subject/background opposition, world tone, style,
+the scale clause and the negative prompt, from the spec doc and the descriptor files. This
+script used to carry a second, subtly different copy of all of that — a copy whose own docstring
+admitted it was "intentionally NOT a verbatim mirror" — plus a third composition path reading
+`docs/design/card-drafts-*.md`, a directory that stopped existing at the 2026-07-31 docs
+reorganisation. Both are gone. If the prompt is wrong, fix it in `gen_card_prompt_briefs.py`
+or in the docs it parses; there is nowhere else it can be wrong.
 
-  1. STYLE   — dev-docs/specs/card-generation-prompt.md:36 (the mandatory global style prefix,
-               verbatim) plus §1's technical delivery rules. §2's negative list follows as an
-               "Avoid:" line, because neither image endpoint takes a
-               negative-prompt parameter.
-  2. CLASS   — the house-look paragraph that opens the "Art prompts" section of
-               dev-docs/specs/card-generation-prompt.md. Gravekeep = ash and ember,
-               explicitly not Azeroth/WoW-adjacent; Verdant = this world's
-               green, overgrown-and-encroaching.
-  3. CARD    — the per-card paragraph from that same fenced block, keyed by card
-               id and paired with its row in card-drafts-<class>.json.
+WHERE THE DIRECTION COMES FROM. `tooling/card-art-seeds/<setId>.json`, keyed by the row's
+NUMERIC card id, four hand-authored fields per card. A card with no seed is SKIPPED rather
+than generated from a placeholder — an unseeded batch comes back weakly directed and samey,
+and the seed is the quality constraint, not the model.
 
-We use only gptImages2.0 for card art anything that indicates otherwise is stale
+FLAT LAYOUT (Sam, 2026-09-05). Candidates and their prompts sit side by side in one directory
+per expansion, named after the card, which is the same name the game ships the file under:
 
-SCALE IS THE CONSTRAINT, as everywhere else in this repo. A board card is
-137x194 px at ortho 4.6 on 1080p, and dev-docs/specs/card-generation-prompt.md:24 sets the bar at
-"readable at 220px". Both class house-look paragraphs already say it; they are
-passed through rather than restated here.
+    art-pipeline/card-art/<setId>/<artId>.png       the first candidate
+    art-pipeline/card-art/<setId>/<artId>.md        the prompt that made it
+    art-pipeline/card-art/<setId>/<artId>__cand2.png    a re-roll, beside it, never over it
 
-Geometry: 1024x1024 square. dev-docs/pipelines/art-and-rendering.md:9 — the illustration is the
-only per-card asset, a 1024 square that bleeds under the frame mask. OpenAI
-takes that as a literal `size`. Gemini takes `aspect_ratio: "1:1"` +
-`image_size: "1K"` and publishes NO table mapping that to exact pixels, so every
-saved file is measured and a non-1024 square is resampled (loudly).
+So promoting art is a copy into unity/Emberfall/Assets/Art/Cards/<setId>/ and never a rename.
 
-ORDER OF WORK is hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.1: legendaries first, then epics, rares,
-commons — identity assets first, filler last.
+NEVER OVERWRITE A GENERATED IMAGE (Sam, 2026-07-26): "don't delete anything you generate — if
+something needs deleting, I'll delete it myself." Numbering always continues past what is on
+disk. `--to-unity` is the one path that writes a fixed destination, so it copies the outgoing
+image aside first — see `preserve_promoted`.
 
-CANDIDATES, NOT SINGLES (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.2): candidates land in
-
-    art-pipeline/card-art/<setId>/<card_id>.png
-
-with a per-class contact sheet, and a human picks before anything is promoted to
-
-    unity/Emberfall/Assets/Art/Cards/<setId>/art_<cardId>.png
-
-Filenames are canonical per §1: `art_<cardId>`, i.e. the row's `artId`
-("art/grave_last_rite") with `/` flattened to `_`.
-
-Keys come from the environment only: GEMINI_API_KEY, OPENAI_API_KEY. --dry-run
-needs neither.
+Keys come from the environment only: OPENAI_API_KEY. --dry-run needs none.
 
 Usage:
   gen_card_art.py [options]
-    --provider gemini|openai   default gemini
     --dry-run                  print the composed prompt per card, generate nothing
-    --card <id>                one card (repeatable); REQUIRED for --provider openai
-    --class <gravekeep|verdant>
-    --candidates N             default 2 (gemini) / 1 (openai), clamped to 1-4
-    --skip-existing            default ON; --no-skip-existing to re-roll
+    --card <id>                one card (repeatable); accepts artId, handle or numeric id
+    --class <name>             one class only (gravekeep, verdant, neutral, ...)
+    --set <setId>              one expansion only
+    --only-missing-art         restrict to cards with no promoted png
+    --candidates N             default 1, clamped to 1-4
+    --skip-existing            default ON; --no-skip-existing to add N more
     --sheet-only               rebuild the contact sheets from what is on disk
     --to-unity                 write straight to Assets/, skipping candidates
-
-DIRECT-TO-UNITY (--to-unity) writes one image per card to the promoted path and
-skips the candidates step entirely. The destination filename is fixed by the card
-id, so it cannot land beside its predecessor the way a candidate does; the outgoing
-image is copied to <card_dir>/replaced_<utc>.png before the overwrite instead.
---skip-existing then means "this card is already promoted", so a run can deliver
-art it did not generate. Every run prints that split explicitly.
 """
 
 import argparse
@@ -70,7 +53,6 @@ import base64
 import json
 import os
 import pathlib
-import re
 import sys
 import time
 
@@ -88,326 +70,45 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-DOCS = pathlib.Path(os.environ.get("EMBERFALL_DOCS", REPO / "docs"))
-DESIGN = DOCS / "design"
-
 OUT = REPO / "art-pipeline" / "card-art"
-
+CARD_DATA = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
+SEEDS_DIR = REPO / "tooling" / "card-art-seeds"
 UNITY_CARDS = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
 MANIFEST = OUT / "prompt-manifest.json"
 
 EDGE = 1024  # dev-docs/pipelines/art-and-rendering.md:9
 
-# ---------------------------------------------------------------- providers
-#
-# Gemini call shape is the documented Interactions API image-generation form
-# (ai.google.dev/gemini-api/docs/interactions/image-generation): POST
-# /v1beta/interactions, key in `x-goog-api-key` (NOT a Bearer token), size via
-# response_format.aspect_ratio + image_size, bytes returned base64-inline under
-# steps[].content[] where type == "image". Neither provider has a
-# candidate-count parameter, so N candidates means N requests.
-#
-# `secs` and `usd_per_image` are ESTIMATES, used only by the spend guard's
-# printout.
-#
-# THE OPENAI PRICE, CORRECTED 2026-07-26. This guard used to print "~20x gemini
-# cost units," a ratio derived from a believed ~$6/image. That $6 was never
-# gpt-image-2's price: it came from a gbrain note about OpenDesign burning
-# tokens through bad context management — a different tool, a different failure.
-# gpt-image-2 bills per token ($8/M image input, $30/M image output, $5/M text
-# input), which lands at roughly $0.005/image at low quality and $0.165-$0.21 at
-# high. This script always asks for `quality: "high"` (see `_post_openai`), so
-# the constant is the top of that band: $0.19/image, deliberately a slight
-# over-estimate so the guard never flatters a run.
-#
-# Gemini's per-image price is NOT hardcoded — nobody has verified it for this
-# model, and inventing one to keep a tidy ratio is exactly the mistake above.
-# `usd_per_image: None` means "unpriced"; the guard says so rather than
-# printing a made-up number. The wall-clock figures are Sam's measured ones and
-# are unchanged.
-PROVIDERS = {
-    "gemini": {
-        "model": "gemini-3.1-flash-image",
-        "env": "GEMINI_API_KEY",
-        "candidates": 2,
-        "secs": 20,
-        "usd_per_image": None,
-        "note": "first pass — fast and cheap, buy breadth",
-    },
-    "openai": {
-        "model": "gpt-image-2",
-        "env": "OPENAI_API_KEY",
-        "candidates": 1,
-        "secs": 300,
-        "usd_per_image": 0.19,
-        "note": "fallback one-shot — ~5 min/image, ~$0.19/image, hand-picked cards only",
-    },
-}
+# gpt-image-2 bills per token ($8/M image input, $30/M image output, $5/M text input), which
+# lands at roughly $0.005/image at low quality and $0.165-$0.21 at high. This script always
+# asks for `quality: "high"` (see `_post`), so the constant is the top of that band —
+# deliberately a slight over-estimate so the spend guard never flatters a run. The wall-clock
+# figure is Sam's measured one.
+MODEL = "gpt-image-2"
+ENV_KEY = "OPENAI_API_KEY"
+USD_PER_IMAGE = 0.19
+SECS_PER_IMAGE = 300
 
-# hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.1 — identity assets first, filler last.
+# hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.1 —
+# identity assets first, filler last.
 RARITY_ORDER = {"LEGENDARY": 0, "EPIC": 1, "RARE": 2, "COMMON": 3}
 
-# One entry per DRAFT FILE, not strictly per class. `batch2` carries both
-# EMBERWARD and TIDECALLER because they were designed as one balance pass
-# against each other (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/card-drafts-emberward-tidecaller.md §1) and share a single
-# house-look paragraph; each card's prompt names its own class palette on its
-# last line, which is what actually keeps the two looks apart.
-CLASSES = {
-    "gravekeep": "card-drafts-gravekeep",
-    "verdant": "card-drafts-verdant",
-    "batch2": "card-drafts-emberward-tidecaller",
-    "batch3": "card-drafts-emberward-tidecaller-b3",
-    "weapon-rerolls": "card-drafts-weapon-rerolls",
-    # M2 expansion classes (dev-docs/art/descriptors/classes.md:7)
-    "clockwright": "card-drafts-clockwright",
-    "nightveil":   "card-drafts-nightveil",
-    "stonewarden": "card-drafts-stonewarden",
-    "tempest":     "card-drafts-tempest",
-    # REKINDLING second expansion set (dev-docs/art/descriptors/classes.md:7)
-    "rekindling":  "card-drafts-rekindling",
-}
-
-# WHERE CANDIDATES LAND under art-pipeline/card-art/ — the card's setId, and nothing else
-# (Sam, 2026-08-06): "separated by expansion at the directory level, class at the file name
-# level." A class-keyed candidate folder used to live here, which meant a card's draft.txt
-# (written under setId by card_art_editor.py) and its candidates (written under the class
-# group) landed in DIFFERENT directories for 92 of 260 cards — so the prompt was not beside
-# the art it produced, which is the whole point of the candidates folder.
-#
-# The candidate directory now matches the promotion directory, which
-# CardArtPostprocessor.cs already enforces: unity/.../Art/Cards/<setId>/. One rule, one
-# place. See card_dir() and final_path().
-
-# ------------------------------------------------------------- style block
-#
-# THE ONE PLACE THE HOUSE LOOK IS DEFINED. Everything below is dev-docs/specs/card-generation-prompt.md:36:
-# §2's global style prefix verbatim, then §1's technical delivery rules. That
-# brief produced the 37 illustrations shipped in the game today, so it is the
-# established look. Change it here or nowhere.
-#
-# §2 AND THE 22 CARD DRAFTS DISAGREE ABOUT BACKGROUNDS, and the ruling is that
-# the provider decides (Sam, 2026-07-26). §2 says "background supports but never
-# competes with subject"; the drafts say "no background scene", near-black,
-# silhouette-first, one accent point of colour. Both are right for the pass they
-# were written for, so the split is per-provider: this STYLE_BLOCK (gemini, the
-# volume pass) leaves the drafts' silhouette-first wording to stand, and
-# STYLE_BLOCK_OPENAI below reinstates §2's supporting background for the pass
-# that is paid for to render detail. GLOBAL_STYLE and TECHNICAL are shared by
-# both — everything that differs is in OPENAI_DETAIL.
-
-# dev-docs/specs/card-generation-prompt.md:36, verbatim.
-GLOBAL_STYLE = (
-    "Stylized fantasy trading-card-game illustration, painterly digital art, "
-    "dramatic rim lighting, single clear subject with strong silhouette, rich "
-    "saturated colors, dynamic composition, centered focal point, background "
-    "supports but never competes with subject, professional card game art "
-    "quality, no text, no border, no frame, no watermark."
-)
-
-# dev-docs/specs/card-generation-prompt.md:12 — the non-negotiable delivery rules, as prompt scaffolding.
-TECHNICAL = """
-SQUARE CROP. The card frame masks the edges: keep the subject's focal point
-inside the CENTRE 70% of the image, because the outer ~15% on every side may be
-cropped or overlaid by the frame. The art BLEEDS TO THE EDGE — no borders, no
-matting, no vignette-to-black, no drawn card edges.
-
-NO TEXT, no letters, no numerals, no runes resembling writing, no logo, no
-wordmark, no signature, no watermark, no frame, no UI element. Ever, anywhere.
-
-READABLE AT 220 PIXELS. One clear subject, strong silhouette, high value
-contrast between subject and background. If it needs squinting at full size it
-is dead on the board.
-
-Painterly digital illustration: confident brushwork, saturated accent lighting,
-readable shapes. NOT photoreal, NOT a 3D render, NOT anime or cel-shaded.
-
-SUBJECT AND BACKGROUND MUST OPPOSE EACH OTHER. The class palette governs the
-SUBJECT, not the whole frame. A subject painted in its palette and then dropped
-into a setting painted in that same palette becomes one flat mass, and at board
-size that mass reads as nothing: a molten creature standing in a volcano is a
-single orange blob. Put the subject somewhere its own palette does not belong,
-and oppose it in hue, in value, or in temperature — the molten thing wrecking a
-cold night village, the black slab against a pale dawn, the frosted thing under
-falling embers. Name the subject palette and the background separately and make
-them fight.
-"""
-
-STYLE_BLOCK = GLOBAL_STYLE + "\n\n" + TECHNICAL.strip()
-
-# --------------------------------------------------- the openai style block
-#
-# ONE STYLE BLOCK PER PROVIDER, because the two providers are picked for
-# opposite reasons (Sam, 2026-07-26).
-#
-# STYLE_BLOCK above is the Gemini/volume path, and the drafts it composes with
-# are silhouette-first on purpose: gpt-image-2's extra detail was found to turn
-# to mud at the board's real 137x194 px, so the first pass buys shape and value
-# separation and nothing else.
-#
-# But gpt-image-2 is never reached by accident — `require_explicit_selection`
-# makes Sam name the card. He is paying the premium precisely FOR the painterly
-# detail, so constraining that path to the minimalism tuned for the cheap one
-# spends the money and throws away the thing it bought. On this path §2's own
-# sentence stands as written: "background supports but never competes with
-# subject" — a supporting background, not an absent one.
-#
-# WHAT IS UNCHANGED: §1's delivery rules, in full. Square crop, focal point in
-# the centre 70%, bleed to the edge, no text/logo/UI, readable at 220px. Those
-# are hard delivery constraints the frame mask and the board scale impose on any
-# provider — not a style preference, and not negotiable by paying more.
-#
-# WHAT IS DROPPED: only the silhouette-ONLY reading — "no background scene",
-# "no background detail", "everything else in the frame stays near-black". That
-# language lives in the per-class house look and the per-card drafts, which are
-# still passed through verbatim (build_prompt composes them identically for both
-# providers), so the release has to be stated here explicitly or the draft text
-# would simply re-impose it.
-OPENAI_DETAIL = """
-PAINT IT FULLY. You are the expensive pass, chosen for depth: rich saturated
-color, layered rendering, atmosphere, texture, and a background that supports
-the subject. Where the class or subject text below says "no background scene",
-"no background detail", "stark black background", or "minimal detail", read that
-as a floor on CONTRAST, not a ban on painting: give the subject a supporting
-environment that stays subordinate to it in value, detail and saturation, and
-never competes for the eye.
+# Appended after the composed brief. gpt-image-2 is being paid for depth, so this releases the
+# silhouette-only reading that a seed's own words can otherwise impose. It is a RELEASE, not a
+# new rule: everything it loosens is a style preference. The hard delivery constraints the frame
+# mask and board scale impose — square crop, focal point centred, bleed to edge, no text or UI,
+# readable at 220 px — come from compose_brief and are not negotiable by paying more.
+PAINT_DETAIL = """PAINT IT FULLY. Use rich saturated color, layered rendering, atmosphere, texture,
+and a background that supports the subject. Where the class or subject text above
+says "no background scene", "no background detail", "stark black background",
+or "minimal detail", read that as a floor on CONTRAST, not a ban on painting:
+give the subject a supporting environment that stays subordinate to it in value,
+detail and saturation, and never competes for the eye.
 
 The 220px read is still the bar, and it is met by value contrast and a clean
-overall shape — not by flattening the subject into a silhouette. Keep the
-silhouette legible; render everything inside it.
-"""
-
-STYLE_BLOCK_OPENAI = (
-    GLOBAL_STYLE + "\n\n" + TECHNICAL.strip() + "\n\n" + OPENAI_DETAIL.strip()
-)
-
-STYLE_BLOCKS = {"gemini": STYLE_BLOCK, "openai": STYLE_BLOCK_OPENAI}
-
-# dev-docs/specs/card-generation-prompt.md:42. Neither endpoint takes a negative
-# parameter, so it is stated as an instruction instead of dropped.
-NEGATIVE = (
-    "Avoid: text, letters, watermark, signature, frame, border, UI, "
-    "photorealism, 3D render, anime, blurry, multiple competing subjects, "
-    "cropped subject head."
-)
+overall shape — not by flattening the subject into a silhouette."""
 
 
-# ---------------------------------------------------------------- parsing
-
-def _art_section(md: str) -> str:
-    """The closing 'Art prompts' section of a card-drafts .md."""
-    m = re.search(r"^##\s+\d+\.\s*Art prompts\s*$", md, re.M)
-    if not m:
-        raise ValueError("no '## N. Art prompts' heading")
-    tail = md[m.end():]
-    nxt = re.search(r"^##\s", tail, re.M)
-    return tail[: nxt.start()] if nxt else tail
-
-
-def _house_look(section: str) -> str:
-    """The class-level prose between the section heading and the fenced block."""
-    head = section.split("```", 1)[0]
-    text = re.sub(r"\*{1,2}(.+?)\*{1,2}", r"\1", head).strip()
-    if not text:
-        raise ValueError("no house-look paragraph before the fenced block")
-    return text
-
-
-def _card_prompts(section: str) -> dict[str, tuple[str, str]]:
-    """id -> (head-of-first-line, prompt body) for each entry in the fence."""
-    fences = re.findall(r"```[a-z]*\n(.*?)```", section, re.S)
-    if not fences:
-        raise ValueError("no fenced prompt block")
-    out: dict[str, tuple[str, str]] = {}
-    for chunk in re.split(r"\n\s*\n", "\n".join(fences)):
-        chunk = chunk.strip()
-        if not chunk:
-            continue
-        first, _, rest = chunk.partition("\n")
-        m = re.match(r"^([a-z0-9_]+)\s*[—–-]\s*(.*)$", first)
-        if not m:
-            raise ValueError(f"unparsed prompt chunk: {first[:60]!r}")
-        cid, head = m.group(1), m.group(2).strip()
-        out[cid] = (head, " ".join(rest.split()))
-    return out
-
-
-def art_file(art_id: str) -> str:
-    """artId 'art/grave_last_rite' -> 'art_grave_last_rite'.
-
-    Takes the artId STRING; gen_card_prompt_briefs.art_file() takes the card row and is the
-    definition the brief generator and the browser editor share. Same rule, verified equal
-    across all 260 rows. If you change one, change the other - the two that used to disagree
-    here rebuilt the name as "art_<cardId>" instead of reading artId, which silently reported
-    cards as having no art.
-    """
-    return art_id.replace("/", "_")
-
-
-def load_cards() -> list[dict]:
-    cards: list[dict] = []
-    for cls, stem in CLASSES.items():
-        rows = json.loads((DESIGN / f"{stem}.json").read_text(encoding="utf-8"))
-        section = _art_section((DESIGN / f"{stem}.md").read_text(encoding="utf-8"))
-        house = _house_look(section)
-        prompts = _card_prompts(section)
-
-        for row in rows:
-            cid = row["id"]
-            if cid not in prompts:
-                raise ValueError(f"{stem}.md has no art prompt for '{cid}'")
-            head, body = prompts[cid]
-            # Gravekeep writes "id — Card Name" then the prompt below; Verdant
-            # starts the prompt on the id line. Drop the head only when it is
-            # the card's name.
-            if head and head.lower() != row["name"].lower():
-                body = (head + " " + body).strip()
-            cards.append(
-                {
-                    # The ART KEY, not the design row's own id. `cid` still reads the prompts
-                    # corpus below, which is that corpus's own spelling; everything downstream
-                    # of here -- the manifest, --card, the results map -- joins on artId.
-                    "id": art_file(row["artId"]),
-                    "handle": row.get("handle", ""),
-                    "cardId": row.get("cardId", ""),
-                    "name": row["name"],
-                    "artId": row["artId"],
-                    "file": art_file(row["artId"]),
-                    "setId": row.get("setId", "EMBERFALL"),
-                    "rarity": row.get("rarity", "COMMON"),
-                    "cost": row.get("cost", 0),
-                    "class": cls,
-                    "house": house,
-                    "core": body,
-                }
-            )
-
-        unused = set(prompts) - {r["id"] for r in rows}
-        if unused:
-            raise ValueError(f"{stem}.md prompts with no JSON row: {sorted(unused)}")
-
-    cards.sort(key=lambda c: (RARITY_ORDER.get(c["rarity"], 9), -c["cost"], c["id"]))
-    return cards
-
-
-# ------------------------------------------------- the OTHER per-card source
-#
-# `load_cards` above reads the per-card paragraph out of docs/design/card-drafts-*.md.
-# That covers 162 card ids and every one of them already has art on disk; the 83 cards
-# that still need art appear in NO drafts file, so this script could not reach a single
-# one of them (measured 2026-08-07 on master 9077356). Their direction lives instead in
-# the reviewed seed corpus, tooling/card-art-seeds/<setId>.json — four fields per card,
-# approved by Sam on NOR-223 before any image was generated.
-#
-# `--from-seeds` swaps source 3 (CARD) for that corpus and leaves sources 1 and 2 alone:
-# STYLE is still STYLE_BLOCKS[provider], so the two providers stay a controlled
-# comparison, and the class house look is still house-level prose rather than anything
-# invented here. The class descriptors and world tone come from the same
-# dev-docs/art/descriptors files gen_card_prompt_briefs.py reads, so a card's seed composes
-# to the same direction whichever of the two scripts you ask.
-#
-# This is opt-in, not a union with load_cards(): a bare run must keep selecting exactly
-# the cards it selected yesterday.
-
+# ------------------------------------------------------------------ sources
 
 def _briefs_module():
     """gen_card_prompt_briefs, imported from this directory regardless of cwd."""
@@ -418,18 +119,22 @@ def _briefs_module():
 
 
 def load_seed_cards() -> list[dict]:
+    """Every card row that has a seed, with its prompt already composed.
+
+    The prompt is built by gen_card_prompt_briefs.compose_brief — the same function the CLI
+    brief generator and the browser editor use, so all three ask for the identical thing.
+    """
     briefs = _briefs_module()
 
     rows: list[dict] = []
-    for fp in sorted((REPO / "unity" / "Emberfall" / "Assets" / "CardData").glob("*.cards.json")):
+    for fp in sorted(CARD_DATA.glob("*.cards.json")):
         rows.extend(json.loads(fp.read_text(encoding="utf-8")))
 
-    seeds_dir = REPO / "tooling" / "card-art-seeds"
     seeds: dict[str, dict] = {}
-    for fp in sorted(seeds_dir.glob("*.json")):
+    for fp in sorted(SEEDS_DIR.glob("*.json")):
         seeds.update(json.loads(fp.read_text(encoding="utf-8")))
     if not seeds:
-        raise ValueError(f"no seeds found under {seeds_dir}")
+        raise ValueError(f"no seeds found under {SEEDS_DIR}")
 
     class_descriptors = briefs.load_class_descriptors()
     world_tone: dict[str, str] = {}
@@ -439,52 +144,28 @@ def load_seed_cards() -> list[dict]:
         # Seeds are keyed by the NUMERIC CARD ID -- the only identifier a rename cannot
         # move. See gen_card_prompt_briefs.seed_key for the two renames that proved it.
         seed = seeds.get(briefs.seed_key(row))
-        if not seed:
+        if not seed or not row.get("artId"):
             continue
-        cls = row.get("class", "NEUTRAL").lower()
         set_id = row.get("setId", "EMBERFALL")
         if set_id not in world_tone:
             world_tone[set_id] = briefs.load_world_tone(set_id)
-        palette, motifs, mood = class_descriptors.get(cls, ("", "", ""))
 
-        house = "\n".join(
-            [
-                f"Class: {cls.title()}.",
-                f"Palette: {palette}",
-                f"Motifs: {motifs}",
-                f"Mood: {seed.get('tone') or mood}",
-                "",
-                world_tone[set_id],
-            ]
-        ).strip()
-
-        core_lines = [
-            briefs.scale_clause(row),
-            seed["subject"].strip(),
-            f"Perspective: {seed['perspective'].strip()}",
-            f"Background: {seed['background'].strip()}",
-            "The subject and the background must oppose each other in hue, value, or "
-            "temperature — never a grey subject on a grey ground.",
-        ]
-        if (seed.get("notes") or "").strip():
-            core_lines.append(seed["notes"].strip())
-
+        prompt = briefs.compose_brief(row, class_descriptors, world_tone[set_id], seed)
         cards.append(
             {
-                # The candidate directory and the prompt-manifest key -- both about the
-                # IMAGE, so both stay on artId while the seed moves to the card id.
+                # Keyed by artId: the manifest, --card and the results map are all about the
+                # IMAGE, while the seed joins on the card id.
                 "id": row["artId"],
                 "handle": row.get("handle", ""),
                 "cardId": row.get("id", ""),
                 "name": row["name"],
                 "artId": row["artId"],
-                "file": art_file(row["artId"]),
+                "file": briefs.art_file(row),
                 "setId": set_id,
                 "rarity": row.get("rarity", "COMMON"),
                 "cost": row.get("cost", 0),
-                "class": cls,
-                "house": house,
-                "core": "\n".join(core_lines),
+                "class": row.get("class", "NEUTRAL").lower(),
+                "prompt": prompt + "\n\n" + PAINT_DETAIL,
             }
         )
 
@@ -492,40 +173,45 @@ def load_seed_cards() -> list[dict]:
     return cards
 
 
-def has_promoted_art(card: dict) -> bool:
-    return final_path(card).exists()
+# -------------------------------------------------------------------- paths
 
-
-def build_prompt(card: dict, provider: str) -> str:
-    """Only the STYLE block differs by provider (see STYLE_BLOCK_OPENAI). The
-    class house look and the per-card subject are composed identically for both,
-    so a card re-rolled on the other provider is still a controlled comparison
-    of the two looks."""
-    return "\n\n".join(
-        [
-            STYLE_BLOCKS[provider],
-            "CLASS HOUSE LOOK:\n" + card["house"],
-            f"SUBJECT — {card['name']}:\n{card['core']}",
-            NEGATIVE,
-        ]
-    )
-
-
-# ------------------------------------------------------------- generation
-
-def card_dir(card: dict) -> pathlib.Path:
-    return OUT / card["setId"] / card["file"]
+def set_dir(card: dict) -> pathlib.Path:
+    """One directory per expansion. There is no per-card leaf directory — see the
+    module docstring, and gen_card_prompt_briefs.delivery_block for why it went."""
+    return OUT / card["setId"]
 
 
 def final_path(card: dict) -> pathlib.Path:
     return UNITY_CARDS / card["setId"] / f"{card['file']}.png"
 
 
-def existing(card: dict, provider: str) -> list[pathlib.Path]:
-    """Candidates from THIS provider only — an openai fallback must not be
-    skipped just because gemini already produced two."""
-    return sorted(card_dir(card).glob(f"cand_{provider}_*.png"))
+def prompt_path(card: dict) -> pathlib.Path:
+    return set_dir(card) / f"{card['file']}.md"
 
+
+def has_promoted_art(card: dict) -> bool:
+    return final_path(card).exists()
+
+
+def existing(card: dict) -> list[pathlib.Path]:
+    """Candidates on disk, in generation order. The first one holds the bare canonical
+    name so it needs no rename to be promoted; re-rolls land beside it, never over it."""
+    stem = card["file"]
+    out = []
+    bare = set_dir(card) / f"{stem}.png"
+    if bare.exists():
+        out.append(bare)
+    out.extend(sorted(set_dir(card).glob(f"{stem}__cand*.png")))
+    return out
+
+
+def candidate_path(card: dict, index: int) -> pathlib.Path:
+    """index is 1-based. Candidate 1 takes the canonical name."""
+    stem = card["file"]
+    return set_dir(card) / (f"{stem}.png" if index == 1 else f"{stem}__cand{index}.png")
+
+
+# --------------------------------------------------------------- generation
 
 def _to_png(raw: bytes) -> tuple[bytes | None, str]:
     """JPEG (or anything) in, PNG bytes out. Pass a PNG through untouched."""
@@ -543,60 +229,13 @@ def _to_png(raw: bytes) -> tuple[bytes | None, str]:
     return buf.getvalue(), ""
 
 
-def _post_gemini(prompt: str, key: str) -> tuple[bytes | None, str]:
-    """Interactions API. Returns (png_bytes, error_message).
-
-    THE ENDPOINT ONLY EMITS JPEG. `response_format.mime_type: "image/png"` is
-    rejected outright — HTTP 400, "Supported values: 'image/jpeg'" — so every
-    call this client made returned nothing (found 2026-07-26; the file
-    extension `.png` had until then been the only evidence anyone had of the
-    format). We ask for jpeg and transcode to PNG here, because
-    dev-docs/pipelines/art-and-rendering.md:9 and the `CardArtPostprocessor.cs` folder contract
-    both want a real PNG on disk, not a JPEG wearing the extension.
-    """
-    r = requests.post(
-        "https://generativelanguage.googleapis.com/v1beta/interactions",
-        headers={
-            "x-goog-api-key": key,
-            "Content-Type": "application/json",
-            "Api-Revision": "2026-05-20",
-        },
-        json={
-            "model": PROVIDERS["gemini"]["model"],
-            "input": prompt,
-            "response_format": {
-                "type": "image",
-                "mime_type": "image/jpeg",
-                "aspect_ratio": "1:1",
-                "image_size": "1K",
-            },
-        },
-        timeout=300,
-    )
-    if r.status_code != 200:
-        return None, f"HTTP {r.status_code}: {r.text[:400]}"
-
-    data = r.json()
-    # Iterate the steps rather than trusting a convenience field: interleaved
-    # text+image output is a documented real case, and a safety refusal comes
-    # back as text where the image should be. Never b64decode unchecked.
-    texts: list[str] = []
-    for step in data.get("steps") or []:
-        for part in step.get("content") or []:
-            if part.get("type") == "image" and part.get("data"):
-                return _to_png(base64.b64decode(part["data"]))
-            if part.get("type") == "text" and part.get("text"):
-                texts.append(part["text"])
-    blurb = " ".join(texts)[:300] if texts else json.dumps(data)[:300]
-    return None, f"no image in response (refusal or text-only?): {blurb}"
-
-
-def _post_openai(prompt: str, key: str) -> tuple[bytes | None, str]:
+def _post(prompt: str, key: str) -> tuple[bytes | None, str]:
+    """Returns (png_bytes, error_message)."""
     r = requests.post(
         "https://api.openai.com/v1/images/generations",
         headers={"Authorization": f"Bearer {key}"},
         json={
-            "model": PROVIDERS["openai"]["model"],
+            "model": MODEL,
             "prompt": prompt,
             "size": f"{EDGE}x{EDGE}",
             "quality": "high",
@@ -608,18 +247,13 @@ def _post_openai(prompt: str, key: str) -> tuple[bytes | None, str]:
         return None, f"HTTP {r.status_code}: {r.text[:400]}"
     data = r.json()["data"][0]
     if "b64_json" in data:
-        return base64.b64decode(data["b64_json"]), ""
-    return requests.get(data["url"], timeout=120).content, ""
-
-
-POST = {"gemini": _post_gemini, "openai": _post_openai}
+        return _to_png(base64.b64decode(data["b64_json"]))
+    return _to_png(requests.get(data["url"], timeout=120).content)
 
 
 def _conform(dest: pathlib.Path, tag: str) -> str:
-    """Measure what actually landed. Gemini publishes no aspect-ratio-to-pixels
-    table, so 1K/1:1 == 1024 square is an assumption until measured; a square
-    that is merely the wrong size is resampled, anything non-square is left
-    alone and reported loudly rather than silently distorted."""
+    """Measure what actually landed. A square that is merely the wrong size is resampled;
+    anything non-square is left alone and reported loudly rather than silently distorted."""
     try:
         from PIL import Image
     except ImportError:
@@ -633,32 +267,31 @@ def _conform(dest: pathlib.Path, tag: str) -> str:
             print(f"[{tag}] NOTE: provider returned {w}x{h}, resampled to {EDGE}x{EDGE}",
                   flush=True)
             return f"{w}x{h} -> {EDGE}x{EDGE}"
-    print(f"[{tag}] WARNING: NOT SQUARE ({w}x{h}) — dev-docs/pipelines/art-and-rendering.md:9 wants a "
-          f"{EDGE} square. Left as-is; fix before promoting.", flush=True)
+    print(f"[{tag}] WARNING: NOT SQUARE ({w}x{h}) — dev-docs/pipelines/art-and-rendering.md:9 "
+          f"wants a {EDGE} square. Left as-is; fix before promoting.", flush=True)
     return f"{w}x{h} NOT SQUARE"
 
 
 def preserve_promoted(card: dict) -> pathlib.Path | None:
     """Copy the CURRENT promoted image aside before anything overwrites it.
 
-    In candidates mode nothing can destroy an image: numbering always continues past
-    what is on disk, so a re-roll lands BESIDE its predecessor. Writing straight into
-    Assets/ has no such property — the destination filename is fixed by the card id, so
-    a second run overwrites the first and the previous image is gone. Sam's standing rule
-    ("a re-roll lands beside the previous candidate, never over it") needs a mechanism
-    here, and this is it: the outgoing image is copied into the card's pipeline folder as
-    replaced_<utc>.png first. Deleting it is Sam's call, not the script's.
+    In candidates mode nothing can destroy an image: numbering always continues past what
+    is on disk, so a re-roll lands BESIDE its predecessor. Writing straight into Assets/ has
+    no such property — the destination filename is fixed by the card, so a second run
+    overwrites the first. The outgoing image is copied into the expansion's pipeline folder
+    as <artId>__replaced_<utc>.png first. Deleting it is Sam's call, not the script's.
 
-    Overwrite-in-place is still what happens to the .png itself — the .meta beside it
-    carries the guid the Addressables entry points at, and replacing the pair mints a new
-    guid and silently orphans that entry.
+    Overwrite-in-place is still what happens to the .png itself — the .meta beside it carries
+    the guid the Addressables entry points at, and replacing the pair mints a new guid and
+    silently orphans that entry.
     """
     dest = final_path(card)
     if not dest.exists():
         return None
-    keep_dir = card_dir(card)
+    keep_dir = set_dir(card)
     keep_dir.mkdir(parents=True, exist_ok=True)
-    keep = keep_dir / f"replaced_{time.strftime('%Y%m%dT%H%M%S', time.gmtime())}.png"
+    stamp = time.strftime("%Y%m%dT%H%M%S", time.gmtime())
+    keep = keep_dir / f"{card['file']}__replaced_{stamp}.png"
     keep.write_bytes(dest.read_bytes())
     return keep
 
@@ -672,11 +305,9 @@ def check_meta(card: dict) -> str | None:
     return None if meta.exists() else str(meta.relative_to(REPO))
 
 
-def generate(card: dict, provider: str, key: str, candidates: int,
+def generate(card: dict, key: str, candidates: int,
              skip: bool, to_unity: bool = False) -> tuple[list[dict], str | None]:
     """Returns (one manifest record per image actually written, skip reason or None)."""
-    spec = PROVIDERS[provider]
-
     if to_unity:
         # Straight into Assets/: the destination is a single fixed filename, so "enough
         # candidates on disk" is meaningless. The only question is whether the card is
@@ -687,25 +318,16 @@ def generate(card: dict, provider: str, key: str, candidates: int,
             print(f"[{card['file']}] skip - {reason} (NOT generated this run)", flush=True)
             return [], reason
     else:
-        have = existing(card, provider)
+        have = existing(card)
         if skip and len(have) >= candidates:
-            reason = f"{len(have)} {provider} candidate(s) on disk"
+            reason = f"{len(have)} candidate(s) on disk"
             print(f"[{card['file']}] skip ({reason})", flush=True)
             return [], reason
 
-    have = existing(card, provider)
-    prompt = build_prompt(card, provider)
-    dest_dir = card_dir(card)
-    dest_dir.mkdir(parents=True, exist_ok=True)
+    have = existing(card)
+    prompt = card["prompt"]
+    set_dir(card).mkdir(parents=True, exist_ok=True)
 
-    # NEVER OVERWRITE A GENERATED IMAGE (Sam, 2026-07-26): "don't delete anything
-    # you generate — if something needs deleting, I'll delete it myself." Numbering
-    # always continues past what is already on disk, so a re-roll ADDS
-    # cand_<provider>_2.png beside _1 and the contact sheet shows them side by side.
-    # Before this, --no-skip-existing restarted the index at 0 and silently
-    # clobbered cand_1 — the one flag in the script that could destroy a candidate.
-    # --skip-existing (default) still means "stop once N exist"; --no-skip-existing
-    # now means "add N more", not "redo the first N".
     base = len(have)
     n_new = (candidates - base) if skip else candidates
     # One fixed destination filename means a second image this run would overwrite the
@@ -713,14 +335,19 @@ def generate(card: dict, provider: str, key: str, candidates: int,
     if to_unity:
         base, n_new = 0, 1
 
+    # The prompt sits beside the picture it produced, under the same stem. Written before
+    # the first request, so a run that fails still leaves the direction it asked for.
+    if not to_unity:
+        prompt_path(card).write_text(prompt, encoding="utf-8")
+
     records: list[dict] = []
     for k in range(n_new):
-        i = base + k
-        tag = f"{card['file']} {provider} c{i + 1}"
-        print(f"[{tag}] requesting {EDGE}x{EDGE} from {spec['model']} ...", flush=True)
+        i = base + k + 1
+        tag = f"{card['file']} c{i}"
+        print(f"[{tag}] requesting {EDGE}x{EDGE} from {MODEL} ...", flush=True)
         t0 = time.time()
         try:
-            raw, err = POST[provider](prompt, key)
+            raw, err = _post(prompt, key)
         except requests.RequestException as e:
             print(f"[{tag}] FAILED (network): {e}", flush=True)
             continue
@@ -736,18 +363,16 @@ def generate(card: dict, provider: str, key: str, candidates: int,
                 print(f"[{tag}] previous image preserved -> {kept.relative_to(REPO)}",
                       flush=True)
         else:
-            dest = dest_dir / f"cand_{provider}_{i + 1}.png"
+            dest = candidate_path(card, i)
         dest.write_bytes(raw)
         dims = _conform(dest, tag)
         took = time.time() - t0
         shown = dest.relative_to(REPO) if to_unity else dest.relative_to(OUT)
-        print(f"[{tag}] -> {shown}  "
-              f"({len(raw)/1e6:.1f} MB, {dims}, {took:.0f}s)", flush=True)
+        print(f"[{tag}] -> {shown}  ({len(raw)/1e6:.1f} MB, {dims}, {took:.0f}s)", flush=True)
         records.append(
             {
                 "file": dest.name,
-                "provider": provider,
-                "model": spec["model"],
+                "model": MODEL,
                 "requested": f"{EDGE}x{EDGE}",
                 "delivered": dims,
                 "seconds": round(took, 1),
@@ -757,16 +382,15 @@ def generate(card: dict, provider: str, key: str, candidates: int,
         )
     # (records, skip reason) — the shape the docstring promises and the shape main() unpacks.
     # This used to `return records`, a bare list, which main() then unpacked as a 2-tuple. That
-    # only survives when the list happens to hold exactly two items, so the default gemini pass
-    # (2 candidates) worked by coincidence while --to-unity (always 1 image) and any card whose
-    # requests all failed (0 images) raised ValueError instead. It raised AFTER the images were
-    # written, so the run lost its manifest — the record of which prompt produced which file.
+    # only survives when the list happens to hold exactly two items, so a 2-candidate pass
+    # worked by coincidence while --to-unity (always 1 image) and any card whose requests all
+    # failed (0 images) raised ValueError instead. It raised AFTER the images were written, so
+    # the run lost its manifest — the record of which prompt produced which file.
     return records, None
 
 
 def write_manifest(cards: list[dict], new_records: dict[str, list[dict]]) -> None:
-    """Per IMAGE: provider + model + the exact prompt used, so any card can be
-    re-rolled on the other provider reproducibly."""
+    """Per IMAGE: model + the exact prompt used, so any card can be re-rolled reproducibly."""
     doc = {"cards": {}}
     if MANIFEST.exists():
         doc = json.loads(MANIFEST.read_text(encoding="utf-8"))
@@ -780,7 +404,7 @@ def write_manifest(cards: list[dict], new_records: dict[str, list[dict]]) -> Non
                 "artId": card["artId"],
                 "class": card["class"],
                 "rarity": card["rarity"],
-                "candidateDir": str(card_dir(card).relative_to(REPO)).replace("\\", "/"),
+                "candidateDir": str(set_dir(card).relative_to(REPO)).replace("\\", "/"),
                 "promotesTo": str(final_path(card).relative_to(REPO)).replace("\\", "/"),
             }
         )
@@ -801,9 +425,8 @@ def write_manifest(cards: list[dict], new_records: dict[str, list[dict]]) -> Non
 # ----------------------------------------------------------- contact sheet
 
 def contact_sheet(cards: list[dict], cls: str) -> None:
-    """One sheet per class: every candidate from every provider side by side,
-    plus a 220px tile — the size §1 says the art has to survive. Judged small
-    or not judged."""
+    """One sheet per (setId, class): every candidate side by side, plus a 220px tile —
+    the size the spec says the art has to survive. Judged small or not judged."""
     from PIL import Image, ImageDraw, ImageFont
 
     BG, INK, DIM, PAD, TILE, SMALL = (26, 24, 22), (208, 200, 188), (140, 132, 122), 24, 300, 220
@@ -818,7 +441,7 @@ def contact_sheet(cards: list[dict], cls: str) -> None:
 
     rows = []
     for card in cards:
-        paths = sorted(card_dir(card).glob("cand_*.png"))
+        paths = existing(card)
         if paths:
             rows.append((card, paths))
     if not rows:
@@ -843,15 +466,16 @@ def contact_sheet(cards: list[dict], cls: str) -> None:
             first = first or im
             x = PAD + i * (TILE + PAD)
             sheet.paste(im.resize((TILE, TILE), Image.LANCZOS), (x, top))
-            d.text((x, top + TILE + 4), p.stem.replace("cand_", ""), fill=DIM, font=font(13))
+            label = p.stem.split("__", 1)[1] if "__" in p.stem else "cand1"
+            d.text((x, top + TILE + 4), label, fill=DIM, font=font(13))
         x = PAD + cols * (TILE + PAD)
         sheet.paste(first.resize((SMALL, SMALL), Image.LANCZOS), (x, top))
         d.text((x, top + SMALL + 4), f"@ {SMALL}px (board read)", fill=DIM, font=font(13))
         y += row_h
 
-    # Sheet sits alongside the candidate folders it summarises, not at the root. One sheet
-    # per (setId, class): a class spans several expansions, and keying off rows[0] put the
-    # whole sheet in whichever set happened to sort first.
+    # Sheet sits alongside the candidates it summarises. One sheet per (setId, class): a class
+    # spans several expansions, and keying off rows[0] put the whole sheet in whichever set
+    # happened to sort first.
     dest = OUT / rows[0][0]["setId"] / f"SHEET_{cls}.png"
     dest.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(dest)
@@ -860,28 +484,22 @@ def contact_sheet(cards: list[dict], cls: str) -> None:
 
 # ------------------------------------------------------------ spend guard
 
-def estimate(provider: str, images: int) -> str:
-    spec = PROVIDERS[provider]
-    mins = images * spec["secs"] / 60
-    usd = spec["usd_per_image"]
-    money = (f"~${images * usd:.2f} (~${usd:.2f}/image, high quality)"
-             if usd is not None else "cost not priced here (cheap first pass)")
-    return (f"{images} image(s) on {provider} ({spec['model']}) "
-            f"~{mins:.0f} min wall-clock, {money}")
+def estimate(images: int) -> str:
+    mins = images * SECS_PER_IMAGE / 60
+    return (f"{images} image(s) on {MODEL} ~{mins:.0f} min wall-clock, "
+            f"~${images * USD_PER_IMAGE:.2f} (~${USD_PER_IMAGE:.2f}/image, high quality)")
 
 
-def require_explicit_selection(provider: str, cards: list[dict], candidates: int,
-                               selected: bool) -> bool:
-    """The expensive provider is opt-in per card. A fat-fingered full-batch run
-    on openai should be impossible, not merely unlikely."""
-    if provider != "openai" or selected:
+def require_explicit_selection(cards: list[dict], candidates: int, selected: bool) -> bool:
+    """Generation is opt-in per card, class or set. At ~$0.19 and ~5 minutes an image, a
+    fat-fingered whole-corpus run should be impossible, not merely unlikely."""
+    if selected:
         return True
-    print("REFUSED: --provider openai requires an explicit --card or --class.\n"
-          f"  It is the fallback: {PROVIDERS['openai']['note']}.\n"
-          f"  You asked for the whole batch: {estimate(provider, len(cards) * candidates)}.\n"
-          "  Run the gemini pass first (the default), then name the cards that "
-          "need the one-shot:\n"
-          "    gen_card_art.py --provider openai --card grave_harrower_of_ash",
+    print("REFUSED: generating needs an explicit --card, --class or --set.\n"
+          f"  You asked for the whole corpus: {estimate(len(cards) * candidates)}.\n"
+          "  Name what you want:\n"
+          "    gen_card_art.py --card grave_hushwight\n"
+          "    gen_card_art.py --set REKINDLING --only-missing-art",
           file=sys.stderr)
     return False
 
@@ -890,27 +508,20 @@ def require_explicit_selection(provider: str, cards: list[dict], candidates: int
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--provider", choices=sorted(PROVIDERS), default="gemini",
-                    help="gemini = first pass (default); openai = expensive fallback")
     ap.add_argument("--dry-run", action="store_true",
                     help="print the fully composed prompt per card, generate nothing")
     ap.add_argument("--card", action="append", metavar="ID", help="single card id (repeatable)")
     ap.add_argument("--class", dest="cls", metavar="NAME",
-                    help=f"one class only; docs source: {', '.join(sorted(CLASSES))}. "
-                         "With --from-seeds the name is the card's own class "
-                         "(neutral, clockwright, ...)")
-    ap.add_argument("--from-seeds", dest="from_seeds", action="store_true",
-                    help="take the per-card direction from the reviewed seed corpus "
-                         "(tooling/card-art-seeds/) instead of docs/design/card-drafts-*.md; "
-                         "this is the only source that reaches the cards still missing art")
+                    help="one class only (gravekeep, verdant, neutral, ...)")
+    ap.add_argument("--set", dest="set_id", metavar="SETID", help="one expansion only")
     ap.add_argument("--only-missing-art", dest="only_missing_art", action="store_true",
                     help="restrict to cards with no promoted png under Assets/Art/Cards/<setId>/")
-    ap.add_argument("--candidates", type=int, default=None, metavar="N",
-                    help="candidates per card (default 2 gemini / 1 openai, clamp 1-4)")
+    ap.add_argument("--candidates", type=int, default=1, metavar="N",
+                    help="candidates per card (default 1, clamp 1-4)")
     ap.add_argument("--skip-existing", dest="skip", action="store_true", default=True,
-                    help="skip cards with enough candidates from this provider (default)")
+                    help="skip cards that already have enough candidates (default)")
     ap.add_argument("--no-skip-existing", dest="skip", action="store_false",
-                    help="re-roll candidates even if they exist")
+                    help="add N more candidates even if some exist")
     ap.add_argument("--sheet-only", action="store_true",
                     help="rebuild contact sheets from what is already on disk")
     ap.add_argument("--to-unity", dest="to_unity", action="store_true",
@@ -918,22 +529,10 @@ def main() -> int:
                          "always 1 image per card, and the outgoing image is preserved first")
     args = ap.parse_args()
 
-    provider = args.provider
-    spec = PROVIDERS[provider]
-    candidates = spec["candidates"] if args.candidates is None else args.candidates
-
-    # Only the docs/design path needs this. --from-seeds reads tooling/card-art-seeds/ instead
-    # and never opens DESIGN, but the guard sat above the branch and refused the run anyway --
-    # so --from-seeds was unusable in this repo, which HAS no docs/design tree, and said the
-    # opposite of why. It is the seed corpus that is the live source; the prose corpus is the
-    # one that may legitimately be absent.
-    if not args.from_seeds and not DESIGN.is_dir():
-        print(f"docs design dir not found: {DESIGN}  (set EMBERFALL_DOCS). "
-              f"--from-seeds does not need it.", file=sys.stderr)
-        return 2
+    candidates = args.candidates
 
     try:
-        cards = load_seed_cards() if args.from_seeds else load_cards()
+        cards = load_seed_cards()
     except (OSError, ValueError, KeyError, json.JSONDecodeError) as e:
         print(f"card load failed: {e}", file=sys.stderr)
         return 2
@@ -941,20 +540,27 @@ def main() -> int:
     if args.only_missing_art:
         before = len(cards)
         cards = [c for c in cards if not has_promoted_art(c)]
-        print(f"--only-missing-art: {before} card(s) in source, "
+        print(f"--only-missing-art: {before} seeded card(s), "
               f"{len(cards)} with no promoted png, {before - len(cards)} already have art")
 
-    selected = bool(args.cls or args.card)
+    selected = bool(args.cls or args.card or args.set_id)
+    if args.set_id:
+        known = sorted({c["setId"] for c in cards})
+        if args.set_id not in known:
+            print(f"unknown set {args.set_id!r}; seeded sets: {', '.join(known)}",
+                  file=sys.stderr)
+            return 2
+        cards = [c for c in cards if c["setId"] == args.set_id]
     if args.cls:
         known = sorted({c["class"] for c in cards})
         if args.cls not in known:
-            print(f"unknown class {args.cls!r}; this source has: {', '.join(known)}",
+            print(f"unknown class {args.cls!r}; this selection has: {', '.join(known)}",
                   file=sys.stderr)
             return 2
         cards = [c for c in cards if c["class"] == args.cls]
     if args.card:
-        # Accept whatever the caller has to hand. Cards are keyed by artId now, but a human
-        # typing --card knows the card by its handle, and a caller reading a row has a number.
+        # Accept whatever the caller has to hand. Cards are keyed by artId, but a human typing
+        # --card knows the card by its handle, and a caller reading a row has a number.
         alias = {}
         for c in cards:
             alias[c["id"]] = c["id"]
@@ -977,24 +583,25 @@ def main() -> int:
             print("=" * 78)
             print(f"{card['id']}  [{card['class']} / {card['rarity']} / {card['cost']} mana]")
             n = 1 if args.to_unity else candidates
-            print(f"  provider {provider} ({spec['model']}) x{n} "
+            print(f"  model    {MODEL} x{n} "
                   f"{'image (direct)' if args.to_unity else 'candidate(s)'}")
             print(f"  file     {card['file']}.png  ({EDGE}x{EDGE})")
             if args.to_unity:
                 print(f"  writes   {final_path(card).relative_to(REPO)}"
                       f"{'  (OVERWRITES; previous preserved)' if final_path(card).exists() else ''}")
             else:
-                print(f"  cands    {card_dir(card).relative_to(REPO)}/cand_{provider}_N.png")
+                print(f"  cands    {candidate_path(card, 1).relative_to(REPO)}")
+                print(f"  prompt   {prompt_path(card).relative_to(REPO)}")
                 print(f"  final    {final_path(card).relative_to(REPO)}")
             print("-" * 78)
-            print(build_prompt(card, provider))
+            print(card["prompt"])
             print()
         print("=" * 78)
         print(f"{len(cards)} prompt(s) composed, in generation order "
               f"(legendary -> epic -> rare -> common). Nothing generated.")
-        print(estimate(provider, len(cards) * candidates))
-        if provider == "openai" and not selected:
-            print("NOTE: a real run would be REFUSED — openai needs --card/--class.")
+        print(estimate(len(cards) * candidates))
+        if not selected:
+            print("NOTE: a real run would be REFUSED — needs --card, --class or --set.")
         return 0
 
     if args.sheet_only:
@@ -1004,25 +611,24 @@ def main() -> int:
         return 0
 
     if not 1 <= candidates <= 4:
-        print("--candidates must be 1-4 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/design/art-brief-m1.md §7.2)", file=sys.stderr)
+        print("--candidates must be 1-4", file=sys.stderr)
         return 2
 
-    if not require_explicit_selection(provider, cards, candidates, selected):
+    if not require_explicit_selection(cards, candidates, selected):
         return 2
 
-    key = os.environ.get(spec["env"])
+    key = os.environ.get(ENV_KEY)
     if not key:
-        print(f"{spec['env']} is not set — required for --provider {provider} "
-              f"({spec['model']}).\n"
+        print(f"{ENV_KEY} is not set — required to generate ({MODEL}).\n"
               f"  Set it in the environment, e.g. PowerShell:\n"
-              f"    [Environment]::SetEnvironmentVariable('{spec['env']}', '<key>', 'User')\n"
+              f"    [Environment]::SetEnvironmentVariable('{ENV_KEY}', '<key>', 'User')\n"
               f"  then start a NEW shell. --dry-run needs no key at all.",
               file=sys.stderr)
         return 2
 
-    print(estimate(provider, len(cards) * (1 if args.to_unity else candidates)))
+    print(estimate(len(cards) * (1 if args.to_unity else candidates)))
     OUT.mkdir(parents=True, exist_ok=True)
-    results = {c["id"]: generate(c, provider, key, candidates, args.skip, args.to_unity)
+    results = {c["id"]: generate(c, key, candidates, args.skip, args.to_unity)
                for c in cards}
     new_records = {cid: recs for cid, (recs, _) in results.items()}
     skipped = {cid: why for cid, (_, why) in results.items() if why}
@@ -1042,12 +648,12 @@ def main() -> int:
     print(f"\n{len(cards)} card(s): {made} image(s) generated, {len(skipped)} skipped")
     if skipped:
         print("SKIPPED - art already on disk, NOT generated this run "
-              "(pass --no-skip-existing to re-roll):")
+              "(pass --no-skip-existing to add more):")
         for cid in sorted(skipped):
             print(f"    {by_id[cid]['file']}  ({skipped[cid]})")
 
     if args.to_unity:
-        print(f"\nWrote directly to {UNITY_CARDS.relative_to(REPO)}/<setId>/<art_file>.png")
+        print(f"\nWrote directly to {UNITY_CARDS.relative_to(REPO)}/<setId>/<artId>.png")
         missing = [m for m in (check_meta(by_id[cid]) for cid in new_records if new_records[cid])
                    if m]
         if missing:
@@ -1058,7 +664,7 @@ def main() -> int:
     else:
         print(f"\n{made} image(s) -> {OUT}")
         print("Human picks one candidate per card, then promote it to "
-              f"{UNITY_CARDS.relative_to(REPO)}/<setId>/<art_file>.png")
+              f"{UNITY_CARDS.relative_to(REPO)}/<setId>/<artId>.png")
     return 0 if made or args.skip else 1
 
 
