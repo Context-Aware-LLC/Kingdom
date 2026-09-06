@@ -52,30 +52,6 @@
     background-color: rgba(11, 14, 19, 0.42);
 }
 
-/* ---------- Right-side flag animation (Art/VFX/right_flag_sheet.png) ----------
- * Overlays the SAME torn banner already painted into MainMenu_Backdrop.png, on the pole near the
- * top-right, with a 7-frame flipbook so it moves. Box measured by cropping the backdrop PNG and
- * reading pixel bounds against the 2400x1080 authored canvas .main-menu paints at (see the unit
- * block atop theme.uss) — good to the eye at the authored aspect, not proven for every aspect the
- * backdrop's own scale-and-crop re-crops under. Nudge these four numbers on glass if it drifts off
- * the pole. MainMenuController.AdvanceFlagFrame swaps the --f0..--f6 modifiers below on a schedule.
- */
-.mm-flag-right {
-    position: absolute;
-    left: 2010px;
-    top: 4px;
-    width: 300px;
-    height: 715px;
-    -unity-background-scale-mode: scale-to-fit;
-}
-.mm-flag-right--f0 { background-image: url("project://database/Assets/Art/VFX/right_flag_sheet.png?fileID=-1463624681&guid=11b53db98cbd9f34988c045b48219e12&type=3#right_flag_sheet_0"); }
-.mm-flag-right--f1 { background-image: url("project://database/Assets/Art/VFX/right_flag_sheet.png?fileID=-1770429784&guid=11b53db98cbd9f34988c045b48219e12&type=3#right_flag_sheet_1"); }
-.mm-flag-right--f2 { background-image: url("project://database/Assets/Art/VFX/right_flag_sheet.png?fileID=295897685&guid=11b53db98cbd9f34988c045b48219e12&type=3#right_flag_sheet_2"); }
-.mm-flag-right--f3 { background-image: url("project://database/Assets/Art/VFX/right_flag_sheet.png?fileID=1133275550&guid=11b53db98cbd9f34988c045b48219e12&type=3#right_flag_sheet_3"); }
-.mm-flag-right--f4 { background-image: url("project://database/Assets/Art/VFX/right_flag_sheet.png?fileID=630926786&guid=11b53db98cbd9f34988c045b48219e12&type=3#right_flag_sheet_4"); }
-.mm-flag-right--f5 { background-image: url("project://database/Assets/Art/VFX/right_flag_sheet.png?fileID=-948771938&guid=11b53db98cbd9f34988c045b48219e12&type=3#right_flag_sheet_5"); }
-.mm-flag-right--f6 { background-image: url("project://database/Assets/Art/VFX/right_flag_sheet.png?fileID=-1596008840&guid=11b53db98cbd9f34988c045b48219e12&type=3#right_flag_sheet_6"); }
-
 /* ---------- Command assembly ----------
  * Phase one of the character-led lobby: navigation owns the left third and the right side remains
  * a cinematic stage. A selected character can be added to that stage later without moving any of

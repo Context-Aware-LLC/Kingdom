@@ -41,11 +41,6 @@ namespace Emberfall.Presentation
         private Label _leaderboardUpdated;
         private CancellationTokenSource _leaderboardRequest;
 
-        private VisualElement _flag;
-        private int _flagFrame;
-        private const int FlagFrameCount = 7;
-        private const long FlagFrameIntervalMs = 110;
-
         private Label _shardBalance;
         private VisualElement _vaultArt;
         private Label _vaultPackCount;
@@ -97,7 +92,6 @@ namespace Emberfall.Presentation
             BindShardBalance();
             RefreshShardBalance();
             BindVaultEntry();
-            BindFlagAnimation();
 
             MountSettingsOverlay();
             _signIn = new SignInGateController(_root, AuthGateway.Provider);
@@ -539,26 +533,6 @@ namespace Emberfall.Presentation
                 if (_vaultArt == null || pieces == null || pieces.Count == 0) return;
                 PackWrapperBaker.ApplyTo(_vaultArt, pieces[0].Sprite);
             });
-        }
-
-        // ── Right-side flag (mainmenu.uss: .mm-flag-right, overlays the painted banner in
-        // MainMenu_Backdrop.png) ────────────────────────────────────────────────────────
-
-        /// <summary>Cycles the seven baked sub-sprite classes on a schedule tied to the flag
-        /// element's own panel, so it stops on its own when this screen is disabled — same as
-        /// every other schedule.Execute use on this controller (see RevealMenu).</summary>
-        private void BindFlagAnimation()
-        {
-            _flag = _root.Q<VisualElement>("flag-right");
-            if (_flag == null) return;
-            _flag.schedule.Execute(AdvanceFlagFrame).Every(FlagFrameIntervalMs);
-        }
-
-        private void AdvanceFlagFrame()
-        {
-            _flag.RemoveFromClassList($"mm-flag-right--f{_flagFrame}");
-            _flagFrame = (_flagFrame + 1) % FlagFrameCount;
-            _flag.AddToClassList($"mm-flag-right--f{_flagFrame}");
         }
 
         private void BindLeaderboard()
