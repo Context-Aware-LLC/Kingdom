@@ -4,8 +4,8 @@
     "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 296,
-  "corpusDigest": "6af7db2439d79773",
+  "totalCards": 297,
+  "corpusDigest": "73e4d16d4f7f3d0d",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -24,10 +24,10 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 296,
+    "total": 297,
     "typeSplit": {
       "MINION": 193,
-      "SPELL": 81,
+      "SPELL": 82,
       "WEAPON": 14,
       "HERO_POWER": 8
     },
@@ -47,10 +47,10 @@
       "LIFEDRAIN": 6
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 68,
+      "ANY_FRIENDLY_MINION": 67,
+      "ANY_MINION": 28,
       "ANY_ENEMY": 27,
-      "ANY_MINION": 27,
-      "ANY_ENEMY_MINION": 23,
+      "ANY_ENEMY_MINION": 24,
       "FRIENDLY_HERO": 18,
       "ENEMY_HERO": 11,
       "ANY_CHARACTER": 4,
@@ -62,7 +62,7 @@
     "costDistribution": {
       "0": 9,
       "1": 31,
-      "2": 73,
+      "2": 74,
       "3": 71,
       "4": 51,
       "5": 21,
@@ -73,7 +73,7 @@
     },
     "rarityBreakdown": {
       "COMMON": 130,
-      "RARE": 96,
+      "RARE": 97,
       "EPIC": 52,
       "LEGENDARY": 18
     },
@@ -115,10 +115,10 @@
   },
   "byClass": {
     "CLOCKWRIGHT": {
-      "total": 31,
+      "total": 32,
       "typeSplit": {
         "MINION": 20,
-        "SPELL": 9,
+        "SPELL": 10,
         "WEAPON": 1,
         "HERO_POWER": 1
       },
@@ -132,14 +132,14 @@
       },
       "selectorFrequency": {
         "ANY_FRIENDLY_MINION": 11,
-        "ANY_MINION": 3,
+        "ANY_MINION": 4,
         "ANY_CHARACTER": 1,
         "SELF": 1
       },
       "costDistribution": {
         "0": 1,
         "1": 2,
-        "2": 6,
+        "2": 7,
         "3": 9,
         "4": 7,
         "5": 2,
@@ -148,7 +148,7 @@
       },
       "rarityBreakdown": {
         "COMMON": 12,
-        "RARE": 11,
+        "RARE": 12,
         "EPIC": 6,
         "LEGENDARY": 2
       },
@@ -310,10 +310,10 @@
       }
     },
     "NEUTRAL": {
-      "total": 41,
+      "total": 39,
       "typeSplit": {
         "MINION": 36,
-        "SPELL": 3,
+        "SPELL": 1,
         "WEAPON": 2,
         "HERO_POWER": 0
       },
@@ -330,24 +330,23 @@
         "LIFEDRAIN": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 4,
-        "FRIENDLY_HERO": 2,
-        "ANY_MINION": 1
+        "ANY_FRIENDLY_MINION": 3,
+        "FRIENDLY_HERO": 2
       },
       "costDistribution": {
         "0": 6,
         "1": 4,
         "2": 11,
         "3": 10,
-        "4": 7,
+        "4": 5,
         "5": 1,
         "6": 1,
         "7": 1
       },
       "rarityBreakdown": {
         "COMMON": 28,
-        "RARE": 7,
-        "EPIC": 4,
+        "RARE": 6,
+        "EPIC": 3,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -379,10 +378,10 @@
       }
     },
     "NIGHTVEIL": {
-      "total": 31,
+      "total": 32,
       "typeSplit": {
         "MINION": 18,
-        "SPELL": 10,
+        "SPELL": 11,
         "WEAPON": 2,
         "HERO_POWER": 1
       },
@@ -396,7 +395,7 @@
         "LIFEDRAIN": 1
       },
       "selectorFrequency": {
-        "ANY_ENEMY_MINION": 6,
+        "ANY_ENEMY_MINION": 7,
         "ANY_FRIENDLY_MINION": 5,
         "ANY_MINION": 5,
         "ENEMY_HERO": 3,
@@ -406,14 +405,14 @@
         "1": 3,
         "2": 8,
         "3": 9,
-        "4": 5,
+        "4": 6,
         "5": 4,
         "6": 2
       },
       "rarityBreakdown": {
         "COMMON": 12,
         "RARE": 11,
-        "EPIC": 6,
+        "EPIC": 7,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -439,10 +438,10 @@
       }
     },
     "STONEWARDEN": {
-      "total": 31,
+      "total": 32,
       "typeSplit": {
         "MINION": 19,
-        "SPELL": 10,
+        "SPELL": 11,
         "WEAPON": 1,
         "HERO_POWER": 1
       },
@@ -458,6 +457,7 @@
         "FRIENDLY_HERO": 4,
         "ANY_ENEMY_MINION": 3,
         "ANY_ENEMY": 1,
+        "ANY_MINION": 1,
         "ENEMY_HERO": 1
       },
       "costDistribution": {
@@ -465,7 +465,7 @@
         "1": 4,
         "2": 6,
         "3": 6,
-        "4": 5,
+        "4": 6,
         "5": 2,
         "6": 4,
         "7": 1,
@@ -473,7 +473,7 @@
       },
       "rarityBreakdown": {
         "COMMON": 13,
-        "RARE": 10,
+        "RARE": 11,
         "EPIC": 6,
         "LEGENDARY": 2
       },
@@ -2118,26 +2118,6 @@
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "verdant_thornfang_matron",
-      "sourceFile": "Emberfall.cards.json"
-    },
-    {
-      "id": 166,
-      "name": "Choking Vines",
-      "type": "SPELL",
-      "cost": 4,
-      "attack": null,
-      "health": null,
-      "durability": null,
-      "class": "NEUTRAL",
-      "rarity": "RARE",
-      "keywords": [],
-      "selectors": [
-        "ANY_MINION"
-      ],
-      "tribe": null,
-      "setId": "EMBERFALL",
-      "collectible": true,
-      "artId": "neutral_choking_vines",
       "sourceFile": "Emberfall.cards.json"
     },
     {
@@ -4608,22 +4588,22 @@
     },
     {
       "id": 200,
-      "name": "Truce Pact",
+      "name": "Double Cross",
       "type": "SPELL",
       "cost": 4,
       "attack": null,
       "health": null,
       "durability": null,
-      "class": "NEUTRAL",
+      "class": "NIGHTVEIL",
       "rarity": "EPIC",
       "keywords": [],
       "selectors": [
-        "ANY_FRIENDLY_MINION"
+        "ANY_ENEMY_MINION"
       ],
       "tribe": null,
       "setId": "REKINDLING",
       "collectible": true,
-      "artId": "neutral_truce_pact",
+      "artId": "night_double_cross",
       "sourceFile": "Rekindling.cards.json"
     },
     {
@@ -6660,6 +6640,46 @@
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "clock_refraction_module",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 232,
+      "name": "Scrap for Parts",
+      "type": "SPELL",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "CLOCKWRIGHT",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_MINION"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "clock_scrap_for_parts",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 166,
+      "name": "Petrify",
+      "type": "SPELL",
+      "cost": 4,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "STONEWARDEN",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_MINION"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "stone_petrify",
       "sourceFile": "Rekindling.cards.json"
     }
   ]

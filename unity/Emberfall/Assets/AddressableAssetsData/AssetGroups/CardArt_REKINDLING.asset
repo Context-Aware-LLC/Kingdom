@@ -365,6 +365,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1b64312047cc1745abf419d037f6ce5
+    m_Address: card_art/night_double_cross
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a1e4eae0ee175144791baad341366cde
     m_Address: card_art/stone_ironclad_grunt
     m_ReadOnly: 0
@@ -377,6 +382,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a9cd39cbac6140b88082554469c5b03f
     m_Address: card_art/stone_quarry_worker
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa3b1e6e68c48ca4da5e2cde85530834
+    m_Address: card_art/clock_scrap_for_parts
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -547,6 +557,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fdbab9050c97484448305c8673adb650
     m_Address: card_art/night_shadow_slip
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fec885e77562bfe4ba71c9ba85e333d5
+    m_Address: card_art/stone_petrify
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

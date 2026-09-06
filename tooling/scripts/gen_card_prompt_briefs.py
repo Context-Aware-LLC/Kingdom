@@ -77,8 +77,8 @@ CARD_DATA_DIR = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
 SEEDS_DIR = REPO / "tooling" / "card-art-seeds"
 OUT_ROOT = REPO / "art-pipeline" / "card-art"
 
-CLASSES_MD = DOCS / "dev-docs" / "art" / "descriptors" / "classes.md"
-WORLD_MD = DOCS / "dev-docs" / "art" / "descriptors" / "world.md"
+CLASSES_MD = DOCS / "dev-docs" / "design" / "art" / "descriptors" / "classes.md"
+WORLD_MD = DOCS / "dev-docs" / "design" / "art" / "descriptors" / "world.md"
 
 # ---------------------------------------------------------------- boilerplate
 
@@ -477,12 +477,40 @@ def main():
     ap.add_argument("--class", dest="class_filter", default=None)
     ap.add_argument("--card", dest="card_ids", action="append", default=None)
     ap.add_argument("--out", default=None, help="write to this file instead of stdout")
+    # --new: a card that doesn't exist in the corpus yet (planned, or a reclass/rename in
+    # progress). --card requires a real row so a typo fails loudly instead of silently drafting
+    # against the wrong card; --new is the explicit, separate opt-in for "there is no row" —
+    # it needs nothing from card data but --set/--class, since scale_clause() takes no stats at
+    # all for SPELL/WEAPON/HERO_POWER and delivery_block() only needs setId + an artId, which a
+    # not-yet-real card can supply as its own slugified name.
+    ap.add_argument("--new", dest="new_name", default=None,
+                     help="draft a brief for a card with no corpus row yet, by name "
+                          "(requires --class; use --type for anything but MINION)")
+    ap.add_argument("--type", dest="new_type", default="MINION",
+                     choices=["MINION", "SPELL", "WEAPON", "HERO_POWER"],
+                     help="--new only: card type, since it decides the scale clause")
     args = ap.parse_args()
 
     class_descriptors = load_class_descriptors()
     world_tone = load_world_tone(args.set)
-    seeds = load_seeds(args.set)
-    cards = load_cards(args.set, args.class_filter, args.card_ids)
+
+    if args.new_name:
+        if not args.class_filter:
+            print("--new requires --class.", file=sys.stderr)
+            sys.exit(1)
+        slug = re.sub(r"[^a-z0-9]+", "_", args.new_name.strip().lower()).strip("_")
+        cards = [{
+            "id": f"NEW:{slug}",
+            "name": args.new_name.strip(),
+            "class": args.class_filter.upper(),
+            "setId": args.set,
+            "artId": slug,
+            "type": args.new_type,
+        }]
+        seeds = {}
+    else:
+        seeds = load_seeds(args.set)
+        cards = load_cards(args.set, args.class_filter, args.card_ids)
 
     if not cards:
         print("No matching cards found.", file=sys.stderr)
