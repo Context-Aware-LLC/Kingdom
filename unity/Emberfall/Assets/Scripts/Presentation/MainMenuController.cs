@@ -233,7 +233,7 @@ namespace Emberfall.Presentation
             bool needsName = _account != null && _account.NeedsDisplayName;
             if (needsAccount || needsName)
             {
-                Go("AccountCreate");
+                ScreenNav.Go(ScreenNav.AccountCreate);
                 return;
             }
 
@@ -251,12 +251,12 @@ namespace Emberfall.Presentation
             RenderVaultEntry(snapshot);
             if (snapshot.PackCount(StarterPackId) <= 0) return;
 
-            PackVaultController.ReturnScene = "MainMenu";
+            PackVaultController.ReturnScene = ScreenNav.MainMenu;
             PackVaultController.Pending = null;
             PackVaultController.Mode = FirstRunMarkers.Has(FirstRunMarkers.Gift)
                 ? PackVaultMode.Vault
                 : PackVaultMode.Gift;
-            Go("PackVault");
+            ScreenNav.Go(ScreenNav.PackVault);
         }
 
         /// <summary>Bootstrap (identity/account) is done. Reveal the menu once the boot plate has
@@ -448,32 +448,8 @@ namespace Emberfall.Presentation
         private void OnFindGame()
         {
             MatchDeckSelection.BeginChoosing();
-            CharacterRosterController.ReturnScene = "MainMenu";
-            Go("CharacterRoster");
-        }
-
-        /// <summary>
-        /// Load a scene by name, reporting the one failure mode that is otherwise silent.
-        ///
-        /// <para><b>A scene missing from the build list does not throw a useful error</b> — in a player
-        /// it is simply not there, and in the Editor <c>LoadScene</c> needs it in
-        /// <c>EditorBuildSettings</c> or nothing happens. Both present as a dead button. The build list
-        /// is kept in sync by <c>Emberfall/Build/Sync Scene List</c>; this check is what tells you it
-        /// wasn't.</para>
-        /// </summary>
-        private static void Go(string sceneName)
-        {
-            // CanStreamedLevelBeLoaded, not SceneUtility.GetBuildIndexByScenePath — the latter wants a
-            // full asset path and answers -1 for a bare scene name, which would make this guard reject
-            // every load it was written to protect.
-            if (!Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                Debug.LogError($"[MainMenu] Scene '{sceneName}' is not in the build list, so this button " +
-                               "cannot do anything. Run Emberfall/Build/Sync Scene List.");
-                return;
-            }
-            Debug.Log($"[MainMenu] → {sceneName}");
-            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+            CharacterRosterController.ReturnScene = ScreenNav.MainMenu;
+            ScreenNav.Go(ScreenNav.CharacterRoster);
         }
 
         /// <summary>
@@ -483,9 +459,9 @@ namespace Emberfall.Presentation
         private void OnCollection()
         {
             MatchDeckSelection.Cancel();
-            CollectionController.ReturnScene = "MainMenu";
+            CollectionController.ReturnScene = ScreenNav.MainMenu;
             CollectionController.PendingDeckId = "";
-            Go("Collection");
+            ScreenNav.Go(ScreenNav.Collection);
         }
 
         /// <summary>Store → <c>Shop</c>. It rendered as an overlay on this screen until
@@ -493,8 +469,8 @@ namespace Emberfall.Presentation
         /// already full-screen and opaque — the overlay was hosting, not design.</summary>
         private void OnStore()
         {
-            ShopScreenController.ReturnScene = "MainMenu";
-            Go("Shop");
+            ShopScreenController.ReturnScene = ScreenNav.MainMenu;
+            ScreenNav.Go(ScreenNav.Shop);
         }
 
         /// <summary>Open the player's unopened packs as a first-class destination. The round menu
@@ -502,10 +478,10 @@ namespace Emberfall.Presentation
         /// caller-writes-its-way-home contract as the store and collection.</summary>
         private void OnCardVault()
         {
-            PackVaultController.ReturnScene = "MainMenu";
+            PackVaultController.ReturnScene = ScreenNav.MainMenu;
             PackVaultController.Pending = null;
             PackVaultController.Mode = PackVaultMode.Vault;
-            Go("PackVault");
+            ScreenNav.Go(ScreenNav.PackVault);
         }
 
         /// <summary>The vault sigil is a permanent first-class destination. Its badge reports the

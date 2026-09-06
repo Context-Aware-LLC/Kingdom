@@ -38,7 +38,7 @@ namespace Emberfall.Presentation
     public sealed class CharacterCreateController : MonoBehaviour
     {
         /// <summary>Where Cancel and a completed creation go. Set by the caller before loading.</summary>
-        public static string ReturnScene = "CharacterRoster";
+        public static string ReturnScene = ScreenNav.CharacterRoster;
 
         /// <summary>
         /// Every real class is pairable; NEUTRAL is not a class a deck can be built on. A pairing
@@ -87,7 +87,7 @@ namespace Emberfall.Presentation
         private void OnEnable()
         {
             _returnScene = string.IsNullOrEmpty(ReturnScene) ? "CharacterRoster" : ReturnScene;
-            ReturnScene = "CharacterRoster";
+            ReturnScene = ScreenNav.CharacterRoster;
 
             _root = GetComponent<UIDocument>().rootVisualElement?.Q<VisualElement>("root");
             if (_root == null)
@@ -162,7 +162,7 @@ namespace Emberfall.Presentation
 
         private void Wire()
         {
-            _root.Q<Button>("create-cancel")?.RegisterCallback<ClickEvent>(_ => Go(_returnScene));
+            _root.Q<Button>("create-cancel")?.RegisterCallback<ClickEvent>(_ => ScreenNav.Go(_returnScene));
             _root.Q<Button>("create-detail-back")?.RegisterCallback<ClickEvent>(_ => ShowView(CreateView.Picker));
             _detailSelect?.RegisterCallback<ClickEvent>(_ => TogglePick(_detailClass));
             _root.Q<Button>("create-change")?.RegisterCallback<ClickEvent>(_ => ChangeSecondary());
@@ -593,25 +593,13 @@ namespace Emberfall.Presentation
         }
 
         // Both doors lead to one controller (#152) in one scene (#154): handing it a deck is what
-        // puts it in deckbuild mode, and View Collection hands it none. Both call Go("Collection");
+        // puts it in deckbuild mode, and View Collection hands it none. Both call ScreenNav.Go(ScreenNav.Collection);
         // the only difference between the two doors is the pending deck.
         private void OpenDeckForEdit(string deckId)
         {
-            CollectionController.ReturnScene = "CharacterRoster";
+            CollectionController.ReturnScene = ScreenNav.CharacterRoster;
             CollectionController.PendingDeckId = deckId;
-            Go("Collection");
-        }
-
-        private static void Go(string sceneName)
-        {
-            if (!UnityEngine.Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                Debug.LogError($"[DeckCreate] Scene '{sceneName}' is not in the build list. " +
-                               "Run Emberfall/Build/Sync Scene List, and remember that menu item does " +
-                               "not reach EditorBuildSettings.asset on disk — hand-edit it to match.");
-                return;
-            }
-            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+            ScreenNav.Go(ScreenNav.Collection);
         }
     }
 }

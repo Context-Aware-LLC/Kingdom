@@ -28,7 +28,7 @@ namespace Emberfall.Presentation
         /// caller-writes-its-own-way-home shape <see cref="CollectionController.ReturnScene"/>
         /// uses. The default keeps Back working if the scene is entered directly from the
         /// Editor.</summary>
-        public static string ReturnScene = "MainMenu";
+        public static string ReturnScene = ScreenNav.MainMenu;
 
         private ShopPanelController _shop;
 
@@ -59,7 +59,7 @@ namespace Emberfall.Presentation
             _shop.Open();
         }
 
-        private void Exit() => Go(ReturnScene);
+        private void Exit() => ScreenNav.Go(ReturnScene);
 
         /// <summary>Send a freshly bought pack to the pack vault rather than opening it over the
         /// store. Returns false without touching anything if that scene cannot be loaded, which
@@ -89,25 +89,10 @@ namespace Emberfall.Presentation
 
             // Come back to the store, not to whatever opened the store: the player is mid-shopping
             // and the wallet they just spent from is here.
-            PackVaultController.ReturnScene = "Shop";
+            PackVaultController.ReturnScene = ScreenNav.Shop;
             PackVaultController.Pending = receipt;
             UnityEngine.SceneManagement.SceneManager.LoadScene(vaultScene);
             return true;
-        }
-
-        /// <summary>Load a scene by name, reporting the one failure mode that is otherwise silent
-        /// (a scene missing from the build list is a dead button with nothing logged in the
-        /// Editor). Mirrors <c>MainMenuController.Go</c> — see there for why
-        /// <c>CanStreamedLevelBeLoaded</c> over <c>GetBuildIndexByScenePath</c>.</summary>
-        private static void Go(string sceneName)
-        {
-            if (!Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                Debug.LogError($"[Shop] Scene '{sceneName}' is not in the build list, so this " +
-                               "button cannot do anything. Run Emberfall/Build/Sync Scene List.");
-                return;
-            }
-            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
         }
     }
 }

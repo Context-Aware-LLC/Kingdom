@@ -18,8 +18,6 @@ namespace Emberfall.Presentation
     [RequireComponent(typeof(UIDocument))]
     public sealed class ConnectionFailedOverlay : MonoBehaviour
     {
-        private const string MainMenuSceneName = "MainMenu";
-
         public void Init(string reason)
         {
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
@@ -45,14 +43,6 @@ namespace Emberfall.Presentation
             SceneManager.LoadScene(scene.name);
         }
 
-        private static void GoToMenu()
-        {
-            if (!Application.CanStreamedLevelBeLoaded(MainMenuSceneName))
-            {
-                Debug.LogError($"[ConnectionFailed] Scene '{MainMenuSceneName}' is not in the build list; cannot return to menu.");
-                return;
-            }
-            SceneManager.LoadScene(MainMenuSceneName);
-        }
+        private static void GoToMenu() => ScreenNav.Go(ScreenNav.MainMenu);
     }
 }

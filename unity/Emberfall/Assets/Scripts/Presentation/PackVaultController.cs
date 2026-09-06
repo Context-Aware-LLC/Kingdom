@@ -80,7 +80,7 @@ namespace Emberfall.Presentation
         /// caller-writes-its-own-way-home shape <see cref="CollectionController.ReturnScene"/> and
         /// <see cref="ShopScreenController.ReturnScene"/> use. Consumed on arrival and reset, so a
         /// caller that forgets to set it does not inherit the last one's answer.</summary>
-        public static string ReturnScene = "MainMenu";
+        public static string ReturnScene = ScreenNav.MainMenu;
 
         /// <summary>A receipt opened somewhere else, to be revealed on arrival. Consumed on read: a
         /// receipt is one opening, and leaving it set would replay the same cards the next time
@@ -174,7 +174,7 @@ namespace Emberfall.Presentation
             Mode = PackVaultMode.Vault;
 
             _returnScene = string.IsNullOrEmpty(ReturnScene) ? "MainMenu" : ReturnScene;
-            ReturnScene = "MainMenu";
+            ReturnScene = ScreenNav.MainMenu;
 
             // The gift goes home to the menu whatever the last caller left in ReturnScene. It is the
             // tail of first run, not a detour out of some screen the player chose to be on.
@@ -740,20 +740,6 @@ namespace Emberfall.Presentation
         private bool Alive(CancellationToken token)
             => this != null && isActiveAndEnabled && !token.IsCancellationRequested;
 
-        private void Exit() => Go(_returnScene);
-
-        /// <summary>Load a scene by name, reporting the one failure mode that is otherwise silent
-        /// (a scene missing from the build list is a dead button with nothing logged in the
-        /// Editor). Mirrors <c>ShopScreenController.Go</c>.</summary>
-        private static void Go(string sceneName)
-        {
-            if (!Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                Debug.LogError($"[PackVault] Scene '{sceneName}' is not in the build list, so this " +
-                               "button cannot do anything. Run Emberfall/Build/Sync Scene List.");
-                return;
-            }
-            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
-        }
+        private void Exit() => ScreenNav.Go(_returnScene);
     }
 }

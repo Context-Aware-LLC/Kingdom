@@ -321,11 +321,11 @@ namespace Emberfall.Presentation
         {
             if (_account != null && _account.Decks().Count == 0)
             {
-                CharacterRosterController.ReturnScene = "MainMenu";
-                Go("CharacterRoster");
+                CharacterRosterController.ReturnScene = ScreenNav.MainMenu;
+                ScreenNav.Go(ScreenNav.CharacterRoster);
                 return;
             }
-            Go("MainMenu");
+            ScreenNav.Go(ScreenNav.MainMenu);
         }
 
         private void SetBusy(bool busy)
@@ -343,16 +343,6 @@ namespace Emberfall.Presentation
             // A space, not empty: an empty label collapses to zero height and the form jumps by a
             // line every time a refusal appears or clears.
             _nameError.text = string.IsNullOrEmpty(message) ? " " : message;
-        }
-
-        private static void Go(string sceneName)
-        {
-            if (Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                SceneManager.LoadScene(sceneName);
-                return;
-            }
-            Debug.LogError($"[AccountCreate] Scene '{sceneName}' is not in the build list — staying put.");
         }
     }
 }

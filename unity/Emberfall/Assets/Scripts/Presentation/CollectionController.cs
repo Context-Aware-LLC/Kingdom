@@ -56,7 +56,7 @@ namespace Emberfall.Presentation
     public sealed class CollectionController : MonoBehaviour
     {
         /// <summary>Where the persistent screen's Back control returns. Set by the caller.</summary>
-        public static string ReturnScene = "MainMenu";
+        public static string ReturnScene = ScreenNav.MainMenu;
 
         /// <summary>Which saved deck to open, or empty to browse. Consumed on read.
         ///
@@ -990,8 +990,8 @@ namespace Emberfall.Presentation
         private void ManageDecks()
         {
             if (EditingDeck) SaveDeck();
-            CharacterRosterController.ReturnScene = "Collection";
-            Go("CharacterRoster");
+            CharacterRosterController.ReturnScene = ScreenNav.Collection;
+            ScreenNav.Go(ScreenNav.CharacterRoster);
         }
 
         // ---- Deck ListView ----
@@ -1265,7 +1265,7 @@ namespace Emberfall.Presentation
         private void Exit()
         {
             if (EditingDeck) SaveDeck();
-            Go(ReturnScene);
+            ScreenNav.Go(ReturnScene);
         }
 
         /// <summary>Persist the deck as-is. Never legality-gated (collection-deckbuilder-spec §1,
@@ -1276,21 +1276,6 @@ namespace Emberfall.Presentation
             if (!EditingDeck) return;
             _account.Save(_deck);
             Debug.Log($"[Collection] Saved '{_deck.Name}' ({_deck.TotalCount} cards).");
-        }
-
-        /// <summary>Load a scene by name, reporting the one failure mode that is otherwise silent
-        /// (a scene missing from the build list is a dead button with nothing logged in the Editor).
-        /// Mirrors <c>MainMenuController.Go</c> — see there for why <c>CanStreamedLevelBeLoaded</c>
-        /// over <c>GetBuildIndexByScenePath</c>.</summary>
-        private static void Go(string sceneName)
-        {
-            if (!Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                Debug.LogError($"[Collection] Scene '{sceneName}' is not in the build list, so this " +
-                               "button cannot do anything. Run Emberfall/Build/Sync Scene List.");
-                return;
-            }
-            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
         }
 
         /// <summary>
