@@ -83,7 +83,7 @@ namespace Emberfall.Presentation
         /// Where Back returns for this visit. Collection sets this when the drawer's management
         /// doorway is used; every other entry leaves the Main Menu default. Consumed on enable.
         /// </summary>
-        public static string ReturnScene = "MainMenu";
+        public static string ReturnScene = ScreenNav.MainMenu;
 
         private VisualElement _root;
         private PlayerAccount _account;
@@ -147,7 +147,7 @@ namespace Emberfall.Presentation
         private void OnEnable()
         {
             _returnScene = string.IsNullOrEmpty(ReturnScene) ? "MainMenu" : ReturnScene;
-            ReturnScene = "MainMenu";
+            ReturnScene = ScreenNav.MainMenu;
             _root = GetComponent<UIDocument>().rootVisualElement?.Q<VisualElement>("root");
             if (_root == null)
             {
@@ -238,7 +238,7 @@ namespace Emberfall.Presentation
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ =>
             {
                 MatchDeckSelection.Cancel();
-                Go(_returnScene);
+                ScreenNav.Go(_returnScene);
             });
 
             // Creation is its own scene (Sam, 2026-08-23) — the same call the Store got, for the
@@ -256,7 +256,7 @@ namespace Emberfall.Presentation
                 CollectionController.ReturnScene = _returnScene == "Collection"
                     ? "MainMenu"
                     : "CharacterRoster";
-                Go("Collection");
+                ScreenNav.Go(ScreenNav.Collection);
             });
             if (MatchDeckSelection.Choosing)
             {
@@ -948,8 +948,8 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            CharacterCreateController.ReturnScene = "CharacterRoster";
-            Go("CharacterCreate");
+            CharacterCreateController.ReturnScene = ScreenNav.CharacterRoster;
+            ScreenNav.Go(ScreenNav.CharacterCreate);
         }
 
         private void ReportDeckReadFailure(Exception ex)
@@ -963,12 +963,12 @@ namespace Emberfall.Presentation
 
         // Both doors lead to one controller (#152) in one scene (#154): handing it a deck is what
         // puts it in deckbuild mode, and View Collection above hands it none. Both call
-        // Go("Collection"); the only difference between the two doors is the pending deck.
+        // ScreenNav.Go(ScreenNav.Collection); the only difference between the two doors is the pending deck.
         private void OpenDeckForEdit(string deckId)
         {
-            CollectionController.ReturnScene = "CharacterRoster";
+            CollectionController.ReturnScene = ScreenNav.CharacterRoster;
             CollectionController.PendingDeckId = deckId;
-            Go("Collection");
+            ScreenNav.Go(ScreenNav.Collection);
         }
 
         // ---- Match pick: select a deck, then continue (Sam, 2026-08-07) --------------------
@@ -1039,7 +1039,7 @@ namespace Emberfall.Presentation
             }
 
             MatchDeckSelection.Select(deck.Id);
-            Go("BoardNetworked");
+            ScreenNav.Go(ScreenNav.BoardNetworked);
         }
 
         private void ClearPick() => _pickedDeckId = "";
@@ -1107,18 +1107,5 @@ namespace Emberfall.Presentation
         }
 
         private static string ClassSlug(CardClass c) => c.ToString().ToLowerInvariant();
-
-        private static void Go(string sceneName)
-        {
-            if (!Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                Debug.LogError($"[DeckRoster] Scene '{sceneName}' is not in the build list. " +
-                               "Run Emberfall/Build/Sync Scene List.");
-                return;
-            }
-
-            Debug.Log($"[DeckRoster] → {sceneName}");
-            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
-        }
     }
 }
