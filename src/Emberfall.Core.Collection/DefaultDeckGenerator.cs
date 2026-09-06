@@ -61,9 +61,9 @@ namespace Emberfall.Core.Collection
         /// pairing also gets NEUTRAL and a second class).
         /// </summary>
         public static bool CanGenerate(CardClass primary, CardClass secondary, ICardDatabase db,
-                                       IOwnedCardCounts? owned = null, bool excludeSecondary = false)
+                                       IOwnedCardCounts? owned = null, int? maxSecondaryCopies = null)
             => db != null
-               && Capacity(Candidates(primary, secondary, db, owned, excludeSecondary), owned)
+               && Capacity(Candidates(primary, secondary, db, owned, maxSecondaryCopies == 0), owned)
                   >= DeckValidator.DeckSize;
 
         /// <summary>
@@ -77,20 +77,23 @@ namespace Emberfall.Core.Collection
         /// </summary>
         /// <param name="deckId">Caller-supplied so this assembly mints no ambient identity.</param>
         /// <param name="rng">Seeded by the caller; the same seed yields the same deck.</param>
-        /// <param name="excludeSecondary">
-        /// Draw from Primary ∪ NEUTRAL only — the pairing is still recorded as
-        /// <paramref name="primary"/>/<paramref name="secondary"/> (L5 only requires the pairing be
-        /// two distinct classes, not that both actually appear; L4 already permits an empty half), but
-        /// no <paramref name="secondary"/> card can be drawn. For a real player's starter deck this
-        /// stays false: dual-class is the shipped format, and a starter should show both halves of the
-        /// pairing. It exists for a caller measuring PRIMARY's own card power — NetSoak's matrix, whose
-        /// deck otherwise came out majority the OPPONENT'S class (measured 2026-09-05, EMBERWARD vs
-        /// GRAVEKEEP: 7 of 30 cards were the class the cell was named for).
+        /// <param name="maxSecondaryCopies">
+        /// A ceiling on total copies drawn from <paramref name="secondary"/> — <c>0</c> excludes it
+        /// entirely, <c>null</c> (the default) leaves it unconstrained. The pairing is still recorded
+        /// as <paramref name="primary"/>/<paramref name="secondary"/> regardless (L5 only requires the
+        /// pairing be two distinct classes, not that both actually appear; L4 already permits an empty
+        /// half). For a real player's starter deck this stays <c>null</c>: dual-class is the shipped
+        /// format, and a starter should show both halves of the pairing. It exists for a caller
+        /// measuring PRIMARY's own card power — NetSoak's matrix, whose deck otherwise came out
+        /// majority the OPPONENT'S class (measured 2026-09-05, EMBERWARD vs GRAVEKEEP: 7 of 30 cards
+        /// were the class the cell was named for). <c>0</c> was the fix that day; Sam widened it the
+        /// same day to "a touch of secondary, capped at 5" once the class-pool number needed a second
+        /// look — a completely excluded secondary was overcorrecting.
         /// </param>
         /// <exception cref="DeckGenerationException">The pool cannot supply 30 legal copies.</exception>
         public static DeckList Generate(CardClass primary, CardClass secondary, ICardDatabase db,
                                         DeterministicRandom rng, string deckId, string? deckName = null,
-                                        IOwnedCardCounts? owned = null, bool excludeSecondary = false)
+                                        IOwnedCardCounts? owned = null, int? maxSecondaryCopies = null)
         {
             if (db == null) throw new ArgumentNullException(nameof(db));
             if (rng == null) throw new ArgumentNullException(nameof(rng));
@@ -102,7 +105,7 @@ namespace Emberfall.Core.Collection
                     "required. Generating against it would produce a deck that fails L5 on its own face.",
                     nameof(primary));
 
-            var candidates = Candidates(primary, secondary, db, owned, excludeSecondary);
+            var candidates = Candidates(primary, secondary, db, owned, maxSecondaryCopies == 0);
             int capacity = Capacity(candidates, owned);
             if (capacity < DeckValidator.DeckSize)
                 throw new DeckGenerationException(
@@ -124,6 +127,14 @@ namespace Emberfall.Core.Collection
             var counts = new int[candidates.Count];
             int total = 0;
 
+            // A running budget across every secondary-class candidate, not a per-card cap — the
+            // format cap already limits one card to 1-2 copies, but says nothing about how many
+            // DIFFERENT secondary cards a deck can hold. maxSecondaryCopies == 0 is handled above by
+            // excluding the class from Candidates entirely, so this only ever throttles a positive cap.
+            int secondaryBudget = maxSecondaryCopies ?? int.MaxValue;
+            int secondaryDrawn = 0;
+            bool SecondaryExhausted(int i) => candidates[i].Class == secondary && secondaryDrawn >= secondaryBudget;
+
             while (total < DeckValidator.DeckSize)
             {
                 // Re-weigh every draw over only the cards with room left. Rebuilding the pool each
@@ -131,7 +142,7 @@ namespace Emberfall.Core.Collection
                 // that an incrementally-maintained weight total would need to get exactly right.
                 int weightSum = 0;
                 for (int i = 0; i < candidates.Count; i++)
-                    if (counts[i] < caps[i])
+                    if (counts[i] < caps[i] && !SecondaryExhausted(i))
                         weightSum += Weight(candidates[i].Cost);
 
                 // Unreachable while capacity >= 30, and cheap to assert rather than loop forever if
@@ -144,12 +155,13 @@ namespace Emberfall.Core.Collection
                 int roll = rng.NextInt(weightSum);
                 for (int i = 0; i < candidates.Count; i++)
                 {
-                    if (counts[i] >= caps[i]) continue;
+                    if (counts[i] >= caps[i] || SecondaryExhausted(i)) continue;
                     roll -= Weight(candidates[i].Cost);
                     if (roll < 0)
                     {
                         counts[i]++;
                         total++;
+                        if (candidates[i].Class == secondary) secondaryDrawn++;
                         break;
                     }
                 }

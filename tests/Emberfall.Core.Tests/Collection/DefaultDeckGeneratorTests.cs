@@ -297,6 +297,33 @@ namespace Emberfall.Core.Tests.Collection
                 Is.False);
         }
 
+        // ---- maxSecondaryCopies: NetSoak's class-pool measurement knob --------------------
+
+        [Test]
+        public void MaxSecondaryCopies_Zero_Excludes_The_Secondary_Class_Entirely()
+        {
+            var character = Rotbloom();
+            var deck = DefaultDeckGenerator.Generate(character.Primary, character.Secondary, LiveCardSet.Db,
+                Rng(11), "deck-1", null, null, maxSecondaryCopies: 0);
+
+            Assert.That(deck.Entries.Any(e => LiveCardSet.Db.Get(e.CardId).Class == character.Secondary), Is.False);
+        }
+
+        [Test]
+        public void MaxSecondaryCopies_Caps_The_Secondary_Classs_Total_Contribution()
+        {
+            var character = Rotbloom();
+            var deck = DefaultDeckGenerator.Generate(character.Primary, character.Secondary, LiveCardSet.Db,
+                Rng(11), "deck-1", null, null, maxSecondaryCopies: 5);
+
+            int secondaryCopies = deck.Entries
+                .Where(e => LiveCardSet.Db.Get(e.CardId).Class == character.Secondary)
+                .Sum(e => e.Count);
+
+            Assert.That(secondaryCopies, Is.LessThanOrEqualTo(5));
+            Assert.That(deck.TotalCount, Is.EqualTo(DeckValidator.DeckSize), "still a full, legal 30");
+        }
+
         [Test]
         public void Generate_Refuses_Arguments_It_Cannot_Honour()
         {
