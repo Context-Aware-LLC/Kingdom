@@ -203,7 +203,7 @@ namespace Emberfall.Presentation
             {
                 if (_passTitle != null) _passTitle.text = "Choose a second class";
                 if (_passHelp != null)
-                    _passHelp.text = $"Your Hero Power stays {Pretty(_picks[0])}'s — this pick only adds its cards.";
+                    _passHelp.text = $"Your Hero Power stays {CardClassTokens.Label(_picks[0])}'s — this pick only adds its cards.";
             }
 
             int split = (PairableClasses.Length + 1) / 2;
@@ -237,7 +237,7 @@ namespace Emberfall.Presentation
         {
             int order = _picks.IndexOf(heroClass);   // -1 = unpicked, 0 = primary, 1 = secondary
             bool selected = order >= 0;
-            string prettyName = Pretty(heroClass);
+            string prettyName = CardClassTokens.Label(heroClass);
 
             var plate = new Button(() => OpenHeroDetail(heroClass))
             {
@@ -261,7 +261,7 @@ namespace Emberfall.Presentation
             portrait.AddToClassList("hero-choice-portrait");
             plate.Add(portrait);
 
-            _art.LoadArt("hero_" + ClassSlug(heroClass), sprite =>
+            _art.LoadArt("hero_" + CardClassTokens.Slug(heroClass), sprite =>
             {
                 if (sprite != null) portrait.style.backgroundImage = new StyleBackground(sprite);
             });
@@ -363,16 +363,16 @@ namespace Emberfall.Presentation
             if (_detailPortrait != null)
             {
                 _detailPortrait.style.backgroundImage = StyleKeyword.None;
-                _art.LoadArt("hero_" + ClassSlug(heroClass), sprite =>
+                _art.LoadArt("hero_" + CardClassTokens.Slug(heroClass), sprite =>
                 {
                     if (sprite != null) _detailPortrait.style.backgroundImage = new StyleBackground(sprite);
                 });
             }
-            if (_detailName != null) _detailName.text = Pretty(heroClass);
+            if (_detailName != null) _detailName.text = CardClassTokens.Label(heroClass);
             if (_detailPass != null)
                 _detailPass.text = ChoosingPrimary
                     ? "Selecting this class locks in its Hero Power."
-                    : $"Selecting this class adds its cards to your pool. Your Hero Power stays {Pretty(_picks[0])}'s.";
+                    : $"Selecting this class adds its cards to your pool. Your Hero Power stays {CardClassTokens.Label(_picks[0])}'s.";
 
             FillTraitBullets(heroClass);
             FillHeroPower(heroClass);
@@ -439,7 +439,7 @@ namespace Emberfall.Presentation
 
             if (_confirmSummary != null)
                 _confirmSummary.text =
-                    $"{Pretty(primary)} + {Pretty(secondary)} — {Pretty(primary)}'s Hero Power, cards " +
+                    $"{CardClassTokens.Label(primary)} + {CardClassTokens.Label(secondary)} — {CardClassTokens.Label(primary)}'s Hero Power, cards " +
                     "from both. This pairing is permanent.";
 
             bool offersChoice = _account != null && _account.OffersStarterChoice();
@@ -453,7 +453,7 @@ namespace Emberfall.Presentation
 
             if (_starterNote != null)
                 _starterNote.text = !canGenerate
-                    ? $"{Pretty(primary)} + {Pretty(secondary)} doesn't have enough cards for a full deck " +
+                    ? $"{CardClassTokens.Label(primary)} + {CardClassTokens.Label(secondary)} doesn't have enough cards for a full deck " +
                       "yet, so only a blank draft is available."
                     : offersChoice
                         ? "A generated deck is legal and playable straight away. A blank one is yours to build."
@@ -566,13 +566,6 @@ namespace Emberfall.Presentation
             element.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        private static string Pretty(CardClass c)
-        {
-            string raw = c.ToString().ToLowerInvariant();
-            return char.ToUpperInvariant(raw[0]) + raw.Substring(1);
-        }
-
-        private static string ClassSlug(CardClass c) => c.ToString().ToLowerInvariant();
 
         /// <summary>"New Deck", then "New Deck 2" — a duplicate name is legal but indistinguishable
         /// in a grid of otherwise identical card backs. Account-wide since ADR-0009; it used to be
