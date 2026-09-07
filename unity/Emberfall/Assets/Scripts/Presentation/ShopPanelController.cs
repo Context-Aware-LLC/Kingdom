@@ -134,12 +134,11 @@ namespace Emberfall.Presentation
             _overlay.RemoveFromClassList("shop-overlay--hidden");
 
             // With no gateway the constructor's disconnected catalog is already on screen, wallet
-            // included — an unbound wallet reads as unavailable, never as zero.
-            if (_flow == null)
-            {
-                SetStatus("Purchases are waiting for the server wallet connection.");
-                return;
-            }
+            // included — an unbound wallet reads as unavailable, never as zero. No status line for
+            // it (Sam, 2026-09-07): the wallet chips already read as unavailable, and a permanent
+            // "waiting for the server" line on a screen the player can't act to fix reads as an
+            // error rather than the offline state it is.
+            if (_flow == null) return;
 
             Refresh();
         }

@@ -139,10 +139,20 @@
 
 #shop-overlay .shop-bar {
     flex-shrink: 0;
-    background-color: rgba(0, 0, 0, 0.55);
-    border-radius: 0 0 var(--space-2) var(--space-2);
     padding: var(--space-2) var(--space-3);
     margin-bottom: var(--space-3);
+}
+
+/* PANEL GONE, VAULT ART THROUGH (Sam, 2026-09-07): the bar's own dark strip was one of the panels
+ * sitting on top of `#shop-overlay`'s CollectionPlate_Vault background and hiding it. Same
+ * visibility trick as Collection's card-wall panel and deck drawer: `visibility` is INHERITED, so
+ * hiding it here and re-showing every direct child (tabs, wallet chips, Back) removes the strip
+ * without touching the layout box `.shop-bar` still reserves or any child's own opacity. */
+#shop-overlay .shop-bar {
+    visibility: hidden;
+}
+.shop-bar > * {
+    visibility: visible;
 }
 
 /* The one element in the bar that may grow, so the tabs stay left and the wallet and Back stay
@@ -186,13 +196,6 @@
     color: var(--ink-2);
     font-size: var(--type-caption);
     white-space: normal;
-}
-
-/* The two balances are direct children of the bar now -- the `.shop-wallet` row that used to hold
- * them was one flex level whose only job was grouping, and the bar already lays out in a row. This
- * carries the separation that wrapper's margin-right used to. */
-.shop-bar .emb-back {
-    margin-left: var(--space-4);
 }
 
 .shop-wallet__balance {
@@ -270,10 +273,19 @@
  * nothing. Measured on the Pixel 5a rig: the packs tab came to 320.4dp of content in a 289.5dp
  * viewport, and this was half of the 31 it was over by. */
 #shop-overlay .shop-section {
-    background-color: rgba(0, 0, 0, 0.45);
-    border-radius: var(--space-2);
     padding: var(--space-4);
     margin-bottom: 0;
+}
+
+/* Same panel-removal as `.shop-bar` above: the section's dark card was the other layer sitting
+ * between the player and the vault background. `.shop-section--hidden`'s `display: none` still
+ * decides which section exists at all -- visibility only governs whether the visible one paints
+ * its own backdrop. */
+#shop-overlay .shop-section {
+    visibility: hidden;
+}
+.shop-section > * {
+    visibility: visible;
 }
 
 /* EXACTLY ONE SECTION IS EVER DISPLAYED, and `display: none` rather than an opacity or a translate

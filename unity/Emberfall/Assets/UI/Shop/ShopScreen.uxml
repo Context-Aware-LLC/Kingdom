@@ -23,7 +23,6 @@
                     <ui:VisualElement picking-mode="Ignore" class="shop-bar__gap"/>
                     <ui:Label name="shop-gold-balance" class="shop-wallet__balance shop-wallet__balance--gold"/>
                     <ui:Label name="shop-gem-balance" class="shop-wallet__balance shop-wallet__balance--gems"/>
-                    <ui:Button name="btn-shop-close" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="shop-content" class="shop-content">
                     <ui:VisualElement name="shop-section-packs" class="shop-section">
@@ -35,6 +34,9 @@
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:Label name="shop-status" text="" class="shop-status shop-status--empty"/>
+                <!-- Bottom-left, off the bar (Sam, 2026-09-07): same corner as Collection's
+                     back-button, part of moving every back button to one place. -->
+                <ui:Button name="btn-shop-close" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back col-back-corner"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <!-- Styled by packreveal.uss, not shop.uss: the same tree is hosted by PackRevealScreen,

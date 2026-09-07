@@ -109,6 +109,7 @@ namespace Emberfall.Presentation
         private VisualElement _queryDrawer;
         private Button _queryToggleButton;
         private VisualElement _drawer;
+        private VisualElement _deckDrawerScrim;
         // The FRAME, not the ScrollView. The chooser's recessed plate and its bottom scroll
         // fade live on the frame, and hiding only the ScrollView would leave an empty plate
         // beside the editor with both claiming flex-grow: 1.
@@ -119,6 +120,8 @@ namespace Emberfall.Presentation
         private Label _drawerTitle;
         private Label _drawerSubtitle;
         private Button _manageDecksButton;
+        private Button _backToDecksButton;
+        private Button _decksButton;
         private Label _deckCharacterName;
         private Label _deckName;
         private bool _queryDrawerOpen;
@@ -338,6 +341,7 @@ namespace Emberfall.Presentation
             _queryDrawer         = _root.Q<VisualElement>("query-bar");
             _queryToggleButton   = _root.Q<Button>("query-toggle");
             _drawer              = _root.Q<VisualElement>("deck-drawer");
+            _deckDrawerScrim     = _root.Q<VisualElement>("deck-drawer-scrim");
             _deckChooserFrame    = _root.Q<VisualElement>("deck-chooser-frame");
             _deckChooserList     = _root.Q<VisualElement>("deck-chooser-list");
             _deckChooserEmpty    = _root.Q<Label>("deck-chooser-empty");
@@ -347,6 +351,8 @@ namespace Emberfall.Presentation
             _deckCharacterName   = _root.Q<Label>("deck-character-name");
             _deckName            = _root.Q<Label>("deck-name");
             _manageDecksButton   = _root.Q<Button>("manage-decks-button");
+            _backToDecksButton   = _root.Q<Button>("choose-another-deck");
+            _decksButton         = _root.Q<Button>("decks-button");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -627,6 +633,8 @@ namespace Emberfall.Presentation
 
             _drawerOpen = true;
             _drawer.AddToClassList("deck-drawer--open");
+            _deckDrawerScrim?.AddToClassList("deck-drawer-scrim--open");
+            if (_decksButton != null) _decksButton.style.display = DisplayStyle.None;
             if (EditingDeck) ShowDrawerPane(editor: true);
             else
             {
@@ -642,6 +650,8 @@ namespace Emberfall.Presentation
             EndDeckEditing();
             _drawerOpen = false;
             _drawer?.RemoveFromClassList("deck-drawer--open");
+            _deckDrawerScrim?.RemoveFromClassList("deck-drawer-scrim--open");
+            if (_decksButton != null) _decksButton.style.display = DisplayStyle.Flex;
         }
 
         private void ShowDeckChooser()
@@ -664,6 +674,11 @@ namespace Emberfall.Presentation
             // still belongs to the chooser, which is the reason that did not depend on the unit.
             if (_manageDecksButton != null)
                 _manageDecksButton.style.display = editor ? DisplayStyle.None : DisplayStyle.Flex;
+            // Moved into the header next to Close (Sam, 2026-09-07) so both exits sit together
+            // instead of one hiding at the top of the editor pane and one at the bottom of the
+            // chooser. It has no home in the chooser pane -- there is no open deck to leave.
+            if (_backToDecksButton != null)
+                _backToDecksButton.style.display = editor ? DisplayStyle.Flex : DisplayStyle.None;
             if (_drawerTitle != null) _drawerTitle.text = editor ? "Editing Deck" : "Decks";
             if (_drawerSubtitle != null)
                 _drawerSubtitle.text = editor ? "Tap a card to add it" : "Choose a deck to edit";
@@ -1011,8 +1026,9 @@ namespace Emberfall.Presentation
             _queryScrim?.RegisterCallback<ClickEvent>(_ => SetQueryDrawerOpen(false));
             _root.Q<Button>("decks-button")?.RegisterCallback<ClickEvent>(_ => OpenDeckDrawer());
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ => HandleBack());
-            _root.Q<Button>("deck-drawer-close")?.RegisterCallback<ClickEvent>(_ => CloseDeckDrawer());
-            _root.Q<Button>("choose-another-deck")?.RegisterCallback<ClickEvent>(_ => ShowDeckChooser());
+            // No more "Close" button in the drawer header (Sam, 2026-09-07) -- an outside tap does it.
+            _deckDrawerScrim?.RegisterCallback<ClickEvent>(_ => CloseDeckDrawer());
+            _backToDecksButton?.RegisterCallback<ClickEvent>(_ => ShowDeckChooser());
             _root.Q<Button>("manage-decks-button")?.RegisterCallback<ClickEvent>(_ => ManageDecks());
         }
 

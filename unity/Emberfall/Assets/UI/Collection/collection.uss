@@ -436,6 +436,23 @@
 .col-query-scrim--open {
     display: flex;
 }
+/* Closes the deck drawer on an outside tap, replacing the "Close" button that used to sit in its
+ * header (Sam, 2026-09-07). Same shape as `.col-query-scrim` above -- full-screen, declared
+ * before the drawer so the drawer (and its own buttons/rows) paints on top and keeps first claim
+ * on any tap that actually lands on it -- MINUS that one's `picking-mode="Ignore"` in the UXML,
+ * which is very likely why closing the filter drawer by tapping outside it does not currently
+ * work; left alone here since fixing it is not this change. */
+.deck-drawer-scrim {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+.deck-drawer-scrim--open {
+    display: flex;
+}
 /* THE FILTER DRAWER IS A LEFT COLUMN (Sam, 2026-08-31), mirroring .deck-drawer on the right.
  *
  * It used to span left:0 to right:0 and slide DOWN, spending up to 332dp of a 411dp screen — the
@@ -531,6 +548,10 @@
 .col-query-actions .col-button--decks {
     min-width: 96px;
 }
+/* BACK MOVES TO THE BOTTOM-LEFT (Sam, 2026-09-07): it used to share `.col-query-actions`' top-right
+ * row with Decks, crowding both against the deck-drawer's own Close when the drawer was open.
+ * `.col-back-corner` itself now lives in theme.uss -- Shop became the second screen to use it the
+ * same day, so it moved rather than being copied. */
 /* `max-width: 58%` is gone with the row: it kept the search field from swallowing a full-width
  * drawer's line. In a column it would cap the field at 58% of ~370dp and leave the sort control
  * beneath it visibly wider, which reads as a broken alignment rather than a deliberate one. */
@@ -752,18 +773,24 @@
 }
 /* The recessed plate, and the coordinate space the bottom fade anchors to. The ScrollView
  * inside it is bare. See the UXML comment for why the fade cannot be the ScrollView's own child. */
+/* padding-bottom reserves `.deck-drawer__manage`'s own footprint (58px + its var(--space-6)
+ * bottom offset = 82) now that button is position: absolute and no longer in this flex column to
+ * push the frame up on its own -- without it the scroll list runs its last rows under the
+ * floating button instead of stopping short of it. */
 .deck-chooser-frame {
     flex-grow: 1;
+    padding-bottom: 82px;
 }
 .deck-chooser {
     flex-grow: 1;
 }
 /* THE TINT IS THE HALF THAT MATTERS. `.emb-scroll-fade` ships a WHITE ramp so one texture can
  * serve every surface; the colour has to come from the use site, and it is the plate this fade
- * sits on -- `.deck-chooser-frame.chrome-panel--recessed` below, opaque so the ramp's own alpha
- * is the only thing varying. Drop this rule and the deck list fades to white. */
+ * sits on -- `.deck-drawer.chrome-panel--outer` now that the chooser's own recessed plate is
+ * gone, nearly opaque so the ramp's own alpha is the only thing varying. Drop this rule and the
+ * deck list fades to white. */
 .deck-chooser__fade {
-    -unity-background-image-tint-color: rgb(8, 12, 18);
+    -unity-background-image-tint-color: rgb(18, 23, 31);
 }
 .deck-chooser--hidden,
 .deck-editor--hidden {
@@ -801,8 +828,6 @@
     /* margin-bottom: var(--space-2); */
     padding: var(--space-3) var(--space-4);
     border-width: 0;
-    border-left-width: 6px;
-    border-left-color: var(--class-neutral);
     border-radius: 0;
     background-color: rgba(21, 28, 38, 0.98);
     background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
@@ -871,9 +896,22 @@
     -unity-font-style: bold;
     color: var(--ink-1);
 }
+/* SITS ALONGSIDE `.ms-gear` (matchsettings.uss), not stacked above it (Sam, 2026-09-07). That
+ * button is the persistent corner settings gear CollectionController mounts on this same screen
+ * (Sam, 2026-09-05: "same corner settings gear as the main menu"), anchored
+ * bottom: var(--space-6) right: var(--space-6), 68px wide -- so its LEFT edge sits 92px off the
+ * screen edge (24 + 68). This button's own right stops at 100 (8px of gap past that), and its
+ * bottom/height match the gear's (var(--space-6), 58px) so the two read as one row. Pulling it
+ * out of the drawer's flex column into position:absolute is what makes that alignment exact --
+ * a flex sibling can't be told "match this unrelated element's bottom" any other way. left
+ * matches the drawer's own left padding (var(--space-6)) so it still reads as flush with the
+ * rest of the drawer's content above it. */
 .deck-drawer__manage {
-    flex-shrink: 0;
-    min-height: 52px;
+    position: absolute;
+    left: var(--space-6);
+    right: 100px;
+    bottom: var(--space-6);
+    height: 58px;
     border-width: 0;
     border-radius: var(--space-2);
     color: var(--ink-1);
@@ -901,23 +939,32 @@
  * cards plus margins; medium and expanded reclaim still more height. CardWall's separate 8dp
  * rounding reserve remains untouched so the last row cannot clip on device pixels.
  *
- * flex-shrink:0 keeps the wall (flex-grow) from squeezing the strip away when space is tight. */
+ * POSITION: ABSOLUTE, NOT IN FLOW (Sam, 2026-09-07, confirmed live in the Unity UI Debugger).
+ * The strip used to reserve its own height in `root`'s column flow, pushing `body` (and the card
+ * wall inside it) down by exactly that much. Now that the wall's own panel is invisible chrome
+ * over a fixed clip boundary (see `#collection-panel`), that reservation is no longer needed --
+ * the strip floats over the top of the wall instead, and `#collection-panel`'s own
+ * `margin-top: var(--space-2)` is the only clearance left to tune. `left: 50%; translate: -50% 0`
+ * centers it without depending on a literal half-width offset, so it still centers correctly if
+ * `max-width: 100%` ever actually clamps the 600px on a narrow device. */
 #class-tab-bar {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    translate: -50% 0;
     flex-direction: row;
     justify-content: space-between;
-    align-self: center;
     width: 600px;
     max-width: 100%;
-    height: 64px;
-    flex-shrink: 0;
-    margin: 0;
+    height: 80px;
 }
 .class-tab_art {
     flex-grow: 0;
     flex-shrink: 0;
     flex-basis: 56px;
-    width: 56px;
-    height: 60px;
+    width: 76px;
+    /* 76, not 60 (Sam, 2026-09-07) -- +4dp top margin still below = 80, this strip's height. */
+    height: 76px;
     border-radius: 18px 18px 0 0;
     margin-top: var(--space-1);
     overflow: hidden;
@@ -1008,13 +1055,49 @@
  * own height (see the authored-px note above `.collection-list`), not a device unit, so this is a
  * small clip margin, not the old ledge back. Bottom runs one step bigger than top (--space-3 vs
  * --space-2) — Sam, 2026-09-05, the last row still wanted a touch more room than the first.*/
+/* TOP IS 0, NOT var(--space-2), AS OF THE CARD WALL PANEL GOING INVISIBLE (Sam, 2026-09-07).
+ * The clip margin these two paddings reserved was for the 9-slice border ART, so a scrolled row
+ * would duck under painted chrome instead of drawing over it (see the comment above). Both
+ * panels are `visibility: hidden` below -- nothing paints there any more, so there is nothing
+ * left to duck under, and the 16px (8 + 8) that used to read as a gap between the class-tab
+ * strip and the first card row moved INTO that strip's own height instead of sitting here doing
+ * nothing. The two moves are one change: grow the strip by exactly what you zero here, or
+ * the first card row drifts off its on-load position. Bottom keeps its own reasoning untouched
+ * -- that clip margin is still real paint (nothing hides the LAST row's chrome) and was never
+ * about the tab strip. */
 .collection .db-collection.chrome-panel--outer {
-    padding: var(--space-2) 20px var(--space-3) 20px;
+    padding: 0 20px var(--space-3) 20px;
     background-color: rgba(18, 23, 31, 0.96);
     overflow: hidden;
 }
 .collection .collection-list.chrome-panel--recessed {
-    padding: var(--space-2) 20px var(--space-3) 20px;
+    padding: 0 20px var(--space-3) 20px;
+}
+/* THE CARD WALL PANEL IS INVISIBLE, NOT GONE. Its `overflow: hidden` above is what pins the
+ * scroll-clip boundary at the first card row's own top edge (now that the top padding is gone,
+ * the two coincide exactly) -- deleting the element, or stripping its chrome-panel classes the
+ * way the deck drawer's nested panes were flattened, would drop that clip with it and let
+ * scrolled cards ride up past the class-tab strip. `visibility` does not touch layout or
+ * clipping, only paint, so hiding it here keeps the box exactly where it is and removes only the
+ * background/border chrome.
+ *
+ * `visibility: hidden` is INHERITED, so everything that still needs to render overrides back to
+ * `visible` explicitly: the empty-state label, and the ListView's own scrollable content --
+ * `#collection-list` itself carries the SAME recessed-panel chrome as its parent and stays
+ * hidden too, on purpose, so only its rows escape via the content-container underneath it.
+ *
+ * margin-top: var(--space-2) (Sam, 2026-09-07, confirmed live in the Unity UI Debugger) is the
+ * clearance under the now-absolutely-positioned `#class-tab-bar` -- that strip no longer reserves
+ * flow space (see its own rule), so without this the wall would start flush at the screen edge. */
+#collection-panel {
+    visibility: hidden;
+    margin-top: var(--space-2);
+}
+#collection-empty {
+    visibility: visible;
+}
+#collection-list .unity-scroll-view__content-container {
+    visibility: visible;
 }
 /* NO PADDING HERE. This selector outranks `.deck-drawer`, so a padding written here silently
  * replaces the whole edge-clearance shorthand that rule authors -- which is exactly what
@@ -1023,17 +1106,29 @@
     border-left-width: 0;
     background-color: rgba(18, 23, 31, 0.98);
 }
-/* The plate moved from the ScrollView to its frame when the bottom fade landed. The alpha is
- * 1 on the chooser, not 0.92: the fade ramps to a FLAT rgb(8, 12, 18) and a translucent plate
- * under it would show the drawer through the bottom band only, as a horizontal seam. */
-.deck-chooser-frame.chrome-panel--recessed {
-    padding: var(--space-4);
-    background-color: rgb(8, 12, 18);
+/* THE DRAWER PANEL IS INVISIBLE, NOT GONE (Sam, 2026-09-07) -- same move as `#collection-panel`
+ * above, and the answer to "opacity: 0 needs every child set back to opacity: 1": opacity is a
+ * GROUP compositing operation, so a child re-asserting opacity: 1 does not undo a transparent
+ * ancestor -- the whole subtree still renders through the parent's alpha. `visibility` is a
+ * plain inherited toggle, not a compositing op, so ONE override at the top of what should still
+ * render is enough; everything below that node inherits `visible` from THERE, not from
+ * `#deck-drawer`. That is why this needs only the drawer's direct children re-asserted, not
+ * "all its children" the way opacity would have.
+ *
+ * `#deck-drawer` keeps its padding, its slide-in `translate`/`opacity` transition and its
+ * `position: absolute` box exactly as declared above -- visibility touches paint only, so the
+ * drawer still opens, closes and clips precisely as before, just without its own background art. */
+#deck-drawer {
+    visibility: hidden;
 }
-.deck-editor.chrome-panel--recessed {
-    padding: var(--space-4);
-    background-color: rgba(8, 12, 18, 0.92);
+.deck-drawer > * {
+    visibility: visible;
 }
+/* The chooser and editor panes used to be their own nested recessed plates (Sam, 2026-09-07:
+ * "everything sits in" a card-within-a-card, eating horizontal space to double padding). Both
+ * now render directly on the outer drawer's own surface above -- one container, not two -- so
+ * there is nothing left for `.deck-chooser-frame`/`.deck-editor` to carry beyond their flex-grow
+ * layout rules further up this file. */
 
 .chrome-button {
     min-height: var(--touch-min);

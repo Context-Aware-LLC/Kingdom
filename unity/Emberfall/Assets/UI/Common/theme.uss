@@ -361,3 +361,19 @@
 .unity-scroll-view__horizontal-scroller.unity-scroll-view__horizontal-scroller {
     display: none;
 }
+
+/* Bottom-left corner for a screen's own Back button (Sam, 2026-09-07): the convention started on
+ * Collection, scoped to `collection.uss` because `.emb-back` also marks buttons on other screens
+ * that had not been checked for this corner being clear on THEIR layout. Shop is the second screen
+ * to get it, checked and clear, so the rule moved here rather than being copy-pasted a second time.
+ * Mirrors `.ms-gear`'s bottom-right anchor (matchsettings.uss) on the opposite side, same
+ * var(--space-6) offset both axes. Still opt-in per screen (`.col-back-corner`, not `.emb-back`
+ * itself) -- add it to a screen's own back button only after confirming the corner is clear there. */
+.col-back-corner {
+    position: absolute;
+    bottom: var(--space-6);
+    left: var(--space-6);
+    min-height: var(--touch-min);
+    height: var(--touch-min);
+    padding: 0 var(--space-4);
+}

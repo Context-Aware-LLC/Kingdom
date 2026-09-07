@@ -29,9 +29,9 @@
             </ui:Button>
             <ui:VisualElement picking-mode="Ignore" class="col-query-actions">
                 <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
-                <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back col-back-corner"/>
         <ui:VisualElement name="query-scrim" picking-mode="Ignore" class="col-query-scrim"/>
         <ui:VisualElement name="query-bar" picking-mode="Ignore" class="col-query chrome-panel chrome-panel--outer">
             <ui:ScrollView name="query-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="col-query-scroll">
@@ -61,19 +61,19 @@
             </ui:ScrollView>
             <ui:VisualElement picking-mode="Ignore" class="emb-scroll-fade col-query__fade"/>
         </ui:VisualElement>
+        <ui:VisualElement name="deck-drawer-scrim" class="deck-drawer-scrim"/>
         <ui:VisualElement name="deck-drawer" class="deck-drawer chrome-panel chrome-panel--outer">
             <ui:VisualElement class="deck-drawer__header">
-                <ui:Button name="deck-drawer-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
+                <ui:Button name="choose-another-deck" text="← All decks" class="deck-drawer__back chrome-button chrome-button--secondary"/>
             </ui:VisualElement>
-            <ui:VisualElement name="deck-chooser-frame" class="deck-chooser-frame chrome-panel chrome-panel--recessed">
+            <ui:VisualElement name="deck-chooser-frame" class="deck-chooser-frame">
                 <ui:ScrollView name="deck-chooser" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="deck-chooser">
                     <ui:VisualElement name="deck-chooser-list" class="deck-chooser__list"/>
                     <ui:Label name="deck-chooser-empty" text="No decks yet." class="deck-chooser__empty"/>
                 </ui:ScrollView>
                 <ui:VisualElement picking-mode="Ignore" class="emb-scroll-fade deck-chooser__fade"/>
             </ui:VisualElement>
-            <ui:VisualElement name="deck-editor" class="deck-editor deck-editor--hidden chrome-panel chrome-panel--recessed">
-                <ui:Button name="choose-another-deck" text="← All decks" class="deck-drawer__back chrome-button chrome-button--secondary"/>
+            <ui:VisualElement name="deck-editor" class="deck-editor deck-editor--hidden">
                 <ui:VisualElement class="deck-editor__identity">
                     <ui:VisualElement class="deck-editor__naming">
                         <ui:Label name="deck-character-name" text="" class="deck-editor__character"/>
