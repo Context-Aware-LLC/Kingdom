@@ -1,4 +1,4 @@
-/**
+ /**
  * Prettier — the NON-C# file types only.
  *
  * C# IS NOT FORMATTED BY PRETTIER AND CANNOT BE. Prettier has no C# parser and no

@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.besty.unity-skills": "https://github.com/Besty0728/Unity-Skills.git?path=/SkillsForUnity",
     "com.emberfall.core": "file:../../../src/Emberfall.Core",
     "com.emberfall.core.cards": "file:../../../src/Emberfall.Core.Cards",
     "com.emberfall.core.collection": "file:../../../src/Emberfall.Core.Collection",

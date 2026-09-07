@@ -655,11 +655,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b0da1bf65224a584790cc79cc095e679
-    m_Address: card_art/neutral_choking_vines
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b2f55e6756959024a988b8273a2d853c
     m_Address: card_art/grave_gravekeep_custodian
     m_ReadOnly: 0

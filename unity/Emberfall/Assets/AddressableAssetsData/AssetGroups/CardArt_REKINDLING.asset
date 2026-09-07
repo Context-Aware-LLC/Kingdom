@@ -445,11 +445,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c7ad691a3b2c4366a2c02370b9ce87b0
-    m_Address: card_art/neutral_truce_pact
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c9e856ca059d4dc49d83ed89fb005c4c
     m_Address: card_art/clock_upgrade_protocol
     m_ReadOnly: 0
