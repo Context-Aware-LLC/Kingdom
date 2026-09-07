@@ -288,7 +288,7 @@ so in the file when you do.
 
 ## Ask the graph before you grep
 
-There is a persistent knowledge graph of this repo — ~4,600 nodes and ~25,000 edges over
+There is a persistent knowledge graph of this repo — ~10,400 nodes and ~94,000 edges over
 csharp, sql, python, javascript, powershell, bash, c and cpp — built by `code-review-graph`.
 It answers *where is this defined, what calls it, what does it call, which flow is it in*. Grep
 answers *which files contain this string*. Reaching for the second when you wanted the first is
