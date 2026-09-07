@@ -84,6 +84,36 @@ def selectors_of(card):
     return sels
 
 
+def action_tags_of(card):
+    """Category tags for the panel's 'Action types' rollup, one per rules[].action.
+
+    DAMAGE splits by how `target.selection` shapes it (see card-schema.md's `selection`
+    section): "1" is a chosen single target, "random: N" is engine-rolled, and any other
+    integer is N == the selector's derived maximum -- i.e. it hits everything, an AoE.
+    """
+    tags = []
+    for rule in card.get("rules", []) or []:
+        action = rule.get("action")
+        if not isinstance(action, dict):
+            continue
+        t = action.get("type")
+        if t == "SILENCE":
+            tags.append("SILENCE")
+        elif t == "DESTROY":
+            tags.append("REMOVAL")
+        elif t == "RETURN_TO_HAND":
+            tags.append("BOUNCE")
+        elif t == "DAMAGE":
+            selection = ((action.get("target") or {}).get("selection")) or ""
+            if selection == "1":
+                tags.append("DAMAGE_SINGLE")
+            elif selection.startswith("random:"):
+                tags.append("DAMAGE_RANDOM")
+            else:
+                tags.append("DAMAGE_AOE")
+    return tags
+
+
 def normalize(card, source_file):
     """Flatten one raw card into the shape the panel consumes."""
     return {
@@ -98,6 +128,7 @@ def normalize(card, source_file):
         "rarity": card.get("rarity"),
         "keywords": list(card.get("keywords", []) or []),
         "selectors": selectors_of(card),
+        "actionTags": action_tags_of(card),
         "tribe": card.get("tribe"),
         "setId": card.get("setId"),
         "collectible": card.get("collectible"),
@@ -110,6 +141,7 @@ def rollup(cards):
     """Compute an aggregate bundle over an arbitrary list of cards."""
     keywords = Counter()
     selectors = Counter()
+    actions = Counter()
     cost = Counter()
     types = Counter()
     rarities = Counter()
@@ -122,6 +154,8 @@ def rollup(cards):
             keywords[kw] += 1
         for sel in c["selectors"]:
             selectors[sel] += 1
+        for act in c["actionTags"]:
+            actions[act] += 1
         if c["cost"] is not None:
             cost[c["cost"]] += 1
         if c["type"]:
@@ -142,6 +176,7 @@ def rollup(cards):
         "typeSplit": {t: types.get(t, 0) for t in CARD_TYPES},
         "keywordFrequency": ordered_counter(keywords),
         "selectorFrequency": ordered_counter(selectors),
+        "actionFrequency": ordered_counter(actions),
         "costDistribution": int_keyed(cost),
         "rarityBreakdown": ordered_counter(rarities),
         "tribeBreakdown": ordered_counter(tribes),
@@ -296,7 +331,7 @@ def sync_server(local, deploy):
     live_after = (after or {}).get("corpus")
     print(f"Live corpus digest after deploy: {live_after or 'UNKNOWN'}")
     if live_after == local:
-        print(f"Live cards loaded:    {after.get('cards', 'unknown')}")
+        print(f"Live cards loaded:{after.get('cards', 'unknown')}")
         print("SERVER_CORPUS=deployed")
         print("=" * 72)
         return 0

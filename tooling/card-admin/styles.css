@@ -90,7 +90,9 @@ input[type="number"] {
   align-items: center;
   gap: 8px;
 }
-
+#cost-hist {
+  height:80%;
+}
 .cost-row input {
   width: 100%;
 }
@@ -264,13 +266,14 @@ button.reset:hover {
 .hist {
   display: flex;
   align-items: flex-end;
-  gap: 6px;
-  height: 130px;
+  justify-content: center;
+  gap: 3px;
+  height: 190px;
   padding-top: 8px;
 }
 
 .hist .col {
-  flex: 1 1 0;
+  flex: 0 1 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -300,12 +303,12 @@ button.reset:hover {
 
 .hist-wrap {
   display: flex;
-  gap: 24px;
+  gap: 14px;
   flex-wrap: wrap;
 }
 
 .hist-block {
-  flex: 1 1 260px;
+  flex: 0 1 200px;
 }
 
 .hist-block h3 {

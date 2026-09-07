@@ -49,6 +49,7 @@
     keywordBars: document.getElementById("keyword-bars"),
     selectorBars: document.getElementById("selector-bars"),
     tribeBars: document.getElementById("tribe-bars"),
+    actionBars: document.getElementById("action-bars"),
     costHist: document.getElementById("cost-hist"),
     attackHist: document.getElementById("attack-hist"),
     healthHist: document.getElementById("health-hist"),
@@ -160,10 +161,11 @@
   }
 
   function aggregate(cards) {
-    var kw = {}, sel = {}, cost = {}, type = {}, atk = {}, hp = {}, trb = {}, rar = {};
+    var kw = {}, sel = {}, act = {}, cost = {}, type = {}, atk = {}, hp = {}, trb = {}, rar = {};
     cards.forEach(function (c) {
       c.keywords.forEach(function (k) { kw[k] = (kw[k] || 0) + 1; });
       c.selectors.forEach(function (s) { sel[s] = (sel[s] || 0) + 1; });
+      c.actionTags.forEach(function (a) { act[a] = (act[a] || 0) + 1; });
       if (c.cost !== null && c.cost !== undefined) cost[c.cost] = (cost[c.cost] || 0) + 1;
       if (c.type) type[c.type] = (type[c.type] || 0) + 1;
       if (c.tribe) trb[c.tribe] = (trb[c.tribe] || 0) + 1;
@@ -173,7 +175,7 @@
         if (c.health !== null && c.health !== undefined) hp[c.health] = (hp[c.health] || 0) + 1;
       }
     });
-    return { keywords: kw, selectors: sel, cost: cost, type: type, attack: atk, health: hp, tribes: trb, rarity: rar };
+    return { keywords: kw, selectors: sel, actions: act, cost: cost, type: type, attack: atk, health: hp, tribes: trb, rarity: rar };
   }
 
   function render() {
@@ -190,6 +192,7 @@
     renderBars(el.keywordBars, agg.keywords, "No keywords in this filter.");
     renderBars(el.tribeBars, agg.tribes, "No tribes in this filter.");
     renderBars(el.selectorBars, agg.selectors, "No targeting selectors in this filter.");
+    renderBars(el.actionBars, agg.actions, "No tracked actions in this filter.");
     renderHist(el.costHist, agg.cost, cards.length === 0);
 
     var minionCount = agg.type.MINION || 0;
