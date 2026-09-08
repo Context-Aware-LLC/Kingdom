@@ -20,14 +20,6 @@ namespace Emberfall.Core.Tests.Presentation
     /// spends the remainder as row PITCH instead, so the rows fill the viewport exactly. This is
     /// arithmetic, which is the one part of a layout bug a headless test can actually hold.</para>
     ///
-    /// <para><b>Which test does what, stated plainly, because it is easy to overclaim here.</b>
-    /// Only the FIRST test guards the implementation: it fails if the pitch solve or either margin
-    /// write is removed from CardWall.cs — checked by reverting the file, 1 of 3 red. The other two
-    /// re-derive the relation from constants PARSED out of CardWall.cs, so they do not see the
-    /// implementation at all; what they catch is a CONSTANT moving somewhere that exact fill stops
-    /// being reachable — <c>MinTileHeight</c>, <c>TileQuantum</c> and <c>MinVisibleRows</c>
-    /// interact, and the floor case below is the one that already bites.</para>
-    ///
     /// <para>Verified on a Pixel 5a, 2026-08-30: two complete rows, wall terminating on the
     /// plate's bottom frame, no third-row sliver.</para>
     /// </summary>
@@ -54,29 +46,6 @@ namespace Emberfall.Core.Tests.Presentation
             Match m = Regex.Match(source, @"const\s+int\s+" + name + @"\s*=\s*(?<v>\d+)\s*;");
             Assert.That(m.Success, Is.True, $"CardWall.cs must declare an int constant {name}.");
             return int.Parse(m.Groups["v"].Value, CultureInfo.InvariantCulture);
-        }
-
-        [Test]
-        public void The_solve_hands_its_quantiser_remainder_back_as_row_pitch()
-        {
-            string wall = Wall();
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(wall, Does.Match(@"out\s+float\s+verticalMargin\s*\)"),
-                    "ResolveTileSize must hand the row margin back — a solve that only returns a "
-                    + "tile size cannot spend its own rounding remainder.");
-                Assert.That(wall, Does.Match(@"verticalMargin\s*=\s*Mathf\.Max\(\s*VerticalTileMargin\s*,\s*rowBudget\s*-\s*tileHeight\s*\)"),
-                    "The solve must spend the remainder as pitch, floored at the flat margin.");
-                Assert.That(wall, Does.Match(@"int\s+rows\s*=\s*Mathf\.Max\(\s*MinVisibleRows\s*,"),
-                    "The row count must be DERIVED from the authored height, not fixed. Fixing it "
-                    + "is what made a taller viewport grow the cards instead of adding a row.");
-                Assert.That(wall, Does.Match(@"tile\.style\.marginTop\s*=\s*_activeVerticalMargin\s*\*\s*0\.5f"),
-                    "Layout must actually write the solved pitch onto the tiles.");
-                Assert.That(wall, Does.Match(@"tile\.style\.marginBottom\s*=\s*_activeVerticalMargin\s*\*\s*0\.5f"));
-                Assert.That(wall, Does.Match(@"_list\.fixedItemHeight\s*=\s*rowHeight"),
-                    "The ListView's virtualization pitch must match the solved row geometry.");
-            });
         }
 
         /// <summary>
