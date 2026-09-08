@@ -220,10 +220,12 @@
     background-image: url("/Assets/Art/Icons/crystal_icon.png");
 }
 
+/* Pill background dropped, not hidden (Sam, 2026-09-07): unlike the panels above, this element
+ * paints its own icon and text directly -- no child to fall back to -- so `visibility` would take
+ * the icon with it. Icon and text now sit straight on the vault art, same as everything else on
+ * this screen. */
 #shop-overlay .shop-wallet__balance {
-    background-color: rgba(0, 0, 0, 0.62);
     border-width: 0;
-    border-radius: 999px;
 }
 
 #shop-overlay .shop-wallet__balance--gold {
@@ -275,6 +277,11 @@
 #shop-overlay .shop-section {
     padding: var(--space-4);
     margin-bottom: 0;
+    /* Reserves Back's footprint (Sam, 2026-09-07): `.col-back-corner` sits absolute at
+       bottom:var(--space-6)=24 with height:var(--touch-min)=56, so 24+56=80 plus a var(--space-3)=12
+       clearance gap is 92 -- otherwise the last pack row or the section label under it renders
+       straight under the button, same trap `.deck-chooser-frame` hit in collection.uss. */
+    padding-bottom: 92px;
 }
 
 /* Same panel-removal as `.shop-bar` above: the section's dark card was the other layer sitting
@@ -316,7 +323,14 @@
 /* FULL WIDTH, FLEX-GROWN HEIGHT (Sam, 2026-09-05). `flex-basis: 0` with `flex-grow: 1` splits
  * .shop-pack-list's height evenly between the two packs instead of sizing each to its content
  * and stranding the rest of the section blank. */
+/* ROW, NAME LEFT OF THE RAIL (Sam, 2026-09-07): replaces a name label stacked full-width below
+ * the rail, which is what the absolute bottom-left Back button collided with on the last pack in
+ * the list. NOT align-items: center on this container -- the rail needs the default `stretch` to
+ * keep filling the row's full height (it did in the old column layout via flex-grow, which only
+ * governs the MAIN axis; centering here would leave the rail's cross-axis height at 0, which is
+ * exactly what happened the first time this shipped). The name centers itself instead, below. */
 .shop-pack {
+    flex-direction: row;
     width: 100%;
     flex-grow: 1;
     flex-basis: 0;
@@ -329,9 +343,18 @@
 }
 
 #shop-overlay .shop-pack {
-    background-color: rgba(11, 14, 19, 0.78);
     border-width: 0;
     border-radius: var(--space-2);
+}
+
+/* Same panel-removal as `.shop-bar` / `.shop-section` above: the tile's own dark card was another
+ * layer over the vault art. The name and the art-rail (and its slots, which keep their own
+ * placeholder chrome -- that is card content, not panel backdrop) inherit back to visible. */
+#shop-overlay .shop-pack {
+    visibility: hidden;
+}
+.shop-pack > * {
+    visibility: visible;
 }
 
 /* THE RAIL FILLS WHATEVER HEIGHT THE PACK HAS (Sam, 2026-09-05), replacing the measured
@@ -343,10 +366,8 @@
  * when the tile's size changes again. */
 .shop-pack__art-rail {
     flex-direction: row;
-    width: 100%;
     flex-grow: 1;
     min-height: 0;
-    margin-bottom: var(--space-2);
 }
 
 /* The slot has NO CHILDREN as of 2026-08-31 — the title plate that used to sit at its bottom edge
@@ -356,7 +377,7 @@
 .shop-pack__art-slot {
     flex-grow: 1;
     flex-basis: 0;
-    background-color: var(--surface-2);
+    /* background-color: var(--surface-2); */
     border-width: 1px;
     border-color: var(--surface-3);
     border-radius: var(--space-2);
@@ -365,14 +386,29 @@
     overflow: hidden;
 }
 
-.shop-pack__art-slot--loaded {
-    background-color: rgba(11, 14, 19, 0.35);
+/* BORDERLESS (Sam, 2026-09-07): the outline around each face read as another panel edge once the
+ * vault art was showing through everything around it. The art itself is scale-and-crop, so nothing
+ * relied on the border for a boundary -- overflow: hidden above is what actually clips it. */
+#shop-overlay .shop-pack__art-slot {
+    border-width: 0;
 }
 
+/* A SHARED PERCENTAGE COLUMN, NOT CONTENT WIDTH (Sam, 2026-09-07): sizing-to-content (previous
+ * pass) let "Rekindling" claim more width than "Emberfall", so each row's art-rail started at a
+ * different x and the second row read as shifted right. Every `.shop-pack` row is the same width
+ * (100% of `.shop-pack-list`), so a percentage here lands every row's name column -- and therefore
+ * every rail's left edge -- at the identical x regardless of which set's name is longest. Same
+ * outcome as a dedicated label column running down the whole list, without splitting the tile's
+ * name+rail out of one clickable element. white-space: nowrap still guards the wrap this replaced. */
 .shop-pack__name {
+    flex-shrink: 0;
+    width: 10%;
+    align-self: center;
+    margin-right: var(--space-3);
     color: var(--ink-1);
     font-size: var(--type-h2);
     -unity-font-style: bold;
+    white-space: nowrap;
 }
 
 /* THE WHOLE TILE IS THE TAP TARGET (Sam, 2026-09-05): the buy buttons and the "5 cards..." line
@@ -475,7 +511,17 @@
 
 /* ---------- Pack detail (Sam, 2026-09-05) ----------
  * Same nested overlay/shell shape as #shop-overlay and .reveal-overlay above: one hidden class
- * toggles the whole thing, and the shell centers itself inside the scrim. */
+ * removes the whole thing from layout, and the shell centers itself inside the scrim.
+ *
+ * THE SHELL FLIES IN FROM THE TAPPED TILE AND BACK OUT AGAIN (Sam, 2026-09-07 follow-up), rather
+ * than fading or scaling from its own center: ShopPanelController computes the tapped tile's
+ * on-screen rect and sets the shell's translate/scale to exactly overlap it, then -- on a later
+ * tick, once that has actually rendered once -- flips translate/scale back to identity so the
+ * transition system animates the shell traveling from the tile's position to its natural centered
+ * layout. --animating is where the transition lives (not here): the very first translate/scale
+ * this element receives each open is that tile-matched starting point, and it must land instantly
+ * with no transition, or the whole effect is backwards. See ShopPanelController.OpenDetail /
+ * CloseDetail for the two-tick sequencing this depends on. */
 .pack-detail-overlay {
     position: absolute;
     top: 0;
@@ -484,22 +530,61 @@
     bottom: 0;
     align-items: center;
     justify-content: center;
-    background-color: rgba(11, 14, 19, 0.94);
+    /* 0.5, not 0.94 (Sam, 2026-09-07 follow-up): "significantly" less dimming -- the tile row
+     * behind the shell should still read as present, not go nearly black. */
+    background-color: rgba(11, 14, 19, 0.5);
+    /* NO TRANSITION HERE ANY MORE (Sam, 2026-09-07 follow-up, reversing the previous note this
+     * replaced): syncing the scrim's fade to the shell's 1.5s duration was worse, not better --
+     * the shell has no background of its own, so its legibility against the still-bright,
+     * undimmed shop behind it depends on the scrim's contrast. With both easing in together, the
+     * early part of the flight was too low-contrast to actually perceive; only the last portion,
+     * once the scrim had darkened enough to read the card against it, registered at all. That is
+     * what looked like "starts centered and transparent, then fades into view" -- the motion was
+     * real the whole time, just invisible for its first stretch. Snapping the scrim to full
+     * darkness instantly puts the WHOLE flight at full contrast from frame one. */
+    opacity: 1;
 }
 
 .pack-detail-overlay--hidden {
     display: none;
 }
 
+/* NO FIXED HEIGHT (Sam, 2026-09-07 follow-up): the art rail this used to hold is gone, and a
+ * shell still stretched to 94% of the screen left three lines of content sitting in a mostly
+ * empty transparent box -- there is no background-color here, so that leftover height just showed
+ * the scrim through it. Sized to content instead, centered by .pack-detail-overlay's
+ * align-items/justify-content: center. */
+/* max-width 820px, not 640px (Sam, 2026-09-07 follow-up): at 640, boxing the art down to fit
+ * beside the title/note/buttons text made it end up SMALLER than the ~515x410 tile art-slot it
+ * flew in from, so the pack visibly shrank instead of growing. The art is the thing that has to
+ * read as "getting bigger" -- see .pack-detail-art below, sized off this wider shell. */
 .pack-detail-shell {
-    width: 96%;
-    height: 94%;
+    width: 90%;
+    max-width: 820px;
     flex-direction: column;
-    background-color: var(--surface-1);
-    border-width: 1px;
+    border-width: 0px;
     border-color: var(--surface-3);
     border-radius: var(--space-3);
     padding: var(--space-4);
+}
+
+/* Transition lives in its own modifier, never on the base rule above: the shell's translate/scale
+ * get set directly in code, and the FIRST such set each open/close (the tile-matched jump) must
+ * apply with no active transition or it animates the wrong direction. --animating is added only
+ * once that jump has already rendered a frame.
+ *
+ * 0.45s, not 0.28s (Sam, 2026-09-07 follow-up): measured live by slowing this to 60s and polling
+ * mid-flight -- the flip DOES run and interpolate correctly, but Unity's ease-out curve is so
+ * front-loaded that at 0.28s essentially all the visible motion lands inside the first ~50ms,
+ * reading as a pop instead of a flight. Longer duration, same ease-out Sam asked for. */
+/* ease-in-out, not ease-out (Sam, 2026-09-07 follow-up): ease-out is heavily front-loaded --
+ * nearly all the motion lands in the first sliver of the duration -- which read as a fast pop at
+ * the start even once the duration was long enough to see. ease-in-out ramps up from a standstill
+ * instead, so the flight has a visible beginning as well as a settle. */
+.pack-detail-shell--animating {
+    transition-property: translate, scale;
+    transition-duration: 2.5s;
+    transition-timing-function: ease-in-out;
 }
 
 .pack-detail-bar {
@@ -507,6 +592,25 @@
     align-items: center;
     flex-shrink: 0;
     margin-bottom: var(--space-3);
+}
+
+/* The one piece actually tapped, with Contain scaling (set alongside backgroundImage in
+ * ShopPanelController.OpenDetail) so the art's own proportions decide how it fills the box rather
+ * than being stretched. Sized off WIDTH with an aspect-ratio matching the tile's own art-slot
+ * (~515x410, i.e. 1.256) instead of a fixed height (Sam, 2026-09-07 follow-up) -- a fixed height
+ * shorter than the slot it flew in from is what made the art shrink instead of grow. At 82% of
+ * the now-820px-max shell this comes out bigger than the slot on both axes. display:none by
+ * default -- OpenDetail only shows it when the FLIP origin was a real art slot, never for the
+ * tile/name-label fallback, where there is no specific piece to show. */
+.pack-detail-art {
+    flex-shrink: 0;
+    align-self: center;
+    width: 82%;
+    aspect-ratio: 1.256;
+    margin-bottom: var(--space-3);
+    border-radius: var(--space-2);
+    overflow: hidden;
+    display: none;
 }
 
 .pack-detail-title {
@@ -532,16 +636,6 @@
     background-color: var(--surface-3);
 }
 
-/* FILLS WHATEVER IS LEFT, same technique as .shop-pack__art-rail above: a fixed ratio would need
- * re-measuring for a shell this much bigger than the tile it replaces. */
-.pack-detail-art-rail {
-    flex-direction: row;
-    width: 100%;
-    flex-grow: 1;
-    min-height: 0;
-    margin-bottom: var(--space-3);
-}
-
 .pack-detail-note {
     flex-shrink: 0;
     color: var(--ink-2);
@@ -550,13 +644,22 @@
     margin-bottom: var(--space-3);
 }
 
+/* COLUMN, NOT ROW (Sam, 2026-09-07 follow-up): two same-shape buttons side by side read as two
+ * different purchasable things. Stacked, they read as two ways to pay for the single pack named
+ * in the title above. */
 .pack-detail-actions {
-    flex-direction: row;
+    flex-direction: column;
     flex-shrink: 0;
 }
 
-/* Bigger than the tile's own buy buttons -- the detail shell has the room the tile never did. */
+/* Bigger than the tile's own buy buttons -- the detail shell has the room the tile never did.
+ * The gap between the two stacked buttons is set in C# (ShopPanelController.OpenDetail, on the
+ * second button only) rather than a :first-child rule here -- Unity does not support that
+ * pseudo-class (logs "Unknown pseudo class 'first-child' in StyleSheet shop" and silently never
+ * applies it; the pre-existing matchsettings.uss usage this was copied from has the same warning
+ * and the same dead rule). */
 .pack-detail-actions .shop-pack__buy {
+    width: 100%;
     min-height: var(--space-12);
     font-size: var(--type-h2);
 }

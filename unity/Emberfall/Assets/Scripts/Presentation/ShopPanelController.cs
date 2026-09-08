@@ -63,10 +63,13 @@ namespace Emberfall.Presentation
         private readonly Label _gems;
         private readonly Label _status;
         private readonly VisualElement _detailOverlay;
-        private readonly VisualElement _detailArtRail;
+        private readonly VisualElement _detailShell;
+        private readonly VisualElement _detailBar;
+        private readonly VisualElement _detailArt;
         private readonly VisualElement _detailActions;
         private readonly Label _detailTitle;
         private readonly Label _detailNote;
+        private VisualElement _detailOriginTile;
         private readonly PackRevealPanel _reveal;
         private readonly ShopFlow _flow;
         private readonly IPackArtProvider _packArt;
@@ -93,7 +96,9 @@ namespace Emberfall.Presentation
             _gems = root.Q<Label>("shop-gem-balance");
             _status = root.Q<Label>("shop-status");
             _detailOverlay = root.Q<VisualElement>("pack-detail-overlay");
-            _detailArtRail = root.Q<VisualElement>("pack-detail-art-rail");
+            _detailShell = root.Q<VisualElement>("pack-detail-shell");
+            _detailBar = root.Q<VisualElement>("pack-detail-bar");
+            _detailArt = root.Q<VisualElement>("pack-detail-art");
             _detailActions = root.Q<VisualElement>("pack-detail-actions");
             _detailTitle = root.Q<Label>("pack-detail-title");
             _detailNote = root.Q<Label>("pack-detail-note");
@@ -107,11 +112,11 @@ namespace Emberfall.Presentation
             _reveal = new PackRevealPanel(root);
 
             Wire(root, "btn-shop-close", Close);
-            Wire(root, "pack-detail-close", CloseDetail);
+            Wire(root, "pack-detail-close", () => CloseDetail());
             // The shell stops its own click from bubbling to the overlay's close-on-scrim handler
             // below -- otherwise every tap on the panel would close it, the same trap CraftModal's
             // craft-scrim comment documents.
-            root.Q<VisualElement>("pack-detail-shell")?.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
+            _detailShell?.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
             _detailOverlay?.RegisterCallback<ClickEvent>(_ => CloseDetail());
 
             _packSection = root.Q<VisualElement>("shop-section-packs");
@@ -168,7 +173,7 @@ namespace Emberfall.Presentation
         private async void Buy(string packId, ShopCurrency currency)
         {
             if (_flow == null || _busy) return;
-            CloseDetail();
+            CloseDetail(immediate: true);
             SetBusy(true);
             SetStatus("Purchasing and opening on the server...");
             try
@@ -229,9 +234,19 @@ namespace Emberfall.Presentation
                 var tile = new VisualElement();
                 tile.AddToClassList("shop-pack");
 
+                // Trimmed and moved beside the rail, not below it (Sam, 2026-09-07): a full-width
+                // caption line under each row was what the absolute bottom-left Back button
+                // collided with, and "Pack" is redundant once the word is sitting on a row of pack
+                // art anyway. Added first so it lands left of the rail in the tile's row layout.
+                var name = new Label(ShortName(offer.DisplayName));
+                name.AddToClassList("shop-pack__name");
+                tile.Add(name);
+
                 // The rail is added only if the set actually has art. An empty rail is a visible
                 // hole in the tile, and a pack whose art has not been drawn yet should read as a
-                // pack without a picture, not as a picture that failed to load.
+                // pack without a picture, not as a picture that failed to load. Appended after
+                // `name` (not Insert(0, ...) any more) so a late-loading rail still lands to its
+                // right instead of jumping in front of it.
                 _packArt?.LoadPackArt(offer.PackId, pieces =>
                 {
                     if (pieces == null || pieces.Count == 0) return;
@@ -239,17 +254,27 @@ namespace Emberfall.Presentation
                     artRail.AddToClassList("shop-pack__art-rail");
                     foreach (PackArtPiece piece in FirstPerFace(pieces, ArtFacesShown))
                         artRail.Add(BuildArtSlot(piece));
-                    tile.Insert(0, artRail);
+                    tile.Add(artRail);
                 });
-
-                var name = new Label(offer.DisplayName);
-                name.AddToClassList("shop-pack__name");
-                tile.Add(name);
 
                 // THE WHOLE TILE IS THE TAP TARGET (Sam, 2026-09-05): buying moved into
                 // #pack-detail-overlay, which OpenDetail populates from this same offer and
                 // wallet. wallet is captured per-render, same as BuyButton below already did.
-                tile.RegisterCallback<ClickEvent>(_ => OpenDetail(offer, wallet));
+                //
+                // The FLIP origin is the specific art slot under the pointer, not the tile
+                // (Sam, 2026-09-07 follow-up): the tile is the whole four-wide row, already
+                // nearly as wide as the detail shell it flies into, so animating FROM the tile
+                // produced a barely-visible flip. Walking up from the click target to the nearest
+                // .shop-pack__art-slot finds the one narrow pack image the player actually tapped;
+                // a tap that lands on the name label or empty tile space (no slot ancestor) falls
+                // back to the tile itself.
+                tile.RegisterCallback<ClickEvent>(evt =>
+                {
+                    VisualElement origin = evt.target as VisualElement;
+                    while (origin != null && origin != tile && !origin.ClassListContains("shop-pack__art-slot"))
+                        origin = origin.parent;
+                    OpenDetail(offer, wallet, origin ?? tile);
+                });
 
                 _packList.Add(tile);
             }
@@ -335,38 +360,199 @@ namespace Emberfall.Presentation
         /// <c>Emberfall.Core.Collection</c> directly elsewhere, and every pack the disconnected
         /// catalog offers uses that one authoritative count, so a second copy of the same fact on
         /// the transport DTO would only be real once a server gateway ships packs of varying size.
+        ///
+        /// <para>NO FOUR-WIDE ART RAIL HERE (Sam, 2026-09-07 follow-up): repeating the tile's
+        /// whole rail at a bigger size just showed the player the same row they had already
+        /// tapped. <see cref="_detailArt"/> shows exactly the ONE piece the tap landed on
+        /// instead — see the follow-up note below on why that single piece still belongs here.</para>
+        ///
+        /// <para><b>The shell flies in from the tapped tile and flies back out to it on close</b>
+        /// (Sam, 2026-09-07 follow-up: no separate modal object appearing/disappearing -- the pack
+        /// itself has to visibly translate to center and scale up, eased out, and reverse on
+        /// close). This is FLIP (First-Last-Invert-Play): <see cref="TryComputeFlipTransform"/>
+        /// derives the shell's tile-matched translate/scale from the screen's bound rather than
+        /// the shell's own (see its own doc comment for why), <see cref="FlipToIdentity"/> applies
+        /// that with NO transition active (pack-detail-shell--animating is not yet applied, so the
+        /// jump is instant and unseen), lets that render for one tick, then turns the transition on
+        /// and resets translate/scale to identity -- which the transition system then animates,
+        /// because the starting values were already rendered in a prior frame. Doing the class-add
+        /// and the value-reset in the same tick as the jump would coalesce into one style
+        /// recalculation with nothing in between to transition from, and the shell would just snap
+        /// to its final spot with no visible motion. <see cref="FlipFromIdentity"/> runs the same
+        /// sequence backwards for close: transition on, translate/scale to the tile-matched values
+        /// (this one SHOULD transition, since identity was already on screen), then hide once that
+        /// has had time to finish.</para>
         /// </summary>
-        private void OpenDetail(PackOffer offer, WalletBalances? wallet)
+        private void OpenDetail(PackOffer offer, WalletBalances? wallet, VisualElement originTile)
         {
             if (_detailOverlay == null) return;
 
-            if (_detailTitle != null)
-                _detailTitle.text = $"{BoosterPack.DefaultCardCount} {ShortName(offer.DisplayName)} cards for your collection";
-            if (_detailNote != null)
-                _detailNote.text = "Core + expansion · Rare or better guaranteed";
+            // STRIPPED TO JUST THE ART, TEMPORARILY (Sam, 2026-09-07 follow-up): the title/note/
+            // buy buttons are hidden entirely so the flight animation can be isolated and nailed
+            // down with the absolute minimum content in the shell. Re-populate and re-show these
+            // once the flight itself is confirmed correct -- RETIREMENT TRIGGER: this debug
+            // stripping should not survive past that point.
+            if (_detailBar != null) _detailBar.style.display = DisplayStyle.None;
+            if (_detailNote != null) _detailNote.style.display = DisplayStyle.None;
+            if (_detailActions != null) _detailActions.style.display = DisplayStyle.None;
 
-            _detailArtRail?.Clear();
-            if (_detailArtRail != null)
+            // The one piece actually tapped travels with the shell (Sam, 2026-09-07 follow-up).
+            // Copies the slot's already-baked background straight across instead of re-resolving
+            // a PackArtPiece/Sprite -- BuildArtSlot already did the (possibly expensive)
+            // PackWrapperBaker bake, and the slot's resolved style is that result.
+            if (_detailArt != null)
             {
-                _packArt?.LoadPackArt(offer.PackId, pieces =>
+                if (originTile != null && originTile.ClassListContains("shop-pack__art-slot"))
                 {
-                    if (pieces == null || pieces.Count == 0) return;
-                    foreach (PackArtPiece piece in FirstPerFace(pieces, ArtFacesShown))
-                        _detailArtRail.Add(BuildArtSlot(piece));
-                });
+                    _detailArt.style.backgroundImage = originTile.resolvedStyle.backgroundImage;
+                    _detailArt.style.backgroundSize = originTile.resolvedStyle.backgroundSize;
+                    _detailArt.style.display = DisplayStyle.Flex;
+                }
+                else
+                {
+                    _detailArt.style.display = DisplayStyle.None;
+                }
             }
 
-            _detailActions?.Clear();
-            if (_detailActions != null)
-            {
-                _detailActions.Add(BuyButton(offer, ShopCurrency.Gold, wallet));
-                _detailActions.Add(BuyButton(offer, ShopCurrency.Gems, wallet));
-            }
-
+            _detailOriginTile = originTile;
+            _detailShell?.RemoveFromClassList("pack-detail-shell--animating");
             _detailOverlay.RemoveFromClassList("pack-detail-overlay--hidden");
+
+            // Called directly, no waiting (Sam, 2026-09-07 follow-up -- see TryComputeFlipTransform
+            // for why this is now safe to call the instant the overlay unhides).
+            FlipToIdentity();
         }
 
-        private void CloseDetail() => _detailOverlay?.AddToClassList("pack-detail-overlay--hidden");
+        /// <summary>
+        /// <paramref name="immediate"/> skips the closing transition: <see cref="Buy"/> calls it
+        /// that way because the purchase flow that follows (a network round trip, then
+        /// <see cref="PackRevealPanel"/>) already provides the visual break a fly-out transition
+        /// exists to give, and layering a second one on top would just be a delay. The close
+        /// button and the scrim tap use the default animated close.
+        /// </summary>
+        private void CloseDetail(bool immediate = false)
+        {
+            if (_detailOverlay == null) return;
+
+            if (immediate || _detailShell == null || _detailOriginTile == null)
+            {
+                _detailShell?.RemoveFromClassList("pack-detail-shell--animating");
+                _detailOverlay.AddToClassList("pack-detail-overlay--hidden");
+                _detailOriginTile = null;
+                return;
+            }
+
+            FlipFromIdentity();
+            // Read off pack-detail-shell--animating's own resolved transition-duration rather
+            // than hardcoding a matching number here (Sam, 2026-09-07 follow-up: an earlier
+            // hardcoded 280ms was left behind when the CSS duration was tuned up to 1.5s, cutting
+            // the close flight off almost immediately). This way the two can never drift apart.
+            _detailOverlay.schedule.Execute(() =>
+            {
+                _detailOverlay.AddToClassList("pack-detail-overlay--hidden");
+                _detailShell.RemoveFromClassList("pack-detail-shell--animating");
+                _detailOriginTile = null;
+            }).StartingIn(ResolvedTransitionMs(_detailShell));
+        }
+
+        /// <summary>The longest of a VisualElement's currently resolved transition-duration
+        /// entries, in whole milliseconds. Used to schedule a follow-up (hiding the element, here)
+        /// exactly as long after starting a transition as the transition itself actually lasts,
+        /// so the two can never drift out of sync as the CSS duration is tuned.</summary>
+        private static int ResolvedTransitionMs(VisualElement element)
+        {
+            float longestMs = 0f;
+            foreach (TimeValue duration in element.resolvedStyle.transitionDuration)
+            {
+                float ms = duration.unit == TimeUnit.Second ? duration.value * 1000f : duration.value;
+                longestMs = Mathf.Max(longestMs, ms);
+            }
+            return Mathf.CeilToInt(longestMs);
+        }
+
+        /// <summary>
+        /// The shell's translate/scale needed to make it exactly overlap the tapped tile,
+        /// computed from the SCREEN's bound and the shell's known CSS constants (90% of the
+        /// screen's width, capped at 820px, centered by pack-detail-overlay) rather than the
+        /// shell's own worldBound.
+        ///
+        /// <para>This replaces two earlier attempts that both measured the shell directly and
+        /// both failed the same way (Sam, 2026-09-07 follow-up): the instant the shell becomes
+        /// visible, its OWN layout is not reliably resolved yet. Two chained scheduled ticks
+        /// (32ms) was not enough, and a GeometryChangedEvent listener never fired at all on a
+        /// repeat open -- live diagnostic logging caught the first attempt returning a near-zero
+        /// jump instead of the real ~650px offset, and confirmed the second attempt's callback
+        /// simply never ran. The <c>screen</c> element (pack-detail-overlay's parent, the whole
+        /// shop UI's root), by contrast, is guaranteed to already be laid out the instant a tile
+        /// can be tapped at all -- there is no tile to tap otherwise -- so deriving the shell's
+        /// FINAL rect from it and fixed numbers needs no readiness check, and this can run the
+        /// instant the overlay unhides.</para>
+        ///
+        /// <para>Scale is uniform and based on width alone (the shell's height is content-driven
+        /// text/art layout, not a fixed number, so it cannot be predicted this way) -- an
+        /// approximation in the jump's exact proportions, never in its timing.</para>
+        /// </summary>
+        private bool TryComputeFlipTransform(out Translate translate, out Scale scale)
+        {
+            translate = default;
+            scale = default;
+            if (_detailOriginTile == null) return false;
+
+            Rect tileBound = _detailOriginTile.worldBound;
+            VisualElement screen = _detailOverlay?.parent;
+            if (screen == null || tileBound.width <= 0 || tileBound.height <= 0) return false;
+
+            Rect screenBound = screen.worldBound;
+            if (screenBound.width <= 0) return false;
+
+            float shellWidth = Mathf.Min(screenBound.width * 0.9f, 820f);
+            float scaleFactor = tileBound.width / shellWidth;
+            translate = new Translate(
+                tileBound.center.x - screenBound.center.x,
+                tileBound.center.y - screenBound.center.y);
+            scale = new Scale(new Vector3(scaleFactor, scaleFactor, 1f));
+            return true;
+        }
+
+        /// <summary>
+        /// The "Play" half of FLIP, forward: jumps the shell (with no transition active) to
+        /// exactly overlap the tapped tile, then -- one tick later, once that jump has rendered --
+        /// turns the transition on and resets translate/scale to identity.
+        /// </summary>
+        private void FlipToIdentity()
+        {
+            if (_detailShell == null) return;
+            if (TryComputeFlipTransform(out Translate translate, out Scale scale))
+            {
+                _detailShell.style.translate = translate;
+                _detailShell.style.scale = scale;
+            }
+
+            // ExecuteLater(16), not a bare Execute -- see the comment on OpenDetail's own
+            // schedule. This is the step that actually has to transition: without the render gap
+            // ExecuteLater buys, the jump above and this reset land in the same layout pass and
+            // the shell just appears at rest with no visible motion.
+            _detailShell.schedule.Execute(() =>
+            {
+                _detailShell.AddToClassList("pack-detail-shell--animating");
+                _detailShell.style.translate = new Translate(0, 0);
+                _detailShell.style.scale = new Scale(Vector3.one);
+            }).ExecuteLater(16);
+        }
+
+        /// <summary>The reverse of <see cref="FlipToIdentity"/>: the shell is already sitting at
+        /// identity (rendered, on screen) and --animating is already applied from the open, so
+        /// setting the tile-matched translate/scale here transitions immediately -- no jump-then-
+        /// animate split needed, because there is no "instant" step to protect from an active
+        /// transition this time.</summary>
+        private void FlipFromIdentity()
+        {
+            if (_detailShell == null) return;
+            if (!TryComputeFlipTransform(out Translate translate, out Scale scale)) return;
+            _detailShell.AddToClassList("pack-detail-shell--animating");
+            _detailShell.style.translate = translate;
+            _detailShell.style.scale = scale;
+        }
 
         /// <summary>The catalog's display names all end in " Pack" (e.g. "Emberfall Pack"); the
         /// detail title already supplies the word via "... cards for your collection", so a
