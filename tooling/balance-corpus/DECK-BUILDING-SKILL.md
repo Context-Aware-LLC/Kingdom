@@ -36,7 +36,6 @@ Deck-building is impossible without these, and the names do not give them away.
 | `OVERWHELM` | Excess damage from killing a minion carries to the enemy hero | `CommandProcessor.cs` |
 | `VANGUARD` | No retaliation if the defender dies to the hit | `CommandProcessor.cs` |
 | `BACKDRAFT` | **Locks mana crystals next turn.** Not damage to you. | `ActionHandlers.cs` |
-| `REINFORCE` | A typed action, not a carrier keyword: +1/+1 to its target | `ActionHandlers.cs` |
 | `FROST` | Whatever it damages misses its next attack — **heroes included**, unlike `VENOM` | `DamagePipeline.cs` |
 
 **`FROST` is the one keyword whose id is not its printed word:** the card face and every tooltip say
@@ -109,7 +108,7 @@ Read from the whole pool, not from a handful of marquee cards.
 - **EMBERWARD** — proactive damage and attack pressure. `FERVOR`, `SKIRMISH`, direct damage, and
   `BACKDRAFT` exchange future flexibility for immediate tempo; its best decks close before the
   locked crystals become decisive.
-- **TIDECALLER** — board denial and durable defence. Frost, bounce, `BULWARK`, and `REINFORCE`
+- **TIDECALLER** — board denial and durable defence. Frost, bounce, `BULWARK`
   effects buy time and turn small defenders into relevant bodies without relying on raw damage.
 - **NEUTRAL** — curve glue rather than a standalone plan. Its cards supply `BULWARK`, healing,
   draw, keyword specialists, and broadly useful bodies when a class pair lacks a cost or role.
@@ -123,20 +122,12 @@ cards is a second small effect stapled onto a familiar body.
   price of being narrower. `grave_tomb_warden` (1/3, `BULWARK`, `ON_DEATH: draw 1`) does two
   jobs where `grave_deathweaver` does one. Prefer Rekindling for a slot you already knew you wanted;
   prefer Emberfall when you want flexibility.
-- **`REINFORCE` is Rekindling's signature rider.** It appears on a dozen cards
-  (`clock_assembly_line`, `ward_iron_foundation`, `verdant_wildbloom_surge`)
-  and is worth +1/+1. On a wide board it is quietly one of the strongest riders available, which is
-  why the go-wide decks here lean on it.
 - **The Rekindling legendaries are build-arounds, not just big bodies.** `ward_aldric` and
   `clock_cogsworth` each convert a stalled board into a threat in one card. If a deck wants a
   top end, check that class's Rekindling legendary first.
 - **How much Rekindling a deck ends up with is an outcome, not a target.** These three landed at
   12, 13 and 4 cards of 30 respectively — the aggro deck is low because Emberfall's Tempest spells
   are already the cheapest reach in the pool and Rekindling adds no cheaper one.
-- **TIDECALLER / GRAVEKEEP gets a complete attrition bridge.** Channel Mender heals and
-  `REINFORCE`s, Memorial Wisp and Grave Builder leave value behind, Shoreline Pact combines bounce
-  with `REINFORCE`, and Deepwater Alliance plus Maren's Peacebroker lock down the opposing board
-  while growing yours.
 - **CLOCKWRIGHT / TEMPEST gets tempo draw plus deterministic reach.** Blueprint Archive and
   Tinker's Gambit replace themselves, Storm Channeler supports the dense spell package,
   Thunderstrike layers targeted and enemy-wide damage, and Voltaic Sentinel plus Stormcaller's

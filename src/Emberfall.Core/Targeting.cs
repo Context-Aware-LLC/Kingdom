@@ -418,8 +418,7 @@ namespace Emberfall.Core
         ///
         /// <para><b>A shortfall fizzles on a MINION or WEAPON and refuses on a SPELL</b> (Sam,
         /// 2026-08-07). The body is the difference: a minion whose herald finds nothing is still a
-        /// minion, so demanding a target it cannot have made 15 rows unplayable — a Reinforce herald
-        /// could never be your first minion. A spell that fizzles is pure card-burn with nothing left
+        /// minion, so demanding a target it cannot have made 15 rows unplayable — A spell that fizzles is pure card-burn with nothing left
         /// over, so it stays refused and the card stays in hand.</para>
         ///
         /// <para><b>A REQUIRED cost opts back out of the fizzle</b> — "sacrifice a friendly minion".

@@ -971,9 +971,24 @@
  * two numbers changes, walk to `#collection-panel` and update the other -- USS drops calc()
  * silently (see theme.uss's own warning), so this can't be written as one formula.
  *
- * WIDTH: 1152px = 9 tabs x (113 authored width + 15 margin-left), all authored on `.class-tab_art`
- * below. Grow a tab or its margin and this needs the same arithmetic redone by hand for the same
- * reason -- no calc(). Getting it wrong under-sizes the box, which does not clip the tabs (nothing
+ * WHY THE FIRST FIX MADE IT WORSE (Sam, 2026-09-08: "centering is worse but its fine" -- fixed
+ * anyway, it's the same math this comment already got wrong once). `flex-grow: 0; flex-shrink: 0;`
+ * on `.class-tab_art` means `flex-basis` alone sizes the tab on this row's main axis -- `width` is
+ * not consulted at all once flex-basis is a definite length, same as plain CSS flexbox. The WIDTH
+ * total below was computed off `width` (123) instead of the number actually rendering (flex-basis,
+ * 99), so the box came out 216px too wide, the flex-start-aligned tabs sat flush left inside it,
+ * and centering that oversized box put the visible tabs 108px LEFT of centre -- worse than the
+ * 7.5px right-of-centre the previous, off-by-one-margin box had. `width` is deleted below rather
+ * than reconciled: keeping two numbers that don't both apply is exactly how this happened twice.
+ *
+ * WHY IT LOOKED OFF-CENTRE, the ORIGINAL finding: the first `margin-left` pass put one on every
+ * tab, `class-tab-emberward` included -- so the box had a 15px gap before the first tab and none
+ * after the last, and `translate: -50%` centers the BOX, not the tabs inside it. `#class-tab-emberward`
+ * below zeroes its own margin so the gutter is between tabs only (8 gaps for 9 tabs, not 9).
+ *
+ * WIDTH: 1091px = 9 tabs x 99 (flex-basis, the ONLY sizing property on `.class-tab_art` now) +
+ * 8 gaps x 25 margin-left. Grow a tab or the gutter and this needs the same arithmetic redone by
+ * hand -- no calc(). Getting it wrong under-sizes the box, which does not clip the tabs (nothing
  * here sets overflow) but does throw off `left: 50%; translate: -50% 0`, which centers against
  * this width, not the tabs' actual total. */
 #class-tab-bar {
@@ -982,27 +997,33 @@
     left: 50%;
     translate: -50% 0;
     flex-direction: row;
-    width: 1152px;
+    width: 1091px;
     max-width: 100%;
     height: 97px;
 }
 .class-tab_art {
     flex-grow: 0;
     flex-shrink: 0;
-    /* flex-basis kept 24 under width, the same gap this pair has carried since 76/56 (2026-09-07) --
-     * preserved rather than closed, since neither Sam nor a device pass has flagged the rendered
-     * size as wrong and collapsing it now would be an unverified guess at which of the two numbers
-     * the engine actually honours. */
-    flex-basis: 89px;
-    width: 113px;
-    /* 113 wide x 93 tall, up from 88 x 88 (Sam, 2026-09-08: "+25 width, +5 height"). +4dp top
-     * margin still below = 97, this strip's height. Grow this and the strip's own height together. */
+    /* THE ONLY SIZING PROPERTY -- no separate `width` (see `#class-tab-bar`'s comment above for why
+     * carrying one was the bug). 99, up from 89 (Sam, 2026-09-08: "+10 width"). */
+    flex-basis: 99px;
+    /* +4dp top margin below = 97, this strip's height. Grow this and the strip's own height
+     * together. */
     height: 93px;
-    margin-left: 15px;
+    /* 25, not 15 (Sam, 2026-09-08: "+10 to the left margin"). See `#class-tab-emberward` below --
+     * the first tab overrides this to 0 so the gutter reads as BETWEEN tabs, not before the first
+     * one too, which is what centering the box actually requires. */
+    margin-left: 25px;
     border-radius: 18px 18px 0 0;
     margin-top: var(--space-1);
     overflow: hidden;
     -unity-background-scale-mode: scale-and-crop;
+}
+/* No margin BEFORE the first tab -- see the "WHY IT LOOKED OFF-CENTRE" note on `#class-tab-bar`.
+ * `.class-tab_art`'s margin-left is the gutter between tabs; the leftmost tab isn't between
+ * anything on its left, so it doesn't get one. */
+#class-tab-emberward {
+    margin-left: 0;
 }
 /* THE CLASS -> HERO-POWER-ART MAP MOVED TO Common/theme.uss (2026-09-03). It is not a collection
  * concern: the character-create picker needs the same eight images to put a class's hero power on
