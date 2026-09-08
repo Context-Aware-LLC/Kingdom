@@ -541,6 +541,16 @@ namespace Emberfall.Presentation
             _leaderboardList = _root.Q<ScrollView>("leaderboard-list");
             _leaderboardStatus = _root.Q<Label>("leaderboard-status");
             _leaderboardUpdated = _root.Q<Label>("leaderboard-updated");
+
+            // Outside tap closes it (2026-09-08). `#leaderboard-modal` (mm-modal) is BOTH the
+            // full-bleed backdrop and the flex container centring `.mm-modal__panel` inside it —
+            // there is no separate scrim element the way Collection's deck drawer has one. A click
+            // on the panel or any of its children bubbles up through this same handler, so the
+            // target check is what keeps it from closing on a click that landed on real content.
+            _leaderboardModal?.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.target == _leaderboardModal) CloseLeaderboard();
+            });
         }
 
         private void OnLeaderboards()

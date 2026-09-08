@@ -106,10 +106,6 @@ namespace Emberfall.Presentation
         private Label _emptyState;
         private Label _status;
 
-        /// <summary>The header's way into creation. The grid's "+" plate is the other, and both go
-        /// to the same scene — creation has been its own SCENE since 2026-08-23 (Sam).</summary>
-        private Button _newDeckButton;
-
         private VisualElement _matchBar;
         private Button _matchContinue;
 
@@ -179,7 +175,6 @@ namespace Emberfall.Presentation
             {
                 Debug.LogError($"[DeckRoster] could not open this device's collection: {ex.Message}");
                 SetStatus("Collection unavailable — see the console.", isError: true);
-                _newDeckButton?.SetEnabled(false);
                 return;
             }
 
@@ -203,8 +198,6 @@ namespace Emberfall.Presentation
             _rosterIntro = _root.Q<Label>("roster-intro");
             _emptyState = _root.Q<Label>("empty-state");
             _status = _root.Q<Label>("status");
-
-            _newDeckButton = _root.Q<Button>("new-character");
 
             _matchBar = _root.Q<VisualElement>("match-bar");
             _matchContinue = _root.Q<Button>("match-continue");
@@ -235,29 +228,15 @@ namespace Emberfall.Presentation
 
         private void WireChrome()
         {
+            // The screen's one way out (2026-09-08): "+ New Deck" and View Collection were cut the
+            // same day as redundant/off-mission (see CharacterRosterScreen.uxml's header comment),
+            // leaving this as the only button `WireChrome` wires at the top level.
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ =>
             {
                 MatchDeckSelection.Cancel();
                 ScreenNav.Go(_returnScene);
             });
 
-            // Creation is its own scene (Sam, 2026-08-23) — the same call the Store got, for the
-            // same reason: full-screen, opaque, a destination. It returns HERE rather than to
-            // _returnScene, because the deck it just made is a plate on this grid and the player
-            // needs to see it land; MatchDeckSelection is deliberately left alone so a queue pick
-            // survives the detour, exactly as it does for the collection below.
-            _newDeckButton?.RegisterCallback<ClickEvent>(_ => NewDeck());
-
-            // The whole card pool, no deck panel (Sam, 2026-08-07). Deliberately does NOT cancel
-            // MatchDeckSelection: browsing the collection mid-queue-pick is a detour, not an
-            // abandonment, and Back returns here with the pick still live.
-            _root.Q<Button>("view-collection")?.RegisterCallback<ClickEvent>(_ =>
-            {
-                CollectionController.ReturnScene = _returnScene == "Collection"
-                    ? "MainMenu"
-                    : "CharacterRoster";
-                ScreenNav.Go(ScreenNav.Collection);
-            });
             if (MatchDeckSelection.Choosing)
             {
                 if (_rosterIntro != null)
@@ -607,7 +586,6 @@ namespace Emberfall.Presentation
 
             _rosterList.Add(BuildDeckGrid(rows));
 
-            RefreshNewDeckButton(rows.Count);
             RefreshMatchBar();
             SetStatus("");
         }
@@ -743,10 +721,15 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// How many plate rows a screenful should show. The real ceiling on plate size: a plate is
-        /// as large as it can be while two rows still fit, so a full roster reads as a short scroll
-        /// rather than one enormous deck.
+        /// as large as it can be while this many rows still fit.
+        ///
+        /// <para><b>3, not 2</b> (2026-09-08, Sam) — matching <see cref="MaxColumns"/>'s own doc
+        /// comment, which already says four columns keeps a FULL roster (<see
+        /// cref="DeckCreation.MaxPerAccount"/> plus the "+", 9 tiles) to three rows. At 2 the height
+        /// solve sized plates as if only two rows needed to fit, so the third row of a full roster
+        /// ran off the bottom of the viewport into a scroll no plate count actually needed.</para>
         /// </summary>
-        private const float RowsPerScreen = 2f;
+        private const float RowsPerScreen = 3f;
 
         /// <summary>Everything a plate row costs beyond the square itself: the plate's padding and
         /// border, its bottom margin, and the grid's own vertical padding. Must be kept in step
@@ -915,16 +898,6 @@ namespace Emberfall.Presentation
             return plate;
         }
 
-        private void RefreshNewDeckButton(int deckCount)
-        {
-            bool room = deckCount < DeckCreation.MaxPerAccount;
-            _newDeckButton?.SetEnabled(room);
-            if (_newDeckButton != null)
-                _newDeckButton.tooltip = room
-                    ? ""
-                    : $"{DeckCreation.MaxPerAccount} decks is the limit. Delete one to make room.";
-        }
-
         /// <summary>
         /// Open the class picker. A deck's pairing is permanent (ADR-0009 ruling 1), so creating one
         /// begins with choosing it — there is no shape of this that fits in a dialog pane, which is
@@ -955,7 +928,6 @@ namespace Emberfall.Presentation
         private void ReportDeckReadFailure(Exception ex)
         {
             Debug.LogError($"[DeckRoster] deck read failed: {ex.Message}");
-            _newDeckButton?.SetEnabled(false);
             _rosterList?.Clear();
             if (_emptyState != null) _emptyState.style.display = DisplayStyle.None;
             SetStatus("Your saved decks could not be loaded.", isError: true);

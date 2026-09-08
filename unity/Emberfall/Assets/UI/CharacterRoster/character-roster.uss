@@ -1,53 +1,32 @@
 /* HORIZONTAL CLEARANCE COMES FROM `.emb-bleed` ON THE ROOT, and this rule must not take it back.
- * Unlike the main menu, this screen has no absolutely-positioned chrome to hang `.emb-edge` on --
- * "Main Menu" and "View Collection" sit in a FLOW header -- so the only thing that can inset them
- * is the root. It was a `padding: var(--space-6)` shorthand until 2026-08-30, which put the two
- * top-right buttons 24dp from the edge, inside the 52dp cutout. Same bug the deck drawer's Close
- * had, arrived at a different way.
+ * LONGHANDS, NOT A SHORTHAND, for the vertical padding below. A `padding:` here outranks nothing
+ * -- `.emb-bleed` and this rule are both one class -- but the LATER of two equal-specificity
+ * declarations wins, and a shorthand re-sets all four sides. Writing the vertical as longhands is
+ * what lets `.emb-bleed`'s horizontal survive regardless of sheet order.
  *
- * LONGHANDS, NOT A SHORTHAND. A `padding:` here outranks nothing -- `.emb-bleed` and this rule are
- * both one class -- but the LATER of two equal-specificity declarations wins, and a shorthand
- * re-sets all four sides. Writing the vertical as longhands is what lets the horizontal survive
- * regardless of sheet order. The vertical came down 24 -> 8 each on 2026-08-31 (Sam); that is safe
- * to move because the roster solver MEASURES its viewport rather than deriving it -- the 48dp root
- * in CharacterRosterController.RowChrome's worked example is an illustration, not an input. */
+ * NO PERSISTENT HEADER (2026-09-08). This screen's chrome used to be a flow row up top -- "+ New
+ * Deck", View Collection, Main Menu -- all three cut the same day: the "+" plate on the grid is
+ * the one door into creation, and the one door out is `#back-button` below, in the same
+ * bottom-left corner every other screen's Back button uses. Nothing left needs a header inset, so
+ * there is no `.roster-header` any more either. */
 .character-roster {
     flex-grow: 1;
-    background-color: var(--surface-1);
+    background-image: url("/Assets/Art/Backgrounds/CharacterRoster_Backdrop.png");
+    -unity-background-scale-mode: scale-and-crop;
     padding-top: var(--space-2);
     padding-bottom: var(--space-2);
     color: var(--ink-1);
 }
 
-.roster-header {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--space-2);
-}
-
-.roster-header-left {
-    flex-direction: row;
-    align-items: center;
-}
-
-.roster-header-actions {
-    flex-direction: row;
-    align-items: center;
-}
-
-.roster-header-actions .roster-button {
-    margin-left: var(--space-2);
-}
-
-/* The one door into creation, top-left (NOR-278). CTA-gold so it reads as the primary thing to
- * do on an empty roster. Flush against the header's left edge (Sam, 2026-08-09) — it used to sit
- * right of a "Characters" / "N characters" heading that said nothing the roster below it didn't
- * already show, so the heading is gone and this no longer needs a margin to clear it. */
-.new-character-button {
+/* ID, not another class, so this reliably outranks `.roster-button` regardless of sheet order.
+ * `.roster-button` sets `height: 48px` / `min-width: 148px`; `.col-back-corner` (theme.uss) wants
+ * `height: var(--touch-min)` (56) and a content-sized width -- and theme.uss loads BEFORE this
+ * sheet, so on equal class specificity `.roster-button`'s later declaration would otherwise win
+ * and land this button 8px under the touch floor, the exact bug class the 2026-09-03 touch audit
+ * exists to catch. */
+#back-button {
     min-width: 0;
     height: var(--touch-min);
-    font-size: var(--type-label);
 }
 
 .roster-body {
@@ -61,8 +40,10 @@
  * came down to match on 2026-08-31 (Sam). (Authored when the panel was 411 tall, where 8 was a
  * real share of it. On the 1080 panel of #349 it is not; the value is left alone because it is
  * the sheet's spacing rhythm, but the row solve above it has NOT been re-measured.) */
+/* NO background-color, same reason as `.character-roster` above -- the panel's flat fill would
+ * sit over the root's incoming background image. Border-radius/padding stay: they still shape
+ * the panel's clip and content inset once the art is behind it. */
 .roster-panel {
-    background-color: var(--surface-2);
     border-radius: var(--space-2);
     padding: var(--space-2);
 }
@@ -177,43 +158,24 @@
     overflow: hidden;
 }
 
-/* GOLD MEANS READY TO PLAY (Sam, 2026-08-07). It is the only thing on a plate that says so —
- * the "17 / 30" caption and the Ready/Draft chip before it are both gone. A deck short of 30, or
- * holding something illegal, simply has no gold edge.
+/* GOLD READY RING, WHITE HOVER RING: both cut 2026-09-08 (Sam) — the blue match-pick ring below is
+ * the only one left. `deck-plate-art--ready` is still toggled by CharacterRosterController off
+ * `summary.Queue.IsEligible` (the tooltip still reads the same eligibility), it just paints
+ * nothing now; ready vs not is no longer shown on the plate itself.
  *
- * The default deck is NOT a border. It is the star on the plate's Functions button, because gold
- * now means something else and a second ring colour on the same element would be read as one
- * state, not two.
- *
- * The match pick is the OUTER ring on the plate, so a picked deck still shows its gold inner edge
- * — two concentric rings, two independent facts. */
-.deck-plate-art--ready {
-    border-width: 3px;
-    border-color: var(--accent);
-}
-
+ * The default deck is NOT a border. It is the star on the plate's Functions button, because a
+ * second ring colour on the same element would be read as one state, not two. */
 .deck-plate--selected {
     background-color: var(--surface-3);
     border-color: var(--mana);
 }
 
 /* The plate has no button (Sam, 2026-08-07). It is the picture, and the picture is the control:
- * one tap opens the functions, two open the deckbuilder. So the only affordance it can offer is
- * the hover itself. */
-.deck-plate:hover .deck-plate-art {
-    border-width: 3px;
-    border-color: var(--ink-1);
-}
-
-/* A ready plate keeps its gold edge until you point at it, and only then takes the hover ink.
- * `.deck-plate--default` shared this rule until ADR-0009 and went with the star below. */
-.deck-plate-art--ready:hover {
-    border-color: var(--ink-1);
-}
+ * one tap opens the functions, two open the deckbuilder. */
 
 /* The default-deck star stood here until ADR-0009. There is no default deck: it answered
  * "which of this character's decks do I open on", and a flat account-wide list does not ask
- * it. The gold ready edge is the only thing marking a plate now. */
+ * it. */
 
 .deck-edit-hint {
     margin-top: var(--space-2);
@@ -222,22 +184,38 @@
     -unity-text-align: middle-center;
 }
 
+/* EXPLICIT transparent, not just an absent declaration (2026-09-08, corrected same day). Deleting
+ * the property here does nothing: `.deck-plate-art` (base, above) already declares `background-
+ * color: var(--surface-3)` as every OTHER plate's art-loading placeholder, and that rule still
+ * wins by cascade whenever this compound selector leaves the property unset -- an absent
+ * declaration does not override a present one, however much more specific the selector is. Same
+ * reason as `.character-roster`/`.roster-panel`: one more flat fill off the root's incoming
+ * background image, but this one needs the explicit value to actually take. */
 .deck-plate--new .deck-plate-art {
     align-items: center;
     justify-content: center;
     border-width: 2px;
     border-color: var(--surface-3);
-    background-color: var(--surface-1);
+    background-color: transparent;
 }
 
+/* EXPLICIT 88, not --type-display (2026-09-08): double the token's 44, on request. Sized against
+ * the plate art's own square rather than the type ramp -- same call as .hero-choice-name's 56. */
 .deck-plate-plus {
-    font-size: var(--type-display);
+    font-size: 88px;
     -unity-font-style: bold;
     color: var(--ink-2);
 }
 
 .deck-plate--new:hover .deck-plate-art { border-color: var(--accent); }
 .deck-plate--new:hover .deck-plate-plus { color: var(--accent); }
+
+/* Press feedback (2026-09-08), same `translate: 0 1px` idiom as `.roster-button:active` -- this
+ * plate IS a Button (BuildNewDeckPlate), not a plain VisualElement like the other plates, so the
+ * pseudo-class applies directly. */
+.deck-plate--new:active {
+    translate: 0 1px;
+}
 
 /* There is no deck-strip-hint and no deck-strip. See the deck grid section above. */
 
@@ -338,12 +316,24 @@
 /* Find Game's Continue bar. Match pick used to be a whole second row layout — text buttons per
  * deck, its own draft/empty states — which meant the same screen looked different depending on
  * which door you came through. It draws the ordinary plates now (Sam, 2026-08-07); this bar is
- * the only thing the match door adds. */
+ * the only thing the match door adds.
+ *
+ * POSITION: ABSOLUTE (2026-09-08), same fix as `.deck-drawer__manage` in collection.uss — in flow
+ * this sat as the last child of `root`'s column, flush to the bottom edge, and collided with
+ * `.ms-gear` (matchsettings.uss, absolute bottom-right). First fix pinned it beside the gear with
+ * a right reserve; CENTERED instead now that the corner is shared with `#back-button` too — a
+ * bar hugging either corner reads as belonging to that corner's button, not as its own action.
+ * `left: 50%; translate: -50% 0` is `#class-tab-bar`'s own centering trick (collection.uss): the
+ * bar sizes to its one button's content width and sits centered regardless of it, so it clears
+ * both `.ms-gear` and `#back-button` without needing to know either one's width. */
 .match-bar {
+    position: absolute;
+    left: 50%;
+    translate: -50% 0;
+    bottom: var(--space-6);
+    height: 58px;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-end;
-    margin-top: var(--space-4);
 }
 
 
@@ -447,6 +437,13 @@
     -unity-font-style: bold;
 }
 
+/* Press feedback for the whole family, one rule (2026-09-08): same `translate: 0 1px` idiom as
+ * `.ms-gear:active` (matchsettings.uss). Generic on `.roster-button` rather than per-modifier so
+ * every button that carries it -- Back included -- gets a touched state with no further wiring. */
+.roster-button:active {
+    translate: 0 1px;
+}
+
 .roster-button--small {
     min-width: 128px;
     height: var(--touch-min);
@@ -458,14 +455,30 @@
     background-color: var(--accent);
 }
 
+/* Literal, same reason as --ghost's hover below: theme.uss has --accent (240,166,60) but no
+ * lighter step to reach for. */
+.roster-button--cta:hover {
+    background-color: rgb(243, 185, 99);
+}
+
 .roster-button--ghost {
     color: var(--ink-1);
     background-color: var(--surface-3);
 }
 
+/* One step brighter than --surface-3 (42,51,64) -- there is no lighter surface token to reach
+ * for, so this is a literal value rather than a var(). */
+.roster-button--ghost:hover {
+    background-color: rgb(58, 69, 86);
+}
+
 .roster-button--danger {
     color: var(--ink-1);
     background-color: var(--negative);
+}
+
+.roster-button--danger:hover {
+    background-color: rgb(234, 109, 113);
 }
 
 .create-button {

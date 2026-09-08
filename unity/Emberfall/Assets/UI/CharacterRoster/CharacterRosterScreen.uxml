@@ -10,26 +10,20 @@
 
           The create FORM is gone (NOR-278). The name field, class dropdowns, swap-order and
           starter-deck dropdown, and the Create button that used to fill a right-hand panel are
-          replaced by the "New Deck" button below and the class-picker scene it opens. This is the
-          game-wide "eliminate forms" principle: no dropdowns, no multi-field forms — the choice is
-          made by tapping a picture.
-        -->
-        <ui:VisualElement class="roster-header">
-            <ui:VisualElement class="roster-header-left">
-                <!-- One of the two ways into deck creation; the grid's trailing "+" is the other,
-                     and both load the class picker. The name is kept so the USS rule and the
-                     controller's Q both keep matching. -->
-                <ui:Button name="new-character" text="+ New Deck" class="roster-button roster-button--cta new-character-button" />
-            </ui:VisualElement>
-            <ui:VisualElement class="roster-header-actions">
-                <!-- The way to the whole card pool, with no deck panel and no class filter (Sam,
-                     2026-08-07). Moved into the header when the create panel it used to sit under
-                     was removed (NOR-278); it is still a way further in, offered beside the way out. -->
-                <ui:Button name="view-collection" text="View Collection" class="roster-button roster-button--ghost" />
-                <ui:Button name="back-button" text="Main Menu" class="roster-button roster-button--ghost emb-back" />
-            </ui:VisualElement>
-        </ui:VisualElement>
+          replaced by the grid's trailing "+" plate and the class-picker scene it opens. This is
+          the game-wide "eliminate forms" principle: no dropdowns, no multi-field forms — the
+          choice is made by tapping a picture.
 
+          The header used to carry a second door to the same place ("+ New Deck", top-left) — cut
+          2026-09-08 (Sam) as redundant with the "+" plate, which is always on screen and never
+          scrolled out of view the way this one could be.
+
+          The header's two-button actions row (View Collection, Main Menu) is gone the same day.
+          "View Collection" is now this screen's only Back button — Main Menu's old job, same
+          corner every other screen uses (Sam, 2026-09-07: .col-back-corner, collection.uss/
+          shop.uss). Browsing the collection as its OWN destination from this screen is cut; the
+          deck grid and the deck modal are what this screen is for.
+        -->
         <ui:VisualElement class="roster-body">
             <ui:VisualElement class="roster-panel roster-panel--list">
                 <ui:ScrollView name="roster-scroll" mode="Vertical" class="roster-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
@@ -39,6 +33,16 @@
                 <ui:Label name="status" text="" class="roster-status" />
             </ui:VisualElement>
         </ui:VisualElement>
+
+        <!-- AFTER `.roster-body`, not before (2026-09-08, fixing the button that shipped dead):
+             `.roster-scroll` covers the same bottom-left corner `.col-back-corner` anchors to, and
+             a LATER sibling paints over an earlier one and wins hit-testing on the overlap — with
+             this above `.roster-body` the scroll view sat on top and ate every click before it
+             reached the button.
+             Plain "Back", no arrow glyph: U+2190 rendered as a double dash here — the same font-
+             coverage bet .col-filter-ribbon__chevron's comment (collection.uss) already warns off.
+             A different arrow code point is the same gamble; skip it. -->
+        <ui:Button name="back-button" text="Back" class="roster-button roster-button--ghost emb-back col-back-corner" />
 
         <!--
           Find Game's second step. The first — pick a deck — is the same grid the deck-management
