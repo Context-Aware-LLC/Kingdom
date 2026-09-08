@@ -33,7 +33,7 @@ namespace Emberfall.Core.Tests.Presentation
                     "The board-approved result-screen duration is three seconds.");
                 Assert.That(returnSource, Does.Contain("new WaitForSecondsRealtime(ReturnDelaySeconds)"),
                     "The automatic return must not stall when scaled game time is paused.");
-                Assert.That(returnSource, Does.Match(@"SceneManager\.LoadScene\(MainMenuSceneName\)"),
+                Assert.That(returnSource, Does.Match(@"ScreenNav\.Go\(ScreenNav\.MainMenu\)"),
                     "The scheduled destination must be the shared MainMenu scene constant.");
             });
         }
