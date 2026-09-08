@@ -290,7 +290,7 @@ MonoBehaviour:
     - line: '|   clonedFromGUID: 00000000000000000000000000000000'
     - line: '|   templatePackageId: '
     - line: '|   templateDefaultScene: '
-    - line: '|   useCustomMainManifest: 0'
+    - line: '|   useCustomMainManifest: 1'
     - line: '|   useCustomLauncherManifest: 0'
     - line: '|   useCustomMainGradleTemplate: 0'
     - line: '|   useCustomLauncherGradleManifest: 0'
