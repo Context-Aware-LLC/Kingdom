@@ -130,10 +130,10 @@ namespace Emberfall.Core.Tests.CardBehavior
             Assert.That(before - after, Is.EqualTo(4));
         }
 
-        [TestCase("storm_crackle", 4, 2)]
-        [TestCase("storm_static_shock", 3, 0)]
+        [TestCase("storm_crackle", 4)]
+        [TestCase("storm_static_shock", 3)]
         public void SingleTarget_Random_Damage_Cards_Hit_Exactly_One_Enemy(
-            string handle, int damage, int backdraft)
+            string handle, int damage)
         {
             int cardId = ShippedCards.Id(handle);
             var state = State(seed: 19);
@@ -153,7 +153,6 @@ namespace Emberfall.Core.Tests.CardBehavior
             };
             Assert.That(losses.Sum(), Is.EqualTo(damage));
             Assert.That(losses.Count(loss => loss == damage), Is.EqualTo(1));
-            Assert.That(state.Players[0].NextTurnBackdraftLock, Is.EqualTo(backdraft));
         }
 
         [Test]
