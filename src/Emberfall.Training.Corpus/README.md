@@ -57,6 +57,11 @@ dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- `
 # Use every playable class instead:
 dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- `
   dataset-matrix 200 "E:\EmberfallData\raw\matrix-all-001" --all-classes
+
+# Pin one curated deck to every ordered primary/secondary pairing:
+dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- `
+  dataset-matrix 200 "E:\EmberfallData\raw\matrix-cohesive-001" --all-classes `
+  --deck-dir "E:\EmberfallData\deck-pools\cohesive-v1"
 ```
 
 `200` is matches per pairing, not the total, and must be positive and even so each class occupies
@@ -64,6 +69,9 @@ each seat equally. An explicit class list must contain at least two unique, non-
 command reports composition and clean/outcome counts for each pairing and
 fails the complete run on the same integrity, rejection, stall, replay, and telemetry conditions as
 the existing single-matchup `dataset` command.
+When `--deck-dir` is present, the directory must provide exactly one legal deck for every selected
+ordered class pairing. The command validates the complete pool before the first match, prints its
+canonical SHA-256, and records the selected deck lists in every episode manifest.
 
 ## Materialize
 

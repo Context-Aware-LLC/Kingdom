@@ -74,6 +74,8 @@ namespace Emberfall.Training.Corpus.Tests
                 new[] { "dataset-matrix", "2", "out", "--unknown" },
                 new[] { "dataset-matrix", "2", "out", "--classes", "EMBERWARD,,TIDECALLER" },
                 new[] { "dataset-matrix", "2", "out", "--all-classes", "--all-classes" },
+                new[] { "dataset-matrix", "2", "out", "--all-classes", "--deck-dir" },
+                new[] { "dataset-matrix", "2", "out", "--all-classes", "--deck-dir", "" },
                 new[] { "dataset-matrix", "2", "out", "--classes", "EMBERWARD,TIDECALLER",
                     "--classes", "GRAVEKEEP,VERDANT" },
             };
