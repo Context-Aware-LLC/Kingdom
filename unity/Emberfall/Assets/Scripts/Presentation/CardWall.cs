@@ -40,6 +40,14 @@ namespace Emberfall.Presentation
         private const float MaxGutter = 32f;
         private const int MinVisibleRows = 2;
         private const float VerticalTileMargin = 8f;
+        // CAPS THE "SPARE VIEWPORT HEIGHT BECOMES ROW GAP" BEHAVIOUR BELOW (Sam, 2026-09-08:
+        // "there's a lot of space between the rows"). ResolveTileSize divides the viewport evenly
+        // across `rows` and hands whatever a row doesn't need for its tile to verticalMargin, with
+        // no ceiling -- on a viewport tall enough to floor two rows with room to spare, that spare
+        // room used to inflate every gap instead of just going unused. Capped here so it shows up
+        // as blank space below the last row instead, which reads as "more rows could fit" rather
+        // than "these rows are loosely packed". Four times the baseline gap, not a measured floor.
+        private const float MaxVerticalMargin = 32f;
         private const float TileQuantum = 16f;
         // THE LEGIBILITY FLOOR IS STILL IN THE RETIRED UNIT AND IS DELIBERATELY LEFT THERE.
         // Authored 2026-08-30 as 112dp — 70% of the 160dp tile it floored, and 294 device px on a
@@ -461,7 +469,7 @@ namespace Emberfall.Presentation
                 tileWidth = Mathf.Round(tileHeight * (authoredWidth / authoredHeight));
             }
 
-            verticalMargin = Mathf.Max(VerticalTileMargin, rowBudget - tileHeight);
+            verticalMargin = Mathf.Clamp(rowBudget - tileHeight, VerticalTileMargin, MaxVerticalMargin);
         }
 
         private void RestartInitialBake()

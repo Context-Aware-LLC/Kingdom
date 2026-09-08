@@ -943,28 +943,49 @@
  * The strip used to reserve its own height in `root`'s column flow, pushing `body` (and the card
  * wall inside it) down by exactly that much. Now that the wall's own panel is invisible chrome
  * over a fixed clip boundary (see `#collection-panel`), that reservation is no longer needed --
- * the strip floats over the top of the wall instead, and `#collection-panel`'s own
- * `margin-top: var(--space-2)` is the only clearance left to tune. `left: 50%; translate: -50% 0`
- * centers it without depending on a literal half-width offset, so it still centers correctly if
- * `max-width: 100%` ever actually clamps the 600px on a narrow device. */
+ * the strip floats over the top of the wall instead, and `#collection-panel`'s own margin-top is
+ * the only clearance left to tune. `left: 50%; translate: -50% 0` centers it without depending on
+ * a literal half-width offset, so it still centers correctly if `max-width: 100%` ever actually
+ * clamps the 600px on a narrow device.
+ *
+ * "FLOATS OVER THE TOP OF THE WALL" WAS ASPIRATIONAL UNTIL TODAY (Sam, 2026-09-08). This element
+ * was declared BEFORE `body` in CollectionScreen.uxml, and UI Toolkit paints and hit-tests later
+ * siblings OVER earlier ones -- so wherever a baked card tile reached this strip, the tile painted
+ * (and picked) on top of it. That is why the tabs read as untargetable regardless of how much
+ * clearance `#collection-panel`'s margin-top left below: no vertical offset fixes a z-order
+ * inversion. It is now declared AFTER `body`, so the strip is unconditionally on top and a tab is
+ * clickable no matter how tight the clearance above the wall gets. NOTE: theme.uss's own
+ * measurement says vertical hardware clearance is ZERO on this axis (the cutout is left/right
+ * only, confirmed on a Pixel 5a) -- the offset below is legibility clearance for the first card
+ * row, not a safe-area workaround; it was originally added on that theory before the paint-order
+ * bug was found, and is kept because the strip still needs SOME headroom to read as its own row.
+ *
+ * TOP: 82px (52 + 30, Sam, 2026-09-08 -- "there's a lot of space between the [card] rows, let's
+ * capitalize on that"). `#collection-panel`'s margin-top below is set to this strip's own bottom
+ * edge (top + height, both authored here), so the wall's first row starts exactly where the strip
+ * ends -- flush, matching the tabs' flat-bottomed shape, no gap and (now that z-order is fixed) no
+ * harm if a future height tweak leaves a sliver of intentional overlap instead. Whichever of the
+ * two numbers changes, walk to `#collection-panel` and update the other -- USS drops calc()
+ * silently (see theme.uss's own warning), so this can't be written as one formula. */
 #class-tab-bar {
     position: absolute;
-    top: 0;
+    top: 82px;
     left: 50%;
     translate: -50% 0;
     flex-direction: row;
     justify-content: space-between;
     width: 600px;
     max-width: 100%;
-    height: 80px;
+    height: 92px;
 }
 .class-tab_art {
     flex-grow: 0;
     flex-shrink: 0;
-    flex-basis: 56px;
-    width: 76px;
-    /* 76, not 60 (Sam, 2026-09-07) -- +4dp top margin still below = 80, this strip's height. */
-    height: 76px;
+    flex-basis: 64px;
+    width: 88px;
+    /* 88, not 76 (Sam, 2026-09-08: "increase tab size a little") -- +4dp top margin still below =
+     * 92, this strip's height. Grow this and the strip's own height together. */
+    height: 88px;
     border-radius: 18px 18px 0 0;
     margin-top: var(--space-1);
     overflow: hidden;
@@ -1086,12 +1107,19 @@
  * `#collection-list` itself carries the SAME recessed-panel chrome as its parent and stays
  * hidden too, on purpose, so only its rows escape via the content-container underneath it.
  *
- * margin-top: var(--space-2) (Sam, 2026-09-07, confirmed live in the Unity UI Debugger) is the
- * clearance under the now-absolutely-positioned `#class-tab-bar` -- that strip no longer reserves
- * flow space (see its own rule), so without this the wall would start flush at the screen edge. */
+ * margin-top (Sam, 2026-09-07, confirmed live in the Unity UI Debugger) is the clearance under
+ * the absolutely-positioned `#class-tab-bar` -- that strip no longer reserves flow space (see its
+ * own rule), so without this the wall would start flush at the screen edge.
+ *
+ * 174px = #class-tab-bar's OWN top (82) + height (92) -- written out, not calc(), because USS
+ * silently drops calc() (see theme.uss's own warning) and a dropped declaration here reads as "no
+ * clearance at all" rather than an error. This puts the wall's first row exactly flush against the
+ * strip's bottom edge, which is now safe to run tight against (2026-09-08): the strip paints and
+ * hit-tests ON TOP of the wall (it is declared after `body` in the UXML), so even a tab that dips
+ * into the first row's art stays clickable. Change either number and update the other to match. */
 #collection-panel {
     visibility: hidden;
-    margin-top: var(--space-2);
+    margin-top: 174px;
 }
 #collection-empty {
     visibility: visible;

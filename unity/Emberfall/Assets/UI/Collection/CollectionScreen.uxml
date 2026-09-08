@@ -2,6 +2,20 @@
     <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/Collection/collection.uss?fileID=7433441132597879392&amp;guid=8ec502da397030442998cd90701bbf86&amp;type=3#collection"/>
     <ui:VisualElement name="root" class="emb-root collection">
+        <ui:VisualElement name="body" class="db-body" style="transform-origin: 25%; justify-content: flex-start; overflow: visible;">
+            <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
+                <ui:ListView name="collection-list" class="collection-list chrome-panel chrome-panel--recessed"/>
+                <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <!-- DECLARED AFTER `body`, ON PURPOSE (Sam, 2026-09-08). UI Toolkit paints later siblings
+             over earlier ones and hit-tests the same way, so with this block BEFORE `body` (its
+             position until today) every card tile the wall overlaps it with painted, and picked,
+             on top of it: the tabs were untargetable wherever a row's tile reached them, no
+             matter how much clearance `#collection-panel`'s margin-top left. Declaring it after
+             `body` makes "the strip floats over the top of the wall" (the comment on `#class-tab-bar`
+             below) literally true in z-order, not just in intent, so a class tab is always
+             clickable regardless of how tight the clearance above the wall gets. -->
         <ui:VisualElement name="class-tab-bar">
             <ui:VisualElement name="class-tab-emberward" class="class-tab_art class-tab_art-emberward"/>
             <ui:VisualElement name="class-tab-stonewarden" class="class-tab_art class-tab_art-stonewarden"/>
@@ -12,12 +26,6 @@
             <ui:VisualElement name="class-tab-tidecaller" class="class-tab_art class-tab_art-tidecaller"/>
             <ui:VisualElement name="class-tab-gravekeep" class="class-tab_art class-tab_art-gravekeep"/>
             <ui:VisualElement name="class-tab-neutral" class="class-tab_art class-tab_art-neutral"/>
-        </ui:VisualElement>
-        <ui:VisualElement name="body" class="db-body" style="transform-origin: 25%; justify-content: flex-start; overflow: visible;">
-            <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
-                <ui:ListView name="collection-list" class="collection-list chrome-panel chrome-panel--recessed"/>
-                <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
-            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement picking-mode="Ignore" class="col-query-toolbar">
             <ui:Button name="query-toggle" class="col-button col-button--filters chrome-button chrome-button--primary">
