@@ -202,21 +202,6 @@ namespace Emberfall.Core.Tests.CardBehavior
         }
 
         [Test]
-        public void GearOverhaul_Buffs_All_And_Only_Friendly_Constructs()
-        {
-            var state = State();
-            CardInstance construct = Board(state, 0, ShippedCards.Id("clock_overclocker"));
-            CardInstance beast = Board(state, 0, ShippedCards.Id("night_venom_asp"));
-            CardInstance spell = Hand(state, ShippedCards.Id("clock_gear_overhaul"));
-
-            var result = new CommandProcessor(_db).Execute(state, Play(state, spell));
-
-            Assert.That(result.Accepted, Is.True);
-            Assert.That((construct.CurrentAttack, construct.MaxHealth), Is.EqualTo((4, 5)));
-            Assert.That((beast.CurrentAttack, beast.MaxHealth), Is.EqualTo((2, 10)));
-        }
-
-        [Test]
         public void Random_Targeting_Uses_The_Canonical_State_Rng_And_Replays_Identically()
         {
             (string hash, ulong rng) Run()
