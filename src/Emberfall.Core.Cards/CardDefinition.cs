@@ -521,17 +521,34 @@ namespace Emberfall.Core.Cards
         /// <see cref="Count"/> has reached the selector's maximum, in which case nobody picks.</summary>
         public bool IsRandom { get; }
 
-        private TargetSelection(int count, bool isRandom)
+        /// <summary>
+        /// Whether the engine takes them deterministically, in canonical candidate order, and the
+        /// player is never asked. This is the third disposition <see cref="Count"/> alone cannot
+        /// spell: not a roll, and not "every candidate" either, because it exists precisely where
+        /// <see cref="TargetSpec.MaxCandidates"/> is unbounded and "every candidate" therefore has no
+        /// integer -- a deck or a graveyard. <c>CardValidator</c> refuses it anywhere else, because on
+        /// a bounded pool a deterministic count below the maximum is the unprincipled "first N in
+        /// board order" shape <see cref="Of"/>'s remarks describe Sam ruling out on 2026-08-18.
+        /// </summary>
+        public bool IsAutomatic { get; }
+
+        private TargetSelection(int count, bool isRandom, bool isAutomatic)
         {
             Count = count;
             IsRandom = isRandom;
+            IsAutomatic = isAutomatic;
         }
 
         /// <summary><c>N</c> -- exactly N, chosen by the controller, or by nobody once N is the maximum.</summary>
-        public static TargetSelection Of(int count) => Make(count, false);
+        public static TargetSelection Of(int count) => Make(count, isRandom: false, isAutomatic: false);
 
         /// <summary><c>random: N</c> -- exactly N, rolled by the engine.</summary>
-        public static TargetSelection RandomOf(int count) => Make(count, true);
+        public static TargetSelection RandomOf(int count) => Make(count, isRandom: true, isAutomatic: false);
+
+        /// <summary><c>auto: N</c> -- exactly N (or fewer, if the pool runs out), taken by the engine
+        /// in canonical candidate order. See <see cref="IsAutomatic"/> for what distinguishes this
+        /// from <see cref="RandomOf"/> and from an ordinary chosen count.</summary>
+        public static TargetSelection AutomaticOf(int count) => Make(count, isRandom: false, isAutomatic: true);
 
         /// <summary>
         /// Every candidate <paramref name="selector"/> can ever yield -- the count that reads as
@@ -548,12 +565,12 @@ namespace Emberfall.Core.Cards
             return Of(max.Value);
         }
 
-        private static TargetSelection Make(int count, bool isRandom)
+        private static TargetSelection Make(int count, bool isRandom, bool isAutomatic)
         {
             if (count < 1)
                 throw new System.ArgumentOutOfRangeException(nameof(count),
                     $"A selection of {count} takes nothing. Write 1 or more.");
-            return new TargetSelection(count, isRandom);
+            return new TargetSelection(count, isRandom, isAutomatic);
         }
 
         /// <summary>Reads an authored term, rejecting anything this type cannot say.</summary>
@@ -561,7 +578,7 @@ namespace Emberfall.Core.Cards
         {
             if (TryParse(term, out TargetSelection selection)) return selection;
             throw new System.FormatException(
-                $"'{term}' is not a selection term. Write 'N' or 'random: N', N being 1 or more.");
+                $"'{term}' is not a selection term. Write 'N', 'random: N' or 'auto: N', N being 1 or more.");
         }
 
         /// <summary>Reads an authored term, reporting failure rather than throwing.</summary>
@@ -572,11 +589,14 @@ namespace Emberfall.Core.Cards
             string text = term.Trim();
 
             bool isRandom = false;
+            bool isAutomatic = false;
             int colon = text.IndexOf(':');
             if (colon >= 0)
             {
-                if (text.Substring(0, colon).TrimEnd() != "random") return false;
-                isRandom = true;
+                string prefix = text.Substring(0, colon).TrimEnd();
+                if (prefix == "random") isRandom = true;
+                else if (prefix == "auto") isAutomatic = true;
+                else return false;
                 text = text.Substring(colon + 1).TrimStart();
             }
 
@@ -591,19 +611,22 @@ namespace Emberfall.Core.Cards
             }
             if (count < 1) return false;
 
-            selection = new TargetSelection(count, isRandom);
+            selection = new TargetSelection(count, isRandom, isAutomatic);
             return true;
         }
 
         public override string ToString()
         {
             string number = Count.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            return IsRandom ? "random: " + number : number;
+            if (IsRandom) return "random: " + number;
+            if (IsAutomatic) return "auto: " + number;
+            return number;
         }
 
-        public bool Equals(TargetSelection other) => Count == other.Count && IsRandom == other.IsRandom;
+        public bool Equals(TargetSelection other)
+            => Count == other.Count && IsRandom == other.IsRandom && IsAutomatic == other.IsAutomatic;
         public override bool Equals(object? obj) => obj is TargetSelection other && Equals(other);
-        public override int GetHashCode() => (Count * 397) ^ (IsRandom ? 1 : 0);
+        public override int GetHashCode() => (Count * 397) ^ (IsRandom ? 1 : 0) ^ (IsAutomatic ? 2 : 0);
         public static bool operator ==(TargetSelection left, TargetSelection right) => left.Equals(right);
         public static bool operator !=(TargetSelection left, TargetSelection right) => !left.Equals(right);
     }
@@ -802,11 +825,13 @@ namespace Emberfall.Core.Cards
 
         /// <summary>
         /// Whether the controller picks the targets. <b>Derived, never authored</b> -- it is simply
-        /// what is left once the engine is not rolling and the count has not reached the maximum
-        /// (Sam, 2026-08-21). A null spec is not a choice.
+        /// what is left once the engine is not rolling, not auto-taking, and the count has not
+        /// reached the maximum (Sam, 2026-08-21; extended 2026-09-08 for
+        /// <see cref="TargetSelection.IsAutomatic"/>). A null spec is not a choice.
         /// </summary>
         public static bool IsPlayerChosen(TargetSpec? target)
-            => target != null && !target.Selection.IsRandom && !target.IsEveryCandidate;
+            => target != null && !target.Selection.IsRandom && !target.Selection.IsAutomatic &&
+               !target.IsEveryCandidate;
 
         public static IReadOnlyCollection<string> Selectors => TargetQueries.Names;
     }

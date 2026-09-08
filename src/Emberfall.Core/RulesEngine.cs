@@ -33,8 +33,7 @@ namespace Emberfall.Core
 
             if (ps.Hand.Count >= MatchEngine.HandCap)
             {
-                card.Zone = Zone.Graveyard;
-                ps.Graveyard.Add(card);
+                EnterGraveyard(state, ps, card);
                 buf.Emit(GameEventKind.CardDrawn, source: card.Id, flags: EventFlags.Overdraw);
             }
             else
@@ -96,6 +95,20 @@ namespace Emberfall.Core
         }
 
         /// <summary>
+        /// The one door into a graveyard: sets the zone, stamps
+        /// <see cref="CardInstance.DiedAtSequence"/> off the match-wide clock
+        /// (<see cref="GameState.NextDeathSequence"/>), then appends. Every other write site used to
+        /// do these two lines itself, which is how a shared death clock across two independently
+        /// list-ordered graveyards would have silently gone missing the next time a new one appeared.
+        /// </summary>
+        public static void EnterGraveyard(GameState state, PlayerState owner, CardInstance card)
+        {
+            card.Zone = Zone.Graveyard;
+            card.DiedAtSequence = state.NextDeathSequence++;
+            owner.Graveyard.Add(card);
+        }
+
+        /// <summary>
         /// Destroy the equipped weapon for <paramref name="seat"/>, emitting
         /// <see cref="GameEventKind.CardDestroyed"/> and raising the weapon's
         /// ON_DEATH toll onto <paramref name="interp"/>'s queue (EF-020). No-op if no weapon. Called
@@ -116,8 +129,7 @@ namespace Emberfall.Core
             var broken = ps.Weapon;
             interp.Events.Emit(GameEventKind.CardDestroyed, source: broken.Id);
             ps.Weapon = null;   // leave the slot BEFORE raising, so the rattle observes an unequipped hero
-            broken.Zone = Zone.Graveyard;
-            ps.Graveyard.Add(broken);
+            EnterGraveyard(interp.State, ps, broken);
 
             interp.RaiseSelf(broken, Trigger.ON_DEATH, System.Array.Empty<TargetRef>());
         }

@@ -39,6 +39,7 @@ namespace Emberfall.Core.Serialization
             w.I32(s.ActionResolutionsThisTurn);
             w.I32(s.NextInstanceCounter);
             w.U64(s.NextEventSequence);
+            w.I32(s.NextDeathSequence);
             w.Bool(s.Mulligan0Done);
             w.Bool(s.Mulligan1Done);
             WalkPendingChoice(w, s.PendingChoice);  // nullable, authoritative choice state
@@ -136,6 +137,7 @@ namespace Emberfall.Core.Serialization
             w.I32(c.AttacksUsedThisTurn);
             w.Bool(c.HasUsedRekindle);
             w.I32(c.Position);
+            w.I32(c.DiedAtSequence);
         }
 
         private static void WalkWeapon(ICanonicalWriter w, CardInstance? weapon)

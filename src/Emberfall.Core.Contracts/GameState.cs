@@ -59,6 +59,16 @@ namespace Emberfall.Core.Contracts
         public int NextInstanceCounter;
         /// <summary>Global event sequence cursor (dev-docs/architecture/determinism-and-projection.md:5).</summary>
         public ulong NextEventSequence;
+        /// <summary>
+        /// Monotonic counter behind <see cref="CardInstance.DiedAtSequence"/> — the ONE death clock
+        /// both players' graveyards share. Each graveyard is independently list-ordered (append =
+        /// death order) but there is no way to interleave the two lists by relative recency without
+        /// this: seat 0's third death and seat 1's second death are otherwise incomparable. Stamped
+        /// by <see cref="Emberfall.Core.RulesEngine.EnterGraveyard"/>, the one door every card takes
+        /// into a graveyard (Sam, 2026-09-08: Mass Rebirth reads "the 7 most recent deaths" across
+        /// BOTH graveyards, which is meaningless without a shared clock).
+        /// </summary>
+        public int NextDeathSequence;
         /// <summary>Per-player mulligan completion flags, seat-indexed.</summary>
         public bool Mulligan0Done;
         public bool Mulligan1Done;
@@ -88,6 +98,9 @@ namespace Emberfall.Core.Contracts
             // D-P1 (dev-docs/architecture/determinism-and-projection.md:23): InstanceId(0) is the reserved redaction
             // sentinel and is never minted — the counter starts at 1.
             NextInstanceCounter = 1;
+            // 0 is "never died" on a CardInstance that has never seen a graveyard — the counter
+            // starts at 1 for the same reason NextInstanceCounter does.
+            NextDeathSequence = 1;
         }
 
         public int SeatOf(PlayerId player)
@@ -270,6 +283,12 @@ namespace Emberfall.Core.Contracts
         public int AttacksUsedThisTurn;
         public bool HasUsedRekindle;
         public int Position; // board slot
+        /// <summary>The match-wide death clock's value when this instance last entered a graveyard —
+        /// 0 if it never has. Stamped only by <see cref="Emberfall.Core.RulesEngine.EnterGraveyard"/>;
+        /// stale (not cleared) once the card leaves the graveyard again, since nothing outside a
+        /// graveyard-zone read ever consults it. See <see cref="GameState.NextDeathSequence"/> for
+        /// why a per-graveyard list position cannot answer "which died more recently" across seats.</summary>
+        public int DiedAtSequence;
 
         public CardInstance(InstanceId id, int definitionId, PlayerId controller)
         {

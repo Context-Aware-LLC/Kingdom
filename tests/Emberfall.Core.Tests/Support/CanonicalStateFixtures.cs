@@ -24,8 +24,9 @@ namespace Emberfall.Core.Tests.Support
             [typeof(GameState)] = new[]
             {
                 "ActionResolutionsThisTurn", "ActivePlayer", "FatigueCounter0", "FatigueCounter1",
-                "Id", "Mulligan0Done", "Mulligan1Done", "NextEventSequence", "NextInstanceCounter",
-                "OngoingEffects", "Outcome", "PendingChoice", "Phase", "Players", "Rng", "StateVersion", "TurnNumber"
+                "Id", "Mulligan0Done", "Mulligan1Done", "NextDeathSequence", "NextEventSequence",
+                "NextInstanceCounter", "OngoingEffects", "Outcome", "PendingChoice", "Phase", "Players",
+                "Rng", "StateVersion", "TurnNumber"
             },
             [typeof(OngoingEffectInstance)] = new[]
             {
@@ -50,8 +51,9 @@ namespace Emberfall.Core.Tests.Support
             [typeof(CardInstance)] = new[]
             {
                 "AttacksUsedThisTurn", "Controller", "CurrentAttack", "CurrentDurability", "CurrentHealth",
-                "DefinitionId", "Effects", "Enchantments", "HasAegisShield", "HasUsedRekindle", "Id",
-                "IsSilenced", "Keywords", "MaxHealth", "Position", "SummonedThisTurn", "Zone"
+                "DefinitionId", "DiedAtSequence", "Effects", "Enchantments", "HasAegisShield",
+                "HasUsedRekindle", "Id", "IsSilenced", "Keywords", "MaxHealth", "Position",
+                "SummonedThisTurn", "Zone"
             },
             [typeof(EffectInstance)] = new[] { "Kind", "Scope", "Source", "TurnsRemaining" },
             [typeof(Enchantment)] = new[] { "AttackDelta", "GrantedKeyword", "HealthDelta", "IsAura", "Source" },
@@ -75,6 +77,7 @@ namespace Emberfall.Core.Tests.Support
             ["GameState.ActionResolutionsThisTurn"] = s => s.ActionResolutionsThisTurn++,
             ["GameState.NextInstanceCounter"] = s => s.NextInstanceCounter++,
             ["GameState.NextEventSequence"] = s => s.NextEventSequence++,
+            ["GameState.NextDeathSequence"] = s => s.NextDeathSequence++,
             ["GameState.Mulligan0Done"] = s => s.Mulligan0Done = !s.Mulligan0Done,
             ["GameState.Mulligan1Done"] = s => s.Mulligan1Done = !s.Mulligan1Done,
             ["GameState.OngoingEffects"] = s => s.OngoingEffects.Clear(),
@@ -149,6 +152,7 @@ namespace Emberfall.Core.Tests.Support
             ["CardInstance.AttacksUsedThisTurn"] = s => HandCard(s).AttacksUsedThisTurn++,
             ["CardInstance.HasUsedRekindle"] = s => HandCard(s).HasUsedRekindle = !HandCard(s).HasUsedRekindle,
             ["CardInstance.Position"] = s => HandCard(s).Position++,
+            ["CardInstance.DiedAtSequence"] = s => HandCard(s).DiedAtSequence++,
 
             // Enchantment (the seeded hand card's enchantment)
             ["Enchantment.Source"] = s => HandCard(s).Enchantments[0].Source = new InstanceId(66),

@@ -41,6 +41,7 @@ namespace Emberfall.Net.Protocol
             w.Name("actionResolutionsThisTurn"); w.I32(s.ActionResolutionsThisTurn);
             w.Name("nextInstanceCounter"); w.I32(s.NextInstanceCounter);
             w.Name("nextEventSequence"); w.U64(s.NextEventSequence);
+            w.Name("nextDeathSequence"); w.I32(s.NextDeathSequence);
             w.Name("mulligan0Done"); w.Bool(s.Mulligan0Done);
             w.Name("mulligan1Done"); w.Bool(s.Mulligan1Done);
             w.Name("pendingChoice");
@@ -169,6 +170,7 @@ namespace Emberfall.Net.Protocol
             w.Name("attacksUsedThisTurn"); w.I32(c.AttacksUsedThisTurn);
             w.Name("hasUsedRekindle"); w.Bool(c.HasUsedRekindle);
             w.Name("position"); w.I32(c.Position);
+            w.Name("diedAtSequence"); w.I32(c.DiedAtSequence);
             w.EndObject();
         }
 
@@ -230,6 +232,7 @@ namespace Emberfall.Net.Protocol
             if (!TryI32Field(obj, "actionResolutionsThisTurn", out int actionRes, ref detail)) return false;
             if (!TryI32Field(obj, "nextInstanceCounter", out int nextInstance, ref detail)) return false;
             if (!TryU64Field(obj, "nextEventSequence", out ulong nextEventSeq, ref detail)) return false;
+            if (!TryI32Field(obj, "nextDeathSequence", out int nextDeath, ref detail)) return false;
             if (!TryBoolField(obj, "mulligan0Done", out bool mull0, ref detail)) return false;
             if (!TryBoolField(obj, "mulligan1Done", out bool mull1, ref detail)) return false;
 
@@ -262,6 +265,7 @@ namespace Emberfall.Net.Protocol
                 ActionResolutionsThisTurn = actionRes,
                 NextInstanceCounter = nextInstance,
                 NextEventSequence = nextEventSeq,
+                NextDeathSequence = nextDeath,
                 Mulligan0Done = mull0,
                 Mulligan1Done = mull1,
                 PendingChoice = pendingChoice,
@@ -440,12 +444,14 @@ namespace Emberfall.Net.Protocol
             if (!TryI32Field(obj, "attacksUsedThisTurn", out int atksUsed, ref detail)) return false;
             if (!TryBoolField(obj, "hasUsedRekindle", out bool rekindle, ref detail)) return false;
             if (!TryI32Field(obj, "position", out int position, ref detail)) return false;
+            if (!TryI32Field(obj, "diedAtSequence", out int diedAt, ref detail)) return false;
             card.HasAegisShield = aegis;
             card.IsSilenced = silenced;
             card.SummonedThisTurn = summoned;
             card.AttacksUsedThisTurn = atksUsed;
             card.HasUsedRekindle = rekindle;
             card.Position = position;
+            card.DiedAtSequence = diedAt;
             return true;
         }
 

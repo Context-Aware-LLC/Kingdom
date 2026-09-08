@@ -507,6 +507,21 @@ namespace Emberfall.Core.Cards
                             "already means every candidate; a count above it is a second spelling of " +
                             "the same thing.");
 
+                    // C31 — `auto: N` is refused on any selector MaxCandidates bounds. It exists only
+                    // to give an unbounded pool (a deck or a graveyard) a deterministic, non-player
+                    // count, because "every candidate" has no integer there. On a BOUNDED selector a
+                    // deterministic count below the maximum is exactly the unprincipled "first N in
+                    // board order" shape Sam ruled out on 2026-08-18 (see TargetSelection.Of's
+                    // remarks) — nothing here would tell it apart from that mistake, so it stays
+                    // unauthorable rather than reintroducing it under a new spelling.
+                    if (target.Selection.IsAutomatic && target.MaxCandidates.HasValue)
+                        Err("C31-AUTOMATIC-ON-BOUNDED-SELECTOR", $"{prefix}.action.target.selection",
+                            $"selection '{target.Selection}' is automatic on '{target.Selector}', which " +
+                            $"is bounded ({target.MaxCandidates.Value}). 'auto: N' is for a deck or a " +
+                            "graveyard, where nothing bounds the pool and a player-chosen or random " +
+                            "count is the only alternative; on a bounded selector, write a plain count " +
+                            "or 'random: N' instead.");
+
                     if (target.Binding.Length > 0) priorTargetBindings.Add(target.Binding);
                 }
 

@@ -221,8 +221,7 @@ namespace Emberfall.Core
                 {
                     PlayerState owner = ctx.State.Players[t.Seat];
                     if (!owner.Hand.Remove(t.Card)) continue;
-                    t.Card.Zone = Zone.Graveyard;
-                    owner.Graveyard.Add(t.Card);
+                    RulesEngine.EnterGraveyard(ctx.State, owner, t.Card);
                     ctx.Events.Emit(GameEventKind.CardDestroyed, source: t.Card.Id);
                 }
             }
@@ -285,8 +284,7 @@ namespace Emberfall.Core
         {
             if (owner.Hand.Count >= MatchEngine.HandCap)
             {
-                card.Zone = Zone.Graveyard;
-                owner.Graveyard.Add(card);
+                RulesEngine.EnterGraveyard(ctx.State, owner, card);
             }
             else
             {

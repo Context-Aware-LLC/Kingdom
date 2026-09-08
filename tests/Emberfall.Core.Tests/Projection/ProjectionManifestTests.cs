@@ -36,6 +36,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["ActionResolutionsThisTurn"] = "PUBLIC",
                 ["NextInstanceCounter"] = "REDACTED (normalized max-visible+1)",
                 ["NextEventSequence"] = "PUBLIC",
+                ["NextDeathSequence"] = "PUBLIC (both graveyards are public)",
                 ["Mulligan0Done"] = "PUBLIC",
                 ["Mulligan1Done"] = "PUBLIC",
                 ["OngoingEffects"] = "PUBLIC list; authority-only rule id stripped",
@@ -95,6 +96,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["AttacksUsedThisTurn"] = "PUBLIC in visible zones (0 in card-backs)",
                 ["HasUsedRekindle"] = "PUBLIC in visible zones (false in card-backs)",
                 ["Position"] = "PUBLIC (board only; 0 elsewhere)",
+                ["DiedAtSequence"] = "PUBLIC (graveyard is public; stale/unredacted once the card leaves it again)",
             },
             [typeof(Enchantment)] = new()
             {

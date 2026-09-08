@@ -445,8 +445,7 @@ namespace Emberfall.Core
                     break;
 
                 case CardType.SPELL:
-                    card.Zone = Zone.Graveyard;
-                    ps.Graveyard.Add(card);
+                    RulesEngine.EnterGraveyard(state, ps, card);
                     buf.Emit(GameEventKind.CardPlayed, source: card.Id);
                     interp.RaiseSelf(card, Trigger.ON_CAST, p.Targets);                 // the spell's one-shot effect
                     // EF-016: ON_SPELL_CAST — the observer half of a cast, enqueued AFTER the spell's own

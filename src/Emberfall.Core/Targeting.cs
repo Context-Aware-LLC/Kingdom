@@ -377,6 +377,20 @@ namespace Emberfall.Core
                     }
                     selected = random;
                 }
+                else if (spec.Selection.IsAutomatic)
+                {
+                    // Nobody chooses and nothing is rolled -- CardValidator restricts this to an
+                    // unbounded selector (deck or graveyard). Canonical candidate order (side, then
+                    // list order within each player's own zone) has no cross-seat meaning: seat 0's
+                    // and seat 1's graveyards are each internally chronological but carry no shared
+                    // clock against each other. GameState.NextDeathSequence IS that clock -- sorting
+                    // by it descending is the only way "the N most recent" can mean anything when a
+                    // selector spans both graveyards (Sam, 2026-09-08: Mass Rebirth's own graveyard is
+                    // mostly the one tribe it excludes, so it has to reach across both).
+                    candidates.Sort((a, b) => b.Card!.DiedAtSequence.CompareTo(a.Card!.DiedAtSequence));
+                    int count = RequiredAutomaticCount(spec, candidates.Count);
+                    selected = candidates.GetRange(0, count);
+                }
                 else
                 {
                     // Nobody is choosing and the engine is not rolling, so the count has reached

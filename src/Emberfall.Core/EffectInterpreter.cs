@@ -275,8 +275,7 @@ namespace Emberfall.Core
 
                     ps.Board.RemoveAt(idx);
                     RulesEngine.Reindex(ps.Board);
-                    minion.Zone = Zone.Graveyard;
-                    ps.Graveyard.Add(minion);
+                    RulesEngine.EnterGraveyard(_state, ps, minion);
                     AuraEngine.Recompute(_state, _db);
                     _buf.Emit(GameEventKind.CardDestroyed, source: minion.Id);
 

@@ -43,6 +43,7 @@ namespace Emberfall.Core.Projection
                 Outcome = s.Outcome,                                    // PUBLIC
                 ActionResolutionsThisTurn = s.ActionResolutionsThisTurn,// PUBLIC
                 NextEventSequence = s.NextEventSequence,                // PUBLIC (events never dropped per-viewer)
+                NextDeathSequence = s.NextDeathSequence,                // PUBLIC (both graveyards are public)
                 Mulligan0Done = s.Mulligan0Done,                        // PUBLIC
                 Mulligan1Done = s.Mulligan1Done,                        // PUBLIC
                 PendingChoice = ProjectPendingChoice(s.PendingChoice, viewer, viewerSeat, ref maxVisibleId),
@@ -153,6 +154,7 @@ namespace Emberfall.Core.Projection
                 AttacksUsedThisTurn = c.AttacksUsedThisTurn,
                 HasUsedRekindle = c.HasUsedRekindle,
                 Position = c.Position,
+                DiedAtSequence = c.DiedAtSequence,
             };
             CloneEffects(s, c.Effects, proj.Effects, viewerSeat, ref max);
             foreach (var k in c.Keywords) proj.Keywords.Add(k);

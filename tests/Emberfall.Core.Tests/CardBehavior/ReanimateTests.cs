@@ -63,6 +63,9 @@ namespace Emberfall.Core.Tests.CardBehavior
                 CurrentAttack = def.Attack ?? 0,
                 MaxHealth = def.Health ?? 0,
                 CurrentHealth = (def.Health ?? 0) - damageTaken,
+                // Call order IS death order here, same clock RulesEngine.EnterGraveyard stamps in a
+                // real match -- see GameState.NextDeathSequence.
+                DiedAtSequence = s.NextDeathSequence++,
             };
             s.Players[seat].Graveyard.Add(card);
             return card;
@@ -141,6 +144,84 @@ namespace Emberfall.Core.Tests.CardBehavior
             var revived = s.Players[1].Board.Single();
             Assert.That(revived.Id, Is.EqualTo(corpse.Id));
             Assert.That(s.Players[1].Graveyard, Is.Empty);
+        }
+
+        // ── Mass Rebirth shape: AUTOMATIC selection across BOTH graveyards ──────────────
+
+        private static CardDefinition UndeadMinion(int id, int attack, int health)
+            => new CardDefinition(id, FixtureCard.Handle(id), FixtureCard.Handle(id), CardType.MINION, 0, attack, health,
+                null, CardClass.NEUTRAL, Rarity.COMMON, Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(), "",
+                "art/" + FixtureCard.Handle(id), SetId.CORE, true, Tribe.UNDEAD, "");
+
+        private static CardDefinition MassRebirthShaped(int id)
+            => Spell(id, TestRules.Rule("mass_rebirth", Trigger.ON_CAST,
+                new ReanimateAction(new TargetSpec("ANY_GRAVEYARD_MINION", TargetSelection.AutomaticOf(7),
+                    filter: new TargetFilterDef(tribe: Tribe.UNDEAD, negateTribe: true)))));
+
+        [Test]
+        public void Automatic_Selection_Needs_No_Player_Chosen_Target()
+        {
+            var fallen = Minion(FixtureCard.Id("fallen"), 2, 2);
+            var massRebirth = MassRebirthShaped(FixtureCard.Id("mass_rebirth"));
+            var db = new FakeCardDatabase().Register(fallen).Register(massRebirth);
+            var s = State();
+            InGraveyard(s, 0, fallen);
+
+            // No TargetRef supplied -- ValidatePlayerChoices must accept zero targets for a spec
+            // that is not player-chosen (IsPlayerChosen == false for an automatic selection).
+            Play(s, db, ToHand(s, 0, massRebirth.Id));
+
+            Assert.That(s.Players[0].Board, Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public void Automatic_Selection_Reaches_Both_Graveyards_Newest_Death_First_And_Skips_Undead()
+        {
+            var fallen = Minion(FixtureCard.Id("fallen"), 2, 2);
+            var undead = UndeadMinion(FixtureCard.Id("undead"), 2, 2);
+            var massRebirth = MassRebirthShaped(FixtureCard.Id("mass_rebirth"));
+            var db = new FakeCardDatabase().Register(fallen).Register(undead).Register(massRebirth);
+            var s = State();
+
+            // Death order across BOTH graveyards, oldest to newest -- no single graveyard's list
+            // order could express this by itself (GameState.NextDeathSequence is the shared clock).
+            var oldest = InGraveyard(s, 0, fallen);       // seat 0, 1st death
+            var middle = InGraveyard(s, 1, fallen);       // seat 1, 2nd death
+            var mostRecentUndead = InGraveyard(s, 0, undead); // seat 0, 3rd death -- filtered out
+            var newest = InGraveyard(s, 1, fallen);       // seat 1, 4th death
+
+            Play(s, db, ToHand(s, 0, massRebirth.Id));
+
+            // Newest-first within seat 1's own board, since both its corpses came back there.
+            Assert.That(s.Players[1].Board.Select(c => c.Id), Is.EqualTo(new[] { newest.Id, middle.Id }));
+            Assert.That(s.Players[0].Board.Select(c => c.Id), Is.EqualTo(new[] { oldest.Id }));
+
+            Assert.That(s.Players[0].Graveyard, Does.Contain(mostRecentUndead), "Undead stays dead");
+            // The cast spell itself joins seat 0's graveyard alongside the un-reanimated Undead --
+            // same as any other resolved spell (see the printed-stats test above).
+            Assert.That(s.Players[0].Graveyard, Has.Count.EqualTo(2));
+            Assert.That(s.Players[1].Graveyard, Is.Empty);
+        }
+
+        [Test]
+        public void Automatic_Selection_Stops_At_Board_Capacity_Without_Skipping_To_Later_Candidates()
+        {
+            var filler = Minion(FixtureCard.Id("filler"), 1, 1);
+            var fallen = Minion(FixtureCard.Id("fallen"), 2, 2);
+            var massRebirth = MassRebirthShaped(FixtureCard.Id("mass_rebirth"));
+            var db = new FakeCardDatabase().Register(filler).Register(fallen).Register(massRebirth);
+            var s = State();
+            for (int i = 0; i < 6; i++) OnBoard(s, db, 0, filler); // 1 free slot, BoardCap 7
+
+            var oldest = InGraveyard(s, 0, fallen);
+            var newest = InGraveyard(s, 0, fallen);
+
+            Play(s, db, ToHand(s, 0, massRebirth.Id));
+
+            Assert.That(s.Players[0].Board, Has.Count.EqualTo(7));
+            Assert.That(s.Players[0].Board, Has.Some.Matches<CardInstance>(c => c.Id == newest.Id),
+                "the most recent death fills the one free slot");
+            Assert.That(s.Players[0].Graveyard, Does.Contain(oldest), "the older corpse has nowhere to go");
         }
     }
 }
