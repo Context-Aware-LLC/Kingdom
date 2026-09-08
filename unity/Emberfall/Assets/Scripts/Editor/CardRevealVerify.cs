@@ -41,12 +41,17 @@ namespace Emberfall.Editor
             failed += StaleExitDoesNotCancelLiveHover();
             failed += EveryKeywordHasGlossary();
             failed += ContentUsesLiveStateOverPrint();
-            failed += FocusViewIsWiredToBoardCards();
+
+            // FocusViewIsWiredToBoardCards SKIPPED 2026-09-08 (Sam): tooltips are not fully formed
+            // yet, so BoardController.Initialize() no longer creates _revealController (#368, #362)
+            // — this check would now correctly FAIL on the very thing that was just deliberately
+            // turned off. Restore the call once the reveal is re-enabled there.
+            // failed += FocusViewIsWiredToBoardCards();
 
             if (failed > 0)
                 Debug.LogError($"[CardRevealVerify] {failed} check(s) FAILED.");
             else
-                Debug.Log("[CardRevealVerify] GREEN — 11/11 checks passed.");
+                Debug.Log("[CardRevealVerify] GREEN — 10/10 checks passed (FocusViewIsWiredToBoardCards skipped, reveal disabled).");
         }
 
         // ── Trigger policy ──────────────────────────────────────────────────────────

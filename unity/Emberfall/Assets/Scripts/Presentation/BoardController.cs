@@ -156,12 +156,14 @@ namespace Emberfall.Presentation
             _artProvider ??= new AddressableArtProvider();
             _uiSprites   ??= new AddressableUiSpriteProvider();
 #endif
-            // One shared board-card focus view. The reveal classes existed before this wiring,
-            // but no shipping bootstrap ever created the controller or attached its triggers, so
-            // their hover/hold policy could pass headless checks while remaining unreachable in a
-            // real match.
-            if (_revealController == null)
-                _revealController = CardRevealController.Create(transform, _inputRouter, this);
+            // DISABLED 2026-09-08 (Sam): tooltips are not fully formed yet — the reveal only arms
+            // for board cards (#368, IsInPlay == Zone.Board) and the separate on-card banner sticks
+            // forever on touch and covers the mana cost (#362). Leaving _revealController null keeps
+            // every CardRevealTrigger attachment below inert (it already null-checks). Re-enable by
+            // restoring this assignment once #368/#362 are resolved.
+            //
+            // if (_revealController == null)
+            //     _revealController = CardRevealController.Create(transform, _inputRouter, this);
 
             // Targeting-state visibility: while the router has a targeting state armed,
             // only valid targets glow (binder suppresses readiness glow for the duration).
@@ -910,7 +912,11 @@ namespace Emberfall.Presentation
             presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer, bodyLabel);
             presenter.SetupFrameLayer(frameRenderer, gemRenderer, _uiSprites,
                                       costSocket, attackSocket, healthSocket, gemSocket);
-            presenter.SetupTooltip(tooltipBgGo, tooltipLabel, _flavorPanel);
+            // DISABLED 2026-09-08 (Sam): the on-card name-overflow banner sticks forever on touch
+            // and covers the mana cost (#362) — same root cause hits the flavor-text-on-hover panel
+            // it shares a trigger with. Leaving tooltipBanner/tooltipLabel/_flavorPanel unwired on
+            // CardPresenter keeps OnMouseEnter's checks false; both are already null-safe.
+            // presenter.SetupTooltip(tooltipBgGo, tooltipLabel, _flavorPanel);
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
             var binder = root.AddComponent<CardMaterialBinder>();
