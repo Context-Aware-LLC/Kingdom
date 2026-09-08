@@ -13,7 +13,7 @@
   },
   {
     "id": 3,
-    "handle": "hero_power_toll_the_bell",
+    "handle": "hero_power_weaken",
     "type": "HERO_POWER",
     "setId": "CORE"
   },
@@ -31,7 +31,7 @@
   },
   {
     "id": 6,
-    "handle": "hero_power_shadow_mark",
+    "handle": "hero_power_backstab",
     "type": "HERO_POWER",
     "setId": "CORE"
   },
@@ -116,6 +116,18 @@
   {
     "id": 62,
     "handle": "neutral_smithy_hammer",
+    "type": "WEAPON",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 63,
+    "handle": "storm_tempest_maul",
+    "type": "WEAPON",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 64,
+    "handle": "night_toxin_blade",
     "type": "WEAPON",
     "setId": "REKINDLING"
   },
@@ -211,9 +223,9 @@
   },
   {
     "id": 166,
-    "handle": "core_choking_vines",
+    "handle": "stone_petrify",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "REKINDLING"
   },
   {
     "id": 167,
@@ -415,13 +427,13 @@
   },
   {
     "id": 200,
-    "handle": "neutral_truce_pact",
+    "handle": "night_double_cross",
     "type": "SPELL",
     "setId": "REKINDLING"
   },
   {
     "id": 201,
-    "handle": "ember_reclaimed_fortress",
+    "handle": "stone_reclaimed_fortress",
     "type": "SPELL",
     "setId": "REKINDLING"
   },
@@ -552,6 +564,66 @@
     "setId": "REKINDLING"
   },
   {
+    "id": 223,
+    "handle": "storm_overcharge",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 224,
+    "handle": "storm_arc_flash",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 225,
+    "handle": "storm_fury",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 226,
+    "handle": "night_shadow_slip",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 227,
+    "handle": "night_venom_lash",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 228,
+    "handle": "warden_rubble_toss",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 229,
+    "handle": "warden_wardens_vow",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 230,
+    "handle": "clock_gear_cache",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 231,
+    "handle": "clock_refraction_module",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 232,
+    "handle": "clock_scrap_for_parts",
+    "type": "SPELL",
+    "setId": "REKINDLING"
+  },
+  {
     "id": 1001,
     "handle": "ember_recruit",
     "type": "MINION",
@@ -637,7 +709,7 @@
   },
   {
     "id": 1015,
-    "handle": "neutral_grove_mender",
+    "handle": "verdant_grove_mender",
     "type": "MINION",
     "setId": "EMBERFALL"
   },
@@ -1069,7 +1141,7 @@
   },
   {
     "id": 1087,
-    "handle": "storm_storm_striker",
+    "handle": "storm_tempest_striker",
     "type": "MINION",
     "setId": "EMBERFALL"
   },
@@ -1381,7 +1453,7 @@
   },
   {
     "id": 1139,
-    "handle": "tide_harbinger",
+    "handle": "tide_prophet_of_the_flood",
     "type": "MINION",
     "setId": "REKINDLING"
   },
@@ -1604,6 +1676,108 @@
   {
     "id": 1176,
     "handle": "storm_vael",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1177,
+    "handle": "storm_crackling_sprite",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1178,
+    "handle": "storm_stormbound_imp",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1179,
+    "handle": "storm_bolt_rider",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1180,
+    "handle": "storm_gale_herald",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1181,
+    "handle": "night_dusk_imp",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1182,
+    "handle": "night_poison_wisp",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1183,
+    "handle": "night_shadow_recon",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1184,
+    "handle": "night_nightfall_rogue",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1185,
+    "handle": "warden_ironclad_grunt",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1186,
+    "handle": "warden_fortress_keeper",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1187,
+    "handle": "warden_granite_behemoth",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1188,
+    "handle": "clock_ticking_automaton",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1189,
+    "handle": "clock_clockwork_knight",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1190,
+    "handle": "clock_grand_artificer",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1191,
+    "handle": "token_shade",
+    "type": "MINION",
+    "setId": "EMBERFALL"
+  },
+  {
+    "id": 1192,
+    "handle": "grave_hushwight",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1193,
+    "handle": "grave_silent_reaper",
     "type": "MINION",
     "setId": "REKINDLING"
   }

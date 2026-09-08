@@ -59,8 +59,12 @@ namespace Emberfall.Core.Tests.CardData
         private static string RegistryPath =>
             Path.Combine(RepoPaths.TestProjectDir, "Fixtures", "CardIds", "shipped-card-ids.json");
 
-        private static readonly JsonSerializerOptions Json =
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true, WriteIndented = true };
+        private static readonly JsonSerializerOptions Json = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true,
+        };
 
         private static IReadOnlyList<Row> Registry()
         {
