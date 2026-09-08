@@ -1,4 +1,4 @@
-# Emberfall Documentation
+[![Emberfall CI — determinism gates](https://github.com/mrsonord2240/tcg-hearthlike/actions/workflows/ci.yml/badge.svg)](https://github.com/mrsonord2240/tcg-hearthlike/actions/workflows/ci.yml)
 
 The maintained documentation is organized by audience and purpose:
 
@@ -16,8 +16,8 @@ Information may belong to more than one audience. Reuse the fact, but write it a
 2. Keep `pub-docs/` and `dev-docs/` short. Move dated reasoning, session residue, replaced proposals, and exhaustive audit evidence to `hist-docs/`.
 3. Label planned, open, unverified, and superseded material. Do not phrase it as current behavior.
 4. Treat executable code, committed data, tests, and deployment configuration as the final check on implementation claims.
-5. Preserve historical records rather than silently rewriting them to match the present.
+5. Do no preserve historical records in place. Move them to the hist-docs and replace with up to date information.
 
 ## Cutover status
 
-The older subject-based folders were retired on 2026-07-31 after their working-tree state was preserved under [`hist-docs/source-snapshots/`](hist-docs/source-snapshots/). Current guidance now lives only in `dev-docs/` and `pub-docs/`; detailed legacy citations point directly into the dated snapshot.
+ Current guidance now lives only in `dev-docs/` and `pub-docs/`; detailed legacy citations point directly to relevant entries in `hist-docs`.

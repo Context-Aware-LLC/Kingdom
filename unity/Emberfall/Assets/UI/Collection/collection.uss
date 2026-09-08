@@ -926,12 +926,15 @@
  * authored against, nine tabs sharing that axis came to 45.7 each, under the touch floor, and
  * 9 x 48 could not fit. THAT ARITHMETIC NO LONGER FORCES IT (#349): nine tabs share 1080 now. It
  * stays horizontal because a nine-item rail down the side of a card wall spends the axis the wall
- * needs, which is the reason that did not depend on the unit. Across the top, nine 56x60 controls
- * fit comfortably and remain close to square without becoming a
- * second row of cards. The explicit size also stops a wide monitor stretching portraits into
- * banners. A centred 600dp rail distributes its 96dp remainder between the eight internal gaps:
- * 12dp apiece, with no artificial inset on the first or last tab. That spacing also leaves a clean
- * seam for outer tab frames later; the frames themselves are deliberately not part of this change.
+ * needs, which is the reason that did not depend on the unit. The explicit size also stops a wide
+ * monitor stretching portraits into banners.
+ *
+ * SPACING IS `margin-left`, NOT `justify-content: space-between` (Sam, 2026-09-08). The strip used
+ * to be a fixed 600px box with the tabs' own width distributing whatever it didn't use across the
+ * eight gaps automatically -- so growing a tab also silently shrank its neighbours' gap. Fixed
+ * per-tab margins make the gutter a number you set, not one that falls out of how much of the 600
+ * the tabs happen to fill; `#class-tab-bar`'s own width below is sized to the tabs' authored total
+ * so nothing is left over to distribute in the first place.
  *
  * HEIGHT AND CARD ROWS. The rail is 64dp: 60dp portraits after their 4dp top inset. It remains in
  * flow, but its former 4dp bottom gap and the wall shell's decorative vertical padding are removed
@@ -966,26 +969,36 @@
  * ends -- flush, matching the tabs' flat-bottomed shape, no gap and (now that z-order is fixed) no
  * harm if a future height tweak leaves a sliver of intentional overlap instead. Whichever of the
  * two numbers changes, walk to `#collection-panel` and update the other -- USS drops calc()
- * silently (see theme.uss's own warning), so this can't be written as one formula. */
+ * silently (see theme.uss's own warning), so this can't be written as one formula.
+ *
+ * WIDTH: 1152px = 9 tabs x (113 authored width + 15 margin-left), all authored on `.class-tab_art`
+ * below. Grow a tab or its margin and this needs the same arithmetic redone by hand for the same
+ * reason -- no calc(). Getting it wrong under-sizes the box, which does not clip the tabs (nothing
+ * here sets overflow) but does throw off `left: 50%; translate: -50% 0`, which centers against
+ * this width, not the tabs' actual total. */
 #class-tab-bar {
     position: absolute;
     top: 82px;
     left: 50%;
     translate: -50% 0;
     flex-direction: row;
-    justify-content: space-between;
-    width: 600px;
+    width: 1152px;
     max-width: 100%;
-    height: 92px;
+    height: 97px;
 }
 .class-tab_art {
     flex-grow: 0;
     flex-shrink: 0;
-    flex-basis: 64px;
-    width: 88px;
-    /* 88, not 76 (Sam, 2026-09-08: "increase tab size a little") -- +4dp top margin still below =
-     * 92, this strip's height. Grow this and the strip's own height together. */
-    height: 88px;
+    /* flex-basis kept 24 under width, the same gap this pair has carried since 76/56 (2026-09-07) --
+     * preserved rather than closed, since neither Sam nor a device pass has flagged the rendered
+     * size as wrong and collapsing it now would be an unverified guess at which of the two numbers
+     * the engine actually honours. */
+    flex-basis: 89px;
+    width: 113px;
+    /* 113 wide x 93 tall, up from 88 x 88 (Sam, 2026-09-08: "+25 width, +5 height"). +4dp top
+     * margin still below = 97, this strip's height. Grow this and the strip's own height together. */
+    height: 93px;
+    margin-left: 15px;
     border-radius: 18px 18px 0 0;
     margin-top: var(--space-1);
     overflow: hidden;
@@ -1111,7 +1124,7 @@
  * the absolutely-positioned `#class-tab-bar` -- that strip no longer reserves flow space (see its
  * own rule), so without this the wall would start flush at the screen edge.
  *
- * 174px = #class-tab-bar's OWN top (82) + height (92) -- written out, not calc(), because USS
+ * 179px = #class-tab-bar's OWN top (82) + height (97) -- written out, not calc(), because USS
  * silently drops calc() (see theme.uss's own warning) and a dropped declaration here reads as "no
  * clearance at all" rather than an error. This puts the wall's first row exactly flush against the
  * strip's bottom edge, which is now safe to run tight against (2026-09-08): the strip paints and
@@ -1119,7 +1132,7 @@
  * into the first row's art stays clickable. Change either number and update the other to match. */
 #collection-panel {
     visibility: hidden;
-    margin-top: 174px;
+    margin-top: 179px;
 }
 #collection-empty {
     visibility: visible;

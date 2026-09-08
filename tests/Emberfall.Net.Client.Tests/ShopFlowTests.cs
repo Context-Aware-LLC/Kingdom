@@ -67,11 +67,11 @@ namespace Emberfall.Net.Client.Tests
                 Assert.That(
                     ShopCatalog.GemBundles,
                     Has.Exactly(1).Matches<GemBundleOffer>(offer =>
-                        offer.Gems == 200 && offer.PriceCents == 199));
+                        offer.Gems == 100 && offer.PriceCents == 199));
                 Assert.That(
                     ShopCatalog.GemBundles,
                     Has.Exactly(1).Matches<GemBundleOffer>(offer =>
-                        offer.Gems == 15000 && offer.PriceCents == 9999));
+                        offer.Gems == 7500 && offer.PriceCents == 9999));
             });
         }
 
