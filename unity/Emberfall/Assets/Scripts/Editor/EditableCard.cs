@@ -166,13 +166,13 @@ namespace Emberfall.Editor
                 clauses.Add(new EditableFilter { Kind = EditableFilterKind.Damaged, Damaged = damaged });
             if (filter.Tribe is { } tribe)
                 clauses.Add(new EditableFilter
-                    { Kind = EditableFilterKind.Tribe, Tribe = tribe, NegateTribe = filter.NegateTribe });
+                { Kind = EditableFilterKind.Tribe, Tribe = tribe, NegateTribe = filter.NegateTribe });
             if (filter.MaxCost is { } maxCost)
                 clauses.Add(new EditableFilter
-                    { Kind = EditableFilterKind.MaxCost, MaxCost = maxCost, NegateCost = filter.NegateCost });
+                { Kind = EditableFilterKind.MaxCost, MaxCost = maxCost, NegateCost = filter.NegateCost });
             if (filter.Keyword is { } keyword)
                 clauses.Add(new EditableFilter
-                    { Kind = EditableFilterKind.Keyword, Keyword = keyword, NegateKeyword = filter.NegateKeyword });
+                { Kind = EditableFilterKind.Keyword, Keyword = keyword, NegateKeyword = filter.NegateKeyword });
             return clauses;
         }
 
