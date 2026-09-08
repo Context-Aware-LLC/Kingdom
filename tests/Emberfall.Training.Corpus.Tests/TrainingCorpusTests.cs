@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using Emberfall.Core;
+using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Projection;
 using Emberfall.Core.Serialization;
@@ -346,15 +347,33 @@ namespace Emberfall.Training.Corpus.Tests
                 string rebuilt = Path.Combine(root, "rebuilt");
                 Directory.CreateDirectory(replayDir);
 
-                string cards = FindCardData();
-                FileCardDatabase db = FileCardDatabase.LoadDirectory(cards);
-                const int minionDefinition = 1001;
-                const int undertowDefinition = 156;
+                const string cardDataSha256 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+                int minionDefinition = FixtureCard.Id("training_public_bounce_minion");
+                int bounceDefinition = FixtureCard.Id("training_public_bounce_spell");
+                var minionCardDefinition = new CardDefinition(
+                    minionDefinition, "training_public_bounce_minion", "Public Bounce Minion",
+                    CardType.MINION, 1, 1, 1, null, CardClass.EMBERWARD, Rarity.COMMON,
+                    Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(), "",
+                    "training_public_bounce_minion", SetId.CORE, false, null, "");
+                var bounce = new CardDefinition(
+                    bounceDefinition, "training_public_bounce_spell", "Public Bounce Spell",
+                    CardType.SPELL, 1, null, null, null, CardClass.TIDECALLER, Rarity.COMMON,
+                    Array.Empty<Keyword>(), new[]
+                    {
+                        new RuleDefinition(
+                            new RuleId("bounce"),
+                            new TriggeredActivation(Trigger.ON_CAST),
+                            AlwaysCondition.Instance,
+                            OneShotLifetime.Instance,
+                            new ReturnToHandAction(
+                                new TargetSpec("ANY_MINION", TargetSelection.Of(1))))
+                    }, "", "training_public_bounce_spell", SetId.CORE, false, null, "");
+                FakeCardDatabase db = new FakeCardDatabase().Register(minionCardDefinition).Register(bounce);
                 var setup = new MatchSetup(
                     CardClass.EMBERWARD,
                     Enumerable.Repeat(minionDefinition, 30).ToArray(),
                     CardClass.TIDECALLER,
-                    Enumerable.Repeat(undertowDefinition, 30).ToArray());
+                    Enumerable.Repeat(bounceDefinition, 30).ToArray());
                 var id = new MatchId("training-known-hand-test");
                 var p0 = new PlayerId("p0");
                 var p1 = new PlayerId("p1");
@@ -388,19 +407,13 @@ namespace Emberfall.Training.Corpus.Tests
                 Apply(new PlayCardIntent(p0, minion.Id, 0, Array.Empty<TargetRef>()));
                 Apply(new EndTurnIntent(p0));
 
-                if (host.State.PlayerOf(p1).Mana.Available < 2)
-                {
-                    CardInstance spark = host.State.PlayerOf(p1).Hand.First(
-                        card => card.DefinitionId == setup.SparkTokenId);
-                    Apply(new PlayCardIntent(p1, spark.Id, 0, Array.Empty<TargetRef>()));
-                }
-                CardInstance undertow = host.State.PlayerOf(p1).Hand.First(
-                    card => card.DefinitionId == undertowDefinition);
+                CardInstance bounceCard = host.State.PlayerOf(p1).Hand.First(
+                    card => card.DefinitionId == bounceDefinition);
                 CardInstance publicTarget = host.State.PlayerOf(p0).Board.Single();
                 InstanceId retiredPublicId = publicTarget.Id;
                 Apply(new PlayCardIntent(
                     p1,
-                    undertow.Id,
+                    bounceCard.Id,
                     0,
                     new[] { new TargetRef(publicTarget.Id) }));
                 int rememberedDecision = decisionHashes.Count;
@@ -431,7 +444,7 @@ namespace Emberfall.Training.Corpus.Tests
                     EpisodeManifest.CurrentEngineContractVersion,
                     ProtocolContract.Version,
                     "test-revision",
-                    CorpusFiles.Sha256CardData(cards),
+                    cardDataSha256,
                     "test-policy",
                     "test-policy",
                     "replays/training-known-hand-test.jsonl",
@@ -443,8 +456,8 @@ namespace Emberfall.Training.Corpus.Tests
                 var writer = new JsonlEpisodeManifestWriter(raw);
                 writer.Append(manifest);
 
-                new TrainingCorpusBuilder(db).Build(writer.Path, manifest.CardDataSha256, built);
-                new TrainingCorpusBuilder(db).Build(writer.Path, manifest.CardDataSha256, rebuilt);
+                new TrainingCorpusBuilder(db).Build(writer.Path, cardDataSha256, built);
+                new TrainingCorpusBuilder(db).Build(writer.Path, cardDataSha256, rebuilt);
                 string decisionsPath = Path.Combine(built, TrainingCorpusBuilder.DecisionsFileName);
                 string[] decisions = File.ReadAllLines(decisionsPath);
 
