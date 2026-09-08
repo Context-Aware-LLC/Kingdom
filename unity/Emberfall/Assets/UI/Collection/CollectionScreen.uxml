@@ -15,8 +15,8 @@
         </ui:VisualElement>
         <ui:VisualElement name="body" class="db-body" style="transform-origin: 25%; justify-content: flex-start; overflow: visible;">
             <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
-            <ui:ListView name="collection-list" class="collection-list chrome-panel chrome-panel--recessed"/>
-            <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
+                <ui:ListView name="collection-list" class="collection-list chrome-panel chrome-panel--recessed"/>
+                <ui:Label name="collection-empty" text="Nothing matches those filters." class="col-empty"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement picking-mode="Ignore" class="col-query-toolbar">
@@ -36,7 +36,7 @@
         <ui:VisualElement name="query-bar" picking-mode="Ignore" class="col-query chrome-panel chrome-panel--outer">
             <ui:ScrollView name="query-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="col-query-scroll">
                 <ui:VisualElement class="col-query-row">
-                    <ui:TextField name="query-search" placeholder-text="Search cards" class="col-search chrome-input"/>
+                    <ui:TextField name="query-search" placeholder-text="Search cards" hide-placeholder-on-focus="true" emoji-fallback-support="false" class="col-search chrome-input"/>
                     <ui:VisualElement name="filter-row" class="db-filter-row">
                         <ui:Button name="filter-primary" text="Primary" class="db-chip"/>
                         <ui:Button name="filter-secondary" text="Secondary" class="db-chip"/>
