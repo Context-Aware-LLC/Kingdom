@@ -61,7 +61,7 @@ dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- `
 # Pin one curated deck to every ordered primary/secondary pairing:
 dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- `
   dataset-matrix 200 "E:\EmberfallData\raw\matrix-cohesive-001" --all-classes `
-  --deck-dir "E:\EmberfallData\deck-pools\cohesive-v1"
+  --deck-dir "E:\EmberfallData\deck-pools\cohesive-v1" --game-seed-offset 8000000
 ```
 
 `200` is matches per pairing, not the total, and must be positive and even so each class occupies
@@ -72,6 +72,8 @@ the existing single-matchup `dataset` command.
 When `--deck-dir` is present, the directory must provide exactly one legal deck for every selected
 ordered class pairing. The command validates the complete pool before the first match, prints its
 canonical SHA-256, and records the selected deck lists in every episode manifest.
+Use distinct `--game-seed-offset` values to create deterministic training and reserved-holdout
+populations with no overlapping match seeds.
 
 ## Materialize
 
