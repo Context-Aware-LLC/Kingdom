@@ -88,7 +88,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         }
 
         [Test]
-        public void Reanimated_Minion_Arrives_On_Its_Owners_Board_At_Printed_Stats_And_Summoning_Sick()
+        public void Reanimated_Minion_Arrives_On_Its_Controllers_Board_At_Printed_Stats_And_Summoning_Sick()
         {
             var fallen = Minion(FixtureCard.Id("fallen"), 4, 2);
             var raiseDead = Spell(FixtureCard.Id("raise_dead"), TestRules.Rule("raise_dead", Trigger.ON_CAST,
@@ -129,7 +129,7 @@ namespace Emberfall.Core.Tests.CardBehavior
         }
 
         [Test]
-        public void Reanimating_From_The_Enemy_Graveyard_Revives_It_Under_Its_Original_Owner()
+        public void Reanimating_From_The_Enemy_Graveyard_Revives_It_Under_The_Effect_Controller()
         {
             var fallen = Minion(FixtureCard.Id("fallen"), 3, 3);
             var raiseTheirDead = Spell(FixtureCard.Id("raise_their_dead"), TestRules.Rule("raise_their_dead", Trigger.ON_CAST,
@@ -140,9 +140,9 @@ namespace Emberfall.Core.Tests.CardBehavior
 
             Play(s, db, ToHand(s, 0, raiseTheirDead.Id), new TargetRef(corpse.Id));
 
-            Assert.That(s.Players[0].Board, Is.Empty, "not the caster's minion to keep");
-            var revived = s.Players[1].Board.Single();
+            var revived = s.Players[0].Board.Single();
             Assert.That(revived.Id, Is.EqualTo(corpse.Id));
+            Assert.That(revived.Controller, Is.EqualTo(s.Players[0].Id));
             Assert.That(s.Players[1].Graveyard, Is.Empty);
         }
 
@@ -192,9 +192,13 @@ namespace Emberfall.Core.Tests.CardBehavior
 
             Play(s, db, ToHand(s, 0, massRebirth.Id));
 
-            // Newest-first within seat 1's own board, since both its corpses came back there.
-            Assert.That(s.Players[1].Board.Select(c => c.Id), Is.EqualTo(new[] { newest.Id, middle.Id }));
-            Assert.That(s.Players[0].Board.Select(c => c.Id), Is.EqualTo(new[] { oldest.Id }));
+            // Every selected corpse belongs to the caster after reanimation, regardless of which
+            // graveyard supplied it. The one global death clock determines their board order.
+            Assert.That(s.Players[0].Board.Select(c => c.Id),
+                Is.EqualTo(new[] { newest.Id, middle.Id, oldest.Id }));
+            Assert.That(s.Players[0].Board, Has.All.Matches<CardInstance>(
+                c => c.Controller == s.Players[0].Id));
+            Assert.That(s.Players[1].Board, Is.Empty);
 
             Assert.That(s.Players[0].Graveyard, Does.Contain(mostRecentUndead), "Undead stays dead");
             // The cast spell itself joins seat 0's graveyard alongside the un-reanimated Undead --

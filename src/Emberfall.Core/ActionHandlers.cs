@@ -124,20 +124,22 @@ namespace Emberfall.Core
     }
 
     // ── REANIMATE ────────────────────────────────────────────────────────────────
-    /// <summary>Moves a graveyard minion onto the board as the same instance -- its id is already
-    /// public (it died in the open), so unlike <see cref="ReturnToHandHandler"/> there is no hidden
-    /// zone to mint a fresh id for. Stops rather than skips once the board is full: every remaining
-    /// target would fail the same <c>RulesEngine.EnterBoard</c> check.</summary>
+    /// <summary>Moves a graveyard minion onto the effect controller's board as the same instance --
+    /// its id is already public (it died in the open), so unlike <see cref="ReturnToHandHandler"/>
+    /// there is no hidden zone to mint a fresh id for. Reanimation changes control when the corpse
+    /// came from the opponent's graveyard. Stops rather than skips once the controller's board is
+    /// full: every remaining target would fail the same <c>RulesEngine.EnterBoard</c> check.</summary>
     internal sealed class ReanimateHandler : IActionHandler
     {
         public void Execute(in EffectContext ctx)
         {
+            int destinationSeat = ctx.State.SeatOf(ctx.Source.Controller);
             foreach (var t in ctx.Targets)
             {
                 if (t.Zone != Zone.Graveyard || t.Card == null) continue;
                 if (!ctx.Db.TryGet(t.Card.DefinitionId, out CardDefinition def)) continue;
                 CardInstance card = t.Card;
-                if (!RulesEngine.EnterBoard(ctx.State, card, def, t.Seat, -1, ctx.Db)) break;
+                if (!RulesEngine.EnterBoard(ctx.State, card, def, destinationSeat, -1, ctx.Db)) break;
                 ctx.State.Players[t.Seat].Graveyard.Remove(card);
                 ctx.Events.Emit(GameEventKind.CardSummoned, source: card.Id);
                 ctx.Interpreter.RaiseObservers(Trigger.ON_FRIENDLY_SUMMON, excluded: card,
