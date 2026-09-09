@@ -30,6 +30,13 @@ namespace Emberfall.Presentation
         // An exposed AudioMixer parameter is in decibels. -80 is the floor a fader in this engine
         // reads as true silence; log10(0) is undefined, so 0 volume maps here rather than through
         // the formula below.
+        //
+        // This number is also MasterMixer's m_SuspendThreshold, which is why that asset must keep
+        // m_EnableSuspend at 0 ("Auto Mixer Suspend" unticked in the inspector). Muting drives the
+        // group to exactly the threshold, so with suspend on, mute stops the mixer's DSP rather
+        // than attenuating it — and a source through a suspended mixer no longer reports itself as
+        // playing, which is the one condition MusicDirector.Update() treats as "track finished,
+        // start the next one". Ticking that box turns Mute into a silent race through the playlist.
         private const float SilenceDb = -80f;
 
         private static bool _loaded;
