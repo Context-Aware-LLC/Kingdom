@@ -176,3 +176,33 @@ create table if not exists deck (
 );
 
 create index if not exists deck_player_idx on deck (player_id);
+
+-- Daily quest progress (dev-docs/specs/daily-quests.md §6). ONE ROW PER MATCH that advanced a
+-- quest, never a counter: the primary key below is the whole idempotency story, so a redelivered
+-- match writes nothing and a quest cannot be inflated by a retry. A player's progress is
+--     select coalesce(sum(credit), 0) ... where player_id = $1 and quest_id = $2 and quest_day = $3
+-- and it is derived on every read rather than stored.
+--
+-- THERE IS NO ASSIGNMENT TABLE, DELIBERATELY. Which quest a player holds on a day is a pure
+-- function of (player_id, quest_day) — see QuestCatalog — so nothing is written at rollover and a
+-- player who never logs in has no rows at all. The consequence to know before adding a reroll:
+-- a reroll is a stored assignment, and it needs a table this schema does not have.
+--
+-- `credit` is not always 1. The card quests contribute the number of cards played that match.
+create table if not exists quest_progress (
+  player_id    text        not null,
+  quest_id     text        not null,
+  quest_day    date        not null,
+  match_id     text        not null,
+  credit       integer     not null,
+  credited_at  timestamptz not null,
+  primary key (player_id, quest_id, quest_day, match_id),
+  constraint quest_progress_credit_positive check (credit > 0)
+);
+
+-- Serves the per-player read that GET /quests makes for its three active days.
+create index if not exists quest_progress_player_day_idx
+  on quest_progress (player_id, quest_day desc, quest_id);
+
+-- Server-private, like the ladder tables above: Supabase's Data API gets no policies and no rows.
+alter table quest_progress enable row level security;

@@ -18,6 +18,7 @@ using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Matchmaking;
+using Emberfall.Net.Server.Quests;
 using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Replay;
 using Emberfall.Net.Server.Telemetry;
@@ -107,6 +108,15 @@ namespace Emberfall.Net.Server
         /// connection rather than silently leaving ownership unknown when only one variable is set.</para>
         /// </summary>
         public IEntitlementLedger? EntitlementLedger { get; init; }
+
+        /// <summary>
+        /// Where daily-quest progress is recorded. Null (default) uses
+        /// <see cref="InMemoryQuestProgressStore"/>, so on a box with no Postgres a restart forgets
+        /// today's progress — tolerable for dev, and the reason the durable adapter exists. Shares
+        /// the accounts database in production; quest progress is keyed on the same
+        /// <c>player_id</c> the ledger is, and completing a quest writes a row into that ledger.
+        /// </summary>
+        public IQuestProgressStore? QuestProgress { get; init; }
 
         /// <summary>
         /// What a finished match and a completed quest pay. Null (default) uses the shipping
@@ -344,10 +354,11 @@ namespace Emberfall.Net.Server
             // both, every eligible ladder match pays — see MatchRewardWorker for why this rides the
             // ranked sink rather than a seam of its own.
             IRankedMatchSink matchSink = ratingWorker;
+            IGoldRewardPolicy goldRewards = cfg.GoldRewards ?? new GoldRewardPolicy();
             if (cfg.EntitlementLedger is not null && cfg.AccountStore is not null)
             {
                 var rewardWorker = new MatchRewardWorker(
-                    new GoldFaucet(cfg.EntitlementLedger, time, cfg.GoldRewards ?? new GoldRewardPolicy()),
+                    new GoldFaucet(cfg.EntitlementLedger, time, goldRewards),
                     cfg.AccountStore);
                 builder.Services.AddSingleton<IHostedService>(rewardWorker);
                 matchSink = new CompositeRankedMatchSink(ratingWorker, rewardWorker);
@@ -358,6 +369,28 @@ namespace Emberfall.Net.Server
                     "[rewards] no {0} configured — match Gold rewards are DISABLED and every finished " +
                     "match pays nothing.",
                     cfg.EntitlementLedger is null ? "entitlement ledger" : "account store");
+            }
+
+            // Daily quests (dev-docs/specs/daily-quests.md). Same two prerequisites as the reward
+            // worker and the same posture on their absence: no quest service, GET /quests answers
+            // 503 "unavailable", and the telemetry sink is left exactly as configured.
+            //
+            // The sink is DECORATED rather than replaced — quest progress is a second reader of
+            // events that already exist, and it must not be able to change what the telemetry
+            // sample records. Everything downstream keeps seeing every event.
+            QuestProgressService? questService = null;
+            ITelemetrySink? telemetry = cfg.Telemetry;
+            if (cfg.EntitlementLedger is not null && cfg.AccountStore is not null)
+            {
+                questService = new QuestProgressService(
+                    cfg.QuestProgress ?? new InMemoryQuestProgressStore(),
+                    cfg.AccountStore,
+                    new GoldFaucet(cfg.EntitlementLedger, time, goldRewards));
+
+                var questSink = new QuestProgressSink(
+                    telemetry ?? NullTelemetrySink.Instance, questService, db);
+                builder.Services.AddSingleton<IHostedService>(questSink);
+                telemetry = questSink;
             }
 
             // The pack line. Two things have to be present for a pack to be openable at all, and
@@ -408,7 +441,7 @@ namespace Emberfall.Net.Server
                 replayStore,
                 matchmaking,
                 ratingForAccount,
-                cfg.Telemetry,
+                telemetry,
                 cfg.TokenVerifier,
                 cfg.AccountStore,
                 botPool,
@@ -445,6 +478,55 @@ namespace Emberfall.Net.Server
                     ratingSystem = "elo",
                     entries,
                 });
+            });
+
+            // GET /quests — the player's active quests and their progress
+            // (dev-docs/specs/daily-quests.md §8). There is deliberately no verb that moves
+            // progress: the server is the only thing that may, so the surface is read-only by
+            // construction rather than by validation.
+            app.MapGet("/quests", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                QuestReadResult result = await QuestsEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, questService,
+                    DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(time.NowMs).UtcDateTime),
+                    context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                // An ARRAY OF FLAT OBJECTS, every value a scalar. AuthJson.TryReadObjectArray reads
+                // exactly this and skips nested structure whole — a `reward: { gold: 60 }` would
+                // decode to nothing, silently, the same trap that made /collection's `cards` an
+                // object rather than an array of pairs.
+                var quests = new List<object>(result.Quests.Count);
+                foreach (QuestView quest in result.Quests)
+                {
+                    quests.Add(new
+                    {
+                        id = quest.Id,
+                        title = quest.Title,
+                        goal = quest.Goal,
+                        progress = quest.Progress,
+                        rewardGold = goldRewards.DailyQuestGold(quest.Id),
+                        day = quest.Day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        state = quest.Complete ? "complete" : "active",
+                    });
+                }
+
+                return Results.Json(new
+                {
+                    // "known" | "unauthenticated" | "unavailable". The client branches on this and
+                    // never on the quest count: an empty list and a failed read must not be the
+                    // same answer, or an outage renders as a finished day.
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    playerId = result.PlayerId,
+                    quests,
+                }, statusCode: result.HttpStatus);
             });
 
             // GET /session — the login handshake the client boot blocks on. Turns a locally-stored
