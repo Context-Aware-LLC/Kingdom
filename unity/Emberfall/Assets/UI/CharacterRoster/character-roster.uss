@@ -158,6 +158,17 @@
     overflow: hidden;
 }
 
+/* The prepared hero sheet is drawn as two adjacent textured meshes. Their vertices share one
+ * diagonal exactly: no separator, stroke or transparent gutter. Primary owns the larger left
+ * field; DeckClassPortrait.PrimaryShare is the single first-pass ratio to tune after device QA. */
+.deck-class-portrait--plate {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 42%;
+}
+
 /* GOLD READY RING, WHITE HOVER RING: both cut 2026-09-08 (Sam) — the blue match-pick ring below is
  * the only one left. `deck-plate-art--ready` is still toggled by CharacterRosterController off
  * `summary.Queue.IsEligible` (the tooltip still reads the same eligibility), it just paints

@@ -68,6 +68,7 @@ namespace Emberfall.Presentation
         private PlayerAccount _account;
         private ICardDatabase _db;
         private CardFaceBaker _faceBaker;
+        private IUiSpriteProvider _uiSprites;
         [SerializeField] private VisualTreeAsset cardRowTemplate;
         private readonly List<CardDefinition> _pool = new List<CardDefinition>();
 
@@ -185,6 +186,7 @@ namespace Emberfall.Presentation
             {
                 _account = PlayerAccount.Local;
                 _db = CardDatabaseLoader.Load();
+                _uiSprites = CardBackCatalog.NewProvider();
             }
             catch (Exception ex)
             {
@@ -713,6 +715,12 @@ namespace Emberfall.Presentation
                 };
                 button.AddToClassList("deck-choice");
                 button.AddToClassList(CardClassTokens.Edge(capturedDeck.PrimaryClass));
+                DeckClassPortrait.Mount(button, _uiSprites,
+                    capturedDeck.PrimaryClass, capturedDeck.SecondaryClass,
+                    "deck-class-portrait--drawer");
+                button.tooltip =
+                    $"{CardClassTokens.Label(capturedDeck.PrimaryClass)} → " +
+                    CardClassTokens.Label(capturedDeck.SecondaryClass);
                 group.Add(button);
 
                 _deckChooserList.Add(group);

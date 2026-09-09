@@ -629,14 +629,17 @@ namespace Emberfall.Presentation
             // deck is known by its sleeve rather than a label.
             var art = new VisualElement();
             art.AddToClassList("deck-plate-art");
-            // The pairing is on the tooltip rather than the plate. It used to be the coloured spine
-            // of the character row this plate sat inside, and that row is gone; painting it back
-            // onto the picture is what the "the deck is its image" ruling refuses.
+            // The chosen showcase card remains the deck's image. The ordered class pair now gets a
+            // portrait band on that same control: primary larger on the left, secondary on the
+            // right. That keeps "Deck image" real while making the immutable pairing visible.
             string pairing = $"{CardClassTokens.Label(deck.PrimaryClass)} → {CardClassTokens.Label(deck.SecondaryClass)}";
             art.tooltip = summary.Queue.IsEligible
                 ? $"{deck.Name} · {pairing} — {deck.TotalCount} / {DeckValidator.DeckSize}"
                 : $"{deck.Name} · {pairing} — {summary.Queue.Reason}";
             ShowcaseArt(deck, art);
+            DeckClassPortrait.Mount(art, _uiSprites,
+                deck.PrimaryClass, deck.SecondaryClass,
+                "deck-class-portrait--plate");
             plate.Add(art);
 
             // Queue standing is the GOLD BORDER and nothing else (Sam, 2026-08-07). It replaced a
