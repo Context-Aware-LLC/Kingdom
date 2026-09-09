@@ -418,12 +418,16 @@ namespace Emberfall.Presentation
             // on the way OUT of the screen, which is exactly what "it works when I leave" looks
             // like. Both had to change, and neither alone does anything visible.
             //
-            // VISIBILITY, NOT DISPLAY. `display: none` takes the subtree out of layout, and the
-            // wall solves its tile size from the live scroll viewport — a viewport that resolves to
-            // NaN while hidden would feed the solve and bake the whole pool at the wrong size, or
-            // not at all. `visibility: hidden` keeps every box resolving and only skips the paint,
-            // which is the entire point: the wall must lay out and bake while it cannot be seen.
-            _root.style.visibility = Visibility.Hidden;
+            // OPACITY, NOT VISIBILITY OR DISPLAY. `display: none` takes the subtree out of layout,
+            // and the wall solves its tile size from the live scroll viewport — a viewport that
+            // resolves to NaN while hidden would feed the solve and bake the whole pool at the
+            // wrong size, or not at all. `visibility: hidden` keeps layout, but it is inherited:
+            // CardWall stamps Visibility.Visible on every populated tile, so each card opts itself
+            // back into painting over the world-space plate. Parent opacity is composited across
+            // the whole subtree and descendants cannot override it. Disable the tree as well so
+            // the transparent controls cannot receive input while the wall bakes underneath.
+            _root.SetEnabled(false);
+            _root.style.opacity = 0f;
         }
 
         /// <summary>Paint this screen again. Idempotent, and safe when the plate was never shown —
@@ -431,7 +435,9 @@ namespace Emberfall.Presentation
         /// each call site, so a new exit path cannot forget it and leave the screen invisible.</summary>
         private void RevealScreen()
         {
-            if (_root != null) _root.style.visibility = Visibility.Visible;
+            if (_root == null) return;
+            _root.style.opacity = 1f;
+            _root.SetEnabled(true);
         }
 
         /// <summary>
