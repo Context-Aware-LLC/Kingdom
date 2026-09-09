@@ -279,10 +279,14 @@ namespace Emberfall.Review
                 if (TryReadInstanceId(Intent[field], out InstanceId single))
                     yield return single;
 
+            // Targets are written either as a bare "i2" or as {"instance":"i97","binding":"target"};
+            // both occur in this corpus, so unwrap the object form before reading the id.
             if (Intent["targets"] is JArray targets)
                 foreach (JToken target in targets)
-                    if (TryReadInstanceId(target, out InstanceId listed))
-                        yield return listed;
+                {
+                    JToken id = target is JObject o ? o["instance"] : target;
+                    if (TryReadInstanceId(id, out InstanceId listed)) yield return listed;
+                }
         }
 
         private static readonly string[] EntityFields = { "attacker", "defender", "card" };

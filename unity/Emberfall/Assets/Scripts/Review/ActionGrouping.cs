@@ -109,11 +109,24 @@ namespace Emberfall.Review
             return key.ToString();
         }
 
+        /// <summary>
+        /// A TARGET HAS TWO WIRE SPELLINGS: a bare "i2", and {"instance":"i97","binding":"target"}.
+        /// Both occur in this corpus. Keyed as written, the two never compare equal, so two
+        /// spellings of one play stay split and the grouping silently under-merges — which is the
+        /// exact failure this class exists to fix. Normalise to the instance id.
+        /// </summary>
         private static void AppendTargets(StringBuilder key, JObject intent)
         {
             key.Append("|t:");
             if (intent["targets"] is JArray targets)
-                foreach (JToken target in targets) key.Append((string)target).Append(',');
+                foreach (JToken target in targets)
+                    key.Append(TargetInstance(target)).Append(',');
+        }
+
+        private static string TargetInstance(JToken target)
+        {
+            if (target is JObject o) return (string)o["instance"] ?? "";
+            return (string)target ?? "";
         }
 
         private static int DefinitionOf(GameState state, string instanceId)
