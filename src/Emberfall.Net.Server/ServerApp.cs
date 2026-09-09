@@ -109,6 +109,15 @@ namespace Emberfall.Net.Server
         public IEntitlementLedger? EntitlementLedger { get; init; }
 
         /// <summary>
+        /// What a finished match and a completed quest pay. Null (default) uses the shipping
+        /// schedule in <see cref="GoldRewardPolicy"/>; a test injects its own so an assertion never
+        /// depends on a live tuning number. It is a policy rather than a set of amounts on
+        /// <see cref="ServerOptions"/> because <see cref="GoldFaucet"/> refuses to take an amount
+        /// from a caller at all — reward quantities have exactly one owner.
+        /// </summary>
+        public IGoldRewardPolicy? GoldRewards { get; init; }
+
+        /// <summary>
         /// Where a pack open gets its seed. Null (default) reads
         /// <see cref="HmacPackSeedSource.SecretEnvVar"/> from the environment, and if that is unset
         /// too the pack line is DISABLED rather than seeded with a default — see the composition root
@@ -328,6 +337,29 @@ namespace Emberfall.Net.Server
                 ? null
                 : new EconomyService(cfg.EntitlementLedger, time);
 
+            // The match Gold faucet. It needs BOTH a ledger to pay into and an account store to
+            // resolve a seat's player_id through, and either absence is an ordinary dev-box
+            // configuration rather than a failure: no faucet is registered, the ranked sink stays
+            // the rating worker alone, and matches finish exactly as they did. On a box that has
+            // both, every eligible ladder match pays — see MatchRewardWorker for why this rides the
+            // ranked sink rather than a seam of its own.
+            IRankedMatchSink matchSink = ratingWorker;
+            if (cfg.EntitlementLedger is not null && cfg.AccountStore is not null)
+            {
+                var rewardWorker = new MatchRewardWorker(
+                    new GoldFaucet(cfg.EntitlementLedger, time, cfg.GoldRewards ?? new GoldRewardPolicy()),
+                    cfg.AccountStore);
+                builder.Services.AddSingleton<IHostedService>(rewardWorker);
+                matchSink = new CompositeRankedMatchSink(ratingWorker, rewardWorker);
+            }
+            else
+            {
+                Console.Error.WriteLine(
+                    "[rewards] no {0} configured — match Gold rewards are DISABLED and every finished " +
+                    "match pays nothing.",
+                    cfg.EntitlementLedger is null ? "entitlement ledger" : "account store");
+            }
+
             // The pack line. Two things have to be present for a pack to be openable at all, and
             // BOTH absences are configuration rather than failure — the route answers 503 and the
             // rest of the server is unaffected:
@@ -381,7 +413,7 @@ namespace Emberfall.Net.Server
                 cfg.AccountStore,
                 botPool,
                 cfg.MatchmakingRatingForAccount is null ? ratingStore : null,
-                ratingWorker,
+                matchSink,
                 trainingEpisodes,
                 onboarding,
                 cfg.EntitlementLedger);
