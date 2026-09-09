@@ -43,8 +43,11 @@ namespace Emberfall.Review
         /// closed list over that would throw away most of what they captured.</summary>
         public List<string> MotifSuggestions { get; private set; } = new List<string>();
 
-        /// <summary>Index 0 is score 1. Sam's scale, quoted from the review document.</summary>
+        /// <summary>Index 0 is score 1. Sam's scale for the PLAY.</summary>
         public List<string> ReasonablenessLabels { get; private set; } = new List<string>();
+
+        /// <summary>Index 0 is score 1. Whether near-certainty suited the SITUATION.</summary>
+        public List<string> ConfidenceLabels { get; private set; } = new List<string>();
 
         public static ReviewVocabulary Open(string annotationsDirectory)
         {
@@ -92,6 +95,8 @@ namespace Emberfall.Review
             MotifSuggestions = Strings(json["tacticalMotif"]);
             ReasonablenessLabels = Strings(json["reasonableness"]);
             if (ReasonablenessLabels.Count == 0) ReasonablenessLabels = DefaultScale();
+            ConfidenceLabels = Strings(json["confidence"]);
+            if (ConfidenceLabels.Count == 0) ConfidenceLabels = DefaultConfidence();
         }
 
         private static List<string> Strings(JToken token)
@@ -115,6 +120,7 @@ namespace Emberfall.Review
                 ["structuralClass"] = new JArray(StructuralValues),
                 ["tacticalMotif"] = new JArray(MotifSuggestions),
                 ["reasonableness"] = new JArray(ReasonablenessLabels),
+                ["confidence"] = new JArray(ConfidenceLabels),
             };
             File.WriteAllText(_path, json.ToString(Formatting.Indented), new UTF8Encoding(false));
         }
@@ -140,7 +146,15 @@ namespace Emberfall.Review
                 "resource-preservation", "shield-timing", "fatigue", "discover-unearth",
             };
             ReasonablenessLabels = DefaultScale();
+            ConfidenceLabels = DefaultConfidence();
         }
+
+        private static List<string> DefaultConfidence() => new List<string>
+        {
+            "1 - Unwarranted. The situation admits real alternatives; near-certainty misrepresents it.",
+            "2 - Overstated. Some support for certainty, but not this much.",
+            "3 - Warranted. The situation is clear-cut; near-certainty is correct.",
+        };
 
         private static List<string> DefaultScale() => new List<string>
         {

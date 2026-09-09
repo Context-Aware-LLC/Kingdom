@@ -96,6 +96,7 @@ namespace Emberfall.Review
                 StructuralClass = edit.StructuralClass,
                 TacticalMotif = edit.TacticalMotif,
                 Reasonableness = edit.Reasonableness,
+                ConfidenceAppropriateness = edit.ConfidenceAppropriateness,
                 Comment = edit.Comment,
             };
 
@@ -113,6 +114,7 @@ namespace Emberfall.Review
                 ["structuralClass"] = row.StructuralClass ?? "",
                 ["tacticalMotif"] = new JArray(row.TacticalMotif ?? Array.Empty<string>()),
                 ["reasonableness"] = row.Reasonableness,
+                ["confidenceAppropriateness"] = row.ConfidenceAppropriateness,
                 ["comment"] = row.Comment ?? "",
             };
 
@@ -151,8 +153,19 @@ namespace Emberfall.Review
         /// </summary>
         public string[] TacticalMotif { get; set; } = Array.Empty<string>();
 
-        /// <summary>Sam's 1-5 scale; 0 means ungraded.</summary>
+        /// <summary>Sam's 1-5 scale for the PLAY itself; 0 means ungraded.</summary>
         public int Reasonableness { get; set; }
+
+        /// <summary>
+        /// 1-3: was near-certainty appropriate FOR THIS SITUATION, independent of whether the play
+        /// was any good? 0 means ungraded.
+        ///
+        /// Separate from <see cref="Reasonableness"/> on Sam's instruction, and the separation is
+        /// the whole point: a genuinely close spot can receive a perfectly fine play at a
+        /// confidence the spot never justified. Fused into one number that case disappears — it
+        /// scores as a pass, because the play was fine.
+        /// </summary>
+        public int ConfidenceAppropriateness { get; set; }
 
         public string Comment { get; set; } = "";
 
@@ -166,6 +179,7 @@ namespace Emberfall.Review
             string.IsNullOrEmpty(StructuralClass)
             && (TacticalMotif == null || TacticalMotif.Length == 0)
             && Reasonableness == 0
+            && ConfidenceAppropriateness == 0
             && string.IsNullOrWhiteSpace(Comment);
 
         public Annotation Clone() => new Annotation
@@ -173,6 +187,7 @@ namespace Emberfall.Review
             StructuralClass = StructuralClass,
             TacticalMotif = (string[])(TacticalMotif ?? Array.Empty<string>()).Clone(),
             Reasonableness = Reasonableness,
+            ConfidenceAppropriateness = ConfidenceAppropriateness,
             Comment = Comment,
             MatchId = MatchId,
             DecisionIndex = DecisionIndex,
@@ -201,6 +216,7 @@ namespace Emberfall.Review
                 StructuralClass = (string)json["structuralClass"] ?? "",
                 TacticalMotif = motifs.ToArray(),
                 Reasonableness = (int?)json["reasonableness"] ?? 0,
+                ConfidenceAppropriateness = (int?)json["confidenceAppropriateness"] ?? 0,
                 Comment = (string)json["comment"] ?? "",
             };
         }

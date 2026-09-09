@@ -91,13 +91,73 @@ namespace Emberfall.Review
             // half-typed comment onto the next.
             if (_editingKey != FrameKey(frame)) LoadEdit(frame);
 
+            // The verdict comes FIRST and takes the keyboard. Measured after Sam's first three
+            // grades: score set on all three, structural/motif/comment empty on all three. Every
+            // state in the bundle was selected for >=0.99 confidence, so the verdict IS the
+            // finding — the rest is optional colour and now sits below it, out of the way.
+            HandleScoreKeys(frame);
+
             DrawNavigation(frame);
+            EditorGUILayout.Space(4f);
+            DrawVerdict(frame);
             EditorGUILayout.Space(4f);
             DrawIdentity(frame);
             EditorGUILayout.Space(6f);
             DrawActions(frame);
             EditorGUILayout.Space(6f);
-            DrawGrading(frame);
+            DrawExtraLabels(frame);
+        }
+
+        /// <summary>
+        /// 1-5 the play, Q/W/E the confidence, 0 clears both, space or → advances.
+        ///
+        /// NOTHING AUTO-ADVANCES. It did while there was one axis, and with two that would jump
+        /// away the moment the first was answered. Advancing is a keypress of its own so the order
+        /// you grade in is yours.
+        ///
+        /// All of it is ignored while a text field is being edited — otherwise typing "5" into the
+        /// comment would grade the decision mid-sentence.
+        /// </summary>
+        private void HandleScoreKeys(ReviewFrame frame)
+        {
+            Event e = Event.current;
+            if (e.type != EventType.KeyDown || EditorGUIUtility.editingTextField) return;
+
+            int play = -1;
+            if (e.keyCode >= KeyCode.Alpha0 && e.keyCode <= KeyCode.Alpha5)
+                play = e.keyCode - KeyCode.Alpha0;
+            else if (e.keyCode >= KeyCode.Keypad0 && e.keyCode <= KeyCode.Keypad5)
+                play = e.keyCode - KeyCode.Keypad0;
+
+            if (play == 0)   // clear both axes together — "I have not judged this"
+            {
+                _edit.Reasonableness = 0;
+                _edit.ConfidenceAppropriateness = 0;
+                Save(frame);
+                e.Use();
+                return;
+            }
+            if (play > 0)
+            {
+                _edit.Reasonableness = play;
+                Save(frame);
+                e.Use();
+                return;
+            }
+
+            int confidence = e.keyCode == KeyCode.Q ? 1
+                           : e.keyCode == KeyCode.W ? 2
+                           : e.keyCode == KeyCode.E ? 3
+                                                    : -1;
+            if (confidence > 0)
+            {
+                _edit.ConfidenceAppropriateness = confidence;
+                Save(frame);
+                e.Use();
+                return;
+            }
+
+            if (e.keyCode == KeyCode.Space) { _reviewer.Next(); e.Use(); }
         }
 
         // ── Grading ─────────────────────────────────────────────────────────────────────────
@@ -118,12 +178,14 @@ namespace Emberfall.Review
         }
 
         /// <summary>
-        /// The handoff's three labels plus a comment. They are SEPARATE FIELDS on purpose: the
-        /// first hand pass over these decisions had only one label slot and produced compound
-        /// values like "routine-structural-alias", which is the structural axis and the verdict
-        /// axis fused into a string neither can be read back out of.
+        /// The verdict. One question, five keys.
+        ///
+        /// The question is NOT "was this a good move" — every decision here was made at >=0.99
+        /// confidence, so the thing being tested is whether that confidence was warranted. Sam's
+        /// line: 1-3 fail, 4 indeterminate, 5 pass. The headline that falls out is a calibration
+        /// rate, which is why indeterminates are counted apart rather than averaged in.
         /// </summary>
-        private void DrawGrading(ReviewFrame frame)
+        private void DrawVerdict(ReviewFrame frame)
         {
             ReviewVocabulary vocabulary = _reviewer.Vocabulary;
             if (vocabulary == null) return;
@@ -132,42 +194,129 @@ namespace Emberfall.Review
             {
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.LabelField("Grade", EditorStyles.boldLabel, GUILayout.Width(48f));
+                    GUILayout.Label("Verdict", EditorStyles.boldLabel, GUILayout.Width(52f));
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label($"{_reviewer.GradedCount} / {_reviewer.FrameCount} done",
-                                    EditorStyles.miniLabel);
-                    // The vocabulary is a file you can edit while this is open; this re-reads it.
+                    GUILayout.Label(Tally(), EditorStyles.miniLabel);
                     if (GUILayout.Button("↻ vocab", EditorStyles.miniButton)) vocabulary.Reload();
                 }
 
-                // 1. Was the action set really offering distinct choices?
-                _edit.StructuralClass = DrawOptionalPopup(
-                    "Structural", _edit.StructuralClass, vocabulary.StructuralValues);
-                DrawAddValue(ref _newStructural, "add structural value",
-                             v => vocabulary.AddStructural(v));
+                // Axis 1 — the PLAY. 1..5, keys 1..5.
+                GUILayout.Label("Was the play legitimate?   keys 1-5", EditorStyles.miniBoldLabel);
+                int play = DrawScoreRow(_edit.Reasonableness, 5, s => s <= 3, s => s == 4);
+                if (play != _edit.Reasonableness) { _edit.Reasonableness = play; Save(frame); }
+                GUILayout.Label(Line(vocabulary.ReasonablenessLabels, _edit.Reasonableness),
+                                EditorStyles.wordWrappedMiniLabel);
 
-                // 2. What kind of decision was it? Open — see Annotation.TacticalMotif.
-                _motifText = EditorGUILayout.TextField("Motif", _motifText);
-                DrawMotifSuggestions(vocabulary);
+                EditorGUILayout.Space(4f);
 
-                // 3. Was the pick reasonable? Sam's scale, quoted from the review document.
-                DrawReasonableness(vocabulary.ReasonablenessLabels);
+                // Axis 2 — the CONFIDENCE. 1..3, keys Q/W/E. Independent of axis 1 on purpose: a
+                // close spot can get a fine play at a certainty the spot never justified, and that
+                // case is invisible if the two are one number.
+                GUILayout.Label("Did the situation justify near-certainty?   keys Q W E",
+                                EditorStyles.miniBoldLabel);
+                int confidence = DrawScoreRow(_edit.ConfidenceAppropriateness, 3, s => s == 1, s => s == 2);
+                if (confidence != _edit.ConfidenceAppropriateness)
+                {
+                    _edit.ConfidenceAppropriateness = confidence;
+                    Save(frame);
+                }
+                GUILayout.Label(Line(vocabulary.ConfidenceLabels, _edit.ConfidenceAppropriateness),
+                                EditorStyles.wordWrappedMiniLabel);
+
+                GUILayout.Label("0 clears · space / → next", EditorStyles.miniLabel);
 
                 EditorGUILayout.LabelField("Comment");
-                _edit.Comment = EditorGUILayout.TextArea(
-                    _edit.Comment ?? "", GUILayout.MinHeight(48f));
-
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    if (GUILayout.Button("Save", GUILayout.Height(22f))) Save(frame);
-                    if (GUILayout.Button("Save & Next ▶", GUILayout.Height(22f)))
-                    {
-                        Save(frame);
-                        _reviewer.Next();
-                    }
-                }
+                _edit.Comment = EditorGUILayout.TextArea(_edit.Comment ?? "", GUILayout.MinHeight(40f));
+                if (GUILayout.Button("Save comment")) Save(frame);
             }
         }
+
+        /// <summary>A row of score buttons; returns the score after any click. Red below the line,
+        /// amber on the middle, green at the top — the same reading in both axes.</summary>
+        private static int DrawScoreRow(int current, int max, Func<int, bool> isBad, Func<int, bool> isMiddle)
+        {
+            int result = current;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                for (int score = 1; score <= max; score++)
+                {
+                    Color was = GUI.backgroundColor;
+                    if (current == score)
+                        GUI.backgroundColor = isBad(score) ? new Color(1f, 0.55f, 0.5f)
+                                            : isMiddle(score) ? new Color(1f, 0.9f, 0.5f)
+                                                              : new Color(0.55f, 1f, 0.6f);
+                    if (GUILayout.Button(score.ToString(), GUILayout.Height(30f))) result = score;
+                    GUI.backgroundColor = was;
+                }
+            }
+            return result;
+        }
+
+        private static string Line(IReadOnlyList<string> labels, int score) =>
+            score >= 1 && score <= labels.Count ? labels[score - 1] : "ungraded";
+
+        /// <summary>
+        /// Two rates, never averaged together. The play rate is how often a near-certain policy
+        /// picked something that was not a legitimate play; the confidence rate is how often it was
+        /// near-certain in a spot that did not justify certainty at all. A single mixed number
+        /// would hide the second, which is the subtler failure.
+        /// </summary>
+        private string Tally()
+        {
+            if (_reviewer.Annotations == null) return "";
+            int badPlay = 0, judgedPlay = 0, badConfidence = 0, judgedConfidence = 0;
+            foreach (ReviewFrame f in _reviewer.Bundle.Frames)
+            {
+                Annotation a = _reviewer.Annotations.For(f);
+                if (a == null) continue;
+                if (a.Reasonableness >= 1)
+                {
+                    // 4 is "not resolvable from one turn" — counted as judged-but-not-a-failure
+                    // would overstate the pass rate, so it is excluded from the denominator.
+                    if (a.Reasonableness != 4) { judgedPlay++; if (a.Reasonableness <= 3) badPlay++; }
+                }
+                if (a.ConfidenceAppropriateness >= 1)
+                {
+                    judgedConfidence++;
+                    if (a.ConfidenceAppropriateness <= 2) badConfidence++;
+                }
+            }
+            string play = judgedPlay > 0
+                ? $"play {badPlay}/{judgedPlay} bad"
+                : "play -";
+            string confidence = judgedConfidence > 0
+                ? $"conf {badConfidence}/{judgedConfidence} unwarranted"
+                : "conf -";
+            return $"{play}  ·  {confidence}  ·  of {_reviewer.FrameCount}";
+        }
+
+
+        /// <summary>
+        /// Motif, and anything else worth saying beyond the verdict. Folded away by default: the
+        /// verdict is the deliverable and this is optional grouping for later.
+        ///
+        /// The structural dropdown that used to sit here is GONE — see ActionGrouping. It asked the
+        /// reviewer to notice something the engine can compute, on every single screen.
+        /// </summary>
+        private void DrawExtraLabels(ReviewFrame frame)
+        {
+            ReviewVocabulary vocabulary = _reviewer.Vocabulary;
+            if (vocabulary == null) return;
+
+            _showExtras = EditorGUILayout.Foldout(_showExtras, "Motif (optional)", true);
+            if (!_showExtras) return;
+
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                GUILayout.Label("What the decision was BETWEEN — the situation, not the pick.",
+                                EditorStyles.miniLabel);
+                _motifText = EditorGUILayout.TextField("Motif", _motifText);
+                DrawMotifSuggestions(vocabulary);
+                if (GUILayout.Button("Save motif")) Save(frame);
+            }
+        }
+
+        private bool _showExtras;
 
         private void Save(ReviewFrame frame)
         {
@@ -180,56 +329,6 @@ namespace Emberfall.Review
                 foreach (string tag in _edit.TacticalMotif) _reviewer.Vocabulary.AddMotif(tag);
 
             Repaint();
-        }
-
-        /// <summary>A popup that can also mean "I have not decided" — the default, and never a
-        /// silently-recorded first value.</summary>
-        private static string DrawOptionalPopup(string label, string current, IReadOnlyList<string> values)
-        {
-            var options = new string[values.Count + 1];
-            options[0] = "(unset)";
-            for (int i = 0; i < values.Count; i++) options[i + 1] = values[i];
-
-            int index = 0;
-            for (int i = 0; i < values.Count; i++)
-                if (string.Equals(values[i], current, StringComparison.Ordinal)) { index = i + 1; break; }
-
-            int picked = EditorGUILayout.Popup(label, index, options);
-            return picked <= 0 ? "" : options[picked];
-        }
-
-        private void DrawReasonableness(IReadOnlyList<string> labels)
-        {
-            var options = new string[labels.Count + 1];
-            options[0] = "(unset)";
-            for (int i = 0; i < labels.Count; i++) options[i + 1] = labels[i];
-
-            int index = _edit.Reasonableness >= 1 && _edit.Reasonableness <= labels.Count
-                ? _edit.Reasonableness
-                : 0;
-            int picked = EditorGUILayout.Popup("Reasonable?", index, options);
-            _edit.Reasonableness = picked;
-        }
-
-        private string _newStructural = "";
-
-        /// <summary>Grow a list without leaving the panel. The vocabulary is still being discovered,
-        /// so the moment you notice a missing value is the moment you should be able to add it.</summary>
-        private static void DrawAddValue(ref string buffer, string placeholder, Func<string, bool> add)
-        {
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                GUILayout.Space(EditorGUIUtility.labelWidth);
-                buffer = EditorGUILayout.TextField(buffer);
-                using (new EditorGUI.DisabledScope(string.IsNullOrWhiteSpace(buffer)))
-                    if (GUILayout.Button("＋", EditorStyles.miniButton, GUILayout.Width(26f)))
-                    {
-                        add(buffer);
-                        buffer = "";
-                        GUI.FocusControl(null);
-                    }
-            }
-            GUILayout.Label($"    {placeholder}", EditorStyles.miniLabel);
         }
 
         private void DrawMotifSuggestions(ReviewVocabulary vocabulary)
@@ -348,24 +447,28 @@ namespace Emberfall.Review
             if (!string.IsNullOrEmpty(_reviewer.HighlightNote))
                 EditorGUILayout.HelpBox(_reviewer.HighlightNote, MessageType.None);
 
-            _scroll = EditorGUILayout.BeginScrollView(_scroll);
-            for (int i = 0; i < frame.Actions.Count; i++)
+            _scroll = EditorGUILayout.BeginScrollView(_scroll, GUILayout.MaxHeight(190f));
+            foreach (ActionGroup group in _reviewer.Groups)
             {
-                ReviewAction action = frame.Actions[i];
-                bool selected = i == _reviewer.SelectedAction;
-
                 using (new EditorGUILayout.HorizontalScope(
-                           selected ? EditorStyles.helpBox : GUIStyle.none))
+                           group.ContainsChosen ? EditorStyles.helpBox : GUIStyle.none))
                 {
-                    GUILayout.Label(action.Chosen ? "●" : "○", GUILayout.Width(16f));
-                    GUILayout.Label(FormatProbability(action.Probability),
-                                    action.Chosen ? EditorStyles.boldLabel : EditorStyles.label,
+                    GUILayout.Label(group.ContainsChosen ? "●" : "○", GUILayout.Width(16f));
+                    GUILayout.Label(FormatProbability(group.Probability),
+                                    group.ContainsChosen ? EditorStyles.boldLabel : EditorStyles.label,
                                     GUILayout.Width(84f));
-
-                    if (GUILayout.Button(action.Description, EditorStyles.linkLabel))
-                        _reviewer.SelectAction(i);
+                    if (GUILayout.Button(group.Label, EditorStyles.linkLabel))
+                        _reviewer.SelectAction(group.Members[0]);
                     GUILayout.FlexibleSpace();
                 }
+
+                // The alias note is the whole point of grouping: it says the confidence you are
+                // reading was assembled from several spellings of one play, not split between
+                // competing ones.
+                if (group.IsAlias)
+                    GUILayout.Label($"        {group.AliasNote} — "
+                                    + $"top spelling alone {FormatProbability(group.TopProbability)}",
+                                    EditorStyles.miniLabel);
             }
             EditorGUILayout.EndScrollView();
         }

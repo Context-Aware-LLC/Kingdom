@@ -155,6 +155,7 @@ namespace Emberfall.Review
             }
 
             _lastState = state;
+            Groups = ActionGrouping.Group(frame, state, _cards);
             BuildBoard(frame, state);
             _board.OnStateUpdated(state);
             foreach (Action<GameState> sink in _stateSinks) sink(state);
@@ -214,6 +215,15 @@ namespace Emberfall.Review
 
         /// <summary>What the last <see cref="SelectAction"/> could and could not light up.</summary>
         public string HighlightNote { get; private set; } = "";
+
+        /// <summary>
+        /// The frame's legal actions grouped into the distinct PLAYS they represent, with the
+        /// policy's probability summed over each. Recomputed per frame.
+        ///
+        /// This replaces a dropdown that asked the reviewer to classify the same thing by hand.
+        /// See ActionGrouping for why that was the wrong question to ask a human.
+        /// </summary>
+        public IReadOnlyList<ActionGroup> Groups { get; private set; } = new List<ActionGroup>();
 
         private enum EntityKind { Absent, Card, Hero }
 
