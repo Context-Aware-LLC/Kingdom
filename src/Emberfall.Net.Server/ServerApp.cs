@@ -206,6 +206,14 @@ namespace Emberfall.Net.Server
                 ? null
                 : new PostgresEntitlementLedger(entitlementsDb!);
 
+            // Quest progress rides the same connection as the ledger it pays into — a quest
+            // completing writes a row there, and splitting the two would let a box record progress
+            // it cannot pay for. Without one the in-memory store stands in, which means a restart
+            // forgets today's progress: fine for dev, and the reason this line exists at all.
+            IQuestProgressStore? questProgress = string.IsNullOrWhiteSpace(entitlementsDb)
+                ? null
+                : new PostgresQuestProgressStore(entitlementsDb!);
+
             return new ServerConfig
             {
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
@@ -218,6 +226,7 @@ namespace Emberfall.Net.Server
                 AccountStore = accountStore,
                 PlayerDataStore = playerDataStore,
                 EntitlementLedger = entitlementLedger,
+                QuestProgress = questProgress,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking

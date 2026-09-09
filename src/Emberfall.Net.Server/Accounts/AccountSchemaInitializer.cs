@@ -49,7 +49,12 @@ namespace Emberfall.Net.Server.Accounts
                 {
                     await _ensureSchema(ct);
                     Console.Error.WriteLine(
-                        "[accounts-schema] applied: account, entitlement_grant, character, deck." +
+                        // The tables schema.sql actually creates. It listed `character`, which the
+                        // 2026-09-04 migration dropped, and omitted the two ladder tables — a
+                        // deploy-verification line that names the wrong tables is worse than none,
+                        // since its whole job is confirming from outside that they exist.
+                        "[accounts-schema] applied: account, entitlement_grant, ladder_player, " +
+                        "ladder_match, deck, quest_progress." +
                         (attempt > 0 ? $" (after {attempt} failed attempt(s))" : ""));
                     return;
                 }
