@@ -18,6 +18,7 @@ using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Matchmaking;
+using Emberfall.Net.Server.Quests;
 using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Replay;
 using Emberfall.Net.Server.Telemetry;
@@ -109,6 +110,24 @@ namespace Emberfall.Net.Server
         public IEntitlementLedger? EntitlementLedger { get; init; }
 
         /// <summary>
+        /// Where daily-quest progress is recorded. Null (default) uses
+        /// <see cref="InMemoryQuestProgressStore"/>, so on a box with no Postgres a restart forgets
+        /// today's progress — tolerable for dev, and the reason the durable adapter exists. Shares
+        /// the accounts database in production; quest progress is keyed on the same
+        /// <c>player_id</c> the ledger is, and completing a quest writes a row into that ledger.
+        /// </summary>
+        public IQuestProgressStore? QuestProgress { get; init; }
+
+        /// <summary>
+        /// What a finished match and a completed quest pay. Null (default) uses the shipping
+        /// schedule in <see cref="GoldRewardPolicy"/>; a test injects its own so an assertion never
+        /// depends on a live tuning number. It is a policy rather than a set of amounts on
+        /// <see cref="ServerOptions"/> because <see cref="GoldFaucet"/> refuses to take an amount
+        /// from a caller at all — reward quantities have exactly one owner.
+        /// </summary>
+        public IGoldRewardPolicy? GoldRewards { get; init; }
+
+        /// <summary>
         /// Where a pack open gets its seed. Null (default) reads
         /// <see cref="HmacPackSeedSource.SecretEnvVar"/> from the environment, and if that is unset
         /// too the pack line is DISABLED rather than seeded with a default — see the composition root
@@ -187,6 +206,14 @@ namespace Emberfall.Net.Server
                 ? null
                 : new PostgresEntitlementLedger(entitlementsDb!);
 
+            // Quest progress rides the same connection as the ledger it pays into — a quest
+            // completing writes a row there, and splitting the two would let a box record progress
+            // it cannot pay for. Without one the in-memory store stands in, which means a restart
+            // forgets today's progress: fine for dev, and the reason this line exists at all.
+            IQuestProgressStore? questProgress = string.IsNullOrWhiteSpace(entitlementsDb)
+                ? null
+                : new PostgresQuestProgressStore(entitlementsDb!);
+
             return new ServerConfig
             {
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
@@ -199,6 +226,7 @@ namespace Emberfall.Net.Server
                 AccountStore = accountStore,
                 PlayerDataStore = playerDataStore,
                 EntitlementLedger = entitlementLedger,
+                QuestProgress = questProgress,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking
@@ -328,6 +356,52 @@ namespace Emberfall.Net.Server
                 ? null
                 : new EconomyService(cfg.EntitlementLedger, time);
 
+            // The match Gold faucet. It needs BOTH a ledger to pay into and an account store to
+            // resolve a seat's player_id through, and either absence is an ordinary dev-box
+            // configuration rather than a failure: no faucet is registered, the ranked sink stays
+            // the rating worker alone, and matches finish exactly as they did. On a box that has
+            // both, every eligible ladder match pays — see MatchRewardWorker for why this rides the
+            // ranked sink rather than a seam of its own.
+            IRankedMatchSink matchSink = ratingWorker;
+            IGoldRewardPolicy goldRewards = cfg.GoldRewards ?? new GoldRewardPolicy();
+            if (cfg.EntitlementLedger is not null && cfg.AccountStore is not null)
+            {
+                var rewardWorker = new MatchRewardWorker(
+                    new GoldFaucet(cfg.EntitlementLedger, time, goldRewards),
+                    cfg.AccountStore);
+                builder.Services.AddSingleton<IHostedService>(rewardWorker);
+                matchSink = new CompositeRankedMatchSink(ratingWorker, rewardWorker);
+            }
+            else
+            {
+                Console.Error.WriteLine(
+                    "[rewards] no {0} configured — match Gold rewards are DISABLED and every finished " +
+                    "match pays nothing.",
+                    cfg.EntitlementLedger is null ? "entitlement ledger" : "account store");
+            }
+
+            // Daily quests (dev-docs/specs/daily-quests.md). Same two prerequisites as the reward
+            // worker and the same posture on their absence: no quest service, GET /quests answers
+            // 503 "unavailable", and the telemetry sink is left exactly as configured.
+            //
+            // The sink is DECORATED rather than replaced — quest progress is a second reader of
+            // events that already exist, and it must not be able to change what the telemetry
+            // sample records. Everything downstream keeps seeing every event.
+            QuestProgressService? questService = null;
+            ITelemetrySink? telemetry = cfg.Telemetry;
+            if (cfg.EntitlementLedger is not null && cfg.AccountStore is not null)
+            {
+                questService = new QuestProgressService(
+                    cfg.QuestProgress ?? new InMemoryQuestProgressStore(),
+                    cfg.AccountStore,
+                    new GoldFaucet(cfg.EntitlementLedger, time, goldRewards));
+
+                var questSink = new QuestProgressSink(
+                    telemetry ?? NullTelemetrySink.Instance, questService, db);
+                builder.Services.AddSingleton<IHostedService>(questSink);
+                telemetry = questSink;
+            }
+
             // The pack line. Two things have to be present for a pack to be openable at all, and
             // BOTH absences are configuration rather than failure — the route answers 503 and the
             // rest of the server is unaffected:
@@ -376,12 +450,12 @@ namespace Emberfall.Net.Server
                 replayStore,
                 matchmaking,
                 ratingForAccount,
-                cfg.Telemetry,
+                telemetry,
                 cfg.TokenVerifier,
                 cfg.AccountStore,
                 botPool,
                 cfg.MatchmakingRatingForAccount is null ? ratingStore : null,
-                ratingWorker,
+                matchSink,
                 trainingEpisodes,
                 onboarding,
                 cfg.EntitlementLedger);
@@ -413,6 +487,55 @@ namespace Emberfall.Net.Server
                     ratingSystem = "elo",
                     entries,
                 });
+            });
+
+            // GET /quests — the player's active quests and their progress
+            // (dev-docs/specs/daily-quests.md §8). There is deliberately no verb that moves
+            // progress: the server is the only thing that may, so the surface is read-only by
+            // construction rather than by validation.
+            app.MapGet("/quests", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                QuestReadResult result = await QuestsEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, questService,
+                    DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(time.NowMs).UtcDateTime),
+                    context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                // An ARRAY OF FLAT OBJECTS, every value a scalar. AuthJson.TryReadObjectArray reads
+                // exactly this and skips nested structure whole — a `reward: { gold: 60 }` would
+                // decode to nothing, silently, the same trap that made /collection's `cards` an
+                // object rather than an array of pairs.
+                var quests = new List<object>(result.Quests.Count);
+                foreach (QuestView quest in result.Quests)
+                {
+                    quests.Add(new
+                    {
+                        id = quest.Id,
+                        title = quest.Title,
+                        goal = quest.Goal,
+                        progress = quest.Progress,
+                        rewardGold = goldRewards.DailyQuestGold(quest.Id),
+                        day = quest.Day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                        state = quest.Complete ? "complete" : "active",
+                    });
+                }
+
+                return Results.Json(new
+                {
+                    // "known" | "unauthenticated" | "unavailable". The client branches on this and
+                    // never on the quest count: an empty list and a failed read must not be the
+                    // same answer, or an outage renders as a finished day.
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    playerId = result.PlayerId,
+                    quests,
+                }, statusCode: result.HttpStatus);
             });
 
             // GET /session — the login handshake the client boot blocks on. Turns a locally-stored
