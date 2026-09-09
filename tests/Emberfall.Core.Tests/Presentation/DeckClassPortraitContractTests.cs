@@ -24,6 +24,8 @@ namespace Emberfall.Core.Tests.Presentation
                     "The primary class must own most of the portrait's area.");
                 Assert.That(portrait, Does.Contain("DrawPair(context, width, height)"),
                     "Both class images must be emitted by one mesh pass so the diagonal is shared, not spaced.");
+                Assert.That(portrait, Does.Contain("UvX(bottomRightX"),
+                    "The diagonal must clip an undistorted rectangle, not shear each portrait into a trapezoid.");
                 Assert.That(collection, Does.Contain("DeckClassPortrait.Mount(button"),
                     "Collection's deck drawer must use the shared class portrait.");
                 Assert.That(roster, Does.Contain("DeckClassPortrait.Mount(art"),

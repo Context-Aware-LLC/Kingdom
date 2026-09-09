@@ -23,6 +23,9 @@ namespace Emberfall.Presentation
         private readonly Cell _primary;
         private readonly Cell _secondary;
 
+        // The source art does not place every face at the same scale or coordinate. Keep the
+        // framing data beside the cell mapping so each hero can be corrected independently after
+        // the first eyes-on-glass pass without recutting the sheet or changing the shared seam.
         private readonly struct Cell
         {
             public Cell(int column, int row, float focusX)
@@ -111,8 +114,14 @@ namespace Emberfall.Presentation
                 cellWidth,
                 cellHeight);
 
-            float averageWidth = ((topRightX - topLeftX) + (bottomRightX - bottomLeftX)) * 0.5f;
-            Rect uv = Cover(source, averageWidth / Mathf.Max(1f, bottomLeftY - topLeftY), cell.FocusX);
+            // Treat the picture as one undistorted rectangle beneath a diagonal clip. Mapping the
+            // same uMax onto both slanted-edge vertices would squeeze the lower scanlines harder
+            // than the upper ones and visibly shear a face.
+            float destinationLeft = Mathf.Min(topLeftX, bottomLeftX);
+            float destinationRight = Mathf.Max(topRightX, bottomRightX);
+            float destinationWidth = destinationRight - destinationLeft;
+            float destinationHeight = Mathf.Max(1f, bottomLeftY - topLeftY);
+            Rect uv = Cover(source, destinationWidth / destinationHeight, cell.FocusX);
 
             float uMin = (uv.xMin + HalfTexel) / texture.width;
             float uMax = (uv.xMax - HalfTexel) / texture.width;
@@ -123,10 +132,14 @@ namespace Emberfall.Presentation
             Color32 white = new Color32(255, 255, 255, 255);
             mesh.SetAllVertices(new[]
             {
-                VertexAt(topLeftX, topLeftY, uMin, vMax, white),
-                VertexAt(topRightX, topRightY, uMax, vMax, white),
-                VertexAt(bottomRightX, bottomRightY, uMax, vMin, white),
-                VertexAt(bottomLeftX, bottomLeftY, uMin, vMin, white),
+                VertexAt(topLeftX, topLeftY,
+                    UvX(topLeftX, destinationLeft, destinationWidth, uMin, uMax), vMax, white),
+                VertexAt(topRightX, topRightY,
+                    UvX(topRightX, destinationLeft, destinationWidth, uMin, uMax), vMax, white),
+                VertexAt(bottomRightX, bottomRightY,
+                    UvX(bottomRightX, destinationLeft, destinationWidth, uMin, uMax), vMin, white),
+                VertexAt(bottomLeftX, bottomLeftY,
+                    UvX(bottomLeftX, destinationLeft, destinationWidth, uMin, uMax), vMin, white),
             });
             mesh.SetAllIndices(new ushort[] { 0, 1, 2, 2, 3, 0 });
         }
@@ -153,6 +166,14 @@ namespace Emberfall.Presentation
             uv = new Vector2(u, v),
             tint = tint,
         };
+
+        private static float UvX(
+            float x,
+            float destinationLeft,
+            float destinationWidth,
+            float uMin,
+            float uMax) =>
+            Mathf.Lerp(uMin, uMax, (x - destinationLeft) / destinationWidth);
 
         private static bool TryCell(CardClass cardClass, out Cell cell)
         {
