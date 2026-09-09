@@ -34,6 +34,33 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         [Test]
+        public void Portrait_backed_deck_controls_are_visually_textless()
+        {
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string collection = File.ReadAllText(Path.Combine(
+                assets, "Scripts", "Presentation", "CollectionController.cs"));
+            string styles = File.ReadAllText(Path.Combine(
+                assets, "UI", "Collection", "collection.uss"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(collection, Does.Not.Contain("deck-choice-pairing"),
+                    "The class portraits replace the drawer's visible class-pair caption.");
+                Assert.That(collection, Does.Not.Contain("text = $\"{capturedDeck.Name}"),
+                    "The portrait-backed drawer button must not render deck-name/count text.");
+                Assert.That(styles, Does.Match(
+                        @"(?s)\.deck-class-portrait--drawer\s*\{[^}]*left:\s*0;[^}]*right:\s*0;"),
+                    "With no label beside it, the drawer portrait must fill the button width.");
+                Assert.That(styles, Does.Match(
+                        @"(?s)\.deck-choice\s*\{[^}]*border-radius:\s*var\(--space-2\);[^}]*overflow:\s*hidden;"),
+                    "The button must clip its full-bleed portrait to the same rounded profile.");
+                Assert.That(styles, Does.Match(
+                        @"(?s)\.deck-choice:hover\s+\.deck-class-portrait--drawer[^}]*opacity:"),
+                    "The opaque full-bleed image must not hide the button's hover/focus feedback.");
+            });
+        }
+
+        [Test]
         public void Prepared_sheet_is_a_shipping_ui_sprite()
         {
             string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");

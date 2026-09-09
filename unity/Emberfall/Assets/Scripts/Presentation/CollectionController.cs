@@ -691,9 +691,8 @@ namespace Emberfall.Presentation
             if (_deckChooserList == null) return;
             _deckChooserList.Clear();
 
-            // ONE FLAT LIST (ADR-0009). It was grouped by character — a name, the pairing under it,
-            // then that character's decks — and the grouping is what went away, not the information:
-            // each row now carries its own pairing, because each deck now has one.
+            // ONE FLAT LIST (ADR-0009). Each deck's ordered pair is now the button image itself;
+            // names, counts and class labels deliberately stay out of the visible chooser row.
             IReadOnlyList<DeckSummary> rows = _account.DeckRows(_db);
 
             foreach (DeckSummary summary in rows)
@@ -703,24 +702,17 @@ namespace Emberfall.Presentation
                 var group = new VisualElement();
                 group.AddToClassList("deck-choice-group");
 
-                var pairing = new Label(
-                    $"{CardClassTokens.Label(capturedDeck.PrimaryClass)} + " +
-                    CardClassTokens.Label(capturedDeck.SecondaryClass));
-                pairing.AddToClassList("deck-choice-pairing");
-                group.Add(pairing);
-
-                var button = new Button(() => OpenDeckEditor(capturedDeck))
-                {
-                    text = $"{capturedDeck.Name}  ·  {summary.TotalCount}/{DeckValidator.DeckSize}"
-                };
+                var button = new Button(() => OpenDeckEditor(capturedDeck));
                 button.AddToClassList("deck-choice");
                 button.AddToClassList(CardClassTokens.Edge(capturedDeck.PrimaryClass));
                 DeckClassPortrait.Mount(button, _uiSprites,
                     capturedDeck.PrimaryClass, capturedDeck.SecondaryClass,
                     "deck-class-portrait--drawer");
                 button.tooltip =
+                    $"{capturedDeck.Name} · " +
                     $"{CardClassTokens.Label(capturedDeck.PrimaryClass)} → " +
-                    CardClassTokens.Label(capturedDeck.SecondaryClass);
+                    $"{CardClassTokens.Label(capturedDeck.SecondaryClass)} · " +
+                    $"{summary.TotalCount}/{DeckValidator.DeckSize}";
                 group.Add(button);
 
                 _deckChooserList.Add(group);

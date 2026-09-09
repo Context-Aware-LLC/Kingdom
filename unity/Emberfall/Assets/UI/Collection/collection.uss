@@ -818,17 +818,12 @@
     color: var(--ink-1);
     margin-bottom: var(--space-1);
 }
-.deck-choice-pairing {
-    font-size: var(--type-body);
-    color: var(--ink-2);
-    margin-bottom: var(--space-1);
-}
 .deck-choice {
     min-height: 64px;
     /* margin-bottom: var(--space-2); */
-    padding: var(--space-3) var(--space-4) var(--space-3) 188px;
+    padding: 0;
     border-width: 0;
-    border-radius: 0;
+    border-radius: var(--space-2);
     overflow: hidden;
     background-color: rgba(21, 28, 38, 0.98);
     background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
@@ -848,9 +843,16 @@
 .deck-class-portrait--drawer {
     position: absolute;
     left: 0;
+    right: 0;
     top: 0;
     bottom: 0;
-    width: 172px;
+    transition-property: opacity;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.deck-choice:hover .deck-class-portrait--drawer,
+.deck-choice:focus .deck-class-portrait--drawer {
+    opacity: 0.88;
 }
 .deck-choice:hover,
 .deck-choice:focus {
