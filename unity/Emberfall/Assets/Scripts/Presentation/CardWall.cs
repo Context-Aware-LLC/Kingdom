@@ -8,20 +8,22 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Presents the collection as virtualized rows of five baked card faces. The host supplies one
+    /// Presents the collection as virtualized rows of five pre-baked card faces. The host supplies one
     /// <see cref="ListView"/> and a five-slot row template; this class owns row batching, recycled
     /// slot state, responsive sizing, card-face baking, and tile gestures.
     ///
-    /// <para>Element identity is deliberately not card identity. A ListView reuses a small set of
-    /// rows while scrolling, so every asynchronous bake is guarded by the slot's binding version
-    /// before it may paint.</para>
+    /// <para>The rows are virtualized; the faces are not. The complete pool is baked behind the
+    /// loading transition before any ListView.bindItem callback may paint it. A recycled row only
+    /// reads the completed cache. This boundary is deliberate: captures initiated from bindItem
+    /// reproduce #341's frame-over-sockets failure in the Editor, while live RenderTexture
+    /// backgrounds reproduce it on Android.</para>
     /// </summary>
     public sealed class CardWall
     {
         // These are pre-style fallbacks shared with CardFaceBaker; the authored values live on
         // .collection-list in collection.uss and are read through OnCustomStyleResolved.
         // They MIRROR that block and must equal it: until the first CustomStyleResolvedEvent the
-        // wall lays out with these and CardFaceBaker seeds its first RenderTexture from them, so a
+        // wall lays out with these and CardFaceBaker seeds its first frozen face from them, so a
         // drift is a wrong first paint plus a wasted bake, on a frame the player sees.
         // They were 114/160 — the COMPACT rung of the three-tier ladder — until #349 (a81a321d)
         // deleted the compact and medium rungs from collection.uss and left these behind.
@@ -97,8 +99,8 @@ namespace Emberfall.Presentation
         private float _lastLayoutWidth = -1f;
         private float _lastLayoutHeight = -1f;
 
-        private bool _initialBakeQueued;
-        private bool _initialPageReady;
+        private bool _poolBakeQueued;
+        private bool _poolBakeReady;
         private int _bakeGeneration;
         private int _bakesOutstanding;
 
@@ -107,8 +109,7 @@ namespace Emberfall.Presentation
         public event Action<CardDefinition> TileClicked;
 
         /// <summary>
-        /// Raised when the initially visible page has finished baking, success or failure. Later rows
-        /// bake lazily as ListView binds them.
+        /// Raised when the complete card pool has finished baking, success or failure.
         /// </summary>
         public event Action BakePassCompleted;
 
@@ -148,8 +149,7 @@ namespace Emberfall.Presentation
                 foreach (CardDefinition def in pool)
                     if (def != null) _pool.Add(def);
 
-            _initialPageReady = false;
-            RestartInitialBake();
+            RestartPoolBake();
             ApplyQuery();
             ScrollToTop();
         }
@@ -160,7 +160,7 @@ namespace Emberfall.Presentation
             _sort = sort;
             ApplyQuery();
             ScrollToTop();
-            if (!_initialPageReady) RestartInitialBake();
+            if (!_poolBakeReady) RestartPoolBake();
         }
 
         /// <summary>Rebind the realized rows so deck and ownership decorations update.</summary>
@@ -240,8 +240,6 @@ namespace Emberfall.Presentation
             binding.Card = def;
             binding.PointerDown = false;
             binding.Dragged = false;
-            int version = binding.Version;
-
             tile.EnableInClassList("card-tile--maxed", false);
             tile.EnableInClassList("card-tile--unowned", false);
             tile.style.backgroundImage = StyleKeyword.None;
@@ -257,21 +255,18 @@ namespace Emberfall.Presentation
             tile.pickingMode = PickingMode.Ignore;
             TileDecorator?.Invoke(def, tile);
 
-            int cardId = def.Id;
-            _baker.Bake(def, texture =>
+            // The ListView is allowed to virtualize elements, not rendering work. If the eager
+            // pass is still running the root remains behind the loading plate and the slot stays
+            // blank; CompletePoolBake refreshes every realized row once the cache is complete.
+            if (!_poolBakeReady) return;
+            if (!_baker.TryGetCachedFace(def.Id, out Texture2D face))
             {
-                if (binding.Version != version || binding.Card?.Id != cardId) return;
-                var face = texture as RenderTexture;
-                if (face == null)
-                {
-                    Debug.LogWarning($"[CardWall] bake failed for '{cardId}' — tile will be blank and non-interactive.");
-                    tile.pickingMode = PickingMode.Ignore;
-                    return;
-                }
+                tile.pickingMode = PickingMode.Ignore;
+                return;
+            }
 
-                tile.style.backgroundImage = new StyleBackground(Background.FromRenderTexture(face));
-                tile.pickingMode = PickingMode.Position;
-            });
+            tile.style.backgroundImage = new StyleBackground(Background.FromTexture2D(face));
+            tile.pickingMode = PickingMode.Position;
         }
 
         private static void ClearSlot(VisualElement tile)
@@ -420,7 +415,7 @@ namespace Emberfall.Presentation
             if (sizeChanged)
             {
                 _baker.SetFaceSize(Mathf.RoundToInt(tileWidth), Mathf.RoundToInt(tileHeight));
-                if (!_initialPageReady) RestartInitialBake();
+                RestartPoolBake();
             }
             _list.RefreshItems();
         }
@@ -472,50 +467,43 @@ namespace Emberfall.Presentation
             verticalMargin = Mathf.Clamp(rowBudget - tileHeight, VerticalTileMargin, MaxVerticalMargin);
         }
 
-        private void RestartInitialBake()
+        private void RestartPoolBake()
         {
-            if (_initialPageReady) return;
+            _poolBakeReady = false;
             _bakeGeneration++;
-            if (_initialBakeQueued) return;
-            _initialBakeQueued = true;
-            _list.schedule.Execute(BakeInitialPage);
+            if (_poolBakeQueued) return;
+            _poolBakeQueued = true;
+            _list.schedule.Execute(BakePool);
         }
 
-        private void BakeInitialPage()
+        private void BakePool()
         {
-            _initialBakeQueued = false;
-            if (_initialPageReady) return;
+            _poolBakeQueued = false;
 
             int generation = _bakeGeneration;
-            float rowHeight = Mathf.Max(1f, _activeTileHeight + _activeVerticalMargin);
-            float height = _viewport?.resolvedStyle.height ?? _list.resolvedStyle.height;
-            int visibleRows = height > 0f && !float.IsNaN(height)
-                ? Mathf.Max(1, Mathf.CeilToInt(height / rowHeight) + 1)
-                : MinVisibleRows;
-            int initialCardCount = Mathf.Min(_visible.Count, visibleRows * CardsPerRow);
-
-            _bakesOutstanding = initialCardCount;
+            _bakesOutstanding = _pool.Count;
             if (_bakesOutstanding == 0)
             {
-                CompleteInitialBake(generation);
+                CompletePoolBake(generation);
                 return;
             }
 
-            for (int i = 0; i < initialCardCount; i++)
-                _baker.Bake(_visible[i], _ => CountBake(generation));
+            for (int i = 0; i < _pool.Count; i++)
+                _baker.Bake(_pool[i], _ => CountBake(generation));
         }
 
         private void CountBake(int generation)
         {
-            if (generation != _bakeGeneration || _initialPageReady) return;
+            if (generation != _bakeGeneration || _poolBakeReady) return;
             if (--_bakesOutstanding > 0) return;
-            CompleteInitialBake(generation);
+            CompletePoolBake(generation);
         }
 
-        private void CompleteInitialBake(int generation)
+        private void CompletePoolBake(int generation)
         {
-            if (generation != _bakeGeneration || _initialPageReady) return;
-            _initialPageReady = true;
+            if (generation != _bakeGeneration || _poolBakeReady) return;
+            _poolBakeReady = true;
+            _list.RefreshItems();
             BakePassCompleted?.Invoke();
         }
 

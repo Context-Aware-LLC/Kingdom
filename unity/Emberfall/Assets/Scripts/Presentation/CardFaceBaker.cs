@@ -34,8 +34,15 @@ namespace Emberfall.Presentation
     /// second card rebinding the rig while the first is still waiting on art would photograph a
     /// chimera. Only the art callback advances the queue.
     ///
-    /// DISPOSE. Cached faces are RenderTextures — unmanaged, and not collected. They are released
-    /// on <see cref="ClearCache"/>, on a face-size change, and on destroy.
+    /// UI TOOLKIT HANDOFF. CardSnapshot necessarily renders into a RenderTexture, but the
+    /// collection never gives that live target to UI Toolkit. On Android, UI Toolkit can paint a
+    /// Background.FromRenderTexture without the socket and gem layers even though ReadPixels sees
+    /// them in the exact same target (#341). Each completed capture is synchronously frozen into
+    /// an immutable Texture2D before delivery. The temporary render target is released immediately
+    /// after that readback.
+    ///
+    /// DISPOSE. Cached faces are Texture2Ds — unmanaged Unity objects, and not collected. They are
+    /// destroyed on <see cref="ClearCache"/>, on a face-size change, and on destroy.
     /// </summary>
     public sealed class CardFaceBaker : MonoBehaviour
     {
@@ -61,7 +68,7 @@ namespace Emberfall.Presentation
         // ONE live state for every card, constructed and never updated — see "AS PRINTED" above.
         private readonly CardLiveState _printed = new CardLiveState(new InstanceId(-1));
 
-        private readonly Dictionary<int, RenderTexture>      _cache   = new();
+        private readonly Dictionary<int, Texture2D>          _cache   = new();
         private readonly Dictionary<int, List<Action<Texture>>> _waiting = new();
         private readonly Queue<CardDefinition> _queue = new();
 
@@ -114,7 +121,7 @@ namespace Emberfall.Presentation
             // no-id case now — no card is ever numbered 0, which is what makes it usable as one.
             if (def == null || def.Id <= 0) { onReady?.Invoke(null); return; }
 
-            if (_cache.TryGetValue(def.Id, out RenderTexture cached))
+            if (_cache.TryGetValue(def.Id, out Texture2D cached))
             {
                 onReady?.Invoke(cached);
                 return;
@@ -134,6 +141,15 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
+        /// Returns a completed face without starting work. CardWall uses this after its eager pool
+        /// bake so ListView.bindItem can only display cached pixels, never initiate a capture.
+        /// </summary>
+        public bool TryGetCachedFace(int cardId, out Texture2D face)
+        {
+            return _cache.TryGetValue(cardId, out face) && face != null;
+        }
+
+        /// <summary>
         /// Re-derives the wall tile resolution. Every cached face is at the OLD size, so the cache
         /// is dropped — a resize is the one moment a stale face is guaranteed wrong.
         /// </summary>
@@ -149,11 +165,9 @@ namespace Emberfall.Presentation
         /// <summary>Releases every baked face. Idempotent; safe to call mid-queue.</summary>
         public void ClearCache()
         {
-            foreach (RenderTexture rt in _cache.Values)
+            foreach (Texture2D face in _cache.Values)
             {
-                if (rt == null) continue;
-                rt.Release();
-                DestroyObj(rt);
+                if (face != null) DestroyObj(face);
             }
             _cache.Clear();
         }
@@ -235,19 +249,26 @@ namespace Emberfall.Presentation
             // once after we were destroyed — would otherwise photograph the rig out of turn.
             if (!_waiting.ContainsKey(def.Id) || _rig == null) return;
 
-            // Bounded for the same reason the pump is (#230): nothing but this callback advances
-            // the queue, so a throw between here and _awaitingArt = false would wedge the wall
-            // permanently. The finally is the queue's only guarantee of forward progress.
             try
             {
                 // A null sprite is a legitimate outcome — art not generated yet — and still gets a
                 // face. SetArt hides the illustration quad and the frame reads as an empty window.
                 _rig.SetArt(sprite);
-
+                Texture2D face = null;
                 RenderTexture rt = CardSnapshot.Capture(_rigVisual, faceWidth, faceHeight);
                 if (rt != null)
                 {
-                    _cache[def.Id] = rt;
+                    try
+                    {
+                        face = Freeze(rt, def.Id);
+                    }
+                    finally
+                    {
+                        rt.Release();
+                        DestroyObj(rt);
+                    }
+
+                    if (face != null) _cache[def.Id] = face;
                 }
                 else
                 {
@@ -262,7 +283,7 @@ namespace Emberfall.Presentation
                                          "(RT alloc failure — see above); tile will be blank.");
                 }
 
-                Deliver(def.Id, rt);
+                Deliver(def.Id, face);
             }
             catch (Exception ex)
             {
@@ -276,6 +297,43 @@ namespace Emberfall.Presentation
             }
 
             PumpQueue();
+        }
+
+        /// <summary>
+        /// Cross the live-render-target boundary before a face reaches UI Toolkit. ReadPixels is
+        /// deliberate rather than Graphics.CopyTexture: #341's source target reads correctly but
+        /// paints incorrectly, and the synchronous readback snapshots those pixels. Apply discards
+        /// the CPU copy after the upload, so the persistent cost is one depthless RGBA texture per
+        /// cached face rather than a colour target plus CardSnapshot's 16-bit depth buffer.
+        /// </summary>
+        private static Texture2D Freeze(RenderTexture source, int cardId)
+        {
+            var face = new Texture2D(source.width, source.height, TextureFormat.RGBA32,
+                                     mipChain: false)
+            {
+                name = $"CardFace_{cardId}",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+
+            RenderTexture previous = RenderTexture.active;
+            try
+            {
+                RenderTexture.active = source;
+                face.ReadPixels(new Rect(0f, 0f, source.width, source.height), 0, 0,
+                                recalculateMipMaps: false);
+                face.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+                return face;
+            }
+            catch
+            {
+                DestroyObj(face);
+                throw;
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+            }
         }
 
         private void Deliver(int cardId, Texture face)

@@ -160,7 +160,7 @@ namespace Emberfall.Presentation
             {
                 if (tex == null || _cardFace == null) return;
                 _cardFace.style.backgroundImage =
-                    new StyleBackground(Background.FromRenderTexture((RenderTexture)tex));
+                    new StyleBackground(Background.FromTexture2D((Texture2D)tex));
             });
 
             _renderCost.text = render.Cost.ToString();
