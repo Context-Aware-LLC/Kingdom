@@ -217,6 +217,24 @@ namespace Emberfall.Presentation
             }
         }
 
+        /// <summary>
+        /// Light up a set of entities without an InputRouter driving it.
+        ///
+        /// The decision-review tool renders a state nobody is playing — no session, no runner, no
+        /// input — but still has to show which cards an action names. That is exactly what
+        /// targeting already draws, so this hands the same two primitives a caller that is not a
+        /// router. Pass null to clear.
+        ///
+        /// Nothing in a match calls this, and it changes no behaviour when unused. If a second
+        /// affordance ever needs the same treatment, make the pair below internal rather than
+        /// growing a third entry point.
+        /// </summary>
+        public void SetReviewHighlight(HashSet<InstanceId> targets, InstanceId? focus)
+        {
+            OnTargetingChanged(targets);
+            OnTargetFocusChanged(focus);
+        }
+
         private void OnTargetFocusChanged(InstanceId? target)
         {
             foreach (var kvp in _presenters)

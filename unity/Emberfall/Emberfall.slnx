@@ -18,4 +18,5 @@
   <Project Path="Emberfall.Net.Client.csproj" />
   <Project Path="Emberfall.Core.Serialization.csproj" />
   <Project Path="Emberfall.AI.csproj" />
+  <Project Path="Emberfall.Review.csproj" />
 </Solution>
