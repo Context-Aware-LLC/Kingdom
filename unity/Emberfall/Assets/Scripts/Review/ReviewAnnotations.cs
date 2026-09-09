@@ -157,13 +157,12 @@ namespace Emberfall.Review
         public int Reasonableness { get; set; }
 
         /// <summary>
-        /// 1-3: was near-certainty appropriate FOR THIS SITUATION, independent of whether the play
-        /// was any good? 0 means ungraded.
+        /// 1-3: was the expressed confidence appropriate FOR THIS SITUATION, independent of whether
+        /// the play was any good? 0 means ungraded.
         ///
         /// Separate from <see cref="Reasonableness"/> on Sam's instruction, and the separation is
-        /// the whole point: a genuinely close spot can receive a perfectly fine play at a
-        /// confidence the spot never justified. Fused into one number that case disappears — it
-        /// scores as a pass, because the play was fine.
+        /// the whole point: an ambiguous spot can be overstated, while an obvious play can be
+        /// understated. Fused into one number those calibration failures disappear.
         /// </summary>
         public int ConfidenceAppropriateness { get; set; }
 

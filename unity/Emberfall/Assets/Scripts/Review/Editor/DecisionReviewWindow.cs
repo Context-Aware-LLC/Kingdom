@@ -178,12 +178,11 @@ namespace Emberfall.Review
         }
 
         /// <summary>
-        /// The verdict. One question, five keys.
+        /// The verdict. Two independent questions: play quality and confidence calibration.
         ///
-        /// The question is NOT "was this a good move" — every decision here was made at >=0.99
-        /// confidence, so the thing being tested is whether that confidence was warranted. Sam's
-        /// line: 1-3 fail, 4 indeterminate, 5 pass. The headline that falls out is a calibration
-        /// rate, which is why indeterminates are counted apart rather than averaged in.
+        /// Sam's play scale is 1-3 fail, 4 indeterminate, 5 pass. Confidence is scored separately
+        /// against the probability the policy actually expressed, so both overconfidence and
+        /// underconfidence remain visible.
         /// </summary>
         private void DrawVerdict(ReviewFrame frame)
         {
@@ -209,10 +208,10 @@ namespace Emberfall.Review
 
                 EditorGUILayout.Space(4f);
 
-                // Axis 2 — the CONFIDENCE. 1..3, keys Q/W/E. Independent of axis 1 on purpose: a
-                // close spot can get a fine play at a certainty the spot never justified, and that
-                // case is invisible if the two are one number.
-                GUILayout.Label("Did the situation justify near-certainty?   keys Q W E",
+                // Axis 2 — the CONFIDENCE. 1..3, keys Q/W/E. Independent of axis 1 on purpose:
+                // either an ambiguous spot can be overstated or an obvious play can be understated,
+                // and both cases disappear if confidence and play quality are fused.
+                GUILayout.Label("Was the expressed confidence reasonable here?   keys Q W E",
                                 EditorStyles.miniBoldLabel);
                 int confidence = DrawScoreRow(_edit.ConfidenceAppropriateness, 3, s => s == 1, s => s == 2);
                 if (confidence != _edit.ConfidenceAppropriateness)
@@ -256,10 +255,9 @@ namespace Emberfall.Review
             score >= 1 && score <= labels.Count ? labels[score - 1] : "ungraded";
 
         /// <summary>
-        /// Two rates, never averaged together. The play rate is how often a near-certain policy
-        /// picked something that was not a legitimate play; the confidence rate is how often it was
-        /// near-certain in a spot that did not justify certainty at all. A single mixed number
-        /// would hide the second, which is the subtler failure.
+        /// Two rates, never averaged together. The play rate tracks illegitimate plays; the
+        /// confidence rate tracks probabilities that were not clearly reasonable for the visible
+        /// situation. A single mixed number would hide either overconfidence or underconfidence.
         /// </summary>
         private string Tally()
         {
@@ -285,7 +283,7 @@ namespace Emberfall.Review
                 ? $"play {badPlay}/{judgedPlay} bad"
                 : "play -";
             string confidence = judgedConfidence > 0
-                ? $"conf {badConfidence}/{judgedConfidence} unwarranted"
+                ? $"conf {badConfidence}/{judgedConfidence} not clearly reasonable"
                 : "conf -";
             return $"{play}  ·  {confidence}  ·  of {_reviewer.FrameCount}";
         }

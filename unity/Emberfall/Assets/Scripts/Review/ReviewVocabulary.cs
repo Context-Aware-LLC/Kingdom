@@ -46,7 +46,7 @@ namespace Emberfall.Review
         /// <summary>Index 0 is score 1. Sam's scale for the PLAY.</summary>
         public List<string> ReasonablenessLabels { get; private set; } = new List<string>();
 
-        /// <summary>Index 0 is score 1. Whether near-certainty suited the SITUATION.</summary>
+        /// <summary>Index 0 is score 1. Whether expressed confidence suited the SITUATION.</summary>
         public List<string> ConfidenceLabels { get; private set; } = new List<string>();
 
         public static ReviewVocabulary Open(string annotationsDirectory)
@@ -151,9 +151,9 @@ namespace Emberfall.Review
 
         private static List<string> DefaultConfidence() => new List<string>
         {
-            "1 - Unwarranted. The situation admits real alternatives; near-certainty misrepresents it.",
-            "2 - Overstated. Some support for certainty, but not this much.",
-            "3 - Warranted. The situation is clear-cut; near-certainty is correct.",
+            "1 - Unreasonable. The confidence level badly misrepresents how clear or ambiguous the choice is.",
+            "2 - Debatable. The confidence may be somewhat high or low, or the situation is hard to calibrate.",
+            "3 - Reasonable. The confidence level fits how clear or ambiguous the choice is.",
         };
 
         private static List<string> DefaultScale() => new List<string>
