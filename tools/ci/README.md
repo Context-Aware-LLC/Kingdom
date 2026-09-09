@@ -3,6 +3,7 @@
 ## .NET determinism gates — run this before every push
 
 ```powershell
+npm run format                         # repair the C# formatting checked by Stage 1
 pwsh tools/ci/gates.ps1            # full pass, ~2.5 min
 pwsh tools/ci/gates.ps1 -Quick     # skip format+vocabulary
 pwsh tools/ci/gates.ps1 -Nightly   # add the slow Category=Nightly corpus
