@@ -9,8 +9,10 @@
 }
 
 /* ---------- Corner button (always visible) ----------
- * The one persistent surface: a small square "menu" (hamburger) button parked bottom-right.
- * Three bars are child VisualElements so the icon is font-independent.
+ * The one persistent surface: a compact "menu" (hamburger) button parked bottom-right.
+ * Three bars are child VisualElements so the icon is font-independent. The source chrome is an
+ * opaque rectangle, so the element itself owns the rounded mask; this also lets adjacent controls
+ * remain visible beneath its corners instead of ending at an artificial square seam.
  */
 .ms-gear {
     position: absolute;
@@ -27,7 +29,8 @@
     -unity-slice-scale: 0.5px;
     -unity-background-image-tint-color: rgb(218, 224, 232);
     border-width: 0;
-    border-radius: 0;
+    border-radius: var(--space-2);
+    overflow: hidden;
     align-items: center;
     justify-content: center;
     padding: 0;

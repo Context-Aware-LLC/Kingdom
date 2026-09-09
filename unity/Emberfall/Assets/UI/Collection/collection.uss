@@ -489,7 +489,7 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 20%;
+    width: 18%;
     padding: var(--space-4) var(--space-6) var(--space-4) var(--edge-safe);
     background-color: rgba(8, 12, 18, 0.98);
     border-right-width: 2px;
@@ -722,7 +722,7 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: 20%;
+    width: 18%;
     /* min-width: 420px; */
     /* Three of this drawer's four sides ARE screen edges (top, right, bottom);
        its left is interior, so it takes the ordinary gutter there. .emb-bleed
@@ -761,6 +761,7 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--space-4);
+    min-height: 10%;
 }
 .deck-drawer__title {
     font-size: var(--type-h1);
@@ -908,10 +909,12 @@
 }
 /* SITS ALONGSIDE `.ms-gear` (matchsettings.uss), not stacked above it (Sam, 2026-09-07). That
  * button is the persistent corner settings gear CollectionController mounts on this same screen
- * (Sam, 2026-09-05: "same corner settings gear as the main menu"), anchored
- * bottom: var(--space-6) right: var(--space-6), 68px wide -- so its LEFT edge sits 92px off the
- * screen edge (24 + 68). This button's own right stops at 100 (8px of gap past that), and its
- * bottom/height match the gear's (var(--space-6), 58px) so the two read as one row. Pulling it
+ * (Sam, 2026-09-05: "same corner settings gear as the main menu"), anchored 24px from the right
+ * and shifted another 52px by its `.emb-edge` margin. At 68px wide its LEFT edge is therefore
+ * 144px from the screen edge. This button stops 100px from that edge and deliberately continues
+ * 44px beneath the gear; `.ms-gear` clips its opaque sprite to rounded corners so that overlap
+ * reads as a layered control instead of a square collision. Their bottom/height match
+ * (var(--space-6), 58px) so the two read as one row. Pulling this button
  * out of the drawer's flex column into position:absolute is what makes that alignment exact --
  * a flex sibling can't be told "match this unrelated element's bottom" any other way. left
  * matches the drawer's own left padding (var(--space-6)) so it still reads as flush with the
@@ -1003,7 +1006,7 @@
  * this width, not the tabs' actual total. */
 #class-tab-bar {
     position: absolute;
-    top: 82px;
+    top: 85px;
     left: 50%;
     translate: -50% 0;
     flex-direction: row;

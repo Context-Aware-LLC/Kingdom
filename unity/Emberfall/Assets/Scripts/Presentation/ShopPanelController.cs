@@ -52,6 +52,12 @@ namespace Emberfall.Presentation
         /// </summary>
         private const int ArtFacesShown = 4;
 
+        /// <summary>How far into the shell's flight (as a fraction of its resolved transition
+        /// duration) the buy buttons reveal -- 90%, not 100% (Sam, 2026-09-08): revealing exactly
+        /// at the end raced the shell's own last layout settle and read as a bump. A fraction, not
+        /// a fixed ms offset, so it stays right if the CSS duration is ever retuned again.</summary>
+        private const float ButtonRevealFraction = 0.9f;
+
         private readonly VisualElement _overlay;
         private readonly VisualElement _packList;
         private readonly VisualElement _gemList;
@@ -64,11 +70,8 @@ namespace Emberfall.Presentation
         private readonly Label _status;
         private readonly VisualElement _detailOverlay;
         private readonly VisualElement _detailShell;
-        private readonly VisualElement _detailBar;
         private readonly VisualElement _detailArt;
         private readonly VisualElement _detailActions;
-        private readonly Label _detailTitle;
-        private readonly Label _detailNote;
         private VisualElement _detailOriginTile;
         private readonly PackRevealPanel _reveal;
         private readonly ShopFlow _flow;
@@ -97,11 +100,8 @@ namespace Emberfall.Presentation
             _status = root.Q<Label>("shop-status");
             _detailOverlay = root.Q<VisualElement>("pack-detail-overlay");
             _detailShell = root.Q<VisualElement>("pack-detail-shell");
-            _detailBar = root.Q<VisualElement>("pack-detail-bar");
             _detailArt = root.Q<VisualElement>("pack-detail-art");
             _detailActions = root.Q<VisualElement>("pack-detail-actions");
-            _detailTitle = root.Q<Label>("pack-detail-title");
-            _detailNote = root.Q<Label>("pack-detail-note");
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packArt = packArt;
             _onClose = onClose;
@@ -345,6 +345,17 @@ namespace Emberfall.Presentation
                 ? "shop-pack__buy--gold"
                 : "shop-pack__buy--gems");
 
+            // The sliced chrome art already used for Back (shop.uss / ShopScreen.uxml
+            // btn-shop-close) and Collection's primary actions (Sam, 2026-09-08). Only two
+            // variants exist -- primary (ember) and secondary (slate) -- so Gold gets the one
+            // that actually matches its color story and Gems takes the other; there's no third,
+            // blue-toned chrome art to give it. shop.uss neutralizes the flat pill background/
+            // border these two classes also carry, so the art is what actually paints.
+            button.AddToClassList("chrome-button");
+            button.AddToClassList(currency == ShopCurrency.Gold
+                ? "chrome-button--primary"
+                : "chrome-button--secondary");
+
             bool canAfford = wallet.HasValue
                 && (currency == ShopCurrency.Gold
                     ? wallet.Value.Gold >= price
@@ -354,12 +365,9 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Populates and shows #pack-detail-overlay for one tile's tap. The card count comes off
-        /// <see cref="BoosterPack.DefaultCardCount"/> rather than a value carried on
-        /// <see cref="PackOffer"/> — Presentation already references
-        /// <c>Emberfall.Core.Collection</c> directly elsewhere, and every pack the disconnected
-        /// catalog offers uses that one authoritative count, so a second copy of the same fact on
-        /// the transport DTO would only be real once a server gateway ships packs of varying size.
+        /// Populates and shows #pack-detail-overlay for one tile's tap. No title or note label
+        /// here (Sam, 2026-09-08): deleted on purpose, since the art plus the two buy buttons'
+        /// own currency labels already say everything a pack tile needs to.
         ///
         /// <para>NO FOUR-WIDE ART RAIL HERE (Sam, 2026-09-07 follow-up): repeating the tile's
         /// whole rail at a bigger size just showed the player the same row they had already
@@ -387,14 +395,23 @@ namespace Emberfall.Presentation
         {
             if (_detailOverlay == null) return;
 
-            // STRIPPED TO JUST THE ART, TEMPORARILY (Sam, 2026-09-07 follow-up): the title/note/
-            // buy buttons are hidden entirely so the flight animation can be isolated and nailed
-            // down with the absolute minimum content in the shell. Re-populate and re-show these
-            // once the flight itself is confirmed correct -- RETIREMENT TRIGGER: this debug
-            // stripping should not survive past that point.
-            if (_detailBar != null) _detailBar.style.display = DisplayStyle.None;
-            if (_detailNote != null) _detailNote.style.display = DisplayStyle.None;
-            if (_detailActions != null) _detailActions.style.display = DisplayStyle.None;
+            _detailActions?.Clear();
+            if (_detailActions != null)
+            {
+                _detailActions.Add(BuyButton(offer, ShopCurrency.Gold, wallet));
+                _detailActions.Add(BuyButton(offer, ShopCurrency.Gems, wallet));
+            }
+
+            // Hidden until the flight is nearly done, not gone (Sam, 2026-09-08): the buy buttons
+            // showing mid-flight competed with the art for attention during the flip.
+            // FlipToIdentity's onSettled callback below reveals them at ButtonRevealFraction of
+            // the way through. visibility, not display: display:none removes the row from layout
+            // entirely, so bringing it back at the end forces a fresh layout pass right as the
+            // shell settles -- Sam saw that as a bump. visibility:hidden keeps the row's box
+            // reserved the whole time, so revealing it is a paint change only, no relayout. No
+            // title/note here -- deleted on purpose (Sam): the art and the two currency labels on
+            // the buttons already say everything a pack tile needs to.
+            if (_detailActions != null) _detailActions.style.visibility = Visibility.Hidden;
 
             // The one piece actually tapped travels with the shell (Sam, 2026-09-07 follow-up).
             // Copies the slot's already-baked background straight across instead of re-resolving
@@ -420,7 +437,10 @@ namespace Emberfall.Presentation
 
             // Called directly, no waiting (Sam, 2026-09-07 follow-up -- see TryComputeFlipTransform
             // for why this is now safe to call the instant the overlay unhides).
-            FlipToIdentity();
+            FlipToIdentity(() =>
+            {
+                if (_detailActions != null) _detailActions.style.visibility = Visibility.Visible;
+            });
         }
 
         /// <summary>
@@ -433,6 +453,11 @@ namespace Emberfall.Presentation
         private void CloseDetail(bool immediate = false)
         {
             if (_detailOverlay == null) return;
+
+            // Hidden again before the flight starts (2026-09-08): the reveal in OpenDetail's
+            // onSettled leaves these visible while the shell sits at rest, and the fly-out should
+            // read the same as the fly-in -- art only, no buttons racing the shell back to the tile.
+            if (_detailActions != null) _detailActions.style.display = DisplayStyle.None;
 
             if (immediate || _detailShell == null || _detailOriginTile == null)
             {
@@ -516,27 +541,56 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// The "Play" half of FLIP, forward: jumps the shell (with no transition active) to
-        /// exactly overlap the tapped tile, then -- one tick later, once that jump has rendered --
-        /// turns the transition on and resets translate/scale to identity.
+        /// exactly overlap the tapped tile, then -- across two LATER, SEPARATE ticks -- turns
+        /// the transition on, and only then resets translate/scale to identity.
+        ///
+        /// <para>THREE steps, not two (2026-09-08, live-diagnosed against the running Editor via
+        /// unity-cli eval, sampling <c>resolvedStyle</c> every <c>EditorApplication.update</c>
+        /// tick through an open): adding <c>--animating</c> and resetting translate/scale in the
+        /// SAME style write does not transition, even once the jump above has already rendered
+        /// for many frames -- the sampled shell went straight from the jumped values to identity
+        /// in one tick, transition class already true, no interpolated frames in between. Only
+        /// once the class-add and the value-reset were split across two separate rendered frames
+        /// (add the class alone; wait a tick; change the values) did the sampler show a real
+        /// interpolating sequence. UI Toolkit's transition system apparently needs the property's
+        /// transition rule to already be active on an EARLIER resolved frame before a value
+        /// change on that property will animate -- introducing the rule and changing the value in
+        /// the same pass does not count, however long the state before that pass was stable.
+        /// <see cref="FlipFromIdentity"/> was never wrong: --animating there is already resolved
+        /// from many real frames before Close is tapped, so its single value-write already meets
+        /// this requirement.</para>
         /// </summary>
-        private void FlipToIdentity()
+        /// <param name="onSettled">Run once the flight has actually finished landing -- timed off
+        /// <see cref="ResolvedTransitionMs"/>, the same way <see cref="CloseDetail"/> times hiding
+        /// the overlay after its own flight. <see cref="OpenDetail"/> uses this to reveal the
+        /// title/note/buy buttons only once the shell is at rest, not mid-flight.</param>
+        private void FlipToIdentity(Action onSettled = null)
         {
-            if (_detailShell == null) return;
+            if (_detailShell == null) { onSettled?.Invoke(); return; }
             if (TryComputeFlipTransform(out Translate translate, out Scale scale))
             {
                 _detailShell.style.translate = translate;
                 _detailShell.style.scale = scale;
             }
 
-            // ExecuteLater(16), not a bare Execute -- see the comment on OpenDetail's own
-            // schedule. This is the step that actually has to transition: without the render gap
-            // ExecuteLater buys, the jump above and this reset land in the same layout pass and
-            // the shell just appears at rest with no visible motion.
             _detailShell.schedule.Execute(() =>
             {
+                // Class only, values unchanged -- this must render on its own before anything
+                // reads as a value change, or the transition system has no earlier frame where
+                // the rule was already active to compare against.
                 _detailShell.AddToClassList("pack-detail-shell--animating");
-                _detailShell.style.translate = new Translate(0, 0);
-                _detailShell.style.scale = new Scale(Vector3.one);
+
+                _detailShell.schedule.Execute(() =>
+                {
+                    _detailShell.style.translate = new Translate(0, 0);
+                    _detailShell.style.scale = new Scale(Vector3.one);
+
+                    if (onSettled != null)
+                    {
+                        int delayMs = Mathf.RoundToInt(ResolvedTransitionMs(_detailShell) * ButtonRevealFraction);
+                        _detailShell.schedule.Execute(onSettled).ExecuteLater(delayMs);
+                    }
+                }).ExecuteLater(16);
             }).ExecuteLater(16);
         }
 

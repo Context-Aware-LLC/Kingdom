@@ -35,6 +35,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f43636b00cd242c0bb3feb016a55844e
+    m_Address: orbs/Orb_Shadowgear
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fd32bfdb1876a80d68581925d03a30f4
     m_Address: orbs/Orb_Confluence
     m_ReadOnly: 0

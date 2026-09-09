@@ -435,23 +435,16 @@
     border-radius: 999px;
 }
 
-.shop-pack__buy--gold {
-    color: var(--surface-0);
-    background-color: var(--accent);
-    border-color: var(--accent);
-}
-
+/* --gold/--gems used to paint their own flat color/border here; superseded (Sam, 2026-09-08,
+ * "dress them up") now that BuyButton also adds chrome-button + chrome-button--primary/
+ * --secondary, the same sliced art already used for Back and Collection's primary actions. The
+ * two classes are kept as bare markers (BuyButton still tags currency for anything that wants
+ * to key off it) rather than deleted outright. chrome-button's own color/background-color and
+ * :disabled/:active states are what actually paint now -- restating any of those properties
+ * here at the same one-class specificity would just be a source-order coin flip against
+ * chrome-button's rule for the same property. */
+.shop-pack__buy--gold,
 .shop-pack__buy--gems {
-    color: var(--ink-1);
-    background-color: rgb(35, 91, 142);
-    border-color: var(--mana);
-}
-
-.shop-pack__buy:disabled {
-    opacity: 1;
-    color: var(--ink-1);
-    background-color: var(--surface-2);
-    border-color: var(--surface-3);
 }
 
 .shop-gem {
@@ -583,7 +576,7 @@
  * instead, so the flight has a visible beginning as well as a settle. */
 .pack-detail-shell--animating {
     transition-property: translate, scale;
-    transition-duration: 2.5s;
+    transition-duration: 1s;
     transition-timing-function: ease-in-out;
 }
 
@@ -644,22 +637,37 @@
     margin-bottom: var(--space-3);
 }
 
-/* COLUMN, NOT ROW (Sam, 2026-09-07 follow-up): two same-shape buttons side by side read as two
- * different purchasable things. Stacked, they read as two ways to pay for the single pack named
- * in the title above. */
+/* ROW, NOT COLUMN (Sam, 2026-09-08, reversing the 2026-09-07 call recorded here): side by side
+ * after all. Sized to 70% of the shell's width rather than the full content box -- centered via
+ * align-self, since align-items:stretch is the shell's default and would otherwise hand this
+ * 100% of the width the way the stacked column used to want. */
 .pack-detail-actions {
-    flex-direction: column;
+    flex-direction: row;
+    flex-grow: 0;
     flex-shrink: 0;
+    align-self: center;
+    width: 70%;
+    justify-content: center;
 }
 
 /* Bigger than the tile's own buy buttons -- the detail shell has the room the tile never did.
- * The gap between the two stacked buttons is set in C# (ShopPanelController.OpenDetail, on the
- * second button only) rather than a :first-child rule here -- Unity does not support that
- * pseudo-class (logs "Unknown pseudo class 'first-child' in StyleSheet shop" and silently never
- * applies it; the pre-existing matchsettings.uss usage this was copied from has the same warning
- * and the same dead rule). */
+ * flex-grow:1 with flex-basis:0 on both buttons splits the row evenly regardless of each
+ * button's own content width. The 4px side margins are the gap between them (8px total,
+ * Sam: "no more than say 10 pixels") -- symmetric so the pair still centers correctly, rather
+ * than a one-sided margin that would nudge the pair off from true center. No :first-child rule
+ * to single one out even if it were wanted -- Unity does not support that pseudo-class (logs
+ * "Unknown pseudo class 'first-child' in StyleSheet shop" and silently never applies it; the
+ * pre-existing matchsettings.uss usage this was copied from has the same warning and the same
+ * dead rule). */
 .pack-detail-actions .shop-pack__buy {
-    width: 100%;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
     min-height: var(--space-12);
     font-size: var(--type-h2);
+    margin: 0 4px;
+    /* chrome-button (base rule, top of this file) already asks for 0 -- restated here at
+     * two-class specificity so it actually wins over the base .shop-pack__buy's own
+     * border-radius, which would otherwise round-clip corners the sliced art already frames. */
+    border-radius: 0;
 }

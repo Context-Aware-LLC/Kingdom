@@ -163,8 +163,10 @@ namespace Emberfall.Presentation
         /// </summary>
         private static readonly (string Plate, string Orb)[] PlateRotation =
         {
+            ("LoadingPlate_Master",             "Orb_StormGlass"),
             ("LoadingPlate_TempestStonewarden", "Orb_Stormstone"),
             ("LoadingPlate_VerdantGravekeep",   "Orb_Lifeblight"),
+            ("LoadingPlate_NightveilClockwright", "Orb_Shadowgear"),
         };
 
         /// <summary>Where the rotation is up to. STATIC, so it survives the screen being closed and

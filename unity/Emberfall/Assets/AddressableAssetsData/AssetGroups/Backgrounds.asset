@@ -30,6 +30,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6aa859aff7ea454daa3d528a9b64d860
+    m_Address: backgrounds/LoadingPlate_NightveilClockwright
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ae3f473153bbea1479ecae4a5d7aa266
     m_Address: backgrounds/BoardPlate_Master
     m_ReadOnly: 0
