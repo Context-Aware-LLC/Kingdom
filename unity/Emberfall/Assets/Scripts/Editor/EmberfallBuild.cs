@@ -94,23 +94,14 @@ namespace Emberfall.Editor
 
         private const string AndroidOutputPath = "Builds/Android/Emberfall.apk";
 
-        // Keystore is a debug signing config checked in alongside the source.
-        // Alias, store password, and key password are the Android debug defaults.
-        // Do not use this keystore for Play Store submissions.
-        private const string KeystorePath   = "keystore/debug.keystore";
-        private const string KeystorePass   = "android";
-        private const string KeyAliasName   = "androiddebugkey";
-        private const string KeyAliasPass   = "android";
-
         /// <summary>
         /// Headless Android build entry point (EF-060): IL2CPP + ARM64 APK via the Android
         /// Addressables profile. Invoke via <c>-executeMethod Emberfall.Editor.EmberfallBuild.BuildAndroid
         /// -buildTarget android</c> so the build target is already Android at startup.
         ///
         /// <para>IL2CPP and ARM64 are forced explicitly here so the build is deterministic
-        /// regardless of whatever the Editor's per-user overrides happen to be.  The keystore
-        /// is the checked-in debug config at <c>keystore/debug.keystore</c>; never use it
-        /// for Play Store submissions.</para>
+        /// regardless of whatever the Editor's per-user overrides happen to be. Local APKs use
+        /// Unity's default debug signing; release-store signing belongs outside this build path.</para>
         ///
         /// <para><b>ARM64 is not a preference and there is no x86_64 build to reach for.</b>
         /// Unity 6000.5.1f1 ships no Android x86_64 runtime — <c>Variations/il2cpp/Release/Libs</c>
@@ -185,12 +176,9 @@ namespace Emberfall.Editor
                     ScriptingImplementation.IL2CPP);
                 PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
-                // Debug signing config checked in as config, not secret.
-                PlayerSettings.Android.keystoreName   = KeystorePath;
-                PlayerSettings.Android.keystorePass   = KeystorePass;
-                PlayerSettings.Android.keyaliasName   = KeyAliasName;
-                PlayerSettings.Android.keyaliasPass   = KeyAliasPass;
-                PlayerSettings.Android.useCustomKeystore = true;
+                // This local APK path uses Unity's default debug signing. Do not silently persist
+                // a custom signing configuration into ProjectSettings whenever this menu runs.
+                PlayerSettings.Android.useCustomKeystore = false;
 
                 BuildAndroidAddressables();
 
