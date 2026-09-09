@@ -10,9 +10,7 @@
     "Emberfall.Session",
     "Emberfall.Presentation"
   ],
-  "includePlatforms": [
-    "Editor"
-  ],
+  "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
   "overrideReferences": true,
@@ -20,7 +18,9 @@
     "Newtonsoft.Json.dll"
   ],
   "autoReferenced": false,
-  "defineConstraints": [],
+  "defineConstraints": [
+    "UNITY_EDITOR"
+  ],
   "versionDefines": [],
   "noEngineReferences": false
 }

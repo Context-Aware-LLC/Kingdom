@@ -87,15 +87,13 @@ namespace Emberfall.Review
                 BoardCameraRig.AuthoredPosition, BoardCameraRig.AuthoredRotation);
             BoardCameraRig.Configure(camera);
 
-            // The board's own components, in the order the shipping scene carries them:
-            // ProceduralBoardSetup requires BoardAnchors and fills it in Awake, which runs before
-            // the bootstrap's Start.
-            var board = new GameObject("Board");
-            board.AddComponent<BoardAnchors>();
-            board.AddComponent<ProceduralBoardSetup>();
-            board.AddComponent<BoardController>();
-            board.AddComponent<DecisionReviewBootstrap>().Configure(bundleDirectory);
+            // Only the bootstrap. It builds and rebuilds the board itself under a child object,
+            // because every frame is a different match and the acting player has to render at the
+            // bottom in all of them — see DecisionReviewBootstrap.Show.
+            var reviewer = new GameObject("DecisionReviewer");
+            reviewer.AddComponent<DecisionReviewBootstrap>().Configure(bundleDirectory);
 
+            DecisionReviewWindow.Open();
             Debug.Log($"[DecisionReview] Scene built for {bundleDirectory}");
         }
     }

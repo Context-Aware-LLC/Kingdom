@@ -1,0 +1,20 @@
+{
+  "name": "Emberfall.Review.Editor",
+  "rootNamespace": "Emberfall.Review",
+  "references": [
+    "Emberfall.Core.Contracts",
+    "Emberfall.Presentation",
+    "Emberfall.Review"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
