@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Emberfall.Core.Contracts;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Emberfall.Review
@@ -104,7 +105,15 @@ namespace Emberfall.Review
                     AppendTargets(key, intent);
                     break;
                 default:
-                    break;   // end_turn, concede, mulligan: the type is the whole identity
+                    // EVERY OTHER TYPE KEYS ON ITS WHOLE INTENT. Keying an unrecognised action by
+                    // $type alone is not the conservative choice — it MERGES actions that differ,
+                    // which inflates the forced bucket and understates the choice on offer. Two
+                    // real cases: unearth_choice differs only in chosenCardId (three offered cards
+                    // read as one play) and mulligan differs only in toReplace. player is dropped
+                    // because every action in one decision carries the same actor; end_turn and
+                    // concede carry nothing else, so the type is still their whole identity.
+                    AppendRemainingFields(key, intent);
+                    break;
             }
             return key.ToString();
         }
@@ -121,6 +130,18 @@ namespace Emberfall.Review
             if (intent["targets"] is JArray targets)
                 foreach (JToken target in targets)
                     key.Append(TargetInstance(target)).Append(',');
+        }
+
+        /// <summary>Every field of an intent except its type and its actor, in a stable order.</summary>
+        private static void AppendRemainingFields(StringBuilder key, JObject intent)
+        {
+            var names = new List<string>();
+            foreach (JProperty property in intent.Properties())
+                if (property.Name != "$type" && property.Name != "player")
+                    names.Add(property.Name);
+            names.Sort(System.StringComparer.Ordinal);
+            foreach (string name in names)
+                key.Append('|').Append(name).Append('=').Append(intent[name].ToString(Formatting.None));
         }
 
         private static string TargetInstance(JToken target)
