@@ -47,10 +47,11 @@ namespace Emberfall.Net.Server.Accounts
         /// Paid per completed daily quest. Flat today because no quest catalog exists yet to carry
         /// per-quest values.
         ///
-        /// <para><b>RETIREMENT TRIGGER — the quest catalog.</b> The commit that lands a quest
-        /// definition carrying its own reward replaces this flat value with a lookup on
-        /// <paramref name="questId"/> and deletes this paragraph. Until then every questId pays the
-        /// same, and the id is accepted only so the faucet's per-quest idempotency key works.</para>
+        /// <para><b>RETIREMENT TRIGGER — the quest catalog.</b> The commit that lands the catalog in
+        /// <c>docs/dev-docs/specs/daily-quests.md</c> §4 as data carrying its own reward replaces
+        /// this flat value with a lookup on <paramref name="questId"/> and deletes this paragraph.
+        /// Until then every questId pays the same, and the id is accepted only so the faucet's
+        /// per-quest idempotency key works.</para>
         /// </summary>
         public long DailyQuestFlatGold { get; init; } = 60;
 
