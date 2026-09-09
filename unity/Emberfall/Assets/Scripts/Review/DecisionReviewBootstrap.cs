@@ -41,14 +41,40 @@ namespace Emberfall.Review
         private GameObject _boardRoot;
         private BoardAnchors _anchors;
         private BoardController _board;
+        private GameState _lastState;
 
         /// <summary>The chrome — hero plates, sockets, mana trays, deck piles. In the shipping
         /// board these subscribe to MatchRunner.OnStateUpdated; here they ride this list, because
         /// there is no runner to subscribe to. Rebuilt with the board.</summary>
         private readonly List<Action<GameState>> _stateSinks = new List<Action<GameState>>();
 
+        [Tooltip("Whose grades these are. Names the sidecar file, so two reviewers never share one.")]
+        [SerializeField] private string reviewer = "sam";
+
+        public string Reviewer => string.IsNullOrWhiteSpace(reviewer) ? "reviewer" : reviewer.Trim();
+
+        /// <summary>Judgement, kept strictly out of the bundle. Null until the bundle loads.</summary>
+        public ReviewAnnotations Annotations { get; private set; }
+
+        /// <summary>The label lists the panel offers. Editable on disk and from the panel — it is a
+        /// work in progress and the tool must not make it expensive to change.</summary>
+        public ReviewVocabulary Vocabulary { get; private set; }
+
         public ReviewBundle Bundle => _bundle;
         public int FrameCount => _bundle?.Frames.Count ?? 0;
+
+        /// <summary>How many of the bundle's decisions carry a judgement — the review pass's
+        /// actual progress, and the reason a long pass can be put down and picked up.</summary>
+        public int GradedCount
+        {
+            get
+            {
+                if (_bundle == null || Annotations == null) return 0;
+                int n = 0;
+                foreach (ReviewFrame frame in _bundle.Frames) if (Annotations.IsGraded(frame)) n++;
+                return n;
+            }
+        }
         public int CurrentFrame { get; private set; }
         public int SelectedAction { get; private set; }
 
@@ -84,6 +110,11 @@ namespace Emberfall.Review
 
             _cards = _bundle.Cards;
             _art = new EditorArtProvider();
+            Annotations = ReviewAnnotations.Open(_bundle, Reviewer);
+            Vocabulary = ReviewVocabulary.Open(
+                System.IO.Path.GetDirectoryName(Annotations.Path));
+            Debug.Log($"[DecisionReview] annotations → {Annotations.Path} ({Annotations.Count} graded)");
+            Debug.Log($"[DecisionReview] vocabulary  → {Vocabulary.Path} (editable; edit it any time)");
 
             Debug.Log($"[DecisionReview] {_bundle.Manifest.BundleId}: {_bundle.Frames.Count} frames, "
                       + $"cards {Short(_bundle.Manifest.CardDataSha256)}, "
@@ -123,6 +154,7 @@ namespace Emberfall.Review
                 return;
             }
 
+            _lastState = state;
             BuildBoard(frame, state);
             _board.OnStateUpdated(state);
             foreach (Action<GameState> sink in _stateSinks) sink(state);
@@ -132,8 +164,16 @@ namespace Emberfall.Review
             Changed?.Invoke();
         }
 
-        /// <summary>Highlight one action's entities. Defaults to the chosen action on every frame
-        /// change; an Editor panel can point it at an alternative to compare.</summary>
+        /// <summary>
+        /// Highlight one action's entities. Defaults to the chosen action on every frame change;
+        /// an Editor panel can point it at an alternative to compare.
+        ///
+        /// It also SAYS what it did, in <see cref="HighlightNote"/>. A highlight that silently does
+        /// nothing is the worst outcome here — it reads as "this action names nothing", when the
+        /// truth is usually that it names a hero, and the board draws heroes with HeroPlateView,
+        /// which owns no CardPresenter and therefore cannot glow. Sam hit exactly that on frame 1,
+        /// whose chosen action targets the enemy hero.
+        /// </summary>
         public void SelectAction(int index)
         {
             ReviewFrame frame = Frame;
@@ -143,14 +183,51 @@ namespace Emberfall.Review
             if (frame.Actions.Count == 0)
             {
                 _board.SetReviewHighlight(null, null);
+                HighlightNote = "no legal actions";
                 return;
             }
 
-            var targets = new HashSet<InstanceId>();
+            GameState state = _lastState;
+            var lit = new HashSet<InstanceId>();
+            var heroes = new List<string>();
+            var missing = new List<string>();
+
             foreach (InstanceId id in frame.Actions[SelectedAction].ReferencedEntities())
-                targets.Add(id);
-            _board.SetReviewHighlight(targets.Count == 0 ? null : targets, null);
+            {
+                switch (Classify(state, id))
+                {
+                    case EntityKind.Card: lit.Add(id); break;
+                    case EntityKind.Hero: heroes.Add(id.ToString()); break;
+                    default: missing.Add(id.ToString()); break;
+                }
+            }
+
+            _board.SetReviewHighlight(lit.Count == 0 ? null : lit, null);
+
+            var note = new List<string>();
+            if (lit.Count > 0) note.Add($"{lit.Count} card(s) lit");
+            if (heroes.Count > 0) note.Add($"hero {string.Join(", ", heroes)} — heroes cannot glow");
+            if (missing.Count > 0) note.Add($"not on the board: {string.Join(", ", missing)}");
+            HighlightNote = note.Count == 0 ? "this action names nothing" : string.Join(" · ", note);
             Changed?.Invoke();
+        }
+
+        /// <summary>What the last <see cref="SelectAction"/> could and could not light up.</summary>
+        public string HighlightNote { get; private set; } = "";
+
+        private enum EntityKind { Absent, Card, Hero }
+
+        /// <summary>Only cards in a zone the board draws get a presenter, so only those can glow.</summary>
+        private static EntityKind Classify(GameState state, InstanceId id)
+        {
+            if (state == null) return EntityKind.Absent;
+            foreach (PlayerState player in state.Players)
+            {
+                if (player.Hero != null && player.Hero.Id == id) return EntityKind.Hero;
+                foreach (CardInstance card in player.Board) if (card.Id == id) return EntityKind.Card;
+                foreach (CardInstance card in player.Hand) if (card.Id == id) return EntityKind.Card;
+            }
+            return EntityKind.Absent;
         }
 
         /// <summary>
@@ -164,6 +241,21 @@ namespace Emberfall.Review
         {
             if (_boardRoot != null) DestroyImmediate(_boardRoot);
             _stateSinks.Clear();
+
+            // THE BACKDROP LIVES UNDER THE BOARD; THE THING THAT SIZES IT LIVES ON THE CAMERA.
+            // ProceduralBoardSetup creates a BoardBackdrop under itself and then attaches a
+            // SafeAreaCamera to Camera.main — outside this hierarchy, and only when one is absent.
+            // SafeAreaCamera scales the plate in Awake and thereafter only when the screen changes,
+            // which it never does here. So a surviving component silently keeps sizing a plate that
+            // was destroyed with the last board, and every rebuild after the first paints a
+            // backdrop that no longer fills the view (Sam, watching it step, 2026-09-08).
+            // Dropping it makes ProceduralBoardSetup re-add it, and its Awake bind the new plate.
+            Camera main = Camera.main;
+            if (main != null)
+            {
+                var safeArea = main.GetComponent<SafeAreaCamera>();
+                if (safeArea != null) DestroyImmediate(safeArea);
+            }
 
             _boardRoot = new GameObject("BoardRoot");
             _boardRoot.transform.SetParent(transform, false);
