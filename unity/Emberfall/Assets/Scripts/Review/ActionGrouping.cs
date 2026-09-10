@@ -122,14 +122,22 @@ namespace Emberfall.Review
         /// A TARGET HAS TWO WIRE SPELLINGS: a bare "i2", and {"instance":"i97","binding":"target"}.
         /// Both occur in this corpus. Keyed as written, the two never compare equal, so two
         /// spellings of one play stay split and the grouping silently under-merges — which is the
-        /// exact failure this class exists to fix. Normalise to the instance id.
+        /// exact failure this class exists to fix. Normalise the SHAPE to the instance id.
+        ///
+        /// KEEP THE BINDING, THOUGH. This used to drop it, which merged "target this minion" and
+        /// "sacrifice this minion" into one play on 381 decisions in the current corpus. Sam's
+        /// ruling, 2026-09-09: they are different, *by extension* — you must target a minion in
+        /// order to sacrifice it, so a sacrifice is a target plus more, never the same play. That
+        /// also makes this agree with DistinctPlayKey in Emberfall.Tools.NetSoak, which the
+        /// exploration sampler mixes over; the two disagreeing about what a play IS would have
+        /// meant the reviewer grading a grouping the sampler never used.
         /// </summary>
         private static void AppendTargets(StringBuilder key, JObject intent)
         {
             key.Append("|t:");
             if (intent["targets"] is JArray targets)
                 foreach (JToken target in targets)
-                    key.Append(TargetInstance(target)).Append(',');
+                    key.Append(TargetKey(target)).Append(',');
         }
 
         /// <summary>Every field of an intent except its type and its actor, in a stable order.</summary>
@@ -144,9 +152,16 @@ namespace Emberfall.Review
                 key.Append('|').Append(name).Append('=').Append(intent[name].ToString(Formatting.None));
         }
 
-        private static string TargetInstance(JToken target)
+        private static string TargetKey(JToken target)
         {
-            if (target is JObject o) return (string)o["instance"] ?? "";
+            if (target is JObject o)
+            {
+                string instance = (string)o["instance"] ?? "";
+                string binding = (string)o["binding"] ?? "";
+                return binding.Length == 0 ? instance : instance + "@" + binding;
+            }
+            // A bare spelling IS the empty binding — IntentJsonCodec.WriteTargets branches on
+            // exactly Binding.Length == 0 — so it keys identically to an object that carries none.
             return (string)target ?? "";
         }
 
