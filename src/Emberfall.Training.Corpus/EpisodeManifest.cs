@@ -112,6 +112,7 @@ namespace Emberfall.Training.Corpus
                            >= decision.BehaviorLegalActionCount.Value)
                         throw new ArgumentException(
                             $"{nameof(DecisionHashes)}[{i}] has an invalid behavior action index.");
+                    ValidateSamplerSpecification(decision, i);
                 }
             }
             if (P0Deck is null || P0Deck.Count == 0) throw new ArgumentException("P0Deck must not be empty.");
@@ -119,6 +120,45 @@ namespace Emberfall.Training.Corpus
             if (HeroMaxHealth <= 0) throw new ArgumentOutOfRangeException(nameof(HeroMaxHealth));
             if (Outcome == MatchOutcome.InProgress)
                 throw new ArgumentException("A completed episode manifest requires a terminal outcome.", nameof(Outcome));
+        }
+
+        /// <summary>
+        /// A mixture row must carry everything needed to recompute the probability its draw used.
+        /// Half a sampler specification is worse than none: it looks reproducible and is not.
+        /// </summary>
+        private static void ValidateSamplerSpecification(EpisodeDecisionHash decision, int i)
+        {
+            string where = $"{nameof(DecisionHashes)}[{i}]";
+            string mode = decision.BehaviorSamplerMode ?? "temperature";
+            if (mode != "temperature" && mode != "mixture" && mode != "argmax")
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.BehaviorSamplerMode)} '{mode}' is not a known sampler.");
+            if (mode != "mixture")
+            {
+                if (decision.BehaviorEpsilon.HasValue
+                    || decision.BehaviorPlayKeySchemaVersion.HasValue)
+                    throw new ArgumentException(
+                        $"{where} carries mixture fields under sampler mode '{mode}'.");
+                return;
+            }
+            if (!decision.BehaviorEpsilon.HasValue
+                || !decision.BehaviorDistinctPlayCount.HasValue
+                || !decision.BehaviorPlayKeySchemaVersion.HasValue)
+                throw new ArgumentException(
+                    $"{where} is a mixture row without a complete sampler specification.");
+            if (!double.IsFinite(decision.BehaviorEpsilon.Value)
+                || decision.BehaviorEpsilon.Value <= 0.0
+                || decision.BehaviorEpsilon.Value >= 1.0)
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.BehaviorEpsilon)} must be finite and in (0, 1).");
+            if (decision.BehaviorPlayKeySchemaVersion.Value <= 0)
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.BehaviorPlayKeySchemaVersion)} must be positive.");
+            if (decision.BehaviorDistinctPlayCount!.Value <= 0
+                || decision.BehaviorDistinctPlayCount.Value > decision.BehaviorLegalActionCount!.Value)
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.BehaviorDistinctPlayCount)} must be between 1 and the "
+                    + "legal action count; plays are a grouping OF the listed actions.");
         }
 
         private static void Require(string value, string name)
@@ -156,5 +196,19 @@ namespace Emberfall.Training.Corpus
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         int? BehaviorLegalActionCount = null,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        bool? BehaviorAllowsConcede = null);
+        bool? BehaviorAllowsConcede = null,
+
+        // A SCALAR TEMPERATURE NO LONGER DESCRIBES THE BEHAVIOR POLICY. Once capture can draw from
+        // a mixture, a row carrying only a temperature reads as a plain tempered softmax and any
+        // consumer that recomputes the behavior probability from it gets a different number than
+        // the one the draw used — with nothing anywhere to contradict it. These fields are what
+        // make the recorded probability reproducible; absent means the plain tempered sampler.
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? BehaviorSamplerMode = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        double? BehaviorEpsilon = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        int? BehaviorDistinctPlayCount = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        int? BehaviorPlayKeySchemaVersion = null);
 }

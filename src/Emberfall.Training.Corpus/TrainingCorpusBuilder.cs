@@ -219,7 +219,11 @@ namespace Emberfall.Training.Corpus
                     expectedHashes.BehaviorCheckpointSha256,
                     expectedHashes.BehaviorLogProbability,
                     expectedHashes.BehaviorPredictedValue,
-                    expectedHashes.BehaviorTemperature));
+                    expectedHashes.BehaviorTemperature,
+                    expectedHashes.BehaviorSamplerMode,
+                    expectedHashes.BehaviorEpsilon,
+                    expectedHashes.BehaviorDistinctPlayCount,
+                    expectedHashes.BehaviorPlayKeySchemaVersion));
                 index++;
             }
 
@@ -433,7 +437,17 @@ namespace Emberfall.Training.Corpus
             [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             double? BehaviorPredictedValue,
             [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-            double? BehaviorTemperature);
+            double? BehaviorTemperature,
+            // Carried through so a corpus row says which distribution its behaviorLogProbability
+            // came from. Without these a mixture row is indistinguishable from a tempered one.
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            string? BehaviorSamplerMode = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            double? BehaviorEpsilon = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            int? BehaviorDistinctPlayCount = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            int? BehaviorPlayKeySchemaVersion = null);
 
         private sealed record PlayerMemory(
             IReadOnlyList<int> SelfRemainingDeck,
