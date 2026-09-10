@@ -223,7 +223,8 @@ namespace Emberfall.Training.Corpus
                     expectedHashes.BehaviorSamplerMode,
                     expectedHashes.BehaviorEpsilon,
                     expectedHashes.BehaviorDistinctPlayCount,
-                    expectedHashes.BehaviorPlayKeySchemaVersion));
+                    expectedHashes.BehaviorPlayKeySchemaVersion,
+                    expectedHashes.BehaviorPlayGroups));
                 index++;
             }
 
@@ -403,7 +404,9 @@ namespace Emberfall.Training.Corpus
             [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             int? BehaviorDistinctPlayCount = null,
             [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-            int? BehaviorPlayKeySchemaVersion = null);
+            int? BehaviorPlayKeySchemaVersion = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? BehaviorPlayGroups = null);
 
         private sealed record PlayerMemory(
             IReadOnlyList<int> SelfRemainingDeck,

@@ -154,11 +154,46 @@ namespace Emberfall.Training.Corpus
             if (decision.BehaviorPlayKeySchemaVersion.Value <= 0)
                 throw new ArgumentException(
                     $"{where}.{nameof(decision.BehaviorPlayKeySchemaVersion)} must be positive.");
+            ValidatePlayGroups(decision, where);
             if (decision.BehaviorDistinctPlayCount!.Value <= 0
                 || decision.BehaviorDistinctPlayCount.Value > decision.BehaviorLegalActionCount!.Value)
                 throw new ArgumentException(
                     $"{where}.{nameof(decision.BehaviorDistinctPlayCount)} must be between 1 and the "
                     + "legal action count; plays are a grouping OF the listed actions.");
+        }
+
+        /// <summary>
+        /// The grouping must cover every listed action exactly once and use every play index it
+        /// claims. A groups array that disagrees with the action count or the play count is worse
+        /// than an absent one: it would let a verifier recompute a confident, wrong mu.
+        /// </summary>
+        private static void ValidatePlayGroups(EpisodeDecisionHash decision, string where)
+        {
+            IReadOnlyList<int>? groups = decision.BehaviorPlayGroups;
+            if (groups is null || groups.Count == 0)
+                throw new ArgumentException(
+                    $"{where} is a mixture row without play-group membership; its behavior "
+                    + "probability cannot be independently recomputed.");
+            int actions = decision.BehaviorLegalActionCount!.Value;
+            int plays = decision.BehaviorDistinctPlayCount!.Value;
+            if (groups.Count != actions)
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.BehaviorPlayGroups)} has {groups.Count} entries "
+                    + $"for {actions} legal actions.");
+            var seen = new bool[plays];
+            foreach (int play in groups)
+            {
+                if (play < 0 || play >= plays)
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.BehaviorPlayGroups)} names play {play}, outside "
+                        + $"0..{plays - 1}.");
+                seen[play] = true;
+            }
+            for (int i = 0; i < plays; i++)
+                if (!seen[i])
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.BehaviorPlayGroups)} never uses play {i}, so the "
+                        + "distinct-play count and the grouping disagree.");
         }
 
         private static void Require(string value, string name)
@@ -210,5 +245,12 @@ namespace Emberfall.Training.Corpus
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         int? BehaviorDistinctPlayCount = null,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        int? BehaviorPlayKeySchemaVersion = null);
+        int? BehaviorPlayKeySchemaVersion = null,
+
+        // Which distinct play each legal-action index belongs to. Without it a verifier cannot
+        // recompute mu(i) = (1-eps)*pi(i) + (eps/K)*pi(i)/pi(P), because pi(P) needs the grouping
+        // -- and re-deriving the grouping means a second implementation of the play-key rule that
+        // will eventually disagree with the one that drew the action.
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? BehaviorPlayGroups = null);
 }

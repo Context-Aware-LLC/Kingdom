@@ -243,6 +243,88 @@ namespace Emberfall.Net.Server.Tests.Bots
             Assert.That(trace.BehaviorLogProbability, Is.LessThanOrEqualTo(0.0));
         }
 
+        [Test]
+        public async Task A_Mixture_Row_Records_Which_Play_Each_Action_Belongs_To()
+        {
+            // Without the grouping, mu(i) = (1-eps)*pi(i) + (eps/K)*pi(i)/pi(P) cannot be
+            // recomputed by anyone but the code that drew it — pi(P) needs to know which indices
+            // share a play. Recording epsilon and K alone LOOKS reproducible and is not.
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            GameState state = OpeningState(db, setup);
+            var policy = new CheckpointSeatPolicy(
+                new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck,
+                CheckpointSelection.Mixture(1.0, Epsilon, 5UL), new string('a', 64));
+            _ = await policy.ChooseAsync(state, P0);
+
+            CheckpointDecisionTrace trace = policy.LastDecision!;
+            Assert.That(trace.PlayGroups, Is.Not.Null);
+            Assert.That(trace.PlayGroups!.Count, Is.EqualTo(trace.LegalActionCount),
+                "every listed action must be assigned to a play");
+            Assert.That(trace.PlayGroups, Is.All.InRange(0, trace.DistinctPlayCount!.Value - 1));
+            Assert.That(new HashSet<int>(trace.PlayGroups).Count,
+                Is.EqualTo(trace.DistinctPlayCount!.Value),
+                "the grouping and the distinct-play count must not disagree");
+
+            // And the grouping is the one the sampler used, not a re-derivation: actions sharing a
+            // play key must share a group id.
+            var enumerator = new LegalActionEnumerator(db, new CommandProcessor(db));
+            IReadOnlyList<PlayerIntent> actions = enumerator.Enumerate(state, P0, includeConcede: false);
+            var keyToGroup = new Dictionary<string, int>();
+            for (int i = 0; i < actions.Count; i++)
+            {
+                string key = DistinctPlayKey.Of(actions[i], state);
+                if (keyToGroup.TryGetValue(key, out int group))
+                    Assert.That(trace.PlayGroups[i], Is.EqualTo(group), $"action {i} split its play");
+                else keyToGroup[key] = trace.PlayGroups[i];
+            }
+        }
+
+        [Test]
+        public void A_Manifest_Refuses_A_Mixture_Row_Whose_Grouping_Does_Not_Add_Up()
+        {
+            // A groups array that disagrees with the action or play count is worse than an absent
+            // one: it lets a verifier recompute a confident, wrong mu.
+            Assert.Multiple(() =>
+            {
+                Assert.That(() => ManifestWith(groups: null), Throws.ArgumentException,
+                    "a mixture row with no grouping must be refused");
+                Assert.That(() => ManifestWith(new[] { 0, 0 }), Throws.ArgumentException,
+                    "grouping shorter than the action count must be refused");
+                Assert.That(() => ManifestWith(new[] { 0, 1, 5 }), Throws.ArgumentException,
+                    "a play index outside 0..K-1 must be refused");
+                Assert.That(() => ManifestWith(new[] { 0, 0, 0 }), Throws.ArgumentException,
+                    "a grouping that never uses play 1 must be refused");
+                Assert.That(() => ManifestWith(new[] { 0, 1, 1 }), Throws.Nothing,
+                    "a consistent grouping is accepted");
+            });
+        }
+
+        private static void ManifestWith(IReadOnlyList<int>? groups)
+        {
+            var decision = new EpisodeDecisionHash(
+                0, P0.Value, new string('b', 64), new string('c', 64),
+                BehaviorCheckpointSha256: new string('a', 64),
+                BehaviorLogProbability: -0.5,
+                BehaviorPredictedValue: 0.1,
+                BehaviorTemperature: 4.0,
+                BehaviorChosenActionIndex: 0,
+                BehaviorLegalActionCount: 3,
+                BehaviorAllowsConcede: false,
+                BehaviorSamplerMode: "mixture",
+                BehaviorEpsilon: Epsilon,
+                BehaviorDistinctPlayCount: 2,
+                BehaviorPlayKeySchemaVersion: 1,
+                BehaviorPlayGroups: groups);
+            new EpisodeManifest(
+                EpisodeManifest.CurrentSchemaVersion, "m", 1UL, P0.Value, P1.Value,
+                CardClass.EMBERWARD, CardClass.TIDECALLER, new[] { 1 }, new[] { 1 }, 30, 1,
+                EpisodeManifest.CurrentEngineContractVersion, ProtocolContract.Version, "rev",
+                new string('d', 64), "p0", "p1", "r.jsonl", new string('e', 64),
+                new string('f', 64), new string('0', 64), new[] { decision },
+                MatchOutcome.Player0Win).Validate();
+        }
+
         // ── the distinct-play key ──────────────────────────────────────────────
 
         [Test]
