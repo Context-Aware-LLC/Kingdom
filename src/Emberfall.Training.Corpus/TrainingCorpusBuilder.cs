@@ -118,7 +118,7 @@ namespace Emberfall.Training.Corpus
                 throw new InvalidDataException(
                     $"Episode '{episode.MatchId}' replay hash {actualReplayHash} does not match manifest {episode.ReplaySha256}.");
 
-            ReplayRecord replay = ReadReplay(replayPath, episode.MatchId);
+            ReplayRecord replay = ReplayReader.Read(replayPath, episode.MatchId);
             ValidateReplayHeader(episode, replay);
             if (episode.DecisionHashes.Count != replay.Intents.Count)
                 throw new InvalidDataException(
@@ -238,47 +238,6 @@ namespace Emberfall.Training.Corpus
                 throw new InvalidDataException(
                     $"Episode '{episode.MatchId}' terminal observation hash disagrees with its manifest.");
             return index;
-        }
-
-        private static ReplayRecord ReadReplay(string path, string expectedMatchId)
-        {
-            string[] lines = File.ReadAllLines(path, Encoding.UTF8);
-            if (lines.Length < 2) throw new InvalidDataException($"Replay '{path}' is incomplete.");
-            using JsonDocument header = JsonDocument.Parse(lines[0]);
-            JsonElement root = header.RootElement;
-            if (!root.TryGetProperty("emberfallReplay", out JsonElement version) || version.GetInt32() != 1)
-                throw new InvalidDataException($"Replay '{path}' has an unsupported header.");
-            ulong seed = root.GetProperty("seed").GetUInt64();
-            string p0 = root.GetProperty("p0").GetString() ?? "";
-            string p1 = root.GetProperty("p1").GetString() ?? "";
-
-            var intents = new List<PlayerIntent>();
-            MatchOutcome? outcome = null;
-            for (int i = 1; i < lines.Length; i++)
-            {
-                using JsonDocument row = JsonDocument.Parse(lines[i]);
-                if (row.RootElement.TryGetProperty("outcome", out JsonElement outcomeElement))
-                {
-                    if (!Enum.TryParse(outcomeElement.GetString(), false, out MatchOutcome parsed))
-                        throw new InvalidDataException($"Replay '{path}' has an unknown outcome.");
-                    outcome = parsed;
-                    if (i != lines.Length - 1)
-                        throw new InvalidDataException($"Replay '{path}' has rows after its outcome footer.");
-                    continue;
-                }
-                byte[] bytes = Encoding.UTF8.GetBytes(lines[i]);
-                DecodeResult decoded = ProtocolCodec.Decode(bytes);
-                if (!decoded.Ok || decoded.Message is not IntentMsg intent)
-                    throw new InvalidDataException(
-                        $"Replay '{path}' row {i + 1} is not an intent: {decoded.Error} {decoded.Detail}");
-                if (!string.Equals(decoded.MatchId.Value, expectedMatchId, StringComparison.Ordinal))
-                    throw new InvalidDataException(
-                        $"Replay '{path}' row {i + 1} belongs to match '{decoded.MatchId.Value}', " +
-                        $"expected '{expectedMatchId}'.");
-                intents.Add(intent.Intent);
-            }
-            if (!outcome.HasValue) throw new InvalidDataException($"Replay '{path}' has no outcome footer.");
-            return new ReplayRecord(seed, p0, p1, intents, outcome.Value);
         }
 
         private static void ValidateReplayHeader(EpisodeManifest episode, ReplayRecord replay)
@@ -408,9 +367,6 @@ namespace Emberfall.Training.Corpus
             try { if (File.Exists(path)) File.Delete(path); }
             catch (IOException) { }
         }
-
-        private sealed record ReplayRecord(ulong Seed, string P0, string P1,
-                                           IReadOnlyList<PlayerIntent> Intents, MatchOutcome Outcome);
 
         private sealed record CorpusEpisodeRow(string MatchId, MatchOutcome Outcome, int Decisions,
                                                string P0Policy, string P1Policy);
