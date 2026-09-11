@@ -381,6 +381,21 @@ namespace Emberfall.Net.Server
             // Bot-fill (design doc §Bot roster & provisioning): a roster path with no account store
             // is a normal dev-box configuration, not a startup failure — logged and skipped.
             IBotPool? botPool = botPoolOverride;
+            // A CHECKPOINT NOBODY WILL EVER ASK FOR IS ALSO A MISCONFIGURATION. The factory below
+            // only runs when bot-fill is fully enabled, so an operator who sets a checkpoint and
+            // forgets the roster (or has no account store) would get a silent Greedy server and no
+            // error at all -- the exact failure the fatal-startup rule exists to prevent, arriving
+            // through the one door it did not cover. There are THREE cases, not two: never
+            // configured, configured and broken, and configured but unreachable.
+            if (botPool is null && !string.IsNullOrWhiteSpace(cfg.BotCheckpointPath)
+                && (string.IsNullOrWhiteSpace(cfg.BotRosterPath) || cfg.AccountStore is null))
+            {
+                throw new InvalidOperationException(
+                    "EMBERFALL_BOT_CHECKPOINT is set but bot-fill is not enabled: it needs "
+                    + "EMBERFALL_BOT_ROSTER and a configured AccountStore. Refusing to start as a "
+                    + "Greedy server while configured for a learned one.");
+            }
+
             if (botPool is null && !string.IsNullOrWhiteSpace(cfg.BotRosterPath))
             {
                 if (cfg.AccountStore is null)
