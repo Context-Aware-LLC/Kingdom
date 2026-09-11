@@ -108,10 +108,9 @@
  * DeckCreation.MaxPerAccount plates plus the "+", and forcing nine onto one line would shrink
  * every picture past the point of being one.
  *
- * A deck is drawn as ONE CARD and carries no name (Sam, 2026-08-07): the art the player chose
- * from inside it is the identity, the way a physical deck is known by its sleeve.
+ * A deck is a wide portrait of its two heroes (Sam, 2026-09-11), with no name on the plate.
  *
- * The plate width and the art's square side are written by
+ * The plate width and the art's rectangular dimensions are written by
  * CharacterRosterController.LayoutDeckGrid. The vertical padding here is a term in that class's
  * RowChrome, which is subtracted from every plate row's share of the viewport before a plate is
  * sized -- keep it in step, its docstring carries the sum. The horizontal is free. */
@@ -121,10 +120,10 @@
     padding: var(--space-1) var(--space-2) var(--space-2) var(--space-2);
 }
 
-/* width, and the art's square side, are written per row by LayoutDeckStrip. The value here is
+/* Width and art dimensions are written per row by LayoutDeckGrid. The value here is
  * only what a plate looks like for the frame before that pass runs. */
 .deck-plate {
-    width: 80px;
+    width: 124px;
     flex-shrink: 0;
     align-items: center;
     /* Must match CharacterRosterController.PlateGutter -- every plate carries one, including the
@@ -145,10 +144,8 @@
     max-height: 90%;
 }
 
-/* The art of whichever card fronts the deck, rendered SQUARE (Sam, 2026-08-07) — a deck is not
- * a card-shaped thumbnail here. scale-and-crop rather than stretch: card art is not square, and
- * letterboxing it reads as a bug where cropping reads as framing. The plate strip overwrites
- * these two values every layout pass; they are the picker's size, and the plate's first frame. */
+/* Image and card-back picker thumbnails remain square. Roster plates override the height below
+ * and receive their responsive rectangular dimensions from LayoutDeckGrid. */
 .deck-plate-art {
     width: 112px;
     height: 112px;
@@ -156,6 +153,11 @@
     background-color: var(--surface-3);
     -unity-background-scale-mode: scale-and-crop;
     overflow: hidden;
+}
+
+/* Same 0.42 height/width ratio as CharacterRosterController.PlateArtHeightRatio. */
+.deck-plate .deck-plate-art {
+    height: 47.04px;
 }
 
 /* The prepared hero sheet is drawn as two adjacent textured meshes. Their vertices share one
@@ -166,7 +168,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    height: 42%;
+    top: 0;
 }
 
 /* GOLD READY RING, WHITE HOVER RING: both cut 2026-09-08 (Sam) — the blue match-pick ring below is
@@ -211,7 +213,7 @@
 }
 
 /* EXPLICIT 88, not --type-display (2026-09-08): double the token's 44, on request. Sized against
- * the plate art's own square rather than the type ramp -- same call as .hero-choice-name's 56. */
+ * the plate art rather than the type ramp -- same call as .hero-choice-name's 56. */
 .deck-plate-plus {
     font-size: 88px;
     -unity-font-style: bold;

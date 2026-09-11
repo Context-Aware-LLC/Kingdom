@@ -55,7 +55,7 @@ namespace Emberfall.Presentation
 
     /// <summary>
     /// The player's decks, and the doorway into the deckbuilder. It reads them fresh from disk and
-    /// draws one square plate each, with a trailing "+" that opens the class picker.
+    /// draws one rectangular plate each, with a trailing "+" that opens the class picker.
     ///
     /// <para><b>It was a roster of CHARACTERS until 2026-09-04 (ADR-0009).</b> Each character was a
     /// row, and its decks a strip inside that row. The container is gone — a deck carries its own
@@ -624,14 +624,11 @@ namespace Emberfall.Presentation
             plate.EnableInClassList("deck-plate--selected",
                 MatchDeckSelection.Choosing && _pickedDeckId == deck.Id);
 
-            // The deck IS its image (Sam, 2026-08-07). No name on the plate: two decks tell each
-            // other apart by the card the player chose to front them with, the same way a physical
-            // deck is known by its sleeve rather than a label.
+            // The portrait is the deck control; the name stays in its tooltip.
             var art = new VisualElement();
             art.AddToClassList("deck-plate-art");
-            // The chosen showcase card remains the deck's image. The ordered class pair now gets a
-            // portrait band on that same control: primary larger on the left, secondary on the
-            // right. That keeps "Deck image" real while making the immutable pairing visible.
+            // The two heroes fill the rectangular control. Showcase art remains underneath as a
+            // fallback if the portrait sheet is unavailable, with no extra card image above them.
             string pairing = $"{CardClassTokens.Label(deck.PrimaryClass)} → {CardClassTokens.Label(deck.SecondaryClass)}";
             art.tooltip = summary.Queue.IsEligible
                 ? $"{deck.Name} · {pairing} — {deck.TotalCount} / {DeckValidator.DeckSize}"
@@ -690,10 +687,9 @@ namespace Emberfall.Presentation
 
         // ---- Plate sizing (Sam, 2026-08-07) ------------------------------------------------
         //
-        // A plate is a SQUARE rendering of the art at the largest sensible size for the space it
-        // has — not a card-shaped thumbnail at a fixed 108x152. UI Toolkit has neither media
-        // queries nor aspect-ratio, so both halves of that are a layout pass: the grid measures
-        // itself, decides how many squares fit across, and grows them to fill the row.
+        // Wide rectangles frame just the ordered hero pair (Sam, 2026-09-11). Keep the portrait
+        // band's former height-to-width ratio, and size both axes in the grid's layout pass.
+        private const float PlateArtHeightRatio = 0.42f;
 
         /// <summary>An absolute floor, and nothing else (Sam, 2026-08-07).
         /// <para>THIS IS STILL 64 AND HAS NOT BEEN RE-MEASURED SINCE THE PANEL STOPPED BEING 411
@@ -734,7 +730,7 @@ namespace Emberfall.Presentation
         /// </summary>
         private const float RowsPerScreen = 3f;
 
-        /// <summary>Everything a plate row costs beyond the square itself: the plate's padding and
+        /// <summary>Everything a plate row costs beyond the art itself: the plate's padding and
         /// border, its bottom margin, and the grid's own vertical padding. Must be kept in step
         /// with character-roster.uss.
         ///
@@ -751,7 +747,7 @@ namespace Emberfall.Presentation
         private const float PlateGutter = 8f;
 
         /// <summary>.deck-plate padding (--space-1) plus its 2px border, both sides — the difference
-        /// between the plate's outer width and the square inside it. The same 12dp is a term in
+        /// between the plate's outer width and the art inside it. The same 12dp is a term in
         /// <see cref="RowChrome"/>, because the plate pays it on both axes.</summary>
         private const float PlateChrome = 12f;
 
@@ -793,7 +789,7 @@ namespace Emberfall.Presentation
             if (plates == 0) return;
 
             // Never more columns than there are plates: two decks on a wide panel should be two
-            // large squares, not two small ones with a four-column grid's worth of empty beside them.
+            // large plates, not two small ones with a four-column grid's worth of empty beside them.
             int columns = Mathf.Clamp(Mathf.FloorToInt(available / (TargetPlate + PlateGutter)),
                                       1, Mathf.Min(MaxColumns, plates));
             float fromWidth = (available - columns * PlateGutter) / columns;
@@ -802,21 +798,22 @@ namespace Emberfall.Presentation
             // makes a lone deck so tall that one plate fills the screen.
             float fromHeight = MaxPlate;
             float viewport = _rosterScroll?.resolvedStyle.height ?? 0f;
-            if (viewport > 0f) fromHeight = viewport / RowsPerScreen - RowChrome;
+            if (viewport > 0f)
+                fromHeight = (viewport / RowsPerScreen - RowChrome) / PlateArtHeightRatio + PlateChrome;
 
             // Clamped at the bottom only. Clamping up to a comfortable minimum is what would push a
             // plate outside its column.
-            float side = Mathf.Max(MinPlate, Mathf.Min(fromWidth, fromHeight, MaxPlate));
+            float width = Mathf.Max(MinPlate, Mathf.Min(fromWidth, fromHeight, MaxPlate));
 
             foreach (VisualElement child in grid.Children())
             {
                 if (!child.ClassListContains("deck-plate")) continue;
-                child.style.width = side;
+                child.style.width = width;
 
                 VisualElement art = child.Q<VisualElement>(className: "deck-plate-art");
                 if (art == null) continue;
-                art.style.width = side - PlateChrome;
-                art.style.height = side - PlateChrome;   // square: the whole point of the pass
+                art.style.width = width - PlateChrome;
+                art.style.height = (width - PlateChrome) * PlateArtHeightRatio;
             }
         }
 
