@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Core.Contracts;
 
-namespace Emberfall.Net.Server.Bots
+namespace Emberfall.Policy
 {
     /// <summary>
     /// One seat's decision policy. Callers provide only the actor-visible snapshot; adapters own

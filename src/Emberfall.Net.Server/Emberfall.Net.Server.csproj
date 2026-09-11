@@ -62,6 +62,7 @@
     <ProjectReference Include="..\Emberfall.Net.Protocol\Emberfall.Net.Protocol.csproj" />
     <!-- Live human-game capture emits the same raw episode contract consumed by the corpus builder. -->
     <ProjectReference Include="..\Emberfall.Training.Corpus\Emberfall.Training.Corpus.csproj" />
+    <ProjectReference Include="..\Emberfall.Policy\Emberfall.Policy.csproj" />
     <!-- Task 6 (AI opponent matchmaking): BotSeatRunner wraps the production LoopbackTransport and
          drives a real NetworkedMatchSession — the same client class a human uses — so a bot seat
          needs the client assembly. -->
