@@ -11,9 +11,11 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Emberfall.Core.Collection;
+using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Server.Accounts;
 using Emberfall.Net.Server.Bots;
+using Emberfall.Policy;
 using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Decks;
 using Emberfall.Net.Server.Identity;
@@ -160,6 +162,15 @@ namespace Emberfall.Net.Server
         /// </summary>
         public string? BotRosterPath { get; init; }
 
+        /// <summary>
+        /// A trained checkpoint for bot seats to play, and the RL export whose feature spec it was
+        /// trained against. BOTH or NEITHER: a checkpoint without its export cannot be encoded for,
+        /// and an export without a checkpoint has nothing to run. Unset means bot seats play
+        /// <see cref="GreedyAi"/>, which is what every existing deploy does today.
+        /// </summary>
+        public string? BotCheckpointPath { get; init; }
+        public string? BotRlExportPath { get; init; }
+
         public static ServerConfig FromEnvironment()
         {
             string telemetryDir = Environment.GetEnvironmentVariable("EMBERFALL_TELEMETRY") ?? "telemetry";
@@ -232,6 +243,8 @@ namespace Emberfall.Net.Server
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking
                 // behavior unchanged, same as every other optional seam above.
                 BotRosterPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_ROSTER"),
+                BotCheckpointPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_CHECKPOINT"),
+                BotRlExportPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_RL_EXPORT"),
             };
         }
 
@@ -264,6 +277,57 @@ namespace Emberfall.Net.Server
     /// </summary>
     public static class ServerApp
     {
+        /// <summary>
+        /// The seat-policy factory for bot-filled matches: the configured checkpoint, or Greedy.
+        ///
+        /// A CONFIGURED-BUT-UNUSABLE CHECKPOINT IS FATAL, on purpose. Starting anyway with a silent
+        /// Greedy fallback would mean an operator who deliberately asked for the learned bot never
+        /// finds out they did not get it -- the failure would surface weeks later as "the bot feels
+        /// the same", with nothing in the logs. This is the same shape as the collection-sync
+        /// degrade recorded in CLAUDE.md: absorbing an error moves it somewhere less legible, so
+        /// distinguish NEVER CONFIGURED (run Greedy, say nothing) from CONFIGURED AND BROKEN (refuse
+        /// to start).
+        ///
+        /// The scorer process is shared across every bot seat. It is a single Python subprocess and
+        /// starting one per seat would multiply model loads for no benefit; the protocol is
+        /// request/response over stdio and the policy serialises its own calls.
+        /// </summary>
+        private static Func<SeatDeck, ISeatPolicy>? BuildBotPolicyFactory(ServerConfig cfg, ICardDatabase db)
+        {
+            bool hasCheckpoint = !string.IsNullOrWhiteSpace(cfg.BotCheckpointPath);
+            bool hasExport = !string.IsNullOrWhiteSpace(cfg.BotRlExportPath);
+            if (!hasCheckpoint && !hasExport) return null;
+            if (hasCheckpoint != hasExport)
+                throw new InvalidOperationException(
+                    "EMBERFALL_BOT_CHECKPOINT and EMBERFALL_BOT_RL_EXPORT must be set together: a "
+                    + "checkpoint cannot be encoded for without the export's feature spec.");
+
+            CheckpointScorerProcess scorer;
+            try
+            {
+                scorer = CheckpointScorerProcess.Start(
+                    cfg.BotRlExportPath!, cfg.BotCheckpointPath!, "auto", null);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(
+                    $"EMBERFALL_BOT_CHECKPOINT is set to '{cfg.BotCheckpointPath}' but the scorer "
+                    + $"could not start: {ex.GetType().Name}: {ex.Message}. Refusing to start with "
+                    + "bot seats silently falling back to Greedy.", ex);
+            }
+
+            Console.Error.WriteLine(
+                $"[bots] learned bot seats enabled: checkpoint sha256={scorer.CheckpointSha256}");
+            return deck =>
+            {
+                var validator = new CommandProcessor(db);
+                var learned = new CheckpointSeatPolicy(
+                    scorer, db, validator, deck.Deck, CheckpointSelection.Argmax);
+                return new LearnedBotSeatPolicy(
+                    learned, new GreedySeatPolicy(validator, db));
+            };
+        }
+
         public static WebApplication Build(ServerConfig cfg) => BuildWithGate(cfg).App;
 
         /// <summary>Same app, with the gate handed back so a test can read per-match attribution
@@ -326,7 +390,7 @@ namespace Emberfall.Net.Server
                 else
                 {
                     var roster = BotRoster.LoadFromFile(cfg.BotRosterPath!, db);
-                    var pool = new BotPool(db);
+                    var pool = new BotPool(db, BuildBotPolicyFactory(cfg, db));
                     builder.Services.AddSingleton<IHostedService>(
                         new BotAccountProvisioner(cfg.AccountStore, roster, pool));
                     botPool = pool;
