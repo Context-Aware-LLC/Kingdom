@@ -80,6 +80,8 @@ namespace Emberfall.Presentation
         private readonly Func<PackOpenReceipt, bool> _revealElsewhere;
 
         private bool _busy;
+        private int _detailAnimationVersion;
+        private bool _detailClosing;
 
         public ShopPanelController(
             VisualElement root,
@@ -378,8 +380,7 @@ namespace Emberfall.Presentation
         /// (Sam, 2026-09-07 follow-up: no separate modal object appearing/disappearing -- the pack
         /// itself has to visibly translate to center and scale up, eased out, and reverse on
         /// close). This is FLIP (First-Last-Invert-Play): <see cref="TryComputeFlipTransform"/>
-        /// derives the shell's tile-matched translate/scale from the screen's bound rather than
-        /// the shell's own (see its own doc comment for why), <see cref="FlipToIdentity"/> applies
+        /// matches the visible art using the shell's untransformed layout, <see cref="FlipToIdentity"/> applies
         /// that with NO transition active (pack-detail-shell--animating is not yet applied, so the
         /// jump is instant and unseen), lets that render for one tick, then turns the transition on
         /// and resets translate/scale to identity -- which the transition system then animates,
@@ -395,6 +396,8 @@ namespace Emberfall.Presentation
         {
             if (_detailOverlay == null) return;
 
+            int animationVersion = ++_detailAnimationVersion;
+            _detailClosing = false;
             _detailActions?.Clear();
             if (_detailActions != null)
             {
@@ -433,14 +436,40 @@ namespace Emberfall.Presentation
 
             _detailOriginTile = originTile;
             _detailShell?.RemoveFromClassList("pack-detail-shell--animating");
+            if (_detailShell != null)
+            {
+                // Lay out the final panel invisibly before measuring its actual art box.
+                _detailShell.style.opacity = 0f;
+                _detailShell.style.translate = new Translate(0, 0);
+                _detailShell.style.scale = new Scale(Vector3.one);
+            }
             _detailOverlay.RemoveFromClassList("pack-detail-overlay--hidden");
 
-            // Called directly, no waiting (Sam, 2026-09-07 follow-up -- see TryComputeFlipTransform
-            // for why this is now safe to call the instant the overlay unhides).
-            FlipToIdentity(() =>
+            // A geometry event alone can miss repeat opens with unchanged dimensions. Sample
+            // on scheduled frames as well, and wait for stable layout before painting the flight.
+            WaitForDetailLayout(animationVersion, default, default);
+        }
+
+        private void WaitForDetailLayout(int version, Rect previousShell, Rect previousArt)
+        {
+            if (_detailShell == null) return;
+            _detailShell.schedule.Execute(() =>
             {
-                if (_detailActions != null) _detailActions.style.visibility = Visibility.Visible;
-            });
+                if (version != _detailAnimationVersion) return;
+                Rect shell = _detailShell.layout;
+                Rect art = _detailArt != null ? _detailArt.layout : default;
+                bool hasArt = _detailArt != null && _detailArt.resolvedStyle.display != DisplayStyle.None;
+                if (shell.width > 0f && shell.height > 0f && shell == previousShell &&
+                    (!hasArt || (art.width > 0f && art.height > 0f && art == previousArt)))
+                {
+                    FlipToIdentity(() =>
+                    {
+                        if (_detailActions != null) _detailActions.style.visibility = Visibility.Visible;
+                    });
+                    return;
+                }
+                WaitForDetailLayout(version, shell, art);
+            }).ExecuteLater(16);
         }
 
         /// <summary>
@@ -452,12 +481,14 @@ namespace Emberfall.Presentation
         /// </summary>
         private void CloseDetail(bool immediate = false)
         {
-            if (_detailOverlay == null) return;
+            if (_detailOverlay == null || (_detailClosing && !immediate)) return;
+            int animationVersion = ++_detailAnimationVersion;
+            _detailClosing = true;
 
             // Hidden again before the flight starts (2026-09-08): the reveal in OpenDetail's
             // onSettled leaves these visible while the shell sits at rest, and the fly-out should
             // read the same as the fly-in -- art only, no buttons racing the shell back to the tile.
-            if (_detailActions != null) _detailActions.style.display = DisplayStyle.None;
+            if (_detailActions != null) _detailActions.style.visibility = Visibility.Hidden;
 
             if (immediate || _detailShell == null || _detailOriginTile == null)
             {
@@ -474,6 +505,7 @@ namespace Emberfall.Presentation
             // the close flight off almost immediately). This way the two can never drift apart.
             _detailOverlay.schedule.Execute(() =>
             {
+                if (animationVersion != _detailAnimationVersion) return;
                 _detailOverlay.AddToClassList("pack-detail-overlay--hidden");
                 _detailShell.RemoveFromClassList("pack-detail-shell--animating");
                 _detailOriginTile = null;
@@ -496,45 +528,40 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// The shell's translate/scale needed to make it exactly overlap the tapped tile,
-        /// computed from the SCREEN's bound and the shell's known CSS constants (90% of the
-        /// screen's width, capped at 820px, centered by pack-detail-overlay) rather than the
-        /// shell's own worldBound.
-        ///
-        /// <para>This replaces two earlier attempts that both measured the shell directly and
-        /// both failed the same way (Sam, 2026-09-07 follow-up): the instant the shell becomes
-        /// visible, its OWN layout is not reliably resolved yet. Two chained scheduled ticks
-        /// (32ms) was not enough, and a GeometryChangedEvent listener never fired at all on a
-        /// repeat open -- live diagnostic logging caught the first attempt returning a near-zero
-        /// jump instead of the real ~650px offset, and confirmed the second attempt's callback
-        /// simply never ran. The <c>screen</c> element (pack-detail-overlay's parent, the whole
-        /// shop UI's root), by contrast, is guaranteed to already be laid out the instant a tile
-        /// can be tapped at all -- there is no tile to tap otherwise -- so deriving the shell's
-        /// FINAL rect from it and fixed numbers needs no readiness check, and this can run the
-        /// instant the overlay unhides.</para>
-        ///
-        /// <para>Scale is uniform and based on width alone (the shell's height is content-driven
-        /// text/art layout, not a fixed number, so it cannot be predicted this way) -- an
-        /// approximation in the jump's exact proportions, never in its timing.</para>
+        /// Match the painted pack, not its outer panel. Both backgrounds contain the same image,
+        /// so their fitted image sizes determine the uniform scale. Layout rects exclude the
+        /// shell's animated transform, keeping the reverse calculation stable even mid-flight.
+        /// All positions are in the shell parent's coordinates, including the tapped slot.
         /// </summary>
         private bool TryComputeFlipTransform(out Translate translate, out Scale scale)
         {
             translate = default;
             scale = default;
-            if (_detailOriginTile == null) return false;
+            if (_detailOriginTile == null || _detailShell?.parent == null) return false;
 
-            Rect tileBound = _detailOriginTile.worldBound;
-            VisualElement screen = _detailOverlay?.parent;
-            if (screen == null || tileBound.width <= 0 || tileBound.height <= 0) return false;
+            Rect tileBound = _detailShell.parent.WorldToLocal(_detailOriginTile.worldBound);
+            Rect shell = _detailShell.layout;
+            if (tileBound.width <= 0f || tileBound.height <= 0f || shell.width <= 0f) return false;
 
-            Rect screenBound = screen.worldBound;
-            if (screenBound.width <= 0) return false;
+            Rect art = _detailArt != null && _detailArt.resolvedStyle.display != DisplayStyle.None
+                ? _detailArt.layout : new Rect(Vector2.zero, shell.size);
+            if (art.width <= 0f || art.height <= 0f) return false;
 
-            float shellWidth = Mathf.Min(screenBound.width * 0.9f, 820f);
-            float scaleFactor = tileBound.width / shellWidth;
-            translate = new Translate(
-                tileBound.center.x - screenBound.center.x,
-                tileBound.center.y - screenBound.center.y);
+            Background background = _detailOriginTile.resolvedStyle.backgroundImage;
+            Vector2 imageSize = background.renderTexture != null
+                ? new Vector2(background.renderTexture.width, background.renderTexture.height)
+                : background.sprite != null ? background.sprite.rect.size
+                : background.texture != null ? new Vector2(background.texture.width, background.texture.height)
+                : art.size;
+            if (imageSize.x <= 0f || imageSize.y <= 0f) return false;
+
+            float tileFit = Mathf.Min(tileBound.width / imageSize.x, tileBound.height / imageSize.y);
+            float artFit = Mathf.Min(art.width / imageSize.x, art.height / imageSize.y);
+            float scaleFactor = tileFit / artFit;
+            Vector2 pivot = shell.size * 0.5f;
+            Vector2 scaledArtCenter = shell.position + pivot + (art.center - pivot) * scaleFactor;
+            Vector2 offset = tileBound.center - scaledArtCenter;
+            translate = new Translate(offset.x, offset.y);
             scale = new Scale(new Vector3(scaleFactor, scaleFactor, 1f));
             return true;
         }
@@ -567,6 +594,7 @@ namespace Emberfall.Presentation
         private void FlipToIdentity(Action onSettled = null)
         {
             if (_detailShell == null) { onSettled?.Invoke(); return; }
+            int animationVersion = _detailAnimationVersion;
             if (TryComputeFlipTransform(out Translate translate, out Scale scale))
             {
                 _detailShell.style.translate = translate;
@@ -575,6 +603,8 @@ namespace Emberfall.Presentation
 
             _detailShell.schedule.Execute(() =>
             {
+                if (animationVersion != _detailAnimationVersion) return;
+                _detailShell.style.opacity = 1f;
                 // Class only, values unchanged -- this must render on its own before anything
                 // reads as a value change, or the transition system has no earlier frame where
                 // the rule was already active to compare against.
@@ -582,13 +612,17 @@ namespace Emberfall.Presentation
 
                 _detailShell.schedule.Execute(() =>
                 {
+                    if (animationVersion != _detailAnimationVersion) return;
                     _detailShell.style.translate = new Translate(0, 0);
                     _detailShell.style.scale = new Scale(Vector3.one);
 
                     if (onSettled != null)
                     {
                         int delayMs = Mathf.RoundToInt(ResolvedTransitionMs(_detailShell) * ButtonRevealFraction);
-                        _detailShell.schedule.Execute(onSettled).ExecuteLater(delayMs);
+                        _detailShell.schedule.Execute(() =>
+                        {
+                            if (animationVersion == _detailAnimationVersion) onSettled();
+                        }).ExecuteLater(delayMs);
                     }
                 }).ExecuteLater(16);
             }).ExecuteLater(16);
