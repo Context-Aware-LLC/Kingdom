@@ -27,27 +27,42 @@ namespace Emberfall.Presentation
         [Header("Board anchors for world-position resolution")]
         [SerializeField] private BoardAnchors boardAnchors;
 
-        [Header("Play reveal — every played card flies out, holds, and lands")]
+        [Header("Play reveal — every played card flies out, holds up to be read, and lands")]
         [Tooltip("A cast spell resolves into the graveyard, which has no anchor and would read as " +
-                 "nothing — so it fades where it was cast instead of flying anywhere. That also " +
-                 "makes it the ONLY type that may linger: nothing takes its place, so nothing doubles.")]
-        [SerializeField] private RevealTiming spellReveal = new RevealTiming(0.20f, 1.35f, 0f, 0.83f);
-        [Tooltip("Flies up out of the hand slot it was played from, holds centre stage, then floats " +
-                 "down into its board slot — landing exactly as the board redraws with the real " +
-                 "card. Linger MUST stay 0: it is the overlap that put two of the same minion on " +
-                 "screen at once (Sam, 2026-08-19).")]
-        [SerializeField] private RevealTiming minionReveal = new RevealTiming(0.18f, 0.83f, 0.28f, 0f);
-        [Tooltip("Same three-phase flight as a minion, landing in the weapon socket. Linger 0 for " +
-                 "the same reason — the socket fills the instant the entry releases.")]
-        [SerializeField] private RevealTiming weaponReveal = new RevealTiming(0.18f, 1.05f, 0.28f, 0f);
-        [Tooltip("Reveal card size at the top of the beat, as a multiple of the in-hand/board size. " +
-                 "The flight scales between 1 and this, so the card leaves and lands at the size a " +
-                 "real card is and is only magnified while it is being read.")]
-        [SerializeField, Range(0.5f, 2f)] private float playRevealScale = 1.6f;
+                 "nothing — so its fly-out collapses it into whatever it hit (or the middle of the " +
+                 "board), arriving as the effect lands.")]
+        [SerializeField] private RevealTiming spellBeat = new RevealTiming(0.12f, 0.70f, 0.16f);
+        [Tooltip("Flies up out of the hand slot it was played from, holds up to be read, then " +
+                 "floats down into its board slot — landing exactly as the board redraws with the " +
+                 "real card.")]
+        [SerializeField] private RevealTiming minionBeat = new RevealTiming(0.12f, 0.55f, 0.18f);
+        [Tooltip("Same three-phase flight as a minion, landing in the weapon socket.")]
+        [SerializeField] private RevealTiming weaponBeat = new RevealTiming(0.12f, 0.60f, 0.18f);
+        [Tooltip("Height of the held card as a fraction of the SCREEN's height — the size it is " +
+                 "read at. See TryHeldPose for why this is a screen fraction and not a card multiple.")]
+        [SerializeField, Range(0.3f, 0.9f)] private float heldScreenHeight = 0.6f;
 
         /// <summary>How far in front of everything the reveal card rides while it is in flight, so
         /// it never clips into the hand fan it is leaving or the board row it is joining.</summary>
         private const float RevealZBias = -0.2f;
+
+        /// <summary>The held card sits this fraction of the way from the camera to the point it is
+        /// revealed over. Card materials are opaque, so DEPTH — not sorting order — is what puts it
+        /// in front; the front-most board furniture is at z -0.75, some twenty units out, and
+        /// halfway clears it by ten.</summary>
+        private const float HeldDepthFraction = 0.5f;
+
+        /// <summary>Viewport margin the held card keeps from the screen edge when it is pulled
+        /// toward a target near one.</summary>
+        private const float HeldScreenMargin = 0.03f;
+
+        /// <summary>A card with nowhere to land (a spell) shrinks to this and is gone as the board
+        /// redraws: it reads as cast INTO its target, and never sits over the effect it caused.</summary>
+        private const float CollapseScale = 0.15f;
+
+        /// <summary>Above the hand fan (50, +20 lifted), below the inspect panel (90) and the
+        /// match-end banner (100).</summary>
+        private const int RevealSortOrder = 80;
 
         private readonly Dictionary<PresentationCue, ParticleSystem> _lookup = new();
         private GameState _state;
@@ -59,15 +74,15 @@ namespace Emberfall.Presentation
         /// classifier delegate, so this stays the single source for the numbers (Sam, 2026-08-01;
         /// per-type 2026-08-18).</summary>
         public PlayRevealHolds RevealHolds =>
-            new PlayRevealHolds(minionReveal.TotalHoldSeconds,
-                                spellReveal.TotalHoldSeconds,
-                                weaponReveal.TotalHoldSeconds);
+            new PlayRevealHolds(minionBeat.TotalHoldSeconds,
+                                spellBeat.TotalHoldSeconds,
+                                weaponBeat.TotalHoldSeconds);
 
         private RevealTiming TimingFor(CardType type) => type switch
         {
-            CardType.SPELL  => spellReveal,
-            CardType.WEAPON => weaponReveal,
-            _               => minionReveal,
+            CardType.SPELL  => spellBeat,
+            CardType.WEAPON => weaponBeat,
+            _               => minionBeat,
         };
 
         private void Awake()
@@ -91,8 +106,8 @@ namespace Emberfall.Presentation
         public void OnStateUpdated(GameState state) => _state = state;
 
         /// <summary>Called by MatchRunner.OnPlayReveal, the instant a card-play entry begins its
-        /// extra hold — shows the played card over its target (or centre stage, if it didn't
-        /// single out anything) for that type's hold + linger, then self-destroys.
+        /// extra hold — flies the played card up to be read over its target (or centre stage, if it
+        /// didn't single out anything) for that type's beat, then self-destroys.
         /// Uses _state as of THIS call (the pre-effect snapshot: MatchRunner fires this before the
         /// held entry releases), which matters for a lethal hit — the target is still on the board
         /// in this snapshot even though it won't be once the hold ends.</summary>
@@ -107,56 +122,118 @@ namespace Emberfall.Presentation
             // both seats read it equally. The caster's own hero anchor was the old fallback and is
             // the wrong place for it: off to one side, on top of the portrait, and it reads as
             // something happening TO the caster.
-            Vector3? pos = ResolvePosition(reveal.Target) ?? ResolveCentrePosition();
-            if (pos == null) return;
+            Vector3? over = ResolvePosition(reveal.Target) ?? ResolveCentrePosition();
+            if (over == null) return;
+            Vector3 overPos = over.Value + new Vector3(0f, 0f, RevealZBias);
+
+            if (!TryHeldPose(overPos, out Vector3 heldPos, out Quaternion heldRot, out float heldScale))
+                return;
 
             // A real card, not a stretched texture: BuildDetachedCard gives the same frame,
             // art-cover-fit and name label a card in hand or on the board gets, through the
             // shipping CreatePresenter rig — one card face implementation, not a second one drifting
             // here. anchorGo's scale carries down to every child quad/label uniformly.
             var anchorGo = new GameObject($"PlayReveal_{reveal.Def.Name}");
-            anchorGo.transform.position = pos.Value + new Vector3(0f, 0f, RevealZBias);
-            anchorGo.transform.localScale = Vector3.one * playRevealScale;
+            Vector3? origin = ResolveHandOrigin(reveal);
+            if (origin.HasValue)
+                anchorGo.transform.position = origin.Value + new Vector3(0f, 0f, RevealZBias);
+            else
+                anchorGo.transform.SetPositionAndRotation(heldPos, heldRot);
+            anchorGo.transform.localScale = Vector3.one * (origin.HasValue ? 1f : heldScale);
 
             CardPresenter card = _board.BuildDetachedCard(anchorGo.transform);
+            // Held up near the camera it covers most of the screen, so a collider on it would take
+            // every tap aimed at the board behind it for the length of the beat.
+            var collider = card.GetComponent<BoxCollider>();
+            if (collider != null) Destroy(collider);
+            var group = card.GetComponent<UnityEngine.Rendering.SortingGroup>();
+            if (group != null) group.sortingOrder = RevealSortOrder;
             card.Bind(reveal.Def, new CardLiveState(new InstanceId(-1)));
             if (_artProvider != null && !string.IsNullOrEmpty(reveal.Def.ArtId))
                 _artProvider.LoadArt(reveal.Def.ArtId, card.SetArt);
 
-            StartCoroutine(FlyReveal(anchorGo, ResolveHandOrigin(reveal),
-                                     pos.Value + new Vector3(0f, 0f, RevealZBias),
-                                     ResolveDestination(reveal), timing));
+            // Nowhere to land (a spell, or a slot the scene cannot resolve) → collapse into the
+            // point it was revealed over.
+            Vector3? destination = ResolveDestination(reveal);
+            Vector3 landPos = destination.HasValue
+                ? destination.Value + new Vector3(0f, 0f, RevealZBias)
+                : overPos;
+            float landScale = destination.HasValue ? 1f : CollapseScale;
+
+            StartCoroutine(FlyReveal(anchorGo.transform, origin.HasValue,
+                                     heldPos, heldRot, heldScale, landPos, landScale, timing));
         }
 
         /// <summary>
-        /// The beat itself: out of the hand, still and magnified to be read, then down into
-        /// whatever slot the card is going to — arriving as the entry releases and the board
-        /// redraws with the real card, which is the point.
+        /// Where the card is held up to be read: facing the camera, <see cref="heldScreenHeight"/>
+        /// of the screen tall, over the point it was revealed over — pulled in from the edges
+        /// as far as it must be to fit on screen whole.
+        ///
+        /// <para>Readability is a screen-space quantity, so it is specified in screen space. A
+        /// multiple of the board card, held in the board plane twenty-odd units from a tilted
+        /// camera, came out at about a quarter of the screen and foreshortened: bigger than a hand
+        /// card, never readable (Sam, 2026-09-11).</para>
+        /// </summary>
+        private bool TryHeldPose(Vector3 over, out Vector3 pos, out Quaternion rot, out float scale)
+        {
+            pos = over;
+            rot = Quaternion.identity;
+            scale = 1f;
+
+            Camera cam = Camera.main;
+            if (cam == null) return false;
+
+            Vector3 vp = cam.WorldToViewportPoint(over);
+            float depth = vp.z * HeldDepthFraction;
+            if (depth <= cam.nearClipPlane) return false;
+
+            float visibleH = cam.orthographic
+                ? 2f * cam.orthographicSize
+                : 2f * depth * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            scale = heldScreenHeight * visibleH / BoardController.CardH;
+
+            float halfH = heldScreenHeight * 0.5f;
+            float halfW = halfH * (BoardController.CardW / BoardController.CardH) / cam.aspect;
+            float x = FitInto(vp.x, halfW + HeldScreenMargin);
+            float y = FitInto(vp.y, halfH + HeldScreenMargin);
+
+            pos = cam.ViewportToWorldPoint(new Vector3(x, y, depth));
+            rot = cam.transform.rotation;   // the card's face is its -z side, so this faces the camera
+            return true;
+        }
+
+        private static float FitInto(float v, float inset)
+            => inset >= 0.5f ? 0.5f : Mathf.Clamp(v, inset, 1f - inset);
+
+        /// <summary>
+        /// The beat itself: out of the hand, turned up to face the player and held to be read, then
+        /// down into whatever slot the card is going to — arriving as the entry releases and the
+        /// board redraws with the real card, which is the point.
         ///
         /// <para>Timing is not decorative here. The three phases sum to
         /// <see cref="RevealTiming.TotalHoldSeconds"/>, the same number NetworkedGameBootstrap hands the
         /// classifier as the entry's hold, so this coroutine and the playback queue finish
-        /// together. A phase with nothing to animate (no hand slot to leave, no destination to
-        /// land in) still WAITS out its share rather than returning early — cutting it short
-        /// would destroy the card before the board redraws and leave a hole where the handoff
-        /// should be. Retune a phase on <see cref="RevealTiming"/>, never here.</para>
+        /// together. A fly-in with no hand slot to leave still WAITS out its share rather than
+        /// returning early — cutting it short would destroy the card before the board redraws and
+        /// leave a hole where the handoff should be. Retune a phase on <see cref="RevealTiming"/>,
+        /// never here.</para>
         /// </summary>
-        private IEnumerator FlyReveal(GameObject go, Vector3? origin, Vector3 hold,
-                                      Vector3? destination, RevealTiming timing)
+        private IEnumerator FlyReveal(Transform t, bool fliesFromHand,
+                                      Vector3 heldPos, Quaternion heldRot, float heldScale,
+                                      Vector3 landPos, float landScale, RevealTiming timing)
         {
-            Transform t = go.transform;
-            float big = playRevealScale;
-
             if (timing.FlyInSeconds > 0f)
             {
-                if (origin.HasValue)
+                if (fliesFromHand)
                 {
-                    Vector3 from = origin.Value + new Vector3(0f, 0f, RevealZBias);
+                    Vector3 from = t.position;
+                    Quaternion fromRot = t.rotation;
                     for (float e = 0f; e < timing.FlyInSeconds; e += Time.deltaTime)
                     {
                         float k = Mathf.SmoothStep(0f, 1f, e / timing.FlyInSeconds);
-                        t.position   = Vector3.Lerp(from, hold, k);
-                        t.localScale = Vector3.one * Mathf.Lerp(1f, big, k);
+                        t.SetPositionAndRotation(Vector3.Lerp(from, heldPos, k),
+                                                 Quaternion.Slerp(fromRot, heldRot, k));
+                        t.localScale = Vector3.one * Mathf.Lerp(1f, heldScale, k);
                         yield return null;
                     }
                 }
@@ -168,47 +245,25 @@ namespace Emberfall.Presentation
                 }
             }
 
-            t.position   = hold;
-            t.localScale = Vector3.one * big;
+            t.SetPositionAndRotation(heldPos, heldRot);
+            t.localScale = Vector3.one * heldScale;
 
             if (timing.HoldSeconds > 0f)
                 yield return new WaitForSeconds(timing.HoldSeconds);
 
-            if (timing.FlyOutSeconds > 0f)
+            for (float e = 0f; e < timing.FlyOutSeconds; e += Time.deltaTime)
             {
-                if (destination.HasValue)
-                {
-                    Vector3 to = destination.Value + new Vector3(0f, 0f, RevealZBias);
-                    for (float e = 0f; e < timing.FlyOutSeconds; e += Time.deltaTime)
-                    {
-                        float k = Mathf.SmoothStep(0f, 1f, e / timing.FlyOutSeconds);
-                        t.position   = Vector3.Lerp(hold, to, k);
-                        t.localScale = Vector3.one * Mathf.Lerp(big, 1f, k);
-                        yield return null;
-                    }
-                }
-                else
-                {
-                    yield return new WaitForSeconds(timing.FlyOutSeconds);
-                }
+                float k = Mathf.SmoothStep(0f, 1f, e / timing.FlyOutSeconds);
+                t.SetPositionAndRotation(Vector3.Lerp(heldPos, landPos, k),
+                                         Quaternion.Slerp(heldRot, Quaternion.identity, k));
+                t.localScale = Vector3.one * Mathf.Lerp(heldScale, landScale, k);
+                yield return null;
             }
 
-            // Linger is what a card with nowhere to go does INSTEAD of flying, so a card that
-            // just landed does not get one — enforced here rather than left to the authored 0,
-            // because the authored value is not trustworthy across this change. Unity's
-            // domain-reload restore matches serialized fields by NAME: an Editor holding the
-            // two-field RevealTiming restores HoldSeconds and LingerSeconds onto the four-field
-            // one and lets the new fields keep their initializers. A minion would come back with
-            // its old 0.35s linger, which IS the double-render — the exact bug this flight was
-            // written to remove, silently reintroduced by a reload rather than by an edit.
-            //
-            // Structural, not defensive: by the time the entry has released the real card is
-            // already sitting exactly where this one is. There is no value of LingerSeconds that
-            // is correct for a card with a destination.
-            if (timing.LingerSeconds > 0f && !destination.HasValue)
-                yield return new WaitForSeconds(timing.LingerSeconds);
-
-            Destroy(go);
+            // Nothing lingers. The entry releases here and the board redraws: a card that landed is
+            // now sitting exactly where the real one is (any overlap is two copies of it — Sam,
+            // 2026-08-19), and a card held up this large would hide the very effect it caused.
+            Destroy(t.gameObject);
         }
 
         /// <summary>The hand slot the card flew out of.
@@ -348,52 +403,37 @@ namespace Emberfall.Presentation
     /// <summary>
     /// One card type's play-reveal beat, in phases.
     ///
-    /// <para>FLY-IN, HOLD and FLY-OUT all cost the match real time: the playback entry is held for
-    /// their sum (<see cref="TotalHoldSeconds"/>), so none of the card's effects are visible for
-    /// any of it. Only HOLD is time spent READING — the other two are travel, and travel that is
-    /// too slow reads as the game being sluggish rather than as the card being important.</para>
-    ///
-    /// <para>LINGER is the one phase that is nearly free, and the one that is dangerous. It runs
-    /// AFTER the entry releases, so the board has already redrawn underneath it. For a spell that
-    /// is exactly right — nothing takes a cast spell's place, so it can fade over its own effect.
-    /// For anything that LANDS somewhere, a non-zero linger is the double-render bug: the reveal
-    /// and the real card, both on screen, both the same minion (Sam, 2026-08-19). Give those types
-    /// a fly-out instead; arriving as the board redraws is what a handoff looks like.</para>
+    /// <para>ALL THREE cost the match real time: the playback entry is held for their sum
+    /// (<see cref="TotalHoldSeconds"/>), so none of the card's effects are visible for any of it,
+    /// and the player who played the card is waiting on it. Only HOLD is time spent READING — the
+    /// other two are travel, and travel that is too slow reads as the game being sluggish rather
+    /// than as the card being important.</para>
     /// </summary>
     [Serializable]
     public struct RevealTiming
     {
         [Tooltip("Travel from the hand slot the card was played out of, up to the reveal position, " +
-                 "growing from real-card size to full reveal size.")]
+                 "turning to face the player and growing to full reveal size.")]
         [Range(0f, 3f)] public float FlyInSeconds;
 
         [Tooltip("Still, magnified, at the reveal position. The part that is actually READ — tune " +
                  "this one for readability and the travel phases for feel.")]
         [Range(0f, 3f)] public float HoldSeconds;
 
-        [Tooltip("Travel down into whatever slot the card is going to, shrinking back to real-card " +
-                 "size, landing exactly as the board redraws with the real card. 0 for a type with " +
-                 "no destination (a spell).")]
+        [Tooltip("Travel down into whatever slot the card is going to (or, for a spell, collapse " +
+                 "into what it hit), landing exactly as the board redraws with the real card.")]
         [Range(0f, 3f)] public float FlyOutSeconds;
-
-        [Tooltip("Time on screen AFTER the entry releases and the board has moved on. Applies ONLY " +
-                 "to a card with no destination — a card that lands somewhere IGNORES this at " +
-                 "runtime, whatever you set here, because by then the real card is already in the " +
-                 "slot and any overlap is two copies of it.")]
-        [Range(0f, 3f)] public float LingerSeconds;
 
         /// <summary>What the playback entry is held for: the whole flight, not just the still part.
         /// The board must not redraw until the card has landed, or the thing it is handing over to
         /// appears underneath it mid-flight.</summary>
         public float TotalHoldSeconds => FlyInSeconds + HoldSeconds + FlyOutSeconds;
 
-        public RevealTiming(float flyInSeconds, float holdSeconds, float flyOutSeconds,
-                            float lingerSeconds)
+        public RevealTiming(float flyInSeconds, float holdSeconds, float flyOutSeconds)
         {
             FlyInSeconds = flyInSeconds;
             HoldSeconds = holdSeconds;
             FlyOutSeconds = flyOutSeconds;
-            LingerSeconds = lingerSeconds;
         }
     }
 }

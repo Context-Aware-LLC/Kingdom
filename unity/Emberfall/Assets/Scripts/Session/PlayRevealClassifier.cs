@@ -44,12 +44,12 @@ namespace Emberfall.Session
     /// Where a reveal card goes when its beat ends. This is what stops the double-render: a card
     /// with a destination FLIES there and is gone the moment the board redraws, so the reveal and
     /// the real card are never both on screen. A card with <see cref="None"/> has nowhere to be —
-    /// it fades in place instead, which is safe precisely because nothing takes its position.
+    /// it collapses into whatever it was revealed over instead.
     /// </summary>
     public enum RevealDestination
     {
         /// <summary>Spell — resolves into the graveyard, which has no anchor and would read as
-        /// nothing anyway. Fades where it was cast.</summary>
+        /// nothing anyway. Collapses into what it hit.</summary>
         None,
 
         /// <summary>Minion — lands in its slot on the controller's board row.</summary>
