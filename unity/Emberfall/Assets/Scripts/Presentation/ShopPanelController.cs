@@ -104,6 +104,7 @@ namespace Emberfall.Presentation
             _detailShell = root.Q<VisualElement>("pack-detail-shell");
             _detailArt = root.Q<VisualElement>("pack-detail-art");
             _detailActions = root.Q<VisualElement>("pack-detail-actions");
+            _detailArt?.RegisterCallback<GeometryChangedEvent>(_ => FitDetailActionsToArt());
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packArt = packArt;
             _onClose = onClose;
@@ -404,6 +405,7 @@ namespace Emberfall.Presentation
                 // Reopening owns the row's layout state too: visibility cannot undo display:none
                 // left on a retained panel by the previous close implementation.
                 _detailActions.style.display = DisplayStyle.Flex;
+                _detailActions.style.width = StyleKeyword.Null;
                 _detailActions.Add(BuyButton(offer, ShopCurrency.Gold, wallet));
                 _detailActions.Add(BuyButton(offer, ShopCurrency.Gems, wallet));
             }
@@ -461,6 +463,7 @@ namespace Emberfall.Presentation
                 if (version != _detailAnimationVersion) return;
                 Rect shell = _detailShell.layout;
                 Rect art = _detailArt != null ? _detailArt.layout : default;
+                FitDetailActionsToArt();
                 bool hasArt = _detailArt != null && _detailArt.resolvedStyle.display != DisplayStyle.None;
                 if (shell.width > 0f && shell.height > 0f && shell == previousShell &&
                     (!hasArt || (art.width > 0f && art.height > 0f && art == previousArt)))
@@ -473,6 +476,29 @@ namespace Emberfall.Presentation
                 }
                 WaitForDetailLayout(version, shell, art);
             }).ExecuteLater(16);
+        }
+
+        private void FitDetailActionsToArt()
+        {
+            if (_detailActions == null || _detailArt == null ||
+                _detailArt.resolvedStyle.display == DisplayStyle.None) return;
+
+            Vector2 box = _detailArt.contentRect.size;
+            Vector2 image = BackgroundImageSize(_detailArt.resolvedStyle.backgroundImage, box);
+            if (box.x <= 0f || box.y <= 0f || image.x <= 0f || image.y <= 0f) return;
+
+            // Contain leaves empty space beside portrait art. The buttons span the painted
+            // image, not that space or the shell, and layout coordinates ignore the flight scale.
+            _detailActions.style.width = image.x * Mathf.Min(box.x / image.x, box.y / image.y);
+        }
+
+        private static Vector2 BackgroundImageSize(Background background, Vector2 fallback)
+        {
+            return background.renderTexture != null
+                ? new Vector2(background.renderTexture.width, background.renderTexture.height)
+                : background.sprite != null ? background.sprite.rect.size
+                : background.texture != null ? new Vector2(background.texture.width, background.texture.height)
+                : fallback;
         }
 
         /// <summary>
@@ -550,12 +576,7 @@ namespace Emberfall.Presentation
                 ? _detailArt.layout : new Rect(Vector2.zero, shell.size);
             if (art.width <= 0f || art.height <= 0f) return false;
 
-            Background background = _detailOriginTile.resolvedStyle.backgroundImage;
-            Vector2 imageSize = background.renderTexture != null
-                ? new Vector2(background.renderTexture.width, background.renderTexture.height)
-                : background.sprite != null ? background.sprite.rect.size
-                : background.texture != null ? new Vector2(background.texture.width, background.texture.height)
-                : art.size;
+            Vector2 imageSize = BackgroundImageSize(_detailOriginTile.resolvedStyle.backgroundImage, art.size);
             if (imageSize.x <= 0f || imageSize.y <= 0f) return false;
 
             float tileFit = Mathf.Min(tileBound.width / imageSize.x, tileBound.height / imageSize.y);

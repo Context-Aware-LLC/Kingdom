@@ -547,13 +547,11 @@
  * empty transparent box -- there is no background-color here, so that leftover height just showed
  * the scrim through it. Sized to content instead, centered by .pack-detail-overlay's
  * align-items/justify-content: center. */
-/* max-width 820px, not 640px (Sam, 2026-09-07 follow-up): at 640, boxing the art down to fit
- * beside the title/note/buttons text made it end up SMALLER than the ~515x410 tile art-slot it
- * flew in from, so the pack visibly shrank instead of growing. The art is the thing that has to
- * read as "getting bigger" -- see .pack-detail-art below, sized off this wider shell. */
+/* Sam, 2026-09-11: enlarge the detail pack by about 30%. The art keeps its proportions inside
+ * the wider shell; the purchase row measures the contained image independently. */
 .pack-detail-shell {
     width: 90%;
-    max-width: 820px;
+    max-width: 1066px;
     flex-direction: column;
     border-width: 0px;
     border-color: var(--surface-3);
@@ -592,7 +590,7 @@
  * than being stretched. Sized off WIDTH with an aspect-ratio matching the tile's own art-slot
  * (~515x410, i.e. 1.256) instead of a fixed height (Sam, 2026-09-07 follow-up) -- a fixed height
  * shorter than the slot it flew in from is what made the art shrink instead of grow. At 82% of
- * the now-820px-max shell this comes out bigger than the slot on both axes. display:none by
+ * the shell this comes out bigger than the slot on both axes. display:none by
  * default -- OpenDetail only shows it when the FLIP origin was a real art slot, never for the
  * tile/name-label fallback, where there is no specific piece to show. */
 .pack-detail-art {
@@ -637,24 +635,20 @@
     margin-bottom: var(--space-3);
 }
 
-/* ROW, NOT COLUMN (Sam, 2026-09-08, reversing the 2026-09-07 call recorded here): side by side
- * after all. Sized to 70% of the shell's width rather than the full content box -- centered via
- * align-self, since align-items:stretch is the shell's default and would otherwise hand this
- * 100% of the width the way the stacked column used to want. */
+/* Side by side, centered under the visible pack. ShopPanelController sets the row width from
+ * the contained background image; a percentage of the shell includes the art's empty gutters. */
 .pack-detail-actions {
     flex-direction: row;
     flex-grow: 0;
     flex-shrink: 0;
     align-self: center;
-    width: 70%;
     justify-content: center;
 }
 
 /* Bigger than the tile's own buy buttons -- the detail shell has the room the tile never did.
  * flex-grow:1 with flex-basis:0 on both buttons splits the row evenly regardless of each
- * button's own content width. The 4px side margins are the gap between them (8px total,
- * Sam: "no more than say 10 pixels") -- symmetric so the pair still centers correctly, rather
- * than a one-sided margin that would nudge the pair off from true center. No :first-child rule
+ * button's own content width. The currency rules below leave an 8px gap only between the
+ * buttons, so their outside edges line up with the pack. No :first-child rule
  * to single one out even if it were wanted -- Unity does not support that pseudo-class (logs
  * "Unknown pseudo class 'first-child' in StyleSheet shop" and silently never applies it; the
  * pre-existing matchsettings.uss usage this was copied from has the same warning and the same
@@ -665,9 +659,17 @@
     flex-basis: 0;
     min-height: var(--space-12);
     font-size: var(--type-h2);
-    margin: 0 4px;
+    margin: 0;
     /* chrome-button (base rule, top of this file) already asks for 0 -- restated here at
      * two-class specificity so it actually wins over the base .shop-pack__buy's own
      * border-radius, which would otherwise round-clip corners the sliced art already frames. */
     border-radius: 0;
+}
+
+.pack-detail-actions .shop-pack__buy--gold {
+    margin-right: 4px;
+}
+
+.pack-detail-actions .shop-pack__buy--gems {
+    margin-left: 4px;
 }
