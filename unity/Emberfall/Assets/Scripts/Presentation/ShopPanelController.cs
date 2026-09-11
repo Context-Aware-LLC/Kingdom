@@ -401,6 +401,9 @@ namespace Emberfall.Presentation
             _detailActions?.Clear();
             if (_detailActions != null)
             {
+                // Reopening owns the row's layout state too: visibility cannot undo display:none
+                // left on a retained panel by the previous close implementation.
+                _detailActions.style.display = DisplayStyle.Flex;
                 _detailActions.Add(BuyButton(offer, ShopCurrency.Gold, wallet));
                 _detailActions.Add(BuyButton(offer, ShopCurrency.Gems, wallet));
             }
