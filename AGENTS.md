@@ -52,10 +52,16 @@ execution-workspace policy, this table is wrong and the excluded paths become a 
 - Stage every commit by explicit path: `git add -- <path>`. Never use `git add -A`, `git add .`,
   or a broad glob. Multiple sessions may share the repository, and a broad add can sweep another
   session's work into your commit.
+- **Staging by path is not sufficient — commit by path too: `git commit --only <paths>`.** A bare
+  `git commit` commits the whole index, and the index is not yours alone: whatever another session
+  left staged rides into your commit no matter how carefully you added. This cost a session on
+  2026-08-12. `git status` distinguishes them — `D ` in the LEFT column is someone else's staged
+  change, ` D` in the right column is an unstaged one.
 - Preserve source files as UTF-8 without BOM. Many files contain em dashes (`—`); use targeted
   edits and verify the encoding after any tool that could rewrite a whole file.
-- Do not open the Unity Editor or run Unity-MCP tools unless the task brief explicitly hands you
-  the Unity seat. Unity is a single-writer resource shared with the operator.
+- Do not open the Unity Editor, drive one through the `unity` CLI, or run `-batchmode`, unless the
+  task brief explicitly hands you the Unity seat. Unity is a single-writer resource shared with the
+  operator. (The Unity MCP relay this line used to name was removed 2026-08-20; the CLI replaced it.)
 
 ## The shared headless Editor at `C:\claude-editor`
 

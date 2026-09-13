@@ -288,21 +288,23 @@ so in the file when you do.
 
 ## Ask the graph before you grep
 
-There is a persistent knowledge graph of this repo — ~10,400 nodes and ~94,000 edges over
-csharp, sql, python, javascript, powershell, bash, c and cpp — built by `code-review-graph`.
-It answers *where is this defined, what calls it, what does it call, which flow is it in*. Grep
-answers *which files contain this string*. Reaching for the second when you wanted the first is
-the default failure, because grep always looks like it worked.
+There is a persistent knowledge graph of this repo — csharp, sql, python, javascript, powershell,
+bash, c and cpp — built by `code-review-graph`. It answers *where is this defined, what calls it,
+what does it call, which flow is it in*. Grep answers *which files contain this string*. Reaching
+for the second when you wanted the first is the default failure, because grep always looks like it
+worked. Its size is printed at every session start; no count for it lives in this file.
 
-**Its callers/callees stop at the assembly boundary, and it does not say so.** C# node keys are
-path-scoped (`...\CardDefinition.cs::TargetSpec.IsKnown`) while `CALLS` targets are stored as
-bare names (`FromSeconds`, `nameof`), so cross-project calls do not resolve: measured
-2026-08-20, **edges joining `Emberfall.Net.Server` to `Emberfall.Core` numbered 0**, and 67% of
-all edges point at a target that is not a node. Treat "Called by" as *within this project*, and
-never as an exhaustive list. Everything derived from those edges inherits the hole —
-`caller_count` claims 2327 symbols have none, `test_coverage` claims 16 of 3924 are tested, 92%
-of `risk_score` is the 0.3 default, and **`code-review-graph dead-code` is therefore unusable**.
-`tooling/scripts/graph_view.py` carries the numbers and a retirement trigger.
+**Its callers/callees effectively stop at the assembly boundary, and it does not say so.** C# node
+keys are path-scoped (`...\CardDefinition.cs::TargetSpec.IsKnown`) while most `CALLS` targets are
+stored as bare names (`FromSeconds`, `nameof`), so a cross-project call usually does not resolve:
+re-measured 2026-09-13, `Emberfall.Net.Server` → `Emberfall.Core` resolves to **27 edges across
+1,409 Server symbols** (it was a flat 0 on 2026-08-20, before `tooling/scripts/csharp_resolver.py`),
+and `CALLS` is 78% unresolved. Treat "Called by" as *within this project*, and never as an
+exhaustive list. Everything derived from those edges inherits the hole — `caller_count`,
+`test_coverage` and `risk_score` are still mostly defaults, and **`code-review-graph dead-code` is
+therefore unusable**. **Believe the tool over this paragraph:**
+`python tooling/scripts/graph_metrics.py` prints today's resolution rates, and
+`tooling/scripts/graph_view.py` carries the history and a retirement trigger.
 
 **You should not normally have to do anything.** `.claude/settings.json` registers a
 `PreToolUse` hook on `Grep|Glob|Read|Bash` that runs `code-review-graph enrich`, which injects
