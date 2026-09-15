@@ -108,7 +108,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement class="craft-wallet">
                     <ui:Label name="craft-shard-balance" text="0" class="craft-wallet-value"/>
-                    <ui:Label text="shards" class="craft-wallet-word"/>
+                    <ui:VisualElement class="craft-shard-icon craft-shard-icon--wallet" tooltip="Shards"/>
                 </ui:VisualElement>
                 <ui:Button name="craft-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
@@ -126,7 +126,7 @@
                         <ui:Label text="Spend shards to make this card." class="craft-half-blurb"/>
                         <ui:VisualElement class="craft-price">
                             <ui:Label name="craft-render-cost" text="0" class="craft-price-value"/>
-                            <ui:Label text="shards" class="craft-price-word"/>
+                            <ui:VisualElement class="craft-shard-icon" tooltip="Shards"/>
                         </ui:VisualElement>
                         <ui:Label name="craft-render-note" text="" class="craft-half-note"/>
                         <ui:Button name="craft-render-button" text="Render" class="craft-action chrome-button chrome-button--primary"/>
@@ -136,7 +136,7 @@
                         <ui:Label text="Break a copy down for shards." class="craft-half-blurb"/>
                         <ui:VisualElement class="craft-price">
                             <ui:Label name="craft-reduce-payout" text="0" class="craft-price-value"/>
-                            <ui:Label text="shards" class="craft-price-word"/>
+                            <ui:VisualElement class="craft-shard-icon" tooltip="Shards"/>
                         </ui:VisualElement>
                         <ui:Label name="craft-reduce-note" text="" class="craft-half-note"/>
                         <ui:Button name="craft-reduce-button" text="Reduce" class="craft-action craft-action--ghost chrome-button chrome-button--secondary"/>

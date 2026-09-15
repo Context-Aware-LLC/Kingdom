@@ -1448,12 +1448,6 @@
     color: var(--accent);
     -unity-font-style: bold;
 }
-.craft-wallet-word {
-    font-size: var(--type-caption);
-    color: var(--ink-2);
-    margin-left: var(--space-1);
-    margin-bottom: var(--space-1);
-}
 
 .craft-body {
     flex-direction: row;
@@ -1531,11 +1525,19 @@
     color: var(--accent);
     -unity-font-style: bold;
 }
-.craft-price-word {
-    font-size: var(--type-label);
-    color: var(--ink-2);
+.craft-shard-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    align-self: center;
     margin-left: var(--space-2);
-    margin-bottom: var(--space-2);
+    background-image: url("/Assets/Art/UI/Crafting/Currency/craft-shard-cyan-v1.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+.craft-shard-icon--wallet {
+    width: 28px;
+    height: 28px;
+    margin-left: var(--space-1);
 }
 .craft-half-note {
     font-size: var(--type-label);

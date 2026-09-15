@@ -47,6 +47,7 @@ namespace Emberfall.Editor
             {
                 ["background"] = ApplyBackground,
                 ["hptabs"] = ApplyMinifiedIcon,
+                ["currency"] = ApplyCurrencyIcon,
             };
 
         void OnPreprocessTexture()
@@ -166,6 +167,13 @@ namespace Emberfall.Editor
             SetPlatform(importer, "Standalone", 256, TextureImporterFormat.BC7);
             SetPlatform(importer, "Android", 256, TextureImporterFormat.ASTC_6x6);
             SetPlatform(importer, "iPhone", 256, TextureImporterFormat.ASTC_6x6);
+        }
+
+        // Currency art is minified beside numbers at multiple UI sizes.
+        static void ApplyCurrencyIcon(TextureImporter importer)
+        {
+            ApplyMinifiedIcon(importer);
+            importer.filterMode = FilterMode.Trilinear;
         }
 
         // FX masks / flipbooks: linear data, not sprites. Single-channel-friendly formats.
