@@ -47,6 +47,9 @@ namespace Emberfall.Editor
             {
                 ["background"] = ApplyBackground,
                 ["hptabs"] = ApplyMinifiedIcon,
+                ["Frames"] = ApplyUiFrame,
+                ["Board"] = ApplyUiFrame,
+                ["HpFrames"] = ApplyUiFrame,
                 ["currency"] = ApplyCurrencyIcon,
             };
 
@@ -137,10 +140,18 @@ namespace Emberfall.Editor
         }
 
         // UI atlas sources (frames/gems/icons/plates): fixed pixel size, mips OFF.
-        static void ApplyUiAtlas(TextureImporter importer)
+        static void ApplyUiAtlas(TextureImporter importer) => ApplyUiAtlas(importer, mips: false);
+
+        // Card and board frames: the atlas lane, but mips ON. These are 1024-2048px paintings drawn
+        // at 110-384px, and without a mip chain their filigree and ember cracks alias into speckle
+        // (2026-09-15, compared side by side in art-pipeline/mip-compare/). Sliced sprites still
+        // work with mips; heavily shrunk slices only go slightly soft.
+        static void ApplyUiFrame(TextureImporter importer) => ApplyUiAtlas(importer, mips: true);
+
+        static void ApplyUiAtlas(TextureImporter importer, bool mips)
         {
             ApplySpriteCommon(importer);
-            importer.mipmapEnabled = false;
+            importer.mipmapEnabled = mips;
 
             // Sliced draw mode (BoardController.MakeSprite sizes frames/gems/icons by
             // SpriteRenderer.size) requires a Full Rect sprite mesh; the default Tight
