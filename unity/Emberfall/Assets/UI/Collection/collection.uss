@@ -1431,6 +1431,17 @@
     min-height: 0;
 }
 
+.craft-feedback {
+    flex-direction: row;
+    align-items: center;
+}
+.craft-status {
+    flex-grow: 1;
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    white-space: normal;
+}
+
 .craft-cardpane {
     align-items: center;
     flex-shrink: 0;

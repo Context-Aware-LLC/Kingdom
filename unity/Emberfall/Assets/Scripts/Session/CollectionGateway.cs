@@ -70,7 +70,10 @@ namespace Emberfall.Session
         public static async Task<CollectionSyncStatus> SyncAsync(
             string accessToken, CancellationToken cancellationToken = default)
         {
+            PlayerAccount account = PlayerAccount.Local;
             CollectionSnapshot snapshot = await FetchAsync(accessToken, cancellationToken);
+            if (cancellationToken.IsCancellationRequested || !ReferenceEquals(account, PlayerAccount.Local))
+                return CollectionSyncStatus.Unauthenticated;
 
             if (!snapshot.ShouldReplaceCache)
             {
@@ -82,7 +85,7 @@ namespace Emberfall.Session
                 return snapshot.Status;
             }
 
-            PlayerAccount.Local.SaveOwnedCards(snapshot.Cards);
+            account.SaveOwnedCards(snapshot.Cards);
             Debug.Log($"[Collection] synced {snapshot.Cards.RecordedCards} card row(s) " +
                       $"for the signed-in account.");
             return snapshot.Status;

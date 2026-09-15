@@ -29,17 +29,8 @@ namespace Emberfall.Presentation
     /// breaking: if you ever find yourself computing a cost or a refusal in this file, the number you
     /// want already exists on <see cref="RenderOffer"/> or <see cref="ReduceOffer"/>.</para>
     ///
-    /// <para><b>The buttons are a STUB and go nowhere (Sam, 2026-08-12).</b> This is groundwork placed
-    /// ahead of the wiring on purpose. <c>CraftingService</c> — the half that actually moves a balance —
-    /// is in <c>Emberfall.Net.Server</c>, which is net10.0 and which Unity cannot load, and there is no
-    /// protocol message or client gateway between the two (nothing in Emberfall.Net.Client or
-    /// Emberfall.Net.Protocol mentions Render, Reduce or Craft). So this raises
-    /// <see cref="RenderRequested"/> / <see cref="ReduceRequested"/> and the host currently logs them.
-    /// RETIREMENT TRIGGER: when a crafting gateway lands — the shape to copy is
-    /// <c>Emberfall.Net.Client/Shop/ShopFlow.cs</c>'s <c>IShopGateway</c> — subscribe these two events
-    /// to it, delete the stub handler in <see cref="CollectionController"/>, and update this paragraph
-    /// and the <c>ShardBalance</c> note there. Nothing else in this file should need to change, which
-    /// is the point of raising events rather than calling anything.</para>
+    /// <para>The host reads and mutates through the authenticated crafting gateway. A commit stays
+    /// open and disabled until the server responds; only a confirmed craft closes the modal.</para>
     /// </summary>
     public sealed class CraftModal
     {
@@ -51,6 +42,10 @@ namespace Emberfall.Presentation
         private readonly Label _cardRarity;
         private readonly Label _shardBalance;
         private readonly Label _copiesOwned;
+        private readonly Label _status;
+        private readonly Button _retry;
+        private readonly Button _close;
+        private bool _submitting;
 
         private readonly Button _renderButton;
         private readonly Label _renderCost;
@@ -76,6 +71,7 @@ namespace Emberfall.Presentation
 
         /// <summary>Raised when the player commits a Reduce. The host destroys; this never does.</summary>
         public event Action<CardDefinition> ReduceRequested;
+        public event Action<CardDefinition> RefreshRequested;
 
         /// <summary>
         /// Binds against an already-cloned plate. Every element is required: a null here is a broken
@@ -94,6 +90,10 @@ namespace Emberfall.Presentation
             _cardRarity = rootPlate.Q<Label>("craft-card-rarity");
             _shardBalance = rootPlate.Q<Label>("craft-shard-balance");
             _copiesOwned = rootPlate.Q<Label>("craft-copies-owned");
+            _status = rootPlate.Q<Label>("craft-status");
+            _retry = rootPlate.Q<Button>("craft-retry");
+            _close = rootPlate.Q<Button>("craft-close");
+            _retry?.RegisterCallback<ClickEvent>(_ => RefreshRequested?.Invoke(_card));
 
             _cardFace?.parent.RegisterCallback<GeometryChangedEvent>(_ => FitCardToHeight());
 
@@ -118,7 +118,7 @@ namespace Emberfall.Presentation
             if (_scrim != null)
                 _scrim.RegisterCallback<ClickEvent>(_ => Close());
             _modal?.RegisterCallback<ClickEvent>(e => e.StopPropagation());
-            rootPlate.Q<Button>("craft-close")?.RegisterCallback<ClickEvent>(_ => Close());
+            _close?.RegisterCallback<ClickEvent>(_ => Close());
 
             Close();
         }
@@ -128,7 +128,8 @@ namespace Emberfall.Presentation
             _modal != null && _scrim != null && _cardFace != null && _cardName != null &&
             _cardRarity != null && _shardBalance != null && _copiesOwned != null &&
             _renderHalf != null && _renderButton != null && _renderCost != null && _renderNote != null &&
-            _reduceHalf != null && _reduceButton != null && _reducePayout != null && _reduceNote != null;
+            _reduceHalf != null && _reduceButton != null && _reducePayout != null && _reduceNote != null &&
+            _status != null && _retry != null && _close != null;
 
         /// <summary>
         /// Show the modal for one card, drawn entirely from the two offers.
@@ -141,6 +142,10 @@ namespace Emberfall.Presentation
             if (def == null || !IsBound) return;
 
             _card = def;
+            _submitting = false;
+            _close?.SetEnabled(true);
+            _status.style.display = DisplayStyle.None;
+            _retry.style.display = DisplayStyle.None;
 
             _cardName.text = def.Name;
             _cardRarity.text = RarityWord(def.Rarity);
@@ -177,6 +182,7 @@ namespace Emberfall.Presentation
 
         public void Close()
         {
+            if (_submitting) return;
             _card = null;
             if (_modal != null) _modal.style.display = DisplayStyle.None;
             if (_scrim != null) _scrim.style.display = DisplayStyle.None;
@@ -200,13 +206,33 @@ namespace Emberfall.Presentation
         private void Commit(Action<CardDefinition> handler)
         {
             CardDefinition committed = _card;
-            if (committed == null) return;
-
-            // Closes first, then raises. Sam's brief: "it makes the card, subtracts the shards, and
-            // the modal closes." Closing first also means a handler that reopens the modal — which the
-            // real one will, to show the new copy count — wins over this close rather than racing it.
-            Close();
+            if (committed == null || _submitting || handler == null) return;
+            SetWorking("Saving...", submitting: true);
             handler?.Invoke(committed);
+        }
+
+        public void SetWorking(string message, bool submitting = false, bool unknown = false)
+        {
+            _submitting = submitting;
+            _close?.SetEnabled(!submitting);
+            _renderButton.SetEnabled(false);
+            _reduceButton.SetEnabled(false);
+            _status.text = message;
+            _status.style.display = DisplayStyle.Flex;
+            _retry.style.display = DisplayStyle.None;
+            if (unknown)
+            {
+                _shardBalance.text = "...";
+                _copiesOwned.text = "...";
+                _renderNote.text = "";
+                _reduceNote.text = "";
+            }
+        }
+
+        public void ShowError(string message)
+        {
+            SetWorking(message);
+            _retry.style.display = DisplayStyle.Flex;
         }
 
         /// <summary>

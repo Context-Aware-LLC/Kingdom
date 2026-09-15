@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
+using Emberfall.Net.Client.Collection;
 using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -178,6 +181,8 @@ namespace Emberfall.Presentation
 
         private void OnEnable()
         {
+            _craftCancel = new CancellationTokenSource();
+            _craftBusy = false;
             _root = GetComponent<UIDocument>().rootVisualElement;
             if (_root == null) { Debug.LogError("[Collection] No rootVisualElement — is the UXML assigned?"); return; }
 
@@ -481,6 +486,10 @@ namespace Emberfall.Presentation
 
         private void OnDisable()
         {
+            _craftVersion++;
+            _craftCancel?.Cancel();
+            _craftCancel?.Dispose();
+            _craftCancel = null;
             if (_wall != null) _wall.BakePassCompleted -= OnFirstBakeCompleted;
             // Parented to the camera, so leaving the scene takes it. Leaving only the SCREEN —
             // the document disabled under a live camera — would otherwise strand it on top.
@@ -876,58 +885,123 @@ namespace Emberfall.Presentation
 
         // ---- Crafting (GH#157 Render / GH#158 Reduce) ----
 
-        /// <summary>
-        /// The shard balance the modal displays.
-        ///
-        /// <para><b>STUB (Sam, 2026-08-12) — this is a made-up number and nothing reads a real one.</b>
-        /// Shards are held by <c>IEntitlementLedger</c> server-side; Unity has no client path to a
-        /// balance, because <c>Emberfall.Net.Server</c> is net10.0 and there is no protocol message or
-        /// gateway between the two. The shape to copy when that lands is
-        /// <c>ShopFlow.IShopGateway.GetShopAsync</c>, which is how the wallet already reaches
-        /// <see cref="ShopPanelController"/>.</para>
-        ///
-        /// <para>It is deliberately generous rather than realistic: the point of the number today is to
-        /// let both halves of the modal be seen in their live state. RETIREMENT TRIGGER: delete this
-        /// constant the moment a real balance is reachable, and update the stub paragraph on
-        /// <see cref="CraftModal"/> with it.</para>
-        /// </summary>
-        private const long StubShardBalance = 2500;
+        private CancellationTokenSource _craftCancel;
+        private int _craftVersion;
+        private bool _craftBusy;
 
-        /// <summary>
-        /// Open the crafting modal on one card.
-        ///
-        /// <para>Both offers come from <see cref="Crafting"/> — the same pure predicates
-        /// <c>CraftingService</c> binds to the ledger — so what this draws is what the server would
-        /// decide. Nothing here computes a cost, a payout or a refusal.</para>
-        ///
-        /// <para><b>A null ownership record is reported as owning zero, which is a fiction</b> and the
-        /// one place this stub knowingly lies. Null means "ownership unknown" everywhere else in this
-        /// screen (see <see cref="_owned"/>), and today it is null on every machine — so the modal
-        /// currently shows a live Render half and a dead Reduce half for every card in the game. That
-        /// is the right shape to look at and the wrong data to trust. It resolves itself: the day an
-        /// ownership record exists, this reads it and the fiction is gone with no change here.</para>
-        /// </summary>
-        private void OpenCraft(CardDefinition def)
+        private async void OpenCraft(CardDefinition def)
         {
-            if (_craftModal == null || def == null) return;
-
-            int copies = _owned != null ? _owned.CopiesOwned(def.Id) : 0;
-
-            _craftModal.Open(def,
-                Crafting.OfferRender(def, copies, StubShardBalance),
-                Crafting.OfferReduce(def, copies),
-                StubShardBalance);
+            if (_craftModal == null || !_craftModal.IsBound || def == null || _craftBusy) return;
+            int version = ++_craftVersion;
+            CancellationToken ct = _craftCancel.Token;
+            _craftModal.Open(def, Crafting.OfferRender(def, 0, 0), Crafting.OfferReduce(def, 0), 0);
+            _craftModal.SetWorking("Loading...", unknown: true);
+            try
+            {
+                string accessToken = await AuthGateway.TokenForConnectAsync();
+                if (!CraftIsCurrent(def, version, ct)) return;
+                CraftingReply reply = await CraftingGateway.ReadAsync(def.Id, accessToken, ct);
+                if (!CraftIsCurrent(def, version, ct)) return;
+                if (!reply.HasSnapshot)
+                {
+                    _craftModal.ShowError(CraftError(reply.Status));
+                    return;
+                }
+                bool synced = await RefreshCraftCollection(accessToken, ct);
+                if (!CraftIsCurrent(def, version, ct)) return;
+                ShowCraft(def, reply);
+                if (!synced) _craftModal.ShowError("Collection refresh failed.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Craft] read failed: {ex.GetType().Name}");
+                if (CraftIsCurrent(def, version, ct)) _craftModal.ShowError("Could not load crafting balances.");
+            }
         }
 
-        /// <summary>
-        /// Binds the modal and hooks its two commits.
-        ///
-        /// <para><b>Both handlers are stubs and move nothing.</b> The real ones spend or pay out
-        /// through <c>CraftingService</c>, which Unity cannot reach — see
-        /// <see cref="StubShardBalance"/>. They log at Warning rather than Log so that a build where
-        /// someone believes crafting works says so in the console on the first click, instead of
-        /// looking like a button that did its job quietly.</para>
-        /// </summary>
+        private bool CraftIsCurrent(CardDefinition def, int version, CancellationToken ct)
+            => this != null && isActiveAndEnabled && !ct.IsCancellationRequested &&
+               version == _craftVersion && ReferenceEquals(_account, PlayerAccount.Local) &&
+               _craftModal.Card == def;
+
+        private void ShowCraft(CardDefinition def, CraftingReply reply)
+        {
+            _craftModal.Open(def, Crafting.OfferRender(def, reply.CopiesOwned, reply.Shards),
+                Crafting.OfferReduce(def, reply.CopiesOwned), reply.Shards);
+        }
+
+        private async Task<bool> RefreshCraftCollection(string accessToken, CancellationToken ct)
+        {
+            CollectionSyncStatus status = await CollectionGateway.SyncAsync(accessToken, ct);
+            if (ct.IsCancellationRequested || !ReferenceEquals(_account, PlayerAccount.Local)) return false;
+            if (status != CollectionSyncStatus.Synced && status != CollectionSyncStatus.Unconstrained) return false;
+            LoadOwnership();
+            _scope.SetOwnershipRecord(_owned != null);
+            BuildPool();
+            _wall.SetPool(_pool);
+            ApplyQuery();
+            Refresh();
+            return true;
+        }
+
+        private async void CommitCraft(CardDefinition def, bool render)
+        {
+            if (_craftBusy || def == null) return;
+            _craftBusy = true;
+            int version = _craftVersion;
+            CancellationToken ct = _craftCancel.Token;
+            try
+            {
+                string accessToken = await AuthGateway.TokenForConnectAsync();
+                if (!CraftIsCurrent(def, version, ct)) return;
+                CraftingReply reply = render
+                    ? await CraftingGateway.RenderAsync(def.Id, accessToken, ct)
+                    : await CraftingGateway.ReduceAsync(def.Id, accessToken, ct);
+                if (!CraftIsCurrent(def, version, ct)) return;
+                bool synced = await RefreshCraftCollection(accessToken, ct);
+                if (!CraftIsCurrent(def, version, ct)) return;
+                if (reply.HasSnapshot) ShowCraft(def, reply);
+                if (reply.Applied && synced)
+                {
+                    _craftModal.Close();
+                    return;
+                }
+                // A read can reconcile an ambiguous write; repeating that write could spend twice.
+                if (!reply.HasSnapshot)
+                {
+                    CraftingReply fresh = await CraftingGateway.ReadAsync(def.Id, accessToken, ct);
+                    if (!CraftIsCurrent(def, version, ct)) return;
+                    if (fresh.HasSnapshot) ShowCraft(def, fresh);
+                }
+                _craftModal.ShowError(reply.Applied ? "Craft complete. Collection refresh failed." : CraftError(reply.Status));
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Craft] request failed: {ex.GetType().Name}");
+                if (CraftIsCurrent(def, version, ct)) _craftModal.ShowError("Craft result is unconfirmed.");
+            }
+            finally
+            {
+                if (version == _craftVersion) _craftBusy = false;
+            }
+        }
+
+        private static string CraftError(string status)
+        {
+            switch (status)
+            {
+                case "unauthenticated": return "Sign in to craft cards.";
+                case "unavailable": return "Crafting is unavailable on this server.";
+                case "insufficientshards": return "Not enough shards.";
+                case "atcopycap": return "Crafting limit reached for this card.";
+                case "ownsnone": return "No copies available to reduce.";
+                case "invalidcard":
+                case "notcraftable":
+                case "notreducible": return "This card cannot be crafted.";
+                default: return "Could not confirm the crafting result.";
+            }
+        }
+
         private void BuildCraftModal()
         {
             _craftModal = new CraftModal(_root, _faceBaker);
@@ -941,23 +1015,9 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // RETIREMENT TRIGGER — wiring these two stubs to CraftingService.
-            // docs/pub-docs/progression/pack-odds.md already tells players, in its "Duplicates"
-            // section, that "Shards come from Reduce, in your collection". Since 2026-08-20 a pack
-            // converts nothing, so Reduce is the ONLY shard faucet the game claims to have — and
-            // until the line below stops being a LogWarning, that page promises an economy the build
-            // cannot deliver. The sentence is generated from
-            // src/Emberfall.Tools.OddsDisclosure/Program.cs; when you wire this, regenerate the page
-            // and delete this comment. If Reduce is cut instead, that sentence has to go with it.
-            _craftModal.RenderRequested += def =>
-                Debug.LogWarning($"[Craft] STUB: Render '{def.Id}' for " +
-                                 $"{ShardCosts.ForRarity(def.Rarity)} shards. Nothing was spent and no " +
-                                 "card was minted — there is no client path to CraftingService yet.");
-
-            _craftModal.ReduceRequested += def =>
-                Debug.LogWarning($"[Craft] STUB: Reduce '{def.Id}' for " +
-                                 $"{ShardValues.ForRarity(def.Rarity)} shards. Nothing was destroyed " +
-                                 "and nothing was paid out — there is no client path to CraftingService yet.");
+            _craftModal.RenderRequested += def => CommitCraft(def, render: true);
+            _craftModal.ReduceRequested += def => CommitCraft(def, render: false);
+            _craftModal.RefreshRequested += OpenCraft;
         }
 
         // ---- Mutations ----

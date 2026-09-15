@@ -312,7 +312,16 @@ namespace Emberfall.Net.Server.Accounts
             return (Crafting.OfferRender(def, owned, shards), Crafting.OfferReduce(def, owned));
         }
 
-        /// <summary>The player's shard balance — the number the collection screen has never had (GH#148).</summary>
+        /// <summary>A consistent card and shard snapshot for the crafting screen.</summary>
+        public async Task<CraftOutcome> ReadAsync(Account account, int cardId, CancellationToken ct = default)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            await using IAsyncDisposable gate =
+                await _ledger.AcquirePlayerMutationLockAsync(account.PlayerId, ct).ConfigureAwait(false);
+            return await ProjectAsync(account.PlayerId, cardId, 0, ct).ConfigureAwait(false);
+        }
+
+        /// <summary>The player's authoritative shard balance.</summary>
         public Task<long> ShardBalanceAsync(Account account, CancellationToken ct = default)
         {
             if (account == null) throw new ArgumentNullException(nameof(account));

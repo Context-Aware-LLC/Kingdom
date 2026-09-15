@@ -112,6 +112,10 @@
                 </ui:VisualElement>
                 <ui:Button name="craft-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
+            <ui:VisualElement class="craft-feedback">
+                <ui:Label name="craft-status" class="craft-status" style="display: none;"/>
+                <ui:Button name="craft-retry" text="Refresh" class="col-button chrome-button chrome-button--secondary" style="display: none;"/>
+            </ui:VisualElement>
             <ui:VisualElement class="craft-body">
                 <ui:VisualElement class="craft-cardpane">
                     <ui:VisualElement name="craft-card-face" class="craft-card-face"/>

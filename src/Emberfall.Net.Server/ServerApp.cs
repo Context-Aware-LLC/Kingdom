@@ -5,6 +5,7 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
@@ -434,6 +435,9 @@ namespace Emberfall.Net.Server
             EconomyService? economy = cfg.EntitlementLedger is null
                 ? null
                 : new EconomyService(cfg.EntitlementLedger, time);
+            CraftingService? crafting = cfg.EntitlementLedger is null
+                ? null
+                : new CraftingService(cfg.EntitlementLedger, db, time);
 
             // The match Gold faucet. It needs BOTH a ledger to pay into and an account store to
             // resolve a seat's player_id through, and either absence is an ordinary dev-box
@@ -898,6 +902,28 @@ namespace Emberfall.Net.Server
                     awards,
                 }, statusCode: result.HttpStatus);
             });
+
+            async Task<IResult> HandleCraft(HttpContext context, int cardId, string? action)
+            {
+                string? header = context.Request.Headers["Authorization"];
+                string? bearer = header?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true
+                    ? header.Substring("Bearer ".Length).Trim() : null;
+                CraftingResult result = await CraftingEndpoint.ExecuteAsync(
+                    bearer, cardId, action, cfg.TokenVerifier, cfg.AccountStore,
+                    crafting, db, onboarding, context.RequestAborted);
+                context.Response.Headers["Cache-Control"] = "no-store";
+                return Results.Json(new
+                {
+                    status = result.Status,
+                    cardId = result.Craft?.CardId,
+                    copiesOwned = result.Craft?.CopiesOwned,
+                    shards = result.Craft?.Shards,
+                }, statusCode: result.HttpStatus);
+            }
+
+            app.MapGet("/crafting/{cardId:int}", (HttpContext context, int cardId) => HandleCraft(context, cardId, null));
+            app.MapPost("/crafting/{cardId:int}/render", (HttpContext context, int cardId) => HandleCraft(context, cardId, "render"));
+            app.MapPost("/crafting/{cardId:int}/reduce", (HttpContext context, int cardId) => HandleCraft(context, cardId, "reduce"));
 
             app.Map("/ws", async context =>
             {
