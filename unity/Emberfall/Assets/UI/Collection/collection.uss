@@ -911,7 +911,8 @@
  * button is the persistent corner settings gear CollectionController mounts on this same screen
  * (Sam, 2026-09-05: "same corner settings gear as the main menu"), anchored 24px from the right
  * and shifted another 52px by its `.emb-edge` margin. At 68px wide its LEFT edge is therefore
- * 144px from the screen edge. This button stops 100px from that edge and deliberately continues
+ * 144px from the screen edge. This button stops the safe inset plus 48px from that edge (100px
+ * with the current token) and deliberately continues
  * 44px beneath the gear; `.ms-gear` clips its opaque sprite to rounded corners so that overlap
  * reads as a layered control instead of a square collision. Their bottom/height match
  * (var(--space-6), 58px) so the two read as one row. Pulling this button
@@ -922,7 +923,8 @@
 .deck-drawer__manage {
     position: absolute;
     left: var(--space-6);
-    right: 100px;
+    right: var(--edge-safe);
+    margin-right: 48px;
     bottom: var(--space-6);
     height: 58px;
     border-width: 0;

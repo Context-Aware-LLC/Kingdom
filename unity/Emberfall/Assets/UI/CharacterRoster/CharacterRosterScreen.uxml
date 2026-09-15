@@ -42,7 +42,7 @@
              Plain "Back", no arrow glyph: U+2190 rendered as a double dash here — the same font-
              coverage bet .col-filter-ribbon__chevron's comment (collection.uss) already warns off.
              A different arrow code point is the same gamble; skip it. -->
-        <ui:Button name="back-button" text="Back" class="roster-button roster-button--ghost emb-back col-back-corner" />
+        <ui:Button name="back-button" text="Back" class="roster-button roster-button--ghost emb-back col-back-corner emb-edge" />
 
         <!--
           Find Game's second step. The first — pick a deck — is the same grid the deck-management
@@ -50,7 +50,7 @@
           match pick. (It was the THIRD step until ADR-0009, when picking a character stopped being
           a step at all.)
         -->
-        <ui:VisualElement name="match-bar" class="match-bar">
+        <ui:VisualElement name="match-bar" picking-mode="Ignore" class="match-bar">
             <ui:Button name="match-continue" text="Continue" class="roster-button roster-button--cta" />
         </ui:VisualElement>
 

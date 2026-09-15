@@ -81,6 +81,7 @@ import os
 import re
 import sys
 import glob
+import xml.etree.ElementTree as ET
 
 UI = 'unity/Emberfall/Assets/UI'
 SCRIPTS = 'unity/Emberfall/Assets/Scripts'
@@ -99,6 +100,12 @@ ROOT_CLASS = 'emb-root'
 # "the classes did not fit" is the excuse that would otherwise swallow every
 # element someone could not be bothered to tag.
 TOKEN_EXCEPTIONS = {
+    'match-bar':
+        'transparent bottom rail bounded by the two safe edges; centering its button within '
+        'that rail preserves the screen center without shifting it by an extra margin',
+    'deck-drawer__manage':
+        'its left edge is internal to the drawer; its right edge clears the screen token '
+        'plus a 48px reserve under the neighboring Settings control',
     'col-query-toolbar':
         'transparent overlay coordinate surface for Back, Decks and Filters; it spans the '
         'horizontal safe area itself so its absolute children can anchor to 0/50% without '
@@ -137,7 +144,7 @@ ROOT_EXCEPTIONS = {
         'a full-bleed backdrop with no flow content at its edges; the rule says so itself '
         '("Edge clearance is NOT this padding\'s job"). Every remaining edge-anchored '
         'element is absolute and tagged',
-        ['mm-shard-balance', 'mm-footer']),
+        ['mm-command', 'mm-shard-balance', 'mm-footer']),
     'collection': (
         'the card wall is the background layer and bleeds by ruling (the wall is headerless, '
         '2026-08-18); the controls are an absolute overlay that spends the token itself, and '
@@ -147,6 +154,10 @@ ROOT_EXCEPTIONS = {
     'pack-reveal-screen': (
         'the root holds only a backdrop; every reveal is inside the overlay',
         ['reveal-overlay']),
+    'pack-vault-screen': (
+        'the shelf and its flow controls live in the padded vault shell; the separate reveal '
+        'overlay owns its own clearance',
+        ['vault-shell', 'reveal-overlay']),
     'shop-screen': (
         'the root holds only a backdrop; all store content is inside the overlay. This is the '
         'screen #shop-overlay\'s id selector kept flush to the edge until PASS 6 caught it',
@@ -157,6 +168,12 @@ ROOT_EXCEPTIONS = {
 }
 
 ELEMENT_INTERNAL = {
+    'tear-burst':
+        'non-interactive light burst parented to the tapped pack face by PackTearAnimator.Play; '
+        'its negative offsets expand around that face, not the screen',
+    'tear-half':
+        'non-interactive torn wrapper pieces parented to the tapped pack face by '
+        'PackTearAnimator.Play; left/top are pack-local coordinates',
     'emb-scroll-fade':
         'the "there is more" fade over the bottom band of a scroll surface; its left/right/bottom '
         'offsets are against the FRAME it is pinned inside (see .deck-chooser-frame in '
@@ -188,9 +205,43 @@ ELEMENT_INTERNAL = {
         'twice would inset it from an inset',
 }
 
+# These controls inherit their coordinate origin from a protected parent. Each
+# declared chain is checked in the XML; moving a control or untagging its carrier
+# must invalidate the declaration rather than silently suppress an edge finding.
+PARENT_CLEARANCE = {
+    ('col-back-corner', 'Shop/ShopScreen.uxml'):
+        (('shop-shell', 'shop-overlay'), BLEED_CLASS),
+    ('mm-vault-dock', 'MainMenu/MainMenuScreen.uxml'):
+        (('mm-command',), EDGE_CLASS),
+    ('mm-vault-count', 'MainMenu/MainMenuScreen.uxml'):
+        (('mm-vault-dock', 'mm-command'), EDGE_CLASS),
+}
+
+
+def _has_parent_clearance(path, cls):
+    relative = os.path.relpath(path, UI).replace(os.sep, '/')
+    declaration = PARENT_CLEARANCE.get((cls, relative))
+    if not declaration:
+        return False
+    chain, clearance_class = declaration
+    root = ET.parse(path).getroot()
+    parents = {child: parent for parent in root.iter() for child in parent}
+    nodes = [node for node in root.iter() if cls in node.get('class', '').split()]
+    if not nodes:
+        return False
+    for node in nodes:
+        for expected in chain:
+            node = parents.get(node)
+            if node is None or expected not in node.get('class', '').split():
+                return False
+        if clearance_class not in node.get('class', '').split():
+            return False
+    return True
+
 
 def _read(p):
-    return io.open(p, encoding='utf-8').read()
+    with io.open(p, encoding='utf-8') as source:
+        return source.read()
 
 
 def _files(root, ext):
@@ -376,10 +427,11 @@ def pass4_verdict(chrome, used, code):
             continue
         sites = used.get(cls, [])
         untagged = [s for s in sites
-                    if EDGE_CLASS not in s[2] and BLEED_CLASS not in s[2]]
+                    if EDGE_CLASS not in s[2] and BLEED_CLASS not in s[2]
+                    and not _has_parent_clearance(s[0], cls)]
         if sites and not untagged:
             print('   %-42s %-24s %-9s %s'
-                  % (where[:42], sel[:24], 'ok', 'every use carries .' + EDGE_CLASS))
+                  % (where[:42], sel[:24], 'ok', 'direct or verified parent clearance'))
         elif sites:
             print('   %-42s %-24s %-9s %d of %d use(s) untagged'
                   % (where[:42], sel[:24], 'FAIL', len(untagged), len(sites)))
@@ -603,8 +655,6 @@ def pass7_roots(used):
     findings = []
 
     tokened = {c for c in TOKEN_EXCEPTIONS}
-    carried = {c for c in used if any(
-        t in cl for _f, _l, cl, _i in used[c] for t in (EDGE_CLASS, BLEED_CLASS))}
 
     roots = {}
     for f, line, classes, _indent in used.get(ROOT_CLASS, []):
@@ -660,6 +710,9 @@ def pass7_roots(used):
             continue
 
         reason, carriers = ROOT_EXCEPTIONS[screen]
+        carried = {c for c in used if any(
+            sf == f and t in cl for sf, _l, cl, _i in used[c]
+            for t in (EDGE_CLASS, BLEED_CLASS))}
         dead = [c for c in carriers if c not in carried and c not in tokened]
         if dead:
             findings.append(

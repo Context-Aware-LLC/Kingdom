@@ -284,7 +284,9 @@ jobs:
       # inline styles that beat the stylesheet, and #shop-overlay's id-selector padding
       # outranking the theme class. See the script's header for the five-pass shape.
       - name: "Stage 6c · UI edge-clearance audit (tooling/scripts)"
-        run: python3 tooling/scripts/audit_edge_safety.py
+        run: |
+          python3 tooling/scripts/audit_edge_safety.py
+          python3 tests/python/test_audit_edge_safety.py -v
 
       # A .uxml is XML, and Unity answers a parse error with an EMPTY rootVisualElement and
       # NO log line of its own. The screen is simply blank, so it reads as a wiring bug when

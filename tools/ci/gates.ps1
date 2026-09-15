@@ -123,6 +123,11 @@ Invoke-Stage 'Stage 5b · Networked AI soak' {
 Invoke-Stage 'Stage 6 · Content C-series card gate' {
     dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Emberfall/Assets/CardData unity/Emberfall/Assets/Art
 }
+Invoke-Stage 'Stage 6c · UI edge-clearance audit' {
+    python tooling/scripts/audit_edge_safety.py
+    if ($LASTEXITCODE -ne 0) { throw "edge audit exit $LASTEXITCODE" }
+    python tests/python/test_audit_edge_safety.py -v
+}
 Invoke-Stage 'Stage 6c · Training exporter tests' {
     $candidates = [System.Collections.Generic.List[string]]::new()
     if ($env:EMBERFALL_TRAINING_PYTHON) {

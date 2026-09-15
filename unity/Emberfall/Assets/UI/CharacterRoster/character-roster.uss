@@ -336,17 +336,17 @@
  * `.ms-gear` (matchsettings.uss, absolute bottom-right). First fix pinned it beside the gear with
  * a right reserve; CENTERED instead now that the corner is shared with `#back-button` too — a
  * bar hugging either corner reads as belonging to that corner's button, not as its own action.
- * `left: 50%; translate: -50% 0` is `#class-tab-bar`'s own centering trick (collection.uss): the
- * bar sizes to its one button's content width and sits centered regardless of it, so it clears
- * both `.ms-gear` and `#back-button` without needing to know either one's width. */
+ * The transparent rail spans the safe horizontal area and centers its one button. It ignores
+ * picking itself, so the expanded rail cannot intercept the neighboring Back or Settings control. */
 .match-bar {
     position: absolute;
-    left: 50%;
-    translate: -50% 0;
+    left: var(--edge-safe);
+    right: var(--edge-safe);
     bottom: var(--space-6);
     height: 58px;
     flex-direction: row;
     align-items: center;
+    justify-content: center;
 }
 
 
