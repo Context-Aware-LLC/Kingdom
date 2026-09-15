@@ -910,7 +910,7 @@ namespace Emberfall.Net.Server
                     ? header.Substring("Bearer ".Length).Trim() : null;
                 CraftingResult result = await CraftingEndpoint.ExecuteAsync(
                     bearer, cardId, action, cfg.TokenVerifier, cfg.AccountStore,
-                    crafting, db, onboarding, context.RequestAborted);
+                    crafting, db, context.RequestAborted);
                 context.Response.Headers["Cache-Control"] = "no-store";
                 return Results.Json(new
                 {

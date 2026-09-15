@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Collection;
 using Emberfall.Net.Server.Accounts;
+using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Tests.Support;
 using NUnit.Framework;
@@ -63,11 +64,21 @@ namespace Emberfall.Net.Server.Tests.Accounts
             }
         }
 
-        [Test, CancelAfter(30_000)]
-        public async Task Fresh_account_starts_at_zero_and_reduce_funds_render_with_real_balances()
+        [TestCase(false), TestCase(true), CancelAfter(30_000)]
+        public async Task Zero_shard_account_can_reduce_and_render_even_with_an_older_signup_grant(bool olderSignup)
         {
             var ledger = new InMemoryEntitlementLedger();
             var accounts = new InMemoryAccountStore(new Clock());
+            var owner = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of("craft-player"), "craft@example.com");
+            var probeCard = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir()).AllCollectible()
+                .First(c => c.Rarity == Rarity.COMMON);
+            if (olderSignup)
+            {
+                await ledger.ApplyBatchAsync(new EntitlementBatch(owner.PlayerId,
+                    OnboardingGrantService.TxnPrefix + owner.PlayerId,
+                    new[] { new EntitlementDelta(BoosterPackGrantService.CardItemPrefix + probeCard.Id, 1, "signup") },
+                    null, DateTimeOffset.FromUnixTimeMilliseconds(new Clock().NowMs)));
+            }
             var app = ServerApp.Build(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",
@@ -81,6 +92,12 @@ namespace Emberfall.Net.Server.Tests.Accounts
             {
                 using var http = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
                 http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "valid");
+                int originalRows = (await ledger.HistoryAsync(owner.PlayerId)).Count;
+                using JsonDocument craftFirst = JsonDocument.Parse(await http.GetStringAsync("/crafting/" + probeCard.Id));
+                Assert.That(craftFirst.RootElement.GetProperty("copiesOwned").GetInt32(), Is.EqualTo(olderSignup ? 1 : 0));
+                Assert.That(craftFirst.RootElement.GetProperty("shards").GetInt64(), Is.Zero);
+                Assert.That((await ledger.HistoryAsync(owner.PlayerId)).Count, Is.EqualTo(originalRows),
+                    "Opening crafting must not issue or recheck a signup grant.");
                 using JsonDocument collection = JsonDocument.Parse(await http.GetStringAsync("/collection"));
                 Assert.That(collection.RootElement.GetProperty("wallet").GetProperty("shards").GetInt64(), Is.Zero);
                 int cardId = int.Parse(collection.RootElement.GetProperty("cards").EnumerateObject().First().Name);

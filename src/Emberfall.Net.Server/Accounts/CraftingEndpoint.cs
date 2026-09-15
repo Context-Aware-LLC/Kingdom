@@ -14,7 +14,7 @@ namespace Emberfall.Net.Server.Accounts
         public static async Task<CraftingResult> ExecuteAsync(
             string? bearerToken, int cardId, string? action,
             IIdentityTokenVerifier? verifier, IAccountStore? accounts,
-            CraftingService? crafting, ICardDatabase cards, OnboardingGrantService? onboarding,
+            CraftingService? crafting, ICardDatabase cards,
             CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(bearerToken)) return new("unauthenticated", 401);
@@ -28,8 +28,6 @@ namespace Emberfall.Net.Server.Accounts
             Account account = await accounts.ResolveOrCreateAsync("supabase",
                 CredentialHash.Of(verified.Identity.Subject), verified.Identity.Email, ct).ConfigureAwait(false);
             if (!EconomyAccountPolicy.IsDurable(account)) return new("unauthenticated", 401);
-            if (onboarding is not null)
-                await onboarding.EnsureGrantedAsync(account, ct).ConfigureAwait(false);
 
             if (action is null)
                 return new("ready", 200, await crafting.ReadAsync(account, cardId, ct).ConfigureAwait(false));

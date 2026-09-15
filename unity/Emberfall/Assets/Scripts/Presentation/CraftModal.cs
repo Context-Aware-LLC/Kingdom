@@ -46,6 +46,7 @@ namespace Emberfall.Presentation
         private readonly Button _retry;
         private readonly Button _close;
         private bool _submitting;
+        private bool _balancesUnknown;
 
         private readonly Button _renderButton;
         private readonly Label _renderCost;
@@ -143,6 +144,7 @@ namespace Emberfall.Presentation
 
             _card = def;
             _submitting = false;
+            _balancesUnknown = false;
             _close?.SetEnabled(true);
             _status.style.display = DisplayStyle.None;
             _retry.style.display = DisplayStyle.None;
@@ -222,6 +224,7 @@ namespace Emberfall.Presentation
             _retry.style.display = DisplayStyle.None;
             if (unknown)
             {
+                _balancesUnknown = true;
                 _shardBalance.text = "...";
                 _copiesOwned.text = "...";
                 _renderNote.text = "";
@@ -232,6 +235,11 @@ namespace Emberfall.Presentation
         public void ShowError(string message)
         {
             SetWorking(message);
+            if (_balancesUnknown)
+            {
+                _shardBalance.text = "--";
+                _copiesOwned.text = "--";
+            }
             _retry.style.display = DisplayStyle.Flex;
         }
 
