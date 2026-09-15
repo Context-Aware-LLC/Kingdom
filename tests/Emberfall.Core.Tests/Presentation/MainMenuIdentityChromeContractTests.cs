@@ -37,7 +37,7 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(rootChrome, Is.EqualTo(new string?[]
                 {
                     "scrim",
-                    "shard-balance",
+                    "shard-wallet",
                     "command",
                     "footer",
                     "leaderboard-modal",
