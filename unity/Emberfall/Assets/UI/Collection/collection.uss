@@ -1330,20 +1330,21 @@
    `left:10% top:8% width:80% height:84%` cleared a 2400px landscape by 240 and a
    1080px portrait by 108 -- the same aspect drift that had the shard counter
    landing somewhere different on every device. Offsets on all four sides size it
-   as well as place it, so it fills the safe area exactly and cannot overflow the
+   as well as place it, so it stays within the screen and cannot overflow the
    way `8% + --edge-safe + 84%` would. Declared in audit_edge_safety.py's
    TOKEN_EXCEPTIONS.
 
-   --edge-safe on the SIDES only, and a plain gutter top and bottom, for the
-   reason on the token in theme.uss: the cutout is on a side, the top and bottom
-   measure zero, and 52 on each of them was 104dp of a 411dp panel spent inside a
-   modal whose whole job is to show an illustration at size. 16 matches .mm-modal. */
+   The frame extends 20px into each safe inset; 24px inner padding keeps content
+   4px inside the safe boundary. With the current 52px token, side gutters are
+   32px. Top and bottom gutters remain 16px, matching .mm-modal. */
 .craft-modal {
     position: absolute;
     left: var(--edge-safe);
     top: var(--space-4);
     right: var(--edge-safe);
     bottom: var(--space-4);
+    margin-left: -20px;
+    margin-right: -20px;
     background-color: var(--surface-1);
     border-radius: var(--space-3);
     padding: var(--space-6);
@@ -1365,6 +1366,34 @@
 }
 .craft-illustration-scrim {
     background-color: rgba(5, 8, 12, 0.48);
+}
+
+.craft-loading {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+}
+.craft-loading-icon {
+    width: 70%;
+    height: 70%;
+    flex-shrink: 0;
+    background-image: url("/Assets/Art/UI/Crafting/craft-loading-alchemy-ring-v1.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+.craft-modal--loading .craft-head,
+.craft-modal--loading .craft-body {
+    visibility: hidden;
+}
+.craft-modal--loading .craft-feedback {
+    display: none;
+}
+.craft-modal--loading .craft-loading {
+    display: flex;
 }
 
 .craft-head {
@@ -1474,7 +1503,7 @@
 .craft-half {
     width: 49%;
     flex-grow: 1;
-    background-color: var(--surface-2);
+    background-color: transparent;
     border-radius: var(--space-2);
     padding: var(--space-6);
     margin-bottom: 0;
@@ -1522,6 +1551,8 @@
 }
 
 .craft-action {
+    width: 60%;
+    align-self: center;
     height: 15%;
     min-height: var(--touch-min);             /* touch target floor; mobile-first */
     background-color: var(--accent);
@@ -1561,7 +1592,8 @@
     border-radius: 0;
 }
 .craft-half.chrome-panel--recessed {
-    background-color: rgba(8, 12, 18, 0.9);
+    background-color: transparent;
+    background-image: none;
     border-radius: 0;
 }
 .craft-action.chrome-button {

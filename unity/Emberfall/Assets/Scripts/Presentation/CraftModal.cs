@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
@@ -45,6 +47,8 @@ namespace Emberfall.Presentation
         private readonly Label _status;
         private readonly Button _retry;
         private readonly Button _close;
+        private readonly VisualElement _loadingIcon;
+        private readonly IVisualElementScheduledItem _loadingTick;
         private bool _submitting;
         private bool _balancesUnknown;
 
@@ -59,6 +63,7 @@ namespace Emberfall.Presentation
         private readonly VisualElement _reduceHalf;
 
         private readonly CardFaceBaker _baker;
+        private Texture2D _cardTexture;
 
         private CardDefinition _card;
 
@@ -94,6 +99,14 @@ namespace Emberfall.Presentation
             _status = rootPlate.Q<Label>("craft-status");
             _retry = rootPlate.Q<Button>("craft-retry");
             _close = rootPlate.Q<Button>("craft-close");
+            _loadingIcon = rootPlate.Q<VisualElement>("craft-loading-icon");
+            if (_loadingIcon != null)
+            {
+                _loadingTick = _loadingIcon.schedule.Execute(() =>
+                    _loadingIcon.style.rotate = new Rotate(new Angle(Time.realtimeSinceStartup * 36f % 360f)))
+                    .Every(16);
+                _loadingTick.Pause();
+            }
             _retry?.RegisterCallback<ClickEvent>(_ => RefreshRequested?.Invoke(_card));
 
             _cardFace?.parent.RegisterCallback<GeometryChangedEvent>(_ => FitCardToHeight());
@@ -130,7 +143,7 @@ namespace Emberfall.Presentation
             _cardRarity != null && _shardBalance != null && _copiesOwned != null &&
             _renderHalf != null && _renderButton != null && _renderCost != null && _renderNote != null &&
             _reduceHalf != null && _reduceButton != null && _reducePayout != null && _reduceNote != null &&
-            _status != null && _retry != null && _close != null;
+            _status != null && _retry != null && _close != null && _loadingIcon != null;
 
         /// <summary>
         /// Show the modal for one card, drawn entirely from the two offers.
@@ -142,12 +155,14 @@ namespace Emberfall.Presentation
         {
             if (def == null || !IsBound) return;
 
+            if (_card != def) _cardTexture = null;
             _card = def;
             _submitting = false;
             _balancesUnknown = false;
             _close?.SetEnabled(true);
             _status.style.display = DisplayStyle.None;
             _retry.style.display = DisplayStyle.None;
+            SetLoading(_cardTexture == null && _baker != null);
 
             _cardName.text = def.Name;
             _cardRarity.text = RarityWord(def.Rarity);
@@ -160,16 +175,6 @@ namespace Emberfall.Presentation
             _shardBalance.text = shardBalance.ToString();
             _copiesOwned.text = $"{render.CopiesOwned} owned";
 
-            // The real card front, baked — never a second UI Toolkit re-implementation of the card
-            // face. Same baker and same cache the wall uses, so opening this modal on a card already
-            // on screen costs no bake at all.
-            _baker?.Bake(def, tex =>
-            {
-                if (tex == null || _cardFace == null) return;
-                _cardFace.style.backgroundImage =
-                    new StyleBackground(Background.FromTexture2D((Texture2D)tex));
-            });
-
             _renderCost.text = render.Cost.ToString();
             _renderNote.text = RenderNote(render);
             SetHalfEnabled(_renderHalf, _renderButton, render.Offerable);
@@ -178,6 +183,23 @@ namespace Emberfall.Presentation
             _reduceNote.text = ReduceNote(reduce, def);
             SetHalfEnabled(_reduceHalf, _reduceButton, reduce.Offerable);
 
+            // The real card front, baked — never a second UI Toolkit re-implementation of the card
+            // face. Same baker and same cache the wall uses, so opening this modal on a card already
+            // on screen costs no bake at all.
+            _baker?.Bake(def, tex =>
+            {
+                if (_cardFace == null || _card != def) return;
+                if (tex == null)
+                {
+                    if (!_balancesUnknown) ShowError("Could not load card artwork.");
+                    return;
+                }
+                _cardTexture = (Texture2D)tex;
+                _cardFace.style.backgroundImage =
+                    new StyleBackground(Background.FromTexture2D((Texture2D)tex));
+                if (!_balancesUnknown) SetLoading(false);
+            });
+
             _modal.style.display = DisplayStyle.Flex;
             _scrim.style.display = DisplayStyle.Flex;
         }
@@ -185,6 +207,7 @@ namespace Emberfall.Presentation
         public void Close()
         {
             if (_submitting) return;
+            SetLoading(false);
             _card = null;
             if (_modal != null) _modal.style.display = DisplayStyle.None;
             if (_scrim != null) _scrim.style.display = DisplayStyle.None;
@@ -205,22 +228,27 @@ namespace Emberfall.Presentation
                 _cardFace.style.width = width;
         }
 
+        public Task PlayConfirmedCraftAsync(bool render, CancellationToken ct)
+            => CraftCardEffect.PlayAsync(_cardFace, _cardTexture, render, ct);
+
         private void Commit(Action<CardDefinition> handler)
         {
             CardDefinition committed = _card;
             if (committed == null || _submitting || handler == null) return;
-            SetWorking("Saving...", submitting: true);
+            SetWorking(string.Empty, submitting: true);
             handler?.Invoke(committed);
         }
 
         public void SetWorking(string message, bool submitting = false, bool unknown = false)
         {
+            SetLoading(unknown);
             _submitting = submitting;
             _close?.SetEnabled(!submitting);
             _renderButton.SetEnabled(false);
             _reduceButton.SetEnabled(false);
             _status.text = message;
-            _status.style.display = DisplayStyle.Flex;
+            _status.style.display = unknown || submitting || string.IsNullOrEmpty(message)
+                ? DisplayStyle.None : DisplayStyle.Flex;
             _retry.style.display = DisplayStyle.None;
             if (unknown)
             {
@@ -230,6 +258,13 @@ namespace Emberfall.Presentation
                 _renderNote.text = "";
                 _reduceNote.text = "";
             }
+        }
+
+        private void SetLoading(bool loading)
+        {
+            _modal?.EnableInClassList("craft-modal--loading", loading);
+            if (loading) _loadingTick?.Resume();
+            else _loadingTick?.Pause();
         }
 
         public void ShowError(string message)

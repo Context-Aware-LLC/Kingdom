@@ -960,12 +960,15 @@ namespace Emberfall.Presentation
                 if (!CraftIsCurrent(def, version, ct)) return;
                 bool synced = await RefreshCraftCollection(accessToken, ct);
                 if (!CraftIsCurrent(def, version, ct)) return;
-                if (reply.HasSnapshot) ShowCraft(def, reply);
                 if (reply.Applied && synced)
                 {
+                    await _craftModal.PlayConfirmedCraftAsync(render, ct);
+                    if (!CraftIsCurrent(def, version, ct)) return;
+                    ShowCraft(def, reply);
                     _craftModal.Close();
                     return;
                 }
+                if (reply.HasSnapshot) ShowCraft(def, reply);
                 // A read can reconcile an ambiguous write; repeating that write could spend twice.
                 if (!reply.HasSnapshot)
                 {
