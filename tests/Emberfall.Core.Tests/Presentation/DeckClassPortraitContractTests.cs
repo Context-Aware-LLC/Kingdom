@@ -75,6 +75,10 @@ namespace Emberfall.Core.Tests.Presentation
                     "The prepared sheet must import as a Sprite for IUiSpriteProvider.");
                 Assert.That(metadata, Does.Contain("spriteMode: 1"),
                     "The custom mesh consumes one full-sheet Sprite and owns the eight cell UVs.");
+                Assert.That(metadata, Does.Contain("enableMipMap: 1"),
+                    "The large hero sheet is minified in deck controls and needs mipmaps to avoid aliasing.");
+                Assert.That(metadata, Does.Contain("filterMode: 2"),
+                    "Trilinear filtering must blend between mip levels as portrait sizes change.");
                 Assert.That(group, Does.Contain("m_GUID: 7563e120342457c45b5340dee9a0b6c0"));
                 Assert.That(group, Does.Contain("m_Address: ui/hero_portrait_sheet"),
                     "Player builds need the same sprite key as Editor play mode.");
