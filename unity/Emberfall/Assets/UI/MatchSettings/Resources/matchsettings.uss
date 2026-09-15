@@ -102,10 +102,10 @@
 .ms-toggle,
 .ms-slider {
     flex-direction: row;
-    margin-top: var(--space-2);
 }
-.ms-toggle:first-child,
-.ms-slider:first-child { margin-top: 0; }
+/* USS has no :first-child. The mute toggle is always the group's first row, so only the sliders
+ * under it take the gap. */
+.ms-slider { margin-top: var(--space-2); }
 .ms-toggle > .unity-toggle__input,
 .ms-toggle .unity-base-field__label,
 .ms-slider .unity-base-field__label {
