@@ -143,10 +143,10 @@
     --type-wordmark: 56px;
     --type-display: 44px;
     --type-h1: 36px;
-    --type-h2: 26px;
-    --type-body: 22px;
-    --type-label: 20px;
-    --type-caption: 16px;
+    --type-h2: 28px;
+    --type-body: 24px;
+    --type-label: 22px;
+    --type-caption: 18px;
     --surface-0: rgb(11, 14, 19);
     --surface-1: rgb(20, 25, 34);
     --surface-2: rgb(30, 37, 48);
