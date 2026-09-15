@@ -3,7 +3,10 @@
     <Style src="project://database/Assets/UI/MainMenu/mainmenu.uss?fileID=7433441132597879392&amp;guid=a7ebbdf5907b4c844915adc374612cc8&amp;type=3#mainmenu"/>
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden mm-root--entering">
         <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim emb-bleed" style="background-image: none;"/>
-        <ui:Label name="shard-balance" text="Shards  —" picking-mode="Ignore" class="mm-shard-balance emb-edge"/>
+        <ui:VisualElement name="shard-wallet" tooltip="Shards" class="mm-shard-balance emb-edge">
+            <ui:Label name="shard-balance" text="—" picking-mode="Ignore"/>
+            <ui:VisualElement picking-mode="Ignore" class="mm-shard-icon"/>
+        </ui:VisualElement>
         <ui:VisualElement name="command" class="mm-command emb-edge">
             <ui:VisualElement name="brand" class="mm-brand">
                 <ui:Label text="EMBERFALL" class="mm-wordmark"/>

@@ -42,9 +42,10 @@ namespace Emberfall.Net.Client.Tests
         {
             Assert.Multiple(() =>
             {
-                Assert.That(WalletDisplay.ShardsUnavailable, Is.EqualTo("Shards  —"));
-                Assert.That(WalletDisplay.Shards(0), Is.EqualTo("Shards  0"));
-                Assert.That(WalletDisplay.Shards(12500), Is.EqualTo("Shards  12,500"));
+                Assert.That(WalletDisplay.ShardsUnavailable, Is.EqualTo("—"));
+                Assert.That(WalletDisplay.Shards(0), Is.EqualTo("0"));
+                Assert.That(WalletDisplay.Shards(12500), Is.EqualTo("12,500"));
+                Assert.That(WalletDisplay.Shards(-1200), Is.EqualTo("-1,200"));
             });
         }
     }

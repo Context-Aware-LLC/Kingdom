@@ -42,6 +42,7 @@ namespace Emberfall.Presentation
         private CancellationTokenSource _leaderboardRequest;
 
         private Label _shardBalance;
+        private VisualElement _shardWallet;
         private VisualElement _vaultArt;
         private Label _vaultPackCount;
         private IPackArtProvider _vaultArtProvider;
@@ -326,6 +327,7 @@ namespace Emberfall.Presentation
 
         private void BindShardBalance()
         {
+            _shardWallet = _root.Q<VisualElement>("shard-wallet");
             _shardBalance = _root.Q<Label>("shard-balance");
             if (_shardBalance != null) _shardBalance.text = WalletDisplay.ShardsUnavailable;
             _lastSafeAreaScreenWidth = -1;
@@ -377,7 +379,7 @@ namespace Emberfall.Presentation
 
         private void RefreshShardSafeArea()
         {
-            if (_shardBalance == null) return;
+            if (_shardWallet == null) return;
 
             int screenWidth = Screen.width;
             int screenHeight = Screen.height;
@@ -402,9 +404,9 @@ namespace Emberfall.Presentation
 
             // Percentages keep the breathing room proportional across phone and desktop canvases;
             // the normalized device inset moves the anchor from the display edge to the safe edge.
-            _shardBalance.style.right = Length.Percent(
+            _shardWallet.style.right = Length.Percent(
                 Mathf.Min(100f, rightInsetPercent + ShardSafeAreaMarginPercent));
-            _shardBalance.style.top = Length.Percent(
+            _shardWallet.style.top = Length.Percent(
                 Mathf.Min(100f, topInsetPercent + ShardSafeAreaMarginPercent));
         }
 

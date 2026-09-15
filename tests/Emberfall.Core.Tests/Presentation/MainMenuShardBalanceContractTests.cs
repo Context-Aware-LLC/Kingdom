@@ -1,4 +1,6 @@
 using System.IO;
+using System.Linq;
+using System.Xml.Linq;
 using Emberfall.Core.Tests.Support;
 using NUnit.Framework;
 
@@ -18,11 +20,23 @@ namespace Emberfall.Core.Tests.Presentation
                 unityRoot, "UI", "MainMenu", "mainmenu.uss"));
             string menuController = File.ReadAllText(Path.Combine(
                 unityRoot, "Scripts", "Presentation", "MainMenuController.cs"));
+            XDocument document = XDocument.Parse(uxml);
+            XElement amount = document.Descendants().Single(e => (string?)e.Attribute("name") == "shard-balance");
+            XElement wallet = amount.Parent!;
 
             Assert.Multiple(() =>
             {
-                Assert.That(uxml, Does.Contain("name=\"shard-balance\" text=\"Shards  —\""),
+                Assert.That((string?)amount.Attribute("text"), Is.EqualTo("—"),
                     "The pre-snapshot state must say unavailable rather than fabricate zero.");
+                Assert.That((string?)wallet.Attribute("name"), Is.EqualTo("shard-wallet"));
+                Assert.That(((string?)wallet.Attribute("class") ?? "").Split(' '), Does.Contain("emb-edge"));
+                Assert.That((string?)wallet.Attribute("tooltip"), Is.EqualTo("Shards"));
+                Assert.That(wallet.Elements().Count(e => (string?)e.Attribute("class") == "mm-shard-icon"), Is.EqualTo(1));
+                Assert.That(styles, Does.Contain("/Assets/Art/UI/Crafting/Currency/craft-shard-cyan-v1.png"));
+                Assert.That(File.Exists(Path.Combine(unityRoot, "Art", "UI", "Crafting", "Currency", "craft-shard-cyan-v1.png")), Is.True);
+                Assert.That(menuController, Does.Contain("_shardWallet.style.right = Length.Percent("));
+                Assert.That(menuController, Does.Contain("_shardWallet.style.top = Length.Percent("));
+                Assert.That(menuController, Does.Not.Contain("_shardBalance.style.right"));
                 Assert.That(styles, Does.Contain(".mm-shard-balance"));
 
                 // The gutter is a TOKEN, not a percentage. `top: 2%` / `right: 2%` were both

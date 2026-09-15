@@ -12,7 +12,7 @@ namespace Emberfall.Net.Client.Shop
         /// No wallet snapshot is not an authoritative zero. Keep that state visible as unavailable
         /// until the gateway returns a ledger-projected balance.
         /// </summary>
-        public const string ShardsUnavailable = "Shards  —";
+        public const string ShardsUnavailable = "—";
 
         /// <summary>
         /// The gem balance label. A debt from a refund reads as "-200 Gems" so the minus sign and
@@ -33,8 +33,9 @@ namespace Emberfall.Net.Client.Shop
         /// <summary>
         /// An authoritative missing ledger row is zero, not blank. The server projection supplies
         /// that zero; this formatter never guesses when the wallet itself is unavailable.
+        /// The shard icon supplies the currency identity beside this amount.
         /// </summary>
         public static string Shards(long shards)
-            => "Shards  " + shards.ToString("N0", CultureInfo.InvariantCulture);
+            => shards.ToString("N0", CultureInfo.InvariantCulture);
     }
 }

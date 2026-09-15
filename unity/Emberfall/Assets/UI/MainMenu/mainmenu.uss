@@ -275,7 +275,10 @@
                                                     .emb-edge in theme.uss; this is the gutter. */
     right: var(--space-6);
     min-width: 12%;
-    font-size: var(--type-label);                /* 16dp. Was --type-h2 to survive the old scale. */
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--type-label);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     color: var(--ink-1);
@@ -289,6 +292,15 @@
     border-width: 0;
     border-radius: 0;
     padding: var(--space-3) var(--space-6);
+}
+
+.mm-shard-icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    margin-left: var(--space-1);
+    background-image: url("/Assets/Art/UI/Crafting/Currency/craft-shard-cyan-v1.png");
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 /* ---------- Account switcher rows ---------- */
