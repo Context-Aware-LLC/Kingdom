@@ -46,6 +46,7 @@ namespace Emberfall.Editor
             LeafTreatments = new(System.StringComparer.OrdinalIgnoreCase)
             {
                 ["background"] = ApplyBackground,
+                ["hptabs"] = ApplyMinifiedIcon,
             };
 
         void OnPreprocessTexture()
@@ -152,6 +153,19 @@ namespace Emberfall.Editor
             SetPlatform(importer, "Standalone", 2048, TextureImporterFormat.BC7);
             SetPlatform(importer, "Android", 2048, TextureImporterFormat.ASTC_6x6);
             SetPlatform(importer, "iPhone", 2048, TextureImporterFormat.ASTC_6x6);
+        }
+
+        // Painterly icons drawn far below source size (the class-tab hero-power art: 1024px+ shown
+        // at ~76px). The UI lane's mips-OFF is right for frames drawn near 1:1 and wrong here —
+        // without a mip chain bright detail aliases into glitter (2026-09-15). Mips ON, capped at
+        // 256, since no screen draws these larger.
+        static void ApplyMinifiedIcon(TextureImporter importer)
+        {
+            ApplySpriteCommon(importer);
+            importer.mipmapEnabled = true;
+            SetPlatform(importer, "Standalone", 256, TextureImporterFormat.BC7);
+            SetPlatform(importer, "Android", 256, TextureImporterFormat.ASTC_6x6);
+            SetPlatform(importer, "iPhone", 256, TextureImporterFormat.ASTC_6x6);
         }
 
         // FX masks / flipbooks: linear data, not sprites. Single-channel-friendly formats.
