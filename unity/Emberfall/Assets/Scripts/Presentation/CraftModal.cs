@@ -95,6 +95,8 @@ namespace Emberfall.Presentation
             _shardBalance = rootPlate.Q<Label>("craft-shard-balance");
             _copiesOwned = rootPlate.Q<Label>("craft-copies-owned");
 
+            _cardFace?.parent.RegisterCallback<GeometryChangedEvent>(_ => FitCardToHeight());
+
             _renderHalf = rootPlate.Q<VisualElement>("craft-render-half");
             _renderButton = rootPlate.Q<Button>("craft-render-button");
             _renderCost = rootPlate.Q<Label>("craft-render-cost");
@@ -149,9 +151,7 @@ namespace Emberfall.Presentation
             _cardRarity.AddToClassList(CardClassTokens.RarityToken(def.Rarity, "craft-rarity--"));
 
             _shardBalance.text = shardBalance.ToString();
-            _copiesOwned.text = render.CopyCap > 0
-                ? $"{render.CopiesOwned} / {render.CopyCap} owned"
-                : $"{render.CopiesOwned} owned";
+            _copiesOwned.text = $"{render.CopiesOwned} owned";
 
             // The real card front, baked — never a second UI Toolkit re-implementation of the card
             // face. Same baker and same cache the wall uses, so opening this modal on a card already
@@ -180,6 +180,21 @@ namespace Emberfall.Presentation
             _card = null;
             if (_modal != null) _modal.style.display = DisplayStyle.None;
             if (_scrim != null) _scrim.style.display = DisplayStyle.None;
+        }
+
+        private void FitCardToHeight()
+        {
+            if (_cardFace?.parent == null) return;
+
+            // Fill the body height at the baked collection face's proportions.
+            float height = _cardFace.parent.contentRect.height;
+            if (float.IsNaN(height) || float.IsInfinity(height) || height <= 0f) return;
+
+            float width = height * CardWall.TileWidth / CardWall.TileHeight;
+            if (!Mathf.Approximately(_cardFace.resolvedStyle.height, height))
+                _cardFace.style.height = height;
+            if (!Mathf.Approximately(_cardFace.resolvedStyle.width, width))
+                _cardFace.style.width = width;
         }
 
         private void Commit(Action<CardDefinition> handler)

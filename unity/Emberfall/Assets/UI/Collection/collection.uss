@@ -1375,6 +1375,10 @@
 .craft-heading {
     flex-grow: 1;
 }
+.craft-metadata {
+    flex-direction: row;
+    align-items: center;
+}
 .craft-name {
     font-size: var(--type-h1);
     color: var(--ink-1);
@@ -1423,23 +1427,27 @@
 .craft-body {
     flex-direction: row;
     flex-grow: 1;
+    flex-basis: 0;
+    min-height: 0;
 }
 
 .craft-cardpane {
     align-items: center;
+    flex-shrink: 0;
     margin-right: var(--space-8);
 }
 .craft-card-face {
-    width: 340px;
-    height: 477px;
+    /* CraftModal fits the face to the full body height. */
+    flex-shrink: 0;
     background-color: var(--surface-3);   /* shows through until the bake resolves */
     border-radius: var(--space-2);
     -unity-background-scale-mode: scale-to-fit;
 }
 .craft-owned {
+    flex-shrink: 0;
     font-size: var(--type-label);
     color: var(--ink-2);
-    margin-top: var(--space-3);
+    margin-left: var(--space-6);
 }
 
 /* The two opposite actions share the body's full height. Stacking them forced each panel below its
@@ -1448,6 +1456,8 @@
 .craft-halves {
     flex-direction: row;
     flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
     justify-content: space-between;
 }
 .craft-half {

@@ -101,7 +101,10 @@
             <ui:VisualElement class="craft-head">
                 <ui:VisualElement class="craft-heading">
                     <ui:Label name="craft-card-name" text="" class="craft-name"/>
-                    <ui:Label name="craft-card-rarity" text="" class="craft-rarity"/>
+                    <ui:VisualElement class="craft-metadata">
+                        <ui:Label name="craft-card-rarity" text="" class="craft-rarity"/>
+                        <ui:Label name="craft-copies-owned" text="" class="craft-owned"/>
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement class="craft-wallet">
                     <ui:Label name="craft-shard-balance" text="0" class="craft-wallet-value"/>
@@ -112,7 +115,6 @@
             <ui:VisualElement class="craft-body">
                 <ui:VisualElement class="craft-cardpane">
                     <ui:VisualElement name="craft-card-face" class="craft-card-face"/>
-                    <ui:Label name="craft-copies-owned" text="" class="craft-owned"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="craft-halves">
                     <ui:VisualElement name="craft-render-half" class="craft-half chrome-panel chrome-panel--recessed">
