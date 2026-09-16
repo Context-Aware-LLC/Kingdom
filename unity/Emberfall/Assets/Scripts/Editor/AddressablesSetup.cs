@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Emberfall.Presentation;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -10,8 +11,8 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// One-shot (idempotent) Addressables bootstrap per hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §8:
-    ///   UI_Core           — Assets/Art/UI/** at address "ui/&lt;fileName&gt;" (always loaded)
-    ///   CardArt_&lt;setId&gt;   — one group per subfolder of Assets/Art/Cards/, at "card_art/&lt;fileName&gt;".
+    ///   UI_Core           — Assets/Art/UI/** and Cards/Backs/** at "ui/&lt;fileName&gt;" (always loaded)
+    ///   CardArt_&lt;setId&gt;   — one group per set folder of Assets/Art/Cards/ (excluding Backs), at "card_art/&lt;fileName&gt;".
     ///                       CORE additionally carries Assets/Art/Hero/**.
     ///   CardData          — card set JSON at "cards/&lt;setId&gt;.cards"
     ///   PackArt_&lt;setId&gt;   — one group per subfolder of Assets/Art/Shop/Packs/, sprites at
@@ -58,6 +59,7 @@ namespace Emberfall.Editor
 
             var uiCore = GetGroup(settings, "UI_Core");
             AddFolderSprites(settings, uiCore, "Assets/Art/UI", "ui");
+            AddFolderSprites(settings, uiCore, CardBackCatalog.ArtFolder, "ui");
             AddFolderAssets(settings, uiCore, "Assets/Materials", "materials", "t:Material");
             // One CardArt_<setId> group per SET FOLDER FOUND ON DISK, not a hardcoded list.
             // REKINDLING shipped card rows and art with no group because the previous three lines
@@ -68,6 +70,9 @@ namespace Emberfall.Editor
             foreach (string setFolder in Directory.GetDirectories(CardArtRoot))
             {
                 string setId = Path.GetFileName(setFolder);
+                // Card backs retain the UI provider's addresses and residency; they are not a card set.
+                if (setId.Equals(Path.GetFileName(CardBackCatalog.ArtFolder), System.StringComparison.OrdinalIgnoreCase))
+                    continue;
                 var group = GetGroup(settings, "CardArt_" + setId);
                 AddFolderSprites(settings, group, $"{CardArtRoot}/{setId}", "card_art");
 

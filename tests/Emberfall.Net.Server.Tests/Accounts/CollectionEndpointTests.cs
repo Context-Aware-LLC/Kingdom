@@ -222,6 +222,41 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That(result.Cards, Is.Empty);
         }
 
+        [Test]
+        public async Task Existing_accounts_receive_one_default_back_and_revocation_stays_account_scoped()
+        {
+            var store = new InMemoryAccountStore(new FixedTime());
+            var ledger = new InMemoryEntitlementLedger();
+            var account = await store.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+            await ledger.GrantAsync(new EntitlementGrant(account.PlayerId, "card:1001", 2, "old_signup", "old-signup", Now));
+            var other = await store.ResolveOrCreateAsync("supabase", CredentialHash.Of("another-subject"));
+            await CardBackOwnership.EnsureDefaultAsync(ledger, other);
+            for (int i = 0; i < 2; ++i)
+            {
+                var result = await CollectionEndpoint.ReadAsync(Token, Accepts(), store, ledger, null, null);
+                Assert.That(result.CardBacks![1], Is.EqualTo(1));
+                Assert.That(result.Cards, Is.EqualTo(new[] { new KeyValuePair<int, int>(1001, 2) }));
+            }
+            Assert.That((await ledger.HistoryAsync(account.PlayerId)).Count, Is.EqualTo(2));
+            await ledger.GrantAsync(new EntitlementGrant(account.PlayerId, "cardback:1", -1, "revoke", "revoke-1", Now));
+            var revoked = await CollectionEndpoint.ReadAsync(Token, Accepts(), store, ledger, null, null);
+            Assert.That(revoked.CardBacks, Is.Empty);
+            Assert.That(await ledger.BalanceAsync(other.PlayerId, "cardback:1"), Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Card_back_grants_reject_guest_accounts_unknown_ids_and_empty_event_ids()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var account = new Account("p1", "supabase", "hash", Now);
+            Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await CardBackOwnership.EnsureDefaultAsync(ledger, account with { CredentialKind = "device_token" }));
+            Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+                await CardBackOwnership.GrantAsync(ledger, account, 999, "test", "event"));
+            Assert.ThrowsAsync<ArgumentException>(async () =>
+                await CardBackOwnership.GrantAsync(ledger, account, 1, "test", ""));
+        }
+
         // ── The onboarding grant ────────────────────────────────────────────────────────
 
         [Test]
@@ -276,6 +311,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 onboarding: new OnboardingGrantService(ledger, Cards(), new FixedTime()));
 
             Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Known));
+            Assert.That(result.CardBacks, Is.Null);
         }
 
         // ── Unopened packs ──────────────────────────────────────────────────────────────

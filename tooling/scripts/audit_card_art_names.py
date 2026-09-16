@@ -155,6 +155,9 @@ def main():
     paths = {}
     on_disk = {}
     for png in sorted(ART_ROOT.rglob("*.png")):
+        # Cosmetic card backs have no card-data row and are not set illustrations.
+        if png.relative_to(ART_ROOT).parts[0] == "Backs":
+            continue
         on_disk.setdefault(png.stem, []).append(png.parent.name)
         paths.setdefault(png.stem, []).append(png)
 

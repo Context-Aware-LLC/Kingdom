@@ -55,7 +55,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             {
                 Id = "d1",
                 Name = "Renamed",
-                CardBackId = "some_back",
+                CardBackId = 42,
                 ShowcaseCardId = 1001,
             };
             repaired.Entries.Add(new DeckEntry(1001, 1));
@@ -65,7 +65,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That(saved, Is.True, "the player's own row — an upsert, not a refusal");
             DeckList stored = (await Store.ReadAsync("p1")).Decks[0];
             Assert.That(stored.Name, Is.EqualTo("Renamed"), "name is mutable");
-            Assert.That(stored.CardBackId, Is.EqualTo("some_back"), "so is the card back");
+            Assert.That(stored.CardBackId, Is.EqualTo(42), "so is the card back");
             Assert.That(stored.ShowcaseCardId, Is.EqualTo(1001), "and the showcase card");
             Assert.That(stored.CountOf(1001), Is.EqualTo(1), "and the cards themselves");
             Assert.That(stored.PrimaryClass, Is.EqualTo(CardClass.EMBERWARD),

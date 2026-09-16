@@ -310,6 +310,9 @@ namespace Emberfall.Session
         public Task<RosterWriteStatus> ConfirmNewDeckAsync(string accessToken, DeckList deck) =>
             RosterGateway.ConfirmNewDeckAsync(accessToken, deck, _decks);
 
+        public Task<RosterWriteStatus> ConfirmDeckEditAsync(string accessToken, DeckList deck) =>
+            RosterGateway.ConfirmDeckEditAsync(accessToken, deck, _decks);
+
         /// <summary>Persist an edit. Never legality-gated — a draft is a savable deck (§1).</summary>
         public void Save(DeckList deck)
         {

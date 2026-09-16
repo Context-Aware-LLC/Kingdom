@@ -19,8 +19,8 @@ namespace Emberfall.Session
     /// play them with. This is the other half of that wire.</para>
     ///
     /// <para>Sync replaces the cache with the server's answer, including an empty deck list.
-    /// New deck creation awaits ConfirmNewDeckAsync before caching or navigating. Existing deck
-    /// edits and deletes still use the Push methods and report failures to the log.</para>
+    /// Deck creation and roster-dialog edits await confirmation before caching or navigating.
+    /// Other edits and deletes use the Push methods and report failures to the log.</para>
     ///
     /// <para><b>Composed on first touch, like <see cref="AuthGateway"/> and
     /// <see cref="CollectionGateway"/>, and invalidated with them</b> — the write lands in
@@ -110,6 +110,11 @@ namespace Emberfall.Session
 
         /// <summary>Wait for the server before caching a new deck.</summary>
         public static Task<RosterWriteStatus> ConfirmNewDeckAsync(
+            string accessToken, DeckList deck, IDeckStore cache) =>
+            Gateway.SaveDeckAndCacheAsync(accessToken, deck, cache);
+
+        /// <summary>Wait for the server before caching an edit, including cosmetic ownership checks.</summary>
+        public static Task<RosterWriteStatus> ConfirmDeckEditAsync(
             string accessToken, DeckList deck, IDeckStore cache) =>
             Gateway.SaveDeckAndCacheAsync(accessToken, deck, cache);
 

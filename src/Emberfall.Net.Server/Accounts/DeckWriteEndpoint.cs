@@ -41,8 +41,7 @@ namespace Emberfall.Net.Server.Accounts
         /// This account already holds <see cref="DeckCreation.MaxPerAccount"/> decks and this write
         /// would be a NEW one. 409.
         ///
-        /// <para><b>The one refusal here that is about the account rather than the deck</b>, and the
-        /// only one a player can act on — delete a deck and try again. It is emphatically not the
+        /// <para>Delete a deck and try again. This is independent of cosmetic ownership and the
         /// "decks are stored, never refused" rule breaking: that rule is about LEGALITY, and this
         /// says nothing about whether the deck is legal. A re-save of a deck the account already
         /// holds is never refused, however full the account is, because it adds nothing.</para>
@@ -54,6 +53,10 @@ namespace Emberfall.Net.Server.Accounts
         /// docstring, which currently claims one flat number for everyone.</para>
         /// </summary>
         AtCapacity,
+        /// <summary>The requested cosmetic identity is not in the server catalog. 400.</summary>
+        UnknownCardBack,
+        /// <summary>The account has no positive entitlement for the selected back. 403.</summary>
+        CardBackNotOwned,
     }
 
     /// <summary>The deck-write answer, before it becomes JSON.</summary>
@@ -77,6 +80,8 @@ namespace Emberfall.Net.Server.Accounts
             DeckWriteStatus.InvalidId => 400,
             DeckWriteStatus.DuplicateId => 409,
             DeckWriteStatus.AtCapacity => 409,
+            DeckWriteStatus.UnknownCardBack => 400,
+            DeckWriteStatus.CardBackNotOwned => 403,
             _ => 500,
         };
     }
@@ -88,16 +93,15 @@ namespace Emberfall.Net.Server.Accounts
     /// <see cref="RosterEndpoint"/> do — verifier, then <c>CredentialHash.Of(identity.Subject)</c>,
     /// then <c>ResolveOrCreateAsync</c>.</para>
     ///
-    /// <para><b>THE DECK CAP LIVES HERE</b> (ADR-0009 ruling 2). It is the only refusal on this route
-    /// that is about the ACCOUNT rather than the deck, and the only one the player can do anything
-    /// about. See <see cref="DeckWriteStatus.AtCapacity"/>.</para>
+    /// <para>The deck cap (ADR-0009 ruling 2) and cosmetic ownership are enforced here.
+    /// Card-back entitlement is independent of gameplay-card legality.</para>
     ///
     /// <para><b>DECKS ARE STORED, NEVER REFUSED.</b> Validation is a QUEUE-time concern
     /// (<c>DeckSubmission.Validate</c> / <c>DeckValidator</c>), not a write-time one — an illegal
     /// deck is a legitimate named state (a draft, or one a balance patch made illegal after the
     /// fact) and refusing to store it would delete a player's work-in-progress. Nothing here asks
     /// whether a deck is LEGAL. What it does refuse is a write it cannot attribute: a body that will
-    /// not parse as a deck at all, an empty deck id, and an id another player already owns.</para>
+    /// not parse as a deck at all, an empty deck id, and an id another player already owns. Unknown or unowned cosmetics are also refused.</para>
     ///
     /// <para><b>The route id is the single authority for the deck's id.</b> <see cref="SaveAsync"/>
     /// overwrites the parsed deck's <c>Id</c> with the route id before saving — otherwise a client
@@ -134,7 +138,8 @@ namespace Emberfall.Net.Server.Accounts
             IIdentityTokenVerifier? verifier,
             IAccountStore? accountStore,
             IPlayerDataStore? playerDataStore,
-            CancellationToken ct = default)
+            CancellationToken ct = default,
+            IEntitlementLedger? ledger = null)
         {
             if (string.IsNullOrWhiteSpace(bearerToken) || verifier is null)
                 return new DeckWriteResult(DeckWriteStatus.Unauthenticated);
@@ -172,6 +177,20 @@ namespace Emberfall.Net.Server.Accounts
 
             if (playerDataStore is null)
                 return new DeckWriteResult(DeckWriteStatus.Unavailable);
+
+            // Gameplay drafts remain savable, but cosmetics require an actual entitlement.
+            int backId = deck.CardBackId == 0 ? CardBackDefinitions.DefaultId : deck.CardBackId;
+            if (!CardBackDefinitions.TryGet(backId, out _))
+                return new DeckWriteResult(DeckWriteStatus.UnknownCardBack);
+            if (ledger is null)
+                return new DeckWriteResult(DeckWriteStatus.Unavailable);
+            await CardBackOwnership.EnsureDefaultAsync(ledger, account, ct).ConfigureAwait(false);
+            await using var ownershipLock = await ledger.AcquirePlayerMutationLockAsync(account.PlayerId, ct)
+                .ConfigureAwait(false);
+            if (await ledger.BalanceAsync(account.PlayerId, CardBackOwnership.Item(backId), ct)
+                .ConfigureAwait(false) <= 0)
+                return new DeckWriteResult(DeckWriteStatus.CardBackNotOwned);
+            deck.CardBackId = backId;
 
             // One authority for the id, or a client could write to an id it did not address.
             deck.Id = deckId;

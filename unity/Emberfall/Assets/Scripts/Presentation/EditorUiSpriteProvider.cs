@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     // Editor-only IUiSpriteProvider: resolves frame/gem/icon sprites straight from AssetDatabase
-    // under Assets/Art/UI/, plus exact-key shared sheets under Assets/Sprites. Serves the M1
+    // under Assets/Art/UI/, card backs under CardBackCatalog.ArtFolder, and shared sheets under Assets/Sprites. Serves the M1
     // vertical slice (in-editor play mode) until the UI Sprite
     // Atlas group exists — then an AtlasUiSpriteProvider replaces it in builds (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §2).
     //
@@ -23,7 +23,7 @@ namespace Emberfall.Presentation
 
             Sprite result = null;
             foreach (string guid in AssetDatabase.FindAssets(
-                         $"t:Sprite {key}", new[] { "Assets/Art/UI", "Assets/Sprites" }))
+                         $"t:Sprite {key}", new[] { "Assets/Art/UI", CardBackCatalog.ArtFolder, "Assets/Sprites" }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 // FindAssets matches loosely; require the exact file name.

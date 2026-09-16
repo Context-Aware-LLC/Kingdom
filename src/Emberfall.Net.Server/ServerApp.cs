@@ -728,7 +728,7 @@ namespace Emberfall.Net.Server
 
                 DeckWriteResult result = await DeckWriteEndpoint.SaveAsync(
                     bearer, id, body, cfg.TokenVerifier, cfg.AccountStore, cfg.PlayerDataStore,
-                    context.RequestAborted);
+                    context.RequestAborted, cfg.EntitlementLedger);
 
                 return Results.Json(new
                 {
@@ -829,6 +829,7 @@ namespace Emberfall.Net.Server
                     // and an unknown one are different answers that would otherwise look identical.
                     ownership = result.Status.ToString().ToLowerInvariant(),
                     playerId = result.PlayerId,
+                    cardBacks = result.CardBacks,
                     cards,
                     packs,
                     wallet = new

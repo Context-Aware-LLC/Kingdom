@@ -57,6 +57,9 @@ namespace Emberfall.Net.Server.Accounts
         /// </summary>
         public IReadOnlyList<KeyValuePair<string, long>> Packs { get; }
 
+        /// <summary>Null means cosmetic ownership could not be read; an empty map means none owned.</summary>
+        public IReadOnlyDictionary<int, long>? CardBacks { get; }
+
         public WalletBalances Wallet { get; }
 
         /// <summary>Diagnostic only, and never the raw subject — <see cref="CredentialHash"/>'s output.
@@ -67,9 +70,11 @@ namespace Emberfall.Net.Server.Accounts
                                 IReadOnlyList<KeyValuePair<int, int>>? cards = null,
                                 WalletBalances wallet = default,
                                 string playerId = "",
-                                IReadOnlyList<KeyValuePair<string, long>>? packs = null)
+                                IReadOnlyList<KeyValuePair<string, long>>? packs = null,
+                                IReadOnlyDictionary<int, long>? cardBacks = null)
         {
             Status = status;
+            CardBacks = cardBacks;
             Cards = cards ?? Array.Empty<KeyValuePair<int, int>>();
             Wallet = wallet;
             PlayerId = playerId ?? "";
@@ -166,6 +171,17 @@ namespace Emberfall.Net.Server.Accounts
                 }
             }
 
+            IReadOnlyDictionary<int, long>? cardBacks = null;
+            try
+            {
+                cardBacks = await CardBackOwnership.ReadAsync(ledger, account, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                Console.Error.WriteLine("[collection] card-back ownership unavailable for player_id={0}: {1}",
+                    account.PlayerId, ex.Message);
+            }
+
             IOwnedCardCounts? owned = await AccountOwnedCounts.ForAsync(account, ledger, ct)
                 .ConfigureAwait(false);
 
@@ -179,7 +195,7 @@ namespace Emberfall.Net.Server.Accounts
                 return new CollectionResult(CollectionResultStatus.Unconstrained,
                     wallet: await WalletOf(economy, account, ct).ConfigureAwait(false),
                     playerId: account.PlayerId,
-                    packs: packs);
+                    packs: packs, cardBacks: cardBacks);
 
             // Null here means the ledger is configured but ForAsync still declined — today only when
             // the account is null, which cannot happen on this path. Treated as Unavailable rather
@@ -192,7 +208,7 @@ namespace Emberfall.Net.Server.Accounts
                 counts.Entries(),
                 await WalletOf(economy, account, ct).ConfigureAwait(false),
                 account.PlayerId,
-                packs);
+                packs, cardBacks);
         }
 
         /// <summary>

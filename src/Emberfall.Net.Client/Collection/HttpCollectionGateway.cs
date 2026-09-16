@@ -84,6 +84,11 @@ namespace Emberfall.Net.Client.Collection
         /// </summary>
         public IReadOnlyDictionary<string, long> Packs { get; }
 
+        /// <summary>Null means the server did not report cosmetic ownership. Never unlock backs
+        /// from the gameplay-card ownership word, including for a superuser.</summary>
+        public IReadOnlyDictionary<int, long>? CardBacks { get; }
+        public bool OwnsCardBack(int id) => CardBacks != null && CardBacks.TryGetValue(id, out long count) && count > 0;
+
         public WalletSnapshot Wallet { get; }
 
         /// <summary>Diagnostic text for a log line. Never shown to a player.</summary>
@@ -94,22 +99,26 @@ namespace Emberfall.Net.Client.Collection
 
         private CollectionSnapshot(CollectionSyncStatus status, OwnedCardCounts? cards,
                                    WalletSnapshot wallet, string detail,
-                                   IReadOnlyDictionary<string, long>? packs = null)
+                                   IReadOnlyDictionary<string, long>? packs = null,
+                                   IReadOnlyDictionary<int, long>? cardBacks = null)
         {
             Status = status;
             Cards = cards;
             Wallet = wallet;
             Detail = detail ?? "";
             Packs = packs ?? NoPacks;
+            CardBacks = cardBacks;
         }
 
         public static CollectionSnapshot Synced(OwnedCardCounts cards, WalletSnapshot wallet,
-                                                IReadOnlyDictionary<string, long>? packs = null)
-            => new CollectionSnapshot(CollectionSyncStatus.Synced, cards, wallet, "", packs);
+                                                IReadOnlyDictionary<string, long>? packs = null,
+                                                IReadOnlyDictionary<int, long>? cardBacks = null)
+            => new CollectionSnapshot(CollectionSyncStatus.Synced, cards, wallet, "", packs, cardBacks);
 
         public static CollectionSnapshot Unconstrained(WalletSnapshot wallet,
-                                                       IReadOnlyDictionary<string, long>? packs = null)
-            => new CollectionSnapshot(CollectionSyncStatus.Unconstrained, null, wallet, "", packs);
+                                                       IReadOnlyDictionary<string, long>? packs = null,
+                                                IReadOnlyDictionary<int, long>? cardBacks = null)
+            => new CollectionSnapshot(CollectionSyncStatus.Unconstrained, null, wallet, "", packs, cardBacks);
 
         public static CollectionSnapshot Failed(CollectionSyncStatus status, string detail)
             => new CollectionSnapshot(status, null, default, detail);
@@ -242,8 +251,20 @@ namespace Emberfall.Net.Client.Collection
             if ((known || unconstrained) && !TryReadPacks(body, out packs))
                 return CollectionSnapshot.Failed(CollectionSyncStatus.Malformed, "no packs field");
 
+            IReadOnlyDictionary<int, long>? cardBacks = null;
+            if (AuthJson.TryReadNestedObject(body, "cardBacks", out var backRows))
+            {
+                var backs = new Dictionary<int, long>();
+                foreach (var row in backRows)
+                    if (int.TryParse(row.Key, NumberStyles.None, CultureInfo.InvariantCulture, out int id)
+                        && id > 0 && long.TryParse(row.Value, NumberStyles.Integer,
+                            CultureInfo.InvariantCulture, out long count) && count > 0)
+                        backs[id] = count;
+                cardBacks = backs;
+            }
+
             if (unconstrained)
-                return CollectionSnapshot.Unconstrained(wallet, packs);
+                return CollectionSnapshot.Unconstrained(wallet, packs, cardBacks);
 
             if (!known)
                 return CollectionSnapshot.Failed(CollectionSyncStatus.Unavailable, ownership);
@@ -268,7 +289,7 @@ namespace Emberfall.Net.Client.Collection
                 }
             }
 
-            return CollectionSnapshot.Synced(cards, wallet, packs);
+            return CollectionSnapshot.Synced(cards, wallet, packs, cardBacks);
         }
 
         /// <summary>

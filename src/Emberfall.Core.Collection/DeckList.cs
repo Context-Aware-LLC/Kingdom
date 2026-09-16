@@ -44,21 +44,9 @@ namespace Emberfall.Core.Collection
         /// <summary>The other half of the pool. Contributes no hero power. Immutable, as <see cref="PrimaryClass"/> is.</summary>
         public CardClass SecondaryClass { get; }
 
-        /// <summary>
-        /// The card back this deck presents, or empty for "whatever the build's default is".
-        ///
-        /// <para><b>Cosmetic, and unvalidated on purpose.</b> Nothing in this assembly knows which
-        /// backs exist — the catalog is art, it lives client-side, and it grows with every set. An id
-        /// naming a back this build has never heard of therefore loads intact and falls back to the
-        /// default at render time, exactly like a card id a balance patch deleted. Refusing it here
-        /// would make a deck unreadable because of a cosmetic.</para>
-        ///
-        /// <para><b>Per deck, not per seat.</b> The back is presented by the deck that is playing, so
-        /// it belongs on the deck rather than on the account — but the seat is still what carries it
-        /// onto the wire, and an opponent's back id is attacker-authored data by the time the client
-        /// resolves it. Nothing sends it today.</para>
-        /// </summary>
-        public string CardBackId { get; set; } = "";
+        /// <summary>The numeric card-back identity, or zero for the default. Unknown positive IDs
+        /// survive storage for forward compatibility; the server checks ownership when saving.</summary>
+        public int CardBackId { get; set; }
 
         /// <summary>
         /// The card whose art represents this deck, or empty to let the client pick one.
@@ -68,7 +56,7 @@ namespace Emberfall.Core.Collection
         /// in the deck. A name still exists and is still editable — it is what the dialog is titled
         /// and what a duplicate is disambiguated by — it is simply not the thing you scan for.</para>
         ///
-        /// <para><b>Unvalidated, like <see cref="CardBackId"/> and for a stronger reason:</b> this id
+        /// <para><b>Unvalidated on read, like <see cref="CardBackId"/>:</b> this id
         /// may name a card a balance patch deleted, or one the player has since removed from the
         /// deck. Neither is a corrupt deck. The client falls back when it cannot resolve the art, and
         /// the id is left alone so that putting the card back restores the image the player chose.</para>

@@ -85,7 +85,7 @@ namespace Emberfall.Core.Tests.Collection
 
             DeckList migrated = CollectionJson.ReadDecks(plan.MigratedDecksJson).Single();
             Assert.That(migrated.Name, Is.EqualTo("Rotvine"));
-            Assert.That(migrated.CardBackId, Is.EqualTo("gravekeep_allover"));
+            Assert.That(migrated.CardBackId, Is.EqualTo(1));
             Assert.That(migrated.ShowcaseCardId, Is.EqualTo(1001));
             Assert.That(migrated.CountOf(1001), Is.EqualTo(2));
         }
@@ -190,7 +190,7 @@ namespace Emberfall.Core.Tests.Collection
             // spelling or number formatting shows up here rather than on a device.
             MigrationPlan plan = CollectionMigration.Plan(Characters, LegacyDecks("""
                 { "id": "d1", "characterId": "chr-1", "name": "Rotvine",
-                  "cardBackId": "gravekeep_allover", "showcaseCardId": 1001,
+                  "cardBackId": 1, "showcaseCardId": 1001,
                   "cards": [ { "id": 1001, "count": 2 } ] }
                 """));
 

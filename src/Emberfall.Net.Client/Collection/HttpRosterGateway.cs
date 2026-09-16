@@ -296,6 +296,7 @@ namespace Emberfall.Net.Client.Collection
             switch (response.StatusCode)
             {
                 case 400: return RosterWriteStatus.Rejected;
+                case 403: return RosterWriteStatus.Rejected;
                 case 401: return RosterWriteStatus.Unauthenticated;
                 case 404: return RosterWriteStatus.NotFound;
                 case 409: return RosterWriteStatus.Conflict;

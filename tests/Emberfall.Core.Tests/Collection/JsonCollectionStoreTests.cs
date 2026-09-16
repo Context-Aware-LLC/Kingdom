@@ -158,14 +158,39 @@ namespace Emberfall.Core.Tests.Collection
             Assert.That(File.Exists(store.FilePath), Is.True, "An emptied collection is an empty file, not a missing one.");
         }
 
+        [TestCase("\"gravekeep_allover\"", 1)]
+        [TestCase("\"\"", 0)]
+        [TestCase("null", 0)]
+        [TestCase("42", 42)]
+        public void Card_back_legacy_values_migrate_to_numbers(string value, int expected)
+        {
+            var json = CollectionJson.WriteDecks(new[] { Rotbloom("d1", "Legacy") })
+                .Replace("\"cardBackId\": 0", "\"cardBackId\": " + value);
+            var deck = CollectionJson.ReadDecks(json)[0];
+            Assert.That(deck.CardBackId, Is.EqualTo(expected));
+            Assert.That(CollectionJson.WriteDecks(new[] { deck }), Does.Contain("\"cardBackId\": " + expected));
+        }
+
+        [TestCase("-1")]
+        [TestCase("1.5")]
+        [TestCase("2147483648")]
+        [TestCase("\"future_handle\"")]
+        [TestCase("true")]
+        public void Malformed_card_back_identity_is_not_silently_replaced(string value)
+        {
+            var json = CollectionJson.WriteDecks(new[] { Rotbloom("d1", "Bad") })
+                .Replace("\"cardBackId\": 0", "\"cardBackId\": " + value);
+            Assert.Throws<CollectionFormatException>(() => CollectionJson.ReadDecks(json));
+        }
+
         [Test]
         public void A_Deck_Round_Trips_Its_Card_Back_And_Survives_One_This_Build_Does_Not_Know()
         {
             var store = Decks();
             var chosen = Rotbloom("deck-1", "Chosen");
-            chosen.CardBackId = "gravekeep_allover";
+            chosen.CardBackId = 1;
             var later = Rotbloom("deck-3", "From a later build");
-            later.CardBackId = "a_back_from_a_set_that_does_not_ship_yet";
+            later.CardBackId = 42;
             store.Save(chosen);
             store.Save(Rotbloom("deck-2", "Unset"));
             store.Save(later);
@@ -174,9 +199,9 @@ namespace Emberfall.Core.Tests.Collection
 
             Assert.That(loaded.Select(d => d.CardBackId), Is.EqualTo(new[]
             {
-                "gravekeep_allover",
-                "",                                          // never chosen == the build default
-                "a_back_from_a_set_that_does_not_ship_yet",   // unknown is cosmetic, never a read error
+                1,
+                0,                                           // never chosen == the build default
+                42,   // unknown is cosmetic, never a read error
             }));
         }
 
@@ -221,7 +246,7 @@ namespace Emberfall.Core.Tests.Collection
 
             Assert.That(loaded.Count, Is.EqualTo(1));
             Assert.That(loaded[0].Name, Is.EqualTo("Rotvine"));
-            Assert.That(loaded[0].CardBackId, Is.Empty);
+            Assert.That(loaded[0].CardBackId, Is.Zero);
         }
 
         [Test]

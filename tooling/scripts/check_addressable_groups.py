@@ -103,7 +103,8 @@ def main() -> int:
         if not base.is_dir():
             continue
         for folder in sorted(p for p in base.iterdir() if p.is_dir()):
-            group = prefix + folder.name
+            # Card backs are cosmetics resolved through the UI sprite provider, not a card set.
+            group = "UI_Core" if root == "Art/Cards" and folder.name == "Backs" else prefix + folder.name
             if group not in declared:
                 missing.append((f"Assets/{root}/{folder.name}/", group))
 

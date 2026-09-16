@@ -59,6 +59,7 @@ namespace Emberfall.Net.Client.Tests.Collection
 
         [TestCase(400)]
         [TestCase(401)]
+        [TestCase(403)]
         [TestCase(409)]
         [TestCase(503)]
         public async Task Refused_creation_does_not_leave_a_local_deck(int code)
@@ -70,6 +71,30 @@ namespace Emberfall.Net.Client.Tests.Collection
                 await Gateway(new FakeAuthHttp().Reply(code, "{}"))
                     .SaveDeckAndCacheAsync("jwt-token", NewDeck(), cache);
                 Assert.That(File.Exists(path), Is.False);
+            }
+            finally { if (File.Exists(path)) File.Delete(path); }
+        }
+
+        [Test]
+        public async Task Refused_cosmetic_edit_preserves_the_existing_cached_deck()
+        {
+            string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+            try
+            {
+                var cache = new JsonDeckStore(path);
+                var original = NewDeck();
+                cache.Save(original);
+                var candidate = NewDeck();
+                candidate.CardBackId = 1;
+                candidate.Name = "Edited";
+                var http = new FakeAuthHttp();
+                var reply = http.HoldReply();
+                var pending = Gateway(http).SaveDeckAndCacheAsync("jwt", candidate, cache);
+                Assert.That(cache.LoadAll().Single().Name, Is.EqualTo(original.Name));
+                reply.SetResult(AuthHttpResponse.Completed(403, "{}"));
+                Assert.That(await pending, Is.EqualTo(RosterWriteStatus.Rejected));
+                Assert.That(cache.LoadAll().Single().Name, Is.EqualTo(original.Name));
+                Assert.That(cache.LoadAll().Single().CardBackId, Is.Zero);
             }
             finally { if (File.Exists(path)) File.Delete(path); }
         }
@@ -336,6 +361,7 @@ namespace Emberfall.Net.Client.Tests.Collection
         }
 
         [TestCase(400, RosterWriteStatus.Rejected)]
+        [TestCase(403, RosterWriteStatus.Rejected)]
         [TestCase(401, RosterWriteStatus.Unauthenticated)]
         [TestCase(409, RosterWriteStatus.Conflict)]
         [TestCase(503, RosterWriteStatus.Unavailable)]

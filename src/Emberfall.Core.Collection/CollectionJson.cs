@@ -59,7 +59,7 @@ namespace Emberfall.Core.Collection
                     w.WriteString("primaryClass", d.PrimaryClass.ToString());
                     w.WriteString("secondaryClass", d.SecondaryClass.ToString());
                     w.WriteString("name", d.Name);
-                    w.WriteString("cardBackId", d.CardBackId);
+                    w.WriteNumber("cardBackId", d.CardBackId);
                     w.WriteNumber("showcaseCardId", d.ShowcaseCardId);
                     w.WriteStartArray("cards");
                     foreach (var e in d.Entries)
@@ -119,7 +119,7 @@ namespace Emberfall.Core.Collection
                     // written before card backs existed reads back with none, which is the same state
                     // as "the player never chose one" and renders identically. Not checked against a
                     // catalog — see DeckList.CardBackId for why an unknown back is not a read error.
-                    CardBackId = Str(el, "cardBackId") ?? "",
+                    CardBackId = ReadCardBackId(el),
                     ShowcaseCardId = OptCardId(el, "showcaseCardId"),
                 };
 
@@ -139,6 +139,22 @@ namespace Emberfall.Core.Collection
                 i++;
             }
             return result;
+        }
+
+        private static int ReadCardBackId(JsonElement deck)
+        {
+            if (!deck.TryGetProperty("cardBackId", out var value) || value.ValueKind == JsonValueKind.Null)
+                return 0;
+            if (value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out int id) && id >= 0)
+                return id;
+            // One-time compatibility with decks saved before numeric cosmetic identities existed.
+            // This is a fixed legacy spelling, not a runtime handle resolver.
+            if (value.ValueKind == JsonValueKind.String)
+            {
+                if (value.GetString() == "") return 0;
+                if (value.GetString() == "gravekeep_allover") return CardBackDefinitions.DefaultId;
+            }
+            throw new CollectionFormatException("Invalid cardBackId: expected a nonnegative numeric ID.");
         }
 
         // ---- profile -------------------------------------------------------------------

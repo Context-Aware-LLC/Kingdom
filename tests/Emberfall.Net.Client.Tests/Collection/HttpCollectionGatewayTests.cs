@@ -26,6 +26,31 @@ namespace Emberfall.Net.Client.Tests.Collection
         private static HttpCollectionGateway Gateway(FakeAuthHttp http)
             => new HttpCollectionGateway(Base, http);
 
+        [TestCase("known")]
+        [TestCase("unconstrained")]
+        public async Task Cosmetic_ownership_is_numeric_and_independent_of_gameplay_ownership(string ownership)
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"" + ownership + "\",\"cards\":{},\"packs\":{}," +
+                "\"cardBacks\":{\"1\":1,\"2\":0,\"3\":-1,\"gravekeep_allover\":1}}");
+            var result = await Gateway(http).FetchAsync("jwt");
+            Assert.That(result.OwnsCardBack(1), Is.True);
+            Assert.That(result.OwnsCardBack(2), Is.False);
+            Assert.That(result.OwnsCardBack(3), Is.False);
+            Assert.That(result.CardBacks!.Count, Is.EqualTo(1));
+        }
+
+        [TestCase("")]
+        [TestCase(",\"cardBacks\":null")]
+        public async Task Missing_cosmetic_ownership_never_unlocks_even_for_superusers(string field)
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"unconstrained\",\"packs\":{}" + field + "}");
+            var result = await Gateway(http).FetchAsync("jwt");
+            Assert.That(result.CardBacks, Is.Null);
+            Assert.That(result.OwnsCardBack(1), Is.False);
+        }
+
         // ── The request ─────────────────────────────────────────────────────────────────
 
         [Test]

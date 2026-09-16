@@ -61,7 +61,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             draft.Entries.Add(new DeckEntry(1001, 1));
 
             DeckWriteResult r = await DeckWriteEndpoint.SaveAsync(
-                Token, "d1", CollectionJson.WriteDecks(new[] { draft }), Accepts(), accounts, data);
+                Token, "d1", CollectionJson.WriteDecks(new[] { draft }), Accepts(), accounts, data, ledger: new InMemoryEntitlementLedger());
 
             Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.Saved),
                 "validate on QUEUE, never on WRITE — refusing here deletes work-in-progress the " +
@@ -75,7 +75,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var data = new InMemoryPlayerDataStore();
 
             DeckWriteResult r = await DeckWriteEndpoint.SaveAsync(
-                Token, "d1", "{ not json", Accepts(), accounts, data);
+                Token, "d1", "{ not json", Accepts(), accounts, data, ledger: new InMemoryEntitlementLedger());
 
             Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.Malformed));
             Assert.That(r.HttpStatus, Is.EqualTo(400));
@@ -94,7 +94,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             // Parses cleanly and throws nothing — ReadDecks just returns zero rows. That is the
             // branch the catch cannot reach, and there is no deck to attribute the write to.
             DeckWriteResult r = await DeckWriteEndpoint.SaveAsync(
-                Token, "d1", "{\"decks\":[]}", Accepts(), accounts, data);
+                Token, "d1", "{\"decks\":[]}", Accepts(), accounts, data, ledger: new InMemoryEntitlementLedger());
 
             Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.Malformed));
             Assert.That(r.HttpStatus, Is.EqualTo(400));
@@ -108,10 +108,10 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var accounts = new InMemoryAccountStore(new FixedTime());
             var data = new InMemoryPlayerDataStore();
-            await DeckWriteEndpoint.SaveAsync(Token, "d1", BodyFor("d1"), Accepts(), accounts, data);
+            await DeckWriteEndpoint.SaveAsync(Token, "d1", BodyFor("d1"), Accepts(), accounts, data, ledger: new InMemoryEntitlementLedger());
 
             DeckWriteResult r = await DeckWriteEndpoint.SaveAsync(
-                Token, "d1", BodyFor("d1"), AcceptsOther(), accounts, data);
+                Token, "d1", BodyFor("d1"), AcceptsOther(), accounts, data, ledger: new InMemoryEntitlementLedger());
 
             Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.DuplicateId),
                 "refusing a write it cannot ATTRIBUTE — nothing here judged the deck's legality");
@@ -130,7 +130,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var data = new InMemoryPlayerDataStore();
 
             DeckWriteResult r = await DeckWriteEndpoint.SaveAsync(
-                Token, "  ", BodyFor("d1"), Accepts(), accounts, data);
+                Token, "  ", BodyFor("d1"), Accepts(), accounts, data, ledger: new InMemoryEntitlementLedger());
 
             Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.InvalidId));
             Assert.That(r.HttpStatus, Is.EqualTo(400));
@@ -160,7 +160,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
 
             await DeckWriteEndpoint.SaveAsync(
                 Token, "route-says-this", CollectionJson.WriteDecks(new[] { deck }),
-                Accepts(), accounts, data);
+                Accepts(), accounts, data, ledger: new InMemoryEntitlementLedger());
 
             Account a = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
             PlayerRoster roster = await data.ReadAsync(a.PlayerId);
@@ -175,7 +175,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var data = new InMemoryPlayerDataStore();
             var deck = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "d1", Name = "D" };
             await DeckWriteEndpoint.SaveAsync(
-                Token, "d1", CollectionJson.WriteDecks(new[] { deck }), Accepts(), accounts, data);
+                Token, "d1", CollectionJson.WriteDecks(new[] { deck }), Accepts(), accounts, data, ledger: new InMemoryEntitlementLedger());
 
             DeckWriteResult r = await DeckWriteEndpoint.DeleteAsync(Token, "d1", Accepts(), accounts, data);
 
@@ -193,6 +193,65 @@ namespace Emberfall.Net.Server.Tests.Accounts
 
             Assert.That(r.Status, Is.EqualTo(DeckWriteStatus.NotFound));
             Assert.That(r.HttpStatus, Is.EqualTo(404));
+        }
+
+        [TestCase(0)]
+        [TestCase(1)]
+        public async Task Default_back_is_granted_and_saved_as_a_numeric_identity(int selection)
+        {
+            var accounts = new InMemoryAccountStore(new FixedTime());
+            var data = new InMemoryPlayerDataStore();
+            var ledger = new InMemoryEntitlementLedger();
+            var deck = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "d1", CardBackId = selection };
+            for (int i = 0; i < 2; ++i)
+            {
+                var result = await DeckWriteEndpoint.SaveAsync(Token, "d1", CollectionJson.WriteDecks(new[] { deck }),
+                    Accepts(), accounts, data, ledger: ledger);
+                Assert.That(result.Status, Is.EqualTo(DeckWriteStatus.Saved));
+            }
+            var account = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+            Assert.That((await data.ReadAsync(account.PlayerId)).Decks[0].CardBackId, Is.EqualTo(1));
+            Assert.That(await ledger.BalanceAsync(account.PlayerId, "cardback:1"), Is.EqualTo(1));
+        }
+
+        [TestCase(0, AccountKind.Standard)]
+        [TestCase(1, AccountKind.Standard)]
+        [TestCase(1, AccountKind.Superuser)]
+        public async Task Revoked_ownership_refuses_the_write_even_for_default_or_superuser(int selection, AccountKind kind)
+        {
+            var accounts = new InMemoryAccountStore(new FixedTime());
+            var account = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+            await accounts.SetKindAsync(account.PlayerId, kind);
+            var data = new InMemoryPlayerDataStore();
+            var ledger = new InMemoryEntitlementLedger();
+            await CardBackOwnership.EnsureDefaultAsync(ledger, account);
+            await ledger.GrantAsync(new EntitlementGrant(account.PlayerId, "cardback:1", -1, "revoke", "revoke-1", account.CreatedAt));
+            var original = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "d1", Name = "Original" };
+            await data.SaveDeckAsync(account.PlayerId, original);
+            var candidate = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "d1", Name = "Rejected", CardBackId = selection };
+            var result = await DeckWriteEndpoint.SaveAsync(Token, "d1", CollectionJson.WriteDecks(new[] { candidate }),
+                Accepts(), accounts, data, ledger: ledger);
+            Assert.That(result.Status, Is.EqualTo(DeckWriteStatus.CardBackNotOwned));
+            Assert.That(result.HttpStatus, Is.EqualTo(403));
+            Assert.That((await data.ReadAsync(account.PlayerId)).Decks[0].Name, Is.EqualTo("Original"));
+            Assert.That(await ledger.BalanceAsync(account.PlayerId, "cardback:1"), Is.Zero);
+        }
+
+        [Test]
+        public async Task Unknown_back_and_unavailable_ledger_never_save()
+        {
+            var accounts = new InMemoryAccountStore(new FixedTime());
+            var data = new InMemoryPlayerDataStore();
+            var deck = new DeckList(CardClass.EMBERWARD, CardClass.TIDECALLER) { Id = "d1", CardBackId = 999 };
+            var result = await DeckWriteEndpoint.SaveAsync(Token, "d1", CollectionJson.WriteDecks(new[] { deck }),
+                Accepts(), accounts, data, ledger: new InMemoryEntitlementLedger());
+            Assert.That(result.Status, Is.EqualTo(DeckWriteStatus.UnknownCardBack));
+            deck.CardBackId = 1;
+            result = await DeckWriteEndpoint.SaveAsync(Token, "d1", CollectionJson.WriteDecks(new[] { deck }),
+                Accepts(), accounts, data);
+            Assert.That(result.Status, Is.EqualTo(DeckWriteStatus.Unavailable));
+            var account = await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+            Assert.That((await data.ReadAsync(account.PlayerId)).Decks, Is.Empty);
         }
 
         // ── IsAuthenticatedAsync — PUT /decks/{id}'s auth-before-read gate ──────────────────────

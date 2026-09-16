@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using Emberfall.Presentation;
 
 namespace Emberfall.Editor
 {
@@ -11,6 +12,7 @@ namespace Emberfall.Editor
     ///
     /// Folder contract (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §8):
     ///   Assets/Art/Cards/&lt;setId&gt;/&lt;artId&gt;.png  — streamed card illustrations
+    ///   Assets/Art/Cards/Backs/...               — card backs (same import settings as UI sprites)
     ///   Assets/Art/Hero/&lt;heroId&gt;.png            — hero portraits (same treatment)
     ///   Assets/Art/Backgrounds/...               — full-screen imagery (menus/splash): full res desktop, lighter mobile
     ///                                              Matched at ANY depth, so Backgrounds/Loading/
@@ -58,6 +60,14 @@ namespace Emberfall.Editor
             var importer = (TextureImporter)assetImporter;
             var path = assetPath.Replace('\\', '/');
             if (!path.StartsWith(ArtRoot)) return;
+
+            // Backs share the UI sprite contract (including FullRect meshes), not the lower
+            // resolution illustration lane. Moving their folder must not change how they render.
+            if (path.StartsWith(CardBackCatalog.ArtFolder + "/"))
+            {
+                ApplyUiAtlas(importer);
+                return;
+            }
 
             // Card illustrations, hero portraits and booster packaging win outright. These are
             // setId-keyed and feed the shipped card pipeline, so a folder somebody happens to name

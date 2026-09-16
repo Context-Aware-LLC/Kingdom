@@ -4,6 +4,7 @@ using Emberfall.Core.Cards;
 using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
 using Emberfall.Session;
+using Emberfall.Net.Client.Collection;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -136,7 +137,10 @@ namespace Emberfall.Presentation
         private DeckList _menuDeck;
 
         /// <summary>The back and the showcase card highlighted in their pickers, committed only by Save.</summary>
-        private string _pendingCardBackId = "";
+        private int _pendingCardBackId;
+        private CollectionSnapshot _cardBackOwnership;
+        private int _deckRequestVersion;
+        private bool _savingDeck;
         private int _pendingShowcaseCardId;
 
         private void OnEnable()
@@ -342,6 +346,8 @@ namespace Emberfall.Presentation
         {
             if (_menuDeck == null) return;
             _deckPane = pane;
+            ++_deckRequestVersion;
+            _deckModalConfirm?.SetEnabled(!_savingDeck);
             SetDeckError("");
 
             // A card grid reads better with room a button stack would only stretch to fill —
@@ -384,7 +390,7 @@ namespace Emberfall.Presentation
             if (pane == DeckPane.Image)
                 BuildShowcaseGrid();
             if (pane == DeckPane.CardBack)
-                BuildCardBackGrid();
+                LoadCardBacksAsync();
             if (pane == DeckPane.Delete && _deckDeleteMessage != null)
                 _deckDeleteMessage.text =
                     $"'{_menuDeck.Name}' and its {_menuDeck.TotalCount} cards are gone for good. " +
@@ -435,14 +441,54 @@ namespace Emberfall.Presentation
                     : "";
         }
 
+        private async void LoadCardBacksAsync()
+        {
+            int request = _deckRequestVersion;
+            var account = _account;
+            _cardBackOwnership = null;
+            _deckBackGrid?.Clear();
+            _deckModalConfirm?.SetEnabled(false);
+            try
+            {
+                var snapshot = await CollectionGateway.FetchAsync(RosterGateway.AccessToken);
+                if (!isActiveAndEnabled || request != _deckRequestVersion ||
+                    !ReferenceEquals(account, PlayerAccount.Local)) return;
+                _cardBackOwnership = snapshot;
+                if (snapshot.CardBacks == null)
+                {
+                    SetDeckError("Could not load your card backs. Go back and try again.");
+                    return;
+                }
+                if (!snapshot.OwnsCardBack(_pendingCardBackId))
+                {
+                    _pendingCardBackId = 0;
+                    foreach (var back in CardBackCatalog.All)
+                        if (snapshot.OwnsCardBack(back.Id)) { _pendingCardBackId = back.Id; break; }
+                }
+                BuildCardBackGrid();
+                if (_pendingCardBackId == 0) SetDeckError("You do not own any available card backs.");
+            }
+            catch (Exception ex)
+            {
+                if (request != _deckRequestVersion || !isActiveAndEnabled) return;
+                Debug.LogWarning($"[DeckRoster] card backs could not be loaded: {ex.Message}");
+                SetDeckError("Could not load your card backs. Go back and try again.");
+            }
+        }
+
+        private void OnDisable() => ++_deckRequestVersion;
+
         private void BuildCardBackGrid()
         {
             if (_deckBackGrid == null) return;
             _deckBackGrid.Clear();
 
-            foreach (CardBackOption back in CardBackCatalog.All)
+            _deckModalConfirm?.SetEnabled(!_savingDeck && _cardBackOwnership != null &&
+                _cardBackOwnership.OwnsCardBack(_pendingCardBackId));
+            foreach (CardBackDefinition back in CardBackCatalog.All)
             {
-                CardBackOption choice = back;
+                if (_cardBackOwnership == null || !_cardBackOwnership.OwnsCardBack(back.Id)) continue;
+                CardBackDefinition choice = back;
                 var option = new Button();
                 option.AddToClassList("deck-back-option");
                 option.EnableInClassList("deck-back-option--on",
@@ -464,44 +510,56 @@ namespace Emberfall.Presentation
             }
         }
 
-        private void ConfirmDeckPane()
+        private async void ConfirmDeckPane()
         {
-            if (_menuDeck == null) return;
-
+            if (_menuDeck == null || _savingDeck) return;
             if (_deckPane == DeckPane.Delete) { DeleteOpenDeck(); return; }
+            if (_deckPane == DeckPane.CardBack &&
+                (_cardBackOwnership == null || !_cardBackOwnership.OwnsCardBack(_pendingCardBackId))) return;
 
+            // Edit a detached candidate. A refused or failed request must leave the local deck intact.
+            var candidate = CollectionJson.ReadDecks(CollectionJson.WriteDecks(new[] { _menuDeck }))[0];
             if (_deckPane == DeckPane.Rename)
             {
                 string name = (_deckRenameField?.value ?? "").Trim();
-                if (name.Length == 0)
-                {
-                    SetDeckError("A deck needs a name.");
-                    return;
-                }
-                _menuDeck.Name = name;
+                if (name.Length == 0) { SetDeckError("A deck needs a name."); return; }
+                candidate.Name = name;
             }
-            else if (_deckPane == DeckPane.Image)
-            {
-                _menuDeck.ShowcaseCardId = _pendingShowcaseCardId;
-            }
-            else if (_deckPane == DeckPane.CardBack)
-            {
-                _menuDeck.CardBackId = _pendingCardBackId;
-            }
+            else if (_deckPane == DeckPane.Image) candidate.ShowcaseCardId = _pendingShowcaseCardId;
+            else if (_deckPane == DeckPane.CardBack) candidate.CardBackId = _pendingCardBackId;
 
+            var account = _account;
+            int request = _deckRequestVersion;
+            _savingDeck = true;
+            _deckModalConfirm?.SetEnabled(false);
+            _deckModalCancel?.SetEnabled(false);
             try
             {
-                _account.Save(_menuDeck);
+                var status = await account.ConfirmDeckEditAsync(RosterGateway.AccessToken, candidate);
+                if (!isActiveAndEnabled || request != _deckRequestVersion ||
+                    !ReferenceEquals(account, PlayerAccount.Local)) return;
+                if (status != RosterWriteStatus.Ok)
+                {
+                    SetDeckError(status == RosterWriteStatus.Rejected
+                        ? "This card back is no longer available to your account. Choose another back."
+                        : "The deck could not be saved. Check your connection and try again.");
+                    return;
+                }
+                CloseDeckDialog();
+                RebuildRoster();
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[DeckRoster] could not save '{_menuDeck.Name}': {ex.Message}");
-                SetDeckError("The deck could not be saved — see the console.");
-                return;
+                Debug.LogWarning($"[DeckRoster] could not save deck: {ex.Message}");
+                if (request == _deckRequestVersion && isActiveAndEnabled)
+                    SetDeckError("The deck could not be saved. Please try again.");
             }
-
-            CloseDeckDialog();
-            RebuildRoster();
+            finally
+            {
+                _savingDeck = false;
+                _deckModalCancel?.SetEnabled(true);
+                _deckModalConfirm?.SetEnabled(true);
+            }
         }
 
         /// <summary>
@@ -538,7 +596,9 @@ namespace Emberfall.Presentation
             _deckModal?.AddToClassList("delete-modal--hidden");
             _menuDeck = null;
             _menuQueueReady = false;
-            _pendingCardBackId = "";
+            _pendingCardBackId = 0;
+            _cardBackOwnership = null;
+            ++_deckRequestVersion;
             _pendingShowcaseCardId = 0;
             _deckPane = DeckPane.Menu;
         }
