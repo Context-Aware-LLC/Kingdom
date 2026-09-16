@@ -785,7 +785,7 @@ namespace Emberfall.Presentation
             // when AuraSet.Frosted arrives, so an unfrosted card costs no draw call.
             frostRenderer.enabled = false;
 
-            // Rarity gem — set into the frame's bottom-centre socket; sprite (gem_{rarity}) and
+            // Rarity gem — set into the frame's upper-right socket; sprite (gem_{rarity}) and
             // final size assigned per-rarity by ApplyFrame, which is also where the socket
             // geometry is applied. Position and size here are only the pre-frame placeholder
             // fallback for a card with no painted frame; ApplyFrame overrides both the moment
@@ -808,6 +808,8 @@ namespace Emberfall.Presentation
             var attackSocket = MakeSocket("AttackSocket", -0.009f);
             var healthSocket = MakeSocket("HealthSocket", -0.009f);
             var gemSocket    = MakeSocket("GemSocket",    -0.011f);
+            attackSocket.sortingOrder = FrameRarityCatalog.StatSocketOrder;
+            healthSocket.sortingOrder = FrameRarityCatalog.StatSocketOrder;
             costSocket.gameObject.SetActive(false);
             attackSocket.gameObject.SetActive(false);
             healthSocket.gameObject.SetActive(false);
@@ -871,6 +873,34 @@ namespace Emberfall.Presentation
             bodyLabel.fontSizeMax      = 1.0f;
             bodyLabel.fontSizeMin      = 0.5f;
 
+            // The tribe plate stretches UNDER the stat frames, which mask both ends.
+            // Shared by match and collection cards; no fitted end cutouts are needed.
+            // Sam's transparent chrome includes the text bed; preserve its alpha without a fill quad.
+            var tribeBanner = new GameObject("TribeBanner");
+            tribeBanner.transform.SetParent(root.transform, false);
+            tribeBanner.transform.localPosition = new Vector3(0f,
+                (0.5f - FrameRarityCatalog.TribeCenterY) * CardH, -0.00825f);
+            float tribeWidth = FrameRarityCatalog.TribeWidth * CardW;
+            float tribeHeight = FrameRarityCatalog.TribeHeight * CardH;
+            var tribePanel = MakeSprite(tribeBanner.transform, "Plate",
+                new Vector3(FrameRarityCatalog.TribeCanvasOffset.x * tribeWidth,
+                    FrameRarityCatalog.TribeCanvasOffset.y * tribeHeight, -0.00025f),
+                new Vector2(FrameRarityCatalog.TribeCanvasScale.x * tribeWidth,
+                    FrameRarityCatalog.TribeCanvasScale.y * tribeHeight));
+            tribePanel.sortingOrder = FrameRarityCatalog.TribePanelOrder;
+            var tribeLabel = MakeLabel(tribeBanner.transform, "Tribe",
+                new Vector3(0f, 0f, -0.00175f), FrameRarityCatalog.TribeEm * CardH * 10f,
+                FrameRarityCatalog.NameParchment);
+            if (bodyFont != null) tribeLabel.font = bodyFont;
+            tribeLabel.fontStyle = FontStyles.Bold;
+            tribeLabel.rectTransform.sizeDelta = new Vector2(
+                FrameRarityCatalog.TribeTextWidth * CardW,
+                tribeHeight - 24f / FrameRarityCatalog.MasterH * CardH);
+            tribeLabel.enableAutoSizing = true;
+            tribeLabel.fontSizeMax = FrameRarityCatalog.TribeEm * CardH * 10f;
+            tribeLabel.fontSizeMin = FrameRarityCatalog.TribeEmFloor * CardH * 10f;
+            tribeBanner.SetActive(false);
+
             // Tooltip banner — the card's full/original title (CardDefinition.Tooltip), shown only
             // on hover for a card whose printed Name was shortened to fit the face (Card Title
             // Length Audit, 2026-08-09). Sits at the very top edge, in front of every other layer
@@ -930,6 +960,7 @@ namespace Emberfall.Presentation
             presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer, bodyLabel);
             presenter.SetupFrameLayer(frameRenderer, gemRenderer, _uiSprites,
                                       costSocket, attackSocket, healthSocket, gemSocket);
+            presenter.SetupTribe(tribeBanner, tribeLabel, tribePanel);
             // DISABLED 2026-09-08 (Sam): the on-card name-overflow banner sticks forever on touch
             // and covers the mana cost (#362) — same root cause hits the flavor-text-on-hover panel
             // it shares a trigger with. Leaving tooltipBanner/tooltipLabel/_flavorPanel unwired on
