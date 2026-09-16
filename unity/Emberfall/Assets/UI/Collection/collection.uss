@@ -880,29 +880,13 @@
     color: var(--ink-2);
     -unity-text-align: middle-left;
 }
-/* A ROW, not a stack: the count is `-unity-text-align: middle-right` because it was authored for
- * the header row it used to live in, and giving it its own line cost a --type-h1 line box (~33dp)
- * of a column that had none to spare. */
+/* Keep the deck count right-aligned above the mana curve. */
 .deck-editor__identity {
     flex-shrink: 0;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin-bottom: var(--space-3);
-}
-.deck-editor__naming {
-    flex-grow: 1;
-    flex-shrink: 1;
-    min-width: 0;
-}
-.deck-editor__character {
-    font-size: var(--type-label);
-    color: var(--ink-2);
-}
-.deck-editor__name {
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-    color: var(--ink-1);
 }
 /* SITS ALONGSIDE `.ms-gear` (matchsettings.uss), not stacked above it (Sam, 2026-09-07). That
  * button is the persistent corner settings gear CollectionController mounts on this same screen

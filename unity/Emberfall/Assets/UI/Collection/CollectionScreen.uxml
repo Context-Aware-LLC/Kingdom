@@ -83,10 +83,6 @@
             </ui:VisualElement>
             <ui:VisualElement name="deck-editor" class="deck-editor deck-editor--hidden">
                 <ui:VisualElement class="deck-editor__identity">
-                    <ui:VisualElement class="deck-editor__naming">
-                        <ui:Label name="deck-character-name" text="" class="deck-editor__character"/>
-                        <ui:Label name="deck-name" text="" class="deck-editor__name"/>
-                    </ui:VisualElement>
                     <ui:Label name="count-label" text="0 / 30" class="db-count"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="curve-strip" class="db-curve"/>

@@ -126,8 +126,6 @@ namespace Emberfall.Presentation
         private Button _manageDecksButton;
         private Button _backToDecksButton;
         private Button _decksButton;
-        private Label _deckCharacterName;
-        private Label _deckName;
         private bool _queryDrawerOpen;
         private bool _drawerOpen;
         private bool _scopeBeforeEditing;
@@ -357,8 +355,6 @@ namespace Emberfall.Presentation
             _deckEditor          = _root.Q<VisualElement>("deck-editor");
             _drawerTitle         = _root.Q<Label>("deck-drawer-title");
             _drawerSubtitle      = _root.Q<Label>("deck-drawer-subtitle");
-            _deckCharacterName   = _root.Q<Label>("deck-character-name");
-            _deckName            = _root.Q<Label>("deck-name");
             _manageDecksButton   = _root.Q<Button>("manage-decks-button");
             _backToDecksButton   = _root.Q<Button>("choose-another-deck");
             _decksButton         = _root.Q<Button>("decks-button");
@@ -762,18 +758,9 @@ namespace Emberfall.Presentation
             // CollectionClassAxis.BeginEditing for why parking rather than dropping.
             _classAxis.BeginEditing(deck.PrimaryClass, deck.SecondaryClass);
 
-            // The character's name led this line until ADR-0009. What is left is the pairing, which
-            // is what the line was actually FOR — it tells the player which pool the wall beside it
-            // is showing.
-            if (_deckCharacterName != null)
-                _deckCharacterName.text = $"{CardClassTokens.Label(deck.PrimaryClass)} + " +
-                                          CardClassTokens.Label(deck.SecondaryClass);
-            if (_deckName != null) _deckName.text = deck.Name;
-
             StampEditing();
             BuildPool();
             _wall.SetPool(_pool);
-            BindOpenDeck();
             ApplyQuery();
             Refresh();
             ShowDrawerPane(editor: true);
@@ -837,6 +824,8 @@ namespace Emberfall.Presentation
         private void BindOpenDeck()
         {
             if (_deckList == null || !EditingDeck) return;
+            // Apply the same mana/name order on initial load and after every edit.
+            SortDeck();
             _deckList.itemsSource = _deck.Entries;
             _deckList.RefreshItems();
         }
@@ -1034,7 +1023,6 @@ namespace Emberfall.Presentation
             int i = _deck.Entries.FindIndex(x => x.CardId == def.Id);
             if (i >= 0) _deck.Entries[i] = _deck.Entries[i].With(_deck.Entries[i].Count + 1);
             else        _deck.Entries.Add(new DeckEntry(def.Id, 1));
-            SortDeck();
             Refresh();
         }
 
@@ -1206,11 +1194,7 @@ namespace Emberfall.Presentation
         private void Refresh()
         {
             if (!EditingDeck) return;
-            if (_deckList != null)
-            {
-                _deckList.itemsSource = _deck.Entries;
-                _deckList.RefreshItems();
-            }
+            BindOpenDeck();
             _wall.RefreshTiles();
             ManaCurveView.Rebuild(_curve, _deck, _db);
 
