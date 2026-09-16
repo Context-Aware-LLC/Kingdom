@@ -7,9 +7,9 @@ namespace Emberfall.Core.Collection
 {
     /// <summary>
     /// What a brand-new account is given, once, the first time its session resolves
-    /// (<b>Sam, 2026-08-12</b>; rares added 2026-09-02). Two halves: a copy of every collectible
+    /// (<b>Sam, 2026-08-12</b>; rares added 2026-09-02). A copy of every collectible
     /// <b>common and rare</b> in the launch pairing, and <see cref="StarterPackCount"/> boosted
-    /// booster packs.
+    /// booster packs, plus <see cref="StarterShardCount"/> crafting shards.
     ///
     /// <para><b>This is the product decision <see cref="IOwnedCardStore"/> used to say nobody had
     /// made.</b> That paragraph is gone; this type is where the answer lives, in the collection
@@ -22,8 +22,8 @@ namespace Emberfall.Core.Collection
     /// same answer from the same card database.</para>
     ///
     /// <para><b>Account-level and once only, keyed on the ledger transaction id
-    /// <c>signup:{playerId}</c></b> (2026-09-01; spec <c>docs/dev-docs/specs/card-ownership.md</c>,
-    /// slice 1). <c>OnboardingGrantService</c> writes the whole grant as one atomic entitlement batch
+    /// <c>signup:{playerId}</c> for cards/packs and <c>signup_shards_v1:{playerId}</c> for shards</b> (2026-09-01; spec <c>docs/dev-docs/specs/card-ownership.md</c>,
+    /// slice 1). <c>OnboardingGrantService</c> writes the card/pack grant as one atomic entitlement batch
     /// under that id, so a replay conflicts on the derived row keys and writes nothing — the grant is
     /// attempted on every account resolve and there is deliberately no due-check for two resolves to
     /// race. A player who reduces their entire collection to shards is still never re-granted, because
@@ -75,6 +75,9 @@ namespace Emberfall.Core.Collection
 
         /// <summary>Packs handed over with the grant.</summary>
         public const int StarterPackCount = 5;
+
+        /// <summary>Once-per-account crafting trial credit, separate from the original card/pack batch.</summary>
+        public const int StarterShardCount = 50;
 
         /// <summary>
         /// Cards in a starter pack — <b>8, not the 5 <see cref="BoosterPack.DefaultCardCount"/> Sam

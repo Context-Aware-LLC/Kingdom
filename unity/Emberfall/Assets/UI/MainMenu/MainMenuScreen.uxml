@@ -21,7 +21,7 @@
                 <ui:Button name="btn-card-vault" text="" tooltip="Open Card Vault" class="mm-vault-button">
                     <ui:VisualElement picking-mode="Ignore" class="mm-vault-art"/>
                 </ui:Button>
-                <ui:Label name="vault-pack-count" text="× 0" picking-mode="Ignore" class="mm-vault-count"/>
+                <ui:Label name="vault-pack-count" text="" picking-mode="Ignore" class="mm-vault-count"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="footer" class="mm-footer emb-edge">

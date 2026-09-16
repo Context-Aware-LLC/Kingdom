@@ -25,7 +25,7 @@ namespace Emberfall.Net.Server.Accounts
     /// path that makes an unowned card a real thing (spec:
     /// <c>docs/dev-docs/specs/card-ownership.md</c>, slice 1).
     ///
-    /// <para><b>Once per account, keyed on the transaction id.</b> The whole grant is a single
+    /// <para><b>Once per account, keyed on the transaction id.</b> The card/pack grant is a single
     /// <see cref="EntitlementBatch"/> under <c>signup:{playerId}</c>, whose rows derive as
     /// <c>signup:{playerId}:{index}</c>. A replay conflicts on those keys, writes nothing and comes
     /// back <see cref="EntitlementBatchOutcome.Duplicate"/> — so this is safe to call on <i>every</i>
@@ -52,7 +52,10 @@ namespace Emberfall.Net.Server.Accounts
     /// ever lets a guest's collection be carried forward, this skip becomes a grant-then-link and
     /// this paragraph is the thing to revisit.</para>
     ///
-    /// <para><b>Storeless and clockless, like the grant it serves.</b> It resolves the plan from the
+    /// <para>The starter shard credit has its own permanent transaction key so existing accounts
+    /// receive it once without changing the historical signup batch.</para>
+    ///
+    /// <para><b>Resolves the grant without opening packs.</b> It resolves the plan from the
     /// card database and writes ledger rows; it opens no packs. The starter packs land as an
     /// entitlement BALANCE that <see cref="BoosterPackGrantService"/> spends later, so the client
     /// gets the reveal moment it was designed for instead of forty cards appearing silently.</para>
@@ -64,6 +67,10 @@ namespace Emberfall.Net.Server.Accounts
         /// <c>signup:{playerId}</c>, which <see cref="EntitlementBatch"/> expands per row.
         /// </summary>
         public const string TxnPrefix = "signup:";
+
+        /// <summary>A separate event so existing accounts get the trial credit without altering
+        /// or replaying their original signup batch.</summary>
+        public const string StarterShardsTxnPrefix = "signup_shards_v1:";
 
         /// <summary>Ledger <c>source</c> for every row this service writes.</summary>
         public const string GrantSource = "signup";
@@ -97,6 +104,13 @@ namespace Emberfall.Net.Server.Accounts
             if (account == null) throw new ArgumentNullException(nameof(account));
             if (IsGuest(account)) return OnboardingOutcome.SkippedGuest;
             EconomyAccountPolicy.RequireDurable(account);
+
+            // This is an additive, one-time credit, not a minimum balance. Spending it never
+            // makes it due again. It also reaches accounts whose old card/pack batch has drifted.
+            GrantResult shards = await _ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, EconomyItems.Shards, OnboardingGrant.StarterShardCount, GrantSource,
+                StarterShardsTxnPrefix + account.PlayerId,
+                DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs)), ct).ConfigureAwait(false);
 
             OnboardingGrantPlan plan = OnboardingGrant.Resolve(_cards);
             var deltas = new List<EntitlementDelta>(plan.GrantedCardIds.Count + 1);
@@ -133,7 +147,7 @@ namespace Emberfall.Net.Server.Accounts
 
             EntitlementBatchResult result = await _ledger.ApplyBatchAsync(batch, ct).ConfigureAwait(false);
             if (result.Applied) return OnboardingOutcome.Granted;
-            if (result.Duplicate) return OnboardingOutcome.AlreadyGranted;
+            if (result.Duplicate) return shards.Applied ? OnboardingOutcome.Granted : OnboardingOutcome.AlreadyGranted;
 
             // Conflict means this account's signup transaction id is bound to a DIFFERENT set of
             // deltas than the grant now resolves to — the grant's CONTENTS changed after this player

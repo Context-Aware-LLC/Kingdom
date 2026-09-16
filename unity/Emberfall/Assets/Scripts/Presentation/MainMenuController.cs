@@ -91,7 +91,6 @@ namespace Emberfall.Presentation
             BindBuildStamp();
 
             BindShardBalance();
-            RefreshShardBalance();
             BindVaultEntry();
 
             MountSettingsOverlay();
@@ -177,6 +176,9 @@ namespace Emberfall.Presentation
                                  "this device already had.");
             }
 
+            // Collection sync applies onboarding credits; read the wallet after that and after
+            // refreshing the session token so the first readout includes the starter shards.
+            RefreshShardBalance();
             await BeginFirstRun();
             FinishBootstrap();
         }
@@ -487,13 +489,17 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>The vault sigil is a permanent first-class destination. Its badge reports the
-        /// live unopened-pack total, including zero; the vault already owns an honest empty state.</summary>
+        /// live unopened-pack total only when positive; the vault stays accessible when empty.</summary>
         private void BindVaultEntry()
         {
             _vaultArt = _root.Q<VisualElement>(className: "mm-vault-art");
             _vaultPackCount = _root.Q<Label>("vault-pack-count");
             _vaultArtProvider = ShopRuntime.PackArt ?? new PackArtProvider();
-            if (_vaultPackCount != null) _vaultPackCount.text = "× 0";
+            if (_vaultPackCount != null)
+            {
+                _vaultPackCount.text = "";
+                _vaultPackCount.style.display = DisplayStyle.None;
+            }
         }
 
         private void RenderVaultEntry(Emberfall.Net.Client.Collection.CollectionSnapshot snapshot)
@@ -505,11 +511,12 @@ namespace Emberfall.Presentation
             {
                 foreach (long count in snapshot.Packs.Values)
                 {
-                    if (count > 0) total += count;
+                    if (count > 0) total = Math.Min(100, total + Math.Min(100, count));
                 }
             }
 
-            _vaultPackCount.text = total > 99 ? "× 99+" : $"× {total}";
+            _vaultPackCount.style.display = total > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            _vaultPackCount.text = total > 99 ? "× 99+" : total > 0 ? $"× {total}" : "";
             if (total > 0) RenderVaultArt(snapshot);
         }
 
