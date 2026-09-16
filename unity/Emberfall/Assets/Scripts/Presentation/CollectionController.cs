@@ -104,6 +104,7 @@ namespace Emberfall.Presentation
         private VisualElement _plate;
         private ListView _collectionList;
         private CardWall _wall;
+        private CollectionDeckDrag _deckDrag;
         private CardQueryBar _query;
         private Label _emptyLabel;
         private ListView _deckList;
@@ -231,6 +232,7 @@ namespace Emberfall.Presentation
             WireScopeToggle();
             WireDeckList();
             WireChrome();
+            WireDeckDrag();
 
             ApplyQuery();
             WireCollectionScroll();
@@ -482,6 +484,8 @@ namespace Emberfall.Presentation
 
         private void OnDisable()
         {
+            _deckDrag?.Dispose();
+            _deckDrag = null;
             _craftVersion++;
             _craftCancel?.Cancel();
             _craftCancel?.Dispose();
@@ -522,13 +526,8 @@ namespace Emberfall.Presentation
         /// new input gesture is a real decision with a verify check of its own
         /// (<c>InputGestureVerify</c>).</para>
         ///
-        /// <para><b>RETIREMENT TRIGGER — drag-to-add/remove in the deckbuilder (Sam, 2026-08-12,
-        /// "pretty soon").</b> Drag takes over add and remove, which frees the tap completely. When
-        /// that lands, DELETE the owns-zero fall-through below and make the tap mean crafting in both
-        /// modes unconditionally: the special case exists only because add currently owns the gesture,
-        /// and once it does not, the case is not a simplification to notice later — it is dead weight
-        /// that makes the deckbuilder's tap mean two different things for no reason. The paragraph
-        /// above about "a gesture of its own" retires with it.</para>
+        /// <para>Drag is an additional add/remove gesture. Keep tap-to-add available while the new
+        /// transfer interaction is exercised on mouse and touch; it is not a tap-mode change.</para>
         /// </summary>
         private void OnTileClicked(CardDefinition def)
         {
@@ -745,6 +744,7 @@ namespace Emberfall.Presentation
         private void OpenDeckEditor(DeckList deck)
         {
             if (deck == null) return;
+            _deckDrag?.Cancel();
             if (EditingDeck) SaveDeck();
 
             _scopeBeforeEditing = _scope.RawScope;
@@ -768,6 +768,7 @@ namespace Emberfall.Presentation
 
         private void EndDeckEditing()
         {
+            _deckDrag?.Cancel();
             if (!EditingDeck) return;
 
             _deck = null;
@@ -800,6 +801,43 @@ namespace Emberfall.Presentation
         }
 
         // ---- Deck ListView ----
+        private void WireDeckDrag()
+        {
+            _deckDrag?.Dispose();
+            _deckDrag = new CollectionDeckDrag(_root, _plate, _collectionList, _deckEditor,
+                ResolveDeckDragSource, CanDropDeckCard, DragCardFace,
+                source => { if (source.FromDeck) RemoveCopy(source.Card); else AddCopy(source.Card); },
+                CardWall.CancelTileTap);
+        }
+
+        private CollectionDeckDrag.Source ResolveDeckDragSource(VisualElement target)
+        {
+            if (!EditingDeck || !_drawerOpen || _queryDrawerOpen || _craftModal?.IsOpen == true)
+                return default;
+            if (_wall.TryGetCard(target, out CardDefinition card, out VisualElement tile))
+                return new CollectionDeckDrag.Source(tile, card, false);
+            if (target != null && _deckList.Contains(target))
+                for (var element = target; element != null && element != _deckList; element = element.parent)
+                    if (element.userData is CardDefinition rowCard)
+                        return new CollectionDeckDrag.Source(element, rowCard, true);
+            return default;
+        }
+
+        private bool CanDropDeckCard(CollectionDeckDrag.Source source)
+        {
+            return EditingDeck && _drawerOpen && !_queryDrawerOpen && _craftModal?.IsOpen != true
+                && (source.FromDeck ? _deck.CountOf(source.Card.Id) > 0
+                    : DeckValidator.CanAdd(_deck, source.Card, _owned));
+        }
+
+        private Texture2D DragCardFace(CardDefinition card)
+        {
+            return _faceBaker.TryGetCachedFace(card.Id, out Texture2D face) ? face : null;
+        }
+
+        private void OnApplicationFocus(bool focused) { if (!focused) _deckDrag?.Cancel(); }
+        private void OnApplicationPause(bool paused) { if (paused) _deckDrag?.Cancel(); }
+
         private void WireDeckList()
         {
             if (_deckList == null) return;
@@ -834,11 +872,12 @@ namespace Emberfall.Presentation
         {
             if (!EditingDeck || index < 0 || index >= _deck.Entries.Count)
             {
+                row.userData = null;
                 row.style.display = DisplayStyle.None;
                 return;
             }
             var entry = _deck.Entries[index];
-            if (!_db.TryGet(entry.CardId, out var def)) { row.style.display = DisplayStyle.None; return; }
+            if (!_db.TryGet(entry.CardId, out var def)) { row.userData = null; row.style.display = DisplayStyle.None; return; }
             row.style.display = DisplayStyle.Flex;
             row.userData = def;
             SetCardRow(row, def);
@@ -883,6 +922,7 @@ namespace Emberfall.Presentation
         private async void OpenCraft(CardDefinition def)
         {
             if (_craftModal == null || !_craftModal.IsBound || def == null || _craftBusy) return;
+            _deckDrag?.Cancel();
             int version = ++_craftVersion;
             CancellationToken ct = _craftCancel.Token;
             _craftModal.Open(def, Crafting.OfferRender(def, 0, 0), Crafting.OfferReduce(def, 0), 0);
@@ -1111,6 +1151,7 @@ namespace Emberfall.Presentation
 
         private void SetQueryDrawerOpen(bool open)
         {
+            _deckDrag?.Cancel();
             if (_queryDrawer == null) return;
 
             _queryDrawerOpen = open;
@@ -1155,6 +1196,7 @@ namespace Emberfall.Presentation
         /// </summary>
         private void ApplyQuery()
         {
+            _deckDrag?.Cancel();
             CardFilter filter = _query.Filter;
             if (_classAxis.IsConstrained)
                 filter.Classes = new List<CardClass>(_classAxis.Selected);
@@ -1194,6 +1236,7 @@ namespace Emberfall.Presentation
         private void Refresh()
         {
             if (!EditingDeck) return;
+            _deckDrag?.Cancel();
             BindOpenDeck();
             _wall.RefreshTiles();
             ManaCurveView.Rebuild(_curve, _deck, _db);

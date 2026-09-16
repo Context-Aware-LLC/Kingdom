@@ -117,6 +117,27 @@ namespace Emberfall.Presentation
 
         public IReadOnlyList<CardDefinition> Visible => _visible;
 
+        /// <summary>Resolve the current card, not a stale id from a recycled wall slot.</summary>
+        public bool TryGetCard(VisualElement target, out CardDefinition card, out VisualElement tile)
+        {
+            card = null;
+            tile = null;
+            if (target == null || !_list.Contains(target)) return false;
+            for (var element = target; element != null && element != _list; element = element.parent)
+            {
+                if (!(element.userData is SlotBinding binding) || binding.Card == null) continue;
+                card = binding.Card;
+                tile = element;
+                return true;
+            }
+            return false;
+        }
+
+        public static void CancelTileTap(VisualElement tile)
+        {
+            if (tile?.userData is SlotBinding binding) binding.PointerDown = false;
+        }
+
         public CardWall(ListView list, VisualTreeAsset rowTemplate, CardFaceBaker baker)
         {
             _list = list ?? throw new ArgumentNullException(nameof(list));

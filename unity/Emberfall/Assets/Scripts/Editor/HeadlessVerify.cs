@@ -36,6 +36,7 @@ namespace Emberfall.Editor
                 RunCheck("AddressablesGuard",    AddressablesGuard.Check),
                 RunCheck("DeviceLayoutVerify",   DeviceLayoutVerify.Check),
                 RunCheck("InputGestureVerify",   InputGestureVerify.Run),
+                RunCheck("CollectionDeckDragVerify", CollectionDeckDragVerify.Run),
                 RunCheck("CardRevealVerify",     CardRevealVerify.Run),
                 RunCheck("CardMaterialBinderVerify", CardMaterialBinderVerify.Run),
                 RunCheck("CardBackOwnershipVerify", CardBackOwnershipVerify.Run),
