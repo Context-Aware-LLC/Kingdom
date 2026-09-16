@@ -258,7 +258,7 @@
 }
 
 .deck-modal-class-badge {
-    font-size: var(--type-caption);
+    font-size: var(--type-body);
     -unity-font-style: bold;
     color: var(--surface-0);
     padding: 2px var(--space-2);
@@ -275,6 +275,15 @@
 .deck-modal-class-badge--clockwright { background-color: var(--class-clockwright); }
 .deck-modal-class-badge--stonewarden { background-color: var(--class-stonewarden); }
 .deck-modal-class-badge--nightveil  { background-color: var(--class-nightveil); }
+
+/* These darker class fills need light ink; the other fills retain dark ink above.
+ * White also keeps Gravekeep above 4.5:1, where --ink-1 would fall short. */
+.deck-modal-class-badge--gravekeep,
+.deck-modal-class-badge--tempest,
+.deck-modal-class-badge--clockwright,
+.deck-modal-class-badge--nightveil {
+    color: rgb(255, 255, 255);
+}
 
 /* ---- Deck modal panes ---- */
 .deck-pane {
