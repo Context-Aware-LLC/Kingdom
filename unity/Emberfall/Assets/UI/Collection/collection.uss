@@ -436,12 +436,9 @@
 .col-query-scrim--open {
     display: flex;
 }
-/* Closes the deck drawer on an outside tap, replacing the "Close" button that used to sit in its
- * header (Sam, 2026-09-07). Same shape as `.col-query-scrim` above -- full-screen, declared
- * before the drawer so the drawer (and its own buttons/rows) paints on top and keeps first claim
- * on any tap that actually lands on it -- MINUS that one's `picking-mode="Ignore"` in the UXML,
- * which is very likely why closing the filter drawer by tapping outside it does not currently
- * work; left alone here since fixing it is not this change. */
+/* Outside taps dismiss the deck CHOOSER. ShowDrawerPane hides this layer while editing so
+ * card clicks and wheel events reach the wall. Back still closes the selected deck.
+ * Declared before the drawer so its buttons and rows remain above the dismiss layer. */
 .deck-drawer-scrim {
     display: none;
     position: absolute;

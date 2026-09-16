@@ -652,7 +652,6 @@ namespace Emberfall.Presentation
 
             _drawerOpen = true;
             _drawer.AddToClassList("deck-drawer--open");
-            _deckDrawerScrim?.AddToClassList("deck-drawer-scrim--open");
             if (_decksButton != null) _decksButton.style.display = DisplayStyle.None;
             if (EditingDeck) ShowDrawerPane(editor: true);
             else
@@ -683,6 +682,9 @@ namespace Emberfall.Presentation
 
         private void ShowDrawerPane(bool editor)
         {
+            // Editing uses the wall beside the drawer. A full-screen dismiss layer here
+            // steals both card clicks and wheel events before they can reach the wall.
+            _deckDrawerScrim?.EnableInClassList("deck-drawer-scrim--open", !editor);
             _deckChooserFrame?.EnableInClassList("deck-chooser--hidden", editor);
             _deckEditor?.EnableInClassList("deck-editor--hidden", !editor);
             // "Manage Decks" leaves the collection entirely, so it belongs to the
