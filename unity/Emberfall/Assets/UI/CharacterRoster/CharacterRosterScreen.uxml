@@ -100,7 +100,8 @@
                 </ui:VisualElement>
 
                 <ui:VisualElement name="deck-rename-pane" class="deck-pane">
-                    <ui:TextField name="deck-rename-field" label="Name" max-length="24" class="roster-field" />
+                    <ui:Label name="deck-rename-help" text="Choose a name for this deck (up to 24 characters)." class="create-help" />
+                    <ui:TextField name="deck-rename-field" max-length="24" class="roster-field" />
                 </ui:VisualElement>
 
                 <ui:VisualElement name="deck-delete-pane" class="deck-pane">

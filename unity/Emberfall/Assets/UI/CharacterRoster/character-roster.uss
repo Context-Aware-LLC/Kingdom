@@ -570,6 +570,27 @@
     max-width: 88%;
 }
 
+/* Rename is a small form: keep the class pairing, then fit the helper, input and actions. */
+.delete-dialog--rename {
+    width: 680px;
+    max-width: 90%;
+    height: auto;
+}
+
+.delete-dialog--rename #deck-modal-account,
+.delete-dialog--rename #deck-modal-title {
+    display: none;
+}
+
+.delete-dialog--rename .deck-modal-header {
+    justify-content: flex-end;
+    margin-bottom: var(--space-4);
+}
+
+.delete-dialog--rename .delete-actions {
+    margin-top: var(--space-2);
+}
+
 .delete-message {
     font-size: var(--type-h2);
     color: var(--ink-1);

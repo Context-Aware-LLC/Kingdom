@@ -349,6 +349,7 @@ namespace Emberfall.Presentation
             _deckDialog?.EnableInClassList("delete-dialog--wide",
                 pane == DeckPane.Image || pane == DeckPane.CardBack);
             _deckDialog?.EnableInClassList("delete-dialog--card-back", pane == DeckPane.CardBack);
+            _deckDialog?.EnableInClassList("delete-dialog--rename", pane == DeckPane.Rename);
 
             Show(_deckMenuPane, pane == DeckPane.Menu);
             Show(_deckImagePane, pane == DeckPane.Image);
