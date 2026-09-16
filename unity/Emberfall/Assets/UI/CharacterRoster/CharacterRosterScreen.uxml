@@ -109,7 +109,6 @@
 
                 <ui:VisualElement name="deck-back-pane" class="deck-pane">
                     <ui:VisualElement name="deck-back-grid" class="deck-back-grid" />
-                    <ui:Label name="deck-back-note" text="" class="create-help create-help--starter" />
                 </ui:VisualElement>
 
                 <ui:Label name="deck-modal-error" text="" class="create-error" />

@@ -144,8 +144,8 @@
     max-height: 90%;
 }
 
-/* Image and card-back picker thumbnails remain square. Roster plates override the height below
- * and receive their responsive rectangular dimensions from LayoutDeckGrid. */
+/* Deck-image thumbnails remain square. Card backs fill their picker cells below; roster plates
+ * receive their responsive rectangular dimensions from LayoutDeckGrid. */
 .deck-plate-art {
     width: 112px;
     height: 112px;
@@ -318,16 +318,44 @@
     background-color: var(--surface-3);
 }
 
-/* Pickers label their options; deck plates on the roster do not. A card back has no other name,
- * and the deck-image grid identifies its cards by tooltip because the art is the point. */
-.deck-back-option .deck-plate-name {
+/* An image-only card-back picker, with room for five columns and two rows. The pane takes the
+ * space above Back/Save, so thumbnail height follows the page instead of the old 112px square. */
+.delete-dialog--card-back #deck-modal-header,
+.delete-dialog--card-back #deck-modal-title {
+    display: none;
+}
+
+#deck-back-pane,
+#deck-back-grid {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-height: 0;
+}
+
+#deck-back-grid {
+    margin-bottom: 0;
+}
+
+#deck-back-grid .deck-back-option {
+    width: 20%;
+    height: 50%;
+    min-width: 0;
+    min-height: 0;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+#deck-back-grid .deck-plate-art {
     width: 100%;
+    height: auto;
+    min-height: 0;
+    flex-grow: 1;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.delete-dialog--card-back .delete-actions {
+    flex-shrink: 0;
     margin-top: var(--space-2);
-    font-size: var(--type-caption);
-    -unity-text-align: middle-center;
-    color: var(--ink-2);
-    text-overflow: ellipsis;
-    overflow: hidden;
 }
 
 /* The character menu popover stood here until ADR-0009 -- a card anchored under a row's name,

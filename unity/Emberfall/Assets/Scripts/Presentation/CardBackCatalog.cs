@@ -10,7 +10,7 @@ namespace Emberfall.Presentation
         /// every deck that chose it back to the default.</summary>
         public readonly string Id;
 
-        /// <summary>What the picker shows.</summary>
+        /// <summary>The picker tooltip; the artwork itself has no caption.</summary>
         public readonly string Name;
 
         /// <summary>The <see cref="IUiSpriteProvider"/> key — the file name under <c>Assets/Art/UI/</c>,
@@ -45,11 +45,8 @@ namespace Emberfall.Presentation
     /// the second half of this, and it is the half that puts an opponent-authored back id on the
     /// wire — read <c>security.md</c> before that one.</para>
     ///
-    /// RETIREMENT TRIGGER: adding a row below is what falsifies "there is only one back". When you
-    /// add one, also (a) drop the single-back note the deck-back picker shows in
-    /// <c>CharacterRosterController.ShowCardBackPane</c>, and (b) confirm its address is registered
-    /// in the <c>UI_Core</c> Addressables group — an unregistered key resolves in the Editor and
-    /// returns null in a build.
+    /// When adding a back, confirm its address is registered in the <c>UI_Core</c> Addressables
+    /// group — an unregistered key resolves in the Editor and returns null in a build.
     /// </summary>
     public static class CardBackCatalog
     {

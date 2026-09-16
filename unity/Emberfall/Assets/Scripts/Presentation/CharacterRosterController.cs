@@ -120,7 +120,6 @@ namespace Emberfall.Presentation
         private VisualElement _deckRenamePane;
         private VisualElement _deckBackPane;
         private VisualElement _deckBackGrid;
-        private Label _deckBackNote;
         private VisualElement _deckImagePane;
         private VisualElement _deckImageGrid;
         private Label _deckImageNote;
@@ -213,7 +212,6 @@ namespace Emberfall.Presentation
             _deckRenamePane = _root.Q<VisualElement>("deck-rename-pane");
             _deckBackPane = _root.Q<VisualElement>("deck-back-pane");
             _deckBackGrid = _root.Q<VisualElement>("deck-back-grid");
-            _deckBackNote = _root.Q<Label>("deck-back-note");
             _deckImagePane = _root.Q<VisualElement>("deck-image-pane");
             _deckImageGrid = _root.Q<VisualElement>("deck-image-grid");
             _deckImageNote = _root.Q<Label>("deck-image-note");
@@ -350,6 +348,7 @@ namespace Emberfall.Presentation
             // see .delete-dialog--wide (Sam, 2026-08-09).
             _deckDialog?.EnableInClassList("delete-dialog--wide",
                 pane == DeckPane.Image || pane == DeckPane.CardBack);
+            _deckDialog?.EnableInClassList("delete-dialog--card-back", pane == DeckPane.CardBack);
 
             Show(_deckMenuPane, pane == DeckPane.Menu);
             Show(_deckImagePane, pane == DeckPane.Image);
@@ -447,6 +446,7 @@ namespace Emberfall.Presentation
                 option.AddToClassList("deck-back-option");
                 option.EnableInClassList("deck-back-option--on",
                     CardBackCatalog.Resolve(_pendingCardBackId).Id == choice.Id);
+                option.tooltip = choice.Name;
                 option.clicked += () =>
                 {
                     _pendingCardBackId = choice.Id;
@@ -459,17 +459,8 @@ namespace Emberfall.Presentation
                 if (sprite != null) art.style.backgroundImage = new StyleBackground(sprite);
                 option.Add(art);
 
-                var name = new Label(choice.Name);
-                name.AddToClassList("deck-plate-name");
-                option.Add(name);
-
                 _deckBackGrid.Add(option);
             }
-
-            if (_deckBackNote != null)
-                _deckBackNote.text = CardBackCatalog.HasChoice
-                    ? ""
-                    : "This is the only card back in the game so far. More arrive with each set.";
         }
 
         private void ConfirmDeckPane()
@@ -554,6 +545,7 @@ namespace Emberfall.Presentation
         private void SetDeckError(string message)
         {
             if (_deckModalError != null) _deckModalError.text = message ?? "";
+            Show(_deckModalError, !string.IsNullOrEmpty(message));
         }
 
         private static void Show(VisualElement element, bool visible)
