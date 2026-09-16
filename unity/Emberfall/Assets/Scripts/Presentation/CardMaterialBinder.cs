@@ -238,6 +238,11 @@ namespace Emberfall.Presentation
         private void Restart(ref Coroutine slot, IEnumerator routine)
         {
             if (slot != null) StopCoroutine(slot);
+            slot = null;
+            // A play reveal hides the source card before the result events arrive, and the
+            // binder stays subscribed until end-of-frame destruction. Hidden cards cannot
+            // animate; this also covers cards under an inactive parent and aura updates.
+            if (!gameObject.activeInHierarchy) return;
             slot = StartCoroutine(routine);
         }
 

@@ -37,6 +37,7 @@ namespace Emberfall.Editor
                 RunCheck("DeviceLayoutVerify",   DeviceLayoutVerify.Check),
                 RunCheck("InputGestureVerify",   InputGestureVerify.Run),
                 RunCheck("CardRevealVerify",     CardRevealVerify.Run),
+                RunCheck("CardMaterialBinderVerify", CardMaterialBinderVerify.Run),
             };
 
             Debug.Log("[HeadlessVerify] ==============================");
