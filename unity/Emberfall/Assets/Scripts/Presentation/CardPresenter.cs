@@ -21,6 +21,9 @@ namespace Emberfall.Presentation
         [SerializeField] private TextMeshPro durabilityLabel;
         [SerializeField] private TextMeshPro keywordLabel;
         [SerializeField] private TextMeshPro bodyLabel;
+        [SerializeField] private GameObject tribeBanner;
+        [SerializeField] private TextMeshPro tribeLabel;
+        [SerializeField] private SpriteRenderer tribePanelRenderer;
         [SerializeField] private Renderer cardBackground;
         [SerializeField] private Renderer artRenderer;
 
@@ -95,6 +98,13 @@ namespace Emberfall.Presentation
             gemSocketRenderer    = gemSocket;
         }
 
+        internal void SetupTribe(GameObject banner, TextMeshPro label, SpriteRenderer panel)
+        {
+            tribeBanner = banner;
+            tribeLabel = label;
+            tribePanelRenderer = panel;
+        }
+
         // Wired by BoardController.CreatePresenter; banner starts inactive and is toggled by
         // OnMouseEnter/OnMouseExit below, only when the bound card carries a non-empty Tooltip.
         // flavorPanel is the match's one shared bottom-right surface (may be null in a detached/
@@ -158,6 +168,7 @@ namespace Emberfall.Presentation
             if (durabilityLabel != null) durabilityLabel.gameObject.SetActive(false);
             if (keywordLabel != null)    keywordLabel.gameObject.SetActive(false);
             if (bodyLabel != null)       bodyLabel.gameObject.SetActive(false);
+            if (tribeBanner != null)     tribeBanner.SetActive(false);
             if (artRenderer != null)     artRenderer.gameObject.SetActive(false);
             if (gemRenderer != null)     gemRenderer.gameObject.SetActive(false);
             if (tooltipBanner != null)   tooltipBanner.SetActive(false);
@@ -282,6 +293,7 @@ namespace Emberfall.Presentation
             if (nameLabel != null) nameLabel.text = _def.Name;
             if (costLabel != null) costLabel.text = _def.Cost.ToString();
             ApplyFrame();
+            ApplyTribe();
             RecolorStats();
             RebuildKeywords();
             ApplyBodyText();
@@ -299,6 +311,28 @@ namespace Emberfall.Presentation
             string rulesText = _def.Text;
             bodyLabel.text = CardTextStyling.Style(rulesText);
             bodyLabel.gameObject.SetActive(rulesText.Length > 0);
+        }
+
+        private void ApplyTribe()
+        {
+            if (tribeBanner == null || tribeLabel == null) return;
+            bool visible = _def != null && _def.Type == CardType.MINION
+                && _def.Tribe.HasValue && _def.Tribe.Value != Tribe.NONE;
+            tribeBanner.SetActive(visible);
+            if (!visible)
+            {
+                tribeLabel.text = string.Empty;
+                return;
+            }
+
+            string name = _def.Tribe.Value.ToString().ToLowerInvariant();
+            tribeLabel.text = char.ToUpperInvariant(name[0]) + name.Substring(1);
+            Sprite panel = _ui?.Get(FrameRarityCatalog.TribePanelSprite);
+            if (tribePanelRenderer != null)
+            {
+                SpriteMaterials.SetPreservingSize(tribePanelRenderer, panel);
+                tribePanelRenderer.gameObject.SetActive(panel != null);
+            }
         }
 
         // Assigning a sprite to a Sliced-mode SpriteRenderer resets its .size to the sprite's
@@ -356,7 +390,7 @@ namespace Emberfall.Presentation
                                      "and in the collection alike. The renderer is left tinted by " +
                                      "rarity, which is the fallback look, not the finished one.");
 
-                if (_hasPaintedFrame) PlaceGem(gem);
+                PlaceGem(gem);
             }
 
             bool showAttack     = FrameRarityCatalog.ShowAttack(_def.Type);
@@ -445,7 +479,7 @@ namespace Emberfall.Presentation
                 (0.5f - frac.y) * BoardController.CardH, z);
         }
 
-        /// <summary>Sets the gem into the frame's bottom-centre socket, sized by HEIGHT with width
+        /// <summary>Sets the gem into the frame's upper-right socket, sized by HEIGHT with width
         /// following the sprite's own aspect ratio.
         ///
         /// <para>Aspect matters because the gems are not one shape: the rare is a square princess

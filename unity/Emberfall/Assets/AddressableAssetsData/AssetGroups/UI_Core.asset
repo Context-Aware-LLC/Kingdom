@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: UI_Core
   m_GUID: 3d766df806eca424e9276c2b8a291061
   m_SerializeEntries:
+  - m_GUID: 162cd4daedce445287cd8e1d8eabe60c
+    m_Address: ui/tribe_plate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 05a051793cd086f41a4a802805d9c268
     m_Address: materials/M_ManaFill
     m_ReadOnly: 0

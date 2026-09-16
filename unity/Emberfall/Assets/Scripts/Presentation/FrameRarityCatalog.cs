@@ -13,7 +13,7 @@ namespace Emberfall.Presentation
     /// is what lets <see cref="FrameSprite"/> be a constant rather than a lookup.</para>
     ///
     /// <para><b>Rarity now reads entirely from the gem</b> (<see cref="GemSprite"/>) in the
-    /// bottom-centre socket. <see cref="GemColor"/>/<see cref="FrameTint"/> remain only as the
+    /// upper-right socket. <see cref="GemColor"/>/<see cref="FrameTint"/> remain only as the
     /// no-sprite fallback.</para>
     /// </summary>
     public static class FrameRarityCatalog
@@ -55,6 +55,7 @@ namespace Emberfall.Presentation
         public const string FrameSprite      = "frame_card";
         public const string StatSocketSprite = "socket_stat"; // cost, attack, health/durability — one sprite, drawn three times
         public const string GemSocketSprite  = "socket_gem";  // the rope bezel the rarity gem sits in
+        public const string TribePanelSprite = "tribe_plate";
 
         // Socket sprite canvas sizes, in master pixels. The disc is centred in its canvas with a
         // transparent margin, so the sprite is drawn at CANVAS span and lands concentric on the
@@ -129,14 +130,29 @@ namespace Emberfall.Presentation
         public static readonly Color NameParchment = new Color32(245, 238, 225, 255);
         public static readonly Color BodyInk       = new Color32(28, 18, 12, 255);
 
-        // Rarity gem socket, bottom-centre. y is the lowest the O206 bezel can sit: the frame's
-        // last opaque row under it is 2044, so 2044 − 103 = 1941. The gem is sized by HEIGHT and
+        // Rarity gem socket, upper-right, opposite the mana cost (Sam, 2026-09-16).
+        // The O206 bezel stays inside the card at (1323, 150). The gem is sized by HEIGHT and
         // the four gem PNGs are normalised to square canvases of equal fill by
         // tooling/scripts/normalize_gem_art.py — re-run it after any gem is re-exported, because
         // a padded export renders as a gem that is mysteriously too small.
-        // RETIREMENT TRIGGER: re-cutting the frame's bottom rail moves this y.
-        public static readonly Vector2 GemSocket = new(0.5f, 0.947754f); // 728, 1941
+        public static readonly Vector2 GemSocket = new(1323f / MasterW, 150f / MasterH);
         public const float GemHeight = 0.075684f; // 155 — O155 stone in the O170 well
+
+        // The tribe plate extends to the stat centres; the stat frames mask its ends.
+        // Only the background stretches under the frames. Text stays in the clear middle.
+        public const float TribeCenterY = 1913f / MasterH;
+        public const float TribeWidth = 1200f / MasterW;
+        public const float TribeTextWidth = 796f / MasterW;
+        public const float TribeHeight = 160f / MasterH;
+        // tribe_plate.png is 2079 x 522; its painted bounds are (36, 90)..(2048, 444).
+        // Size/offset the full canvas so those bounds, not its transparent margins, fit the plate.
+        // Re-measure these if the source canvas or alpha silhouette changes.
+        public static readonly Vector2 TribeCanvasScale = new(2079f / 2012f, 522f / 354f);
+        public static readonly Vector2 TribeCanvasOffset = new(-2.5f / 2012f, 6f / 354f);
+        public const int TribePanelOrder = 2;
+        public const int StatSocketOrder = TribePanelOrder + 1;
+        public const float TribeEm = 100f / MasterH;
+        public const float TribeEmFloor = 84f / MasterH;
 
         // NO KeywordIcon HERE ANY MORE (removed 2026-09-04, Sam: "we aren't doing keyword icons").
         // It minted "icon_kw_<keyword>" addresses and had no callers at all — StatusMarkCatalog
