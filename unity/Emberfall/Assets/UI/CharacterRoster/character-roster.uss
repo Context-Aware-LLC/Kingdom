@@ -140,12 +140,8 @@
     color: var(--ink-1);
 }
 
-.deck-image-scroll {
-    max-height: 90%;
-}
-
-/* Deck-image thumbnails remain square. Card backs fill their picker cells below; roster plates
- * receive their responsive rectangular dimensions from LayoutDeckGrid. */
+/* Card backs fill their picker cells below; roster plates receive their responsive rectangular
+ * dimensions from LayoutDeckGrid. */
 .deck-plate-art {
     width: 112px;
     height: 112px;
@@ -232,23 +228,14 @@
 
 /* There is no deck-strip-hint and no deck-strip. See the deck grid section above. */
 
-/* ---- Deck modal header: account name + class badges (NOR-404) --------------------------------
- * The header row sits above the deck title. Account name is on the left; class badges pin to
- * the right. The badges are the DECK's own pairing since ADR-0009 -- permanent, and
- * read off the deck rather than off a character the deck pointed at. */
+/* ---- Deck modal header: class badges (NOR-404) -----------------------------------------------
+ * The header row sits above the deck title. The badges are the DECK's own pairing since ADR-0009
+ * -- permanent, and read off the deck rather than off a character the deck pointed at. */
 .deck-modal-header {
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin-bottom: var(--space-2);
-}
-
-.deck-modal-account {
-    font-size: var(--type-caption);
-    color: var(--ink-2);
-    flex-shrink: 1;
-    text-overflow: ellipsis;
-    overflow: hidden;
 }
 
 .deck-modal-classes {
@@ -291,8 +278,16 @@
 }
 
 .deck-action {
-    align-self: stretch;
+    width: 184px;
+    align-self: center;
     margin-bottom: var(--space-2);
+}
+
+#deck-select.deck-action--selected {
+    color: var(--accent);
+    background-color: var(--surface-3);
+    border-width: 2px;
+    border-color: var(--accent);
 }
 
 .deck-back-grid {
@@ -551,8 +546,8 @@
 }
 
 /* Sized for the menu pane (a stack of buttons) — the common case for opening this dialog.
- * .delete-dialog--wide (below) overrides this for the two panes that actually need the room:
- * a grid of card art wants width the button list would only stretch to fill (Sam, 2026-08-09).
+ * .delete-dialog--wide (below) overrides this for the card-back pane's art grid, which needs
+ * width the button list would only stretch to fill (Sam, 2026-08-09).
  * Same override pattern as .character-create-dialog just below. */
 .delete-dialog {
     width: 50%;
@@ -570,6 +565,16 @@
     max-width: 88%;
 }
 
+/* The deck menu and its subpanes share the roster artwork instead of drawing a flat card. */
+#deck-modal,
+#deck-dialog {
+    background-color: transparent;
+}
+
+#deck-dialog {
+    border-width: 0;
+}
+
 /* Rename is a small form: keep the class pairing, then fit the helper, input and actions. */
 .delete-dialog--rename {
     width: 680px;
@@ -577,7 +582,6 @@
     height: auto;
 }
 
-.delete-dialog--rename #deck-modal-account,
 .delete-dialog--rename #deck-modal-title {
     display: none;
 }
