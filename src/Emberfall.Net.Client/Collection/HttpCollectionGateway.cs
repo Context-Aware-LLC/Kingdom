@@ -199,6 +199,19 @@ namespace Emberfall.Net.Client.Collection
                 .GetAsync(_baseUrl + "/collection", headers, cancellationToken)
                 .ConfigureAwait(false);
 
+            // A Fly resume can leave the first authenticated read waiting on a cold dependency
+            // until Unity's request timer fires. The server may finish warming immediately after
+            // that abort; retry this idempotent GET once before declaring the collection offline.
+            // Other transport failures (including no route) should not double the wait.
+            if (response.IsTransportFailure && !cancellationToken.IsCancellationRequested &&
+                (response.Body.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 response.Body.IndexOf("timed out", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                response = await _http
+                    .GetAsync(_baseUrl + "/collection", headers, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
             if (response.IsTransportFailure)
                 return CollectionSnapshot.Failed(CollectionSyncStatus.Offline, response.Body);
 

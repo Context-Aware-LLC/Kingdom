@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Net.Client.Auth;
 using Emberfall.Net.Client.Tests.Auth;
@@ -172,6 +173,49 @@ namespace Emberfall.Net.Client.Tests.Collection
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Offline));
             Assert.That(snapshot.ShouldReplaceCache, Is.False);
             Assert.That(snapshot.Cards, Is.Null);
+            Assert.That(http.Requests.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task A_timed_out_first_read_retries_once_and_uses_the_server_answer()
+        {
+            var http = new FakeAuthHttp()
+                .ReplyTransportFailure("Request timeout")
+                .Reply(200, "{\"ownership\":\"known\",\"cards\":{\"1001\":2},\"packs\":{}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+
+            Assert.That(http.Requests.Count, Is.EqualTo(2));
+            Assert.That(http.Requests.All(r => r.Verb == "GET" && r.Url == Base + "/collection"), Is.True);
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
+            Assert.That(snapshot.Cards!.CopiesOwned(1001), Is.EqualTo(2));
+        }
+
+        [Test]
+        public async Task A_second_timeout_stays_offline_without_an_unbounded_retry()
+        {
+            var http = new FakeAuthHttp()
+                .ReplyTransportFailure("Request timeout")
+                .ReplyTransportFailure("Request timeout");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+
+            Assert.That(http.Requests.Count, Is.EqualTo(2));
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Offline));
+            Assert.That(snapshot.ShouldReplaceCache, Is.False);
+        }
+
+        [Test]
+        public async Task A_cancelled_timeout_does_not_retry()
+        {
+            using var cancellation = new CancellationTokenSource();
+            var http = new FakeAuthHttp().ReplyTransportFailure("Request timeout");
+            cancellation.Cancel();
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", cancellation.Token);
+
+            Assert.That(http.Requests.Count, Is.LessThanOrEqualTo(1));
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Offline));
         }
 
         [Test]
