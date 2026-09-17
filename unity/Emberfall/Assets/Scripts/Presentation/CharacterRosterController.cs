@@ -112,7 +112,6 @@ namespace Emberfall.Presentation
 
         private VisualElement _deckModal;
         private VisualElement _deckDialog;
-        private Label _deckModalAccount;
         private VisualElement _deckModalClasses;
         private Label _deckModalTitle;
         private Label _deckModalSub;
@@ -121,9 +120,6 @@ namespace Emberfall.Presentation
         private VisualElement _deckRenamePane;
         private VisualElement _deckBackPane;
         private VisualElement _deckBackGrid;
-        private VisualElement _deckImagePane;
-        private VisualElement _deckImageGrid;
-        private Label _deckImageNote;
         private VisualElement _deckDeletePane;
         private Label _deckDeleteMessage;
         private TextField _deckRenameField;
@@ -136,12 +132,11 @@ namespace Emberfall.Presentation
         /// is modal, so nothing can change it underneath.</summary>
         private DeckList _menuDeck;
 
-        /// <summary>The back and the showcase card highlighted in their pickers, committed only by Save.</summary>
+        /// <summary>The back highlighted in its picker, committed only by Save.</summary>
         private int _pendingCardBackId;
         private CollectionSnapshot _cardBackOwnership;
         private int _deckRequestVersion;
         private bool _savingDeck;
-        private int _pendingShowcaseCardId;
 
         private void OnEnable()
         {
@@ -207,7 +202,6 @@ namespace Emberfall.Presentation
 
             _deckModal = _root.Q<VisualElement>("deck-modal");
             _deckDialog = _root.Q<VisualElement>("deck-dialog");
-            _deckModalAccount = _root.Q<Label>("deck-modal-account");
             _deckModalClasses = _root.Q<VisualElement>("deck-modal-classes");
             _deckModalTitle = _root.Q<Label>("deck-modal-title");
             _deckModalSub = _root.Q<Label>("deck-modal-sub");
@@ -216,9 +210,6 @@ namespace Emberfall.Presentation
             _deckRenamePane = _root.Q<VisualElement>("deck-rename-pane");
             _deckBackPane = _root.Q<VisualElement>("deck-back-pane");
             _deckBackGrid = _root.Q<VisualElement>("deck-back-grid");
-            _deckImagePane = _root.Q<VisualElement>("deck-image-pane");
-            _deckImageGrid = _root.Q<VisualElement>("deck-image-grid");
-            _deckImageNote = _root.Q<Label>("deck-image-note");
             _deckDeletePane = _root.Q<VisualElement>("deck-delete-pane");
             _deckDeleteMessage = _root.Q<Label>("deck-delete-message");
             _deckRenameField = _root.Q<TextField>("deck-rename-field");
@@ -262,15 +253,14 @@ namespace Emberfall.Presentation
         /// <para><c>New</c> was a pane here until ADR-0009. Creating a deck now begins with a class
         /// pairing, which is a full screen's worth of choice, so "+" loads the create SCENE instead
         /// of opening a pane with two buttons in it.</para></summary>
-        private enum DeckPane { Menu, Rename, Image, CardBack, Delete }
+        private enum DeckPane { Menu, Rename, CardBack, Delete }
 
         private DeckPane _deckPane = DeckPane.Menu;
 
         private void WireDeckDialog()
         {
-            _deckSelectButton?.RegisterCallback<ClickEvent>(_ => PickForMatch());
+            _deckSelectButton?.RegisterCallback<ClickEvent>(_ => ToggleMatchPick());
             _root.Q<Button>("deck-edit")?.RegisterCallback<ClickEvent>(_ => OpenDeckForEdit(_menuDeck.Id));
-            _root.Q<Button>("deck-image")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Image));
             _root.Q<Button>("deck-rename")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Rename));
             _root.Q<Button>("deck-change-back")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.CardBack));
             _deckDeleteButton?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Delete));
@@ -287,17 +277,10 @@ namespace Emberfall.Presentation
         {
             _menuDeck = deck;
             _pendingCardBackId = deck.CardBackId;
-            _pendingShowcaseCardId = deck.ShowcaseCardId;
-
-            if (_deckModalAccount != null)
-                _deckModalAccount.text = _account.DisplayNameOr("");
             BuildClassBadges(deck);
 
             if (_deckModalSub != null)
-            {
-                string standing = summary.Queue.IsEligible ? "Queue ready" : $"Draft · {summary.Queue.Reason}";
-                _deckModalSub.text = $"{deck.TotalCount} / {DeckValidator.DeckSize} · {standing}";
-            }
+                _deckModalSub.text = $"{deck.TotalCount} / {DeckValidator.DeckSize}";
 
             // Delete has no floor any more (ADR-0009). The guard it used to carry — "{name} needs at
             // least one deck" — protected a character from being left with nothing to play, and an
@@ -307,15 +290,13 @@ namespace Emberfall.Presentation
 
             // Select is the match door's one addition to this dialog.
             bool choosing = MatchDeckSelection.Choosing;
-            bool alreadyPicked = choosing && _pickedDeckId == deck.Id;
             _menuQueueReady = summary.Queue.IsEligible;
 
             Show(_deckSelectButton, choosing);
-            if (choosing && _deckSelectButton != null)
+            if (choosing)
             {
-                _deckSelectButton.SetEnabled(summary.Queue.IsEligible && !alreadyPicked);
-                _deckSelectButton.text = alreadyPicked ? "Selected" : "Select this deck";
                 _deckSelectButton.tooltip = summary.Queue.IsEligible ? "" : summary.Queue.Reason;
+                RefreshDeckSelectButton();
             }
 
             ShowDeckPane(DeckPane.Menu);
@@ -350,15 +331,13 @@ namespace Emberfall.Presentation
             _deckModalConfirm?.SetEnabled(!_savingDeck);
             SetDeckError("");
 
-            // A card grid reads better with room a button stack would only stretch to fill —
-            // see .delete-dialog--wide (Sam, 2026-08-09).
+            // The card-back grid needs more room than the menu's button stack.
             _deckDialog?.EnableInClassList("delete-dialog--wide",
-                pane == DeckPane.Image || pane == DeckPane.CardBack);
+                pane == DeckPane.CardBack);
             _deckDialog?.EnableInClassList("delete-dialog--card-back", pane == DeckPane.CardBack);
             _deckDialog?.EnableInClassList("delete-dialog--rename", pane == DeckPane.Rename);
 
             Show(_deckMenuPane, pane == DeckPane.Menu);
-            Show(_deckImagePane, pane == DeckPane.Image);
             Show(_deckRenamePane, pane == DeckPane.Rename);
             Show(_deckBackPane, pane == DeckPane.CardBack);
             Show(_deckDeletePane, pane == DeckPane.Delete);
@@ -368,7 +347,6 @@ namespace Emberfall.Presentation
                 _deckModalTitle.text = pane switch
                 {
                     DeckPane.Rename => "Rename deck",
-                    DeckPane.Image => "Deck image",
                     DeckPane.CardBack => "Card back",
                     DeckPane.Delete => "Delete deck?",
                     _ => _menuDeck.Name,
@@ -387,58 +365,12 @@ namespace Emberfall.Presentation
 
             if (pane == DeckPane.Rename)
                 _deckRenameField?.SetValueWithoutNotify(_menuDeck.Name);
-            if (pane == DeckPane.Image)
-                BuildShowcaseGrid();
             if (pane == DeckPane.CardBack)
                 LoadCardBacksAsync();
             if (pane == DeckPane.Delete && _deckDeleteMessage != null)
                 _deckDeleteMessage.text =
                     $"'{_menuDeck.Name}' and its {_menuDeck.TotalCount} cards are gone for good. " +
                     "The cards themselves stay in your collection.";
-        }
-
-        /// <summary>
-        /// Every distinct card in the deck, as pickable art. Empty for an empty deck, which is the
-        /// honest answer: a deck with no cards has nothing of its own to be recognised by.
-        /// </summary>
-        private void BuildShowcaseGrid()
-        {
-            if (_deckImageGrid == null) return;
-            _deckImageGrid.Clear();
-
-            CardDefinition current =
-                _pendingShowcaseCardId > 0 && _db.TryGet(_pendingShowcaseCardId, out CardDefinition picked)
-                    ? picked
-                    : ShowcaseOf(_menuDeck);
-            foreach (DeckEntry entry in _menuDeck.Entries)
-            {
-                if (!_db.TryGet(entry.CardId, out CardDefinition def)) continue;
-                CardDefinition choice = def;
-
-                var option = new Button();
-                option.AddToClassList("deck-back-option");
-                option.EnableInClassList("deck-back-option--on", current != null && current.Id == choice.Id);
-                option.tooltip = choice.Name;
-                option.clicked += () =>
-                {
-                    _pendingShowcaseCardId = choice.Id;
-                    BuildShowcaseGrid();     // selection is the only state, so redrawing is the update
-                };
-
-                var art = new VisualElement();
-                art.AddToClassList("deck-plate-art");
-                _art.LoadArt(choice.ArtId, sprite =>
-                {
-                    if (sprite != null) art.style.backgroundImage = new StyleBackground(sprite);
-                });
-                option.Add(art);
-                _deckImageGrid.Add(option);
-            }
-
-            if (_deckImageNote != null)
-                _deckImageNote.text = _menuDeck.Entries.Count == 0
-                    ? "Put some cards in this deck first — its picture comes from one of them."
-                    : "";
         }
 
         private async void LoadCardBacksAsync()
@@ -525,7 +457,6 @@ namespace Emberfall.Presentation
                 if (name.Length == 0) { SetDeckError("A deck needs a name."); return; }
                 candidate.Name = name;
             }
-            else if (_deckPane == DeckPane.Image) candidate.ShowcaseCardId = _pendingShowcaseCardId;
             else if (_deckPane == DeckPane.CardBack) candidate.CardBackId = _pendingCardBackId;
 
             var account = _account;
@@ -599,7 +530,6 @@ namespace Emberfall.Presentation
             _pendingCardBackId = 0;
             _cardBackOwnership = null;
             ++_deckRequestVersion;
-            _pendingShowcaseCardId = 0;
             _deckPane = DeckPane.Menu;
         }
 
@@ -1011,22 +941,33 @@ namespace Emberfall.Presentation
         private bool _menuQueueReady;
 
         /// <summary>
-        /// Mark the open deck as the one to play. It does NOT enter the queue — that is Continue's
-        /// job. A button labelled Select, pressed from inside an options dialog, should not be the
-        /// thing that drops the player into matchmaking.
+        /// Toggle the open deck's match pick. Continue enters the queue; this control only changes
+        /// which plate is selected, and a second press clears that selection.
         /// </summary>
-        private void PickForMatch()
+        private void ToggleMatchPick()
         {
             if (_menuDeck == null) return;
-            if (!_menuQueueReady)
+            if (_pickedDeckId == _menuDeck.Id)
+                ClearPick();
+            else if (!_menuQueueReady)
             {
                 SetDeckError("This deck is not queue ready yet.");
                 return;
             }
+            else
+                _pickedDeckId = _menuDeck.Id;
 
-            _pickedDeckId = _menuDeck.Id;
             CloseDeckDialog();
             RebuildRoster();
+        }
+
+        private void RefreshDeckSelectButton()
+        {
+            if (_deckSelectButton == null || _menuDeck == null) return;
+            bool selected = _pickedDeckId == _menuDeck.Id;
+            _deckSelectButton.text = selected ? "Selected" : "Select this deck";
+            _deckSelectButton.EnableInClassList("deck-action--selected", selected);
+            _deckSelectButton.SetEnabled(selected || _menuQueueReady);
         }
 
         /// <summary>

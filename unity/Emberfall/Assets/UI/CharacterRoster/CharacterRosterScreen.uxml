@@ -55,14 +55,13 @@
         </ui:VisualElement>
 
         <!--
-          What a deck plate opens. One dialog, three panes — the menu, then whichever action was
+          What a deck plate opens. One dialog, with the menu and its action panes — whichever was
           picked — because a deck's name and its card back are both edited from here now and two
           separate modals would be two separate places to leave a deck half-renamed.
         -->
         <ui:VisualElement name="deck-modal" class="delete-modal delete-modal--hidden emb-bleed">
             <ui:VisualElement name="deck-dialog" class="delete-dialog">
                 <ui:VisualElement name="deck-modal-header" class="deck-modal-header">
-                    <ui:Label name="deck-modal-account" text="" class="deck-modal-account" />
                     <ui:VisualElement name="deck-modal-classes" class="deck-modal-classes" />
                 </ui:VisualElement>
                 <ui:Label name="deck-modal-title" text="" class="delete-title" />
@@ -75,7 +74,6 @@
                     <ui:Button name="deck-edit" text="Edit deck" class="roster-button roster-button--cta deck-action" />
                     <!-- Match pick only. Every other action below is offered from both doors. -->
                     <ui:Button name="deck-select" text="Select this deck" class="roster-button roster-button--cta deck-action" />
-                    <ui:Button name="deck-image" text="Deck image" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-rename" text="Rename deck" class="roster-button roster-button--ghost deck-action" />
                     <ui:Button name="deck-change-back" text="Change card back" class="roster-button roster-button--ghost deck-action" />
                     <!-- "Set as default" was here until ADR-0009. It answered "which of this
@@ -92,13 +90,6 @@
                   loads the class-picker scene. The two starter shapes are still offered, on that
                   screen's confirm view.
                 -->
-                <ui:VisualElement name="deck-image-pane" class="deck-pane">
-                    <ui:ScrollView name="deck-image-scroll" mode="Vertical" class="deck-image-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden">
-                        <ui:VisualElement name="deck-image-grid" class="deck-back-grid" />
-                    </ui:ScrollView>
-                    <ui:Label name="deck-image-note" text="" class="create-help create-help--starter" />
-                </ui:VisualElement>
-
                 <ui:VisualElement name="deck-rename-pane" class="deck-pane">
                     <ui:Label name="deck-rename-help" text="Choose a name for this deck (up to 24 characters)." class="create-help" />
                     <ui:TextField name="deck-rename-field" max-length="24" class="roster-field" />
