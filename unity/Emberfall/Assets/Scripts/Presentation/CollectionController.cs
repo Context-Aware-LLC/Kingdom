@@ -108,6 +108,20 @@ namespace Emberfall.Presentation
         private CardQueryBar _query;
         private Label _emptyLabel;
         private ListView _deckList;
+        private const int DeckPreviewHoldMs = 500;
+        // Match CollectionDeckDrag's touch threshold so scrolling or dragging wins before the hold.
+        private const float DeckPreviewMoveThreshold = 6f;
+        private VisualElement _deckCardPreview;
+        private Label _deckCardPreviewFallback;
+        private VisualElement _previewDeckRow;
+        private int _previewCardId;
+        private int _previewVersion;
+        private VisualElement _heldDeckRow;
+        private IVisualElementScheduledItem _deckHoldTimer;
+        private Vector2 _deckHoldDown;
+        private int _deckHoldPointer = -1;
+        private int _suppressedDeckClickPointer = -1;
+        private bool _deckHoldShown;
         private VisualElement _curve;
         private Label _deckCountLabel;
         private VisualElement _queryScrim;
@@ -484,6 +498,12 @@ namespace Emberfall.Presentation
 
         private void OnDisable()
         {
+            CancelDeckHold();
+            HideDeckCardPreview();
+            _root?.UnregisterCallback<PointerDownEvent>(OnDeckTouchDown, TrickleDown.TrickleDown);
+            _root?.UnregisterCallback<PointerMoveEvent>(OnDeckTouchMove, TrickleDown.TrickleDown);
+            _root?.UnregisterCallback<PointerUpEvent>(OnDeckTouchUp, TrickleDown.TrickleDown);
+            _root?.UnregisterCallback<PointerCancelEvent>(OnDeckTouchCancel, TrickleDown.TrickleDown);
             _deckDrag?.Dispose();
             _deckDrag = null;
             _craftVersion++;
@@ -659,6 +679,8 @@ namespace Emberfall.Presentation
         private void CloseDeckDrawer()
         {
             if (!_drawerOpen) return;
+            CancelDeckHold();
+            HideDeckCardPreview();
             if (EditingDeck) SaveDeck();
             EndDeckEditing();
             _drawerOpen = false;
@@ -769,6 +791,8 @@ namespace Emberfall.Presentation
         private void EndDeckEditing()
         {
             _deckDrag?.Cancel();
+            CancelDeckHold();
+            HideDeckCardPreview();
             if (!EditingDeck) return;
 
             _deck = null;
@@ -835,18 +859,38 @@ namespace Emberfall.Presentation
             return _faceBaker.TryGetCachedFace(card.Id, out Texture2D face) ? face : null;
         }
 
-        private void OnApplicationFocus(bool focused) { if (!focused) _deckDrag?.Cancel(); }
-        private void OnApplicationPause(bool paused) { if (paused) _deckDrag?.Cancel(); }
+        private void OnApplicationFocus(bool focused)
+        {
+            if (focused) return;
+            _deckDrag?.Cancel();
+            CancelDeckHold();
+            HideDeckCardPreview();
+        }
+
+        private void OnApplicationPause(bool paused)
+        {
+            if (!paused) return;
+            _deckDrag?.Cancel();
+            CancelDeckHold();
+            HideDeckCardPreview();
+        }
 
         private void WireDeckList()
         {
             if (_deckList == null) return;
+
+            _deckCardPreview = _root.Q<VisualElement>("deck-card-preview");
+            _deckCardPreviewFallback = _root.Q<Label>("deck-card-preview-fallback");
 
             _deckList.fixedItemHeight = 54;
             _deckList.selectionType = SelectionType.None;
             _deckList.makeItem = MakeCardRow;
             _deckList.bindItem = BindDeckRow;
             _deckList.RegisterCallback<ClickEvent>(OnDeckClick);
+            _root.RegisterCallback<PointerDownEvent>(OnDeckTouchDown, TrickleDown.TrickleDown);
+            _root.RegisterCallback<PointerMoveEvent>(OnDeckTouchMove, TrickleDown.TrickleDown);
+            _root.RegisterCallback<PointerUpEvent>(OnDeckTouchUp, TrickleDown.TrickleDown);
+            _root.RegisterCallback<PointerCancelEvent>(OnDeckTouchCancel, TrickleDown.TrickleDown);
 
             // No visible scrollbars anywhere (Sam, 2026-08-01 ruling). ListView doesn't expose
             // verticalScrollerVisibility itself — only its internal ScrollView does — so this can't be
@@ -862,6 +906,7 @@ namespace Emberfall.Presentation
         private void BindOpenDeck()
         {
             if (_deckList == null || !EditingDeck) return;
+            HideDeckCardPreview();
             // Apply the same mana/name order on initial load and after every edit.
             SortDeck();
             _deckList.itemsSource = _deck.Entries;
@@ -870,6 +915,7 @@ namespace Emberfall.Presentation
 
         private void BindDeckRow(VisualElement row, int index)
         {
+            if (_previewDeckRow == row) HideDeckCardPreview();
             if (!EditingDeck || index < 0 || index >= _deck.Entries.Count)
             {
                 row.userData = null;
@@ -886,17 +932,38 @@ namespace Emberfall.Presentation
 
         private void OnDeckClick(ClickEvent evt)
         {
+            if (_suppressedDeckClickPointer >= 0 && evt.pointerId == _suppressedDeckClickPointer)
+            {
+                _suppressedDeckClickPointer = -1;
+                return;
+            }
             var e = evt.target as VisualElement;
             while (e != null && !(e.userData is CardDefinition)) e = e.parent;
             if (!(e?.userData is CardDefinition def)) return;
+            HideDeckCardPreview();
             RemoveCopy(def);
         }
 
         // ---- Shared row factory (§2.3 tile is Phase 2; the spike uses a legible full-width row) ----
-        private static VisualElement MakeCardRow()
+        private VisualElement MakeCardRow()
         {
             var row = new VisualElement();
             row.AddToClassList("card-row");
+            row.RegisterCallback<PointerEnterEvent>(evt =>
+            {
+                if (evt.pointerType == UnityEngine.UIElements.PointerType.mouse)
+                    ShowDeckCardPreview(row);
+            });
+            row.RegisterCallback<PointerLeaveEvent>(_ =>
+            {
+                if (_previewDeckRow == row) HideDeckCardPreview();
+                if (_heldDeckRow == row) CancelDeckHold();
+            });
+            row.RegisterCallback<DetachFromPanelEvent>(_ =>
+            {
+                if (_previewDeckRow == row) HideDeckCardPreview();
+                if (_heldDeckRow == row) CancelDeckHold();
+            });
             // var cost = new Label { name = "cost" };   cost.AddToClassList("card-cost");
             // var dot  = new VisualElement { name = "dot" }; dot.AddToClassList("card-rarity-dot");
             var name = new Label { name = "name" };   name.AddToClassList("card-name");
@@ -913,6 +980,111 @@ namespace Emberfall.Presentation
             CardClassTokens.SwapPrefixed(row, CardClassTokens.AllEdge(), CardClassTokens.Edge(def.Class));
         }
 
+        private VisualElement DeckRowAt(VisualElement target)
+        {
+            if (target == null || _deckList == null || !_deckList.Contains(target)) return null;
+            for (var row = target; row != null && row != _deckList; row = row.parent)
+                if (row.userData is CardDefinition) return row;
+            return null;
+        }
+
+        private void ShowDeckCardPreview(VisualElement row)
+        {
+            if (!EditingDeck || !_drawerOpen || _queryDrawerOpen || _craftModal?.IsOpen == true ||
+                _deckCardPreview == null || !(row?.userData is CardDefinition card)) return;
+            if (_previewDeckRow == row && _previewCardId == card.Id) return;
+
+            _previewDeckRow = row;
+            _previewCardId = card.Id;
+            int version = ++_previewVersion;
+            _deckCardPreview.style.backgroundImage = StyleKeyword.None;
+            _deckCardPreview.style.display = DisplayStyle.Flex;
+            if (_deckCardPreviewFallback != null)
+            {
+                _deckCardPreviewFallback.text = card.Name;
+                _deckCardPreviewFallback.style.display = DisplayStyle.Flex;
+            }
+
+            _faceBaker.Bake(card, texture =>
+            {
+                if (version != _previewVersion || _previewDeckRow != row ||
+                    !(row.userData is CardDefinition current) || current.Id != card.Id) return;
+                if (!(texture is Texture2D face)) return;
+                _deckCardPreview.style.backgroundImage =
+                    new StyleBackground(Background.FromTexture2D(face));
+                if (_deckCardPreviewFallback != null)
+                    _deckCardPreviewFallback.style.display = DisplayStyle.None;
+            });
+        }
+
+        private void HideDeckCardPreview()
+        {
+            ++_previewVersion;
+            _previewDeckRow = null;
+            _previewCardId = 0;
+            if (_deckCardPreview != null) _deckCardPreview.style.display = DisplayStyle.None;
+        }
+
+        private void OnDeckTouchDown(PointerDownEvent evt)
+        {
+            if (evt.pointerType != UnityEngine.UIElements.PointerType.touch || evt.button != 0 ||
+                !evt.isPrimary || _deckHoldPointer >= 0) return;
+            _suppressedDeckClickPointer = -1;
+            VisualElement row = DeckRowAt(evt.target as VisualElement);
+            if (row == null || !EditingDeck || !_drawerOpen || _queryDrawerOpen ||
+                _craftModal?.IsOpen == true) return;
+
+            int cardId = ((CardDefinition)row.userData).Id;
+            int pointer = evt.pointerId;
+            _heldDeckRow = row;
+            _deckHoldPointer = pointer;
+            _deckHoldDown = evt.position;
+            _deckHoldShown = false;
+            _deckHoldTimer = _root.schedule.Execute(() =>
+            {
+                _deckHoldTimer = null;
+                if (_deckHoldPointer != pointer || _heldDeckRow != row ||
+                    !(row.userData is CardDefinition current) || current.Id != cardId) return;
+                _deckHoldShown = true;
+                _suppressedDeckClickPointer = pointer;
+                ShowDeckCardPreview(row);
+            }).StartingIn(DeckPreviewHoldMs);
+        }
+
+        private void OnDeckTouchMove(PointerMoveEvent evt)
+        {
+            if (evt.pointerId != _deckHoldPointer) return;
+            Vector2 delta = (Vector2)evt.position - _deckHoldDown;
+            if (delta.sqrMagnitude < DeckPreviewMoveThreshold * DeckPreviewMoveThreshold) return;
+            bool shown = _deckHoldShown;
+            CancelDeckHold();
+            if (shown) HideDeckCardPreview();
+        }
+
+        private void OnDeckTouchUp(PointerUpEvent evt)
+        {
+            if (evt.pointerId != _deckHoldPointer) return;
+            bool shown = _deckHoldShown;
+            CancelDeckHold();
+            if (shown) HideDeckCardPreview();
+        }
+
+        private void OnDeckTouchCancel(PointerCancelEvent evt)
+        {
+            if (evt.pointerId != _deckHoldPointer) return;
+            CancelDeckHold();
+            HideDeckCardPreview();
+        }
+
+        private void CancelDeckHold()
+        {
+            _deckHoldTimer?.Pause();
+            _deckHoldTimer = null;
+            _heldDeckRow = null;
+            _deckHoldPointer = -1;
+            _deckHoldShown = false;
+        }
+
         // ---- Crafting (GH#157 Render / GH#158 Reduce) ----
 
         private CancellationTokenSource _craftCancel;
@@ -923,6 +1095,8 @@ namespace Emberfall.Presentation
         {
             if (_craftModal == null || !_craftModal.IsBound || def == null || _craftBusy) return;
             _deckDrag?.Cancel();
+            CancelDeckHold();
+            HideDeckCardPreview();
             int version = ++_craftVersion;
             CancellationToken ct = _craftCancel.Token;
             _craftModal.Open(def, Crafting.OfferRender(def, 0, 0), Crafting.OfferReduce(def, 0), 0);
@@ -1152,6 +1326,11 @@ namespace Emberfall.Presentation
         private void SetQueryDrawerOpen(bool open)
         {
             _deckDrag?.Cancel();
+            if (open)
+            {
+                CancelDeckHold();
+                HideDeckCardPreview();
+            }
             if (_queryDrawer == null) return;
 
             _queryDrawerOpen = open;
