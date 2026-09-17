@@ -565,14 +565,14 @@
     max-width: 88%;
 }
 
-/* The deck menu and its subpanes share the roster artwork instead of drawing a flat card. */
-#deck-modal,
-#deck-dialog {
-    background-color: transparent;
+/* Keep the deck grid visible but subdued while its options are open. The dialog uses the
+ * --surface-2 colour with a little transparency so its controls stay readable over the art. */
+#deck-modal {
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 #deck-dialog {
-    border-width: 0;
+    background-color: rgba(30, 37, 48, 0.92);
 }
 
 /* Rename is a small form: keep the class pairing, then fit the helper, input and actions. */
