@@ -90,6 +90,9 @@
             </ui:VisualElement>
             <ui:Button name="manage-decks-button" text="Manage Decks" class="deck-drawer__manage chrome-button chrome-button--primary"/>
         </ui:VisualElement>
+        <ui:VisualElement name="deck-card-preview" picking-mode="Ignore" class="deck-card-preview emb-edge">
+            <ui:Label name="deck-card-preview-fallback" picking-mode="Ignore" class="deck-card-preview__fallback"/>
+        </ui:VisualElement>
         <ui:VisualElement name="craft-scrim" class="craft-scrim emb-bleed" style="display: flex; visibility: hidden;"/>
         <ui:VisualElement name="craft-modal" class="craft-modal chrome-panel chrome-panel--outer" style="visibility: visible;">
             <ui:VisualElement picking-mode="Ignore" class="craft-illustration"/>

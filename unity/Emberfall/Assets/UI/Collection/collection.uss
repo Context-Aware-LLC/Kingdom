@@ -1600,6 +1600,30 @@
     -unity-background-scale-mode: scale-to-fit;
     opacity: 0.94;
 }
+
+/* Inspect the full baked card beside the deck drawer. Ignore picking so wall gestures still work. */
+.deck-card-preview {
+    display: none;
+    position: absolute;
+    top: 50%;
+    right: 20%;
+    translate: 0 -50%;
+    width: 360px;
+    height: 505px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--surface-2);
+    border-radius: var(--space-2);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.deck-card-preview__fallback {
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    padding: var(--space-4);
+}
 .collection-deck-drag-preview > Label {
     background-color: var(--surface-2);
     color: var(--ink-1);
