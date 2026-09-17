@@ -14,12 +14,11 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class UnearthChoiceView : MonoBehaviour
     {
-        private static readonly Color ScrimColor = new Color(0.035f, 0.03f, 0.055f, 0.94f);
-
-        private const float SurfaceZ = -2f;
+        private const float CameraDistance = 10f;
         private const float CardGap = 0.28f;
-        private const float MaxOfferWidth = 10.8f;
-        private const float MaxCardScale = 0.76f;
+        private const float MaxCardScale = 2f;
+        private const float OfferWidthFraction = 0.86f;
+        private const float CardHeightFraction = 0.57f;
 
         // Unearth is always "choose one of three" (card-schema.md "Interactive Unearth choices");
         // the opponent's back count is this constant, never a real option count.
@@ -30,6 +29,7 @@ namespace Emberfall.Presentation
         private ICardDatabase _database;
         private BoardController _board;
         private IArtProvider _art;
+        private Camera _camera;
 
         private GameObject _surface;
         private GameObject _cardsRoot;
@@ -37,6 +37,9 @@ namespace Emberfall.Presentation
         private UnearthChoiceAudience _audience;
         private ulong _choiceSequence;
         private readonly List<GameObject> _cards = new List<GameObject>();
+        private readonly List<int> _slotIndices = new List<int>();
+        private int _slotCount;
+        private float _cardScale = 1f;
 
         public void Init(PlayerId localPlayer, InputRouter router, ICardDatabase database,
                          BoardController board, IArtProvider art)
@@ -46,10 +49,17 @@ namespace Emberfall.Presentation
             _database = database;
             _board = board;
             _art = art;
+            _camera = Camera.main;
 
-            transform.position = new Vector3(0f, 0.15f, SurfaceZ);
             BuildSurface();
+            LayoutSurface();
             SetVisible(false);
+        }
+
+        private void LateUpdate()
+        {
+            if (_surface != null && _surface.activeSelf)
+                LayoutSurface();
         }
 
         public void OnStateUpdated(GameState state)
@@ -95,22 +105,8 @@ namespace Emberfall.Presentation
             _surface = new GameObject("Surface");
             _surface.transform.SetParent(transform, false);
 
-            var scrim = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            scrim.name = "Scrim";
-            scrim.transform.SetParent(_surface.transform, false);
-            scrim.transform.localPosition = new Vector3(0f, 0f, 0.5f);
-            scrim.transform.localScale = new Vector3(15.5f, 8.5f, 1f);
-            Destroy(scrim.GetComponent<MeshCollider>());
-            Renderer scrimRenderer = scrim.GetComponent<Renderer>();
-            MaterialCatalog.Assign(scrimRenderer, MaterialCatalog.Plate);
-            var block = new MaterialPropertyBlock();
-            scrimRenderer.GetPropertyBlock(block);
-            block.SetColor("_BaseColor", ScrimColor);
-            scrimRenderer.SetPropertyBlock(block);
-
             var titleGo = new GameObject("Title");
             titleGo.transform.SetParent(_surface.transform, false);
-            titleGo.transform.localPosition = new Vector3(0f, 2.55f, -0.1f);
             _title = titleGo.AddComponent<TextMeshPro>();
             _title.alignment = TextAlignmentOptions.Center;
             _title.color = Color.white;
@@ -121,12 +117,60 @@ namespace Emberfall.Presentation
 
             _cardsRoot = new GameObject("Options");
             _cardsRoot.transform.SetParent(_surface.transform, false);
-            _cardsRoot.transform.localPosition = new Vector3(0f, -0.1f, -0.15f);
+            _cardsRoot.transform.localPosition = new Vector3(0f, -0.12f, -0.15f);
+        }
+
+        private void LayoutSurface()
+        {
+            if (_camera == null) _camera = Camera.main;
+            if (_camera == null) return;
+
+            int screenWidth = Mathf.Max(1, Screen.width);
+            int screenHeight = Mathf.Max(1, Screen.height);
+            Rect safeArea = Screen.safeArea;
+            if (safeArea.width <= 0f || safeArea.height <= 0f)
+                safeArea = new Rect(0f, 0f, screenWidth, screenHeight);
+
+            float viewHeight = _camera.orthographic
+                ? 2f * _camera.orthographicSize
+                : 2f * CameraDistance * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            float viewWidth = viewHeight * _camera.aspect;
+            float safeWidth = viewWidth * safeArea.width / screenWidth;
+            float safeHeight = viewHeight * safeArea.height / screenHeight;
+            float centreX = viewWidth * (safeArea.center.x / screenWidth - 0.5f);
+            float centreY = viewHeight * (safeArea.center.y / screenHeight - 0.5f);
+
+            // Keep the cards parallel to the screen and centered in its safe area. The board
+            // remains visible behind them; the router still blocks gameplay until a choice lands.
+            _surface.transform.SetPositionAndRotation(
+                _camera.transform.TransformPoint(new Vector3(centreX, centreY, CameraDistance)),
+                _camera.transform.rotation);
+
+            int count = Mathf.Max(1, _slotCount);
+            float unscaledWidth = count * BoardController.CardW + (count - 1) * CardGap;
+            _cardScale = Mathf.Min(MaxCardScale, Mathf.Min(
+                OfferWidthFraction * safeWidth / unscaledWidth,
+                CardHeightFraction * safeHeight / BoardController.CardH));
+            _title.transform.localPosition = new Vector3(
+                0f, BoardController.CardH * _cardScale * 0.5f + 0.52f, -0.1f);
+            _title.rectTransform.sizeDelta = new Vector2(safeWidth * 0.9f, 0.7f);
+
+            for (int i = 0; i < _cards.Count; i++)
+                PositionSlot(_cards[i].transform, _slotIndices[i], count);
+        }
+
+        private void PositionSlot(Transform anchor, int index, int count)
+        {
+            float step = (BoardController.CardW + CardGap) * _cardScale;
+            anchor.localPosition = new Vector3((index - (count - 1) * 0.5f) * step, 0f, 0f);
+            anchor.localScale = Vector3.one * _cardScale;
         }
 
         private void BuildOffer(IReadOnlyList<int> options, ulong choiceSequence)
         {
             if (_board == null || _database == null || options == null || options.Count == 0) return;
+            _slotCount = options.Count;
+            LayoutSurface();
 
             // Options order is authoritative RNG/replay order. Deliberately enumerate by index and
             // never sort or project through a keyed collection.
@@ -154,6 +198,7 @@ namespace Emberfall.Presentation
                     });
 
                 _cards.Add(anchor.gameObject);
+                _slotIndices.Add(index);
             }
         }
 
@@ -162,6 +207,8 @@ namespace Emberfall.Presentation
         private void BuildOpponentBacks()
         {
             if (_board == null) return;
+            _slotCount = OpponentBackCount;
+            LayoutSurface();
 
             for (int index = 0; index < OpponentBackCount; index++)
             {
@@ -170,20 +217,15 @@ namespace Emberfall.Presentation
                 card.gameObject.name = "Back";
                 card.SetHidden();
                 _cards.Add(anchor.gameObject);
+                _slotIndices.Add(index);
             }
         }
 
         private Transform PlaceCardSlot(int index, int count, string name)
         {
-            float unscaledWidth = count * BoardController.CardW + (count - 1) * CardGap;
-            float cardScale = Mathf.Min(MaxCardScale, MaxOfferWidth / unscaledWidth);
-            float step = (BoardController.CardW + CardGap) * cardScale;
-            float firstX = -0.5f * step * (count - 1);
-
             var anchor = new GameObject(name);
             anchor.transform.SetParent(_cardsRoot.transform, false);
-            anchor.transform.localPosition = new Vector3(firstX + index * step, 0f, 0f);
-            anchor.transform.localScale = Vector3.one * cardScale;
+            PositionSlot(anchor.transform, index, count);
             return anchor.transform;
         }
 
@@ -196,6 +238,8 @@ namespace Emberfall.Presentation
                 Destroy(card);
             }
             _cards.Clear();
+            _slotIndices.Clear();
+            _slotCount = 0;
             _choiceSequence = 0;
         }
 
