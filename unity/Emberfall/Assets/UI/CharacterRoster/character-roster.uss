@@ -126,6 +126,9 @@
 .deck-plate {
     width: 124px;
     flex-shrink: 0;
+    /* The grid fills the viewport. Keep each plate's border and tap area on its portrait,
+     * even when the flex row itself stretches to that height. */
+    align-self: flex-start;
     align-items: center;
     /* Must match CharacterRosterController.PlateGutter -- every plate carries one, including the
      * last, so the width solve charges the strip for `plates` of them. 12 -> 8 on 2026-08-31. */
