@@ -35,6 +35,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a99295885357cc41ae9bda1604d5230
+    m_Address: backgrounds/Battle_collage
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ae3f473153bbea1479ecae4a5d7aa266
     m_Address: backgrounds/BoardPlate_Master
     m_ReadOnly: 0
@@ -42,6 +47,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: afd1abb4b9600f34e82e2660ec03ed1f
     m_Address: backgrounds/LoadingPlate_VerdantGravekeep
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ca3ee2558301db441a5177be495d0043
+    m_Address: backgrounds/CharacterRoster_Backdrop_v1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d500f4dcb3094b8384dfd7de8668d770
+    m_Address: backgrounds/CharacterRoster_Backdrop
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
