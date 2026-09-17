@@ -313,6 +313,23 @@ namespace Emberfall.Policy
                     if (!_remainingDeck.Remove(drawn.DefinitionId))
                         throw new InvalidOperationException("Drawn card is absent from checkpoint deck memory.");
                 }
+                // A deck-targeting effect can move a card straight into hand and report a
+                // bounce rather than a draw. The public deck count identifies how many such
+                // exits remain after ordinary draws and mulligan returns are accounted for.
+                foreach (GameEvent e in events)
+                {
+                    if (_remainingDeck.Count <= ownAfter.Deck.Count) break;
+                    if (e.Kind != GameEventKind.CardBounced || !e.Target.HasValue) continue;
+                    InstanceId id = e.Target.Value;
+                    if (FindCard(ownBefore.Hand, id) != null
+                        || FindCard(ownBefore.Board, id) != null
+                        || FindCard(ownBefore.Graveyard, id) != null
+                        || ownBefore.Weapon?.Id == id) continue;
+                    CardInstance? moved = FindCard(ownAfter.Hand, id)
+                        ?? FindCard(ownAfter.Graveyard, id);
+                    if (moved != null && !_remainingDeck.Remove(moved.DefinitionId))
+                        throw new InvalidOperationException("Card moved from deck is absent from checkpoint deck memory.");
+                }
                 _remainingDeck.Sort();
                 RequireDeckCount(ownAfter);
                 _opponentHand!.Observe(
@@ -342,9 +359,18 @@ namespace Emberfall.Policy
             if (!_memoryInitialized)
             {
                 int drawnFromDeck = Math.Max(0, _remainingDeck.Count - self.Deck.Count);
+                // The first observation can arrive after a card has already left hand. Include
+                // all visible own zones, not just the current hand, when reconstructing the
+                // starting deck. Public deck count caps the subtraction for generated cards.
                 var definitions = new List<int>();
                 foreach (CardInstance card in self.Hand)
                     if (card.Id.Value != 0) definitions.Add(card.DefinitionId);
+                foreach (CardInstance card in self.Board)
+                    if (card.Id.Value != 0) definitions.Add(card.DefinitionId);
+                foreach (CardInstance card in self.Graveyard)
+                    if (card.Id.Value != 0) definitions.Add(card.DefinitionId);
+                if (self.Weapon is CardInstance weapon && weapon.Id.Value != 0)
+                    definitions.Add(weapon.DefinitionId);
                 definitions.Sort();
                 RemoveDefinitions(definitions, drawnFromDeck);
                 _memoryInitialized = true;
