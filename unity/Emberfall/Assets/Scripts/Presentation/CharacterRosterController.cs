@@ -782,7 +782,12 @@ namespace Emberfall.Presentation
             float fromHeight = MaxPlate;
             float viewport = _rosterScroll?.resolvedStyle.height ?? 0f;
             if (viewport > 0f)
+            {
+                // The ScrollView content otherwise collapses to the plate rows, leaving no height
+                // for align-content to distribute. Match its visible height as the window resizes.
+                grid.style.minHeight = viewport;
                 fromHeight = (viewport / RowsPerScreen - RowChrome) / PlateArtHeightRatio + PlateChrome;
+            }
 
             // Clamped at the bottom only. Clamping up to a comfortable minimum is what would push a
             // plate outside its column.
