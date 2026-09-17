@@ -32,7 +32,7 @@ namespace Emberfall.Core.Contracts
     /// </summary>
     public enum Tribe
     {
-        NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT, HUMAN, FEY, MERFOLK
+        NONE, BEAST, CONSTRUCT, UNDEAD, ELEMENTAL, DRAGON, SPIRIT, HUMAN, FEY, MERFOLK, CATFOLK
     }
 
     /// <summary>
