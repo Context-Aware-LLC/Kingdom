@@ -72,6 +72,80 @@ namespace Emberfall.Net.Server.Tests.Bots
             Assert.That(actual, Is.EqualTo(expected));
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task First_Observation_After_A_Card_Leaves_Hand_Reconstructs_Deck_Memory(bool secondSeat)
+        {
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            PlayerId viewer = secondSeat ? P1 : P0;
+            GameState authority;
+            ulong seed = 17UL;
+            do
+            {
+                authority = MatchEngine.BeginMatch(
+                    setup, db, new MatchId("late-deck-memory"), P0, P1, seed++);
+            } while (secondSeat && authority.ActivePlayer != P0);
+            PlayerState self = authority.PlayerOf(viewer);
+            if (secondSeat)
+                Assert.That(self.Hand.Exists(card => card.DefinitionId == setup.SparkTokenId), Is.True);
+            CardInstance played = self.Hand[0];
+            self.Hand.RemoveAt(0);
+            played.Zone = Zone.Graveyard;
+            self.Graveyard.Add(played);
+            CardInstance drawn = self.Deck[0];
+            self.Deck.RemoveAt(0);
+            drawn.Zone = Zone.Hand;
+            self.Hand.Add(drawn);
+
+            var scorer = new FakeScorer(count => new double[count]);
+            var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
+                secondSeat ? setup.P1Deck : setup.P0Deck,
+                CheckpointSelection.Argmax, new string('a', 64));
+            _ = await policy.ChooseAsync(GameStateProjector.Project(authority, viewer), viewer);
+
+            var expected = self.Deck.ConvertAll(card => card.DefinitionId);
+            expected.Sort();
+            var actual = new List<int>();
+            foreach (JsonElement id in scorer.LastMemory.GetProperty("selfRemainingDeck").EnumerateArray())
+                actual.Add(id.GetInt32());
+            Assert.That(actual, Is.EqualTo(expected));
+        }
+
+        [Test]
+        public async Task Card_Moved_From_Deck_Without_Draw_Event_Updates_Deck_Memory()
+        {
+            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
+            GameState before = ProjectOpeningState(db, setup);
+            before.Phase = TurnPhase.Main;
+            before.ActivePlayer = P0;
+            PlayerState self = before.PlayerOf(P0);
+            self.Hand.Clear();
+            self.Deck.Clear();
+            self.Deck.Add(new CardInstance(new InstanceId(0), 0, P0) { Zone = Zone.Deck });
+            self.Deck.Add(new CardInstance(new InstanceId(0), 0, P0) { Zone = Zone.Deck });
+            var scorer = new FakeScorer(count => new double[count]);
+            int remainingDefinition = setup.P0Deck[0];
+            int movedDefinition = setup.P0Deck[1];
+            var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
+                new[] { remainingDefinition, movedDefinition }, CheckpointSelection.Argmax, new string('a', 64));
+            _ = await policy.ChooseAsync(before, P0);
+
+            GameState after = GameStateProjector.Project(before, P0);
+            after.PlayerOf(P0).Deck.RemoveAt(0);
+            after.PlayerOf(P0).Hand.Add(new CardInstance(new InstanceId(501), movedDefinition, P0)
+            { Zone = Zone.Hand });
+            policy.ObserveTransition(before, new[]
+            {
+                new GameEvent(GameEventKind.CardBounced, 1, null, new InstanceId(501), null, EventFlags.None),
+            }, after, P0);
+            _ = await policy.ChooseAsync(after, P0);
+            JsonElement deck = scorer.LastMemory.GetProperty("selfRemainingDeck");
+            Assert.That(deck.GetArrayLength(), Is.EqualTo(1));
+            Assert.That(deck[0].GetInt32(), Is.EqualTo(remainingDefinition));
+        }
+
         [Test]
         public async Task Opponent_Bounce_Followed_By_Draw_Removes_Only_The_Drawn_Definition()
         {
