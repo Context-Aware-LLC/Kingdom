@@ -261,6 +261,10 @@
 .edge--tidecaller { border-left-color: var(--class-tidecaller); }
 .edge--gravekeep  { border-left-color: var(--class-gravekeep); }
 .edge--verdant    { border-left-color: var(--class-verdant); }
+.edge--clockwright { border-left-color: var(--class-clockwright); }
+.edge--nightveil  { border-left-color: var(--class-nightveil); }
+.edge--stonewarden { border-left-color: var(--class-stonewarden); }
+.edge--tempest    { border-left-color: var(--class-tempest); }
 
 /* ---------- Buttons ---------- */
 .db-button {
