@@ -99,7 +99,15 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 Assert.That((await ledger.HistoryAsync(owner.PlayerId)).Count, Is.EqualTo(originalRows),
                     "Opening crafting must not issue or recheck a signup grant.");
                 using JsonDocument collection = JsonDocument.Parse(await http.GetStringAsync("/collection"));
-                Assert.That(collection.RootElement.GetProperty("wallet").GetProperty("shards").GetInt64(), Is.Zero);
+                Assert.That(collection.RootElement.GetProperty("wallet").GetProperty("shards").GetInt64(),
+                    Is.EqualTo(OnboardingGrant.StarterShardCount));
+                // Once the separate starter credit is spent, collection must not replenish it.
+                await ledger.GrantAsync(new EntitlementGrant(owner.PlayerId,
+                    ShardValues.LedgerItem, -OnboardingGrant.StarterShardCount,
+                    "test", "craft-test-spent-starter-credit",
+                    DateTimeOffset.FromUnixTimeMilliseconds(new Clock().NowMs)));
+                using JsonDocument zeroCollection = JsonDocument.Parse(await http.GetStringAsync("/collection"));
+                Assert.That(zeroCollection.RootElement.GetProperty("wallet").GetProperty("shards").GetInt64(), Is.Zero);
                 int cardId = int.Parse(collection.RootElement.GetProperty("cards").EnumerateObject().First().Name);
                 string route = "/crafting/" + cardId;
                 using JsonDocument initial = JsonDocument.Parse(await http.GetStringAsync(route));

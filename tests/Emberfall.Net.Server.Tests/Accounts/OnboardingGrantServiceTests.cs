@@ -150,13 +150,19 @@ namespace Emberfall.Net.Server.Tests.Accounts
 
             IReadOnlyList<EntitlementGrant> history = await ledger.HistoryAsync(account.PlayerId);
             Assert.That(history, Is.Not.Empty);
+            int shardRows = 0;
             foreach (EntitlementGrant row in history)
             {
                 Assert.That(row.Source, Is.EqualTo(OnboardingGrantService.GrantSource));
+                bool starterShards = row.Item == EconomyItems.Shards;
+                if (starterShards) shardRows++;
                 Assert.That(row.ExternalTxnId,
-                            Does.StartWith(OnboardingGrantService.TxnPrefix + account.PlayerId),
+                            Does.StartWith((starterShards
+                                ? OnboardingGrantService.StarterShardsTxnPrefix
+                                : OnboardingGrantService.TxnPrefix) + account.PlayerId),
                             "the once-per-account key must be the player's own signup transaction");
             }
+            Assert.That(shardRows, Is.EqualTo(1), "the starter credit has its own once-only transaction");
         }
 
         // ── once, and only once ──────────────────────────────────────────────────────────────
