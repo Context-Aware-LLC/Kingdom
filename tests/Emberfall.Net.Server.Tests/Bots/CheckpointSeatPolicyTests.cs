@@ -8,6 +8,7 @@ using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Projection;
 using Emberfall.Net.Protocol;
+using Emberfall.Net.Server.Bots;
 using Emberfall.Net.Server.Data;
 using Emberfall.Net.Server.Tests.Support;
 using Emberfall.Tools.NetSoak;
@@ -99,10 +100,16 @@ namespace Emberfall.Net.Server.Tests.Bots
             self.Hand.Add(drawn);
 
             var scorer = new FakeScorer(count => new double[count]);
-            var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
+            var processor = new CommandProcessor(db);
+            var policy = new CheckpointSeatPolicy(scorer, db, processor,
                 secondSeat ? setup.P1Deck : setup.P0Deck,
                 CheckpointSelection.Argmax, new string('a', 64));
-            _ = await policy.ChooseAsync(GameStateProjector.Project(authority, viewer), viewer);
+            var warnings = new List<string>();
+            var served = new LearnedBotSeatPolicy(policy, new GreedySeatPolicy(processor, db), warnings.Add);
+            _ = await served.ChooseAsync(GameStateProjector.Project(authority, viewer), viewer);
+            Assert.That(served.FallbackDecisions, Is.Zero,
+                "a late first observation must still be served by the checkpoint");
+            Assert.That(warnings, Is.Empty);
 
             var expected = self.Deck.ConvertAll(card => card.DefinitionId);
             expected.Sort();
