@@ -57,6 +57,13 @@ namespace Emberfall.Presentation
         public const string GemSocketSprite  = "socket_gem";  // the rope bezel the rarity gem sits in
         public const string TribePanelSprite = "tribe_plate";
 
+        // Explicit SpriteRenderer order for the upper-right rarity assembly. These renderers live
+        // inside one SortingGroup, where a shared order can fall back to hierarchy/material rules
+        // instead of the tiny Z offsets used to seat the stone in its bezel.
+        public const int FrameOrder = 0;
+        public const int GemSocketOrder = FrameOrder + 1;
+        public const int GemOrder = GemSocketOrder + 1;
+
         // Socket sprite canvas sizes, in master pixels. The disc is centred in its canvas with a
         // transparent margin, so the sprite is drawn at CANVAS span and lands concentric on the
         // socket centre — do not size these to the disc.

@@ -758,6 +758,7 @@ namespace Emberfall.Presentation
             // Sprite (the one frame_card) assigned by CardPresenter.ApplyFrame (D2).
             var frameRenderer = MakeSprite(root.transform, "Frame",
                 new Vector3(0f, 0f, -0.006f), new Vector2(CardW, CardH));
+            frameRenderer.sortingOrder = FrameRarityCatalog.FrameOrder;
 
             // Frost overlay — the frost cue (SG_Frost), card-sized, driven by CardMaterialBinder's
             // _FrostAmount. Its own quad because SG_Frost is an overlay shader: it has _FrostOpacity
@@ -789,6 +790,7 @@ namespace Emberfall.Presentation
             // one resolves.
             var gemRenderer = MakeSprite(root.transform, "Gem",
                 new Vector3(0f, -CardH * StatRowFrac, -0.012f), new Vector2(CardW * 0.16f, CardW * 0.16f));
+            gemRenderer.sortingOrder = FrameRarityCatalog.GemOrder;
 
             // Socket housings — the three digit bosses and the gem bezel, composited OVER the
             // frame rather than painted into it (2026-08-19). That is what lets one frame serve
@@ -805,6 +807,7 @@ namespace Emberfall.Presentation
             var attackSocket = MakeSocket("AttackSocket", -0.009f);
             var healthSocket = MakeSocket("HealthSocket", -0.009f);
             var gemSocket    = MakeSocket("GemSocket",    -0.011f);
+            gemSocket.sortingOrder = FrameRarityCatalog.GemSocketOrder;
             attackSocket.sortingOrder = FrameRarityCatalog.StatSocketOrder;
             healthSocket.sortingOrder = FrameRarityCatalog.StatSocketOrder;
             costSocket.gameObject.SetActive(false);
