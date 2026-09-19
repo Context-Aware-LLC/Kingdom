@@ -549,10 +549,8 @@
     display: none;
 }
 
-/* Sized for the menu pane (a stack of buttons) — the common case for opening this dialog.
- * .delete-dialog--wide (below) overrides this for the card-back pane's art grid, which needs
- * width the button list would only stretch to fill (Sam, 2026-08-09).
- * Same override pattern as .character-create-dialog just below. */
+/* The shared baseline remains roomy for the delete confirmation. The ordinary menu gets its own
+ * content-sized modifier below; rename and card-back retain their specialized dimensions. */
 .delete-dialog {
     width: 50%;
     max-width: 60%;
@@ -562,6 +560,14 @@
     border-radius: var(--space-2);
     border-width: 1px;
     border-color: var(--surface-3);
+}
+
+/* Follow the menu's 184px controls instead of reserving the baseline 50% x 80% viewport box.
+ * Class badges and the deck title may make the final panel a little wider than the actions. */
+.delete-dialog--menu {
+    width: auto;
+    max-width: 90%;
+    height: auto;
 }
 
 .delete-dialog--wide {

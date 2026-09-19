@@ -332,6 +332,7 @@ namespace Emberfall.Presentation
             SetDeckError("");
 
             // The card-back grid needs more room than the menu's button stack.
+            _deckDialog?.EnableInClassList("delete-dialog--menu", pane == DeckPane.Menu);
             _deckDialog?.EnableInClassList("delete-dialog--wide",
                 pane == DeckPane.CardBack);
             _deckDialog?.EnableInClassList("delete-dialog--card-back", pane == DeckPane.CardBack);
