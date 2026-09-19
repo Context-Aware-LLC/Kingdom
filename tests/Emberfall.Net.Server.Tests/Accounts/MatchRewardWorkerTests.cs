@@ -35,11 +35,14 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         private static (MatchRewardWorker Worker, InMemoryEntitlementLedger Ledger) WorkerOver(
-            InMemoryAccountStore accounts)
+            InMemoryAccountStore accounts,
+            Func<AccountId, bool>? isBotAccount = null)
         {
             var ledger = new InMemoryEntitlementLedger();
             var worker = new MatchRewardWorker(
-                new GoldFaucet(ledger, new FakeTime(), new StubGoldRewardPolicy()), accounts);
+                new GoldFaucet(ledger, new FakeTime(), new StubGoldRewardPolicy()),
+                accounts,
+                isBotAccount);
             return (worker, ledger);
         }
 
@@ -134,20 +137,57 @@ namespace Emberfall.Net.Server.Tests.Accounts
             });
         }
 
-        [TestCase(TelemetrySource.BotFill)]
-        [TestCase(TelemetrySource.AiSoak)]
-        public async Task Only_A_Ladder_Match_Pays(TelemetrySource source)
+        [Test]
+        public async Task Bot_fill_pays_the_human_and_never_the_roster_bot()
+        {
+            var (accounts, human, bot) = await TwoPlayersAsync();
+            var (worker, ledger) = WorkerOver(
+                accounts,
+                account => account == AccountId.FromAuthenticatedAccount(bot));
+
+            await worker.PayAsync(Result(
+                "match-1", human, bot, MatchOutcome.Player0Win, TelemetrySource.BotFill));
+
+            long humanGold = await ledger.BalanceAsync(human, EconomyItems.Gold);
+            long botGold = await ledger.BalanceAsync(bot, EconomyItems.Gold);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(humanGold, Is.EqualTo(30));
+                Assert.That(botGold, Is.Zero);
+            });
+        }
+
+        [Test]
+        public async Task Bot_fill_without_a_roster_identity_predicate_fails_closed()
         {
             var (accounts, p0, p1) = await TwoPlayersAsync();
 
             InMemoryEntitlementLedger ledger = await PayAsync(
-                accounts, Result("match-1", p0, p1, MatchOutcome.Player0Win, source));
+                accounts,
+                Result("match-1", p0, p1, MatchOutcome.Player0Win, TelemetrySource.BotFill));
+
+            long p0Gold = await ledger.BalanceAsync(p0, EconomyItems.Gold);
+            long p1Gold = await ledger.BalanceAsync(p1, EconomyItems.Gold);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(p0Gold, Is.Zero);
+                Assert.That(p1Gold, Is.Zero);
+            });
+        }
+
+        [Test]
+        public async Task Ai_soak_does_not_pay()
+        {
+            var (accounts, p0, p1) = await TwoPlayersAsync();
+
+            InMemoryEntitlementLedger ledger = await PayAsync(
+                accounts, Result("match-1", p0, p1, MatchOutcome.Player0Win, TelemetrySource.AiSoak));
 
             long winner = await ledger.BalanceAsync(p0, EconomyItems.Gold);
             long loser = await ledger.BalanceAsync(p1, EconomyItems.Gold);
 
-            // The whole anti-farm posture rests on this: a bot cannot be beaten for Gold, so the
-            // uncapped per-match reward needs a second real account to exploit rather than a script.
             Assert.Multiple(() =>
             {
                 Assert.That(winner, Is.Zero);

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Core.Collection;
 using Emberfall.Net.Client.Auth;
+using Emberfall.Net.Client.Quests;
 using Emberfall.Net.Client.Shop;
 using Emberfall.Session;
 using UnityEngine;
@@ -35,6 +36,7 @@ namespace Emberfall.Presentation
         private LoadingOverlay _loading;
 
         [SerializeField] private string leaderboardUrl = "https://emberfall.fly.dev/leaderboard?limit=50";
+        [SerializeField] private string questBaseUrl = "https://emberfall.fly.dev";
         private VisualElement _leaderboardModal;
         private ScrollView _leaderboardList;
         private Label _leaderboardStatus;
@@ -43,6 +45,9 @@ namespace Emberfall.Presentation
 
         private Label _shardBalance;
         private VisualElement _shardWallet;
+        private ScrollView _questList;
+        private Label _questStatus;
+        private HttpQuestGateway _questGateway;
         private VisualElement _vaultArt;
         private Label _vaultPackCount;
         private IPackArtProvider _vaultArtProvider;
@@ -91,6 +96,7 @@ namespace Emberfall.Presentation
             BindBuildStamp();
 
             BindShardBalance();
+            BindQuestPanel();
             BindVaultEntry();
 
             MountSettingsOverlay();
@@ -162,8 +168,10 @@ namespace Emberfall.Presentation
                     // TokenForConnectAsync is the one accessor that answers a token the server will
                     // take right now; PackVaultController already uses it for its HTTP calls.
                     string accessToken = await AuthGateway.TokenForConnectAsync();
+                    Task<QuestSnapshot> questRequest = FetchQuestsAsync(accessToken);
                     await CollectionGateway.SyncAsync(accessToken);
                     await RosterGateway.SyncAsync(accessToken);
+                    RenderQuests(await questRequest);
 
                     // The bind may have switched accounts underneath the field captured in OnEnable.
                     _account = PlayerAccount.Local;
@@ -171,6 +179,7 @@ namespace Emberfall.Presentation
             }
             catch (Exception ex)
             {
+                RenderQuestFailure("Quests unavailable");
                 Debug.LogWarning($"[MainMenu] could not restore this session's player data " +
                                  $"({ex.GetType().Name}: {ex.Message}); continuing with whatever " +
                                  "this device already had.");
@@ -377,6 +386,117 @@ namespace Emberfall.Presentation
             _shardBalance.text = shards.HasValue
                 ? WalletDisplay.Shards(shards.Value)
                 : WalletDisplay.ShardsUnavailable;
+        }
+
+        // ── Daily quests ──────────────────────────────────────────────────────────────
+
+        private void BindQuestPanel()
+        {
+            _questList = _root.Q<ScrollView>("quest-list");
+            _questStatus = _root.Q<Label>("quest-status");
+            _questGateway = new HttpQuestGateway(
+                questBaseUrl,
+                new UnityWebRequestAuthHttp(15));
+            if (_questList != null) _questList.Clear();
+            if (_questStatus != null)
+            {
+                _questStatus.text = "Loading quests…";
+                _questStatus.RemoveFromClassList("mm-quest-status--hidden");
+            }
+        }
+
+        private async Task<QuestSnapshot> FetchQuestsAsync(string accessToken)
+        {
+            try
+            {
+                return await _questGateway.FetchAsync(accessToken);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Quests] fetch threw ({ex.GetType().Name}: {ex.Message}); " +
+                                 "reporting it as offline.");
+                return QuestSnapshot.Failed(
+                    QuestFetchStatus.Offline,
+                    $"{ex.GetType().Name}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Paint the server's newest-first three-day quest window. This is a projection only:
+        /// progress still moves exclusively from server-observed match completion, and there is no
+        /// claim control because rewards auto-grant on the transition into completion.
+        /// </summary>
+        private void RenderQuests(QuestSnapshot snapshot)
+        {
+            if (_questList == null || _questStatus == null) return;
+            _questList.Clear();
+
+            if (snapshot == null || snapshot.Status != QuestFetchStatus.Known)
+            {
+                string message = snapshot?.Status == QuestFetchStatus.Unauthenticated
+                    ? "Sign in to view quests"
+                    : "Quests unavailable";
+                RenderQuestFailure(message);
+                return;
+            }
+
+            if (snapshot.Quests.Count == 0)
+            {
+                RenderQuestFailure("No current quests");
+                return;
+            }
+
+            _questStatus.AddToClassList("mm-quest-status--hidden");
+            for (int index = 0; index < snapshot.Quests.Count; index++)
+                _questList.Add(BuildQuestRow(snapshot.Quests[index], index));
+        }
+
+        private void RenderQuestFailure(string message)
+        {
+            if (_questList != null) _questList.Clear();
+            if (_questStatus == null) return;
+            _questStatus.text = message;
+            _questStatus.RemoveFromClassList("mm-quest-status--hidden");
+        }
+
+        private static VisualElement BuildQuestRow(QuestEntry quest, int index)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("mm-quest-row");
+            if (quest.Complete) row.AddToClassList("mm-quest-row--complete");
+
+            var heading = new VisualElement();
+            heading.AddToClassList("mm-quest-row__heading");
+
+            var title = new Label(quest.Title);
+            title.AddToClassList("mm-quest-title");
+            heading.Add(title);
+
+            var age = new Label(index switch
+            {
+                0 => "TODAY",
+                1 => "YESTERDAY",
+                _ => "2 DAYS AGO",
+            });
+            age.AddToClassList("mm-quest-age");
+            heading.Add(age);
+            row.Add(heading);
+
+            var detail = new Label(quest.Complete
+                ? $"COMPLETE  ·  +{quest.RewardGold} GOLD"
+                : $"{quest.Progress} / {quest.Goal}  ·  +{quest.RewardGold} GOLD");
+            detail.AddToClassList("mm-quest-detail");
+            row.Add(detail);
+
+            var track = new VisualElement();
+            track.AddToClassList("mm-quest-progress");
+            var fill = new VisualElement();
+            fill.AddToClassList("mm-quest-progress__fill");
+            fill.style.width = Length.Percent(
+                Mathf.Clamp01((float)quest.Progress / quest.Goal) * 100f);
+            track.Add(fill);
+            row.Add(track);
+            return row;
         }
 
         private void RefreshShardSafeArea()

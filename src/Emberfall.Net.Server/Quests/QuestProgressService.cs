@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Net.Server.Accounts;
+using Emberfall.Net.Server.Identity;
+using Emberfall.Net.Server.Telemetry;
 
 namespace Emberfall.Net.Server.Quests
 {
@@ -21,15 +23,18 @@ namespace Emberfall.Net.Server.Quests
         private readonly IQuestProgressStore _progress;
         private readonly IAccountStore _accounts;
         private readonly GoldFaucet _faucet;
+        private readonly Func<AccountId, bool>? _isBotAccount;
 
         public QuestProgressService(
             IQuestProgressStore progress,
             IAccountStore accounts,
-            GoldFaucet faucet)
+            GoldFaucet faucet,
+            Func<AccountId, bool>? isBotAccount = null)
         {
             _progress = progress ?? throw new ArgumentNullException(nameof(progress));
             _accounts = accounts ?? throw new ArgumentNullException(nameof(accounts));
             _faucet = faucet ?? throw new ArgumentNullException(nameof(faucet));
+            _isBotAccount = isBotAccount;
         }
 
         /// <summary>
@@ -40,12 +45,21 @@ namespace Emberfall.Net.Server.Quests
         {
             if (facts is null) throw new ArgumentNullException(nameof(facts));
 
+            // Bot fill must be progression-identical for the PLAYER, without creating a second
+            // economy for roster accounts. Fail closed when a BotFill event arrives without the
+            // roster predicate that can distinguish the seats. AI soak is never player progress.
+            if (facts.Source == TelemetrySource.AiSoak) return;
+            AccountId accountId = AccountId.FromAuthenticatedAccount(facts.PlayerId);
+            if (_isBotAccount?.Invoke(accountId) == true) return;
+            if (facts.Source == TelemetrySource.BotFill && _isBotAccount is null) return;
+
             Account? account = await _accounts
                 .FindByPlayerIdAsync(facts.PlayerId, ct)
                 .ConfigureAwait(false);
-            // A guest has no account row and may not be paid; a bot has one and would be. Both are
-            // filtered here rather than at the sink, because "who can hold a quest" is this service's
-            // question and the sink should not have to know the answer.
+            // A guest has no durable account row and may not be paid. Roster bots are filtered
+            // above even though they do have durable rows: only the human half of bot fill owns
+            // progression. Both decisions live here because "who can hold a quest" is this
+            // service's question and the sink should not have to know the answer.
             if (account is null || !EconomyAccountPolicy.IsDurable(account)) return;
 
             DateOnly day = DateOnly.FromDateTime(facts.EndedAtUtc.UtcDateTime);

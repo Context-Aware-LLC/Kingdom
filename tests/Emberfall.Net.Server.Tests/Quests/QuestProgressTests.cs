@@ -341,6 +341,49 @@ namespace Emberfall.Net.Server.Tests.Quests
         }
 
         [Test]
+        public async Task Bot_fill_credits_the_human_and_never_the_roster_bot()
+        {
+            var accounts = new InMemoryAccountStore(new FakeTime());
+            Account human = await PlayerHoldingAsync(accounts, "play-three", 0);
+            Account bot = await PlayerHoldingAsync(accounts, "play-three", 1);
+            var progress = new InMemoryQuestProgressStore();
+            var service = new QuestProgressService(
+                progress,
+                accounts,
+                new GoldFaucet(new InMemoryEntitlementLedger(), new FakeTime(), new StubGoldRewardPolicy()),
+                account => account == AccountId.FromAuthenticatedAccount(bot.PlayerId));
+            var sink = new QuestProgressSink(
+                NullTelemetrySink.Instance, service, new ClassCardDatabase());
+
+            AccountId p0 = AccountId.FromAuthenticatedAccount(human.PlayerId);
+            AccountId p1 = AccountId.FromAuthenticatedAccount(bot.PlayerId);
+            await sink.EvaluateAsync(
+                Complete(
+                    p0,
+                    p1,
+                    CardClass.EMBERWARD,
+                    MatchOutcome.Player0Win,
+                    8,
+                    TelemetrySource.BotFill),
+                new CardSeenEvent(
+                    new MatchId("match-1"),
+                    Now,
+                    TelemetrySource.BotFill,
+                    Array.Empty<CardSeenRow>()));
+
+            QuestView humanQuest = (await service.ViewAsync(human.PlayerId, Day))
+                .Single(v => v.Day == Day);
+            QuestView botQuest = (await service.ViewAsync(bot.PlayerId, Day))
+                .Single(v => v.Day == Day);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(humanQuest.Progress, Is.EqualTo(1));
+                Assert.That(botQuest.Progress, Is.Zero);
+            });
+        }
+
+        [Test]
         public async Task A_Card_Sample_With_No_Match_Complete_Behind_It_Advances_Nothing()
         {
             var accounts = new InMemoryAccountStore(new FakeTime());
@@ -441,9 +484,14 @@ namespace Emberfall.Net.Server.Tests.Quests
         }
 
         private static MatchCompleteEvent Complete(
-            AccountId p0, AccountId p1, CardClass @class, MatchOutcome outcome, int turns)
+            AccountId p0,
+            AccountId p1,
+            CardClass @class,
+            MatchOutcome outcome,
+            int turns,
+            TelemetrySource source = TelemetrySource.Ladder)
             => new MatchCompleteEvent(
-                new MatchId("match-1"), Now, MatchEndReason.Win, outcome, turns, TelemetrySource.Ladder,
+                new MatchId("match-1"), Now, MatchEndReason.Win, outcome, turns, source,
                 new SeatOutcome(p0, @class, "deck-0", "hash-0",
                     outcome == MatchOutcome.Player0Win ? SeatResult.Win : SeatResult.Loss,
                     Array.Empty<int>()),

@@ -3,15 +3,18 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Emberfall.Core.Contracts;
+using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Ranking;
+using Emberfall.Net.Server.Telemetry;
 using Microsoft.Extensions.Hosting;
 
 namespace Emberfall.Net.Server.Accounts
 {
     /// <summary>
     /// Pays the match Gold rewards for finished matches. Modelled on <see cref="RatingWorker"/> and
-    /// fed from the same <see cref="IRankedMatchSink"/> seam, because the question "did this match
-    /// count?" has exactly one right answer and two systems must not disagree about it.
+    /// fed from the same <see cref="IRankedMatchSink"/> seam because that result already carries the
+    /// outcome, identities and source. Reward eligibility deliberately diverges from Elo for bot
+    /// fill: the human receives ordinary progression while the synthetic opponent and rating do not.
     ///
     /// <para><b>Off the match thread, deliberately.</b> <c>MatchSession</c> calls
     /// <see cref="Record"/> from inside its single-threaded dispatch, at the moment a match is
@@ -31,6 +34,7 @@ namespace Emberfall.Net.Server.Accounts
     {
         private readonly GoldFaucet _faucet;
         private readonly IAccountStore _accounts;
+        private readonly Func<AccountId, bool>? _isBotAccount;
 
         /// <summary>Completed when the drain loop has finished — see <see cref="StopAsync"/>.</summary>
         private readonly TaskCompletionSource _drained =
@@ -50,20 +54,23 @@ namespace Emberfall.Net.Server.Accounts
                 AllowSynchronousContinuations = false,
             });
 
-        public MatchRewardWorker(GoldFaucet faucet, IAccountStore accounts)
+        public MatchRewardWorker(
+            GoldFaucet faucet,
+            IAccountStore accounts,
+            Func<AccountId, bool>? isBotAccount = null)
         {
             _faucet = faucet ?? throw new ArgumentNullException(nameof(faucet));
             _accounts = accounts ?? throw new ArgumentNullException(nameof(accounts));
+            _isBotAccount = isBotAccount;
         }
 
         /// <summary>
-        /// Accept one finished match for payment. Ineligible matches — bot-fill, AI soak, self-play,
-        /// unattributed — are dropped here rather than filtered later, so nothing but a real human
-        /// ladder match ever reaches the faucet.
+        /// Accept one finished match for payment. Human ladder matches and the human seat of a
+        /// bot-filled match qualify; AI soak, self-play and unattributed matches do not.
         /// </summary>
         public void Record(RankedMatchResult result)
         {
-            if (!result.IsEligible) return;
+            if (!IsPayable(result)) return;
             if (!_queue.Writer.TryWrite(result))
                 Console.Error.WriteLine(
                     "[rewards] result queue was closed before match {0} could be paid.",
@@ -114,11 +121,26 @@ namespace Emberfall.Net.Server.Accounts
         /// </summary>
         public async Task PayAsync(RankedMatchResult result)
         {
-            if (!result.IsEligible) return;
-            await PaySeatAsync(result, result.P0.Value, result.Outcome == MatchOutcome.Player0Win)
+            if (!IsPayable(result)) return;
+            await PaySeatAsync(result, result.P0, result.Outcome == MatchOutcome.Player0Win)
                 .ConfigureAwait(false);
-            await PaySeatAsync(result, result.P1.Value, result.Outcome == MatchOutcome.Player1Win)
+            await PaySeatAsync(result, result.P1, result.Outcome == MatchOutcome.Player1Win)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Reward eligibility is deliberately separate from <see cref="RankedMatchResult.IsEligible"/>:
+        /// bot fill should look like an ordinary match to the player, but it must not move Elo.
+        /// A bot-filled result is accepted only when the configured roster identifies exactly one
+        /// bot seat, so a malformed source label cannot turn self-play into a Gold faucet.
+        /// </summary>
+        private bool IsPayable(RankedMatchResult result)
+        {
+            if (result.IsEligible) return true;
+            if (result.Source != TelemetrySource.BotFill || _isBotAccount is null) return false;
+            if (!result.P0.IsAttributed || !result.P1.IsAttributed || result.P0 == result.P1) return false;
+            if (result.Outcome == MatchOutcome.InProgress) return false;
+            return _isBotAccount(result.P0) != _isBotAccount(result.P1);
         }
 
         /// <summary>
@@ -128,8 +150,10 @@ namespace Emberfall.Net.Server.Accounts
         /// (<c>EconomyAccountPolicy.RequireDurable</c>). Refusing loudly here would log on every
         /// guest match.
         /// </summary>
-        private async Task PaySeatAsync(RankedMatchResult result, string playerId, bool won)
+        private async Task PaySeatAsync(RankedMatchResult result, AccountId seat, bool won)
         {
+            if (_isBotAccount?.Invoke(seat) == true) return;
+            string playerId = seat.Value;
             try
             {
                 Account? account = await _accounts

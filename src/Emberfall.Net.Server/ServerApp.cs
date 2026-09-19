@@ -443,15 +443,17 @@ namespace Emberfall.Net.Server
             // resolve a seat's player_id through, and either absence is an ordinary dev-box
             // configuration rather than a failure: no faucet is registered, the ranked sink stays
             // the rating worker alone, and matches finish exactly as they did. On a box that has
-            // both, every eligible ladder match pays — see MatchRewardWorker for why this rides the
-            // ranked sink rather than a seam of its own.
+            // both, every eligible ladder match and the human seat of bot fill pay — see
+            // MatchRewardWorker for why this rides the ranked sink rather than a seam of its own.
             IRankedMatchSink matchSink = ratingWorker;
             IGoldRewardPolicy goldRewards = cfg.GoldRewards ?? new GoldRewardPolicy();
+            Func<AccountId, bool>? isBotAccount = botPool is null ? null : botPool.IsBotAccount;
             if (cfg.EntitlementLedger is not null && cfg.AccountStore is not null)
             {
                 var rewardWorker = new MatchRewardWorker(
                     new GoldFaucet(cfg.EntitlementLedger, time, goldRewards),
-                    cfg.AccountStore);
+                    cfg.AccountStore,
+                    isBotAccount);
                 builder.Services.AddSingleton<IHostedService>(rewardWorker);
                 matchSink = new CompositeRankedMatchSink(ratingWorker, rewardWorker);
             }
@@ -477,7 +479,8 @@ namespace Emberfall.Net.Server
                 questService = new QuestProgressService(
                     cfg.QuestProgress ?? new InMemoryQuestProgressStore(),
                     cfg.AccountStore,
-                    new GoldFaucet(cfg.EntitlementLedger, time, goldRewards));
+                    new GoldFaucet(cfg.EntitlementLedger, time, goldRewards),
+                    isBotAccount);
 
                 var questSink = new QuestProgressSink(
                     telemetry ?? NullTelemetrySink.Instance, questService, db);

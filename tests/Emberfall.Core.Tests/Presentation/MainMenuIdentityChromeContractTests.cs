@@ -7,9 +7,9 @@ using NUnit.Framework;
 namespace Emberfall.Core.Tests.Presentation
 {
     /// <summary>
-    /// The main menu keeps navigation and wallet chrome only. Character and deck context belongs
-    /// on the roster and collection surfaces, so the former upper-left identity plate must not
-    /// return as either dormant markup or dead presentation binding.
+    /// The main menu keeps navigation, wallet and current-quest chrome only. Character and deck
+    /// context belongs on the roster and collection surfaces, so the former upper-left identity
+    /// plate must not return as either dormant markup or dead presentation binding.
     /// </summary>
     [TestFixture]
     [Category("Presentation")]
@@ -38,6 +38,7 @@ namespace Emberfall.Core.Tests.Presentation
                 {
                     "scrim",
                     "shard-wallet",
+                    "quest-panel",
                     "command",
                     "footer",
                     "leaderboard-modal",

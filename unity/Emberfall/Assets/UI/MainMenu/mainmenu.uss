@@ -299,6 +299,115 @@
     -unity-background-scale-mode: scale-to-fit;
 }
 
+/* ---------- Current quests ----------
+ * Startup projection of GET /quests. It occupies the right-side stage without joining the command
+ * button group: quests are status, not navigation. The server owns progress and auto-grants rewards,
+ * so this panel deliberately contains no claim buttons or other mutating controls. */
+.mm-quests {
+    position: absolute;
+    top: 16%;
+    right: var(--space-6);
+    bottom: 14%;
+    width: 620px;
+    padding: var(--space-6);
+    background-color: rgba(8, 11, 16, 0.88);
+    background-image: url("/Assets/Art/UI/Chrome/ui_panel_outer_forged.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 64;
+    -unity-slice-bottom: 64;
+    -unity-slice-scale: 0.55px;
+    opacity: 1;
+    translate: 0 0;
+    transition-property: opacity, translate;
+    transition-duration: 0.36s;
+    transition-timing-function: ease-out;
+}
+.mm-root--entering .mm-quests {
+    opacity: 0;
+    translate: 32px 0;
+}
+.mm-quests__title {
+    color: var(--accent);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    letter-spacing: 2px;
+    margin-bottom: var(--space-4);
+}
+.mm-quest-list {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.mm-quest-status {
+    flex-grow: 1;
+    color: var(--ink-2);
+    font-size: var(--type-body);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+.mm-quest-status--hidden {
+    display: none;
+}
+.mm-quest-row {
+    flex-shrink: 0;
+    min-height: 146px;
+    margin-bottom: var(--space-3);
+    padding: var(--space-4);
+    background-color: rgba(24, 30, 40, 0.92);
+    border-left-width: 4px;
+    border-left-color: var(--accent);
+}
+.mm-quest-row--complete {
+    border-left-color: var(--positive);
+    opacity: 0.78;
+}
+.mm-quest-row__heading {
+    flex-direction: row;
+    align-items: center;
+}
+.mm-quest-title {
+    flex-grow: 1;
+    flex-shrink: 1;
+    color: var(--ink-1);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    white-space: normal;
+}
+.mm-quest-age {
+    flex-shrink: 0;
+    margin-left: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    letter-spacing: 1px;
+}
+.mm-quest-detail {
+    margin-top: var(--space-3);
+    color: var(--ink-2);
+    font-size: var(--type-label);
+}
+.mm-quest-row--complete .mm-quest-detail {
+    color: var(--positive);
+}
+.mm-quest-progress {
+    height: 8px;
+    margin-top: var(--space-3);
+    background-color: var(--surface-3);
+    overflow: hidden;
+}
+.mm-quest-progress__fill {
+    height: 100%;
+    background-color: var(--accent);
+}
+.mm-quest-row--complete .mm-quest-progress__fill {
+    background-color: var(--positive);
+}
+.mm-quests__footnote {
+    margin-top: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    -unity-text-align: middle-right;
+}
+
 /* ---------- Account switcher rows ---------- */
 .mm-accounts {
     flex-direction: column;

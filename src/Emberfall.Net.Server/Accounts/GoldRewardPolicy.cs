@@ -26,12 +26,11 @@ namespace Emberfall.Net.Server.Accounts
         /// a colluding pair could farm by conceding to each other, so it is not the bulk of the
         /// income.
         ///
-        /// <para><b>There is no daily cap on this, and nothing else caps it either.</b> Eligibility
-        /// is the only bound: <c>RankedMatchResult.IsEligible</c> pays only for a Ladder-source
-        /// match between two distinct attributed accounts, so farming it needs a second real
-        /// account and a matchmaking hit, not a bot. If the ladder ever pays bot-fill matches, or
-        /// the population gets small enough that two accounts can reliably find each other, this
-        /// needs a per-UTC-day ceiling before that happens — the faucet has the day key already
+        /// <para><b>There is no daily cap on this, and nothing else caps it either.</b> Since
+        /// 2026-09-19 the human seat of a bot-filled match receives the same reward so progression
+        /// cannot reveal the matchmaking fallback. That deliberately removes the old "needs a
+        /// second real account" anti-farm bound. If telemetry shows farming, add a per-UTC-day
+        /// ceiling without making bot fill pay differently — the faucet has the day key already
         /// (see <c>GoldFaucet.GrantMatchAsync</c>'s first-win transaction id).</para>
         /// </summary>
         public long MatchGold { get; init; } = 5;
@@ -44,14 +43,13 @@ namespace Emberfall.Net.Server.Accounts
         public long FirstWinGold { get; init; } = 50;
 
         /// <summary>
-        /// Paid per completed daily quest. Flat today because no quest catalog exists yet to carry
+        /// Paid per completed daily quest. Flat today because the quest catalog does not carry
         /// per-quest values.
         ///
-        /// <para><b>RETIREMENT TRIGGER — the quest catalog.</b> The commit that lands the catalog in
-        /// <c>docs/dev-docs/specs/daily-quests.md</c> §4 as data carrying its own reward replaces
-        /// this flat value with a lookup on <paramref name="questId"/> and deletes this paragraph.
-        /// Until then every questId pays the same, and the id is accepted only so the faucet's
-        /// per-quest idempotency key works.</para>
+        /// <para><b>RETIREMENT TRIGGER — variable quest rewards.</b> The change that gives catalog
+        /// definitions their own reward replaces this flat value with a lookup on
+        /// <paramref name="questId"/>. Until then every quest id pays the same, and the id is
+        /// accepted so the faucet's per-quest idempotency key works.</para>
         /// </summary>
         public long DailyQuestFlatGold { get; init; } = 60;
 
