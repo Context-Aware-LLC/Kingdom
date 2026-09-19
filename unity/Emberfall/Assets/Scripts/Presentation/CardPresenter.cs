@@ -4,6 +4,7 @@ using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Emberfall.Presentation
 {
@@ -218,6 +219,17 @@ namespace Emberfall.Presentation
         private void OnMouseEnter()
         {
             if (_def == null) return;
+            // Unity synthesizes mouse enter from a touchscreen press but does not reliably send the
+            // matching exit when the finger lifts. Showing this small on-card banner on touch was
+            // therefore sticky and covered the mana cost. Touch has the full inspect surface; this
+            // immediate banner and the flavor corner remain desktop-hover affordances only.
+            bool touchPressed = Touchscreen.current?.primaryTouch.press.isPressed == true;
+            if (!ShouldShowDirectHover(touchPressed))
+            {
+                HideTooltip();
+                HideFlavorText();
+                return;
+            }
             if (!string.IsNullOrEmpty(_def.Tooltip) && tooltipBanner != null)
             {
                 if (tooltipLabel != null) tooltipLabel.text = _def.Tooltip;
@@ -225,6 +237,8 @@ namespace Emberfall.Presentation
             }
             _flavorPanel?.Show(_def.FlavorText, this);
         }
+
+        internal static bool ShouldShowDirectHover(bool touchPressed) => !touchPressed;
 
         private void OnMouseExit()
         {

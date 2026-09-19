@@ -22,36 +22,39 @@ namespace Emberfall.Presentation
     /// </summary>
     internal sealed class CardRevealPanel : MonoBehaviour
     {
-        // Sized in card widths rather than in camera fractions, so the panel keeps a fixed
-        // relationship to the thing it is describing across every aspect ratio the phone build
-        // has to survive.
-        private const float PanelW = BoardController.CardW * 2.55f;
-        private const float PanelH = BoardController.CardH * 1.90f;
-        private const float DetailX = 1.75f;
-        private const float FocusX = -2.15f;
-        private const float FocusScale = 2.10f;
+        // A camera-relative plane gives the inspect surface a stable fraction of the physical
+        // screen under the perspective board rig. The retired fixed world-size layout was only
+        // about half-height on some phones and got smaller whenever safe-area fitting retreated the
+        // board camera — exactly the opposite of what a readability surface should do.
+        private const float OverlayDistance = 2f;
+        internal const float CardHeightFraction = 0.84f;
+        internal const float DetailWidthFraction = 0.92f;
+        internal const float OuterMarginFraction = 0.045f;
+        internal const float ColumnGapFraction = 0.035f;
 
         // Above the hand (HandSortBase 50, +20 while lifted) and below the match-end banner (100).
         private const int SortBase = 90;
 
-        // Card materials are opaque, so draw order alone loses to the depth buffer. World z is what
-        // actually puts the panel in front; -1.5 clears the hand fan's stagger and its hover pull.
-        private const float PanelZ = -1.5f;
-
-        // Up from centre: on a phone the hand is at the bottom under the player's own hand, and
-        // the reveal is worthless if a thumb is resting on it.
-        private const float PanelY = 0.55f;
-
         private static readonly Color PlateColor = new Color(0.09f, 0.11f, 0.16f, 1f);
+        private static readonly Color DimColor = new Color(0.015f, 0.02f, 0.035f, 0.68f);
 
         private TextMeshPro _title;
         private TextMeshPro _subtitle;
         private TextMeshPro _body;
         private Renderer _face;
+        private Transform _faceTransform;
+        private SpriteRenderer _dimmer;
+        private Sprite _solidSprite;
         private BoardController _board;
         private CardPresenter _focusPresenter;
         private InstanceId _focusedCard;
         private bool _hasFocusedCard;
+        private float _focusX;
+        private float _focusY;
+        private float _focusScale;
+        private int _layoutScreenWidth = -1;
+        private int _layoutScreenHeight = -1;
+        private Rect _layoutSafeArea;
 
         internal static CardRevealPanel Create(Transform parent, BoardController board)
         {
@@ -73,19 +76,32 @@ namespace Emberfall.Presentation
             if (cam != null)
             {
                 transform.SetParent(cam.transform, false);
-                transform.localPosition = new Vector3(0f, PanelY, -cam.transform.position.z + PanelZ);
+                transform.localPosition = new Vector3(0f, 0f, OverlayDistance);
                 transform.localRotation = Quaternion.identity;
             }
             else
             {
-                transform.position = new Vector3(0f, PanelY, PanelZ);
+                transform.position = new Vector3(0f, 0f, -1.5f);
             }
+
+            _solidSprite = Sprite.Create(
+                Texture2D.whiteTexture,
+                new Rect(0f, 0f, Texture2D.whiteTexture.width, Texture2D.whiteTexture.height),
+                new Vector2(0.5f, 0.5f), Texture2D.whiteTexture.width);
+            var dimGo = new GameObject("Dimmer");
+            dimGo.transform.SetParent(transform, false);
+            dimGo.transform.localPosition = new Vector3(0f, 0f, 0.05f);
+            _dimmer = dimGo.AddComponent<SpriteRenderer>();
+            _dimmer.sprite = _solidSprite;
+            _dimmer.color = DimColor;
+            _dimmer.sortingOrder = SortBase - 2;
 
             var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             faceGo.name = "Face";
             faceGo.transform.SetParent(transform, false);
-            faceGo.transform.localPosition = new Vector3(DetailX, 0f, 0f);
-            faceGo.transform.localScale = new Vector3(PanelW, PanelH, 1f);
+            faceGo.transform.localPosition = Vector3.zero;
+            faceGo.transform.localScale = Vector3.one;
+            _faceTransform = faceGo.transform;
             DestroyGenerated(faceGo.GetComponent<MeshCollider>()); // never eat a gesture
             var face = faceGo.GetComponent<Renderer>();
             _face = face;
@@ -96,8 +112,8 @@ namespace Emberfall.Presentation
             mpb.SetColor("_BaseColor", PlateColor);
             face.SetPropertyBlock(mpb);
 
-            float pad = PanelW * 0.06f;
-            float inner = PanelW - pad * 2f;
+            float pad = BoardController.CardW * 0.12f;
+            float inner = BoardController.CardW * 2.3f;
 
             // Sam, 2026-09-05: the plate's text read as tiny against how much room the plate has.
             // It was: the on-card label sizes (CardPresenter's NameEm/BodyEm * CardH * 10) copied
@@ -108,8 +124,8 @@ namespace Emberfall.Presentation
             // actually grows to fill the box instead of sitting at a card-sized glyph in a
             // plate-sized frame.
 
-            _title = MakeText("Title", new Vector3(DetailX, PanelH * 0.40f, -0.01f),
-                              new Vector2(inner, PanelH * 0.14f), 3.0f, Color.white,
+            _title = MakeText("Title", new Vector3(0f, 0f, -0.01f),
+                              new Vector2(inner, BoardController.CardH * 0.27f), 3.0f, Color.white,
                               TextAlignmentOptions.Center, wrap: false);
             _title.enableAutoSizing = true;
             _title.fontSizeMax      = 3.0f;
@@ -120,8 +136,8 @@ namespace Emberfall.Presentation
             TMP_FontAsset display = BoardController.CardFont();
             if (display != null) _title.font = display;
 
-            _subtitle = MakeText("Subtitle", new Vector3(DetailX, PanelH * 0.28f, -0.01f),
-                                 new Vector2(inner, PanelH * 0.10f), 1.8f,
+            _subtitle = MakeText("Subtitle", new Vector3(0f, 0f, -0.01f),
+                                 new Vector2(inner, BoardController.CardH * 0.19f), 1.8f,
                                  new Color(0.72f, 0.76f, 0.84f),
                                  TextAlignmentOptions.Center, wrap: false);
             _subtitle.enableAutoSizing = true;
@@ -129,8 +145,8 @@ namespace Emberfall.Presentation
             _subtitle.fontSizeMin      = 1.0f;
             _subtitle.overflowMode     = TextOverflowModes.Ellipsis;
 
-            _body = MakeText("Body", new Vector3(DetailX, -PanelH * 0.06f, -0.01f),
-                             new Vector2(inner, PanelH * 0.58f), 2.4f,
+            _body = MakeText("Body", new Vector3(0f, 0f, -0.01f),
+                             new Vector2(inner, BoardController.CardH * 1.10f), 2.4f,
                              new Color(0.94f, 0.94f, 0.94f),
                              TextAlignmentOptions.Top, wrap: true);
             // BodyEm/BodyEmFloor * CardH * 10 * PlateScale (0.90, 0.55 pre-rescale) — see PlateScale
@@ -140,6 +156,91 @@ namespace Emberfall.Presentation
             _body.fontSizeMax      = 2.4f;
             _body.fontSizeMin      = 1.3f;
             _body.overflowMode     = TextOverflowModes.Ellipsis;
+
+            ApplyLayout(force: true);
+        }
+
+        private void LateUpdate() => ApplyLayout(force: false);
+
+        private void ApplyLayout(bool force)
+        {
+            Camera cam = Camera.main;
+            int screenW = Mathf.Max(1, Screen.width);
+            int screenH = Mathf.Max(1, Screen.height);
+            Rect safe = Screen.safeArea;
+            if (safe.width <= 1f || safe.height <= 1f)
+                safe = new Rect(0f, 0f, screenW, screenH);
+            if (!force && screenW == _layoutScreenWidth && screenH == _layoutScreenHeight
+                       && safe == _layoutSafeArea) return;
+
+            _layoutScreenWidth = screenW;
+            _layoutScreenHeight = screenH;
+            _layoutSafeArea = safe;
+
+            float viewH;
+            float viewW;
+            if (cam != null)
+            {
+                if (transform.parent != cam.transform)
+                    transform.SetParent(cam.transform, false);
+                transform.localPosition = new Vector3(0f, 0f, OverlayDistance);
+                transform.localRotation = Quaternion.identity;
+                viewH = cam.orthographic
+                    ? cam.orthographicSize * 2f
+                    : 2f * OverlayDistance * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
+                viewW = viewH * cam.aspect;
+            }
+            else
+            {
+                viewH = DeviceLayout.DesignHalfHeight * 2f;
+                viewW = viewH * (float)screenW / screenH;
+            }
+
+            Rect safeViewport = Rect.MinMaxRect(
+                safe.xMin / screenW, safe.yMin / screenH,
+                safe.xMax / screenW, safe.yMax / screenH);
+            CardRevealLayout layout = CardRevealLayout.Solve(viewW, viewH, safeViewport);
+
+            if (_dimmer != null)
+            {
+                _dimmer.transform.localPosition = new Vector3(0f, 0f, 0.05f);
+                _dimmer.transform.localScale = new Vector3(viewW, viewH, 1f);
+            }
+            if (_faceTransform != null)
+            {
+                _faceTransform.localPosition = new Vector3(layout.DetailCenter.x, layout.DetailCenter.y, 0f);
+                _faceTransform.localScale = new Vector3(layout.DetailWidth, layout.CardHeight, 1f);
+            }
+
+            float pad = layout.DetailWidth * 0.07f;
+            float inner = layout.DetailWidth - pad * 2f;
+            _title.transform.localPosition = new Vector3(
+                layout.DetailCenter.x, layout.DetailCenter.y + layout.CardHeight * 0.40f, -0.01f);
+            _title.rectTransform.sizeDelta = new Vector2(inner, layout.CardHeight * 0.14f);
+            _subtitle.transform.localPosition = new Vector3(
+                layout.DetailCenter.x, layout.DetailCenter.y + layout.CardHeight * 0.28f, -0.01f);
+            _subtitle.rectTransform.sizeDelta = new Vector2(inner, layout.CardHeight * 0.10f);
+            _body.transform.localPosition = new Vector3(
+                layout.DetailCenter.x, layout.DetailCenter.y - layout.CardHeight * 0.06f, -0.01f);
+            _body.rectTransform.sizeDelta = new Vector2(inner, layout.CardHeight * 0.58f);
+
+            float fontScale = layout.CardHeight / (BoardController.CardH * 1.90f);
+            _title.fontSizeMax = 3.0f * fontScale;
+            _title.fontSizeMin = 1.8f * fontScale;
+            _subtitle.fontSizeMax = 1.8f * fontScale;
+            _subtitle.fontSizeMin = 1.0f * fontScale;
+            _body.fontSizeMax = 2.4f * fontScale;
+            _body.fontSizeMin = 1.3f * fontScale;
+
+            _focusX = layout.CardCenter.x;
+            _focusY = layout.CardCenter.y;
+            _focusScale = layout.CardHeight / BoardController.CardH;
+            if (_focusPresenter != null)
+            {
+                Transform focus = _focusPresenter.transform;
+                focus.localPosition = new Vector3(_focusX, _focusY, -0.03f);
+                focus.localScale = Vector3.one * _focusScale;
+            }
         }
 
         private TextMeshPro MakeText(string goName, Vector3 localPos, Vector2 size, float fontSize,
@@ -164,6 +265,7 @@ namespace Emberfall.Presentation
         internal void Show(CardRevealTrigger trigger, CardRevealContent content)
         {
             if (_title == null) return;
+            ApplyLayout(force: false);
             ApplyPlateColor();
             if (trigger != null && (!_hasFocusedCard || !_focusedCard.Equals(trigger.CardId)))
                 RebuildFocusCard(trigger);
@@ -199,9 +301,9 @@ namespace Emberfall.Presentation
             _focusedCard = trigger.CardId;
             _hasFocusedCard = true;
             Transform focus = _focusPresenter.transform;
-            focus.localPosition = new Vector3(FocusX, 0f, -0.03f);
+            focus.localPosition = new Vector3(_focusX, _focusY, -0.03f);
             focus.localRotation = Quaternion.identity;
-            focus.localScale = Vector3.one * FocusScale;
+            focus.localScale = Vector3.one * _focusScale;
             var group = focus.GetComponent<UnityEngine.Rendering.SortingGroup>();
             if (group != null) group.sortingOrder = SortBase + 1;
         }
@@ -224,6 +326,7 @@ namespace Emberfall.Presentation
             // The child is destroyed with this panel; only the live-state subscription needs an
             // explicit release here.
             if (_focusPresenter != null) _focusPresenter.Unbind();
+            DestroyGenerated(_solidSprite);
         }
 
         private static void DestroyGenerated(Object generated)
@@ -231,6 +334,53 @@ namespace Emberfall.Presentation
             if (generated == null) return;
             if (Application.isPlaying) Destroy(generated);
             else DestroyImmediate(generated);
+        }
+    }
+
+    /// <summary>Pure screen-plane solve for the full-card inspect view.</summary>
+    internal readonly struct CardRevealLayout
+    {
+        internal Vector2 CardCenter { get; }
+        internal Vector2 DetailCenter { get; }
+        internal float CardHeight { get; }
+        internal float CardWidth { get; }
+        internal float DetailWidth { get; }
+
+        private CardRevealLayout(Vector2 cardCenter, Vector2 detailCenter,
+                                 float cardHeight, float cardWidth, float detailWidth)
+        {
+            CardCenter = cardCenter;
+            DetailCenter = detailCenter;
+            CardHeight = cardHeight;
+            CardWidth = cardWidth;
+            DetailWidth = detailWidth;
+        }
+
+        internal static CardRevealLayout Solve(float viewWidth, float viewHeight, Rect safeViewport)
+        {
+            float safeW = viewWidth * Mathf.Clamp01(safeViewport.width);
+            float safeH = viewHeight * Mathf.Clamp01(safeViewport.height);
+            float centreX = viewWidth * (safeViewport.center.x - 0.5f);
+            float centreY = viewHeight * (safeViewport.center.y - 0.5f);
+            float margin = safeH * CardRevealPanel.OuterMarginFraction;
+            float gap = safeH * CardRevealPanel.ColumnGapFraction;
+            float usableW = Mathf.Max(0f, safeW - margin * 2f);
+            float desiredCardH = safeH * CardRevealPanel.CardHeightFraction;
+            float desiredCardW = desiredCardH * BoardController.CardW / BoardController.CardH;
+
+            // Preserve enough room for readable rules text. Normal landscape screens keep the
+            // full-height card; unusually narrow safe areas shrink it just enough to stay inside.
+            float minimumDetailW = Mathf.Min(safeH * 0.42f, usableW * 0.42f);
+            float maximumCardW = Mathf.Max(0f, usableW - gap - minimumDetailW);
+            float cardW = Mathf.Min(desiredCardW, maximumCardW);
+            float cardH = cardW * BoardController.CardH / BoardController.CardW;
+            float availableDetail = Mathf.Max(0f, usableW - cardW - gap);
+            float detailW = Mathf.Min(safeH * CardRevealPanel.DetailWidthFraction, availableDetail);
+            float totalW = cardW + gap + detailW;
+            float left = centreX - totalW * 0.5f;
+            var cardCenter = new Vector2(left + cardW * 0.5f, centreY);
+            var detailCenter = new Vector2(left + cardW + gap + detailW * 0.5f, centreY);
+            return new CardRevealLayout(cardCenter, detailCenter, cardH, cardW, detailW);
         }
     }
 

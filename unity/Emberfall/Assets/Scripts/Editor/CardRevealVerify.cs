@@ -41,17 +41,15 @@ namespace Emberfall.Editor
             failed += StaleExitDoesNotCancelLiveHover();
             failed += EveryKeywordHasGlossary();
             failed += ContentUsesLiveStateOverPrint();
-
-            // FocusViewIsWiredToBoardCards SKIPPED 2026-09-08 (Sam): tooltips are not fully formed
-            // yet, so BoardController.Initialize() no longer creates _revealController (#368, #362)
-            // — this check would now correctly FAIL on the very thing that was just deliberately
-            // turned off. Restore the call once the reveal is re-enabled there.
-            // failed += FocusViewIsWiredToBoardCards();
+            failed += ReadableZonesIncludeHandAndBoard();
+            failed += DirectTooltipSuppressesTouch();
+            failed += LayoutUsesSafeHeight();
+            failed += FocusViewIsWiredToReadableCards();
 
             if (failed > 0)
                 Debug.LogError($"[CardRevealVerify] {failed} check(s) FAILED.");
             else
-                Debug.Log("[CardRevealVerify] GREEN — 10/10 checks passed (FocusViewIsWiredToBoardCards skipped, reveal disabled).");
+                Debug.Log("[CardRevealVerify] GREEN — 14/14 checks passed.");
         }
 
         // ── Trigger policy ──────────────────────────────────────────────────────────
@@ -248,7 +246,51 @@ namespace Emberfall.Editor
             return Pass("ContentUsesLiveStateOverPrint");
         }
 
-        private static int FocusViewIsWiredToBoardCards()
+        private static int ReadableZonesIncludeHandAndBoard()
+        {
+            if (!CardRevealTrigger.CanInspectZone(Zone.Hand))
+                return Fail("ReadableZonesIncludeHandAndBoard", "local hand is not inspectable");
+            if (!CardRevealTrigger.CanInspectZone(Zone.Board))
+                return Fail("ReadableZonesIncludeHandAndBoard", "board is not inspectable");
+            if (CardRevealTrigger.CanInspectZone(Zone.Deck))
+                return Fail("ReadableZonesIncludeHandAndBoard", "deck unexpectedly became inspectable");
+            return Pass("ReadableZonesIncludeHandAndBoard");
+        }
+
+        private static int DirectTooltipSuppressesTouch()
+        {
+            if (CardPresenter.ShouldShowDirectHover(touchPressed: true))
+                return Fail("DirectTooltipSuppressesTouch", "touch would open the sticky on-card tooltip");
+            if (!CardPresenter.ShouldShowDirectHover(touchPressed: false))
+                return Fail("DirectTooltipSuppressesTouch", "desktop hover tooltip was suppressed");
+            return Pass("DirectTooltipSuppressesTouch");
+        }
+
+        private static int LayoutUsesSafeHeight()
+        {
+            // Pixel 5a landscape safe viewport from DeviceLayout's device evidence: left cutout,
+            // otherwise full height. Work in normalized screen-plane units so this stays pure.
+            var safe = Rect.MinMaxRect(136f / 2400f, 0f, 1f, 1f);
+            CardRevealLayout layout = CardRevealLayout.Solve(20f / 9f, 1f, safe);
+            if (layout.CardHeight < 0.80f)
+                return Fail("LayoutUsesSafeHeight", $"card uses only {layout.CardHeight:P0} of safe height");
+
+            float safeLeft = -0.5f * (20f / 9f) + 136f / 2400f * (20f / 9f);
+            float safeRight = 0.5f * (20f / 9f);
+            float left = layout.CardCenter.x - layout.CardWidth * 0.5f;
+            float right = layout.DetailCenter.x + layout.DetailWidth * 0.5f;
+            if (left < safeLeft || right > safeRight)
+                return Fail("LayoutUsesSafeHeight", $"layout [{left:F3}, {right:F3}] escaped safe [{safeLeft:F3}, {safeRight:F3}]");
+
+            CardRevealLayout narrow = CardRevealLayout.Solve(1.05f, 1f, new Rect(0f, 0f, 1f, 1f));
+            float narrowLeft = narrow.CardCenter.x - narrow.CardWidth * 0.5f;
+            float narrowRight = narrow.DetailCenter.x + narrow.DetailWidth * 0.5f;
+            if (narrowLeft < -0.525f || narrowRight > 0.525f)
+                return Fail("LayoutUsesSafeHeight", "narrow safe area caused horizontal overflow");
+            return Pass("LayoutUsesSafeHeight");
+        }
+
+        private static int FocusViewIsWiredToReadableCards()
         {
             var root = new GameObject("CardFocusVerifyRoot");
             var routerGo = new GameObject("CardFocusVerifyRouter");
@@ -279,28 +321,39 @@ namespace Emberfall.Editor
                     MaxHealth = def.Health ?? 0,
                 };
                 CardPresenter presenter = board.EditorBuildCard(card, p0, Zone.Board);
-                CardRevealTrigger trigger = presenter != null
+                CardRevealTrigger boardTrigger = presenter != null
                     ? presenter.GetComponent<CardRevealTrigger>()
+                    : null;
+                var handCard = new CardInstance(new InstanceId(78), def.Id, p0)
+                {
+                    Zone = Zone.Hand,
+                    CurrentAttack = def.Attack ?? 0,
+                    CurrentHealth = def.Health ?? 0,
+                    MaxHealth = def.Health ?? 0,
+                };
+                CardPresenter handPresenter = board.EditorBuildCard(handCard, p0, Zone.Hand);
+                CardRevealTrigger handTrigger = handPresenter != null
+                    ? handPresenter.GetComponent<CardRevealTrigger>()
                     : null;
                 CardRevealController controller = root.GetComponentInChildren<CardRevealController>();
                 panel = controller != null ? controller.FocusPanel : null;
 
-                if (trigger == null || !trigger.IsInPlay)
-                    return Fail("FocusViewIsWiredToBoardCards", "board presenter has no live reveal trigger");
+                if (boardTrigger == null || !boardTrigger.IsInspectable)
+                    return Fail("FocusViewIsWiredToReadableCards", "board presenter has no live reveal trigger");
+                if (handTrigger == null || !handTrigger.IsInspectable)
+                    return Fail("FocusViewIsWiredToReadableCards", "hand presenter has no live reveal trigger");
                 if (panel == null)
-                    return Fail("FocusViewIsWiredToBoardCards", "board initialization created no focus panel");
+                    return Fail("FocusViewIsWiredToReadableCards", "board initialization created no focus panel");
 
-                panel.Show(trigger, trigger.BuildContent());
+                panel.Show(handTrigger, handTrigger.BuildContent());
                 CardPresenter[] focused = panel.GetComponentsInChildren<CardPresenter>(true);
                 if (focused.Length != 1)
-                    return Fail("FocusViewIsWiredToBoardCards",
+                    return Fail("FocusViewIsWiredToReadableCards",
                         $"focus panel contains {focused.Length} card faces, expected exactly one");
                 if (focused[0].GetComponent<BoxCollider>() != null)
-                    return Fail("FocusViewIsWiredToBoardCards", "focused copy retained an input collider");
-                if (focused[0].transform.localScale.x < 2f)
-                    return Fail("FocusViewIsWiredToBoardCards", "focused copy is not presented large");
+                    return Fail("FocusViewIsWiredToReadableCards", "focused copy retained an input collider");
 
-                return Pass("FocusViewIsWiredToBoardCards");
+                return Pass("FocusViewIsWiredToReadableCards");
             }
             finally
             {

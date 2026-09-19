@@ -23,7 +23,12 @@ namespace Emberfall.Presentation
         internal InstanceId CardId { get; private set; }
         internal CardDefinition Definition => _def;
         internal ICardLiveState LiveState => _live;
-        internal bool IsInPlay => Clickable != null && Clickable.Zone == Zone.Board;
+        internal bool IsInspectable => Clickable != null && CanInspectZone(Clickable.Zone);
+
+        // Hidden opponent hands never reach this component (they have no CardDefinition), so Hand
+        // means the local readable hand. Keep this policy explicit: expanding it to Deck or Graveyard
+        // would make off-board presenters unexpectedly intercept the match inspect gesture.
+        internal static bool CanInspectZone(Zone zone) => zone == Zone.Hand || zone == Zone.Board;
 
         /// <summary>The click handler on the same root, so the controller can hand a completed read
         /// back to InputRouter to undo whatever the same press already did. Null in modes that run

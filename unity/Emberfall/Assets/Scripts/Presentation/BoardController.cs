@@ -156,14 +156,11 @@ namespace Emberfall.Presentation
             _artProvider ??= new AddressableArtProvider();
             _uiSprites   ??= new AddressableUiSpriteProvider();
 #endif
-            // DISABLED 2026-09-08 (Sam): tooltips are not fully formed yet — the reveal only arms
-            // for board cards (#368, IsInPlay == Zone.Board) and the separate on-card banner sticks
-            // forever on touch and covers the mana cost (#362). Leaving _revealController null keeps
-            // every CardRevealTrigger attachment below inert (it already null-checks). Re-enable by
-            // restoring this assignment once #368/#362 are resolved.
-            //
-            // if (_revealController == null)
-            //     _revealController = CardRevealController.Create(transform, _inputRouter, this);
+            // One shared inspect surface for the local hand and both boards. Hidden opponent cards
+            // never receive a definition below, so they cannot acquire a reveal trigger or leak
+            // projected information. Touch inspection is a hold-and-release read; desktop uses hover.
+            if (_revealController == null)
+                _revealController = CardRevealController.Create(transform, _inputRouter, this);
 
             // Targeting-state visibility: while the router has a targeting state armed,
             // only valid targets glow (binder suppresses readiness glow for the duration).

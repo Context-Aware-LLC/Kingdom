@@ -24,6 +24,7 @@ namespace Emberfall.Presentation
 
         private bool       _pressActive;
         private InstanceId _pressCard;
+        private bool       _pressReadHandled;
         private bool       _wasPointerHeld;
 
         internal CardRevealPanel FocusPanel => _panel;
@@ -70,7 +71,7 @@ namespace Emberfall.Presentation
 
         internal void OnPointerEnter(CardRevealTrigger t)
         {
-            if (Blocked() || !t.IsInPlay) return;
+            if (Blocked() || !t.IsInspectable) return;
             _model.PointerEnter(t.CardId, Time.unscaledTime);
         }
 
@@ -79,9 +80,10 @@ namespace Emberfall.Presentation
 
         internal void OnPointerDown(CardRevealTrigger t)
         {
-            if (Blocked() || !t.IsInPlay) return;
+            if (Blocked() || !t.IsInspectable) return;
             _pressActive = true;
             _pressCard   = t.CardId;
+            _pressReadHandled = false;
             // A real touch is the only thing that arms the hold — see HoverRevealModel for why a
             // mouse press must not. The unified pointer stream deliberately does not carry which
             // device is driving it, so this asks the touchscreen directly; the fallback keeps
@@ -107,7 +109,8 @@ namespace Emberfall.Presentation
             {
                 _pressActive = false;
                 InstanceId pressed = _pressCard;
-                if (_model.Release(now)) CancelPressSelection(pressed);
+                bool wasRead = _model.Release(now);
+                if (wasRead && !_pressReadHandled) CancelPressSelection(pressed);
             }
 
             // Dismiss a sticky reveal when the player presses something that is not a card.
@@ -121,6 +124,14 @@ namespace Emberfall.Presentation
             _wasPointerHeld = pointerHeld;
 
             _model.Tick(now);
+            // Once a stationary press matures into a read it can never become a drag later in the
+            // same contact. Cancel the router's pending Pressed gesture immediately, before thumb
+            // drift can cross its drag threshold and turn inspection into an accidental play.
+            if (_pressActive && _model.PressBecameRead && !_pressReadHandled)
+            {
+                _pressReadHandled = true;
+                CancelPressSelection(_pressCard);
+            }
             if (Blocked() && _model.Visible) _model.Cancel();
             Sync();
         }
@@ -181,6 +192,6 @@ namespace Emberfall.Presentation
         // GestureInProgress is folded in here rather than left to expire on its own: a card being
         // dragged is still "hovered" as far as OnMouseEnter is concerned, so without this the
         // inspect panel would pop open mid-drag and sit over the drop target.
-        private bool Blocked() => _router != null && (_router.BlocksInput || _router.GestureInProgress);
+        private bool Blocked() => _router != null && _router.BlocksCardInspection;
     }
 }

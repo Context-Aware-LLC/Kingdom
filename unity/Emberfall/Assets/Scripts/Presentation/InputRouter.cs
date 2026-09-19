@@ -99,6 +99,12 @@ namespace Emberfall.Presentation
         // drag and obscuring the drop).
         public bool GestureInProgress => _gesture != Gesture.None;
 
+        // A stationary press is allowed to mature into CardRevealController's touch-hold inspect.
+        // Once travel turns it into a drag (or a placed card is waiting for a target), inspection
+        // must stay closed so it cannot cover the drop surface. BlocksInput includes choice/UI modals.
+        public bool BlocksCardInspection => BlocksInput || _gesture == Gesture.Dragging
+            || _gesture == Gesture.AwaitingEffectDrag || _gesture == Gesture.AwaitingEffectClick;
+
         // EDITOR/TEST ONLY: injectable probe for headless verification. Overrides raycast behavior.
         public System.Func<Vector2, (PointerSubject subject, Transform hitTransform, CardPresenter presenter)> InjectableProbe;
 
@@ -863,8 +869,11 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // Outside mulligan, a long-press read has no selection to undo. Ordinary gameplay taps
-            // are inert and drag gestures tear themselves down on release/cancel.
+            // Outside mulligan, consume a stationary source press immediately. Waiting until
+            // release leaves a window where thumb drift can promote the same contact to Dragging,
+            // making a read turn into an accidental play when the finger lifts.
+            if (_gesture == Gesture.Pressed && _source.Id.Equals(card.CardId))
+                CancelGesture();
         }
 
         // In-match concede (C-G1-3), invoked by the settings overlay's confirm. Deliberately

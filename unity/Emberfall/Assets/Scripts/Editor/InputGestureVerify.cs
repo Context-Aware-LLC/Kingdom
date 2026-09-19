@@ -44,6 +44,7 @@ namespace Emberfall.Editor
             _failed = 0;
 
             FullStackDragThreshold();
+            FullStackReadConsumesPendingDrag();
             FullStackTapDoesNotArm();
             FullStackDragResolve();
             FullStackDragCancellation();
@@ -333,6 +334,38 @@ namespace Emberfall.Editor
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
 
             harness.Cleanup();
+        }
+
+        private static void FullStackReadConsumesPendingDrag()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+            var descriptorGo = new GameObject("ReadConsumesPendingDragCard");
+            var descriptor = descriptorGo.AddComponent<ClickableCard>();
+            descriptor.Init(s.Players[0].Hand[0].Id, P0, Zone.Hand, null);
+
+            try
+            {
+                harness.StepFrames(new PointerSample(PointerPhase.Pressed, new Vector2(25, 200)));
+                Check("stationary card press remains eligible for inspection",
+                    harness.Router.GestureInProgress && !harness.Router.BlocksCardInspection);
+
+                // CardRevealController calls this when its hold timer matures. Movement after that
+                // point must not resurrect the same contact as a drag and play the card on release.
+                harness.Router.CancelSelection(descriptor);
+                Check("long-press read consumes the pending source gesture",
+                    !harness.Router.GestureInProgress);
+                harness.StepFrames(
+                    new PointerSample(PointerPhase.Held, new Vector2(25, 230)),
+                    new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
+                Check("thumb drift after a read cannot submit a card play",
+                    harness.SubmittedIntents.Count == 0);
+            }
+            finally
+            {
+                Object.DestroyImmediate(descriptorGo);
+                harness.Cleanup();
+            }
         }
 
         private static void FullStackTapDoesNotArm()
