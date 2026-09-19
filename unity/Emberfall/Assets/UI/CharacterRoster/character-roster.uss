@@ -282,7 +282,8 @@
 }
 
 .deck-action {
-    width: 184px;
+    /* Fits the longest shipped label, "Change card back", at --type-body with button padding. */
+    width: 248px;
     align-self: center;
     margin-bottom: var(--space-2);
 }
@@ -562,7 +563,7 @@
     border-color: var(--surface-3);
 }
 
-/* Follow the menu's 184px controls instead of reserving the baseline 50% x 80% viewport box.
+/* Follow the menu's compact controls instead of reserving the baseline 50% x 80% viewport box.
  * Class badges and the deck title may make the final panel a little wider than the actions. */
 .delete-dialog--menu {
     width: auto;
