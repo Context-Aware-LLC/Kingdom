@@ -264,84 +264,45 @@
     letter-spacing: 1px;
 }
 
-/* ---------- Shard balance ----------
- * These percentages are the no-inset fallback; the controller adds Screen.safeArea's normalized
- * top/right inset at runtime and keeps this plate inside cutouts and system bars as they change.
- */
-.mm-shard-balance {
+/* ---------- Top status rail ----------
+ * Quests and all three wallet balances share one horizontal line. There is deliberately no outer
+ * panel: the backdrop remains visible between the translucent quest cards and currency readouts.
+ * These offsets are the no-inset fallback; the controller adds Screen.safeArea's normalized
+ * top/right inset at runtime while .emb-edge owns the fixed left/right hardware clearance. */
+.mm-top-rail {
     position: absolute;
-    top: var(--space-6);                         /* was 2% — a percentage of the WIDTH, so it
-                                                    moved with aspect and landed differently on
-                                                    every device. Edge clearance comes from
-                                                    .emb-edge in theme.uss; this is the gutter. */
+    top: var(--space-6);
+    left: var(--space-6);
     right: var(--space-6);
-    min-width: 12%;
+    height: 124px;
     flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--type-label);
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    color: var(--ink-1);
-    background-color: transparent;
-    background-image: none;
-    border-width: 0;
-    border-radius: 0;
-    padding: var(--space-3) var(--space-6);
-}
-
-.mm-shard-icon {
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    margin-left: var(--space-1);
-    background-image: url("/Assets/Art/UI/Crafting/Currency/craft-shard-cyan-v1.png");
-    -unity-background-scale-mode: scale-to-fit;
-}
-
-/* ---------- Current quests ----------
- * Startup projection of GET /quests. It occupies the right-side stage without joining the command
- * button group: quests are status, not navigation. The server owns progress and auto-grants rewards,
- * so this panel deliberately contains no claim buttons or other mutating controls. */
-.mm-quests {
-    position: absolute;
-    top: 16%;
-    right: var(--space-6);
-    bottom: 14%;
-    width: 620px;
-    padding: var(--space-6);
-    background-color: rgba(8, 11, 16, 0.88);
-    background-image: url("/Assets/Art/UI/Chrome/ui_panel_outer_forged.png");
-    -unity-slice-left: 64;
-    -unity-slice-right: 64;
-    -unity-slice-top: 64;
-    -unity-slice-bottom: 64;
-    -unity-slice-scale: 0.55px;
+    align-items: stretch;
+    background-color: rgba(0, 0, 0, 0);
     opacity: 1;
     translate: 0 0;
     transition-property: opacity, translate;
     transition-duration: 0.36s;
     transition-timing-function: ease-out;
 }
-.mm-root--entering .mm-quests {
+.mm-root--entering .mm-top-rail {
     opacity: 0;
-    translate: 32px 0;
+    translate: 0 -24px;
 }
-.mm-quests__title {
-    color: var(--accent);
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-    letter-spacing: 2px;
-    margin-bottom: var(--space-4);
+.mm-quest-strip {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
 }
 .mm-quest-list {
     flex-grow: 1;
     flex-shrink: 1;
+    min-width: 0;
+    flex-direction: row;
 }
 .mm-quest-status {
     flex-grow: 1;
     color: var(--ink-2);
-    font-size: var(--type-body);
+    font-size: var(--type-label);
     -unity-text-align: middle-center;
     white-space: normal;
 }
@@ -349,16 +310,19 @@
     display: none;
 }
 .mm-quest-row {
-    flex-shrink: 0;
-    min-height: 146px;
-    margin-bottom: var(--space-3);
-    padding: var(--space-4);
-    background-color: rgba(24, 30, 40, 0.92);
-    border-left-width: 4px;
-    border-left-color: var(--accent);
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-right: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background-color: rgba(12, 16, 22, 0.28);
+    border-bottom-width: 3px;
+    border-bottom-color: var(--accent);
+    border-radius: var(--space-2);
 }
 .mm-quest-row--complete {
-    border-left-color: var(--positive);
+    border-bottom-color: var(--positive);
     opacity: 0.78;
 }
 .mm-quest-row__heading {
@@ -369,29 +333,53 @@
     flex-grow: 1;
     flex-shrink: 1;
     color: var(--ink-1);
-    font-size: var(--type-body);
+    font-size: var(--type-label);
     -unity-font-style: bold;
     white-space: normal;
 }
 .mm-quest-age {
     flex-shrink: 0;
-    margin-left: var(--space-3);
+    margin-left: var(--space-2);
     color: var(--ink-2);
     font-size: var(--type-caption);
     letter-spacing: 1px;
 }
+.mm-quest-summary {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--space-2);
+}
 .mm-quest-detail {
-    margin-top: var(--space-3);
     color: var(--ink-2);
-    font-size: var(--type-label);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
 }
 .mm-quest-row--complete .mm-quest-detail {
     color: var(--positive);
 }
+.mm-quest-reward {
+    flex-direction: row;
+    align-items: center;
+    margin-left: var(--space-2);
+}
+.mm-quest-reward__icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    background-image: url("/Assets/Art/UI/Icons/icon_currency_gold.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+.mm-quest-reward__amount {
+    margin-left: var(--space-1);
+    color: var(--accent);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+}
 .mm-quest-progress {
-    height: 8px;
-    margin-top: var(--space-3);
-    background-color: var(--surface-3);
+    height: 6px;
+    margin-top: var(--space-2);
+    background-color: rgba(47, 54, 68, 0.58);
     overflow: hidden;
 }
 .mm-quest-progress__fill {
@@ -401,11 +389,56 @@
 .mm-quest-row--complete .mm-quest-progress__fill {
     background-color: var(--positive);
 }
-.mm-quests__footnote {
-    margin-top: var(--space-2);
-    color: var(--ink-2);
-    font-size: var(--type-caption);
-    -unity-text-align: middle-right;
+
+.mm-wallet-strip {
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: center;
+    margin-left: var(--space-3);
+}
+.mm-wallet-chip {
+    min-width: 116px;
+    height: 64px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-left: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background-color: rgba(8, 11, 16, 0.34);
+    border-bottom-width: 2px;
+    border-bottom-color: var(--surface-3);
+    border-radius: var(--space-2);
+}
+.mm-wallet-chip--gold {
+    border-bottom-color: var(--accent);
+}
+.mm-wallet-chip--gems {
+    border-bottom-color: var(--mana);
+}
+.mm-wallet-chip--shards {
+    border-bottom-color: rgb(58, 201, 219);
+}
+.mm-wallet-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+.mm-wallet-icon--gold {
+    background-image: url("/Assets/Art/UI/Icons/icon_currency_gold.png");
+}
+.mm-wallet-icon--gems {
+    background-image: url("/Assets/Art/UI/Icons/icon_currency_gems.png");
+}
+.mm-wallet-icon--shards {
+    background-image: url("/Assets/Art/UI/Crafting/Currency/craft-shard-cyan-v1.png");
+}
+.mm-wallet-amount {
+    margin-left: var(--space-2);
+    color: var(--ink-1);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
 }
 
 /* ---------- Account switcher rows ---------- */

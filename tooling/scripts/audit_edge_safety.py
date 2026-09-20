@@ -144,7 +144,7 @@ ROOT_EXCEPTIONS = {
         'a full-bleed backdrop with no flow content at its edges; the rule says so itself '
         '("Edge clearance is NOT this padding\'s job"). Every remaining edge-anchored '
         'element is absolute and tagged',
-        ['mm-command', 'mm-shard-balance', 'mm-footer']),
+        ['mm-command', 'mm-top-rail', 'mm-footer']),
     'collection': (
         'the card wall is the background layer and bleeds by ruling (the wall is headerless, '
         '2026-08-18); the controls are an absolute overlay that spends the token itself, and '

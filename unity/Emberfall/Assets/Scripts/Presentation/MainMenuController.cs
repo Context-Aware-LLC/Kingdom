@@ -18,8 +18,9 @@ namespace Emberfall.Presentation
     ///
     /// <para>Each destination has a named handler so a scene-loader drops straight in. Store,
     /// Collection, the pack vault and the roster are scenes of their own; the remaining unfinished
-    /// destinations still log their intent. Nothing but the shard plate outlives a departure — every screen rebinds from
-    /// <c>ShopRuntime</c>/<c>AuthGateway</c> on arrival rather than being handed state.</para>
+    /// destinations still log their intent. Nothing but the top status rail outlives a departure —
+    /// every screen rebinds from <c>ShopRuntime</c>/<c>AuthGateway</c> on arrival rather than being
+    /// handed state.</para>
     ///
     /// <para><b>This screen is also where account setup begins.</b> A device that has never been
     /// named is routed through the one-time account flow before the menu is used. Deck context
@@ -43,9 +44,11 @@ namespace Emberfall.Presentation
         private Label _leaderboardUpdated;
         private CancellationTokenSource _leaderboardRequest;
 
+        private Label _goldBalance;
+        private Label _gemBalance;
         private Label _shardBalance;
-        private VisualElement _shardWallet;
-        private ScrollView _questList;
+        private VisualElement _topRail;
+        private VisualElement _questList;
         private Label _questStatus;
         private HttpQuestGateway _questGateway;
         private VisualElement _vaultArt;
@@ -55,7 +58,7 @@ namespace Emberfall.Presentation
         private int _lastSafeAreaScreenWidth = -1;
         private int _lastSafeAreaScreenHeight = -1;
 
-        private const float ShardSafeAreaMarginPercent = 2f;
+        private const float TopRailSafeAreaMarginPercent = 2f;
         private static readonly string StarterPackId = OnboardingGrant.StarterPack().Id;
 
 
@@ -95,7 +98,7 @@ namespace Emberfall.Presentation
 
             BindBuildStamp();
 
-            BindShardBalance();
+            BindWalletBalances();
             BindQuestPanel();
             BindVaultEntry();
 
@@ -187,7 +190,7 @@ namespace Emberfall.Presentation
 
             // Collection sync applies onboarding credits; read the wallet after that and after
             // refreshing the session token so the first readout includes the starter shards.
-            RefreshShardBalance();
+            RefreshWalletBalances();
             await BeginFirstRun();
             FinishBootstrap();
         }
@@ -195,11 +198,11 @@ namespace Emberfall.Presentation
         /// <summary>
         /// Safe-area changes have no callback: rotation and Android system-bar changes can move the
         /// usable top/right edge while the scene stays enabled. Poll only the three values that can
-        /// affect this read-only plate and write layout when one actually changes.
+        /// affect this read-only rail and write layout when one actually changes.
         /// </summary>
         private void Update()
         {
-            RefreshShardSafeArea();
+            RefreshTopRailSafeArea();
         }
 
         /// <summary>Drop the sign-in gate's deep-link subscription. <see cref="SignInGateController"/>
@@ -334,31 +337,34 @@ namespace Emberfall.Presentation
             label.style.display = DisplayStyle.None;
         }
 
-        // ── Shard balance ──────────────────────────────────────────────────────────────
+        // ── Wallet balances ────────────────────────────────────────────────────────────
 
-        private void BindShardBalance()
+        private void BindWalletBalances()
         {
-            _shardWallet = _root.Q<VisualElement>("shard-wallet");
+            _topRail = _root.Q<VisualElement>("top-rail");
+            _goldBalance = _root.Q<Label>("gold-balance");
+            _gemBalance = _root.Q<Label>("gem-balance");
             _shardBalance = _root.Q<Label>("shard-balance");
-            if (_shardBalance != null) _shardBalance.text = WalletDisplay.ShardsUnavailable;
+            RenderWalletBalances(null);
             _lastSafeAreaScreenWidth = -1;
-            RefreshShardSafeArea();
+            RefreshTopRailSafeArea();
         }
 
         /// <summary>
-        /// Read the wallet the plate reports. This used to arrive as a side effect of building the
+        /// Read the wallet the top rail reports. This used to arrive as a side effect of building the
         /// store's in-scene panel; with the store on its own scene (2026-08-20) the menu owns the
         /// read, and re-runs it on every <c>OnEnable</c> — which includes the return from a
-        /// purchase, so an opened pack's shards land on the plate with no cross-scene wiring at all.
+        /// purchase, so Gold, Gems and an opened pack's Shards land on the rail with no cross-scene
+        /// wiring at all.
         ///
-        /// <para>Failure is not silent-but-zero: an unreachable account server leaves the plate on
-        /// its em dash, the same as having no gateway bound.</para>
+        /// <para>Failure is not silent-but-zero: an unreachable account server leaves each amount
+        /// on its em dash, the same as having no gateway bound.</para>
         /// </summary>
-        private async void RefreshShardBalance()
+        private async void RefreshWalletBalances()
         {
             if (ShopRuntime.Gateway == null)
             {
-                RenderShardBalance(null);
+                RenderWalletBalances(null);
                 return;
             }
 
@@ -366,33 +372,42 @@ namespace Emberfall.Presentation
             {
                 var wallet = new ShopFlow(ShopRuntime.Gateway);
                 await wallet.RefreshAsync();
-                RenderShardBalance(wallet.Snapshot?.Wallet.Shards);
+                RenderWalletBalances(wallet.Snapshot?.Wallet);
             }
             catch (Exception ex)
             {
-                RenderShardBalance(null);
-                Debug.LogWarning($"[MainMenu] shard balance unavailable: {ex.GetType().Name}: {ex.Message}");
+                RenderWalletBalances(null);
+                Debug.LogWarning($"[MainMenu] wallet balances unavailable: {ex.GetType().Name}: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Adopt the gateway's ledger projection directly. A null snapshot state stays an em dash;
-        /// an authoritative missing ledger row arrives from the server as 0 and therefore renders 0.
-        /// No shard count is stored by this controller.
+        /// Adopt the gateway's ledger projection directly. A null snapshot state keeps all three
+        /// amounts as em dashes; authoritative missing ledger rows arrive from the server as zero.
+        /// Adjacent icons carry the currency names, so the labels render amounts only.
         /// </summary>
-        private void RenderShardBalance(long? shards)
+        private void RenderWalletBalances(WalletBalances? wallet)
         {
-            if (_shardBalance == null) return;
-            _shardBalance.text = shards.HasValue
-                ? WalletDisplay.Shards(shards.Value)
+            string gold = wallet.HasValue
+                ? WalletDisplay.IconAmount(wallet.Value.Gold)
                 : WalletDisplay.ShardsUnavailable;
+            string gems = wallet.HasValue
+                ? WalletDisplay.IconAmount(wallet.Value.Gems)
+                : WalletDisplay.ShardsUnavailable;
+            string shards = wallet.HasValue
+                ? WalletDisplay.IconAmount(wallet.Value.Shards)
+                : WalletDisplay.ShardsUnavailable;
+
+            if (_goldBalance != null) _goldBalance.text = gold;
+            if (_gemBalance != null) _gemBalance.text = gems;
+            if (_shardBalance != null) _shardBalance.text = shards;
         }
 
         // ── Daily quests ──────────────────────────────────────────────────────────────
 
         private void BindQuestPanel()
         {
-            _questList = _root.Q<ScrollView>("quest-list");
+            _questList = _root.Q<VisualElement>("quest-list");
             _questStatus = _root.Q<Label>("quest-status");
             _questGateway = new HttpQuestGateway(
                 questBaseUrl,
@@ -483,10 +498,24 @@ namespace Emberfall.Presentation
             row.Add(heading);
 
             var detail = new Label(quest.Complete
-                ? $"COMPLETE  ·  +{quest.RewardGold} GOLD"
-                : $"{quest.Progress} / {quest.Goal}  ·  +{quest.RewardGold} GOLD");
+                ? "COMPLETE"
+                : $"{quest.Progress} / {quest.Goal}");
             detail.AddToClassList("mm-quest-detail");
-            row.Add(detail);
+
+            var reward = new VisualElement();
+            reward.AddToClassList("mm-quest-reward");
+            var rewardIcon = new VisualElement();
+            rewardIcon.AddToClassList("mm-quest-reward__icon");
+            reward.Add(rewardIcon);
+            var rewardAmount = new Label($"+{quest.RewardGold}");
+            rewardAmount.AddToClassList("mm-quest-reward__amount");
+            reward.Add(rewardAmount);
+
+            var summary = new VisualElement();
+            summary.AddToClassList("mm-quest-summary");
+            summary.Add(detail);
+            summary.Add(reward);
+            row.Add(summary);
 
             var track = new VisualElement();
             track.AddToClassList("mm-quest-progress");
@@ -499,9 +528,9 @@ namespace Emberfall.Presentation
             return row;
         }
 
-        private void RefreshShardSafeArea()
+        private void RefreshTopRailSafeArea()
         {
-            if (_shardWallet == null) return;
+            if (_topRail == null) return;
 
             int screenWidth = Screen.width;
             int screenHeight = Screen.height;
@@ -526,10 +555,10 @@ namespace Emberfall.Presentation
 
             // Percentages keep the breathing room proportional across phone and desktop canvases;
             // the normalized device inset moves the anchor from the display edge to the safe edge.
-            _shardWallet.style.right = Length.Percent(
-                Mathf.Min(100f, rightInsetPercent + ShardSafeAreaMarginPercent));
-            _shardWallet.style.top = Length.Percent(
-                Mathf.Min(100f, topInsetPercent + ShardSafeAreaMarginPercent));
+            _topRail.style.right = Length.Percent(
+                Mathf.Min(100f, rightInsetPercent + TopRailSafeAreaMarginPercent));
+            _topRail.style.top = Length.Percent(
+                Mathf.Min(100f, topInsetPercent + TopRailSafeAreaMarginPercent));
         }
 
         // ── Settings overlay (C-G1-3 / decision 23 §5, mounted here too since Sam 2026-08-09) ──

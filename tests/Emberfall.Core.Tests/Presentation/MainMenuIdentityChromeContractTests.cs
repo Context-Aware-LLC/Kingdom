@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Emberfall.Core.Tests.Presentation
 {
     /// <summary>
-    /// The main menu keeps navigation, wallet and current-quest chrome only. Character and deck
+    /// The main menu keeps navigation and a shared quest/wallet top rail only. Character and deck
     /// context belongs on the roster and collection surfaces, so the former upper-left identity
     /// plate must not return as either dormant markup or dead presentation binding.
     /// </summary>
@@ -37,8 +37,7 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(rootChrome, Is.EqualTo(new string?[]
                 {
                     "scrim",
-                    "shard-wallet",
-                    "quest-panel",
+                    "top-rail",
                     "command",
                     "footer",
                     "leaderboard-modal",

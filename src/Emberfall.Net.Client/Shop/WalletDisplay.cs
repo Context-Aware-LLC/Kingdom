@@ -36,6 +36,14 @@ namespace Emberfall.Net.Client.Shop
         /// The shard icon supplies the currency identity beside this amount.
         /// </summary>
         public static string Shards(long shards)
-            => shards.ToString("N0", CultureInfo.InvariantCulture);
+            => IconAmount(shards);
+
+        /// <summary>
+        /// Amount-only text for a wallet readout whose adjacent icon supplies the currency name.
+        /// This also preserves <see cref="long.MinValue"/> for gem debt without taking an absolute
+        /// value that would overflow.
+        /// </summary>
+        public static string IconAmount(long amount)
+            => amount.ToString("N0", CultureInfo.InvariantCulture);
     }
 }

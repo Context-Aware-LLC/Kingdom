@@ -48,5 +48,17 @@ namespace Emberfall.Net.Client.Tests
                 Assert.That(WalletDisplay.Shards(-1200), Is.EqualTo("-1,200"));
             });
         }
+
+        [Test]
+        public void Icon_backed_wallets_render_amounts_without_repeating_currency_names()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(WalletDisplay.IconAmount(0), Is.EqualTo("0"));
+                Assert.That(WalletDisplay.IconAmount(12500), Is.EqualTo("12,500"));
+                Assert.That(WalletDisplay.IconAmount(-1200), Is.EqualTo("-1,200"));
+                Assert.That(WalletDisplay.IconAmount(long.MinValue), Does.StartWith("-"));
+            });
+        }
     }
 }

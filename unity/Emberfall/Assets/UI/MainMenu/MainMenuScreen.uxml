@@ -3,15 +3,25 @@
     <Style src="project://database/Assets/UI/MainMenu/mainmenu.uss?fileID=7433441132597879392&amp;guid=a7ebbdf5907b4c844915adc374612cc8&amp;type=3#mainmenu"/>
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden mm-root--entering">
         <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim emb-bleed" style="background-image: none;"/>
-        <ui:VisualElement name="shard-wallet" tooltip="Shards" class="mm-shard-balance emb-edge">
-            <ui:Label name="shard-balance" text="—" picking-mode="Ignore"/>
-            <ui:VisualElement picking-mode="Ignore" class="mm-shard-icon"/>
-        </ui:VisualElement>
-        <ui:VisualElement name="quest-panel" class="mm-quests emb-edge">
-            <ui:Label text="CURRENT QUESTS" class="mm-quests__title"/>
-            <ui:Label name="quest-status" text="Loading quests…" class="mm-quest-status"/>
-            <ui:ScrollView name="quest-list" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="mm-quest-list"/>
-            <ui:Label text="Rewards are granted automatically" class="mm-quests__footnote"/>
+        <ui:VisualElement name="top-rail" class="mm-top-rail emb-edge">
+            <ui:VisualElement name="quest-strip" class="mm-quest-strip">
+                <ui:Label name="quest-status" text="Loading quests…" class="mm-quest-status"/>
+                <ui:VisualElement name="quest-list" class="mm-quest-list"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="wallet-strip" class="mm-wallet-strip">
+                <ui:VisualElement name="gold-wallet" tooltip="Gold" class="mm-wallet-chip mm-wallet-chip--gold">
+                    <ui:VisualElement picking-mode="Ignore" class="mm-wallet-icon mm-wallet-icon--gold"/>
+                    <ui:Label name="gold-balance" text="—" picking-mode="Ignore" class="mm-wallet-amount"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="gem-wallet" tooltip="Gems" class="mm-wallet-chip mm-wallet-chip--gems">
+                    <ui:VisualElement picking-mode="Ignore" class="mm-wallet-icon mm-wallet-icon--gems"/>
+                    <ui:Label name="gem-balance" text="—" picking-mode="Ignore" class="mm-wallet-amount"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="shard-wallet" tooltip="Shards" class="mm-wallet-chip mm-wallet-chip--shards">
+                    <ui:VisualElement picking-mode="Ignore" class="mm-wallet-icon mm-wallet-icon--shards"/>
+                    <ui:Label name="shard-balance" text="—" picking-mode="Ignore" class="mm-wallet-amount"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="command" class="mm-command emb-edge">
             <ui:VisualElement name="brand" class="mm-brand">
