@@ -317,12 +317,9 @@
     margin-right: var(--space-3);
     padding: var(--space-3) var(--space-4);
     background-color: rgba(12, 16, 22, 0.28);
-    border-bottom-width: 3px;
-    border-bottom-color: var(--accent);
     border-radius: var(--space-2);
 }
 .mm-quest-row--complete {
-    border-bottom-color: var(--positive);
     opacity: 0.78;
 }
 .mm-quest-row__heading {
