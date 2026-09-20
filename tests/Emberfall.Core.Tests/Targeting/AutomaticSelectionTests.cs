@@ -37,6 +37,17 @@ namespace Emberfall.Core.Tests.Targeting
         }
 
         [Test]
+        public void Shipped_Mass_Rebirth_Remains_Automatic()
+        {
+            CardDefinition massRebirth = ShippedCards.Cards.Single(card => card.Id == 209);
+            var action = (ReanimateAction)massRebirth.Rules.Single().Action;
+
+            Assert.That(action.Target.Selection, Is.EqualTo(TargetSelection.AutomaticOf(7)),
+                "a player-chosen seven-target graveyard action expands into an unbounded permutation set");
+            Assert.That(TargetSpec.IsPlayerChosen(action.Target), Is.False);
+        }
+
+        [Test]
         public void C31_Refuses_Automatic_On_A_Bounded_Selector()
         {
             var def = Card(new ReanimateAction(new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.AutomaticOf(2))));

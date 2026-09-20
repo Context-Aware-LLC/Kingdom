@@ -5,7 +5,7 @@
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 297,
-  "corpusDigest": "45810e371ff761fb",
+  "corpusDigest": "70dd561cdb62b0f1",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -87,14 +87,15 @@
     },
     "tribeBreakdown": {
       "CONSTRUCT": 45,
-      "HUMAN": 41,
+      "HUMAN": 39,
       "UNDEAD": 24,
       "ELEMENTAL": 23,
       "BEAST": 22,
       "FEY": 15,
       "SPIRIT": 13,
       "DRAGON": 6,
-      "MERFOLK": 2
+      "MERFOLK": 4,
+      "CATFOLK": 1
     },
     "minionCount": 193,
     "attackDistribution": {
@@ -378,6 +379,7 @@
         "UNDEAD": 7,
         "CONSTRUCT": 5,
         "SPIRIT": 4,
+        "CATFOLK": 1,
         "DRAGON": 1,
         "ELEMENTAL": 1
       },
@@ -657,10 +659,10 @@
       },
       "tribeBreakdown": {
         "ELEMENTAL": 7,
-        "HUMAN": 5,
+        "MERFOLK": 4,
+        "HUMAN": 3,
         "SPIRIT": 3,
         "BEAST": 2,
-        "MERFOLK": 2,
         "DRAGON": 1
       },
       "minionCount": 20,
@@ -1066,7 +1068,7 @@
       ],
       "selectors": [],
       "actionTags": [],
-      "tribe": "HUMAN",
+      "tribe": "MERFOLK",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_oracle",
@@ -1110,7 +1112,7 @@
         "ANY_ENEMY_MINION"
       ],
       "actionTags": [],
-      "tribe": "HUMAN",
+      "tribe": "MERFOLK",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "tide_wave_caller",
@@ -1272,7 +1274,7 @@
       ],
       "selectors": [],
       "actionTags": [],
-      "tribe": null,
+      "tribe": "CATFOLK",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "neutral_veilstalker",
