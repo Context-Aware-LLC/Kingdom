@@ -164,6 +164,44 @@ namespace Emberfall.Net.Client.Tests.Collection
         }
 
         [Test]
+        public async Task Only_successful_collection_answers_carry_an_authoritative_wallet()
+        {
+            CollectionSnapshot known = await Gateway(new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}," +
+                "\"wallet\":{\"gold\":60,\"gems\":2,\"shards\":4}}"))
+                .FetchAsync("jwt");
+            CollectionSnapshot unconstrained = await Gateway(new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"unconstrained\",\"packs\":{}," +
+                "\"wallet\":{\"gold\":60,\"gems\":2,\"shards\":4}}"))
+                .FetchAsync("jwt");
+            CollectionSnapshot offline = await Gateway(new FakeAuthHttp()
+                .ReplyTransportFailure("no route to host"))
+                .FetchAsync("jwt");
+            CollectionSnapshot missingWallet = await Gateway(new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}}"))
+                .FetchAsync("jwt");
+            CollectionSnapshot partialWallet = await Gateway(new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}," +
+                "\"wallet\":{\"gold\":60,\"gems\":2}}"))
+                .FetchAsync("jwt");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(known.HasAuthoritativeWallet, Is.True);
+                Assert.That(unconstrained.HasAuthoritativeWallet, Is.True);
+                Assert.That(offline.HasAuthoritativeWallet, Is.False,
+                    "A failure snapshot's default-valued wallet must not masquerade as a real zero.");
+                Assert.That(missingWallet.Status, Is.EqualTo(CollectionSyncStatus.Synced),
+                    "A missing wallet must not discard an otherwise valid ownership answer.");
+                Assert.That(missingWallet.HasAuthoritativePacks, Is.True,
+                    "Wallet completeness must not invalidate the pack shelf in the same answer.");
+                Assert.That(missingWallet.HasAuthoritativeWallet, Is.False);
+                Assert.That(partialWallet.HasAuthoritativeWallet, Is.False,
+                    "A partial wallet must not render missing currency fields as real zeroes.");
+            });
+        }
+
+        [Test]
         public async Task An_offline_device_keeps_whatever_it_had()
         {
             var http = new FakeAuthHttp().ReplyTransportFailure("no route to host");

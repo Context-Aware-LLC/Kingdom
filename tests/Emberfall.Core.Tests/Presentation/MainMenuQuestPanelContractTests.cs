@@ -55,9 +55,9 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(controller, Does.Contain("BindQuestPanel();"));
                 Assert.That(controller, Does.Contain("FetchQuestsAsync(accessToken)"));
                 Assert.That(controller, Does.Contain("RenderQuests("));
-                Assert.That(controller, Does.Contain("wallet.Value.Gold"));
-                Assert.That(controller, Does.Contain("wallet.Value.Gems"));
-                Assert.That(controller, Does.Contain("wallet.Value.Shards"));
+                Assert.That(controller, Does.Contain("snapshot.Wallet.Gold"));
+                Assert.That(controller, Does.Contain("snapshot.Wallet.Gems"));
+                Assert.That(controller, Does.Contain("snapshot.Wallet.Shards"));
             });
         }
     }

@@ -171,7 +171,12 @@ namespace Emberfall.Presentation
                     if (def != null) _pool.Add(def);
 
             RestartPoolBake();
-            ApplyQuery();
+            // A pool replacement changes row identity and frequently row count (Owned/All and
+            // entering/leaving deck editing). RefreshItems only rebinds elements Unity currently
+            // realizes, so rows from the wider pool can survive on screen after the source shrinks.
+            // Rebuild clears that virtualization state. Pool changes are infrequent; text/facet/sort
+            // changes stay on the cheaper rebind path below.
+            ApplyQuery(rebuild: true);
             ScrollToTop();
         }
 
@@ -179,7 +184,7 @@ namespace Emberfall.Presentation
         {
             _filter = filter;
             _sort = sort;
-            ApplyQuery();
+            ApplyQuery(rebuild: false);
             ScrollToTop();
             if (!_poolBakeReady) RestartPoolBake();
         }
@@ -190,7 +195,7 @@ namespace Emberfall.Presentation
             _list.RefreshItems();
         }
 
-        private void ApplyQuery()
+        private void ApplyQuery(bool rebuild)
         {
             _visible.Clear();
             foreach (CardDefinition def in CardQuery.Search(_pool, _filter, _sort))
@@ -206,7 +211,10 @@ namespace Emberfall.Presentation
             }
 
             _list.itemsSource = _rows;
-            _list.RefreshItems();
+            if (rebuild)
+                _list.Rebuild();
+            else
+                _list.RefreshItems();
         }
 
         private VisualElement MakeRow()

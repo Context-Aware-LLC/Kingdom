@@ -95,8 +95,8 @@ namespace Emberfall.Core.Tests.Presentation
 
             Assert.That(menu, Does.Match(@"AuthGateway\.TokenForConnectAsync\(\)"),
                 "The boot resume must ask for a refreshed token before it syncs.");
-            Assert.That(menu, Does.Match(@"CollectionGateway\.SyncAsync\("),
-                "A launch with a restored session must still pull the collection down.");
+            Assert.That(menu, Does.Match(@"CollectionGateway\.SyncSnapshotAsync\("),
+                "A launch with a restored session must still pull the collection and wallet down.");
             Assert.That(menu, Does.Match(@"RosterGateway\.SyncAsync\("),
                 "A launch with a restored session must still pull the roster down.");
         }

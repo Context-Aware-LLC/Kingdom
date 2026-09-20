@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Core.Collection;
 using Emberfall.Net.Client.Auth;
+using Emberfall.Net.Client.Collection;
 using Emberfall.Net.Client.Quests;
 using Emberfall.Net.Client.Shop;
 using Emberfall.Session;
@@ -19,8 +20,8 @@ namespace Emberfall.Presentation
     /// <para>Each destination has a named handler so a scene-loader drops straight in. Store,
     /// Collection, the pack vault and the roster are scenes of their own; the remaining unfinished
     /// destinations still log their intent. Nothing but the top status rail outlives a departure —
-    /// every screen rebinds from <c>ShopRuntime</c>/<c>AuthGateway</c> on arrival rather than being
-    /// handed state.</para>
+    /// every screen rebinds from its server-backed gateways on arrival rather than being handed
+    /// cross-scene state.</para>
     ///
     /// <para><b>This screen is also where account setup begins.</b> A device that has never been
     /// named is routed through the one-time account flow before the menu is used. Deck context
@@ -151,6 +152,7 @@ namespace Emberfall.Presentation
         /// </summary>
         private async void ResumeThenFinishBootstrap()
         {
+            CollectionSnapshot collection = null;
             try
             {
                 if (_signIn != null && !_signIn.IsRequired && AuthGateway.IsSignedIn)
@@ -172,7 +174,8 @@ namespace Emberfall.Presentation
                     // take right now; PackVaultController already uses it for its HTTP calls.
                     string accessToken = await AuthGateway.TokenForConnectAsync();
                     Task<QuestSnapshot> questRequest = FetchQuestsAsync(accessToken);
-                    await CollectionGateway.SyncAsync(accessToken);
+                    collection = await CollectionGateway.SyncSnapshotAsync(accessToken);
+                    RenderWalletBalances(collection);
                     await RosterGateway.SyncAsync(accessToken);
                     RenderQuests(await questRequest);
 
@@ -188,10 +191,9 @@ namespace Emberfall.Presentation
                                  "this device already had.");
             }
 
-            // Collection sync applies onboarding credits; read the wallet after that and after
-            // refreshing the session token so the first readout includes the starter shards.
-            RefreshWalletBalances();
-            await BeginFirstRun();
+            // Reuse the collection read for first-run routing as well as the wallet. A failed read
+            // is retried inside BeginFirstRun so a transient fault cannot strand starter packs.
+            await BeginFirstRun(collection);
             FinishBootstrap();
         }
 
@@ -231,7 +233,7 @@ namespace Emberfall.Presentation
         /// starter packs returns to the vault. <see cref="FirstRunMarkers.Gift"/> only suppresses the
         /// one-time congratulations treatment after the player has actually opened their first pack.</para>
         /// </summary>
-        private async Task BeginFirstRun()
+        private async Task BeginFirstRun(CollectionSnapshot collection = null)
         {
             // FIRST RUN IS A SCENE NOW (Sam, 2026-08-25). The sign-in gate and the name step were
             // two .mm-modal overlays on this screen; they are AccountCreate, and this is the only
@@ -257,12 +259,13 @@ namespace Emberfall.Presentation
             // The ledger balance owns this route. The local marker only decides whether the vault
             // wears its congratulations face, so quitting after one open cannot strand the rest of
             // the starter packs behind a marker that has already been written.
-            // Refreshed, for the reason spelled out in ResumeThenFinishBootstrap — and self-sufficient
-            // rather than reusing that method's token, because the gift must not depend on the order
-            // two boot steps happen to run in. A 401 here reads as "no starter packs" and strands the
-            // gift silently; TokenForConnectAsync is a no-op when the token is already fresh.
-            var snapshot = await PackGateway.ReadShelfAsync(
-                await AuthGateway.TokenForConnectAsync());
+            // Reuse a successful startup snapshot so the menu does not read /collection twice. Stay
+            // self-sufficient when startup had no authoritative answer: a transient failure there
+            // must not strand the gift, and TokenForConnectAsync is a no-op when the token is fresh.
+            var snapshot = collection != null && collection.HasAuthoritativePacks
+                ? collection
+                : await PackGateway.ReadShelfAsync(await AuthGateway.TokenForConnectAsync());
+            RenderWalletBalances(snapshot);
             RenderVaultEntry(snapshot);
             if (snapshot.PackCount(StarterPackId) <= 0) return;
 
@@ -351,52 +354,24 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Read the wallet the top rail reports. This used to arrive as a side effect of building the
-        /// store's in-scene panel; with the store on its own scene (2026-08-20) the menu owns the
-        /// read, and re-runs it on every <c>OnEnable</c> — which includes the return from a
-        /// purchase, so Gold, Gems and an opened pack's Shards land on the rail with no cross-scene
-        /// wiring at all.
-        ///
-        /// <para>Failure is not silent-but-zero: an unreachable account server leaves each amount
-        /// on its em dash, the same as having no gateway bound.</para>
+        /// Adopt the collection endpoint's ledger projection directly. A failed or absent snapshot
+        /// renders visual zeroes; authoritative missing ledger rows also arrive as zero. Adjacent
+        /// icons carry the currency names, so the labels render amounts only. The fallback is never
+        /// persisted or spent.
         /// </summary>
-        private async void RefreshWalletBalances()
+        private void RenderWalletBalances(CollectionSnapshot snapshot)
         {
-            if (ShopRuntime.Gateway == null)
-            {
-                RenderWalletBalances(null);
-                return;
-            }
-
-            try
-            {
-                var wallet = new ShopFlow(ShopRuntime.Gateway);
-                await wallet.RefreshAsync();
-                RenderWalletBalances(wallet.Snapshot?.Wallet);
-            }
-            catch (Exception ex)
-            {
-                RenderWalletBalances(null);
-                Debug.LogWarning($"[MainMenu] wallet balances unavailable: {ex.GetType().Name}: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Adopt the gateway's ledger projection directly. A null snapshot state keeps all three
-        /// amounts as em dashes; authoritative missing ledger rows arrive from the server as zero.
-        /// Adjacent icons carry the currency names, so the labels render amounts only.
-        /// </summary>
-        private void RenderWalletBalances(WalletBalances? wallet)
-        {
-            string gold = wallet.HasValue
-                ? WalletDisplay.IconAmount(wallet.Value.Gold)
-                : WalletDisplay.ShardsUnavailable;
-            string gems = wallet.HasValue
-                ? WalletDisplay.IconAmount(wallet.Value.Gems)
-                : WalletDisplay.ShardsUnavailable;
-            string shards = wallet.HasValue
-                ? WalletDisplay.IconAmount(wallet.Value.Shards)
-                : WalletDisplay.ShardsUnavailable;
+            string fallback = WalletDisplay.IconAmount(0);
+            bool available = snapshot != null && snapshot.HasAuthoritativeWallet;
+            string gold = available
+                ? WalletDisplay.IconAmount(snapshot.Wallet.Gold)
+                : fallback;
+            string gems = available
+                ? WalletDisplay.IconAmount(snapshot.Wallet.Gems)
+                : fallback;
+            string shards = available
+                ? WalletDisplay.IconAmount(snapshot.Wallet.Shards)
+                : fallback;
 
             if (_goldBalance != null) _goldBalance.text = gold;
             if (_gemBalance != null) _gemBalance.text = gems;

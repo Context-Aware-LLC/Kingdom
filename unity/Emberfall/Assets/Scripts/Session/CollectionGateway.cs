@@ -69,11 +69,23 @@ namespace Emberfall.Session
         /// </summary>
         public static async Task<CollectionSyncStatus> SyncAsync(
             string accessToken, CancellationToken cancellationToken = default)
+            => (await SyncSnapshotAsync(accessToken, cancellationToken)).Status;
+
+        /// <summary>
+        /// Pull this identity's collection down, apply the same guarded ownership-cache update as
+        /// <see cref="SyncAsync"/>, and return the complete server snapshot to a caller that also
+        /// needs live wallet or pack balances. One request therefore has one identity check and one
+        /// authoritative answer instead of each main-menu feature fetching <c>/collection</c> again.
+        /// </summary>
+        public static async Task<CollectionSnapshot> SyncSnapshotAsync(
+            string accessToken, CancellationToken cancellationToken = default)
         {
             PlayerAccount account = PlayerAccount.Local;
             CollectionSnapshot snapshot = await FetchAsync(accessToken, cancellationToken);
             if (cancellationToken.IsCancellationRequested || !ReferenceEquals(account, PlayerAccount.Local))
-                return CollectionSyncStatus.Unauthenticated;
+                return CollectionSnapshot.Failed(
+                    CollectionSyncStatus.Unauthenticated,
+                    "the active account changed while its collection was loading");
 
             if (!snapshot.ShouldReplaceCache)
             {
@@ -82,13 +94,13 @@ namespace Emberfall.Session
                 if (snapshot.Status != CollectionSyncStatus.Unconstrained)
                     Debug.LogWarning($"[Collection] not synced ({snapshot.Status}): {snapshot.Detail}. " +
                                      "Keeping whatever this device already had.");
-                return snapshot.Status;
+                return snapshot;
             }
 
             account.SaveOwnedCards(snapshot.Cards);
             Debug.Log($"[Collection] synced {snapshot.Cards.RecordedCards} card row(s) " +
                       $"for the signed-in account.");
-            return snapshot.Status;
+            return snapshot;
         }
 
         /// <summary>

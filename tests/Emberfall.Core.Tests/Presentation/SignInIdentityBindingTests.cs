@@ -113,7 +113,7 @@ namespace Emberfall.Core.Tests.Presentation
 
             Assert.That(menu, Does.Match(
                 @"(?s)DeviceAccounts\.TryBindToIdentity\([^)]*\);.*?"
-                + @"CollectionGateway\.SyncAsync\(.*?RosterGateway\.SyncAsync\(.*?BeginFirstRun\(\)"),
+                + @"CollectionGateway\.SyncSnapshotAsync\(.*?RosterGateway\.SyncAsync\(.*?BeginFirstRun\(collection\)"),
                 "MainMenuController must bind the identity and run both syncs before it hands the "
                 + "player the menu. Without it only the very first launch after an install ever "
                 + "restores anything: every launch after that reaches the right identity with a "

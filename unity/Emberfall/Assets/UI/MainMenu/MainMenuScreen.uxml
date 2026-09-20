@@ -11,15 +11,15 @@
             <ui:VisualElement name="wallet-strip" class="mm-wallet-strip">
                 <ui:VisualElement name="gold-wallet" tooltip="Gold" class="mm-wallet-chip mm-wallet-chip--gold">
                     <ui:VisualElement picking-mode="Ignore" class="mm-wallet-icon mm-wallet-icon--gold"/>
-                    <ui:Label name="gold-balance" text="—" picking-mode="Ignore" class="mm-wallet-amount"/>
+                    <ui:Label name="gold-balance" text="0" picking-mode="Ignore" class="mm-wallet-amount"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="gem-wallet" tooltip="Gems" class="mm-wallet-chip mm-wallet-chip--gems">
                     <ui:VisualElement picking-mode="Ignore" class="mm-wallet-icon mm-wallet-icon--gems"/>
-                    <ui:Label name="gem-balance" text="—" picking-mode="Ignore" class="mm-wallet-amount"/>
+                    <ui:Label name="gem-balance" text="0" picking-mode="Ignore" class="mm-wallet-amount"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="shard-wallet" tooltip="Shards" class="mm-wallet-chip mm-wallet-chip--shards">
                     <ui:VisualElement picking-mode="Ignore" class="mm-wallet-icon mm-wallet-icon--shards"/>
-                    <ui:Label name="shard-balance" text="—" picking-mode="Ignore" class="mm-wallet-amount"/>
+                    <ui:Label name="shard-balance" text="0" picking-mode="Ignore" class="mm-wallet-amount"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

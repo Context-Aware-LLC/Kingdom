@@ -98,13 +98,14 @@ namespace Emberfall.Net.Client.Collection
             new Dictionary<string, long>(StringComparer.Ordinal);
 
         private CollectionSnapshot(CollectionSyncStatus status, OwnedCardCounts? cards,
-                                   WalletSnapshot wallet, string detail,
+                                   WalletSnapshot wallet, bool hasAuthoritativeWallet, string detail,
                                    IReadOnlyDictionary<string, long>? packs = null,
                                    IReadOnlyDictionary<int, long>? cardBacks = null)
         {
             Status = status;
             Cards = cards;
             Wallet = wallet;
+            HasAuthoritativeWallet = hasAuthoritativeWallet;
             Detail = detail ?? "";
             Packs = packs ?? NoPacks;
             CardBacks = cardBacks;
@@ -112,16 +113,20 @@ namespace Emberfall.Net.Client.Collection
 
         public static CollectionSnapshot Synced(OwnedCardCounts cards, WalletSnapshot wallet,
                                                 IReadOnlyDictionary<string, long>? packs = null,
-                                                IReadOnlyDictionary<int, long>? cardBacks = null)
-            => new CollectionSnapshot(CollectionSyncStatus.Synced, cards, wallet, "", packs, cardBacks);
+                                                IReadOnlyDictionary<int, long>? cardBacks = null,
+                                                bool hasAuthoritativeWallet = true)
+            => new CollectionSnapshot(CollectionSyncStatus.Synced, cards, wallet,
+                hasAuthoritativeWallet, "", packs, cardBacks);
 
         public static CollectionSnapshot Unconstrained(WalletSnapshot wallet,
                                                        IReadOnlyDictionary<string, long>? packs = null,
-                                                IReadOnlyDictionary<int, long>? cardBacks = null)
-            => new CollectionSnapshot(CollectionSyncStatus.Unconstrained, null, wallet, "", packs, cardBacks);
+                                                       IReadOnlyDictionary<int, long>? cardBacks = null,
+                                                       bool hasAuthoritativeWallet = true)
+            => new CollectionSnapshot(CollectionSyncStatus.Unconstrained, null, wallet,
+                hasAuthoritativeWallet, "", packs, cardBacks);
 
         public static CollectionSnapshot Failed(CollectionSyncStatus status, string detail)
-            => new CollectionSnapshot(status, null, default, detail);
+            => new CollectionSnapshot(status, null, default, false, detail);
 
         /// <summary>How many unopened packs of one line this player holds; 0 when the line is absent.
         /// One accessor rather than a lookup at each call site, because the routing decision in
@@ -134,6 +139,19 @@ namespace Emberfall.Net.Client.Collection
         /// than a status comparison at each call site, because the wrong comparison here is exactly
         /// the bug that empties somebody's collection.</summary>
         public bool ShouldReplaceCache => Status == CollectionSyncStatus.Synced;
+
+        /// <summary>Whether this answer carries the endpoint's authoritative pack shelf. Pack
+        /// authority is independent of wallet completeness so one partial projection does not force
+        /// a second collection read or strand a valid starter-pack route.</summary>
+        public bool HasAuthoritativePacks =>
+            Status == CollectionSyncStatus.Synced || Status == CollectionSyncStatus.Unconstrained;
+
+        /// <summary>
+        /// Whether this answer carries a complete wallet projected from the entitlement ledger.
+        /// Missing or malformed wallet fields leave this false even when ownership and packs remain
+        /// usable; failure snapshots use a default-valued wallet only as inert storage.
+        /// </summary>
+        public bool HasAuthoritativeWallet { get; }
     }
 
     /// <summary>
@@ -251,7 +269,7 @@ namespace Emberfall.Net.Client.Collection
             if (!AuthJson.TryString(fields, "ownership", out string ownership))
                 return CollectionSnapshot.Failed(CollectionSyncStatus.Malformed, "no ownership field");
 
-            WalletSnapshot wallet = ReadWallet(body);
+            bool hasAuthoritativeWallet = TryReadWallet(body, out WalletSnapshot wallet);
 
             bool known = ownership.Equals("known", StringComparison.OrdinalIgnoreCase);
             bool unconstrained = ownership.Equals("unconstrained", StringComparison.OrdinalIgnoreCase);
@@ -277,7 +295,8 @@ namespace Emberfall.Net.Client.Collection
             }
 
             if (unconstrained)
-                return CollectionSnapshot.Unconstrained(wallet, packs, cardBacks);
+                return CollectionSnapshot.Unconstrained(wallet, packs, cardBacks,
+                    hasAuthoritativeWallet);
 
             if (!known)
                 return CollectionSnapshot.Failed(CollectionSyncStatus.Unavailable, ownership);
@@ -302,7 +321,8 @@ namespace Emberfall.Net.Client.Collection
                 }
             }
 
-            return CollectionSnapshot.Synced(cards, wallet, packs, cardBacks);
+            return CollectionSnapshot.Synced(cards, wallet, packs, cardBacks,
+                hasAuthoritativeWallet);
         }
 
         /// <summary>
@@ -333,15 +353,23 @@ namespace Emberfall.Net.Client.Collection
             return true;
         }
 
-        private static WalletSnapshot ReadWallet(string body)
+        /// <summary>
+        /// Read the complete wallet projection. Missing or malformed fields make the wallet
+        /// non-authoritative without discarding an otherwise valid ownership or pack answer.
+        /// </summary>
+        private static bool TryReadWallet(string body, out WalletSnapshot wallet)
         {
+            wallet = default;
             if (!AuthJson.TryReadNestedObject(body, "wallet", out var w))
-                return default;
+                return false;
 
-            AuthJson.TryInt64(w, "gold", out long gold);
-            AuthJson.TryInt64(w, "gems", out long gems);
-            AuthJson.TryInt64(w, "shards", out long shards);
-            return new WalletSnapshot(gold, gems, shards);
+            if (!AuthJson.TryInt64(w, "gold", out long gold) ||
+                !AuthJson.TryInt64(w, "gems", out long gems) ||
+                !AuthJson.TryInt64(w, "shards", out long shards))
+                return false;
+
+            wallet = new WalletSnapshot(gold, gems, shards);
+            return true;
         }
     }
 }
