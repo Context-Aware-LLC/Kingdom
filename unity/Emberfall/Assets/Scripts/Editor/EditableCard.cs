@@ -136,6 +136,13 @@ namespace Emberfall.Editor
         Keyword,
     }
 
+    public enum EditableTargetSelectionMode
+    {
+        Counted,
+        Random,
+        Automatic,
+    }
+
     /// <summary>One authored filter clause: which axis, and the value it carries.</summary>
     /// <remarks>
     /// Every axis keeps its own field rather than sharing one boxed value, so switching the
@@ -206,11 +213,11 @@ namespace Emberfall.Editor
     public sealed class EditableTarget
     {
         public string Selector = "ANY_CHARACTER";
-        // One term, always written — so there is no "has a selection" toggle to leave off. The
-        // count IS the term: "every candidate" is the selector's own maximum rather than a third
-        // mode, so there is no longer a box that means nothing under one of the modes.
+        // One term, always written — so there is no "has a selection" toggle to leave off. Counted
+        // is the ordinary N term, Random is "random: N", and Automatic is "auto: N". One enum
+        // keeps those mutually exclusive and prevents an editor save from collapsing a disposition.
         public int SelectionCount = 1;
-        public bool RandomSelection;
+        public EditableTargetSelectionMode SelectionMode = EditableTargetSelectionMode.Counted;
         public List<EditableFilter> Filters = new List<EditableFilter>();
         public string Binding = "";
         public string DistinctFrom = "";
@@ -232,7 +239,11 @@ namespace Emberfall.Editor
         {
             Selector = target.Selector,
             SelectionCount = target.Selection.Count,
-            RandomSelection = target.Selection.IsRandom,
+            SelectionMode = target.Selection.IsAutomatic
+                ? EditableTargetSelectionMode.Automatic
+                : target.Selection.IsRandom
+                    ? EditableTargetSelectionMode.Random
+                    : EditableTargetSelectionMode.Counted,
             Filters = EditableFilter.From(target.Filter),
             Binding = target.Binding,
             DistinctFrom = target.DistinctFrom,
@@ -242,11 +253,18 @@ namespace Emberfall.Editor
         public TargetSpec ToDefinition()
         {
             TargetFilterDef? filter = EditableFilter.Fold(Filters);
-            TargetSelection selection = RandomSelection
-                ? TargetSelection.RandomOf(SelectionCount)
-                : TargetSelection.Of(SelectionCount);
+            TargetSelection selection = SelectionMode switch
+            {
+                EditableTargetSelectionMode.Counted => TargetSelection.Of(SelectionCount),
+                EditableTargetSelectionMode.Random => TargetSelection.RandomOf(SelectionCount),
+                EditableTargetSelectionMode.Automatic => TargetSelection.AutomaticOf(SelectionCount),
+                _ => throw Unknown("editable target selection mode", SelectionMode),
+            };
             return new TargetSpec(Selector, selection, filter, Binding, DistinctFrom, Cost);
         }
+
+        private static InvalidOperationException Unknown(string family, object value)
+            => new InvalidOperationException($"Unknown {family} '{value}'.");
     }
 
     public sealed class EditableRule

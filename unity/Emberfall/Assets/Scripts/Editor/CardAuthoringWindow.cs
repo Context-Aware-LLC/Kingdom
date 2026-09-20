@@ -950,14 +950,14 @@ namespace Emberfall.Editor
             target.Selector = SelectorOptions[EditorGUILayout.Popup(
                 "action.target.selector", selectorIndex, SelectorOptions)];
 
-            // One selection term, always written — there is no "has a selection" toggle, because a
-            // count of the selector's own maximum IS "every candidate". Who chooses follows from
-            // the pair: random rolls, otherwise the controller picks, unless the count has reached
-            // the maximum and nobody picks. C27 rejects the one shape this lets you type but the
-            // model deliberately cannot say — an automatic finite count.
+            // One selection term, always written — there is no "has a selection" toggle. Counted
+            // means N (the controller picks unless N reaches the selector's maximum), Random means
+            // "random: N", and Automatic means "auto: N" for deterministic unbounded selectors.
+            // C31 rejects Automatic on a bounded selector.
             target.SelectionCount = Mathf.Max(1,
                 EditorGUILayout.IntField("target.selection count", target.SelectionCount));
-            target.RandomSelection = EditorGUILayout.Toggle("target.selection random", target.RandomSelection);
+            target.SelectionMode = (EditableTargetSelectionMode)EditorGUILayout.EnumPopup(
+                "target.selection mode", target.SelectionMode);
             // Authored, not derived: whether this pick is the card's price is the one thing no
             // sentence can be read back to recover.
             target.Cost = (CostKind)EditorGUILayout.EnumPopup("target.cost", target.Cost);
