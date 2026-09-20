@@ -15,7 +15,8 @@ namespace Emberfall.Policy
     /// serialized because stdin/stdout form one ordered stream; a timeout faults and terminates the
     /// process so a late response can never be mistaken for a later decision.
     /// </summary>
-    public sealed class CheckpointScorerProcess : ICheckpointScorer, IAsyncDisposable
+    public sealed class CheckpointScorerProcess :
+        ICheckpointScorer, ICheckpointStateEmbeddingScorer, IAsyncDisposable
     {
         private const string Protocol = "emberfall-policy-scorer-v1";
 
@@ -115,6 +116,25 @@ namespace Emberfall.Policy
             object playerMemory,
             IReadOnlyList<JsonElement> legalActions,
             CancellationToken cancellationToken)
+            => await ScoreAsync(
+                observation, playerMemory, legalActions,
+                includeStateEmbedding: false, cancellationToken).ConfigureAwait(false);
+
+        async Task<PolicyScore> ICheckpointStateEmbeddingScorer.ScoreWithStateEmbeddingAsync(
+            JsonElement observation,
+            object playerMemory,
+            IReadOnlyList<JsonElement> legalActions,
+            CancellationToken cancellationToken)
+            => await ScoreAsync(
+                observation, playerMemory, legalActions,
+                includeStateEmbedding: true, cancellationToken).ConfigureAwait(false);
+
+        private async Task<PolicyScore> ScoreAsync(
+            JsonElement observation,
+            object playerMemory,
+            IReadOnlyList<JsonElement> legalActions,
+            bool includeStateEmbedding,
+            CancellationToken cancellationToken)
         {
             await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
@@ -131,6 +151,7 @@ namespace Emberfall.Policy
                     observation,
                     playerMemory,
                     legalActions,
+                    includeStateEmbedding,
                 }, JsonOptions);
                 try
                 {
@@ -196,7 +217,10 @@ namespace Emberfall.Policy
                     throw new InvalidOperationException($"Checkpoint scorer rejected request {requestId}: {response.Error}");
                 if (response.Logits is null)
                     throw new InvalidDataException("Checkpoint scorer response omitted logits.");
-                return new PolicyScore(response.Logits, response.Value);
+                if (includeStateEmbedding
+                    && (response.StateEmbedding is null || response.StateEmbedding.Count == 0))
+                    throw new InvalidDataException("Checkpoint scorer response omitted the requested state embedding.");
+                return new PolicyScore(response.Logits, response.Value, response.StateEmbedding);
             }
             catch
             {
@@ -306,6 +330,7 @@ namespace Emberfall.Policy
             IReadOnlyList<double>? Logits,
             double Value,
             int SelectedActionIndex,
+            IReadOnlyList<double>? StateEmbedding,
             string? Error);
 
         private sealed record ScorerReady(bool Ready, string? Protocol);

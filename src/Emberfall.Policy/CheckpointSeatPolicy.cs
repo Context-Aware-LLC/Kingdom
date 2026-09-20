@@ -810,7 +810,19 @@ namespace Emberfall.Policy
             CancellationToken cancellationToken);
     }
 
-    internal sealed record PolicyScore(IReadOnlyList<double> Logits, double Value);
+    internal interface ICheckpointStateEmbeddingScorer
+    {
+        Task<PolicyScore> ScoreWithStateEmbeddingAsync(
+            JsonElement observation,
+            object playerMemory,
+            IReadOnlyList<JsonElement> legalActions,
+            CancellationToken cancellationToken);
+    }
+
+    internal sealed record PolicyScore(
+        IReadOnlyList<double> Logits,
+        double Value,
+        IReadOnlyList<double>? StateEmbedding = null);
 
     /// <summary>
     /// Capture-time provenance for one decision.
