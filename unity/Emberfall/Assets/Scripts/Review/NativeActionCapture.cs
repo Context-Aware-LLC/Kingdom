@@ -7,6 +7,7 @@ using Emberfall.Core.Contracts;
 using Emberfall.Net.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 
 namespace Emberfall.Review
 {
@@ -21,6 +22,7 @@ namespace Emberfall.Review
         private readonly ReviewBundle _bundle;
         private readonly string _reviewer;
         private readonly Dictionary<int, JObject> _latest = new Dictionary<int, JObject>();
+        private bool _needsLeadingNewline;
 
         private NativeActionCapture(ReviewBundle bundle, string reviewer, string path)
         {
@@ -100,7 +102,9 @@ namespace Emberfall.Review
                 ["intent"] = intent?.DeepClone(),
                 ["unreviewable"] = unreviewable,
             };
-            File.AppendAllText(Path, row.ToString(Formatting.None) + "\n", new UTF8Encoding(false));
+            File.AppendAllText(Path, (_needsLeadingNewline ? "\n" : "")
+                + row.ToString(Formatting.None) + "\n", new UTF8Encoding(false));
+            _needsLeadingNewline = false;
             _latest[frame.FrameIndex] = row;
         }
 
@@ -108,12 +112,26 @@ namespace Emberfall.Review
         {
             if (!File.Exists(Path)) return;
             string[] lines = File.ReadAllLines(Path, Encoding.UTF8);
+            using (var stream = File.OpenRead(Path))
+            {
+                if (stream.Length > 0)
+                {
+                    stream.Seek(-1, SeekOrigin.End);
+                    _needsLeadingNewline = stream.ReadByte() != '\n';
+                }
+            }
             for (int i = 0; i < lines.Length; i++)
             {
                 if (lines[i].Length == 0) continue;
                 JObject row;
                 try { row = JObject.Parse(lines[i]); }
-                catch (JsonException) when (i == lines.Length - 1) { break; }
+                // A torn final write is ignored, and remains an ignored interior line after the
+                // next append adds a separator. Identity-valid rows around it still survive.
+                catch (JsonException)
+                {
+                    Debug.LogWarning($"[DecisionReview] Ignoring torn action sidecar row {i + 1} in {Path}");
+                    continue;
+                }
                 int frameIndex = (int?)row["frameIndex"] ?? -1;
                 if (frameIndex < 0 || frameIndex >= _bundle.Frames.Count)
                     throw new InvalidDataException($"Action sidecar row {i + 1} has invalid frame index.");
@@ -129,7 +147,7 @@ namespace Emberfall.Review
                     throw new InvalidDataException($"Action sidecar row {i + 1} does not match this bundle.");
                 int position = (int?)row["actionPosition"] ?? -1;
                 bool skipped = (bool?)row["unreviewable"] == true;
-                if (skipped ? position != -1 || row["intent"]?.Type != JTokenType.Null
+                if (skipped ? position != -1 || (row["intent"] != null && row["intent"].Type != JTokenType.Null)
                     : position < 0 || position >= frame.Actions.Count
                       || !JToken.DeepEquals(row["intent"], frame.Actions[position].Intent)
                       || (int?)row["actionIndex"] != frame.Actions[position].Index)
