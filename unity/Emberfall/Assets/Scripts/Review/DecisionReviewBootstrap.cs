@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Generic;
+using Emberfall.Core;
 using Emberfall.Core.Contracts;
 using Emberfall.Presentation;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Emberfall.Review
 {
     /// <summary>
     /// Puts one training decision on the real Emberfall board.
     ///
-    /// It is NOT a match. There is no session, no runner, no input router, no server and no
-    /// server to have — <see cref="BoardController.Initialize"/> takes the router and the runner as
-    /// nullable parameters and null-guards every use of them, which is the entire reason this proof
-    /// is cheap. A frame is a still: the board is handed one snapshot and nothing ever advances it.
+    /// It is NOT a match. There is no session, no runner and no server. In native capture mode
+    /// the ordinary InputRouter feeds a local queue, but no command is ever applied to the state.
+    /// A frame is a still: the board is handed one snapshot and nothing ever advances it.
     ///
     /// THIS COMPONENT MUST NOT LIVE IN AN EDITOR-ONLY ASSEMBLY. It did, for one commit, and Unity
     /// refused to attach it — "Can't add script behaviour ... because it is an editor script" —
@@ -34,6 +35,8 @@ namespace Emberfall.Review
         [Tooltip("Which frame to open on. Clamped to the bundle.")]
         [SerializeField] private int startFrame;
 
+        [SerializeField] private bool nativeActionMode;
+
         private ReviewBundle _bundle;
         private ICardDatabase _cards;
         private IArtProvider _art;
@@ -42,6 +45,10 @@ namespace Emberfall.Review
         private BoardAnchors _anchors;
         private BoardController _board;
         private GameState _lastState;
+        private InputRouter _inputRouter;
+        private HotSeatInput _input;
+        private NativeActionCapture _actionCapture;
+        private string _captureStatus = "";
 
         /// <summary>The chrome — hero plates, sockets, mana trays, deck piles. In the shipping
         /// board these subscribe to MatchRunner.OnStateUpdated; here they ride this list, because
@@ -62,6 +69,8 @@ namespace Emberfall.Review
 
         public ReviewBundle Bundle => _bundle;
         public int FrameCount => _bundle?.Frames.Count ?? 0;
+        public bool NativeActionMode => nativeActionMode;
+        public int CapturedCount => _actionCapture?.Count ?? 0;
 
         /// <summary>How many of the bundle's decisions carry a judgement — the review pass's
         /// actual progress, and the reason a long pass can be put down and picked up.</summary>
@@ -87,10 +96,11 @@ namespace Emberfall.Review
                 : null;
 
         /// <summary>Set before Start when driving this from a menu command.</summary>
-        public void Configure(string directory, int frame = 0)
+        public void Configure(string directory, int frame = 0, bool captureOneAction = false)
         {
             bundleDirectory = directory;
             startFrame = frame;
+            nativeActionMode = captureOneAction;
         }
 
         private void Start()
@@ -110,17 +120,105 @@ namespace Emberfall.Review
 
             _cards = _bundle.Cards;
             _art = new EditorArtProvider();
-            Annotations = ReviewAnnotations.Open(_bundle, Reviewer);
-            Vocabulary = ReviewVocabulary.Open(
-                System.IO.Path.GetDirectoryName(Annotations.Path));
-            Debug.Log($"[DecisionReview] annotations → {Annotations.Path} ({Annotations.Count} graded)");
-            Debug.Log($"[DecisionReview] vocabulary  → {Vocabulary.Path} (editable; edit it any time)");
+            if (nativeActionMode)
+            {
+                try { _actionCapture = NativeActionCapture.Open(_bundle, Reviewer); }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[DecisionReview] action capture refused: {ex.Message}");
+                    enabled = false;
+                    return;
+                }
+                Debug.Log($"[DecisionReview] native actions → {_actionCapture.Path} ({_actionCapture.Count} recorded)");
+            }
+            else
+            {
+                Annotations = ReviewAnnotations.Open(_bundle, Reviewer);
+                Vocabulary = ReviewVocabulary.Open(
+                    System.IO.Path.GetDirectoryName(Annotations.Path));
+                Debug.Log($"[DecisionReview] annotations → {Annotations.Path} ({Annotations.Count} graded)");
+                Debug.Log($"[DecisionReview] vocabulary  → {Vocabulary.Path} (editable; edit it any time)");
+            }
 
             Debug.Log($"[DecisionReview] {_bundle.Manifest.BundleId}: {_bundle.Frames.Count} frames, "
                       + $"cards {Short(_bundle.Manifest.CardDataSha256)}, "
                       + $"wire {_bundle.Manifest.WireContractVersion}");
 
-            Show(Mathf.Clamp(startFrame, 0, _bundle.Frames.Count - 1));
+            int first = Mathf.Clamp(startFrame, 0, _bundle.Frames.Count - 1);
+            if (nativeActionMode)
+            {
+                int pending = NextUncaptured(first);
+                if (pending >= 0) first = pending;
+            }
+            Show(first);
+            if (nativeActionMode && FrameCount > 0 && CapturedCount == FrameCount)
+            {
+                _captureStatus = "Bundle complete. Backspace revisits a state.";
+                _inputRouter.enabled = false;
+            }
+        }
+
+        private void Update()
+        {
+            if (!nativeActionMode || _actionCapture == null || Frame == null) return;
+
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null)
+            {
+                if (keyboard.backspaceKey.wasPressedThisFrame || keyboard.pageUpKey.wasPressedThisFrame)
+                { Previous(); return; }
+                if (keyboard.pageDownKey.wasPressedThisFrame)
+                { Next(); return; }
+                if (keyboard.uKey.wasPressedThisFrame)
+                {
+                    _actionCapture.Skip(Frame);
+                    AdvanceAfterCapture();
+                    return;
+                }
+            }
+
+            if (_input == null || !_input.TryGetIntent(out PlayerIntent intent)) return;
+            if (_actionCapture.TryRecord(Frame, intent, out string error))
+            {
+                AdvanceAfterCapture();
+                return;
+            }
+            _captureStatus = error;
+            Debug.LogWarning("[DecisionReview] " + error);
+        }
+
+        private void AdvanceAfterCapture()
+        {
+            int next = NextUncaptured(CurrentFrame + 1);
+            if (next < 0)
+            {
+                _captureStatus = "Bundle complete. Backspace revisits a state.";
+                _inputRouter.enabled = false;
+                return;
+            }
+            Show(next);
+        }
+
+        private int NextUncaptured(int start)
+        {
+            for (int i = start; i < FrameCount; i++)
+                if (!_actionCapture.IsCaptured(_bundle.Frames[i])) return i;
+            for (int i = 0; i < Mathf.Min(start, FrameCount); i++)
+                if (!_actionCapture.IsCaptured(_bundle.Frames[i])) return i;
+            return -1;
+        }
+
+        private void OnGUI()
+        {
+            if (!nativeActionMode || _actionCapture == null || Frame == null) return;
+            GUI.Box(new Rect(12f, 12f, 380f, 60f), "");
+            GUI.Label(new Rect(22f, 16f, 360f, 20f),
+                $"ACTION REVIEW  {CurrentFrame + 1}/{FrameCount}  ·  {CapturedCount} saved"
+                + (_actionCapture.IsCaptured(Frame) ? "  ·  recorded" : ""));
+            GUI.Label(new Rect(22f, 36f, 360f, 20f),
+                string.IsNullOrEmpty(_captureStatus)
+                    ? "Make one move  ·  U skip  ·  Backspace back  ·  PgDn next"
+                    : _captureStatus);
         }
 
         public void Next() => Show(CurrentFrame + 1);
@@ -155,12 +253,14 @@ namespace Emberfall.Review
             }
 
             _lastState = state;
-            Groups = ActionGrouping.Group(frame, state, _cards);
+            Groups = nativeActionMode ? new List<ActionGroup>() : ActionGrouping.Group(frame, state, _cards);
             BuildBoard(frame, state);
+            _inputRouter?.OnStateUpdated(state);
             _board.OnStateUpdated(state);
             foreach (Action<GameState> sink in _stateSinks) sink(state);
-            if (frame.IsTargetAudit) ClearActionSelection();
+            if (nativeActionMode || frame.IsTargetAudit) ClearActionSelection();
             else SelectAction(frame.ChosenActionIndex);
+            _captureStatus = "";
 
             Debug.Log($"[DecisionReview] {frame.Caption} — {frame.MatchId}#{frame.DecisionIndex}");
             Changed?.Invoke();
@@ -289,24 +389,51 @@ namespace Emberfall.Review
             PlayerId opponent = actor == seat0 ? seat1 : seat0;
 
             _anchors.SetPlayers(actor, opponent);
-            // No InputRouter and no MatchRunner: nothing here is playable, and both parameters are
-            // null-tolerant by design. localHumanId is the actor so affordances read from their side.
+            _input = nativeActionMode ? new HotSeatInput(actor) : null;
+            _inputRouter = nativeActionMode ? _boardRoot.AddComponent<InputRouter>() : null;
+            if (_inputRouter != null)
+                _inputRouter.Init(actor, _input, _cards, new CommandProcessor(_cards));
+
+            // A router in native mode exposes the real game gestures, but its queue is drained
+            // here, never by a MatchRunner. localHumanId is the actor for near-side affordances.
             _board.Initialize(_cards, _anchors, actor, opponent,
-                              inputRouter: null, matchRunner: null,
+                              inputRouter: _inputRouter, matchRunner: null,
                               artProvider: _art, localHumanId: actor);
 
-            BuildChrome(actor, state.PlayerOf(actor).Hero.Class);
-            BuildChrome(opponent, state.PlayerOf(opponent).Hero.Class);
+            HeroPlateView localPlate = BuildChrome(actor, state.PlayerOf(actor).Hero.Class);
+            HeroPlateView remotePlate = BuildChrome(opponent, state.PlayerOf(opponent).Hero.Class);
+            if (_inputRouter == null) return;
+            _boardRoot.GetComponent<ProceduralBoardSetup>().SetupClickables(actor, opponent, _inputRouter);
+            _inputRouter.SetHeroPlates(localPlate, remotePlate);
+            _board.SetHeroPlates(actor, localPlate, opponent, remotePlate);
+
+            var endTurn = new GameObject("EndTurnButton").AddComponent<EndTurnButtonView>();
+            endTurn.transform.SetParent(_boardRoot.transform, false);
+            endTurn.transform.position = new Vector3(6.3f, 0f, 0f);
+            endTurn.Init(actor, _inputRouter);
+            _stateSinks.Add(endTurn.OnStateUpdated);
+
+            var mulligan = new GameObject("MulliganConfirmButton").AddComponent<MulliganConfirmButtonView>();
+            mulligan.transform.SetParent(_boardRoot.transform, false);
+            mulligan.transform.position = MulliganConfirmButtonView.BoardPosition;
+            mulligan.Init(actor, _inputRouter);
+            _stateSinks.Add(mulligan.OnStateUpdated);
+
+            var unearth = new GameObject("UnearthChoice").AddComponent<UnearthChoiceView>();
+            unearth.transform.SetParent(_boardRoot.transform, false);
+            unearth.Init(actor, _inputRouter, _cards, _board, _art);
+            _stateSinks.Add(unearth.OnStateUpdated);
         }
 
         // ── Chrome, duplicated from NetworkedGameBootstrap (see the class remark) ───────────────
 
-        private void BuildChrome(PlayerId playerId, CardClass heroClass)
+        private HeroPlateView BuildChrome(PlayerId playerId, CardClass heroClass)
         {
+            HeroPlateView plate = null;
             Transform hero = _anchors.HeroAnchor(playerId);
             if (hero != null)
             {
-                var plate = new GameObject($"HeroPlate_{playerId}").AddComponent<HeroPlateView>();
+                plate = new GameObject($"HeroPlate_{playerId}").AddComponent<HeroPlateView>();
                 plate.Init(playerId, hero, _art, heroClass);
                 _stateSinks.Add(plate.OnStateUpdated);
             }
@@ -335,6 +462,7 @@ namespace Emberfall.Review
                 pile.Init(playerId, deck);
                 _stateSinks.Add(pile.OnStateUpdated);
             }
+            return plate;
         }
 
         private static string Short(string hash) =>

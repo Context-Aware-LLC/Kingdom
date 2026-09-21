@@ -41,6 +41,28 @@ namespace Emberfall.Review
             Launch(directory);
         }
 
+        [MenuItem("Emberfall/Review/Capture One Action (game view)", priority = 103)]
+        public static void OpenNativeCapture()
+        {
+            string directory = EditorPrefs.GetString(BundleKey, "");
+            if (!IsBundle(directory))
+            {
+                directory = Prompt(directory);
+                if (!IsBundle(directory)) return;
+                EditorPrefs.SetString(BundleKey, directory);
+            }
+            Launch(directory, captureOneAction: true);
+        }
+
+        [MenuItem("Emberfall/Review/Capture One Action (choose bundle)…", priority = 104)]
+        public static void OpenNativeCaptureWithPrompt()
+        {
+            string directory = Prompt(EditorPrefs.GetString(BundleKey, ""));
+            if (!IsBundle(directory)) return;
+            EditorPrefs.SetString(BundleKey, directory);
+            Launch(directory, captureOneAction: true);
+        }
+
         private static string Prompt(string current)
         {
             string chosen = EditorUtility.OpenFolderPanel(
@@ -63,7 +85,7 @@ namespace Emberfall.Review
             !string.IsNullOrEmpty(directory)
             && File.Exists(Path.Combine(directory, "bundle-manifest.json"));
 
-        private static void Launch(string bundleDirectory)
+        private static void Launch(string bundleDirectory, bool captureOneAction = false)
         {
             if (EditorApplication.isPlaying)
             {
@@ -74,12 +96,12 @@ namespace Emberfall.Review
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
 
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            Build(bundleDirectory);
+            Build(bundleDirectory, captureOneAction);
             EditorApplication.isPlaying = true;
         }
 
         /// <summary>The whole scene: a configured camera and one board object.</summary>
-        private static void Build(string bundleDirectory)
+        private static void Build(string bundleDirectory, bool captureOneAction)
         {
             var cameraGo = new GameObject("Main Camera") { tag = "MainCamera" };
             var camera = cameraGo.AddComponent<Camera>();
@@ -91,9 +113,15 @@ namespace Emberfall.Review
             // because every frame is a different match and the acting player has to render at the
             // bottom in all of them — see DecisionReviewBootstrap.Show.
             var reviewer = new GameObject("DecisionReviewer");
-            reviewer.AddComponent<DecisionReviewBootstrap>().Configure(bundleDirectory);
+            reviewer.AddComponent<DecisionReviewBootstrap>().Configure(
+                bundleDirectory, captureOneAction: captureOneAction);
 
-            DecisionReviewWindow.Open();
+            if (!captureOneAction) DecisionReviewWindow.Open();
+            else EditorApplication.delayCall += () =>
+            {
+                System.Type gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView");
+                if (gameViewType != null) EditorWindow.GetWindow(gameViewType).Focus();
+            };
             Debug.Log($"[DecisionReview] Scene built for {bundleDirectory}");
         }
     }

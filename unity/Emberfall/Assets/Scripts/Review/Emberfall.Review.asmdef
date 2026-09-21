@@ -2,13 +2,15 @@
   "name": "Emberfall.Review",
   "rootNamespace": "Emberfall.Review",
   "references": [
+    "Emberfall.Core",
     "Emberfall.Core.Contracts",
     "Emberfall.Core.Cards",
     "Emberfall.Core.Serialization",
     "Emberfall.Net.Protocol",
     "Emberfall.Data",
     "Emberfall.Session",
-    "Emberfall.Presentation"
+    "Emberfall.Presentation",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

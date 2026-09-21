@@ -87,6 +87,14 @@ namespace Emberfall.Review
                 return;
             }
 
+            if (_reviewer.NativeActionMode)
+            {
+                EditorGUILayout.HelpBox(
+                    "Native action capture is active in the Game view. This panel does not grade it.",
+                    MessageType.Info);
+                return;
+            }
+
             // The edit buffer follows the frame, so stepping away never carries one decision's
             // half-typed comment onto the next.
             if (_editingKey != FrameKey(frame)) LoadEdit(frame);
