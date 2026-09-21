@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using Emberfall.Core.Contracts;
 using Newtonsoft.Json;
@@ -32,6 +34,7 @@ namespace Emberfall.Review
     {
         public static List<ActionGroup> Group(ReviewFrame frame, GameState state, ICardDatabase cards)
         {
+            bool blind = frame.IsTargetAudit;
             var order = new List<string>();
             var groups = new Dictionary<string, ActionGroup>();
 
@@ -41,7 +44,7 @@ namespace Emberfall.Review
                 string key = KeyOf(action.Intent, state, out AliasKind kind);
                 if (!groups.TryGetValue(key, out ActionGroup group))
                 {
-                    group = new ActionGroup { Alias = kind };
+                    group = new ActionGroup { Alias = kind, Key = key, Label = action.Description };
                     groups[key] = group;
                     order.Add(key);
                 }
@@ -51,7 +54,7 @@ namespace Emberfall.Review
                 if (action.Probability > group.TopProbability)
                 {
                     group.TopProbability = action.Probability;
-                    group.Label = action.Description;
+                    if (!blind) group.Label = action.Description;
                 }
             }
 
@@ -62,8 +65,25 @@ namespace Emberfall.Review
                 if (group.Members.Count < 2) group.Alias = AliasKind.None;
                 result.Add(group);
             }
-            result.Sort((a, b) => b.Probability.CompareTo(a.Probability));
+            if (blind)
+                result.Sort((a, b) => string.CompareOrdinal(
+                    BlindRank(frame, a.Key), BlindRank(frame, b.Key)));
+            else
+                result.Sort((a, b) => b.Probability.CompareTo(a.Probability));
             return result;
+        }
+
+        private static string BlindRank(ReviewFrame frame, string key)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(
+                frame.MatchId + "\0" + frame.DecisionIndex.ToString(CultureInfo.InvariantCulture) + "\0" + key);
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] digest = sha.ComputeHash(bytes);
+                var text = new StringBuilder(digest.Length * 2);
+                foreach (byte value in digest) text.Append(value.ToString("x2"));
+                return text.ToString();
+            }
         }
 
         /// <summary>
@@ -188,6 +208,7 @@ namespace Emberfall.Review
     public sealed class ActionGroup
     {
         public List<int> Members { get; } = new List<int>();
+        public string Key { get; set; } = "";
 
         /// <summary>The policy's probability over this PLAY — the sum across its spellings. This is
         /// the number to judge certainty by; a per-action figure understates it.</summary>
@@ -199,6 +220,7 @@ namespace Emberfall.Review
         public AliasKind Alias { get; set; }
 
         public bool IsAlias => Members.Count > 1;
+        public bool IsConcede => string.Equals(Key, "concede", StringComparison.Ordinal);
 
         public string AliasNote =>
             !IsAlias ? ""

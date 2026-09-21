@@ -185,9 +185,14 @@ namespace Emberfall.Review
         public int EpisodeReturnForActor { get; private set; }
         public IReadOnlyList<ReviewAction> Actions { get; private set; } = Array.Empty<ReviewAction>();
 
+        public bool IsTargetAudit =>
+            Stratum.StartsWith("target-audit:", StringComparison.Ordinal);
+
         /// <summary>A short label for the reviewer's chrome — "12 · mid:attack · turn 9 (p1)".</summary>
         public string Caption =>
-            $"{SampleNumber} · {Stratum} · turn {Turn} ({Actor})";
+            IsTargetAudit
+                ? $"{SampleNumber} · turn {Turn} ({Actor})"
+                : $"{SampleNumber} · {Stratum} · turn {Turn} ({Actor})";
 
         /// <summary>
         /// The decoded state, resolved on first use and cached. Decoding goes through the real

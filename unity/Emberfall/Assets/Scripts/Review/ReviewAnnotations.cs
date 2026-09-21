@@ -23,7 +23,7 @@ namespace Emberfall.Review
     /// </summary>
     public sealed class ReviewAnnotations
     {
-        public const int SchemaVersion = 1;
+        public const int SchemaVersion = 2;
 
         private readonly string _path;
         private readonly ReviewBundleManifest _manifest;
@@ -81,7 +81,11 @@ namespace Emberfall.Review
         public bool IsGraded(ReviewFrame frame)
         {
             Annotation row = For(frame);
-            return row != null && !row.IsEmpty;
+            if (row == null) return false;
+            if (frame.IsTargetAudit)
+                return row.Unreviewable
+                    || ((row.PreferredActionIndices?.Length ?? 0) > 0 && row.AuditConfidence > 0);
+            return !row.IsEmpty;
         }
 
         public void Save(ReviewFrame frame, string reviewer, Annotation edit)
@@ -97,6 +101,9 @@ namespace Emberfall.Review
                 TacticalMotif = edit.TacticalMotif,
                 Reasonableness = edit.Reasonableness,
                 ConfidenceAppropriateness = edit.ConfidenceAppropriateness,
+                PreferredActionIndices = (int[])(edit.PreferredActionIndices ?? Array.Empty<int>()).Clone(),
+                AuditConfidence = edit.AuditConfidence,
+                Unreviewable = edit.Unreviewable,
                 Comment = edit.Comment,
             };
 
@@ -115,6 +122,9 @@ namespace Emberfall.Review
                 ["tacticalMotif"] = new JArray(row.TacticalMotif ?? Array.Empty<string>()),
                 ["reasonableness"] = row.Reasonableness,
                 ["confidenceAppropriateness"] = row.ConfidenceAppropriateness,
+                ["preferredActionIndices"] = new JArray(row.PreferredActionIndices ?? Array.Empty<int>()),
+                ["auditConfidence"] = row.AuditConfidence,
+                ["unreviewable"] = row.Unreviewable,
                 ["comment"] = row.Comment ?? "",
             };
 
@@ -166,6 +176,18 @@ namespace Emberfall.Review
         /// </summary>
         public int ConfidenceAppropriateness { get; set; }
 
+        /// <summary>
+        /// Representative legal-action indices for the distinct plays the reviewer considers
+        /// preferred. More than one records a tie or strategically equivalent set.
+        /// </summary>
+        public int[] PreferredActionIndices { get; set; } = Array.Empty<int>();
+
+        /// <summary>Blind target-audit confidence: 1 low, 2 medium, 3 high; 0 means unset.</summary>
+        public int AuditConfidence { get; set; }
+
+        /// <summary>The visible state is insufficient or broken, so no preference is recorded.</summary>
+        public bool Unreviewable { get; set; }
+
         public string Comment { get; set; } = "";
 
         public string MatchId { get; set; } = "";
@@ -179,6 +201,9 @@ namespace Emberfall.Review
             && (TacticalMotif == null || TacticalMotif.Length == 0)
             && Reasonableness == 0
             && ConfidenceAppropriateness == 0
+            && (PreferredActionIndices == null || PreferredActionIndices.Length == 0)
+            && AuditConfidence == 0
+            && !Unreviewable
             && string.IsNullOrWhiteSpace(Comment);
 
         public Annotation Clone() => new Annotation
@@ -187,6 +212,9 @@ namespace Emberfall.Review
             TacticalMotif = (string[])(TacticalMotif ?? Array.Empty<string>()).Clone(),
             Reasonableness = Reasonableness,
             ConfidenceAppropriateness = ConfidenceAppropriateness,
+            PreferredActionIndices = (int[])(PreferredActionIndices ?? Array.Empty<int>()).Clone(),
+            AuditConfidence = AuditConfidence,
+            Unreviewable = Unreviewable,
             Comment = Comment,
             MatchId = MatchId,
             DecisionIndex = DecisionIndex,
@@ -205,6 +233,11 @@ namespace Emberfall.Review
                     if (!string.IsNullOrWhiteSpace(text)) motifs.Add(text);
                 }
 
+            var preferred = new List<int>();
+            if (json["preferredActionIndices"] is JArray preferredArray)
+                foreach (JToken index in preferredArray)
+                    if (index.Type == JTokenType.Integer) preferred.Add((int)index);
+
             return new Annotation
             {
                 MatchId = (string)json["matchId"] ?? "",
@@ -216,6 +249,9 @@ namespace Emberfall.Review
                 TacticalMotif = motifs.ToArray(),
                 Reasonableness = (int?)json["reasonableness"] ?? 0,
                 ConfidenceAppropriateness = (int?)json["confidenceAppropriateness"] ?? 0,
+                PreferredActionIndices = preferred.ToArray(),
+                AuditConfidence = (int?)json["auditConfidence"] ?? 0,
+                Unreviewable = (bool?)json["unreviewable"] ?? false,
                 Comment = (string)json["comment"] ?? "",
             };
         }

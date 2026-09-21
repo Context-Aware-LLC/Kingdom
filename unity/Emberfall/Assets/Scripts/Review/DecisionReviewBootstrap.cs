@@ -159,7 +159,8 @@ namespace Emberfall.Review
             BuildBoard(frame, state);
             _board.OnStateUpdated(state);
             foreach (Action<GameState> sink in _stateSinks) sink(state);
-            SelectAction(frame.ChosenActionIndex);
+            if (frame.IsTargetAudit) ClearActionSelection();
+            else SelectAction(frame.ChosenActionIndex);
 
             Debug.Log($"[DecisionReview] {frame.Caption} — {frame.MatchId}#{frame.DecisionIndex}");
             Changed?.Invoke();
@@ -210,6 +211,14 @@ namespace Emberfall.Review
             if (heroes.Count > 0) note.Add($"hero {string.Join(", ", heroes)} — heroes cannot glow");
             if (missing.Count > 0) note.Add($"not on the board: {string.Join(", ", missing)}");
             HighlightNote = note.Count == 0 ? "this action names nothing" : string.Join(" · ", note);
+            Changed?.Invoke();
+        }
+
+        public void ClearActionSelection()
+        {
+            SelectedAction = -1;
+            if (_board != null) _board.SetReviewHighlight(null, null);
+            HighlightNote = "select View beside a play to inspect its targets";
             Changed?.Invoke();
         }
 

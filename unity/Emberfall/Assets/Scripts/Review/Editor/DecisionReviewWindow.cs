@@ -95,11 +95,13 @@ namespace Emberfall.Review
             // grades: score set on all three, structural/motif/comment empty on all three. Every
             // state in the bundle was selected for >=0.99 confidence, so the verdict IS the
             // finding — the rest is optional colour and now sits below it, out of the way.
-            HandleScoreKeys(frame);
+            if (frame.IsTargetAudit) HandleAuditKeys(frame);
+            else HandleScoreKeys(frame);
 
             DrawNavigation(frame);
             EditorGUILayout.Space(4f);
-            DrawVerdict(frame);
+            if (frame.IsTargetAudit) DrawAuditVerdict(frame);
+            else DrawVerdict(frame);
             EditorGUILayout.Space(4f);
             DrawIdentity(frame);
             EditorGUILayout.Space(6f);
@@ -157,6 +159,39 @@ namespace Emberfall.Review
                 return;
             }
 
+            if (e.keyCode == KeyCode.Space) { _reviewer.Next(); e.Use(); }
+        }
+
+        private void HandleAuditKeys(ReviewFrame frame)
+        {
+            Event e = Event.current;
+            if (e.type != EventType.KeyDown || EditorGUIUtility.editingTextField) return;
+
+            int confidence = -1;
+            if (e.keyCode >= KeyCode.Alpha1 && e.keyCode <= KeyCode.Alpha3)
+                confidence = e.keyCode - KeyCode.Alpha0;
+            else if (e.keyCode >= KeyCode.Keypad1 && e.keyCode <= KeyCode.Keypad3)
+                confidence = e.keyCode - KeyCode.Keypad0;
+            if (confidence > 0 && !_edit.Unreviewable)
+            {
+                _edit.AuditConfidence = confidence;
+                Save(frame);
+                e.Use();
+                return;
+            }
+
+            if (e.keyCode == KeyCode.U)
+            {
+                _edit.Unreviewable = !_edit.Unreviewable;
+                if (_edit.Unreviewable)
+                {
+                    _edit.PreferredActionIndices = new int[0];
+                    _edit.AuditConfidence = 0;
+                }
+                Save(frame);
+                e.Use();
+                return;
+            }
             if (e.keyCode == KeyCode.Space) { _reviewer.Next(); e.Use(); }
         }
 
@@ -226,6 +261,60 @@ namespace Emberfall.Review
 
                 EditorGUILayout.LabelField("Comment");
                 _edit.Comment = EditorGUILayout.TextArea(_edit.Comment ?? "", GUILayout.MinHeight(40f));
+                if (GUILayout.Button("Save comment")) Save(frame);
+            }
+        }
+
+        private void DrawAuditVerdict(ReviewFrame frame)
+        {
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.Label("Blind target audit", EditorStyles.boldLabel);
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label($"{_reviewer.GradedCount} / {_reviewer.FrameCount} complete",
+                                    EditorStyles.miniLabel);
+                }
+
+                EditorGUILayout.HelpBox(
+                    "Select every play you would accept as best. Ties are allowed. No model pick, "
+                    + "score, outcome, or disagreement category is shown.", MessageType.Info);
+
+                bool unreviewable = EditorGUILayout.ToggleLeft(
+                    "Unreviewable from this state", _edit.Unreviewable);
+                if (unreviewable != _edit.Unreviewable)
+                {
+                    _edit.Unreviewable = unreviewable;
+                    if (unreviewable)
+                    {
+                        _edit.PreferredActionIndices = new int[0];
+                        _edit.AuditConfidence = 0;
+                    }
+                    Save(frame);
+                }
+
+                using (new EditorGUI.DisabledScope(_edit.Unreviewable))
+                {
+                    GUILayout.Label("Confidence in your preferred set   keys 1-3", EditorStyles.miniBoldLabel);
+                    int confidence = DrawScoreRow(_edit.AuditConfidence, 3, s => false, s => s == 2);
+                    if (confidence != _edit.AuditConfidence)
+                    {
+                        _edit.AuditConfidence = confidence;
+                        Save(frame);
+                    }
+                    GUILayout.Label(
+                        _edit.AuditConfidence == 1 ? "low"
+                        : _edit.AuditConfidence == 2 ? "medium"
+                        : _edit.AuditConfidence == 3 ? "high"
+                        : "unset",
+                        EditorStyles.wordWrappedMiniLabel);
+                }
+
+                GUILayout.Label("U marks unreviewable · space / → next", EditorStyles.miniLabel);
+
+                EditorGUILayout.LabelField("Comment (optional)");
+                _edit.Comment = EditorGUILayout.TextArea(_edit.Comment ?? "", GUILayout.MinHeight(36f));
                 if (GUILayout.Button("Save comment")) Save(frame);
             }
         }
@@ -424,17 +513,26 @@ namespace Emberfall.Review
                 EditorGUILayout.LabelField("Actor", $"{frame.Actor} · turn {frame.Turn}");
                 EditorGUILayout.LabelField("Observation", frame.ObservationHash.Substring(0, 16) + "…");
 
-                // Shown as CONTEXT and labelled as such. The review document is explicit that the
-                // episode result is not evidence the action was good — a won game does not redeem a
-                // bad play and a lost one does not condemn a forced move.
-                string outcome = frame.EpisodeReturnForActor > 0 ? "actor won"
-                    : frame.EpisodeReturnForActor < 0 ? "actor lost" : "draw";
-                EditorGUILayout.LabelField("Eventually", $"{outcome}  (context, not proof)");
+                if (!frame.IsTargetAudit)
+                {
+                    // Shown as CONTEXT and labelled as such. The review document is explicit that the
+                    // episode result is not evidence the action was good — a won game does not redeem a
+                    // bad play and a lost one does not condemn a forced move.
+                    string outcome = frame.EpisodeReturnForActor > 0 ? "actor won"
+                        : frame.EpisodeReturnForActor < 0 ? "actor lost" : "draw";
+                    EditorGUILayout.LabelField("Eventually", $"{outcome}  (context, not proof)");
+                }
             }
         }
 
         private void DrawActions(ReviewFrame frame)
         {
+            if (frame.IsTargetAudit)
+            {
+                DrawAuditActions(frame);
+                return;
+            }
+
             EditorGUILayout.LabelField($"Legal actions ({frame.Actions.Count})", EditorStyles.boldLabel);
             EditorGUILayout.LabelField(
                 "Click one to light up what it names. Probabilities are the policy's, over this set.",
@@ -469,6 +567,60 @@ namespace Emberfall.Review
                                     EditorStyles.miniLabel);
             }
             EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawAuditActions(ReviewFrame frame)
+        {
+            int visible = 0;
+            foreach (ActionGroup group in _reviewer.Groups) if (!group.IsConcede) visible++;
+            EditorGUILayout.LabelField($"Distinct plays ({visible})", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(
+                "Check every preferred play. View only lights up named cards or targets.",
+                EditorStyles.miniLabel);
+
+            if (!string.IsNullOrEmpty(_reviewer.HighlightNote))
+                EditorGUILayout.HelpBox(_reviewer.HighlightNote, MessageType.None);
+
+            _scroll = EditorGUILayout.BeginScrollView(_scroll, GUILayout.MaxHeight(240f));
+            foreach (ActionGroup group in _reviewer.Groups)
+            {
+                if (group.IsConcede) continue;
+                int representative = group.Members[0];
+                bool wasPreferred = IsPreferred(representative);
+                using (new EditorGUILayout.HorizontalScope(wasPreferred ? EditorStyles.helpBox : GUIStyle.none))
+                {
+                    bool preferred = GUILayout.Toggle(wasPreferred, GUIContent.none, GUILayout.Width(22f));
+                    if (preferred != wasPreferred)
+                    {
+                        SetPreferred(representative, preferred);
+                        _edit.Unreviewable = false;
+                        Save(frame);
+                    }
+                    GUILayout.Label(group.Label,
+                                    wasPreferred ? EditorStyles.boldLabel : EditorStyles.label);
+                    if (GUILayout.Button("View", EditorStyles.miniButton, GUILayout.Width(42f)))
+                        _reviewer.SelectAction(representative);
+                }
+                if (group.IsAlias)
+                    GUILayout.Label($"        {group.AliasNote}", EditorStyles.miniLabel);
+            }
+            EditorGUILayout.EndScrollView();
+        }
+
+        private bool IsPreferred(int actionIndex)
+        {
+            foreach (int selected in _edit.PreferredActionIndices ?? new int[0])
+                if (selected == actionIndex) return true;
+            return false;
+        }
+
+        private void SetPreferred(int actionIndex, bool preferred)
+        {
+            var values = new List<int>(_edit.PreferredActionIndices ?? new int[0]);
+            values.Remove(actionIndex);
+            if (preferred) values.Add(actionIndex);
+            values.Sort();
+            _edit.PreferredActionIndices = values.ToArray();
         }
 
         /// <summary>
