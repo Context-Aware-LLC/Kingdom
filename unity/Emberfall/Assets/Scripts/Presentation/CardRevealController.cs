@@ -168,8 +168,7 @@ namespace Emberfall.Presentation
             // OnMouseEnter already raised it, and driving it from here as well would give one
             // behaviour two owners.
             SetLift(_model.Source == HoverRevealModel.RevealSource.Hold ? t : null);
-            CardRevealContent content = t.BuildContent();
-            _panel.Show(t, content);
+            _panel.Show(t);
         }
 
         // Exactly one card is ever lifted from here, and the previous one is always put back —

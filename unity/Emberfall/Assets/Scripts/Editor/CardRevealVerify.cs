@@ -43,7 +43,7 @@ namespace Emberfall.Editor
             failed += ContentUsesLiveStateOverPrint();
             failed += ReadableZonesIncludeHandAndBoard();
             failed += DirectTooltipSuppressesTouch();
-            failed += LayoutUsesSafeHeight();
+            failed += LayoutFillsSafeHeight();
             failed += FocusViewIsWiredToReadableCards();
 
             if (failed > 0)
@@ -266,28 +266,26 @@ namespace Emberfall.Editor
             return Pass("DirectTooltipSuppressesTouch");
         }
 
-        private static int LayoutUsesSafeHeight()
+        private static int LayoutFillsSafeHeight()
         {
             // Pixel 5a landscape safe viewport from DeviceLayout's device evidence: left cutout,
             // otherwise full height. Work in normalized screen-plane units so this stays pure.
             var safe = Rect.MinMaxRect(136f / 2400f, 0f, 1f, 1f);
             CardRevealLayout layout = CardRevealLayout.Solve(20f / 9f, 1f, safe);
-            if (layout.CardHeight < 0.80f)
-                return Fail("LayoutUsesSafeHeight", $"card uses only {layout.CardHeight:P0} of safe height");
+            if (!Mathf.Approximately(layout.CardHeight, 1f))
+                return Fail("LayoutFillsSafeHeight", $"card uses {layout.CardHeight:P0} of safe height");
+
+            float expectedWidth = BoardController.CardW / BoardController.CardH;
+            if (!Mathf.Approximately(layout.CardWidth, expectedWidth))
+                return Fail("LayoutFillsSafeHeight", "card aspect ratio changed while filling height");
 
             float safeLeft = -0.5f * (20f / 9f) + 136f / 2400f * (20f / 9f);
             float safeRight = 0.5f * (20f / 9f);
             float left = layout.CardCenter.x - layout.CardWidth * 0.5f;
-            float right = layout.DetailCenter.x + layout.DetailWidth * 0.5f;
+            float right = layout.CardCenter.x + layout.CardWidth * 0.5f;
             if (left < safeLeft || right > safeRight)
-                return Fail("LayoutUsesSafeHeight", $"layout [{left:F3}, {right:F3}] escaped safe [{safeLeft:F3}, {safeRight:F3}]");
-
-            CardRevealLayout narrow = CardRevealLayout.Solve(1.05f, 1f, new Rect(0f, 0f, 1f, 1f));
-            float narrowLeft = narrow.CardCenter.x - narrow.CardWidth * 0.5f;
-            float narrowRight = narrow.DetailCenter.x + narrow.DetailWidth * 0.5f;
-            if (narrowLeft < -0.525f || narrowRight > 0.525f)
-                return Fail("LayoutUsesSafeHeight", "narrow safe area caused horizontal overflow");
-            return Pass("LayoutUsesSafeHeight");
+                return Fail("LayoutFillsSafeHeight", $"card [{left:F3}, {right:F3}] escaped safe [{safeLeft:F3}, {safeRight:F3}]");
+            return Pass("LayoutFillsSafeHeight");
         }
 
         private static int FocusViewIsWiredToReadableCards()
@@ -345,13 +343,18 @@ namespace Emberfall.Editor
                 if (panel == null)
                     return Fail("FocusViewIsWiredToReadableCards", "board initialization created no focus panel");
 
-                panel.Show(handTrigger, handTrigger.BuildContent());
+                panel.Show(handTrigger);
                 CardPresenter[] focused = panel.GetComponentsInChildren<CardPresenter>(true);
                 if (focused.Length != 1)
                     return Fail("FocusViewIsWiredToReadableCards",
                         $"focus panel contains {focused.Length} card faces, expected exactly one");
                 if (focused[0].GetComponent<BoxCollider>() != null)
                     return Fail("FocusViewIsWiredToReadableCards", "focused copy retained an input collider");
+                if (panel.transform.Find("Face") != null
+                    || panel.transform.Find("Title") != null
+                    || panel.transform.Find("Subtitle") != null
+                    || panel.transform.Find("Body") != null)
+                    return Fail("FocusViewIsWiredToReadableCards", "secondary detail panel still exists");
 
                 return Pass("FocusViewIsWiredToReadableCards");
             }
