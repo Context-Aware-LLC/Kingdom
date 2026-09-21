@@ -1219,6 +1219,12 @@
     -unity-slice-bottom: 36;
     -unity-slice-scale: 0.5px;
 }
+/* The Decks CTA used to keep `.col-button--decks`' gold background beneath this slate
+ * nine-slice. Its outer pixels are transparent, so the underlay escaped only at the four corners
+ * and read as stray gold caps. The sprite owns the whole visible surface; keep its underlay clear. */
+.col-button--decks.chrome-button--secondary {
+    background-color: transparent;
+}
 .chrome-button:hover {
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
