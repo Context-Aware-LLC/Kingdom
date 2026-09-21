@@ -633,7 +633,7 @@ namespace Emberfall.Editor
             HeroPowerDrops();
             DropOnOpenBoardPlays();
             TargetSets();
-            TargetlessHeraldReturnsToHand();
+            TargetlessHeraldFizzleOrRequiredCost();
         }
 
         // ── The cases ───────────────────────────────────────────────────────────────
@@ -943,15 +943,15 @@ namespace Emberfall.Editor
         }
 
         /// <summary>
-        /// A herald whose target set is empty owes no aim step, but dropping it now returns it to
-        /// hand rather than allowing its effect to fizzle into play (Sam, 2026-08-29).
+        /// A herald whose target set is empty owes no aim step. Its body still plays while an
+        /// optional on-play effect fizzles; only an unpayable required cost blocks the drop.
         ///
         /// <para>THE DEAD END THIS GUARDS. NeedsTarget used to read the card DEFINITION, which does
         /// not know the board. A Reinforce herald with no friendly minion armed an aim step holding
         /// zero candidates: nothing glowed and every drop entered a mode that could not complete.
-        /// Ask the plan for the live candidate set, then cancel the drop when that set is empty.</para>
+        /// Ask the plan for the live candidate count and let a zero-required-count effect fizzle.</para>
         /// </summary>
-        private static void TargetlessHeraldReturnsToHand()
+        private static void TargetlessHeraldFizzleOrRequiredCost()
         {
             GameState s = NewState();
             s.Players[0].Board.Clear();                 // nothing friendly to reinforce
@@ -964,7 +964,7 @@ namespace Emberfall.Editor
             Check("...and glows nothing", m.TargetsFor(fizzle) == null);
 
             var played = m.Resolve(fizzle, PointerSubject.None, DropPoint.Board(-1.35f));
-            Check("...and returns to hand when dropped with no legal target", played == null);
+            Check("...and plays its body while the effect fizzles", played is PlayCardIntent);
             Check("...leaving the machine in Direct, ready for another card",
                 m.Phase == DragTargetingModel.TargetingPhase.Direct);
 

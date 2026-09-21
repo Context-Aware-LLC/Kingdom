@@ -121,7 +121,7 @@ namespace Emberfall.Presentation
     /// so this errs toward SUBMITTING: the courtesy target set can be wrong (it is built from a
     /// mirror), and swallowing a gesture the authority would have allowed is the worse of the two
     /// errors. Hand-card legality that is fully visible in the mirror is checked here, though:
-    /// an unaffordable card or one with an empty chosen-target set must cancel so InputRouter
+    /// an unaffordable card or one with an unpayable required target must cancel so InputRouter
     /// can return its dragged visual instead of waiting for a snapshot that a rejected play
     /// will never produce.</para>
     /// </summary>
@@ -353,8 +353,8 @@ namespace Emberfall.Presentation
             ClearChoicePlan();
             // A group the engine no longer asks for is skipped, not shown. A herald with no target
             // reports RequiredCount 0 (Targeting.RequiredPlayerCount), and an armed step with
-            // nothing to pick is a dead end. HandCardCanResolve now catches that empty candidate
-            // set before this method; skipping zero-count groups here keeps the plan itself valid.
+            // nothing to pick is a dead end. HandCardCanResolve catches an unsatisfied required
+            // count before this method; skipping zero-count groups here keeps the plan itself valid.
             foreach (TargetChoiceRequirement requirement in Targeting.PlayerChoicePlan(
                          State, _db, _p0Id, def, trigger, source))
                 if (requirement.RequiredCount > 0)
@@ -488,7 +488,7 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// Local, visible playability only. The authority remains final, but mana, board capacity
-        /// and an empty player-chosen target set are all present in this player's projection and
+        /// and an unpayable required target are all present in this player's projection and
         /// can be refused early so a failed drop returns to hand immediately.
         /// </summary>
         private bool HandCardCanResolve(InstanceId cardId)
