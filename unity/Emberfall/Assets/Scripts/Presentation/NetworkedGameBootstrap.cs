@@ -442,6 +442,7 @@ namespace Emberfall.Presentation
                 // hero-as-attacker gold cue in networked mode).
                 if (inputRouter != null)
                     inputRouter.SetHeroPlates(localPlate, remotePlate);
+                boardController?.SetHeroPlates(localId, localPlate, remoteId, remotePlate);
             }
 
             // ── End-turn button (was hot-seat-only; found missing at b3 §14 step 4) ──

@@ -89,6 +89,35 @@ namespace Emberfall.Presentation
         private IArtProvider _artProvider;
         private IUiSpriteProvider _uiSprites;
         private CardRevealController _revealController;
+        private GameState _currentState;
+
+        // Hero portraits are separate from their anchors so combat motion can move the character
+        // without dragging its collider, hero-power socket or weapon socket along with it. The
+        // bootstrap supplies the two live views after constructing them.
+        private readonly Dictionary<PlayerId, HeroPlateView> _heroPlates = new();
+
+        // ── Combat contact motion ──────────────────────────────────────────────────
+        // AttackDeclared is the one event shared by local, remote and AI combat. Driving the
+        // motion from it keeps presentation out of input prediction and gives every attacker /
+        // defender pairing the same lunge, contact recoil and return.
+        private const float CombatWindupSeconds = 0.06f;
+        private const float CombatStrikeSeconds = 0.10f;
+        private const float CombatImpactSeconds = 0.07f;
+        private const float CombatReturnSeconds = 0.16f;
+        private const float CombatContactOverlap = 0.08f;
+        private const float CombatMaxWindup = 0.16f;
+        private const float CombatMaxRecoil = 0.20f;
+
+        private Coroutine _combatMotion;
+        private Transform _combatAttacker;
+        private Transform _combatDefender;
+        private Vector3 _combatAttackerRestLocalPosition;
+        private Quaternion _combatAttackerRestLocalRotation;
+        private Vector3 _combatDefenderRestLocalPosition;
+        private Quaternion _combatDefenderRestLocalRotation;
+        private UnityEngine.Rendering.SortingGroup _combatAttackerSorting;
+        private bool _combatAttackerSortingWasEnabled;
+        private int _combatAttackerSortingOrder;
 
         // Bottom-right flavor-text surface (CardDefinition.FlavorText), one per match, lazily
         // built the first time a card needs it and shared by every CardPresenter. Screen-anchored
@@ -171,11 +200,20 @@ namespace Emberfall.Presentation
                 _inputRouter.TargetFocusChanged += OnTargetFocusChanged;
             }
 
-            // Deaths are read here, not only in CardMaterialBinder, because the controller is what
-            // owns the presenter's lifetime and therefore the only place that can hold a card
-            // alive long enough to burn.
+            // Combat motion and deaths both consume the paced semantic event stream. Deaths are
+            // read here, not only in CardMaterialBinder, because the controller owns presenter
+            // lifetime and is the only place that can hold a card alive long enough to animate.
             if (_matchRunner != null)
-                _matchRunner.OnMatchEvent += OnMatchEventForDeaths;
+                _matchRunner.OnMatchEvent += OnMatchEvent;
+        }
+
+        /// <summary>Supplies the visual-only hero transforms used by combat contact motion.</summary>
+        public void SetHeroPlates(PlayerId firstPlayer, HeroPlateView firstPlate,
+                                  PlayerId secondPlayer, HeroPlateView secondPlate)
+        {
+            _heroPlates.Clear();
+            if (firstPlate != null) _heroPlates[firstPlayer] = firstPlate;
+            if (secondPlate != null) _heroPlates[secondPlayer] = secondPlate;
         }
 
         private void OnDestroy()
@@ -186,7 +224,8 @@ namespace Emberfall.Presentation
                 _inputRouter.TargetFocusChanged -= OnTargetFocusChanged;
             }
             if (_matchRunner != null)
-                _matchRunner.OnMatchEvent -= OnMatchEventForDeaths;
+                _matchRunner.OnMatchEvent -= OnMatchEvent;
+            StopCombatMotion(restore: false);
             // The shared flavor plate re-parents itself to the camera for screen anchoring and is
             // therefore no longer beneath this hierarchy when the board is torn down.
             if (_flavorPanel != null) DestroyObj(_flavorPanel.gameObject);
@@ -196,13 +235,209 @@ namespace Emberfall.Presentation
         // target — the dying thing is the subject of its own death. Reading both fields keeps this
         // correct either way, and costs nothing: a weapon's CardDestroyed fact names an id with no presenter,
         // which the sweep simply never looks up.
-        private void OnMatchEventForDeaths(IReadOnlyList<GameEvent> batch)
+        private void OnMatchEvent(IReadOnlyList<GameEvent> batch)
         {
             foreach (GameEvent e in batch)
             {
-                if (e.Kind != GameEventKind.CardDestroyed) continue;
-                if (e.Source.HasValue) _diedThisTick.Add(e.Source.Value);
-                if (e.Target.HasValue) _diedThisTick.Add(e.Target.Value);
+                if (e.Kind == GameEventKind.AttackDeclared && e.Source.HasValue && e.Target.HasValue)
+                    StartCombatMotion(e.Source.Value, e.Target.Value);
+
+                if (e.Kind == GameEventKind.CardDestroyed)
+                {
+                    if (e.Source.HasValue) _diedThisTick.Add(e.Source.Value);
+                    if (e.Target.HasValue) _diedThisTick.Add(e.Target.Value);
+                }
+            }
+        }
+
+        private void StartCombatMotion(InstanceId attackerId, InstanceId defenderId)
+        {
+            if (!Application.isPlaying || !isActiveAndEnabled) return;
+
+            Transform attacker = ResolveCombatVisual(attackerId);
+            Transform defender = ResolveCombatVisual(defenderId);
+            if (attacker == null || defender == null || attacker == defender) return;
+
+            StopCombatMotion(restore: true);
+
+            _combatAttacker = attacker;
+            _combatDefender = defender;
+            _combatAttackerRestLocalPosition = attacker.localPosition;
+            _combatAttackerRestLocalRotation = attacker.localRotation;
+            _combatDefenderRestLocalPosition = defender.localPosition;
+            _combatDefenderRestLocalRotation = defender.localRotation;
+            RaiseCombatAttacker(attacker);
+            _combatMotion = StartCoroutine(PlayCombatMotion(attacker, defender));
+        }
+
+        private void RaiseCombatAttacker(Transform attacker)
+        {
+            _combatAttackerSorting = attacker.GetComponent<UnityEngine.Rendering.SortingGroup>();
+            if (_combatAttackerSorting == null)
+            {
+                _combatAttackerSorting =
+                    attacker.gameObject.AddComponent<UnityEngine.Rendering.SortingGroup>();
+                _combatAttackerSortingWasEnabled = false;
+                _combatAttackerSortingOrder = 0;
+            }
+            else
+            {
+                _combatAttackerSortingWasEnabled = _combatAttackerSorting.enabled;
+                _combatAttackerSortingOrder = _combatAttackerSorting.sortingOrder;
+            }
+
+            _combatAttackerSorting.enabled = true;
+            _combatAttackerSorting.sortingOrder = 80;
+        }
+
+        private Transform ResolveCombatVisual(InstanceId id)
+        {
+            if (_presenters.TryGetValue(id, out CardPresenter presenter) && presenter != null)
+                return presenter.transform;
+
+            if (_currentState == null) return null;
+            foreach (PlayerState player in _currentState.Players)
+            {
+                if (player.Hero.Id != id) continue;
+                return _heroPlates.TryGetValue(player.Id, out HeroPlateView plate) && plate != null
+                    ? plate.transform
+                    : null;
+            }
+            return null;
+        }
+
+        private IEnumerator PlayCombatMotion(Transform attacker, Transform defender)
+        {
+            Vector3 attackerRest = attacker.position;
+            Vector3 defenderRest = defender.position;
+            Vector3 separation = defenderRest - attackerRest;
+            separation.z = 0f;
+            float distance = separation.magnitude;
+            if (distance < 0.001f)
+            {
+                FinishCombatMotion();
+                yield break;
+            }
+
+            Vector3 direction = separation / distance;
+            float attackerHalf = HalfVisualExtent(attacker, direction);
+            float defenderHalf = HalfVisualExtent(defender, direction);
+            float contactTravel = Mathf.Max(0f,
+                distance - attackerHalf - defenderHalf + CombatContactOverlap);
+            float windupDistance = Mathf.Min(CombatMaxWindup, distance * 0.06f);
+            float recoilDistance = Mathf.Min(CombatMaxRecoil,
+                Mathf.Max(0.08f, contactTravel * 0.08f));
+
+            // Negative z is nearer the board camera (the input drag uses the same convention).
+            float strikeZ = Mathf.Min(attackerRest.z, defenderRest.z) - 0.35f;
+            Vector3 windup = attackerRest - direction * windupDistance;
+            Vector3 contact = attackerRest + direction * contactTravel;
+            contact.z = strikeZ;
+            Vector3 bounce = contact - direction * Mathf.Min(0.14f, contactTravel * 0.12f);
+            Vector3 defenderRecoil = defenderRest + direction * recoilDistance;
+
+            yield return MoveCombatPhase(attacker, attackerRest, windup,
+                                         defender, defenderRest, defenderRest,
+                                         CombatWindupSeconds, 0);
+            yield return MoveCombatPhase(attacker, windup, contact,
+                                         defender, defenderRest, defenderRest,
+                                         CombatStrikeSeconds, 1);
+            yield return MoveCombatPhase(attacker, contact, bounce,
+                                         defender, defenderRest, defenderRecoil,
+                                         CombatImpactSeconds, 2);
+            yield return MoveCombatPhase(attacker, bounce, attackerRest,
+                                         defender, defenderRecoil, defenderRest,
+                                         CombatReturnSeconds, 2);
+
+            FinishCombatMotion();
+        }
+
+        private static IEnumerator MoveCombatPhase(
+            Transform attacker, Vector3 attackerFrom, Vector3 attackerTo,
+            Transform defender, Vector3 defenderFrom, Vector3 defenderTo,
+            float duration, int easing)
+        {
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = duration > 0f ? Mathf.Clamp01(elapsed / duration) : 1f;
+                float eased = CombatEase(t, easing);
+                if (attacker != null)
+                    attacker.position = Vector3.LerpUnclamped(attackerFrom, attackerTo, eased);
+                if (defender != null)
+                    defender.position = Vector3.LerpUnclamped(defenderFrom, defenderTo, eased);
+                yield return null;
+            }
+
+            if (attacker != null) attacker.position = attackerTo;
+            if (defender != null) defender.position = defenderTo;
+        }
+
+        private static float CombatEase(float t, int easing)
+        {
+            switch (easing)
+            {
+                case 1: return t * t;                         // accelerate into contact
+                case 2: return 1f - Mathf.Pow(1f - t, 3f);   // recoil / settle quickly
+                default: return t * t * (3f - 2f * t);       // compact windup
+            }
+        }
+
+        private static float HalfVisualExtent(Transform visual, Vector3 direction)
+        {
+            Renderer[] renderers = visual.GetComponentsInChildren<Renderer>();
+            Bounds bounds = default;
+            bool found = false;
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer == null || !renderer.enabled || !renderer.gameObject.activeInHierarchy)
+                    continue;
+                if (!found) { bounds = renderer.bounds; found = true; }
+                else bounds.Encapsulate(renderer.bounds);
+            }
+
+            if (!found) return 0.5f;
+            Vector3 extent = bounds.extents;
+            return Mathf.Abs(direction.x) * extent.x + Mathf.Abs(direction.y) * extent.y;
+        }
+
+        private void StopCombatMotion(bool restore)
+        {
+            if (_combatMotion != null)
+                StopCoroutine(_combatMotion);
+            if (restore) RestoreCombatPoses();
+            _combatMotion = null;
+            _combatAttacker = null;
+            _combatDefender = null;
+            _combatAttackerSorting = null;
+        }
+
+        private void FinishCombatMotion()
+        {
+            RestoreCombatPoses();
+            _combatMotion = null;
+            _combatAttacker = null;
+            _combatDefender = null;
+            _combatAttackerSorting = null;
+        }
+
+        private void RestoreCombatPoses()
+        {
+            if (_combatAttacker != null)
+            {
+                _combatAttacker.localPosition = _combatAttackerRestLocalPosition;
+                _combatAttacker.localRotation = _combatAttackerRestLocalRotation;
+            }
+            if (_combatDefender != null)
+            {
+                _combatDefender.localPosition = _combatDefenderRestLocalPosition;
+                _combatDefender.localRotation = _combatDefenderRestLocalRotation;
+            }
+            if (_combatAttackerSorting != null)
+            {
+                _combatAttackerSorting.sortingOrder = _combatAttackerSortingOrder;
+                _combatAttackerSorting.enabled = _combatAttackerSortingWasEnabled;
             }
         }
 
@@ -257,6 +492,11 @@ namespace Emberfall.Presentation
         public void OnStateUpdated(GameState state)
         {
             if (_db == null) return;
+
+            // At zero playback delay another snapshot can arrive before the 0.39s motion finishes.
+            // A newer authoritative pose wins; never let the old coroutine fight the redraw.
+            if (_combatMotion != null) StopCombatMotion(restore: true);
+            _currentState = state;
 
             // Defensive: if the end-of-frame flush could not run (component disabled mid-tick,
             // coroutine stopped), resolve last tick's parked ids now — while _diedThisTick still
