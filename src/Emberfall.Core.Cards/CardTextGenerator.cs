@@ -133,15 +133,55 @@ namespace Emberfall.Core.Cards
         {
             if (card == null) throw new ArgumentNullException(nameof(card));
 
+            return Generate(card, card.Rules, pool);
+        }
+
+        /// <summary>
+        /// Player-facing text after applying the controller's live Arcane Surge bonus. Authored
+        /// copy remains authoritative when no bonus applies; a boosted spell is regenerated from
+        /// its typed rules so every damage action receives the same amount the engine will use.
+        /// </summary>
+        public static string GenerateEffective(CardDefinition card, ICardDatabase pool,
+            int spellDamageBonus)
+        {
+            if (card == null) throw new ArgumentNullException(nameof(card));
+            if (spellDamageBonus < 0)
+                throw new ArgumentOutOfRangeException(nameof(spellDamageBonus));
+            if (spellDamageBonus == 0 || card.Type != CardType.SPELL)
+                return card.Text;
+
+            var effectiveRules = new List<RuleDefinition>(card.Rules.Count);
+            bool changed = false;
+            foreach (RuleDefinition rule in card.Rules)
+            {
+                if (rule.Action is DamageAction damage)
+                {
+                    effectiveRules.Add(new RuleDefinition(rule.Id, rule.Activation, rule.Condition,
+                        rule.Lifetime, new DamageAction(damage.Amount + spellDamageBonus, damage.Target)));
+                    changed = true;
+                }
+                else
+                {
+                    effectiveRules.Add(rule);
+                }
+            }
+
+            return changed ? Generate(card, effectiveRules, pool) : card.Text;
+        }
+
+        private static string Generate(CardDefinition card, IReadOnlyList<RuleDefinition> rules,
+            ICardDatabase pool)
+        {
+
             string band = CarrierBand(card);
-            var parts = new List<string>(1 + card.Rules.Count);
+            var parts = new List<string>(1 + rules.Count);
             // Comma-separated and closed with a stop. Two separate jobs: the commas stop "Bulwark
             // Lifedrain" reading as one two-word keyword, and the stop separates the band from the
             // rules text that follows it. The trigger marker's colon used to do that second job —
             // "Bulwark Herald: Draw a card." — and ON_PLAY prints no marker any more, which would
             // have left "Bulwark Draw a card." Presentation emphasises each name on top of this.
             if (band.Length > 0) parts.Add(band);
-            parts.AddRange(RenderRuleGroups(card.Rules, pool ?? NoPool.Instance));
+            parts.AddRange(RenderRuleGroups(rules, pool ?? NoPool.Instance));
             return string.Join(" ", parts);
         }
 

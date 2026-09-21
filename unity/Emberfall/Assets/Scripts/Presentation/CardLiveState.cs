@@ -16,6 +16,7 @@ namespace Emberfall.Presentation
         public AuraSet Auras   { get; private set; }
         public int BoardSlot   { get; private set; }
         public AttackReadiness AttackReadiness { get; private set; }
+        public int SpellDamageBonus { get; private set; }
 
         public event Action<CardChange> Changed;
 
@@ -25,7 +26,7 @@ namespace Emberfall.Presentation
 
         // ownerMayAct: this card sits on the local human's board, it's that player's turn,
         // and the phase is Main (BoardController computes it from the snapshot).
-        public void UpdateFrom(CardInstance ci, bool ownerMayAct = false)
+        public void UpdateFrom(CardInstance ci, bool ownerMayAct = false, int spellDamageBonus = 0)
         {
             CardChange changed = CardChange.None;
 
@@ -62,6 +63,12 @@ namespace Emberfall.Presentation
             {
                 AttackReadiness = newReadiness;
                 changed |= CardChange.Affordance;
+            }
+
+            if (SpellDamageBonus != spellDamageBonus)
+            {
+                SpellDamageBonus = spellDamageBonus;
+                changed |= CardChange.Text;
             }
 
             if (changed != CardChange.None)

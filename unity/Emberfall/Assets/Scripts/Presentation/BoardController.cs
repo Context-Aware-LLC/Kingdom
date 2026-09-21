@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Emberfall.Core;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Data;
@@ -274,8 +275,9 @@ namespace Emberfall.Presentation
                     && state.ActivePlayer == ps.Id
                     && state.Phase == TurnPhase.Main;
 
-                SyncZone(ps.Id, ps.Board, Zone.Board, ownerMayAct);
-                SyncZone(ps.Id, ps.Hand,  Zone.Hand,  ownerMayAct);
+                int spellDamageBonus = ArcaneSurge.BonusFor(state, ps.Id);
+                SyncZone(ps.Id, ps.Board, Zone.Board, ownerMayAct, spellDamageBonus);
+                SyncZone(ps.Id, ps.Hand,  Zone.Hand,  ownerMayAct, spellDamageBonus);
                 // ps.Weapon is deliberately NOT synced and deliberately NOT added to _thisLive.
                 // HeroSocketsView draws the equipped weapon as the forged ring beside the hero power,
                 // so a CardPresenter for it is a second copy of the same weapon sitting directly
@@ -318,7 +320,8 @@ namespace Emberfall.Presentation
 
         // ── Private helpers ─────────────────────────────────────────────────────────
 
-        private void SyncZone(PlayerId owner, List<CardInstance> cards, Zone zone, bool ownerMayAct)
+        private void SyncZone(PlayerId owner, List<CardInstance> cards, Zone zone, bool ownerMayAct,
+                              int spellDamageBonus)
         {
             // Projected hidden hand: every entry is the redaction sentinel (id 0, empty
             // DefinitionId — a4 design §6). _db.Get("") would THROW and abort the whole tick,
@@ -346,7 +349,7 @@ namespace Emberfall.Presentation
             {
                 CardInstance ci = cards[i];
                 _thisLive.Add(ci.Id);
-                GetOrCreate(ci, owner, zone, i, ownerMayAct);
+                GetOrCreate(ci, owner, zone, i, ownerMayAct, spellDamageBonus);
             }
         }
 
@@ -397,7 +400,8 @@ namespace Emberfall.Presentation
             _drawsThisTick++;
         }
 
-        private void GetOrCreate(CardInstance ci, PlayerId owner, Zone zone, int slotIndex, bool ownerMayAct)
+        private void GetOrCreate(CardInstance ci, PlayerId owner, Zone zone, int slotIndex,
+                                 bool ownerMayAct, int spellDamageBonus)
         {
             bool spawned = false;
             if (!_presenters.TryGetValue(ci.Id, out CardPresenter presenter))
@@ -414,7 +418,7 @@ namespace Emberfall.Presentation
                 CardDefinition def = _db.Get(ci.DefinitionId);
                 if (def != null)
                 {
-                    presenter.Bind(def, live);
+                    presenter.Bind(def, live, _db);
                     _artProvider?.LoadArt(def.ArtId, presenter.SetArt);
                 }
 
@@ -452,7 +456,7 @@ namespace Emberfall.Presentation
 
             // Update live state regardless (stats may have changed).
             if (_liveStates.TryGetValue(ci.Id, out CardLiveState liveState))
-                liveState.UpdateFrom(ci, zone == Zone.Board && ownerMayAct);
+                liveState.UpdateFrom(ci, zone == Zone.Board && ownerMayAct, spellDamageBonus);
 
             // Re-parent to the correct anchor if the card moved slots.
             if (boardAnchors != null)
@@ -646,7 +650,7 @@ namespace Emberfall.Presentation
             var collider = presenter.GetComponent<BoxCollider>();
             if (collider != null) { collider.enabled = false; DestroyObj(collider); }
 
-            presenter.Bind(def, live);
+            presenter.Bind(def, live, _db);
             _artProvider?.LoadArt(def.ArtId, sprite =>
             {
                 if (presenter != null) presenter.SetArt(sprite);
@@ -664,7 +668,7 @@ namespace Emberfall.Presentation
         public CardPresenter EditorBuildCard(CardInstance ci, PlayerId owner, Zone zone)
         {
             _thisLive.Add(ci.Id);
-            GetOrCreate(ci, owner, zone, 0, ownerMayAct: false);
+            GetOrCreate(ci, owner, zone, 0, ownerMayAct: false, spellDamageBonus: 0);
             return _presenters.TryGetValue(ci.Id, out CardPresenter p) ? p : null;
         }
 #endif

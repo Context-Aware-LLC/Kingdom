@@ -8,7 +8,17 @@ namespace Emberfall.Presentation
     public enum AuraSet { None = 0, Shield = 1, Shroud = 2, Glow = 4, Bulwark = 8, Frosted = 16 }
 
     [Flags]
-    public enum CardChange { None = 0, Stats = 1, Keywords = 2, Auras = 4, Slot = 8, Zone = 16, Affordance = 32 }
+    public enum CardChange
+    {
+        None = 0,
+        Stats = 1,
+        Keywords = 2,
+        Auras = 4,
+        Slot = 8,
+        Zone = 16,
+        Affordance = 32,
+        Text = 64,
+    }
 
     // Attack affordance for the local player's board minions (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/design-system.md §6.5 "Also do"
     // column / ui-polish master list). None = not applicable (hand card, enemy minion, not
@@ -28,6 +38,7 @@ namespace Emberfall.Presentation
         AuraSet Auras { get; }
         int BoardSlot { get; }
         AttackReadiness AttackReadiness { get; }
+        int SpellDamageBonus { get; }
 
         event Action<CardChange> Changed;
     }

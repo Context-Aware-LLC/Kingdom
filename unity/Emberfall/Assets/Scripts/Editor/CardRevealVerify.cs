@@ -388,6 +388,7 @@ namespace Emberfall.Editor
             public AuraSet Auras { get; set; }
             public int BoardSlot { get; set; }
             public AttackReadiness AttackReadiness { get; set; }
+            public int SpellDamageBonus { get; set; }
 #pragma warning disable 67
             public event Action<CardChange> Changed;
 #pragma warning restore 67

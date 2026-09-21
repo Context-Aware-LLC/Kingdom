@@ -60,6 +60,7 @@ namespace Emberfall.Presentation
 
         private CardDefinition  _def;
         private ICardLiveState  _live;
+        private ICardDatabase _cardDatabase;
         private MaterialPropertyBlock _mpb;
         private MaterialPropertyBlock _artMpb;
         private bool _isSelected;
@@ -192,9 +193,14 @@ namespace Emberfall.Presentation
         }
 
         public void Bind(CardDefinition staticDef, ICardLiveState liveState)
+            => Bind(staticDef, liveState, null);
+
+        public void Bind(CardDefinition staticDef, ICardLiveState liveState,
+                         ICardDatabase cardDatabase)
         {
             _def  = staticDef;
             _live = liveState;
+            _cardDatabase = cardDatabase;
             _live.Changed += OnChanged;
             ApplyAll();
         }
@@ -207,6 +213,7 @@ namespace Emberfall.Presentation
             _live.Changed -= OnChanged;
             _live = null;
             _def  = null;
+            _cardDatabase = null;
         }
 
         // Immediate on-card hover cue — the card's original/full title (CardDefinition.Tooltip),
@@ -299,6 +306,7 @@ namespace Emberfall.Presentation
             if ((what & CardChange.Keywords)   != 0) RebuildKeywords();
             if ((what & CardChange.Auras)      != 0) ApplyAuras();
             if ((what & CardChange.Affordance) != 0) ApplyAuras();
+            if ((what & CardChange.Text)       != 0) ApplyBodyText();
         }
 
         private void ApplyAll()
@@ -322,7 +330,9 @@ namespace Emberfall.Presentation
             if (bodyLabel == null) return;
             if (_def == null) { bodyLabel.gameObject.SetActive(false); return; }
 
-            string rulesText = _def.Text;
+            int spellDamageBonus = _live != null ? _live.SpellDamageBonus : 0;
+            string rulesText = CardTextGenerator.GenerateEffective(_def,
+                _cardDatabase ?? CardTextGenerator.NoPool.Instance, spellDamageBonus);
             bodyLabel.text = CardTextStyling.Style(rulesText);
             bodyLabel.gameObject.SetActive(rulesText.Length > 0);
         }

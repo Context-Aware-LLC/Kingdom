@@ -4,6 +4,25 @@ using Emberfall.Core.Cards;
 
 namespace Emberfall.Core
 {
+    /// <summary>The shared engine/presentation answer for the live Arcane Surge bonus.</summary>
+    public static class ArcaneSurge
+    {
+        public static int BonusFor(GameState state, PlayerId controller)
+        {
+            if (state == null) throw new System.ArgumentNullException(nameof(state));
+
+            PlayerState player = state.PlayerOf(controller);
+            var board = player.Board;
+            int bonus = 0;
+            for (int i = 0; i < board.Count; i++)
+                if (!board[i].IsSilenced && board[i].Keywords.Contains(Keyword.ARCANE_SURGE)) bonus++;
+            CardInstance? weapon = player.Weapon;
+            if (weapon != null && !weapon.IsSilenced && weapon.Keywords.Contains(Keyword.ARCANE_SURGE))
+                bonus++;
+            return bonus;
+        }
+    }
+
     /// <summary>
     /// The closed set of reusable engine primitives — one <see cref="IActionHandler"/> per
     /// typed <see cref="RuleAction"/> node. There is no per-card code: a card is
@@ -49,17 +68,7 @@ namespace Emberfall.Core
         /// since 2026-09-06, the equipped weapon (card-schema.md "What a weapon can and cannot
         /// do") (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1).</summary>
         internal static int SpellDamageBonus(GameState state, PlayerId controller)
-        {
-            PlayerState player = state.PlayerOf(controller);
-            var board = player.Board;
-            int bonus = 0;
-            for (int i = 0; i < board.Count; i++)
-                if (!board[i].IsSilenced && board[i].Keywords.Contains(Keyword.ARCANE_SURGE)) bonus++;
-            CardInstance? weapon = player.Weapon;
-            if (weapon != null && !weapon.IsSilenced && weapon.Keywords.Contains(Keyword.ARCANE_SURGE))
-                bonus++;
-            return bonus;
-        }
+            => ArcaneSurge.BonusFor(state, controller);
     }
 
     // ── DEAL_DAMAGE ──────────────────────────────────────────────────────────────
