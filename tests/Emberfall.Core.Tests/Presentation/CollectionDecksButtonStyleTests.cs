@@ -32,5 +32,28 @@ namespace Emberfall.Core.Tests.Presentation
                     "The slate sprite has transparent outer corners; an accent underlay leaks through them as gold corners.");
             });
         }
+
+        [Test]
+        public void Primary_chrome_filters_button_has_no_solid_underlay_in_its_transparent_corners()
+        {
+            string collection = Path.Combine(RepoPaths.RepoRoot,
+                "unity", "Emberfall", "Assets", "UI", "Collection");
+            XDocument document = XDocument.Load(Path.Combine(collection, "CollectionScreen.uxml"));
+            XElement filtersButton = document.Descendants()
+                .Single(element => (string?)element.Attribute("name") == "query-toggle");
+            string[] classes = ((string?)filtersButton.Attribute("class") ?? "")
+                .Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+            string styles = File.ReadAllText(Path.Combine(collection, "collection.uss"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(classes, Does.Contain("col-button--filters"));
+                Assert.That(classes, Does.Contain("chrome-button--primary"),
+                    "The ember nine-slice is the visible Filters button surface.");
+                Assert.That(styles, Does.Match(
+                        @"(?s)\.col-button--filters\.chrome-button--primary\s*\{[^}]*background-color:\s*transparent;"),
+                    "The Filters button should let the ember sprite's transparent corners stay clear.");
+            });
+        }
     }
 }

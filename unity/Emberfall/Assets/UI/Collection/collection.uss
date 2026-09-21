@@ -1211,6 +1211,10 @@
     -unity-slice-scale: 0.5px;
     color: rgb(250, 230, 193);
 }
+/* The ember nine-slice owns the Filters button's surface; leave its transparent corners clear. */
+.col-button--filters.chrome-button--primary {
+    background-color: transparent;
+}
 .chrome-button--secondary {
     background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
     -unity-slice-left: 64;
