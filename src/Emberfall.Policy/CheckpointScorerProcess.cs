@@ -218,9 +218,12 @@ namespace Emberfall.Policy
                 if (response.Logits is null)
                     throw new InvalidDataException("Checkpoint scorer response omitted logits.");
                 if (includeStateEmbedding
-                    && (response.StateEmbedding is null || response.StateEmbedding.Count == 0))
-                    throw new InvalidDataException("Checkpoint scorer response omitted the requested state embedding.");
-                return new PolicyScore(response.Logits, response.Value, response.StateEmbedding);
+                    && (response.StateEmbedding is null || response.StateEmbedding.Count == 0
+                        || response.StateFusionInput is null || response.StateFusionInput.Count == 0))
+                    throw new InvalidDataException("Checkpoint scorer response omitted the requested state representation.");
+                return new PolicyScore(
+                    response.Logits, response.Value,
+                    response.StateEmbedding, response.StateFusionInput);
             }
             catch
             {
@@ -331,6 +334,7 @@ namespace Emberfall.Policy
             double Value,
             int SelectedActionIndex,
             IReadOnlyList<double>? StateEmbedding,
+            IReadOnlyList<double>? StateFusionInput,
             string? Error);
 
         private sealed record ScorerReady(bool Ready, string? Protocol);

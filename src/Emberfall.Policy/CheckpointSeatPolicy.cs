@@ -822,7 +822,8 @@ namespace Emberfall.Policy
     internal sealed record PolicyScore(
         IReadOnlyList<double> Logits,
         double Value,
-        IReadOnlyList<double>? StateEmbedding = null);
+        IReadOnlyList<double>? StateEmbedding = null,
+        IReadOnlyList<double>? StateFusionInput = null);
 
     /// <summary>
     /// Capture-time provenance for one decision.
