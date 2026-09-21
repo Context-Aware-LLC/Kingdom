@@ -177,12 +177,13 @@ namespace Emberfall.Core.Tests.Interpreter
         }
 
         [Test]
-        public void A_Herald_With_No_Legal_Target_Dropped_On_The_Board_Returns_To_Hand()
+        public void A_Herald_With_An_Unpayable_Required_Target_Returns_To_Hand()
         {
             var herald = Minion(FixtureCard.Id("targetless-herald"), new[]
             {
                 TestRules.Rule("hit", Trigger.ON_PLAY,
-                    new DamageAction(1, new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1)))),
+                    new DamageAction(1, new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1),
+                        cost: CostKind.Required))),
             });
             var db = new FakeCardDatabase().Register(herald);
             GameState state = State();
@@ -194,8 +195,34 @@ namespace Emberfall.Core.Tests.Interpreter
             PlayerIntent intent = model.Resolve(source, PointerSubject.None, DropPoint.Board(0f));
 
             Assert.That(intent, Is.Null,
-                "a herald whose required target set is empty should return to hand instead of fizzling in play");
+                "an unpayable required target must return the card to hand");
             Assert.That(model.Phase, Is.EqualTo(DragTargetingModel.TargetingPhase.Direct));
+        }
+
+        [Test]
+        public void A_Minion_Whose_Only_Target_Is_Shrouded_Can_Play_While_Its_Effect_Fizzles()
+        {
+            var striker = Minion(FixtureCard.Id("striker"), new[]
+            {
+                TestRules.Rule("hit", Trigger.ON_PLAY,
+                    new DamageAction(1, new TargetSpec("ANY_MINION", TargetSelection.Of(1)))),
+            });
+            var enemy = Minion(FixtureCard.Id("shrouded-enemy"));
+            var db = new FakeCardDatabase().Register(striker).Register(enemy);
+            GameState state = State();
+            var card = new CardInstance(state.NextInstanceId(), striker.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            CardInstance shrouded = Board(state, 1, enemy);
+            shrouded.Keywords.Add(Keyword.SHROUD);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+
+            Assert.That(source.NeedsTarget, Is.False);
+            var play = model.Resolve(source, PointerSubject.None, DropPoint.Board(0f)) as PlayCardIntent;
+            Assert.That(play, Is.Not.Null, "the minion should still play when its damage fizzles");
+            Assert.That(play!.Targets, Is.Empty);
+            Assert.That(new CommandProcessor(db).CanExecute(state, play, out _), Is.True,
+                "the presentation and game authority must agree about this targetless play");
         }
 
         // ---- minions can be placed anywhere in the row, not just past the end (Sam, 2026-08-09) ---

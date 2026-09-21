@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Emberfall.Core.Contracts;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -50,21 +53,52 @@ namespace Emberfall.Review
                 if (capture.TryRecord(frame, new ConcedeIntent(new PlayerId(frame.Actor)), out _))
                     throw new Exception("Concede was accepted as a demonstration.");
 
+                ReviewFrame mulliganFrame = null;
+                JArray legalToss = null;
+                foreach (ReviewFrame candidate in bundle.Frames)
+                {
+                    foreach (ReviewAction action in candidate.Actions)
+                    {
+                        if ((string)action.Intent["$type"] != "mulligan"
+                            || !(action.Intent["toReplace"] is JArray cards) || cards.Count < 2) continue;
+                        mulliganFrame = candidate;
+                        legalToss = cards;
+                        break;
+                    }
+                    if (mulliganFrame != null) break;
+                }
+                if (mulliganFrame == null) throw new Exception("Bundle has no multi-card mulligan action.");
+                var reversedToss = new List<InstanceId>();
+                for (int i = legalToss.Count - 1; i >= 0; i--)
+                {
+                    string wireId = (string)legalToss[i];
+                    reversedToss.Add(new InstanceId(int.Parse(wireId.Substring(1),
+                        CultureInfo.InvariantCulture)));
+                }
+                if (!capture.TryRecord(mulliganFrame,
+                        new MulliganIntent(new PlayerId(mulliganFrame.Actor), reversedToss), out error))
+                    throw new Exception("Mulligan card order incorrectly changed legality: " + error);
+                if (capture.TryRecord(mulliganFrame,
+                        new MulliganIntent(new PlayerId(mulliganFrame.Actor),
+                            new[] { reversedToss[0], reversedToss[0] }), out _))
+                    throw new Exception("Duplicate mulligan card ids were accepted.");
+
                 capture = NativeActionCapture.Open(bundle, "smoke");
-                if (capture.Count != 1 || !capture.IsCaptured(frame) || capture.WasSkipped(frame))
+                if (capture.Count != 2 || !capture.IsCaptured(frame) || capture.WasSkipped(frame)
+                    || !capture.IsCaptured(mulliganFrame))
                     throw new Exception("Legal capture did not resume from disk.");
                 capture.Skip(frame);
                 capture = NativeActionCapture.Open(bundle, "smoke");
-                if (capture.Count != 1 || !capture.WasSkipped(frame))
+                if (capture.Count != 2 || !capture.WasSkipped(frame))
                     throw new Exception("Latest-row skip did not resume from disk.");
                 File.AppendAllText(capture.Path, "{\"torn\"");
                 capture = NativeActionCapture.Open(bundle, "smoke");
                 if (!capture.TryRecord(frame, legal, out error))
                     throw new Exception("Capture after a torn tail failed: " + error);
                 capture = NativeActionCapture.Open(bundle, "smoke");
-                if (capture.Count != 1 || capture.WasSkipped(frame))
+                if (capture.Count != 2 || capture.WasSkipped(frame))
                     throw new Exception("Latest row after a torn tail did not resume.");
-                Debug.Log("[NativeActionCaptureVerify] PASS: legal match, concede refusal, append, torn-tail recovery and resume");
+                Debug.Log("[NativeActionCaptureVerify] PASS: legal match, mulligan set matching, concede refusal, append, torn-tail recovery and resume");
             }
             catch (Exception ex)
             {

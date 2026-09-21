@@ -506,7 +506,7 @@ namespace Emberfall.Presentation
             Trigger trigger = def.Type == CardType.SPELL ? Trigger.ON_CAST : Trigger.ON_PLAY;
             foreach (TargetChoiceRequirement requirement in Targeting.PlayerChoicePlan(
                          State, _db, _p0Id, def, trigger, cardId))
-                if (requirement.Candidates.Count == 0) return false;
+                if (requirement.Candidates.Count < requirement.RequiredCount) return false;
 
             return true;
         }

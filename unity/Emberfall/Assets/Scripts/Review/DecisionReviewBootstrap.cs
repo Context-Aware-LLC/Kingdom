@@ -49,6 +49,9 @@ namespace Emberfall.Review
         private HotSeatInput _input;
         private NativeActionCapture _actionCapture;
         private string _captureStatus = "";
+        private string _jumpFrameText = "";
+        private bool _jumpFieldFocused;
+        private int _requestedFrame = -1;
 
         /// <summary>The chrome — hero plates, sockets, mana trays, deck piles. In the shipping
         /// board these subscribe to MatchRunner.OnStateUpdated; here they ride this list, because
@@ -153,7 +156,7 @@ namespace Emberfall.Review
             Show(first);
             if (nativeActionMode && FrameCount > 0 && CapturedCount == FrameCount)
             {
-                _captureStatus = "Bundle complete. Backspace revisits a state.";
+                _captureStatus = "Bundle complete. Use Prev or Go to revisit a state.";
                 _inputRouter.enabled = false;
             }
         }
@@ -162,8 +165,16 @@ namespace Emberfall.Review
         {
             if (!nativeActionMode || _actionCapture == null || Frame == null) return;
 
+            if (_requestedFrame >= 0)
+            {
+                int requested = _requestedFrame;
+                _requestedFrame = -1;
+                Show(requested);
+                return;
+            }
+
             Keyboard keyboard = Keyboard.current;
-            if (keyboard != null)
+            if (keyboard != null && !_jumpFieldFocused)
             {
                 if (keyboard.backspaceKey.wasPressedThisFrame || keyboard.pageUpKey.wasPressedThisFrame)
                 { Previous(); return; }
@@ -192,7 +203,7 @@ namespace Emberfall.Review
             int next = NextUncaptured(CurrentFrame + 1);
             if (next < 0)
             {
-                _captureStatus = "Bundle complete. Backspace revisits a state.";
+                _captureStatus = "Bundle complete. Use Prev or Go to revisit a state.";
                 _inputRouter.enabled = false;
                 return;
             }
@@ -211,13 +222,32 @@ namespace Emberfall.Review
         private void OnGUI()
         {
             if (!nativeActionMode || _actionCapture == null || Frame == null) return;
-            GUI.Box(new Rect(12f, 12f, 380f, 60f), "");
-            GUI.Label(new Rect(22f, 16f, 360f, 20f),
+            GUI.Box(new Rect(12f, 12f, 500f, 96f), "");
+            GUI.Label(new Rect(22f, 16f, 480f, 20f),
                 $"ACTION REVIEW  {CurrentFrame + 1}/{FrameCount}  ·  {CapturedCount} saved"
-                + (_actionCapture.IsCaptured(Frame) ? "  ·  recorded" : ""));
-            GUI.Label(new Rect(22f, 36f, 360f, 20f),
+                + (_actionCapture.IsCaptured(Frame) ? "  ·  recorded (replay to replace)" : ""));
+
+            if (GUI.Button(new Rect(22f, 38f, 68f, 26f), "Prev"))
+                _requestedFrame = Mathf.Max(0, CurrentFrame - 1);
+            if (GUI.Button(new Rect(96f, 38f, 68f, 26f), "Next"))
+                _requestedFrame = Mathf.Min(FrameCount - 1, CurrentFrame + 1);
+            GUI.Label(new Rect(178f, 41f, 68f, 20f), "Go to #");
+            GUI.SetNextControlName("ReviewJumpFrame");
+            _jumpFrameText = GUI.TextField(new Rect(244f, 39f, 52f, 24f), _jumpFrameText, 3);
+            _jumpFieldFocused = GUI.GetNameOfFocusedControl() == "ReviewJumpFrame";
+            if (GUI.Button(new Rect(302f, 38f, 48f, 26f), "Go"))
+            {
+                if (int.TryParse(_jumpFrameText, out int number) && number >= 1 && number <= FrameCount)
+                    _requestedFrame = number - 1;
+                else
+                    _captureStatus = $"Enter a decision number from 1 to {FrameCount}.";
+                GUI.FocusControl("");
+                _jumpFieldFocused = false;
+            }
+
+            GUI.Label(new Rect(22f, 72f, 480f, 20f),
                 string.IsNullOrEmpty(_captureStatus)
-                    ? "Make one move  ·  U skip  ·  Backspace back  ·  PgDn next"
+                    ? "Make one move  ·  U skip  ·  Backspace/PgUp back  ·  PgDn next"
                     : _captureStatus);
         }
 
@@ -239,6 +269,8 @@ namespace Emberfall.Review
         {
             if (_bundle == null || _bundle.Frames.Count == 0) return;
             CurrentFrame = Mathf.Clamp(index, 0, _bundle.Frames.Count - 1);
+            _jumpFrameText = (CurrentFrame + 1).ToString();
+            _jumpFieldFocused = false;
             ReviewFrame frame = _bundle.Frames[CurrentFrame];
 
             GameState state;

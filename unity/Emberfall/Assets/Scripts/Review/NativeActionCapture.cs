@@ -52,7 +52,8 @@ namespace Emberfall.Review
 
         public int Count => _latest.Count;
 
-        /// <summary>Only an exact member of this frame's legal list may be recorded.</summary>
+        /// <summary>Only a member of this frame's legal list may be recorded. Mulligan cards are
+        /// a set: their click order does not change the play.</summary>
         public bool TryRecord(ReviewFrame frame, PlayerIntent intent, out string error)
         {
             error = "";
@@ -73,12 +74,40 @@ namespace Emberfall.Review
             JToken wireIntent = envelope["body"]?["intent"];
             for (int i = 0; i < frame.Actions.Count; i++)
             {
-                if (!JToken.DeepEquals(wireIntent, frame.Actions[i].Intent)) continue;
+                if (!MatchesLegalIntent(wireIntent, frame.Actions[i].Intent)) continue;
                 Append(frame, i, frame.Actions[i].Intent, false);
                 return true;
             }
             error = "That gesture did not match a legal action in this frozen state.";
             return false;
+        }
+
+        private static bool MatchesLegalIntent(JToken submitted, JToken legal)
+        {
+            if (JToken.DeepEquals(submitted, legal)) return true;
+            if (!(submitted is JObject submittedObject) || !(legal is JObject legalObject)
+                || (string)submittedObject["$type"] != "mulligan"
+                || (string)legalObject["$type"] != "mulligan"
+                || !(submittedObject["toReplace"] is JArray submittedCards)
+                || !(legalObject["toReplace"] is JArray legalCards)
+                || submittedCards.Count != legalCards.Count)
+                return false;
+
+            // Compare every other wire field exactly, then compare the replacement ids as a set.
+            // Reject duplicate ids rather than letting a malformed list collapse into a legal set.
+            var submittedRest = (JObject)submittedObject.DeepClone();
+            var legalRest = (JObject)legalObject.DeepClone();
+            submittedRest.Remove("toReplace");
+            legalRest.Remove("toReplace");
+            if (!JToken.DeepEquals(submittedRest, legalRest)) return false;
+
+            var submittedIds = new HashSet<string>(StringComparer.Ordinal);
+            var legalIds = new HashSet<string>(StringComparer.Ordinal);
+            foreach (JToken card in submittedCards)
+                if (card.Type != JTokenType.String || !submittedIds.Add((string)card)) return false;
+            foreach (JToken card in legalCards)
+                if (card.Type != JTokenType.String || !legalIds.Add((string)card)) return false;
+            return submittedIds.SetEquals(legalIds);
         }
 
         public void Skip(ReviewFrame frame) => Append(frame, -1, null, true);
