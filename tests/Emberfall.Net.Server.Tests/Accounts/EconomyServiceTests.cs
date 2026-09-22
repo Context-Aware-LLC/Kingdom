@@ -55,12 +55,12 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         [Test]
-        public async Task Pack_Purchase_Atomically_Spends_100_Gold_And_Grants_One_Pack()
+        public async Task Pack_Purchase_Atomically_Spends_200_Gold_And_Grants_One_Pack()
         {
             var ledger = new InMemoryEntitlementLedger();
             Account account = AuthenticatedAccount();
             await ledger.GrantAsync(new EntitlementGrant(
-                account.PlayerId, EconomyItems.Gold, 100, "quest", "quest-1", At));
+                account.PlayerId, EconomyItems.Gold, 200, "quest", "quest-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
             var pack = new BoosterPack(SetId.EMBERFALL);
 
@@ -70,7 +70,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.Multiple(() =>
             {
                 Assert.That(result.Status, Is.EqualTo(PackPurchaseStatus.Purchased));
-                Assert.That(result.PackInstanceId, Is.EqualTo("purchase-1"));
+                Assert.That(result.PurchaseTransactionId, Is.EqualTo("purchase-1"));
                 Assert.That(result.Wallet.Gold, Is.EqualTo(0));
                 Assert.That(result.Wallet.Gems, Is.EqualTo(0));
             });
@@ -78,12 +78,12 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         [Test]
-        public async Task Pack_Purchase_With_99_Gems_Leaves_The_Wallet_And_Pack_Unchanged()
+        public async Task Pack_Purchase_With_199_Gems_Leaves_The_Wallet_And_Pack_Unchanged()
         {
             var ledger = new InMemoryEntitlementLedger();
             Account account = AuthenticatedAccount();
             await ledger.GrantAsync(new EntitlementGrant(
-                account.PlayerId, EconomyItems.Gems, 99, "play_billing", "store-1", At));
+                account.PlayerId, EconomyItems.Gems, 199, "play_billing", "store-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
             var pack = new BoosterPack(SetId.EMBERFALL);
 
@@ -94,7 +94,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             {
                 Assert.That(result.Status, Is.EqualTo(PackPurchaseStatus.InsufficientFunds));
                 Assert.That(result.Wallet.Gold, Is.EqualTo(0));
-                Assert.That(result.Wallet.Gems, Is.EqualTo(99));
+                Assert.That(result.Wallet.Gems, Is.EqualTo(199));
             });
             Assert.That(await ledger.BalanceAsync(account.PlayerId, pack.Id), Is.EqualTo(0));
             Assert.That(await ledger.HistoryAsync(account.PlayerId), Has.Count.EqualTo(1));
@@ -106,7 +106,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var ledger = new InMemoryEntitlementLedger();
             var account = new Account("player-1", "device_token", "subject-hash", At);
             await ledger.GrantAsync(new EntitlementGrant(
-                account.PlayerId, EconomyItems.Gold, 100, "quest", "quest-1", At));
+                account.PlayerId, EconomyItems.Gold, 200, "quest", "quest-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
 
             Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -114,7 +114,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
                     account, new BoosterPack(SetId.EMBERFALL), EconomyCurrency.Gold, "purchase-1"));
 
             Assert.That(await ledger.HistoryAsync(account.PlayerId), Has.Count.EqualTo(1));
-            Assert.That(await ledger.BalanceAsync(account.PlayerId, EconomyItems.Gold), Is.EqualTo(100));
+            Assert.That(await ledger.BalanceAsync(account.PlayerId, EconomyItems.Gold), Is.EqualTo(200));
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             var ledger = new InMemoryEntitlementLedger();
             Account account = AuthenticatedAccount();
             await ledger.GrantAsync(new EntitlementGrant(
-                account.PlayerId, EconomyItems.Gold, 200, "quest", "quest-1", At));
+                account.PlayerId, EconomyItems.Gold, 400, "quest", "quest-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
             var pack = new BoosterPack(SetId.EMBERFALL);
 
@@ -136,7 +136,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             {
                 Assert.That(first.Status, Is.EqualTo(PackPurchaseStatus.Purchased));
                 Assert.That(replay.Status, Is.EqualTo(PackPurchaseStatus.Replayed));
-                Assert.That(replay.Wallet.Gold, Is.EqualTo(100));
+                Assert.That(replay.Wallet.Gold, Is.EqualTo(200));
             });
             Assert.That(await ledger.BalanceAsync(account.PlayerId, pack.Id), Is.EqualTo(1));
             Assert.That(await ledger.HistoryAsync(account.PlayerId), Has.Count.EqualTo(3));

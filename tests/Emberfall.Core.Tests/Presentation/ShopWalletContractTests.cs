@@ -45,5 +45,25 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(panel, Does.Contain("WalletDisplay.IconAmount(snapshot.Wallet.Gems)"));
             });
         }
+
+        [Test]
+        public void Shop_purchase_grants_to_vault_without_a_reveal_handoff()
+        {
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string screen = File.ReadAllText(Path.Combine(assets, "Scripts", "Presentation", "ShopScreenController.cs"));
+            string panel = File.ReadAllText(Path.Combine(assets, "Scripts", "Presentation", "ShopPanelController.cs"));
+            XDocument document = XDocument.Load(Path.Combine(assets, "UI", "Shop", "ShopScreen.uxml"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(screen, Does.Contain("new HttpShopGateway("),
+                    "The live shop needs a default server gateway, not an unassigned static seam.");
+                Assert.That(panel, Does.Contain("Pack added to Card Vault"));
+                Assert.That(panel, Does.Not.Contain("_reveal.Show("));
+                Assert.That(screen, Does.Not.Contain("PackVaultController.Pending ="));
+                Assert.That(document.Descendants().Any(e =>
+                    (string?)e.Attribute("name") == "reveal-overlay"), Is.False);
+            });
+        }
     }
 }

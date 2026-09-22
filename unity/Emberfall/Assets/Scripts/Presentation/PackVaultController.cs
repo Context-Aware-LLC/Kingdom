@@ -52,11 +52,9 @@ namespace Emberfall.Presentation
     /// force-quits the instant this scene loads has not had their gift yet, and must get it on the
     /// next launch.</para>
     ///
-    /// <para><b>Two ways in, and they go home differently.</b> A receipt written to
-    /// <see cref="Pending"/> by someone else — a store purchase — is shown on arrival and returns to
-    /// <see cref="ReturnScene"/> when it is dismissed, because that player is mid-shopping and the
-    /// wallet they just spent from is back there. A pack opened <i>here</i> returns to the shelf,
-    /// with one fewer on it. Same screen, same reveal; the difference is only where Done leads.</para>
+    /// <para>Purchased packs arrive on this same unopened shelf as granted packs; the player chooses
+    /// when to open one. <see cref="Pending"/> remains a generic direct-receipt handoff seam, but
+    /// the Shop no longer uses it. A pack opened here returns to the shelf with one fewer on it.</para>
     ///
     /// <para><b>No ScrollView, deliberately</b> — the shelf is a wrapping row that fits what it can
     /// and counts the rest. UI Toolkit's ScrollView content lays out correctly and <i>paints</i> above
@@ -82,9 +80,9 @@ namespace Emberfall.Presentation
         /// caller that forgets to set it does not inherit the last one's answer.</summary>
         public static string ReturnScene = ScreenNav.MainMenu;
 
-        /// <summary>A receipt opened somewhere else, to be revealed on arrival. Consumed on read: a
-        /// receipt is one opening, and leaving it set would replay the same cards the next time
-        /// anything lands here.</summary>
+        /// <summary>A receipt opened somewhere else, to be revealed on arrival. The Shop does not
+        /// use this for purchases; it grants unopened inventory instead. Consumed on read so a
+        /// handed-in receipt cannot be replayed on a later visit.</summary>
         public static PackOpenReceipt Pending;
 
         /// <summary>
@@ -205,8 +203,8 @@ namespace Emberfall.Presentation
                 // Somebody else's open. The shelf underneath is never drawn: Done leaves, so a fetch
                 // would be a round trip to render a screen nobody sees.
                 //
-                // A handed-in receipt is a purchase, never the gift, so nothing here is gated: if a
-                // caller managed to set both, the receipt wins and the lock comes off with it.
+                // A handed-in receipt is already open, never the gift, so nothing here is gated:
+                // if a caller managed to set both, the receipt wins and the lock comes off with it.
                 _revealWasHandedIn = true;
                 ReleaseGiftLock();
                 SetSubtitle("");

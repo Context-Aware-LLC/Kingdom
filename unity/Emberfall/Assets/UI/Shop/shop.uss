@@ -503,7 +503,7 @@
 }
 
 /* ---------- Pack detail (Sam, 2026-09-05) ----------
- * Same nested overlay/shell shape as #shop-overlay and .reveal-overlay above: one hidden class
+ * Same nested overlay/shell shape as #shop-overlay above: one hidden class
  * removes the whole thing from layout, and the shell centers itself inside the scrim.
  *
  * THE SHELL FLIES IN FROM THE TAPPED TILE AND BACK OUT AGAIN (Sam, 2026-09-07 follow-up), rather

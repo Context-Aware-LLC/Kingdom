@@ -24,17 +24,7 @@ namespace Emberfall.Net.Client.Tests
                 new WalletBalances(200, 200, 85),
                 new List<PackOffer>(),
                 new List<GemBundleOffer>());
-            var open = new PackOpenReceipt(
-                "pack.emberfall",
-                "pack-instance-7",
-                new[]
-                {
-                    new PackCardAward(
-                        FixtureCard.Id("emberward_ember_acolyte"),
-                        Rarity.RARE,
-                        PackUpgradeReason.RareFloor),
-                });
-            var authoritative = new PackPurchaseResult(after, open);
+            var authoritative = new PackPurchaseResult(after, "pack.emberfall", 1);
             var gateway = new RecordingShopGateway(before, authoritative);
             var flow = new ShopFlow(gateway);
 
@@ -45,9 +35,10 @@ namespace Emberfall.Net.Client.Tests
             {
                 Assert.That(gateway.LastRequest.PackId, Is.EqualTo("pack.emberfall"));
                 Assert.That(gateway.LastRequest.Currency, Is.EqualTo(ShopCurrency.Gold));
+                Assert.That(System.Guid.TryParse(gateway.LastRequest.RequestId, out _), Is.True);
                 Assert.That(result, Is.SameAs(authoritative));
                 Assert.That(flow.Snapshot, Is.SameAs(after));
-                Assert.That(flow.LatestOpen, Is.SameAs(open));
+                Assert.That(result.UnopenedCount, Is.EqualTo(1));
                 Assert.That(result.Shop.Wallet.Shards, Is.EqualTo(85));
             });
         }
@@ -68,7 +59,7 @@ namespace Emberfall.Net.Client.Tests
             public Task<ShopSnapshot> GetShopAsync(CancellationToken cancellationToken = default)
                 => Task.FromResult(_snapshot);
 
-            public Task<PackPurchaseResult> PurchaseAndOpenAsync(
+            public Task<PackPurchaseResult> PurchaseAsync(
                 PackPurchaseRequest request,
                 CancellationToken cancellationToken = default)
             {

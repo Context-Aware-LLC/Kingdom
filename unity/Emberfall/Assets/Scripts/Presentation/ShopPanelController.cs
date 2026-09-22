@@ -11,25 +11,15 @@ namespace Emberfall.Presentation
     /// <summary>
     /// Binds the store's catalog and purchase flow. Pricing and placeholder art slots may render
     /// while disconnected; the wallet may be read from the authenticated collection projection,
-    /// but purchase success still comes only from <see cref="IShopGateway"/>.
+    /// but purchase success still comes only from <see cref="IShopGateway"/>. Buying grants an
+    /// unopened pack to the Vault; it never opens a pack here.
     ///
     /// <para>Host-agnostic on purpose: it queries its elements by name and hands Back back to
     /// whoever built it. <see cref="ShopScreenController"/> is that host today, and leaves for its
     /// return scene — but nothing here knows it lives in a scene of its own.</para>
     ///
-    /// <para><b>The reveal is not here.</b> Opening a pack is <see cref="PackRevealPanel"/>, which
-    /// this owns but does not reach into — the store hands it a receipt and hides it on the way
-    /// out, and that is the entire relationship. It was inlined until 2026-08-20, which left the
-    /// only pack-opening surface in the game locked inside the only screen that sells them.</para>
-    ///
-    /// <para><b>A host may take the reveal somewhere else.</b> Pass <c>revealElsewhere</c> and the
-    /// store hands the receipt over instead of showing its own overlay — that is how
-    /// <see cref="ShopScreenController"/> sends it to the PackReveal scene. It returns a bool
-    /// rather than being an <see cref="Action"/> because the handoff can fail for a reason the
-    /// host discovers and the store must survive: a scene missing from the build list. False means
-    /// "I did not take it", and the overlay runs as it always did. <b>Never drop a receipt on that
-    /// path</b> — the cards are already bought and server-side, so a silent no-show is the one
-    /// outcome the player cannot tell apart from being robbed.</para>
+    /// <para>Opening and revealing are the Vault's job, not the Shop's. A purchase returns an
+    /// authoritative wallet and unopened pack count; it never returns card awards.</para>
     /// </summary>
     public sealed class ShopPanelController
     {
@@ -75,13 +65,15 @@ namespace Emberfall.Presentation
         private readonly VisualElement _detailArt;
         private readonly VisualElement _detailActions;
         private VisualElement _detailOriginTile;
-        private readonly PackRevealPanel _reveal;
         private readonly ShopFlow _flow;
         private readonly IPackArtProvider _packArt;
         private readonly System.Action _onClose;
-        private readonly Func<PackOpenReceipt, bool> _revealElsewhere;
+        private readonly System.Action _onRefreshFailed;
 
         private bool _busy;
+        private bool _purchaseUncertain;
+
+        public bool HasShopSnapshot => _flow?.Snapshot != null;
         private int _detailAnimationVersion;
         private bool _detailClosing;
 
@@ -90,7 +82,7 @@ namespace Emberfall.Presentation
             IShopGateway gateway,
             IPackArtProvider packArt,
             System.Action onClose,
-            Func<PackOpenReceipt, bool> revealElsewhere = null)
+            System.Action onRefreshFailed = null)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
             // Unlike the gateway, this one is structural: with no way home, Back is a dead button.
@@ -110,11 +102,7 @@ namespace Emberfall.Presentation
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packArt = packArt;
             _onClose = onClose;
-            _revealElsewhere = revealElsewhere;
-
-            // No onDone: here the reveal is an overlay over a screen the player is still on, so
-            // dismissing it means returning to the store, which is what hiding it already does.
-            _reveal = new PackRevealPanel(root);
+            _onRefreshFailed = onRefreshFailed;
 
             Wire(root, "btn-shop-close", Close);
             Wire(root, "pack-detail-close", () => CloseDetail());
@@ -143,8 +131,8 @@ namespace Emberfall.Presentation
             if (_overlay == null) return;
             _overlay.RemoveFromClassList("shop-overlay--hidden");
 
-            // Without a purchase gateway, the scene host separately reads the authenticated
-            // collection wallet. Purchase controls remain disabled.
+            // An override host can omit a purchase gateway. Its disconnected catalog stays
+            // visible and purchase controls remain disabled.
             if (_flow == null) return;
 
             Refresh();
@@ -165,6 +153,7 @@ namespace Emberfall.Presentation
             {
                 SetStatus("The shop could not reach the account server.");
                 UnityEngine.Debug.LogWarning($"[Shop] refresh failed: {ex.GetType().Name}: {ex.Message}");
+                _onRefreshFailed?.Invoke();
             }
             finally
             {
@@ -177,24 +166,27 @@ namespace Emberfall.Presentation
             if (_flow == null || _busy) return;
             CloseDetail(immediate: true);
             SetBusy(true);
-            SetStatus("Purchasing and opening on the server...");
+            SetStatus("Adding pack to Card Vault...");
             try
             {
                 PackPurchaseResult result = await _flow.PurchaseAsync(packId, currency);
                 RenderSnapshot(result.Shop);
-
-                // Hand off if a host wants the reveal on its own stage; fall back to the overlay
-                // when it declines, so the receipt is always shown somewhere.
-                if (_revealElsewhere == null || !_revealElsewhere(result.OpenedPack))
-                {
-                    _reveal.Show(result.OpenedPack);
-                }
-
-                SetStatus("");
+                SetStatus("Pack added to Card Vault. Open it whenever you're ready.");
+            }
+            catch (ShopPurchaseException ex)
+            {
+                _purchaseUncertain = ex.OutcomeUnknown;
+                SetStatus(ex.OutcomeUnknown
+                    ? "Purchase status uncertain. Check Card Vault before buying again."
+                    : ex.Message);
+                UnityEngine.Debug.LogWarning($"[Shop] purchase declined: {ex.Message}");
             }
             catch (Exception ex)
             {
-                SetStatus("Purchase failed. Your displayed balance has not been changed.");
+                // A dropped response can follow a committed ledger transaction. Do not let a
+                // second tap create a new purchase until the player checks the Vault.
+                _purchaseUncertain = true;
+                SetStatus("Purchase status uncertain. Check Card Vault before buying again.");
                 UnityEngine.Debug.LogWarning($"[Shop] purchase failed: {ex.GetType().Name}: {ex.Message}");
             }
             finally
@@ -219,7 +211,7 @@ namespace Emberfall.Presentation
             RenderGemBundles(snapshot.GemBundles);
         }
 
-        /// <summary>Show the read-only account wallet when purchases have no shop gateway. Never
+        /// <summary>Show the read-only account wallet when the shop read is unavailable. Never
         /// mistake an offline or incomplete collection answer for an authoritative zero.</summary>
         public void RenderCollectionWallet(CollectionSnapshot snapshot)
         {
@@ -376,7 +368,7 @@ namespace Emberfall.Presentation
                 && (currency == ShopCurrency.Gold
                     ? wallet.Value.Gold >= price
                     : wallet.Value.Gems >= price);
-            button.SetEnabled(_flow != null && !_busy && canAfford);
+            button.SetEnabled(_flow != null && !_busy && !_purchaseUncertain && canAfford);
             return button;
         }
 
@@ -516,9 +508,8 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// <paramref name="immediate"/> skips the closing transition: <see cref="Buy"/> calls it
-        /// that way because the purchase flow that follows (a network round trip, then
-        /// <see cref="PackRevealPanel"/>) already provides the visual break a fly-out transition
-        /// exists to give, and layering a second one on top would just be a delay. The close
+        /// that way because the purchase network round trip already provides the visual break a
+        /// fly-out transition exists to give, and layering a second one on top would delay it. The close
         /// button and the scrim tap use the default animated close.
         /// </summary>
         private void CloseDetail(bool immediate = false)
@@ -745,7 +736,6 @@ namespace Emberfall.Presentation
         /// two that a scene load takes to arrive.</summary>
         private void Close()
         {
-            _reveal.Hide();
             _onClose();
         }
 

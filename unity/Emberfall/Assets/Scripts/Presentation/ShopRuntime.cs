@@ -3,13 +3,11 @@ using Emberfall.Net.Client.Shop;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Composition seam for the account transport delivered with the server wallet/purchase path.
-    /// The store can render its locked catalog without one, but all purchase controls stay disabled.
+    /// Optional override of the shop's authenticated HTTP gateway. With no override,
+    /// <see cref="ShopScreenController"/> composes <see cref="HttpShopGateway"/> itself.
     ///
-    /// <para>Static because the store is a scene now: <see cref="ShopScreenController"/> binds
-    /// whatever the menu already put here, and statics are what survive a scene load untouched.
-    /// It lived inside ShopPanelController.cs until 2026-08-20 — a leftover from when the store
-    /// was an overlay in the main menu and there was only one file to put it in.</para>
+    /// <para>Static because a test or alternate host can replace the transport across a scene
+    /// load; ordinary production flow leaves this null.</para>
     /// </summary>
     public static class ShopRuntime
     {

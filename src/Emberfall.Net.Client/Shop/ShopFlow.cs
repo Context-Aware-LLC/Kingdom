@@ -129,12 +129,15 @@ namespace Emberfall.Net.Client.Shop
     {
         public string PackId { get; }
         public ShopCurrency Currency { get; }
+        public string RequestId { get; }
 
-        public PackPurchaseRequest(string packId, ShopCurrency currency)
+        public PackPurchaseRequest(string packId, ShopCurrency currency, string requestId)
         {
             if (string.IsNullOrWhiteSpace(packId)) throw new ArgumentException("Pack id is required.", nameof(packId));
+            if (!Guid.TryParse(requestId, out _)) throw new ArgumentException("A request id is required.", nameof(requestId));
             PackId = packId;
             Currency = currency;
+            RequestId = requestId;
         }
     }
 
@@ -162,12 +165,16 @@ namespace Emberfall.Net.Client.Shop
     public sealed class PackPurchaseResult
     {
         public ShopSnapshot Shop { get; }
-        public PackOpenReceipt OpenedPack { get; }
+        public string PackId { get; }
+        public long UnopenedCount { get; }
 
-        public PackPurchaseResult(ShopSnapshot shop, PackOpenReceipt openedPack)
+        public PackPurchaseResult(ShopSnapshot shop, string packId, long unopenedCount)
         {
             Shop = shop ?? throw new ArgumentNullException(nameof(shop));
-            OpenedPack = openedPack ?? throw new ArgumentNullException(nameof(openedPack));
+            if (string.IsNullOrWhiteSpace(packId)) throw new ArgumentException("Pack id is required.", nameof(packId));
+            if (unopenedCount < 0) throw new ArgumentOutOfRangeException(nameof(unopenedCount));
+            PackId = packId;
+            UnopenedCount = unopenedCount;
         }
     }
 
@@ -203,27 +210,25 @@ namespace Emberfall.Net.Client.Shop
     }
 
     /// <summary>
-    /// Seam for the authoritative wallet, purchase, and open path supplied by the account server.
+    /// Seam for the authoritative wallet and purchase path supplied by the account server.
     /// </summary>
     public interface IShopGateway
     {
         Task<ShopSnapshot> GetShopAsync(CancellationToken cancellationToken = default);
-        Task<PackPurchaseResult> PurchaseAndOpenAsync(
+        Task<PackPurchaseResult> PurchaseAsync(
             PackPurchaseRequest request,
             CancellationToken cancellationToken = default);
     }
 
     /// <summary>
     /// Owns the client flow around the shop seam. It forwards player intent and adopts the returned
-    /// snapshot and open receipt by reference so no client-side price, wallet, or card calculation
-    /// can drift from authority.
+    /// snapshot by reference so no client-side price or wallet calculation can drift from authority.
     /// </summary>
     public sealed class ShopFlow
     {
         private readonly IShopGateway _gateway;
 
         public ShopSnapshot? Snapshot { get; private set; }
-        public PackOpenReceipt? LatestOpen { get; private set; }
 
         public ShopFlow(IShopGateway gateway)
         {
@@ -241,13 +246,12 @@ namespace Emberfall.Net.Client.Shop
             ShopCurrency currency,
             CancellationToken cancellationToken = default)
         {
-            var request = new PackPurchaseRequest(packId, currency);
-            PackPurchaseResult result = await _gateway.PurchaseAndOpenAsync(request, cancellationToken)
+            var request = new PackPurchaseRequest(packId, currency, Guid.NewGuid().ToString("N"));
+            PackPurchaseResult result = await _gateway.PurchaseAsync(request, cancellationToken)
                 .ConfigureAwait(false)
                 ?? throw new InvalidOperationException("The shop gateway returned no purchase result.");
 
             Snapshot = result.Shop;
-            LatestOpen = result.OpenedPack;
             return result;
         }
     }

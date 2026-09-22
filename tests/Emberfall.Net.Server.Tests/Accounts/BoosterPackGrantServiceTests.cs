@@ -185,6 +185,32 @@ namespace Emberfall.Net.Server.Tests.Accounts
             }
         }
 
+        [Test]
+        public async Task Ledger_derived_pity_survives_a_new_service_and_counts_only_completed_opens()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            ICardDatabase cards = Cards();
+            var first = Service(ledger, new LedgerPackPityStore(ledger, cards), cards);
+            await GrantPackAsync(ledger, Player, Pack, "durable-1");
+            var opened = await first.OpenAsync(AuthenticatedAccount(), Pack, "durable-1");
+
+            // A new store/service sees no in-memory cursor from the first process.
+            var recovered = new LedgerPackPityStore(ledger, cards);
+            Assert.That(await recovered.LoadAsync(Player, Pack.Id), Is.EqualTo(opened.Pity));
+
+            await GrantPackAsync(ledger, Player, Pack, "durable-2");
+            var second = await Service(ledger, recovered, cards)
+                .OpenAsync(AuthenticatedAccount(), Pack, "durable-2");
+            Assert.That(second.Pity.PacksOpened, Is.EqualTo(2));
+            await ledger.GrantAsync(new EntitlementGrant(Player,
+                BoosterPackGrantService.SeedItemPrefix + Pack.Id, 1,
+                BoosterPackGrantService.SeedSourcePrefix + "2:1",
+                "packopen:unfinished:seed",
+                DateTimeOffset.FromUnixTimeMilliseconds(new FixedTime().NowMs)));
+            Assert.That(await new LedgerPackPityStore(ledger, cards).LoadAsync(Player, Pack.Id),
+                Is.EqualTo(second.Pity), "a seed without a completed open must not advance pity");
+        }
+
         /// <summary>
         /// THE FIFTH-PACK BUG (2026-09-04, live on Fly). Five starter packs, four opened fine, and the
         /// fifth left the player's collection unreadable forever: the seed row parked a 64-bit seed in

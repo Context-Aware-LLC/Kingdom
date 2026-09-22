@@ -140,9 +140,8 @@ namespace Emberfall.Net.Server
         public IPackSeedSource? PackSeedSource { get; init; }
 
         /// <summary>
-        /// Where booster pity counters live. Null (default) uses
-        /// <see cref="InMemoryPackPityStore"/> — the only implementation that exists, so pity does not
-        /// survive a restart. The composition root carries the retirement trigger for that.
+        /// Override for booster pity counters. Null uses the durable ledger-derived projection;
+        /// an injected in-memory store is useful for isolated tests.
         /// </summary>
         public IPackPityStore? PackPityStore { get; init; }
 
@@ -429,9 +428,7 @@ namespace Emberfall.Net.Server
                 ? null
                 : new OnboardingGrantService(cfg.EntitlementLedger, db, time);
 
-            // Only GET /collection reads this today, and only for the wallet half of its reply. It is
-            // constructed here rather than inside the route so that slice 5's purchase endpoints get
-            // the same instance rather than minting a second one over the same ledger.
+            // The collection and shop routes share one economy projection and the same ledger.
             EconomyService? economy = cfg.EntitlementLedger is null
                 ? null
                 : new EconomyService(cfg.EntitlementLedger, time);
@@ -514,16 +511,12 @@ namespace Emberfall.Net.Server
                 }
                 else
                 {
-                    // RETIREMENT TRIGGER — THE PITY STORE IS IN-MEMORY AND THIS IS THE ONLY PLACE
-                    // THAT SAYS SO. InMemoryPackPityStore is the only IPackPityStore that exists, so
-                    // a restart forgets every player's rare floor and epic/legendary pity clocks;
-                    // the ledger keeps the CARDS, but a player mid-way to a pity legendary starts
-                    // that clock again. Tolerable for the five-pack gift, which is opened in one
-                    // sitting. NOT tolerable once packs are sold. The commit that adds a durable
-                    // adapter (a `pack_pity` table beside `entitlement_grant`) replaces the line
-                    // below and deletes this comment.
+                    // Pity comes from completed open audit rows in the durable entitlement ledger.
+                    // A process restart or a crash between completion and the old cursor save
+                    // cannot reset a paid pack's epic/legendary streak.
                     packOpener = new BoosterPackGrantService(
-                        cfg.EntitlementLedger, cfg.PackPityStore ?? new InMemoryPackPityStore(),
+                        cfg.EntitlementLedger,
+                        cfg.PackPityStore ?? new LedgerPackPityStore(cfg.EntitlementLedger, db),
                         packSeeds, db, time);
                 }
             }
@@ -844,6 +837,70 @@ namespace Emberfall.Net.Server
                 }, statusCode: result.HttpStatus);
             });
 
+            // Shop prices and wallet come from the server. A purchase only grants an unopened pack;
+            // the player chooses when to open it in Card Vault. Both routes are authenticated and
+            // uncached, and purchases are unavailable if this box cannot open packs afterward.
+            var shopOffers = new List<object>();
+            foreach (BoosterPack retail in BoosterPack.All())
+                shopOffers.Add(new
+                {
+                    packId = retail.Id,
+                    displayName = retail.Expansion + " Pack",
+                    goldPrice = EconomyService.PackPrice,
+                    gemPrice = EconomyService.PackPrice,
+                });
+
+            app.MapGet("/shop", async (HttpContext context) =>
+            {
+                string? bearer = BearerFrom(context);
+                ShopEndpointResult result = await ShopEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, economy, packOpener,
+                    onboarding, context.RequestAborted);
+                context.Response.Headers["Cache-Control"] = "no-store";
+                return Results.Json(new
+                {
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    wallet = new { gold = result.Wallet.Gold, gems = result.Wallet.Gems,
+                                   shards = result.Wallet.Shards },
+                    packs = shopOffers,
+                }, statusCode: result.HttpStatus);
+            });
+
+            app.MapPost("/shop/purchase", async (HttpContext context) =>
+            {
+                string? packId = null, currency = null, requestId = null;
+                try
+                {
+                    using var body = await JsonDocument.ParseAsync(
+                        context.Request.Body, cancellationToken: context.RequestAborted);
+                    if (body.RootElement.ValueKind == JsonValueKind.Object)
+                    {
+                        if (body.RootElement.TryGetProperty("packId", out var p) &&
+                            p.ValueKind == JsonValueKind.String) packId = p.GetString();
+                        if (body.RootElement.TryGetProperty("currency", out var c) &&
+                            c.ValueKind == JsonValueKind.String) currency = c.GetString();
+                        if (body.RootElement.TryGetProperty("requestId", out var r) &&
+                            r.ValueKind == JsonValueKind.String) requestId = r.GetString();
+                    }
+                }
+                catch (JsonException) { /* Malformed body becomes InvalidRequest below. */ }
+
+                ShopEndpointResult result = await ShopEndpoint.PurchaseAsync(
+                    BearerFrom(context), packId, currency, requestId, cfg.TokenVerifier,
+                    cfg.AccountStore, cfg.EntitlementLedger, economy, packOpener,
+                    onboarding, context.RequestAborted);
+                context.Response.Headers["Cache-Control"] = "no-store";
+                return Results.Json(new
+                {
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    packId = result.PackId,
+                    unopenedCount = result.UnopenedCount,
+                    wallet = new { gold = result.Wallet.Gold, gems = result.Wallet.Gems,
+                                   shards = result.Wallet.Shards },
+                    packs = shopOffers,
+                }, statusCode: result.HttpStatus);
+            });
+
             // POST /packs/open — the verb the ledger has been missing. Body is {"packId": "..."} and
             // NOTHING ELSE: the instance id that anchors the open is minted server-side, and a client
             // that could choose it could replay one pack into unbounded opens. See PackOpenEndpoint.
@@ -979,6 +1036,15 @@ namespace Emberfall.Net.Server
             });
 
             return (app, gate);
+        }
+
+        private static string? BearerFrom(HttpContext context)
+        {
+            string? header = context.Request.Headers["Authorization"];
+            return !string.IsNullOrEmpty(header) &&
+                   header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                ? header.Substring("Bearer ".Length).Trim()
+                : null;
         }
 
         private static string ResolveBuildRevision()

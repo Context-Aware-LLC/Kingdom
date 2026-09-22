@@ -88,16 +88,16 @@ namespace Emberfall.Net.Server.Accounts
     public sealed class PackPurchaseOutcome
     {
         public PackPurchaseStatus Status { get; }
-        public string PackInstanceId { get; }
+        public string PurchaseTransactionId { get; }
         public WalletBalances Wallet { get; }
 
         public PackPurchaseOutcome(
             PackPurchaseStatus status,
-            string packInstanceId,
+            string purchaseTransactionId,
             WalletBalances wallet)
         {
             Status = status;
-            PackInstanceId = packInstanceId;
+            PurchaseTransactionId = purchaseTransactionId;
             Wallet = wallet;
         }
     }
