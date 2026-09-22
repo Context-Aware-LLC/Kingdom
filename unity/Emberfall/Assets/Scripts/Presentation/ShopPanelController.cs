@@ -9,7 +9,8 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// Binds the store's catalog and purchase flow. Pricing and placeholder art slots may render
-    /// while disconnected; balances and purchase success come only from <see cref="IShopGateway"/>.
+    /// while disconnected; the wallet may be read from the authenticated collection projection,
+    /// but purchase success still comes only from <see cref="IShopGateway"/>.
     ///
     /// <para>Host-agnostic on purpose: it queries its elements by name and hands Back back to
     /// whoever built it. <see cref="ShopScreenController"/> is that host today, and leaves for its
@@ -141,11 +142,8 @@ namespace Emberfall.Presentation
             if (_overlay == null) return;
             _overlay.RemoveFromClassList("shop-overlay--hidden");
 
-            // With no gateway the constructor's disconnected catalog is already on screen, wallet
-            // included — an unbound wallet reads as unavailable, never as zero. No status line for
-            // it (Sam, 2026-09-07): the wallet chips already read as unavailable, and a permanent
-            // "waiting for the server" line on a screen the player can't act to fix reads as an
-            // error rather than the offline state it is.
+            // Without a purchase gateway, the scene host separately reads the authenticated
+            // collection wallet. Purchase controls remain disabled.
             if (_flow == null) return;
 
             Refresh();
@@ -214,16 +212,30 @@ namespace Emberfall.Presentation
         private void RenderSnapshot(ShopSnapshot snapshot)
         {
             if (snapshot == null) return;
-            if (_gold != null) _gold.text = $"Gold  {snapshot.Wallet.Gold:N0}";
-            if (_gems != null) _gems.text = WalletDisplay.Gems(snapshot.Wallet.Gems);
+            if (_gold != null) _gold.text = WalletDisplay.IconAmount(snapshot.Wallet.Gold);
+            if (_gems != null) _gems.text = WalletDisplay.IconAmount(snapshot.Wallet.Gems);
             RenderPacks(snapshot.Packs, snapshot.Wallet);
             RenderGemBundles(snapshot.GemBundles);
         }
 
+        /// <summary>Show the read-only account wallet when purchases have no shop gateway. Never
+        /// mistake an offline or incomplete collection answer for an authoritative zero.</summary>
+        public void RenderCollectionWallet(CollectionSnapshot snapshot)
+        {
+            if (snapshot == null || !snapshot.HasAuthoritativeWallet)
+            {
+                SetWalletUnavailable();
+                return;
+            }
+
+            if (_gold != null) _gold.text = WalletDisplay.IconAmount(snapshot.Wallet.Gold);
+            if (_gems != null) _gems.text = WalletDisplay.IconAmount(snapshot.Wallet.Gems);
+        }
+
         private void SetWalletUnavailable()
         {
-            if (_gold != null) _gold.text = "";
-            if (_gems != null) _gems.text = "";
+            if (_gold != null) _gold.text = "—";
+            if (_gems != null) _gems.text = "—";
         }
 
         private void RenderPacks(IReadOnlyList<PackOffer> offers, WalletBalances? wallet)

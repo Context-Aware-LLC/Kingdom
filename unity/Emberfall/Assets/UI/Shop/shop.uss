@@ -196,34 +196,36 @@
     white-space: normal;
 }
 
+.shop-wallet {
+    flex-direction: row;
+    align-items: center;
+    height: 104px;
+    margin-left: var(--space-6);
+}
+
+/* Separate icons keep their proportions; a background on the full-width balance label stretched
+ * the currency art behind the text. The 72px icons exceed twice the menu's 32px icons. */
+.shop-wallet__icon {
+    width: 72px;
+    height: 72px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.shop-wallet__icon--gold {
+    background-image: url("/Assets/Art/UI/Icons/icon_currency_gold.png");
+}
+
+.shop-wallet__icon--gems {
+    background-image: url("/Assets/Art/UI/Icons/icon_currency_gems.png");
+}
+
 .shop-wallet__balance {
-    color: var(--ink-1);
-    background-color: var(--surface-0);
-    border-radius: var(--space-2);
-    padding: var(--space-2) var(--space-4);
-    margin-left: var(--space-2);
-    font-size: var(--type-label);                /* 16dp. Was --type-h2 to survive the old scale. */
+    margin-left: var(--space-3);
+    font-size: 48px;
     -unity-font-style: bold;
-}
-
-.shop-wallet__balance--gold {
-    border-left-width: 3px;
-    border-left-color: var(--accent);
-    background-image: url("/Assets/Art/Icons/gold_icon.png");
-}
-
-.shop-wallet__balance--gems {
-    border-left-width: 3px;
-    border-left-color: var(--mana);
-    background-image: url("/Assets/Art/Icons/crystal_icon.png");
-}
-
-/* Pill background dropped, not hidden (Sam, 2026-09-07): unlike the panels above, this element
- * paints its own icon and text directly -- no child to fall back to -- so `visibility` would take
- * the icon with it. Icon and text now sit straight on the vault art, same as everything else on
- * this screen. */
-#shop-overlay .shop-wallet__balance {
-    border-width: 0;
+    -unity-text-align: middle-left;
+    white-space: nowrap;
 }
 
 #shop-overlay .shop-wallet__balance--gold {

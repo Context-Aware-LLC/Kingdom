@@ -1,4 +1,5 @@
 using Emberfall.Net.Client.Shop;
+using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -48,8 +49,8 @@ namespace Emberfall.Presentation
             MatchSettingsController.Mount();
 
             // PackArt stays an override seam (a test or a future streamed loader can set it); with
-            // nobody overriding it the rails come from the art folders on disk. The gateway has no
-            // such default on purpose — an unbound wallet must read as unavailable, never as zero.
+            // nobody overriding it the rails come from the art folders on disk. A missing shop
+            // gateway disables purchases, but the read-only wallet still comes from /collection.
             _shop = new ShopPanelController(
                 root,
                 ShopRuntime.Gateway,
@@ -57,6 +58,26 @@ namespace Emberfall.Presentation
                 Exit,
                 RevealOnItsOwnScreen);
             _shop.Open();
+            if (ShopRuntime.Gateway == null) RefreshCollectionWallet();
+        }
+
+        private async void RefreshCollectionWallet()
+        {
+            ShopPanelController shop = _shop;
+            if (shop == null || !AuthGateway.IsSignedIn) return;
+
+            try
+            {
+                string accessToken = await AuthGateway.TokenForConnectAsync();
+                if (string.IsNullOrEmpty(accessToken)) return;
+                var snapshot = await CollectionGateway.FetchAsync(accessToken);
+                if (isActiveAndEnabled && ReferenceEquals(_shop, shop))
+                    shop.RenderCollectionWallet(snapshot);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[Shop] wallet refresh failed: {ex.GetType().Name}: {ex.Message}");
+            }
         }
 
         private void Exit() => ScreenNav.Go(ReturnScene);

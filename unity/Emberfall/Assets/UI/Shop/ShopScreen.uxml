@@ -21,8 +21,14 @@
                     <ui:Button name="shop-tab-packs" text="Booster Packs" class="shop-tab shop-tab--on"/>
                     <ui:Button name="shop-tab-gems" text="Gem Bundles" class="shop-tab"/>
                     <ui:VisualElement picking-mode="Ignore" class="shop-bar__gap"/>
-                    <ui:Label name="shop-gold-balance" class="shop-wallet__balance shop-wallet__balance--gold"/>
-                    <ui:Label name="shop-gem-balance" class="shop-wallet__balance shop-wallet__balance--gems"/>
+                    <ui:VisualElement tooltip="Gold" class="shop-wallet">
+                        <ui:VisualElement picking-mode="Ignore" class="shop-wallet__icon shop-wallet__icon--gold"/>
+                        <ui:Label name="shop-gold-balance" text="—" picking-mode="Ignore" class="shop-wallet__balance shop-wallet__balance--gold"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement tooltip="Gems" class="shop-wallet">
+                        <ui:VisualElement picking-mode="Ignore" class="shop-wallet__icon shop-wallet__icon--gems"/>
+                        <ui:Label name="shop-gem-balance" text="—" picking-mode="Ignore" class="shop-wallet__balance shop-wallet__balance--gems"/>
+                    </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="shop-content" class="shop-content">
                     <ui:VisualElement name="shop-section-packs" class="shop-section">
