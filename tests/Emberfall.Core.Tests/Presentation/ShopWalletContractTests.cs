@@ -38,6 +38,8 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(File.Exists(Path.Combine(assets, "Art", "UI", "Icons", "icon_currency_gems.png")), Is.True);
                 Assert.That(screen, Does.Contain("CollectionGateway.FetchAsync(accessToken)"));
                 Assert.That(screen, Does.Contain("AuthGateway.TokenForConnectAsync()"));
+                Assert.That(panel, Does.Contain("using Emberfall.Net.Client.Collection;"),
+                    "CollectionSnapshot is declared in the client collection namespace, not Core.Collection.");
                 Assert.That(panel, Does.Contain("snapshot.HasAuthoritativeWallet"));
                 Assert.That(panel, Does.Contain("WalletDisplay.IconAmount(snapshot.Wallet.Gold)"));
                 Assert.That(panel, Does.Contain("WalletDisplay.IconAmount(snapshot.Wallet.Gems)"));

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Emberfall.Core.Collection;
+using Emberfall.Net.Client.Collection;
 using Emberfall.Net.Client.Shop;
 using UnityEngine;
 using UnityEngine.UIElements;
