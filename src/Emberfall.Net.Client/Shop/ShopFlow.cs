@@ -187,18 +187,18 @@ namespace Emberfall.Net.Client.Shop
     {
         public static IReadOnlyList<PackOffer> Packs { get; } = Array.AsReadOnly(new[]
         {
-            new PackOffer("pack.emberfall", "Emberfall Pack", 100, 100),
-            new PackOffer("pack.rekindling", "Rekindling Pack", 100, 100),
+            new PackOffer("pack.emberfall", "Emberfall Pack", 200, 200),
+            new PackOffer("pack.rekindling", "Rekindling Pack", 200, 200),
         });
 
         public static IReadOnlyList<GemBundleOffer> GemBundles { get; } = Array.AsReadOnly(new[]
         {
-            new GemBundleOffer("gems.tier.200", 100, 199),
-            new GemBundleOffer("gems.tier.550", 300, 499),
-            new GemBundleOffer("gems.tier.1200", 600, 999),
-            new GemBundleOffer("gems.tier.2600", 1300, 1999),
-            new GemBundleOffer("gems.tier.7000", 3500, 4999),
-            new GemBundleOffer("gems.tier.15000", 7500, 9999),
+            new GemBundleOffer("gems.tier.200", 150, 199),
+            new GemBundleOffer("gems.tier.550", 400, 499),
+            new GemBundleOffer("gems.tier.1200", 800, 999),
+            new GemBundleOffer("gems.tier.2600", 1600, 1999),
+            new GemBundleOffer("gems.tier.7000", 4400, 4999),
+            new GemBundleOffer("gems.tier.15000", 9000, 9999),
         });
     }
 

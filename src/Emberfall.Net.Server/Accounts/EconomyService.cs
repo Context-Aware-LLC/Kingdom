@@ -108,7 +108,7 @@ namespace Emberfall.Net.Server.Accounts
     /// </summary>
     public sealed class EconomyService
     {
-        public const long PackPrice = 100;
+        public const long PackPrice = 200;
         public const string PackPurchaseSource = "pack_purchase";
 
         private readonly IEntitlementLedger _ledger;

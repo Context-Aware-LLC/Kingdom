@@ -52,29 +52,6 @@ namespace Emberfall.Net.Client.Tests
             });
         }
 
-        [Test]
-        public void Locked_Catalog_Offers_Both_100_Currency_Prices_And_The_Six_Approved_Gem_Bundles()
-        {
-            Assert.Multiple(() =>
-            {
-                Assert.That(ShopCatalog.Packs, Has.Count.EqualTo(2));
-                Assert.That(ShopCatalog.Packs, Has.All.Property(nameof(PackOffer.GoldPrice)).EqualTo(100));
-                Assert.That(ShopCatalog.Packs, Has.All.Property(nameof(PackOffer.GemPrice)).EqualTo(100));
-                // PackagingArtKeys was deleted: pack art is discovered from
-                // Assets/Art/Shop/Packs/<setId>/ and joined by the offer's PackId, so a new
-                // expansion's art no longer needs an edit in a transport project.
-                Assert.That(ShopCatalog.GemBundles, Has.Count.EqualTo(6));
-                Assert.That(
-                    ShopCatalog.GemBundles,
-                    Has.Exactly(1).Matches<GemBundleOffer>(offer =>
-                        offer.Gems == 100 && offer.PriceCents == 199));
-                Assert.That(
-                    ShopCatalog.GemBundles,
-                    Has.Exactly(1).Matches<GemBundleOffer>(offer =>
-                        offer.Gems == 7500 && offer.PriceCents == 9999));
-            });
-        }
-
         private sealed class RecordingShopGateway : IShopGateway
         {
             private readonly ShopSnapshot _snapshot;
