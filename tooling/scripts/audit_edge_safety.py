@@ -155,9 +155,9 @@ ROOT_EXCEPTIONS = {
         'the root holds only a backdrop; every reveal is inside the overlay',
         ['reveal-overlay']),
     'pack-vault-screen': (
-        'the shelf and its flow controls live in the padded vault shell; the separate reveal '
-        'overlay owns its own clearance',
-        ['vault-shell', 'reveal-overlay']),
+        'the shelf and its flow controls live in the padded vault shell; Back has its own '
+        'safe-edge margin and the separate reveal overlay owns its own clearance',
+        ['vault-shell', 'vault-back', 'reveal-overlay']),
     'shop-screen': (
         'the root holds only a backdrop; all store content is inside the overlay. This is the '
         'screen #shop-overlay\'s id selector kept flush to the edge until PASS 6 caught it',
@@ -174,6 +174,9 @@ ELEMENT_INTERNAL = {
     'tear-half':
         'non-interactive torn wrapper pieces parented to the tapped pack face by '
         'PackTearAnimator.Play; left/top are pack-local coordinates',
+    'vault-pack__tooltip':
+        'expansion label parented to its pack tile by PackVaultController.BuildTile; '
+        'its absolute offsets are tile-local, not screen-edge coordinates',
     'emb-scroll-fade':
         'the "there is more" fade over the bottom band of a scroll surface; its left/right/bottom '
         'offsets are against the FRAME it is pinned inside (see .deck-chooser-frame in '

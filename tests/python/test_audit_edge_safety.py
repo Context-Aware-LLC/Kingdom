@@ -93,6 +93,13 @@ class EdgeSafetyTests(unittest.TestCase):
             self.assertIn(f'face.Add({child});', source)
             self.assertIn(f'{child}.pickingMode = PickingMode.Ignore;', source)
 
+    def test_vault_tooltip_declaration_matches_pack_local_parenting(self):
+        source = (REPO_ROOT / audit.SCRIPTS / 'Presentation/PackVaultController.cs').read_text(encoding='utf-8')
+        self.assertIn('vault-pack__tooltip', audit.ELEMENT_INTERNAL)
+        self.assertIn('tooltip.AddToClassList("vault-pack__tooltip");', source)
+        self.assertIn('tile.Add(tooltip);', source)
+        self.assertIn('tooltip.pickingMode = PickingMode.Ignore;', source)
+
 
 if __name__ == '__main__':
     unittest.main()
