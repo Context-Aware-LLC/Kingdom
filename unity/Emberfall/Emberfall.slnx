@@ -12,6 +12,7 @@
   <Project Path="Emberfall.Core.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Emberfall.Core.Collection.csproj" />
+  <Project Path="Emberfall.Review.Editor.csproj" />
   <Project Path="Unity.Pipeline.Tests.Runtime.csproj" />
   <Project Path="Emberfall.Net.Protocol.csproj" />
   <Project Path="Emberfall.Core.Cards.csproj" />
@@ -19,5 +20,4 @@
   <Project Path="Emberfall.Review.csproj" />
   <Project Path="Emberfall.Core.Serialization.csproj" />
   <Project Path="Emberfall.AI.csproj" />
-  <Project Path="Emberfall.Review.Editor.csproj" />
 </Solution>

@@ -9,6 +9,8 @@
 .pack-vault-screen {
     flex-grow: 1;
     background-color: var(--surface-0);
+    background-image: url("/Assets/Art/Backgrounds/PackVault_AncientCache_Backdrop_v1.png");
+    -unity-background-scale-mode: scale-and-crop;
 }
 
 /* Carries .emb-bleed in the markup, so the horizontal clearance is the theme's and the padding
@@ -18,34 +20,8 @@
 .vault-shell {
     flex-grow: 1;
     padding-top: var(--space-4);
-    padding-bottom: var(--space-4);
-}
-
-/* ONE BAR, the same shape the store settled on 2026-08-31: what you act on, in a single row.
- * A screen you reached by opening your packs does not need a header telling you so, and on the
- * 914 x 411 panel this was authored against a title/subtitle pair plus its own padding was most
- * of a shelf row. The panel is 2400 x 1080 now (#349) and that pair would fit — the bar stays a
- * single row because the first reason is the real one, not because of the budget. */
-.vault-bar {
-    flex-direction: row;
-    align-items: center;
-    margin-bottom: var(--space-3);
-}
-
-.vault-title {
-    color: var(--ink-1);
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-}
-
-.vault-subtitle {
-    color: var(--ink-2);
-    font-size: var(--type-label);
-    margin-left: var(--space-3);
-}
-
-.vault-bar__gap {
-    flex-grow: 1;
+    /* Same 56px Back footprint, 24px edge offset, and 12px gap reserved by Shop. */
+    padding-bottom: 92px;
 }
 
 .vault-back {
@@ -142,10 +118,8 @@
     margin: 1%;
     padding: var(--space-3);
     align-items: stretch;
-    background-color: var(--surface-1);
-    border-width: 1px;
-    border-color: var(--surface-3);
-    border-radius: var(--space-3);
+    background-color: transparent;
+    border-width: 0;
 
     /* Rest state for the gift entrance (.vault-pack--enter). Harmless in Vault mode, which never
      * stages the tile and so never transitions it. */
@@ -154,10 +128,6 @@
     transition-property: opacity, translate;
     transition-duration: 260ms, 260ms;
     transition-timing-function: ease-out, ease-out;
-}
-
-.vault-pack:active {
-    border-color: var(--accent);
 }
 
 /* The gift's entrance. Applied at BUILD time by PackVaultController and scheduled off one tile at a
@@ -185,7 +155,6 @@
     width: 100%;
     aspect-ratio: 0.7;
     flex-shrink: 0;
-    margin-bottom: var(--space-2);
     background-color: var(--surface-2);
     border-radius: var(--space-2);
     -unity-background-scale-mode: scale-and-crop;
@@ -199,17 +168,17 @@
     background-color: rgba(11, 14, 19, 0.35);
 }
 
-.vault-pack__name {
+.vault-pack__tooltip {
+    position: absolute;
+    left: var(--space-4);
+    right: var(--space-4);
+    bottom: var(--space-4);
+    display: none;
+    padding: var(--space-2);
+    background-color: rgba(11, 14, 19, 0.9);
+    border-radius: var(--space-2);
     color: var(--ink-1);
     font-size: var(--type-label);
-    -unity-font-style: bold;
-    white-space: normal;
-    -unity-text-align: middle-center;
-}
-
-.vault-pack__hint {
-    color: var(--ink-2);
-    font-size: var(--type-caption);
     -unity-text-align: middle-center;
 }
 

@@ -6,6 +6,7 @@ using Emberfall.Net.Client.Shop;
 using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
+using PointerType = UnityEngine.UIElements.PointerType;
 
 namespace Emberfall.Presentation
 {
@@ -112,10 +113,11 @@ namespace Emberfall.Presentation
         private const int EntranceBannerMs = 60;
         private const int EntranceFirstTileMs = 220;
         private const int EntranceTileStepMs = 90;
+        private const int PackTooltipHoldMs = 500;
+        private const float PackTooltipMoveThreshold = 12f;
 
         private VisualElement _shelf;
         private Label _status;
-        private Label _subtitle;
         private VisualElement _banner;
         private Button _back;
         private PackRevealPanel _reveal;
@@ -180,7 +182,6 @@ namespace Emberfall.Presentation
 
             _shelf = root.Q<VisualElement>("vault-shelf");
             _status = root.Q<Label>("vault-status");
-            _subtitle = root.Q<Label>("vault-subtitle");
             _banner = root.Q<VisualElement>("vault-banner");
             _packArt = new PackArtProvider();
             _reveal = new PackRevealPanel(root, RevealDismissed);
@@ -207,7 +208,6 @@ namespace Emberfall.Presentation
                 // if a caller managed to set both, the receipt wins and the lock comes off with it.
                 _revealWasHandedIn = true;
                 ReleaseGiftLock();
-                SetSubtitle("");
                 SetStatus("");
                 _reveal.Show(handedIn);
                 return;
@@ -324,12 +324,10 @@ namespace Emberfall.Presentation
                 // device may have spent it since.
                 ReleaseGiftLock();
                 ShowBanner(false);
-                SetSubtitle("");
                 SetStatus("No packs waiting.");
                 return;
             }
 
-            SetSubtitle(total == 1 ? "1 pack waiting" : $"{total} packs waiting");
             SetStatus("");
 
             int drawn = 0;
@@ -407,7 +405,7 @@ namespace Emberfall.Presentation
 
             // The face is built before the button so the click can carry it: the tear happens ON this
             // element, and it is the only handle to the pack the player actually touched.
-            var tile = new Button(() => Open(packId, index, face));
+            var tile = new Button();
             tile.AddToClassList("vault-pack");
             tile.SetEnabled(!_busy);
 
@@ -448,24 +446,85 @@ namespace Emberfall.Presentation
                 face.AddToClassList("vault-pack__face--art");
             });
 
-            var name = new Label(PackDisplayName(packId));
-            name.AddToClassList("vault-pack__name");
-            tile.Add(name);
+            var tooltip = new Label(ExpansionDisplayName(packId));
+            tooltip.AddToClassList("vault-pack__tooltip");
+            tooltip.pickingMode = PickingMode.Ignore;
+            tile.Add(tooltip);
 
-            var hint = new Label("Tap to open");
-            hint.AddToClassList("vault-pack__hint");
-            tile.Add(hint);
+            IVisualElementScheduledItem holdTimer = null;
+            int heldPointer = -1;
+            int suppressedClickPointer = -1;
+            Vector2 holdDown = default;
+            void HideTooltip() => tooltip.style.display = DisplayStyle.None;
+            void CancelHold()
+            {
+                holdTimer?.Pause();
+                holdTimer = null;
+                heldPointer = -1;
+                HideTooltip();
+            }
+
+            tile.RegisterCallback<PointerEnterEvent>(evt =>
+            {
+                if (evt.pointerType == PointerType.mouse)
+                    tooltip.style.display = DisplayStyle.Flex;
+            });
+            tile.RegisterCallback<PointerLeaveEvent>(evt =>
+            {
+                if (evt.pointerType == PointerType.mouse) HideTooltip();
+                else if (evt.pointerId == heldPointer) CancelHold();
+            });
+            tile.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.pointerType != PointerType.touch || evt.button != 0 || !evt.isPrimary) return;
+                suppressedClickPointer = -1;
+                heldPointer = evt.pointerId;
+                holdDown = evt.position;
+                int pointer = evt.pointerId;
+                holdTimer = tile.schedule.Execute(() =>
+                {
+                    holdTimer = null;
+                    if (heldPointer != pointer || tile.panel == null || !tile.enabledSelf) return;
+                    suppressedClickPointer = pointer;
+                    tooltip.style.display = DisplayStyle.Flex;
+                }).StartingIn(PackTooltipHoldMs);
+            });
+            tile.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (evt.pointerId != heldPointer) return;
+                Vector2 delta = (Vector2)evt.position - holdDown;
+                if (delta.sqrMagnitude >= PackTooltipMoveThreshold * PackTooltipMoveThreshold)
+                    CancelHold();
+            });
+            tile.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (evt.pointerId == heldPointer) CancelHold();
+            });
+            tile.RegisterCallback<PointerCancelEvent>(evt =>
+            {
+                if (evt.pointerId == heldPointer) CancelHold();
+            });
+            tile.RegisterCallback<DetachFromPanelEvent>(_ => CancelHold());
+            tile.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.pointerId == suppressedClickPointer)
+                {
+                    suppressedClickPointer = -1;
+                    return;
+                }
+                HideTooltip();
+                Open(packId, index, face);
+            });
 
             return tile;
         }
 
-        /// <summary>A pack line as a player should read it. <c>pack.emberfall.starter</c> is
-        /// "Starter Pack" — the last segment is the only part that distinguishes one inventory
-        /// line from another. Packaging resolution separately uses the expansion segment.</summary>
-        private static string PackDisplayName(string packId)
+        private static string ExpansionDisplayName(string packId)
         {
-            string token = TokenText.Pretty(packId);
-            return token.Length == 0 ? "Pack" : token + " Pack";
+            string[] parts = packId?.Split('.');
+            if (parts == null || parts.Length < 2) return "Pack";
+            string expansion = TokenText.Pretty(parts[1]);
+            return expansion.Length == 0 ? "Pack" : expansion + " Pack";
         }
 
         // ── Opening ─────────────────────────────────────────────────────────────────────
@@ -709,12 +768,6 @@ namespace Emberfall.Presentation
             _status.EnableInClassList("vault-status--empty", _status.text.Length == 0);
         }
 
-        private void SetSubtitle(string text)
-        {
-            if (_subtitle == null) return;
-            _subtitle.text = text ?? "";
-        }
-
         /// <summary>A failure the player can read, with no tiles behind it — an empty shelf under an
         /// error message would say the player owns nothing, which is the one thing none of these
         /// statuses is evidence of.</summary>
@@ -728,7 +781,6 @@ namespace Emberfall.Presentation
             ReleaseGiftLock();
             ShowBanner(false);
             _shelf?.Clear();
-            SetSubtitle("");
             SetStatus(message);
         }
 

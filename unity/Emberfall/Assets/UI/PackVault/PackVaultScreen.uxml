@@ -13,12 +13,6 @@
          does not report the parse failure: the whole screen renders EMPTY.) -->
     <ui:VisualElement name="root" class="emb-root pack-vault-screen">
         <ui:VisualElement name="vault-shell" class="vault-shell emb-bleed">
-            <ui:VisualElement name="vault-bar" class="vault-bar">
-                <ui:Label text="Packs" class="vault-title"/>
-                <ui:Label name="vault-subtitle" text="" class="vault-subtitle"/>
-                <ui:VisualElement picking-mode="Ignore" class="vault-bar__gap"/>
-                <ui:Button name="btn-vault-back" text="← Back" class="vault-back emb-back"/>
-            </ui:VisualElement>
             <!-- Gift mode only, and hidden here so Vault mode never has to turn it off. It is shown
                  by PackVaultController once a shelf with packs on it has actually rendered: a banner
                  saying "here is a gift" over a spinner, or over "could not reach the server", is
@@ -32,6 +26,7 @@
             <ui:VisualElement name="vault-shelf" class="vault-shelf"/>
             <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
         </ui:VisualElement>
+        <ui:Button name="btn-vault-back" text="← Back" class="vault-back emb-back col-back-corner emb-edge"/>
         <!-- THERE IS NO TEAR STAGE, and its absence is the design (Sam, 2026-09-03).
              A full screen overlay used to sit here, re-render the tapped pack into itself at a fixed
              size and ask for a second tap. PackTearAnimator now tears the shelf tile itself, so
