@@ -9,7 +9,7 @@
                      the shop, and on the 411-unit landscape panel this was decided against
                      (pre-#349) that pair plus its own padding was
                      ~96dp of the ~280dp the two sections had to share. What survives is what you
-                     act on: the two tabs, the wallet, and Back, in a single row.
+                     act on: the two tabs, the Vault link, the wallet, and Back, in a single row.
                      (No double dash anywhere in this comment. An XML comment may not contain one,
                      and Unity does not report the parse failure: the whole screen renders EMPTY.)
 
@@ -19,6 +19,10 @@
                 <ui:VisualElement name="shop-bar" class="shop-bar">
                     <ui:Button name="shop-tab-packs" text="Booster Packs" class="shop-tab shop-tab--on"/>
                     <ui:Button name="shop-tab-gems" text="Gem Bundles" class="shop-tab"/>
+                    <ui:VisualElement name="shop-vault-entry" class="shop-vault-entry">
+                        <ui:Button name="shop-card-vault" text="Card Vault" class="shop-vault-link"/>
+                        <ui:Label name="shop-vault-count" text="" picking-mode="Ignore" class="shop-vault-count shop-vault-count--hidden"/>
+                    </ui:VisualElement>
                     <ui:VisualElement picking-mode="Ignore" class="shop-bar__gap"/>
                     <ui:VisualElement tooltip="Gold" class="shop-wallet">
                         <ui:VisualElement picking-mode="Ignore" class="shop-wallet__icon shop-wallet__icon--gold"/>
@@ -38,7 +42,6 @@
                         <ui:VisualElement name="shop-gem-list" class="shop-gem-list"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:Label name="shop-status" text="" class="shop-status shop-status--empty"/>
                 <!-- Bottom-left, off the bar (Sam, 2026-09-07): same corner as Collection's
                      back-button, part of moving every back button to one place. -->
                 <ui:Button name="btn-shop-close" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back col-back-corner"/>
@@ -48,17 +51,19 @@
              the tapped tile's position rather than cutting to a full-screen modal, as of the
              2026-09-07 follow-up; see ShopPanelController.OpenDetail/CloseDetail and shop.uss's
              pack detail shell animation modifier class): the buy buttons that used to sit on the
-             tile live here instead, under a title stating what the pack actually gives you.
+             tile live here instead, under the selected pack art.
              pack-detail-art shows the ONE piece actually tapped, not the tile's whole four-wide
              rail again, so the art the player's thumb was on travels into the card with the text
              instead of just vanishing under the scrim; OpenDetail leaves it hidden when the tap
              did not land on a specific art slot. pack-detail-shell stops its own ClickEvent from
              bubbling, so a tap on the panel does not fall through to this overlay's close-on-scrim
-             handler — the same trap CraftModal's craft-scrim documents. -->
+             handler — the same trap CraftModal's craft-scrim documents. On purchase, the shell
+             flies to the Card Vault link rather than back to its source tile. -->
         <ui:VisualElement name="pack-detail-overlay" class="pack-detail-overlay pack-detail-overlay--hidden emb-bleed">
             <ui:VisualElement name="pack-detail-shell" class="pack-detail-shell">
                 <ui:VisualElement name="pack-detail-art" class="pack-detail-art"/>
                 <ui:VisualElement name="pack-detail-actions" class="pack-detail-actions"/>
+                <ui:Label name="pack-detail-error" text="" class="pack-detail-error pack-detail-error--hidden"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

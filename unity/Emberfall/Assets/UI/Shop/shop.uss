@@ -116,7 +116,7 @@
     padding: 0;
 }
 
-/* ---------- The bar: tabs, wallet, Back ----------
+/* ---------- The bar: catalog tabs, Vault destination, wallet ----------
  * Replaced `.shop-header` on 2026-08-31. The store's `Shop` title and its subtitle are gone, and
  * so is the pair of `.shop-section__title` labels below — the tabs carry the section names now.
  *
@@ -189,8 +189,43 @@
     border-bottom-color: var(--accent);
 }
 
-.shop-section__help,
-.shop-status {
+.shop-vault-entry {
+    flex-direction: row;
+    align-items: center;
+    margin-left: var(--space-4);
+}
+
+.shop-vault-link {
+    min-height: var(--touch-min);
+    padding: 0 var(--space-3);
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+}
+
+.shop-vault-link:hover {
+    color: var(--accent);
+}
+
+.shop-vault-count {
+    min-width: 44px;
+    height: 44px;
+    padding: 0 var(--space-2);
+    border-radius: 999px;
+    background-color: var(--accent);
+    color: var(--surface-0);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.shop-vault-count--hidden {
+    display: none;
+}
+
+.shop-section__help {
     color: var(--ink-2);
     font-size: var(--type-caption);
     white-space: normal;
@@ -479,34 +514,11 @@
     font-size: var(--type-label);
 }
 
-.shop-status {
-    min-height: 20px;
-    color: var(--warning);
-    margin-top: var(--space-2);
-}
-
-#shop-overlay .shop-status {
-    flex-shrink: 0;
-    background-color: rgba(0, 0, 0, 0.55);
-    border-radius: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    margin-top: 0;
-}
-
-/* AN EMPTY STATUS LINE COSTS NOTHING. A Label with no text still reserves its box -- measured at
- * 32dp of a 411dp panel here, taken straight off the content area, and the store is empty of
- * status most of the time it is open. ShopPanelController.SetStatus stamps and clears this; the
- * UXML ships it on, because the label starts empty. Same band, same fix, as the roster's in
- * 32dfdb81. */
-.shop-status--empty {
-    display: none;
-}
-
 /* ---------- Pack detail (Sam, 2026-09-05) ----------
  * Same nested overlay/shell shape as #shop-overlay above: one hidden class
  * removes the whole thing from layout, and the shell centers itself inside the scrim.
  *
- * THE SHELL FLIES IN FROM THE TAPPED TILE AND BACK OUT AGAIN (Sam, 2026-09-07 follow-up), rather
+ * THE SHELL FLIES IN FROM THE TAPPED TILE AND BACK OUT ON DISMISS (Sam, 2026-09-07 follow-up), rather
  * than fading or scaling from its own center: ShopPanelController computes the tapped tile's
  * on-screen rect and sets the shell's translate/scale to exactly overlap it, then -- on a later
  * tick, once that has actually rendered once -- flips translate/scale back to identity so the
@@ -514,7 +526,8 @@
  * layout. --animating is where the transition lives (not here): the very first translate/scale
  * this element receives each open is that tile-matched starting point, and it must land instantly
  * with no transition, or the whole effect is backwards. See ShopPanelController.OpenDetail /
- * CloseDetail for the two-tick sequencing this depends on. */
+ * CloseDetail for the two-tick sequencing this depends on. A confirmed purchase uses the same
+ * reverse motion with the Card Vault menu entry as its target instead. */
 .pack-detail-overlay {
     position: absolute;
     top: 0;
@@ -576,6 +589,20 @@
     transition-property: translate, scale;
     transition-duration: 1s;
     transition-timing-function: ease-in-out;
+}
+
+.pack-detail-error {
+    align-self: center;
+    max-width: 82%;
+    margin-top: var(--space-3);
+    color: var(--warning);
+    font-size: var(--type-label);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.pack-detail-error--hidden {
+    display: none;
 }
 
 .pack-detail-bar {

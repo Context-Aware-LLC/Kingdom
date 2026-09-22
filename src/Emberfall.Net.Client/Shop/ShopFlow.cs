@@ -115,13 +115,16 @@ namespace Emberfall.Net.Client.Shop
         public WalletBalances Wallet { get; }
         public IReadOnlyList<PackOffer> Packs { get; }
         public IReadOnlyList<GemBundleOffer> GemBundles { get; }
+        public long VaultCount { get; }
 
         public ShopSnapshot(WalletBalances wallet, IReadOnlyList<PackOffer>? packs,
-                            IReadOnlyList<GemBundleOffer>? gemBundles)
+                            IReadOnlyList<GemBundleOffer>? gemBundles, long vaultCount = 0)
         {
+            if (vaultCount < 0) throw new ArgumentOutOfRangeException(nameof(vaultCount));
             Wallet = wallet;
             Packs = packs ?? Array.Empty<PackOffer>();
             GemBundles = gemBundles ?? Array.Empty<GemBundleOffer>();
+            VaultCount = vaultCount;
         }
     }
 

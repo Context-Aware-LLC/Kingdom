@@ -57,17 +57,20 @@ namespace Emberfall.Presentation
         private readonly VisualElement _gemSection;
         private readonly Button _packTab;
         private readonly Button _gemTab;
+        private readonly VisualElement _vaultEntry;
+        private readonly Label _vaultCount;
         private readonly Label _gold;
         private readonly Label _gems;
-        private readonly Label _status;
         private readonly VisualElement _detailOverlay;
         private readonly VisualElement _detailShell;
         private readonly VisualElement _detailArt;
         private readonly VisualElement _detailActions;
+        private readonly Label _detailError;
         private VisualElement _detailOriginTile;
         private readonly ShopFlow _flow;
         private readonly IPackArtProvider _packArt;
         private readonly System.Action _onClose;
+        private readonly System.Action _onVault;
         private readonly System.Action _onRefreshFailed;
 
         private bool _busy;
@@ -82,29 +85,35 @@ namespace Emberfall.Presentation
             IShopGateway gateway,
             IPackArtProvider packArt,
             System.Action onClose,
+            System.Action onVault,
             System.Action onRefreshFailed = null)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
             // Unlike the gateway, this one is structural: with no way home, Back is a dead button.
             if (onClose == null) throw new ArgumentNullException(nameof(onClose));
+            if (onVault == null) throw new ArgumentNullException(nameof(onVault));
 
             _overlay = root.Q<VisualElement>("shop-overlay");
             _packList = root.Q<VisualElement>("shop-pack-list");
             _gemList = root.Q<VisualElement>("shop-gem-list");
             _gold = root.Q<Label>("shop-gold-balance");
             _gems = root.Q<Label>("shop-gem-balance");
-            _status = root.Q<Label>("shop-status");
+            _vaultEntry = root.Q<VisualElement>("shop-vault-entry");
+            _vaultCount = root.Q<Label>("shop-vault-count");
             _detailOverlay = root.Q<VisualElement>("pack-detail-overlay");
             _detailShell = root.Q<VisualElement>("pack-detail-shell");
             _detailArt = root.Q<VisualElement>("pack-detail-art");
             _detailActions = root.Q<VisualElement>("pack-detail-actions");
+            _detailError = root.Q<Label>("pack-detail-error");
             _detailArt?.RegisterCallback<GeometryChangedEvent>(_ => FitDetailActionsToArt());
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packArt = packArt;
             _onClose = onClose;
+            _onVault = onVault;
             _onRefreshFailed = onRefreshFailed;
 
             Wire(root, "btn-shop-close", Close);
+            Wire(root, "shop-card-vault", OpenVault);
             Wire(root, "pack-detail-close", () => CloseDetail());
             // The shell stops its own click from bubbling to the overlay's close-on-scrim handler
             // below -- otherwise every tap on the panel would close it, the same trap CraftModal's
@@ -124,6 +133,7 @@ namespace Emberfall.Presentation
             ShowSection(packs: true);
 
             RenderDisconnectedCatalog();
+            RenderVaultCount(0);
         }
 
         public void Open()
@@ -142,16 +152,13 @@ namespace Emberfall.Presentation
         {
             if (_flow == null || _busy) return;
             SetBusy(true);
-            SetStatus("Loading wallet...");
             try
             {
                 await _flow.RefreshAsync();
                 RenderSnapshot(_flow.Snapshot);
-                SetStatus("");
             }
             catch (Exception ex)
             {
-                SetStatus("The shop could not reach the account server.");
                 UnityEngine.Debug.LogWarning($"[Shop] refresh failed: {ex.GetType().Name}: {ex.Message}");
                 _onRefreshFailed?.Invoke();
             }
@@ -163,20 +170,21 @@ namespace Emberfall.Presentation
 
         private async void Buy(string packId, ShopCurrency currency)
         {
-            if (_flow == null || _busy) return;
-            CloseDetail(immediate: true);
+            if (_flow == null || _busy || _detailClosing) return;
             SetBusy(true);
-            SetStatus("Adding pack to Card Vault...");
+            SetDetailError("");
+            bool flyingToVault = false;
             try
             {
                 PackPurchaseResult result = await _flow.PurchaseAsync(packId, currency);
-                RenderSnapshot(result.Shop);
-                SetStatus("Pack added to Card Vault. Open it whenever you're ready.");
+                RenderSnapshot(result.Shop, updateVaultCount: false);
+                FlyDetailToVault(result.Shop.VaultCount);
+                flyingToVault = true;
             }
             catch (ShopPurchaseException ex)
             {
                 _purchaseUncertain = ex.OutcomeUnknown;
-                SetStatus(ex.OutcomeUnknown
+                SetDetailError(ex.OutcomeUnknown
                     ? "Purchase status uncertain. Check Card Vault before buying again."
                     : ex.Message);
                 UnityEngine.Debug.LogWarning($"[Shop] purchase declined: {ex.Message}");
@@ -186,12 +194,12 @@ namespace Emberfall.Presentation
                 // A dropped response can follow a committed ledger transaction. Do not let a
                 // second tap create a new purchase until the player checks the Vault.
                 _purchaseUncertain = true;
-                SetStatus("Purchase status uncertain. Check Card Vault before buying again.");
+                SetDetailError("Purchase status uncertain. Check Card Vault before buying again.");
                 UnityEngine.Debug.LogWarning($"[Shop] purchase failed: {ex.GetType().Name}: {ex.Message}");
             }
             finally
             {
-                SetBusy(false);
+                if (!flyingToVault) SetBusy(false);
             }
         }
 
@@ -202,19 +210,35 @@ namespace Emberfall.Presentation
             RenderGemBundles(ShopCatalog.GemBundles);
         }
 
-        private void RenderSnapshot(ShopSnapshot snapshot)
+        private void RenderSnapshot(ShopSnapshot snapshot, bool updateVaultCount = true)
         {
             if (snapshot == null) return;
             if (_gold != null) _gold.text = WalletDisplay.IconAmount(snapshot.Wallet.Gold);
             if (_gems != null) _gems.text = WalletDisplay.IconAmount(snapshot.Wallet.Gems);
+            if (updateVaultCount) RenderVaultCount(snapshot.VaultCount);
             RenderPacks(snapshot.Packs, snapshot.Wallet);
             RenderGemBundles(snapshot.GemBundles);
+        }
+
+        private void RenderVaultCount(long count)
+        {
+            if (_vaultCount == null) return;
+            _vaultCount.text = count > 99 ? "99+" : count.ToString();
+            Toggle(_vaultCount, "shop-vault-count--hidden", count <= 0);
         }
 
         /// <summary>Show the read-only account wallet when the shop read is unavailable. Never
         /// mistake an offline or incomplete collection answer for an authoritative zero.</summary>
         public void RenderCollectionWallet(CollectionSnapshot snapshot)
         {
+            if (snapshot != null && snapshot.HasAuthoritativePacks)
+            {
+                long count = 0;
+                foreach (long packs in snapshot.Packs.Values)
+                    if (packs > 0) count = checked(count + packs);
+                RenderVaultCount(count);
+            }
+
             if (snapshot == null || !snapshot.HasAuthoritativeWallet)
             {
                 SetWalletUnavailable();
@@ -400,10 +424,11 @@ namespace Emberfall.Presentation
         /// </summary>
         private void OpenDetail(PackOffer offer, WalletBalances? wallet, VisualElement originTile)
         {
-            if (_detailOverlay == null) return;
+            if (_detailOverlay == null || _busy) return;
 
             int animationVersion = ++_detailAnimationVersion;
             _detailClosing = false;
+            SetDetailError("");
             _detailActions?.Clear();
             if (_detailActions != null)
             {
@@ -506,15 +531,11 @@ namespace Emberfall.Presentation
                 : fallback;
         }
 
-        /// <summary>
-        /// <paramref name="immediate"/> skips the closing transition: <see cref="Buy"/> calls it
-        /// that way because the purchase network round trip already provides the visual break a
-        /// fly-out transition exists to give, and layering a second one on top would delay it. The close
-        /// button and the scrim tap use the default animated close.
-        /// </summary>
-        private void CloseDetail(bool immediate = false)
+        /// <summary>Close-on-scrim returns the selected pack to its source tile. A confirmed
+        /// purchase takes a different exit, <see cref="FlyDetailToVault"/>.</summary>
+        private void CloseDetail()
         {
-            if (_detailOverlay == null || (_detailClosing && !immediate)) return;
+            if (_detailOverlay == null || _busy || _detailClosing) return;
             int animationVersion = ++_detailAnimationVersion;
             _detailClosing = true;
 
@@ -523,7 +544,7 @@ namespace Emberfall.Presentation
             // read the same as the fly-in -- art only, no buttons racing the shell back to the tile.
             if (_detailActions != null) _detailActions.style.visibility = Visibility.Hidden;
 
-            if (immediate || _detailShell == null || _detailOriginTile == null)
+            if (_detailShell == null || _detailOriginTile == null)
             {
                 _detailShell?.RemoveFromClassList("pack-detail-shell--animating");
                 _detailOverlay.AddToClassList("pack-detail-overlay--hidden");
@@ -543,6 +564,38 @@ namespace Emberfall.Presentation
                 _detailShell.RemoveFromClassList("pack-detail-shell--animating");
                 _detailOriginTile = null;
             }).StartingIn(ResolvedTransitionMs(_detailShell));
+        }
+
+        /// <summary>The server-confirmed purchase reuses the centered pack's reverse FLIP,
+        /// but lands in Card Vault instead of the tapped slot. The badge appears on landing.</summary>
+        private void FlyDetailToVault(long vaultCount)
+        {
+            if (_detailOverlay == null || _detailShell == null ||
+                !TryComputeFlipTransform(_vaultEntry, out Translate translate, out Scale scale))
+            {
+                _detailOverlay?.AddToClassList("pack-detail-overlay--hidden");
+                _detailOriginTile = null;
+                RenderVaultCount(vaultCount);
+                SetBusy(false);
+                return;
+            }
+
+            int animationVersion = ++_detailAnimationVersion;
+            _detailClosing = true;
+            if (_detailActions != null) _detailActions.style.visibility = Visibility.Hidden;
+            SetDetailError("");
+            _detailShell.AddToClassList("pack-detail-shell--animating");
+            _detailShell.style.translate = translate;
+            _detailShell.style.scale = scale;
+            _detailShell.schedule.Execute(() =>
+            {
+                if (animationVersion != _detailAnimationVersion) return;
+                _detailOverlay.AddToClassList("pack-detail-overlay--hidden");
+                _detailShell.RemoveFromClassList("pack-detail-shell--animating");
+                _detailOriginTile = null;
+                RenderVaultCount(vaultCount);
+                SetBusy(false);
+            }).ExecuteLater(ResolvedTransitionMs(_detailShell));
         }
 
         /// <summary>The longest of a VisualElement's currently resolved transition-duration
@@ -566,13 +619,13 @@ namespace Emberfall.Presentation
         /// shell's animated transform, keeping the reverse calculation stable even mid-flight.
         /// All positions are in the shell parent's coordinates, including the tapped slot.
         /// </summary>
-        private bool TryComputeFlipTransform(out Translate translate, out Scale scale)
+        private bool TryComputeFlipTransform(VisualElement target, out Translate translate, out Scale scale)
         {
             translate = default;
             scale = default;
-            if (_detailOriginTile == null || _detailShell?.parent == null) return false;
+            if (target == null || _detailShell?.parent == null) return false;
 
-            Rect tileBound = _detailShell.parent.WorldToLocal(_detailOriginTile.worldBound);
+            Rect tileBound = _detailShell.parent.WorldToLocal(target.worldBound);
             Rect shell = _detailShell.layout;
             if (tileBound.width <= 0f || tileBound.height <= 0f || shell.width <= 0f) return false;
 
@@ -580,7 +633,7 @@ namespace Emberfall.Presentation
                 ? _detailArt.layout : new Rect(Vector2.zero, shell.size);
             if (art.width <= 0f || art.height <= 0f) return false;
 
-            Vector2 imageSize = BackgroundImageSize(_detailOriginTile.resolvedStyle.backgroundImage, art.size);
+            Vector2 imageSize = BackgroundImageSize(target.resolvedStyle.backgroundImage, art.size);
             if (imageSize.x <= 0f || imageSize.y <= 0f) return false;
 
             float tileFit = Mathf.Min(tileBound.width / imageSize.x, tileBound.height / imageSize.y);
@@ -623,7 +676,7 @@ namespace Emberfall.Presentation
         {
             if (_detailShell == null) { onSettled?.Invoke(); return; }
             int animationVersion = _detailAnimationVersion;
-            if (TryComputeFlipTransform(out Translate translate, out Scale scale))
+            if (TryComputeFlipTransform(_detailOriginTile, out Translate translate, out Scale scale))
             {
                 _detailShell.style.translate = translate;
                 _detailShell.style.scale = scale;
@@ -664,7 +717,7 @@ namespace Emberfall.Presentation
         private void FlipFromIdentity()
         {
             if (_detailShell == null) return;
-            if (!TryComputeFlipTransform(out Translate translate, out Scale scale)) return;
+            if (!TryComputeFlipTransform(_detailOriginTile, out Translate translate, out Scale scale)) return;
             _detailShell.AddToClassList("pack-detail-shell--animating");
             _detailShell.style.translate = translate;
             _detailShell.style.scale = scale;
@@ -707,28 +760,14 @@ namespace Emberfall.Presentation
         private void SetBusy(bool busy)
         {
             _busy = busy;
-            ShopSnapshot snapshot = _flow?.Snapshot;
-            if (snapshot != null) RenderPacks(snapshot.Packs, snapshot.Wallet);
-            else RenderPacks(ShopCatalog.Packs, null);
+            _detailActions?.SetEnabled(!busy && !_purchaseUncertain);
         }
 
-        /// <summary>
-        /// The status line, and it COLLAPSES when it has nothing to say.
-        ///
-        /// <para>An empty Label still reserves its box: measured on the Pixel 5a rig, this one held
-        /// 32 of a 411-unit panel permanently (pre-#349 units), taken straight off the content area
-        /// the sections have to fit inside. That is the same band CharacterRoster collapsed in
-        /// <c>32dfdb81</c> for the same reason. The panel is 1080 now, so the 32 costs proportionally
-        /// less — but a band that reserves height for nothing is wrong at any scale.</para>
-        ///
-        /// <para>Null-or-whitespace, not null: <see cref="SetWalletUnavailable"/> and the disconnected
-        /// path both clear this by assigning "".</para>
-        /// </summary>
-        private void SetStatus(string message)
+        private void SetDetailError(string message)
         {
-            if (_status == null) return;
-            _status.text = message ?? "";
-            Toggle(_status, "shop-status--empty", string.IsNullOrWhiteSpace(_status.text));
+            if (_detailError == null) return;
+            _detailError.text = message ?? "";
+            Toggle(_detailError, "pack-detail-error--hidden", string.IsNullOrWhiteSpace(message));
         }
 
         /// <summary>Back. The overlay is deliberately left visible: the host decides what
@@ -736,7 +775,14 @@ namespace Emberfall.Presentation
         /// two that a scene load takes to arrive.</summary>
         private void Close()
         {
+            if (_busy) return;
             _onClose();
+        }
+
+        private void OpenVault()
+        {
+            if (_busy) return;
+            _onVault();
         }
 
         /// <summary>

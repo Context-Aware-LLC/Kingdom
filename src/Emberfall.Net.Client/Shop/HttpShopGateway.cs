@@ -105,10 +105,12 @@ namespace Emberfall.Net.Client.Shop
         private static bool TrySnapshot(string body, out ShopSnapshot? snapshot)
         {
             snapshot = null;
-            if (!AuthJson.TryReadNestedObject(body, "wallet", out var wallet) ||
+            if (!AuthJson.TryReadTopLevel(body, out var fields) ||
+                !AuthJson.TryReadNestedObject(body, "wallet", out var wallet) ||
                 !AuthJson.TryInt64(wallet, "gold", out long gold) || gold < 0 ||
                 !AuthJson.TryInt64(wallet, "gems", out long gems) ||
                 !AuthJson.TryInt64(wallet, "shards", out long shards) || shards < 0 ||
+                !AuthJson.TryInt64(fields, "vaultCount", out long vaultCount) || vaultCount < 0 ||
                 !AuthJson.TryReadObjectArray(body, "packs", out var rows)) return false;
 
             var packs = new List<PackOffer>(rows.Count);
@@ -123,7 +125,7 @@ namespace Emberfall.Net.Client.Shop
                 packs.Add(new PackOffer(packId, displayName, (int)goldPrice, (int)gemPrice));
             }
             snapshot = new ShopSnapshot(new WalletBalances(gold, gems, shards), packs,
-                ShopCatalog.GemBundles);
+                ShopCatalog.GemBundles, vaultCount);
             return true;
         }
     }

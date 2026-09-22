@@ -47,7 +47,7 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         [Test]
-        public void Shop_purchase_grants_to_vault_without_a_reveal_handoff()
+        public void Shop_purchase_flies_to_a_counted_vault_link_without_a_status_toast_or_reveal()
         {
             string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
             string screen = File.ReadAllText(Path.Combine(assets, "Scripts", "Presentation", "ShopScreenController.cs"));
@@ -56,11 +56,20 @@ namespace Emberfall.Core.Tests.Presentation
 
             Assert.Multiple(() =>
             {
+                string[] menuItems = document.Descendants().Where(e =>
+                    (string?)e.Attribute("name") is "shop-tab-packs" or "shop-tab-gems" or "shop-vault-entry")
+                    .Select(e => (string)e.Attribute("name")!).ToArray();
                 Assert.That(screen, Does.Contain("new HttpShopGateway("),
                     "The live shop needs a default server gateway, not an unassigned static seam.");
-                Assert.That(panel, Does.Contain("Pack added to Card Vault"));
+                Assert.That(menuItems, Is.EqualTo(new[] { "shop-tab-packs", "shop-tab-gems", "shop-vault-entry" }));
+                Assert.That(document.Descendants().Any(e => (string?)e.Attribute("name") == "shop-vault-count"), Is.True);
+                Assert.That(document.Descendants().Any(e => (string?)e.Attribute("name") == "shop-status"), Is.False);
+                Assert.That(panel, Does.Contain("FlyDetailToVault(result.Shop.VaultCount)"));
+                Assert.That(panel, Does.Contain("TryComputeFlipTransform(_vaultEntry"));
+                Assert.That(panel, Does.Not.Contain("Pack added to Card Vault"));
                 Assert.That(panel, Does.Not.Contain("_reveal.Show("));
-                Assert.That(screen, Does.Not.Contain("PackVaultController.Pending ="));
+                Assert.That(screen, Does.Contain("PackVaultController.Mode = PackVaultMode.Vault"));
+                Assert.That(screen, Does.Contain("PackVaultController.ReturnScene = ScreenNav.Shop"));
                 Assert.That(document.Descendants().Any(e =>
                     (string?)e.Attribute("name") == "reveal-overlay"), Is.False);
             });

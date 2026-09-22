@@ -854,12 +854,13 @@ namespace Emberfall.Net.Server
             {
                 string? bearer = BearerFrom(context);
                 ShopEndpointResult result = await ShopEndpoint.ReadAsync(
-                    bearer, cfg.TokenVerifier, cfg.AccountStore, economy, packOpener,
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, cfg.EntitlementLedger, economy, packOpener,
                     onboarding, context.RequestAborted);
                 context.Response.Headers["Cache-Control"] = "no-store";
                 return Results.Json(new
                 {
                     status = result.Status.ToString().ToLowerInvariant(),
+                    vaultCount = result.VaultCount,
                     wallet = new
                     {
                         gold = result.Wallet.Gold,
@@ -899,6 +900,7 @@ namespace Emberfall.Net.Server
                     status = result.Status.ToString().ToLowerInvariant(),
                     packId = result.PackId,
                     unopenedCount = result.UnopenedCount,
+                    vaultCount = result.VaultCount,
                     wallet = new
                     {
                         gold = result.Wallet.Gold,

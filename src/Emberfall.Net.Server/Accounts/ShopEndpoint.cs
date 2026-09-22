@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Core.Collection;
@@ -24,14 +25,16 @@ namespace Emberfall.Net.Server.Accounts
         public WalletBalances Wallet { get; }
         public string PackId { get; }
         public long UnopenedCount { get; }
+        public long VaultCount { get; }
 
         public ShopEndpointResult(ShopEndpointStatus status, WalletBalances wallet = default,
-                                  string packId = "", long unopenedCount = 0)
+                                  string packId = "", long unopenedCount = 0, long vaultCount = 0)
         {
             Status = status;
             Wallet = wallet;
             PackId = packId;
             UnopenedCount = unopenedCount;
+            VaultCount = vaultCount;
         }
 
         public int HttpStatus => Status switch
@@ -53,21 +56,24 @@ namespace Emberfall.Net.Server.Accounts
     {
         public static async Task<ShopEndpointResult> ReadAsync(
             string? bearerToken, IIdentityTokenVerifier? verifier, IAccountStore? accounts,
-            EconomyService? economy, BoosterPackGrantService? opener,
+            IEntitlementLedger? ledger, EconomyService? economy, BoosterPackGrantService? opener,
             OnboardingGrantService? onboarding,
             CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(bearerToken))
                 return new ShopEndpointResult(ShopEndpointStatus.Unauthenticated);
-            if (verifier == null || accounts == null || economy == null || opener == null)
+            if (verifier == null || accounts == null || ledger == null || economy == null || opener == null)
                 return new ShopEndpointResult(ShopEndpointStatus.Unavailable);
             Account? account = await ResolveAsync(bearerToken, verifier, accounts, onboarding, ct)
                 .ConfigureAwait(false);
             if (account == null)
                 return new ShopEndpointResult(ShopEndpointStatus.Unauthenticated);
 
-            return new ShopEndpointResult(ShopEndpointStatus.Ready,
-                await economy.GetWalletAsync(account, ct).ConfigureAwait(false));
+            WalletBalances wallet = await economy.GetWalletAsync(account, ct).ConfigureAwait(false);
+            IReadOnlyDictionary<string, long> balances = await ledger.BalancesAsync(account.PlayerId, ct)
+                .ConfigureAwait(false);
+            return new ShopEndpointResult(ShopEndpointStatus.Ready, wallet,
+                vaultCount: CountVaultPacks(balances));
         }
 
         public static async Task<ShopEndpointResult> PurchaseAsync(
@@ -113,11 +119,22 @@ namespace Emberfall.Net.Server.Accounts
             if (purchased.Status == PackPurchaseStatus.InsufficientFunds)
                 return new ShopEndpointResult(ShopEndpointStatus.InsufficientFunds, purchased.Wallet);
 
-            long unopened = await ledger.BalanceAsync(account.PlayerId, pack.Id, ct).ConfigureAwait(false);
+            IReadOnlyDictionary<string, long> balances = await ledger.BalancesAsync(account.PlayerId, ct)
+                .ConfigureAwait(false);
+            balances.TryGetValue(pack.Id, out long unopened);
             return new ShopEndpointResult(
                 purchased.Status == PackPurchaseStatus.Purchased
                     ? ShopEndpointStatus.Purchased : ShopEndpointStatus.Replayed,
-                purchased.Wallet, pack.Id, unopened);
+                purchased.Wallet, pack.Id, unopened, CountVaultPacks(balances));
+        }
+
+        private static long CountVaultPacks(IReadOnlyDictionary<string, long> balances)
+        {
+            long count = 0;
+            foreach (KeyValuePair<string, long> row in balances)
+                if (row.Value > 0 && PackCatalog.IsPackItem(row.Key))
+                    count = checked(count + row.Value);
+            return count;
         }
 
         private static async Task<Account?> ResolveAsync(

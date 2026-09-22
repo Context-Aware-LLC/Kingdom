@@ -47,8 +47,14 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 CredentialHash.Of(Subject), "buyer@example.com");
             await ledger.GrantAsync(new EntitlementGrant(buyer.PlayerId, EconomyItems.Gold, 500,
                 "test", "fund-shop-buyer", DateTimeOffset.FromUnixTimeMilliseconds(new Clock().NowMs)));
+            await ledger.GrantAsync(new EntitlementGrant(buyer.PlayerId,
+                OnboardingGrant.StarterPack().Id, 2, "test", "existing-vault-packs",
+                DateTimeOffset.FromUnixTimeMilliseconds(new Clock().NowMs)));
             var economy = new EconomyService(ledger, new Clock());
             var opener = Opener(ledger);
+
+            ShopEndpointResult catalog = await ShopEndpoint.ReadAsync(Token, new Verifier(),
+                accounts, ledger, economy, opener, null);
 
             ShopEndpointResult first = await ShopEndpoint.PurchaseAsync(Token, PackId, "gold", RequestId,
                 new Verifier(), accounts, ledger, economy, opener, null);
@@ -65,6 +71,9 @@ namespace Emberfall.Net.Server.Tests.Accounts
                     "one intent cannot be rebound to a different currency");
                 Assert.That(first.Wallet.Gold, Is.EqualTo(300));
                 Assert.That(replay.UnopenedCount, Is.EqualTo(1));
+                Assert.That(catalog.VaultCount, Is.EqualTo(2));
+                Assert.That(first.VaultCount, Is.EqualTo(3));
+                Assert.That(replay.VaultCount, Is.EqualTo(3));
             });
             Assert.That(await ledger.BalanceAsync(buyer.PlayerId, PackId), Is.EqualTo(1));
             Assert.That((await ledger.HistoryAsync(buyer.PlayerId)).Any(row =>

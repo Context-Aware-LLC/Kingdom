@@ -58,6 +58,7 @@ namespace Emberfall.Presentation
                 gateway,
                 ShopRuntime.PackArt ?? new PackArtProvider(),
                 Exit,
+                OpenVault,
                 RefreshCollectionWallet);
             _shop.Open();
         }
@@ -82,6 +83,14 @@ namespace Emberfall.Presentation
         }
 
         private void Exit() => ScreenNav.Go(ReturnScene);
+
+        private void OpenVault()
+        {
+            PackVaultController.ReturnScene = ScreenNav.Shop;
+            PackVaultController.Pending = null;
+            PackVaultController.Mode = PackVaultMode.Vault;
+            ScreenNav.Go(ScreenNav.PackVault);
+        }
 
     }
 }

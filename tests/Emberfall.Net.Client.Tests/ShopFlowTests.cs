@@ -23,7 +23,7 @@ namespace Emberfall.Net.Client.Tests
             var after = new ShopSnapshot(
                 new WalletBalances(200, 200, 85),
                 new List<PackOffer>(),
-                new List<GemBundleOffer>());
+                new List<GemBundleOffer>(), vaultCount: 3);
             var authoritative = new PackPurchaseResult(after, "pack.emberfall", 1);
             var gateway = new RecordingShopGateway(before, authoritative);
             var flow = new ShopFlow(gateway);
@@ -39,6 +39,7 @@ namespace Emberfall.Net.Client.Tests
                 Assert.That(result, Is.SameAs(authoritative));
                 Assert.That(flow.Snapshot, Is.SameAs(after));
                 Assert.That(result.UnopenedCount, Is.EqualTo(1));
+                Assert.That(result.Shop.VaultCount, Is.EqualTo(3));
                 Assert.That(result.Shop.Wallet.Shards, Is.EqualTo(85));
             });
         }
