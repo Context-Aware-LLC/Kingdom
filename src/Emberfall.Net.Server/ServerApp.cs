@@ -860,8 +860,12 @@ namespace Emberfall.Net.Server
                 return Results.Json(new
                 {
                     status = result.Status.ToString().ToLowerInvariant(),
-                    wallet = new { gold = result.Wallet.Gold, gems = result.Wallet.Gems,
-                                   shards = result.Wallet.Shards },
+                    wallet = new
+                    {
+                        gold = result.Wallet.Gold,
+                        gems = result.Wallet.Gems,
+                        shards = result.Wallet.Shards,
+                    },
                     packs = shopOffers,
                 }, statusCode: result.HttpStatus);
             });
@@ -895,8 +899,12 @@ namespace Emberfall.Net.Server
                     status = result.Status.ToString().ToLowerInvariant(),
                     packId = result.PackId,
                     unopenedCount = result.UnopenedCount,
-                    wallet = new { gold = result.Wallet.Gold, gems = result.Wallet.Gems,
-                                   shards = result.Wallet.Shards },
+                    wallet = new
+                    {
+                        gold = result.Wallet.Gold,
+                        gems = result.Wallet.Gems,
+                        shards = result.Wallet.Shards,
+                    },
                     packs = shopOffers,
                 }, statusCode: result.HttpStatus);
             });
