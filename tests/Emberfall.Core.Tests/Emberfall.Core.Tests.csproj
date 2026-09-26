@@ -51,6 +51,9 @@
     <!-- Card SFX event routing is Unity-free; audio loading/playback remains in the Unity-only director. -->
     <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\CardSoundCueRouter.cs"
              Link="Presentation\CardSoundCueRouter.cs" />
+    <!-- Hero-impact event classification is Unity-free; native haptics and camera motion stay in Unity. -->
+    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\HeroImpactFeedbackPolicy.cs"
+             Link="Presentation\HeroImpactFeedbackPolicy.cs" />
     <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\MinionSummonArchetypes.cs"
              Link="Presentation\MinionSummonArchetypes.cs" />
     <!-- Unearth snapshot interpretation is Unity-free so reconnect/redaction/order behavior can

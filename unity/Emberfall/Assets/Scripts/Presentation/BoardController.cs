@@ -158,6 +158,7 @@ namespace Emberfall.Presentation
         private readonly List<InstanceId>    _pendingRemoval = new();
         private readonly HashSet<InstanceId> _diedThisTick   = new();
         private Coroutine _removalFlush;
+        private bool _heroDeathShakePlayed;
 
         private const float DeathDissolveDur = 0.40f;
 
@@ -177,6 +178,7 @@ namespace Emberfall.Presentation
             _inputRouter = inputRouter;
             _matchRunner = matchRunner;
             _artProvider = artProvider;
+            _heroDeathShakePlayed = false;
 #if UNITY_EDITOR
             // Editor play mode: serve art from AssetDatabase — fast iteration, no content
             // build required (dev-docs/pipelines/art-and-rendering.md:13). Player builds resolve through Addressables.
@@ -237,6 +239,16 @@ namespace Emberfall.Presentation
         // which the sweep simply never looks up.
         private void OnMatchEvent(IReadOnlyList<GameEvent> batch)
         {
+            HeroImpactFeedbackDecision impact = HeroImpactFeedbackPolicy.Evaluate(
+                _currentState, _localHumanId, batch, _heroDeathShakePlayed);
+            for (int i = 0; i < impact.DamagePulseCount; i++)
+                HeroHaptics.PulseDamage();
+            if (impact.ShakeForHeroDeath)
+            {
+                _heroDeathShakePlayed = true;
+                ScreenEarthquake.Play(Camera.main);
+            }
+
             foreach (GameEvent e in batch)
             {
                 if (e.Kind == GameEventKind.AttackDeclared && e.Source.HasValue && e.Target.HasValue)
