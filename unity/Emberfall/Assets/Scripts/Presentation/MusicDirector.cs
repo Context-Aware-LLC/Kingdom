@@ -70,13 +70,14 @@ namespace Emberfall.Presentation
             }
             _clips.AddRange(handle.Result);
             Reshuffle();
-            PlayNext();
+            if (!OpeningCinematic.IsActive) PlayNext();
         }
 
         private void Update()
         {
             if (_clips.Count == 0 || _source == null) return;
             if (_suspended) return;
+            if (OpeningCinematic.IsActive) return;
             if (!_source.isPlaying) PlayNext();
         }
 
