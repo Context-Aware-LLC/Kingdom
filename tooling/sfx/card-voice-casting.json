@@ -1,0 +1,13 @@
+{
+  "_about": "Per-card voice casting for individual minions -- distinct from voice-lines.json, which is keyed by hero PrimaryClass (8 voices, one per class). A legendary or epic minion here can use ANY voice, including one already cast to a hero class (Sam, 2026-09-27): there is no collision rule to check. Lines are written and dispatched in a later pass; this file exists to pin the casting decision as it's made, before the lines exist.",
+  "cards": {
+    "night_seraphine": {
+      "card_name": "Seraphine, Whisper Queen",
+      "voice_name": "Natasha",
+      "voice_id": "PB6BdkFkZLbI39GHdnbQ",
+      "source": "https://elevenlabs.io/app/voice-lab/share/4eaa727b84bbb5bac05be2e454cedfc4d4662f08e677f7d917668d5d99d3e86b/PB6BdkFkZLbI39GHdnbQ",
+      "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
+      "lines": {}
+    }
+  }
+}
