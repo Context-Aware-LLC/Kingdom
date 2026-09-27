@@ -156,6 +156,22 @@ namespace Emberfall.Presentation
         /// costs the player something real.</summary>
         private bool _busy;
 
+        /// <summary>
+        /// The balance the shelf last drew, kept so Done can redraw it with one fewer pack instead of
+        /// re-reading all of <c>GET /collection</c> — a full round trip, token refresh included, to
+        /// learn a number the receipt already settled.
+        ///
+        /// <para><b>Not a prediction</b> (ADR-0004): the decrement is applied only on
+        /// <see cref="PackOpenStatus.Opened"/>, which is the server saying it spent one pack on that
+        /// line. <see cref="PackOpenStatus.AlreadyOpened"/> moved no counter, so it re-reads instead,
+        /// as does every failure path.</para>
+        /// </summary>
+        private Dictionary<string, long> _shelfBalance;
+
+        /// <summary>True when <see cref="_shelfBalance"/> already reflects the open whose reveal is
+        /// on screen, so Done may redraw from it without a fetch.</summary>
+        private bool _shelfSettled;
+
         private CancellationTokenSource _cancel;
 
         private void OnEnable()
@@ -302,6 +318,11 @@ namespace Emberfall.Presentation
         {
             if (_shelf == null) return;
             _shelf.Clear();
+            _shelfBalance = packs == null
+                ? new Dictionary<string, long>(StringComparer.Ordinal)
+                : new Dictionary<string, long>(packs.Count, StringComparer.Ordinal);
+            if (packs != null)
+                foreach (KeyValuePair<string, long> line in packs) _shelfBalance[line.Key] = line.Value;
 
             // Ordinal, so the shelf does not reorder itself between two reads of the same balance.
             var lines = new List<KeyValuePair<string, long>>();
@@ -601,6 +622,15 @@ namespace Emberfall.Presentation
                     SetStatus("");
                     PackOpenReceipt receipt = result.Receipt;
 
+                    _shelfSettled = false;
+                    if (result.Status == PackOpenStatus.Opened
+                        && _shelfBalance != null
+                        && _shelfBalance.TryGetValue(packId, out long held) && held > 0)
+                    {
+                        _shelfBalance[packId] = held - 1;
+                        _shelfSettled = true;
+                    }
+
                     // NO SKIP CONTROL, and spec §8 is satisfied by its absence rather than by a flag.
                     // The rule was "no skip on the gift's first pack; everything after it is
                     // skippable", written when the tear was a stage the player had to sit through and
@@ -672,12 +702,22 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>Done, on the reveal. A receipt this screen produced goes back to the shelf with
-        /// one fewer on it; one handed in by the store goes back to the store.</summary>
+        /// one fewer on it — drawn from the settled balance when the receipt settled it, re-read
+        /// otherwise; one handed in by the store goes back to the store.</summary>
         private void RevealDismissed()
         {
             if (_revealWasHandedIn)
             {
                 Exit();
+                return;
+            }
+
+            if (_shelfSettled)
+            {
+                _shelfSettled = false;
+                // Unbusy BEFORE the render: BuildTile reads _busy to decide whether a tile is live.
+                SetBusy(false);
+                RenderShelf(_shelfBalance);
                 return;
             }
             Refresh();
