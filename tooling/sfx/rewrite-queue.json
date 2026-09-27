@@ -1,18 +1,81 @@
 {
   "_about": "Lines flagged in soundweb as needing a REWRITE -- the words are wrong, so every take of them is wrong. Keyed by canonical stem. Written by the Rewrite button's panel, which carries an optional 'note' -- Sam's suggested replacement, entered before the flag is written at all. Clear an entry by unflagging it there, or by hand once the line in voice-lines.json (or card-voice-casting.json) has been rewritten and regenerated.",
   "needs_rewrite": {
-    "vo_card_ember_general_kira_play_3": {
-      "class": "card:ember_general_kira",
-      "moment": "play",
-      "text": "Rally! We burn together.",
-      "note": "Rally for the Flame!!",
+    "vo_card_grave_caretaker_solen_attack_1": {
+      "class": "card:grave_caretaker_solen",
+      "moment": "attack",
+      "text": "This is mercy, of a kind.",
+      "note": "In death you will have peace.",
       "status": "needs_rewrite"
     },
     "vo_card_grave_caretaker_solen_attack_2": {
       "class": "card:grave_caretaker_solen",
       "moment": "attack",
       "text": "I take what I'm owed.",
-      "note": "",
+      "note": "I reap what I am owed.",
+      "status": "needs_rewrite"
+    },
+    "vo_card_grave_caretaker_solen_death_1": {
+      "class": "card:grave_caretaker_solen",
+      "moment": "death",
+      "text": "Rise, and finish what I started.",
+      "note": "Rise and avenge me!!",
+      "status": "needs_rewrite"
+    },
+    "vo_card_grave_caretaker_solen_death_2": {
+      "class": "card:grave_caretaker_solen",
+      "moment": "death",
+      "text": "My watch ends. Theirs begins.",
+      "note": "I have longed for this peace.",
+      "status": "needs_rewrite"
+    },
+    "vo_card_grave_caretaker_solen_play_2": {
+      "class": "card:grave_caretaker_solen",
+      "moment": "play",
+      "text": "Rest easy. I'm still watching over you.",
+      "note": "Peaceful rest I watch over you.",
+      "status": "needs_rewrite"
+    },
+    "vo_card_neutral_aric_attack_1": {
+      "class": "card:neutral_aric",
+      "moment": "attack",
+      "text": "Together, we're heavier than this.",
+      "note": "Strike as one!",
+      "status": "needs_rewrite"
+    },
+    "vo_card_neutral_aric_death_1": {
+      "class": "card:neutral_aric",
+      "moment": "death",
+      "text": "Carry what I started.",
+      "note": "Carry On!",
+      "status": "needs_rewrite"
+    },
+    "vo_card_neutral_aric_death_2": {
+      "class": "card:neutral_aric",
+      "moment": "death",
+      "text": "First among many... now among the fallen.",
+      "note": "Though I fall you must go on.",
+      "status": "needs_rewrite"
+    },
+    "vo_card_neutral_aric_death_3": {
+      "class": "card:neutral_aric",
+      "moment": "death",
+      "text": "The many outlast the first.",
+      "note": "I am dying, but the Resistance cannot.",
+      "status": "needs_rewrite"
+    },
+    "vo_card_night_seraphine_play_1": {
+      "class": "card:night_seraphine",
+      "moment": "play",
+      "text": "Every shadow answers to me now.",
+      "note": "Every shadow answers to me.",
+      "status": "needs_rewrite"
+    },
+    "vo_card_night_seraphine_play_2": {
+      "class": "card:night_seraphine",
+      "moment": "play",
+      "text": "Whisper the word. I'll bring the blade.",
+      "note": "Was that a whispered whimper?",
       "status": "needs_rewrite"
     }
   }
