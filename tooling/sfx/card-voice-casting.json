@@ -1,5 +1,11 @@
 {
-  "_about": "Per-card voice casting for individual minions -- distinct from voice-lines.json, which is keyed by hero PrimaryClass (8 voices, one per class). A legendary or epic minion here can use ANY voice, including one already cast to a hero class (Sam, 2026-09-27): there is no collision rule to check. Lines are written and dispatched in a later pass; this file exists to pin the casting decision as it's made, before the lines exist.",
+  "_about": "Per-card voice casting for individual minions -- distinct from voice-lines.json, which is keyed by hero PrimaryClass (8 voices, one per class). A legendary or epic minion here can use ANY voice, including one already cast to a hero class (Sam, 2026-09-27): there is no collision rule to check. This file exists to pin the casting decision as it's made, and now the lines dispatched against it.",
+  "_moments": {
+    "play": "The minion's ON_PLAY summon beat -- what it says arriving on the board.",
+    "attack": "Said swinging into a target.",
+    "death": "Said dying. For Kira Blade of Shadows and Caretaker Solen this coincides with their Toll (ON_DEATH) effect, so the line can lean into what the death itself does.",
+    "_wiring": "NOT the audio.md event vocabulary (CardPlayed / hero power / friendly-summon-observer). Nothing routes 'attack' or 'death' to a card voice clip yet -- that hookup is separate, later work. This file is content, not wiring."
+  },
   "cards": {
     "night_seraphine": {
       "card_name": "Seraphine, Whisper Queen",
@@ -7,7 +13,23 @@
       "voice_id": "PB6BdkFkZLbI39GHdnbQ",
       "source": "https://elevenlabs.io/app/voice-lab/share/4eaa727b84bbb5bac05be2e454cedfc4d4662f08e677f7d917668d5d99d3e86b/PB6BdkFkZLbI39GHdnbQ",
       "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
-      "lines": {}
+      "lines": {
+        "play": [
+          "Every shadow answers to me now.",
+          "Whisper the word. I'll bring the blade.",
+          "The Queen has ears everywhere."
+        ],
+        "attack": [
+          "You won't hear this coming.",
+          "A whisper, then silence.",
+          "Quiet, as a blade should be."
+        ],
+        "death": [
+          "Even queens go quiet.",
+          "The whisper... fades.",
+          "Keep my throne warm."
+        ]
+      }
     },
     "warden_aldric": {
       "card_name": "Aldric, The Fortifier",
@@ -15,7 +37,23 @@
       "voice_id": "7rQX8r6PVq3gfJ8rZzyE",
       "source": "https://elevenlabs.io/app/voice-lab/share/d396af315ee8681a2edbd4739b7c111101366f851614b6d67562a5f62a619e20/7rQX8r6PVq3gfJ8rZzyE",
       "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
-      "lines": {}
+      "lines": {
+        "play": [
+          "Stand behind me. I'll hold the line.",
+          "None of you fall while I stand.",
+          "The wall just got taller."
+        ],
+        "attack": [
+          "Feel the weight of it.",
+          "This is what holding ground looks like.",
+          "Break, or move aside."
+        ],
+        "death": [
+          "Hold... without me.",
+          "The wall... cracks at last.",
+          "I fortified what I could."
+        ]
+      }
     },
     "ember_general_kira": {
       "card_name": "General Kira",
@@ -23,7 +61,23 @@
       "voice_id": "Qbw4VpyUrHEG7NigKzty",
       "source": "https://elevenlabs.io/app/voice-lab/share/914770ef70c19d0797266f204709ec45f46561f06e80bd87e4d9857bc507c0ad/Qbw4VpyUrHEG7NigKzty",
       "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
-      "lines": {}
+      "lines": {
+        "play": [
+          "Fall in! The flame is unified again.",
+          "Three for the hero. More to come.",
+          "Rally! We burn together."
+        ],
+        "attack": [
+          "For Emberward!",
+          "This strike carries the whole line.",
+          "Feel the fire behind it."
+        ],
+        "death": [
+          "Hold the line... without me.",
+          "The flame... passes to you.",
+          "A general falls. The war does not."
+        ]
+      }
     },
     "neutral_aric": {
       "card_name": "Aric, First Among Many",
@@ -32,7 +86,23 @@
       "source": "https://elevenlabs.io/app/voice-lab/share/ae23ca715ed6b339e4ad22f2d45dd40b36a6449e031b4f8970bfe29524bd1bbc/3SF4rB1fGBMXU9xRM7pz",
       "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
       "note": "Sam: this voice reads very quiet -- needs gain added on generation or in post.",
-      "lines": {}
+      "lines": {
+        "play": [
+          "None above the rest. All of us, together.",
+          "Stand taller. I've got the healing.",
+          "First among many, not above them."
+        ],
+        "attack": [
+          "Together, we're heavier than this.",
+          "One strike, every shoulder behind it.",
+          "This is what unity swings like."
+        ],
+        "death": [
+          "Carry what I started.",
+          "First among many... now among the fallen.",
+          "The many outlast the first."
+        ]
+      }
     },
     "night_kira_blade_of_shadows": {
       "card_name": "Kira, Blade of Shadows",
@@ -40,7 +110,23 @@
       "voice_id": "HBDoL4wkcalemIO0nUAu",
       "source": "https://elevenlabs.io/app/voice-lab/share/08d830cec0aea5bf6ea88c4a22c485d7461ce058ade7276be1d0c8a27cf0bb5e/HBDoL4wkcalemIO0nUAu",
       "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
-      "lines": {}
+      "lines": {
+        "play": [
+          "You won't see the blade until it's in.",
+          "Shadows move first. I move faster.",
+          "One cut. That's all I need."
+        ],
+        "attack": [
+          "Gone before you bleed.",
+          "Vanguard means I go first.",
+          "Skirmish. Then silence."
+        ],
+        "death": [
+          "Even dead, I reach you.",
+          "One last blade. Straight to the throat.",
+          "The Toll comes due."
+        ]
+      }
     },
     "grave_caretaker_solen": {
       "card_name": "Caretaker Solen",
@@ -48,7 +134,23 @@
       "voice_id": "Vs5CmVCVJwW4odQS2pVf",
       "source": "https://elevenlabs.io/app/voice-lab/share/18599001ec9126b66cf378225f5b839e6c127716f0f3dc7807450b275732de44/Vs5CmVCVJwW4odQS2pVf",
       "why": "Sam, 2026-09-27. UNDEAD tribe, not HUMAN -- outside the original Human-minion scope this file started from, added anyway on Sam's pick. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
-      "lines": {}
+      "lines": {
+        "play": [
+          "I tend what the grave keeps.",
+          "Rest easy. I'm still watching over you.",
+          "The dead are patient, in my care."
+        ],
+        "attack": [
+          "This is mercy, of a kind.",
+          "I take what I'm owed.",
+          "Drained, and given back to the earth."
+        ],
+        "death": [
+          "Rise, and finish what I started.",
+          "My watch ends. Theirs begins.",
+          "Two more rise from my care."
+        ]
+      }
     }
   }
 }
