@@ -210,10 +210,28 @@ def scan():
         g = groups.setdefault(group_key, {"voice": voice_by_group.get(group_key, ""), "subs": {}})
         line = g["subs"].setdefault(sub, {}).setdefault(
             canon, {"text": text, "takes": [], "final": None})
-        final = final_dir / (canon + path.suffix)
-        if final.exists():
-            line["final"] = rel(final)
-        line["takes"].append(rel(path))
+        if text and not line["text"]:
+            line["text"] = text
+        # path is None for a SEEDED line (see below) -- there is no take to record, only the
+        # line's existence. Whether it was ever promoted is still worth checking either way, so
+        # a line that was promoted and then had its takes archived/rejected still shows "in
+        # Assets" instead of looking unfinished.
+        if line["final"] is None:
+            final = final_dir / (canon + (path.suffix if path is not None else ".wav"))
+            if final.exists():
+                line["final"] = rel(final)
+        if path is not None:
+            line["takes"].append(rel(path))
+
+    # Seed every AUTHORED line before looking at disk at all, even ones with zero live takes.
+    # Without this, a line whose only take(s) got rejected (moved to _rejected/, so the rglob
+    # below never sees it) vanishes from the page on the next load -- taking its Rewrite button
+    # with it, so the one line you just decided was bad becomes the one line you can no longer
+    # flag. Cost Sam a "where did it go" on 2026-09-27.
+    for stem, (cls, moment, text) in text_by_stem.items():
+        add(cls, moment, None, stem, VOICE_FINAL / FOLDER.get(cls, "Unsorted"), text)
+    for stem, (handle, moment, text) in card_text_by_stem.items():
+        add("card:" + handle, moment, None, stem, VOICE_FINAL / "Cards" / handle, text)
 
     if VOICE_TAKES.is_dir():
         for p in sorted(VOICE_TAKES.rglob("*")):
