@@ -77,6 +77,7 @@ import urllib.parse
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 LINES_FILE = pathlib.Path(__file__).resolve().parent / "voice-lines.json"
+CARD_LINES_FILE = pathlib.Path(__file__).resolve().parent / "card-voice-casting.json"
 # Committed, not gitignored: a flag raised in one session is acted on in another.
 QUEUE_FILE = pathlib.Path(__file__).resolve().parent / "rewrite-queue.json"
 
@@ -154,6 +155,25 @@ def load_lines():
     return text_by_stem, voice_by_class
 
 
+def load_card_lines():
+    """canonical stem -> (handle, moment, text); handle -> voice_name. Sibling to load_lines(),
+    for card-voice-casting.json's per-MINION voices rather than voice-lines.json's per-CLASS
+    ones -- kept as a separate lookup rather than merged into load_lines() because the two
+    files key differently (handle vs. class) and a card's group in the page is per-card, not
+    per-class. Missing file is not fatal, same reasoning as load_lines()."""
+    try:
+        data = json.loads(CARD_LINES_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}, {}
+    text_by_stem, voice_by_handle = {}, {}
+    for handle, entry in data.get("cards", {}).items():
+        voice_by_handle[handle] = entry.get("voice_name") or ""
+        for moment, lines in entry.get("lines", {}).items():
+            for i, text in enumerate(lines, 1):
+                text_by_stem["vo_card_%s_%s_%d" % (handle, moment, i)] = (handle, moment, text)
+    return text_by_stem, voice_by_handle
+
+
 def load_queue() -> dict:
     """stem -> {class, moment, text}. A missing or corrupt file is an EMPTY queue, never fatal:
     losing the flags is annoying, taking the whole preview page down over them is worse."""
@@ -179,10 +199,13 @@ def save_queue(queue: dict) -> None:
 def scan():
     """Every candidate clip, grouped for display. Rebuilt per request so the page is never stale."""
     text_by_stem, voice_by_class = load_lines()
+    card_text_by_stem, voice_by_handle = load_card_lines()
+    voice_by_group = dict(voice_by_class)
+    voice_by_group.update({"card:" + h: v for h, v in voice_by_handle.items()})
     groups = {}
 
     def add(group_key, sub, path, canon, final_dir, text):
-        g = groups.setdefault(group_key, {"voice": voice_by_class.get(group_key, ""), "subs": {}})
+        g = groups.setdefault(group_key, {"voice": voice_by_group.get(group_key, ""), "subs": {}})
         line = g["subs"].setdefault(sub, {}).setdefault(
             canon, {"text": text, "takes": [], "final": None})
         final = final_dir / (canon + path.suffix)
@@ -195,6 +218,13 @@ def scan():
             if p.suffix.lower() not in AUDIO_EXT or any(d in p.parts for d in SKIP_DIRS):
                 continue
             canon = canonical_stem(p.stem)
+            # Card stems (vo_card_<handle>_...) are checked first and routed to their own
+            # per-card group/folder; everything else falls through to the class lookup exactly
+            # as before.
+            if canon in card_text_by_stem:
+                handle, moment, text = card_text_by_stem[canon]
+                add("card:" + handle, moment, p, canon, VOICE_FINAL / "Cards" / handle, text)
+                continue
             cls, moment, text = text_by_stem.get(canon, ("UNMATCHED", "unknown", ""))
             add(cls, moment, p, canon, VOICE_FINAL / FOLDER.get(cls, "Unsorted"), text)
 
@@ -219,12 +249,16 @@ def destination(path: pathlib.Path, variant: bool = False) -> pathlib.Path:
     times a turn (undead_summon alone covers 22 cards), and one clip stops sounding like the game
     and starts sounding like a loop."""
     canon = canonical_stem(path.stem)
-    m = re.match(r"vo_([a-z]+)_", canon)
-    if m:
-        folder = next((f for cls, f in FOLDER.items() if cls.lower() == m.group(1)), "Unsorted")
-        base = VOICE_FINAL / folder
+    card_text_by_stem, _ = load_card_lines()
+    if canon in card_text_by_stem:
+        base = VOICE_FINAL / "Cards" / card_text_by_stem[canon][0]
     else:
-        base = SFX_FINAL
+        m = re.match(r"vo_([a-z]+)_", canon)
+        if m:
+            folder = next((f for cls, f in FOLDER.items() if cls.lower() == m.group(1)), "Unsorted")
+            base = VOICE_FINAL / folder
+        else:
+            base = SFX_FINAL
     if not variant:
         return base / (canon + path.suffix)
     for i in range(2, MAX_VARIANTS + 1):
