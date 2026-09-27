@@ -38,10 +38,11 @@ namespace Emberfall.Presentation
     {
         private const string CacheFileName = "intro.mp4";
 
-        /// <summary>Bucket/object path under Supabase Storage's public object endpoint. Sam: create
-        /// a PUBLIC bucket named "video" and upload the file at this path — anything else here is a
-        /// 404 that the download-failure branch below quietly swallows into "skip to menu".</summary>
-        private const string StorageObjectPath = "video/intro.mp4";
+        /// <summary>Bucket/object path under Supabase Storage's public object endpoint. Verified
+        /// live 2026-09-27: bucket "video", object "Emberfall-intro.mp4" (the original filename,
+        /// kept as uploaded rather than renamed to match code). A path mismatch here is a 404 that
+        /// the download-failure branch below quietly swallows into "skip to menu".</summary>
+        private const string StorageObjectPath = "video/Emberfall-intro.mp4";
 
         private const float DownloadTimeoutSeconds = 60f;
         private const float PrepareTimeoutSeconds = 30f;
