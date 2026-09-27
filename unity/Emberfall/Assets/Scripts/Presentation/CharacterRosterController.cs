@@ -270,6 +270,19 @@ namespace Emberfall.Presentation
                 else ShowDeckPane(DeckPane.Menu);
             });
             _deckModalConfirm?.RegisterCallback<ClickEvent>(_ => ConfirmDeckPane());
+
+            // Outside tap closes it (Sam, 2026-09-26), match pick only. `#deck-modal` is BOTH the
+            // full-bleed scrim and the flex container centring `#deck-dialog`, so a click on the
+            // dialog or any child bubbles here too — the target check is what tells them apart.
+            // Only the Menu pane closes: from Rename/CardBack/Delete a stray tap would throw away
+            // typed or pending input, so those keep Back as the one way out. Cancel is disabled
+            // while a save is in flight (see ConfirmDeckPane); the scrim honours the same rule.
+            _deckModal?.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.target != _deckModal) return;
+                if (!MatchDeckSelection.Choosing || _savingDeck || _deckPane != DeckPane.Menu) return;
+                CloseDeckDialog();
+            });
             _deckRenameField?.RegisterValueChangedCallback(_ => SetDeckError(""));
         }
 
