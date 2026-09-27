@@ -38,11 +38,12 @@ namespace Emberfall.Presentation
     {
         private const string CacheFileName = "intro.mp4";
 
-        /// <summary>Bucket/object path under Supabase Storage's public object endpoint. Verified
-        /// live 2026-09-27: bucket "video", object "Emberfall-intro.mp4" (the original filename,
-        /// kept as uploaded rather than renamed to match code). A path mismatch here is a 404 that
-        /// the download-failure branch below quietly swallows into "skip to menu".</summary>
-        private const string StorageObjectPath = "video/Emberfall-intro.mp4";
+        /// <summary>Bucket/object path under Supabase Storage's public object endpoint. NOT
+        /// "Emberfall" anything (Sam, 2026-09-27) -- that is the internal codename, not the
+        /// published name (still undecided, see the game-name thread), and this path is public: it
+        /// is fetched over plain HTTP by every client. A path mismatch here is a 404 that the
+        /// download-failure branch below quietly swallows into "skip to menu".</summary>
+        private const string StorageObjectPath = "video/intro.mp4";
 
         private const float DownloadTimeoutSeconds = 60f;
         private const float PrepareTimeoutSeconds = 30f;
