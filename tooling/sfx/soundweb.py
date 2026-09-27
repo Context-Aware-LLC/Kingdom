@@ -403,10 +403,19 @@ async function flag(stem, cls, moment, text, note) {
 }
 
 // Rewrite no longer flags on the click that opens it -- it opens this panel FIRST, so there is
-// somewhere to type the suggestion before anything is written to the queue file.
+// somewhere to type the suggestion before anything is written to the queue file. A small
+// textarea appearing below a button that was just clicked is easy to miss on a long page, so
+// opening it also scrolls it into view and focuses the textarea -- the cursor blinking there is
+// the tell that something happened.
 function togglePanel(stem) {
   const panel = document.getElementById("panel-" + stem);
-  if (panel) panel.classList.toggle("open");
+  if (!panel) return;
+  const opening = !panel.classList.contains("open");
+  panel.classList.toggle("open");
+  if (opening) {
+    panel.scrollIntoView({ block: "center", behavior: "smooth" });
+    panel.querySelector("textarea").focus();
+  }
 }
 
 function submitRewrite(stem, cls, moment, text, btn) {
