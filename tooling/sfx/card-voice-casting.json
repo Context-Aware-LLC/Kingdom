@@ -19,18 +19,18 @@
     },
     "ember_general_kira": {
       "card_name": "General Kira",
-      "voice_name": null,
+      "voice_name": "Kristen",
       "voice_id": "Qbw4VpyUrHEG7NigKzty",
       "source": "https://elevenlabs.io/app/voice-lab/share/914770ef70c19d0797266f204709ec45f46561f06e80bd87e4d9857bc507c0ad/Qbw4VpyUrHEG7NigKzty",
-      "why": "Sam, 2026-09-27. Voice name not given -- the share link's page is client-rendered and could not be scraped for it. Fill in when known.",
+      "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
       "lines": {}
     },
     "neutral_aric": {
       "card_name": "Aric, First Among Many",
-      "voice_name": null,
+      "voice_name": "Evil Guy Oxley",
       "voice_id": "3SF4rB1fGBMXU9xRM7pz",
       "source": "https://elevenlabs.io/app/voice-lab/share/ae23ca715ed6b339e4ad22f2d45dd40b36a6449e031b4f8970bfe29524bd1bbc/3SF4rB1fGBMXU9xRM7pz",
-      "why": "Sam, 2026-09-27. Voice name not given -- the share link's page is client-rendered and could not be scraped for it. Fill in when known.",
+      "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
       "note": "Sam: this voice reads very quiet -- needs gain added on generation or in post.",
       "lines": {}
     }
