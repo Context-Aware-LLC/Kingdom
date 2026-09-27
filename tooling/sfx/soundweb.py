@@ -223,15 +223,27 @@ def scan():
         if path is not None:
             line["takes"].append(rel(path))
 
-    # Seed every AUTHORED line before looking at disk at all, even ones with zero live takes.
+    # Seed every AUTHORED line that is NOT already finished, before looking at disk for takes.
     # Without this, a line whose only take(s) got rejected (moved to _rejected/, so the rglob
     # below never sees it) vanishes from the page on the next load -- taking its Rewrite button
     # with it, so the one line you just decided was bad becomes the one line you can no longer
     # flag. Cost Sam a "where did it go" on 2026-09-27.
+    #
+    # "Not already finished" is load-bearing: a line that IS promoted to Assets and has since had
+    # its candidate takes cleared (--archive-decided) is DONE, not stuck -- seeding it anyway
+    # resurrects every finished class as a page full of empty Rewrite-only rows with no audio,
+    # which is a worse bug than the one this seeding exists to fix. Cost Sam a second "where did
+    # my page go" minutes after the first fix, same day.
     for stem, (cls, moment, text) in text_by_stem.items():
-        add(cls, moment, None, stem, VOICE_FINAL / FOLDER.get(cls, "Unsorted"), text)
+        folder = VOICE_FINAL / FOLDER.get(cls, "Unsorted")
+        if (folder / (stem + ".wav")).exists():
+            continue
+        add(cls, moment, None, stem, folder, text)
     for stem, (handle, moment, text) in card_text_by_stem.items():
-        add("card:" + handle, moment, None, stem, VOICE_FINAL / "Cards" / handle, text)
+        folder = VOICE_FINAL / "Cards" / handle
+        if (folder / (stem + ".wav")).exists():
+            continue
+        add("card:" + handle, moment, None, stem, folder, text)
 
     if VOICE_TAKES.is_dir():
         for p in sorted(VOICE_TAKES.rglob("*")):
