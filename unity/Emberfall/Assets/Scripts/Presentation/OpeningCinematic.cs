@@ -34,6 +34,7 @@ namespace Emberfall.Presentation
         private VideoPlayer _player;
         private RenderTexture _target;
         private AspectRatioFitter _aspect;
+        private RawImage _picture;
         private bool _prepared;
         private bool _finished;
 
@@ -101,6 +102,7 @@ namespace Emberfall.Presentation
             Stretch(picture.GetComponent<RectTransform>());
 
             var image = picture.GetComponent<RawImage>();
+            _picture = image;
             image.color = Color.white;
             image.raycastTarget = false;
 
@@ -146,8 +148,8 @@ namespace Emberfall.Presentation
 
         // Any press skips (Sam, 2026-09-26): click, tap or space. Polled on the press edge rather
         // than through the EventSystem so it also works while the film is still preparing, when the
-        // canvas has nothing to raycast against yet. Complete() is idempotent, so a press on the
-        // frame the film ends on is harmless.
+        // canvas has nothing to raycast against yet. Skip() and Complete() both bail once the film
+        // is finished, so a press on the frame it ends on is harmless.
         private void Update()
         {
             if (_finished) return;
@@ -161,7 +163,46 @@ namespace Emberfall.Presentation
                 (mouse != null && mouse.leftButton.wasPressedThisFrame) ||
                 (touch != null && touch.primaryTouch.press.wasPressedThisFrame);
 
-            if (pressed) Complete();
+            if (pressed) Skip();
+        }
+
+        /// <summary>Ends the film on a player's press without letting that press reach the menu.
+        /// The skip lands on the press edge, so the release arrives after the film is gone and the
+        /// MainMenu underneath sees a pointer-up (or a space key-up) it never saw the start of. The
+        /// screen is therefore kept alive, black, until every skip input is let go — its EventSystem
+        /// is what feeds the menu, and with navigation off and an opaque raycast target on top it
+        /// swallows the release. Music is released immediately; only the input shield lingers.</summary>
+        private void Skip()
+        {
+            if (_finished) return;
+            _finished = true;
+            _active = false;
+
+            if (_player != null) _player.Stop();
+            if (_picture != null) _picture.enabled = false;
+            StartCoroutine(HoldUntilReleased());
+        }
+
+        private IEnumerator HoldUntilReleased()
+        {
+            // Capped so a stuck key or a lost touch can never trap the player behind black.
+            float deadline = Time.realtimeSinceStartup + 2f;
+            while (AnySkipInputHeld() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            // One more frame so the release itself is dispatched to this EventSystem, not the menu's.
+            yield return null;
+            Destroy(gameObject);
+        }
+
+        private static bool AnySkipInputHeld()
+        {
+            var keyboard = Keyboard.current;
+            var mouse = Mouse.current;
+            var touch = Touchscreen.current;
+            return (keyboard != null && keyboard.spaceKey.isPressed) ||
+                   (mouse != null && mouse.leftButton.isPressed) ||
+                   (touch != null && touch.primaryTouch.press.isPressed);
         }
 
         private IEnumerator PrepareAndPlay()
