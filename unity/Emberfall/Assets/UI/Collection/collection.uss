@@ -535,24 +535,28 @@
 }
 .col-query-actions {
     position: absolute;
-    top: var(--space-3);
+    top: var(--space-2);
     right: 0;
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
 }
+/* Bigger corner nav pass (Sam, 2026-09-27): 64 (up from --touch-min's 56), and `top` above moved
+ * from --space-3 to --space-2 so 8+64=72 stays flush with `.col-query-toolbar`'s own 72px row
+ * instead of overrunning it. */
 .col-query-actions .col-button {
-    min-height: var(--touch-min);
-    height: var(--touch-min);
+    min-height: 64px;
+    height: 64px;
     padding: 0 var(--space-4);
+    font-size: var(--type-body);
 }
 .col-query-actions .col-button--decks {
     min-width: 96px;
 }
 /* BACK MOVES TO THE BOTTOM-LEFT (Sam, 2026-09-07): it used to share `.col-query-actions`' top-right
  * row with Decks, crowding both against the deck-drawer's own Close when the drawer was open.
- * `.col-back-corner` itself now lives in theme.uss -- Shop became the second screen to use it the
- * same day, so it moved rather than being copied. */
+ * The canonical `.emb-back-button` (theme.uss, 2026-09-27) is what every screen's Back control
+ * uses now. */
 /* `max-width: 58%` is gone with the row: it kept the search field from swallowing a full-width
  * drawer's line. In a column it would cap the field at 58% of ~370dp and leave the sort control
  * beneath it visibly wider, which reads as a broken alignment rather than a deliberate one. */
@@ -897,18 +901,18 @@
  * with the current token) and deliberately continues
  * 44px beneath the gear; `.ms-gear` clips its opaque sprite to rounded corners so that overlap
  * reads as a layered control instead of a square collision. Their bottom/height match
- * (var(--space-6), 58px) so the two read as one row. Pulling this button
- * out of the drawer's flex column into position:absolute is what makes that alignment exact --
- * a flex sibling can't be told "match this unrelated element's bottom" any other way. left
- * matches the drawer's own left padding (var(--space-6)) so it still reads as flush with the
- * rest of the drawer's content above it. */
+ * (var(--space-6), 68px -- updated 2026-09-27 alongside `.ms-gear`) so the two read as one row.
+ * Pulling this button out of the drawer's flex column into position:absolute is what makes that
+ * alignment exact -- a flex sibling can't be told "match this unrelated element's bottom" any
+ * other way. left matches the drawer's own left padding (var(--space-6)) so it still reads as
+ * flush with the rest of the drawer's content above it. */
 .deck-drawer__manage {
     position: absolute;
     left: var(--space-6);
     right: var(--edge-safe);
     margin-right: 48px;
     bottom: var(--space-6);
-    height: 58px;
+    height: 68px;
     border-width: 0;
     border-radius: var(--space-2);
     color: var(--ink-1);
@@ -1240,8 +1244,8 @@
     opacity: 0.42;
 }
 .col-query-actions .chrome-button {
-    min-height: var(--touch-min);
-    height: var(--touch-min);
+    min-height: 64px;
+    height: 64px;
     padding: 0 20px;
 }
 .deck-drawer__back.chrome-button {

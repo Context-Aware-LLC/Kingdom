@@ -312,11 +312,12 @@
 #shop-overlay .shop-section {
     padding: var(--space-4);
     margin-bottom: 0;
-    /* Reserves Back's footprint (Sam, 2026-09-07): `.col-back-corner` sits absolute at
-       bottom:var(--space-6)=24 with height:var(--touch-min)=56, so 24+56=80 plus a var(--space-3)=12
-       clearance gap is 92 -- otherwise the last pack row or the section label under it renders
-       straight under the button, same trap `.deck-chooser-frame` hit in collection.uss. */
-    padding-bottom: 92px;
+    /* Reserves Back's footprint (Sam, 2026-09-07; height updated 2026-09-27 with the canonical
+       button): `.emb-back-button` sits absolute at bottom:var(--space-6)=24 with height:68, so
+       24+68=92 plus a var(--space-3)=12 clearance gap is 104 -- otherwise the last pack row or
+       the section label under it renders straight under the button, same trap
+       `.deck-chooser-frame` hit in collection.uss. */
+    padding-bottom: 104px;
 }
 
 /* Same panel-removal as `.shop-bar` above: the section's dark card was the other layer sitting

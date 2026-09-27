@@ -42,9 +42,9 @@
                         <ui:VisualElement name="shop-gem-list" class="shop-gem-list"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <!-- Bottom-left, off the bar (Sam, 2026-09-07): same corner as Collection's
-                     back-button, part of moving every back button to one place. -->
-                <ui:Button name="btn-shop-close" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back col-back-corner"/>
+                <!-- Bottom-left, off the bar (Sam, 2026-09-07): same corner as every other
+                     screen's Back button. `.emb-back-button` (theme.uss) is the canonical one. -->
+                <ui:Button name="btn-shop-close" text="Back" class="emb-back emb-back-button"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <!-- Opened by tapping a tile in shop-pack-list (Sam, 2026-09-05; the shell FLIES IN from

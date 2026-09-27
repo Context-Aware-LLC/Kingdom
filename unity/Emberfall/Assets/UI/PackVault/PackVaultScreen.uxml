@@ -26,7 +26,7 @@
             <ui:VisualElement name="vault-shelf" class="vault-shelf"/>
             <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
         </ui:VisualElement>
-        <ui:Button name="btn-vault-back" text="← Back" class="vault-back emb-back col-back-corner emb-edge"/>
+        <ui:Button name="btn-vault-back" text="Back" class="emb-back emb-back-button"/>
         <!-- THERE IS NO TEAR STAGE, and its absence is the design (Sam, 2026-09-03).
              A full screen overlay used to sit here, re-render the tapped pack into itself at a fixed
              size and ask for a second tap. PackTearAnimator now tears the shelf tile itself, so

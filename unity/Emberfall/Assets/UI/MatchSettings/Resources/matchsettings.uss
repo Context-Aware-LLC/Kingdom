@@ -20,7 +20,7 @@
     bottom: var(--space-6);
     right: var(--space-6);
     width: 68px;
-    height: 58px;
+    height: 68px;
     background-color: rgba(18, 23, 31, 0.98);
     background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
     -unity-slice-left: 64;
@@ -39,8 +39,8 @@
 .ms-gear:hover  { -unity-background-image-tint-color: rgb(255, 255, 255); }
 .ms-gear:active { -unity-background-image-tint-color: rgb(188, 195, 205); translate: 0 1px; }
 .ms-gear-bar {
-    width: 22px;
-    height: 3px;
+    width: 24px;
+    height: 4px;
     margin: 2px 0;
     background-color: rgb(232, 194, 132);
 }

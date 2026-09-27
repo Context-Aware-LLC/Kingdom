@@ -20,9 +20,9 @@
 
           The header's two-button actions row (View Collection, Main Menu) is gone the same day.
           "View Collection" is now this screen's only Back button — Main Menu's old job, same
-          corner every other screen uses (Sam, 2026-09-07: .col-back-corner, collection.uss/
-          shop.uss). Browsing the collection as its OWN destination from this screen is cut; the
-          deck grid and the deck modal are what this screen is for.
+          corner every other screen uses via the canonical `.emb-back-button` (theme.uss).
+          Browsing the collection as its OWN destination from this screen is cut; the deck grid
+          and the deck modal are what this screen is for.
         -->
         <ui:VisualElement class="roster-body">
             <ui:VisualElement class="roster-panel roster-panel--list">
@@ -35,14 +35,11 @@
         </ui:VisualElement>
 
         <!-- AFTER `.roster-body`, not before (2026-09-08, fixing the button that shipped dead):
-             `.roster-scroll` covers the same bottom-left corner `.col-back-corner` anchors to, and
+             `.roster-scroll` covers the same bottom-left corner `.emb-back-button` anchors to, and
              a LATER sibling paints over an earlier one and wins hit-testing on the overlap — with
              this above `.roster-body` the scroll view sat on top and ate every click before it
-             reached the button.
-             Plain "Back", no arrow glyph: U+2190 rendered as a double dash here — the same font-
-             coverage bet .col-filter-ribbon__chevron's comment (collection.uss) already warns off.
-             A different arrow code point is the same gamble; skip it. -->
-        <ui:Button name="back-button" text="Back" class="roster-button roster-button--ghost emb-back col-back-corner emb-edge" />
+             reached the button. -->
+        <ui:Button name="back-button" text="Back" class="emb-back emb-back-button" />
 
         <!--
           Find Game's second step. The first — pick a deck — is the same grid the deck-management

@@ -39,7 +39,7 @@
                 <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Button name="back-button" text="← Back" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back col-back-corner emb-edge"/>
+        <ui:Button name="back-button" text="Back" class="emb-back emb-back-button"/>
         <ui:VisualElement name="query-scrim" picking-mode="Ignore" class="col-query-scrim"/>
         <ui:VisualElement name="query-bar" picking-mode="Ignore" class="col-query chrome-panel chrome-panel--outer">
             <ui:ScrollView name="query-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="col-query-scroll">

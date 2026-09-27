@@ -364,18 +364,61 @@
     display: none;
 }
 
-/* Bottom-left corner for a screen's own Back button (Sam, 2026-09-07): the convention started on
- * Collection, scoped to `collection.uss` because `.emb-back` also marks buttons on other screens
- * that had not been checked for this corner being clear on THEIR layout. Shop is the second screen
- * to get it, checked and clear, so the rule moved here rather than being copy-pasted a second time.
+/* THE CANONICAL BACK BUTTON (Sam, 2026-09-27). One visual definition for every screen's own
+ * corner Back control, replacing four independent copies that had drifted: Collection/Shop's
+ * `col-button`+`chrome-button` combo (which only rendered correctly on Collection -- Shop never
+ * loaded `collection.uss`, so its `col-button`/`col-button--ghost` classes matched nothing and
+ * Unity's default button background showed through the chrome sprite's transparent corners),
+ * the roster's `#back-button` ID-selector escape hatch fighting `.roster-button`'s own sizing,
+ * and the pack vault's flat-color `.vault-back` with no chrome at all.
+ *
+ * Apply THIS CLASS ALONE alongside the functional `.emb-back` marker (BackNavigation.cs). It
+ * carries its own size, chrome and position, so it never needs a screen-local override or a
+ * specificity fight with that screen's own button styles again.
+ *
+ * height 68 matches `.ms-gear` (matchsettings.uss), the opposite bottom corner, so the two read
+ * as one row. That is 12 over `--touch-min`'s floor, matching this session's "make corner nav
+ * bigger" pass (back, Collection's Decks button, the settings gear) -- Filters was left alone.
+ *
+ * TEXT IS PLAIN "Back", NO ARROW GLYPH. U+2190 rendered as a double dash on the roster screen
+ * (font-coverage gamble, same one `.col-filter-ribbon__chevron`'s comment in collection.uss
+ * warns off for the same reason) -- since the glyph is a bet against the SAME shared font
+ * everywhere, skip it everywhere rather than per screen.
+ *
  * Mirrors `.ms-gear`'s bottom-right anchor (matchsettings.uss) on the opposite side, same
- * var(--space-6) offset both axes. Still opt-in per screen (`.col-back-corner`, not `.emb-back`
- * itself) -- add it to a screen's own back button only after confirming the corner is clear there. */
-.col-back-corner {
+ * var(--space-6) offset both axes, `margin: 0 var(--edge-safe)` composing with it the same way
+ * `.emb-edge` does (see the comment above it) for the hardware cutout. */
+.emb-back-button {
     position: absolute;
     bottom: var(--space-6);
     left: var(--space-6);
-    min-height: var(--touch-min);
-    height: var(--touch-min);
-    padding: 0 var(--space-4);
+    margin: 0 var(--edge-safe);
+    min-width: 0;
+    min-height: 68px;
+    height: 68px;
+    padding: 0 var(--space-6);
+    border-width: 0;
+    border-radius: 0;
+    background-color: transparent;
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(232, 236, 242);
+    color: var(--ink-1);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    transition-property: -unity-background-image-tint-color, opacity, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.emb-back-button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.emb-back-button:active {
+    translate: 0 1px;
+    -unity-background-image-tint-color: rgb(205, 211, 220);
 }

@@ -18,17 +18,6 @@
     color: var(--ink-1);
 }
 
-/* ID, not another class, so this reliably outranks `.roster-button` regardless of sheet order.
- * `.roster-button` sets `height: 48px` / `min-width: 148px`; `.col-back-corner` (theme.uss) wants
- * `height: var(--touch-min)` (56) and a content-sized width -- and theme.uss loads BEFORE this
- * sheet, so on equal class specificity `.roster-button`'s later declaration would otherwise win
- * and land this button 8px under the touch floor, the exact bug class the 2026-09-03 touch audit
- * exists to catch. */
-#back-button {
-    min-width: 0;
-    height: var(--touch-min);
-}
-
 .roster-body {
     flex-grow: 1;
     min-height: 0;
@@ -380,7 +369,7 @@
     left: var(--edge-safe);
     right: var(--edge-safe);
     bottom: var(--space-6);
-    height: 58px;
+    height: 68px;
     flex-direction: row;
     align-items: center;
     justify-content: center;
