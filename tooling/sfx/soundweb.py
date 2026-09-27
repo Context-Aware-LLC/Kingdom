@@ -189,8 +189,10 @@ def save_queue(queue: dict) -> None:
         json.dumps({
             "_about": "Lines flagged in soundweb as needing a REWRITE -- the words are wrong, so "
                       "every take of them is wrong. Keyed by canonical stem. Written by the "
-                      "Rewrite button; clear an entry by unflagging it there, or by hand once the "
-                      "line in voice-lines.json has been rewritten and regenerated.",
+                      "Rewrite button's panel, which carries an optional 'note' -- Sam's suggested "
+                      "replacement, entered before the flag is written at all. Clear an entry by "
+                      "unflagging it there, or by hand once the line in voice-lines.json (or "
+                      "card-voice-casting.json) has been rewritten and regenerated.",
             "needs_rewrite": dict(sorted(queue.items())),
         }, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8")
@@ -294,6 +296,14 @@ PAGE_HEAD = """<!doctype html>
  button { font: inherit; font-size: 13px; padding: 2px 9px; border-radius: 6px; cursor: pointer; }
  .x { padding: 2px 7px; }
  .var { padding: 2px 7px; }
+ .rw-panel { display: none; margin: 6px 0 12px; }
+ .rw-panel.open { display: block; }
+ .rw-panel textarea { width: 100%; max-width: 480px; box-sizing: border-box; font: inherit;
+                       font-size: 13px; border-radius: 8px; border: 1px solid;
+                       background: Canvas; color: CanvasText; padding: 6px 8px; resize: vertical; }
+ .rw-panel-actions { display: flex; gap: 8px; margin-top: 6px; }
+ .rw-panel-actions .ghost { opacity: .7; }
+ .note { font-size: 12.5px; opacity: .7; font-style: italic; margin: 2px 0 0; }
  .rw { border: 1px solid; border-radius: 10px; padding: 10px 14px; margin: 0 0 8px;
        background: color-mix(in srgb, Canvas 92%, orange); }
  .rw > summary { font-size: 14px; font-weight: 600; cursor: pointer; }
@@ -315,7 +325,8 @@ PAGE_HEAD = """<!doctype html>
 <code>_2</code>/<code>_3</code> slot and the game picks among them at random, so a sound shared by
 20 cards stops sounding like a loop.
 X moves it to <code>_rejected/</code> &mdash; nothing is deleted.
-Rewrite flags the LINE (all its takes) and pins it to the top &mdash; for words no read can save.</p>
+Rewrite opens a note for what the line should say instead, then flags the LINE (all its takes)
+and pins it to the top &mdash; for words no read can save.</p>
 """
 
 PAGE_TAIL = """
@@ -362,17 +373,19 @@ function drawRewrites() {
     const stem = document.createElement("span"); stem.className = "stem"; stem.textContent = k;
     const text = document.createElement("span"); text.className = "text";
     text.textContent = e.text || "";
+    const note = document.createElement("span"); note.className = "note";
+    note.textContent = e.note ? ("→ " + e.note) : "";
     const btn = document.createElement("button"); btn.textContent = "unflag";
     btn.addEventListener("click", function () { flag(k); });
-    row.append(stem, text, btn);
+    row.append(stem, text, note, btn);
     return row;
   }));
 }
 
-async function flag(stem, cls, moment, text) {
+async function flag(stem, cls, moment, text, note) {
   const r = await fetch("/flag", {
     method: "POST", headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({stem, on: !(stem in RW), cls, moment, text})
+    body: JSON.stringify({stem, on: !(stem in RW), cls, moment, text, note})
   });
   const d = await r.json();
   document.getElementById("toast").textContent = d.message;
@@ -385,6 +398,21 @@ async function flag(stem, cls, moment, text) {
     b.classList.toggle("on", isOn);
     b.textContent = isOn ? "Flagged ↑" : "Rewrite";
   }
+  const panel = document.getElementById("panel-" + stem);
+  if (panel) panel.classList.remove("open");
+}
+
+// Rewrite no longer flags on the click that opens it -- it opens this panel FIRST, so there is
+// somewhere to type the suggestion before anything is written to the queue file.
+function togglePanel(stem) {
+  const panel = document.getElementById("panel-" + stem);
+  if (panel) panel.classList.toggle("open");
+}
+
+function submitRewrite(stem, cls, moment, text, btn) {
+  const panel = btn.closest(".rw-panel");
+  const note = panel.querySelector("textarea").value;
+  flag(stem, cls, moment, text, note);
 }
 drawRewrites();
 </script>
@@ -455,12 +483,14 @@ def rewrite_box(queue: dict, groups: dict) -> str:
             line = find_line(groups, stem) or {"takes": [], "final": None}
             in_assets = ('<span class="done">  &check; in Assets</span>'
                          if line.get("final") else "")
+            note_html = ('<div class="note">was: %s</div>' % html.escape(entry.get("note", ""))
+                         if entry.get("note") else "")
             out.append(
-                '<div class="line"><div class="text">%s</div>'
+                '<div class="line"><div class="text">%s</div>%s'
                 '<div class="stem">%s%s</div>'
                 '<div class="takes">%s<button class="flag" onclick=\'flag(%s)\'>Done</button>'
                 '</div></div>'
-                % (html.escape(entry.get("text", "")), html.escape(stem), in_assets,
+                % (html.escape(entry.get("text", "")), note_html, html.escape(stem), in_assets,
                    take_html(line["takes"]), attr(stem)))
         out.append("</details>")
 
@@ -494,16 +524,32 @@ def render(groups) -> bytes:
                 # json.dumps alone is NOT safe inside an HTML attribute: a line carrying an
                 # apostrophe closes the onclick early and everything after it parses as markup.
                 # html.escape(quote=True) is what makes the JSON safe to sit there.
-                flag = ('<button class="flag%s" id="flag-%s" onclick=\'flag(%s,%s,%s,%s)\'>'
-                        '%s</button>'
-                        % (" on" if flagged else "", html.escape(canon), attr(canon),
-                           attr(cls_name), attr(sub), attr(line["text"] or ""),
-                           "Flagged &#8593;" if flagged else "Rewrite"))
+                if flagged:
+                    # Already flagged: this click UNFLAGS, same as the "unflag"/"Done" buttons
+                    # elsewhere on the page. Only the FIRST click, on an unflagged line, opens
+                    # the note panel instead of writing anything.
+                    flag = ('<button class="flag on" id="flag-%s" onclick=\'flag(%s)\'>'
+                            'Flagged &#8593;</button>'
+                            % (html.escape(canon), attr(canon)))
+                    panel = ""
+                else:
+                    flag = ('<button class="flag" id="flag-%s" onclick=\'togglePanel(%s)\'>'
+                            'Rewrite</button>' % (html.escape(canon), attr(canon)))
+                    panel = (
+                        '<div class="rw-panel" id="panel-%s">'
+                        '<textarea rows="2" placeholder="What should this line say instead? '
+                        '(optional -- blank just flags the read)"></textarea>'
+                        '<div class="rw-panel-actions">'
+                        '<button onclick=\'submitRewrite(%s,%s,%s,%s,this)\'>Flag for rewrite</button>'
+                        '<button class="ghost" onclick=\'togglePanel(%s)\'>Cancel</button>'
+                        '</div></div>'
+                        % (html.escape(canon), attr(canon), attr(cls_name), attr(sub),
+                           attr(line["text"] or ""), attr(canon)))
                 out.append(
                     '<div class="line"><div class="text">%s</div>'
-                    '<div class="stem">%s%s</div><div class="takes">%s%s</div></div>'
+                    '<div class="stem">%s%s</div><div class="takes">%s%s</div>%s</div>'
                     % (html.escape(line["text"] or "&nbsp;"), html.escape(canon), done, takes,
-                       flag))
+                       flag, panel))
         out.append("</details>")
     out.append(PAGE_TAIL)
     return "".join(out).encode("utf-8")
@@ -576,17 +622,24 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return
             queue = load_queue()
             if payload.get("on"):
+                note = clean(payload.get("note"), 500)
                 queue[stem] = {
                     "class": clean(payload.get("cls"), 40),
                     "moment": clean(payload.get("moment"), 40),
                     "text": clean(payload.get("text"), 300),
+                    # What Sam typed into the Rewrite panel -- the suggested replacement, not the
+                    # old line (that's "text"). Optional: a bad read of otherwise-fine words can
+                    # still be flagged with nothing here, same as before this panel existed.
+                    "note": note,
                     # Set to "rewritten" by whoever actually rewrites the line and regenerates
                     # its takes. That flips the entry from the flat list to the section with
                     # players in it, so a rewrite lands back in front of Sam instead of
                     # disappearing into a 240-clip page.
                     "status": "needs_rewrite",
                 }
-                msg = "Flagged %s for rewrite -- pinned to the top. No audio touched." % stem
+                msg = ("Flagged %s with your note -- pinned to the top. No audio touched." % stem
+                       if note else
+                       "Flagged %s for rewrite -- pinned to the top. No audio touched." % stem)
             else:
                 queue.pop(stem, None)
                 msg = "Unflagged %s." % stem

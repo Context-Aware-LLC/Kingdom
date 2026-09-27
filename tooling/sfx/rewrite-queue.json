@@ -1,4 +1,11 @@
 {
-  "_about": "Lines flagged in soundweb as needing a REWRITE -- the words are wrong, so every take of them is wrong. Keyed by canonical stem. Written by the Rewrite button; clear an entry by unflagging it there, or by hand once the line in voice-lines.json has been rewritten and regenerated.",
-  "needs_rewrite": {}
+  "_about": "Lines flagged in soundweb as needing a REWRITE -- the words are wrong, so every take of them is wrong. Keyed by canonical stem. Written by the Rewrite button's panel, which carries an optional 'note' -- Sam's suggested replacement, entered before the flag is written at all. Clear an entry by unflagging it there, or by hand once the line in voice-lines.json (or card-voice-casting.json) has been rewritten and regenerated.",
+  "needs_rewrite": {
+    "vo_card_grave_caretaker_solen_attack_3": {
+      "class": "card:grave_caretaker_solen",
+      "moment": "attack",
+      "text": "Drained, and given back to the earth.",
+      "status": "needs_rewrite"
+    }
+  }
 }
