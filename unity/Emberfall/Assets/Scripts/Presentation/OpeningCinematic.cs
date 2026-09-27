@@ -2,6 +2,7 @@ using System.Collections;
 using System.IO;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -141,6 +142,26 @@ namespace Emberfall.Presentation
             _player.prepareCompleted += OnPrepared;
             _player.loopPointReached += OnFinished;
             _player.errorReceived += OnError;
+        }
+
+        // Any press skips (Sam, 2026-09-26): click, tap or space. Polled on the press edge rather
+        // than through the EventSystem so it also works while the film is still preparing, when the
+        // canvas has nothing to raycast against yet. Complete() is idempotent, so a press on the
+        // frame the film ends on is harmless.
+        private void Update()
+        {
+            if (_finished) return;
+
+            var keyboard = Keyboard.current;
+            var mouse = Mouse.current;
+            var touch = Touchscreen.current;
+
+            bool pressed =
+                (keyboard != null && keyboard.spaceKey.wasPressedThisFrame) ||
+                (mouse != null && mouse.leftButton.wasPressedThisFrame) ||
+                (touch != null && touch.primaryTouch.press.wasPressedThisFrame);
+
+            if (pressed) Complete();
         }
 
         private IEnumerator PrepareAndPlay()
