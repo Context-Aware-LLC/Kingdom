@@ -25,8 +25,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 042f624f018f3c64189a5309ba3c092c
+    m_Address: vo/vo_card_night_seraphine_death_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0543ccf38cc9843479b61247d989ddba
     m_Address: vo/vo_verdant_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 055ec4420ede3da459d4749c8e258fdb
+    m_Address: vo/vo_card_grave_caretaker_solen_death_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -42,6 +52,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0a1b1367caf737e438028c271294ae89
     m_Address: vo/vo_gravekeep_turn_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0a2b42ce51d7427438ef1949fd52bebd
+    m_Address: vo/vo_card_warden_aldric_play_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -140,6 +155,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 347b95b81b59f0d498c9fb5051eece43
+    m_Address: vo/vo_card_grave_caretaker_solen_attack_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3af2946fc2221c44f9d27ff9b3e1159b
+    m_Address: vo/vo_card_warden_aldric_death_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3b365926ae7b0244d8b19d1a787c897f
     m_Address: vo/vo_clockwright_match_start_2
     m_ReadOnly: 0
@@ -200,6 +225,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60380be6104d43d49a9303d35fe98886
+    m_Address: vo/vo_card_grave_caretaker_solen_attack_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 604dd0c5e01edb548839e202e110304f
     m_Address: vo/vo_stonewarden_turn_start_2
     m_ReadOnly: 0
@@ -212,6 +242,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 62f0c63e044525545933bc0b702ee103
     m_Address: vo/vo_clockwright_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 64c154cf9fe89294f886b9dd1b662b4b
+    m_Address: vo/vo_card_grave_caretaker_solen_death_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -235,6 +270,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a947e7c27b3cf845bac994ae586b9fb
+    m_Address: vo/vo_card_night_kira_blade_of_shadows_death_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6b38fd7825d56ba4a9dade68e860d774
     m_Address: vo/vo_tempest_lose_3
     m_ReadOnly: 0
@@ -242,6 +282,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6c5c1aa9952075a4aaa9679a8fb8f4c5
     m_Address: vo/vo_tempest_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e2dbb5d14f9c564890ac67c0420ea3f
+    m_Address: vo/vo_card_grave_caretaker_solen_play_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -280,6 +325,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 76e9dd62ee3f65844ab09bde73d5ba06
+    m_Address: vo/vo_card_night_seraphine_attack_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 797328265ba2b09438c0a621b8b54fab
     m_Address: vo/vo_nightveil_lose_1
     m_ReadOnly: 0
@@ -305,8 +355,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f63a6c124183894a96b89aa388aa3f8
+    m_Address: vo/vo_card_neutral_aric_attack_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7f97f66feba6e784eb746e1537c1ddec
     m_Address: vo/vo_tempest_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7fb0dd58bdb869843a5257939b91d82b
+    m_Address: vo/vo_card_warden_aldric_attack_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -362,6 +422,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 98010998e2f518c408d481ab8dfa7c77
     m_Address: vo/vo_gravekeep_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b0f21f7c51127744b8dc241dafdacc0
+    m_Address: vo/vo_card_neutral_aric_attack_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -480,6 +545,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bcbe058807bfbd948b8da1b1d374ccce
+    m_Address: vo/vo_card_grave_caretaker_solen_death_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bedae3e244aceed4b93128cd39e648d4
+    m_Address: vo/vo_card_grave_caretaker_solen_attack_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c01ce880c7dac994591c48eed6d6e9e9
     m_Address: vo/vo_clockwright_match_start_3
     m_ReadOnly: 0
@@ -487,6 +562,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c0834ad77b78b184cb8414fb6b1e0bdf
     m_Address: vo/vo_nightveil_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c170f9708f9809d40ad3bbe359556811
+    m_Address: vo/vo_card_warden_aldric_attack_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -535,6 +615,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d46ac473e0743474da619857bcf71f07
+    m_Address: vo/vo_card_warden_aldric_play_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d61ee7fa812dbc748881ff4a086ca41d
+    m_Address: vo/vo_card_grave_caretaker_solen_play_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d6ca246bca6e43f49b5c0b91ab66a543
     m_Address: vo/vo_emberward_lose_1
     m_ReadOnly: 0
@@ -575,8 +665,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eae615dc9e14fd446b84eeba841d4dd6
+    m_Address: vo/vo_card_grave_caretaker_solen_play_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ec87fcbd24fcec04fa9ea333bbba5996
     m_Address: vo/vo_tempest_rope_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee439a014b3352243b251910a022262c
+    m_Address: vo/vo_card_night_seraphine_attack_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -607,6 +707,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: faadefb595300804a9af235ea9b81ebc
     m_Address: vo/vo_gravekeep_lose_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: faf2c34583dc228438dbe70670ff01b7
+    m_Address: vo/vo_card_warden_aldric_attack_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
