@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: UI_Core
   m_GUID: 3d766df806eca424e9276c2b8a291061
   m_SerializeEntries:
-  - m_GUID: 162cd4daedce445287cd8e1d8eabe60c
-    m_Address: ui/tribe_plate
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 05a051793cd086f41a4a802805d9c268
     m_Address: materials/M_ManaFill
     m_ReadOnly: 0
@@ -40,6 +35,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 162cd4daedce445287cd8e1d8eabe60c
+    m_Address: ui/tribe_plate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1a890b214e6bef044854c8ea4f0e4521
     m_Address: materials/M_WordmarkEmberfall
     m_ReadOnly: 0
@@ -47,11 +47,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 23c42332aa507fb48bfdbb99665010e2
     m_Address: materials/Wood
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 25a1a9becdcf83542a32813ff9f97a24
-    m_Address: ui/HeroPower_CarvedStone
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -185,11 +180,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bd9a533c10664d44b9ee713715c97722
-    m_Address: ui/Weapon_CarvedStone
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c5630a76852906f4c85f5e02f8814b9b
     m_Address: ui/card_back
     m_ReadOnly: 0
@@ -222,11 +212,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d7f26e4d524b0a54792b43bb5cd8678b
     m_Address: materials/M_Dissolve
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: db20ebe440881c44492ea9f13b581be5
-    m_Address: ui/HeroFrames_CarvedStone
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

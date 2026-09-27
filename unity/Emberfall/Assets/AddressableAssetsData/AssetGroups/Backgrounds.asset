@@ -40,6 +40,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 96d7a20afa5c4284b9b9d29525208531
+    m_Address: backgrounds/PackVault_AncientCache_Backdrop_v1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ae3f473153bbea1479ecae4a5d7aa266
     m_Address: backgrounds/BoardPlate_Master
     m_ReadOnly: 0

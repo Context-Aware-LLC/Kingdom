@@ -5,7 +5,7 @@
     "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 297,
-  "corpusDigest": "70dd561cdb62b0f1",
+  "corpusDigest": "d2f3d88260de144a",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -36,9 +36,9 @@
       "SKIRMISH": 19,
       "SHROUD": 15,
       "OVERWHELM": 11,
-      "REKINDLE": 11,
       "VANGUARD": 11,
       "AEGIS": 10,
+      "REKINDLE": 10,
       "VENOM": 10,
       "ARCANE_SURGE": 8,
       "DOUBLESTRIKE": 8,
@@ -480,7 +480,7 @@
         "BULWARK": 10,
         "OVERWHELM": 4,
         "AEGIS": 2,
-        "REKINDLE": 2,
+        "REKINDLE": 1,
         "SKIRMISH": 1,
         "VANGUARD": 1
       },
@@ -3437,9 +3437,7 @@
       "durability": null,
       "class": "STONEWARDEN",
       "rarity": "RARE",
-      "keywords": [
-        "REKINDLE"
-      ],
+      "keywords": [],
       "selectors": [
         "ANY_FRIENDLY_MINION"
       ],

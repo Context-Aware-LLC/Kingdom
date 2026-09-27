@@ -199,3 +199,5 @@ card-text-parser-refusals.txt
 # than no stamp: the whole point is that a tester's report can be trusted to name their build.
 unity/Emberfall/Assets/Resources/build-stamp.txt
 unity/Emberfall/Assets/Resources/build-stamp.txt.meta
+
+.gbrain-owner.json
