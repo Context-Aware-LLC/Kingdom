@@ -33,6 +33,14 @@
       "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
       "note": "Sam: this voice reads very quiet -- needs gain added on generation or in post.",
       "lines": {}
+    },
+    "night_kira_blade_of_shadows": {
+      "card_name": "Kira, Blade of Shadows",
+      "voice_name": "Emily E",
+      "voice_id": "HBDoL4wkcalemIO0nUAu",
+      "source": "https://elevenlabs.io/app/voice-lab/share/08d830cec0aea5bf6ea88c4a22c485d7461ce058ade7276be1d0c8a27cf0bb5e/HBDoL4wkcalemIO0nUAu",
+      "why": "Sam, 2026-09-27. Shared via a voice-lab link, not yet confirmed added to the account's voice library -- do that before dispatching.",
+      "lines": {}
     }
   }
 }
