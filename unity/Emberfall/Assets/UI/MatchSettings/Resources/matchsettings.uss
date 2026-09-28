@@ -93,11 +93,20 @@
 
 /* ---------- Audio (Sam, 2026-09-05: mute + separate music/SFX volume) ----------
  * Sits inside its own surface so it reads as one settings group rather than two more menu items —
- * .ms-item below is a full-width button; a label+control row needs its own row layout instead. */
+ * .ms-item below is a full-width button; a label+control row needs its own row layout instead.
+ * Sam, 2026-09-27: framed in the same slate chrome as .ms-item. Padding clears the sprite's
+ * 18px slice border (36 x 0.5) so the rows never sit on the frame. */
 .ms-audio {
-    background-color: var(--surface-2);
-    border-radius: var(--space-2);
-    padding: var(--space-3) var(--space-4);
+    background-color: transparent;
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(232, 236, 242);
+    border-radius: 0;
+    padding: var(--space-6);
     margin-top: var(--space-2);
 }
 .ms-toggle,
@@ -106,7 +115,7 @@
 }
 /* USS has no :first-child. The mute toggle is always the group's first row, so only the sliders
  * under it take the gap. */
-.ms-slider { margin-top: var(--space-2); }
+.ms-slider { margin-top: var(--space-4); }
 .ms-toggle > .unity-toggle__input,
 .ms-toggle .unity-base-field__label,
 .ms-slider .unity-base-field__label {
@@ -140,37 +149,34 @@
  * still there to look at, just not adjustable until unmuted. */
 .ms-slider:disabled { opacity: 0.4; }
 
-/* ---------- Menu items ---------- */
+/* ---------- Menu items ----------
+ * Sam, 2026-09-27: the same slate button chrome as .emb-back-button (theme.uss) and the main
+ * menu's .mm-button--secondary. Background colour is transparent so Unity's default button fill
+ * never shows through the sprite's rounded corners. Every item, Quit included, uses this. */
 .ms-item {
     font-size: var(--type-h2);
     -unity-font-style: bold;
     color: var(--ink-1);
-    background-color: var(--surface-2);
+    background-color: transparent;
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(232, 236, 242);
     border-width: 0;
-    border-radius: var(--space-2);
-    height: 56px;
-    margin-top: var(--space-2);
+    border-radius: 0;
+    height: 68px;
+    margin: var(--space-4) 0 0 0;
     padding: 0 var(--space-6);
+    transition-property: -unity-background-image-tint-color, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
 }
-.ms-item:hover  { background-color: var(--surface-3); }
-.ms-item:active { background-color: var(--surface-0); }
+.ms-item:hover  { -unity-background-image-tint-color: rgb(255, 255, 255); }
+.ms-item:active { -unity-background-image-tint-color: rgb(205, 211, 220); translate: 0 1px; }
 
 /* Concede is destructive — it reads in the negative color and warms on hover. */
 .ms-item--danger        { color: var(--negative); }
-.ms-item--danger:hover  { background-color: rgba(229, 72, 77, 0.22); }
-
-/* Quit (Sam, 2026-08-09): accessible, never a call to action. No background, no bold, smaller and
- * quieter than the .ms-item rows above it — it should read as the last, least-important line in
- * the menu, not compete with Concede/Close for attention. */
-.ms-item-quiet {
-    font-size: var(--type-caption);
-    color: var(--ink-2);
-    background-color: rgba(0, 0, 0, 0);
-    border-width: 0;
-    height: auto;
-    margin-top: var(--space-4);
-    padding: var(--space-1) 0 0 0;
-    -unity-text-align: middle-center;
-}
-.ms-item-quiet:hover  { color: var(--ink-1); }
-.ms-item-quiet:active { color: var(--ink-2); }
+.ms-item--danger:hover  { -unity-background-image-tint-color: rgb(255, 205, 205); }

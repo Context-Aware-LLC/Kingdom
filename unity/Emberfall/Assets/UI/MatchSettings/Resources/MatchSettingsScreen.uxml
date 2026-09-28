@@ -62,10 +62,8 @@
                          session either way. Hidden when nobody is signed in — the controller shows
                          it, because "is there a session" is not something the UXML can know. -->
                     <ui:Button name="btn-sign-out" text="Sign out" class="ms-item" style="display: none;" />
-                    <!-- Quit (Sam, 2026-08-09): accessible, not a call to action — deliberately NOT
-                         an .ms-item, so it never reads with the same weight as Concede/Close. Same
-                         corner both places this panel mounts (match or main menu). -->
-                    <ui:Button name="btn-quit" text="Quit" class="ms-item-quiet" />
+                    <!-- Quit (Sam, 2026-09-27): styled as a regular .ms-item, same as the rest. -->
+                    <ui:Button name="btn-quit" text="Quit" class="ms-item" />
                 </ui:VisualElement>
 
                 <!-- Confirm view — SHARED, not concede's own (2026-09-02). Two things now need a
