@@ -224,6 +224,8 @@
 }
 
 .vault-loading {
+    /* Direct child of .pack-vault-screen: these four edges are the full viewport, so flex
+     * centering remains exact even when the rack changes width. */
     position: absolute;
     left: 0;
     top: 0;

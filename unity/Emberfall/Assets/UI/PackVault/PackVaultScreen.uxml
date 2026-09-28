@@ -29,13 +29,14 @@
                     <ui:Label name="vault-banner-title" text="A gift to start you off" class="vault-banner__title"/>
                     <ui:Label name="vault-banner-body" text="Open them and keep everything inside." class="vault-banner__body"/>
                 </ui:VisualElement>
-                <ui:VisualElement name="vault-stage" class="vault-stage">
-                    <ui:VisualElement name="vault-loading" picking-mode="Ignore" class="vault-loading vault-loading--hidden">
-                        <ui:VisualElement name="vault-loading-icon" picking-mode="Ignore" class="vault-loading__icon"/>
-                    </ui:VisualElement>
-                </ui:VisualElement>
+                <ui:VisualElement name="vault-stage" class="vault-stage"/>
                 <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
             </ui:VisualElement>
+        </ui:VisualElement>
+        <!-- A direct child of the full-screen root so absolute zero-edge positioning centers the
+             seal in the viewport rather than in the stage column beside the rack. -->
+        <ui:VisualElement name="vault-loading" picking-mode="Ignore" class="vault-loading vault-loading--hidden">
+            <ui:VisualElement name="vault-loading-icon" picking-mode="Ignore" class="vault-loading__icon"/>
         </ui:VisualElement>
         <ui:Button name="btn-vault-back" text="Back" class="emb-back emb-back-button"/>
         <!-- NO TEAR OVERLAY (Sam, 2026-09-03). The pack that tears is the one the player dropped on
