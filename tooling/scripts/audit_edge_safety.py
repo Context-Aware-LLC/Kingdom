@@ -129,6 +129,11 @@ TOKEN_EXCEPTIONS = {
         'on top of the root\'s own --space-6 -- deliberately over-paying the 52dp cutout, '
         'because unlike the wall\'s forged frame (decoration that bleeds on purpose) a tab '
         'under the hole-punch is a dead touch target',
+    'emb-back-button':
+        'the one canonical Back (theme.uss, 2026-09-27), applied ALONE by design so no screen '
+        'restyles it. Its `margin: 0 var(--edge-safe)` is exactly .emb-edge\'s declaration, kept '
+        'inside the class so the button needs no second class to clear the cutout -- and it '
+        'lives in theme.uss, so PASS 5 still sees the token spent in one file',
 }
 
 # Screen ROOTS that deliberately run edge to edge, keyed by the root's own screen
@@ -152,9 +157,10 @@ ROOT_EXCEPTIONS = {
         'spends it as a margin',
         ['col-query-toolbar', 'col-query', 'craft-modal', 'class-tab-bar']),
     'pack-vault-screen': (
-        'the shelf and its flow controls live in the padded vault shell; Back has its own '
-        'safe-edge margin and the separate reveal overlay owns its own clearance',
-        ['vault-shell', 'vault-back', 'reveal-overlay']),
+        'the rack, stage and rail live in the padded vault shell; Back is the canonical '
+        '.emb-back-button, which spends the token itself, and the reveal overlay owns its own '
+        'clearance',
+        ['vault-shell', 'emb-back-button', 'reveal-overlay']),
     'shop-screen': (
         'the root holds only a backdrop; all store content is inside the overlay. This is the '
         'screen #shop-overlay\'s id selector kept flush to the edge until PASS 6 caught it',
@@ -213,8 +219,6 @@ ELEMENT_INTERNAL = {
 # declared chain is checked in the XML; moving a control or untagging its carrier
 # must invalidate the declaration rather than silently suppress an edge finding.
 PARENT_CLEARANCE = {
-    ('col-back-corner', 'Shop/ShopScreen.uxml'):
-        (('shop-shell', 'shop-overlay'), BLEED_CLASS),
     ('mm-vault-dock', 'MainMenu/MainMenuScreen.uxml'):
         (('mm-command',), EDGE_CLASS),
     ('mm-vault-count', 'MainMenu/MainMenuScreen.uxml'):
