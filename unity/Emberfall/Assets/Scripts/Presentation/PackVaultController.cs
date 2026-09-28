@@ -99,6 +99,7 @@ namespace Emberfall.Presentation
         private const int EntranceBannerMs = 60;
         private const int EntranceFirstSlotMs = 220;
         private const int EntranceSlotStepMs = 90;
+        private const float LoadingDegreesPerSecond = 36f;
 
         private VisualElement _root;
         private VisualElement _rack;
@@ -107,6 +108,9 @@ namespace Emberfall.Presentation
         private VisualElement _rail;
         private VisualElement _railHint;
         private Label _status;
+        private VisualElement _loading;
+        private VisualElement _loadingIcon;
+        private IVisualElementScheduledItem _loadingTick;
         private VisualElement _banner;
         private Button _back;
         private PackRevealPanel _reveal;
@@ -205,6 +209,16 @@ namespace Emberfall.Presentation
             _rail = root.Q<VisualElement>("vault-rail");
             _railHint = root.Q<VisualElement>("vault-rail-hint");
             _status = root.Q<Label>("vault-status");
+            _loading = root.Q<VisualElement>("vault-loading");
+            _loadingIcon = root.Q<VisualElement>("vault-loading-icon");
+            if (_loadingIcon != null)
+            {
+                _loadingTick = _loadingIcon.schedule.Execute(() =>
+                    _loadingIcon.style.rotate = new Rotate(new Angle(
+                        Time.realtimeSinceStartup * LoadingDegreesPerSecond % 360f)))
+                    .Every(16);
+                _loadingTick.Pause();
+            }
             _banner = root.Q<VisualElement>("vault-banner");
             _packArt = new PackArtProvider();
             _reveal = new PackRevealPanel(root, RevealDismissed);
@@ -239,6 +253,7 @@ namespace Emberfall.Presentation
                 // if a caller managed to set both, the receipt wins and the lock comes off with it.
                 _revealWasHandedIn = true;
                 ReleaseGiftLock();
+                SetLoading(false);
                 SetStatus("");
                 _reveal.Show(handedIn);
                 return;
@@ -249,6 +264,7 @@ namespace Emberfall.Presentation
 
         private void OnDisable()
         {
+            _loadingTick?.Pause();
             _drag?.Dispose();
             _drag = null;
 
@@ -273,7 +289,8 @@ namespace Emberfall.Presentation
             try
             {
                 SetBusy(true);
-                SetStatus("Checking what you have…");
+                SetStatus("");
+                SetLoading(true);
 
                 string accessToken = await AuthGateway.TokenForConnectAsync();
                 if (!Alive(token)) return;
@@ -330,7 +347,11 @@ namespace Emberfall.Presentation
             }
             finally
             {
-                if (Alive(token)) SetBusy(false);
+                if (Alive(token))
+                {
+                    SetLoading(false);
+                    SetBusy(false);
+                }
             }
         }
 
@@ -710,7 +731,6 @@ namespace Emberfall.Presentation
                     // NOT "nothing happened". The open commits before the response is written, so
                     // this pack may be genuinely spent. Re-reading is the recovery; a retry derives the
                     // next instance id and spends a second pack. Never offer one.
-                    SetStatus("We lost the connection. Checking what you have…");
                     Refresh();
                     return true;
 
@@ -733,7 +753,6 @@ namespace Emberfall.Presentation
                 default:
                     // A 2xx that decoded to nothing. The cards may well have been granted, so the
                     // answer is another read, never another open.
-                    SetStatus("Something went wrong opening that. Checking what you have…");
                     Debug.LogWarning($"[PackVault] open malformed: {result?.Detail}");
                     Refresh();
                     return true;
@@ -850,6 +869,13 @@ namespace Emberfall.Presentation
             if (_status == null) return;
             _status.text = text ?? "";
             _status.EnableInClassList("vault-status--empty", _status.text.Length == 0);
+        }
+
+        private void SetLoading(bool loading)
+        {
+            _loading?.EnableInClassList("vault-loading--hidden", !loading);
+            if (loading) _loadingTick?.Resume();
+            else _loadingTick?.Pause();
         }
 
         /// <summary>A failure the player can read, with no rack behind it — an empty rack under an

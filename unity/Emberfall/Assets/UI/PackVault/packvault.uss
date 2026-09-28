@@ -217,6 +217,28 @@
     background-color: rgba(255, 214, 148, 0.08);
 }
 
+.vault-loading {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+}
+
+.vault-loading__icon {
+    width: 300px;
+    height: 300px;
+    flex-shrink: 0;
+    background-image: url("/Assets/Art/UI/Crafting/craft-loading-alchemy-ring-v1.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.vault-loading--hidden {
+    display: none;
+}
+
 .vault-stage__hint {
     color: var(--ink-2);
     font-size: var(--type-h2);

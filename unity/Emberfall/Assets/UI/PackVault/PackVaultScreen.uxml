@@ -27,6 +27,9 @@
                     <ui:Label name="vault-banner-body" text="Open them and keep everything inside." class="vault-banner__body"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="vault-stage" class="vault-stage">
+                    <ui:VisualElement name="vault-loading" picking-mode="Ignore" class="vault-loading vault-loading--hidden">
+                        <ui:VisualElement name="vault-loading-icon" picking-mode="Ignore" class="vault-loading__icon"/>
+                    </ui:VisualElement>
                     <ui:Label name="vault-stage-hint" text="Drag a pack here to open it" picking-mode="Ignore" class="vault-stage__hint vault-stage__hint--hidden"/>
                 </ui:VisualElement>
                 <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
