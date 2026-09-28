@@ -974,6 +974,73 @@ namespace Emberfall.Net.Server
                 }, statusCode: result.HttpStatus);
             });
 
+            // POST /packs/open-many — one bounded server operation for the vault's stacked packs.
+            // The client still names only a pack line and a count; every idempotency anchor is minted
+            // inside the player's mutation lock. This avoids repeating the HTTP/auth/account/lock
+            // path for every pack while preserving the same per-pack receipts.
+            app.MapPost("/packs/open-many", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                string? packId = null;
+                int count = 0;
+                try
+                {
+                    using var body = await System.Text.Json.JsonDocument
+                        .ParseAsync(context.Request.Body, cancellationToken: context.RequestAborted)
+                        .ConfigureAwait(false);
+                    if (body.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    {
+                        if (body.RootElement.TryGetProperty("packId", out var packIdElement) &&
+                            packIdElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                            packId = packIdElement.GetString();
+                        if (body.RootElement.TryGetProperty("count", out var countElement) &&
+                            countElement.ValueKind == System.Text.Json.JsonValueKind.Number)
+                            countElement.TryGetInt32(out count);
+                    }
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    // The endpoint owns the status vocabulary for malformed input.
+                }
+
+                PackOpenBatchEndpointResult result = await PackOpenEndpoint.OpenManyAsync(
+                    bearer, packId, count, cfg.TokenVerifier, cfg.AccountStore,
+                    cfg.EntitlementLedger, packOpener, onboarding, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+                var opens = new List<object>(result.Opens.Count);
+                foreach (PackOpenEndpointResult open in result.Opens)
+                {
+                    var awards = new List<object>(open.Awards.Count);
+                    foreach (PackSlotAward award in open.Awards)
+                        awards.Add(new
+                        {
+                            cardId = award.CardId,
+                            rarity = award.Rarity.ToString(),
+                            upgrade = award.Upgrade.ToString().ToLowerInvariant(),
+                        });
+                    opens.Add(new
+                    {
+                        status = open.Status.ToString().ToLowerInvariant(),
+                        packId = open.PackId,
+                        packInstanceId = open.PackInstanceId,
+                        awards,
+                    });
+                }
+
+                return Results.Json(new
+                {
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    packId = result.PackId,
+                    opens,
+                }, statusCode: result.HttpStatus);
+            });
+
             async Task<IResult> HandleCraft(HttpContext context, int cardId, string? action)
             {
                 string? header = context.Request.Headers["Authorization"];

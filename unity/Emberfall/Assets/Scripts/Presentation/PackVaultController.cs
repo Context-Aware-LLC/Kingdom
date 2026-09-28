@@ -32,9 +32,9 @@ namespace Emberfall.Presentation
     /// <para><b>The layout.</b> A RACK down the left holds one slot per pack LINE — a miniature of
     /// the expansion's pack, its name, and a count bubble — so five expansions fit however many packs
     /// each holds. (It was a tile per pack, which at forty packs drew three rows it could not scroll
-    /// to.) The STAGE in the middle is where packs open. The RAIL under it is where a pack is held to
-    /// count up a stack. <see cref="PackRackDrag"/> owns the gesture; a tap still opens, so a broken
-    /// drag never strands a pack.</para>
+    /// to.) The RAIL is the rack's narrow right edge, where a pack is held to count up a stack. The
+    /// STAGE in the middle is where packs open. <see cref="PackRackDrag"/> owns the gesture; a tap
+    /// still opens, so a broken drag never strands a pack.</para>
     ///
     /// <para><b>The pack that tears is the one the player is holding</b> (Sam, 2026-09-03, carried
     /// over). The ruling was "no stage that re-renders a copy of a pack the player already touched";
@@ -106,7 +106,6 @@ namespace Emberfall.Presentation
         private VisualElement _stage;
         private VisualElement _stageHint;
         private VisualElement _rail;
-        private VisualElement _railHint;
         private Label _status;
         private VisualElement _loading;
         private VisualElement _loadingIcon;
@@ -203,11 +202,10 @@ namespace Emberfall.Presentation
             // tail of first run, not a detour out of some screen the player chose to be on.
             if (_mode == PackVaultMode.Gift) _returnScene = "MainMenu";
 
-            _rack = root.Q<VisualElement>("vault-rack");
+            _rack = root.Q<VisualElement>("vault-rack-slots");
             _stage = root.Q<VisualElement>("vault-stage");
             _stageHint = root.Q<VisualElement>("vault-stage-hint");
             _rail = root.Q<VisualElement>("vault-rail");
-            _railHint = root.Q<VisualElement>("vault-rail-hint");
             _status = root.Q<Label>("vault-status");
             _loading = root.Q<VisualElement>("vault-loading");
             _loadingIcon = root.Q<VisualElement>("vault-loading-icon");
@@ -291,6 +289,7 @@ namespace Emberfall.Presentation
                 SetBusy(true);
                 SetStatus("");
                 SetLoading(true);
+                SetRailVisible(false);
 
                 string accessToken = await AuthGateway.TokenForConnectAsync();
                 if (!Alive(token)) return;
@@ -383,6 +382,7 @@ namespace Emberfall.Presentation
             if (_parkedPack != null)
                 _parkedCount = (int)Math.Min(_parkedCount, Math.Min(Held(_parkedPack), PackRackDrag.MaxBatch));
             if (_parkedCount <= 0) { _parkedPack = null; _parkedCount = 0; }
+            SetRailVisible(total > 0);
             RenderRail();
 
             if (total == 0)
@@ -516,23 +516,19 @@ namespace Emberfall.Presentation
             RenderRail();
         }
 
-        /// <summary>The parked stack, or the rail's hint when nothing is parked.</summary>
+        /// <summary>The parked stack on the vertical rail, if there is one.</summary>
         private void RenderRail()
         {
             if (_rail == null) return;
             _rail.Q<VisualElement>("vault-rail-stack")?.RemoveFromHierarchy();
 
             bool parked = _parkedPack != null && _parkedCount > 0;
-            _railHint?.EnableInClassList("vault-rail__hint--hidden", parked);
             if (!parked) return;
 
             var stack = new VisualElement { name = "vault-rail-stack", userData = _parkedPack };
             stack.AddToClassList("vault-rail__stack");
             stack.SetEnabled(!_busy);
             stack.Add(BuildMini(_parkedPack, _parkedCount));
-            var label = new Label("Drag to open " + _parkedCount) { pickingMode = PickingMode.Ignore };
-            label.AddToClassList("vault-rail__label");
-            stack.Add(label);
             _rail.Add(stack);
         }
 
@@ -600,13 +596,13 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Open <paramref name="count"/> packs of one line, one request at a time, then tear the
-        /// stage pack and reveal everything that came back.
+        /// Open <paramref name="count"/> packs of one line in one bounded batch request, then tear
+        /// the stage pack and reveal everything that came back.
         ///
-        /// <para><b>It stops at the first open that does not return a receipt, and never retries
-        /// it.</b> <see cref="PackOpenStatus.Offline"/> may be a pack genuinely spent; the recovery is
-        /// a re-read, and a retry would spend a second one. Whatever did come back is still revealed
-        /// — those cards are granted — and dismissing re-reads rather than trusting the arithmetic.</para>
+        /// <para>A stack is one bounded server request. The server authenticates and acquires the
+        /// player mutation lock once, then returns every per-pack receipt together. A lost response
+        /// is never retried because it may represent several packs already committed; recovery is a
+        /// shelf re-read.</para>
         /// </summary>
         private async void OpenBatch(string packId, int count)
         {
@@ -628,7 +624,7 @@ namespace Emberfall.Presentation
             {
                 SetBusy(true);
                 Sprite art = PlaceStagePack(packId);
-                SetStatus(count == 1 ? "Opening…" : $"Opening 1 of {count}…");
+                SetStatus("");
 
                 string accessToken = await AuthGateway.TokenForConnectAsync();
                 if (!Alive(token)) return;
@@ -641,29 +637,63 @@ namespace Emberfall.Presentation
 
                 var receipts = new List<PackOpenReceipt>(count);
                 bool settled = true;
+                int openedCount = 0;
                 PackOpenResult stopped = null;
 
-                for (int i = 0; i < count; i++)
+                if (count == 1)
                 {
-                    if (i > 0) SetStatus($"Opening {i + 1} of {count}…");
-
                     PackOpenResult result = await PackGateway.OpenAsync(packId, accessToken, token);
                     if (!Alive(token)) return;
-
                     if (!result.HasReveal)
-                    {
                         stopped = result;
-                        break;
-                    }
-
-                    // AlreadyOpened carries the SAME cards and spent nothing twice, so it is shown
-                    // exactly as an Opened is — but it moved no counter, so the balance is not ours to
-                    // decrement and dismissing re-reads.
-                    receipts.Add(result.Receipt);
-                    if (result.Status == PackOpenStatus.Opened && Held(packId) > 0)
-                        _shelfBalance[packId] = Held(packId) - 1;
                     else
-                        settled = false;
+                    {
+                        receipts.Add(result.Receipt);
+                        settled = result.Status == PackOpenStatus.Opened;
+                        if (result.Status == PackOpenStatus.Opened) openedCount++;
+                    }
+                }
+                else
+                {
+                    PackOpenBatchResult result = await PackGateway
+                        .OpenManyAsync(packId, count, accessToken, token);
+                    if (!Alive(token)) return;
+                    if (result.ShouldFallbackToSingleOpens)
+                    {
+                        // A client may update before its server deployment. A route-level 404 proves
+                        // the batch did not spend anything, so the old endpoint is safe here. Keep the
+                        // loader as the only waiting feedback, then hand the collected receipts to the
+                        // same tear and multi-card reveal used by the batch path.
+                        for (int i = 0; i < count; i++)
+                        {
+                            PackOpenResult fallback = await PackGateway
+                                .OpenAsync(packId, accessToken, token);
+                            if (!Alive(token)) return;
+                            if (!fallback.HasReveal)
+                            {
+                                stopped = fallback;
+                                settled = false;
+                                break;
+                            }
+
+                            receipts.Add(fallback.Receipt);
+                            if (fallback.Status == PackOpenStatus.Opened) openedCount++;
+                            else settled = false;
+                        }
+                    }
+                    else if (!result.HasReveals)
+                        stopped = PackOpenResult.Failed(result.Status, result.Detail);
+                    else
+                    {
+                        receipts.AddRange(result.Receipts);
+                        settled = result.Receipts.Count == count;
+                        openedCount = result.Receipts.Count;
+                    }
+                }
+
+                if (receipts.Count > 0)
+                {
+                    _shelfBalance[packId] = Math.Max(0, Held(packId) - openedCount);
 
                     // THE GIFT IS SPENT THE MOMENT A PACK OPENS, not when the player arrived and not
                     // when they leave. Anything earlier loses the gift to a force-quit; anything later
@@ -686,7 +716,7 @@ namespace Emberfall.Presentation
                 retained = true;
                 SetStatus("");
 
-                string note = stopped == null ? null : $"stopped after {receipts.Count} of {count}";
+                string note = receipts.Count == count ? null : $"opened {receipts.Count} of {count}";
                 if (stopped != null)
                     Debug.LogWarning($"[PackVault] batch stopped at {receipts.Count}/{count}: " +
                                      $"{stopped.Status} {stopped.Detail}");
@@ -830,6 +860,9 @@ namespace Emberfall.Presentation
         private void SetStageHint(bool shown)
             => _stageHint?.EnableInClassList("vault-stage__hint--hidden", !shown);
 
+        private void SetRailVisible(bool shown)
+            => _rail?.EnableInClassList("vault-rail--hidden", !shown);
+
         /// <summary>
         /// Hide Back while the gift holds the player, show it otherwise.
         ///
@@ -893,6 +926,7 @@ namespace Emberfall.Presentation
             _rack?.Clear();
             ClearStagePack();
             SetStageHint(false);
+            SetRailVisible(false);
             _shelfBalance = null;
             Unpark();
             SetStatus(message);

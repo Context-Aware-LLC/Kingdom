@@ -230,6 +230,24 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         [Test]
+        public async Task One_batch_call_opens_every_requested_owned_pack()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var cards = Cards();
+            (var store, Account account) = await AccountWithPacks(ledger, 5);
+
+            PackOpenBatchEndpointResult result = await PackOpenEndpoint.OpenManyAsync(
+                Token, StarterId, 5, Accepts(), store, ledger, Opener(ledger, cards), onboarding: null);
+
+            Assert.That(result.Status, Is.EqualTo(PackOpenEndpointStatus.Opened));
+            Assert.That(result.Opens, Has.Count.EqualTo(5));
+            Assert.That(result.Opens.Select(open => open.PackInstanceId).Distinct().Count(), Is.EqualTo(5));
+            Assert.That(result.Opens.All(open => open.Awards.Count == OnboardingGrant.StarterPackCardCount),
+                Is.True);
+            Assert.That(await ledger.BalanceAsync(account.PlayerId, StarterId), Is.Zero);
+        }
+
+        [Test]
         public async Task The_instance_id_is_derived_from_the_ledger_and_advances_with_each_open()
         {
             // The minting rule (Sam, 2026-09-03): open:{playerId}:{packId}:{n}, where n is how many

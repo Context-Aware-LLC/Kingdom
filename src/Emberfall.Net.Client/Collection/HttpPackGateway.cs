@@ -82,6 +82,44 @@ namespace Emberfall.Net.Client.Collection
         public bool HasReveal => Receipt is not null;
     }
 
+    /// <summary>One bounded multi-pack request. Successful replies carry every receipt produced by
+    /// the server; failures carry none because a partial wire reply cannot safely describe inventory
+    /// that may already have committed.</summary>
+    public sealed class PackOpenBatchResult
+    {
+        public PackOpenStatus Status { get; }
+        public IReadOnlyList<PackOpenReceipt> Receipts { get; }
+        public string Detail { get; }
+        /// <summary>True only when the server proves that it does not expose the batch route.
+        /// A caller may safely use the established single-open route because a 404 cannot have
+        /// committed this batch. No other failure is retryable: the response may have been lost
+        /// after the packs were spent.</summary>
+        public bool ShouldFallbackToSingleOpens { get; }
+
+        private PackOpenBatchResult(
+            PackOpenStatus status, IReadOnlyList<PackOpenReceipt>? receipts, string detail,
+            bool shouldFallbackToSingleOpens = false)
+        {
+            Status = status;
+            Receipts = receipts ?? Array.Empty<PackOpenReceipt>();
+            Detail = detail ?? "";
+            ShouldFallbackToSingleOpens = shouldFallbackToSingleOpens;
+        }
+
+        public static PackOpenBatchResult Success(IReadOnlyList<PackOpenReceipt> receipts)
+            => new PackOpenBatchResult(PackOpenStatus.Opened, receipts, "");
+
+        public static PackOpenBatchResult Failed(PackOpenStatus status, string detail)
+            => new PackOpenBatchResult(status, Array.Empty<PackOpenReceipt>(), detail);
+
+        public static PackOpenBatchResult BatchRouteMissing(string detail)
+            => new PackOpenBatchResult(
+                PackOpenStatus.Unavailable, Array.Empty<PackOpenReceipt>(), detail,
+                shouldFallbackToSingleOpens: true);
+
+        public bool HasReveals => Receipts.Count > 0;
+    }
+
     /// <summary>
     /// Opens packs the player already owns — the client half of slice 0
     /// (<c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>).
@@ -164,6 +202,62 @@ namespace Emberfall.Net.Client.Collection
         }
 
         /// <summary>
+        /// Open up to ten packs in one server operation. Authentication, account resolution and the
+        /// network round trip happen once; the server keeps the per-player mutation lock across the
+        /// ordered opens so instance ids and pity progression remain deterministic.
+        /// </summary>
+        public async Task<PackOpenBatchResult> OpenManyAsync(
+            string packId, int count, string accessToken,
+            CancellationToken cancellationToken = default)
+        {
+            if (!IsConfigured)
+                return PackOpenBatchResult.Failed(PackOpenStatus.Unavailable,
+                    "No pack endpoint is configured.");
+            if (string.IsNullOrEmpty(accessToken))
+                return PackOpenBatchResult.Failed(PackOpenStatus.Unauthenticated, "Not signed in.");
+            if (string.IsNullOrWhiteSpace(packId))
+                return PackOpenBatchResult.Failed(PackOpenStatus.UnknownPack, "No pack id.");
+            if (count < 1 || count > 10)
+                return PackOpenBatchResult.Failed(PackOpenStatus.Malformed,
+                    "Pack batch count must be between 1 and 10.");
+
+            var headers = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("Authorization", "Bearer " + accessToken),
+                new KeyValuePair<string, string>("Accept", "application/json"),
+            };
+            string body = AuthJson.ObjectWithRaw(
+                "\"count\":" + count.ToString(CultureInfo.InvariantCulture),
+                AuthJson.Field("packId", packId));
+
+            AuthHttpResponse response = await _http
+                .PostJsonAsync(_baseUrl + "/packs/open-many", body, headers, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (response.IsTransportFailure)
+                return PackOpenBatchResult.Failed(PackOpenStatus.Offline, response.Body);
+            if (response.StatusCode == 401)
+                return PackOpenBatchResult.Failed(PackOpenStatus.Unauthenticated, response.Body);
+            if (response.StatusCode == 400)
+                return PackOpenBatchResult.Failed(PackOpenStatus.UnknownPack, response.Body);
+            if (response.StatusCode == 409)
+                return PackOpenBatchResult.Failed(PackOpenStatus.NoneOwned, response.Body);
+            // Deployment is not atomic across the game client and server. A client can learn the
+            // batch route before the connected server has it. A route-level 404 is the one failure
+            // that proves no batch open was committed, so the presentation layer may safely fall
+            // back to the established single-open route and still produce a reveal.
+            if (response.StatusCode == 404)
+                return PackOpenBatchResult.BatchRouteMissing(response.Body);
+            if (response.StatusCode == 503)
+                return PackOpenBatchResult.Failed(PackOpenStatus.Unavailable, "Server returned 503");
+            if (!response.IsSuccess)
+                return PackOpenBatchResult.Failed(PackOpenStatus.Offline,
+                    "Server returned " + response.StatusCode.ToString(CultureInfo.InvariantCulture));
+
+            return ParseBatch(response.Body);
+        }
+
+        /// <summary>
         /// A 409 is two different server states — <c>noneowned</c>, an ordinary player state, and
         /// <c>conflict</c>, a ledger defect — and <b>one client outcome</b>: there is no pack to
         /// reveal and no retry that would produce one. So they share a status and differ in the
@@ -233,6 +327,30 @@ namespace Emberfall.Net.Client.Collection
 
             return PackOpenResult.Success(opened,
                 new PackOpenReceipt(packId, packInstanceId, awards));
+        }
+
+        private static PackOpenBatchResult ParseBatch(string body)
+        {
+            if (!AuthJson.TryReadTopLevel(body, out var fields) ||
+                !AuthJson.TryString(fields, "status", out string status) ||
+                !status.Equals("opened", StringComparison.OrdinalIgnoreCase))
+                return PackOpenBatchResult.Failed(PackOpenStatus.Malformed,
+                    "batch has no opened status");
+
+            if (!AuthJson.TryReadRawObjectArray(body, "opens", out var rows) || rows.Count == 0)
+                return PackOpenBatchResult.Failed(PackOpenStatus.Malformed,
+                    "batch has no opens");
+
+            var receipts = new List<PackOpenReceipt>(rows.Count);
+            foreach (string row in rows)
+            {
+                PackOpenResult open = Parse(row);
+                if (!open.HasReveal || open.Receipt is null)
+                    return PackOpenBatchResult.Failed(PackOpenStatus.Malformed,
+                        "batch contains a malformed open: " + open.Detail);
+                receipts.Add(open.Receipt);
+            }
+            return PackOpenBatchResult.Success(receipts);
         }
 
         /// <summary>

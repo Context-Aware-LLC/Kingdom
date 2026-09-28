@@ -23,6 +23,9 @@ namespace Emberfall.Net.Server.Accounts
         /// <summary>The <c>packId</c> is not a pack line this build knows. 400.</summary>
         UnknownPack,
 
+        /// <summary>The requested batch count is outside the server's bounded range. 400.</summary>
+        InvalidCount,
+
         /// <summary>The player holds no unopened pack on this line. 409.</summary>
         NoneOwned,
 
@@ -75,6 +78,41 @@ namespace Emberfall.Net.Server.Accounts
             PackOpenEndpointStatus.Opened => 200,
             PackOpenEndpointStatus.AlreadyOpened => 200,
             PackOpenEndpointStatus.UnknownPack => 400,
+            PackOpenEndpointStatus.InvalidCount => 400,
+            PackOpenEndpointStatus.NoneOwned => 409,
+            PackOpenEndpointStatus.Conflict => 409,
+            PackOpenEndpointStatus.Unauthenticated => 401,
+            PackOpenEndpointStatus.Unavailable => 503,
+            _ => 500,
+        };
+    }
+
+    /// <summary>Several ordered opens produced by one authenticated, locked server operation.</summary>
+    public sealed class PackOpenBatchEndpointResult
+    {
+        public PackOpenEndpointStatus Status { get; }
+        public string PackId { get; }
+        public IReadOnlyList<PackOpenEndpointResult> Opens { get; }
+        public string Detail { get; }
+
+        public PackOpenBatchEndpointResult(
+            PackOpenEndpointStatus status,
+            string packId = "",
+            IReadOnlyList<PackOpenEndpointResult>? opens = null,
+            string detail = "")
+        {
+            Status = status;
+            PackId = packId ?? "";
+            Opens = opens ?? Array.Empty<PackOpenEndpointResult>();
+            Detail = detail ?? "";
+        }
+
+        public int HttpStatus => Status switch
+        {
+            PackOpenEndpointStatus.Opened => 200,
+            PackOpenEndpointStatus.AlreadyOpened => 200,
+            PackOpenEndpointStatus.UnknownPack => 400,
+            PackOpenEndpointStatus.InvalidCount => 400,
             PackOpenEndpointStatus.NoneOwned => 409,
             PackOpenEndpointStatus.Conflict => 409,
             PackOpenEndpointStatus.Unauthenticated => 401,
@@ -130,7 +168,7 @@ namespace Emberfall.Net.Server.Accounts
     {
         /// <summary>Prefix of the derived instance id. Public so the tests that pin the minting rule
         /// name it rather than repeating the string.</summary>
-        public const string InstancePrefix = "open:";
+        public const string InstancePrefix = BoosterPackGrantService.OpenInstancePrefix;
 
         /// <summary>
         /// Open one pack on the named line for the bearer's account.
@@ -225,6 +263,92 @@ namespace Emberfall.Net.Server.Accounts
                     "[packs] open refused for player_id={0} pack={1} instance={2}: {3}",
                     account.PlayerId, pack.Id, instanceId, ex.Message);
                 return new PackOpenEndpointResult(PackOpenEndpointStatus.Conflict, pack.Id, instanceId,
+                    detail: ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Open a bounded group of packs for one bearer. Unlike a client loop over
+        /// <see cref="OpenAsync"/>, verification, account resolution, onboarding and the player's
+        /// mutation lock each happen once.
+        /// </summary>
+        public static async Task<PackOpenBatchEndpointResult> OpenManyAsync(
+            string? bearerToken,
+            string? packId,
+            int count,
+            IIdentityTokenVerifier? verifier,
+            IAccountStore? accountStore,
+            IEntitlementLedger? ledger,
+            BoosterPackGrantService? packs,
+            OnboardingGrantService? onboarding,
+            CancellationToken ct = default)
+        {
+            if (count < 1 || count > BoosterPackGrantService.MaxBatchCount)
+                return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.InvalidCount,
+                    detail: "batch count must be between 1 and " +
+                        BoosterPackGrantService.MaxBatchCount.ToString(CultureInfo.InvariantCulture));
+            if (string.IsNullOrWhiteSpace(bearerToken))
+                return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.Unauthenticated);
+            if (verifier is null || accountStore is null || ledger is null || packs is null)
+                return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.Unavailable);
+            if (!PackCatalog.TryResolve(packId, out BoosterPack pack))
+                return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.UnknownPack,
+                    detail: "unknown pack line");
+
+            var verified = await verifier.VerifyAsync(bearerToken!, ct).ConfigureAwait(false);
+            if (!verified.IsSuccess || verified.Identity is null)
+                return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.Unauthenticated);
+
+            string subHash = CredentialHash.Of(verified.Identity.Subject);
+            Account account = await accountStore
+                .ResolveOrCreateAsync("supabase", subHash, verified.Identity.Email, ct)
+                .ConfigureAwait(false);
+
+            if (onboarding is not null)
+            {
+                try
+                {
+                    await onboarding.EnsureGrantedAsync(account, ct).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine("[packs] onboarding grant failed for player_id={0}: {1}",
+                        account.PlayerId, ex.Message);
+                }
+            }
+
+            if (!EconomyAccountPolicy.IsDurable(account))
+                return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.Unauthenticated,
+                    pack.Id, detail: "guest account");
+
+            try
+            {
+                IReadOnlyList<PackOpenOutcome> outcomes = await packs
+                    .OpenManyAsync(account, pack, count, ct)
+                    .ConfigureAwait(false);
+                if (outcomes.Count == 0)
+                    return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.NoneOwned, pack.Id);
+
+                var opens = new List<PackOpenEndpointResult>(outcomes.Count);
+                foreach (PackOpenOutcome outcome in outcomes)
+                {
+                    opens.Add(new PackOpenEndpointResult(
+                        outcome.Status == PackOpenStatus.Opened
+                            ? PackOpenEndpointStatus.Opened
+                            : PackOpenEndpointStatus.AlreadyOpened,
+                        outcome.PackId,
+                        outcome.PackInstanceId,
+                        outcome.Awards));
+                }
+                return new PackOpenBatchEndpointResult(
+                    PackOpenEndpointStatus.Opened, pack.Id, opens);
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.Error.WriteLine(
+                    "[packs] batch open refused for player_id={0} pack={1}: {2}",
+                    account.PlayerId, pack.Id, ex.Message);
+                return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.Conflict, pack.Id,
                     detail: ex.Message);
             }
         }

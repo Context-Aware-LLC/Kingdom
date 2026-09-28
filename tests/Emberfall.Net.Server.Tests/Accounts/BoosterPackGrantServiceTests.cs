@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -71,6 +72,33 @@ namespace Emberfall.Net.Server.Tests.Accounts
         private sealed class SimulatedLedgerOutage : Exception
         {
             public SimulatedLedgerOutage() : base("simulated ledger outage") { }
+        }
+
+        private sealed class CountingLockLedger : IEntitlementLedger
+        {
+            private readonly IEntitlementLedger _inner = new InMemoryEntitlementLedger();
+            public int LockCount { get; private set; }
+
+            public Task<GrantResult> GrantAsync(EntitlementGrant grant, CancellationToken ct = default)
+                => _inner.GrantAsync(grant, ct);
+            public Task<EntitlementBatchResult> ApplyBatchAsync(
+                EntitlementBatch batch, CancellationToken ct = default)
+                => _inner.ApplyBatchAsync(batch, ct);
+            public Task<long> BalanceAsync(string playerId, string item, CancellationToken ct = default)
+                => _inner.BalanceAsync(playerId, item, ct);
+            public Task<IReadOnlyDictionary<string, long>> BalancesAsync(
+                string playerId, CancellationToken ct = default)
+                => _inner.BalancesAsync(playerId, ct);
+            public Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(
+                string playerId, CancellationToken ct = default)
+                => _inner.HistoryAsync(playerId, ct);
+
+            public Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(
+                string playerId, CancellationToken ct = default)
+            {
+                LockCount++;
+                return _inner.AcquirePlayerMutationLockAsync(playerId, ct);
+            }
         }
 
         private static ICardDatabase Cards()
@@ -341,6 +369,24 @@ namespace Emberfall.Net.Server.Tests.Accounts
 
             Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(2 * (Pack.CardCount + 4)));
             Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(0));
+        }
+
+        [Test]
+        public async Task A_Batch_Uses_One_Player_Mutation_Lock()
+        {
+            var ledger = new CountingLockLedger();
+            var service = Service(ledger, new InMemoryPackPityStore(), Cards());
+            for (int i = 0; i < 5; i++)
+                await GrantPackAsync(ledger, Player, Pack, "grant-" + i);
+
+            IReadOnlyList<PackOpenOutcome> outcomes = await service
+                .OpenManyAsync(AuthenticatedAccount(), Pack, 5);
+
+            Assert.That(outcomes, Has.Count.EqualTo(5));
+            Assert.That(ledger.LockCount, Is.EqualTo(1),
+                "a batch must not reacquire the durable player lock for every pack");
+            Assert.That(outcomes.Select(outcome => outcome.PackInstanceId).Distinct().Count(),
+                Is.EqualTo(5));
         }
 
         // ── the crash window ─────────────────────────────────────────────────────────────────

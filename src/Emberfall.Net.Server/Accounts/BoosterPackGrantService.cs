@@ -94,6 +94,12 @@ namespace Emberfall.Net.Server.Accounts
     /// </summary>
     public sealed class BoosterPackGrantService
     {
+        /// <summary>Server-owned prefix for instance ids minted from durable open-count state.</summary>
+        public const string OpenInstancePrefix = "open:";
+
+        /// <summary>The largest player-requested batch. Keeps one mutation-lock hold bounded.</summary>
+        public const int MaxBatchCount = 10;
+
         /// <summary>
         /// Ledger item prefix for a card entitlement: <c>card:1159</c> — the NUMERIC card id, which is
         /// the only key a card has. (The handle-shaped example this comment used to give predates the
@@ -202,6 +208,46 @@ namespace Emberfall.Net.Server.Accounts
             await using IAsyncDisposable gate =
                 await _ledger.AcquirePlayerMutationLockAsync(account.PlayerId, ct).ConfigureAwait(false);
             return await OpenLockedAsync(account.PlayerId, pack, packInstanceId, ct).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Open several owned packs while paying for one per-player mutation lock. Instance ids are
+        /// minted inside that lock from the completion-marker balance, so every item in the result is
+        /// distinct and ordered even when another device is also trying to open this pack line.
+        /// Returns fewer than requested when the shelf became stale, and an empty list when none
+        /// remain.
+        /// </summary>
+        public async Task<IReadOnlyList<PackOpenOutcome>> OpenManyAsync(
+            Account account, BoosterPack pack, int count, CancellationToken ct = default)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            if (pack == null) throw new ArgumentNullException(nameof(pack));
+            if (count < 1 || count > MaxBatchCount)
+                throw new ArgumentOutOfRangeException(nameof(count),
+                    $"Pack batch count must be between 1 and {MaxBatchCount}.");
+            EconomyAccountPolicy.RequireDurable(account);
+
+            await using IAsyncDisposable gate =
+                await _ledger.AcquirePlayerMutationLockAsync(account.PlayerId, ct).ConfigureAwait(false);
+
+            long owned = await _ledger.BalanceAsync(account.PlayerId, pack.Id, ct).ConfigureAwait(false);
+            if (owned <= 0) return Array.Empty<PackOpenOutcome>();
+
+            long completed = await _ledger
+                .BalanceAsync(account.PlayerId, OpenedItemPrefix + pack.Id, ct)
+                .ConfigureAwait(false);
+            if (completed < 0) completed = 0;
+
+            int openCount = (int)Math.Min(owned, count);
+            var outcomes = new List<PackOpenOutcome>(openCount);
+            for (int i = 0; i < openCount; i++)
+            {
+                string instanceId = OpenInstancePrefix + account.PlayerId + ":" + pack.Id + ":" +
+                    (completed + i).ToString(CultureInfo.InvariantCulture);
+                outcomes.Add(await OpenLockedAsync(account.PlayerId, pack, instanceId, ct)
+                    .ConfigureAwait(false));
+            }
+            return outcomes;
         }
 
         private async Task<PackOpenOutcome> OpenLockedAsync(string playerId, BoosterPack pack,

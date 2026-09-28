@@ -106,6 +106,27 @@ namespace Emberfall.Net.Client.Auth
             var list = new List<IReadOnlyDictionary<string, string>>();
             items = list;
 
+            if (!TryReadRawObjectArray(json, name, out var rawItems)) return false;
+            foreach (string rawItem in rawItems)
+            {
+                if (!TryReadTopLevel(rawItem, out var element)) return false;
+                list.Add(element);
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// A nested array of objects, preserving each complete object as JSON. This is for composed
+        /// replies such as a multi-pack open, whose elements themselves contain an <c>awards</c>
+        /// array. The ordinary object-array reader intentionally flattens only scalar members; the
+        /// raw form lets the caller hand each complete child to its existing decoder.
+        /// </summary>
+        public static bool TryReadRawObjectArray(string json, string name,
+                                                 out IReadOnlyList<string> items)
+        {
+            var list = new List<string>();
+            items = list;
+
             if (!TryReadTopLevel(json, keepContainers: true, out var outer)) return false;
             if (!outer.TryGetValue(name, out string? raw) || string.IsNullOrEmpty(raw)) return false;
 
@@ -124,8 +145,7 @@ namespace Emberfall.Net.Client.Auth
 
                 int start = pos;
                 if (!SkipContainer(raw, ref pos)) return false;
-                if (!TryReadTopLevel(raw.Substring(start, pos - start), out var element)) return false;
-                list.Add(element);
+                list.Add(raw.Substring(start, pos - start));
 
                 SkipWhitespace(raw, ref pos);
                 if (pos >= raw.Length) return false;

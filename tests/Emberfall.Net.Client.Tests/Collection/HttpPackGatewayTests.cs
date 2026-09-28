@@ -60,6 +60,56 @@ namespace Emberfall.Net.Client.Tests.Collection
         }
 
         [Test]
+        public async Task A_multi_open_is_one_request_and_returns_every_receipt()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"status\":\"opened\",\"packId\":\"" + Starter + "\",\"opens\":[" +
+                Receipt("opened", "open:p1:" + Starter + ":0", Award(1001, "COMMON")) + "," +
+                Receipt("opened", "open:p1:" + Starter + ":1", Award(1042, "RARE")) + "]}");
+
+            PackOpenBatchResult result = await Gateway(http).OpenManyAsync(Starter, 2, "jwt-token");
+
+            Assert.That(http.Requests, Has.Count.EqualTo(1),
+                "a batch must pay for one network round trip, not one per pack");
+            (string url, string? body, var headers, string verb) = http.Requests[0];
+            Assert.That(url, Is.EqualTo("https://emberfall.fly.dev/packs/open-many"));
+            Assert.That(verb, Is.EqualTo("POST"));
+            Assert.That(body, Is.EqualTo("{\"packId\":\"" + Starter + "\",\"count\":2}"));
+            Assert.That(result.Status, Is.EqualTo(PackOpenStatus.Opened));
+            Assert.That(result.Receipts, Has.Count.EqualTo(2));
+            Assert.That(result.Receipts.Select(r => r.PackInstanceId), Is.EqualTo(new[]
+            {
+                "open:p1:" + Starter + ":0",
+                "open:p1:" + Starter + ":1",
+            }));
+        }
+
+        [Test]
+        public async Task A_missing_batch_route_explicitly_allows_the_safe_single_open_fallback()
+        {
+            var http = new FakeAuthHttp().Reply(404, "{\"status\":\"notfound\"}");
+
+            PackOpenBatchResult result = await Gateway(http).OpenManyAsync(Starter, 2, "jwt-token");
+
+            Assert.That(http.Requests, Has.Count.EqualTo(1));
+            Assert.That(result.HasReveals, Is.False);
+            Assert.That(result.ShouldFallbackToSingleOpens, Is.True,
+                "only a missing route proves the batch spent no packs and is safe to fall back");
+        }
+
+        [Test]
+        public async Task A_faulted_batch_response_never_allows_a_second_spend_fallback()
+        {
+            var http = new FakeAuthHttp().Reply(500, "");
+
+            PackOpenBatchResult result = await Gateway(http).OpenManyAsync(Starter, 2, "jwt-token");
+
+            Assert.That(result.Status, Is.EqualTo(PackOpenStatus.Offline));
+            Assert.That(result.ShouldFallbackToSingleOpens, Is.False,
+                "the server may have committed before the faulted response was written");
+        }
+
+        [Test]
         public async Task A_signed_out_device_never_reaches_the_network()
         {
             var http = new FakeAuthHttp();

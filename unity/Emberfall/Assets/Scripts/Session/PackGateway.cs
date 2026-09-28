@@ -108,5 +108,24 @@ namespace Emberfall.Session
                                              $"{ex.GetType().Name}: {ex.Message}");
             }
         }
+
+        /// <summary>Open a bounded stack in one request. Like <see cref="OpenAsync"/>, a lost reply
+        /// is never retried because the server may already have committed every receipt.</summary>
+        public static async Task<PackOpenBatchResult> OpenManyAsync(
+            string packId, int count, string accessToken,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return await Gateway.OpenManyAsync(packId, count, accessToken, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Packs] batch open threw ({ex.GetType().Name}: {ex.Message}); " +
+                                 "treating it as a lost response — re-read the shelf, do not retry.");
+                return PackOpenBatchResult.Failed(PackOpenStatus.Offline,
+                                                  $"{ex.GetType().Name}: {ex.Message}");
+            }
+        }
     }
 }

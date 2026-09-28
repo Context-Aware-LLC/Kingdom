@@ -3,8 +3,8 @@
     <Style src="project://database/Assets/UI/PackVault/packvault.uss?fileID=7433441132597879392&amp;guid=36eac866b4624b47af05d928f36743f1&amp;type=3#packvault"/>
     <Style src="project://database/Assets/UI/PackReveal/packreveal.uss?fileID=7433441132597879392&amp;guid=a201f4cb62914110a1d96762b261bb3d&amp;type=3#packreveal"/>
     <!-- The pack vault: a RACK on the left (one slot per pack line, filled by PackVaultController
-         from the balance on GET /collection), the STAGE where a dropped pack opens, and the RAIL
-         under it where a held pack counts up a stack. All three are authored empty of packs.
+         from the balance on GET /collection), a narrow vertical RAIL inside the rack where a held
+         pack counts up a stack, and the STAGE where a dropped pack opens.
 
          THE reveal-* TREE IS THE STORE'S, VERBATIM, AND MUST STAY THAT WAY. PackRevealPanel
          queries these NAMES out of whatever root it is handed, which is the whole reason it was
@@ -14,7 +14,10 @@
          does not report the parse failure: the whole screen renders EMPTY.) -->
     <ui:VisualElement name="root" class="emb-root pack-vault-screen">
         <ui:VisualElement name="vault-shell" class="vault-shell emb-bleed">
-            <ui:VisualElement name="vault-rack" class="vault-rack"/>
+            <ui:VisualElement name="vault-rack" class="vault-rack">
+                <ui:VisualElement name="vault-rack-slots" class="vault-rack__slots"/>
+                <ui:VisualElement name="vault-rail" class="vault-rail vault-rail--hidden"/>
+            </ui:VisualElement>
             <ui:VisualElement name="vault-main" class="vault-main">
                 <!-- Gift mode only, and hidden here so Vault mode never has to turn it off. It is
                      shown by PackVaultController once a rack with packs on it has actually rendered:
@@ -30,12 +33,8 @@
                     <ui:VisualElement name="vault-loading" picking-mode="Ignore" class="vault-loading vault-loading--hidden">
                         <ui:VisualElement name="vault-loading-icon" picking-mode="Ignore" class="vault-loading__icon"/>
                     </ui:VisualElement>
-                    <ui:Label name="vault-stage-hint" text="Drag a pack here to open it" picking-mode="Ignore" class="vault-stage__hint vault-stage__hint--hidden"/>
                 </ui:VisualElement>
                 <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
-                <ui:VisualElement name="vault-rail" class="vault-rail">
-                    <ui:Label name="vault-rail-hint" text="Hold a pack on the rail to open several" picking-mode="Ignore" class="vault-rail__hint"/>
-                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:Button name="btn-vault-back" text="Back" class="emb-back emb-back-button"/>

@@ -87,25 +87,31 @@
  *
  * One slot per pack LINE, down the left edge (Sam, 2026-09-27). It replaced a wrapping shelf of one
  * tile per pack, which at forty packs drew rows it could not scroll to. A slot carries the count in
- * a bubble, so the rack's height is bounded by the number of EXPANSIONS, not packs — five fit — and
- * nothing here needs a ScrollView (which still paints wrong on Android, #285/#307). */
+ * a bubble, so the rack's height is bounded by the number of EXPANSIONS, not packs — five fit. The
+ * rightmost 18% is the vertical hold rail; the slots and rail sit directly on the backdrop. */
 .vault-rack {
     width: 22%;
     max-width: 460px;
     flex-shrink: 0;
-    justify-content: center;
+    flex-direction: row;
+    align-items: stretch;
     padding-right: var(--space-4);
 }
 
+.vault-rack__slots {
+    width: 82%;
+    flex-shrink: 0;
+    justify-content: center;
+    padding-right: var(--space-3);
+}
+
 .vault-slot {
+    width: 100%;
     flex-direction: row;
     align-items: center;
     margin-bottom: var(--space-3);
-    padding: var(--space-3);
-    background-color: rgba(11, 14, 19, 0.55);
-    border-width: 1px;
-    border-color: var(--surface-3);
-    border-radius: var(--space-3);
+    padding: var(--space-1) 0;
+    background-color: rgba(0, 0, 0, 0);
 
     /* Rest state for the gift entrance (.vault-slot--enter). Harmless in Vault mode, which never
      * stages a slot and so never transitions it. */
@@ -135,9 +141,9 @@
 .vault-slot__label {
     flex-grow: 1;
     flex-shrink: 1;
-    margin-left: var(--space-4);
+    margin-left: var(--space-2);
     color: var(--ink-1);
-    font-size: var(--type-body);
+    font-size: var(--type-label);
     -unity-font-style: bold;
     white-space: normal;
 }
@@ -146,10 +152,10 @@
  * portrait ratio (see .vault-pack__face). No aspect-ratio here: both sides are set, and the ghost
  * overrides both. */
 .vault-mini {
-    width: 84px;
-    height: 120px;
+    width: 72px;
+    height: 103px;
     flex-shrink: 0;
-    background-color: var(--surface-2);
+    background-color: rgba(0, 0, 0, 0);
     border-radius: var(--space-2);
 }
 
@@ -194,7 +200,7 @@
     color: var(--surface-0);
 }
 
-/* ── The stage and the rail ───────────────────────────────────────────────────────────────── */
+/* ── The stage ────────────────────────────────────────────────────────────────────────────── */
 
 .vault-main {
     flex-grow: 1;
@@ -228,8 +234,8 @@
 }
 
 .vault-loading__icon {
-    width: 300px;
-    height: 300px;
+    width: 400px;
+    height: 400px;
     flex-shrink: 0;
     background-image: url("/Assets/Art/UI/PackVault/vault-loading-cache-seal.png");
     -unity-background-scale-mode: scale-to-fit;
@@ -250,50 +256,54 @@
     display: none;
 }
 
-/* The shelf rail. A pack held over it counts up; one released on it stays parked there. */
+/* The vertical hold rail occupies the rack's rightmost 18%. A pack held over it counts up; one
+ * released on it stays parked there. It is a line over the backdrop, not a panel. */
 .vault-rail {
-    height: 176px;
+    width: 18%;
+    flex-grow: 1;
     flex-shrink: 0;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin-top: var(--space-2);
-    background-color: rgba(11, 14, 19, 0.45);
-    border-top-width: 6px;
-    border-color: rgb(120, 86, 48);
-    border-radius: var(--space-2);
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 4px;
+    border-color: rgba(120, 86, 48, 0.82);
 }
 
 .vault-rail--armed {
     border-color: var(--accent);
-    background-color: rgba(255, 214, 148, 0.12);
+    background-color: rgba(0, 0, 0, 0);
 }
 
-.vault-rail__hint {
-    color: var(--ink-2);
-    font-size: var(--type-label);
-    -unity-text-align: middle-center;
-}
-
-.vault-rail__hint--hidden {
+.vault-rail--hidden {
     display: none;
 }
 
 .vault-rail__stack {
-    flex-direction: row;
+    width: 100%;
+    flex-direction: column;
     align-items: center;
-    padding: var(--space-2) var(--space-4);
+    justify-content: center;
 }
 
 .vault-rail__stack:disabled {
     opacity: 0.45;
 }
 
-.vault-rail__label {
-    margin-left: var(--space-6);
-    color: var(--ink-1);
-    font-size: var(--type-body);
-    -unity-font-style: bold;
+.vault-rail .vault-mini {
+    width: 54px;
+    height: 77px;
+}
+
+.vault-rail .vault-count {
+    top: -8px;
+    right: -8px;
+    min-width: 32px;
+    height: 32px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-radius: 16px;
+    font-size: var(--type-caption);
 }
 
 /* The pack under the finger. Added to the screen root's hierarchy by PackRackDrag, picking-ignored,
