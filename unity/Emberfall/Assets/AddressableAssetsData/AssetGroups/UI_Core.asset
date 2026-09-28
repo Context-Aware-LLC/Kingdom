@@ -30,6 +30,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8b69fccd400246058676dc4b2361b8a6
+    m_Address: ui/vault-loading-cache-seal
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10c1e2c0756a7f144bd18024d4a5e754
     m_Address: ui/gem_common
     m_ReadOnly: 0

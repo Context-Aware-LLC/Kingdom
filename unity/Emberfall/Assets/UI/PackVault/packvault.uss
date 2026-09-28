@@ -231,7 +231,7 @@
     width: 300px;
     height: 300px;
     flex-shrink: 0;
-    background-image: url("/Assets/Art/UI/Crafting/craft-loading-alchemy-ring-v1.png");
+    background-image: url("/Assets/Art/UI/PackVault/vault-loading-cache-seal.png");
     -unity-background-scale-mode: scale-to-fit;
 }
 
