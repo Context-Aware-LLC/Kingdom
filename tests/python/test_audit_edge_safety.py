@@ -93,12 +93,17 @@ class EdgeSafetyTests(unittest.TestCase):
             self.assertIn(f'face.Add({child});', source)
             self.assertIn(f'{child}.pickingMode = PickingMode.Ignore;', source)
 
-    def test_vault_tooltip_declaration_matches_pack_local_parenting(self):
+    def test_vault_count_declaration_matches_mini_local_parenting(self):
         source = (REPO_ROOT / audit.SCRIPTS / 'Presentation/PackVaultController.cs').read_text(encoding='utf-8')
-        self.assertIn('vault-pack__tooltip', audit.ELEMENT_INTERNAL)
-        self.assertIn('tooltip.AddToClassList("vault-pack__tooltip");', source)
-        self.assertIn('tile.Add(tooltip);', source)
-        self.assertIn('tooltip.pickingMode = PickingMode.Ignore;', source)
+        self.assertIn('vault-count', audit.ELEMENT_INTERNAL)
+        self.assertIn('badge.AddToClassList("vault-count");', source)
+        self.assertIn('mini.Add(badge);', source)
+
+    def test_vault_ghost_declaration_matches_pointer_parenting(self):
+        source = (REPO_ROOT / audit.SCRIPTS / 'Presentation/PackRackDrag.cs').read_text(encoding='utf-8')
+        self.assertIn('vault-ghost', audit.ELEMENT_INTERNAL)
+        self.assertIn('_ghost.AddToClassList("vault-ghost");', source)
+        self.assertIn('pickingMode = PickingMode.Ignore', source)
 
 
 if __name__ == '__main__':

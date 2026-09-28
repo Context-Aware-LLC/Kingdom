@@ -132,3 +132,88 @@
     white-space: normal;
     -unity-text-align: middle-center;
 }
+
+/* ── Several packs at once (PackRevealPanel.ShowMany, vault only) ──────────────────────────────
+ *
+ * The shown row is the best of the run, up to ten cards, so the cards shrink to fit one row and the
+ * row stops growing: the space under it belongs to the list. No ScrollView anywhere — it paints
+ * wrong on Android (#285/#307) — so the list is sized to fit, and commons are counted, not named.
+ * The list ignores picking throughout, so a tap on it falls through to .reveal-dismiss. */
+.reveal-cards--batch {
+    flex-grow: 0;
+    flex-wrap: nowrap;
+}
+
+.reveal-cards--batch .reveal-card {
+    width: 9%;
+    min-width: 0;
+    margin: 0.5%;
+    padding: var(--space-2);
+}
+
+.reveal-cards--batch .reveal-card__name {
+    font-size: var(--type-caption);
+}
+
+.reveal-list {
+    width: 96%;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    justify-content: center;
+    margin-top: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.reveal-list--hidden {
+    display: none;
+}
+
+/* "stopped after 3 of 10" — a run cut short by a failed open. Full width, above the blocks. */
+.reveal-list__note {
+    width: 100%;
+    color: var(--warning);
+    font-size: var(--type-label);
+    -unity-text-align: middle-center;
+    margin-bottom: var(--space-2);
+}
+
+/* One class. Five to a row, so every class in the game fits in two. */
+.reveal-list__block {
+    width: 19%;
+    margin: 0.5%;
+    padding: var(--space-2) var(--space-3);
+    background-color: var(--surface-0);
+    border-left-width: 4px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-2);
+}
+
+.reveal-list__block--neutral { border-color: var(--class-neutral); }
+.reveal-list__block--emberward { border-color: var(--class-emberward); }
+.reveal-list__block--tidecaller { border-color: var(--class-tidecaller); }
+.reveal-list__block--gravekeep { border-color: var(--class-gravekeep); }
+.reveal-list__block--verdant { border-color: var(--class-verdant); }
+.reveal-list__block--clockwright { border-color: var(--class-clockwright); }
+.reveal-list__block--nightveil { border-color: var(--class-nightveil); }
+.reveal-list__block--stonewarden { border-color: var(--class-stonewarden); }
+.reveal-list__block--tempest { border-color: var(--class-tempest); }
+
+.reveal-list__class {
+    color: var(--ink-1);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    margin-bottom: var(--space-1);
+}
+
+.reveal-list__line {
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    white-space: normal;
+}
+
+.reveal-list__line--rare { color: var(--rarity-rare); }
+.reveal-list__line--epic { color: var(--rarity-epic); }
+.reveal-list__line--legendary { color: var(--rarity-legendary); }

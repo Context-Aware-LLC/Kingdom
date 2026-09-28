@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Client.Shop;
@@ -29,9 +30,21 @@ namespace Emberfall.Presentation
     public sealed class PackRevealPanel
     {
         private const string HiddenClass = "reveal-overlay--hidden";
+        private const string BatchClass = "reveal-cards--batch";
+        private const string ListHiddenClass = "reveal-list--hidden";
+
+        /// <summary>The row a single pack deals, and the floor <see cref="ShowMany"/> fills up to.</summary>
+        private const int StandardRow = 5;
+
+        /// <summary>The most cards <see cref="ShowMany"/> deals face-up. Ten fits one row at the batch
+        /// card width; the rest are in the list.</summary>
+        private const int MaxShown = 10;
 
         private readonly VisualElement _overlay;
         private readonly VisualElement _cardRow;
+
+        /// <summary>The batch list under the shown row. Optional: only the vault's markup has one.</summary>
+        private readonly VisualElement _list;
         private readonly Label _title;
         private readonly Label _summary;
         private readonly Action _onDone;
@@ -58,6 +71,7 @@ namespace Emberfall.Presentation
             _cardRow = root.Q<VisualElement>("reveal-cards");
             _title = root.Q<Label>("reveal-title");
             _summary = root.Q<Label>("reveal-summary");
+            _list = root.Q<VisualElement>("reveal-list");
             _onDone = onDone;
 
             // A tap anywhere off a card (Sam, 2026-09-27): there is no Done button. The dismiss layer
@@ -78,6 +92,9 @@ namespace Emberfall.Presentation
         {
             if (receipt == null || !IsBound) return;
             _cardRow.Clear();
+            _cardRow.RemoveFromClassList(BatchClass);
+            _list?.Clear();
+            _list?.AddToClassList(ListHiddenClass);
             _generation++;
             if (_title != null) _title.text = TokenText.Pretty(receipt.PackId) + " opened";
             if (_summary != null)
@@ -94,6 +111,154 @@ namespace Emberfall.Presentation
             }
 
             _overlay.RemoveFromClassList(HiddenClass);
+        }
+
+        /// <summary>
+        /// Several packs at once (Sam, 2026-09-27). Ten packs is fifty cards, and fifty cards dealt
+        /// face-up is a wall nobody reads — so the cards SHOWN are the ones worth a moment, and
+        /// everything is accounted for in a list underneath.
+        ///
+        /// <para><b>The shown row:</b> every legendary and epic, best first; when those are fewer than
+        /// <see cref="StandardRow"/>, rares (then commons) fill it up to that — "one rare, the epics
+        /// and the legendary". Capped at <see cref="MaxShown"/>; anything past the cap is still in
+        /// the list.</para>
+        ///
+        /// <para><b>The list:</b> one block per class, one line per rarity, best first. Rare and up
+        /// are NAMED; commons are COUNTED. Naming thirty-odd commons is the wall again, and there is
+        /// no ScrollView to put it in (#285/#307).</para>
+        ///
+        /// <para>A host with no <c>reveal-list</c> in its markup gets the shown row alone.</para>
+        /// </summary>
+        /// <param name="note">A line for the summary when the run stopped short, or null.</param>
+        public void ShowMany(IReadOnlyList<PackOpenReceipt> receipts, string note = null)
+        {
+            if (receipts == null || receipts.Count == 0 || !IsBound) return;
+            if (receipts.Count == 1 && string.IsNullOrEmpty(note)) { Show(receipts[0]); return; }
+
+            _cardRow.Clear();
+            _cardRow.AddToClassList(BatchClass);
+            _generation++;
+
+            var awards = new List<PackCardAward>();
+            foreach (PackOpenReceipt receipt in receipts)
+                if (receipt != null) awards.AddRange(receipt.Awards);
+
+            if (_title != null)
+                _title.text = receipts.Count == 1 ? TokenText.Pretty(receipts[0].PackId) + " opened"
+                                                  : $"{receipts.Count} packs opened";
+            if (_summary != null)
+            {
+                string cards = awards.Count == 1 ? "1 card" : $"{awards.Count} cards";
+                _summary.text = string.IsNullOrEmpty(note) ? cards : cards + " · " + note;
+            }
+
+            // Stable: equal rarities keep pack order, so the reveal does not reshuffle on a re-render.
+            var order = new List<int>(awards.Count);
+            for (int i = 0; i < awards.Count; i++) order.Add(i);
+            order.Sort((a, b) =>
+            {
+                int byRarity = awards[b].Rarity.CompareTo(awards[a].Rarity);
+                return byRarity != 0 ? byRarity : a.CompareTo(b);
+            });
+            var ranked = new List<PackCardAward>(order.Count);
+            foreach (int i in order) ranked.Add(awards[i]);
+
+            int highs = 0;
+            foreach (PackCardAward award in ranked)
+                if (award.Rarity >= Rarity.EPIC) highs++;
+            int shown = Math.Min(Math.Max(highs, Math.Min(StandardRow, ranked.Count)), MaxShown);
+
+            for (int i = 0; i < shown; i++)
+            {
+                VisualElement card = BuildRevealCard(ranked[i]);
+                _cardRow.Add(card);
+                int delay = 140 + (i * 120);
+                card.schedule.Execute(() => card.AddToClassList("reveal-card--shown")).StartingIn(delay);
+            }
+
+            BuildList(awards, note);
+            _overlay.RemoveFromClassList(HiddenClass);
+        }
+
+        /// <summary>Everything in the list ignores picking, so a tap on it reaches the dismiss layer
+        /// behind — the reveal's only way out.</summary>
+        private void BuildList(List<PackCardAward> awards, string note)
+        {
+            if (_list == null) return;
+            _list.Clear();
+            _list.RemoveFromClassList(ListHiddenClass);
+
+            // The vault's reveal has no summary line, so a run that stopped short says so here.
+            if (!string.IsNullOrEmpty(note))
+            {
+                var stopped = new Label(note) { pickingMode = PickingMode.Ignore };
+                stopped.AddToClassList("reveal-list__note");
+                _list.Add(stopped);
+            }
+
+            // class → rarity → (name → copies), in enum order so the blocks sit in a fixed place.
+            var byClass = new SortedDictionary<CardClass, SortedDictionary<Rarity, List<KeyValuePair<string, int>>>>();
+            foreach (PackCardAward award in awards)
+            {
+                CardDefinition definition = Definition(award.CardId);
+                CardClass cls = definition?.Class ?? CardClass.NEUTRAL;
+                string name = definition != null ? definition.Name : $"Card {award.CardId}";
+
+                if (!byClass.TryGetValue(cls, out var byRarity))
+                    byClass[cls] = byRarity = new SortedDictionary<Rarity, List<KeyValuePair<string, int>>>();
+                if (!byRarity.TryGetValue(award.Rarity, out var names))
+                    byRarity[award.Rarity] = names = new List<KeyValuePair<string, int>>();
+
+                int at = names.FindIndex(n => n.Key == name);
+                if (at < 0) names.Add(new KeyValuePair<string, int>(name, 1));
+                else names[at] = new KeyValuePair<string, int>(name, names[at].Value + 1);
+            }
+
+            foreach (var cls in byClass)
+            {
+                var block = new VisualElement { pickingMode = PickingMode.Ignore };
+                block.AddToClassList("reveal-list__block");
+                block.AddToClassList("reveal-list__block--" + CardClassTokens.Slug(cls.Key));
+
+                var heading = new Label(CardClassTokens.Label(cls.Key)) { pickingMode = PickingMode.Ignore };
+                heading.AddToClassList("reveal-list__class");
+                block.Add(heading);
+
+                // Best rarity first — SortedDictionary is ascending, so walk it backwards.
+                var rarities = new List<Rarity>(cls.Value.Keys);
+                for (int r = rarities.Count - 1; r >= 0; r--)
+                {
+                    Rarity rarity = rarities[r];
+                    List<KeyValuePair<string, int>> names = cls.Value[rarity];
+                    int copies = 0;
+                    foreach (var n in names) copies += n.Value;
+
+                    string head = $"{RarityWord(rarity)} ×{copies}";
+                    string text = rarity == Rarity.COMMON ? head : head + ": " + JoinNames(names);
+
+                    var line = new Label(text) { pickingMode = PickingMode.Ignore };
+                    line.AddToClassList("reveal-list__line");
+                    line.AddToClassList(CardClassTokens.RarityToken(rarity, "reveal-list__line--"));
+                    block.Add(line);
+                }
+
+                _list.Add(block);
+            }
+        }
+
+        private static string RarityWord(Rarity r) => r switch
+        {
+            Rarity.RARE => "Rare",
+            Rarity.EPIC => "Epic",
+            Rarity.LEGENDARY => "Legendary",
+            _ => "Common",
+        };
+
+        private static string JoinNames(List<KeyValuePair<string, int>> names)
+        {
+            var parts = new List<string>(names.Count);
+            foreach (var n in names) parts.Add(n.Value > 1 ? $"{n.Key} ×{n.Value}" : n.Key);
+            return string.Join(", ", parts);
         }
 
         public void Hide() => _overlay?.AddToClassList(HiddenClass);

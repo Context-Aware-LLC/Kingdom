@@ -6,18 +6,17 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The tear: the pack the player tapped comes apart WHERE IT ALREADY IS, on the shelf, and hands
-    /// off to <see cref="PackRevealPanel"/>. Slice 3 of
+    /// The tear: the pack the player dropped on the vault's stage comes apart WHERE THEY PUT IT, and
+    /// hands off to <see cref="PackRevealPanel"/>. Slice 3 of
     /// <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>.
     ///
-    /// <para><b>IN PLACE, NOT ON A STAGE</b> (Sam, 2026-09-03, replacing the original overlay). The
-    /// first build put a full-screen stage over the shelf, re-rendered the pack into it at a fixed
+    /// <para><b>IN PLACE, NOT ON AN OVERLAY</b> (Sam, 2026-09-03, replacing the original overlay). The
+    /// first build put a full-screen overlay over the shelf, re-rendered the pack into it at a fixed
     /// 260dp, and asked the player to tap a SECOND time — so the object they touched vanished and a
-    /// smaller copy of it appeared somewhere else, wearing a foil strip that was flat placeholder
-    /// colour. Three faults with one cause: a stage is a second view of a thing that was already on
-    /// screen. There is no stage now. The tile is the pack, the tap that spends it is the tap that
-    /// opens it, and its own art is what tears. <b>Do not reintroduce an overlay to hold a beat</b> —
-    /// anything this needs to draw goes inside the tile.</para>
+    /// smaller copy of it appeared somewhere else. A second view of a thing already on screen is the
+    /// fault. Since 2026-09-27 the player carries the pack to the stage themselves (the rack and rail,
+    /// Sam), so the pack on the stage IS the one they dropped. <b>Do not reintroduce an overlay to hold
+    /// a beat</b> — anything this needs to draw goes inside the pack it is handed.</para>
     ///
     /// <para><b>It ends where the reveal begins.</b> The spec's step 4 is "the cards fly out into
     /// <c>reveal-cards</c> — the existing panel's staggered schedule already does this", so this class
@@ -139,10 +138,10 @@ namespace Emberfall.Presentation
         /// <summary>Hand off to whatever is showing the cards. Idempotent — dealing the same receipt
         /// twice would build a second row of cards under the first.
         ///
-        /// <para>Nothing is torn down here. The reveal covers the shelf immediately, and dismissing it
-        /// re-reads the shelf and rebuilds every tile from scratch — so the torn tile is discarded by
-        /// the refresh rather than restored, and a player who glimpses the shelf behind the reveal
-        /// sees the pack they just opened lying open.</para></summary>
+        /// <para>Nothing is torn down here. The reveal covers the stage immediately, and dismissing it
+        /// redraws the rack and clears the stage — so the torn pack is discarded rather than restored,
+        /// and a player who glimpses the stage behind the reveal sees the pack they just opened lying
+        /// open.</para></summary>
         private void Complete()
         {
             if (!_running) return;
