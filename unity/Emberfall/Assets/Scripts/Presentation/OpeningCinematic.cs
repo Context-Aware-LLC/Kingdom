@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.IO;
 using Emberfall.Session;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -50,6 +49,12 @@ namespace Emberfall.Presentation
         private const int VideoWidth = 1280;
         private const int VideoHeight = 720;
 
+        /// <summary>The studio mark shown until the film is ready to play (Sam, 2026-09-27). Loaded
+        /// from Resources, not Addressables: this runs BeforeSceneLoad, ahead of anything that
+        /// initializes the Addressables catalog.</summary>
+        private const string SplashResource = "Splash/SplashWisp";
+        private const float SplashHeight = 360f;
+
         private static OpeningCinematic _instance;
         private static bool _active;
 
@@ -57,8 +62,7 @@ namespace Emberfall.Presentation
         private RenderTexture _target;
         private AspectRatioFitter _aspect;
         private RawImage _picture;
-        private TextMeshProUGUI _wordmark;
-        private TextMeshProUGUI _status;
+        private RawImage _splash;
         private UnityWebRequest _download;
         private bool _prepared;
         private bool _finished;
@@ -123,35 +127,27 @@ namespace Emberfall.Presentation
             black.color = Color.black;
             black.raycastTarget = true;
 
-            // Same wordmark treatment as MainMenuScreen's `.mm-wordmark` (mainmenu.uss) so the
-            // splash reads as the same brand rather than a placeholder loading screen.
-            var wordmark = new GameObject("Wordmark", typeof(RectTransform), typeof(TextMeshProUGUI));
-            wordmark.transform.SetParent(transform, false);
-            var wordmarkRect = wordmark.GetComponent<RectTransform>();
-            wordmarkRect.anchorMin = new Vector2(0.5f, 0.5f);
-            wordmarkRect.anchorMax = new Vector2(0.5f, 0.5f);
-            wordmarkRect.sizeDelta = new Vector2(900, 120);
-            wordmarkRect.anchoredPosition = Vector2.zero;
-            _wordmark = wordmark.GetComponent<TextMeshProUGUI>();
-            _wordmark.text = "EMBERFALL";
-            _wordmark.fontSize = 64;
-            _wordmark.fontStyle = FontStyles.Bold;
-            _wordmark.characterSpacing = 8;
-            _wordmark.alignment = TextAlignmentOptions.Center;
-            _wordmark.color = new Color32(244, 239, 228, 255);
-
-            var status = new GameObject("Status", typeof(RectTransform), typeof(TextMeshProUGUI));
-            status.transform.SetParent(transform, false);
-            var statusRect = status.GetComponent<RectTransform>();
-            statusRect.anchorMin = new Vector2(0.5f, 0.5f);
-            statusRect.anchorMax = new Vector2(0.5f, 0.5f);
-            statusRect.sizeDelta = new Vector2(600, 60);
-            statusRect.anchoredPosition = new Vector2(0, -90);
-            _status = status.GetComponent<TextMeshProUGUI>();
-            _status.text = "";
-            _status.fontSize = 24;
-            _status.alignment = TextAlignmentOptions.Center;
-            _status.color = new Color32(200, 200, 200, 255);
+            // No progress readout (Sam, 2026-09-27): the mark alone holds the screen through the
+            // first-launch download and the prepare, so the player sees a splash, not a loader.
+            var splashTex = Resources.Load<Texture2D>(SplashResource);
+            if (splashTex != null)
+            {
+                var splash = new GameObject("Splash", typeof(RectTransform), typeof(RawImage));
+                splash.transform.SetParent(transform, false);
+                var splashRect = splash.GetComponent<RectTransform>();
+                splashRect.anchorMin = new Vector2(0.5f, 0.5f);
+                splashRect.anchorMax = new Vector2(0.5f, 0.5f);
+                splashRect.sizeDelta = new Vector2(
+                    SplashHeight * splashTex.width / splashTex.height, SplashHeight);
+                splashRect.anchoredPosition = Vector2.zero;
+                _splash = splash.GetComponent<RawImage>();
+                _splash.texture = splashTex;
+                _splash.raycastTarget = false;
+            }
+            else
+            {
+                Debug.LogWarning($"[OpeningCinematic] splash '{SplashResource}' not found; showing black.");
+            }
 
             var picture = new GameObject("Picture", typeof(RectTransform), typeof(RawImage),
                 typeof(AspectRatioFitter));
@@ -178,7 +174,7 @@ namespace Emberfall.Presentation
             image.texture = _target;
         }
 
-        /// <summary>Splash (wordmark + status) until a playable local copy of the film exists, then
+        /// <summary>Splash until a playable local copy of the film exists, then
         /// the film itself. Every exit from this — no settings asset, a download failure, a prepare
         /// timeout, a playback error, a skip — funnels through <see cref="Complete"/> or
         /// <see cref="Skip"/> so MainMenu underneath is always reached exactly once.</summary>
@@ -198,7 +194,6 @@ namespace Emberfall.Presentation
                 }
             }
 
-            _status.text = "";
             BuildPlayer(cachedPath);
             yield return PrepareAndPlay();
         }
@@ -218,7 +213,6 @@ namespace Emberfall.Presentation
             }
 
             string partPath = cachedPath + ".part";
-            _status.text = "Downloading…";
 
             using (_download = new UnityWebRequest(url, UnityWebRequest.kHttpVerbGET))
             {
@@ -237,7 +231,6 @@ namespace Emberfall.Presentation
                         _download.Abort();
                         break;
                     }
-                    _status.text = $"Downloading… {Mathf.RoundToInt(_download.downloadProgress * 100f)}%";
                     yield return null;
                 }
 
@@ -362,8 +355,7 @@ namespace Emberfall.Presentation
             if (_download != null) _download.Abort();
             if (_player != null) _player.Stop();
             if (_picture != null) _picture.enabled = false;
-            if (_wordmark != null) _wordmark.enabled = false;
-            if (_status != null) _status.enabled = false;
+            if (_splash != null) _splash.enabled = false;
             StartCoroutine(HoldUntilReleased());
         }
 
@@ -413,8 +405,7 @@ namespace Emberfall.Presentation
             if (player.width > 0 && player.height > 0)
                 _aspect.aspectRatio = (float)player.width / player.height;
 
-            _wordmark.enabled = false;
-            _status.enabled = false;
+            if (_splash != null) _splash.enabled = false;
             _picture.enabled = true;
             player.Play();
         }
