@@ -151,9 +151,6 @@ ROOT_EXCEPTIONS = {
         'the class rail -- the one piece of FLOW chrome at this root since 2026-08-31 -- '
         'spends it as a margin',
         ['col-query-toolbar', 'col-query', 'craft-modal', 'class-tab-bar']),
-    'pack-reveal-screen': (
-        'the root holds only a backdrop; every reveal is inside the overlay',
-        ['reveal-overlay']),
     'pack-vault-screen': (
         'the shelf and its flow controls live in the padded vault shell; Back has its own '
         'safe-edge margin and the separate reveal overlay owns its own clearance',

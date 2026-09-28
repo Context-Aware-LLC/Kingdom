@@ -148,7 +148,7 @@ namespace Emberfall.Presentation
         private bool _entrancePlayed;
 
         /// <summary>True while the reveal on screen belongs to somebody else's open. Decides where
-        /// Done goes, and nothing else.</summary>
+        /// dismissing goes, and nothing else.</summary>
         private bool _revealWasHandedIn;
 
         /// <summary>One open at a time, and no tile is live while one is in flight. A second tap
@@ -157,7 +157,7 @@ namespace Emberfall.Presentation
         private bool _busy;
 
         /// <summary>
-        /// The balance the shelf last drew, kept so Done can redraw it with one fewer pack instead of
+        /// The balance the shelf last drew, kept so dismissing can redraw it with one fewer pack instead of
         /// re-reading all of <c>GET /collection</c> — a full round trip, token refresh included, to
         /// learn a number the receipt already settled.
         ///
@@ -169,7 +169,7 @@ namespace Emberfall.Presentation
         private Dictionary<string, long> _shelfBalance;
 
         /// <summary>True when <see cref="_shelfBalance"/> already reflects the open whose reveal is
-        /// on screen, so Done may redraw from it without a fetch.</summary>
+        /// on screen, so dismissing may redraw from it without a fetch.</summary>
         private bool _shelfSettled;
 
         private CancellationTokenSource _cancel;
@@ -217,7 +217,7 @@ namespace Emberfall.Presentation
 
             if (handedIn != null)
             {
-                // Somebody else's open. The shelf underneath is never drawn: Done leaves, so a fetch
+                // Somebody else's open. The shelf underneath is never drawn: dismissing leaves, so a fetch
                 // would be a round trip to render a screen nobody sees.
                 //
                 // A handed-in receipt is already open, never the gift, so nothing here is gated:
@@ -701,7 +701,7 @@ namespace Emberfall.Presentation
             }
         }
 
-        /// <summary>Done, on the reveal. A receipt this screen produced goes back to the shelf with
+        /// <summary>A tap off the cards, on the reveal. A receipt this screen produced goes back to the shelf with
         /// one fewer on it — drawn from the settled balance when the receipt settled it, re-read
         /// otherwise; one handed in by the store goes back to the store.</summary>
         private void RevealDismissed()
@@ -775,7 +775,7 @@ namespace Emberfall.Presentation
         /// <para><b>Hidden, not disabled.</b> <c>emb-back</c> makes this the target of Android's back
         /// gesture (<c>BackNavigation</c> clicks the topmost visible back control), so a merely
         /// disabled button would still be found and the system gesture would land on a dead control.
-        /// Removing it from the tree lets the gesture fall through to the reveal's Done when a reveal
+        /// Removing it from the tree lets the gesture fall through to the reveal's dismiss layer when a reveal
         /// is up, and to nothing when it is not — which is the intent.</para>
         /// </summary>
         private void ApplyGiftLock()

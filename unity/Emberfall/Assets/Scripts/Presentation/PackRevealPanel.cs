@@ -47,7 +47,7 @@ namespace Emberfall.Presentation
         private int _generation;
 
         /// <param name="root">Any element the <c>reveal-*</c> tree sits under.</param>
-        /// <param name="onDone">What Done does after hiding. Null for a host that owns its own
+        /// <param name="onDone">What dismissing does after hiding. Null for a host that owns its own
         /// dismissal — the store just wants its overlay back — and a way home for a host where the
         /// reveal IS the screen.</param>
         public PackRevealPanel(VisualElement root, Action onDone = null)
@@ -60,8 +60,10 @@ namespace Emberfall.Presentation
             _summary = root.Q<Label>("reveal-summary");
             _onDone = onDone;
 
-            Button done = root.Q<Button>("btn-reveal-done");
-            if (done != null) done.clicked += Done;
+            // A tap anywhere off a card (Sam, 2026-09-27): there is no Done button. The dismiss layer
+            // sits behind the cards, so a card swallows its own tap and only the gaps reach this.
+            VisualElement dismiss = root.Q<VisualElement>("reveal-dismiss");
+            dismiss?.RegisterCallback<ClickEvent>(_ => Done());
 
             // Start hidden regardless of what the markup said. A host that forgets the hidden class
             // would otherwise open on an empty stage, which reads as a bug in the pack, not the UXML.
@@ -114,9 +116,7 @@ namespace Emberfall.Presentation
             flourish.AddToClassList("reveal-card__flourish");
             card.Add(flourish);
 
-            var rarity = new Label(award.Rarity.ToString());
-            rarity.AddToClassList("reveal-card__rarity");
-            card.Add(rarity);
+            // No rarity line (Sam, 2026-09-27): the border colour already says it.
 
             // THE ILLUSTRATION, not a baked card face. CardFaceBaker photographs the whole printed
             // front — frame, stats, rules text — off a 3D rig, and it needs that rig, a capture

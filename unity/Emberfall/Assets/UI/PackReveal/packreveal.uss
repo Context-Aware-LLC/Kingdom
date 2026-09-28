@@ -1,19 +1,15 @@
-/* The pack-opening reveal. Moved out of shop.uss on 2026-08-20 with the controller it styles:
- * the reveal now has two hosts (the store overlay and PackRevealScreen), and a shared surface
- * cannot live in one host's stylesheet.
+/* The pack-opening reveal. Moved out of shop.uss on 2026-08-20 with the controller it styles, so
+ * the reveal could be hosted somewhere other than the store; the vault is that host.
  *
- * Both hosts link this sheet. It is self-sufficient on purpose — the overlay and shell rules below
- * used to be borrowed from `.shop-overlay` / `.shop-shell`, which is exactly what made the reveal
- * impossible to host anywhere but the store. `.emb-root` (theme.uss) is the only outside
- * dependency, and only for the design tokens. */
+ * It is self-sufficient on purpose. `.emb-root` (theme.uss) is the only outside dependency, and
+ * only for the design tokens. */
 
-/* Scene root, for the standalone screen only. Mirrors `.shop-screen`: `.emb-root` carries tokens
- * and nothing else, so the overlay below needs a parent that actually fills the panel. */
-.pack-reveal-screen {
-    flex-grow: 1;
-    background-color: var(--surface-0);
-}
-
+/* No panel of its own (Sam, 2026-09-27): the cards sit on the vault's own backdrop. It is painted
+ * again here, rather than left transparent, because the shelf is still laid out underneath and a
+ * transparent overlay would show the cards over the packs. Same image, same scale mode, same box
+ * as `.pack-vault-screen`, so the two are indistinguishable.
+ * No padding: this element carries .emb-bleed, and a class rule here ties theme.uss on specificity
+ * and wins on sheet order, so the clearance would never apply. */
 .reveal-overlay {
     position: absolute;
     top: 0;
@@ -22,40 +18,22 @@
     bottom: 0;
     align-items: center;
     justify-content: center;
-    background-color: rgba(11, 14, 19, 0.94);
-    /* No padding: this element carries .emb-bleed, and a class rule here ties
-       theme.uss on specificity and wins on sheet order, so the clearance would
-       never apply. Same defeat as #shop-overlay's padding, one specificity level
-       down. */
+    background-color: var(--surface-0);
+    background-image: url("/Assets/Art/Backgrounds/PackVault_AncientCache_Backdrop_v1.png");
+    -unity-background-scale-mode: scale-and-crop;
 }
 
 .reveal-overlay--hidden {
     display: none;
 }
 
-.reveal-shell {
-    width: 96%;
-    height: 94%;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--surface-1);
-    border-width: 1px;
-    border-color: var(--surface-3);
-    border-radius: var(--space-3);
-    padding: var(--space-4);
-}
-
-.reveal-title {
-    color: var(--ink-1);
-    font-size: var(--type-h1);
-    -unity-font-style: bold;
-    margin-bottom: var(--space-2);
-}
-
-.reveal-summary {
-    color: var(--ink-2);
-    font-size: var(--type-label);
-    margin-bottom: var(--space-4);
+/* The tap-off-a-card target. Behind the cards, filling the overlay. */
+.reveal-dismiss {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .reveal-cards {
@@ -128,21 +106,12 @@
     background-color: rgba(255, 190, 65, 0.28);
 }
 
-.reveal-card__rarity {
-    color: var(--ink-2);
-    font-size: var(--type-caption);
-    -unity-font-style: bold;
-    letter-spacing: 1px;
-}
-
-/* The illustration. flex-grow takes the space between the rarity line and the name, which is
-   exactly the hole the card shape already had. `scale-and-crop` rather than `scale-to-fit`: card
-   art is drawn to its own aspect and the tile is 0.7, so fitting would letterbox every card
-   against the surface colour. Painted from script — a card whose art has not been generated yet
-   keeps this rule's background and simply reads as a card without a picture. */
+/* The illustration. flex-grow takes the space above the name. `scale-and-crop` rather than
+   `scale-to-fit`: card art is drawn to its own aspect and the tile is 0.7, so fitting would
+   letterbox every card against the surface colour. Painted from script — a card whose art has not
+   been generated yet keeps this rule's background and simply reads as a card without a picture. */
 .reveal-card__art {
     flex-grow: 1;
-    margin-top: var(--space-2);
     margin-bottom: var(--space-2);
     background-color: rgba(0, 0, 0, 0.25);
     border-radius: var(--space-1);
@@ -162,14 +131,4 @@
     font-size: var(--type-caption);
     white-space: normal;
     -unity-text-align: middle-center;
-}
-
-.reveal-done {
-    min-width: 28%;
-    min-height: 48px;
-    color: var(--surface-0);
-    background-color: var(--accent);
-    border-color: var(--accent);
-    border-radius: var(--space-2);
-    -unity-font-style: bold;
 }

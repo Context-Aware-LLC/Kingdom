@@ -32,16 +32,15 @@
              size and ask for a second tap. PackTearAnimator now tears the shelf tile itself, so
              everything the beat draws is a child of that tile and there is nothing to author here.
              Adding a stage back would put a second copy of an on-screen object on screen. -->
-        <!-- emb-back on Done as well as on Back, so Android's back gesture dismisses the reveal
-             before it leaves the screen. BackNavigation clicks the TOPMOST visible back control,
-             and a modal declared after the content it covers is topmost by document order. -->
+        <!-- The reveal is the cards on the vault backdrop, nothing else (Sam, 2026-09-27): no
+             panel, no title, no count, no button. A tap anywhere off a card dismisses it.
+             reveal-dismiss is that tap: it fills the overlay BEHIND the cards, and reveal-cards
+             ignores picking so its gaps fall through to it. It also carries emb-back, so Android's
+             back gesture dismisses the reveal before it leaves the screen: BackNavigation clicks
+             the DEEPEST visible back control, and this sits one level below Back. -->
         <ui:VisualElement name="reveal-overlay" class="reveal-overlay reveal-overlay--hidden emb-bleed">
-            <ui:VisualElement class="reveal-shell">
-                <ui:Label name="reveal-title" text="Pack opened" class="reveal-title"/>
-                <ui:Label name="reveal-summary" text="" class="reveal-summary"/>
-                <ui:VisualElement name="reveal-cards" class="reveal-cards"/>
-                <ui:Button name="btn-reveal-done" text="Add to collection" class="reveal-done emb-back"/>
-            </ui:VisualElement>
+            <ui:VisualElement name="reveal-dismiss" class="reveal-dismiss emb-back"/>
+            <ui:VisualElement name="reveal-cards" class="reveal-cards" picking-mode="Ignore"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
