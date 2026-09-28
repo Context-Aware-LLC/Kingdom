@@ -6,7 +6,6 @@ using Emberfall.Net.Client.Shop;
 using Emberfall.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
-using PointerType = UnityEngine.UIElements.PointerType;
 
 namespace Emberfall.Presentation
 {
@@ -17,7 +16,7 @@ namespace Emberfall.Presentation
     /// </summary>
     public enum PackVaultMode
     {
-        /// <summary>The unopened-pack surface: the shelf immediately, Back always, no banner.</summary>
+        /// <summary>The unopened-pack surface: the rack immediately, Back always, no banner.</summary>
         Vault = 0,
 
         /// <summary>The onboarding gift: a banner, a scripted entrance, and no way out until the
@@ -26,44 +25,41 @@ namespace Emberfall.Presentation
     }
 
     /// <summary>
-    /// The pack vault: every unopened pack this player holds, and the verb that spends one.
-    /// Slices 1 and 2 of <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>.
+    /// The pack vault: every unopened pack this player holds, and the verb that spends them.
+    /// Slices 1 and 2 of <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>, reshaped into a
+    /// rack, a stage and a rail on 2026-09-27 (Sam).
     ///
-    /// <para><b>It replaces the PackReveal scene rather than sitting beside it.</b> That screen said
-    /// of itself that it was "a frame, not a finished screen … meant to be replaced rather than
-    /// extended": it could present a receipt and could not produce one, so a granted pack had a
-    /// reveal and no way to reach it. This owns the whole verb — <i>a pack becomes cards</i> — which
-    /// is why the old scene, its controller and its UXML were deleted in the same commit. Two pack
-    /// screens in one build is the state worth never having.</para>
+    /// <para><b>The layout.</b> A RACK down the left holds one slot per pack LINE — a miniature of
+    /// the expansion's pack, its name, and a count bubble — so five expansions fit however many packs
+    /// each holds. (It was a tile per pack, which at forty packs drew three rows it could not scroll
+    /// to.) The STAGE in the middle is where packs open. The RAIL under it is where a pack is held to
+    /// count up a stack. <see cref="PackRackDrag"/> owns the gesture; a tap still opens, so a broken
+    /// drag never strands a pack.</para>
     ///
-    /// <para><b>The reveal itself is still <see cref="PackRevealPanel"/>, untouched.</b> It was split
-    /// out of the store in 2026-08-20 precisely so a pack opened somewhere other than the store could
-    /// have one, and it queries its <c>reveal-*</c> elements out of whatever root it is handed. Do not
-    /// write a second reveal.</para>
+    /// <para><b>The pack that tears is the one the player is holding</b> (Sam, 2026-09-03, carried
+    /// over). The ruling was "no stage that re-renders a copy of a pack the player already touched";
+    /// here the player carries the pack onto the stage themselves, so the pack on the stage IS the
+    /// one they dropped, and it tears where they put it.</para>
+    ///
+    /// <para><b>Several packs are several opens.</b> The server opens one pack per request and a
+    /// stack is a loop of them, one at a time, stopping at the first that does not come back with a
+    /// receipt — never retrying one (see <see cref="PackGateway"/>: a retry spends a second pack).
+    /// <see cref="PackRackDrag.MaxBatch"/> bounds the wait.</para>
+    ///
+    /// <para><b>The reveal is still <see cref="PackRevealPanel"/></b>, which queries its
+    /// <c>reveal-*</c> elements out of whatever root it is handed. One pack deals its row as before;
+    /// a stack goes through <see cref="PackRevealPanel.ShowMany"/>. Do not write a second reveal.</para>
     ///
     /// <para><b>Two modes, one screen</b> (<see cref="PackVaultMode"/>). <see cref="PackVaultMode.Gift"/>
     /// is the onboarding beat: it opens with a banner and a staggered entrance, it hides Back until a
-    /// pack has actually been opened, and it always goes home to the main menu. Everything else about
-    /// it — the shelf, the open, the reveal — is the vault's, unchanged. The mode is set by the caller
-    /// (<c>MainMenuController.BeginFirstRun</c>) and consumed on arrival.</para>
+    /// pack has actually been opened, and it always goes home to the main menu. The mode is set by the
+    /// caller (<c>MainMenuController.BeginFirstRun</c>) and consumed on arrival.</para>
     ///
     /// <para><b>The BALANCE routes; the MARKER only picks the mode.</b> That split is what makes
     /// starter packs unstrandable, and it is the reason <see cref="FirstRunMarkers.Gift"/> is written
     /// HERE — on the first pack opened — rather than by whatever routed the player in. A player who
     /// force-quits the instant this scene loads has not had their gift yet, and must get it on the
     /// next launch.</para>
-    ///
-    /// <para>Purchased packs arrive on this same unopened shelf as granted packs; the player chooses
-    /// when to open one. <see cref="Pending"/> remains a generic direct-receipt handoff seam, but
-    /// the Shop no longer uses it. A pack opened here returns to the shelf with one fewer on it.</para>
-    ///
-    /// <para><b>No ScrollView, deliberately</b> — the shelf is a wrapping row that fits what it can
-    /// and counts the rest. UI Toolkit's ScrollView content lays out correctly and <i>paints</i> above
-    /// its viewport on Android (#285, #307); it is a renderer fault no stylesheet can reach, and it
-    /// is not worth inheriting for a shelf that holds five things. When the shelf genuinely needs to
-    /// scroll, that bug is the thing to fix first.
-    /// <b>RETIREMENT TRIGGER:</b> when #285 and #307 close, this paragraph and the
-    /// <see cref="MaxTilesShown"/> overflow label may both go.</para>
     ///
     /// <para><b>Nothing here rolls anything</b> (ADR-0004). The balance comes from
     /// <c>GET /collection</c> and the awards come from the open's receipt; this screen has no opinion
@@ -97,32 +93,26 @@ namespace Emberfall.Presentation
         /// </summary>
         public static PackVaultMode Mode = PackVaultMode.Vault;
 
-        /// <summary>
-        /// How many pack tiles the shelf draws before it stops and counts the rest.
-        ///
-        /// <para>The shelf does not scroll (see the type remarks), so an unbounded balance would
-        /// overflow the panel silently. Ten is comfortably more than the five the gift grants and
-        /// more than a shopping trip produces; past it, a count is more use than a tile the player
-        /// cannot see anyway.</para>
-        /// </summary>
-        private const int MaxTilesShown = 10;
-
-        /// <summary>How long after a render the banner settles, and the step between tiles behind it.
-        /// The same shape as <see cref="PackRevealPanel"/>'s <c>140 + i*170</c> card stagger, a little
-        /// quicker: these are five identical objects arriving, not five things to read.</summary>
+        /// <summary>How long after a render the banner settles, and the step between rack slots
+        /// behind it. The same shape as <see cref="PackRevealPanel"/>'s card stagger, a little
+        /// quicker: these are objects arriving, not things to read.</summary>
         private const int EntranceBannerMs = 60;
-        private const int EntranceFirstTileMs = 220;
-        private const int EntranceTileStepMs = 90;
-        private const int PackTooltipHoldMs = 500;
-        private const float PackTooltipMoveThreshold = 12f;
+        private const int EntranceFirstSlotMs = 220;
+        private const int EntranceSlotStepMs = 90;
 
-        private VisualElement _shelf;
+        private VisualElement _root;
+        private VisualElement _rack;
+        private VisualElement _stage;
+        private VisualElement _stageHint;
+        private VisualElement _rail;
+        private VisualElement _railHint;
         private Label _status;
         private VisualElement _banner;
         private Button _back;
         private PackRevealPanel _reveal;
         private PackTearAnimator _tear;
         private IPackArtProvider _packArt;
+        private PackRackDrag _drag;
 
         private string _returnScene = "MainMenu";
 
@@ -142,35 +132,47 @@ namespace Emberfall.Presentation
         /// </summary>
         private bool _giftLocked;
 
-        /// <summary>The entrance is an arrival, so it plays on the first shelf this visit draws and
-        /// never again — the shelf is re-rendered after every open, and re-staggering the tiles the
-        /// player just watched a pack leave would read as a glitch, not a flourish.</summary>
+        /// <summary>The entrance is an arrival, so it plays on the first rack this visit draws and
+        /// never again — the rack is re-rendered after every open, and re-staggering it would read as
+        /// a glitch, not a flourish.</summary>
         private bool _entrancePlayed;
 
         /// <summary>True while the reveal on screen belongs to somebody else's open. Decides where
         /// Done goes, and nothing else.</summary>
         private bool _revealWasHandedIn;
 
-        /// <summary>One open at a time, and no tile is live while one is in flight. A second tap
-        /// during an open would spend a second pack, which is the one mistake on this screen that
-        /// costs the player something real.</summary>
+        /// <summary>One open at a time, and no gesture starts while one is in flight. A second open
+        /// during the first would spend more packs than the player asked for, which is the one
+        /// mistake on this screen that costs the player something real.</summary>
         private bool _busy;
 
         /// <summary>
-        /// The balance the shelf last drew, kept so Done can redraw it with one fewer pack instead of
-        /// re-reading all of <c>GET /collection</c> — a full round trip, token refresh included, to
-        /// learn a number the receipt already settled.
+        /// The balance the rack last drew, kept so Done can redraw it with the opened packs gone
+        /// instead of re-reading all of <c>GET /collection</c> — a full round trip, token refresh
+        /// included, to learn numbers the receipts already settled.
         ///
         /// <para><b>Not a prediction</b> (ADR-0004): the decrement is applied only on
         /// <see cref="PackOpenStatus.Opened"/>, which is the server saying it spent one pack on that
         /// line. <see cref="PackOpenStatus.AlreadyOpened"/> moved no counter, so it re-reads instead,
-        /// as does every failure path.</para>
+        /// as does a stack that stopped short.</para>
         /// </summary>
         private Dictionary<string, long> _shelfBalance;
 
         /// <summary>True when <see cref="_shelfBalance"/> already reflects the open whose reveal is
         /// on screen, so Done may redraw from it without a fetch.</summary>
         private bool _shelfSettled;
+
+        /// <summary>The stack parked on the rail: a pack line and how many. Presentation only — no
+        /// pack is spent or reserved by parking it, and it is clamped to the balance on every render.</summary>
+        private string _parkedPack;
+        private int _parkedCount;
+
+        /// <summary>The pack on the stage while an open is in flight, and what tears.</summary>
+        private VisualElement _stagePack;
+
+        /// <summary>Picks which of a set's art pieces the next stage pack wears, so consecutive opens
+        /// of one line are not the same picture every time.</summary>
+        private int _stageArtTurn;
 
         private CancellationTokenSource _cancel;
 
@@ -182,6 +184,7 @@ namespace Emberfall.Presentation
                 Debug.LogError("[PackVault] No rootVisualElement — is the UXML assigned?");
                 return;
             }
+            _root = root;
 
             // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).
             MatchSettingsController.Mount();
@@ -196,14 +199,26 @@ namespace Emberfall.Presentation
             // tail of first run, not a detour out of some screen the player chose to be on.
             if (_mode == PackVaultMode.Gift) _returnScene = "MainMenu";
 
-            _shelf = root.Q<VisualElement>("vault-shelf");
+            _rack = root.Q<VisualElement>("vault-rack");
+            _stage = root.Q<VisualElement>("vault-stage");
+            _stageHint = root.Q<VisualElement>("vault-stage-hint");
+            _rail = root.Q<VisualElement>("vault-rail");
+            _railHint = root.Q<VisualElement>("vault-rail-hint");
             _status = root.Q<Label>("vault-status");
             _banner = root.Q<VisualElement>("vault-banner");
             _packArt = new PackArtProvider();
             _reveal = new PackRevealPanel(root, RevealDismissed);
-            // No root: the tear runs on the tile it is handed, not on a stage in this markup.
             _tear = new PackTearAnimator();
             _cancel = new CancellationTokenSource();
+
+            _drag = new PackRackDrag(root, _rack, _stage, _rail, ResolveSource,
+                canStart: () => !_busy && _shelfBalance != null,
+                held: packId => (int)Math.Min(Held(packId), int.MaxValue),
+                parkedCount: () => _parkedCount,
+                art: packId => FaceSpriteOrNull(packId, 0),
+                open: (packId, count) => OpenBatch(packId, count),
+                park: Park,
+                unpark: Unpark);
 
             _back = root.Q<Button>("btn-vault-back");
             if (_back != null) _back.clicked += Exit;
@@ -217,7 +232,7 @@ namespace Emberfall.Presentation
 
             if (handedIn != null)
             {
-                // Somebody else's open. The shelf underneath is never drawn: Done leaves, so a fetch
+                // Somebody else's open. The rack underneath is never drawn: Done leaves, so a fetch
                 // would be a round trip to render a screen nobody sees.
                 //
                 // A handed-in receipt is already open, never the gift, so nothing here is gated:
@@ -234,16 +249,19 @@ namespace Emberfall.Presentation
 
         private void OnDisable()
         {
+            _drag?.Dispose();
+            _drag = null;
+
             // A scene change mid-fetch would otherwise land a UI write on a destroyed panel.
             _cancel?.Cancel();
             _cancel?.Dispose();
             _cancel = null;
         }
 
-        // ── The shelf ───────────────────────────────────────────────────────────────────
+        // ── The rack ────────────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Read the shelf and draw it.
+        /// Read the balance and draw the rack.
         ///
         /// <para><b>async void is correct here</b>, the same rule the menu's bootstrap follows: this is
         /// driven by a Unity lifecycle method and by button callbacks, neither of which can be
@@ -263,7 +281,7 @@ namespace Emberfall.Presentation
                 if (string.IsNullOrEmpty(accessToken))
                 {
                     // TokenForConnectAsync answers the empty string for every failure, including a
-                    // refresh that was refused. Both read the same from here: no identity, no shelf.
+                    // refresh that was refused. Both read the same from here: no identity, no rack.
                     Fail("Sign in to see your packs.");
                     return;
                 }
@@ -277,7 +295,9 @@ namespace Emberfall.Presentation
                     // enumerate and does still hold packs, and the gift is developed on one.
                     case CollectionSyncStatus.Synced:
                     case CollectionSyncStatus.Unconstrained:
-                        RenderShelf(snapshot.Packs);
+                        // Unbusy BEFORE the render, so the rack is drawn live.
+                        SetBusy(false);
+                        RenderRack(snapshot.Packs);
                         break;
 
                     case CollectionSyncStatus.Offline:
@@ -314,29 +334,35 @@ namespace Emberfall.Presentation
             }
         }
 
-        private void RenderShelf(IReadOnlyDictionary<string, long> packs)
+        private long Held(string packId)
+            => packId != null && _shelfBalance != null && _shelfBalance.TryGetValue(packId, out long n) ? n : 0;
+
+        private void RenderRack(IReadOnlyDictionary<string, long> packs)
         {
-            if (_shelf == null) return;
-            _shelf.Clear();
-            _shelfBalance = packs == null
-                ? new Dictionary<string, long>(StringComparer.Ordinal)
-                : new Dictionary<string, long>(packs.Count, StringComparer.Ordinal);
+            if (_rack == null) return;
+            _rack.Clear();
+            ClearStagePack();
+
+            _shelfBalance = new Dictionary<string, long>(StringComparer.Ordinal);
             if (packs != null)
                 foreach (KeyValuePair<string, long> line in packs) _shelfBalance[line.Key] = line.Value;
 
-            // Ordinal, so the shelf does not reorder itself between two reads of the same balance.
+            // Ordinal, so the rack does not reorder itself between two reads of the same balance.
             var lines = new List<KeyValuePair<string, long>>();
             long total = 0;
-            if (packs != null)
+            foreach (KeyValuePair<string, long> line in _shelfBalance)
             {
-                foreach (KeyValuePair<string, long> line in packs)
-                {
-                    if (line.Value <= 0) continue;
-                    lines.Add(line);
-                    total += line.Value;
-                }
+                if (line.Value <= 0) continue;
+                lines.Add(line);
+                total += line.Value;
             }
             lines.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+
+            // The park never outlives the packs it stands for.
+            if (_parkedPack != null)
+                _parkedCount = (int)Math.Min(_parkedCount, Math.Min(Held(_parkedPack), PackRackDrag.MaxBatch));
+            if (_parkedCount <= 0) { _parkedPack = null; _parkedCount = 0; }
+            RenderRail();
 
             if (total == 0)
             {
@@ -345,30 +371,18 @@ namespace Emberfall.Presentation
                 // device may have spent it since.
                 ReleaseGiftLock();
                 ShowBanner(false);
+                SetStageHint(false);
                 SetStatus("No packs waiting.");
                 return;
             }
 
             SetStatus("");
+            SetStageHint(true);
 
-            int drawn = 0;
             foreach (KeyValuePair<string, long> line in lines)
-            {
-                for (long i = 0; i < line.Value && drawn < MaxTilesShown; i++, drawn++)
-                    _shelf.Add(BuildTile(line.Key, drawn));
-                if (drawn >= MaxTilesShown) break;
-            }
+                _rack.Add(BuildSlot(line.Key, line.Value));
 
-            long hidden = total - drawn;
-            if (hidden > 0)
-            {
-                var more = new Label($"+{hidden} more");
-                more.AddToClassList("vault-pack__overflow");
-                if (WillPlayEntrance) more.AddToClassList("vault-pack--enter");
-                _shelf.Add(more);
-            }
-
-            // The banner belongs to the shelf, not to the screen: it says "here is a gift", and it
+            // The banner belongs to the rack, not to the screen: it says "here is a gift", and it
             // must not be the thing on screen while the fetch is still running or after it failed.
             ShowBanner(_mode == PackVaultMode.Gift);
             if (_mode == PackVaultMode.Gift && !_entrancePlayed)
@@ -379,11 +393,11 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Stagger the banner and the tiles in. <b>USS does the animation</b> — every element is built
+        /// Stagger the banner and the rack in. <b>USS does the animation</b> — every element is built
         /// carrying an <c>--enter</c> class that holds it faded and displaced, and this only schedules
         /// the class coming off, at which point the transition on the base rule runs. Same mechanism as
-        /// <see cref="PackRevealPanel"/>'s card stagger, for the same reason: a transition is one
-        /// declaration and a hand-driven lerp is a frame loop that has to be cancelled on scene exit.
+        /// <see cref="PackRevealPanel"/>'s card stagger: a transition is one declaration and a
+        /// hand-driven lerp is a frame loop that has to be cancelled on scene exit.
         ///
         /// <para><c>schedule</c> is owned by the element, so a scene change drops the callbacks with
         /// the panel and there is nothing here to unhook.</para>
@@ -395,201 +409,205 @@ namespace Emberfall.Presentation
                        .Execute(() => _banner.RemoveFromClassList("vault-banner--enter"))
                        .StartingIn(EntranceBannerMs);
 
-            if (_shelf == null) return;
+            if (_rack == null) return;
 
             int i = 0;
-            foreach (VisualElement child in _shelf.Children())
+            foreach (VisualElement child in _rack.Children())
             {
-                VisualElement tile = child;
-                int delay = EntranceFirstTileMs + (i * EntranceTileStepMs);
-                tile.schedule
-                    .Execute(() => tile.RemoveFromClassList("vault-pack--enter"))
-                    .StartingIn(delay);
+                VisualElement slot = child;
+                slot.schedule
+                    .Execute(() => slot.RemoveFromClassList("vault-slot--enter"))
+                    .StartingIn(EntranceFirstSlotMs + (i * EntranceSlotStepMs));
                 i++;
             }
         }
 
         /// <summary>
-        /// One unopened pack. <b>A tile per pack, not per line</b> — the count is the point of the
-        /// screen, and "five packs" reads as five objects, not as a number beside one.
+        /// One pack LINE: its miniature, its name, and how many are held. <b>A slot per line, not per
+        /// pack</b> — the count bubble is what says "ten", so a player's forty packs are five slots
+        /// rather than forty tiles the screen cannot scroll to.
         ///
-        /// <para>A <see cref="Button"/> rather than a click callback on a plain element: it brings
-        /// focus, the disabled state the busy guard needs, and keyboard activation, all of which a
-        /// hand-rolled <c>ClickEvent</c> handler would have to grow.</para>
+        /// <para>A plain element, not a Button: <see cref="PackRackDrag"/> owns press, drag and tap on
+        /// it, and a Button's own clickable would fire a second open on the same tap.</para>
         /// </summary>
-        /// <param name="index">This tile's position on the shelf, which is what picks its art —
-        /// see the art block below.</param>
-        private VisualElement BuildTile(string packId, int index)
+        private VisualElement BuildSlot(string packId, long held)
         {
-            var face = new VisualElement();
-            face.AddToClassList("vault-pack__face");
+            var slot = new VisualElement { userData = packId };
+            slot.AddToClassList("vault-slot");
+            slot.SetEnabled(!_busy);
+            // Staged displaced, for PlayEntrance to release. Applied at BUILD time because a class
+            // added in the same frame the element is created transitions from the staged value.
+            if (WillPlayEntrance) slot.AddToClassList("vault-slot--enter");
 
-            // The face is built before the button so the click can carry it: the tear happens ON this
-            // element, and it is the only handle to the pack the player actually touched.
-            var tile = new Button();
-            tile.AddToClassList("vault-pack");
-            tile.SetEnabled(!_busy);
+            slot.Add(BuildMini(packId, held));
 
-            // Staged displaced, for PlayEntrance to release. Applied at BUILD time rather than after
-            // the fact because a class added in the same frame the element is created transitions from
-            // the staged value; one added afterwards would flash the tile at rest first.
-            if (WillPlayEntrance) tile.AddToClassList("vault-pack--enter");
-
-            tile.Add(face);
-
-            // ONE FACE PER TILE, NOT ONE PER SET. A set ships several pieces precisely so a shelf of
-            // five packs is five different objects rather than the same picture five times — which is
-            // the whole reason the shelf draws a tile per PACK (see this method's summary). Taking
-            // pieces[0] for every tile would have quietly thrown away every piece but the first.
-            //
-            // Keyed on shelf POSITION because the client has no pack instance identity to key on: the
-            // instance id is minted server-side inside PackOpenEndpoint and never travels to us
-            // (deliberately — a client that picks it can replay one grant into many opens). Position
-            // is stable for as long as the shelf is, which is all this needs; opening a pack
-            // re-renders and the remaining tiles simply re-take the low indices.
-            //
-            // The modulo is not decoration — a set may hold fewer pieces than the player holds packs,
-            // and MaxTilesShown is 10 while STARTER ships 5.
-            //
-            // PackWrapperBaker wraps the flat illustration into a sealed foil pack. Its return value
-            // is deliberately unchecked: false means it already fell back to painting the raw Sprite,
-            // so the face carries art either way and the class below stays true.
-            //
-            // A SKU-qualified starter pack takes its OWN folder when one has been drawn and its
-            // expansion's when one has not; PackArtSet ranks the candidates, PackArtProvider takes
-            // the first with a manifest. A set whose art has not been drawn yet is the normal state
-            // and says nothing — see PackArtProvider — so an artless pack reads as a pack without a
-            // picture, never as a picture that failed.
-            _packArt?.LoadPackArt(packId, pieces =>
-            {
-                if (pieces == null || pieces.Count == 0) return;
-                PackWrapperBaker.ApplyTo(face, pieces[index % pieces.Count].Sprite);
-                face.AddToClassList("vault-pack__face--art");
-            });
-
-            var tooltip = new Label(ExpansionDisplayName(packId));
-            tooltip.AddToClassList("vault-pack__tooltip");
-            tooltip.pickingMode = PickingMode.Ignore;
-            tile.Add(tooltip);
-
-            IVisualElementScheduledItem holdTimer = null;
-            int heldPointer = -1;
-            int suppressedClickPointer = -1;
-            Vector2 holdDown = default;
-            void HideTooltip() => tooltip.style.display = DisplayStyle.None;
-            void CancelHold()
-            {
-                holdTimer?.Pause();
-                holdTimer = null;
-                heldPointer = -1;
-                HideTooltip();
-            }
-
-            tile.RegisterCallback<PointerEnterEvent>(evt =>
-            {
-                if (evt.pointerType == PointerType.mouse)
-                    tooltip.style.display = DisplayStyle.Flex;
-            });
-            tile.RegisterCallback<PointerLeaveEvent>(evt =>
-            {
-                if (evt.pointerType == PointerType.mouse) HideTooltip();
-                else if (evt.pointerId == heldPointer) CancelHold();
-            });
-            tile.RegisterCallback<PointerDownEvent>(evt =>
-            {
-                if (evt.pointerType != PointerType.touch || evt.button != 0 || !evt.isPrimary) return;
-                suppressedClickPointer = -1;
-                heldPointer = evt.pointerId;
-                holdDown = evt.position;
-                int pointer = evt.pointerId;
-                holdTimer = tile.schedule.Execute(() =>
-                {
-                    holdTimer = null;
-                    if (heldPointer != pointer || tile.panel == null || !tile.enabledSelf) return;
-                    suppressedClickPointer = pointer;
-                    tooltip.style.display = DisplayStyle.Flex;
-                }).StartingIn(PackTooltipHoldMs);
-            });
-            tile.RegisterCallback<PointerMoveEvent>(evt =>
-            {
-                if (evt.pointerId != heldPointer) return;
-                Vector2 delta = (Vector2)evt.position - holdDown;
-                if (delta.sqrMagnitude >= PackTooltipMoveThreshold * PackTooltipMoveThreshold)
-                    CancelHold();
-            });
-            tile.RegisterCallback<PointerUpEvent>(evt =>
-            {
-                if (evt.pointerId == heldPointer) CancelHold();
-            });
-            tile.RegisterCallback<PointerCancelEvent>(evt =>
-            {
-                if (evt.pointerId == heldPointer) CancelHold();
-            });
-            tile.RegisterCallback<DetachFromPanelEvent>(_ => CancelHold());
-            tile.RegisterCallback<ClickEvent>(evt =>
-            {
-                if (evt.pointerId == suppressedClickPointer)
-                {
-                    suppressedClickPointer = -1;
-                    return;
-                }
-                HideTooltip();
-                Open(packId, index, face);
-            });
-
-            return tile;
+            var label = new Label(PackLineName(packId)) { pickingMode = PickingMode.Ignore };
+            label.AddToClassList("vault-slot__label");
+            slot.Add(label);
+            return slot;
         }
 
-        private static string ExpansionDisplayName(string packId)
+        /// <summary>A pack miniature with its count bubble — the rack slot's and the parked stack's.
+        /// Everything inside ignores picking so the press lands on the slot that owns it.</summary>
+        private VisualElement BuildMini(string packId, long count)
+        {
+            var mini = new VisualElement { pickingMode = PickingMode.Ignore };
+            mini.AddToClassList("vault-mini");
+
+            // A set whose art has not been drawn yet is the normal state (PackArtProvider says so),
+            // so an artless pack reads as a pack without a picture, never as a picture that failed.
+            Sprite art = FaceSpriteOrNull(packId, 0);
+            if (art != null)
+            {
+                PackWrapperBaker.ApplyTo(mini, art);
+                mini.AddToClassList("vault-mini--art");
+            }
+
+            var badge = new Label(count.ToString()) { pickingMode = PickingMode.Ignore };
+            badge.AddToClassList("vault-count");
+            mini.Add(badge);
+            return mini;
+        }
+
+        /// <summary>"pack.emberfall" → "Emberfall"; "pack.emberfall.starter" → "Emberfall Starter".</summary>
+        private static string PackLineName(string packId)
         {
             string[] parts = packId?.Split('.');
             if (parts == null || parts.Length < 2) return "Pack";
-            string expansion = TokenText.Pretty(parts[1]);
-            return expansion.Length == 0 ? "Pack" : expansion + " Pack";
+            string name = TokenText.Pretty(parts[1]);
+            if (name.Length == 0) return "Pack";
+            return parts.Length > 2 ? name + " " + TokenText.Pretty(parts[2]) : name;
+        }
+
+        // ── The rail ────────────────────────────────────────────────────────────────────
+
+        private void Park(string packId, int count)
+        {
+            _parkedPack = packId;
+            _parkedCount = count;
+            RenderRail();
+        }
+
+        private void Unpark()
+        {
+            _parkedPack = null;
+            _parkedCount = 0;
+            RenderRail();
+        }
+
+        /// <summary>The parked stack, or the rail's hint when nothing is parked.</summary>
+        private void RenderRail()
+        {
+            if (_rail == null) return;
+            _rail.Q<VisualElement>("vault-rail-stack")?.RemoveFromHierarchy();
+
+            bool parked = _parkedPack != null && _parkedCount > 0;
+            _railHint?.EnableInClassList("vault-rail__hint--hidden", parked);
+            if (!parked) return;
+
+            var stack = new VisualElement { name = "vault-rail-stack", userData = _parkedPack };
+            stack.AddToClassList("vault-rail__stack");
+            stack.SetEnabled(!_busy);
+            stack.Add(BuildMini(_parkedPack, _parkedCount));
+            var label = new Label("Drag to open " + _parkedCount) { pickingMode = PickingMode.Ignore };
+            label.AddToClassList("vault-rail__label");
+            stack.Add(label);
+            _rail.Add(stack);
+        }
+
+        /// <summary>What <see cref="PackRackDrag"/> is pressing on: a rack slot or the parked stack,
+        /// found by walking up from the event target to the element carrying a pack id.</summary>
+        private PackRackDrag.Source ResolveSource(VisualElement target)
+        {
+            for (VisualElement e = target; e != null && e != _root; e = e.parent)
+            {
+                if (!(e.userData is string packId)) continue;
+                if (e.ClassListContains("vault-slot")) return new PackRackDrag.Source(e, packId, false);
+                if (e.ClassListContains("vault-rail__stack")) return new PackRackDrag.Source(e, packId, true);
+            }
+            return default;
         }
 
         // ── Opening ─────────────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// The face a tile at <paramref name="index"/> is wearing, or null when the set has no art.
-        /// The same expression <see cref="BuildTile"/> paints with, so the tear cannot disagree with
-        /// the tile it grew out of.
+        /// The face a pack of this line wears at art turn <paramref name="turn"/>, or null when the
+        /// set has no art.
         ///
         /// <para><see cref="IPackArtProvider.LoadPackArt"/> is synchronous by contract — both the
         /// Addressables and the AssetDatabase path resolve inline, and the callback shape is kept only
         /// for a future streamed loader — which is what makes assigning out of it and returning
         /// legal here.</para>
         /// </summary>
-        private Sprite FaceSpriteOrNull(string packId, int index)
+        private Sprite FaceSpriteOrNull(string packId, int turn)
         {
             Sprite face = null;
             _packArt?.LoadPackArt(packId, pieces =>
             {
-                if (pieces != null && pieces.Count > 0) face = pieces[index % pieces.Count].Sprite;
+                if (pieces != null && pieces.Count > 0) face = pieces[turn % pieces.Count].Sprite;
             });
             return face;
         }
 
-        /// <param name="artIndex">The shelf position of the tile that was tapped, so the pack that
-        /// tears is the one the player touched. Without it the tear would always wear the set's first
-        /// face while the tile under the finger wore its own — the mismatch a shelf of five distinct
-        /// faces makes visible.</param>
-        /// <param name="face">That tile's own face element. The tear runs ON it rather than on a
-        /// stage — see <see cref="PackTearAnimator"/> — so this is the pack, not a picture of it.</param>
-        private async void Open(string packId, int artIndex, VisualElement face)
+        /// <summary>Put a sealed pack of this line in the middle of the stage — the pack the player
+        /// just dropped — and return the sprite it wears, for the tear to bake from.</summary>
+        private Sprite PlaceStagePack(string packId)
+        {
+            ClearStagePack();
+            SetStageHint(false);
+            if (_stage == null) return null;
+
+            _stagePack = new VisualElement { pickingMode = PickingMode.Ignore };
+            // .vault-pack__face is what the tear's rules hang off (packvault.uss, THE TEAR).
+            _stagePack.AddToClassList("vault-pack__face");
+            _stagePack.AddToClassList("vault-stage__pack");
+
+            Sprite art = FaceSpriteOrNull(packId, _stageArtTurn++);
+            if (art != null)
+            {
+                PackWrapperBaker.ApplyTo(_stagePack, art);
+                _stagePack.AddToClassList("vault-pack__face--art");
+            }
+            _stage.Add(_stagePack);
+            return art;
+        }
+
+        private void ClearStagePack()
+        {
+            _stagePack?.RemoveFromHierarchy();
+            _stagePack = null;
+        }
+
+        /// <summary>
+        /// Open <paramref name="count"/> packs of one line, one request at a time, then tear the
+        /// stage pack and reveal everything that came back.
+        ///
+        /// <para><b>It stops at the first open that does not return a receipt, and never retries
+        /// it.</b> <see cref="PackOpenStatus.Offline"/> may be a pack genuinely spent; the recovery is
+        /// a re-read, and a retry would spend a second one. Whatever did come back is still revealed
+        /// — those cards are granted — and Done re-reads rather than trusting the arithmetic.</para>
+        /// </summary>
+        private async void OpenBatch(string packId, int count)
         {
             if (_busy) return;
+            count = (int)Math.Min(count, Math.Min(Held(packId), PackRackDrag.MaxBatch));
+            if (count < 1) return;
+
+            // A stack taken off the rail is spent from the rail; any other open leaves the park as it
+            // is, and the render after Done clamps it to what is left.
+            if (packId == _parkedPack) Unpark();
 
             CancellationToken token = _cancel?.Token ?? CancellationToken.None;
 
             // Set on every path that hands the screen to something else — a reveal, or a re-read. The
-            // busy flag belongs to whatever is now driving; clearing it here would re-arm the tiles
+            // busy flag belongs to whatever is now driving; clearing it here would re-arm the rack
             // underneath a reveal, and under a Refresh that is still in flight.
             bool retained = false;
             try
             {
                 SetBusy(true);
-                SetStatus("Opening…");
+                Sprite art = PlaceStagePack(packId);
+                SetStatus(count == 1 ? "Opening…" : $"Opening 1 of {count}…");
 
                 string accessToken = await AuthGateway.TokenForConnectAsync();
                 if (!Alive(token)) return;
@@ -600,16 +618,31 @@ namespace Emberfall.Presentation
                     return;
                 }
 
-                PackOpenResult result = await PackGateway.OpenAsync(packId, accessToken, token);
-                if (!Alive(token)) return;
+                var receipts = new List<PackOpenReceipt>(count);
+                bool settled = true;
+                PackOpenResult stopped = null;
 
-                if (result.HasReveal)
+                for (int i = 0; i < count; i++)
                 {
+                    if (i > 0) SetStatus($"Opening {i + 1} of {count}…");
+
+                    PackOpenResult result = await PackGateway.OpenAsync(packId, accessToken, token);
+                    if (!Alive(token)) return;
+
+                    if (!result.HasReveal)
+                    {
+                        stopped = result;
+                        break;
+                    }
+
                     // AlreadyOpened carries the SAME cards and spent nothing twice, so it is shown
-                    // exactly as an Opened is. The two are separate only so a log line can tell them
-                    // apart.
-                    _revealWasHandedIn = false;
-                    retained = true;
+                    // exactly as an Opened is — but it moved no counter, so the balance is not ours to
+                    // decrement and Done re-reads.
+                    receipts.Add(result.Receipt);
+                    if (result.Status == PackOpenStatus.Opened && Held(packId) > 0)
+                        _shelfBalance[packId] = Held(packId) - 1;
+                    else
+                        settled = false;
 
                     // THE GIFT IS SPENT THE MOMENT A PACK OPENS, not when the player arrived and not
                     // when they leave. Anything earlier loses the gift to a force-quit; anything later
@@ -618,74 +651,33 @@ namespace Emberfall.Presentation
                     // means there is exactly one site that can.
                     MarkGiftSeen();
                     ReleaseGiftLock();
+                }
 
-                    SetStatus("");
-                    PackOpenReceipt receipt = result.Receipt;
-
-                    _shelfSettled = false;
-                    if (result.Status == PackOpenStatus.Opened
-                        && _shelfBalance != null
-                        && _shelfBalance.TryGetValue(packId, out long held) && held > 0)
-                    {
-                        _shelfBalance[packId] = held - 1;
-                        _shelfSettled = true;
-                    }
-
-                    // NO SKIP CONTROL, and spec §8 is satisfied by its absence rather than by a flag.
-                    // The rule was "no skip on the gift's first pack; everything after it is
-                    // skippable", written when the tear was a stage the player had to sit through and
-                    // tap a second time. The tear is now half a second on the tile they just touched,
-                    // with nothing between them and the cards — there is no wait to skip, so there is
-                    // no control to hide, and `allowSkip` went with the stage.
-                    _tear.Play(receipt, face, FaceSpriteOrNull(packId, artIndex),
-                               () => _reveal.Show(receipt));
+                if (receipts.Count == 0)
+                {
+                    ClearStagePack();
+                    retained = HandleNoReceipt(packId, stopped);
                     return;
                 }
 
-                switch (result.Status)
+                _revealWasHandedIn = false;
+                _shelfSettled = settled && stopped == null;
+                retained = true;
+                SetStatus("");
+
+                string note = stopped == null ? null : $"stopped after {receipts.Count} of {count}";
+                if (stopped != null)
+                    Debug.LogWarning($"[PackVault] batch stopped at {receipts.Count}/{count}: " +
+                                     $"{stopped.Status} {stopped.Detail}");
+
+                // NO SKIP CONTROL, and spec §8 is satisfied by its absence rather than by a flag: the
+                // tear is half a second on the pack the player just dropped, with nothing between them
+                // and the cards — there is no wait to skip, so there is no control to hide.
+                _tear.Play(receipts[0], _stagePack, art, () =>
                 {
-                    case PackOpenStatus.NoneOwned:
-                        // Honest and reachable: another device opened the last one, or this shelf was
-                        // drawn before it was. Re-read rather than argue with it.
-                        retained = true;
-                        SetStatus("That pack is already open.");
-                        Refresh();
-                        return;
-
-                    case PackOpenStatus.Offline:
-                        // NOT "nothing happened". The open commits before the response is written, so
-                        // this pack may be genuinely spent. Re-reading the shelf is the recovery; a
-                        // retry derives the next instance id and spends a second pack. Never offer one.
-                        retained = true;
-                        SetStatus("We lost the connection. Checking what you have…");
-                        Refresh();
-                        return;
-
-                    case PackOpenStatus.Unauthenticated:
-                        Fail("Sign in again to open this pack.");
-                        return;
-
-                    case PackOpenStatus.Unavailable:
-                        Fail("Packs cannot be opened on this server.");
-                        Debug.LogWarning($"[PackVault] open unavailable: {result.Detail}");
-                        return;
-
-                    case PackOpenStatus.UnknownPack:
-                        // A client bug — this shelf was drawn from the server's own balance, so a pack
-                        // line it will not accept means the two disagree about what a pack is.
-                        Fail("This build does not know that pack.");
-                        Debug.LogError($"[PackVault] server refused pack id '{packId}': {result.Detail}");
-                        return;
-
-                    default:
-                        // A 2xx that decoded to nothing. The cards may well have been granted, so the
-                        // answer is another read, never another open.
-                        retained = true;
-                        SetStatus("Something went wrong opening that. Checking what you have…");
-                        Debug.LogWarning($"[PackVault] open malformed: {result.Detail}");
-                        Refresh();
-                        return;
-                }
+                    if (receipts.Count == 1 && note == null) _reveal.Show(receipts[0]);
+                    else _reveal.ShowMany(receipts, note);
+                });
             }
             catch (OperationCanceledException)
             {
@@ -701,9 +693,56 @@ namespace Emberfall.Presentation
             }
         }
 
-        /// <summary>Done, on the reveal. A receipt this screen produced goes back to the shelf with
-        /// one fewer on it — drawn from the settled balance when the receipt settled it, re-read
-        /// otherwise; one handed in by the store goes back to the store.</summary>
+        /// <summary>The first open of a run came back without a receipt. Returns true when a re-read
+        /// has taken over the screen (and with it the busy flag).</summary>
+        private bool HandleNoReceipt(string packId, PackOpenResult result)
+        {
+            switch (result?.Status)
+            {
+                case PackOpenStatus.NoneOwned:
+                    // Honest and reachable: another device opened the last one, or this rack was
+                    // drawn before it was. Re-read rather than argue with it.
+                    SetStatus("That pack is already open.");
+                    Refresh();
+                    return true;
+
+                case PackOpenStatus.Offline:
+                    // NOT "nothing happened". The open commits before the response is written, so
+                    // this pack may be genuinely spent. Re-reading is the recovery; a retry derives the
+                    // next instance id and spends a second pack. Never offer one.
+                    SetStatus("We lost the connection. Checking what you have…");
+                    Refresh();
+                    return true;
+
+                case PackOpenStatus.Unauthenticated:
+                    Fail("Sign in again to open this pack.");
+                    return false;
+
+                case PackOpenStatus.Unavailable:
+                    Fail("Packs cannot be opened on this server.");
+                    Debug.LogWarning($"[PackVault] open unavailable: {result.Detail}");
+                    return false;
+
+                case PackOpenStatus.UnknownPack:
+                    // A client bug — this rack was drawn from the server's own balance, so a pack
+                    // line it will not accept means the two disagree about what a pack is.
+                    Fail("This build does not know that pack.");
+                    Debug.LogError($"[PackVault] server refused pack id '{packId}': {result.Detail}");
+                    return false;
+
+                default:
+                    // A 2xx that decoded to nothing. The cards may well have been granted, so the
+                    // answer is another read, never another open.
+                    SetStatus("Something went wrong opening that. Checking what you have…");
+                    Debug.LogWarning($"[PackVault] open malformed: {result?.Detail}");
+                    Refresh();
+                    return true;
+            }
+        }
+
+        /// <summary>Done, on the reveal. A run this screen produced goes back to the rack with the
+        /// opened packs gone — drawn from the settled balance when the receipts settled it, re-read
+        /// otherwise; a receipt handed in by the store goes back to the store.</summary>
         private void RevealDismissed()
         {
             if (_revealWasHandedIn)
@@ -715,9 +754,9 @@ namespace Emberfall.Presentation
             if (_shelfSettled)
             {
                 _shelfSettled = false;
-                // Unbusy BEFORE the render: BuildTile reads _busy to decide whether a tile is live.
+                // Unbusy BEFORE the render: BuildSlot reads _busy to decide whether a slot is live.
                 SetBusy(false);
-                RenderShelf(_shelfBalance);
+                RenderRack(_shelfBalance);
                 return;
             }
             Refresh();
@@ -762,12 +801,15 @@ namespace Emberfall.Presentation
 
             // Staged before it is unhidden, in that order: the displaced state has to be the one the
             // element is first laid out in, or the banner appears at rest and then jumps back to
-            // animate in. Same reason BuildTile stages a tile at construction.
+            // animate in. Same reason BuildSlot stages a slot at construction.
             if (shown && WillPlayEntrance) _banner.AddToClassList("vault-banner--enter");
             if (!shown) _banner.RemoveFromClassList("vault-banner--enter");
 
             _banner.EnableInClassList("vault-banner--hidden", !shown);
         }
+
+        private void SetStageHint(bool shown)
+            => _stageHint?.EnableInClassList("vault-stage__hint--hidden", !shown);
 
         /// <summary>
         /// Hide Back while the gift holds the player, show it otherwise.
@@ -796,9 +838,11 @@ namespace Emberfall.Presentation
         private void SetBusy(bool busy)
         {
             _busy = busy;
-            if (_shelf == null) return;
-            foreach (VisualElement child in _shelf.Children())
-                child.SetEnabled(!busy);
+            if (busy) _drag?.End();
+            if (_rack != null)
+                foreach (VisualElement child in _rack.Children())
+                    child.SetEnabled(!busy);
+            _rail?.Q<VisualElement>("vault-rail-stack")?.SetEnabled(!busy);
         }
 
         private void SetStatus(string text)
@@ -808,7 +852,7 @@ namespace Emberfall.Presentation
             _status.EnableInClassList("vault-status--empty", _status.text.Length == 0);
         }
 
-        /// <summary>A failure the player can read, with no tiles behind it — an empty shelf under an
+        /// <summary>A failure the player can read, with no rack behind it — an empty rack under an
         /// error message would say the player owns nothing, which is the one thing none of these
         /// statuses is evidence of.</summary>
         private void Fail(string message)
@@ -820,7 +864,11 @@ namespace Emberfall.Presentation
             // everyone, which arrives here as Unavailable on the very first pack of first run.
             ReleaseGiftLock();
             ShowBanner(false);
-            _shelf?.Clear();
+            _rack?.Clear();
+            ClearStagePack();
+            SetStageHint(false);
+            _shelfBalance = null;
+            Unpark();
             SetStatus(message);
         }
 

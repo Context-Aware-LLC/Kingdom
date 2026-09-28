@@ -2,8 +2,9 @@
     <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/PackVault/packvault.uss?fileID=7433441132597879392&amp;guid=36eac866b4624b47af05d928f36743f1&amp;type=3#packvault"/>
     <Style src="project://database/Assets/UI/PackReveal/packreveal.uss?fileID=7433441132597879392&amp;guid=a201f4cb62914110a1d96762b261bb3d&amp;type=3#packreveal"/>
-    <!-- The pack vault. The shelf is authored empty; PackVaultController fills it from the pack
-         balance on GET /collection, one tile per unopened pack.
+    <!-- The pack vault: a RACK on the left (one slot per pack line, filled by PackVaultController
+         from the balance on GET /collection), the STAGE where a dropped pack opens, and the RAIL
+         under it where a held pack counts up a stack. All three are authored empty of packs.
 
          THE reveal-* TREE IS THE STORE'S, VERBATIM, AND MUST STAY THAT WAY. PackRevealPanel
          queries these NAMES out of whatever root it is handed, which is the whole reason it was
@@ -13,25 +14,31 @@
          does not report the parse failure: the whole screen renders EMPTY.) -->
     <ui:VisualElement name="root" class="emb-root pack-vault-screen">
         <ui:VisualElement name="vault-shell" class="vault-shell emb-bleed">
-            <!-- Gift mode only, and hidden here so Vault mode never has to turn it off. It is shown
-                 by PackVaultController once a shelf with packs on it has actually rendered: a banner
-                 saying "here is a gift" over a spinner, or over "could not reach the server", is
-                 worse than no banner at all. The staged entrance modifier is added at show time and
-                 is deliberately not authored here.
-                 (No double dash anywhere in this comment either, for the reason above.) -->
-            <ui:VisualElement name="vault-banner" class="vault-banner vault-banner--hidden">
-                <ui:Label name="vault-banner-title" text="A gift to start you off" class="vault-banner__title"/>
-                <ui:Label name="vault-banner-body" text="Open them and keep everything inside." class="vault-banner__body"/>
+            <ui:VisualElement name="vault-rack" class="vault-rack"/>
+            <ui:VisualElement name="vault-main" class="vault-main">
+                <!-- Gift mode only, and hidden here so Vault mode never has to turn it off. It is
+                     shown by PackVaultController once a rack with packs on it has actually rendered:
+                     a banner saying "here is a gift" over a spinner, or over "could not reach the
+                     server", is worse than no banner at all. The staged entrance modifier is added at
+                     show time and is deliberately not authored here.
+                     (No double dash anywhere in this comment either, for the reason above.) -->
+                <ui:VisualElement name="vault-banner" class="vault-banner vault-banner--hidden">
+                    <ui:Label name="vault-banner-title" text="A gift to start you off" class="vault-banner__title"/>
+                    <ui:Label name="vault-banner-body" text="Open them and keep everything inside." class="vault-banner__body"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="vault-stage" class="vault-stage">
+                    <ui:Label name="vault-stage-hint" text="Drag a pack here to open it" picking-mode="Ignore" class="vault-stage__hint vault-stage__hint--hidden"/>
+                </ui:VisualElement>
+                <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
+                <ui:VisualElement name="vault-rail" class="vault-rail">
+                    <ui:Label name="vault-rail-hint" text="Hold a pack on the rail to open several" picking-mode="Ignore" class="vault-rail__hint"/>
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement name="vault-shelf" class="vault-shelf"/>
-            <ui:Label name="vault-status" text="" class="vault-status vault-status--empty"/>
         </ui:VisualElement>
         <ui:Button name="btn-vault-back" text="Back" class="emb-back emb-back-button"/>
-        <!-- THERE IS NO TEAR STAGE, and its absence is the design (Sam, 2026-09-03).
-             A full screen overlay used to sit here, re-render the tapped pack into itself at a fixed
-             size and ask for a second tap. PackTearAnimator now tears the shelf tile itself, so
-             everything the beat draws is a child of that tile and there is nothing to author here.
-             Adding a stage back would put a second copy of an on-screen object on screen. -->
+        <!-- NO TEAR OVERLAY (Sam, 2026-09-03). The pack that tears is the one the player dropped on
+             vault-stage, so everything the beat draws is a child of that pack. A full screen overlay
+             that re-rendered it would put a second copy of an on-screen object on screen. -->
         <!-- emb-back on Done as well as on Back, so Android's back gesture dismisses the reveal
              before it leaves the screen. BackNavigation clicks the TOPMOST visible back control,
              and a modal declared after the content it covers is topmost by document order. -->
@@ -40,6 +47,9 @@
                 <ui:Label name="reveal-title" text="Pack opened" class="reveal-title"/>
                 <ui:Label name="reveal-summary" text="" class="reveal-summary"/>
                 <ui:VisualElement name="reveal-cards" class="reveal-cards"/>
+                <!-- Vault only: the per class list a multi pack open adds under the cards
+                     (PackRevealPanel.ShowMany). The store has no multi pack open and no list. -->
+                <ui:VisualElement name="reveal-list" class="reveal-list reveal-list--hidden"/>
                 <ui:Button name="btn-reveal-done" text="Add to collection" class="reveal-done emb-back"/>
             </ui:VisualElement>
         </ui:VisualElement>

@@ -174,9 +174,13 @@ ELEMENT_INTERNAL = {
     'tear-half':
         'non-interactive torn wrapper pieces parented to the tapped pack face by '
         'PackTearAnimator.Play; left/top are pack-local coordinates',
-    'vault-pack__tooltip':
-        'expansion label parented to its pack tile by PackVaultController.BuildTile; '
-        'its absolute offsets are tile-local, not screen-edge coordinates',
+    'vault-count':
+        'count bubble parented to a pack miniature by PackVaultController.BuildMini and '
+        'PackRackDrag.CreateGhost; its negative offsets hang off the miniature\'s corner, not the screen',
+    'vault-ghost':
+        'the dragged pack, added to the screen root by PackRackDrag.CreateGhost with '
+        'picking-mode Ignore and placed under the pointer from script each move; it goes where '
+        'the finger is, so an edge inset would put it somewhere the finger is not',
     'emb-scroll-fade':
         'the "there is more" fade over the bottom band of a scroll surface; its left/right/bottom '
         'offsets are against the FRAME it is pinned inside (see .deck-chooser-frame in '

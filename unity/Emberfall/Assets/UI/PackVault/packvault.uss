@@ -1,4 +1,5 @@
-/* The pack vault — the shelf of unopened packs, and the chrome around the reveal.
+/* The pack vault — the rack of unopened packs, the stage and rail they open on, and the chrome
+ * around the reveal.
  *
  * The reveal itself is NOT styled here. `packreveal.uss` owns every `.reveal-*` rule and this
  * screen links it alongside this sheet, the same way ShopScreen.uxml does. That sheet was pulled
@@ -19,6 +20,8 @@
  * (The same defeat packreveal.uss documents for .reveal-overlay.) */
 .vault-shell {
     flex-grow: 1;
+    /* The rack, then the stage-and-rail column beside it. */
+    flex-direction: row;
     padding-top: var(--space-4);
     /* Same 68px Back footprint, 24px edge offset, and 12px gap reserved by Shop (updated
        2026-09-27 for the canonical `.emb-back-button`, theme.uss). */
@@ -44,7 +47,7 @@
 
     /* The entrance. Both properties are transitioned here rather than on the --enter rule, so the
      * animation runs in BOTH directions off one declaration and a class that is only ever removed
-     * still animates. Duration matches the tile stagger's step. */
+     * still animates. Duration matches the slot stagger's step. */
     opacity: 1;
     translate: 0 0;
     transition-property: opacity, translate;
@@ -80,34 +83,32 @@
     translate: 0 -12px;
 }
 
-/* A WRAPPING ROW, NOT A ScrollView. UI Toolkit's ScrollView content lays out correctly and PAINTS
- * above its viewport on Android (#285, #307) — a renderer fault no stylesheet can reach. The shelf
- * holds five packs at the gift and ten at its cap, so it does not need one, and inheriting that
- * bug for a surface this small is a bad trade. PackVaultController counts the overflow instead.
- * RETIREMENT TRIGGER: when #285 and #307 close, a ScrollView here becomes the ordinary answer and
- * the tile cap can go with it. */
-.vault-shelf {
-    flex-grow: 1;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-content: flex-start;
+/* ── The rack ─────────────────────────────────────────────────────────────────────────────────
+ *
+ * One slot per pack LINE, down the left edge (Sam, 2026-09-27). It replaced a wrapping shelf of one
+ * tile per pack, which at forty packs drew rows it could not scroll to. A slot carries the count in
+ * a bubble, so the rack's height is bounded by the number of EXPANSIONS, not packs — five fit — and
+ * nothing here needs a ScrollView (which still paints wrong on Android, #285/#307). */
+.vault-rack {
+    width: 22%;
+    max-width: 460px;
+    flex-shrink: 0;
     justify-content: center;
+    padding-right: var(--space-4);
 }
 
-/* Three up on a phone, and sized off the row rather than a min-width: the store learned on
- * 2026-08-31 that a floor can only ever fight the percentage, and clamps a tile UP into a layout
- * that then leaves dead width beside it. 31% plus the 1% margins fills the row exactly. */
-.vault-pack {
-    width: 31%;
-    flex-shrink: 0;
-    margin: 1%;
+.vault-slot {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-3);
     padding: var(--space-3);
-    align-items: stretch;
-    background-color: transparent;
-    border-width: 0;
+    background-color: rgba(11, 14, 19, 0.55);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-3);
 
-    /* Rest state for the gift entrance (.vault-pack--enter). Harmless in Vault mode, which never
-     * stages the tile and so never transitions it. */
+    /* Rest state for the gift entrance (.vault-slot--enter). Harmless in Vault mode, which never
+     * stages a slot and so never transitions it. */
     opacity: 1;
     translate: 0 0;
     transition-property: opacity, translate;
@@ -115,21 +116,175 @@
     transition-timing-function: ease-out, ease-out;
 }
 
-/* The gift's entrance. Applied at BUILD time by PackVaultController and scheduled off one tile at a
- * time, so the packs arrive in sequence rather than all at once — five objects landing on a shelf,
- * which is the thing the beat is about.
- *
- * Selected on the modifier alone (not `.vault-pack.vault-pack--enter`) so the overflow label, which
- * is not a `.vault-pack`, stages and releases with the tiles it stands for.
- *
- * The transition lives on `.vault-pack` and `.vault-pack__overflow`, not here — see the banner. */
-.vault-pack--enter {
-    opacity: 0;
-    translate: 0 16px;
+.vault-slot:disabled {
+    opacity: 0.45;
 }
 
-.vault-pack:disabled {
+/* The gift's entrance: applied at BUILD time by PackVaultController and released one slot at a
+ * time, so the packs arrive in sequence. The transition lives on .vault-slot, not here. */
+.vault-slot--enter {
+    opacity: 0;
+    translate: -16px 0;
+}
+
+/* The slot or parked stack a drag was lifted from, while the ghost is away from it. */
+.vault-source--lifted {
+    opacity: 0.5;
+}
+
+.vault-slot__label {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-left: var(--space-4);
+    color: var(--ink-1);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+/* A pack miniature: the rack slot's, the parked stack's and the drag ghost's. 0.7 is the pack's
+ * portrait ratio (see .vault-pack__face). No aspect-ratio here: both sides are set, and the ghost
+ * overrides both. */
+.vault-mini {
+    width: 84px;
+    height: 120px;
+    flex-shrink: 0;
+    background-color: var(--surface-2);
+    border-radius: var(--space-2);
+}
+
+/* Only once art actually resolved; an artless pack keeps the plain plate. */
+.vault-mini--art {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+/* The count bubble, over the miniature's top-right corner. A notification bubble, so it is the
+ * alarm colour and it breaks the pack's silhouette on purpose. */
+.vault-count {
+    position: absolute;
+    top: -12px;
+    right: -16px;
+    min-width: 46px;
+    height: 46px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 23px;
+    border-width: 2px;
+    border-color: rgba(11, 14, 19, 0.9);
+    background-color: var(--negative);
+    color: rgb(255, 255, 255);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    scale: 1 1;
+    transition-property: scale, background-color;
+    transition-duration: 110ms, 110ms;
+    transition-timing-function: ease-out, ease-out;
+}
+
+/* One tick of the rail's count-up. PackRackDrag adds it and takes it off again, so the bubble pops
+ * on every +1. */
+.vault-count--bump {
+    scale: 1.3 1.3;
+}
+
+/* The stack has reached what the player holds, or the batch cap. */
+.vault-count--max {
+    background-color: var(--accent);
+    color: var(--surface-0);
+}
+
+/* ── The stage and the rail ───────────────────────────────────────────────────────────────── */
+
+.vault-main {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+/* Where a dropped pack opens. It holds no pack until one is dropped on it; the pack that tears is
+ * built into it by PackVaultController.PlaceStagePack. */
+.vault-stage {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    border-width: 3px;
+    border-color: rgba(0, 0, 0, 0);
+    border-radius: var(--space-4);
+}
+
+.vault-stage--armed {
+    border-color: var(--accent);
+    background-color: rgba(255, 214, 148, 0.08);
+}
+
+.vault-stage__hint {
+    color: var(--ink-2);
+    font-size: var(--type-h2);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.vault-stage__hint--hidden {
+    display: none;
+}
+
+/* The shelf rail. A pack held over it counts up; one released on it stays parked there. */
+.vault-rail {
+    height: 176px;
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--space-2);
+    background-color: rgba(11, 14, 19, 0.45);
+    border-top-width: 6px;
+    border-color: rgb(120, 86, 48);
+    border-radius: var(--space-2);
+}
+
+.vault-rail--armed {
+    border-color: var(--accent);
+    background-color: rgba(255, 214, 148, 0.12);
+}
+
+.vault-rail__hint {
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    -unity-text-align: middle-center;
+}
+
+.vault-rail__hint--hidden {
+    display: none;
+}
+
+.vault-rail__stack {
+    flex-direction: row;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+}
+
+.vault-rail__stack:disabled {
     opacity: 0.45;
+}
+
+.vault-rail__label {
+    margin-left: var(--space-6);
+    color: var(--ink-1);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+}
+
+/* The pack under the finger. Added to the screen root's hierarchy by PackRackDrag, picking-ignored,
+ * and centred on the pointer from script. A little larger than the rack miniature: it is lifted. */
+.vault-ghost {
+    position: absolute;
+    width: 118px;
+    height: 168px;
+}
+
+.vault-ghost__face {
+    width: 100%;
+    height: 100%;
 }
 
 /* A booster is a portrait object. 0.7 is the reveal card's ratio, so a pack and the cards it
@@ -153,36 +308,11 @@
     background-color: rgba(11, 14, 19, 0.35);
 }
 
-.vault-pack__tooltip {
-    position: absolute;
-    left: var(--space-4);
-    right: var(--space-4);
-    bottom: var(--space-4);
-    display: none;
-    padding: var(--space-2);
-    background-color: rgba(11, 14, 19, 0.9);
-    border-radius: var(--space-2);
-    color: var(--ink-1);
-    font-size: var(--type-label);
-    -unity-text-align: middle-center;
-}
-
-/* The tail of a shelf too long to draw. A count, not a tile: the packs it stands for are real and
- * openable, they are just not on screen until the ones in front of them are gone. */
-.vault-pack__overflow {
-    width: 31%;
-    margin: 1%;
-    color: var(--ink-2);
-    font-size: var(--type-label);
-    -unity-text-align: middle-center;
-    -unity-font-style: bold;
-
-    /* Stages and releases with the tiles — see .vault-pack--enter. */
-    opacity: 1;
-    translate: 0 0;
-    transition-property: opacity, translate;
-    transition-duration: 260ms, 260ms;
-    transition-timing-function: ease-out, ease-out;
+/* The pack on the stage — the only .vault-pack__face now. Explicit on both sides, overriding the
+ * 100% width above; 336 x 480 is the same 0.7 portrait, so the aspect ratio still agrees. */
+.vault-stage__pack {
+    width: 336px;
+    height: 480px;
 }
 
 .vault-status {
@@ -194,16 +324,16 @@
     min-height: var(--space-8);
 }
 
-/* Collapsed rather than blanked, so an empty status does not hold a band of dead space above the
- * bottom edge while the shelf is full. */
+/* Collapsed rather than blanked, so an empty status does not hold a band of dead space between the
+ * stage and the rail. */
 .vault-status--empty {
     display: none;
 }
 
 /* ============================================================================================
- * THE TEAR (slice 3), IN PLACE. Every rule below is a child of `.vault-pack__face` — the tile the
- * player tapped. There is no stage, no overlay and no second render of the pack; PackTearAnimator's
- * remarks say why, and the UXML carries the same note where the stage used to be.
+ * THE TEAR (slice 3), IN PLACE. Every rule below is a child of `.vault-pack__face` — the pack the
+ * player dropped on the stage. There is no overlay and no second render of the pack;
+ * PackTearAnimator's remarks say why, and the UXML carries the same note.
  *
  * PackTearAnimator drives all of this by adding a modifier; there is no keyframe anywhere, because
  * USS has none — each beat is a transition on the base rule that a scheduled class toggle releases.
@@ -311,8 +441,7 @@
  * a door; a torn wrapper falls away off-axis. The shader bakes each piece as its own texture so the
  * rotation costs nothing and never distorts the source image (Sol, 2026-09-03).
  *
- * Travel is in PERCENT, not pixels: the tile is 31% of a shelf whose width is the screen's, so a
- * fixed 120px throw that clears a phone tile barely moves a tablet one. */
+ * Travel is in PERCENT, not pixels, so the throw scales with whatever size the stage pack is. */
 .tear-half--parted {
     opacity: 0;
 }
