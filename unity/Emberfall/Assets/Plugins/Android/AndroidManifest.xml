@@ -50,7 +50,7 @@
        and pre-1.0 the schema moves. It is an ATTRIBUTE ON <application>, not a <meta-data>
        entry — the meta-data form parses and does nothing. Nothing else sets it (the generated
        launcher manifest has no allowBackup), so no tools:replace is needed; confirm after a
-       build with: adb shell dumpsys package com.ContextAware.Emberfall | grep ALLOW_BACKUP -->
+       build with: adb shell dumpsys package com.contextaware.kobi | grep ALLOW_BACKUP -->
   <application android:allowBackup="false" android:appCategory="game" android:enableOnBackInvokedCallback="true" android:extractNativeLibs="true">
     <meta-data android:name="unity.splash-mode" android:value="0" />
     <meta-data android:name="unity.splash-enable" android:value="True" />

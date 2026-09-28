@@ -170,7 +170,8 @@ PlayerSettings:
   androidMaxAspectRatio: 2.4
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.ContextAware.Emberfall
+    Android: com.contextaware.kobi
+    iPhone: com.contextaware.kobi
   buildNumber:
     Standalone: 0
     VisionOS: 0
