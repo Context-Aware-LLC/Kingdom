@@ -113,6 +113,7 @@ namespace Emberfall.Presentation
         private VisualElement _banner;
         private Button _back;
         private PackRevealPanel _reveal;
+        private CardFaceBaker _revealFaceBaker;
         private PackTearAnimator _tear;
         private IPackArtProvider _packArt;
         private PackRackDrag _drag;
@@ -219,7 +220,8 @@ namespace Emberfall.Presentation
             }
             _banner = root.Q<VisualElement>("vault-banner");
             _packArt = new PackArtProvider();
-            _reveal = new PackRevealPanel(root, RevealDismissed);
+            _revealFaceBaker = CreateRevealFaceBaker();
+            _reveal = new PackRevealPanel(root, RevealDismissed, _revealFaceBaker);
             _tear = new PackTearAnimator();
             _cancel = new CancellationTokenSource();
 
@@ -270,6 +272,37 @@ namespace Emberfall.Presentation
             _cancel?.Cancel();
             _cancel?.Dispose();
             _cancel = null;
+
+            if (_revealFaceBaker != null)
+            {
+                Destroy(_revealFaceBaker.gameObject);
+                _revealFaceBaker = null;
+            }
+        }
+
+        /// <summary>The batch reveal shows the canonical printed card, not a second art-and-name
+        /// imitation. The baker owns an off-camera card rig and a small per-visit texture cache;
+        /// failure leaves PackRevealPanel's readable fallback in place.</summary>
+        private CardFaceBaker CreateRevealFaceBaker()
+        {
+            var bakerHost = new GameObject("PackRevealCardFaceBaker");
+            bakerHost.transform.SetParent(transform, false);
+            var baker = bakerHost.AddComponent<CardFaceBaker>();
+            try
+            {
+                // Large enough that the five-card gallery still downsamples on the widest authored
+                // viewport instead of stretching the collection wall's smaller default capture.
+                baker.SetFaceSize(384, 538);
+                baker.Initialize(CardDatabaseLoader.Load());
+                return baker;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[PackVault] printed card faces unavailable; using reveal fallbacks " +
+                                 $"({ex.GetType().Name}: {ex.Message}).");
+                Destroy(bakerHost);
+                return null;
+            }
         }
 
         // ── The rack ────────────────────────────────────────────────────────────────────

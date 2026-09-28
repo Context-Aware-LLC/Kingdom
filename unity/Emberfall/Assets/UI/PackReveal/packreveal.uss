@@ -18,6 +18,7 @@
     bottom: 0;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
     background-color: var(--surface-0);
     background-image: url("/Assets/Art/Backgrounds/PackVault_AncientCache_Backdrop_v1.png");
     -unity-background-scale-mode: scale-and-crop;
@@ -37,26 +38,25 @@
 }
 
 .reveal-cards {
-    width: 96%;
-    flex-grow: 1;
+    width: 80%;
+    flex-grow: 0;
+    flex-shrink: 1;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
+    margin-top: var(--space-4);
 }
 
 .reveal-card {
     width: 18%;
-    min-width: 135px;
-    max-width: 230px;
-    aspect-ratio: 0.7;
+    min-width: 120px;
+    aspect-ratio: 0.7135;
     align-items: stretch;
     justify-content: space-between;
-    background-color: var(--surface-0);
-    border-width: 3px;
-    border-color: var(--rarity-common);
-    border-radius: var(--space-3);
-    padding: var(--space-3);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    padding: 0;
     margin: 1%;
     opacity: 0;
     scale: 0 1;
@@ -64,6 +64,7 @@
     transition-duration: 0.22s;
     transition-timing-function: ease-out;
     overflow: hidden;
+    -unity-background-scale-mode: scale-to-fit;
 }
 
 .reveal-card--shown {
@@ -81,8 +82,23 @@
 
 .reveal-card--legendary {
     border-color: var(--rarity-legendary);
-    background-color: rgb(48, 35, 20);
 }
+
+.reveal-card__fallback {
+    flex-grow: 1;
+    align-items: stretch;
+    justify-content: space-between;
+    background-color: rgba(7, 10, 15, 0.88);
+    border-width: 3px;
+    border-color: var(--rarity-common);
+    border-radius: var(--space-3);
+    padding: var(--space-3);
+    overflow: hidden;
+}
+
+.reveal-card--rare .reveal-card__fallback { border-color: var(--rarity-rare); }
+.reveal-card--epic .reveal-card__fallback { border-color: var(--rarity-epic); }
+.reveal-card--legendary .reveal-card__fallback { border-color: var(--rarity-legendary); }
 
 .reveal-card__flourish {
     position: absolute;
@@ -134,30 +150,38 @@
  * The list ignores picking throughout, so a tap on it falls through to .reveal-dismiss. */
 .reveal-cards--batch {
     flex-grow: 0;
-    flex-wrap: nowrap;
 }
 
 .reveal-cards--batch .reveal-card {
-    width: 9%;
-    min-width: 0;
-    margin: 0.5%;
-    padding: var(--space-2);
+    width: 18%;
 }
 
 .reveal-cards--batch .reveal-card__name {
     font-size: var(--type-caption);
 }
 
+/* Preserve the "show every epic and legendary" rule when a remarkable batch produces more than
+ * five premium cards. Ordinary batches get the large 80%-wide five-card gallery above; only this
+ * exceptional row returns to the compact width needed to keep all ten and the receipt on screen. */
+.reveal-cards--crowded {
+    flex-wrap: nowrap;
+}
+
+.reveal-cards--crowded .reveal-card {
+    min-width: 0;
+    margin: 0.5%;
+}
+
 .reveal-list {
-    width: 96%;
+    width: 80%;
     flex-grow: 1;
     flex-shrink: 1;
     flex-direction: row;
     flex-wrap: wrap;
     align-content: flex-start;
     justify-content: center;
-    margin-top: var(--space-3);
-    margin-bottom: var(--space-3);
+    margin-top: var(--space-4);
+    margin-bottom: var(--space-4);
 }
 
 .reveal-list--hidden {
@@ -173,40 +197,99 @@
     margin-bottom: var(--space-2);
 }
 
-/* One class. Five to a row, so every class in the game fits in two. */
-.reveal-list__block {
-    width: 19%;
-    margin: 0.5%;
-    padding: var(--space-2) var(--space-3);
-    background-color: var(--surface-0);
-    border-left-width: 4px;
-    border-color: var(--surface-3);
-    border-radius: var(--space-2);
+/* One rarity plate. These are deliberately translucent: the ancient cache stays present behind
+ * the receipt, while the paired border and inset-dark surface give names a stable reading ground. */
+.reveal-list__panel {
+    width: 23.5%;
+    min-width: 180px;
+    min-height: 96px;
+    margin: 0.75%;
+    padding: var(--space-3) var(--space-4);
+    background-color: rgba(7, 11, 17, 0.82);
+    border-width: 1px;
+    border-top-width: 3px;
+    border-color: rgba(154, 167, 182, 0.58);
+    border-radius: var(--space-3);
 }
 
-.reveal-list__block--neutral { border-color: var(--class-neutral); }
-.reveal-list__block--emberward { border-color: var(--class-emberward); }
-.reveal-list__block--tidecaller { border-color: var(--class-tidecaller); }
-.reveal-list__block--gravekeep { border-color: var(--class-gravekeep); }
-.reveal-list__block--verdant { border-color: var(--class-verdant); }
-.reveal-list__block--clockwright { border-color: var(--class-clockwright); }
-.reveal-list__block--nightveil { border-color: var(--class-nightveil); }
-.reveal-list__block--stonewarden { border-color: var(--class-stonewarden); }
-.reveal-list__block--tempest { border-color: var(--class-tempest); }
+.reveal-list__panel--rare { border-color: rgba(61, 123, 245, 0.78); }
+.reveal-list__panel--epic { border-color: rgba(162, 75, 229, 0.82); }
+.reveal-list__panel--legendary { border-color: rgba(240, 166, 60, 0.86); }
 
-.reveal-list__class {
-    color: var(--ink-1);
+.reveal-list__header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--space-2);
+    margin-bottom: var(--space-2);
+    border-bottom-width: 1px;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.reveal-list__rarity {
+    color: var(--rarity-common);
     font-size: var(--type-label);
     -unity-font-style: bold;
-    margin-bottom: var(--space-1);
+    letter-spacing: 1px;
 }
 
-.reveal-list__line {
-    color: var(--ink-2);
+.reveal-list__panel--rare .reveal-list__rarity { color: var(--rarity-rare); }
+.reveal-list__panel--epic .reveal-list__rarity { color: var(--rarity-epic); }
+.reveal-list__panel--legendary .reveal-list__rarity { color: var(--rarity-legendary); }
+
+.reveal-list__total {
+    min-width: 38px;
+    padding: 2px var(--space-2);
+    color: var(--ink-1);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+}
+
+.reveal-list__body {
+    flex-grow: 1;
+}
+
+.reveal-list__common-count {
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-top: var(--space-1);
+}
+
+.reveal-list__item {
+    min-height: 24px;
+    flex-direction: row;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.reveal-list__marker {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    margin-right: var(--space-2);
+    background-color: var(--rarity-common);
+    border-radius: 999px;
+}
+
+.reveal-list__panel--rare .reveal-list__marker { background-color: var(--rarity-rare); }
+.reveal-list__panel--epic .reveal-list__marker { background-color: var(--rarity-epic); }
+.reveal-list__panel--legendary .reveal-list__marker { background-color: var(--rarity-legendary); }
+
+.reveal-list__name {
+    flex-grow: 1;
+    color: var(--ink-1);
     font-size: var(--type-caption);
     white-space: normal;
 }
 
-.reveal-list__line--rare { color: var(--rarity-rare); }
-.reveal-list__line--epic { color: var(--rarity-epic); }
-.reveal-list__line--legendary { color: var(--rarity-legendary); }
+.reveal-list__copies {
+    margin-left: var(--space-2);
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Net.Client.Shop;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace Emberfall.Presentation
@@ -31,6 +32,7 @@ namespace Emberfall.Presentation
     {
         private const string HiddenClass = "reveal-overlay--hidden";
         private const string BatchClass = "reveal-cards--batch";
+        private const string CrowdedClass = "reveal-cards--crowded";
         private const string ListHiddenClass = "reveal-list--hidden";
 
         /// <summary>The row a single pack deals, and the floor <see cref="ShowMany"/> fills up to.</summary>
@@ -48,6 +50,7 @@ namespace Emberfall.Presentation
         private readonly Label _title;
         private readonly Label _summary;
         private readonly Action _onDone;
+        private readonly CardFaceBaker _faceBaker;
 
         private ICardDatabase _cards;
         private IArtProvider _art;
@@ -63,7 +66,7 @@ namespace Emberfall.Presentation
         /// <param name="onDone">What dismissing does after hiding. Null for a host that owns its own
         /// dismissal — the store just wants its overlay back — and a way home for a host where the
         /// reveal IS the screen.</param>
-        public PackRevealPanel(VisualElement root, Action onDone = null)
+        public PackRevealPanel(VisualElement root, Action onDone = null, CardFaceBaker faceBaker = null)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
 
@@ -73,6 +76,7 @@ namespace Emberfall.Presentation
             _summary = root.Q<Label>("reveal-summary");
             _list = root.Q<VisualElement>("reveal-list");
             _onDone = onDone;
+            _faceBaker = faceBaker;
 
             // A tap anywhere off a card (Sam, 2026-09-27): there is no Done button. The dismiss layer
             // sits behind the cards, so a card swallows its own tap and only the gaps reach this.
@@ -93,6 +97,7 @@ namespace Emberfall.Presentation
             if (receipt == null || !IsBound) return;
             _cardRow.Clear();
             _cardRow.RemoveFromClassList(BatchClass);
+            _cardRow.RemoveFromClassList(CrowdedClass);
             _list?.Clear();
             _list?.AddToClassList(ListHiddenClass);
             _generation++;
@@ -104,10 +109,8 @@ namespace Emberfall.Presentation
 
             for (int i = 0; i < receipt.Awards.Count; i++)
             {
-                VisualElement card = BuildRevealCard(receipt.Awards[i]);
-                _cardRow.Add(card);
                 int delay = 140 + (i * 170);
-                card.schedule.Execute(() => card.AddToClassList("reveal-card--shown")).StartingIn(delay);
+                _cardRow.Add(BuildRevealCard(receipt.Awards[i], delay));
             }
 
             _overlay.RemoveFromClassList(HiddenClass);
@@ -123,9 +126,9 @@ namespace Emberfall.Presentation
         /// and the legendary". Capped at <see cref="MaxShown"/>; anything past the cap is still in
         /// the list.</para>
         ///
-        /// <para><b>The list:</b> one block per class, one line per rarity, best first. Rare and up
-        /// are NAMED; commons are COUNTED. Naming thirty-odd commons is the wall again, and there is
-        /// no ScrollView to put it in (#285/#307).</para>
+        /// <para><b>The list:</b> one translucent plate per rarity. Rare and up are NAMED without
+        /// repeating class labels; commons are COUNTED. Naming thirty-odd commons is the wall again,
+        /// and there is no ScrollView to put it in (#285/#307).</para>
         ///
         /// <para>A host with no <c>reveal-list</c> in its markup gets the shown row alone.</para>
         /// </summary>
@@ -137,6 +140,7 @@ namespace Emberfall.Presentation
 
             _cardRow.Clear();
             _cardRow.AddToClassList(BatchClass);
+            _cardRow.RemoveFromClassList(CrowdedClass);
             _generation++;
 
             var awards = new List<PackCardAward>();
@@ -167,13 +171,15 @@ namespace Emberfall.Presentation
             foreach (PackCardAward award in ranked)
                 if (award.Rarity >= Rarity.EPIC) highs++;
             int shown = Math.Min(Math.Max(highs, Math.Min(StandardRow, ranked.Count)), MaxShown);
+            _cardRow.EnableInClassList(CrowdedClass, shown > StandardRow);
 
             for (int i = 0; i < shown; i++)
             {
-                VisualElement card = BuildRevealCard(ranked[i]);
-                _cardRow.Add(card);
                 int delay = 140 + (i * 120);
-                card.schedule.Execute(() => card.AddToClassList("reveal-card--shown")).StartingIn(delay);
+                VisualElement card = BuildRevealCard(ranked[i], delay);
+                if (shown > StandardRow)
+                    card.style.width = Length.Percent((100f / shown) - 1f);
+                _cardRow.Add(card);
             }
 
             BuildList(awards, note);
@@ -196,17 +202,15 @@ namespace Emberfall.Presentation
                 _list.Add(stopped);
             }
 
-            // class → rarity → (name → copies), in enum order so the blocks sit in a fixed place.
-            var byClass = new SortedDictionary<CardClass, SortedDictionary<Rarity, List<KeyValuePair<string, int>>>>();
+            // rarity → (name → copies). Class deliberately does not enter this read model: a
+            // batch receipt is about what rarity arrived, not which deck-building bucket owns it.
+            var byRarity = new SortedDictionary<Rarity, List<KeyValuePair<string, int>>>();
             foreach (PackCardAward award in awards)
             {
                 CardDefinition definition = Definition(award.CardId);
-                CardClass cls = definition?.Class ?? CardClass.NEUTRAL;
                 string name = definition != null ? definition.Name : $"Card {award.CardId}";
 
-                if (!byClass.TryGetValue(cls, out var byRarity))
-                    byClass[cls] = byRarity = new SortedDictionary<Rarity, List<KeyValuePair<string, int>>>();
-                if (!byRarity.TryGetValue(award.Rarity, out var names))
+                if (!byRarity.TryGetValue(award.Rarity, out List<KeyValuePair<string, int>> names))
                     byRarity[award.Rarity] = names = new List<KeyValuePair<string, int>>();
 
                 int at = names.FindIndex(n => n.Key == name);
@@ -214,36 +218,79 @@ namespace Emberfall.Presentation
                 else names[at] = new KeyValuePair<string, int>(name, names[at].Value + 1);
             }
 
-            foreach (var cls in byClass)
+            var rarityOrder = new[]
             {
-                var block = new VisualElement { pickingMode = PickingMode.Ignore };
-                block.AddToClassList("reveal-list__block");
-                block.AddToClassList("reveal-list__block--" + CardClassTokens.Slug(cls.Key));
+                Rarity.COMMON, Rarity.RARE, Rarity.EPIC, Rarity.LEGENDARY,
+            };
 
-                var heading = new Label(CardClassTokens.Label(cls.Key)) { pickingMode = PickingMode.Ignore };
-                heading.AddToClassList("reveal-list__class");
-                block.Add(heading);
+            foreach (Rarity rarity in rarityOrder)
+            {
+                if (!byRarity.TryGetValue(rarity, out List<KeyValuePair<string, int>> names)) continue;
 
-                // Best rarity first — SortedDictionary is ascending, so walk it backwards.
-                var rarities = new List<Rarity>(cls.Value.Keys);
-                for (int r = rarities.Count - 1; r >= 0; r--)
+                int copies = 0;
+                foreach (KeyValuePair<string, int> name in names) copies += name.Value;
+
+                var panel = new VisualElement { pickingMode = PickingMode.Ignore };
+                panel.AddToClassList("reveal-list__panel");
+                panel.AddToClassList(CardClassTokens.RarityToken(rarity, "reveal-list__panel--"));
+
+                var header = new VisualElement { pickingMode = PickingMode.Ignore };
+                header.AddToClassList("reveal-list__header");
+
+                var heading = new Label(RarityWord(rarity)) { pickingMode = PickingMode.Ignore };
+                heading.AddToClassList("reveal-list__rarity");
+                header.Add(heading);
+
+                if (rarity != Rarity.COMMON)
                 {
-                    Rarity rarity = rarities[r];
-                    List<KeyValuePair<string, int>> names = cls.Value[rarity];
-                    int copies = 0;
-                    foreach (var n in names) copies += n.Value;
+                    var total = new Label($"×{copies}") { pickingMode = PickingMode.Ignore };
+                    total.AddToClassList("reveal-list__total");
+                    header.Add(total);
+                }
+                panel.Add(header);
 
-                    string head = $"{RarityWord(rarity)} ×{copies}";
-                    string text = rarity == Rarity.COMMON ? head : head + ": " + JoinNames(names);
+                var body = new VisualElement { pickingMode = PickingMode.Ignore };
+                body.AddToClassList("reveal-list__body");
 
-                    var line = new Label(text) { pickingMode = PickingMode.Ignore };
-                    line.AddToClassList("reveal-list__line");
-                    line.AddToClassList(CardClassTokens.RarityToken(rarity, "reveal-list__line--"));
-                    block.Add(line);
+                if (rarity == Rarity.COMMON)
+                {
+                    var commonCount = new Label(copies == 1 ? "1 card" : $"{copies} cards")
+                        { pickingMode = PickingMode.Ignore };
+                    commonCount.AddToClassList("reveal-list__common-count");
+                    body.Add(commonCount);
+                }
+                else
+                {
+                    foreach (KeyValuePair<string, int> name in names)
+                        body.Add(BuildNamedAward(name));
                 }
 
-                _list.Add(block);
+                panel.Add(body);
+                _list.Add(panel);
             }
+        }
+
+        private static VisualElement BuildNamedAward(KeyValuePair<string, int> award)
+        {
+            var row = new VisualElement { pickingMode = PickingMode.Ignore };
+            row.AddToClassList("reveal-list__item");
+
+            var marker = new VisualElement { pickingMode = PickingMode.Ignore };
+            marker.AddToClassList("reveal-list__marker");
+            row.Add(marker);
+
+            var name = new Label(award.Key) { pickingMode = PickingMode.Ignore };
+            name.AddToClassList("reveal-list__name");
+            row.Add(name);
+
+            if (award.Value > 1)
+            {
+                var copies = new Label($"×{award.Value}") { pickingMode = PickingMode.Ignore };
+                copies.AddToClassList("reveal-list__copies");
+                row.Add(copies);
+            }
+
+            return row;
         }
 
         private static string RarityWord(Rarity r) => r switch
@@ -254,13 +301,6 @@ namespace Emberfall.Presentation
             _ => "Common",
         };
 
-        private static string JoinNames(List<KeyValuePair<string, int>> names)
-        {
-            var parts = new List<string>(names.Count);
-            foreach (var n in names) parts.Add(n.Value > 1 ? $"{n.Key} ×{n.Value}" : n.Key);
-            return string.Join(", ", parts);
-        }
-
         public void Hide() => _overlay?.AddToClassList(HiddenClass);
 
         private void Done()
@@ -269,7 +309,7 @@ namespace Emberfall.Presentation
             _onDone?.Invoke();
         }
 
-        private VisualElement BuildRevealCard(PackCardAward award)
+        private VisualElement BuildRevealCard(PackCardAward award, int revealDelayMs)
         {
             CardDefinition definition = Definition(award.CardId);
 
@@ -277,27 +317,32 @@ namespace Emberfall.Presentation
             card.AddToClassList("reveal-card");
             card.AddToClassList(CardClassTokens.RarityToken(award.Rarity, "reveal-card--"));
 
+            // This fallback is held out of view while CardFaceBaker's serial queue builds the
+            // canonical printed card. It appears only if capture fails, keeping the award readable
+            // without ever layering a second name or rarity treatment over a real face.
+            var fallback = new VisualElement();
+            fallback.AddToClassList("reveal-card__fallback");
+            card.Add(fallback);
+
             var flourish = new VisualElement();
             flourish.AddToClassList("reveal-card__flourish");
-            card.Add(flourish);
+            fallback.Add(flourish);
 
             // No rarity line (Sam, 2026-09-27): the border colour already says it.
 
-            // THE ILLUSTRATION, not a baked card face. CardFaceBaker photographs the whole printed
-            // front — frame, stats, rules text — off a 3D rig, and it needs that rig, a capture
-            // camera and the CardCapture layer present in the scene. The reveal is its own card
-            // shape drawn in USS (border by rarity, rarity line, name), so it wants the picture
-            // alone; asking for a baked face would bind this host-agnostic panel to a scene it may
-            // not be in. RETIREMENT TRIGGER: if the reveal is ever restyled to show real printed
-            // cards, this is where it swaps to CardFaceBaker — and PackVault's scene grows a rig.
+            // The illustration-and-name treatment is only the resilient fallback. The vault injects
+            // a CardFaceBaker below, which replaces it with the canonical printed card as soon as
+            // that off-camera capture completes; hosts without a rig can still use the panel.
             var art = new VisualElement();
             art.AddToClassList("reveal-card__art");
-            card.Add(art);
+            fallback.Add(art);
             PaintArt(art, definition);
 
             var name = new Label(definition != null ? definition.Name : $"Card {award.CardId}");
             name.AddToClassList("reveal-card__name");
-            card.Add(name);
+            fallback.Add(name);
+
+            PaintFace(card, fallback, definition, revealDelayMs);
 
             // No award line. It read "NEW CARD" or "DUPE -> n SHARDS", and since the no-auto-sharding
             // ruling (Sam, 2026-08-12) every slot is a card — leaving "NEW CARD" would assert newness the
@@ -308,6 +353,39 @@ namespace Emberfall.Presentation
 
             return card;
         }
+
+        /// <summary>Reveal the same complete printed card face used by the collection wall, falling
+        /// back to the illustration tile only when capture fails. The generation check prevents a
+        /// late face from a dismissed reveal painting onto a later pack's card element.</summary>
+        private void PaintFace(VisualElement target, VisualElement fallback,
+                               CardDefinition definition, int revealDelayMs)
+        {
+            if (_faceBaker == null || definition == null)
+            {
+                RevealAfter(target, revealDelayMs);
+                return;
+            }
+
+            // Reserve the card's layout slot but do not show the old mini-card while the canonical
+            // face is in flight. A successful reveal is full-card-first; the fallback appears only
+            // when the baker explicitly reports that it could not capture one.
+            fallback.style.display = DisplayStyle.None;
+            int generation = _generation;
+            _faceBaker.Bake(definition, texture =>
+            {
+                if (generation != _generation) return;
+                if (texture is Texture2D face)
+                    target.style.backgroundImage =
+                        new StyleBackground(Background.FromTexture2D(face));
+                else
+                    fallback.style.display = DisplayStyle.Flex;
+                RevealAfter(target, revealDelayMs);
+            });
+        }
+
+        private static void RevealAfter(VisualElement target, int delayMs)
+            => target.schedule.Execute(() => target.AddToClassList("reveal-card--shown"))
+                .StartingIn(delayMs);
 
         /// <summary>The printed card behind an award, or null when the database will not open. Both
         /// the name and the illustration come off it, so one lookup answers both — and a card that

@@ -51,7 +51,7 @@
         <ui:VisualElement name="reveal-overlay" class="reveal-overlay reveal-overlay--hidden emb-bleed">
             <ui:VisualElement name="reveal-dismiss" class="reveal-dismiss emb-back"/>
             <ui:VisualElement name="reveal-cards" class="reveal-cards" picking-mode="Ignore"/>
-            <!-- Vault only: the per class list a multi pack open adds under the cards
+            <!-- Vault only: the per rarity receipt a multi pack open adds under the cards
                  (PackRevealPanel.ShowMany). It ignores picking, so a tap on it dismisses too. -->
             <ui:VisualElement name="reveal-list" class="reveal-list reveal-list--hidden" picking-mode="Ignore"/>
         </ui:VisualElement>
