@@ -1,0 +1,15 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "kingdomofbadideas",
+  "compatibility_date": "2026-09-28",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page"
+  },
+  // Custom domains (apex + www) are attached in the dashboard/API, not here: the local
+  // CLOUDFLARE_API_TOKEN lacks the zone Workers Routes permission, so listing them makes
+  // `wrangler deploy` fail after the upload. Attached domains survive deploys.
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": true }
+}
