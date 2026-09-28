@@ -301,14 +301,10 @@ namespace Emberfall.Presentation
 
             // No award line. It read "NEW CARD" or "DUPE -> n SHARDS", and since the no-auto-sharding
             // ruling (Sam, 2026-08-12) every slot is a card — leaving "NEW CARD" would assert newness the
-            // receipt no longer carries, and a third copy would be labelled new. Rarity, name and the
-            // pity flourish are what the reveal has to say.
-            if (award.Upgrade != PackUpgradeReason.None)
-            {
-                var upgrade = new Label(UpgradeLabel(award.Upgrade));
-                upgrade.AddToClassList("reveal-card__upgrade");
-                card.Add(upgrade);
-            }
+            // receipt no longer carries, and a third copy would be labelled new.
+            //
+            // No pity line either (Sam, 2026-09-27): nothing on the reveal may say a card was a
+            // guaranteed or pity upgrade. award.Upgrade is still on the receipt; it is just not shown.
 
             return card;
         }
@@ -353,13 +349,5 @@ namespace Emberfall.Presentation
                 target.style.backgroundImage = new StyleBackground(sprite);
             });
         }
-
-        private static string UpgradeLabel(PackUpgradeReason upgrade) => upgrade switch
-        {
-            PackUpgradeReason.RareFloor => "RARE+ GUARANTEED",
-            PackUpgradeReason.EpicPity => "EPIC GUARANTEE",
-            PackUpgradeReason.LegendaryPity => "LEGENDARY GUARANTEE",
-            _ => "",
-        };
     }
 }

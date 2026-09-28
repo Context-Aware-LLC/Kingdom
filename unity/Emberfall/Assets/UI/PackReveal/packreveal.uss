@@ -126,13 +126,6 @@
     -unity-text-align: middle-center;
 }
 
-.reveal-card__upgrade {
-    color: var(--accent);
-    font-size: var(--type-caption);
-    white-space: normal;
-    -unity-text-align: middle-center;
-}
-
 /* ── Several packs at once (PackRevealPanel.ShowMany, vault only) ──────────────────────────────
  *
  * The shown row is the best of the run, up to ten cards, so the cards shrink to fit one row and the
