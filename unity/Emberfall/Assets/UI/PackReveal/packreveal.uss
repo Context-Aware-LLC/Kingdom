@@ -20,7 +20,7 @@
     justify-content: center;
     flex-direction: column;
     background-color: var(--surface-0);
-    background-image: url("/Assets/Art/Backgrounds/PackVault_AncientCache_Backdrop_v1.png");
+    background-image: url("/Assets/Art/Backgrounds/PackVault_AncientCache_Backdrop.png");
     -unity-background-scale-mode: scale-and-crop;
 }
 
