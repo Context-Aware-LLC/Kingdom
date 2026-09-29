@@ -210,6 +210,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0175aaa14ee4e63ae426830d30f0708
+    m_Address: ui/Loading_Wordmark_KingdomOfBadIdeas
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c5630a76852906f4c85f5e02f8814b9b
     m_Address: ui/card_back
     m_ReadOnly: 0

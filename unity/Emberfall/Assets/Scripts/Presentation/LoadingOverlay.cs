@@ -38,25 +38,19 @@ namespace Emberfall.Presentation
         private const float WordmarkInDuration = 0.9f;
         private const float FadeOutDuration    = 0.6f;
 
-        // Wordmark ember gradient — TMP vertex colors, NOT the material (as-built §4).
-        private static readonly Color EmberGold = new Color(1.00f, 0.87f, 0.55f);
-        private static readonly Color EmberRed  = new Color(0.75f, 0.22f, 0.08f);
         private static readonly Color ErrorTint = new Color(1.00f, 0.55f, 0.45f);
 
         private static readonly int FadeId     = Shader.PropertyToID("_Fade");
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
-        private static readonly int FaceColorId     = Shader.PropertyToID("_FaceColor");
-        private static readonly int OutlineColorId  = Shader.PropertyToID("_OutlineColor");
-        private static readonly int UnderlayColorId = Shader.PropertyToID("_UnderlayColor");
-        private static readonly int MainTexId       = Shader.PropertyToID("_MainTex");
+        private static readonly int MainTexId = Shader.PropertyToID("_MainTex");
 
         private SpriteRenderer _plate;
         private string _plateName = DefaultPlate;
         private string _orbName;                  // null = keep M_LoadingOrb's own _MainTex
         private Material _orbMat;                 // instanced — _Fade/_Progress are per-overlay
-        private TextMeshPro _wordmark;
+        private SpriteRenderer _wordmark;
         private Transform _wordmarkRoot;
-        private float _faceA = 1f, _outlineA = 1f, _underlayA = 1f;
+        private float _wordmarkScale;
         private TextMeshPro _status;
         private float _statusShown;               // 0→1 entrance of the status line
 
@@ -205,44 +199,29 @@ namespace Emberfall.Presentation
                 rend.sortingOrder = 310;
             }
 
-            // ── Wordmark — 3D TMP, Alfa Slab One SDF, instanced wordmark material,
-            //    vertex-gradient ember, TextArcWarp 60° (as-built §4). Starts at alpha 0.
-            var font = LoadAsset<TMP_FontAsset>(
-                "Assets/Art/Fonts/AlfaSlabOne-Regular SDF.asset", "fonts/AlfaSlabOne-Regular SDF");
-            var wordmarkShared = MaterialCatalog.Get("M_WordmarkEmberfall");
-            if (font != null && wordmarkShared != null)
+            // ── Wordmark — authored vector outlines with the approved 60° arc already in
+            //    the geometry. This keeps the brand mark independent of TMP layout/font state
+            //    and makes the composition scale as one stable unit around the Confluence orb.
+            var wordmarkSprite = LoadAsset<Sprite>(
+                "Assets/Art/UI/Loading_Wordmark_KingdomOfBadIdeas.svg",
+                "ui/Loading_Wordmark_KingdomOfBadIdeas");
+            if (wordmarkSprite != null)
             {
                 var go = new GameObject("Wordmark");
                 go.transform.SetParent(transform, false);
 
-                _wordmark = go.AddComponent<TextMeshPro>();
-                // AddComponent<TextMeshPro> swaps the GO's Transform for a RectTransform,
-                // DESTROYING the original — cache the root only after this point.
-                _wordmarkRoot = _wordmark.transform;
+                _wordmark = go.AddComponent<SpriteRenderer>();
+                _wordmarkRoot = go.transform;
                 _wordmarkRoot.localPosition = new Vector3(0f, WordmarkYFrac * h, -0.02f);
-                _wordmark.font = font;
-                _wordmark.fontSharedMaterial = wordmarkShared;
-                _wordmark.rectTransform.sizeDelta = new Vector2(WordmarkWFrac * h, WordmarkHFrac * h);
-                _wordmark.enableAutoSizing = true;
-                _wordmark.fontSizeMin = 1f;
-                _wordmark.fontSizeMax = 500f;
-                _wordmark.alignment = TextAlignmentOptions.Center;
-                _wordmark.textWrappingMode = TextWrappingModes.NoWrap;
-                _wordmark.characterSpacing = 6f;   // as-built: spacing lives on the component
-                _wordmark.enableVertexGradient = true;
-                _wordmark.colorGradient = new VertexGradient(EmberGold, EmberGold, EmberRed, EmberRed);
+                _wordmark.sprite = wordmarkSprite;
                 _wordmark.sortingOrder = 320;
-                _wordmark.text = "KINGDOM <size=70%>OF</size> BAD IDEAS";
-                go.AddComponent<TextArcWarp>();    // default 60° — the approved arc
+                _wordmark.color = new Color(1f, 1f, 1f, 0f);
 
-                // Fade scales face/outline/underlay together (vertex alpha alone would leave
-                // the charred outline at full strength). Base alphas come from the SHARED
-                // material; writes go to tmp.fontMaterial re-queried per call, because TMP can
-                // re-instance its material during mesh regeneration and strand a cached copy.
-                _faceA     = GetAlpha(wordmarkShared, FaceColorId);
-                _outlineA  = GetAlpha(wordmarkShared, OutlineColorId);
-                _underlayA = GetAlpha(wordmarkShared, UnderlayColorId);
-                ApplyWordmarkAlpha(0f);
+                Vector2 wordmarkSize = wordmarkSprite.bounds.size;
+                _wordmarkScale = Mathf.Min(
+                    WordmarkWFrac * h / wordmarkSize.x,
+                    WordmarkHFrac * h / wordmarkSize.y);
+                _wordmarkRoot.localScale = Vector3.one * (_wordmarkScale * 1.06f);
             }
 
             // ── Status line — placeholder for the progress/tip slot (spec §4 row 3).
@@ -281,8 +260,9 @@ namespace Emberfall.Presentation
             if (_orbMat != null) _orbMat.SetFloat(FadeId, fade);
             if (_wordmark != null)
             {
-                ApplyWordmarkAlpha(enter * fade);
-                _wordmarkRoot.localScale = Vector3.one * Mathf.Lerp(1.06f, 1f, enter);
+                _wordmark.color = new Color(1f, 1f, 1f, enter * fade);
+                _wordmarkRoot.localScale = Vector3.one
+                    * (_wordmarkScale * Mathf.Lerp(1.06f, 1f, enter));
             }
             if (_status != null)
             {
@@ -298,33 +278,12 @@ namespace Emberfall.Presentation
             }
         }
 
-        private void ApplyWordmarkAlpha(float a)
-        {
-            if (_wordmark == null) return;
-            Material m = _wordmark.fontMaterial;   // current instance, survives TMP re-instancing
-            SetAlpha(m, FaceColorId, _faceA * a);
-            SetAlpha(m, OutlineColorId, _outlineA * a);
-            SetAlpha(m, UnderlayColorId, _underlayA * a);
-        }
-
-        private static float GetAlpha(Material m, int id) =>
-            m != null && m.HasProperty(id) ? m.GetColor(id).a : 1f;
-
-        private static void SetAlpha(Material m, int id, float a)
-        {
-            if (m == null || !m.HasProperty(id)) return;
-            Color c = m.GetColor(id);
-            c.a = a;
-            m.SetColor(id, c);
-        }
-
         private static float EaseOutCubic(float x) => 1f - (1f - x) * (1f - x) * (1f - x);
 
         private void OnDestroy()
         {
             _destroyed = true;
             if (_orbMat != null) Destroy(_orbMat);
-            // The wordmark's fontMaterial instance is TMP's — TMP owns and destroys it.
         }
 
         private static T LoadAsset<T>(string editorPath, string address) where T : Object
