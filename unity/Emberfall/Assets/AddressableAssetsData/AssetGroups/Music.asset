@@ -15,41 +15,29 @@ MonoBehaviour:
   m_GroupName: Music
   m_GUID: 9ff83b87c80af5d4c9df677eca0359a7
   m_SerializeEntries:
-  - m_GUID: 050ac9f39fb601a43a6a0149047e7ffa
-    m_Address: music/Ashen_Glow_2026-09-05T112115
+  - m_GUID: e1751bb997154c189aa8d9dec8e5760c
+    m_Address: music/The_Court_Jesters_Scheme_2026-09-29T045914
     m_ReadOnly: 0
     m_SerializedLabels:
-    - music
+    - music-menu
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 20927277dac6a224e97113adc4931f7b
-    m_Address: music/Glowing_Runes_2026-09-05T112358
+  - m_GUID: 8b20eca4e72846ddaa1e7391fe145df9
+    m_Address: music/Tavern_Cards_and_Cardboards_2026-09-29T050724
     m_ReadOnly: 0
     m_SerializedLabels:
-    - music
+    - music-battle
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3d05ac83391929645a9c0fddc572bfa5
-    m_Address: music/Embers_and_Parchment_2026-09-05T111749
+  - m_GUID: 760fd209dc944d2481727395b9dbb056
+    m_Address: music/Tavern_Draft_Duel_2026-09-29T050724
     m_ReadOnly: 0
     m_SerializedLabels:
-    - music
+    - music-battle
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 49f12fafae48dca4f816d37e047ad552
-    m_Address: music/Whispering_Runes_2026-09-05T112358
+  - m_GUID: 921939c63d894b1caeace8cb0b9d3dfa
+    m_Address: music/Tavern_Tussle_Tactics_2026-09-29T050907
     m_ReadOnly: 0
     m_SerializedLabels:
-    - music
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a1b14a273e076534fade1c93926c2faf
-    m_Address: music/Hearthside_Draft_2026-09-05T111749
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - music
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dde951b30d8c2bb4a94513f853ba5ad9
-    m_Address: music/Embers_in_the_Hearth_2026-09-05T112114
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - music
+    - music-battle
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}

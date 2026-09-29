@@ -2,30 +2,42 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.SceneManagement;
 
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Background music: loads every clip under the Addressables "music" label and loops through
-    /// them in shuffled order, forever. Sam, 2026-09-05: "play them all at random in a loop" — six
-    /// ambient tracks under <c>Assets/Sound/Music/</c>, registered by <c>AddressablesSetup.Run()</c>
-    /// into the Music group at <c>music/&lt;fileName&gt;</c>, all carrying the "music" label.
+    /// Background music, in POOLS chosen by screen. Each pool is one subfolder of
+    /// <c>Assets/Sound/Music/</c>, registered by <c>AddressablesSetup.Run()</c> under the label
+    /// <c>music-&lt;folder&gt;</c>; the pool plays shuffled, forever. Sam, 2026-09-28: one menu
+    /// track, three battle tracks, and a vault track to follow. A screen whose pool is missing or
+    /// empty plays the menu pool, so a pool can be added by dropping a folder in, before or after
+    /// the code that asks for it.
     ///
     /// <para>Self-bootstraps once per process via <see cref="RuntimeInitializeOnLoadMethodAttribute"/>
     /// rather than being wired into a specific scene's bootstrap, unlike CardSoundDirector/
-    /// HeroVoiceDirector: music has no match-specific state to bind to and should keep playing
-    /// across a menu-to-match transition, which <c>DontDestroyOnLoad</c> gives it for free.</para>
+    /// HeroVoiceDirector: music has no match-specific state to bind to, and <c>DontDestroyOnLoad</c>
+    /// lets the menu pool keep playing across menu-to-menu transitions instead of restarting.</para>
     /// </summary>
     public sealed class MusicDirector : MonoBehaviour
     {
-        private const string MusicLabel = "music";
+        private const string MenuPool = "menu";
+        private const string BattlePool = "battle";
+        private const string VaultPool = "vault";
+        private const float FadeOutSeconds = 0.8f;
 
-        private readonly List<AudioClip> _clips = new();
-        private readonly List<int> _order = new();
-        private int _cursor;
+        private sealed class Pool
+        {
+            public readonly List<AudioClip> Clips = new();
+            public readonly List<int> Order = new();
+            public int Cursor;
+        }
+
+        private readonly Dictionary<string, Pool> _pools = new();
+        private readonly List<AsyncOperationHandle> _handles = new();
         private AudioSource _source;
-        private AsyncOperationHandle<IList<AudioClip>> _handle;
-        private bool _handleValid;
+        private string _playing;
         private bool _suspended;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -56,30 +68,61 @@ namespace Emberfall.Presentation
             source.outputAudioMixerGroup = AudioSettings.MusicGroup;
             _source = source;
 
-            _handle = Addressables.LoadAssetsAsync<AudioClip>(MusicLabel, null);
-            _handleValid = true;
-            _handle.Completed += OnClipsLoaded;
+            LoadPool(MenuPool);
+            LoadPool(BattlePool);
+            LoadPool(VaultPool);
         }
 
-        private void OnClipsLoaded(AsyncOperationHandle<IList<AudioClip>> handle)
+        /// <summary>Locations first, then assets: <c>LoadAssetsAsync</c> on a label nothing carries
+        /// fails with an InvalidKeyException in the log, and a pool with no folder yet (the vault,
+        /// as of this writing) is a normal state here, not an error.</summary>
+        private void LoadPool(string name)
         {
-            if (handle.Status != AsyncOperationStatus.Succeeded || handle.Result == null || handle.Result.Count == 0)
+            var locate = Addressables.LoadResourceLocationsAsync("music-" + name, typeof(AudioClip));
+            _handles.Add(locate);
+            locate.Completed += located =>
             {
-                Debug.LogWarning($"[MusicDirector] no clips resolved under the '{MusicLabel}' label.");
-                return;
-            }
-            _clips.AddRange(handle.Result);
-            Reshuffle();
-            if (!OpeningCinematic.IsActive) PlayNext();
+                if (located.Status != AsyncOperationStatus.Succeeded || located.Result.Count == 0) return;
+                var load = Addressables.LoadAssetsAsync<AudioClip>((IList<IResourceLocation>)located.Result, null);
+                _handles.Add(load);
+                load.Completed += loaded =>
+                {
+                    if (loaded.Status != AsyncOperationStatus.Succeeded || loaded.Result == null) return;
+                    var pool = new Pool();
+                    pool.Clips.AddRange(loaded.Result);
+                    Reshuffle(pool);
+                    _pools[name] = pool;
+                };
+            };
         }
 
         private void Update()
         {
-            if (_clips.Count == 0 || _source == null) return;
-            if (_suspended) return;
-            if (OpeningCinematic.IsActive) return;
-            if (!_source.isPlaying) PlayNext();
+            if (_source == null || _suspended || OpeningCinematic.IsActive) return;
+
+            string want = PoolForScene(SceneManager.GetActiveScene().name);
+            if (!_pools.ContainsKey(want)) want = MenuPool;
+            if (!_pools.ContainsKey(want)) return;
+
+            // Leaving a pool mid-track fades rather than cuts. The fade runs on the source, not the
+            // mixer, so the player's Music volume and Mute are untouched by it.
+            if (_source.isPlaying && want != _playing)
+            {
+                _source.volume -= Time.unscaledDeltaTime / FadeOutSeconds;
+                if (_source.volume > 0f) return;
+                _source.Stop();
+            }
+            if (!_source.isPlaying) PlayNext(want);
         }
+
+        // Scene names, not paths: SceneManager reports the name, and EmberfallBuild's list holds
+        // the paths these came from. Anything unlisted is a menu screen.
+        private static string PoolForScene(string scene) => scene switch
+        {
+            "BoardNetworked" => BattlePool,
+            "PackVault" => VaultPool,
+            _ => MenuPool,
+        };
 
         /// <summary>Go quiet with the app instead of playing on over it.
         ///
@@ -105,31 +148,36 @@ namespace Emberfall.Presentation
 
         private void OnApplicationFocus(bool hasFocus) => OnApplicationPause(!hasFocus);
 
-        private void PlayNext()
+        private void PlayNext(string name)
         {
-            if (_cursor >= _order.Count) Reshuffle();
-            _source.clip = _clips[_order[_cursor]];
+            Pool pool = _pools[name];
+            if (pool.Cursor >= pool.Order.Count) Reshuffle(pool);
+            _source.clip = pool.Clips[pool.Order[pool.Cursor]];
+            _source.volume = 1f;
             _source.Play();
-            _cursor++;
+            pool.Cursor++;
+            _playing = name;
         }
 
         // Fisher-Yates, re-run whenever the cursor exhausts the current pass — the loop never runs
         // dry and never repeats the same fixed order twice in a row.
-        private void Reshuffle()
+        private static void Reshuffle(Pool pool)
         {
-            _order.Clear();
-            for (int i = 0; i < _clips.Count; i++) _order.Add(i);
-            for (int i = _order.Count - 1; i > 0; i--)
+            pool.Order.Clear();
+            for (int i = 0; i < pool.Clips.Count; i++) pool.Order.Add(i);
+            for (int i = pool.Order.Count - 1; i > 0; i--)
             {
                 int j = Random.Range(0, i + 1);
-                (_order[i], _order[j]) = (_order[j], _order[i]);
+                (pool.Order[i], pool.Order[j]) = (pool.Order[j], pool.Order[i]);
             }
-            _cursor = 0;
+            pool.Cursor = 0;
         }
 
         private void OnDestroy()
         {
-            if (_handleValid && _handle.IsValid()) Addressables.Release(_handle);
+            // Reverse order: each asset load depends on the locations handle that produced it.
+            for (int i = _handles.Count - 1; i >= 0; i--)
+                if (_handles[i].IsValid()) Addressables.Release(_handles[i]);
         }
     }
 }

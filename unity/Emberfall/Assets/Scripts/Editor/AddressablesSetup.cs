@@ -38,12 +38,13 @@ namespace Emberfall.Editor
         /// </summary>
         public const string VoiceFolder = "Assets/Sound/Voice";
 
-        /// <summary>Background music, addressed <c>music/&lt;fileName&gt;</c> and additionally
-        /// carrying the <see cref="MusicLabel"/> label — MusicDirector loads the whole label at
-        /// once (it plays all of them, shuffled, forever) rather than one address at a time like
-        /// SFX/VO, which pick a specific clip per event.</summary>
+        /// <summary>Background music, addressed <c>music/&lt;fileName&gt;</c>. Each subfolder is a
+        /// POOL — its clips carry the label <c>music-&lt;folder lowercased&gt;</c>, and MusicDirector
+        /// loads a whole label at once (shuffled, forever) rather than one address at a time like
+        /// SFX/VO. Unlike Voice/ and Backgrounds/, the subfolder here is NOT organisational: it
+        /// decides which screens a track plays on. Clips loose in the root belong to no pool and
+        /// are not registered.</summary>
         public const string MusicFolder = "Assets/Sound/Music";
-        private const string MusicLabel = "music";
 
         /// <summary>Every group name this run touched, in the order it touched them, so the
         /// closing log reports the run rather than a list someone has to remember to edit.</summary>
@@ -139,8 +140,12 @@ namespace Emberfall.Editor
             var voiceGroup = GetGroup(settings, "Voice");
             AddFolderAssets(settings, voiceGroup, VoiceFolder, "vo", "t:AudioClip");
             var musicGroup = GetGroup(settings, "Music");
-            AddFolderAssets(settings, musicGroup, MusicFolder, "music", "t:AudioClip");
-            LabelFolderAssets(settings, MusicFolder, "t:AudioClip", MusicLabel);
+            foreach (string poolFolder in AssetDatabase.GetSubFolders(MusicFolder))
+            {
+                AddFolderAssets(settings, musicGroup, poolFolder, "music", "t:AudioClip");
+                LabelFolderAssets(settings, poolFolder, "t:AudioClip",
+                                  "music-" + Path.GetFileName(poolFolder).ToLowerInvariant());
+            }
 
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.BatchModification, null, true, true);
             AssetDatabase.SaveAssets();
@@ -261,8 +266,8 @@ namespace Emberfall.Editor
         /// <summary>Tags every matching asset already in the settings with <paramref name="label"/>,
         /// registering the label first if this is its first use. Separate from
         /// <see cref="AddFolderAssets"/> because every other caller wants one address per file, not
-        /// a shared label — Music is the only group loaded as a whole rather than by specific
-        /// address, so it is the only one that needs this.</summary>
+        /// a shared label — Music pools are the only assets loaded as a whole rather than by
+        /// specific address, so they are the only ones that need this.</summary>
         private static void LabelFolderAssets(AddressableAssetSettings settings, string folder,
                                               string filter, string label)
         {
