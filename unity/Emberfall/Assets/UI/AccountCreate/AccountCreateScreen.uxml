@@ -39,48 +39,50 @@
         <!-- SIGN IN: email, then the six-digit code that arrives in the reply. No Cancel, no Skip
              and no guest — Sam's 2026-08-08 ruling. The only way out is a session, so this view
              deliberately has nothing that dismisses it. -->
-        <!-- TWO ROWS, and every element as high up the panel as it will go (Sam, 2026-08-30). Both
+        <!-- A CENTRED STACK, pinned to the top (Sam, 2026-09-28; top-pinned since 2026-08-30). Both
              views own a text field, so the IME is open here more often than not, and on the Pixel 5a
-             its top edge lands at roughly 119dp of the 411dp panel. A tall single column puts the
-             thing you are typing into, and the button that accepts it, underneath the keyboard.
-             Row 1 carries the question and the answer; row 2 carries everything secondary. -->
-        <ui:VisualElement name="signin-view">
-            <ui:VisualElement class="mm-modal__columns mm-row">
-                <ui:VisualElement class="mm-modal__pitch">
-                    <ui:Label name="signin-title" text="Welcome to the Kingdom" class="mm-modal__title"/>
-                    <ui:Label name="signin-help" text="The Crown requires your name on file before you may play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
-                </ui:VisualElement>
-                <ui:VisualElement class="mm-modal__form">
-                    <!-- THE FORK, and it is the first thing a launch with no session sees. Both
-                         branches end at the same Supabase identity, so this is not two auth systems;
-                         what it changes is what happens AFTER. A returning player is asked for a
-                         password rather than sent to their inbox, is never asked to choose a
-                         "permanent" display name a second time, and has this device's collection
-                         scope bound to the account they just proved they own. Before it existed
-                         there was no way to say "I have been here before", so every launch was
-                         treated as a first one. -->
-                    <ui:VisualElement name="signin-choice" class="mm-modal__actions">
-                        <ui:Button name="btn-signin-new" text="I am new here" class="mm-modal__button signin-btn"/>
-                        <ui:Button name="btn-signin-returning" text="I have an account" class="mm-modal__button signin-btn"/>
-                    </ui:VisualElement>
-                    <ui:TextField name="signin-email" placeholder-text="Email address" keyboard-type="EmailAddress" class="mm-modal__field"/>
-                    <ui:TextField name="signin-password" password="true" placeholder-text="Password" class="mm-modal__field" style="display: none;"/>
-                    <ui:TextField name="signin-code" max-length="6" placeholder-text="6-digit code" keyboard-type="NumberPad" class="mm-modal__field mm-signin__code" style="display: none;"/>
-                    <ui:VisualElement class="mm-modal__actions">
-                        <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button signin-btn" style="display: none;"/>
-                        <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button signin-btn"/>
-                    </ui:VisualElement>
+             its top edge lands at roughly 29% of the panel. Everything read while typing stays in
+             the top band: the header, then the field row. The call-to-action line reads as one
+             sentence, "Skip the paperwork and [Google] or [New] [Account]". -->
+        <ui:VisualElement name="signin-view" class="signin-stack">
+            <ui:VisualElement class="signin-header">
+                <ui:Label name="signin-title" text="Welcome to the Kingdom" class="mm-modal__title"/>
+                <ui:Label name="signin-help" text="The Crown requires your name on file before you may play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
+            </ui:VisualElement>
+            <!-- The field row. Hidden in effect on the choice step, when every child is hidden. -->
+            <ui:VisualElement class="signin-line">
+                <ui:TextField name="signin-email" placeholder-text="Email address" keyboard-type="EmailAddress" class="mm-modal__field signin-field"/>
+                <ui:TextField name="signin-password" password="true" placeholder-text="Password" class="mm-modal__field signin-field" style="display: none;"/>
+                <ui:TextField name="signin-code" max-length="6" placeholder-text="6-digit code" keyboard-type="NumberPad" class="mm-modal__field mm-signin__code" style="display: none;"/>
+                <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button signin-btn" style="display: none;"/>
+                <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button signin-btn"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="signin-line">
+                <!-- Named signin-or for SignInGateController, which shows it exactly when Google is
+                     shown. It was a bare "or" divider until the sentence replaced it. -->
+                <ui:Label name="signin-or" text="Skip the paperwork and" class="mm-signin__or"/>
+                <ui:Button name="btn-signin-google" text="Continue with Google" class="mm-modal__button signin-btn signin-btn--ember mm-signin__google"/>
+                <!-- THE FORK, and it is the first thing a launch with no session sees. Both
+                     branches end at the same Supabase identity, so this is not two auth systems;
+                     what it changes is what happens AFTER. A returning player is asked for a
+                     password rather than sent to their inbox, is never asked to choose a
+                     "permanent" display name a second time, and has this device's collection
+                     scope bound to the account they just proved they own. Before it existed
+                     there was no way to say "I have been here before", so every launch was
+                     treated as a first one. The "or" lives inside it so it hides with it. -->
+                <ui:VisualElement name="signin-choice" class="signin-line signin-choice">
+                    <ui:Label text="or" class="mm-signin__or"/>
+                    <ui:Button name="btn-signin-new" text="I am new here" class="mm-modal__button signin-btn"/>
+                    <ui:Button name="btn-signin-returning" text="I have an account" class="mm-modal__button signin-btn"/>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement class="mm-row mm-row--secondary">
+            <ui:VisualElement class="signin-line">
                 <ui:Label name="signin-error" text=" " class="mm-modal__error"/>
                 <ui:Button name="btn-signin-resend" text="Send another code" class="mm-signin__resend" style="display: none;"/>
                 <!-- The password was always OPTIONAL (NOR-246), so a returning player may well not
                      have one. This is their way through and it must never be hidden on the password
                      step, or that step is a dead end for exactly the players it was built for. -->
                 <ui:Button name="btn-signin-code-instead" text="Email me a code instead" class="mm-signin__resend" style="display: none;"/>
-                <ui:Label name="signin-or" text="or" class="mm-signin__or"/>
-                <ui:Button name="btn-signin-google" text="Continue with Google" class="mm-modal__button signin-btn signin-btn--ember mm-signin__google"/>
             </ui:VisualElement>
         </ui:VisualElement>
 

@@ -1050,5 +1050,48 @@
 }
 .account-create-screen .mm-signin__google {
     min-width: 440px;
-    margin-left: 0;
+    margin-left: var(--space-3);
+}
+
+/* The sign-in view as a centred stack (Sam, 2026-09-28): header, field row, then one line that
+ * reads "Skip the paperwork and [Google] or [I am new here] [I have an account]". The name view
+ * still uses the two-row layout above. */
+.account-create-screen .signin-stack {
+    align-items: center;
+}
+.account-create-screen .signin-header {
+    align-items: center;
+}
+.account-create-screen .signin-header > .mm-modal__title,
+.account-create-screen .signin-header > .mm-modal__help {
+    -unity-text-align: upper-center;
+    max-width: 1500px;
+}
+.account-create-screen .signin-line {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--space-3);
+}
+.account-create-screen .signin-choice {
+    margin-top: 0;
+}
+.account-create-screen .signin-field {
+    width: 620px;
+    margin-bottom: 0;
+    margin-left: var(--space-3);
+}
+.account-create-screen .signin-line > .mm-signin__code {
+    width: 360px;
+    margin-bottom: 0;
+}
+.account-create-screen .signin-line .mm-signin__or {
+    align-self: center;
+    padding: 0;
+    margin: 0 var(--space-2) 0 var(--space-3);
+}
+.account-create-screen .signin-line > .mm-signin__resend {
+    align-self: center;
+    padding: 0;
+    margin: 0 var(--space-3);
 }
