@@ -79,7 +79,7 @@ function Resolve-PackageName {
         return $Matches[1]
     }
     $company = if ($text -match 'companyName:\s*(.+)') { $Matches[1].Trim() } else { 'DefaultCompany' }
-    $product = if ($text -match 'productName:\s*(.+)')  { $Matches[1].Trim() } else { 'Emberfall' }
+    $product = if ($text -match 'productName:\s*(.+)')  { $Matches[1].Trim() } else { 'Bad Ideas' }
     $guess = "com.$company.$product" -replace '\s',''
     Write-Warning "applicationIdentifier.Android is not set in ProjectSettings.asset; guessing '$guess'. Pass -PackageName to override."
     return $guess

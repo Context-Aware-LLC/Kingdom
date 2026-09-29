@@ -185,13 +185,17 @@ The naming convention itself, and everything that checks it, lives in that scrip
 
 ## Never commit a changed `productName`
 
-**Before committing `unity/Emberfall/ProjectSettings/ProjectSettings.asset`, `git diff` it and confirm `productName` is still exactly `Emberfall`.**
+**Before committing `unity/Emberfall/ProjectSettings/ProjectSettings.asset`, `git diff` it and confirm `productName` is still exactly `Bad Ideas`.**
 
-`Application.persistentDataPath` is `AppData/LocalLow/<companyName>/<productName>`, so that one
-string keys the player's **entire collection**. Rename the product and the game silently boots
-against a different, empty collection root. Committing such a rename **permanently relocates the
-save location for every build**: the real collection becomes unreachable and any existing
-tester's collection orphans, with no error and no way for the player to tell what happened.
+It was `Emberfall` until 2026-09-28. Sam renamed it before any store upload, because it is the
+label under the app icon. The codename, the setId and the folder names stay `Emberfall`.
+
+On Windows, `Application.persistentDataPath` is `AppData/LocalLow/<companyName>/<productName>`
+and PlayerPrefs are keyed the same way, so that one string keys the desktop player's **entire
+collection** and stored session. Rename the product and a desktop build silently boots against a
+different, empty collection root, with no error and no way for the player to tell what happened.
+On Android and iOS the save root is keyed on the package id (`com.contextaware.kobi`), so
+`productName` is only the icon label there. Once a build ships, the package id can never change.
 
 **This is not a typo risk — a tool does it to you.** Running a Unity **multiplayer scenario**
 rewrites `productName` to its role name. The project's only scenario asset was deleted
@@ -278,7 +282,7 @@ Three reasons the lock is not optional, all of which bite silently:
    URP globals. The damage arrives looking like your own diff.
 
 **Releasing is part of the task.** Revert Unity's collateral, confirm `productName` is still
-`Emberfall`, park the worktree off any feature branch, and set the block back to `VACANT`. A stale
+`Bad Ideas`, park the worktree off any feature branch, and set the block back to `VACANT`. A stale
 claim — OCCUPIED, no `Unity.exe` on that path, `since` older than 30 minutes — is fair to take; say
 so in the file when you do.
 

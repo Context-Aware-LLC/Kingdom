@@ -81,7 +81,7 @@ per project folder, so it is one Editor at a time; and every Unity run rewrites 
 are not yours, so the damage arrives looking like your own diff.
 
 **Releasing is part of the task**, not follow-up work: revert Unity's collateral, confirm
-`productName` is still `Emberfall`, park the worktree off any feature branch, set the block back to
+`productName` is still `Bad Ideas`, park the worktree off any feature branch, set the block back to
 `VACANT`. A stale claim — OCCUPIED, no `Unity.exe` on that path, `since` older than 30 minutes — is
 fair to take; say so in the file when you do.
 

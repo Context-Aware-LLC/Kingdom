@@ -251,12 +251,14 @@ namespace Emberfall.Editor
         }
 
         /// <summary>
-        /// The one true product name. <b>Changing it moves every player's save data.</b>
+        /// The one true product name. It is the label under the app icon on Android and iOS, and on
+        /// Windows <b>changing it moves every player's save data</b>:
         /// <see cref="Application.persistentDataPath"/> is <c>AppData/LocalLow/&lt;company&gt;/&lt;product&gt;</c>,
-        /// so the collection root — profiles, rosters, decks, the account registry — is keyed on this
-        /// string.
+        /// so the desktop collection root — profiles, rosters, decks, the account registry — is keyed on
+        /// this string. (On mobile the save root is keyed on the package id instead.) Renamed from
+        /// "Emberfall" 2026-09-28, before any store upload, for the Kingdom of Bad Ideas name.
         /// </summary>
-        private const string CanonicalProductName = "Emberfall";
+        private const string CanonicalProductName = "Bad Ideas";
 
         /// <summary>
         /// Restore <c>productName</c> after a multiplayer scenario has renamed it.
@@ -279,7 +281,7 @@ namespace Emberfall.Editor
 
             // Set and save UNCONDITIONALLY, even when the in-memory value already looks right.
             // The scenario writes the rename into ProjectSettings.asset from ITS OWN process, so this
-            // Editor can hold "Emberfall" in memory while the file on disk — the thing git commits —
+            // Editor can hold the right name in memory while the file on disk — the thing git commits —
             // says "Emberfall (Client)". An early return on `current == canonical` therefore skipped the
             // one step that mattered and left the file wrong (observed 2026-07-27). The in-memory value
             // is not evidence about the file.
