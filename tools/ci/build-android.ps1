@@ -8,6 +8,12 @@
 #
 # Usage: pwsh tools/ci/build-android.ps1
 #        pwsh tools/ci/build-android.ps1 -PerfCapture
+#        pwsh tools/ci/build-android.ps1 -PlayRelease -VersionCode 2
+#
+# -PlayRelease builds a Google Play AAB signed with the UPLOAD key instead of a debug APK. The
+# keystore lives outside the repo (default below); its password comes from
+# $env:EMBERFALL_UPLOAD_KEYSTORE_PASS or is prompted for, and is never written to disk. Pass a
+# -VersionCode above the last upload's: Play refuses a repeat, and the new code persists.
 #        pwsh tools/ci/build-android.ps1 -UnityPath "C:\path\to\Unity.exe"
 [CmdletBinding()]
 param(
@@ -16,7 +22,11 @@ param(
     # the Android module installed for that Editor, which a bare headless install will not have.
     [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe' }
                            else            { "$HOME/Unity/Hub/Editor/6000.5.1f1/Editor/Unity" }),
-    [switch]$PerfCapture
+    [switch]$PerfCapture,
+    [switch]$PlayRelease,
+    [string]$Keystore = 'C:\Users\User\keystores\KingdomOfBadIdeas\kobi-upload.keystore',
+    [string]$KeyAlias = 'kobi-upload',
+    [int]$VersionCode = 0
 )
 
 $ErrorActionPreference = 'Stop'
@@ -26,7 +36,8 @@ $REPO_ROOT  = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptR
 $PROJECT    = [System.IO.Path]::Combine($REPO_ROOT, 'unity', 'Emberfall')
 $TIMESTAMP  = (Get-Date -Format 'yyyyMMdd-HHmmss')
 $LOG        = Join-Path ([System.IO.Path]::GetTempPath()) "unity-build-android-$TIMESTAMP.log"
-$APK        = [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'Emberfall.apk')
+$APK        = if ($PlayRelease) { [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'KingdomOfBadIdeas.aab') }
+              else              { [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'Emberfall.apk') }
 $BUILD_INFO = "$APK.build.json"
 
 $BUILD_COMMIT = (& git -C $REPO_ROOT rev-parse HEAD).Trim()
@@ -37,6 +48,31 @@ if ($LASTEXITCODE -ne 0 -or -not $BUILD_COMMIT) {
 $BUILD_STATUS = @(& git -C $REPO_ROOT status --porcelain --untracked-files=all)
 $BUILD_DIRTY = $BUILD_STATUS.Count -gt 0
 $DIRTY_SUFFIX = if ($BUILD_DIRTY) { '-dirty' } else { '' }
+if ($PlayRelease -and $PerfCapture) {
+    Write-Error 'A Play release cannot also be a performance capture build.'
+    exit 1
+}
+if ($PlayRelease) {
+    if (-not (Test-Path -LiteralPath $Keystore)) {
+        Write-Error "Upload keystore not found at '$Keystore'. Pass -Keystore."
+        exit 1
+    }
+    $uploadPass = $env:EMBERFALL_UPLOAD_KEYSTORE_PASS
+    if (-not $uploadPass) {
+        $secure = Read-Host -AsSecureString 'Upload keystore password (KeePass)'
+        $uploadPass = [System.Net.NetworkCredential]::new('', $secure).Password
+    }
+    if (-not $uploadPass) {
+        Write-Error 'No upload keystore password given.'
+        exit 1
+    }
+    if ($VersionCode -le 0) {
+        Write-Host "build-android: WARNING - no -VersionCode; the AAB keeps the project's current code, which Play refuses if it was already uploaded."
+    }
+    if ($BUILD_DIRTY) {
+        Write-Host 'build-android: WARNING - building a Play release from a dirty worktree.'
+    }
+}
 if ($PerfCapture -and $BUILD_DIRTY) {
     Write-Error 'A performance capture build must come from a clean worktree so its commit identity is exact.'
     $BUILD_STATUS | ForEach-Object { Write-Host "  $_" }
@@ -89,7 +125,7 @@ Write-Host "build-android: Unity   $UnityPath"
 Write-Host "build-android: project $PROJECT"
 Write-Host "build-android: log     $LOG"
 Write-Host "build-android: commit  $BUILD_COMMIT$DIRTY_SUFFIX"
-Write-Host "build-android: profile $(if ($PerfCapture) { 'EF-064 release capture' } else { 'standard release' })"
+Write-Host "build-android: profile $(if ($PlayRelease) { "PLAY RELEASE (AAB, upload key '$KeyAlias')" } elseif ($PerfCapture) { 'EF-064 release capture' } else { 'standard release' })"
 Write-Host "build-android: compile barrier $($compileBarrierUtc.ToString('O')) ($($compileInputs.Count) input(s))"
 Write-Host "build-android: launching headless (IL2CPP + ARM64)…"
 Write-Host ""
@@ -109,6 +145,13 @@ $previousBuildCommit = $env:EMBERFALL_BUILD_COMMIT
 try {
     $env:EMBERFALL_PERF_CAPTURE_BUILD = if ($PerfCapture) { '1' } else { '0' }
     $env:EMBERFALL_BUILD_COMMIT = $BUILD_COMMIT
+    if ($PlayRelease) {
+        $env:EMBERFALL_PLAY_RELEASE = '1'
+        $env:EMBERFALL_UPLOAD_KEYSTORE = $Keystore
+        $env:EMBERFALL_UPLOAD_KEY_ALIAS = $KeyAlias
+        $env:EMBERFALL_UPLOAD_KEYSTORE_PASS = $uploadPass
+        $env:EMBERFALL_VERSION_CODE = if ($VersionCode -gt 0) { "$VersionCode" } else { '' }
+    }
 
     $proc = Start-Process -FilePath $UnityPath -ArgumentList $unityArgs -PassThru -NoNewWindow
     # Android IL2CPP builds are slow; allow 30 minutes.
@@ -124,6 +167,9 @@ try {
 } finally {
     $env:EMBERFALL_PERF_CAPTURE_BUILD = $previousCaptureBuild
     $env:EMBERFALL_BUILD_COMMIT = $previousBuildCommit
+    # The signing environment dies with the build; the password never outlives the Unity process.
+    Remove-Item Env:EMBERFALL_PLAY_RELEASE, Env:EMBERFALL_UPLOAD_KEYSTORE, Env:EMBERFALL_UPLOAD_KEY_ALIAS,
+                Env:EMBERFALL_UPLOAD_KEYSTORE_PASS, Env:EMBERFALL_VERSION_CODE -ErrorAction SilentlyContinue
 }
 
 # ── Log read ─────────────────────────────────────────────────────────────────
@@ -151,7 +197,7 @@ if ($compileErrors) {
 # ── Build result detection ────────────────────────────────────────────────────
 $buildSucceeded = $logLines | Where-Object { $_ -match '\[EmberfallBuild\] Player build Succeeded' }
 $buildFailed    = $logLines | Where-Object { $_ -match '\[EmberfallBuild\] Player build.*FAILED\|BuildFailedException' }
-$apkLine        = $logLines | Where-Object { $_ -match 'Builds[/\\]Android[/\\]Emberfall\.apk' } | Select-Object -Last 1
+$apkLine        = $logLines | Where-Object { $_ -match 'Builds[/\\]Android[/\\](Emberfall\.apk|KingdomOfBadIdeas\.aab)' } | Select-Object -Last 1
 
 Write-Host "build-android: =============================="
 Write-Host "build-android: Last 60 log lines:"
@@ -160,7 +206,7 @@ Write-Host "build-android: =============================="
 
 if ($buildSucceeded -and -not $compileErrors -and $unityExit -eq 0) {
     if (-not (Test-Path -LiteralPath $APK)) {
-        Write-Host "build-android: FAILED — success marker found but APK is missing at '$APK'"
+        Write-Host "build-android: FAILED — success marker found but the build output is missing at '$APK'"
         exit 1
     }
 
@@ -171,6 +217,7 @@ if ($buildSucceeded -and -not $compileErrors -and $unityExit -eq 0) {
         commit = $BUILD_COMMIT
         dirty = $BUILD_DIRTY
         perfCapture = [bool]$PerfCapture
+        playRelease = [bool]$PlayRelease
         apkSha256 = $apkSha256
         apkBytes = $apkItem.Length
         builtUtc = [DateTime]::UtcNow.ToString('O')
@@ -178,7 +225,7 @@ if ($buildSucceeded -and -not $compileErrors -and $unityExit -eq 0) {
     } | ConvertTo-Json
     [System.IO.File]::WriteAllText($BUILD_INFO, $buildInfo + "`n", [System.Text.UTF8Encoding]::new($false))
 
-    Write-Host "build-android: SUCCESS — APK produced"
+    Write-Host "build-android: SUCCESS — $(if ($PlayRelease) { 'Play AAB' } else { 'APK' }) produced"
     Write-Host "build-android: SHA256  $apkSha256"
     Write-Host "build-android: metadata $BUILD_INFO"
     if ($apkLine) { Write-Host "build-android: $apkLine" }

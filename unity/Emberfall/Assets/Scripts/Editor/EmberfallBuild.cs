@@ -101,7 +101,9 @@ namespace Emberfall.Editor
         ///
         /// <para>IL2CPP and ARM64 are forced explicitly here so the build is deterministic
         /// regardless of whatever the Editor's per-user overrides happen to be. Local APKs use
-        /// Unity's default debug signing; release-store signing belongs outside this build path.</para>
+        /// Unity's default debug signing. With <c>EMBERFALL_PLAY_RELEASE=1</c> (set by
+        /// <c>build-android.ps1 -PlayRelease</c>) the same path emits a Play AAB signed with the
+        /// upload key instead -- see <see cref="PlaySigning"/>.</para>
         ///
         /// <para><b>ARM64 is not a preference and there is no x86_64 build to reach for.</b>
         /// Unity 6000.5.1f1 ships no Android x86_64 runtime — <c>Variations/il2cpp/Release/Libs</c>
@@ -149,8 +151,17 @@ namespace Emberfall.Editor
             bool profilerBuild = Environment.GetEnvironmentVariable(
                 "EMBERFALL_PROFILER_BUILD") == "1";
             string buildCommit = Environment.GetEnvironmentVariable("EMBERFALL_BUILD_COMMIT");
+            PlaySigning play = PlaySigning.FromEnvironment();
+            if (play != null && (perfCaptureBuild || profilerBuild))
+                throw new BuildFailedException(
+                    "[EmberfallBuild] A Play release cannot also be a perf-capture or profiler build.");
+
             string originalVersion = PlayerSettings.bundleVersion;
             bool originalFrameTimingStats = PlayerSettings.enableFrameTimingStats;
+            bool originalAppBundle = EditorUserBuildSettings.buildAppBundle;
+            string originalKeystore = PlayerSettings.Android.keystoreName;
+            string originalAlias = PlayerSettings.Android.keyaliasName;
+            string outputPath = play != null ? PlayOutputPath : AndroidOutputPath;
 
             try
             {
@@ -179,14 +190,38 @@ namespace Emberfall.Editor
                 // This local APK path uses Unity's default debug signing. Do not silently persist
                 // a custom signing configuration into ProjectSettings whenever this menu runs.
                 PlayerSettings.Android.useCustomKeystore = false;
+                EditorUserBuildSettings.buildAppBundle = false;
+
+                if (play != null)
+                {
+                    // Play release: an AAB signed with the UPLOAD key, which lives outside the repo
+                    // (C:\Users\User\keystores\KingdomOfBadIdeas). Every signing field is put back
+                    // in `finally` -- Unity writes keystoreName into ProjectSettings on save, and
+                    // a committed path to one machine's keystore is a build that fails everywhere
+                    // else. The passwords are never serialized by Unity at all.
+                    PlayerSettings.Android.useCustomKeystore = true;
+                    PlayerSettings.Android.keystoreName = play.KeystorePath;
+                    PlayerSettings.Android.keystorePass = play.Password;
+                    PlayerSettings.Android.keyaliasName = play.Alias;
+                    PlayerSettings.Android.keyaliasPass = play.Password;
+                    EditorUserBuildSettings.buildAppBundle = true;
+
+                    // The version code is the one thing a Play build SHOULD persist: Play refuses
+                    // an upload whose code is not above every earlier one, so it is a floor.
+                    if (play.VersionCode > 0)
+                        PlayerSettings.Android.bundleVersionCode = play.VersionCode;
+                    Debug.Log($"[EmberfallBuild] PLAY RELEASE: AAB signed with alias '{play.Alias}', " +
+                              $"versionCode {PlayerSettings.Android.bundleVersionCode}, " +
+                              $"version {PlayerSettings.bundleVersion}");
+                }
 
                 BuildAndroidAddressables();
 
-                Directory.CreateDirectory(Path.GetDirectoryName(AndroidOutputPath));
+                Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
                 var options = new BuildPlayerOptions
                 {
                     scenes             = AllScenes,
-                    locationPathName   = AndroidOutputPath,
+                    locationPathName   = outputPath,
                     target             = BuildTarget.Android,
                     targetGroup        = BuildTargetGroup.Android,
                     options            = profilerBuild
@@ -217,7 +252,7 @@ namespace Emberfall.Editor
                               + "`AndroidPlayer(...@ADB:<serial>)`. Stop Play Mode first — it steals "
                               + "the target and reads as 'cannot connect'. Deep Profiler is NOT "
                               + "supported here; use Memory Profiler snapshots for allocations.");
-                Report(BuildPipeline.BuildPlayer(options), AndroidOutputPath);
+                Report(BuildPipeline.BuildPlayer(options), outputPath);
             }
             finally
             {
@@ -225,7 +260,45 @@ namespace Emberfall.Editor
                 // project defaults. Restore them even when Addressables or IL2CPP fails.
                 PlayerSettings.bundleVersion = originalVersion;
                 PlayerSettings.enableFrameTimingStats = originalFrameTimingStats;
+                PlayerSettings.Android.useCustomKeystore = false;
+                PlayerSettings.Android.keystoreName = originalKeystore;
+                PlayerSettings.Android.keyaliasName = originalAlias;
+                PlayerSettings.Android.keystorePass = "";
+                PlayerSettings.Android.keyaliasPass = "";
+                EditorUserBuildSettings.buildAppBundle = originalAppBundle;
                 AssetDatabase.SaveAssets();
+            }
+        }
+
+        private const string PlayOutputPath = "Builds/Android/KingdomOfBadIdeas.aab";
+
+        /// <summary>Upload-key signing for a Play release, read from the environment that
+        /// <c>tools/ci/build-android.ps1 -PlayRelease</c> sets. Null means an ordinary local APK.
+        /// A half-set environment is refused rather than falling back to debug signing, because an
+        /// AAB signed with the wrong key is only discovered when Play rejects the upload.</summary>
+        private sealed class PlaySigning
+        {
+            public string KeystorePath, Alias, Password;
+            public int VersionCode;
+
+            public static PlaySigning FromEnvironment()
+            {
+                if (Environment.GetEnvironmentVariable("EMBERFALL_PLAY_RELEASE") != "1") return null;
+                var s = new PlaySigning
+                {
+                    KeystorePath = Environment.GetEnvironmentVariable("EMBERFALL_UPLOAD_KEYSTORE"),
+                    Alias = Environment.GetEnvironmentVariable("EMBERFALL_UPLOAD_KEY_ALIAS"),
+                    Password = Environment.GetEnvironmentVariable("EMBERFALL_UPLOAD_KEYSTORE_PASS"),
+                };
+                if (string.IsNullOrEmpty(s.KeystorePath) || !File.Exists(s.KeystorePath))
+                    throw new BuildFailedException(
+                        $"[EmberfallBuild] Play release: upload keystore not found at '{s.KeystorePath}'.");
+                if (string.IsNullOrEmpty(s.Alias) || string.IsNullOrEmpty(s.Password))
+                    throw new BuildFailedException(
+                        "[EmberfallBuild] Play release: EMBERFALL_UPLOAD_KEY_ALIAS and " +
+                        "EMBERFALL_UPLOAD_KEYSTORE_PASS must both be set.");
+                int.TryParse(Environment.GetEnvironmentVariable("EMBERFALL_VERSION_CODE"), out s.VersionCode);
+                return s;
             }
         }
 
