@@ -115,6 +115,11 @@ namespace Emberfall.Presentation
         public const float BodyWidth   = 0.851648f; // 1240   in a 1262-wide parchment
         public const float BodyHeight  = 0.226563f; // 464
         // 100 -> 118 on 2026-08-31 (Sam: "increase the size of the font on cards").
+        // 118 -> 140 on 2026-09-28 (Sam: two-line rules text should grow into the empty third
+        // line instead of sitting at the ceiling). Browser estimate from the font bench, Flex cut
+        // wght 600 / wdth 90 / opsz 20 / GRAD 100 in the y 1369..1833 box: two-line texts fit up to
+        // ~145 before needing a third line, three-line texts top out at 87..132 so they barely
+        // move, and one-liners could reach ~238, so this ceiling is what holds THEM to 140.
         //
         // RAISING THE CEILING IS FREE; RAISING THE FLOOR IS NOT. CardPresenter drives the label
         // with TMP auto-sizing between BodyEmFloor and this, so this is the size a card gets when
@@ -132,13 +137,8 @@ namespace Emberfall.Presentation
         // 8% from the board card growing under them (this is an em of CardH). Spending 78 or 84 is
         // a real option, but it costs a specific card its parchment — Masterwork Constructor, 109
         // chars, the corpus's longest — and that is a content decision, not a typography one.
-        public const float BodyEm      = 118f / MasterH;
+        public const float BodyEm      = 140f / MasterH;
         public const float BodyEmFloor = 72f / MasterH; // auto-shrink floor for long rules text
-        // Rules-text line spacing, in TMP units (1/100 em, added to the face's own line height).
-        // GoogleSansFlex-Card's line is 1.252 em (hhea 1932 + 572 over 2000 upm), so each -10 takes
-        // 0.1 em off it. -25 is a line of ~1.0 em, 0.8 of the face's natural height (Sam,
-        // 2026-09-28: -50 was too tight, so halfway back). Re-derive it if the face is swapped.
-        public const float BodyLineSpacing = -25f;
         public const int   KeywordLeadPct = 115;        // keyword lead, % of body
 
         public static readonly Color NameParchment = new Color32(245, 238, 225, 255);

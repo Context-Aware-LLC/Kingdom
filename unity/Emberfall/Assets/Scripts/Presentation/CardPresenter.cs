@@ -484,9 +484,7 @@ namespace Emberfall.Presentation
                 // keywords CardTextStyling wraps in <b> (Sam, 2026-09-28). Bolding the label
                 // would bold every word and erase the keyword contrast.
                 bodyLabel.color = FrameRarityCatalog.BodyInk;
-                bodyLabel.fontStyle &= ~FontStyles.Bold;
-                bodyLabel.lineSpacing = FrameRarityCatalog.BodyLineSpacing;
-                bodyLabel.fontSizeMax = FrameRarityCatalog.BodyEm * H * 10f;
+                bodyLabel.fontStyle &= ~FontStyles.Bold;                bodyLabel.fontSizeMax = FrameRarityCatalog.BodyEm * H * 10f;
                 bodyLabel.fontSizeMin = FrameRarityCatalog.BodyEmFloor * H * 10f;
                 // The new parchment is centered on the card, so unlike the old frame this needs
                 // no horizontal shift to stay off the rails.
