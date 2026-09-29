@@ -1033,7 +1033,7 @@
  * unchanged, so this screen's UXML and CollectionController.WireClassTabs need no edit; theme.uss
  * loads before this file on every screen that has both. */
 .class-tab_art-neutral {
-    background-color: var(--class-neutral);
+    background-image: url("/Assets/Art/UI/hptabs/neutral_hp.png");
 }
 
 /* Two states over that base, and they are about different questions.
@@ -1046,8 +1046,8 @@
  * position of is the strip they always get.
  *
  * The tint is what carries it. Opacity alone on a strip of full-bleed portraits still reads as
- * eight lit tabs, so the art is also tinted toward the surface it sits on; the neutral tab paints a
- * flat colour rather than an image and takes the opacity half only.
+ * eight lit tabs, so the art is also tinted toward the surface it sits on. Neutral now has its own
+ * king portrait and follows the same image treatment as the eight hero classes.
  *
  * --on says "this tab is filtering the wall" by CONTRAST ONLY -- it draws nothing of its own; the
  * gold frame it used to fade in was removed 2026-08-30 (see below). Once any class is selected,
