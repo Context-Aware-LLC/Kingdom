@@ -40,6 +40,16 @@ namespace Emberfall.Presentation
         private string _playing;
         private bool _suspended;
 
+        private static MusicDirector _instance;
+        private string _heldScene;   // non-null: silent until the active scene is no longer this one
+
+        /// <summary>Fades the current track out and stays silent until the next scene loads — the
+        /// match end, where the victory stinger plays and the battle loop would talk over it.</summary>
+        public static void FadeOutUntilSceneChange()
+        {
+            if (_instance != null) _instance._heldScene = SceneManager.GetActiveScene().name;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Bootstrap()
         {
@@ -67,6 +77,7 @@ namespace Emberfall.Presentation
             source.spatialBlend = 0f;
             source.outputAudioMixerGroup = AudioSettings.MusicGroup;
             _source = source;
+            _instance = this;
 
             LoadPool(MenuPool);
             LoadPool(BattlePool);
@@ -100,19 +111,22 @@ namespace Emberfall.Presentation
         {
             if (_source == null || _suspended || OpeningCinematic.IsActive) return;
 
-            string want = PoolForScene(SceneManager.GetActiveScene().name);
+            string scene = SceneManager.GetActiveScene().name;
+            if (_heldScene != null && _heldScene != scene) _heldScene = null;
+
+            string want = PoolForScene(scene);
             if (!_pools.ContainsKey(want)) want = MenuPool;
             if (!_pools.ContainsKey(want)) return;
 
             // Leaving a pool mid-track fades rather than cuts. The fade runs on the source, not the
             // mixer, so the player's Music volume and Mute are untouched by it.
-            if (_source.isPlaying && want != _playing)
+            if (_source.isPlaying && (want != _playing || _heldScene != null))
             {
                 _source.volume -= Time.unscaledDeltaTime / FadeOutSeconds;
                 if (_source.volume > 0f) return;
                 _source.Stop();
             }
-            if (!_source.isPlaying) PlayNext(want);
+            if (_heldScene == null && !_source.isPlaying) PlayNext(want);
         }
 
         // Scene names, not paths: SceneManager reports the name, and EmberfallBuild's list holds
@@ -175,6 +189,7 @@ namespace Emberfall.Presentation
 
         private void OnDestroy()
         {
+            if (_instance == this) _instance = null;
             // Reverse order: each asset load depends on the locations handle that produced it.
             for (int i = _handles.Count - 1; i >= 0; i--)
                 if (_handles[i].IsValid()) Addressables.Release(_handles[i]);

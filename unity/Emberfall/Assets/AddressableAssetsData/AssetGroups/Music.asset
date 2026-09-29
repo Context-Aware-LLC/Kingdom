@@ -15,20 +15,14 @@ MonoBehaviour:
   m_GroupName: Music
   m_GUID: 9ff83b87c80af5d4c9df677eca0359a7
   m_SerializeEntries:
-  - m_GUID: e1751bb997154c189aa8d9dec8e5760c
-    m_Address: music/The_Court_Jesters_Scheme_2026-09-29T045914
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - music-menu
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8b20eca4e72846ddaa1e7391fe145df9
-    m_Address: music/Tavern_Cards_and_Cardboards_2026-09-29T050724
+  - m_GUID: 760fd209dc944d2481727395b9dbb056
+    m_Address: music/Tavern_Draft_Duel_2026-09-29T050724
     m_ReadOnly: 0
     m_SerializedLabels:
     - music-battle
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 760fd209dc944d2481727395b9dbb056
-    m_Address: music/Tavern_Draft_Duel_2026-09-29T050724
+  - m_GUID: 8b20eca4e72846ddaa1e7391fe145df9
+    m_Address: music/Tavern_Cards_and_Cardboards_2026-09-29T050724
     m_ReadOnly: 0
     m_SerializedLabels:
     - music-battle
@@ -38,6 +32,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - music-battle
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e1751bb997154c189aa8d9dec8e5760c
+    m_Address: music/The_Court_Jesters_Scheme_2026-09-29T045914
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - music-menu
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd34cc58a8f94b4b98b6bbc1a56b660f
+    m_Address: music/The_Golden_Snicker_2026-09-29T051057
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - music-vault
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}

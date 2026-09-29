@@ -35,6 +35,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 212161590cd249d2b040da6ace1b0ac8
+    m_Address: sfx/match_victory
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 344bf1c4e7fea1f419e224346e8c45d5
     m_Address: sfx/beast_summon
     m_ReadOnly: 0
@@ -110,6 +115,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9cace54078b249ff8c7fafef7f61effe
+    m_Address: sfx/match_defeat_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9fd2de4f259f4ecbb2250d5fa34d6ea7
+    m_Address: sfx/match_defeat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9fd95adcfb875bf44b8e15d4cd3897c4
     m_Address: sfx/tempest_spell_cast
     m_ReadOnly: 0
@@ -165,6 +180,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9c2cc7ef34445b0b7bea7f6b2db81be
+    m_Address: sfx/match_victory_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cdddb6ba2f7e0804ba3408bf7fe3d125
     m_Address: sfx/emberward_spell_cast
     m_ReadOnly: 0
@@ -172,6 +192,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d67ecd053cecacb41a60f5e24431841c
     m_Address: sfx/imp_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7a0698d53964a149545732f02c85c6e
+    m_Address: sfx/match_defeat_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

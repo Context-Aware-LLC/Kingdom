@@ -548,6 +548,8 @@ namespace Emberfall.Presentation
                 Debug.Log($"[NetworkedMatch] OVER — {outcome}");
                 MatchEndBanner.Show(outcome, localSeat: _net.Seat); // seat-aware — the server deals the seat
                 heroVoice.OnMatchEnded(outcome);                    // Draw is silent, by authoring
+                MusicDirector.FadeOutUntilSceneChange();            // the battle loop would clash with the stinger
+                cardSounds.OnMatchEnded(outcome, _net.Seat);
             };
 
             // ── §14 step 4 diagnostic (v9 frost retest): playback-side twin of the [Net] snap

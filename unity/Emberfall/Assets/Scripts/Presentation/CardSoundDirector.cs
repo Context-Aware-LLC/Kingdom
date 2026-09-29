@@ -38,6 +38,17 @@ namespace Emberfall.Presentation
                     _player.Play(soundId);
         }
 
+        /// <summary>The end-of-match stinger (Sam, 2026-09-28). A draw has none. Variants
+        /// (<c>match_victory_2</c>, <c>match_defeat_3</c>…) are picked up by
+        /// <see cref="AddressableSoundEffectPlayer.Play"/>.</summary>
+        public void OnMatchEnded(MatchOutcome outcome, int localSeat)
+        {
+            if (_player == null) return;
+            if (outcome == MatchOutcome.Draw || outcome == MatchOutcome.InProgress) return;
+            bool won = outcome == (localSeat == 0 ? MatchOutcome.Player0Win : MatchOutcome.Player1Win);
+            _player.Play(won ? "match_victory" : "match_defeat");
+        }
+
         private void OnDestroy() => _player?.ReleaseAll();
     }
 
