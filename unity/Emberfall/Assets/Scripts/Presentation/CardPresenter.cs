@@ -485,6 +485,7 @@ namespace Emberfall.Presentation
                 // would bold every word and erase the keyword contrast.
                 bodyLabel.color = FrameRarityCatalog.BodyInk;
                 bodyLabel.fontStyle &= ~FontStyles.Bold;
+                bodyLabel.lineSpacing = FrameRarityCatalog.BodyLineSpacing;
                 bodyLabel.fontSizeMax = FrameRarityCatalog.BodyEm * H * 10f;
                 bodyLabel.fontSizeMin = FrameRarityCatalog.BodyEmFloor * H * 10f;
                 // The new parchment is centered on the card, so unlike the old frame this needs
