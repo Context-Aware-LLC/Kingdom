@@ -135,10 +135,10 @@ namespace Emberfall.Presentation
         public const float BodyEm      = 118f / MasterH;
         public const float BodyEmFloor = 72f / MasterH; // auto-shrink floor for long rules text
         // Rules-text line spacing, in TMP units (1/100 em, added to the face's own line height).
-        // GoogleSansFlex-Card's line is 1.252 em (hhea 1932 + 572 over 2000 upm), so -50 sets the
-        // line to 0.6 of the face's natural height (Sam, 2026-09-28, trying it once: Masterwork
-        // Constructor ran off the bottom). Re-derive it if the face is swapped for another.
-        public const float BodyLineSpacing = -50f;
+        // GoogleSansFlex-Card's line is 1.252 em (hhea 1932 + 572 over 2000 upm), so each -10 takes
+        // 0.1 em off it. -25 is a line of ~1.0 em, 0.8 of the face's natural height (Sam,
+        // 2026-09-28: -50 was too tight, so halfway back). Re-derive it if the face is swapped.
+        public const float BodyLineSpacing = -25f;
         public const int   KeywordLeadPct = 115;        // keyword lead, % of body
 
         public static readonly Color NameParchment = new Color32(245, 238, 225, 255);

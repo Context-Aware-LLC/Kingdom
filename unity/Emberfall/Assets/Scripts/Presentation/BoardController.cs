@@ -1122,7 +1122,9 @@ namespace Emberfall.Presentation
             // Keep the first line off the painted middle rail without moving the whole rules box
             // toward the stat sockets. TMP's own top margin reduces the usable content area in
             // place, so the bottom edge and the hand-fan clearance budget stay unchanged.
-            bodyLabel.margin = new Vector4(0f, CardH * 0.025f, 0f, 0f);
+            // Halved from 0.025 (Sam, 2026-09-28): long rules text ran off the bottom while the
+            // top margin held nearly a whole line of empty parchment.
+            bodyLabel.margin = new Vector4(0f, CardH * 0.0125f, 0f, 0f);
             bodyLabel.textWrappingMode = TextWrappingModes.Normal;
             bodyLabel.overflowMode     = TextOverflowModes.Ellipsis;
             bodyLabel.enableAutoSizing = true;
