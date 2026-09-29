@@ -415,10 +415,18 @@
     transition-duration: 0.1s;
     transition-timing-function: ease-out;
 }
+/* Every state restates the clear fill: Unity's own `.unity-button:hover`/`:active` outrank the
+ * one-class base rule above and repaint the grey behind the sprite's rounded corners. */
 .emb-back-button:hover {
+    background-color: transparent;
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 .emb-back-button:active {
+    background-color: transparent;
     translate: 0 1px;
     -unity-background-image-tint-color: rgb(205, 211, 220);
+}
+.emb-back-button:focus,
+.emb-back-button:disabled {
+    background-color: transparent;
 }
