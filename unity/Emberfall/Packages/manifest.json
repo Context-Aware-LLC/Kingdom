@@ -16,7 +16,7 @@
     "com.unity.memoryprofiler": "1.1.12",
     "com.unity.mobile.android-logcat": "1.4.7",
     "com.unity.nuget.newtonsoft-json": "3.2.2",
-    "com.unity.pipeline": "0.5.0-exp.1",
+    "com.unity.pipeline": "0.8.0-exp.1",
     "com.unity.purchasing": "5.4.3",
     "com.unity.render-pipelines.universal": "17.5.0",
     "com.unity.ugui": "2.5.0",
