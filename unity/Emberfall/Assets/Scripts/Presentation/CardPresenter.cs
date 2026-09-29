@@ -478,10 +478,13 @@ namespace Emberfall.Presentation
 
             if (bodyLabel != null)
             {
-                // Rules band: bold dark ink on the frame's parchment (2026-07-25 mobile-
-                // legibility pass — regular-weight slab strokes didn't read at board scale).
+                // Rules band: dark ink on the frame's parchment. NOT bold as a whole any more:
+                // the weight is baked into the face (GoogleSansFlex-Card, cut by
+                // tooling/scripts/instance_font.py), and TMP's faux bold is left to the
+                // keywords CardTextStyling wraps in <b> (Sam, 2026-09-28). Bolding the label
+                // would bold every word and erase the keyword contrast.
                 bodyLabel.color = FrameRarityCatalog.BodyInk;
-                bodyLabel.fontStyle |= FontStyles.Bold;
+                bodyLabel.fontStyle &= ~FontStyles.Bold;
                 bodyLabel.fontSizeMax = FrameRarityCatalog.BodyEm * H * 10f;
                 bodyLabel.fontSizeMin = FrameRarityCatalog.BodyEmFloor * H * 10f;
                 // The new parchment is centered on the card, so unlike the old frame this needs

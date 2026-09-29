@@ -104,14 +104,16 @@ namespace Emberfall.Presentation
         // copy. Ellipsis is only eligible after this floor is exhausted.
         public const float NameEmFloor = 72f / MasterH;
 
-        // Rules text box. NOTE this is NOT the parchment's centre — the parchment runs y 1369..1905
-        // (centre 1637) but the two stat sockets bite its bottom corners from y 1790 up, so the
-        // text box stops there and sits higher than the panel it is printed on. Setting
-        // BodyCenterY from the parchment instead pushes the last line under the stat rings.
-        // RETIREMENT TRIGGER: moving StatSocketLeft/Right vertically moves this floor with them.
-        public const float BodyCenterY = 0.771240f; // 1579   box y 1369..1790
+        // Rules text box, y 1369..1833: from the top of the parchment down to the TOP OF THE TRIBE
+        // PLATE (TribeCenterY - TribeHeight/2 = 1913 - 80). It used to stop at y 1790, where the
+        // stat sockets begin, and Sam moved it down to ride the plate instead (2026-09-28). The
+        // price: the bottom 43 px of the box now sits level with the stat rings, so a last line
+        // running the box's full width can reach under them at the corners. Text is centred,
+        // so only a nearly full last line does that.
+        // RETIREMENT TRIGGER: moving the tribe plate vertically moves this floor with it.
+        public const float BodyCenterY = 0.781738f; // 1601   box y 1369..1833
         public const float BodyWidth   = 0.851648f; // 1240   in a 1262-wide parchment
-        public const float BodyHeight  = 0.205566f; // 421
+        public const float BodyHeight  = 0.226563f; // 464
         // 100 -> 118 on 2026-08-31 (Sam: "increase the size of the font on cards").
         //
         // RAISING THE CEILING IS FREE; RAISING THE FLOOR IS NOT. CardPresenter drives the label

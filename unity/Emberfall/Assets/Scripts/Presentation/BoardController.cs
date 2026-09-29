@@ -1109,9 +1109,9 @@ namespace Emberfall.Presentation
             if (bodyFont != null) bodyLabel.font = bodyFont;
             bodyLabel.fontSize  = 1.0f;
             // Centered across, TOP down the band — not TextAlignmentOptions.Center (Sam,
-            // 2026-08-13). The band is centered on the parchment at BodyCenterY 0.790 with
-            // BodyHeight 0.23, so it runs 0.675..0.905 of the card, while the stat sockets sit at
-            // 0.881/0.884 and their digits reach up to ~0.83. Vertically centering meant a SHORT
+            // 2026-08-13). The band runs y 1369..1833 of the 2048 master (0.668..0.895 of the
+            // card, FrameRarityCatalog.BodyCenterY/BodyHeight), while the stat sockets sit at
+            // 0.934/0.933 and their rings reach up to ~0.87. Vertically centering meant a SHORT
             // line floated to the middle of that band and a two-liner grew DOWNWARD into the
             // attack/health frames — the shorter the text, the closer to the collision. Growing
             // from the top instead spends the empty space at the bottom, where the stats already
@@ -1282,7 +1282,7 @@ namespace Emberfall.Presentation
         {
             if (s_bodyFont == null)
                 s_bodyFont = LoadAsset<TMP_FontAsset>(
-                    "Assets/Art/Fonts/GoogleSans-Regular SDF.asset", "fonts/GoogleSans-Regular SDF");
+                    "Assets/Art/Fonts/GoogleSansFlex-Card SDF.asset", "fonts/GoogleSansFlex-Card SDF");
             return s_bodyFont ?? CardFont();   // missing asset must not blank the rules box
         }
 
