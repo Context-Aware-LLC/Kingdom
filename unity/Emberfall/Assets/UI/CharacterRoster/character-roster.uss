@@ -219,6 +219,18 @@
     translate: 0 1px;
 }
 
+/* Clear in every state (Sam, 2026-09-29). Being a Button, the new-deck plate picks up Unity's
+ * default grey on `.unity-button:hover:enabled`/`:active:enabled`, which outranks `.deck-plate`'s
+ * transparent and showed as a filled box around the dashed art. */
+.deck-plate--new.unity-button,
+.deck-plate--new.unity-button:hover,
+.deck-plate--new.unity-button:hover:enabled,
+.deck-plate--new.unity-button:active,
+.deck-plate--new.unity-button:active:enabled,
+.deck-plate--new.unity-button:focus {
+    background-color: rgba(0, 0, 0, 0);
+}
+
 /* There is no deck-strip-hint and no deck-strip. See the deck grid section above. */
 
 /* ---- Deck modal header: class badges (NOR-404) -----------------------------------------------

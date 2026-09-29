@@ -415,18 +415,25 @@
     transition-duration: 0.1s;
     transition-timing-function: ease-out;
 }
-/* Every state restates the clear fill: Unity's own `.unity-button:hover`/`:active` outrank the
- * one-class base rule above and repaint the grey behind the sprite's rounded corners. */
 .emb-back-button:hover {
-    background-color: transparent;
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 .emb-back-button:active {
-    background-color: transparent;
     translate: 0 1px;
     -unity-background-image-tint-color: rgb(205, 211, 220);
 }
-.emb-back-button:focus,
-.emb-back-button:disabled {
-    background-color: transparent;
+/* CLEAR CORNERS in every state (Sam, 2026-09-29). Paired with `.unity-button` on purpose: Unity's
+ * default theme repaints a grey fill on `.unity-button:hover:enabled`/`:active:enabled`, and
+ * character-roster.uss rounds every `.unity-button` 4px -- both land on the sprite's transparent
+ * corners and both outrank a one-class rule. Four classes' worth of specificity ends the fight on
+ * every screen that loads this sheet, whatever its own button rules say. */
+.emb-back-button.unity-button,
+.emb-back-button.unity-button:hover,
+.emb-back-button.unity-button:hover:enabled,
+.emb-back-button.unity-button:active,
+.emb-back-button.unity-button:active:enabled,
+.emb-back-button.unity-button:focus,
+.emb-back-button.unity-button:disabled {
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
 }
