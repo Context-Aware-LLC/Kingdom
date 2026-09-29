@@ -48,7 +48,7 @@
             <ui:VisualElement class="mm-modal__columns mm-row">
                 <ui:VisualElement class="mm-modal__pitch">
                     <ui:Label name="signin-title" text="Create your account" class="mm-modal__title"/>
-                    <ui:Label name="signin-help" text="Emberfall needs an account before you can play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
+                    <ui:Label name="signin-help" text="The Crown requires your name on file before you may play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="mm-modal__form">
                     <!-- THE FORK, and it is the first thing a launch with no session sees. Both

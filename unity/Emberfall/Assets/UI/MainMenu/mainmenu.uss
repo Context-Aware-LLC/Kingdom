@@ -101,6 +101,17 @@
     -unity-text-outline-width: 1px;
     -unity-text-outline-color: rgba(11, 14, 19, 0.9);
 }
+/* The small "of" between KINGDOM and BAD IDEAS, stacked the way the website sets it
+   (kingdomofbadideas.com). Negative margins pull the two big lines in around it. */
+.mm-wordmark-of {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: rgb(238, 168, 67);
+    margin-top: -10px;
+    margin-bottom: -10px;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(11, 14, 19, 0.9);
+}
 .mm-tagline {
     font-size: var(--type-h2);
     color: rgb(238, 168, 67);

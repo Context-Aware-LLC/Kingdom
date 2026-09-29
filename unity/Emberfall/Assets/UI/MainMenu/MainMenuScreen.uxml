@@ -25,7 +25,9 @@
         </ui:VisualElement>
         <ui:VisualElement name="command" class="mm-command emb-edge">
             <ui:VisualElement name="brand" class="mm-brand">
-                <ui:Label text="EMBERFALL" class="mm-wordmark"/>
+                <ui:Label text="KINGDOM" class="mm-wordmark"/>
+                <ui:Label text="of" class="mm-wordmark-of"/>
+                <ui:Label text="BAD IDEAS" class="mm-wordmark"/>
             </ui:VisualElement>
             <ui:VisualElement name="menu" class="mm-menu">
                 <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
@@ -46,7 +48,7 @@
         <ui:VisualElement name="leaderboard-modal" class="mm-modal mm-modal--hidden emb-bleed">
             <ui:VisualElement class="mm-modal__panel mm-leaderboard">
                 <ui:VisualElement class="mm-leaderboard__header">
-                    <ui:Label text="The Emberfall Crown" class="mm-leaderboard__title"/>
+                    <ui:Label text="The Official Register of Winners" class="mm-leaderboard__title"/>
                     <ui:Button name="btn-leaderboard-close" text="Close" class="mm-modal__button mm-leaderboard__close"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="mm-leaderboard__columns">

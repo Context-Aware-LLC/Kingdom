@@ -232,7 +232,7 @@ namespace Emberfall.Presentation
                 _wordmark.enableVertexGradient = true;
                 _wordmark.colorGradient = new VertexGradient(EmberGold, EmberGold, EmberRed, EmberRed);
                 _wordmark.sortingOrder = 320;
-                _wordmark.text = "EMBERFALL";
+                _wordmark.text = "KINGDOM <size=70%>OF</size> BAD IDEAS";
                 go.AddComponent<TextArcWarp>();    // default 60° — the approved arc
 
                 // Fade scales face/outline/underlay together (vertex alpha alone would leave
