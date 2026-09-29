@@ -27,6 +27,33 @@ namespace Emberfall.Editor
     {
         private const string ProbeKey = "self-check-device-token";
 
+        /// <summary>
+        /// Finish a Google (or mailed-link) sign-in in the Editor. Windows has no handler for
+        /// <c>emberfall://</c>, so the browser stops at "the scheme does not have a registered
+        /// handler" instead of returning to the game. Copy that <c>emberfall://auth?code=...</c> URL,
+        /// then run this while the sign-in screen is up in Play mode. The code is single-use and
+        /// pairs with the most recent Google button press, so use the URL from that attempt.
+        /// </summary>
+        [MenuItem("Emberfall/Player Account/Deliver Deep Link From Clipboard")]
+        public static void DeliverDeepLinkFromClipboard()
+        {
+            string url = (GUIUtility.systemCopyBuffer ?? "").Trim().Trim('\'', '"');
+            if (!url.StartsWith("emberfall://", StringComparison.OrdinalIgnoreCase))
+            {
+                Debug.LogWarning("[SignIn] The clipboard does not hold an emberfall:// link. Copy the " +
+                                 "URL from the browser's error, then run this again.");
+                return;
+            }
+            if (!EditorApplication.isPlaying ||
+                !SignInGateController.EditorDeliverDeepLink(url))
+            {
+                Debug.LogWarning("[SignIn] No sign-in screen is listening. Enter Play mode on the " +
+                                 "sign-in screen first.");
+                return;
+            }
+            Debug.Log("[SignIn] Delivered the deep link from the clipboard.");
+        }
+
         [MenuItem("Emberfall/Player Account/Show This Device's Account")]
         public static void ShowAccount()
         {

@@ -249,6 +249,9 @@ namespace Emberfall.Presentation
             // OS launched us fresh off the link) is caught separately in Open(), because this event
             // does not fire for the launch that is already in progress when it is subscribed.
             Application.deepLinkActivated += OnDeepLinkActivated;
+#if UNITY_EDITOR
+            EditorDeepLink += OnDeepLinkActivated;
+#endif
 
             // And the other half of the same story: the player coming BACK from the browser without
             // having completed anything. See OnFocusChanged.
@@ -264,8 +267,33 @@ namespace Emberfall.Presentation
         public void Close()
         {
             Application.deepLinkActivated -= OnDeepLinkActivated;
+#if UNITY_EDITOR
+            EditorDeepLink -= OnDeepLinkActivated;
+#endif
             Application.focusChanged -= OnFocusChanged;
         }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Stands in for <see cref="Application.deepLinkActivated"/> in the Editor, where nothing ever
+        /// raises it: Windows has no handler registered for <c>emberfall://</c>, so the browser stops
+        /// at "the scheme does not have a registered handler" and the Google redirect never reaches
+        /// the game. <c>Emberfall/Auth/Deliver Deep Link From Clipboard</c> feeds the copied URL in
+        /// here, and it takes the same path a device link takes. Editor-only; a player build compiles
+        /// none of it.
+        /// </summary>
+        private static event Action<string> EditorDeepLink;
+
+        /// <summary>Hand <paramref name="url"/> to every open gate as if the OS had delivered it.
+        /// Returns false when no gate is listening, meaning the sign-in screen is not up.</summary>
+        public static bool EditorDeliverDeepLink(string url)
+        {
+            Action<string> handlers = EditorDeepLink;
+            if (handlers == null) return false;
+            handlers(url);
+            return true;
+        }
+#endif
 
         /// <summary>
         /// The player came back from the browser. If they did not bring a code with them, give them
