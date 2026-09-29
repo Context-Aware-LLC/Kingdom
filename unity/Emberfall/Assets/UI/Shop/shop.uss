@@ -468,7 +468,22 @@
 
 #shop-overlay .shop-pack__buy {
     border-width: 0;
-    border-radius: 999px;
+    border-radius: 0;
+}
+/* Clear, not a fill, in every state: the chrome art has rounded transparent corners, and Unity's
+ * default button fill behind them shows as square corners (Sam, 2026-09-28, the same treatment as
+ * `.mm-button`). No radius either -- a pill radius clips the sliced art's own corners. */
+#shop-overlay .shop-pack__buy,
+#shop-overlay .shop-pack__buy:hover,
+#shop-overlay .shop-pack__buy:active,
+#shop-overlay .shop-pack__buy:focus,
+#shop-overlay .shop-pack__buy:disabled,
+.pack-detail-actions .shop-pack__buy,
+.pack-detail-actions .shop-pack__buy:hover,
+.pack-detail-actions .shop-pack__buy:active,
+.pack-detail-actions .shop-pack__buy:focus,
+.pack-detail-actions .shop-pack__buy:disabled {
+    background-color: rgba(0, 0, 0, 0);
 }
 
 /* --gold/--gems used to paint their own flat color/border here; superseded (Sam, 2026-09-08,
