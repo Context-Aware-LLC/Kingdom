@@ -235,8 +235,7 @@ blocks on it.** `tools/ci/unity-verify.ps1` does exactly that, so the verify hal
 the Editor closed, and it reports the lock as an error rather than clearing it. Never clear it
 yourself.
 
-**Drive an already-open Editor instead of spawning one.** The Unity CLI reaches a running Editor
-through the project's `com.unity.pipeline` package, so it takes no lock and contends with nobody:
+**Drive an already-open Editor instead of spawning one.** The Unity
 `unity command menu --path "<menu item>"` replaces `Unity.exe -batchmode -executeMethod`, and every
 command takes `--json`. `unity pipeline list` is what diagnoses a connection failure; the
 `unity-cli` skill carries the rest, including the Safe Mode recovery loop.
