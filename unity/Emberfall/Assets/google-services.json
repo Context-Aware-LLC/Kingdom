@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1057967263376",
+    "project_id": "kingdom-of-bad-ideas",
+    "storage_bucket": "kingdom-of-bad-ideas.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1057967263376:android:976a24721fc665dfbc9215",
+        "android_client_info": {
+          "package_name": "com.contextaware.kobi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIFfd9JXpCDHhSK_OiQS1hMNJyx-5MiA4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

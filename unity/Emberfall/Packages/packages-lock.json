@@ -82,6 +82,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.collab-proxy": {
+      "version": "2.12.4",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.collections": {
       "version": "6.5.0",
       "depth": 1,
@@ -278,6 +285,16 @@
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
+    },
+    "com.unity.services.cloud-build": {
+      "version": "file:com.unity.services.cloud-build",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.services.core": "1.16.0",
+        "com.unity.nuget.newtonsoft-json": "3.2.2",
+        "com.unity.collab-proxy": "2.11.3"
+      }
     },
     "com.unity.services.core": {
       "version": "1.18.0",

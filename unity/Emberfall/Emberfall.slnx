@@ -2,6 +2,7 @@
   <Project Path="Emberfall.Presentation.csproj" />
   <Project Path="Unity.VisualStudio.Editor.csproj" />
   <Project Path="Emberfall.Core.Contracts.csproj" />
+  <Project Path="Unity.Services.CloudBuild.Editor.csproj" />
   <Project Path="Emberfall.Session.csproj" />
   <Project Path="Emberfall.Editor.csproj" />
   <Project Path="Emberfall.Data.csproj" />

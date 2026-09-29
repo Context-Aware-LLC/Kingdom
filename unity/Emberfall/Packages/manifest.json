@@ -19,6 +19,7 @@
     "com.unity.pipeline": "0.8.0-exp.1",
     "com.unity.purchasing": "5.4.3",
     "com.unity.render-pipelines.universal": "17.5.0",
+    "com.unity.services.cloud-build": "2.0.8",
     "com.unity.ugui": "2.5.0",
     "com.unity.modules.particlesystem": "1.0.0",
     "com.unity.modules.video": "1.0.0"

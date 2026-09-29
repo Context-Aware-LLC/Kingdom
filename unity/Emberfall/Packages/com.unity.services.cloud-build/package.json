@@ -1,0 +1,44 @@
+{
+  "name": "com.unity.services.cloud-build",
+  "displayName": "Build Automation",
+  "version": "2.0.8",
+  "unity": "6000.1",
+  "unityRelease": "0a10",
+  "_upm": {
+    "gameService": {
+      "genericDashboardUrl": "https://unity.com/solutions/ci-cd",
+      "projectDashboardUrl": "https://dashboard.unity3d.com/organizations/{0}/projects/{1}/cloud-build/history",
+      "projectDashboardUrlType": "OrganizationKeyAndProjectGuid"
+    },
+    "supportedPlatforms": [
+      "Android",
+      "iOS",
+      "Linux",
+      "Mac",
+      "PC",
+      "WebGL",
+      "Windows 8 Universal",
+      "Windows 10 Universal"
+    ],
+    "changelog": "### Modified\n- No longer attempt to fetch signing credentials for platforms that don't use signing credentials\n- Fixed the help box link to configure Cloud Project settings\n- Fixed help box button positioning in Unity 6.5+\n- Made signing optional for OSX"
+  },
+  "description": "Integrate with Unity Build Automation \n\nThis package provides services to build and distribute your applications.",
+  "dependencies": {
+    "com.unity.services.core": "1.16.0",
+    "com.unity.nuget.newtonsoft-json": "3.2.2",
+    "com.unity.collab-proxy": "2.11.3"
+  },
+  "relatedPackages": {
+    "com.unity.services.cloud-build.tests": "2.0.8"
+  },
+  "upmCi": {
+    "footprint": "546a58ad65632dd7eeb3e51c5b99091fe6afebbd"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.services.cloud-build@2.0/manual/index.html",
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/operate-services-sdk.git",
+    "type": "git",
+    "revision": "bb3fea04e068ec755ac932cbe8d628f231b4a617"
+  },
+  "_fingerprint": "235f37f57c39445615a669cad2e7b226415ff911"
+}
