@@ -155,7 +155,9 @@
     font-size: var(--type-h2);
     -unity-font-style: bold;
     color: var(--ink-1);
-    background-color: rgba(18, 23, 31, 0.98);
+    /* Clear, not a fill: the chrome art has rounded corners, and a fill behind it shows as square
+     * corners around them (Sam, 2026-09-28). Every state repeats it, as the sign-in buttons do. */
+    background-color: rgba(0, 0, 0, 0);
     border-width: 0;
     border-radius: 0;
     height: 68px;
@@ -168,10 +170,12 @@
     transition-timing-function: ease-out;
 }
 .mm-button:hover {
+    background-color: rgba(0, 0, 0, 0);
     -unity-background-image-tint-color: rgb(255, 255, 255);
     translate: 5px 0;
 }
 .mm-button:active {
+    background-color: rgba(0, 0, 0, 0);
     -unity-background-image-tint-color: rgb(192, 198, 207);
     translate: 2px 1px;
 }
