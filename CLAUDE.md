@@ -38,8 +38,9 @@ Read the code, the data and the tests; they cannot drift from themselves. Do not
 ## Where things are
 
 `src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx` — note `.slnx`, not `.sln`). `unity/Emberfall/` is the Unity project.
-`art/` and `art-pipeline/` hold source art and
-generated candidates.
+`art-pipeline/` holds source art and generated candidates, and is gitignored.
+`tooling/fonts/` holds variable font sources that `tooling/scripts/instance_font.py` cuts into
+the static fonts Unity ships, because Unity cannot set a variable font's axes.
 `tooling/scripts/` and `tools/ci/` hold automation.
 See `src/README.md` for the engine map.
 
