@@ -890,7 +890,7 @@ namespace Emberfall.Presentation
             switch (result.Failure)
             {
                 case AuthFailure.Network:
-                    return "No connection. Emberfall needs the internet to sign you in.";
+                    return "No connection. The Kingdom needs the internet to sign you in.";
                 case AuthFailure.NotConfigured:
                     return "This build has no sign-in service configured.";
                 case AuthFailure.NoSuchAccount:

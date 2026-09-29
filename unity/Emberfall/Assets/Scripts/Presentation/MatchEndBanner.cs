@@ -50,7 +50,7 @@ namespace Emberfall.Presentation
 
             var footer = MakeLabel(root.transform, "Return", new Vector3(0f, -1.85f, -0.01f), 1.75f,
                 new Color(0.72f, 0.75f, 0.82f));
-            footer.text = "Returning to Emberfall…";
+            footer.text = "Returning to the Kingdom…";
 
             root.AddComponent<MatchEndMenuReturn>();
             return root;
