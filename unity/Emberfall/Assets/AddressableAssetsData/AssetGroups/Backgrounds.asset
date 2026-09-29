@@ -41,7 +41,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 96d7a20afa5c4284b9b9d29525208531
-    m_Address: backgrounds/PackVault_AncientCache_Backdrop_v1
+    m_Address: backgrounds/PackVault_AncientCache_Backdrop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a283eda404745e4ae925067cad7f027
+    m_Address: backgrounds/Login_Backdrop
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -56,7 +61,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ca3ee2558301db441a5177be495d0043
-    m_Address: backgrounds/CharacterRoster_Backdrop_v1
+    m_Address: backgrounds/Ultimate_Melee_Backdrop
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

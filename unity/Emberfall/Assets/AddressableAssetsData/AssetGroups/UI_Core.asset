@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f233e8d0e7206d4a81b4965fd1e24a6
+    m_Address: ui/app_icon_adaptive_bg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0f3821d0f72546e7a2bb42cacb0b441a
     m_Address: ui/hero-frame
     m_ReadOnly: 0
@@ -27,11 +32,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 107716d18f80437382eca3d7fb4755da
     m_Address: ui/craft-loading-alchemy-ring-v1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8b69fccd400246058676dc4b2361b8a6
-    m_Address: ui/vault-loading-cache-seal
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -62,6 +62,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 467ef0cab3a3404db7b6336508fe1b72
     m_Address: ui/socket_stat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4987a7cc92704fb49aa1b02ad97b7dce
+    m_Address: ui/app_icon_adaptive_fg
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -102,6 +107,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 64e81dc0c85219242ab77fdd070c609e
     m_Address: ui/HeroPower_IronEmber
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6d133b261b356734ba03632d586991df
+    m_Address: ui/splash_orb_icon
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -150,6 +160,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8437deca02f1892499365a63266a6ef5
+    m_Address: ui/Orb_Confluence_Icon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 869fa2f9008b458b8167d3d9f872b596
     m_Address: ui/socket_gem
     m_ReadOnly: 0
@@ -157,6 +172,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 87810fcee28764547b60b5eee0696b9d
     m_Address: ui/splash_orb
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8aa77043ae5d46e0a7542e0c12cc4df9
+    m_Address: ui/neutral_hp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8b69fccd400246058676dc4b2361b8a6
+    m_Address: ui/vault-loading-cache-seal
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -227,6 +252,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: df41997c499025949bfe17a12747f50b
     m_Address: ui/night_hp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e005acad0f5ea3844bfe7e42567e0f6c
+    m_Address: ui/app_icon_1024
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
