@@ -1112,10 +1112,7 @@ namespace Emberfall.Presentation
                     _craftModal.ShowError(CraftError(reply.Status));
                     return;
                 }
-                bool synced = await RefreshCraftCollection(accessToken, ct);
-                if (!CraftIsCurrent(def, version, ct)) return;
                 ShowCraft(def, reply);
-                if (!synced) _craftModal.ShowError("Collection refresh failed.");
             }
             catch (Exception ex)
             {
