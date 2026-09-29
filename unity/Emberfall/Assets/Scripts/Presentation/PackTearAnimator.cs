@@ -43,10 +43,7 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class PackTearAnimator
     {
-        /// <summary>The beat schedule, in ms from the tear starting. The burst peaks between the
-        /// recoil and the split so it reads as the thing that pushed the pieces apart rather than a
-        /// flash afterwards.</summary>
-        private const int BurstMs = 120;
+        /// <summary>The beat schedule, in ms from the tear starting.</summary>
         private const int SplitMs = 180;
         private const int HandOffMs = 560;
 
@@ -111,13 +108,6 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            var burst = new VisualElement();
-            burst.AddToClassList("tear-burst");
-            burst.pickingMode = PickingMode.Ignore;
-
-            // Burst first so it sits UNDER both pieces: it is the light coming out of the pack, not a
-            // flash over it.
-            face.Add(burst);
             face.Add(top);
             face.Add(bottom);
 
@@ -126,7 +116,6 @@ namespace Emberfall.Presentation
             // moment they part. Cleared rather than faded because the pieces are already covering it.
             face.style.backgroundImage = StyleKeyword.None;
 
-            Schedule(face, () => burst.AddToClassList("tear-burst--fired"), BurstMs);
             Schedule(face, () =>
             {
                 top.AddToClassList("tear-half--parted");

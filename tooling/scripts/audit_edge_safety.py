@@ -171,9 +171,6 @@ ROOT_EXCEPTIONS = {
 }
 
 ELEMENT_INTERNAL = {
-    'tear-burst':
-        'non-interactive light burst parented to the tapped pack face by PackTearAnimator.Play; '
-        'its negative offsets expand around that face, not the screen',
     'tear-half':
         'non-interactive torn wrapper pieces parented to the tapped pack face by '
         'PackTearAnimator.Play; left/top are pack-local coordinates',

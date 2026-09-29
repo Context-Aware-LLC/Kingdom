@@ -90,9 +90,10 @@ class EdgeSafetyTests(unittest.TestCase):
 
     def test_tear_effect_declarations_match_the_pack_local_parenting(self):
         source = (REPO_ROOT / audit.SCRIPTS / 'Presentation/PackTearAnimator.cs').read_text(encoding='utf-8')
-        for child in ('burst', 'top', 'bottom'):
+        for child in ('top', 'bottom'):
             self.assertIn(f'face.Add({child});', source)
             self.assertIn(f'{child}.pickingMode = PickingMode.Ignore;', source)
+        self.assertNotIn('tear-burst', audit.ELEMENT_INTERNAL)
 
     def test_vault_count_declaration_matches_mini_local_parenting(self):
         source = (REPO_ROOT / audit.SCRIPTS / 'Presentation/PackVaultController.cs').read_text(encoding='utf-8')

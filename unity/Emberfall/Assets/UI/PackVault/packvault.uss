@@ -372,8 +372,7 @@
  * PackTearAnimator drives all of this by adding a modifier; there is no keyframe anywhere, because
  * USS has none — each beat is a transition on the base rule that a scheduled class toggle releases.
  * Read that class's remarks before changing a duration: the C# schedule and these transitions are
- * one clock, and moving only one half lands the burst after the split instead of between the recoil
- * and it.
+ * one clock, and moving only one half leaves the two baked edges visibly out of step.
  *
  * THE TORN PIECES ARE BAKED. PackWrapperBaker renders them, and the intact face, from one source
  * sprite across a shared procedural tear line, so files 4 and 5 of spec §6.1 were never art anybody
@@ -383,10 +382,7 @@
  * THE FOIL STRIP IS GONE (Sam, 2026-09-03). It was a flat placeholder band laid across the pack art
  * and it read as exactly that — a block of yellow over the picture. A strip only makes sense as a
  * thing you pull, and there is no pull gesture any more. If pack_tear_strip.png is ever drawn, it
- * belongs baked INTO the wrapper by the crimp shader, not painted over it by a rule here.
- *
- * RETIREMENT TRIGGER: when Assets/Art/VFX/Pack/fx_pack_burst.png lands, .tear-burst's glow becomes a
- * background-image on that same rule and this paragraph goes with it. */
+ * belongs baked INTO the wrapper by the crimp shader, not painted over it by a rule here. */
 
 /* The tile while it is coming apart. `overflow: hidden` is off so the pieces can travel past the
  * tile's own bounds — a tear clipped to the pack it came out of reads as a wipe. */
@@ -403,31 +399,6 @@
     transition-property: opacity, scale;
     transition-duration: 320ms, 320ms;
     transition-timing-function: ease-out, ease-out;
-}
-
-/* Behind both pieces, and picking-mode Ignore from script so it can never eat a gesture. Sized past
- * the tile on every side: a burst that stops at the pack's edge reads as a highlight. */
-.tear-burst {
-    position: absolute;
-    left: -25%;
-    right: -25%;
-    top: -25%;
-    bottom: -25%;
-    /* Clamped to a circle by UI Toolkit; a length rather than a percentage because the
-     * element has no intrinsic size of its own to resolve one against. */
-    border-radius: 400px;
-    background-color: rgba(255, 214, 148, 0);
-    opacity: 0;
-    scale: 0.4 0.4;
-    transition-property: opacity, scale, background-color;
-    transition-duration: 280ms, 280ms, 280ms;
-    transition-timing-function: ease-out, ease-out, ease-out;
-}
-
-.tear-burst--fired {
-    background-color: rgba(255, 214, 148, 0.42);
-    opacity: 1;
-    scale: 1.15 1.15;
 }
 
 /* NOT TWO HALVES, and the art is what says so. Spec §6.1 sizes pack_torn_top at 1024 × 640 and
