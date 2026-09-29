@@ -8,12 +8,13 @@
 #
 # Usage: pwsh tools/ci/build-android.ps1
 #        pwsh tools/ci/build-android.ps1 -PerfCapture
-#        pwsh tools/ci/build-android.ps1 -PlayRelease -VersionCode 2
+#        pwsh tools/ci/build-android.ps1 -PlayRelease
 #
 # -PlayRelease builds a Google Play AAB signed with the UPLOAD key instead of a debug APK. The
 # keystore lives outside the repo (default below); its password comes from
-# $env:EMBERFALL_UPLOAD_KEYSTORE_PASS or is prompted for, and is never written to disk. Pass a
-# -VersionCode above the last upload's: Play refuses a repeat, and the new code persists.
+# $env:EMBERFALL_UPLOAD_KEYSTORE_PASS or is prompted for, and is never written to disk. The
+# version and version code bump themselves (StoreVersionBump.cs); -VersionCode N overrides the
+# code when Play needs a specific one.
 #        pwsh tools/ci/build-android.ps1 -UnityPath "C:\path\to\Unity.exe"
 [CmdletBinding()]
 param(
@@ -66,9 +67,6 @@ if ($PlayRelease) {
         Write-Error 'No upload keystore password given.'
         exit 1
     }
-    if ($VersionCode -le 0) {
-        Write-Host "build-android: WARNING - no -VersionCode; the AAB keeps the project's current code, which Play refuses if it was already uploaded."
-    }
     if ($BUILD_DIRTY) {
         Write-Host 'build-android: WARNING - building a Play release from a dirty worktree.'
     }
@@ -117,8 +115,8 @@ if ($compileInputs.Count -eq 0) {
 }
 
 $compileBarrierUtc = [DateTime]::UtcNow
-foreach ($input in $compileInputs) {
-    [System.IO.File]::SetLastWriteTimeUtc($input.FullName, $compileBarrierUtc)
+foreach ($compileInput in $compileInputs) {
+    [System.IO.File]::SetLastWriteTimeUtc($compileInput.FullName, $compileBarrierUtc)
 }
 
 Write-Host "build-android: Unity   $UnityPath"

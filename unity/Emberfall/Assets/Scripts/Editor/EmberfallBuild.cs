@@ -159,6 +159,7 @@ namespace Emberfall.Editor
             string originalVersion = PlayerSettings.bundleVersion;
             bool originalFrameTimingStats = PlayerSettings.enableFrameTimingStats;
             bool originalAppBundle = EditorUserBuildSettings.buildAppBundle;
+            bool originalCustomKeystore = PlayerSettings.Android.useCustomKeystore;
             string originalKeystore = PlayerSettings.Android.keystoreName;
             string originalAlias = PlayerSettings.Android.keyaliasName;
             string outputPath = play != null ? PlayOutputPath : AndroidOutputPath;
@@ -258,9 +259,13 @@ namespace Emberfall.Editor
             {
                 // These values identify and enable the measurement build, but they are not
                 // project defaults. Restore them even when Addressables or IL2CPP fails.
-                PlayerSettings.bundleVersion = originalVersion;
+                // A Play build keeps the version StoreVersionBump gave it; only the perf
+                // capture's "+perf.<sha>" suffix is temporary.
+                if (play == null) PlayerSettings.bundleVersion = originalVersion;
                 PlayerSettings.enableFrameTimingStats = originalFrameTimingStats;
-                PlayerSettings.Android.useCustomKeystore = false;
+                // Back to whatever the Keystore Manager had, not to off: Sam signs store builds
+                // from the Build Profiles window with the upload key configured there.
+                PlayerSettings.Android.useCustomKeystore = originalCustomKeystore;
                 PlayerSettings.Android.keystoreName = originalKeystore;
                 PlayerSettings.Android.keyaliasName = originalAlias;
                 PlayerSettings.Android.keystorePass = "";
