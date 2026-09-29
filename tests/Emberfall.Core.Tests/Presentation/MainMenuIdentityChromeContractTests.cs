@@ -54,5 +54,35 @@ namespace Emberfall.Core.Tests.Presentation
                     "The menu should not load roster/deck data solely for removed chrome.");
             });
         }
+
+        [Test]
+        public void Main_menu_wordmark_is_outlined_vector_art()
+        {
+            string unityRoot = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string wordmarkPath = Path.Combine(
+                unityRoot, "Art", "UI", "MainMenu_Wordmark_KingdomOfBadIdeas.svg");
+            string wordmark = File.ReadAllText(wordmarkPath);
+            string metadata = File.ReadAllText(wordmarkPath + ".meta");
+            string uxml = File.ReadAllText(Path.Combine(
+                unityRoot, "UI", "MainMenu", "MainMenuScreen.uxml"));
+            string styles = File.ReadAllText(Path.Combine(
+                unityRoot, "UI", "MainMenu", "mainmenu.uss"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(wordmark, Does.Not.Contain("<text"),
+                    "The brand must remain outlined art rather than runtime font rendering.");
+                Assert.That(metadata, Does.Contain("svgType: 3"),
+                    "Unity 6000.5 serializes VectorImage as SVG type 3.");
+                Assert.That(metadata, Does.Not.Contain("svgType: 4"),
+                    "SVG type 4 selects UISVGImage and fails this UI Toolkit background import.");
+                Assert.That(uxml, Does.Contain("class=\"mm-wordmark-art\""));
+                Assert.That(uxml, Does.Not.Contain("text=\"KINGDOM\""));
+                Assert.That(styles, Does.Contain(
+                    "MainMenu_Wordmark_KingdomOfBadIdeas.svg"));
+                Assert.That(styles, Does.Contain(
+                    "-unity-background-scale-mode: scale-to-fit"));
+            });
+        }
     }
 }

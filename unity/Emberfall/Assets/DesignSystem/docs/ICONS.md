@@ -174,7 +174,7 @@ Re-import in Unity and the entire design system's tint cascade starts working. (
 After Unity imports an SVG, the Inspector's importer should look like:
 
 ```
-SVG Type: Texture (3)
+SVG Type: Vector Image (3)
 Texture Size: 256 (square)
 Filter Mode: Bilinear
 Sample Count: 4 (anti-aliasing)
@@ -191,17 +191,24 @@ If your icon renders blocky or corner-clipped, double-check:
 
 The repo ships pre-built `.svg.meta` files for every icon with the right settings, so they import correctly on first project open. If you import a fresh SVG, Unity uses its own defaults — verify the importer settings in the Inspector match the table above.
 
-## Why not VectorImage / Sprite?
+## SVG type values in Unity 6000.5
 
-Both are Unity-side options for `com.unity.vectorgraphics`:
+The serialized number is an enum value, not a stable descriptive label. The mapping below was
+verified against `UnityEditor.VectorGraphicsModule.dll` from Unity 6000.5.1f1. In particular,
+`svgType: 4` is **UI SVG Image**, not VectorImage; using it for a UI Toolkit background can enter
+`SVGImporter.GenerateUGUISpriteAsset`, produce a null `svgImage`, and leave the USS with a
+`DefaultAsset` instead of an image.
 
-| Type | Works with `background-image` | Tints via `-unity-background-image-tint-color` | Notes |
-| --- | --- | --- | --- |
-| **Texture** (svgType: 3) | ✓ | ✓ | What we use. Rasterised at import time. |
-| Sprite (svgType: 0) | Partial | ✗ | UI Toolkit accepts Sprites for `background-image`, but the tint property doesn't apply uniformly. |
-| VectorImage (svgType: 4) | ✓ | ✗ | The vector data preserves original colours; tint is ignored. |
+| Serialized value | Unity 6000.5 enum | UI Toolkit `background-image` use |
+| --- | --- | --- |
+| `0` | VectorSprite | Sprite-oriented; not the design-system default. |
+| `1` | TexturedSprite | Sprite-oriented; not the design-system default. |
+| `2` | Texture2D | Raster output. |
+| **`3`** | **VectorImage** | The design-system and outlined-wordmark mode. |
+| `4` | UISVGImage | UGUI-oriented; do not use for USS backgrounds. |
 
-We use **Texture** so a single SVG asset can render in every component colour the design system needs — primary, danger, gold, on-accent — by tinting only.
+Use **VectorImage (`svgType: 3`)** for multicolour outlined artwork and UI Toolkit backgrounds.
+Because vector colours are authored in the SVG, do not rely on runtime image tinting for that mode.
 
 ## Renaming
 
