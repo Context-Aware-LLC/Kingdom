@@ -66,7 +66,11 @@
     flex-shrink: 0;
     align-items: stretch;
     justify-content: center;
-    padding: 0;
+    /* The bottom padding reserves the band the vault dock occupies (bottom 60 + 104 tall + a
+       gap), so the centred brand and menu cannot slide under it. Padding does not move the
+       dock itself, because it is absolute. Before this, the three-line KINGDOM / of / BAD IDEAS
+       wordmark pushed the Leaderboards row about 49px under the vault. */
+    padding: 0 0 184px 0;
     background-color: rgba(8, 11, 16, 0);
     opacity: 1;
     translate: 0 0;
