@@ -91,30 +91,16 @@
        screen gets. See the budget note on .mm-menu (#249). */
     margin-bottom: var(--space-8);
 }
-/* 72px HARDCODED was the last survivor of the pre-refDpi-160 authoring: on the 914 x 411 panel
-   of the day, 'EMBERFALL' at 72 plus 8 of tracking ran about 57% of the width and into the edge
-   chrome on both sides. A token now, so it moves with the rest of the type scale.
-
-   THE SCREEN-CLASS RUN THIS ONCE JOINED IS GONE (#349) — there is one type scale, not three. The
-   reason to keep it a token is unchanged: a raw px here is a number nothing else can find. */
-.mm-wordmark {
-    font-size: 58px;
-    -unity-font-style: bold;
-    color: rgb(244, 239, 228);
-    letter-spacing: 6px;
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(11, 14, 19, 0.9);
-}
-/* The small "of" between KINGDOM and BAD IDEAS, stacked the way the website sets it
-   (kingdomofbadideas.com). Negative margins pull the two big lines in around it. */
-.mm-wordmark-of {
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-    color: rgb(238, 168, 67);
-    margin-top: -10px;
-    margin-bottom: -10px;
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(11, 14, 19, 0.9);
+/* One outlined VectorImage replaces the former three live-text labels. Its 1600:620 viewBox is
+ * rendered with contain semantics, so the whole mark remains visible while PanelSettings scales
+ * the authored 1080px height to the device. The fixed 568px command column makes the mark 568x220
+ * authored px at every supported landscape aspect ratio; only the panel's device scale changes. */
+.mm-wordmark-art {
+    width: 100%;
+    height: 220px;
+    flex-shrink: 0;
+    background-image: url("/Assets/Art/UI/MainMenu_Wordmark_KingdomOfBadIdeas.svg");
+    -unity-background-scale-mode: scale-to-fit;
 }
 .mm-tagline {
     font-size: var(--type-h2);

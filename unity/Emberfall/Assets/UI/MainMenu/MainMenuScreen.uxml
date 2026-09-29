@@ -25,9 +25,7 @@
         </ui:VisualElement>
         <ui:VisualElement name="command" class="mm-command emb-edge">
             <ui:VisualElement name="brand" class="mm-brand">
-                <ui:Label text="KINGDOM" class="mm-wordmark"/>
-                <ui:Label text="of" class="mm-wordmark-of"/>
-                <ui:Label text="BAD IDEAS" class="mm-wordmark"/>
+                <ui:VisualElement name="wordmark" tooltip="Kingdom of Bad Ideas" picking-mode="Ignore" class="mm-wordmark-art"/>
             </ui:VisualElement>
             <ui:VisualElement name="menu" class="mm-menu">
                 <ui:Button name="btn-find-game" text="Find Game" class="mm-button mm-button--cta"/>
