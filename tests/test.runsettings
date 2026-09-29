@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Wired in by tests/Directory.Build.props, so a bare `dotnet test` uses it.
+
+  ConsoleOut 0: the in-process server writes its startup posture to stderr ("[rewards] no entitlement
+  ledger configured", "[packs] ... is unset") on every boot, and the adapter relayed each line as a
+  build warning: hundreds of them, enough to scroll a failure off the top of the terminal (Sam,
+  2026-09-28). A failing test still carries its own output in its result.
+-->
+<RunSettings>
+  <NUnit>
+    <ConsoleOut>0</ConsoleOut>
+  </NUnit>
+</RunSettings>
