@@ -964,13 +964,13 @@
     background-image: url("/Assets/Art/Backgrounds/Login_Backdrop.png");
     -unity-background-scale-mode: scale-and-crop;
 }
-/* The plate hugs its content (flex-grow 0) so the backdrop shows below it. Nearly clear at 0.25
+/* The plate hugs its content (flex-grow 0) so the backdrop shows below it. Half clear at 0.5
  * (Sam, 2026-09-28; it was 0.88), so the loose text below carries a shadow to stay legible over
  * the bright backdrop. */
 .account-create-screen #signin-view,
 .account-create-screen #name-view {
     flex-grow: 0;
-    background-color: rgba(11, 14, 19, 0.25);
+    background-color: rgba(11, 14, 19, 0.5);
     border-width: 2px;
     border-color: rgba(240, 138, 60, 0.35);
     border-radius: 18px;
