@@ -1215,10 +1215,6 @@
     -unity-slice-scale: 0.5px;
     color: rgb(250, 230, 193);
 }
-/* The ember nine-slice owns the Filters button's surface; leave its transparent corners clear. */
-.col-button--filters.chrome-button--primary {
-    background-color: transparent;
-}
 .chrome-button--secondary {
     background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
     -unity-slice-left: 64;
@@ -1226,12 +1222,6 @@
     -unity-slice-top: 36;
     -unity-slice-bottom: 36;
     -unity-slice-scale: 0.5px;
-}
-/* The Decks CTA used to keep `.col-button--decks`' gold background beneath this slate
- * nine-slice. Its outer pixels are transparent, so the underlay escaped only at the four corners
- * and read as stray gold caps. The sprite owns the whole visible surface; keep its underlay clear. */
-.col-button--decks.chrome-button--secondary {
-    background-color: transparent;
 }
 .chrome-button:hover {
     -unity-background-image-tint-color: rgb(255, 255, 255);
@@ -1257,7 +1247,6 @@
 }
 .deck-drawer__manage.chrome-button {
     min-height: 52px;
-    background-color: rgba(16, 13, 10, 0.98);
     color: rgb(250, 230, 193);
 }
 
@@ -1600,7 +1589,6 @@
 }
 .craft-action.chrome-button--primary,
 .craft-action.chrome-button--primary:hover {
-    background-color: rgba(16, 13, 10, 0.98);
     color: rgb(250, 230, 193);
 }
 .collection-deck-drag-preview {
@@ -1650,6 +1638,41 @@
 
 .craft-action.chrome-button--secondary,
 .craft-action.chrome-button--secondary:hover {
-    background-color: rgba(21, 28, 38, 0.98);
     color: var(--ink-1);
+}
+
+/* CLEAR CORNERS (Sam, 2026-09-29; the same treatment as `.mm-button` and the shop's buy buttons).
+ * Every chrome-art button on this screen has rounded transparent corners, and any fill behind the
+ * art -- Unity's default button grey, `.col-button`'s surface, `.craft-action`'s accent, a chip's
+ * mana -- shows through them as square caps. Clear in EVERY state, because each of those rules
+ * repaints on :hover/:disabled. Last in the file and at three-class specificity so it outranks
+ * the per-button fills above without anyone having to remember them. No radius on the
+ * chrome-buttons either: a pill radius clips the art's own corners. */
+.chrome-button.chrome-button--primary,
+.chrome-button.chrome-button--primary:hover,
+.chrome-button.chrome-button--primary:active,
+.chrome-button.chrome-button--primary:focus,
+.chrome-button.chrome-button--primary:disabled,
+.chrome-button.chrome-button--secondary,
+.chrome-button.chrome-button--secondary:hover,
+.chrome-button.chrome-button--secondary:active,
+.chrome-button.chrome-button--secondary:focus,
+.chrome-button.chrome-button--secondary:disabled {
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+}
+.collection .db-chip,
+.collection .db-chip:hover,
+.collection .db-chip:active,
+.collection .db-chip:focus,
+.collection .db-chip:disabled,
+.collection .db-chip.db-chip--on,
+.collection .db-chip.db-chip--on:hover,
+.collection .db-chip.db-chip--on:active,
+.collection .db-chip.db-chip--on:focus,
+.deck-choice,
+.deck-choice:hover,
+.deck-choice:active,
+.deck-choice:focus {
+    background-color: rgba(0, 0, 0, 0);
 }
