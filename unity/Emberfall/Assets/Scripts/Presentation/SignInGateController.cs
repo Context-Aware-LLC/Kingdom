@@ -418,7 +418,7 @@ namespace Emberfall.Presentation
             _returning = false;
             _sentTo = "";
 
-            if (_title != null) _title.text = "Welcome to Emberfall";
+            if (_title != null) _title.text = "Welcome to the Kingdom";
             if (_help != null) _help.text = "Have you played before?";
 
             Display(_choice, true);
@@ -448,8 +448,8 @@ namespace Emberfall.Presentation
                 _help.text = returning
                     ? "Sign in with the email and password you used before. No password? We can email " +
                       "you a code instead."
-                    : "Emberfall needs an account before you can play. Enter your email and we will " +
-                      "send you a six-digit code.";
+                    : "The Crown requires your name on file before you may play. Enter your email " +
+                      "and we will send you a six-digit code.";
 
             Display(_choice, false);
             Display(_emailField, true);
@@ -924,6 +924,10 @@ namespace Emberfall.Presentation
         {
             if (_primary == null) return;
             _primary.text = _step == Step.Email ? "Email me a code" : "Sign in";
+            // Ember chrome only on the code step (Sam, 2026-09-28). While Google is on screen it is
+            // the one ember button and everything else is slate; the code step hides Google, so
+            // "Sign in" becomes the call to action there.
+            _primary.EnableInClassList("signin-btn--ember", _step == Step.Code);
         }
 
         private void SetError(string message)

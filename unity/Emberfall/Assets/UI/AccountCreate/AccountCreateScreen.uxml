@@ -47,7 +47,7 @@
         <ui:VisualElement name="signin-view">
             <ui:VisualElement class="mm-modal__columns mm-row">
                 <ui:VisualElement class="mm-modal__pitch">
-                    <ui:Label name="signin-title" text="Create your account" class="mm-modal__title"/>
+                    <ui:Label name="signin-title" text="Welcome to the Kingdom" class="mm-modal__title"/>
                     <ui:Label name="signin-help" text="The Crown requires your name on file before you may play. Enter your email and we will send you a six-digit code." class="mm-modal__help"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="mm-modal__form">
@@ -60,15 +60,15 @@
                          there was no way to say "I have been here before", so every launch was
                          treated as a first one. -->
                     <ui:VisualElement name="signin-choice" class="mm-modal__actions">
-                        <ui:Button name="btn-signin-new" text="I am new here" class="mm-modal__button mm-modal__button--cta"/>
-                        <ui:Button name="btn-signin-returning" text="I have an account" class="mm-modal__button"/>
+                        <ui:Button name="btn-signin-new" text="I am new here" class="mm-modal__button signin-btn"/>
+                        <ui:Button name="btn-signin-returning" text="I have an account" class="mm-modal__button signin-btn"/>
                     </ui:VisualElement>
-                    <ui:TextField name="signin-email" class="mm-modal__field"/>
-                    <ui:TextField name="signin-password" password="true" class="mm-modal__field" style="display: none;"/>
-                    <ui:TextField name="signin-code" max-length="6" class="mm-modal__field mm-signin__code" style="display: none;"/>
+                    <ui:TextField name="signin-email" placeholder-text="Email address" keyboard-type="EmailAddress" class="mm-modal__field"/>
+                    <ui:TextField name="signin-password" password="true" placeholder-text="Password" class="mm-modal__field" style="display: none;"/>
+                    <ui:TextField name="signin-code" max-length="6" placeholder-text="6-digit code" keyboard-type="NumberPad" class="mm-modal__field mm-signin__code" style="display: none;"/>
                     <ui:VisualElement class="mm-modal__actions">
-                        <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button" style="display: none;"/>
-                        <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button mm-modal__button--cta"/>
+                        <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button signin-btn" style="display: none;"/>
+                        <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button signin-btn"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
@@ -80,7 +80,7 @@
                      step, or that step is a dead end for exactly the players it was built for. -->
                 <ui:Button name="btn-signin-code-instead" text="Email me a code instead" class="mm-signin__resend" style="display: none;"/>
                 <ui:Label name="signin-or" text="or" class="mm-signin__or"/>
-                <ui:Button name="btn-signin-google" text="Continue with Google" class="mm-modal__button mm-signin__google"/>
+                <ui:Button name="btn-signin-google" text="Continue with Google" class="mm-modal__button signin-btn signin-btn--ember mm-signin__google"/>
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -96,9 +96,9 @@
                     <ui:Label name="name-help" text="This is the name other players see. Choose carefully — it is permanent. To change it later you would have to contact support." class="mm-modal__help"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="mm-modal__form">
-                    <ui:TextField name="name-field" max-length="16" class="mm-modal__field"/>
+                    <ui:TextField name="name-field" max-length="16" placeholder-text="Display name (up to 16 letters)" class="mm-modal__field"/>
                     <ui:VisualElement class="mm-modal__actions">
-                        <ui:Button name="btn-name-confirm" text="Continue" class="mm-modal__button mm-modal__button--cta"/>
+                        <ui:Button name="btn-name-confirm" text="Continue" class="mm-modal__button signin-btn signin-btn--ember"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
@@ -107,8 +107,8 @@
                  a Q() from the root will reach — which is any depth, but the names are the contract. -->
             <ui:VisualElement class="mm-row mm-row--secondary">
                 <ui:Label name="name-password-help" text="Optional: set a password so you can sign back in without checking your email." class="mm-modal__help" style="display: none;"/>
-                <ui:TextField name="name-password" password="true" class="mm-modal__field" style="display: none;"/>
-                <ui:TextField name="name-password-confirm" password="true" class="mm-modal__field" style="display: none;"/>
+                <ui:TextField name="name-password" password="true" placeholder-text="Password (optional)" class="mm-modal__field" style="display: none;"/>
+                <ui:TextField name="name-password-confirm" password="true" placeholder-text="Confirm password" class="mm-modal__field" style="display: none;"/>
                 <ui:Label name="name-error" text=" " class="mm-modal__error"/>
             </ui:VisualElement>
         </ui:VisualElement>

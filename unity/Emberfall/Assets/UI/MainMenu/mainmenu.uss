@@ -946,3 +946,109 @@
 .account-create-screen .mm-row--secondary > * {
     margin-right: var(--space-3);
 }
+
+/* ---------- Sign-in restyle (Sam, 2026-09-28) ----------
+ * The Kingdom of Bad Ideas pass: a painted backdrop, a dark plate that keeps the form legible over
+ * it, larger type, and chrome buttons. The layout is unchanged: still two rows, still pinned to
+ * the top above the IME (see the TOP-JUSTIFIED note above).
+ *
+ * TYPE SIZES ARE LOCAL, NOT TOKENS, ON PURPOSE. The shared type scale is authored against the
+ * 1080 px panel, where 18 px is about 7 dp on a phone. Sam judged everything below the title too
+ * small to read, so this screen sets its own sizes rather than moving the scale under every screen.
+ *
+ * Buttons: slate by default, ember for the one call to action on screen. That is Google while it is
+ * visible, "Sign in" on the code step (SignInGateController toggles the ember modifier there), and
+ * Continue on the name step. */
+.account-create-screen {
+    background-color: var(--surface-0);
+    background-image: url("/Assets/Art/Backgrounds/Login_Backdrop.png");
+    -unity-background-scale-mode: scale-and-crop;
+}
+/* The plate hugs its content (flex-grow 0) so the backdrop shows below it. */
+.account-create-screen #signin-view,
+.account-create-screen #name-view {
+    flex-grow: 0;
+    background-color: rgba(11, 14, 19, 0.88);
+    border-width: 2px;
+    border-color: rgba(240, 138, 60, 0.35);
+    border-radius: 18px;
+    padding: var(--space-6) var(--space-8);
+}
+.account-create-screen .mm-modal__help {
+    font-size: 30px;
+    color: rgb(217, 210, 195);
+}
+.account-create-screen .mm-modal__error {
+    font-size: 26px;
+}
+.account-create-screen .mm-modal__field {
+    font-size: 34px;
+}
+.account-create-screen .mm-modal__field > .unity-base-text-field__input {
+    min-height: 76px;
+    padding: 12px 20px;
+    background-color: rgba(8, 11, 16, 0.92);
+    border-width: 2px;
+    border-color: rgba(239, 228, 207, 0.22);
+    border-radius: 10px;
+}
+.account-create-screen .mm-modal__field:focus > .unity-base-text-field__input {
+    border-color: rgb(240, 138, 60);
+}
+/* The helper text inside an empty field. Unity adds this modifier while the placeholder shows. */
+.account-create-screen .unity-base-text-field__input--placeholder {
+    color: rgba(169, 177, 187, 0.85);
+}
+.account-create-screen .mm-signin__code {
+    font-size: 44px;
+}
+.account-create-screen .mm-signin__resend {
+    font-size: 26px;
+}
+.account-create-screen .mm-signin__or {
+    font-size: 28px;
+}
+.account-create-screen .signin-btn {
+    height: 96px;
+    min-width: 260px;
+    padding: 0 var(--space-8);
+    margin-left: var(--space-3);
+    font-size: 30px;
+    -unity-font-style: bold;
+    color: rgb(236, 231, 220);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.8px;
+    -unity-background-image-tint-color: rgb(222, 227, 234);
+    transition-property: -unity-background-image-tint-color, translate, opacity;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.account-create-screen .signin-btn:hover {
+    background-color: rgba(0, 0, 0, 0);
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.account-create-screen .signin-btn:active {
+    translate: 0 1px;
+    -unity-background-image-tint-color: rgb(192, 198, 207);
+}
+.account-create-screen .signin-btn:disabled {
+    opacity: 0.45;
+}
+.account-create-screen .signin-btn--ember {
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_primary_ember.png");
+    -unity-slice-top: 34;
+    -unity-slice-bottom: 34;
+    color: rgb(255, 226, 179);
+    -unity-background-image-tint-color: rgb(255, 236, 205);
+}
+.account-create-screen .mm-signin__google {
+    min-width: 440px;
+    margin-left: 0;
+}
