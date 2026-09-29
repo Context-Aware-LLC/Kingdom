@@ -3,6 +3,26 @@
 These project rules apply to every agent working in this repository. Role-specific instructions
 may narrow an agent's scope or forbid publishing; when they do, follow the stricter rule.
 
+## Product identity and tone
+
+- **The public game is _Kingdom of Bad Ideas_**, at `kingdomofbadideas.com`. `Bad Ideas` is the
+  app-icon label (`productName`) and `com.contextaware.kobi` is the package id. `Emberfall` remains
+  the internal codename and `EMBERFALL` remains a set id; do not casually rename handles, ids,
+  `artId`s, namespaces, repository paths, or other internal identifiers to match the public name.
+- **The world is ridiculous and the performance is deadpan.** The tonal ingredients are original
+  anachronism, medieval bureaucracy, peasant politics, and absurdity treated with complete
+  seriousness. Gameplay remains strategically serious even when the setting, presentation, SFX,
+  flavor, or an occasional separately approved mechanic supplies slapstick.
+- **The inspiration is a tone, never borrowed material.** Do not reproduce or closely echo a
+  recognizable Monty Python character, scene, line, prop, or joke. If a gag only works because the
+  audience recognizes somebody else's bit, cut it. Original visual and verbal comedy must stand on
+  its own.
+- **Retone deliberately, not indiscriminately.** Audit names rather than blanket-renaming them;
+  regenerate art selectively when a changed concept actually needs it. A display-name change never
+  changes a card handle, id, or `artId`. Unless Sam gives a task-specific scope, follow the staged
+  pass in `docs/dev-docs/specs/tone-kingdom-of-bad-ideas.md`: tone guide, CLOCKWRIGHT pilot,
+  class-by-class rollout, NEUTRAL last, then global copy after the voice has been proven.
+
 Before choosing a workspace or integration path, identify the execution mode:
 
 - **Interactive** — Sam is directly participating in the conversation, assigning the work, and
