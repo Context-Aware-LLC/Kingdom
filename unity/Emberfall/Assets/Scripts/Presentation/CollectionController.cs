@@ -191,6 +191,49 @@ namespace Emberfall.Presentation
         /// which is fine: the point is that consecutive visits differ, not that the sequence is
         /// remembered across launches.</summary>
         private static int _plateRotation;
+        private static LoadingOverlay _pendingLoadingTransition;
+
+        /// <summary>
+        /// Warm the exact plate the next Collection visit will use without advancing the rotation.
+        /// MainMenu calls this while its own boot plate still covers the screen, moving synchronous
+        /// Addressables work away from the later button press.
+        /// </summary>
+        public static void PrewarmNextLoadingPlate()
+        {
+            (string plate, string orb) = PeekPlate();
+            LoadingOverlay.Prewarm(plate, orb);
+        }
+
+        /// <summary>
+        /// Create the Collection plate in the source scene, then detach it so the destination can
+        /// adopt the same visible object. The caller must let it paint once before starting the
+        /// asynchronous scene load.
+        /// </summary>
+        public static LoadingOverlay BeginLoadingTransition(Camera camera)
+        {
+            if (_pendingLoadingTransition != null) return _pendingLoadingTransition;
+            (string plate, string orb) = NextPlate();
+            LoadingOverlay loading = LoadingOverlay.Create(camera, plate, orb);
+            if (loading == null) return null;
+            loading.PreserveAcrossSceneLoad();
+            _pendingLoadingTransition = loading;
+            return loading;
+        }
+
+        /// <summary>Undo a source-side transition when asynchronous navigation could not start.</summary>
+        public static void CancelLoadingTransition(LoadingOverlay loading)
+        {
+            if (_pendingLoadingTransition == loading) _pendingLoadingTransition = null;
+            if (loading != null) Destroy(loading.gameObject);
+        }
+
+        private static LoadingOverlay TakePendingLoadingTransition(Camera camera)
+        {
+            LoadingOverlay loading = _pendingLoadingTransition;
+            _pendingLoadingTransition = null;
+            loading?.AttachToCamera(camera);
+            return loading;
+        }
 
         private void OnEnable()
         {
@@ -420,8 +463,12 @@ namespace Emberfall.Presentation
         /// </summary>
         private void ShowLoadingPlate()
         {
-            (string plate, string orb) = NextPlate();
-            _loading = LoadingOverlay.Create(Camera.main, plate, orb);
+            _loading = TakePendingLoadingTransition(Camera.main);
+            if (_loading == null)
+            {
+                (string plate, string orb) = NextPlate();
+                _loading = LoadingOverlay.Create(Camera.main, plate, orb);
+            }
             if (_loading == null) return;   // no camera: the wall just paints in as it bakes
             _loading.OnFadedOut += RevealScreen;
             _loadingSince = Time.realtimeSinceStartup;
@@ -471,6 +518,12 @@ namespace Emberfall.Presentation
             return row;
         }
 
+        private static (string Plate, string Orb) PeekPlate()
+        {
+            if (PlateRotation.Length == 0) return (LoadingOverlay.DefaultPlate, null);
+            return PlateRotation[_plateRotation % PlateRotation.Length];
+        }
+
         private void OnFirstBakeCompleted()
         {
             if (_wall != null) _wall.BakePassCompleted -= OnFirstBakeCompleted;
@@ -511,8 +564,9 @@ namespace Emberfall.Presentation
             _craftCancel?.Dispose();
             _craftCancel = null;
             if (_wall != null) _wall.BakePassCompleted -= OnFirstBakeCompleted;
-            // Parented to the camera, so leaving the scene takes it. Leaving only the SCREEN —
-            // the document disabled under a live camera — would otherwise strand it on top.
+            // A normal plate is camera-parented; a menu-owned transition is a persistent root that
+            // follows the camera. Destroy either explicitly so disabling only this document cannot
+            // strand the plate on top of another screen.
             if (_loading != null)
             {
                 _loading.OnFadedOut -= RevealScreen;

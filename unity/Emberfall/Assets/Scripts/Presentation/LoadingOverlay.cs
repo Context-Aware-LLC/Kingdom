@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -21,7 +22,9 @@ namespace Emberfall.Presentation
     ///                    surface. Reconnecting mid-match is HUD scope, not this.
     ///
     /// All overlays anchor to screen center and size from screen HEIGHT (spec §5) — the
-    /// plate is height-anchored so vertical content never crops; width flexes per aspect.
+    /// plate is height-anchored so vertical content never crops; width flexes per aspect. Most are
+    /// camera children; a source-scene transition may temporarily become a persistent root and
+    /// follow the active camera until its destination adopts it.
     /// </summary>
     public sealed class LoadingOverlay : MonoBehaviour
     {
@@ -44,6 +47,14 @@ namespace Emberfall.Presentation
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
         private static readonly int MainTexId = Shader.PropertyToID("_MainTex");
 
+        // Addressables.LoadAssetAsync(...).WaitForCompletion is intentionally confined to a
+        // prewarmable cache. Collection primes its next plate while the menu's boot cover is still
+        // visible, so clicking Collection never starts a blocking bundle read before the transition
+        // has painted. These assets are global presentation furniture and already remained resident
+        // for the process lifetime because their Addressables handles were never released; making
+        // that lifetime explicit avoids repeating WaitForCompletion and gives prewarm real meaning.
+        private static readonly Dictionary<string, Object> AssetCache = new();
+
         private SpriteRenderer _plate;
         private string _plateName = DefaultPlate;
         private string _orbName;                  // null = keep M_LoadingOrb's own _MainTex
@@ -59,6 +70,9 @@ namespace Emberfall.Presentation
         private bool _failed;
         private float _fadeOutT = -1f;            // <0 = not fading yet
         private bool _destroyed;
+        private bool _preservedAcrossScenes;
+        private Camera _followCamera;
+        private float _cameraDistance;
 
         /// <summary>Fires once the fade-out finishes, right before this destroys itself. Screen
         /// Space Overlay UI always paints over this camera-parented rig regardless of its own
@@ -98,10 +112,59 @@ namespace Emberfall.Presentation
             float dist = cam.nearClipPlane + 1f;
             go.transform.localPosition = new Vector3(0f, 0f, dist);
             var overlay = go.AddComponent<LoadingOverlay>();
+            overlay._followCamera = cam;
+            overlay._cameraDistance = dist;
             overlay._plateName = string.IsNullOrWhiteSpace(plateName) ? DefaultPlate : plateName;
             overlay._orbName = string.IsNullOrWhiteSpace(orbName) ? null : orbName;
             overlay.Build(cam, dist);
             return overlay;
+        }
+
+        /// <summary>
+        /// Resolve every asset needed by a later <see cref="Create"/> while another loading cover is
+        /// already on screen. The created renderers are still per-transition; only immutable source
+        /// assets and the shared orb material are warmed here.
+        /// </summary>
+        public static void Prewarm(string plateName = DefaultPlate, string orbName = null)
+        {
+            string resolvedPlate = string.IsNullOrWhiteSpace(plateName) ? DefaultPlate : plateName;
+            LoadAsset<Texture2D>($"Assets/Art/Backgrounds/Loading/{resolvedPlate}.png",
+                $"backgrounds/{resolvedPlate}");
+            if (!string.IsNullOrWhiteSpace(orbName))
+                LoadAsset<Texture2D>($"Assets/Art/Orbs/{orbName}.png", $"orbs/{orbName}");
+            LoadAsset<Sprite>("Assets/Art/UI/Loading_Wordmark_KingdomOfBadIdeas.svg",
+                "ui/Loading_Wordmark_KingdomOfBadIdeas");
+            MaterialCatalog.Get("M_LoadingOrb");
+        }
+
+        /// <summary>
+        /// Detach this camera-space rig before its source scene is unloaded. Its world pose still
+        /// faces the source camera while the asynchronous load runs; the destination calls
+        /// <see cref="AttachToCamera"/> during activation to hand it to the new camera.
+        /// </summary>
+        public void PreserveAcrossSceneLoad()
+        {
+            if (_destroyed || _preservedAcrossScenes) return;
+            transform.SetParent(null, true);
+            _preservedAcrossScenes = true;
+            DontDestroyOnLoad(gameObject);
+        }
+
+        /// <summary>Continue a preserved transition on the destination scene's camera.</summary>
+        public void AttachToCamera(Camera cam)
+        {
+            if (_destroyed || cam == null) return;
+            _followCamera = cam;
+            _cameraDistance = cam.nearClipPlane + 1f;
+            if (!_preservedAcrossScenes)
+            {
+                transform.SetParent(cam.transform, false);
+                transform.localPosition = new Vector3(0f, 0f, _cameraDistance);
+                transform.localRotation = Quaternion.identity;
+                transform.localScale = Vector3.one;
+                return;
+            }
+            FollowCamera();
         }
 
         /// <summary>The match has real state on the board (first released snapshot). Idempotent;
@@ -278,6 +341,19 @@ namespace Emberfall.Presentation
             }
         }
 
+        private void LateUpdate()
+        {
+            if (_preservedAcrossScenes && _followCamera != null) FollowCamera();
+        }
+
+        private void FollowCamera()
+        {
+            transform.SetPositionAndRotation(
+                _followCamera.transform.TransformPoint(0f, 0f, _cameraDistance),
+                _followCamera.transform.rotation);
+            transform.localScale = Vector3.one;
+        }
+
         private static float EaseOutCubic(float x) => 1f - (1f - x) * (1f - x) * (1f - x);
 
         private void OnDestroy()
@@ -288,6 +364,8 @@ namespace Emberfall.Presentation
 
         private static T LoadAsset<T>(string editorPath, string address) where T : Object
         {
+            if (AssetCache.TryGetValue(address, out Object cached) && cached is T typed)
+                return typed;
 #if UNITY_EDITOR
             var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(editorPath);
 #else
@@ -296,6 +374,8 @@ namespace Emberfall.Presentation
 #endif
             if (asset == null)
                 Debug.LogWarning($"[LoadingOverlay] asset '{address}' not found — element skipped.");
+            else
+                AssetCache[address] = asset;
             return asset;
         }
     }

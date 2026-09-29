@@ -49,17 +49,35 @@ namespace Emberfall.Presentation
         /// </summary>
         public static void Go(string sceneName)
         {
-            if (!Application.CanStreamedLevelBeLoaded(sceneName))
-            {
-                Debug.LogError(
-                    $"[Nav] Scene '{sceneName}' is not in the build list, so this cannot do " +
-                    "anything. Run Emberfall/Build/Sync Scene List — and note that menu item does " +
-                    "not reach EditorBuildSettings.asset on disk, so hand-edit it to match.");
-                return;
-            }
-
-            Debug.Log($"[Nav] {SceneManager.GetActiveScene().name} → {sceneName}");
+            if (!CanLoad(sceneName)) return;
+            LogTransition(sceneName);
             SceneManager.LoadScene(sceneName);
+        }
+
+        /// <summary>
+        /// Start a non-blocking scene load after the caller has painted any source-scene transition
+        /// surface it owns. The operation may outlive the caller when its source scene is destroyed.
+        /// </summary>
+        public static AsyncOperation GoAsync(string sceneName)
+        {
+            if (!CanLoad(sceneName)) return null;
+            LogTransition(sceneName);
+            return SceneManager.LoadSceneAsync(sceneName);
+        }
+
+        private static bool CanLoad(string sceneName)
+        {
+            if (Application.CanStreamedLevelBeLoaded(sceneName)) return true;
+            Debug.LogError(
+                $"[Nav] Scene '{sceneName}' is not in the build list, so this cannot do " +
+                "anything. Run Emberfall/Build/Sync Scene List — and note that menu item does " +
+                "not reach EditorBuildSettings.asset on disk, so hand-edit it to match.");
+            return false;
+        }
+
+        private static void LogTransition(string sceneName)
+        {
+            Debug.Log($"[Nav] {SceneManager.GetActiveScene().name} → {sceneName}");
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using Emberfall.Core.Collection;
@@ -58,6 +59,7 @@ namespace Emberfall.Presentation
         private Rect _lastSafeArea;
         private int _lastSafeAreaScreenWidth = -1;
         private int _lastSafeAreaScreenHeight = -1;
+        private bool _collectionTransitioning;
 
         private const float TopRailSafeAreaMarginPercent = 2f;
         private static readonly string StarterPackId = OnboardingGrant.StarterPack().Id;
@@ -287,6 +289,11 @@ namespace Emberfall.Presentation
         /// only runs once <see cref="LoadingOverlay.OnFadedOut"/> fires.</para></summary>
         private void FinishBootstrap()
         {
+            // LoadingOverlay's player path uses blocking Addressables completion. Pay that cost for
+            // the next Collection plate now, while this screen's own boot plate is still covering
+            // the menu, rather than on the later button press the player expects to answer at once.
+            CollectionController.PrewarmNextLoadingPlate();
+
             if (_loading != null)
             {
                 _loading.OnFadedOut += RevealMenu;
@@ -586,10 +593,40 @@ namespace Emberfall.Presentation
         /// </summary>
         private void OnCollection()
         {
+            if (_collectionTransitioning) return;
             MatchDeckSelection.Cancel();
             CollectionController.ReturnScene = ScreenNav.MainMenu;
             CollectionController.PendingDeckId = "";
-            ScreenNav.Go(ScreenNav.Collection);
+            StartCoroutine(OpenCollection());
+        }
+
+        private IEnumerator OpenCollection()
+        {
+            _collectionTransitioning = true;
+            LoadingOverlay transition = CollectionController.BeginLoadingTransition(Camera.main);
+            if (transition == null)
+            {
+                _collectionTransitioning = false;
+                ScreenNav.Go(ScreenNav.Collection);
+                yield break;
+            }
+
+            // The plate is world-space and the menu is Screen Space Overlay, so the source UI must
+            // stop painting before the plate can be seen. Yielding one frame is load-bearing: it
+            // gives Unity a real render/present boundary before scene activation starts doing work.
+            _root.SetEnabled(false);
+            _root.style.opacity = 0f;
+            yield return null;
+
+            AsyncOperation operation = ScreenNav.GoAsync(ScreenNav.Collection);
+            if (operation != null) yield break;
+
+            // Build-list validation failed. Do not strand a persistent plate over a menu that never
+            // left; return the source screen to its exact interactive state.
+            CollectionController.CancelLoadingTransition(transition);
+            _root.style.opacity = 1f;
+            _root.SetEnabled(true);
+            _collectionTransitioning = false;
         }
 
         /// <summary>Store → <c>Shop</c>. It rendered as an overlay on this screen until

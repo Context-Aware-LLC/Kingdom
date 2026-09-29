@@ -62,6 +62,11 @@ namespace Emberfall.Presentation
         private const float TileDragThreshold = 10f;
         private const float RowSafetyMargin = 2f;
         private const float LastRowSafetyMargin = 2f;
+        // EditorArtProvider resolves inline, and every completed request performs a synchronous GPU
+        // readback. Submitting the entire pool in one scheduled callback therefore starves the very
+        // loading animation that is meant to cover this work. Two captures per panel tick keeps the
+        // eager all-faces-before-reveal contract while returning control to rendering frequently.
+        private const int MaxBakeRequestsPerTick = 2;
 
         private sealed class CardRow
         {
@@ -500,9 +505,7 @@ namespace Emberfall.Presentation
         {
             _poolBakeReady = false;
             _bakeGeneration++;
-            if (_poolBakeQueued) return;
-            _poolBakeQueued = true;
-            _list.schedule.Execute(BakePool);
+            QueueCurrentPoolBake();
         }
 
         private void BakePool()
@@ -517,8 +520,37 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            for (int i = 0; i < _pool.Count; i++)
+            BakePoolBatch(generation, 0);
+        }
+
+        private void BakePoolBatch(int generation, int start)
+        {
+            if (generation != _bakeGeneration)
+            {
+                QueueCurrentPoolBake();
+                return;
+            }
+
+            int end = Mathf.Min(_pool.Count, start + MaxBakeRequestsPerTick);
+            for (int i = start; i < end; i++)
                 _baker.Bake(_pool[i], _ => CountBake(generation));
+
+            if (generation != _bakeGeneration) return;
+            if (end >= _pool.Count) return;
+
+            _poolBakeQueued = true;
+            _list.schedule.Execute(() =>
+            {
+                _poolBakeQueued = false;
+                BakePoolBatch(generation, end);
+            }).ExecuteLater(1);
+        }
+
+        private void QueueCurrentPoolBake()
+        {
+            if (_poolBakeQueued) return;
+            _poolBakeQueued = true;
+            _list.schedule.Execute(BakePool);
         }
 
         private void CountBake(int generation)
