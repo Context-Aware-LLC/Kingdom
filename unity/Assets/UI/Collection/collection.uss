@@ -983,17 +983,17 @@
     flex-direction: row;
     width: 1091px;
     max-width: 100%;
-    height: 97px;
+    height: 99px;
 }
 .class-tab_art {
     flex-grow: 0;
     flex-shrink: 0;
     /* THE ONLY SIZING PROPERTY -- no separate `width` (see `#class-tab-bar`'s comment above for why
      * carrying one was the bug). 99, up from 89 (Sam, 2026-09-08: "+10 width"). */
-    flex-basis: 99px;
+    flex-basis: 100px;
     /* +4dp top margin below = 97, this strip's height. Grow this and the strip's own height
      * together. */
-    height: 93px;
+    height: 95px;
     /* 25, not 15 (Sam, 2026-09-08: "+10 to the left margin"). See `#class-tab-emberward` below --
      * the first tab overrides this to 0 so the gutter reads as BETWEEN tabs, not before the first
      * one too, which is what centering the box actually requires. */
