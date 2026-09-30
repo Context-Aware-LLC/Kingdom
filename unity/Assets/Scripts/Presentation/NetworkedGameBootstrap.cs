@@ -449,7 +449,7 @@ namespace Emberfall.Presentation
             if (inputRouter != null)
             {
                 var endTurnGo = new GameObject("EndTurnButton");
-                endTurnGo.transform.position = new Vector3(6.3f, 0f, 0f);
+                endTurnGo.transform.position = EndTurnButtonView.BoardPosition;
                 var endTurn = endTurnGo.AddComponent<EndTurnButtonView>();
                 endTurn.Init(localId, inputRouter);
                 matchRunner.OnStateUpdated += endTurn.OnStateUpdated;
@@ -458,10 +458,10 @@ namespace Emberfall.Presentation
             // ── Visible turn clock (E2 minimal slice; C-G1-2a) ──────────────────────
             // Binds to the seam's OnTurnTimer (main-thread-marshaled by MainThreadMatchSession).
             // Server-driven: the turn clock is a server timer, so it exists only on this path.
-            // (It is why the deleted in-process hot-seat boot never had one.) Above the end-turn
-            // button.
+            // (It is why the deleted in-process hot-seat boot never had one.) The Royal Council
+            // board gives the clock its own crown-fuse medallion on the left.
             var clockGo = new GameObject("TurnClock");
-            clockGo.transform.position = new Vector3(6.3f, 1.2f, 0f);
+            clockGo.transform.position = TurnClockView.BoardPosition;
             var turnClock = clockGo.AddComponent<TurnClockView>();
             turnClock.Init();
             _view.OnTurnTimer += turnClock.OnTurnTimer;

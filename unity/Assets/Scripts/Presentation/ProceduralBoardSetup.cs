@@ -63,107 +63,26 @@ namespace Emberfall.Presentation
         private const float P1Sign =  1f;
 
         // ── §1.1 bottom-edge budget, as |coordinates| for seat 0 ────────────────────────
-        // Signs are applied in BuildSeat: x is negated for the hero side, positive for the
-        // rail/deck side, then multiplied by the seat sign.
+        // The Royal Council board keeps both circular satellites on the portrait's INBOARD side
+        // (Sam, 2026-09-30). The pair is rotationally symmetric by seat: local power upper-right
+        // and weapon lower-right; opponent power lower-left and weapon upper-left. This removes the
+        // old outboard ring that competed with the frame edge and the board's timer furniture.
         //
-        // ONE RING EACH SIDE OF THE PORTRAIT (Sam, 2026-09-04, twice: "these need to be outside of
-        // the hero frame not top of it", then "should be on opposite sides of the hero frame").
-        // They used to straddle the hero's centre line at ±0.57, which put both frames (1.32 wide
-        // at the time) wholly inside a 2.16-wide plate and drew them across the lower half of the
-        // picture. Each now clears the plate's edge but for a SocketOverlap: metal touches metal,
-        // no art covers art.
-        //
-        // THE THREE NUMBERS ARE ONE SOLVE, not three choices:
-        //     SocketOffsetX = PlateW/2 + FrameSize/2 - SocketOverlap = 1.08 + 0.755 - 0.34
-        //     HeroX         = 8.90 - SocketOffsetX - FrameSize/2     (the design edge)
-        // so HeroClusterOuterEdge is exactly DeviceLayout.DesignHalfWidth, which is what
-        // SelfCheck assertion 1 pins. The outboard socket owns that edge.
-        //
-        // WHAT IT COSTS. The exposed width of an outboard ring is taken one-for-one out of the
-        // board row's outermost slot, so the hero cluster and a full row compete for the same
-        // screen. THE TABLE THAT USED TO BE HERE — outermost-minion edge against the portrait
-        // oval, per minion count — WAS COMPUTED IN WORLD X AND WAS THEREFORE MEANINGLESS; see the
-        // depth note on HeroX below for why, and for the measured screen-space figures that
-        // replace it. Do not reinstate a world-x table here.
-        //
-        // Raising SocketOverlap moves the hero back out — but NOT, as this block
-        // claimed until 2026-09-04, burying the ring at the same rate.
-        //
-        // THE FIRST ~0.15 OF OVERLAP IS FREE, because SocketOffsetX is solved against the sprite
-        // QUAD and both rings are drawn well inside theirs. Measured off the alpha channel at the
-        // ring's widest point (mid-row), quad-local:
-        //
-        //     hero-frame.png    -0.4590 .. +0.4658   (the plate essentially fills its quad)
-        //     hero-power.png    -0.3406 .. +0.3743
-        //     weapon-frame.png  -0.4958 .. +0.3343   (cut wider, and seated left in its quad)
-        //
-        // So at overlap 0.15 the rings did not touch the plate at all: 0.134 of clear air on the
-        // power side and 0.157 on the weapon side, ~12 px on a 1080p phone, which is the gap Sam
-        // saw. Overlap spent below those figures buys hero-x back for nothing. Above them it does
-        // start eating the ring, at 1.0 per 1.0.
-        //
-        // The asymmetry is the ART, not this file — one dial cannot close both gaps exactly, and
-        // the weapon side is the binding one. Re-cutting either ring moves these numbers; they come
-        // from the alpha bbox, so re-measure rather than adjusting by eye.
-        //
-        // The other lever, if a full board matters more than the rings do: BoardRowGeometry
-        // .SlotSpacing, tightening the row instead of moving the hero. The 1.62 -> 1.363 figure
-        // once quoted here was solved in world x and does not survive the correction below;
-        // re-derive it in screen space before quoting it. NOT TAKEN either way — it reshapes every
-        // board in the game to fix a hero frame, and that is Sam's call, not this file's.
-        //
-        // RETIREMENT TRIGGER: HeroPlateView.PlateW and HeroSocketsView.FrameSize are inputs to the
-        // solve above. Change either and re-solve HeroX in the same commit; DeviceLayout.SelfCheck
-        // fails on the mismatch rather than letting it ship.
-        // 0.15 -> 0.34 on 2026-09-04, paying for HeroSocketsView.FrameSize 1.32 -> 1.51 (Sam:
-        // bigger, and touching the hero frame). 0.157 of it closes the transparent gap above and
-        // the rest is real overlap, so the drawn rings now meet the plate: -0.001 on the weapon
-        // side, -0.025 on the power side. HeroX did not have to move FOR THIS CHANGE — the pair was
-        // solved to hold HeroClusterOuterEdge where it then was, 7.8800. It has since moved for a
-        // different reason and the edge is 8.9000; SelfCheck asserts whichever it currently is.
-        private const float SocketOverlap = 0.34f;
-        internal const float SocketOffsetX =
-            HeroPlateView.PlateW * 0.5f + HeroSocketsView.FrameSize * 0.5f - SocketOverlap;
-        // A LITERAL, though it is 8.90 - SocketOffsetX - FrameSize/2 to four places. Deriving it
-        // from DesignHalfWidth would make DeviceLayout.SelfCheck's "design half-width == the widest
-        // thing the board builds" assertion tautological — it would pass by construction after any
-        // resize instead of reporting that the solve needs redoing.
-        //
-        // 5.63 -> 6.65 on 2026-09-04, SPENDING SPACE THAT WAS ALWAYS THERE. Everything above about
-        // the row's outermost slot was an argument about a budget the orthographic camera imposed,
-        // and that camera was retired by f121a591 on 2026-08-28. Under the live perspective rig the
-        // design box is a FLOOR on what must be visible, not a ceiling on what may exist, so the
-        // fix for the seven-minion collision is to move the cluster OUT rather than to shrink the
-        // row or bury the rings. 6.65 is where the cluster sat before fbd2dfcd moved it in to solve
-        // this same collision the other way.
-        //
-        // DO NOT SOLVE THIS IN WORLD X. The board is drawn in PERSPECTIVE and the hero sits at a
-        // different y from the minion row, so the two are at different distances from the camera
-        // and screen position is x/depth, not x. Comparing world-space extents between them — which
-        // this comment did until it was corrected on 2026-09-04 — silently answers the wrong
-        // question, and it is wrong in OPPOSITE DIRECTIONS for the two seats:
-        //
-        //     P0 (local)     row depth 20.318   hero depth 19.913   hero is NEARER -> projects WIDER
-        //     P1 (opponent)  row depth 21.124   hero depth 21.530   hero is FURTHER -> projects NARROWER
-        //
-        // So identical world geometry clears on our side and collides on theirs. Measured at
-        // 2400x1080 with seven minions, outermost card corner against hero-cluster corner:
-        //
-        //     P0   ring clear (on Y — it leaves the row's band entirely)   portrait clear 16 px
-        //          hero plate OVERLAP 12 px
-        //     P1   ring OVERLAP 103 px    hero plate OVERLAP 28 px    portrait OVERLAP 2 px
-        //
-        // The opponent's side is worse for two further reasons, both of which are constants that
-        // deliberately do NOT take the seat sign: SocketOffsetX (so the INBOARD ring is the hero
-        // power for us and the WEAPON for them, and the weapon art is cut 0.12 wider on that edge)
-        // and SocketDrop (so their rings ride toward the battlefield, into the row's y band, while
-        // ours ride toward the bottom edge and out of it). Both are documented as deliberate below.
-        //
-        // BOARD SLOT COUNT IS NOT AFFECTED AND NEVER WAS — BoardSlotCount is 7 for both seats and
-        // slot x is not seat-signed. This is a drawing overlap, not a capacity difference.
+        // The hero-power ring retains the approved 0.34-unit metal-on-metal overlap. The weapon is
+        // farther inboard and toward the outer screen edge; its 1.73 x-offset and 1.00 y-offset put
+        // the weapon's left-heavy alpha just across the portrait trim while keeping the ring's
+        // outer vertical edge at 4.585, just inside the 4.60 design edge. The two rings are 1.568
+        // units centre-to-centre, so their 1.51 quads remain distinct click targets.
+        private const float HeroPowerOverlap = 0.34f;
+        internal const float HeroPowerOffsetX =
+            HeroPlateView.PlateW * 0.5f + HeroSocketsView.FrameSize * 0.5f - HeroPowerOverlap;
+        internal const float WeaponOffsetX = 1.73f;
+
+        // 5.63 -> 6.65 on 2026-09-04 under the live perspective rig. The board row and portrait
+        // clear in screen space; do not re-solve this using world-x extents.
         internal const float HeroX = 6.65f;
         internal const float HeroClusterOuterEdge =
-            HeroX + SocketOffsetX + HeroSocketsView.FrameSize * 0.5f;
+            HeroX + HeroPlateView.PlateW * 0.5f;
 
         // Two columns of five mana orbs stand inboard of the deck pile. The 0.31-unit gap from
         // the grid's outer edge to the pile's inner edge keeps them distinct, and is preserved
@@ -184,15 +103,10 @@ namespace Emberfall.Presentation
         private const float Baseline = 4.45f; // frame crown/bottom remains 0.15 inside y +/-4.6
         internal const float HeroY = Baseline - HeroPlateView.PlateH * 0.5f;
 
-        // How far below the hero's centre each ring rides. Unchanged when they moved out from
-        // under the portrait ("right where they are", Sam), so they still straddle its lower third
-        // at |y| 2.86..4.18. That band is also what keeps the INBOARD ring clear of the board row,
-        // which reaches |y| 2.479 (RowY + CardH/2) — 0.38 of clearance, and raising this spends it.
-        //
-        // Screen-down is deliberate rather than multiplied by the seat sign: every portrait is
-        // upright, so the opponent's rings ride toward the battlefield while the local ones ride
-        // toward the bottom edge.
-        internal const float SocketDrop = 0.69f;
+        // The power sits toward the battlefield; the optional weapon sits toward the outer screen
+        // edge. Multiplying both by ySign rotates the complete cluster 180 degrees for the opponent.
+        internal const float HeroPowerTowardCenterY = 0.55f;
+        internal const float WeaponTowardEdgeY = 1.00f;
         internal const float ManaGridY = 3.35f;
         private const float DeckY      = 3.53f;  // a 1.3-wide card-proportioned pile (1.83
                                                  // tall) on the baseline. DeckPileView renders
@@ -266,28 +180,12 @@ namespace Emberfall.Presentation
 
             seat.HeroAnchor = MakeAnchor($"{prefix}_Hero",
                 new Vector3(xSign * HeroX, ySign * HeroY, 0f));
-            // SCREEN-RIGHT / SCREEN-LEFT, NOT INBOARD / OUTBOARD. The x offset is deliberately NOT
-            // multiplied by xSign, for the same reason SocketDrop is not multiplied by ySign: the
-            // sprites are upright and unmirrored, so their left and right are screen-absolute while
-            // the seats are mirrored (p0 xSign -1, p1 xSign +1).
-            //
-            // WHICH SIDE IS WHICH IS DECIDED BY THE ART, not by taste. The two rings are cut as a
-            // MIRRORED PAIR: the hero power's molten wreath sits on its lower-RIGHT with its rivets
-            // on the left, the weapon's blades sit on its LEFT with its rivets on the right. The
-            // rings now sit one to each side of the portrait, and power screen-RIGHT with weapon
-            // screen-LEFT is the arrangement that flares both ornaments AWAY from it and turns both
-            // sets of rivets — which carry the numerals — back toward it. Swap them and the
-            // weapon's blades cut straight across the plate. Rendered both ways 2026-09-03, when
-            // the two frames still abutted under the portrait and the argument was about which of
-            // them the other's ornament crossed; the conclusion survived the 2026-09-04 split
-            // because it never depended on the gap, only on which way each ornament points.
-            //
-            // RETIREMENT TRIGGER: if either socket ring is ever re-cut symmetrical, or mirrored
-            // per seat, this stops being a constraint and the offset can go back to xSign.
             seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower",
-                new Vector3(xSign * HeroX + SocketOffsetX, ySign * HeroY - SocketDrop, 0f));
+                new Vector3(xSign * (HeroX - HeroPowerOffsetX),
+                            ySign * (HeroY - HeroPowerTowardCenterY), 0f));
             seat.WeaponAnchor = MakeAnchor($"{prefix}_Weapon",
-                new Vector3(xSign * HeroX - SocketOffsetX, ySign * HeroY - SocketDrop, 0f));
+                new Vector3(xSign * (HeroX - WeaponOffsetX),
+                            ySign * (HeroY + WeaponTowardEdgeY), 0f));
             seat.ManaTrayAnchor = MakeAnchor($"{prefix}_ManaTray",
                 new Vector3(xSign * -ManaGridX, ySign * ManaGridY, 0f));
             seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -DeckX,     ySign * DeckY,      0f));

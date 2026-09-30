@@ -257,8 +257,11 @@ def main() -> int:
     lift = const(SCRIPTS / "HandCardHover.cs", "Lift", "HandCardHover.Lift")
     hover_scale = const(SCRIPTS / "HandCardHover.cs", "Scale", "HandCardHover.Scale")
     hero_x = const(setup, "HeroX", "ProceduralBoardSetup.HeroX")
-    socket_x = const(setup, "SocketOffsetX", "ProceduralBoardSetup.SocketOffsetX")
     socket_size = const(sockets, "FrameSize", "HeroSocketsView.FrameSize")
+    hero_plate_w = const(hero, "PlateW", "HeroPlateView.PlateW")
+    power_overlap = const(setup, "HeroPowerOverlap", "ProceduralBoardSetup.HeroPowerOverlap")
+    power_x = hero_plate_w / 2 + socket_size / 2 - power_overlap
+    weapon_x = const(setup, "WeaponOffsetX", "ProceduralBoardSetup.WeaponOffsetX")
     deck_x = const(setup, "DeckX", "ProceduralBoardSetup.DeckX")
     mana_x = const(setup, "ManaGridX", "ProceduralBoardSetup.ManaGridX")
     baseline = const(setup, "Baseline", "ProceduralBoardSetup.Baseline")
@@ -291,7 +294,9 @@ def main() -> int:
     # ── 2. the horizontal budget ────────────────────────────────────────────────
     design_h = ortho                      # half-height, world units
     elements = [
-        ("hero cluster outer edge", hero_x + socket_x + socket_size / 2),
+        ("hero portrait outer edge", hero_x + hero_plate_w / 2),
+        ("hero-power outer edge", hero_x - power_x + socket_size / 2),
+        ("weapon outer edge", hero_x - weapon_x + socket_size / 2),
         ("deck pile outer edge", deck_x + pile_w / 2),
         ("mana grid outer edge", mana_x + rail_w / 2),
         ("board row outer edge", (slot_n - 1) * 0.5 * slot_gap + card_w / 2),
@@ -310,7 +315,7 @@ def main() -> int:
     print()
     print(f"  DESIGN HALF-WIDTH        = {design_w:.4f} world units  ({elements[0][0]})")
     print(f"  MINIMUM SUPPORTED ASPECT = {design_w:.4f} / {design_h:.4f} = {min_aspect:.5f}")
-    print(f"                             narrower than this and the hero cluster leaves the screen.")
+    print(f"                             narrower than this and the widest bottom-row element leaves the screen.")
     print()
 
     # ── 2b. the vertical budget ───────────────────────────────────────
@@ -634,9 +639,9 @@ def main() -> int:
 
     # ── 9. verdict ──────────────────────────────────────────────────────────────
     print("== 9. WHAT THIS ESTABLISHES " + "=" * 66)
-    print(f"  A. Supported landscape aspect range: {min_aspect:.4f} .. {plate_aspect:.4f}")
-    print(f"     (16:9 = {16/9:.4f} is IN, by {(design_h*16/9-design_w)*ppu:.0f} px per side;")
-    print(f"      16:10 = {1.6:.4f} and 4:3 = {4/3:.4f} are OUT — the hero cluster clips.)")
+    print(f"  A. Orthographic-reference aspect range: {min_aspect:.4f} .. {plate_aspect:.4f}")
+    print(f"     (16:9 = {16/9:.4f} is OUT, by {abs((design_h*16/9-design_w)*ppu):.0f} px per side;")
+    print(f"      16:10 = {1.6:.4f} and 4:3 = {4/3:.4f} are OUT — the bottom-row furniture clips.)")
     hd_ppu = 720 / (2 * design_h)
     print(f"  B. Supported short edge: 1080 px. A 720p HD+ panel gives a "
           f"{hand_w*hd_ppu:.0f} px hand card and a body")

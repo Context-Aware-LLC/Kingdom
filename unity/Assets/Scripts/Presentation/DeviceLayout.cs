@@ -8,7 +8,7 @@ namespace Emberfall.Presentation
     /// budgets derived from them. The live perspective rig consumes these bounds; the original
     /// orthographic safe-area solve remains as a deterministic reference and compatibility path.
     ///
-    /// <para>The stable fact is the logical design box: height 9.2 and width 15.76 world units.
+    /// <para>The stable fact is the logical design box: height 9.2 and width 17.8 world units.
     /// Camera fitting may change projected scale, but gameplay anchors and clearance checks stay
     /// expressed against that one box.</para>
     ///
@@ -33,16 +33,15 @@ namespace Emberfall.Presentation
         public const float DesignHalfHeight = 4.6f;
 
         /// <summary>
-        /// Half the world width the bottom row actually needs, in world units. Set by the
-        /// widest element of the seat cluster: the outboard hero socket, whose edge is
-        /// <c>ProceduralBoardSetup.HeroClusterOuterEdge</c> 8.90. The deck pile is now pinned to
-        /// the same edge; the narrower portrait is deliberately inset between its two sockets.
+        /// Half the world width the bottom row actually needs, in world units. Set by the deck
+        /// pile's outer edge at 8.90. The Royal Council layout puts both hero satellites inboard,
+        /// so <c>ProceduralBoardSetup.HeroClusterOuterEdge</c> is now the narrower portrait edge.
         ///
         /// <para>7.88 -> 8.90 on 2026-09-04. Under the live perspective rig this is a FLOOR on
         /// what must be visible, not a ceiling on what may exist, so widening it does not shrink
         /// anything on screen — the fit stays at its <c>CompositionRetreat</c> floor at every
-        /// aspect the game ships to. What it buys is room for the hero cluster and the mana rail
-        /// to stop overlapping the minion row.</para>
+        /// aspect the game ships to. What it buys is room for the deck pile and mana rail to stop
+        /// overlapping the minion row.</para>
         ///
         /// <para>THE REAL CEILING IS THE BACKDROP ART, NOT THE VIEWPORT. Past
         /// <c>MaxAspect * DesignHalfHeight</c> = 10.1996 the arena plate stops and bare camera
@@ -69,8 +68,8 @@ namespace Emberfall.Presentation
         /// <para>Under the live rig <c>BoardCameraRig.ApplySafeArea</c> fits the eight corners of
         /// the design box by RETREATING, so the box is a FLOOR on what must be visible rather than
         /// a ceiling on what may exist — and the fit does not leave its <c>CompositionRetreat</c>
-        /// floor until aspect 1.295, narrower than 4:3. Measured half-width at the bottom row:
-        /// 8.43 at 4:3, 11.24 at 16:9, 14.04 at 20:9, against this box's 7.88. Run
+        /// floor until aspect 1.465. Measured half-width at the bottom row: 9.23 at 4:3,
+        /// 11.24 at 16:9, 14.04 at 20:9, against this box's 8.90. Run
         /// <c>tooling/scripts/board_camera_fit.py</c>; it reads these constants and prints the
         /// solve.</para>
         ///
@@ -322,9 +321,9 @@ namespace Emberfall.Presentation
             ok &= Line(sb, manaEdgeY <= DesignHalfHeight + 0.001f,
                 $"mana grid edge |y| {manaEdgeY:F3} <= design edge {DesignHalfHeight:F2}");
 
-            // 1c. The enlarged local sockets intentionally consume the remaining vertical
-            //     budget, but must never cross the safe-area design edge.
-            float socketEdgeY = ProceduralBoardSetup.HeroY + ProceduralBoardSetup.SocketDrop
+            // 1c. The lower local weapon intentionally consumes the remaining vertical budget,
+            //     but must never cross the safe-area design edge.
+            float socketEdgeY = ProceduralBoardSetup.HeroY + ProceduralBoardSetup.WeaponTowardEdgeY
                                 + HeroSocketsView.FrameSize * 0.5f;
             ok &= Line(sb, socketEdgeY <= DesignHalfHeight + 0.001f,
                 $"local socket edge |y| {socketEdgeY:F3} <= design edge {DesignHalfHeight:F2}");

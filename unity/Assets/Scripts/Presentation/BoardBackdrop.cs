@@ -4,10 +4,11 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// Spawns the full-board backdrop plate behind every play element.
-    /// The master (tooling/scripts/build_board_master.py) is a 16:9 plate whose
-    /// decorated ruin ring sits at the 16:9 frame, extended with mirrored bleed to
-    /// the 20:9 span (±10.2 world units at ortho 4.6, hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1) — so
-    /// every supported landscape aspect crops it and none letterboxes. There is no
+    /// The master (tooling/scripts/build_board_master.py) spans the complete 20:9
+    /// board-art contract (±10.2 world units at ortho 4.6,
+    /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1),
+    /// either authored directly at that ratio or extended from a legacy 16:9 plate.
+    /// Every supported landscape aspect crops it and none letterboxes. There is no
     /// portrait orientation. Swapping the board art is overwriting
     /// BoardPlate_Master.png; nothing here changes.
     /// </summary>

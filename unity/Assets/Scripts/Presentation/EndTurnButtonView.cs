@@ -12,6 +12,9 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class EndTurnButtonView : MonoBehaviour
     {
+        /// <summary>Royal Council seal-press landing plate at centre-right.</summary>
+        public static readonly Vector3 BoardPosition = new(6.3f, 0f, 0f);
+
         // Menu chrome, ember on your turn and slate on theirs (BoardButtonChrome). Was a flat
         // green/grey quad at 1.30 x 0.52; enlarged with the chrome (Sam, 2026-09-30).
         private const float ButtonW = 2.40f;

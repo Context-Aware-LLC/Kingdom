@@ -21,6 +21,9 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class TurnClockView : MonoBehaviour
     {
+        /// <summary>Royal Council crown-fuse warning medallion at centre-left.</summary>
+        public static readonly Vector3 BoardPosition = new(-6.3f, 0.6f, 0f);
+
         private static readonly Color NormalColor = new Color(0.86f, 0.88f, 0.95f);
         private static readonly Color RopeColor   = new Color(0.90f, 0.25f, 0.22f);
         private static readonly Color NormalPlate = new Color(0.12f, 0.14f, 0.19f);
