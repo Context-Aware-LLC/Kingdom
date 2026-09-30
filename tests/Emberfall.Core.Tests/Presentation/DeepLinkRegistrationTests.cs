@@ -11,7 +11,7 @@ namespace Emberfall.Core.Tests.Presentation
     /// <para><b>This has already shipped broken once, and nothing noticed.</b> On 2026-09-01 commit
     /// <c>20341326</c> ("possible uss system and collection screen edits") deleted
     /// <c>Assets/Plugins/</c> entirely, through git's RENAME DETECTION — the diff reads
-    /// <c>Assets/{Plugins.meta =&gt; DesignSystem.meta}</c>, because a new folder's <c>.meta</c> is
+    /// <c>Assets/{Plugins.meta =&gt;}</c>, because a new folder's <c>.meta</c> is
     /// tiny near-identical YAML and git paired it with the old one. Nothing in that commit's message
     /// or file list reads as a deletion.</para>
     ///
