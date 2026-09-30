@@ -14,6 +14,8 @@ namespace Emberfall.Presentation
     {
         /// <summary>Royal Council seal-press landing plate at centre-right.</summary>
         public static readonly Vector3 BoardPosition = new(6.3f, 0f, 0f);
+        public static readonly Vector2 ArtworkUv =
+            new(4091f / 4612f, 1f - 902f / 2080f);
 
         // Menu chrome, ember on your turn and slate on theirs (BoardButtonChrome). Was a flat
         // green/grey quad at 1.30 x 0.52; enlarged with the chrome (Sam, 2026-09-30).

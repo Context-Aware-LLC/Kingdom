@@ -327,16 +327,15 @@ namespace Emberfall.Presentation
             }
         }
 
-        /// <summary>Centre of the play area, derived from the scene rather than hard-coded: the
-        /// two hero anchors are mirrored about the origin (ProceduralBoardSetup places them at
-        /// ±HeroX, ±HeroY), so their midpoint is the point between the two board rows however the
-        /// layout is retuned.</summary>
+        /// <summary>Centre of the play area, derived from the middle board-slot anchors. Hero
+        /// fixtures are intentionally asymmetric in the Royal Council artwork, so their midpoint
+        /// is no longer the battlefield centre.</summary>
         private Vector3? ResolveCentrePosition()
         {
             if (boardAnchors == null || _state == null || _state.Players.Length < 2) return null;
 
-            Transform a = boardAnchors.HeroAnchor(_state.Players[0].Id);
-            Transform b = boardAnchors.HeroAnchor(_state.Players[1].Id);
+            Transform a = boardAnchors.AnchorFor(_state.Players[0].Id, Zone.Board, 3);
+            Transform b = boardAnchors.AnchorFor(_state.Players[1].Id, Zone.Board, 3);
             if (a == null || b == null) return null;
 
             return (a.position + b.position) * 0.5f;

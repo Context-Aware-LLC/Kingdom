@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Emberfall.Presentation
@@ -9,8 +10,9 @@ namespace Emberfall.Presentation
     /// hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1),
     /// either authored directly at that ratio or extended from a legacy 16:9 plate.
     /// Every supported landscape aspect crops it and none letterboxes. There is no
-    /// portrait orientation. Swapping the board art is overwriting
-    /// BoardPlate_Master.png; nothing here changes.
+    /// portrait orientation. Swapping the board art preserves the runtime address, but a composition
+    /// that moves painted UI furniture must also update the measured artwork UVs registered by
+    /// <c>ProceduralBoardSetup</c>, <c>EndTurnButtonView</c> and <c>TurnClockView</c>.
     /// </summary>
     public static class BoardBackdrop
     {
@@ -36,6 +38,46 @@ namespace Emberfall.Presentation
         private static Transform s_instance;
         private static SpriteRenderer s_renderer;
 
+        private readonly struct ArtworkAnchor
+        {
+            public readonly Transform Target;
+            public readonly Vector2 Uv;
+            public readonly float ForegroundZ;
+
+            public ArtworkAnchor(Transform target, Vector2 uv, float foregroundZ)
+            {
+                Target = target;
+                Uv = uv;
+                ForegroundZ = foregroundZ;
+            }
+        }
+
+        // UI fixtures in the generated board are part of the texture, while the camera fits and
+        // cover-scales that texture per device. Their live transforms therefore cannot be stable
+        // world constants. Keep the authored UV and re-project it onto the gameplay plane after
+        // every camera/backdrop fit.
+        private static readonly List<ArtworkAnchor> ArtworkAnchors = new();
+
+        public static void RegisterArtworkAnchor(
+            Transform target,
+            Vector2 artworkUv,
+            float foregroundZ = 0f)
+        {
+            if (target == null) return;
+
+            for (int i = ArtworkAnchors.Count - 1; i >= 0; i--)
+            {
+                if (ArtworkAnchors[i].Target == null || ArtworkAnchors[i].Target == target)
+                    ArtworkAnchors.RemoveAt(i);
+            }
+
+            ArtworkAnchors.Add(new ArtworkAnchor(
+                target,
+                new Vector2(Mathf.Clamp01(artworkUv.x), Mathf.Clamp01(artworkUv.y)),
+                foregroundZ));
+            AlignArtworkAnchors(Camera.main);
+        }
+
         /// <summary>
         /// Rescale the plate to span <paramref name="visibleHeight"/> world units, matching
         /// whatever orthographicSize SafeAreaCamera solved for the device's safe area (EF-062).
@@ -46,6 +88,7 @@ namespace Emberfall.Presentation
             if (s_instance == null || visibleHeight <= 0f) return;
             float k = visibleHeight / VisibleHeight;
             s_instance.localScale = new Vector3(k, k, 1f);
+            AlignArtworkAnchors(Camera.main);
         }
 
         /// <summary>
@@ -90,10 +133,45 @@ namespace Emberfall.Presentation
                 new Vector3((minX + maxX) * 0.5f, (minY + maxY) * 0.5f, BehindZ),
                 Quaternion.identity);
             s_instance.localScale = new Vector3(cover, cover, 1f);
+            AlignArtworkAnchors(camera);
+        }
+
+        private static void AlignArtworkAnchors(Camera camera)
+        {
+            if (camera == null || s_instance == null || s_renderer == null
+                || s_renderer.sprite == null)
+                return;
+
+            Bounds bounds = s_renderer.sprite.bounds;
+            for (int i = ArtworkAnchors.Count - 1; i >= 0; i--)
+            {
+                ArtworkAnchor registration = ArtworkAnchors[i];
+                if (registration.Target == null)
+                {
+                    ArtworkAnchors.RemoveAt(i);
+                    continue;
+                }
+
+                var localArtworkPoint = new Vector3(
+                    Mathf.Lerp(bounds.min.x, bounds.max.x, registration.Uv.x),
+                    Mathf.Lerp(bounds.min.y, bounds.max.y, registration.Uv.y),
+                    0f);
+                Vector3 artworkPoint = s_instance.TransformPoint(localArtworkPoint);
+                Vector3 viewport = camera.WorldToViewportPoint(artworkPoint);
+                if (viewport.z <= 0f) continue;
+
+                Ray ray = camera.ViewportPointToRay(new Vector3(viewport.x, viewport.y, 0f));
+                var foreground = new Plane(
+                    Vector3.forward,
+                    new Vector3(0f, 0f, registration.ForegroundZ));
+                if (foreground.Raycast(ray, out float distance))
+                    registration.Target.position = ray.GetPoint(distance);
+            }
         }
 
         public static void Create(Transform parent)
         {
+            ArtworkAnchors.Clear();
             var tex = LoadAsset<Texture2D>(EditorPath, Address);
             if (tex == null) return;
 

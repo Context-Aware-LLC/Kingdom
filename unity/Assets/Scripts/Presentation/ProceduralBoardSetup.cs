@@ -8,17 +8,12 @@ namespace Emberfall.Presentation
     // Attach this to the same GameObject as BoardAnchors.
     // When the scene is authoring-complete (anchors placed in editor), remove this component.
     //
-    // Every bottom-edge anchor below is the hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1 budget, pinned
-    // 2026-07-24 (was M1 placeholder coordinates that sat the hero cluster level with the
-    // board row). §1.1 allocates SPANS on x; the element centres here are those spans minus
-    // each element's own width, and the y column is §1.3 — the vertical §1.1 never wrote.
-    //
     // Layout (logical board bounds are y ±4.6; BoardCameraRig fits them in perspective):
     //   Board rows:  y = ±RowY (7 slots, x = ±4.86 at BoardRowGeometry.SlotSpacing) — outside §1.1
     //   Hand rows:   fanned by HandFanLayout — fixed 6-unit footprint, count-dependent pitch
-    //   The hero cluster mirrors per seat (first-person rule: your hero is on YOUR left, so the
-    //   two heroes sit kitty-corner — P0 bottom-left, P1 top-right). P0 signs are (-1,-1), so
-    //   seat 1 is seat 0 point-reflected through the origin, exactly as §1.1 specifies.
+    //   Hero and resource cluster ROOTS: registered to measured BoardPlate artwork UVs, because
+    //   the generated table's fixtures are not a point-reflected pair and its cover fit moves in
+    //   world space with aspect ratio. Children keep the approved 180-degree seat arrangement.
     [RequireComponent(typeof(BoardAnchors))]
     public sealed class ProceduralBoardSetup : MonoBehaviour
     {
@@ -62,7 +57,19 @@ namespace Emberfall.Presentation
         private const float P0Sign = -1f;
         private const float P1Sign =  1f;
 
-        // ── §1.1 bottom-edge budget, as |coordinates| for seat 0 ────────────────────────
+        // Measured fixture centres in BoardPlate_Master.png (4612 x 2080), expressed as sprite UV
+        // from bottom-left. BoardBackdrop projects these through the fitted artwork plane, so the
+        // clusters remain seated in their painted furniture at every aspect and safe-area inset.
+        private static readonly Vector2 P0HeroFixtureUv =
+            new(540f / 4612f, 1f - 1448f / 2080f);
+        private static readonly Vector2 P1HeroFixtureUv =
+            new(3686f / 4612f, 1f - 409f / 2080f);
+        private static readonly Vector2 P0ResourceFixtureUv =
+            new(3876f / 4612f, 1f - 1572f / 2080f);
+        private static readonly Vector2 P1ResourceFixtureUv =
+            new(806f / 4612f, 1f - 383f / 2080f);
+
+        // ── Royal Council fixture-local cluster geometry ───────────────────────────────
         // The Royal Council board keeps both circular satellites on the portrait's INBOARD side
         // (Sam, 2026-09-30). The pair is rotationally symmetric by seat: local power upper-right
         // and weapon lower-right; opponent power lower-left and weapon upper-left. This removes the
@@ -78,28 +85,17 @@ namespace Emberfall.Presentation
             HeroPlateView.PlateW * 0.5f + HeroSocketsView.FrameSize * 0.5f - HeroPowerOverlap;
         internal const float WeaponOffsetX = 1.73f;
 
-        // 5.63 -> 6.65 on 2026-09-04 under the live perspective rig. The board row and portrait
-        // clear in screen space; do not re-solve this using world-x extents.
+        // Fallback placement before BoardBackdrop has fitted the artwork. The live hero-cluster
+        // roots are registered to the UV fixtures above and replace this position immediately.
         internal const float HeroX = 6.65f;
-        internal const float HeroClusterOuterEdge =
-            HeroX + HeroPlateView.PlateW * 0.5f;
 
-        // Two columns of five mana orbs stand inboard of the deck pile. The 0.31-unit gap from
-        // the grid's outer edge to the pile's inner edge keeps them distinct, and is preserved
-        // through the move below.
-        //
-        // BOTH MOVED OUT WITH THE HERO on 2026-09-04, to keep the two halves of the bottom row
-        // symmetric: the deck pile's outer edge is pinned to HeroClusterOuterEdge 8.90, and the
-        // rail follows it inboard at the same 0.31 gap. This was not cosmetic — the rail's inner
-        // edge was at 5.30 and a 7-minion row reaches 5.618, so the rail was lapped by the row for
-        // 0.279 units of shared band exactly as the hero was. It now clears by 0.752.
+        // Fallback resource-cluster placement. The mana rail keeps this offset from the deck when
+        // the cluster root is projected onto the painted deck cradle.
         internal const float ManaGridX = 6.83f;   // rail 6.37..7.29
         internal const float DeckX     = 8.25f;   // pile 7.60..8.90
 
         // ── Vertical (§1.3) ─────────────────────────────────────────────────────────────
-        // §1.1 is an x-budget only. Everything in it rests on one baseline 0.15 above the
-        // screen edge: |y| = 4.45. Each centre below is that baseline plus half the element's
-        // own height, so moving the baseline moves the whole bottom row together.
+        // Fallback baseline used until the artwork fit projects each fixture root.
         private const float Baseline = 4.45f; // frame crown/bottom remains 0.15 inside y +/-4.6
         internal const float HeroY = Baseline - HeroPlateView.PlateH * 0.5f;
 
@@ -116,9 +112,15 @@ namespace Emberfall.Presentation
         private void Awake()
         {
             var anchors = GetComponent<BoardAnchors>();
-            BuildSeat(anchors.p0, "P0", P0Sign, xSign: -1f);
-            BuildSeat(anchors.p1, "P1", P1Sign, xSign: +1f);
+            BuildSeat(anchors.p0, "P0", P0Sign, xSign: -1f,
+                out Transform p0HeroCluster, out Transform p0ResourceCluster);
+            BuildSeat(anchors.p1, "P1", P1Sign, xSign: +1f,
+                out Transform p1HeroCluster, out Transform p1ResourceCluster);
             BoardBackdrop.Create(transform);
+            BoardBackdrop.RegisterArtworkAnchor(p0HeroCluster, P0HeroFixtureUv);
+            BoardBackdrop.RegisterArtworkAnchor(p1HeroCluster, P1HeroFixtureUv);
+            BoardBackdrop.RegisterArtworkAnchor(p0ResourceCluster, P0ResourceFixtureUv);
+            BoardBackdrop.RegisterArtworkAnchor(p1ResourceCluster, P1ResourceFixtureUv);
             AttachBoardLighting(transform);
             AttachSafeAreaCamera();
         }
@@ -160,7 +162,13 @@ namespace Emberfall.Presentation
                 cam.gameObject.AddComponent<SafeAreaCamera>();
         }
 
-        private void BuildSeat(SeatAnchors seat, string prefix, float ySign, float xSign)
+        private void BuildSeat(
+            SeatAnchors seat,
+            string prefix,
+            float ySign,
+            float xSign,
+            out Transform heroCluster,
+            out Transform resourceCluster)
         {
             seat.BoardSlots = new Transform[BoardSlotCount];
             for (int i = 0; i < BoardSlotCount; i++)
@@ -178,17 +186,22 @@ namespace Emberfall.Presentation
                 seat.HandSlots[i] = MakeAnchor($"{prefix}_Hand{i}", Vector3.zero);
             HandFanLayout.Apply(seat.HandSlots, HandSlotCount, seat.FanMirrored);
 
-            seat.HeroAnchor = MakeAnchor($"{prefix}_Hero",
+            heroCluster = MakeAnchor($"{prefix}_HeroCluster",
                 new Vector3(xSign * HeroX, ySign * HeroY, 0f));
-            seat.HeroPowerAnchor = MakeAnchor($"{prefix}_HeroPower",
-                new Vector3(xSign * (HeroX - HeroPowerOffsetX),
-                            ySign * (HeroY - HeroPowerTowardCenterY), 0f));
-            seat.WeaponAnchor = MakeAnchor($"{prefix}_Weapon",
-                new Vector3(xSign * (HeroX - WeaponOffsetX),
-                            ySign * (HeroY + WeaponTowardEdgeY), 0f));
-            seat.ManaTrayAnchor = MakeAnchor($"{prefix}_ManaTray",
-                new Vector3(xSign * -ManaGridX, ySign * ManaGridY, 0f));
-            seat.DeckAnchor      = MakeAnchor($"{prefix}_Deck",      new Vector3(xSign * -DeckX,     ySign * DeckY,      0f));
+            seat.HeroAnchor = MakeChildAnchor(heroCluster, $"{prefix}_Hero", Vector3.zero);
+            seat.HeroPowerAnchor = MakeChildAnchor(heroCluster, $"{prefix}_HeroPower",
+                new Vector3(-xSign * HeroPowerOffsetX,
+                            -ySign * HeroPowerTowardCenterY, 0f));
+            seat.WeaponAnchor = MakeChildAnchor(heroCluster, $"{prefix}_Weapon",
+                new Vector3(-xSign * WeaponOffsetX,
+                            ySign * WeaponTowardEdgeY, 0f));
+
+            resourceCluster = MakeAnchor($"{prefix}_ResourceCluster",
+                new Vector3(xSign * -DeckX, ySign * DeckY, 0f));
+            seat.DeckAnchor = MakeChildAnchor(resourceCluster, $"{prefix}_Deck", Vector3.zero);
+            seat.ManaTrayAnchor = MakeChildAnchor(resourceCluster, $"{prefix}_ManaTray",
+                new Vector3(xSign * (DeckX - ManaGridX),
+                            ySign * (ManaGridY - DeckY), 0f));
         }
 
         // Called from NetworkedGameBootstrap's boot after SetPlayers() — attaches the ClickableHeroPower /
@@ -234,6 +247,17 @@ namespace Emberfall.Presentation
             var go = new GameObject(anchorName);
             go.transform.SetParent(transform, false);
             go.transform.position = worldPos;
+            return go.transform;
+        }
+
+        private static Transform MakeChildAnchor(
+            Transform parent,
+            string anchorName,
+            Vector3 localPosition)
+        {
+            var go = new GameObject(anchorName);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPosition;
             return go.transform;
         }
     }

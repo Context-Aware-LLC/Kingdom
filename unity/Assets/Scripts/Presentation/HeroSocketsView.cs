@@ -6,8 +6,8 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The enlarged hero-power and weapon sockets, one flanking each side of the hero portrait
-    /// (they were docked across its lower edge until 2026-09-04, where they covered the picture).
+    /// The enlarged hero-power and weapon sockets, vertically staggered on the inboard side of
+    /// each hero portrait. Their cluster root follows the Royal Council artwork fixture.
     /// They remain separate objects because the weapon disappears when unequipped and the hero
     /// power owns its own input collider. Circular art fills each transparent opening and stays
     /// inside the gold aperture.
@@ -20,12 +20,12 @@ namespace Emberfall.Presentation
         /// <para>THIS IS THE QUAD, NOT THE RING. Both sprites carry transparent margin, and the
         /// ring's widest point spans only 0.7149 of the quad — so the drawn ring is 1.0795 units
         /// here, not 1.51. Every "how big does it look" and "does it touch the plate" question is
-        /// answered against that fraction, never against this constant; see
-        /// <c>ProceduralBoardSetup.SocketOverlap</c>, which pays for the margin.</para>
+        /// answered against that fraction, never against this constant; see the separate offsets
+        /// in <c>ProceduralBoardSetup</c>, which pay for the transparent margins.</para>
         ///
         /// <para>Raised 1.32 -> 1.51 on 2026-09-04 (Sam: bigger, and touching the hero frame).
-        /// SocketOverlap absorbed the growth, so HeroX did not move and the cluster's outer edge
-        /// is still exactly DesignHalfWidth.</para></summary>
+        /// The current local offsets keep both quads distinct while their drawn metal rims meet
+        /// the hero frame.</para></summary>
         public const float FrameSize = 1.51f;
 
         /// <summary>The hero power's tap target. Tracks the DRAWN ring rather than the quad —

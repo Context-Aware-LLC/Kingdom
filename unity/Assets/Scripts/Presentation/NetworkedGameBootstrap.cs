@@ -450,6 +450,8 @@ namespace Emberfall.Presentation
             {
                 var endTurnGo = new GameObject("EndTurnButton");
                 endTurnGo.transform.position = EndTurnButtonView.BoardPosition;
+                BoardBackdrop.RegisterArtworkAnchor(
+                    endTurnGo.transform, EndTurnButtonView.ArtworkUv);
                 var endTurn = endTurnGo.AddComponent<EndTurnButtonView>();
                 endTurn.Init(localId, inputRouter);
                 matchRunner.OnStateUpdated += endTurn.OnStateUpdated;
@@ -462,6 +464,7 @@ namespace Emberfall.Presentation
             // board gives the clock its own crown-fuse medallion on the left.
             var clockGo = new GameObject("TurnClock");
             clockGo.transform.position = TurnClockView.BoardPosition;
+            BoardBackdrop.RegisterArtworkAnchor(clockGo.transform, TurnClockView.ArtworkUv);
             var turnClock = clockGo.AddComponent<TurnClockView>();
             turnClock.Init();
             _view.OnTurnTimer += turnClock.OnTurnTimer;

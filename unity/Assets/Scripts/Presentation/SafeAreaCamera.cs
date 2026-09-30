@@ -5,14 +5,10 @@ namespace Emberfall.Presentation
     /// <summary>
     /// EF-062. Keeps the board inside <c>Screen.safeArea</c> on Android without letterboxing.
     ///
-    /// <para>WHY THIS HAS TO EXIST AT RUNTIME AND CANNOT BE A CONSTANT. The whole bottom row —
-    /// hero plate, both sockets, the mana rail, the deck pile — rests on
-    /// <c>ProceduralBoardSetup.Baseline</c> 4.45, which is 0.15 world units above the screen
-    /// edge at 4.6. That is 18 px on a 1080p panel, and it is the ENTIRE vertical inset budget.
-    /// Android landscape puts the gesture bar on that same bottom edge and it wants 24–48 dp:
-    /// 66–132 px at the 2.75x density of a 1080p 6.3" phone. So the bottom row lands under the
-    /// gesture bar on every modern Android device, and by how much is device data that only
-    /// <c>Screen.safeArea</c> knows.</para>
+    /// <para>WHY THIS HAS TO EXIST AT RUNTIME AND CANNOT BE A CONSTANT. Android landscape safe
+    /// areas vary by device, orientation and navigation mode. The camera must fit the gameplay
+    /// box first; then <c>BoardBackdrop</c> cover-fits its art and reprojects every registered
+    /// Royal Council fixture anchor from artwork UV into the foreground plane.</para>
     ///
     /// <para>Attached by <c>ProceduralBoardSetup.Awake</c> rather than authored into the scene,
     /// so BoardNetworked.unity picks it up without a YAML edit — and so does any board scene

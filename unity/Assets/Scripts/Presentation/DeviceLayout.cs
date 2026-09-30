@@ -33,9 +33,9 @@ namespace Emberfall.Presentation
         public const float DesignHalfHeight = 4.6f;
 
         /// <summary>
-        /// Half the world width the bottom row actually needs, in world units. Set by the deck
-        /// pile's outer edge at 8.90. The Royal Council layout puts both hero satellites inboard,
-        /// so <c>ProceduralBoardSetup.HeroClusterOuterEdge</c> is now the narrower portrait edge.
+        /// Half-width of the fixed gameplay box, in world units. The Royal Council hero and
+        /// resource clusters register against artwork UVs after the backdrop fit, so their final
+        /// world positions are device-dependent and do not define this box.
         ///
         /// <para>7.88 -> 8.90 on 2026-09-04. Under the live perspective rig this is a FLOOR on
         /// what must be visible, not a ceiling on what may exist, so widening it does not shrink
@@ -300,13 +300,10 @@ namespace Emberfall.Presentation
             var sb = new System.Text.StringBuilder();
             bool ok = true;
 
-            // 1. The design half-width is the widest thing the bottom row builds.
-            float heroEdge = ProceduralBoardSetup.HeroClusterOuterEdge;
+            // 1. The fixed layout still carries the resource cluster's authored fallback budget.
             float deckEdge = ProceduralBoardSetup.DeckX + DeckPileView.PileW * 0.5f;
-            float widest = Mathf.Max(heroEdge, deckEdge);
-            ok &= Line(sb, Mathf.Abs(widest - DesignHalfWidth) < 0.001f,
-                $"DesignHalfWidth {DesignHalfWidth:F4} == widest built element {widest:F4} "
-                + $"(hero cluster {heroEdge:F4}, deck pile {deckEdge:F4})");
+            ok &= Line(sb, Mathf.Abs(deckEdge - DesignHalfWidth) < 0.001f,
+                $"DesignHalfWidth {DesignHalfWidth:F4} == deck fallback edge {deckEdge:F4}");
 
             // 1b. The vertical mana layout is exactly 2 x 5 square cells, with all ten
             //     MatchEngine slots represented and the tray still inside the design box.
@@ -321,12 +318,15 @@ namespace Emberfall.Presentation
             ok &= Line(sb, manaEdgeY <= DesignHalfHeight + 0.001f,
                 $"mana grid edge |y| {manaEdgeY:F3} <= design edge {DesignHalfHeight:F2}");
 
-            // 1c. The lower local weapon intentionally consumes the remaining vertical budget,
-            //     but must never cross the safe-area design edge.
-            float socketEdgeY = ProceduralBoardSetup.HeroY + ProceduralBoardSetup.WeaponTowardEdgeY
-                                + HeroSocketsView.FrameSize * 0.5f;
-            ok &= Line(sb, socketEdgeY <= DesignHalfHeight + 0.001f,
-                $"local socket edge |y| {socketEdgeY:F3} <= design edge {DesignHalfHeight:F2}");
+            // 1c. The two inboard socket quads remain distinct after their art-relative cluster
+            //     is moved; projection changes position and scale together, not local separation.
+            float socketDx = ProceduralBoardSetup.WeaponOffsetX
+                             - ProceduralBoardSetup.HeroPowerOffsetX;
+            float socketDy = ProceduralBoardSetup.WeaponTowardEdgeY
+                             + ProceduralBoardSetup.HeroPowerTowardCenterY;
+            float socketDistance = Mathf.Sqrt(socketDx * socketDx + socketDy * socketDy);
+            ok &= Line(sb, socketDistance >= HeroSocketsView.FrameSize,
+                $"socket centres {socketDistance:F3} >= frame size {HeroSocketsView.FrameSize:F3}");
 
             // 2. THE DESIGN BOX STAYS ON THE ARENA FLOOR. Replaces the two MinAspect assertions
             //    (2026-09-04), which asked whether 16:9 and 16:10 cleared a box aspect under the

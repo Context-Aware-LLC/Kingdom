@@ -231,8 +231,6 @@ def main() -> int:
     board = SCRIPTS / "BoardController.cs"
     fan = SCRIPTS / "HandFanLayout.cs"
     setup = SCRIPTS / "ProceduralBoardSetup.cs"
-    hero = SCRIPTS / "HeroPlateView.cs"
-    sockets = SCRIPTS / "HeroSocketsView.cs"
     deck = SCRIPTS / "DeckPileView.cs"
     mana = SCRIPTS / "ManaTrayView.cs"
     frames = SCRIPTS / "FrameRarityCatalog.cs"
@@ -256,12 +254,6 @@ def main() -> int:
     tilt_deg = const(fan, "MaxTiltDeg", "HandFanLayout.MaxTiltDeg")
     lift = const(SCRIPTS / "HandCardHover.cs", "Lift", "HandCardHover.Lift")
     hover_scale = const(SCRIPTS / "HandCardHover.cs", "Scale", "HandCardHover.Scale")
-    hero_x = const(setup, "HeroX", "ProceduralBoardSetup.HeroX")
-    socket_size = const(sockets, "FrameSize", "HeroSocketsView.FrameSize")
-    hero_plate_w = const(hero, "PlateW", "HeroPlateView.PlateW")
-    power_overlap = const(setup, "HeroPowerOverlap", "ProceduralBoardSetup.HeroPowerOverlap")
-    power_x = hero_plate_w / 2 + socket_size / 2 - power_overlap
-    weapon_x = const(setup, "WeaponOffsetX", "ProceduralBoardSetup.WeaponOffsetX")
     deck_x = const(setup, "DeckX", "ProceduralBoardSetup.DeckX")
     mana_x = const(setup, "ManaGridX", "ProceduralBoardSetup.ManaGridX")
     baseline = const(setup, "Baseline", "ProceduralBoardSetup.Baseline")
@@ -294,10 +286,7 @@ def main() -> int:
     # ── 2. the horizontal budget ────────────────────────────────────────────────
     design_h = ortho                      # half-height, world units
     elements = [
-        ("hero portrait outer edge", hero_x + hero_plate_w / 2),
-        ("hero-power outer edge", hero_x - power_x + socket_size / 2),
-        ("weapon outer edge", hero_x - weapon_x + socket_size / 2),
-        ("deck pile outer edge", deck_x + pile_w / 2),
+        ("deck fallback outer edge", deck_x + pile_w / 2),
         ("mana grid outer edge", mana_x + rail_w / 2),
         ("board row outer edge", (slot_n - 1) * 0.5 * slot_gap + card_w / 2),
     ]
@@ -547,16 +536,16 @@ def main() -> int:
         spare_u = design_h * d.aspect - design_w
         print(f"    {d.name:<28} {spare_u:7.4f} units = {spare_u*p:6.1f} px per side")
     print()
-    print(f"  VERTICAL. The whole bottom row rests on ProceduralBoardSetup.Baseline "
-          f"{baseline:g},")
+    print(f"  VERTICAL FALLBACK. Before artwork-UV registration, the authored fixture roots use "
+          f"ProceduralBoardSetup.Baseline {baseline:g},")
     print(f"  which is {vert_spare:.4f} units above the screen edge at {design_h:g} — that is the")
     print(f"  ENTIRE vertical inset budget:")
     for d in DEVICES[:4]:
         p = d.short_px / (2 * design_h)
         print(f"    {d.name:<28} {vert_spare*p:6.1f} px of vertical clearance")
     print()
-    print("  Android landscape puts the gesture/navigation bar on the BOTTOM edge, which is")
-    print("  exactly where the hero frame, both sockets, the mana grid and the deck pile sit.")
+    print("  Royal Council fixture roots are reprojected from artwork UV after the live safe-area")
+    print("  solve; this legacy fallback budget does not describe their final screen placement.")
     print("  The gesture inset alone is 24-48 dp; at the 2.75x density of a 1080p 6.3\" panel")
     print(f"  that is {24*2.75:.0f}-{48*2.75:.0f} px against a "
           f"{vert_spare*DEVICES[0].short_px/(2*design_h):.0f} px budget.")

@@ -23,8 +23,8 @@ namespace Emberfall.Presentation
                 float d = HeroSocketsView.HitDiameter;
                 col.size = new Vector3(d, d, 0.1f);
                 // Kept nearer the board camera than the hero's box, which is the whole plate. The
-                // overlap shrank from "the socket sits on the portrait" to the SocketOverlap 0.15
-                // the ring laps onto the plate's edge (2026-09-04), but it did not go away, so a
+                // overlap shrank from "the socket sits on the portrait" to the narrow strip where
+                // the ring laps onto the plate's edge, but it did not go away, so a
                 // tap in that strip still needs a deterministic answer. InputRouter.Probe
                 // additionally walks past the OPPONENT's socket, which is a pure obstruction;
                 // read that comment before widening this box.
