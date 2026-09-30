@@ -23,40 +23,34 @@
 .tidbit-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.72);
     align-items: center;
     justify-content: center;
 }
 
-/* 460 rather than the old portrait-era 320px, which stacked the illustration above
-   the copy and left no room for it. 460 puts the art beside the words instead.
-
-   460 HAS NOT BEEN RE-MEASURED SINCE THE PANEL CHANGED (#349). It was chosen against
-   a 914 x 411 panel, where it was half the width; the panel is 2400 x 1080 authored px
-   now, so the same 460 is a fifth of it. The card is the tidbit's whole content, so
-   check it on a device before shipping the first tidbit rather than trusting this
-   number — it is the older of the two units, not a decision anyone has re-made. */
+/* Sized in the 2400 x 1080 authored panel (#349), on the same footing as the roster's
+   .delete-dialog: half the screen wide, theme surfaces and type steps. */
 .tidbit-card {
-    width: 460px;
+    width: 50%;
     max-width: 90%;
-    background-color: #131A24;
+    background-color: var(--surface-2);
     border-width: 1px;
-    border-color: #263041;
-    border-radius: 12px;
-    padding: 16px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-2);
+    padding: var(--space-6);
 }
 
 .tidbit-header {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: var(--space-4);
 }
 
 .tidbit-title {
-    font-size: 16px;
+    font-size: var(--type-h1);
     -unity-font-style: bold;
-    color: #F2F4F7;
+    color: var(--ink-1);
 }
 
 /* Art left, copy right. Two lines of body against a 4:3 illustration is the whole
@@ -64,16 +58,16 @@
 .tidbit-body-row {
     flex-direction: row;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: var(--space-6);
 }
 
 /* 4:3, matching the 800x600 source in spec §6.5. FirstRunTidbit.Render sets
    display: none on this element when the sprite does not resolve, so the copy
    takes the full width rather than sitting beside a hole. */
 .tidbit-art {
-    width: 176px;
-    height: 132px;
-    margin-right: var(--space-3);
+    width: 400px;
+    height: 300px;
+    margin-right: var(--space-6);
     flex-shrink: 0;
     -unity-background-scale-mode: scale-to-fit;
 }
@@ -85,9 +79,11 @@
     flex-grow: 1;
     flex-basis: 0;
     white-space: normal;
-    color: #A1A7B3;
+    font-size: var(--type-body);
+    color: var(--ink-2);
 }
 
 .tidbit-actions {
     flex-direction: row;
+    justify-content: flex-end;
 }
