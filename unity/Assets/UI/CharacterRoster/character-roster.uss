@@ -745,7 +745,7 @@
     -unity-text-align: middle-left;
 }
 
-.hero-choice:hover {
+.hero-choice.unity-button:hover {
     background-color: var(--surface-3);
 }
 

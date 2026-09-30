@@ -422,6 +422,24 @@
     opacity: 0.42;
 }
 
+/* THE GREY SQUARE (Sam, 2026-09-30, read off the UI Debugger): Unity's default theme fills
+ * `.unity-button:hover` and `:hover:enabled` (and the press/focus states) and that fill paints under
+ * the chrome sprite's clear corners. The variable block above did not stop it, so the states are
+ * cleared here directly: same specificity as the default theme's, and this sheet loads after it,
+ * so order decides. A plate that WANTS a fill on a button pairs its own rule with `.unity-button`
+ * (`.hero-choice.unity-button:hover`) and loads after this sheet. */
+.unity-button:hover,
+.unity-button:hover:enabled,
+.unity-button:active,
+.unity-button:active:enabled,
+.unity-button:hover:active,
+.unity-button:hover:active:enabled,
+.unity-button:focus,
+.unity-button:focus:enabled,
+.unity-button:disabled {
+    background-color: rgba(0, 0, 0, 0);
+}
+
 /* After `.unity-button`: same specificity, so order decides. */
 .emb-primary {
     background-image: url("/Assets/Art/UI/Chrome/ui_button_primary_ember.png");
