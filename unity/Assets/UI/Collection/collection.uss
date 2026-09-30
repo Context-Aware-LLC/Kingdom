@@ -880,10 +880,10 @@
  * button is the persistent corner settings gear CollectionController mounts on this same screen
  * (Sam, 2026-09-05: "same corner settings gear as the main menu"), anchored 24px from the right
  * and shifted another 52px by its `.emb-edge` margin. At 68px wide its LEFT edge is therefore
- * 144px from the screen edge. This button stops the safe inset plus 48px from that edge (100px
- * with the current token) and deliberately continues
- * 44px beneath the gear; `.ms-gear` clips its opaque sprite to rounded corners so that overlap
- * reads as a layered control instead of a square collision. Their bottom/height match
+ * 144px from the screen edge. This button stops the safe inset plus 108px from that edge (160px
+ * with the current token), a 16px gap short of the gear. It used to run 44px beneath it, but the
+ * gear's sprite has clear corners now (2026-09-30), and this button's ember showed through them
+ * as if the gear's corners were filled. Their bottom/height match
  * (var(--space-6), 68px -- updated 2026-09-27 alongside `.ms-gear`) so the two read as one row.
  * Pulling this button out of the drawer's flex column into position:absolute is what makes that
  * alignment exact -- a flex sibling can't be told "match this unrelated element's bottom" any
@@ -893,7 +893,7 @@
     position: absolute;
     left: var(--space-6);
     right: var(--edge-safe);
-    margin-right: 48px;
+    margin-right: 108px;
     bottom: var(--space-6);
     height: 68px;
     border-width: 0;
