@@ -72,7 +72,7 @@ namespace Emberfall.Presentation
         private VisualElement _pickerView, _detailView, _confirmView;
         private VisualElement _heroColumnLeft, _heroColumnRight;
         private VisualElement _detailPortrait, _detailBullets, _powerBlock;
-        private Label _passTitle, _passHelp, _detailName, _detailPass;
+        private Label _detailName, _detailPass;
         private Label _powerName, _powerDesc, _confirmSummary, _createError;
         private Button _detailSelect, _createGenerated, _createBlank, _cancel;
         private Label _starterNote;
@@ -140,8 +140,6 @@ namespace Emberfall.Presentation
             _detailView = _root.Q<VisualElement>("create-detail-view");
             _confirmView = _root.Q<VisualElement>("create-confirm-view");
 
-            _passTitle = _root.Q<Label>("create-pass-title");
-            _passHelp = _root.Q<Label>("create-pass-help");
             _heroColumnLeft = _root.Q<VisualElement>("create-hero-column-left");
             _heroColumnRight = _root.Q<VisualElement>("create-hero-column-right");
 
@@ -188,26 +186,12 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// The button picker, rebuilt each time it shows so the primary choice stays visible.
-        /// Its title is pass-specific: pass 1 chooses the Hero Power; pass 2 adds cards only.
         /// </summary>
         private void BuildHeroChoices()
         {
             if (_heroColumnLeft == null || _heroColumnRight == null) return;
             _heroColumnLeft.Clear();
             _heroColumnRight.Clear();
-
-            if (ChoosingPrimary)
-            {
-                if (_passTitle != null) _passTitle.text = "Choose your hero";
-                if (_passHelp != null)
-                    _passHelp.text = "A deck is TWO classes. This first pick decides your Hero Power.";
-            }
-            else
-            {
-                if (_passTitle != null) _passTitle.text = "Choose a second class";
-                if (_passHelp != null)
-                    _passHelp.text = $"Your Hero Power stays {CardClassTokens.Label(_picks[0])}'s — this pick only adds its cards.";
-            }
 
             int split = (PairableClasses.Length + 1) / 2;
             for (int i = 0; i < PairableClasses.Length; i++)

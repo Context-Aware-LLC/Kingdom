@@ -625,8 +625,7 @@
  * THIS SCREEN AUTHORS ITS OWN VERTICAL GUTTER, and has to. `.emb-bleed` is its only inset and
  * `.emb-bleed` is `0 var(--edge-safe)` since 568d6b33 -- the cutout is on a SIDE, so the class
  * deliberately no longer imposes a top or bottom (see the token's note in theme.uss). Nothing
- * else in the picker column has a top margin, so without these two the heading in
- * `.create-picker-header` sits at y=0. LONGHANDS, not a `padding`
+ * else in the picker column has a top margin, so without these two the plates sit at y=0. LONGHANDS, not a `padding`
  * shorthand: the shorthand would re-set the horizontal padding `.emb-bleed` is here to supply. */
 .character-create-screen {
     flex-grow: 1;
@@ -642,45 +641,11 @@
     min-height: 0;
 }
 
-.create-picker-header {
-    flex-direction: row;
-    align-items: center;
-}
-
-.create-picker-heading {
-    flex-grow: 1;
-    align-items: center;
-}
-
-/* --type-h1 is 36 at the expanded screen class, which is a caption on a 1080-unit panel, not a
- * screen title. Sized here rather than by moving the token because .delete-title is worn by the
- * detail and confirm views and by the roster's own dialogs. */
-.create-picker-heading #create-pass-title {
-    font-size: 52px;
-    margin-bottom: 0;
-}
-
-/* The pairing explanation (#312). Sized under the title rather than beside the tokens: every unit
- * this line takes comes straight off .hero-choice's height, and the header is already competing
- * with eight plates. white-space: normal so a long second-pass sentence wraps inside the heading
- * column rather than pushing Cancel off the row. */
-.create-pass-help {
-    font-size: 30px;
-    color: var(--ink-2);
-    white-space: normal;
-    -unity-text-align: middle-center;
-    margin-top: var(--space-1);
-}
-
 #create-detail-view,
 #create-confirm-view {
     align-self: center;
     width: 720px;
     max-width: 100%;
-}
-
-#create-pass-title {
-    -unity-text-align: middle-center;
 }
 
 /* Fixed columns keep all eight choices predictable on a short landscape phone. The picker has
@@ -690,12 +655,15 @@
  * column sized to its four buttons and was centred, which meant the column's own
  * `justify-content` had no surplus to distribute and could never have had any. The two bands of
  * nothing above and below the list were that, not an absence of sizing rules on the buttons. */
+/* margin-bottom clears the corner Back (`.emb-back-button`: 68 tall, 24 off the bottom = 92 from
+ * the root's edge). The root's own 16 of bottom padding already counts, so 76 + 16 = 92. */
 .hero-choice-list {
     flex-grow: 1;
     min-height: 0;
     flex-direction: row;
     align-items: stretch;
     justify-content: space-evenly;
+    margin-bottom: 76px;
 }
 
 /* space-evenly, not center (Sam, 2026-08-30). Four content-sized buttons centred in a full-height

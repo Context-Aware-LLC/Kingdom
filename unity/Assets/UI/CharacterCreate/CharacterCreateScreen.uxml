@@ -28,17 +28,6 @@
         <!-- PICKER: one plate per real class, fixed at four choices per column. The plates
              themselves are built in CharacterCreateController.BuildHeroChoice. -->
         <ui:VisualElement name="create-picker-view">
-            <ui:VisualElement class="create-picker-header">
-                <ui:VisualElement class="create-picker-heading">
-                    <ui:Label name="create-pass-title" text="Choose your hero" class="delete-title" />
-                    <!-- THE ONLY PLACE THE PAIRING IS EXPLAINED BEFORE IT IS MADE (#312). A
-                         character is two classes and the picker asks for them one at a time, so
-                         without this line the second pass reads as "pick another hero" and the
-                         player has no way to learn that the first pick is the one that decides the
-                         Hero Power. Filled per pass by BuildHeroChoices. -->
-                    <ui:Label name="create-pass-help" text="" class="create-pass-help" />
-                </ui:VisualElement>
-            </ui:VisualElement>
             <ui:VisualElement name="create-hero-choices" class="hero-choice-list">
                 <ui:VisualElement name="create-hero-column-left" class="hero-choice-column" />
                 <ui:VisualElement name="create-hero-column-right" class="hero-choice-column" />
