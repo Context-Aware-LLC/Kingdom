@@ -113,9 +113,10 @@ namespace Emberfall.Core.Cards
         /// future name with the identical shape is admitted here AND resolvable there, together or
         /// not at all.</para>
         ///
-        /// <para>What stays rejected and why: <c>NotSelf</c> ("your OTHER minions") is a coherent
-        /// aura the engine could now serve, and it is deliberately still out — widening a
-        /// fail-closed capability is a ruling, not a refactor, and this commit is a refactor. A
+        /// <para><c>NotSelf</c> ("your OTHER minions") was held out of this relation until Sam ruled
+        /// it in (2026-09-30, Throneless King's +1/+1 to other friendly Undead). It is positional in
+        /// the same way SELF and BESIDE are — "other than the source" needs a source standing on the
+        /// board — so it is minion-only. What stays rejected and why: a
         /// hero-inclusive domain stays out because a stat aura on a hero means nothing;
         /// <c>TriggerSource</c> stays out because a continuous fold has no trigger to read.</para>
         /// </summary>
@@ -123,20 +124,22 @@ namespace Emberfall.Core.Cards
         {
             if (!TargetQueries.TryGet(selector, out TargetQuery query)) return false;
 
-            // SELF and BESIDE are POSITIONAL — they answer "the source" and "next to the source",
+            // SELF, BESIDE and NOT_SELF are POSITIONAL — they answer "the source" and "next to the source",
             // which only mean something for a thing standing in a board slot. A spell's aura is
             // carried by an OngoingEffectInstance, which has an id and a controller and no position
             // at all, so `Targeting` resolves either of them to the EMPTY SET and reports no error.
             // That is precisely the silent shape the 2026-08-20 collapse onto one relation existed
             // to delete — an aura that validates and affects nobody — so refuse them here, where the
             // refusal is visible, rather than letting the resolver return nothing.
-            if (query.Relation == SourceRelation.Self || query.Relation == SourceRelation.Beside)
+            if (query.Relation == SourceRelation.Self || query.Relation == SourceRelation.Beside ||
+                query.Relation == SourceRelation.NotSelf)
                 if (sourceType != CardType.MINION) return false;
 
             // The source itself, wherever it is. SELF states no criteria — the relation names the
             // entity — so there is nothing else on the query to check.
             if (query.Relation == SourceRelation.Self) return true;
-            if (query.Relation != SourceRelation.Any && query.Relation != SourceRelation.Beside)
+            if (query.Relation != SourceRelation.Any && query.Relation != SourceRelation.Beside &&
+                query.Relation != SourceRelation.NotSelf)
                 return false;
             return query.Zones == TargetZones.Board && query.Types == TargetTypes.Minion;
         }

@@ -39,6 +39,7 @@ namespace Emberfall.Core.Tests.Effects
         [TestCase("ANY_ENEMY_MINION", "a1:0,a1:1")]
         [TestCase("ANY_MINION", "a0:0,a0:1,a0:2,a1:0,a1:1")]
         [TestCase("ADJACENT", "a0:0,a0:2")]
+        [TestCase("OTHER_FRIENDLY_MINIONS", "a0:0,a0:2")]
         public void An_aura_reaches_exactly_the_minions_its_selector_names(string selector, string expected)
         {
             (GameState state, FakeCardDatabase db) = BoardWithAura(selector);
@@ -58,6 +59,7 @@ namespace Emberfall.Core.Tests.Effects
         /// </summary>
         [TestCase("ANY_FRIENDLY_MINION")]
         [TestCase("ADJACENT")]
+        [TestCase("OTHER_FRIENDLY_MINIONS")]
         [TestCase("ANY_MINION")]
         public void Recomputing_an_aura_is_idempotent(string selector)
         {
@@ -78,14 +80,13 @@ namespace Emberfall.Core.Tests.Effects
         /// test on the query's SHAPE, and this is the claim that the swap admitted no more and no
         /// less than before.
         ///
-        /// <para>The rejections are the half worth reading. <c>OTHER_FRIENDLY_MINIONS</c> is a
-        /// coherent aura the engine could now serve and is deliberately still out — widening a
-        /// fail-closed capability is a ruling, not a refactor. Character-domain selectors are out
+        /// <para>The rejections are the half worth reading. <c>OTHER_FRIENDLY_MINIONS</c> was held out
+        /// until Sam ruled it in (2026-09-30). Character-domain selectors are out
         /// because a stat aura on a hero means nothing, and <c>TRIGGER_SOURCE</c> because a
         /// continuous fold has no trigger to read.</para>
         /// </summary>
         [Test]
-        public void Exactly_five_selectors_may_declare_an_aura()
+        public void Exactly_six_selectors_may_declare_an_aura()
         {
             var admitted = TargetSpec.Selectors
                 .Where(s => AuraCapabilities.Supports(CardType.MINION, AuraRule(s)))
@@ -96,8 +97,21 @@ namespace Emberfall.Core.Tests.Effects
 
             Assert.That(admitted, Is.EqualTo(new[]
             {
-                "ADJACENT", "ANY_ENEMY_MINION", "ANY_FRIENDLY_MINION", "ANY_MINION", "SELF",
+                "ADJACENT", "ANY_ENEMY_MINION", "ANY_FRIENDLY_MINION", "ANY_MINION",
+                "OTHER_FRIENDLY_MINIONS", "SELF",
             }));
+        }
+
+        /// <summary>"Other than the source" needs a source on the board; a spell's aura has none.</summary>
+        [Test]
+        public void Other_friendly_minions_is_minion_only()
+        {
+            var rule = new RuleDefinition(new RuleId("aura"), AuraActivation.Instance,
+                AlwaysCondition.Instance, PermanentLifetime.Instance,
+                new ModifyStatsAction(1, 1, new TargetSpec("OTHER_FRIENDLY_MINIONS",
+                    EveryCandidateOf("OTHER_FRIENDLY_MINIONS"))));
+
+            Assert.That(AuraCapabilities.Supports(CardType.SPELL, rule), Is.False);
         }
 
         /// <summary>An aura is a continuous fold, so it can hold no chooser and no dice.</summary>
