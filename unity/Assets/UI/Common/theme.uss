@@ -1,4 +1,5 @@
 /* The settings overlay (gear + panel) is styled entirely in settings.uss. */
+@import url("/Assets/UI/Common/controls.uss");
 @import url("/Assets/UI/Common/settings.uss");
 
 /* ================================================================================================
@@ -289,10 +290,6 @@
     background-image: url("/Assets/Art/UI/hptabs/tide_hp.png");
 }
 
-.unity-base-dropdown__label {
-    color: var(--unity-colors-dropdown-text);
-}
-
 /* ── SCREEN CLASSES ARE GONE (#247, retired by #349 on 2026-09-03) ─────────────────────────
    `.emb-sw-compact` / `-medium` / `-expanded` and the ScreenClass.cs that applied them were
    deleted here. Their values now live in the base `.emb-root` block at the top of this file.
@@ -375,26 +372,9 @@
  * The fill paints under the sprite's transparent corners. Tint the sprite instead
  * (`-unity-background-image-tint-color`), as `.roster-button--danger` does.
  *
- * THE CORNER FIX is the variable block: Unity's default theme paints `.unity-button:hover:enabled`
- * and `:active:enabled` (three-class selectors no one-class rule can beat) from the
- * `--unity-colors-button-*` variables, so clearing the variables clears the grey fill without a
- * specificity fight -- and without stripping the fills plates like `.hero-choice` rely on. Names
- * from Unity's built-in variable reference (UIE-uss-built-in-variable-reference, 6000.5).
+ * THE CORNER FIX is the state block below `.unity-button:disabled`: it clears the fill on every
+ * hover/press/focus state directly, so nothing paints under the sprite's clear corners.
  * ================================================================================================ */
-:root {
-    --unity-colors-button-background: rgba(0, 0, 0, 0);
-    --unity-colors-button-background-hover: rgba(0, 0, 0, 0);
-    --unity-colors-button-background-pressed: rgba(0, 0, 0, 0);
-    --unity-colors-button-background-hover_pressed: rgba(0, 0, 0, 0);
-    --unity-colors-button-background-focus: rgba(0, 0, 0, 0);
-    --unity-colors-button-background-disabled: rgba(0, 0, 0, 0);
-    --unity-colors-button-border: rgba(0, 0, 0, 0);
-    --unity-colors-button-border-hover: rgba(0, 0, 0, 0);
-    --unity-colors-button-border-pressed: rgba(0, 0, 0, 0);
-    --unity-colors-button-border-focus: rgba(0, 0, 0, 0);
-    --unity-colors-button-border-disabled: rgba(0, 0, 0, 0);
-}
-
 .unity-button {
     border-width: 0;
     border-radius: 0;
@@ -422,11 +402,9 @@
     opacity: 0.42;
 }
 
-/* THE GREY SQUARE (Sam, 2026-09-30, read off the UI Debugger): Unity's default theme fills
- * `.unity-button:hover` and `:hover:enabled` (and the press/focus states) and that fill paints under
- * the chrome sprite's clear corners. The variable block above did not stop it, so the states are
- * cleared here directly: same specificity as the default theme's, and this sheet loads after it,
- * so order decides. A plate that WANTS a fill on a button pairs its own rule with `.unity-button`
+/* THE GREY SQUARE (Sam, 2026-09-30, read off the UI Debugger): a hover/press/focus fill paints under
+ * the chrome sprite's clear corners. Cleared on every state, at `.unity-button:hover:enabled`'s
+ * specificity. A plate that WANTS a fill on a button pairs its own rule with `.unity-button`
  * (`.hero-choice.unity-button:hover`) and loads after this sheet. */
 .unity-button:hover,
 .unity-button:hover:enabled,

@@ -8,12 +8,8 @@
  * one-class `.unity-button` rules come AFTER these and would win any one-class tie. The scope makes
  * these two classes deep, which beats them regardless of order.
  *
- * HOVER AND PRESS. Unity's default theme fills `.unity-button:hover:enabled` and
- * `:active:enabled` (three-class selectors) with its grey button colours. A fill paints under the
- * chrome sprite's clear corners and shows as a grey square. theme.uss clears those colours through
- * the `--unity-colors-button-*` variables; the state rules below also clear the fill directly, at a
- * specificity the default theme cannot beat, so the settings element does not depend on the
- * variables resolving.
+ * HOVER AND PRESS. theme.uss clears the fill on every `.unity-button` state, so nothing paints
+ * under the chrome sprite's clear corners.
  */
 
 .ms-root {

@@ -1,0 +1,162 @@
+/*
+ * controls.uss — the structure of the built-in controls Unity's default theme used to supply
+ * (Sam, 2026-09-30, when theme.tss stopped importing unity-theme://default). Imported by
+ * theme.uss. Only what this project renders is here: TextField, Toggle, Slider, DropdownField and
+ * its popup, ScrollView, ListView. A new control type means a new block here, not a screen rule.
+ *
+ * GEOMETRY AND STATE-FREE COLOUR ONLY. Screens style their own fields and lists on top of this
+ * (one-class rules load after this sheet and win ties), so nothing here sets a size a screen
+ * would have to fight.
+ *
+ * WRITTEN BLIND: the default theme is compiled into the engine and cannot be read as a file.
+ * These are the rules the controls visibly need; if a control looks collapsed or unstyled, the
+ * missing rule belongs in this file.
+ */
+
+/* ---------- Fields: label + input row ---------- */
+.unity-base-field {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-items: center;
+}
+.unity-base-field__label {
+    min-width: 120px;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+}
+.unity-base-field__input {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+/* ---------- TextField ---------- */
+.unity-base-text-field__input {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+    -unity-text-align: middle-left;
+    color: var(--ink-1);
+    --unity-cursor-color: var(--ink-1);
+    --unity-selection-color: rgba(232, 194, 132, 0.4);
+}
+.unity-base-text-field__input--placeholder {
+    color: var(--ink-2);
+}
+
+/* ---------- Toggle ---------- */
+.unity-toggle__input {
+    flex-direction: row;
+    flex-grow: 1;
+    align-items: center;
+}
+.unity-toggle__checkmark {
+    flex-shrink: 0;
+    width: var(--space-6);
+    height: var(--space-6);
+    margin-right: var(--space-2);
+}
+
+/* ---------- Slider ---------- */
+.unity-base-slider__input {
+    flex-direction: row;
+    flex-grow: 1;
+    align-items: center;
+}
+.unity-base-slider__drag-container {
+    flex-grow: 1;
+    flex-direction: row;
+    justify-content: center;
+    height: var(--space-6);
+    margin: 0 var(--space-3);
+}
+.unity-base-slider__tracker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: var(--space-1);
+    margin-top: -2px;
+}
+.unity-base-slider__dragger {
+    position: absolute;
+    top: 50%;
+    width: var(--space-6);
+    height: var(--space-6);
+    margin-top: -12px;
+}
+
+/* ---------- DropdownField (the closed field and the popup it opens) ---------- */
+.unity-base-popup-field__input {
+    flex-direction: row;
+    flex-grow: 1;
+    align-items: center;
+    overflow: hidden;
+}
+.unity-base-popup-field__text {
+    flex-grow: 1;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+}
+.unity-base-popup-field__arrow {
+    flex-shrink: 0;
+    width: var(--space-4);
+    height: var(--space-4);
+}
+
+/* The popup is reparented to the panel root, so nothing above it in a screen can style it. */
+.unity-base-dropdown__container-outer {
+    background-color: var(--surface-2);
+    border-width: 1px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-2);
+    overflow: hidden;
+}
+.unity-base-dropdown__container-inner {
+    padding: var(--space-1) 0;
+}
+.unity-base-dropdown__item {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    min-height: var(--touch-min);
+    padding: 0 var(--space-4);
+}
+.unity-base-dropdown__item:hover,
+.unity-base-dropdown__item:focus {
+    background-color: var(--surface-3);
+}
+.unity-base-dropdown__label {
+    flex-grow: 1;
+    color: var(--ink-1);
+    font-size: var(--type-body);
+    -unity-text-align: middle-left;
+}
+
+/* ---------- ScrollView and ListView ---------- */
+.unity-scroll-view__content-and-vertical-scrollbar {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-direction: row;
+}
+.unity-scroll-view__content-viewport {
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: hidden;
+}
+.unity-scroll-view__content-container {
+    flex-shrink: 0;
+}
+.unity-collection-view,
+.unity-list-view {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.unity-collection-view__scroll-view,
+.unity-list-view__scroll-view {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.unity-collection-view__item,
+.unity-list-view__item {
+    flex-shrink: 0;
+}
