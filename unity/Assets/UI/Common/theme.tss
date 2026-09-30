@@ -1,0 +1,7 @@
+/* THE ONE PANEL THEME. Every PanelSettings points here, so theme.uss is the default style of every
+ * panel and nothing else is a theme (Sam, 2026-09-30). Unity's default theme is still imported
+ * first, because controls with no rule in theme.uss (dropdown, slider, toggle, text field) lean on
+ * it. RETIREMENT TRIGGER: delete the first line once theme.uss styles those controls itself; the
+ * `--unity-colors-button-*` block in theme.uss goes with it. */
+@import url("unity-theme://default");
+@import url("/Assets/UI/Common/theme.uss");

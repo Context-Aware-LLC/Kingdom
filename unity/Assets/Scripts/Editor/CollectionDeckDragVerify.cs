@@ -33,7 +33,7 @@ namespace Emberfall.Editor
                 var root = panel.visualTree;
                 root.style.width = 1200;
                 root.style.height = 800;
-                root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>("Assets/UI/Collection/CollectionTheme.tss"));
+                root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<ThemeStyleSheet>("Assets/UI/Common/theme.tss"));
                 root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/UI/Collection/collection.uss"));
                 var wall = new ScrollView();
                 Place(wall, 20, 100, 550, 600);
