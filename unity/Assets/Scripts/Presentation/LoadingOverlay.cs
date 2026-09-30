@@ -73,6 +73,7 @@ namespace Emberfall.Presentation
         private bool _preservedAcrossScenes;
         private Camera _followCamera;
         private float _cameraDistance;
+        private float _builtHeight;               // view height (world units) the rig was sized for
 
         /// <summary>Fires once the fade-out finishes, right before this destroys itself. Screen
         /// Space Overlay UI always paints over this camera-parented rig regardless of its own
@@ -161,7 +162,7 @@ namespace Emberfall.Presentation
                 transform.SetParent(cam.transform, false);
                 transform.localPosition = new Vector3(0f, 0f, _cameraDistance);
                 transform.localRotation = Quaternion.identity;
-                transform.localScale = Vector3.one;
+                transform.localScale = Vector3.one * FitScale();
                 return;
             }
             FollowCamera();
@@ -207,9 +208,8 @@ namespace Emberfall.Presentation
         private void Build(Camera cam, float dist)
         {
             _t0 = Time.time;
-            float h = cam.orthographic
-                ? cam.orthographicSize * 2f
-                : 2f * dist * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            float h = ViewHeight(cam, dist);
+            _builtHeight = h;
 
             // ── Plate — SpriteRenderer so the default sprite material honors alpha
             //    (MatchEndBanner precedent; primitives' Default-Material strips in URP builds).
@@ -352,8 +352,22 @@ namespace Emberfall.Presentation
             transform.SetPositionAndRotation(
                 _followCamera.transform.TransformPoint(0f, 0f, _cameraDistance),
                 _followCamera.transform.rotation);
-            transform.localScale = Vector3.one;
+            transform.localScale = Vector3.one * FitScale();
         }
+
+        /// <summary>The rig is sized in world units for the camera that built it. A destination
+        /// camera with a different projection sees a different height at the same distance — the
+        /// orthographic menu (size 5 → 10 units) handing to Collection's 60° perspective camera
+        /// (1.5 units at 1.3) showed the rig ~6.7× too large, a close-up of the orb's core.</summary>
+        private float FitScale()
+        {
+            if (_followCamera == null || _builtHeight <= 0f) return 1f;
+            return ViewHeight(_followCamera, _cameraDistance) / _builtHeight;
+        }
+
+        private static float ViewHeight(Camera cam, float dist) => cam.orthographic
+            ? cam.orthographicSize * 2f
+            : 2f * dist * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
 
         private static float EaseOutCubic(float x) => 1f - (1f - x) * (1f - x) * (1f - x);
 
