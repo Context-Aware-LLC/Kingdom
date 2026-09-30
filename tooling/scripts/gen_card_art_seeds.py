@@ -61,8 +61,8 @@ def _load(name: str, filename: str):
 
 briefs = _load("gen_card_prompt_briefs", "gen_card_prompt_briefs.py")
 SEEDS_DIR = briefs.SEEDS_DIR
-CARD_DATA = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
-CARD_ART = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
+CARD_DATA = REPO / "unity" / "Assets" / "CardData"
+CARD_ART = REPO / "unity" / "Assets" / "Art" / "Cards"
 
 SEED_FIELDS = ("subject", "perspective", "background", "notes")
 

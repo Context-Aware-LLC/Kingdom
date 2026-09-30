@@ -22,7 +22,7 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-UI_ROOT = Path(__file__).resolve().parents[2] / "unity" / "Emberfall" / "Assets" / "UI"
+UI_ROOT = Path(__file__).resolve().parents[2] / "unity" / "Assets" / "UI"
 
 
 def main() -> int:

@@ -71,9 +71,9 @@ for _stream in (sys.stdout, sys.stderr):
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 OUT = REPO / "art-pipeline" / "card-art"
-CARD_DATA = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
+CARD_DATA = REPO / "unity" / "Assets" / "CardData"
 SEEDS_DIR = REPO / "tooling" / "card-art-seeds"
-UNITY_CARDS = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
+UNITY_CARDS = REPO / "unity" / "Assets" / "Art" / "Cards"
 MANIFEST = OUT / "prompt-manifest.json"
 
 EDGE = 1024  # dev-docs/pipelines/art-and-rendering.md:9

@@ -51,7 +51,7 @@ REPO = pathlib.Path(__file__).resolve().parents[2]
 # Prompts AND pictures, same directory, same stem: art-pipeline/card-art/<setId>/<artId>.{md,png}.
 # One constant, because they are one directory - that is the point.
 CANDIDATES_DIR = REPO / "art-pipeline" / "card-art"
-PROMOTED_ART_DIR = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
+PROMOTED_ART_DIR = REPO / "unity" / "Assets" / "Art" / "Cards"
 HTML_PATH = pathlib.Path(__file__).resolve().parent / "card_art_editor.html"
 
 # mtime-keyed caches — avoid re-reading/re-parsing on every request; invalidated automatically

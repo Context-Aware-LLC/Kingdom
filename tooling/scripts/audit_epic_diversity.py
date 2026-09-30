@@ -35,7 +35,7 @@ import pathlib
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-CARD_DIR = ROOT / "unity" / "Emberfall" / "Assets" / "CardData"
+CARD_DIR = ROOT / "unity" / "Assets" / "CardData"
 
 for _s in (sys.stdout, sys.stderr):
     try:

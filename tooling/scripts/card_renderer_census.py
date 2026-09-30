@@ -34,7 +34,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-SRC = REPO / "unity" / "Emberfall" / "Assets" / "Scripts" / "Presentation" / "BoardController.cs"
+SRC = REPO / "unity" / "Assets" / "Scripts" / "Presentation" / "BoardController.cs"
 
 # (regex, kind, unity_component)
 SITE_PATTERNS = [

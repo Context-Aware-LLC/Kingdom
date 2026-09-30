@@ -40,7 +40,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-ASSETS = REPO / "unity" / "Emberfall" / "Assets"
+ASSETS = REPO / "unity" / "Assets"
 SETTINGS = ASSETS / "AddressableAssetsData" / "AddressableAssetSettings.asset"
 GROUPS_DIR = ASSETS / "AddressableAssetsData" / "AssetGroups"
 

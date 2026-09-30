@@ -68,8 +68,8 @@ import re
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-UI = REPO / "unity" / "Emberfall" / "Assets" / "UI"
-SCRIPTS = REPO / "unity" / "Emberfall" / "Assets" / "Scripts"
+UI = REPO / "unity" / "Assets" / "UI"
+SCRIPTS = REPO / "unity" / "Assets" / "Scripts"
 
 FLOOR_DP = 48
 

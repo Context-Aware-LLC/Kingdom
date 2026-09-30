@@ -38,7 +38,7 @@ import sys
 sys.stdout.reconfigure(encoding="utf-8")
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-P = REPO / "unity" / "Emberfall" / "Assets" / "Scripts" / "Presentation"
+P = REPO / "unity" / "Assets" / "Scripts" / "Presentation"
 RIG = "BoardCameraRig.cs"
 
 

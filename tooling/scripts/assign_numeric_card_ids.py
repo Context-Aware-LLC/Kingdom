@@ -32,7 +32,7 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-CARD_DATA = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
+CARD_DATA = REPO / "unity" / "Assets" / "CardData"
 # Core first: the system cards (hero powers, the coin) belong to no expansion because
 # they never rotate. Order only decides who gets the next free number in a band.
 FILES = ["Core.cards.json", "Emberfall.cards.json", "Rekindling.cards.json"]

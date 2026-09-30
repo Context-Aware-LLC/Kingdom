@@ -56,7 +56,7 @@ from PIL import Image, ImageChops, ImageDraw
 
 REPO = pathlib.Path(r"c:\Users\User\Documents\tcg-hearthlike")
 MASTERS = REPO / "art-pipeline" / "ui" / "cards" / "frames"
-SHIPPED = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "UI" / "Frames"
+SHIPPED = REPO / "unity" / "Assets" / "Art" / "UI" / "Frames"
 
 # rarity -> (master stem, shipped stem). Sam's untouched GIMP cut is the master;
 # the pre-cut `Frame_<Name>.png` is not kept on disk, only `_cut.png`.

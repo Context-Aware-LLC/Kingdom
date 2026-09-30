@@ -29,7 +29,7 @@ SOURCE_W = 3696     # Existing 16:9 authored-frame contract.
 OUTPUT_H = 2080
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-DEST = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Backgrounds" / "BoardPlate_Master.png"
+DEST = REPO / "unity" / "Assets" / "Art" / "Backgrounds" / "BoardPlate_Master.png"
 
 
 def main() -> int:

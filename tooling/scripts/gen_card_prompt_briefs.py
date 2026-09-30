@@ -73,7 +73,7 @@ for _stream in (sys.stdout, sys.stderr):
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 DOCS = pathlib.Path(os.environ.get("EMBERFALL_DOCS", REPO / "docs"))
-CARD_DATA_DIR = REPO / "unity" / "Emberfall" / "Assets" / "CardData"
+CARD_DATA_DIR = REPO / "unity" / "Assets" / "CardData"
 SEEDS_DIR = REPO / "tooling" / "card-art-seeds"
 OUT_ROOT = REPO / "art-pipeline" / "card-art"
 

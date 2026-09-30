@@ -29,7 +29,7 @@ from PIL import Image
 
 SRC = pathlib.Path(__file__).resolve().parents[2] / "art-pipeline" / "ui" / "board" /"hp-frames"
 UNITY = (pathlib.Path(__file__).resolve().parents[2]
-         / "unity" / "Emberfall" / "Assets" / "Art" / "UI" / "Board" / "HpFrames")
+         / "unity" / "Assets" / "Art" / "UI" / "Board" / "HpFrames")
 
 
 def split(path: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]:

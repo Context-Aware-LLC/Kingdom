@@ -115,7 +115,7 @@ def main() -> int:
     # Confirm the serializer still matches the C# writer BEFORE writing anything with it.
     # A drifted serializer would rewrite all 293 rows, and the damage would look like a
     # successful merge.
-    card_dir = args.card_dir or (REPO / "unity" / "Emberfall" / "Assets" / "CardData")
+    card_dir = args.card_dir or (REPO / "unity" / "Assets" / "CardData")
     files = set_files(card_dir)
 
     print("verifying canonical serializer against the corpus…")

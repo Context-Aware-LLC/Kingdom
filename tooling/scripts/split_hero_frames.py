@@ -55,7 +55,7 @@ from PIL import Image, ImageDraw
 
 SRC = pathlib.Path(__file__).resolve().parents[2] / "art-pipeline" / "ui" / "board" /"hp-frames"
 UNITY = (pathlib.Path(__file__).resolve().parents[2]
-         / "unity" / "Emberfall" / "Assets" / "Art" / "UI" / "Board" / "HpFrames")
+         / "unity" / "Assets" / "Art" / "UI" / "Board" / "HpFrames")
 
 THRESH = 8            # see note 2 above — keep tight
 SOCKETS = [(0.25, 0.50), (0.75, 0.50)]

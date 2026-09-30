@@ -21,7 +21,7 @@ from PIL import Image, ImageDraw
 
 SRC = pathlib.Path(__file__).resolve().parents[2] / "art-pipeline" / "ui" / "board" /"hp-frames"
 UNITY = (pathlib.Path(__file__).resolve().parents[2]
-         / "unity" / "Emberfall" / "Assets" / "Art" / "UI" / "Board" / "HpFrames")
+         / "unity" / "Assets" / "Art" / "UI" / "Board" / "HpFrames")
 
 THRESH = 24          # max channel value still counted as "painted black"
 FILL = 128           # marker written into the mask by the flood

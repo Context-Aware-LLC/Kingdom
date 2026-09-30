@@ -42,7 +42,7 @@ CARDS = pathlib.Path(__file__).resolve().parent / "card-voice-casting.json"
 # Takes are candidates, same rule as dispatch_vo.py: never straight into Assets/, because
 # the Voice group addresses by file name and a _takeN suffix would claim its own address.
 TAKE_ROOT = ROOT / "art-pipeline" / "sfx" / "voice" / "Cards"
-FINAL_ROOT = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "Voice" / "Cards"
+FINAL_ROOT = ROOT / "unity" / "Assets" / "Sound" / "Voice" / "Cards"
 
 
 def plan(data, only_handle, only_moment):

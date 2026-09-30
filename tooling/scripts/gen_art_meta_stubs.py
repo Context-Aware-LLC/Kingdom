@@ -21,7 +21,7 @@ import uuid
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-CARDS_ROOT = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
+CARDS_ROOT = REPO / "unity" / "Assets" / "Art" / "Cards"
 
 # textureFormat values (Unity internal enum):
 #   25 = BC7   (Standalone / DXT)

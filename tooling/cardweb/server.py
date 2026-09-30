@@ -333,8 +333,8 @@ def run_validation() -> dict:
     try:
         r = subprocess.run(
             ["dotnet", "run", "--project", str(proj), "--",
-             str(REPO / "unity" / "Emberfall" / "Assets" / "CardData"),
-             str(REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards")],
+             str(REPO / "unity" / "Assets" / "CardData"),
+             str(REPO / "unity" / "Assets" / "Art" / "Cards")],
             capture_output=True, text=True, timeout=300, cwd=str(REPO),
         )
         return {"ok": r.returncode == 0, "exit": r.returncode,

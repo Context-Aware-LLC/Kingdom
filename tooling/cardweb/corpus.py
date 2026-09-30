@@ -42,9 +42,9 @@ REPO = pathlib.Path(__file__).resolve().parents[2]
 # Overridable so the server can run somewhere that is not a repo checkout -- a container image
 # carries the three set files and the thumbnail cache, and nothing else of the 518 MB art tree.
 CARD_DATA_DIR = pathlib.Path(
-    os.environ.get("EMBERFALL_CARD_DIR", REPO / "unity" / "Emberfall" / "Assets" / "CardData"))
+    os.environ.get("EMBERFALL_CARD_DIR", REPO / "unity" / "Assets" / "CardData"))
 ART_DIR = pathlib.Path(
-    os.environ.get("EMBERFALL_ART_DIR", REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"))
+    os.environ.get("EMBERFALL_ART_DIR", REPO / "unity" / "Assets" / "Art" / "Cards"))
 # The servable images. This is the ONLY art the deployed server has -- a container ships the
 # 4.2 MB cache and none of the 518 MB source tree, so art resolution must succeed against the
 # thumbnails alone and treat ART_DIR as an optional extra.

@@ -82,9 +82,9 @@ CARD_LINES_FILE = pathlib.Path(__file__).resolve().parent / "card-voice-casting.
 QUEUE_FILE = pathlib.Path(__file__).resolve().parent / "rewrite-queue.json"
 
 VOICE_TAKES = ROOT / "art-pipeline" / "sfx" / "voice"
-VOICE_FINAL = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "Voice"
+VOICE_FINAL = ROOT / "unity" / "Assets" / "Sound" / "Voice"
 SFX_TAKES = ROOT / "art-pipeline" / "sfx"
-SFX_FINAL = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "SFX"
+SFX_FINAL = ROOT / "unity" / "Assets" / "Sound" / "SFX"
 
 # Decided takes are moved here, not deleted. Sited beside the candidate trees rather than
 # inside them: VOICE_TAKES is walked with rglob, so an archive under voice/ would need the

@@ -52,7 +52,7 @@ LINES = pathlib.Path(__file__).resolve().parent / "voice-lines.json"
 # Addressables address and the rejects would ship alongside the keeper. Sam picks one, trims
 # it, and drops it into FINAL_ROOT under the canonical stem with no take suffix.
 TAKE_ROOT = ROOT / "art-pipeline" / "sfx" / "voice"
-FINAL_ROOT = ROOT / "unity" / "Emberfall" / "Assets" / "Sound" / "Voice"
+FINAL_ROOT = ROOT / "unity" / "Assets" / "Sound" / "Voice"
 MODEL_ID = "eleven_v3"
 API = "https://api.elevenlabs.io/v1/text-to-speech/"
 

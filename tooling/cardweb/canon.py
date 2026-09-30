@@ -216,4 +216,4 @@ def selftest(card_dir: pathlib.Path) -> int:
 
 if __name__ == "__main__":
     REPO = pathlib.Path(__file__).resolve().parents[2]
-    raise SystemExit(selftest(REPO / "unity" / "Emberfall" / "Assets" / "CardData"))
+    raise SystemExit(selftest(REPO / "unity" / "Assets" / "CardData"))

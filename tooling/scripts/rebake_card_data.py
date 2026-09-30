@@ -63,8 +63,8 @@ ADMIN_OUTPUTS = (
 )
 CARD_CI_PROJECT = ROOT / "src" / "Emberfall.Tools.CardCi"
 ART_AUDIT = ROOT / "tooling" / "scripts" / "audit_card_art_names.py"
-CARD_DIR = ROOT / "unity" / "Emberfall" / "Assets" / "CardData"
-ART_DIR = ROOT / "unity" / "Emberfall" / "Assets" / "Art"
+CARD_DIR = ROOT / "unity" / "Assets" / "CardData"
+ART_DIR = ROOT / "unity" / "Assets" / "Art"
 ART_CARDS = ART_DIR / "Cards"
 
 

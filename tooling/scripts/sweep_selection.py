@@ -119,7 +119,7 @@ def sweep_card_files(paths, tally, log):
 
 
 def main() -> int:
-    sets = sorted((ROOT / "unity" / "Emberfall" / "Assets" / "CardData").glob("*.cards.json"))
+    sets = sorted((ROOT / "unity" / "Assets" / "CardData").glob("*.cards.json"))
     fixtures = sorted((ROOT / "tests" / "Emberfall.Core.Tests" / "Fixtures" / "CardSets")
                       .glob("*.cards.snapshot.json"))
     if not sets:

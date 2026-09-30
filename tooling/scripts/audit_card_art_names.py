@@ -69,8 +69,8 @@ import pathlib
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-CARD_DIR = ROOT / "unity" / "Emberfall" / "Assets" / "CardData"
-ART_ROOT = ROOT / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
+CARD_DIR = ROOT / "unity" / "Assets" / "CardData"
+ART_ROOT = ROOT / "unity" / "Assets" / "Art" / "Cards"
 
 ROLES = ("hero_power", "token")
 

@@ -26,7 +26,7 @@ import sys
 from PIL import Image
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-ART_DIR = REPO / "unity" / "Emberfall" / "Assets" / "Art" / "Cards"
+ART_DIR = REPO / "unity" / "Assets" / "Art" / "Cards"
 THUMB_DIR = pathlib.Path(__file__).resolve().parent / ".thumbs"
 
 EDGE = 256          # longest edge, px
