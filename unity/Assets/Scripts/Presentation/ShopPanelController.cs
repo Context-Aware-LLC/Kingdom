@@ -735,6 +735,9 @@ namespace Emberfall.Presentation
                 : displayName;
         }
 
+        /// <summary>Stone positions defined in shop.uss; the largest bundle shows them all.</summary>
+        private const int GemPileSlots = 6;
+
         private void RenderGemBundles(IReadOnlyList<GemBundleOffer> bundles)
         {
             if (_gemList == null) return;
@@ -746,7 +749,22 @@ namespace Emberfall.Presentation
                 var row = new VisualElement();
                 row.AddToClassList("shop-gem");
 
-                var amount = new Label($"{bundle.Gems:N0} Gems");
+                // A pile that grows with the bundle: one more stone per tier, placed by
+                // `.shop-gem__stone--N` in shop.uss (Sam, 2026-09-30).
+                var pile = new VisualElement { pickingMode = PickingMode.Ignore };
+                pile.AddToClassList("shop-gem__pile");
+                for (int stone = 0; stone <= i && stone < GemPileSlots; stone++)
+                {
+                    var gem = new VisualElement { pickingMode = PickingMode.Ignore };
+                    gem.AddToClassList("shop-gem__stone");
+                    gem.AddToClassList("shop-gem__stone--" + stone);
+                    pile.Add(gem);
+                }
+                row.Add(pile);
+
+                // A standard button: chrome comes from theme.uss. Purchases are not wired yet
+                // (the section says so), so it has no handler.
+                var amount = new Button { text = $"{bundle.Gems:N0} Gems" };
                 amount.AddToClassList("shop-gem__amount");
                 row.Add(amount);
 

@@ -511,36 +511,53 @@
 .shop-pack__buy--gems {
 }
 
+/* GEM BUNDLE ROW (Sam, 2026-09-30): a pile of gems that grows with the bundle, a standard button
+ * in the middle, the price on the far side. Replaces the long pill. ShopPanelController adds one
+ * more stone per tier; each is placed by class inside a fixed 160x112 box, and later stones draw
+ * over earlier ones, so the pile builds bottom-up. */
 .shop-gem {
     width: 31%;
-    min-width: 180px;
+    min-width: 360px;
     flex-direction: row;
     align-items: center;
-    background-color: var(--surface-0);
-    border-width: 1px;
-    border-color: var(--surface-3);
-    border-radius: var(--space-2);
-    padding: var(--space-3);
     margin-right: 2%;
-    margin-top: var(--space-2);
+    margin-top: var(--space-4);
 }
 
-#shop-overlay .shop-gem {
-    background-color: rgba(11, 14, 19, 0.78);
-    border-width: 0;
-    border-radius: 999px;
+.shop-gem__pile {
+    width: 160px;
+    height: 112px;
+    flex-shrink: 0;
 }
 
+.shop-gem__stone {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+}
+.shop-gem__stone--0 { left: 52px;  bottom: 0;    background-image: url("/Assets/Art/UI/Gems/gem_rare.png"); }
+.shop-gem__stone--1 { left: 4px;   bottom: 6px;  background-image: url("/Assets/Art/UI/Gems/gem_common.png"); }
+.shop-gem__stone--2 { left: 100px; bottom: 6px;  background-image: url("/Assets/Art/UI/Gems/gem_epic.png"); }
+.shop-gem__stone--3 { left: 28px;  bottom: 36px; background-image: url("/Assets/Art/UI/Gems/gem_legendary.png"); }
+.shop-gem__stone--4 { left: 76px;  bottom: 36px; background-image: url("/Assets/Art/UI/Gems/gem_rare.png"); }
+.shop-gem__stone--5 { left: 52px;  bottom: 58px; background-image: url("/Assets/Art/UI/Gems/gem_common.png"); }
+
+/* Geometry and type only; chrome is theme.uss's `.unity-button`. */
 .shop-gem__amount {
     flex-grow: 1;
-    color: var(--mana);
+    flex-shrink: 1;
+    height: 68px;
+    margin: 0 var(--space-4);
     font-size: var(--type-label);
-    -unity-font-style: bold;
 }
 
 .shop-gem__price {
-    color: var(--ink-2);
-    font-size: var(--type-label);
+    width: 110px;
+    flex-shrink: 0;
+    color: var(--ink-1);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
 }
 
 /* ---------- Pack detail (Sam, 2026-09-05) ----------
