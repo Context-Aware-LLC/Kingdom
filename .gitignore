@@ -53,6 +53,7 @@ artifacts/
 # source. 23 of these were tracked until 2026-08-07 and dirtied `git status` on every reload.
 /unity/*.csproj
 /unity/*.sln
+/unity/*.slnx
 
 # ── Unity / toolchain scratch ─────────────────────────────────────────────────
 # Native build tree from the Android IL2CPP toolchain. 55 files, 2.3 MB, were tracked.
