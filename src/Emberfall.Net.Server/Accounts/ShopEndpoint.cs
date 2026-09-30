@@ -81,12 +81,16 @@ namespace Emberfall.Net.Server.Accounts
             IIdentityTokenVerifier? verifier, IAccountStore? accounts,
             IEntitlementLedger? ledger, EconomyService? economy,
             BoosterPackGrantService? opener, OnboardingGrantService? onboarding,
-            CancellationToken ct = default)
+            CancellationToken ct = default, long quantity = 1)
         {
             if (string.IsNullOrWhiteSpace(bearerToken))
                 return new ShopEndpointResult(ShopEndpointStatus.Unauthenticated);
             if (verifier == null || accounts == null || ledger == null || economy == null || opener == null)
                 return new ShopEndpointResult(ShopEndpointStatus.Unavailable);
+            // Client-authored, so bounded here before anything is priced: a count outside 1..Max is
+            // a malformed request, never a clamp.
+            if (quantity < 1 || quantity > EconomyService.MaxPackQuantity)
+                return new ShopEndpointResult(ShopEndpointStatus.InvalidRequest);
 
             // The starter line is grant-only. Resolve only retail packs that this build can open.
             BoosterPack? pack = null;
@@ -108,7 +112,7 @@ namespace Emberfall.Net.Server.Accounts
             PackPurchaseOutcome purchased;
             try
             {
-                purchased = await economy.PurchasePackAsync(account, pack, chosen, transactionId, ct)
+                purchased = await economy.PurchasePackAsync(account, pack, chosen, transactionId, (int)quantity, ct)
                     .ConfigureAwait(false);
             }
             catch (InvalidOperationException)

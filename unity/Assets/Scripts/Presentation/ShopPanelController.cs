@@ -65,6 +65,11 @@ namespace Emberfall.Presentation
         private readonly VisualElement _detailShell;
         private readonly VisualElement _detailArt;
         private readonly VisualElement _detailActions;
+        private readonly VisualElement _detailQuantityRow;
+        private readonly Label _detailQuantityLabel;
+        private PackOffer _detailOffer;
+        private WalletBalances? _detailWallet;
+        private int _detailQuantity = 1;
         private readonly Label _detailError;
         private VisualElement _detailOriginTile;
         private readonly ShopFlow _flow;
@@ -105,6 +110,20 @@ namespace Emberfall.Presentation
             _detailArt = root.Q<VisualElement>("pack-detail-art");
             _detailActions = root.Q<VisualElement>("pack-detail-actions");
             _detailError = root.Q<Label>("pack-detail-error");
+            _detailQuantityRow = root.Q<VisualElement>("pack-detail-quantity");
+            if (_detailQuantityRow != null)
+            {
+                // "- N +" (Sam, 2026-09-30): how many packs one tap of a buy button takes.
+                var less = new Button(() => StepQuantity(-1)) { text = "-" };
+                var more = new Button(() => StepQuantity(1)) { text = "+" };
+                _detailQuantityLabel = new Label("1");
+                less.AddToClassList("pack-detail-quantity__step");
+                more.AddToClassList("pack-detail-quantity__step");
+                _detailQuantityLabel.AddToClassList("pack-detail-quantity__value");
+                _detailQuantityRow.Add(less);
+                _detailQuantityRow.Add(_detailQuantityLabel);
+                _detailQuantityRow.Add(more);
+            }
             _detailArt?.RegisterCallback<GeometryChangedEvent>(_ => FitDetailActionsToArt());
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _packArt = packArt;
@@ -168,7 +187,31 @@ namespace Emberfall.Presentation
             }
         }
 
-        private async void Buy(string packId, ShopCurrency currency)
+        private void StepQuantity(int delta)
+        {
+            if (_busy || _detailClosing) return;
+            _detailQuantity = Mathf.Clamp(_detailQuantity + delta, 1, ShopCatalog.MaxPackQuantity);
+            RefreshDetailActions();
+        }
+
+        /// <summary>Rebuilds the two buy buttons for the current quantity: their labels show the
+        /// TOTAL, and each enables only if the wallet covers it.</summary>
+        private void RefreshDetailActions()
+        {
+            if (_detailQuantityLabel != null) _detailQuantityLabel.text = _detailQuantity.ToString();
+            if (_detailActions == null) return;
+            _detailActions.Clear();
+            _detailActions.Add(BuyButton(_detailOffer, ShopCurrency.Gold, _detailWallet, _detailQuantity));
+            _detailActions.Add(BuyButton(_detailOffer, ShopCurrency.Gems, _detailWallet, _detailQuantity));
+        }
+
+        private void SetActionsVisible(Visibility visibility)
+        {
+            if (_detailActions != null) _detailActions.style.visibility = visibility;
+            if (_detailQuantityRow != null) _detailQuantityRow.style.visibility = visibility;
+        }
+
+        private async void Buy(string packId, ShopCurrency currency, int quantity)
         {
             if (_flow == null || _busy || _detailClosing) return;
             SetBusy(true);
@@ -176,7 +219,7 @@ namespace Emberfall.Presentation
             bool flyingToVault = false;
             try
             {
-                PackPurchaseResult result = await _flow.PurchaseAsync(packId, currency);
+                PackPurchaseResult result = await _flow.PurchaseAsync(packId, currency, quantity: quantity);
                 RenderSnapshot(result.Shop, updateVaultCount: false);
                 FlyDetailToVault(result.Shop.VaultCount);
                 flyingToVault = true;
@@ -364,11 +407,12 @@ namespace Emberfall.Presentation
             return slot;
         }
 
-        private Button BuyButton(PackOffer offer, ShopCurrency currency, WalletBalances? wallet)
+        private Button BuyButton(PackOffer offer, ShopCurrency currency, WalletBalances? wallet,
+            int quantity = 1)
         {
-            int price = currency == ShopCurrency.Gold ? offer.GoldPrice : offer.GemPrice;
+            int price = (currency == ShopCurrency.Gold ? offer.GoldPrice : offer.GemPrice) * quantity;
             string label = currency == ShopCurrency.Gold ? "Gold" : "Gems";
-            var button = new Button(() => Buy(offer.PackId, currency))
+            var button = new Button(() => Buy(offer.PackId, currency, quantity))
             {
                 text = $"{price:N0} {label}",
             };
@@ -436,8 +480,10 @@ namespace Emberfall.Presentation
                 // left on a retained panel by the previous close implementation.
                 _detailActions.style.display = DisplayStyle.Flex;
                 _detailActions.style.width = StyleKeyword.Null;
-                _detailActions.Add(BuyButton(offer, ShopCurrency.Gold, wallet));
-                _detailActions.Add(BuyButton(offer, ShopCurrency.Gems, wallet));
+                _detailOffer = offer;
+                _detailWallet = wallet;
+                _detailQuantity = 1;
+                RefreshDetailActions();
             }
 
             // Hidden until the flight is nearly done, not gone (Sam, 2026-09-08): the buy buttons
@@ -449,7 +495,7 @@ namespace Emberfall.Presentation
             // reserved the whole time, so revealing it is a paint change only, no relayout. No
             // title/note here -- deleted on purpose (Sam): the art and the two currency labels on
             // the buttons already say everything a pack tile needs to.
-            if (_detailActions != null) _detailActions.style.visibility = Visibility.Hidden;
+            SetActionsVisible(Visibility.Hidden);
 
             // The one piece actually tapped travels with the shell (Sam, 2026-09-07 follow-up).
             // Copies the slot's already-baked background straight across instead of re-resolving
@@ -500,7 +546,7 @@ namespace Emberfall.Presentation
                 {
                     FlipToIdentity(() =>
                     {
-                        if (_detailActions != null) _detailActions.style.visibility = Visibility.Visible;
+                        SetActionsVisible(Visibility.Visible);
                     });
                     return;
                 }
@@ -542,7 +588,7 @@ namespace Emberfall.Presentation
             // Hidden again before the flight starts (2026-09-08): the reveal in OpenDetail's
             // onSettled leaves these visible while the shell sits at rest, and the fly-out should
             // read the same as the fly-in -- art only, no buttons racing the shell back to the tile.
-            if (_detailActions != null) _detailActions.style.visibility = Visibility.Hidden;
+            SetActionsVisible(Visibility.Hidden);
 
             if (_detailShell == null || _detailOriginTile == null)
             {
@@ -582,7 +628,7 @@ namespace Emberfall.Presentation
 
             int animationVersion = ++_detailAnimationVersion;
             _detailClosing = true;
-            if (_detailActions != null) _detailActions.style.visibility = Visibility.Hidden;
+            SetActionsVisible(Visibility.Hidden);
             SetDetailError("");
             _detailShell.AddToClassList("pack-detail-shell--animating");
             _detailShell.style.translate = translate;
@@ -779,6 +825,7 @@ namespace Emberfall.Presentation
         {
             _busy = busy;
             _detailActions?.SetEnabled(!busy && !_purchaseUncertain);
+            _detailQuantityRow?.SetEnabled(!busy && !_purchaseUncertain);
         }
 
         private void SetDetailError(string message)

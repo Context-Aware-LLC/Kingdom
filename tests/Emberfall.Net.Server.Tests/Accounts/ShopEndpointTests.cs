@@ -98,6 +98,20 @@ namespace Emberfall.Net.Server.Tests.Accounts
             Assert.That(noOpener.Status, Is.EqualTo(ShopEndpointStatus.Unavailable));
         }
 
+        [TestCase(0)]
+        [TestCase(-5)]
+        [TestCase(EconomyService.MaxPackQuantity + 1)]
+        public async Task A_quantity_outside_the_bound_is_an_invalid_request(long quantity)
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var accounts = new InMemoryAccountStore(new Clock());
+            ShopEndpointResult result = await ShopEndpoint.PurchaseAsync(Token, PackId, "gold",
+                RequestId, new Verifier(), accounts, ledger, new EconomyService(ledger, new Clock()),
+                Opener(ledger), null, default, quantity);
+
+            Assert.That(result.Status, Is.EqualTo(ShopEndpointStatus.InvalidRequest));
+        }
+
         [Test]
         public async Task Insufficient_funds_does_not_create_a_pack()
         {

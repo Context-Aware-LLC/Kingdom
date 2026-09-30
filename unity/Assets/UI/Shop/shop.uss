@@ -708,6 +708,29 @@
     margin-bottom: var(--space-3);
 }
 
+/* "- N +" above the buy buttons: how many packs one tap buys (Sam, 2026-09-30). Geometry only;
+ * the steps are standard buttons, so the chrome comes from theme.uss. */
+.pack-detail-quantity {
+    flex-direction: row;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-self: center;
+    align-items: center;
+    margin-bottom: var(--space-3);
+}
+.pack-detail-quantity__step {
+    min-width: 68px;
+    height: 68px;
+    font-size: var(--type-h2);
+}
+.pack-detail-quantity__value {
+    min-width: 96px;
+    color: var(--ink-1);
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
 /* Side by side, centered under the visible pack. ShopPanelController sets the row width from
  * the contained background image; a percentage of the shell includes the art's empty gutters. */
 .pack-detail-actions {

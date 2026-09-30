@@ -874,12 +874,17 @@ namespace Emberfall.Net.Server
             app.MapPost("/shop/purchase", async (HttpContext context) =>
             {
                 string? packId = null, currency = null, requestId = null;
+                long quantity = 1;
                 try
                 {
                     using var body = await JsonDocument.ParseAsync(
                         context.Request.Body, cancellationToken: context.RequestAborted);
                     if (body.RootElement.ValueKind == JsonValueKind.Object)
                     {
+                        // Absent means one pack; present-but-not-an-integer is malformed (0 is
+                        // out of range, so the endpoint answers InvalidRequest).
+                        if (body.RootElement.TryGetProperty("quantity", out var q))
+                            quantity = q.ValueKind == JsonValueKind.Number && q.TryGetInt64(out long qn) ? qn : 0;
                         if (body.RootElement.TryGetProperty("packId", out var p) &&
                             p.ValueKind == JsonValueKind.String) packId = p.GetString();
                         if (body.RootElement.TryGetProperty("currency", out var c) &&
@@ -893,7 +898,7 @@ namespace Emberfall.Net.Server
                 ShopEndpointResult result = await ShopEndpoint.PurchaseAsync(
                     BearerFrom(context), packId, currency, requestId, cfg.TokenVerifier,
                     cfg.AccountStore, cfg.EntitlementLedger, economy, packOpener,
-                    onboarding, context.RequestAborted);
+                    onboarding, context.RequestAborted, quantity);
                 context.Response.Headers["Cache-Control"] = "no-store";
                 return Results.Json(new
                 {

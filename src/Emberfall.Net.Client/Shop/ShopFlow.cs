@@ -133,14 +133,18 @@ namespace Emberfall.Net.Client.Shop
         public string PackId { get; }
         public ShopCurrency Currency { get; }
         public string RequestId { get; }
+        /// <summary>How many packs this one intent buys. The server bounds it again.</summary>
+        public int Quantity { get; }
 
-        public PackPurchaseRequest(string packId, ShopCurrency currency, string requestId)
+        public PackPurchaseRequest(string packId, ShopCurrency currency, string requestId, int quantity = 1)
         {
+            if (quantity < 1) throw new ArgumentOutOfRangeException(nameof(quantity));
             if (string.IsNullOrWhiteSpace(packId)) throw new ArgumentException("Pack id is required.", nameof(packId));
             if (!Guid.TryParse(requestId, out _)) throw new ArgumentException("A request id is required.", nameof(requestId));
             PackId = packId;
             Currency = currency;
             RequestId = requestId;
+            Quantity = quantity;
         }
     }
 
@@ -195,6 +199,9 @@ namespace Emberfall.Net.Client.Shop
     /// </summary>
     public static class ShopCatalog
     {
+        /// <summary>The most packs one purchase may take; the server enforces the same bound.</summary>
+        public const int MaxPackQuantity = 10;
+
         public static IReadOnlyList<PackOffer> Packs { get; } = Array.AsReadOnly(new[]
         {
             new PackOffer("pack.emberfall", "Emberfall Pack", 200, 200),
@@ -247,9 +254,10 @@ namespace Emberfall.Net.Client.Shop
         public async Task<PackPurchaseResult> PurchaseAsync(
             string packId,
             ShopCurrency currency,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            int quantity = 1)
         {
-            var request = new PackPurchaseRequest(packId, currency, Guid.NewGuid().ToString("N"));
+            var request = new PackPurchaseRequest(packId, currency, Guid.NewGuid().ToString("N"), quantity);
             PackPurchaseResult result = await _gateway.PurchaseAsync(request, cancellationToken)
                 .ConfigureAwait(false)
                 ?? throw new InvalidOperationException("The shop gateway returned no purchase result.");

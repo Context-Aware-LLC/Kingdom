@@ -62,6 +62,7 @@
         <ui:VisualElement name="pack-detail-overlay" class="pack-detail-overlay pack-detail-overlay--hidden emb-bleed">
             <ui:VisualElement name="pack-detail-shell" class="pack-detail-shell">
                 <ui:VisualElement name="pack-detail-art" class="pack-detail-art"/>
+                <ui:VisualElement name="pack-detail-quantity" class="pack-detail-quantity"/>
                 <ui:VisualElement name="pack-detail-actions" class="pack-detail-actions"/>
                 <ui:Label name="pack-detail-error" text="" class="pack-detail-error pack-detail-error--hidden"/>
             </ui:VisualElement>

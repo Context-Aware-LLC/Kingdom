@@ -109,6 +109,9 @@ namespace Emberfall.Net.Server.Accounts
     public sealed class EconomyService
     {
         public const long PackPrice = 200;
+        /// <summary>The most packs one purchase may take. The client picks the quantity, so the
+        /// server owns the bound (docs/dev-docs/quality/security.md, "purchasable inventory").</summary>
+        public const int MaxPackQuantity = 10;
         public const string PackPurchaseSource = "pack_purchase";
 
         private readonly IEntitlementLedger _ledger;
@@ -182,10 +185,13 @@ namespace Emberfall.Net.Server.Accounts
             BoosterPack pack,
             EconomyCurrency currency,
             string serverTransactionId,
+            int quantity = 1,
             CancellationToken ct = default)
         {
             if (account == null) throw new ArgumentNullException(nameof(account));
             if (pack == null) throw new ArgumentNullException(nameof(pack));
+            if (quantity < 1 || quantity > MaxPackQuantity)
+                throw new ArgumentOutOfRangeException(nameof(quantity));
             if (string.IsNullOrWhiteSpace(serverTransactionId))
                 throw new ArgumentException("A server-minted purchase transaction id is required.", nameof(serverTransactionId));
             EconomyAccountPolicy.RequireDurable(account);
@@ -201,10 +207,10 @@ namespace Emberfall.Net.Server.Accounts
                 PackPurchaseSource + ":" + serverTransactionId,
                 new List<EntitlementDelta>
                 {
-                    new EntitlementDelta(currencyItem, -PackPrice, PackPurchaseSource),
-                    new EntitlementDelta(pack.Id, 1, PackPurchaseSource),
+                    new EntitlementDelta(currencyItem, -PackPrice * quantity, PackPurchaseSource),
+                    new EntitlementDelta(pack.Id, quantity, PackPurchaseSource),
                 },
-                new EntitlementBalanceRequirement(currencyItem, PackPrice),
+                new EntitlementBalanceRequirement(currencyItem, PackPrice * quantity),
                 DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs));
 
             EntitlementBatchResult applied = await _ledger.ApplyBatchAsync(batch, ct).ConfigureAwait(false);

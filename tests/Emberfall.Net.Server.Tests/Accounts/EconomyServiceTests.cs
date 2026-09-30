@@ -78,6 +78,54 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         [Test]
+        public async Task A_multi_pack_purchase_spends_the_total_and_grants_every_pack()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            Account account = AuthenticatedAccount();
+            await ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, EconomyItems.Gold, 1000, "quest", "quest-1", At));
+            var economy = new EconomyService(ledger, new FixedTime());
+            var pack = new BoosterPack(SetId.EMBERFALL);
+
+            PackPurchaseOutcome result = await economy.PurchasePackAsync(
+                account, pack, EconomyCurrency.Gold, "purchase-1", 3);
+
+            Assert.That(result.Status, Is.EqualTo(PackPurchaseStatus.Purchased));
+            Assert.That(result.Wallet.Gold, Is.EqualTo(400));
+            Assert.That(await ledger.BalanceAsync(account.PlayerId, pack.Id), Is.EqualTo(3));
+        }
+
+        [Test]
+        public async Task A_multi_pack_purchase_the_wallet_cannot_cover_takes_nothing()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            Account account = AuthenticatedAccount();
+            await ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, EconomyItems.Gold, 599, "quest", "quest-1", At));
+            var economy = new EconomyService(ledger, new FixedTime());
+            var pack = new BoosterPack(SetId.EMBERFALL);
+
+            PackPurchaseOutcome result = await economy.PurchasePackAsync(
+                account, pack, EconomyCurrency.Gold, "purchase-1", 3);
+
+            Assert.That(result.Status, Is.EqualTo(PackPurchaseStatus.InsufficientFunds));
+            Assert.That(result.Wallet.Gold, Is.EqualTo(599));
+            Assert.That(await ledger.BalanceAsync(account.PlayerId, pack.Id), Is.Zero);
+        }
+
+        [TestCase(0)]
+        [TestCase(-1)]
+        [TestCase(EconomyService.MaxPackQuantity + 1)]
+        public void A_quantity_outside_the_bound_is_refused(int quantity)
+        {
+            var economy = new EconomyService(new InMemoryEntitlementLedger(), new FixedTime());
+
+            Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+                await economy.PurchasePackAsync(AuthenticatedAccount(),
+                    new BoosterPack(SetId.EMBERFALL), EconomyCurrency.Gold, "purchase-1", quantity));
+        }
+
+        [Test]
         public async Task Pack_Purchase_With_199_Gems_Leaves_The_Wallet_And_Pack_Unchanged()
         {
             var ledger = new InMemoryEntitlementLedger();

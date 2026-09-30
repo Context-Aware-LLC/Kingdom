@@ -58,7 +58,20 @@ namespace Emberfall.Net.Client.Tests.Shop
             Assert.That(http.Requests[0].Url, Is.EqualTo("https://emberfall.fly.dev/shop/purchase"));
             Assert.That(http.Requests[0].Body, Is.EqualTo(
                 "{\"packId\":\"pack.emberfall\",\"currency\":\"gold\"," +
-                "\"requestId\":\"bd6ad741-7d8b-4e51-a581-154425424370\"}"));
+                "\"requestId\":\"bd6ad741-7d8b-4e51-a581-154425424370\",\"quantity\":1}"));
+        }
+
+        [Test]
+        public async Task A_multi_pack_purchase_sends_its_quantity()
+        {
+            var http = new FakeAuthHttp().Reply(200, Snapshot.Replace("\"ready\"", "\"purchased\"").Replace(
+                "\"packs\":", "\"packId\":\"pack.emberfall\",\"unopenedCount\":3,\"packs\":"));
+            var request = new PackPurchaseRequest("pack.emberfall", ShopCurrency.Gems,
+                "bd6ad741-7d8b-4e51-a581-154425424370", 3);
+
+            await Gateway(http).PurchaseAsync(request);
+
+            Assert.That(http.Requests[0].Body, Does.EndWith("\"quantity\":3}"));
         }
 
         [Test]

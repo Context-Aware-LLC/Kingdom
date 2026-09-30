@@ -51,7 +51,8 @@ namespace Emberfall.Net.Client.Shop
             if (_baseUrl.Length == 0 || string.IsNullOrEmpty(token))
                 throw new ShopPurchaseException("Sign in before buying a pack.", false);
 
-            string body = AuthJson.Object(
+            string body = AuthJson.ObjectWithRaw(
+                "\"quantity\":" + request.Quantity.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 AuthJson.Field("packId", request.PackId),
                 AuthJson.Field("currency", request.Currency.ToString().ToLowerInvariant()),
                 AuthJson.Field("requestId", request.RequestId));
