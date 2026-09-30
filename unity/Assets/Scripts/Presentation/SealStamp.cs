@@ -18,8 +18,8 @@ namespace Emberfall.Presentation
     /// <see cref="PackTearAnimator"/> uses with classes. Beats are scheduled on the seal itself, so
     /// they die with it if the target leaves the panel mid-slam.</para>
     ///
-    /// <para><b>No sound yet.</b> <c>onImpact</c> fires on the frame the wax lands; that is where
-    /// the thunk goes once it exists.</para>
+    /// <para><b>The thunk</b> (<c>Sound/SFX/ui/Wax_stamp.wav</c>) is preloaded when the drop starts
+    /// and played on the frame the wax lands, so it cannot trail the impact by a load.</para>
     /// </summary>
     public static class SealStamp
     {
@@ -41,7 +41,8 @@ namespace Emberfall.Presentation
         /// edge. All null centres the seal.</param>
         /// <param name="tiltDegrees">Resting rotation. Null picks a random tilt, which is what makes a
         /// stamp look hand-pressed rather than printed.</param>
-        /// <param name="onImpact">Called when the wax lands. The sound hook.</param>
+        /// <param name="sound">UI sound id played on impact; null for a silent stamp.</param>
+        /// <param name="onImpact">Called when the wax lands.</param>
         /// <param name="onDone">Called once the seal has settled.</param>
         /// <returns>The seal element, or null when there was nothing to stamp with — in which case
         /// both callbacks have already run, so a caller mid-sequence is never stranded.</returns>
@@ -54,6 +55,7 @@ namespace Emberfall.Presentation
             float? right = null,
             float? bottom = null,
             float? tiltDegrees = null,
+            string sound = UiSfx.WaxStamp,
             Action onImpact = null,
             Action onDone = null)
         {
@@ -65,6 +67,7 @@ namespace Emberfall.Presentation
             }
 
             float tilt = tiltDegrees ?? UnityEngine.Random.Range(-14f, 14f);
+            if (sound != null) UiSfx.Preload(sound);
 
             var stamp = new VisualElement { pickingMode = PickingMode.Ignore };
             stamp.AddToClassList(SealClass);
@@ -114,6 +117,7 @@ namespace Emberfall.Presentation
                 Transition(stamp, SquashMs, EasingMode.EaseOut);
                 s.scale = new Scale(new Vector2(1.14f, 0.88f));
                 target.style.translate = new Translate(0, 4);
+                if (sound != null) UiSfx.Play(sound);
                 onImpact?.Invoke();
             });
 

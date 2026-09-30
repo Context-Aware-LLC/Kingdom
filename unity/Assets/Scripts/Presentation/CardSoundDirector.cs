@@ -166,6 +166,17 @@ namespace Emberfall.Presentation
             load.Completed += handle => PlayLoaded(handle, address);
         }
 
+        /// <summary>Start loading <paramref name="soundId"/>'s base clip without playing it, so a
+        /// later <see cref="Play"/> lands on the frame it is called rather than after a load. For a
+        /// sound tied to a beat of an animation that has a lead-in, like the seal's drop.</summary>
+        public void Preload(string soundId)
+        {
+            if (string.IsNullOrEmpty(soundId)) return;
+            string address = _addressPrefix + soundId;
+            if (_handles.ContainsKey(address)) return;
+            _handles[address] = Addressables.LoadAssetAsync<AudioClip>(address);
+        }
+
         public void ReleaseAll()
         {
             foreach (AsyncOperationHandle<AudioClip> handle in _handles.Values)
