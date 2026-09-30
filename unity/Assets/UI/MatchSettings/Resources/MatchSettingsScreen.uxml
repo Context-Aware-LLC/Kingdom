@@ -92,7 +92,7 @@
                 <ui:Label name="account-error" text=" " class="mm-modal__error"/>
                 <ui:VisualElement class="mm-modal__actions">
                     <ui:Button name="btn-account-close" text="Close" class="mm-modal__button emb-back"/>
-                    <ui:Button name="btn-account-new" text="New account" class="mm-modal__button mm-modal__button--cta"/>
+                    <ui:Button name="btn-account-new" text="New account" class="mm-modal__button emb-primary"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

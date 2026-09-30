@@ -374,7 +374,7 @@ namespace Emberfall.Presentation
             {
                 _deckModalConfirm.text = pane == DeckPane.Delete ? "Delete deck" : "Save";
                 _deckModalConfirm.EnableInClassList("roster-button--danger", pane == DeckPane.Delete);
-                _deckModalConfirm.EnableInClassList("roster-button--cta", pane != DeckPane.Delete);
+                _deckModalConfirm.EnableInClassList("emb-primary", pane != DeckPane.Delete);
             }
 
             if (pane == DeckPane.Rename)

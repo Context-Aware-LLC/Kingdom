@@ -74,7 +74,7 @@ namespace Emberfall.Presentation
         private VisualElement _detailPortrait, _detailBullets, _powerBlock;
         private Label _passTitle, _passHelp, _detailName, _detailPass;
         private Label _powerName, _powerDesc, _confirmSummary, _createError;
-        private Button _detailSelect, _createGenerated, _createBlank;
+        private Button _detailSelect, _createGenerated, _createBlank, _cancel;
         private Label _starterNote;
         private FirstRunTidbit _tidbit;
         private bool _creating;
@@ -136,6 +136,7 @@ namespace Emberfall.Presentation
         private void CacheElements()
         {
             _pickerView = _root.Q<VisualElement>("create-picker-view");
+            _cancel = _root.Q<Button>("create-cancel");
             _detailView = _root.Q<VisualElement>("create-detail-view");
             _confirmView = _root.Q<VisualElement>("create-confirm-view");
 
@@ -176,6 +177,8 @@ namespace Emberfall.Presentation
         private void ShowView(CreateView view)
         {
             Show(_pickerView, view == CreateView.Picker);
+            // The corner Back lives on the root, not in the picker view, so it hides with it here.
+            Show(_cancel, view == CreateView.Picker);
             Show(_detailView, view == CreateView.Detail);
             Show(_confirmView, view == CreateView.Confirm);
 

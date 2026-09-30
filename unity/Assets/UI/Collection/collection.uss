@@ -71,17 +71,9 @@
 .db-chip {
     font-size: var(--type-label);
     color: var(--ink-2);
-    background-color: var(--surface-3);
-    border-width: 0;
-    border-radius: 999px;
     padding: var(--space-1) var(--space-4);
     margin-right: var(--space-2);
     height: var(--touch-min);
-}
-.db-chip--on {
-    color: var(--surface-0);
-    background-color: var(--mana);
-    -unity-font-style: bold;
 }
 
 /* ---------- Lists ---------- */
@@ -334,21 +326,12 @@
 .col-button {
     min-height: var(--space-12);
     padding: var(--space-2) var(--space-6);
-    border-width: 0;
-    border-radius: 999px;
     color: var(--ink-1);
-    background-color: var(--surface-3);
     font-size: var(--type-label);
-}
-.col-button--ghost {
-    background-color: rgba(0, 0, 0, 0.55);
 }
 .col-button--decks {
     min-width: 120px;
     margin-right: var(--space-3);
-    color: var(--surface-0);
-    background-color: var(--accent);
-    -unity-font-style: bold;
 }
 /* A tab hanging from the top-LEFT, because that is now the edge its drawer arrives from. It was
  * centred (`left: 50%; translate: -50% 0`) while the drawer came down across the full width. */

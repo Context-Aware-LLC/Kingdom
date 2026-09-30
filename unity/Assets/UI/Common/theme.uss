@@ -361,6 +361,76 @@
     display: none;
 }
 
+/* ================================================================================================
+ * EVERY BUTTON IS CHROME (Sam, 2026-09-30). Slate by default, ember with `.emb-primary`.
+ *
+ * ONE-CLASS SPECIFICITY ON PURPOSE. This sheet is linked FIRST on every screen, so a screen's own
+ * one-class rule that sets `background-image` (a gear, a tab strip, a plate) still wins the tie and
+ * keeps its art. A button that must NOT be chrome says `background-image: none` in its own rule.
+ *
+ * A SCREEN RULE THAT SETS `background-color` ON A CHROME BUTTON BRINGS THE SQUARE CORNERS BACK.
+ * The fill paints under the sprite's transparent corners. Tint the sprite instead
+ * (`-unity-background-image-tint-color`), as `.roster-button--danger` does.
+ *
+ * THE CORNER FIX is the variable block: Unity's default theme paints `.unity-button:hover:enabled`
+ * and `:active:enabled` (three-class selectors no one-class rule can beat) from the
+ * `--unity-colors-button-*` variables, so clearing the variables clears the grey fill without a
+ * specificity fight -- and without stripping the fills plates like `.hero-choice` rely on. Names
+ * from Unity's built-in variable reference (UIE-uss-built-in-variable-reference, 6000.5).
+ * ================================================================================================ */
+:root {
+    --unity-colors-button-background: rgba(0, 0, 0, 0);
+    --unity-colors-button-background-hover: rgba(0, 0, 0, 0);
+    --unity-colors-button-background-pressed: rgba(0, 0, 0, 0);
+    --unity-colors-button-background-hover_pressed: rgba(0, 0, 0, 0);
+    --unity-colors-button-background-focus: rgba(0, 0, 0, 0);
+    --unity-colors-button-background-disabled: rgba(0, 0, 0, 0);
+    --unity-colors-button-border: rgba(0, 0, 0, 0);
+    --unity-colors-button-border-hover: rgba(0, 0, 0, 0);
+    --unity-colors-button-border-pressed: rgba(0, 0, 0, 0);
+    --unity-colors-button-border-focus: rgba(0, 0, 0, 0);
+    --unity-colors-button-border-disabled: rgba(0, 0, 0, 0);
+}
+
+.unity-button {
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(232, 236, 242);
+    color: var(--ink-1);
+    transition-property: -unity-background-image-tint-color, opacity, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.unity-button:hover {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.unity-button:active {
+    translate: 0 1px;
+    -unity-background-image-tint-color: rgb(205, 211, 220);
+}
+.unity-button:disabled {
+    opacity: 0.42;
+}
+
+/* After `.unity-button`: same specificity, so order decides. */
+.emb-primary {
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_primary_ember.png");
+    -unity-slice-top: 34;
+    -unity-slice-bottom: 34;
+    -unity-background-image-tint-color: rgb(255, 236, 205);
+    color: rgb(250, 230, 193);
+}
+.emb-primary:active {
+    -unity-background-image-tint-color: rgb(230, 206, 170);
+}
+
 /* THE CANONICAL BACK BUTTON (Sam, 2026-09-27). One visual definition for every screen's own
  * corner Back control, replacing four independent copies that had drifted: Collection/Shop's
  * `col-button`+`chrome-button` combo (which only rendered correctly on Collection -- Shop never
@@ -370,8 +440,8 @@
  * and the pack vault's flat-color `.vault-back` with no chrome at all.
  *
  * Apply THIS CLASS ALONE alongside the functional `.emb-back` marker (BackNavigation.cs). It
- * carries its own size, chrome and position, so it never needs a screen-local override or a
- * specificity fight with that screen's own button styles again.
+ * carries its own size and position and takes its chrome from `.unity-button` above, so it never
+ * needs a screen-local override.
  *
  * height 68 matches `.ms-gear` (matchsettings.uss), the opposite bottom corner, so the two read
  * as one row. That is 12 over `--touch-min`'s floor, matching this session's "make corner nav
@@ -394,36 +464,12 @@
     min-height: 68px;
     height: 68px;
     padding: 0 var(--space-6);
-    border-width: 0;
-    border-radius: 0;
-    background-color: transparent;
-    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
-    -unity-slice-left: 64;
-    -unity-slice-right: 64;
-    -unity-slice-top: 36;
-    -unity-slice-bottom: 36;
-    -unity-slice-scale: 0.5px;
-    -unity-background-image-tint-color: rgb(232, 236, 242);
-    color: var(--ink-1);
     font-size: var(--type-body);
-    -unity-font-style: bold;
     -unity-text-align: middle-center;
-    transition-property: -unity-background-image-tint-color, opacity, translate;
-    transition-duration: 0.1s;
-    transition-timing-function: ease-out;
 }
-.emb-back-button:hover {
-    -unity-background-image-tint-color: rgb(255, 255, 255);
-}
-.emb-back-button:active {
-    translate: 0 1px;
-    -unity-background-image-tint-color: rgb(205, 211, 220);
-}
-/* CLEAR CORNERS in every state (Sam, 2026-09-29). Paired with `.unity-button` on purpose: Unity's
- * default theme repaints a grey fill on `.unity-button:hover:enabled`/`:active:enabled`, and
- * character-roster.uss rounds every `.unity-button` 4px -- both land on the sprite's transparent
- * corners and both outrank a one-class rule. Four classes' worth of specificity ends the fight on
- * every screen that loads this sheet, whatever its own button rules say. */
+/* CLEAR CORNERS in every state (Sam, 2026-09-29). Paired with `.unity-button` on purpose: it
+ * outranks any screen's own button rules. The button rules above should make this redundant; it
+ * stays until that is seen on a device. */
 .emb-back-button.unity-button,
 .emb-back-button.unity-button:hover,
 .emb-back-button.unity-button:hover:enabled,

@@ -48,7 +48,7 @@
           a step at all.)
         -->
         <ui:VisualElement name="match-bar" picking-mode="Ignore" class="match-bar">
-            <ui:Button name="match-continue" text="Continue" class="roster-button roster-button--cta" />
+            <ui:Button name="match-continue" text="Continue" class="roster-button emb-primary" />
         </ui:VisualElement>
 
         <!--
@@ -68,11 +68,11 @@
                     <!-- The primary action (Sam, 2026-08-09): opening a deck's menu is most often
                          "I want to change what's in it," and that used to have no button at all —
                          only the undiscoverable double-tap-the-plate gesture reached the deckbuilder. -->
-                    <ui:Button name="deck-edit" text="Edit deck" class="roster-button roster-button--cta deck-action" />
+                    <ui:Button name="deck-edit" text="Edit deck" class="roster-button emb-primary deck-action" />
                     <!-- Match pick only. Every other action below is offered from both doors. -->
-                    <ui:Button name="deck-select" text="Select this deck" class="roster-button roster-button--cta deck-action" />
-                    <ui:Button name="deck-rename" text="Rename deck" class="roster-button roster-button--ghost deck-action" />
-                    <ui:Button name="deck-change-back" text="Change card back" class="roster-button roster-button--ghost deck-action" />
+                    <ui:Button name="deck-select" text="Select this deck" class="roster-button emb-primary deck-action" />
+                    <ui:Button name="deck-rename" text="Rename deck" class="roster-button deck-action" />
+                    <ui:Button name="deck-change-back" text="Change card back" class="roster-button deck-action" />
                     <!-- "Set as default" was here until ADR-0009. It answered "which of this
                          character's decks do I open on"; a flat deck list does not ask it, and the
                          queue never read the answer anyway (#343). -->
@@ -102,8 +102,8 @@
 
                 <ui:Label name="deck-modal-error" text="" class="create-error" />
                 <ui:VisualElement class="delete-actions">
-                    <ui:Button name="deck-modal-cancel" text="Close" class="roster-button roster-button--ghost emb-back" />
-                    <ui:Button name="deck-modal-confirm" text="Save" class="roster-button roster-button--cta" />
+                    <ui:Button name="deck-modal-cancel" text="Close" class="roster-button emb-back" />
+                    <ui:Button name="deck-modal-confirm" text="Save" class="roster-button emb-primary" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

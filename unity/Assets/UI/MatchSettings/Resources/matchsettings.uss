@@ -21,16 +21,8 @@
     right: var(--space-6);
     width: 68px;
     height: 68px;
-    background-color: rgba(18, 23, 31, 0.98);
-    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
-    -unity-slice-left: 64;
-    -unity-slice-right: 64;
-    -unity-slice-top: 36;
-    -unity-slice-bottom: 36;
     -unity-slice-scale: 0.5px;
     -unity-background-image-tint-color: rgb(218, 224, 232);
-    border-width: 0;
-    border-radius: var(--space-2);
     overflow: hidden;
     align-items: center;
     justify-content: center;

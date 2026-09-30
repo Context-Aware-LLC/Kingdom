@@ -211,6 +211,7 @@
     align-items: center;
     justify-content: center;
     background-color: var(--surface-0);
+    background-image: none;
     border-width: 6px;
     border-color: rgb(86, 93, 104);
     border-radius: 52px;
@@ -581,33 +582,12 @@
     flex-direction: row;
     justify-content: flex-end;
 }
+/* Geometry and type only; chrome is theme.uss's `.unity-button` / `.emb-primary`. */
 .mm-modal__button {
     font-size: var(--type-label);
-    -unity-font-style: bold;
-    color: var(--ink-1);
-    background-color: var(--surface-2);
-    border-width: 1px;
-    border-color: var(--surface-3);
-    border-radius: var(--space-1);
     height: var(--touch-min);
     padding: 0 var(--space-6);
     margin-left: var(--space-2);
-}
-.mm-modal__button:hover {
-    background-color: var(--surface-3);
-}
-.mm-modal__button--cta {
-    background-color: var(--accent);
-    border-color: var(--accent);
-    color: var(--surface-0);
-}
-.mm-modal__button--cta:hover {
-    background-color: rgb(250, 186, 90);
-}
-.mm-modal__button--cta:disabled {
-    background-color: var(--surface-2);
-    border-color: var(--surface-3);
-    color: var(--ink-2);
 }
 
 /* ---------- Ranked ladder ---------- */
@@ -823,6 +803,7 @@
  * in competition with the thing the player should actually be doing. */
 .mm-signin__resend {
     background-color: rgba(0, 0, 0, 0);
+    background-image: none;
     border-width: 0;
     color: var(--ink-2);
     font-size: var(--type-caption);              /* 14dp. Below the 16dp .mm-modal__button so the

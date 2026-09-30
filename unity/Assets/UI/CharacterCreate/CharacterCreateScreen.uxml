@@ -29,7 +29,6 @@
              themselves are built in CharacterCreateController.BuildHeroChoice. -->
         <ui:VisualElement name="create-picker-view">
             <ui:VisualElement class="create-picker-header">
-                <ui:VisualElement class="create-picker-header-spacer" />
                 <ui:VisualElement class="create-picker-heading">
                     <ui:Label name="create-pass-title" text="Choose your hero" class="delete-title" />
                     <!-- THE ONLY PLACE THE PAIRING IS EXPLAINED BEFORE IT IS MADE (#312). A
@@ -39,7 +38,6 @@
                          Hero Power. Filled per pass by BuildHeroChoices. -->
                     <ui:Label name="create-pass-help" text="" class="create-pass-help" />
                 </ui:VisualElement>
-                <ui:Button name="create-cancel" text="Cancel" class="roster-button roster-button--ghost emb-back" />
             </ui:VisualElement>
             <ui:VisualElement name="create-hero-choices" class="hero-choice-list">
                 <ui:VisualElement name="create-hero-column-left" class="hero-choice-column" />
@@ -69,8 +67,8 @@
                 <ui:Label name="create-power-desc" text="" class="hero-power-desc" />
             </ui:VisualElement>
             <ui:VisualElement class="delete-actions">
-                <ui:Button name="create-detail-back" text="Back" class="roster-button roster-button--ghost emb-back" />
-                <ui:Button name="create-detail-select" text="Select" class="roster-button roster-button--cta" />
+                <ui:Button name="create-detail-back" text="Back" class="roster-button emb-back" />
+                <ui:Button name="create-detail-select" text="Select" class="roster-button emb-primary" />
             </ui:VisualElement>
         </ui:VisualElement>
 
@@ -94,11 +92,17 @@
             <ui:Label name="create-starter-note" text="" class="create-help create-help--starter" />
             <ui:Label name="create-error" text="" class="create-error" />
             <ui:VisualElement class="delete-actions">
-                <ui:Button name="create-change" text="Wait!" class="roster-button roster-button--ghost" />
-                <ui:Button name="create-blank" text="Start blank" class="roster-button roster-button--ghost" />
-                <ui:Button name="create-generated" text="Generate a queue-ready deck" class="roster-button roster-button--cta" />
+                <ui:Button name="create-change" text="Wait!" class="roster-button" />
+                <ui:Button name="create-blank" text="Start blank" class="roster-button" />
+                <ui:Button name="create-generated" text="Generate a queue-ready deck" class="roster-button emb-primary" />
             </ui:VisualElement>
         </ui:VisualElement>
+
+        <!-- The picker's way out, in the corner every screen's Back uses. A child of the ROOT,
+             not the picker view: an absolute child of the view would sit inside the root's edge
+             padding and take the cutout inset twice. CharacterCreateController.ShowView hides it
+             with the picker, so the hardware back gesture finds the detail view's own Back. -->
+        <ui:Button name="create-cancel" text="Back" class="emb-back emb-back-button" />
 
         <!-- TIDBIT: the first-run card, driven by FirstRunTidbit. LAST CHILD ON PURPOSE —
              UI Toolkit has no z-index, so document order is the only thing putting this over
@@ -124,7 +128,7 @@
                     <ui:Label name="tidbit-body" text="" class="tidbit-copy" />
                 </ui:VisualElement>
                 <ui:VisualElement class="tidbit-actions">
-                    <ui:Button name="btn-tidbit-done" text="Got it" class="roster-button roster-button--cta" />
+                    <ui:Button name="btn-tidbit-done" text="Got it" class="roster-button emb-primary" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

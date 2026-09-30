@@ -130,6 +130,7 @@
     border-color: rgba(0, 0, 0, 0);
     border-radius: var(--space-2);
     background-color: transparent;
+    background-image: none;
     color: var(--ink-1);
 }
 
@@ -311,6 +312,7 @@
     border-color: var(--surface-3);
     border-radius: var(--space-2);
     background-color: var(--surface-1);
+    background-image: none;
     color: var(--ink-1);
 }
 
@@ -470,29 +472,14 @@
     color: var(--negative);
 }
 
-/* THIS CLASS ALONE DOES NOT MAKE A VISIBLE BUTTON. It sets geometry and type and deliberately
- * leaves `color` and `background-color` to a modifier — --cta, --ghost, --danger. A button given
- * `roster-button` and no modifier does not fall back to anything of ours: it renders as Unity's
- * DEFAULT runtime button, flat light grey with a mid-grey label, and nothing warns. That is what
- * shipped on the whole hero picker (#311/#314/#325) — the screen was read as "missing its
- * stylesheet" when every class it uses was in fact defined right here.
- * Add a modifier, or set the two properties yourself, whenever you add this class. */
+/* Geometry and type only. The chrome comes from `.unity-button` in theme.uss (slate), or
+ * `.emb-primary` (ember). Height matches `.emb-back-button`. */
 .roster-button {
     min-width: 148px;
-    height: 48px;
-    border-width: 0;
-    border-radius: var(--space-2);
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
+    height: 68px;
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
     font-size: var(--type-body);
-    -unity-font-style: bold;
-}
-
-/* Press feedback for the whole family, one rule (2026-09-08): same `translate: 0 1px` idiom as
- * `.ms-gear:active` (matchsettings.uss). Generic on `.roster-button` rather than per-modifier so
- * every button that carries it -- Back included -- gets a touched state with no further wiring. */
-.roster-button:active {
-    translate: 0 1px;
 }
 
 .roster-button--small {
@@ -501,35 +488,13 @@
     font-size: var(--type-label);
 }
 
-.roster-button--cta {
-    color: var(--surface-0);
-    background-color: var(--accent);
-}
-
-/* Literal, same reason as --ghost's hover below: theme.uss has --accent (240,166,60) but no
- * lighter step to reach for. */
-.roster-button--cta:hover {
-    background-color: rgb(243, 185, 99);
-}
-
-.roster-button--ghost {
-    color: var(--ink-1);
-    background-color: var(--surface-3);
-}
-
-/* One step brighter than --surface-3 (42,51,64) -- there is no lighter surface token to reach
- * for, so this is a literal value rather than a var(). */
-.roster-button--ghost:hover {
-    background-color: rgb(58, 69, 86);
-}
-
+/* Red slate by TINT, not fill: a fill paints under the chrome's transparent corners. */
 .roster-button--danger {
-    color: var(--ink-1);
-    background-color: var(--negative);
+    -unity-background-image-tint-color: rgb(229, 110, 114);
 }
 
 .roster-button--danger:hover {
-    background-color: rgb(234, 109, 113);
+    -unity-background-image-tint-color: rgb(245, 140, 143);
 }
 
 .create-button {
@@ -660,8 +625,8 @@
  * THIS SCREEN AUTHORS ITS OWN VERTICAL GUTTER, and has to. `.emb-bleed` is its only inset and
  * `.emb-bleed` is `0 var(--edge-safe)` since 568d6b33 -- the cutout is on a SIDE, so the class
  * deliberately no longer imposes a top or bottom (see the token's note in theme.uss). Nothing
- * else in the picker column has a top margin, so without these two the Cancel button in
- * `.create-picker-header` sits at y=0 and clips its own top corners. LONGHANDS, not a `padding`
+ * else in the picker column has a top margin, so without these two the heading in
+ * `.create-picker-header` sits at y=0. LONGHANDS, not a `padding`
  * shorthand: the shorthand would re-set the horizontal padding `.emb-bleed` is here to supply. */
 .character-create-screen {
     flex-grow: 1;
@@ -680,10 +645,6 @@
 .create-picker-header {
     flex-direction: row;
     align-items: center;
-}
-
-.create-picker-header-spacer {
-    width: 148px;
 }
 
 .create-picker-heading {
@@ -807,9 +768,9 @@
     padding: var(--space-1);
     color: var(--ink-1);
     background-color: var(--surface-2);
-    /* 6 -> 14 and 4 -> 12 for the same reason every other number in this block moved: `.unity-button`
-     * supplies a 4-unit radius that was a soft corner on an 84-unit plate and is a hard one on a
-     * 212-unit plate, and a 6-unit spine beside a 204-unit portrait is a hairline. */
+    /* A plate, not a chrome button: opts out of theme.uss's `.unity-button` slate. */
+    background-image: none;
+    /* 14: a 6-unit spine beside a 204-unit portrait is a hairline. */
     border-left-width: 14px;
     border-left-color: var(--class-neutral);
     border-radius: 12px;
@@ -1028,8 +989,4 @@
     font-size: var(--type-body);
     color: var(--ink-2);
     white-space: normal;
-}
-
-.unity-button {
-    border-radius: 4px;
 }

@@ -109,7 +109,7 @@
                     <ui:Label name="craft-shard-balance" text="0" class="craft-wallet-value"/>
                     <ui:VisualElement class="craft-shard-icon craft-shard-icon--wallet" tooltip="Shards"/>
                 </ui:VisualElement>
-                <ui:Button name="craft-close" text="Close" class="col-button col-button--ghost chrome-button chrome-button--secondary emb-back"/>
+                <ui:Button name="craft-close" text="Close" class="col-button chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
             <ui:VisualElement class="craft-feedback">
                 <ui:Label name="craft-status" class="craft-status" style="display: none;"/>
