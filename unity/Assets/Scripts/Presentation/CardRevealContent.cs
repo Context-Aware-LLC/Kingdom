@@ -85,8 +85,19 @@ namespace Emberfall.Presentation
                 }
 
                 case CardType.WEAPON:
-                    sb.Append("  ·  ").Append(def.Attack ?? 0).Append(" / ").Append(def.Durability ?? 0);
+                {
+                    int printedAtk  = def.Attack ?? 0;
+                    int printedDura = def.Durability ?? 0;
+                    // Live values only for an EQUIPPED weapon (Durability non-null); in hand the
+                    // instance stats are not materialised and the printed card is the truth.
+                    bool equipped = live != null && live.Durability.HasValue;
+                    int atk  = equipped ? live.Attack : printedAtk;
+                    int dura = equipped ? live.Durability.Value : printedDura;
+                    sb.Append("  ·  ").Append(atk).Append(" / ").Append(dura);
+                    if (equipped && (atk != printedAtk || dura != printedDura))
+                        sb.Append("   (printed ").Append(printedAtk).Append('/').Append(printedDura).Append(')');
                     break;
+                }
             }
 
             return sb.ToString();

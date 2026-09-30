@@ -593,14 +593,17 @@ namespace Emberfall.Presentation
                 (0.5f - frac.y) * BoardController.CardH, z);
         }
 
-        // The equipped weapon is no longer rendered as a card, so nothing pushes live weapon
-        // stats through here — HeroSocketsView draws them on the weapon ring's stat bosses,
-        // including the buff/damage colouring this used to own. Weapon cards in HAND still get
-        // their attack and durability from _def on the Bind/refresh path above.
+        // The equipped weapon is not rendered as a card on the board — HeroSocketsView draws it
+        // as the ring beside the hero. The one card that shows an EQUIPPED weapon is the reveal
+        // panel's focus copy, bound to the socket's live state, whose Durability is non-null;
+        // that is the only case the weapon branch below repaints. Weapon cards in HAND keep the
+        // printed attack and durability ApplyFrame wrote above.
 
         private void RecolorStats()
         {
-            if (_live == null || _def.Type != CardType.MINION) return;
+            if (_live == null || _def == null) return;
+            if (_def.Type == CardType.WEAPON) { RecolorEquippedWeapon(); return; }
+            if (_def.Type != CardType.MINION) return;
 
             // In hand the core hasn't materialized instance stats yet (SummonMinion sets them;
             // MaxHealth ≥ 1 for any live minion) — show the printed definition stats instead of
@@ -628,6 +631,30 @@ namespace Emberfall.Presentation
                 healthLabel.color = _live.Health < _live.MaxHealth ? DamageColor
                                   : _live.MaxHealth > baseHp      ? BuffColor
                                   : Color.white;
+            }
+        }
+
+        // Same colour rules as HeroSocketsView.SetWeapon, so the ring and its enlarged card agree.
+        private void RecolorEquippedWeapon()
+        {
+            if (!_live.Durability.HasValue) return;
+
+            if (attackLabel != null)
+            {
+                int baseAtk = _def.Attack ?? _live.Attack;
+                attackLabel.text  = _live.Attack.ToString();
+                attackLabel.color = _live.Attack > baseAtk ? BuffColor
+                                  : _live.Attack < baseAtk ? DamageColor
+                                  : Color.white;
+            }
+
+            if (durabilityLabel != null)
+            {
+                int dura     = _live.Durability.Value;
+                int baseDura = _def.Durability ?? dura;
+                durabilityLabel.text  = dura.ToString();
+                // Durability only ever falls, so under base always means worn, never buffed.
+                durabilityLabel.color = dura < baseDura ? DamageColor : Color.white;
             }
         }
 

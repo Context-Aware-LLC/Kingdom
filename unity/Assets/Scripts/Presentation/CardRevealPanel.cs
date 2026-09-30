@@ -38,6 +38,7 @@ namespace Emberfall.Presentation
         private CardPresenter _focusPresenter;
         private InstanceId _focusedCard;
         private bool _hasFocusedCard;
+        private ICardLiveState _focusedLive;
         private float _focusX;
         private float _focusY;
         private float _focusScale;
@@ -148,7 +149,11 @@ namespace Emberfall.Presentation
         internal void Show(CardRevealTrigger trigger)
         {
             ApplyLayout(force: false);
-            if (trigger != null && (!_hasFocusedCard || !_focusedCard.Equals(trigger.CardId)))
+            // The live state is compared as well as the id: a weapon's hand card and its equipped
+            // socket share one InstanceId but not one live state, and a focus copy still bound to
+            // the hand card's would show printed stats for the equipped weapon.
+            if (trigger != null && (!_hasFocusedCard || !_focusedCard.Equals(trigger.CardId)
+                                    || !ReferenceEquals(_focusedLive, trigger.LiveState)))
                 RebuildFocusCard(trigger);
             gameObject.SetActive(true);
         }
@@ -169,6 +174,7 @@ namespace Emberfall.Presentation
 
             _focusedCard = trigger.CardId;
             _hasFocusedCard = true;
+            _focusedLive = trigger.LiveState;
             Transform focus = _focusPresenter.transform;
             focus.localPosition = new Vector3(_focusX, _focusY, -0.03f);
             focus.localRotation = Quaternion.identity;
@@ -181,6 +187,7 @@ namespace Emberfall.Presentation
         {
             _focusedCard = default;
             _hasFocusedCard = false;
+            _focusedLive = null;
             if (_focusPresenter == null) return;
             _focusPresenter.Unbind();
             GameObject old = _focusPresenter.gameObject;

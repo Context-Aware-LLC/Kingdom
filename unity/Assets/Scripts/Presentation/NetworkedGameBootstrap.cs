@@ -602,6 +602,8 @@ namespace Emberfall.Presentation
             var go   = new GameObject($"HeroSockets_{playerId}");
             var view = go.AddComponent<HeroSocketsView>();
             view.Init(playerId, power, weapon, db, artProvider);
+            // boardController.Initialize ran above, so its reveal controller exists by now.
+            if (boardController != null) view.AttachReveal(boardController.RevealController);
             matchRunner.OnStateUpdated += view.OnStateUpdated;
         }
 

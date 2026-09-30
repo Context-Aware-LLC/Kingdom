@@ -146,6 +146,16 @@ namespace Emberfall.Presentation
         // this the same illustration is re-requested dozens of times a turn.
         private string _powerArtId, _weaponArtId;
 
+        // THE EQUIPPED WEAPON IS READABLE (Sam, 2026-09-30: "you should be able to mouse over an
+        // equipped weapon and still see its large size card preview"). The socket reuses the board
+        // cards' reveal pipeline — one CardRevealTrigger on its own collider, one live state fed
+        // from ps.Weapon — rather than a second preview. Rebuilt per weapon INSTANCE, so a replaced
+        // or destroyed weapon takes its trigger (and through Unregister, any open reveal) with it.
+        private CardRevealController _reveal;
+        private CardRevealTrigger    _weaponTrigger;
+        private CardLiveState        _weaponLive;
+        private InstanceId           _weaponId;
+
         /// <summary>Attach to a new GameObject and call Init once before the first
         /// OnStateUpdated. Identified by PlayerId, never by seat index (HeroPlateView
         /// precedent — a networked seat-1 local renders at visual bottom).</summary>
@@ -190,6 +200,10 @@ namespace Emberfall.Presentation
             }
         }
 
+        /// <summary>Makes the equipped weapon inspectable through the match's reveal controller.
+        /// Optional: a mode without one (the decision review) simply never gets a trigger.</summary>
+        internal void AttachReveal(CardRevealController controller) => _reveal = controller;
+
         public void OnStateUpdated(GameState state)
         {
             PlayerState ps = state.Players[state.SeatOf(_playerId)];
@@ -203,7 +217,7 @@ namespace Emberfall.Presentation
             SetPower(cost, usable, powerDef?.ArtId);
 
             CardInstance w = ps.Weapon;
-            if (w == null) { SetWeapon(false, 0, 0, null, 0, 0); return; }
+            if (w == null) { SetWeapon(false, 0, 0, null, 0, 0); ClearWeaponReveal(); return; }
 
             // Base values so a buffed or damaged weapon reads as such — carried over from
             // CardPresenter.SetWeaponStats, which used to render the equipped weapon as a card.
@@ -211,6 +225,58 @@ namespace Emberfall.Presentation
             int durability = w.CurrentDurability ?? 0;
             SetWeapon(true, w.CurrentAttack, durability, wdef?.ArtId,
                       wdef?.Attack ?? w.CurrentAttack, wdef?.Durability ?? durability);
+            SyncWeaponReveal(w, wdef);
+        }
+
+        private void SyncWeaponReveal(CardInstance w, CardDefinition def)
+        {
+            if (_reveal == null || _weaponRoot == null || def == null) { ClearWeaponReveal(); return; }
+            if (_weaponTrigger != null && !_weaponId.Equals(w.Id)) ClearWeaponReveal();
+
+            if (_weaponTrigger == null)
+            {
+                _weaponId   = w.Id;
+                _weaponLive = new CardLiveState(w.Id, equippedWeapon: true);
+                _weaponLive.UpdateFrom(w);
+
+                var go = new GameObject("WeaponReveal");
+                go.transform.SetParent(_weaponRoot.transform, false);
+                go.transform.localPosition = Vector3.zero;
+
+                // Sized to the drawn ring's aperture, like the hero power's tap target, and pushed
+                // BEHIND the hero plate's box (z -0.05..0.05) so the plate keeps the strip where the
+                // ring laps onto it. The collider carries no ClickableCard, ClickableHero or
+                // ClickableHeroPower descriptor, so InputRouter.Probe walks straight past it:
+                // pressing, dragging and targeting behave exactly as before, and only Unity's
+                // OnMouse events — which the reveal trigger listens to — see it.
+                var col = go.AddComponent<BoxCollider>();
+                col.size   = new Vector3(HitDiameter, HitDiameter, 0.1f);
+                col.center = new Vector3(WeaponApertureOffset.x, WeaponApertureOffset.y, 0.1f);
+
+                _weaponTrigger = go.AddComponent<CardRevealTrigger>();
+                _weaponTrigger.InitEquippedWeapon(w.Id, def, _weaponLive, _reveal);
+            }
+            else
+            {
+                // Attack and durability change under a raised panel; the focus card is bound to
+                // this state and repaints from its Changed event.
+                _weaponLive.UpdateFrom(w);
+            }
+        }
+
+        // Destroying the trigger's object is what closes an open reveal: its OnDestroy unregisters
+        // from the controller, which cancels the model when this weapon was the one on screen.
+        private void ClearWeaponReveal()
+        {
+            if (_weaponTrigger != null)
+            {
+                GameObject go = _weaponTrigger.gameObject;
+                if (Application.isPlaying) Destroy(go);
+                else DestroyImmediate(go);
+            }
+            _weaponTrigger = null;
+            _weaponLive    = null;
+            _weaponId      = default;
         }
 
         /// <summary>Public so an editor preview can drive the shipping layer directly rather than

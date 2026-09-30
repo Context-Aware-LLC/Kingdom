@@ -13,8 +13,8 @@ namespace Emberfall.Presentation
     /// from hand has its collider destroyed mid-press, and the up event that never arrives would
     /// strand the panel on screen.</para>
     ///
-    /// <para>Attached to every card the local player can legitimately read: their own hand, and
-    /// both boards. Hidden cards (the opponent's projected hand) never reach this component at all
+    /// <para>Attached to every card the local player can legitimately read: their own hand,
+    /// both boards, and both heroes' equipped weapons (HeroSocketsView). Hidden cards (the opponent's projected hand) never reach this component at all
     /// — BoardController's card-back path skips the definition bind, so there is nothing to
     /// describe and no way for the reveal to leak hidden information.</para>
     /// </summary>
@@ -23,7 +23,14 @@ namespace Emberfall.Presentation
         internal InstanceId CardId { get; private set; }
         internal CardDefinition Definition => _def;
         internal ICardLiveState LiveState => _live;
-        internal bool IsInspectable => Clickable != null && CanInspectZone(Clickable.Zone);
+        internal bool IsInspectable => Clickable != null
+            ? CanInspectZone(Clickable.Zone)
+            : _equippedWeapon;
+
+        // The weapon socket has no ClickableCard — it is not a card on the board and InputRouter
+        // never treats it as a subject — so its readability cannot come from a zone. Set only by
+        // InitEquippedWeapon; a board card in a router-less mode (replay) stays uninspectable.
+        private bool _equippedWeapon;
 
         // Hidden opponent hands never reach this component (they have no CardDefinition), so Hand
         // means the local readable hand. Keep this policy explicit: expanding it to Deck or Graveyard
@@ -48,6 +55,15 @@ namespace Emberfall.Presentation
             Clickable   = clickable;
             _controller = controller;
             _controller?.Register(this);
+        }
+
+        /// <summary>The hero's equipped weapon, hosted by HeroSocketsView on its own collider.
+        /// Equipped weapons are public for both heroes, so either socket may be read.</summary>
+        internal void InitEquippedWeapon(InstanceId cardId, CardDefinition def, ICardLiveState live,
+                                         CardRevealController controller)
+        {
+            _equippedWeapon = true;
+            Init(cardId, def, live, null, controller);
         }
 
         /// <summary>Composed on demand rather than cached: stats and keywords change under a

@@ -40,6 +40,12 @@ namespace Emberfall.Presentation
         AttackReadiness AttackReadiness { get; }
         int SpellDamageBonus { get; }
 
+        /// <summary>Current durability of an EQUIPPED weapon, and null for every other card —
+        /// including a weapon in hand, whose instance stats are not materialised until it is
+        /// equipped (DerivedStats.EnterWeapon). Null means "the printed card is the whole truth".
+        /// Only HeroSocketsView's weapon state sets it.</summary>
+        int? Durability { get; }
+
         event Action<CardChange> Changed;
     }
 }

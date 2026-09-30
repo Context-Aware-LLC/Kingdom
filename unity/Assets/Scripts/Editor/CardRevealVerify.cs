@@ -41,6 +41,7 @@ namespace Emberfall.Editor
             failed += StaleExitDoesNotCancelLiveHover();
             failed += EveryKeywordHasGlossary();
             failed += ContentUsesLiveStateOverPrint();
+            failed += EquippedWeaponContentUsesLiveStats();
             failed += ReadableZonesIncludeHandAndBoard();
             failed += DirectTooltipSuppressesTouch();
             failed += LayoutFillsSafeHeight();
@@ -246,6 +247,27 @@ namespace Emberfall.Editor
             return Pass("ContentUsesLiveStateOverPrint");
         }
 
+        // The equipped weapon's reveal (HeroSocketsView) must read its CURRENT attack and
+        // durability; a weapon in hand (Durability null) must keep reading the printed card.
+        private static int EquippedWeaponContentUsesLiveStats()
+        {
+            CardDefinition def = WeaponWith(attack: 3, durability: 2);
+
+            CardRevealContent worn = CardRevealContent.Build(def, new StubLive { Attack = 4, Durability = 1 });
+            if (worn.Subtitle == null || worn.Subtitle.IndexOf("4 / 1", StringComparison.Ordinal) < 0)
+                return Fail("EquippedWeaponContentUsesLiveStats", $"live stats missing from \"{worn.Subtitle}\"");
+            if (worn.Subtitle.IndexOf("printed 3/2", StringComparison.Ordinal) < 0)
+                return Fail("EquippedWeaponContentUsesLiveStats", $"printed stats not annotated in \"{worn.Subtitle}\"");
+
+            CardRevealContent inHand = CardRevealContent.Build(def, new StubLive { Attack = 0, Durability = null });
+            if (inHand.Subtitle.IndexOf("3 / 2", StringComparison.Ordinal) < 0
+                || inHand.Subtitle.IndexOf("printed", StringComparison.Ordinal) >= 0)
+                return Fail("EquippedWeaponContentUsesLiveStats",
+                            $"hand weapon did not read as printed: \"{inHand.Subtitle}\"");
+
+            return Pass("EquippedWeaponContentUsesLiveStats");
+        }
+
         private static int ReadableZonesIncludeHandAndBoard()
         {
             if (!CardRevealTrigger.CanInspectZone(Zone.Hand))
@@ -389,6 +411,7 @@ namespace Emberfall.Editor
             public int BoardSlot { get; set; }
             public AttackReadiness AttackReadiness { get; set; }
             public int SpellDamageBonus { get; set; }
+            public int? Durability { get; set; }
 #pragma warning disable 67
             public event Action<CardChange> Changed;
 #pragma warning restore 67
@@ -405,6 +428,15 @@ namespace Emberfall.Editor
                 // `cardText:` with the switch to generated text (eec7c6c). Typed rules replace
                 // both; this fixture needs none, so an empty list is the faithful translation.
                 keywords: new[] { kw }, rules: Array.Empty<RuleDefinition>(),
+                flavorText: "", artId: "verify", setId: SetId.CORE,
+                collectible: true, tribe: null, factionId: "");
+
+        private static CardDefinition WeaponWith(int attack, int durability) =>
+            new CardDefinition(
+                id: 9011, handle: "verify_weapon", name: "Verify Weapon", type: CardType.WEAPON, cost: 1,
+                attack: attack, health: null, durability: durability,
+                @class: CardClass.NEUTRAL, rarity: Rarity.COMMON,
+                keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
                 flavorText: "", artId: "verify", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "");
 

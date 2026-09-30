@@ -89,6 +89,10 @@ namespace Emberfall.Presentation
         private IArtProvider _artProvider;
         private IUiSpriteProvider _uiSprites;
         private CardRevealController _revealController;
+
+        /// <summary>The match's one reveal controller, so HeroSocketsView can make the equipped
+        /// weapon inspectable through the same pipeline. Null until <see cref="Initialize"/>.</summary>
+        internal CardRevealController RevealController => _revealController;
         private GameState _currentState;
 
         // Hero portraits are separate from their anchors so combat motion can move the character

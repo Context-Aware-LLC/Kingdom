@@ -17,12 +17,21 @@ namespace Emberfall.Presentation
         public int BoardSlot   { get; private set; }
         public AttackReadiness AttackReadiness { get; private set; }
         public int SpellDamageBonus { get; private set; }
+        public int? Durability { get; private set; }
 
         public event Action<CardChange> Changed;
 
         private readonly HashSet<Keyword> _keywords = new HashSet<Keyword>();
+        private readonly bool _equippedWeapon;
 
-        public CardLiveState(InstanceId id) => Id = id;
+        /// <param name="equippedWeapon">True only for the state behind the hero's weapon socket.
+        /// A weapon's hand and equipped lives share one InstanceId, so the zone cannot be read off
+        /// the instance; the owner says which one this is.</param>
+        public CardLiveState(InstanceId id, bool equippedWeapon = false)
+        {
+            Id = id;
+            _equippedWeapon = equippedWeapon;
+        }
 
         // ownerMayAct: this card sits on the local human's board, it's that player's turn,
         // and the phase is Main (BoardController computes it from the snapshot).
@@ -30,11 +39,14 @@ namespace Emberfall.Presentation
         {
             CardChange changed = CardChange.None;
 
-            if (Attack != ci.CurrentAttack || Health != ci.CurrentHealth || MaxHealth != ci.MaxHealth)
+            int? durability = _equippedWeapon ? ci.CurrentDurability : null;
+            if (Attack != ci.CurrentAttack || Health != ci.CurrentHealth || MaxHealth != ci.MaxHealth
+                || Durability != durability)
             {
-                Attack    = ci.CurrentAttack;
-                Health    = ci.CurrentHealth;
-                MaxHealth = ci.MaxHealth;
+                Attack     = ci.CurrentAttack;
+                Health     = ci.CurrentHealth;
+                MaxHealth  = ci.MaxHealth;
+                Durability = durability;
                 changed  |= CardChange.Stats;
             }
 
