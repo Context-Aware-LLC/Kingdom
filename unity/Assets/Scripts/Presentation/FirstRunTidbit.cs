@@ -150,6 +150,7 @@ namespace Emberfall.Presentation
         {
             _title.text = tidbit.Title;
             _body.text = tidbit.Body;
+            Stamp();
 
             if (_art == null) return;
 
@@ -164,6 +165,17 @@ namespace Emberfall.Presentation
                 ? new StyleBackground(StyleKeyword.None)
                 : new StyleBackground(sprite);
             _art.style.display = sprite == null ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
+        /// <summary>Every card is sealed as it arrives: the wax lands on its top-right corner a
+        /// beat after the card shows, so the player sees the card first and the stamp second.</summary>
+        private void Stamp()
+        {
+            SealStamp.Clear(_card);
+            Sprite seal = _sprites?.Get(SealStamp.SpriteKey);
+            if (seal == null) return;
+            _card.schedule.Execute(() => SealStamp.Play(_card, seal, size: 170f, top: -60f, right: -50f))
+                .StartingIn(250);
         }
 
         private void Hide()

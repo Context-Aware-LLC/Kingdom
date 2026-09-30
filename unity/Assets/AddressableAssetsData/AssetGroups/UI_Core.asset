@@ -185,6 +185,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 288a436c492d45f1b7e575702530ee2e
+    m_Address: ui/ui_seal_crown
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 96639c2fa6d74b4e95d61ef2653ab769
     m_Address: ui/hero-power
     m_ReadOnly: 0
