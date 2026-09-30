@@ -991,10 +991,10 @@ PlayerSettings:
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
   enableDirectStorage: 0
-  cloudProjectId: 759471ab-312e-4ec2-956e-f448a2f463cb
+  cloudProjectId: 0712252e-43f2-44e7-a8d5-a41a25a63337
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Emberfall
+  projectName: Kingdom
   organizationId: mrsonord2240
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
