@@ -8,7 +8,7 @@ namespace Emberfall.Tools.CollectionSelfCheck
 {
     /// <summary>
     /// <see cref="ICardDatabase"/> over the live shipping card sets — every
-    /// <c>unity/Emberfall/Assets/CardData/*.cards.json</c>, the same rows the client loads since
+    /// <c>unity/Assets/CardData/*.cards.json</c>, the same rows the client loads since
     /// EF-040.
     ///
     /// <para>The live sets, not the pinned golden-replay snapshot, and for the same reason
@@ -76,6 +76,6 @@ namespace Emberfall.Tools.CollectionSelfCheck
         }
 
         internal static string DefaultCardDataDir()
-            => Path.Combine(FindRepoRoot(), "unity", "Emberfall", "Assets", "CardData");
+            => Path.Combine(FindRepoRoot(), "unity", "Assets", "CardData");
     }
 }

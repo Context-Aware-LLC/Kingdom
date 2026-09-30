@@ -40,30 +40,30 @@
   <ItemGroup>
     <!-- Unity-free gesture policy: compile the production model into headless tests so target-plan
          changes do not require launching the Unity editor to verify. -->
-    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\DragTargetingModel.cs"
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\DragTargetingModel.cs"
              Link="Presentation\DragTargetingModel.cs" />
     <!-- #139: placement is solved from the drop's x, so the gesture model needs the row's
          arithmetic. BoardRowGeometry is UnityEngine-free for exactly this reason. -->
-    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\BoardRowGeometry.cs"
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\BoardRowGeometry.cs"
              Link="Presentation\BoardRowGeometry.cs" />
-    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\OngoingEffectStatusModel.cs"
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\OngoingEffectStatusModel.cs"
              Link="Presentation\OngoingEffectStatusModel.cs" />
     <!-- Card SFX event routing is Unity-free; audio loading/playback remains in the Unity-only director. -->
-    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\CardSoundCueRouter.cs"
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\CardSoundCueRouter.cs"
              Link="Presentation\CardSoundCueRouter.cs" />
     <!-- Hero-impact event classification is Unity-free; native haptics and camera motion stay in Unity. -->
-    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\HeroImpactFeedbackPolicy.cs"
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\HeroImpactFeedbackPolicy.cs"
              Link="Presentation\HeroImpactFeedbackPolicy.cs" />
-    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\MinionSummonArchetypes.cs"
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\MinionSummonArchetypes.cs"
              Link="Presentation\MinionSummonArchetypes.cs" />
     <!-- Unearth snapshot interpretation is Unity-free so reconnect/redaction/order behavior can
          be proved without taking the machine-wide Unity Editor seat. -->
-    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Presentation\UnearthChoiceModel.cs"
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\UnearthChoiceModel.cs"
              Link="Presentation\UnearthChoiceModel.cs" />
     <!-- Unity-free authoring model/writer: compile and round-trip them without launching Unity. -->
-    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Editor\EditableCard.cs"
+    <Compile Include="..\..\unity\Assets\Scripts\Editor\EditableCard.cs"
              Link="Editor\EditableCard.cs" />
-    <Compile Include="..\..\unity\Emberfall\Assets\Scripts\Editor\CardJsonRowIO.cs"
+    <Compile Include="..\..\unity\Assets\Scripts\Editor\CardJsonRowIO.cs"
              Link="Editor\CardJsonRowIO.cs" />
   </ItemGroup>
 

@@ -13,7 +13,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Shop_wallet_has_separate_large_icons_and_reads_the_authoritative_collection_wallet()
         {
-            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string shop = Path.Combine(assets, "UI", "Shop");
             XDocument document = XDocument.Load(Path.Combine(shop, "ShopScreen.uxml"));
             string styles = File.ReadAllText(Path.Combine(shop, "shop.uss"));
@@ -49,7 +49,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Shop_purchase_flies_to_a_counted_vault_link_without_a_status_toast_or_reveal()
         {
-            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string screen = File.ReadAllText(Path.Combine(assets, "Scripts", "Presentation", "ShopScreenController.cs"));
             string panel = File.ReadAllText(Path.Combine(assets, "Scripts", "Presentation", "ShopPanelController.cs"));
             XDocument document = XDocument.Load(Path.Combine(assets, "UI", "Shop", "ShopScreen.uxml"));

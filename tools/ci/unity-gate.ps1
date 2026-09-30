@@ -48,9 +48,9 @@ $startedAt = Get-Date
 
 $commit      = (& git -C $REPO_ROOT rev-parse HEAD).Trim()
 $commitShort = (& git -C $REPO_ROOT rev-parse --short HEAD).Trim()
-$dirtyUnity  = @(& git -C $REPO_ROOT status --porcelain -- unity/Emberfall | ForEach-Object { $_.Trim() })
+$dirtyUnity  = @(& git -C $REPO_ROOT status --porcelain -- unity | ForEach-Object { $_.Trim() })
 
-Write-Host "unity-gate: commit $commitShort  $(if ($dirtyUnity.Count -gt 0) { "($($dirtyUnity.Count) uncommitted unity/Emberfall path(s) — gate reflects HEAD, not the working tree)" } else { '(clean)' })" -ForegroundColor Cyan
+Write-Host "unity-gate: commit $commitShort  $(if ($dirtyUnity.Count -gt 0) { "($($dirtyUnity.Count) uncommitted unity path(s) — gate reflects HEAD, not the working tree)" } else { '(clean)' })" -ForegroundColor Cyan
 
 # ── Stage 1: compile ─────────────────────────────────────────────────────────
 Write-Host "unity-gate: running unity-compile.ps1..." -ForegroundColor Cyan

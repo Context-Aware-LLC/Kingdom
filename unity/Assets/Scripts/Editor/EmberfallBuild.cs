@@ -12,7 +12,7 @@ namespace Emberfall.Editor
     /// <summary>
     /// M2 D1 player-build entry point: Addressables content build + Windows standalone player
     /// in one step (content must be rebuilt whenever addressable assets change, or the player
-    /// ships a stale catalog). Output: unity/Emberfall/Builds/Windows/Emberfall.exe.
+    /// ships a stale catalog). Output: unity/Builds/Windows/Emberfall.exe.
     /// </summary>
     public static class EmberfallBuild
     {

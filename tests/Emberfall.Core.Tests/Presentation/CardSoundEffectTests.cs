@@ -239,7 +239,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Class_cast_clips_on_disk_match_the_router_and_report_what_is_missing()
         {
             string sfx = Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Sound", "SFX");
+                RepoPaths.RepoRoot, "unity", "Assets", "Sound", "SFX");
             // spell_cast_1 is a pre-convention placeholder that nothing routes to; it is listed
             // so the orphan check stays about NEW mistakes rather than re-reporting a known one.
             var wanted = new List<string>

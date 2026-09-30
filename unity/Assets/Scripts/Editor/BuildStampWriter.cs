@@ -77,7 +77,7 @@ namespace Emberfall.Editor
             {
                 var psi = new ProcessStartInfo("git", args)
                 {
-                    // The project lives at <repo>/unity/Emberfall, so dataPath's parent is not the
+                    // The project lives at <repo>/unity, so dataPath's parent is not the
                     // repo root — but git walks up, so any path inside the tree resolves it.
                     WorkingDirectory = Application.dataPath,
                     RedirectStandardOutput = true,

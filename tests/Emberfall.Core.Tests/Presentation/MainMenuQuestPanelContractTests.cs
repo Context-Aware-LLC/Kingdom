@@ -13,7 +13,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Startup_surface_places_translucent_quests_and_icon_wallets_in_one_top_rail()
         {
-            string unityRoot = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string unityRoot = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string uxml = File.ReadAllText(Path.Combine(
                 unityRoot, "UI", "MainMenu", "MainMenuScreen.uxml"));
             string styles = File.ReadAllText(Path.Combine(

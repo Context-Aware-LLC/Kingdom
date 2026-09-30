@@ -18,7 +18,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Main_menu_does_not_render_or_bind_character_and_deck_identity()
         {
-            string unityRoot = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string unityRoot = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string uxml = File.ReadAllText(Path.Combine(
                 unityRoot, "UI", "MainMenu", "MainMenuScreen.uxml"));
             string styles = File.ReadAllText(Path.Combine(
@@ -58,7 +58,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Main_menu_wordmark_is_outlined_vector_art()
         {
-            string unityRoot = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string unityRoot = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string wordmarkPath = Path.Combine(
                 unityRoot, "Art", "UI", "MainMenu_Wordmark_KingdomOfBadIdeas.svg");
             string wordmark = File.ReadAllText(wordmarkPath);

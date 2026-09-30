@@ -19,7 +19,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Loading_plate_suppresses_the_composited_collection_without_collapsing_layout()
         {
             string path = Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation",
+                RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation",
                 "CollectionController.cs");
             string source = File.ReadAllText(path);
 
@@ -42,7 +42,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Menu_renders_a_preloaded_collection_plate_before_async_scene_activation()
         {
             string presentation = Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation");
+                RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation");
             string menu = File.ReadAllText(Path.Combine(presentation, "MainMenuController.cs"));
             string nav = File.ReadAllText(Path.Combine(presentation, "ScreenNav.cs"));
             string collection = File.ReadAllText(Path.Combine(presentation, "CollectionController.cs"));
@@ -88,7 +88,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Initial_wall_bake_is_time_sliced_so_the_loading_plate_can_animate()
         {
             string path = Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation",
+                RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation",
                 "CardWall.cs");
             string source = File.ReadAllText(path);
 

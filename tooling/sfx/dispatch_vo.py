@@ -2,7 +2,7 @@
 """Generate hero voice lines from voice-lines.json straight into the Unity project.
 
 Reads the cast and the script from tooling/sfx/voice-lines.json and writes
-    unity/Emberfall/Assets/Sound/Voice/<Class>/vo_<class>_<moment>_<n>.wav
+    unity/Assets/Sound/Voice/<Class>/vo_<class>_<moment>_<n>.wav
 
 Uses model_id eleven_v3, because that is the only model that honours the inline
 audio tags ([whispers], [shouts], emotion tags) -- older models read the brackets

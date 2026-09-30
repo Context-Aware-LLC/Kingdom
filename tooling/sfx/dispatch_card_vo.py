@@ -10,7 +10,7 @@ than duplicating it; only the keying (card handle, not class) and the output pat
 Reads tooling/sfx/card-voice-casting.json and writes takes into
     art-pipeline/sfx/voice/Cards/<handle>/vo_card_<handle>_<moment>_<n>_take<T>.wav
 A promoted take (via soundweb.py) lands at
-    unity/Emberfall/Assets/Sound/Voice/Cards/<handle>/vo_card_<handle>_<moment>_<n>.wav
+    unity/Assets/Sound/Voice/Cards/<handle>/vo_card_<handle>_<moment>_<n>.wav
 
 Subfolder depth does not matter to Addressables: AddressablesSetup.AddFolderAssets scans
 the whole Assets/Sound/Voice tree recursively and addresses by FILE NAME

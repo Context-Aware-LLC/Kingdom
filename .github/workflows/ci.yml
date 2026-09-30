@@ -234,7 +234,7 @@ jobs:
       # shared CardValidator, C2 duplicate-id across the library, artId->file check
       # (art misses WARN only — placeholder-art policy, M2 decision 18).
       - name: "Stage 6 · Content C-series card gate (Emberfall.Tools.CardCi)"
-        run: dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Emberfall/Assets/CardData unity/Emberfall/Assets/Art
+        run: dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Assets/CardData unity/Assets/Art
 
       # CardValidator C14b (above, via CardCi) already fails a fired trigger that declares an
       # ANY_* selector. This scan is NOT that check twice: its real job is the drift guard the

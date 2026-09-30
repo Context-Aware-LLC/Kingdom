@@ -14,7 +14,7 @@
   // order and never sorted by count — position is half the encoding.
   var RARITY_ORDER = ["COMMON", "RARE", "EPIC", "LEGENDARY"];
   // Lifted verbatim from the game's own --rarity-* tokens in
-  // unity/Emberfall/Assets/UI/Deckbuilder/theme.uss, so a bar here reads as the
+  // unity/Assets/UI/Deckbuilder/theme.uss, so a bar here reads as the
   // same rarity a player sees on the frame. That match is worth one knowing
   // deviation: RARE-blue and EPIC-purple collapse to ~ΔE 3 under deuteranopia,
   // which is why nothing in this panel encodes rarity by color ALONE — every

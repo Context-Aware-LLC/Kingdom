@@ -13,7 +13,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Wallets_Start_At_Zero_And_Travel_With_The_Top_Rail_Safe_Area()
         {
-            string unityRoot = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string unityRoot = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string uxml = File.ReadAllText(Path.Combine(
                 unityRoot, "UI", "MainMenu", "MainMenuScreen.uxml"));
             string styles = File.ReadAllText(Path.Combine(

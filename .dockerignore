@@ -27,11 +27,9 @@ src/**/obj/
 # --- card definitions: source of truth is the Unity tree (Dockerfile.server line 15) ---
 !unity/
 unity/*
-!unity/Emberfall/
-unity/Emberfall/*
-!unity/Emberfall/Assets/
-unity/Emberfall/Assets/*
-!unity/Emberfall/Assets/CardData/
+!unity/Assets/
+unity/Assets/*
+!unity/Assets/CardData/
 
 # --- AI-opponent bot roster (Dockerfile.server line 18) ---
 !tooling/

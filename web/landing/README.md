@@ -10,6 +10,6 @@ Deploy from this folder:
 
 Only `public/` is published.
 
-`public/assets/` holds web encodes of files under `unity/Emberfall/Assets/Art/` (the backdrops,
+`public/assets/` holds web encodes of files under `unity/Assets/Art/` (the backdrops,
 hero portraits, splash orb, and the Alfa Slab One and Google Sans fonts subset to Latin). When
 the art changes, re-encode from those sources rather than editing the encodes.

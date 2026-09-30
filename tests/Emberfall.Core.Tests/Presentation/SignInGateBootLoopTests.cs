@@ -28,11 +28,11 @@ namespace Emberfall.Core.Tests.Presentation
     public sealed class SignInGateBootLoopTests
     {
         private static string Gate() => File.ReadAllText(Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation",
+            RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation",
             "SignInGateController.cs"));
 
         private static string Screen() => File.ReadAllText(Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "UI", "AccountCreate",
+            RepoPaths.RepoRoot, "unity", "Assets", "UI", "AccountCreate",
             "AccountCreateScreen.uxml"));
 
         /// <summary>The gate must look for an element the screen actually contains. Either half

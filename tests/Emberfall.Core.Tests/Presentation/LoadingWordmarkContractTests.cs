@@ -16,13 +16,13 @@ namespace Emberfall.Core.Tests.Presentation
         public void Loading_wordmark_is_outlined_vector_art_loaded_as_a_sprite()
         {
             string assetPath = Path.Combine(RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "Art", "UI", AssetName);
+                "unity", "Assets", "Art", "UI", AssetName);
             string svg = File.ReadAllText(assetPath);
             string meta = File.ReadAllText(assetPath + ".meta");
             string overlay = File.ReadAllText(Path.Combine(RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "Scripts", "Presentation", "LoadingOverlay.cs"));
+                "unity", "Assets", "Scripts", "Presentation", "LoadingOverlay.cs"));
             string addressables = File.ReadAllText(Path.Combine(RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "AddressableAssetsData", "AssetGroups", "UI_Core.asset"));
+                "unity", "Assets", "AddressableAssetsData", "AssetGroups", "UI_Core.asset"));
 
             Assert.Multiple(() =>
             {

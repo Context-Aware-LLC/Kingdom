@@ -1135,14 +1135,14 @@ namespace Emberfall.Net.Server
             return typeof(ServerApp).Assembly.GetName().Version?.ToString() ?? "unknown-build";
         }
 
-        /// <summary>Dev convenience: locate unity/Emberfall/Assets/CardData by walking up from the
+        /// <summary>Dev convenience: locate unity/Assets/CardData by walking up from the
         /// binary (same convention as the test harnesses). Containers set EMBERFALL_CARDS instead.</summary>
         private static string FindRepoCardData()
         {
             string? path = AppContext.BaseDirectory;
             for (int i = 0; i < 10 && path is not null; i++, path = Path.GetDirectoryName(path))
             {
-                string candidate = Path.Combine(path, "unity", "Emberfall", "Assets", "CardData");
+                string candidate = Path.Combine(path, "unity", "Assets", "CardData");
                 if (Directory.Exists(candidate)) return candidate;
             }
             throw new DirectoryNotFoundException(

@@ -2,7 +2,7 @@
 #
 # Keep the artifacts derived from the canonical card rows from separating from them.
 #
-# A hand-edit to unity/Emberfall/Assets/CardData/*.cards.json silently stales what is generated
+# A hand-edit to unity/Assets/CardData/*.cards.json silently stales what is generated
 # from those rows, and NOTHING in Unity notices. Found red on 2026-08-11, a day after the balance
 # edit that opened it.
 #

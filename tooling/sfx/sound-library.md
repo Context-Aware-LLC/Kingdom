@@ -1,7 +1,7 @@
 # Card SFX authoring sheet — shared library v1
 
 Generate these in ElevenLabs Studio, save with the **exact stem** in the first column,
-drop the file in `unity/Emberfall/Assets/Sound/SFX/`. Addressables registers that folder
+drop the file in `unity/Assets/Sound/SFX/`. Addressables registers that folder
 automatically as `sfx/<stem>`.
 
 **Filename rule (validator C30):** the stem must match `^[a-z0-9][a-z0-9_-]*$` — lowercase,

@@ -14,7 +14,7 @@ namespace Emberfall.Core.Tests.Presentation
     public sealed class CardChromeLayeringContractTests
     {
         private static string PresentationFile(string name) => File.ReadAllText(Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation", name));
+            RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation", name));
 
         [Test]
         public void Rarity_gem_and_bezel_render_above_the_card_frame()

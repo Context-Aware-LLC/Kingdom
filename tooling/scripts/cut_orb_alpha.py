@@ -35,7 +35,7 @@ R_SOLID = 485.0
 R_ZERO = 502.0
 REFERENCE_MASK = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "..", "..", "unity", "Emberfall", "Assets", "Art", "Orbs", "Orb_StormGlass.png",
+    "..", "..", "unity", "Assets", "Art", "Orbs", "Orb_StormGlass.png",
 )
 
 

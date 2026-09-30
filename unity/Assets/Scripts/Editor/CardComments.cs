@@ -55,7 +55,7 @@ namespace Emberfall.Editor
         /// <para>Every other path in this window is project-relative ("Assets/CardData/...")
         /// because File.* resolves those against the Unity project root. This one is OUTSIDE the
         /// project — the tool that writes it is not a Unity thing — so it is anchored on
-        /// dataPath (<c>unity/Emberfall/Assets</c>) and walked up to the repo root. Deriving it
+        /// dataPath (<c>unity/Assets</c>) and walked up to the repo root. Deriving it
         /// from the cwd instead would work in the Editor and break under any batchmode
         /// invocation that sets a different one.</para>
         /// </summary>

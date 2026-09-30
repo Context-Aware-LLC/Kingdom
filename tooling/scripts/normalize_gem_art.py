@@ -40,7 +40,7 @@ from pathlib import Path
 
 from PIL import Image
 
-GEMS = Path("unity/Emberfall/Assets/Art/UI/Gems")
+GEMS = Path("unity/Assets/Art/UI/Gems")
 ORIGINALS = Path("art-pipeline/gems/original")
 
 # Below this an "edge" is compression noise or an invisible halo tail, not art.

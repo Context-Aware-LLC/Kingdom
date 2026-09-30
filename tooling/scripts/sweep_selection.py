@@ -12,7 +12,7 @@ finding. Re-run it after importing cards authored against the old shape.
 
 Three data surfaces carry authored targets, and all three move together or the build breaks:
 
-  * `unity/Emberfall/Assets/CardData/*.cards.json`   — the shipped sets
+  * `unity/Assets/CardData/*.cards.json`   — the shipped sets
   * `tests/.../Fixtures/CardSets/*.cards.snapshot.json`
 
 The oracle for the rewrite is NOT this script. It is `CardCi` rule C26, which regenerates
@@ -20,7 +20,7 @@ every card's text from its rules and compares it to the authored string — so a
 term changed what the card MEANS would change what it SAYS. Run it after:
 
     dotnet run --project src/Emberfall.Tools.CardCi -- \
-        unity/Emberfall/Assets/CardData unity/Emberfall/Assets/Art/Cards
+        unity/Assets/CardData unity/Assets/Art/Cards
 
 Exit 1 if a row cannot be given a term.
 """

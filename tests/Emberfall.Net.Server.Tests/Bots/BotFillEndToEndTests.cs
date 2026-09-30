@@ -26,7 +26,7 @@ namespace Emberfall.Net.Server.Tests.Bots
 
         /// <summary>
         /// Locates repo-root files the same way <see cref="SessionHarness.CardDataDir()"/> locates
-        /// <c>unity/Emberfall/Assets/CardData</c>: walk up from the test assembly's own output
+        /// <c>unity/Assets/CardData</c>: walk up from the test assembly's own output
         /// directory until the target is found, rather than hard-coding a fixed count of ".."
         /// segments against a build-output layout that can silently change (different SDK, a
         /// bin/obj nesting change, CI vs. local). Verified against this repo's actual build output:

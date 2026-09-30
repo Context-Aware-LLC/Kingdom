@@ -83,8 +83,8 @@ import sys
 import glob
 import xml.etree.ElementTree as ET
 
-UI = 'unity/Emberfall/Assets/UI'
-SCRIPTS = 'unity/Emberfall/Assets/Scripts'
+UI = 'unity/Assets/UI'
+SCRIPTS = 'unity/Assets/Scripts'
 THEME = UI + '/Common/theme.uss'
 EDGE_CLASS = 'emb-edge'
 BLEED_CLASS = 'emb-bleed'

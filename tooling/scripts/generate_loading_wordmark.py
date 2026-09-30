@@ -18,9 +18,9 @@ from fontTools.ttLib import TTFont
 
 
 ROOT = Path(__file__).resolve().parents[2]
-FONT_PATH = ROOT / "unity/Emberfall/Assets/Art/Fonts/AlfaSlabOne-Regular.ttf"
+FONT_PATH = ROOT / "unity/Assets/Art/Fonts/AlfaSlabOne-Regular.ttf"
 OUTPUT_PATH = (
-    ROOT / "unity/Emberfall/Assets/Art/UI/Loading_Wordmark_KingdomOfBadIdeas.svg"
+    ROOT / "unity/Assets/Art/UI/Loading_Wordmark_KingdomOfBadIdeas.svg"
 )
 
 TEXT = "KINGDOM OF BAD IDEAS"

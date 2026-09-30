@@ -7,5 +7,5 @@
       "customSyntax": "postcss"
     }
   ],
-  "ignoreFiles": ["node_modules/**", "unity/Emberfall/Library/**", "art-pipeline/**"]
+  "ignoreFiles": ["node_modules/**", "unity/Library/**", "art-pipeline/**"]
 }

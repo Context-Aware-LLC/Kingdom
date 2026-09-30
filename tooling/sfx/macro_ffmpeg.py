@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Apply the "Emberfall VO Trim" treatment to clips with ffmpeg instead of Audacity.
 
-    python tooling/sfx/macro_ffmpeg.py art-pipeline/sfx/_tomacro --out unity/Emberfall/Assets/Sound/SFX
+    python tooling/sfx/macro_ffmpeg.py art-pipeline/sfx/_tomacro --out unity/Assets/Sound/SFX
     python tooling/sfx/macro_ffmpeg.py <dir> --dry-run          # measure and print, write nothing
 
 WHAT IT REPRODUCES, LINE FOR LINE

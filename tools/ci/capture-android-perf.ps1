@@ -43,7 +43,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Apk = "unity/Emberfall/Builds/Android/Emberfall.apk",
+    [string]$Apk = "unity/Builds/Android/Emberfall.apk",
     [string]$PackageName,
     [int]$Seconds = 120,
     [string]$OutDir,
@@ -72,7 +72,7 @@ function Find-Adb {
 
 function Resolve-PackageName {
     if ($PackageName) { return $PackageName }
-    $ps = Join-Path $repo 'unity/Emberfall/ProjectSettings/ProjectSettings.asset'
+    $ps = Join-Path $repo 'unity/ProjectSettings/ProjectSettings.asset'
     $text = Get-Content $ps -Raw
     # applicationIdentifier is a YAML map: `applicationIdentifier:\n    Android: com.x.y`
     if ($text -match 'applicationIdentifier:\s*\r?\n(?:\s+\w+:.*\r?\n)*?\s+Android:\s*(\S+)') {

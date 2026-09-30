@@ -13,7 +13,7 @@ namespace Emberfall.Core.Tests.Presentation
         {
             string buildSource = File.ReadAllText(Path.Combine(
                 RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "Scripts", "Editor", "EmberfallBuild.cs"));
+                "unity", "Assets", "Scripts", "Editor", "EmberfallBuild.cs"));
 
             Assert.Multiple(() =>
             {

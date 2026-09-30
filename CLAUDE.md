@@ -1,4 +1,4 @@
-# TCG "Hearthlike"
+# TCG "Kingdom of Bad Ideas"
 
 A digital, turn-based **1v1 collectible trading card game** 
 
@@ -37,7 +37,7 @@ Read the code, the data and the tests; they cannot drift from themselves. Do not
 
 ## Where things are
 
-`src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx` — note `.slnx`, not `.sln`). `unity/Emberfall/` is the Unity project.
+`src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx` — note `.slnx`, not `.sln`). `unity/` is the Unity project.
 `art-pipeline/` holds source art and generated candidates, and is gitignored.
 `tooling/fonts/` holds variable font sources that `tooling/scripts/instance_font.py` cuts into
 the static fonts Unity ships, because Unity cannot set a variable font's axes.
@@ -186,7 +186,7 @@ The naming convention itself, and everything that checks it, lives in that scrip
 
 ## Never commit a changed `productName`
 
-**Before committing `unity/Emberfall/ProjectSettings/ProjectSettings.asset`, `git diff` it and confirm `productName` is still exactly `Bad Ideas`.**
+**Before committing `unity/ProjectSettings/ProjectSettings.asset`, `git diff` it and confirm `productName` is still exactly `Bad Ideas`.**
 
 It was `Emberfall` until 2026-09-28. Sam renamed it before any store upload, because it is the
 label under the app icon. The codename, the setId and the folder names stay `Emberfall`.
@@ -230,7 +230,7 @@ file.
 
 ## Unity: the Editor is a single-writer resource
 
-**An open Editor holds `unity/Emberfall/Temp/UnityLockfile`, and anything spawning its own Editor
+**An open Editor holds `unity/Temp/UnityLockfile`, and anything spawning its own Editor
 blocks on it.** `tools/ci/unity-verify.ps1` does exactly that, so the verify half of the gate needs
 the Editor closed, and it reports the lock as an error rather than clearing it. Never clear it
 yourself.

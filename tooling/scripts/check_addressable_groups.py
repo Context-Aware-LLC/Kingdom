@@ -63,7 +63,7 @@ def staged_paths() -> list[str]:
 
 
 def touches_a_set_root(paths: list[str]) -> bool:
-    return any(f"unity/Emberfall/Assets/{root}/" in p for p in paths for root in ROOTS)
+    return any(f"unity/Assets/{root}/" in p for p in paths for root in ROOTS)
 
 
 def groups_declared() -> set[str]:
@@ -123,7 +123,7 @@ def main() -> int:
     print()
     print(f"  Fix, about a second in an open Editor:   {MENU_ITEM}")
     print("  Headless (needs the FULL type name, and no Editor holding the project lock):")
-    print("    Unity.exe -batchmode -nographics -quit -projectPath unity/Emberfall \\")
+    print("    Unity.exe -batchmode -nographics -quit -projectPath unity \\")
     print("      -executeMethod Emberfall.Editor.AddressablesSetup.Run -logFile <log>")
     print()
     print("  Then stage the AddressableAssetsData changes yourself. THIS HOOK DELIBERATELY DOES NOT")

@@ -4,7 +4,7 @@ An offline browser panel for exploring the Emberfall card corpus, plus the scrip
 
 ## Files
 
-- `build_data.py` — parses EVERY `unity/Emberfall/Assets/CardData/*.cards.json` (it globs; CORE
+- `build_data.py` — parses EVERY `unity/Assets/CardData/*.cards.json` (it globs; CORE
   split out 2026-08-23 and a hand-listed subset had already gone stale once) and writes:
   - `data.json` — canonical machine-readable aggregate (per-card records + corpus-wide and
     per-class rollups).
@@ -74,7 +74,7 @@ total, so the *mix* compares across classes of different sizes. The number besid
 is the denominator in both modes.
 
 Rarity colors are lifted from the game's own `--rarity-*` tokens
-(`unity/Emberfall/Assets/UI/Deckbuilder/theme.uss`) so a bar reads as the rarity a player sees on
+(`unity/Assets/UI/Deckbuilder/theme.uss`) so a bar reads as the rarity a player sees on
 the frame. RARE-blue and EPIC-purple are near-identical under deuteranopia, so nothing here encodes
 rarity by color alone — the order is fixed low-to-high and every segment is named and counted in
 the labelled row beside it.

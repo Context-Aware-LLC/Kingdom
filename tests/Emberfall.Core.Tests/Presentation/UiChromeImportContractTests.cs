@@ -23,7 +23,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Transparent_chrome_uses_the_input_texture_alpha_channel()
         {
             string chromeDirectory = Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Art", "UI", "Chrome");
+                RepoPaths.RepoRoot, "unity", "Assets", "Art", "UI", "Chrome");
 
             Assert.Multiple(() =>
             {

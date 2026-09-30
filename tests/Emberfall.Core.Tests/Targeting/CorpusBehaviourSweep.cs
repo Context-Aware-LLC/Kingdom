@@ -287,7 +287,7 @@ namespace Emberfall.Core.Tests.Targeting
             var defs = new List<CardDefinition>();
             foreach (string file in new[] { "Core.cards.json", "Emberfall.cards.json", "Rekindling.cards.json" })
                 defs.AddRange(CardJson.DeserializeArray(File.ReadAllText(Path.Combine(
-                    RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData", file))));
+                    RepoPaths.RepoRoot, "unity", "Assets", "CardData", file))));
             return defs;
         }
 

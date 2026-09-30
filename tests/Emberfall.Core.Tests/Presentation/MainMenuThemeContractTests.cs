@@ -18,7 +18,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Character_class_dropdown_text_is_styled_at_both_runtime_roots()
         {
             string uiDirectory = Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "UI", "MainMenu");
+                RepoPaths.RepoRoot, "unity", "Assets", "UI", "MainMenu");
             string themePath = Path.Combine(uiDirectory, "MainMenuTheme.tss");
             string themeMetaPath = themePath + ".meta";
             string panelSettingsPath = Path.Combine(uiDirectory, "MainMenuPanelSettings.asset");

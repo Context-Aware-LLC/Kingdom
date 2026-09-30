@@ -27,12 +27,12 @@ tooling/sfx/sound-library.md holds the prompt and the search term for each stem.
 """
 import json,glob,collections,re,sys
 rows=[]
-for f in glob.glob('unity/Emberfall/Assets/CardData/*.cards.json'):
+for f in glob.glob('unity/Assets/CardData/*.cards.json'):
     d=json.load(open(f,encoding='utf-8'))
     rows += d if isinstance(d,list) else d.get('cards',d)
 mins=[r for r in rows if r.get('type')=='MINION']
 
-CS = 'unity/Emberfall/Assets/Scripts/Presentation/MinionSummonArchetypes.cs'
+CS = 'unity/Assets/Scripts/Presentation/MinionSummonArchetypes.cs'
 # ("stem", @"pattern"),  -- one rule per line, in order. A format change in that file shows up
 # here as an empty rule list, which is loud, rather than as a quietly different tally.
 RULES = [(m.group(1), m.group(2)) for m in

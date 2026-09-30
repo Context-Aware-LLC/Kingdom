@@ -15,7 +15,7 @@ Run from the repo root:  python tooling/scripts/bot_deck_report.py
 import json, glob, collections, sys, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CARD_DIR = os.path.join(ROOT, "unity", "Emberfall", "Assets", "CardData")
+CARD_DIR = os.path.join(ROOT, "unity", "Assets", "CardData")
 ROSTER = os.path.join(ROOT, "tooling", "data", "bot-roster.json")
 
 

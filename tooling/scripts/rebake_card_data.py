@@ -5,7 +5,7 @@ Usage:
   python tooling/scripts/rebake_card_data.py --write    # regenerate whatever is stale
   python tooling/scripts/rebake_card_data.py --check --skip-gates      # no CI-gate replay
 
-Editing `unity/Emberfall/Assets/CardData/*.cards.json` silently stales ONE derived
+Editing `unity/Assets/CardData/*.cards.json` silently stales ONE derived
 artifact, and nothing at edit time forces it. This is the controller that runs it, along with
 the blocking content gates, so "did I remember everything?" is one line.
 

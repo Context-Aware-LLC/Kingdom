@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-FRAMES = Path("unity/Emberfall/Assets/Art/UI/Frames")
+FRAMES = Path("unity/Assets/Art/UI/Frames")
 
 # A socket interior is opaque and near-black. The bezel around it is mid-grey stone, and the
 # card body behind the frame is transparent, so both are excluded by these two tests together.

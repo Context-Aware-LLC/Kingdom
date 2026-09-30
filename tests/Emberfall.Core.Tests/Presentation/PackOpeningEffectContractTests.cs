@@ -11,7 +11,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Pack_tear_has_no_full_pack_ellipse()
         {
-            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string animator = File.ReadAllText(Path.Combine(
                 assets, "Scripts", "Presentation", "PackTearAnimator.cs"));
             string styles = File.ReadAllText(Path.Combine(

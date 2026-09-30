@@ -11,7 +11,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Batch_reveal_uses_real_card_faces_and_rarity_receipt_plates()
         {
-            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string presentation = Path.Combine(assets, "Scripts", "Presentation");
             string reveal = File.ReadAllText(Path.Combine(presentation, "PackRevealPanel.cs"));
             string vault = File.ReadAllText(Path.Combine(presentation, "PackVaultController.cs"));

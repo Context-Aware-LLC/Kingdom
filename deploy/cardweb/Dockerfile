@@ -35,7 +35,7 @@ COPY tooling/card-admin/ /app/tooling/card-admin/
 
 # The corpus. Three files; the 518 MB art tree is deliberately NOT shipped -- the server
 # resolves art through the thumbnail cache and never reads a source PNG.
-COPY unity/Emberfall/Assets/CardData/*.cards.json /app/carddata/
+COPY unity/Assets/CardData/*.cards.json /app/carddata/
 
 ENV EMBERFALL_CARD_DIR=/app/carddata \
     EMBERFALL_ART_DIR=/app/carddata \

@@ -28,7 +28,7 @@ from fontTools.varLib.instancer import instantiateVariableFont
 
 REPO = Path(__file__).resolve().parents[2]
 SRC = REPO / "tooling/fonts/GoogleSansFlex-Variable.ttf"
-OUT = REPO / "unity/Emberfall/Assets/Art/Fonts/GoogleSansFlex-Card.ttf"
+OUT = REPO / "unity/Assets/Art/Fonts/GoogleSansFlex-Card.ttf"
 FAMILY = "Google Sans Flex Card"
 AXES = ("wght", "wdth", "opsz", "GRAD", "ROND", "slnt")
 TAG = "axes:"

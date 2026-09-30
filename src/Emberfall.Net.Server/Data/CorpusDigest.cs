@@ -11,7 +11,7 @@ namespace Emberfall.Net.Server.Data
     /// `/healthz` so a stale deployment is DETECTABLE rather than silent.
     ///
     /// WHY THIS EXISTS. The corpus is baked into the image (`Dockerfile.server` COPYs
-    /// `unity/Emberfall/Assets/CardData/` to `/app/cards/`), frozen at `fly deploy`. On
+    /// `unity/Assets/CardData/` to `/app/cards/`), frozen at `fly deploy`. On
     /// 2026-08-28 the live server resolved a four-day-old copy: card 1067 printed
     /// "Summon a 1/1 Gear Wisp" and summoned nothing, because the deployed rules said
     /// ON_DEATH/DRAW 2. It was not an error at any point — the card simply behaved like an
@@ -53,7 +53,7 @@ namespace Emberfall.Net.Server.Data
             if (files.Length == 0) return Empty;
 
             // Sort on the RELATIVE path, not the absolute one: the container loads from
-            // /app/cards and the working tree from unity/Emberfall/Assets/CardData, so an
+            // /app/cards and the working tree from unity/Assets/CardData, so an
             // absolute sort could order the same corpus two different ways on the two sides.
             var entries = new List<KeyValuePair<string, string>>(files.Length);
             foreach (var f in files)

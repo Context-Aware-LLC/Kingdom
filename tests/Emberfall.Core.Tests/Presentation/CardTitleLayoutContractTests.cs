@@ -13,15 +13,15 @@ namespace Emberfall.Core.Tests.Presentation
     public sealed class CardTitleLayoutContractTests
     {
         private static string Presenter() => File.ReadAllText(Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation",
+            RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation",
             "CardPresenter.cs"));
 
         private static string Board() => File.ReadAllText(Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation",
+            RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation",
             "BoardController.cs"));
 
         private static string TmpSettings() => File.ReadAllText(Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "TextMesh Pro", "Resources",
+            RepoPaths.RepoRoot, "unity", "Assets", "TextMesh Pro", "Resources",
             "TMP Settings.asset"));
 
         [Test]

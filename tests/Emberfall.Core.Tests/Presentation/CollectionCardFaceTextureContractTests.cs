@@ -20,7 +20,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Collection_freezes_card_captures_before_handing_them_to_ui_toolkit()
         {
             string presentation = Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation");
+                RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation");
             string baker = File.ReadAllText(Path.Combine(presentation, "CardFaceBaker.cs"));
             string wall = File.ReadAllText(Path.Combine(presentation, "CardWall.cs"));
             string craft = File.ReadAllText(Path.Combine(presentation, "CraftModal.cs"));

@@ -77,7 +77,7 @@ pwsh tools/ci/unity-gate.ps1
 
 Runs `unity-compile.ps1` then, only if that passes, `unity-verify.ps1` — and writes the result
 to `.agent/unity-gate.json` (gitignored, regenerated every run): timestamp, commit SHA, pass/fail
-per stage, failed assembly/check names, and whether `unity/Emberfall` had uncommitted changes at
+per stage, failed assembly/check names, and whether `unity` had uncommitted changes at
 run time. Exits nonzero if either stage fails. Skips the verify stage on a compile failure rather
 than queuing for the single-writer Editor over a break it already caught.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Aggregate the Emberfall card corpus into a single data file for the admin panel.
 
-Reads every *.cards.json under unity/Emberfall/Assets/CardData/ and emits
+Reads every *.cards.json under unity/Assets/CardData/ and emits
 tooling/card-admin/data.json: a normalized per-card array plus precomputed
 corpus-wide and per-class rollups (keyword frequency, targeting-selector
 frequency, cost distribution, type split, and minion attack/health
@@ -42,7 +42,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # RETIREMENT TRIGGER: if a *.cards.json ever lands here that is NOT a shipped set (a fixture, a
 # scratch file), this glob starts counting it and must go back to an explicit list -- the same
 # list CardJsonRowIO.PathForSet holds.
-CARD_FILES = sorted((REPO_ROOT / "unity/Emberfall/Assets/CardData").glob("*.cards.json"))
+CARD_FILES = sorted((REPO_ROOT / "unity/Assets/CardData").glob("*.cards.json"))
 OUT_PATH = Path(__file__).resolve().parent / "data.json"
 # Browsers block fetch('data.json') under file://, so the panel loads this thin
 # wrapper instead (window.CARD_DATA = <same object>). data.json stays canonical.
@@ -55,7 +55,7 @@ CARD_TYPES = ["MINION", "SPELL", "WEAPON", "HERO_POWER"]
 # not `fly ssh console`, whose first attempt against a suspended machine simply fails.
 HEALTH_URL = "https://emberfall.fly.dev/healthz"
 FLY_APP = "emberfall"
-CARD_DIR = REPO_ROOT / "unity/Emberfall/Assets/CardData"
+CARD_DIR = REPO_ROOT / "unity/Assets/CardData"
 DIGEST_LENGTH = 16
 EMPTY_DIGEST = "0" * DIGEST_LENGTH
 
@@ -256,7 +256,7 @@ def working_tree_note():
             ["git", "rev-parse", "--short", "HEAD"], cwd=REPO_ROOT,
             capture_output=True, text=True, check=True).stdout.strip()
         dirty = subprocess.run(
-            ["git", "status", "--porcelain", "--", "src", "unity/Emberfall/Assets/CardData",
+            ["git", "status", "--porcelain", "--", "src", "unity/Assets/CardData",
              "tooling/data/bot-roster.json"],
             cwd=REPO_ROOT, capture_output=True, text=True, check=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):

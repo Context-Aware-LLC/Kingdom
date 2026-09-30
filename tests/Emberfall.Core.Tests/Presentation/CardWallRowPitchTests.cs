@@ -30,7 +30,7 @@ namespace Emberfall.Core.Tests.Presentation
         private static string Wall()
         {
             string path = Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation", "CardWall.cs");
+                RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation", "CardWall.cs");
             return File.ReadAllText(path);
         }
 

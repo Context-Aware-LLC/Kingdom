@@ -14,7 +14,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Secondary_chrome_decks_button_has_no_gold_underlay_in_its_transparent_corners()
         {
             string collection = Path.Combine(RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "UI", "Collection");
+                "unity", "Assets", "UI", "Collection");
             XDocument document = XDocument.Load(Path.Combine(collection, "CollectionScreen.uxml"));
             XElement decksButton = document.Descendants()
                 .Single(element => (string?)element.Attribute("name") == "decks-button");
@@ -37,7 +37,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Primary_chrome_filters_button_has_no_solid_underlay_in_its_transparent_corners()
         {
             string collection = Path.Combine(RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "UI", "Collection");
+                "unity", "Assets", "UI", "Collection");
             XDocument document = XDocument.Load(Path.Combine(collection, "CollectionScreen.uxml"));
             XElement filtersButton = document.Descendants()
                 .Single(element => (string?)element.Attribute("name") == "query-toggle");

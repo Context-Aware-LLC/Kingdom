@@ -5,7 +5,7 @@ What was learned drafting the first hand-built decks for the balance matrix
 drafting a corpus deck does not have to re-derive the card pool's shape from scratch.
 
 **Read the card data, not the card names.** Every claim below was checked against
-`unity/Emberfall/Assets/CardData/Emberfall.cards.json`, `Rekindling.cards.json`, and the engine
+`unity/Assets/CardData/Emberfall.cards.json`, `Rekindling.cards.json`, and the engine
 source. Where a brief and the data disagreed, the data won — see *Corrections to briefs* at the
 bottom, which is the most load-bearing section in this file.
 

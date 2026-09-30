@@ -112,14 +112,14 @@ namespace Emberfall.Net.Server.Tests.Support
 
         public static string CardDataDir()
         {
-            // tests/Emberfall.Net.Server.Tests -> repo root -> unity/Emberfall/Assets/CardData
+            // tests/Emberfall.Net.Server.Tests -> repo root -> unity/Assets/CardData
             string? path = TestContext.CurrentContext.TestDirectory;
             for (int i = 0; i < 10 && path is not null; i++, path = Path.GetDirectoryName(path))
             {
-                string candidate = Path.Combine(path, "unity", "Emberfall", "Assets", "CardData");
+                string candidate = Path.Combine(path, "unity", "Assets", "CardData");
                 if (Directory.Exists(candidate)) return candidate;
             }
-            throw new DirectoryNotFoundException("Could not locate unity/Emberfall/Assets/CardData from test directory.");
+            throw new DirectoryNotFoundException("Could not locate unity/Assets/CardData from test directory.");
         }
 
         /// <param name="attributed">

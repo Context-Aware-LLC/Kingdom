@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Run automatically after producing any change Unity will have to compile — before calling that work done. TRIGGER — whenever a change touches a .cs file under unity/Emberfall/Assets/Scripts/{Presentation,Editor,AI,Data,Session}, an Emberfall.Core.*/.Net.Client/.Net.Protocol file or any .asmdef/.asmref/.csproj under unity/Emberfall.  SKIP only when nothing Unity-consumed changed: docs, Emberfall.Net.Server/.Tools.* (cloud-only, net10.0), non-Unity tooling scripts, or art with no accompanying code. Check the cached result in .agent/unity-gate.json before paying for a fresh run — the verify stage drives a real Editor and the Editor is a single-writer resource, so re-running it when a good answer already exists for this commit just contends with whoever else might have it open.
+description: Run automatically after producing any change Unity will have to compile — before calling that work done. TRIGGER — whenever a change touches a .cs file under unity/Assets/Scripts/{Presentation,Editor,AI,Data,Session}, an Emberfall.Core.*/.Net.Client/.Net.Protocol file or any .asmdef/.asmref/.csproj under unity.  SKIP only when nothing Unity-consumed changed: docs, Emberfall.Net.Server/.Tools.* (cloud-only, net10.0), non-Unity tooling scripts, or art with no accompanying code. Check the cached result in .agent/unity-gate.json before paying for a fresh run — the verify stage drives a real Editor and the Editor is a single-writer resource, so re-running it when a good answer already exists for this commit just contends with whoever else might have it open.
 ---
 
 # /verify — Unity compile + test gate
@@ -8,19 +8,19 @@ description: Run automatically after producing any change Unity will have to com
 Reports the result of `tools/ci/unity-gate.ps1` (compile stage via `unity-compile.ps1`, then headless-Editor compile+test via `unity-verify.ps1`), reusing a cached result when it still applies instead of always re-running.
 
 **Nobody is going to tell you to run this.** The trigger is the description above, not an instruction in your task. If you just finished editing or creating a `.cs` file Unity compiles
-(Presentation/Editor/AI/Data/Session, or a `Core`/`Net.Client`/`Net.Protocol` file it consumes as a local package), or touched an `.asmdef`/`.csproj` under `unity/Emberfall`, invoke this yourself
+(Presentation/Editor/AI/Data/Session, or a `Core`/`Net.Client`/`Net.Protocol` file it consumes as a local package), or touched an `.asmdef`/`.csproj` under `unity`, invoke this yourself
 before you report that work as done — a green cloud CI run tells you nothing about whether the Editor still compiles.
 
 ## Procedure
 
-1. **Get the current commit.** `git rev-parse HEAD` (and `git status --porcelain -- unity/Emberfall` for working-tree state).
+1. **Get the current commit.** `git rev-parse HEAD` (and `git status --porcelain -- unity` for working-tree state).
 
 2. **Read `.agent/unity-gate.json` if it exists.** Compare its `commit` field to the current HEAD:
    - **Missing file** → no cached result. Run the gate (step 3).
    - **`commit` differs from current HEAD** → stale. Run the gate (step 3).
-   - **`commit` matches AND `workingTreeDirty` was `false` in the cached run AND `unity/Emberfall` is clean right now** → the cached result still applies. Skip to step 5 and report it directly without re-running (a cached PASS needs no fix attempt; a cached FAIL still goes through step 4 first).
+   - **`commit` matches AND `workingTreeDirty` was `false` in the cached run AND `unity` is clean right now** → the cached result still applies. Skip to step 5 and report it directly without re-running (a cached PASS needs no fix attempt; a cached FAIL still goes through step 4 first).
    - **`commit` matches but either the cached run or the current tree has uncommitted
-     `unity/Emberfall` changes** → the cache may not reflect what's actually on disk right now (the gate only ever reflects HEAD, never the working tree). Say so, and ask whether to trust the cached result anyway or re-run — don't silently pick one.
+     `unity` changes** → the cache may not reflect what's actually on disk right now (the gate only ever reflects HEAD, never the working tree). Say so, and ask whether to trust the cached result anyway or re-run — don't silently pick one.
 
 3. **Run the gate:** `pwsh tools/ci/unity-gate.ps1`. This can take a while (the verify stage drives a real headless Editor). If it fails immediately with "Unity project is locked", that means an Editor is open on this machine right now — tell the user that, don't treat it as a code failure, and don't try to clear the lock yourself (`unity-verify.ps1` never does either). Then read the freshly written `.agent/unity-gate.json`.
 

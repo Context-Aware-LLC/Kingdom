@@ -1,9 +1,9 @@
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-$assetPath = Join-Path $repoRoot 'unity\Emberfall\Assets\Settings\ActionSet.inputactions'
+$assetPath = Join-Path $repoRoot 'unity\Assets\Settings\ActionSet.inputactions'
 $metaPath = "$assetPath.meta"
-$presentationPath = Join-Path $repoRoot 'unity\Emberfall\Assets\Scripts\Presentation'
+$presentationPath = Join-Path $repoRoot 'unity\Assets\Scripts\Presentation'
 $wrapperPath = Join-Path $presentationPath 'EmberfallActions.cs'
 $assemblyPath = Join-Path $presentationPath 'Emberfall.Presentation.asmdef'
 

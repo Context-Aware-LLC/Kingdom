@@ -13,7 +13,6 @@ namespace Emberfall.Core.Tests.Presentation
             => File.ReadAllText(Path.Combine(
                 RepoPaths.RepoRoot,
                 "unity",
-                "Emberfall",
                 "Assets",
                 "Scripts",
                 "Presentation",

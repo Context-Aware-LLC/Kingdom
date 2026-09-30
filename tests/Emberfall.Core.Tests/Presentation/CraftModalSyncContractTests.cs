@@ -13,7 +13,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Opening_crafting_reads_one_card_without_resyncing_the_collection()
         {
             string controller = File.ReadAllText(Path.Combine(RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "Scripts", "Presentation", "CollectionController.cs"));
+                "unity", "Assets", "Scripts", "Presentation", "CollectionController.cs"));
             string openCraft = Between(controller,
                 "private async void OpenCraft(CardDefinition def)",
                 "private bool CraftIsCurrent");

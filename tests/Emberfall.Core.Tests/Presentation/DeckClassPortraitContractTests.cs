@@ -12,7 +12,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Deck_entry_surfaces_share_the_ordered_pair_portrait()
         {
             string presentation = Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation");
+                RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation");
 
             string portrait = File.ReadAllText(Path.Combine(presentation, "DeckClassPortrait.cs"));
             string collection = File.ReadAllText(Path.Combine(presentation, "CollectionController.cs"));
@@ -36,7 +36,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Portrait_backed_deck_controls_are_visually_textless()
         {
-            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string collection = File.ReadAllText(Path.Combine(
                 assets, "Scripts", "Presentation", "CollectionController.cs"));
             string styles = File.ReadAllText(Path.Combine(
@@ -63,7 +63,7 @@ namespace Emberfall.Core.Tests.Presentation
         [Test]
         public void Prepared_sheet_is_a_shipping_ui_sprite()
         {
-            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             string metadata = File.ReadAllText(Path.Combine(
                 assets, "Sprites", "hero_portrait_sheet.png.meta"));
             string group = File.ReadAllText(Path.Combine(

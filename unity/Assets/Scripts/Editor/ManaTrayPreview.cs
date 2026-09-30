@@ -178,8 +178,8 @@ namespace Emberfall.Editor
             return Path.GetFileName(path);
         }
 
-        // Application.dataPath is <repo>/unity/Emberfall/Assets.
+        // Application.dataPath is <repo>/unity/Assets.
         private static string RepoRoot() =>
-            Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", ".."));
+            Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
     }
 }

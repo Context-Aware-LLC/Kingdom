@@ -170,7 +170,7 @@ def main():
     w("---\n")
 
     for card_set in ("Emberfall", "Rekindling"):
-        relative = "unity/Emberfall/Assets/CardData/%s.cards.json" % card_set
+        relative = "unity/Assets/CardData/%s.cards.json" % card_set
         mine = rows(os.path.join(repo, relative))
         theirs = rows(os.path.join(fork_root, relative))
         pairs, only_master, only_fork = pair_up(mine, theirs)

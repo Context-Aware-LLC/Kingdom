@@ -8,7 +8,7 @@ using Emberfall.Core.Tests.Support;
 namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
-    /// The <b>live</b> Emberfall card set — <c>unity/Emberfall/Assets/CardData/Emberfall.cards.json</c>,
+    /// The <b>live</b> Emberfall card set — <c>unity/Assets/CardData/Emberfall.cards.json</c>,
     /// the same rows the game ships — loaded for the deck-legality tests.
     ///
     /// <para>Deliberately not the pinned golden-replay snapshot. Those two files answer different

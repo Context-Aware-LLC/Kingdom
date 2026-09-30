@@ -31,7 +31,7 @@ namespace Emberfall.Core.Tests.Presentation
     public sealed class SignInIdentityBindingTests
     {
         private static string Gate() => File.ReadAllText(Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation",
+            RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation",
             "SignInGateController.cs"));
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Emberfall.Core.Tests.Presentation
         }
 
         private static string Menu() => File.ReadAllText(Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation",
+            RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation",
             "MainMenuController.cs"));
 
         /// <summary>

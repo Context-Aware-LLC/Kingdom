@@ -1,8 +1,8 @@
 {
   "generatedFrom": [
-    "unity/Emberfall/Assets/CardData/Core.cards.json",
-    "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
-    "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
+    "unity/Assets/CardData/Core.cards.json",
+    "unity/Assets/CardData/Emberfall.cards.json",
+    "unity/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 297,
   "corpusDigest": "d2f3d88260de144a",

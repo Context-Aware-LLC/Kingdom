@@ -17,7 +17,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Replacing_The_Pool_Rebuilds_Virtualized_Rows_While_Querying_Only_Rebinds()
         {
             string source = File.ReadAllText(Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation",
+                RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation",
                 "CardWall.cs"));
 
             string setPool = Slice(source, "public void SetPool", "public void SetQuery");

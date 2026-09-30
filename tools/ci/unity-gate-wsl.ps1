@@ -254,7 +254,7 @@ $what = if ($locked) {
     # so the NEXT run refuses to start and would otherwise be reported as a code failure.
     # unity-verify.ps1 never clears locks on purpose, and neither does this - a lock can mean a
     # live Editor. Say which it is instead of guessing.
-    "the project is LOCKED, not broken - a previous run left ${WslCheckout}/unity/Emberfall/Temp/UnityLockfile. Confirm no Editor is running in '$Distro' (wsl -d $Distro -- pgrep -l Unity), then remove it"
+    "the project is LOCKED, not broken - a previous run left ${WslCheckout}/unity/Temp/UnityLockfile. Confirm no Editor is running in '$Distro' (wsl -d $Distro -- pgrep -l Unity), then remove it"
 } elseif ($csErrors.Count -gt 0) {
     "compile errors"
 } elseif ($failed.Count -gt 0) {

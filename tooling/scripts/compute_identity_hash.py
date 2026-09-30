@@ -5,8 +5,8 @@ Run to get the correct pinned hash after adding/changing cards.
 import json
 import hashlib
 
-EMBERFALL = "unity/Emberfall/Assets/CardData/Emberfall.cards.json"
-REKINDLING = "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
+EMBERFALL = "unity/Assets/CardData/Emberfall.cards.json"
+REKINDLING = "unity/Assets/CardData/Rekindling.cards.json"
 
 SEP_FIELD = ""
 SEP_RULE = ""

@@ -13,7 +13,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Outside_click_blocker_is_enabled_only_for_the_deck_chooser()
         {
             string source = File.ReadAllText(Path.Combine(RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "Scripts", "Presentation", "CollectionController.cs"));
+                "unity", "Assets", "Scripts", "Presentation", "CollectionController.cs"));
             int start = source.IndexOf("private void ShowDrawerPane(bool editor)", System.StringComparison.Ordinal);
             int end = source.IndexOf("private void RebuildDeckChooser()", start, System.StringComparison.Ordinal);
             string paneTransition = source.Substring(start, end - start);

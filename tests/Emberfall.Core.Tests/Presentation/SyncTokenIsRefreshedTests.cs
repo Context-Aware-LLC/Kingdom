@@ -44,7 +44,7 @@ namespace Emberfall.Core.Tests.Presentation
         };
 
         private static string Read(string fileName) => File.ReadAllText(Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Presentation", fileName));
+            RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation", fileName));
 
         /// <summary>
         /// The same source with every line comment removed, because the rule is about what the code

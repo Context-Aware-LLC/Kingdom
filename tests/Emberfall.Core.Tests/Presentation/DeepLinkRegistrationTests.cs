@@ -37,11 +37,11 @@ namespace Emberfall.Core.Tests.Presentation
     public sealed class DeepLinkRegistrationTests
     {
         private static string AndroidManifest() => Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Plugins", "Android",
+            RepoPaths.RepoRoot, "unity", "Assets", "Plugins", "Android",
             "AndroidManifest.xml");
 
         private static string IosPlist() => Path.Combine(
-            RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Plugins", "iOS", "Info.plist");
+            RepoPaths.RepoRoot, "unity", "Assets", "Plugins", "iOS", "Info.plist");
 
         [Test]
         public void The_android_manifest_exists_and_declares_the_emberfall_scheme()
@@ -86,7 +86,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void The_configured_redirect_url_matches_what_the_platforms_register()
         {
             string settings = File.ReadAllText(Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "Scripts", "Session",
+                RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Session",
                 "SupabaseAuthSettings.cs"));
 
             Assert.That(settings, Does.Contain("emberfall://auth"),

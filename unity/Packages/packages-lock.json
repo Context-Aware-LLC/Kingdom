@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "com.emberfall.core": {
-      "version": "file:../../../src/Emberfall.Core",
+      "version": "file:../../src/Emberfall.Core",
       "depth": 0,
       "source": "local",
       "dependencies": {
@@ -10,7 +10,7 @@
       }
     },
     "com.emberfall.core.cards": {
-      "version": "file:../../../src/Emberfall.Core.Cards",
+      "version": "file:../../src/Emberfall.Core.Cards",
       "depth": 0,
       "source": "local",
       "dependencies": {
@@ -18,7 +18,7 @@
       }
     },
     "com.emberfall.core.collection": {
-      "version": "file:../../../src/Emberfall.Core.Collection",
+      "version": "file:../../src/Emberfall.Core.Collection",
       "depth": 0,
       "source": "local",
       "dependencies": {
@@ -27,25 +27,25 @@
       }
     },
     "com.emberfall.core.contracts": {
-      "version": "file:../../../src/Emberfall.Core.Contracts",
+      "version": "file:../../src/Emberfall.Core.Contracts",
       "depth": 0,
       "source": "local",
       "dependencies": {}
     },
     "com.emberfall.core.serialization": {
-      "version": "file:../../../src/Emberfall.Core.Serialization",
+      "version": "file:../../src/Emberfall.Core.Serialization",
       "depth": 0,
       "source": "local",
       "dependencies": {}
     },
     "com.emberfall.net.client": {
-      "version": "file:../../../src/Emberfall.Net.Client",
+      "version": "file:../../src/Emberfall.Net.Client",
       "depth": 0,
       "source": "local",
       "dependencies": {}
     },
     "com.emberfall.net.protocol": {
-      "version": "file:../../../src/Emberfall.Net.Protocol",
+      "version": "file:../../src/Emberfall.Net.Protocol",
       "depth": 0,
       "source": "local",
       "dependencies": {}

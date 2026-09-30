@@ -34,7 +34,7 @@ $ErrorActionPreference = 'Stop'
 
 # Path.Combine, never a literal '\' - a backslash is a legal filename character on Linux.
 $REPO_ROOT  = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..'))
-$PROJECT    = [System.IO.Path]::Combine($REPO_ROOT, 'unity', 'Emberfall')
+$PROJECT    = [System.IO.Path]::Combine($REPO_ROOT, 'unity')
 $TIMESTAMP  = (Get-Date -Format 'yyyyMMdd-HHmmss')
 $LOG        = Join-Path ([System.IO.Path]::GetTempPath()) "unity-build-android-$TIMESTAMP.log"
 $APK        = if ($PlayRelease) { [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'KingdomOfBadIdeas.aab') }

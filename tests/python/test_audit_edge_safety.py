@@ -76,8 +76,8 @@ class EdgeSafetyTests(unittest.TestCase):
         self._check_mutated_chain(lambda root, node, parents, carrier: root.append(copy.deepcopy(node)))
 
     def test_root_carriers_must_be_in_the_same_screen(self):
-        vault = 'unity/Emberfall/Assets/UI/PackVault/PackVaultScreen.uxml'
-        other = 'unity/Emberfall/Assets/UI/Shop/ShopScreen.uxml'
+        vault = 'unity/Assets/UI/PackVault/PackVaultScreen.uxml'
+        other = 'unity/Assets/UI/Shop/ShopScreen.uxml'
         used = {
             audit.ROOT_CLASS: [(vault, 1, [audit.ROOT_CLASS, 'pack-vault-screen'], 4)],
             'vault-shell': [(vault, 2, ['vault-shell', audit.BLEED_CLASS], 8)],

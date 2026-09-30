@@ -26,7 +26,7 @@ per expansion, named after the card, which is the same name the game ships the f
     art-pipeline/card-art/<setId>/<artId>.md        the prompt that made it
     art-pipeline/card-art/<setId>/<artId>__cand2.png    a re-roll, beside it, never over it
 
-So promoting art is a copy into unity/Emberfall/Assets/Art/Cards/<setId>/ and never a rename.
+So promoting art is a copy into unity/Assets/Art/Cards/<setId>/ and never a rename.
 
 NEVER OVERWRITE A GENERATED IMAGE (Sam, 2026-07-26): "don't delete anything you generate — if
 something needs deleting, I'll delete it myself." Numbering always continues past what is on

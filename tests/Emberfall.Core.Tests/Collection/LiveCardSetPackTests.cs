@@ -25,7 +25,7 @@ namespace Emberfall.Core.Tests.Collection
     {
         private static IReadOnlyList<CardDefinition> LoadEveryLiveCard()
         {
-            string dir = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData");
+            string dir = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets", "CardData");
             Assert.That(Directory.Exists(dir), Is.True, $"Card data directory not found at {dir}");
 
             var files = new List<string>(Directory.GetFiles(dir, "*.cards.json"));

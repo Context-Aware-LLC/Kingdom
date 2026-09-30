@@ -42,7 +42,7 @@ WHAT IS A SEED (human-authored, tracked, never auto-overwritten):
   tooling/card-art-seeds/<setId>.json, keyed by card id:
     { "subject": "...", "perspective": "...", "background": "...", "tone": "...", "notes": "..." }
   Deliberately NOT in art-pipeline/ (untracked, disposable per CLAUDE.md) and NOT inside
-  unity/Emberfall/Assets/CardData/ (that file is gameplay data feeding the determinism hash;
+  unity/Assets/CardData/ (that file is gameplay data feeding the determinism hash;
   art-authoring metadata does not belong mixed into it).
 
 A card with no seed entry still gets a full prompt: every field is filled with a generic,

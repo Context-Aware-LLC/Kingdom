@@ -13,7 +13,7 @@ namespace Emberfall.Core.Tests.Presentation
         {
             string styles = File.ReadAllText(Path.Combine(
                 RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "UI", "MatchSettings", "Resources", "matchsettings.uss"));
+                "unity", "Assets", "UI", "MatchSettings", "Resources", "matchsettings.uss"));
 
             Assert.That(styles, Does.Match(
                     @"(?s)\.ms-gear\s*\{[^}]*border-radius:\s*var\(--space-2\);[^}]*overflow:\s*hidden;"),

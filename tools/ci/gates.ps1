@@ -71,7 +71,7 @@ if (-not $Quick) {
             Write-Host "   stylelint is not installed — run 'npm install' at the repo root" -ForegroundColor Yellow
             throw "node_modules/stylelint missing"
         }
-        npx stylelint "unity/Emberfall/Assets/UI/**/*.uss"
+        npx stylelint "unity/Assets/UI/**/*.uss"
     }
 
     # The same failure mode one file type over, and the one with no log line at all. Unity parses
@@ -121,7 +121,7 @@ Invoke-Stage 'Stage 5b · Networked AI soak' {
     dotnet run --project src/Emberfall.Tools.NetSoak -c Release --no-build -- liveai 5
 }
 Invoke-Stage 'Stage 6 · Content C-series card gate' {
-    dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Emberfall/Assets/CardData unity/Emberfall/Assets/Art
+    dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Assets/CardData unity/Assets/Art
 }
 Invoke-Stage 'Stage 6c · UI edge-clearance audit' {
     python tooling/scripts/audit_edge_safety.py

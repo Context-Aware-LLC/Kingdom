@@ -5,8 +5,8 @@ from pathlib import Path
 
 # Define the files to analyze
 files = [
-    "unity/Emberfall/Assets/CardData/Emberfall.cards.json",
-    "unity/Emberfall/Assets/CardData/Rekindling.cards.json"
+    "unity/Assets/CardData/Emberfall.cards.json",
+    "unity/Assets/CardData/Rekindling.cards.json"
 ]
 
 # Track data across all files

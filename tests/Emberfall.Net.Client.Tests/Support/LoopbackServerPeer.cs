@@ -170,10 +170,10 @@ namespace Emberfall.Net.Client.Tests.Support
             string? path = TestContext.CurrentContext.TestDirectory;
             for (int i = 0; i < 10 && path is not null; i++, path = Path.GetDirectoryName(path))
             {
-                string candidate = Path.Combine(path, "unity", "Emberfall", "Assets", "CardData");
+                string candidate = Path.Combine(path, "unity", "Assets", "CardData");
                 if (Directory.Exists(candidate)) return candidate;
             }
-            throw new DirectoryNotFoundException("Could not locate unity/Emberfall/Assets/CardData.");
+            throw new DirectoryNotFoundException("Could not locate unity/Assets/CardData.");
         }
 
         public void Dispose()

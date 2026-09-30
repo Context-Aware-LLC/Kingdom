@@ -29,7 +29,7 @@ No `.env`, no Caddy, no box to sync to — Fly builds from the repo and provisio
 - `Caddyfile` — auto-TLS reverse proxy, terminates `wss://`, forwards to `emberfall-server:8080`
   (service name + port move together with `docker-compose.yml`).
 - `Dockerfile.server` — multi-stage build of `Emberfall.Net.Server`; bakes in the canonical card
-  data from `unity/Emberfall/Assets/CardData/`.
+  data from `unity/Assets/CardData/`.
 - `docker-compose.yml` — Caddy + server, one command. Keeps the `dns:` pin on the caddy service
   (systemd-resolved stub resolver breaks ACME inside the container netns — documented gotcha).
   Replay logs persist in the `replay_data` volume (`/data/replays`).

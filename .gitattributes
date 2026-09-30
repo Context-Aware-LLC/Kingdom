@@ -25,7 +25,7 @@
 
 # Training provenance hashes the raw card-data bytes. Pin these files to LF so a fresh Windows
 # worktree cannot produce a different card-data identity from the same Git revision.
-unity/Emberfall/Assets/CardData/*.cards.json text eol=lf
+unity/Assets/CardData/*.cards.json text eol=lf
 
 # Desync captures under evidence/ are raw wire bytes. These MUST stay byte-exact — the whole
 # point of the file is that its hash is reproducible, and `core.autocrlf=true` on Windows would

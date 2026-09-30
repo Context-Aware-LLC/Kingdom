@@ -14,7 +14,7 @@ before the bleed is added, so swapping in a concept image does not change the
 runtime camera/layout contract.
 
 Usage: build_board_master.py <plate_16x9.png>
-Writes unity/Emberfall/Assets/Art/Backgrounds/BoardPlate_Master.png — a fixed
+Writes unity/Assets/Art/Backgrounds/BoardPlate_Master.png — a fixed
 name, so swapping the board art is: generate a new 16:9 plate, rerun this.
 """
 

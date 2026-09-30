@@ -83,7 +83,7 @@ actions. Every observation is projected for the acting player before it is seria
 ```powershell
 dotnet run --project src/Emberfall.Tools.TrainingCorpus -c Release -- build `
   --manifests "E:\EmberfallData\raw\run-001\episode-manifests.jsonl" `
-  --cards "unity\Emberfall\Assets\CardData" `
+  --cards "unity\Assets\CardData" `
   --out "E:\EmberfallData\corpus\v1"
 ```
 

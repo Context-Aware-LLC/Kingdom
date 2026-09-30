@@ -9,7 +9,7 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// Editor-owned load/save over the flat Emberfall card-row array
-    /// (unity/Emberfall/Assets/Resources/cards/Emberfall.cards.json). This is the pragmatic stand-in for
+    /// (unity/Assets/Resources/cards/Emberfall.cards.json). This is the pragmatic stand-in for
     /// the spec's per-file `cards/&lt;setId&gt;/&lt;id&gt;.card.json` + ScriptedImporter convention
     /// (dev-docs/pipelines/card-authoring-and-import.md:5) — deliberately not adopted this pass since the
     /// Emberfall set already lives as one file; see the plan's "explicitly deferred" list.

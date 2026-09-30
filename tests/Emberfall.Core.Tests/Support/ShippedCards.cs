@@ -50,7 +50,7 @@ namespace Emberfall.Core.Tests.Support
 
         private static IReadOnlyList<CardDefinition> Load()
         {
-            string dir = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets", "CardData");
+            string dir = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets", "CardData");
             var all = new List<CardDefinition>();
             foreach (string file in Directory.GetFiles(dir, "*.cards.json"))
                 all.AddRange(CardJson.DeserializeArray(File.ReadAllText(file)));

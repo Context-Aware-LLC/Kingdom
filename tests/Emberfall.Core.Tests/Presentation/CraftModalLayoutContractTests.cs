@@ -15,7 +15,7 @@ namespace Emberfall.Core.Tests.Presentation
         [TestCase("craft-shard-balance")]
         public void Craft_currency_amount_has_a_shard_icon_instead_of_a_word(string amountName)
         {
-            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Emberfall", "Assets");
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
             XDocument document = XDocument.Load(Path.Combine(assets, "UI", "Collection", "CollectionScreen.uxml"));
             XElement amount = document.Descendants().Single(e => (string?)e.Attribute("name") == amountName);
             XElement[] icons = amount.Parent!.Elements().Where(e =>
@@ -42,7 +42,7 @@ namespace Emberfall.Core.Tests.Presentation
         public void Craft_processing_does_not_insert_a_status_row_above_the_card()
         {
             string modal = File.ReadAllText(Path.Combine(RepoPaths.RepoRoot,
-                "unity", "Emberfall", "Assets", "Scripts", "Presentation", "CraftModal.cs"));
+                "unity", "Assets", "Scripts", "Presentation", "CraftModal.cs"));
 
             Assert.Multiple(() =>
             {

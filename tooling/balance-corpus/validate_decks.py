@@ -16,7 +16,7 @@ import sys
 from collections import Counter
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CARD_DATA = os.path.join(REPO, 'unity', 'Emberfall', 'Assets', 'CardData')
+CARD_DATA = os.path.join(REPO, 'unity', 'Assets', 'CardData')
 CORPUS = os.path.join(REPO, 'tests', 'Emberfall.Core.Tests', 'Fixtures', 'BalanceCorpus')
 
 DECK_SIZE = 30
