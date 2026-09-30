@@ -5,7 +5,7 @@
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 297,
-  "corpusDigest": "d2f3d88260de144a",
+  "corpusDigest": "c1ba5ddfe32ac18b",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -32,7 +32,7 @@
       "HERO_POWER": 8
     },
     "keywordFrequency": {
-      "BULWARK": 41,
+      "BULWARK": 38,
       "SKIRMISH": 19,
       "SHROUD": 15,
       "OVERWHELM": 11,
@@ -41,13 +41,13 @@
       "REKINDLE": 10,
       "VENOM": 10,
       "ARCANE_SURGE": 8,
-      "DOUBLESTRIKE": 8,
       "FERVOR": 8,
+      "DOUBLESTRIKE": 7,
       "FROST": 6,
       "LIFEDRAIN": 6
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 67,
+      "ANY_FRIENDLY_MINION": 66,
       "ANY_MINION": 28,
       "ANY_ENEMY": 27,
       "ANY_ENEMY_MINION": 24,
@@ -57,6 +57,7 @@
       "ANY_FRIENDLY": 3,
       "ANY_GRAVEYARD_MINION": 1,
       "FRIENDLY_GRAVEYARD_MINION": 1,
+      "OTHER_FRIENDLY_MINIONS": 1,
       "SELF": 1
     },
     "actionFrequency": {
@@ -69,14 +70,14 @@
     },
     "costDistribution": {
       "0": 4,
-      "1": 34,
-      "2": 75,
+      "1": 33,
+      "2": 76,
       "3": 72,
       "4": 50,
       "5": 22,
-      "6": 21,
-      "7": 13,
-      "8": 5,
+      "6": 20,
+      "7": 15,
+      "8": 4,
       "9": 1
     },
     "rarityBreakdown": {
@@ -104,9 +105,10 @@
       "2": 52,
       "3": 44,
       "4": 25,
-      "5": 20,
-      "6": 14,
-      "7": 5,
+      "5": 21,
+      "6": 11,
+      "7": 6,
+      "8": 1,
       "10": 1
     },
     "healthDistribution": {
@@ -114,10 +116,10 @@
       "2": 38,
       "3": 30,
       "4": 39,
-      "5": 30,
-      "6": 19,
+      "5": 29,
+      "6": 22,
       "7": 7,
-      "8": 5,
+      "8": 3,
       "10": 1,
       "12": 1
     }
@@ -132,8 +134,8 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 3,
         "AEGIS": 2,
+        "BULWARK": 2,
         "SKIRMISH": 2,
         "VANGUARD": 2,
         "FROST": 1,
@@ -156,8 +158,9 @@
         "3": 9,
         "4": 6,
         "5": 2,
+        "6": 1,
         "7": 2,
-        "8": 2
+        "8": 1
       },
       "rarityBreakdown": {
         "COMMON": 12,
@@ -183,9 +186,8 @@
         "2": 5,
         "3": 4,
         "4": 6,
-        "6": 2,
-        "7": 1,
-        "8": 1
+        "6": 3,
+        "7": 1
       }
     },
     "EMBERWARD": {
@@ -341,7 +343,7 @@
         "HERO_POWER": 0
       },
       "keywordFrequency": {
-        "BULWARK": 7,
+        "BULWARK": 6,
         "SKIRMISH": 4,
         "AEGIS": 3,
         "ARCANE_SURGE": 2,
@@ -354,7 +356,8 @@
       },
       "selectorFrequency": {
         "ANY_FRIENDLY_MINION": 3,
-        "FRIENDLY_HERO": 2
+        "FRIENDLY_HERO": 2,
+        "OTHER_FRIENDLY_MINIONS": 1
       },
       "actionFrequency": {},
       "costDistribution": {
@@ -364,8 +367,7 @@
         "3": 11,
         "4": 5,
         "5": 2,
-        "6": 1,
-        "7": 1
+        "7": 2
       },
       "rarityBreakdown": {
         "COMMON": 28,
@@ -389,8 +391,7 @@
         "2": 13,
         "3": 7,
         "4": 4,
-        "5": 2,
-        "6": 1
+        "5": 3
       },
       "healthDistribution": {
         "1": 6,
@@ -398,8 +399,8 @@
         "3": 7,
         "4": 5,
         "5": 4,
-        "6": 2,
-        "7": 1
+        "6": 1,
+        "7": 2
       }
     },
     "NIGHTVEIL": {
@@ -485,7 +486,7 @@
         "VANGUARD": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 14,
+        "ANY_FRIENDLY_MINION": 13,
         "ANY_ENEMY_MINION": 3,
         "FRIENDLY_HERO": 3,
         "ANY_ENEMY": 1,
@@ -500,8 +501,8 @@
       },
       "costDistribution": {
         "0": 1,
-        "1": 4,
-        "2": 6,
+        "1": 3,
+        "2": 7,
         "3": 6,
         "4": 6,
         "5": 2,
@@ -527,17 +528,17 @@
         "3": 2,
         "4": 3,
         "5": 3,
-        "6": 1,
-        "7": 2
+        "7": 2,
+        "8": 1
       },
       "healthDistribution": {
         "2": 2,
         "3": 2,
         "4": 3,
         "5": 4,
-        "6": 3,
+        "6": 4,
         "7": 2,
-        "8": 2,
+        "8": 1,
         "12": 1
       }
     },
@@ -550,7 +551,7 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "DOUBLESTRIKE": 5,
+        "DOUBLESTRIKE": 4,
         "FERVOR": 3,
         "SKIRMISH": 3,
         "ARCANE_SURGE": 1,
@@ -575,8 +576,8 @@
         "3": 6,
         "4": 3,
         "5": 1,
-        "6": 2,
-        "7": 1
+        "6": 1,
+        "7": 2
       },
       "rarityBreakdown": {
         "COMMON": 12,
@@ -604,8 +605,8 @@
         "2": 5,
         "3": 1,
         "4": 1,
-        "5": 4,
-        "6": 1
+        "5": 3,
+        "6": 2
       }
     },
     "TIDECALLER": {
@@ -694,7 +695,7 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 5,
+        "BULWARK": 4,
         "OVERWHELM": 4,
         "AEGIS": 1,
         "ARCANE_SURGE": 1,
@@ -742,8 +743,8 @@
         "2": 4,
         "3": 7,
         "5": 2,
-        "6": 2,
-        "7": 2,
+        "6": 1,
+        "7": 3,
         "10": 1
       },
       "healthDistribution": {
@@ -752,8 +753,7 @@
         "3": 3,
         "4": 5,
         "5": 5,
-        "6": 2,
-        "7": 1,
+        "6": 3,
         "10": 1
       }
     }
@@ -1347,17 +1347,18 @@
       "id": 1018,
       "name": "Throneless King",
       "type": "MINION",
-      "cost": 6,
-      "attack": 6,
-      "health": 6,
+      "cost": 7,
+      "attack": 5,
+      "health": 7,
       "durability": null,
       "class": "NEUTRAL",
       "rarity": "LEGENDARY",
       "keywords": [
-        "BULWARK",
         "REKINDLE"
       ],
-      "selectors": [],
+      "selectors": [
+        "OTHER_FRIENDLY_MINIONS"
+      ],
       "actionTags": [],
       "tribe": "UNDEAD",
       "setId": "EMBERFALL",
@@ -1927,7 +1928,7 @@
       "name": "Grave Maul",
       "type": "WEAPON",
       "cost": 3,
-      "attack": 1,
+      "attack": 3,
       "health": null,
       "durability": 2,
       "class": "GRAVEKEEP",
@@ -3543,8 +3544,8 @@
       "name": "Duras, the Ironmount",
       "type": "MINION",
       "cost": 8,
-      "attack": 6,
-      "health": 8,
+      "attack": 8,
+      "health": 6,
       "durability": null,
       "class": "STONEWARDEN",
       "rarity": "LEGENDARY",
@@ -3552,9 +3553,7 @@
         "OVERWHELM",
         "SKIRMISH"
       ],
-      "selectors": [
-        "ANY_FRIENDLY_MINION"
-      ],
+      "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
       "setId": "EMBERFALL",
@@ -3855,15 +3854,13 @@
       "id": 1089,
       "name": " Zael of the Struck Sky",
       "type": "MINION",
-      "cost": 6,
+      "cost": 7,
       "attack": 6,
-      "health": 5,
+      "health": 6,
       "durability": null,
       "class": "TEMPEST",
       "rarity": "LEGENDARY",
-      "keywords": [
-        "DOUBLESTRIKE"
-      ],
+      "keywords": [],
       "selectors": [
         "ENEMY_HERO"
       ],
@@ -5878,13 +5875,12 @@
       "name": "Praxis, Seed of New Ages",
       "type": "MINION",
       "cost": 7,
-      "attack": 6,
-      "health": 7,
+      "attack": 7,
+      "health": 6,
       "durability": null,
       "class": "VERDANT",
       "rarity": "LEGENDARY",
       "keywords": [
-        "BULWARK",
         "OVERWHELM"
       ],
       "selectors": [
@@ -6048,15 +6044,13 @@
       "id": 1159,
       "name": "Cogsworth, The Grand Rebuilder",
       "type": "MINION",
-      "cost": 8,
+      "cost": 6,
       "attack": 5,
-      "health": 8,
+      "health": 6,
       "durability": null,
       "class": "CLOCKWRIGHT",
       "rarity": "LEGENDARY",
-      "keywords": [
-        "BULWARK"
-      ],
+      "keywords": [],
       "selectors": [
         "ANY_FRIENDLY_MINION"
       ],
@@ -7014,7 +7008,7 @@
       "id": 228,
       "name": "Rubble Toss",
       "type": "SPELL",
-      "cost": 1,
+      "cost": 2,
       "attack": null,
       "health": null,
       "durability": null,
