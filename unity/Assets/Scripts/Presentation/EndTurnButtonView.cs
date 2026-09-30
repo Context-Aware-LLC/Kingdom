@@ -20,8 +20,8 @@ namespace Emberfall.Presentation
         // This is the TOP of the Royal Council seal press, not a small plaque placed on it. It
         // remains an XY-plane sprite at z=0, so the board camera naturally foreshortens it into the
         // painted mechanism's ellipse instead of presenting it as a screen-facing HUD button.
-        private const float ButtonW = 3.35f;
-        private const float ButtonH = 1.75f;
+        private const float ButtonW = 4.00f;
+        private const float ButtonH = 2.15f;
         private const int   ChromeOrder = 11;
 
         private PlayerId       _p0Id;
@@ -42,7 +42,7 @@ namespace Emberfall.Presentation
             labelGo.transform.SetParent(transform, false);
             labelGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
             _label = labelGo.AddComponent<TextMeshPro>();
-            _label.fontSize  = 3.8f;
+            _label.fontSize  = 4.4f;
             _label.alignment = TextAlignmentOptions.Center;
             _label.color     = BoardButtonChrome.SecondaryInk;
             _label.rectTransform.sizeDelta = new Vector2(ButtonW, ButtonH);

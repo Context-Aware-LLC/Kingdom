@@ -30,7 +30,7 @@ namespace Emberfall.Presentation
         // partly on edge instead of another face-up board card.
         internal const float PileW = 1.45f;
         private const float PileH = 1.72f;
-        private const float SurfaceYawDeg = 48f;
+        private const float SurfaceYawDeg = 36f;
         private const float SurfaceRollDeg = 7.5f;
 
         // Thickness. Six layers is the visual ceiling; past that the steps stop reading and just
@@ -77,7 +77,7 @@ namespace Emberfall.Presentation
 
             // A single shallow body gives the pile a readable physical edge under perspective;
             // the offset sprites above it continue to communicate the actual count bands.
-            const float pileDepth = 0.14f;
+            const float pileDepth = 0.28f;
             _depthBacking = BoardFurnitureDepth.Create(transform, "DeckDepth",
                 new Vector2(PileW, PileH), pileDepth).transform;
 
