@@ -67,6 +67,7 @@ namespace Emberfall.Presentation
             _label.rectTransform.sizeDelta = new Vector2(ClockW, ClockH);
             _label.textWrappingMode = TextWrappingModes.NoWrap;
             _label.text            = string.Empty;
+            BoardController.ApplyUiFont(_label);
             SetVisible(false);
         }
 

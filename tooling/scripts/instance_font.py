@@ -42,7 +42,7 @@ def show(path):
     print(m.group(1).strip() if m else f"{path.name} carries no axis record (name ID 3: {uid!r})")
 
 
-def cut(src, out, requested):
+def cut(src, out, requested, family=FAMILY):
     font = TTFont(src)
     fvar = {a.axisTag: a for a in font["fvar"].axes}
     pins = {}
@@ -58,9 +58,9 @@ def cut(src, out, requested):
     static = instantiateVariableFont(font, pins)
     record = " ".join(f"{t}={pins[t]:g}" for t in AXES)
     name = static["name"]
-    for nid, value in ((1, FAMILY), (2, "Regular"), (4, f"{FAMILY} Regular"),
-                       (6, FAMILY.replace(" ", "") + "-Regular"),
-                       (3, f"{FAMILY.replace(' ', '')};{TAG} {record}")):
+    for nid, value in ((1, family), (2, "Regular"), (4, f"{family} Regular"),
+                       (6, family.replace(" ", "") + "-Regular"),
+                       (3, f"{family.replace(' ', '')};{TAG} {record}")):
         name.removeNames(nameID=nid)
         name.setName(value, nid, 3, 1, 0x409)
     for nid in (16, 17):      # typographic family/subfamily would re-group it with the source
@@ -79,12 +79,13 @@ def main():
         ap.add_argument(f"--{tag}", type=float)
     ap.add_argument("--src", type=Path, default=SRC)
     ap.add_argument("--out", type=Path, default=OUT)
+    ap.add_argument("--family", default=FAMILY, help="font family name written into the cut (one per output file)")
     ap.add_argument("--show", action="store_true", help="print the settings the current cut was made with")
     args = ap.parse_args()
     if args.show:
         show(args.out)
         return
-    cut(args.src, args.out.resolve(), {t: getattr(args, t) for t in AXES})
+    cut(args.src, args.out.resolve(), {t: getattr(args, t) for t in AXES}, args.family)
 
 
 if __name__ == "__main__":

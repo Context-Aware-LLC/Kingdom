@@ -1288,6 +1288,40 @@ namespace Emberfall.Presentation
             return s_bodyFont ?? CardFont();   // missing asset must not blank the rules box
         }
 
+        // The board-label faces: turn buttons, hero and weapon numbers, mulligan, match end, versus,
+        // loading, Unearth. Two static cuts of Google Sans Flex (tooling/scripts/instance_font.py,
+        // tuned in the Font Bench), because TMP cannot set a variable font's weight per label.
+        // Before these existed every one of those labels fell back to TMP's LiberationSans.
+        private static TMP_FontAsset s_uiFont, s_uiBoldFont;
+
+        /// <summary>Gives a board label its UI face. A label already styled Bold gets the bold CUT
+        /// and loses TMP's faux bold, which would otherwise thicken the real bold a second time. A
+        /// missing asset leaves the label on TMP's default rather than blank.</summary>
+        internal static void ApplyUiFont(TMP_Text label)
+        {
+            bool bold = (label.fontStyle & FontStyles.Bold) != 0;
+            TMP_FontAsset font = bold ? UiBoldFont() : UiFont();
+            if (font == null) return;
+            label.font = font;
+            if (bold) label.fontStyle &= ~FontStyles.Bold;
+        }
+
+        private static TMP_FontAsset UiFont()
+        {
+            if (s_uiFont == null)
+                s_uiFont = LoadAsset<TMP_FontAsset>(
+                    "Assets/Art/Fonts/GoogleSansFlex-UI SDF.asset", "fonts/GoogleSansFlex-UI SDF");
+            return s_uiFont;
+        }
+
+        private static TMP_FontAsset UiBoldFont()
+        {
+            if (s_uiBoldFont == null)
+                s_uiBoldFont = LoadAsset<TMP_FontAsset>(
+                    "Assets/Art/Fonts/GoogleSansFlex-UIBold SDF.asset", "fonts/GoogleSansFlex-UIBold SDF");
+            return s_uiBoldFont;
+        }
+
         private static T LoadAsset<T>(string editorPath, string address) where T : Object
         {
 #if UNITY_EDITOR

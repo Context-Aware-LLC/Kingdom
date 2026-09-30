@@ -224,6 +224,7 @@ namespace Emberfall.Presentation
             tmp.enableAutoSizing = true;
             tmp.fontSizeMax      = fontSize;
             tmp.fontSizeMin      = fontSize * 0.45f;
+            BoardController.ApplyUiFont(tmp);
             var mr = tmp.GetComponent<MeshRenderer>();
             if (mr != null) mr.sortingOrder = TextOrder;
             return tmp;

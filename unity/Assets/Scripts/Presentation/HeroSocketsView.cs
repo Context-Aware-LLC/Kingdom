@@ -349,6 +349,7 @@ namespace Emberfall.Presentation
             tmp.alignment        = TextAlignmentOptions.Center;
             tmp.color            = color;
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            BoardController.ApplyUiFont(tmp);
 
             // SAME RECIPE AS CardPresenter.PlaceDigit, deliberately: autosizing OFF, a rect
             // roomier than the glyph, and fontSize as em-height x 10.

@@ -52,6 +52,7 @@ namespace Emberfall.Presentation
             _label.rectTransform.sizeDelta = new Vector2(ButtonW, ButtonH);
             _label.textWrappingMode = TextWrappingModes.NoWrap;
             _label.text = "END TURN";
+            BoardController.ApplyUiFont(_label);
 
             var col = gameObject.AddComponent<BoxCollider>();
             col.size = new Vector3(ButtonW, ButtonH, 0.1f);

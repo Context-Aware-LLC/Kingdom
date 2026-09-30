@@ -114,6 +114,7 @@ namespace Emberfall.Presentation
             _title.fontSize = 2.1f;
             _title.textWrappingMode = TextWrappingModes.NoWrap;
             _title.rectTransform.sizeDelta = new Vector2(10.8f, 0.7f);
+            BoardController.ApplyUiFont(_title);
 
             _cardsRoot = new GameObject("Options");
             _cardsRoot.transform.SetParent(_surface.transform, false);

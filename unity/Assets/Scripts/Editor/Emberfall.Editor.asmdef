@@ -11,6 +11,7 @@
     "Emberfall.Data",
     "Emberfall.Session",
     "Emberfall.Presentation",
+    "Unity.TextMeshPro",
     "Unity.Addressables",
     "Unity.Addressables.Editor",
     "Unity.ResourceManager"

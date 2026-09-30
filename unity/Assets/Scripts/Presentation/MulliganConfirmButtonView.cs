@@ -91,6 +91,7 @@ namespace Emberfall.Presentation
             _label.color     = Color.white;
             _label.rectTransform.sizeDelta = new Vector2(ButtonW, ButtonH);
             _label.textWrappingMode = TextWrappingModes.NoWrap;
+            BoardController.ApplyUiFont(_label);
 
             var instructionGo = new GameObject("Instruction");
             instructionGo.transform.SetParent(transform, false);
@@ -103,6 +104,7 @@ namespace Emberfall.Presentation
             _instruction.rectTransform.sizeDelta = new Vector2(5.2f, 0.55f);
             _instruction.textWrappingMode = TextWrappingModes.NoWrap;
             _instruction.text = "TAP CARDS TO REPLACE";
+            BoardController.ApplyUiFont(_instruction);
 
             _collider = gameObject.AddComponent<BoxCollider>();
             _collider.size = new Vector3(ButtonW, ButtonH, 0.1f);

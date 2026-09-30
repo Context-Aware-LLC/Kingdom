@@ -40,6 +40,7 @@ namespace Emberfall.Presentation
             var headline = MakeLabel(root.transform, "Verdict", new Vector3(0f, 0.5f, -0.01f), 12f, color);
             headline.text = verdict;
             headline.fontStyle = FontStyles.Bold;
+            BoardController.ApplyUiFont(headline);   // again: Bold picks the bold cut
 
             MakeRule(root.transform, new Vector3(0f, -0.28f, -0.01f), color);
 
@@ -100,6 +101,7 @@ namespace Emberfall.Presentation
             tmp.rectTransform.sizeDelta = new Vector2(16f, fontSize * 0.3f);
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
             tmp.sortingOrder     = 101; // above the scrim
+            BoardController.ApplyUiFont(tmp);
             return tmp;
         }
     }

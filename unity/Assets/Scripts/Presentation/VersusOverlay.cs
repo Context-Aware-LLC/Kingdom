@@ -318,6 +318,7 @@ namespace Emberfall.Presentation
             tmp.fontSize = size;
             tmp.characterSpacing = tracking;
             tmp.fontStyle = bold ? FontStyles.Bold : FontStyles.Normal;
+            BoardController.ApplyUiFont(tmp);   // before fontMaterial below clones the face's material
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
             // richText off for anything not authored here — see SanitizeName. This is the line that

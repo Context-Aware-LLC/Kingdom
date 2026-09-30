@@ -296,6 +296,7 @@ namespace Emberfall.Presentation
             label.color           = new Color(0.92f, 0.15f, 0.12f);
             label.textWrappingMode = TextWrappingModes.NoWrap;
             label.rectTransform.sizeDelta = new Vector2(2.4f, 3f);
+            BoardController.ApplyUiFont(label);
         }
 
         private void OnDestroy() => Unbind();

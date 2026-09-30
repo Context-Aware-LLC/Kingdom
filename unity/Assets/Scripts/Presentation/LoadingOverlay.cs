@@ -300,6 +300,7 @@ namespace Emberfall.Presentation
             _status.color = new Color(0.92f, 0.88f, 0.82f, 0f);
             _status.sortingOrder = 320;
             _status.text = "";
+            BoardController.ApplyUiFont(_status);
         }
 
         private void Update()
