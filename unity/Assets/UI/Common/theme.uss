@@ -436,3 +436,13 @@
     background-color: rgba(0, 0, 0, 0);
     border-radius: 0;
 }
+
+/* Menu buttons: Modern Antiqua (Sam, 2026-09-30). Every <ui:Button> carries .unity-button, so
+   this reaches all of them on every screen that loads this sheet. Doubled for specificity, the same
+   trick as the scroller rules above: the per-screen button classes set -unity-font-style: bold, and
+   Modern Antiqua ships one weight, so bold here would be UI Toolkit's synthetic thickening.
+   The asset is built by Emberfall/Fonts/Build Menu Button Font Asset. */
+.unity-button.unity-button {
+    -unity-font-definition: url("/Assets/Art/Fonts/ModernAntiqua-Regular UITK.asset");
+    -unity-font-style: normal;
+}
