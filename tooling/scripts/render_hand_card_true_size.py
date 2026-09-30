@@ -29,14 +29,14 @@ from PIL import Image, ImageDraw, ImageFont
 sys.stdout.reconfigure(encoding="utf-8")
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-UNITY = REPO / "unity" / "Emberfall"
+UNITY = REPO / "unity"
 SCRIPTS = UNITY / "Assets" / "Scripts" / "Presentation"
 ART = UNITY / "Assets" / "Art"
 OUT = REPO / "artifacts" / "ef-062"
 
 FRAME_PNG = ART / "UI" / "Frames" / "frame_epic.png"    # IronEmber, the calibration master
 DISPLAY_TTF = ART / "Fonts" / "AlfaSlabOne-Regular.ttf"  # CardFont()  — card name
-BODY_TTF = ART / "Fonts" / "GoogleSans-Regular.ttf"      # BodyFont()  — rules box
+BODY_TTF = ART / "Fonts" / "GoogleSansFlex-Card.ttf"     # BodyFont()  — rules box
 
 
 def const(path, name):

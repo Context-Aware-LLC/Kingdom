@@ -47,7 +47,7 @@ import sys
 sys.stdout.reconfigure(encoding="utf-8")   # em dashes survive a cp1252 console
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-UNITY = REPO / "unity" / "Emberfall"
+UNITY = REPO / "unity"
 SCRIPTS = UNITY / "Assets" / "Scripts" / "Presentation"
 SCENES = UNITY / "Assets" / "Scenes"
 ART = UNITY / "Assets" / "Art"
@@ -280,8 +280,8 @@ def main() -> int:
     body_cy = const(frames, "BodyCenterY", "FrameRarityCatalog.BodyCenterY")
     plate_px = png_size(ART / "Backgrounds" / "BoardPlate_Master.png", "BoardPlate_Master")
     vis_h_declared = const(backdrop, "VisibleHeight", "BoardBackdrop.VisibleHeight")
-    cap_frac = measured_cap_over_em(ART / "Fonts" / "GoogleSans-Regular.ttf",
-                                    "GoogleSans cap height")
+    cap_frac = measured_cap_over_em(ART / "Fonts" / "GoogleSansFlex-Card.ttf",
+                                    "GoogleSansFlex-Card cap height")
 
     print("== 1. CONSTANTS READ (nothing below is typed by hand) " + "=" * 39)
     w = max(len(a) for a, _, _ in FOUND)
@@ -481,7 +481,7 @@ def main() -> int:
           f"recognition threshold = {ref_cap_arcmin/ACUITY_THRESHOLD_ARCMIN:.2f}x margin "
           f"(document says {REF_MARGIN:g}x). Model reproduces.")
     print()
-    print(f"  Our rules box: GoogleSans-Regular, cap height {cap_frac:.4f} em (measured),")
+    print(f"  Our rules box: GoogleSansFlex-Card, cap height {cap_frac:.4f} em (measured),")
     print(f"  em box = BodyEm {body_em:.5f} x CardH, auto-shrinking to BodyEmFloor "
           f"{body_floor:.5f} on long text.")
     print()

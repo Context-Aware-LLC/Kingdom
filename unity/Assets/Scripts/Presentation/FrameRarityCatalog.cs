@@ -128,7 +128,8 @@ namespace Emberfall.Presentation
         //
         // The FLOOR is the opposite: it is the size long text stops shrinking AT, so raising it
         // pushes the longest cards out of the parchment. Measured over all 275 shipped cards with
-        // the real GoogleSans-Regular SDF face at the real box, cards whose text no longer fits:
+        // the former GoogleSans-Regular SDF face at the real box (the rules box has used
+        // GoogleSansFlex-Card since; not re-measured), cards whose text no longer fits:
         //
         //      floor 72 -> 0      floor 84 -> 2      floor 100 -> 13
         //      floor 78 -> 1      floor 92 -> 6      floor 112 -> 75
