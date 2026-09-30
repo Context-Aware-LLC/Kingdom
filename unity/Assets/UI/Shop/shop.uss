@@ -706,9 +706,7 @@
  * button's own content width. The currency rules below leave an 8px gap only between the
  * buttons, so their outside edges line up with the pack. No :first-child rule
  * to single one out even if it were wanted -- Unity does not support that pseudo-class (logs
- * "Unknown pseudo class 'first-child' in StyleSheet shop" and silently never applies it; the
- * pre-existing matchsettings.uss usage this was copied from has the same warning and the same
- * dead rule). */
+ * "Unknown pseudo class 'first-child' in StyleSheet shop" and silently never applies it). */
 .pack-detail-actions .shop-pack__buy {
     flex-grow: 1;
     flex-shrink: 1;

@@ -224,7 +224,7 @@ namespace Emberfall.Presentation
             sfx.SetValueWithoutNotify(AudioSettings.SfxVolume);
             music.SetEnabled(!AudioSettings.Muted);
             sfx.SetEnabled(!AudioSettings.Muted);
-            // .ms-toggle--on drives the checkmark fill (matchsettings.uss) — set explicitly rather
+            // .ms-toggle--on drives the checkmark fill (settings.uss) — set explicitly rather
             // than trusting UI Toolkit's ":checked" pseudo-state, which needs the class as a hook.
             mute.EnableInClassList("ms-toggle--on", AudioSettings.Muted);
 

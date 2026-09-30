@@ -367,7 +367,7 @@
  * missing-glyph box. Seen in a device-dp capture 2026-08-25.
  *
  * Swapping in a different arrow character would just be the same bet on a different code
- * point. .ms-gear already solved this and says why in matchsettings.uss: "Three bars are child
+ * point. .ms-gear already solved this and says why in settings.uss: "Three bars are child
  * VisualElements so the icon is font-independent." Same treatment here. */
 .col-filter-ribbon__chevron {
     width: 22px;
@@ -876,7 +876,7 @@
     justify-content: flex-end;
     margin-bottom: var(--space-3);
 }
-/* SITS ALONGSIDE `.ms-gear` (matchsettings.uss), not stacked above it (Sam, 2026-09-07). That
+/* SITS ALONGSIDE `.ms-gear` (settings.uss), not stacked above it (Sam, 2026-09-07). That
  * button is the persistent corner settings gear CollectionController mounts on this same screen
  * (Sam, 2026-09-05: "same corner settings gear as the main menu"), anchored 24px from the right
  * and shifted another 52px by its `.emb-edge` margin. At 68px wide its LEFT edge is therefore

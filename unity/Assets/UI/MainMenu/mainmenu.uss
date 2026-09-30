@@ -836,7 +836,7 @@
 }
 
 /* ---------- Footer ----------
- * Bottom-left (Sam, 2026-08-09): the in-match settings gear (.ms-gear, matchsettings.uss) lives
+ * Bottom-left (Sam, 2026-08-09): the in-match settings gear (.ms-gear, settings.uss) lives
  * bottom-right, and MainMenuController now mounts that same overlay over this screen so Settings
  * is reachable from the menu too. The version label moved out of that corner to make room for it,
  * rather than the two ever sharing a slot.

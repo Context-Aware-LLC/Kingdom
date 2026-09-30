@@ -1,3 +1,6 @@
+/* The settings overlay (gear + panel) is styled entirely in settings.uss. */
+@import url("/Assets/UI/Common/settings.uss");
+
 /* ================================================================================================
  * WHAT ONE AUTHORED PIXEL IS. Read this before trusting any number in any sheet in this project.
  *
@@ -443,7 +446,7 @@
  * carries its own size and position and takes its chrome from `.unity-button` above, so it never
  * needs a screen-local override.
  *
- * height 68 matches `.ms-gear` (matchsettings.uss), the opposite bottom corner, so the two read
+ * height 68 matches `.ms-gear` (settings.uss), the opposite bottom corner, so the two read
  * as one row. That is 12 over `--touch-min`'s floor, matching this session's "make corner nav
  * bigger" pass (back, Collection's Decks button, the settings gear) -- Filters was left alone.
  *
@@ -452,7 +455,7 @@
  * warns off for the same reason) -- since the glyph is a bet against the SAME shared font
  * everywhere, skip it everywhere rather than per screen.
  *
- * Mirrors `.ms-gear`'s bottom-right anchor (matchsettings.uss) on the opposite side, same
+ * Mirrors `.ms-gear`'s bottom-right anchor (settings.uss) on the opposite side, same
  * var(--space-6) offset both axes, `margin: 0 var(--edge-safe)` composing with it the same way
  * `.emb-edge` does (see the comment above it) for the hardware cutout. */
 .emb-back-button {

@@ -1,0 +1,217 @@
+/*
+ * settings.uss — the settings overlay (MatchSettingsScreen.uxml): the corner gear, its modal panel
+ * and everything inside it. Imported by theme.uss, so every screen gets it and nothing else links it
+ * (Sam, 2026-09-30). Styles for this element belong HERE and nowhere else: not in a screen sheet,
+ * not inline in the UXML, not set from code.
+ *
+ * EVERY RULE IS SCOPED UNDER `.ms-root`. theme.uss imports this file at its top, so theme.uss's own
+ * one-class `.unity-button` rules come AFTER these and would win any one-class tie. The scope makes
+ * these two classes deep, which beats them regardless of order.
+ *
+ * HOVER AND PRESS. Unity's default theme fills `.unity-button:hover:enabled` and
+ * `:active:enabled` (three-class selectors) with its grey button colours. A fill paints under the
+ * chrome sprite's clear corners and shows as a grey square. theme.uss clears those colours through
+ * the `--unity-colors-button-*` variables; the state rules below also clear the fill directly, at a
+ * specificity the default theme cannot beat, so the settings element does not depend on the
+ * variables resolving.
+ */
+
+.ms-root {
+    flex-grow: 1;
+}
+
+/* ---------- Every button in the settings element ---------- */
+.ms-root .unity-button:hover:enabled,
+.ms-root .unity-button:focus:enabled,
+.ms-root .unity-button:active:enabled,
+.ms-root .unity-button:hover:active:enabled {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+}
+
+/* ---------- Corner button (always visible) ----------
+ * A compact "menu" (hamburger) button parked bottom-right, in the same slate chrome as every other
+ * button. Three bars are child VisualElements so the icon is font-independent. The sprite has clear
+ * corners, so nothing should sit beneath the gear: whatever is there shows through them. */
+.ms-root .ms-gear {
+    position: absolute;
+    bottom: var(--space-6);
+    right: var(--space-6);
+    width: 68px;
+    height: 68px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(218, 224, 232);
+    transition-property: -unity-background-image-tint-color, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.ms-root .ms-gear:hover:enabled {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.ms-root .ms-gear:active:enabled {
+    -unity-background-image-tint-color: rgb(188, 195, 205);
+    translate: 0 1px;
+}
+.ms-root .ms-gear-bar {
+    width: 24px;
+    height: 4px;
+    margin: 2px 0;
+    background-color: rgb(232, 194, 132);
+}
+
+/* ---------- Modal overlay (hidden until the gear is pressed) ---------- */
+.ms-root .ms-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;                       /* toggled by MatchSettingsController */
+    align-items: center;
+    justify-content: center;
+}
+.ms-root .ms-scrim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(11, 14, 19, 0.68);
+}
+.ms-root .ms-panel {
+    min-width: 320px;
+    background-color: var(--surface-1);
+    border-width: 1px;
+    border-color: rgba(11, 14, 19, 0.7);
+    border-radius: var(--space-3);
+    padding: var(--space-6);
+    align-items: stretch;
+}
+
+.ms-root .ms-view { align-items: stretch; }
+.ms-root .ms-hidden { display: none; }
+
+.ms-root .ms-title {
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    -unity-text-align: middle-center;
+    margin-bottom: var(--space-4);
+}
+.ms-root .ms-subtitle {
+    font-size: var(--type-body);
+    color: var(--ink-2);
+    -unity-text-align: middle-center;
+    margin-bottom: var(--space-6);
+}
+
+/* ---------- Audio (Sam, 2026-09-05: mute + separate music/SFX volume) ----------
+ * Its own slate-framed group, so it reads as one setting rather than two more menu items.
+ * Padding clears the sprite's 18px slice border (36 x 0.5) so the rows never sit on the frame. */
+.ms-root .ms-audio {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(232, 236, 242);
+    border-radius: 0;
+    padding: var(--space-6);
+    margin-top: var(--space-2);
+}
+.ms-root .ms-toggle,
+.ms-root .ms-slider {
+    flex-direction: row;
+}
+/* USS has no :first-child. The mute toggle is always the group's first row, so only the sliders
+ * under it take the gap. */
+.ms-root .ms-slider { margin-top: var(--space-4); }
+.ms-root .ms-toggle > .unity-toggle__input,
+.ms-root .ms-toggle .unity-base-field__label,
+.ms-root .ms-slider .unity-base-field__label {
+    color: var(--ink-1);
+    font-size: var(--type-label);
+    min-width: 90px;
+}
+.ms-root .ms-toggle .unity-toggle__checkmark,
+.ms-root .ms-toggle:hover .unity-toggle__checkmark,
+.ms-root .ms-toggle:focus .unity-toggle__checkmark {
+    background-color: var(--surface-3);
+    border-width: 0;
+    border-radius: var(--space-1);
+}
+/* `:checked` is a pseudo-state, not a class, so MatchSettingsController drives .ms-toggle--on
+ * explicitly (Sam, 2026-09-05), the same pattern as .db-chip--on. */
+.ms-root .ms-toggle--on .unity-toggle__checkmark,
+.ms-root .ms-toggle--on:hover .unity-toggle__checkmark,
+.ms-root .ms-toggle--on:focus .unity-toggle__checkmark {
+    background-color: var(--mana);
+}
+.ms-root .ms-slider .unity-base-slider__tracker,
+.ms-root .ms-slider:hover .unity-base-slider__tracker {
+    background-color: var(--surface-3);
+    border-width: 0;
+    border-radius: 999px;
+}
+.ms-root .ms-slider .unity-base-slider__dragger,
+.ms-root .ms-slider:hover .unity-base-slider__dragger,
+.ms-root .ms-slider:active .unity-base-slider__dragger {
+    background-color: var(--mana);
+    border-width: 0;
+    border-radius: 999px;
+}
+/* Dimmed rather than hidden while muted: the values are still there to read, just not adjustable
+ * until unmuted. */
+.ms-root .ms-slider:disabled { opacity: 0.4; }
+
+/* ---------- Menu items ----------
+ * Full-width slate buttons. Every item, Quit included, uses this (Sam, 2026-09-27). */
+.ms-root .ms-item {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(232, 236, 242);
+    border-width: 0;
+    border-radius: 0;
+    height: 68px;
+    margin: var(--space-4) 0 0 0;
+    padding: 0 var(--space-6);
+    transition-property: -unity-background-image-tint-color, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.ms-root .ms-item:hover:enabled {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.ms-root .ms-item:active:enabled {
+    -unity-background-image-tint-color: rgb(205, 211, 220);
+    translate: 0 1px;
+}
+
+/* Concede is destructive: it reads in the negative colour and warms on hover. */
+.ms-root .ms-item--danger {
+    color: var(--negative);
+}
+.ms-root .ms-item--danger:hover:enabled {
+    -unity-background-image-tint-color: rgb(255, 205, 205);
+}

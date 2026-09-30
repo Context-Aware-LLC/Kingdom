@@ -11,8 +11,9 @@
   reachable from the main menu now, not just in-match) via Resources and bound by
   MatchSettingsController. On the menu mount, Concede is hidden (nothing to concede) and Switch
   account is what's left.
-  Styled by theme.uss (shared meta-screen tokens, single source of truth) + mainmenu.uss (for the
-  account-modal it reuses) + matchsettings.uss.
+  Styled by Common/settings.uss, which theme.uss imports (Sam, 2026-09-30). Every rule for the gear
+  and the panel lives there; add none here, inline, or in a screen sheet. mainmenu.uss is linked
+  only for the dev account switcher's shared .mm-modal shell, and none of its rules reach .ms-*.
 
   The root is picking-mode Ignore so the world-space board keeps its clicks; only the gear
   (always) and the scrim (while open) are pickable. Board input is ALSO gated in InputRouter
@@ -20,11 +21,8 @@
 -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <Style src="../../Common/theme.uss" />
-    <!-- Reused here for .mm-modal / .mm-accounts — the account switcher (below) is the same
-         modal MainMenuController used to own directly; it now lives on this shared panel instead
-         of being duplicated in matchsettings.uss. -->
+    <!-- For the dev account switcher (below) only: it is the main menu's .mm-modal shell. -->
     <Style src="../../MainMenu/mainmenu.uss" />
-    <Style src="matchsettings.uss" />
 
     <ui:VisualElement name="root" class="emb-root ms-root" picking-mode="Ignore">
 

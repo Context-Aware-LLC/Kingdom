@@ -373,7 +373,7 @@
  *
  * POSITION: ABSOLUTE (2026-09-08), same fix as `.deck-drawer__manage` in collection.uss — in flow
  * this sat as the last child of `root`'s column, flush to the bottom edge, and collided with
- * `.ms-gear` (matchsettings.uss, absolute bottom-right). First fix pinned it beside the gear with
+ * `.ms-gear` (settings.uss, absolute bottom-right). First fix pinned it beside the gear with
  * a right reserve; CENTERED instead now that the corner is shared with `#back-button` too — a
  * bar hugging either corner reads as belonging to that corner's button, not as its own action.
  * The transparent rail spans the safe horizontal area and centers its one button. It ignores
