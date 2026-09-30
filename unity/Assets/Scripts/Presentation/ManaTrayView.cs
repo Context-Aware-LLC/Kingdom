@@ -29,6 +29,7 @@ namespace Emberfall.Presentation
         internal const float RailH = 2.30f;
         internal const int GridColumns = 2;
         internal const int GridRows = 5;
+        private const float SurfaceRollDeg = 8f;
 
         private static readonly int FillLevelId   = Shader.PropertyToID("_FillLevel");
         private static readonly int SpentLevelId  = Shader.PropertyToID("_SpentLevel");
@@ -51,7 +52,10 @@ namespace Emberfall.Presentation
             _playerId = playerId;
             transform.SetParent(anchor, false);
             transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
+            // Both painted corner cradles share the table's screen-space rake. Keep the
+            // procedural sockets round in their own quad, then rotate the complete tray to follow
+            // that furniture instead of leaving a perfectly vertical UI grid over angled metal.
+            transform.localRotation = Quaternion.Euler(0f, 0f, SurfaceRollDeg);
 
             // One quad, ten procedural cells. The shader derives cell aspect from this transform,
             // so the sockets stay round and no per-orb hierarchy is needed.

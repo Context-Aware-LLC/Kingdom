@@ -17,10 +17,11 @@ namespace Emberfall.Presentation
         public static readonly Vector2 ArtworkUv =
             new(4091f / 4612f, 1f - 902f / 2080f);
 
-        // Menu chrome, ember on your turn and slate on theirs (BoardButtonChrome). Was a flat
-        // green/grey quad at 1.30 x 0.52; enlarged with the chrome (Sam, 2026-09-30).
-        private const float ButtonW = 2.40f;
-        private const float ButtonH = 0.90f;
+        // This is the TOP of the Royal Council seal press, not a small plaque placed on it. It
+        // remains an XY-plane sprite at z=0, so the board camera naturally foreshortens it into the
+        // painted mechanism's ellipse instead of presenting it as a screen-facing HUD button.
+        private const float ButtonW = 3.35f;
+        private const float ButtonH = 1.75f;
         private const int   ChromeOrder = 11;
 
         private PlayerId       _p0Id;
@@ -41,7 +42,7 @@ namespace Emberfall.Presentation
             labelGo.transform.SetParent(transform, false);
             labelGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
             _label = labelGo.AddComponent<TextMeshPro>();
-            _label.fontSize  = 2.7f;
+            _label.fontSize  = 3.8f;
             _label.alignment = TextAlignmentOptions.Center;
             _label.color     = BoardButtonChrome.SecondaryInk;
             _label.rectTransform.sizeDelta = new Vector2(ButtonW, ButtonH);

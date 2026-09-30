@@ -75,15 +75,17 @@ namespace Emberfall.Presentation
         // and weapon lower-right; opponent power lower-left and weapon upper-left. This removes the
         // old outboard ring that competed with the frame edge and the board's timer furniture.
         //
-        // The hero-power ring retains the approved 0.34-unit metal-on-metal overlap. The weapon is
-        // farther inboard and toward the outer screen edge; its 1.73 x-offset and 1.00 y-offset put
-        // the weapon's left-heavy alpha just across the portrait trim while keeping the ring's
-        // outer vertical edge at 4.585, just inside the 4.60 design edge. The two rings are 1.568
-        // units centre-to-centre, so their 1.51 quads remain distinct click targets.
+        // The hero-power ring retains the approved 0.34-unit metal-on-metal overlap. The weapon
+        // uses a smaller quad overlap because its painted metal is left-heavy. Both x offsets derive
+        // from the hero width, so enlarging a portrait does not bury either satellite in it. Their
+        // offset delta remains 0.235 and their 1.568 centre distance keeps the 1.51 click targets
+        // distinct.
         private const float HeroPowerOverlap = 0.34f;
+        private const float WeaponQuadOverlap = 0.105f;
         internal const float HeroPowerOffsetX =
             HeroPlateView.PlateW * 0.5f + HeroSocketsView.FrameSize * 0.5f - HeroPowerOverlap;
-        internal const float WeaponOffsetX = 1.73f;
+        internal const float WeaponOffsetX =
+            HeroPlateView.PlateW * 0.5f + HeroSocketsView.FrameSize * 0.5f - WeaponQuadOverlap;
 
         // Fallback placement before BoardBackdrop has fitted the artwork. The live hero-cluster
         // roots are registered to the UV fixtures above and replace this position immediately.
@@ -92,7 +94,7 @@ namespace Emberfall.Presentation
         // Fallback resource-cluster placement. The mana rail keeps this offset from the deck when
         // the cluster root is projected onto the painted deck cradle.
         internal const float ManaGridX = 6.83f;   // rail 6.37..7.29
-        internal const float DeckX     = 8.25f;   // pile 7.60..8.90
+        internal const float DeckX     = 8.175f;  // resized pile fallback still ends at 8.90
 
         // ── Vertical (§1.3) ─────────────────────────────────────────────────────────────
         // Fallback baseline used until the artwork fit projects each fixture root.
@@ -104,10 +106,9 @@ namespace Emberfall.Presentation
         internal const float HeroPowerTowardCenterY = 0.55f;
         internal const float WeaponTowardEdgeY = 1.00f;
         internal const float ManaGridY = 3.35f;
-        private const float DeckY      = 3.53f;  // a 1.3-wide card-proportioned pile (1.83
-                                                 // tall) on the baseline. DeckPileView renders
-                                                 // here — NetworkedGameBootstrap builds one per
-                                                 // seat — and DeckAnchor is the draw source
+        private const float DeckY      = 3.59f;  // resized pile fallback remains on the baseline.
+                                                // The live root is artwork-registered; DeckAnchor
+                                                // remains the draw-flight source in either case.
 
         private void Awake()
         {

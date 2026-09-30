@@ -22,13 +22,14 @@ namespace Emberfall.Presentation
         // Valid-target cue: cyan to match CardMaterialBinder's target glow.
         private static readonly Color TargetableTint = new Color(0.25f, 0.90f, 1.00f);
 
-        // hero-frame.png is 1024x1536, so this keeps its native 2:3 aspect. The full composition
-        // is 35% larger than the first authored-frame pass (Sam, 2026-08-29); portrait, HP and
-        // ClickableHero's collider scale with it as one figure.
-        internal const float PlateW = 2.16f;       // 1.60 * 1.35
-        internal const float PlateH = 3.24f;       // 2.40 * 1.35
-        private const float PortraitW = 1.566f;    // 1.16 * 1.35
-        private const float PortraitH = 2.133f;    // 1.58 * 1.35
+        // hero-frame.png is 1024x1536, so this keeps its native 2:3 aspect. Royal Council's
+        // painted portrait fixtures have more room than the old board anchors; grow the complete
+        // composition together so art, HP label and ClickableHero collider stay registered.
+        private const float FixtureScale = 1.16f;
+        internal const float PlateW = 2.16f * FixtureScale;
+        internal const float PlateH = 3.24f * FixtureScale;
+        private const float PortraitW = 1.566f * FixtureScale;
+        private const float PortraitH = 2.133f * FixtureScale;
         private const string FrameSpriteKey = "hero-frame";
         private const int FrameOrder = 8;
         private const int PortraitOrder = 9;
@@ -79,7 +80,9 @@ namespace Emberfall.Presentation
             // composition ever wants it back. Left here because it reads well, not because it
             // has to be.
             _hpLabel = MakeLabel(transform, "HP",
-                new Vector3(0.648f, 0.162f, -0.02f), 6.345f, HpFull);
+                new Vector3(0.648f * FixtureScale, 0.162f * FixtureScale, -0.02f),
+                6.345f * FixtureScale,
+                HpFull);
         }
 
         private void SetPortrait(Sprite sprite)

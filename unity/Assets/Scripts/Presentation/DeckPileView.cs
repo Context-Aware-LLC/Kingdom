@@ -25,11 +25,13 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class DeckPileView : MonoBehaviour
     {
-        // hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1 deck pile: 1.3 wide (x +6.53..+7.83), card-proportioned, so
-        // 1.83 tall. Deliberately larger than the 1.17 x 1.65 card quad — the pile is furniture,
-        // not a card in play, and the extra size is what keeps the back's pattern legible.
-        internal const float PileW = 1.30f;
-        private const float PileH = 1.83f;
+        // Royal Council seats the draw pile in a raised corner cradle. The card remains tall enough
+        // for its back to identify it, but is yawed below so it reads as a physical stack pictured
+        // partly on edge instead of another face-up board card.
+        internal const float PileW = 1.45f;
+        private const float PileH = 1.72f;
+        private const float SurfaceYawDeg = 48f;
+        private const float SurfaceRollDeg = 7.5f;
 
         // Thickness. Six layers is the visual ceiling; past that the steps stop reading and just
         // smear the silhouette. A full 30-card deck therefore starts at six and sheds one every
@@ -63,7 +65,8 @@ namespace Emberfall.Presentation
             _playerId = playerId;
             transform.SetParent(anchor, false);
             transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
+            float yaw = anchor.position.x >= 0f ? -SurfaceYawDeg : SurfaceYawDeg;
+            transform.localRotation = Quaternion.Euler(0f, yaw, SurfaceRollDeg);
 
 #if UNITY_EDITOR
             uiSprites ??= new EditorUiSpriteProvider();
