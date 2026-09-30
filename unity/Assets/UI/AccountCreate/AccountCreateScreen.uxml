@@ -43,7 +43,7 @@
              views own a text field, so the IME is open here more often than not, and on the Pixel 5a
              its top edge lands at roughly 29% of the panel. Everything read while typing stays in
              the top band: the header, then the field row. The call-to-action line reads as one
-             sentence, "Skip the paperwork and [Google] or [I have an account] Just kidding
+             sentence, "Skip the paperwork and [Google] or [I have an account] I Jest!
              [I am new here]". -->
         <ui:VisualElement name="signin-view" class="signin-stack">
             <ui:VisualElement class="signin-header">
@@ -74,7 +74,7 @@
                 <ui:VisualElement name="signin-choice" class="signin-line signin-choice">
                     <ui:Label text="or" class="mm-signin__or"/>
                     <ui:Button name="btn-signin-returning" text="I have an account" class="mm-modal__button signin-btn"/>
-                    <ui:Label text="Just kidding" class="mm-signin__or"/>
+                    <ui:Label text="I Jest!" class="mm-signin__or"/>
                     <ui:Button name="btn-signin-new" text="I am new here" class="mm-modal__button signin-btn"/>
                 </ui:VisualElement>
             </ui:VisualElement>

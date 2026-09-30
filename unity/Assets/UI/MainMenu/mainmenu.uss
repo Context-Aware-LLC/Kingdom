@@ -1036,7 +1036,7 @@
 }
 
 /* The sign-in view as a centred stack (Sam, 2026-09-28): header, field row, then one line that
- * reads "Skip the paperwork and [Google] or [I have an account] Just kidding [I am new here]". The name view
+ * reads "Skip the paperwork and [Google] or [I have an account] I Jest! [I am new here]". The name view
  * still uses the two-row layout above. */
 .account-create-screen .signin-stack {
     align-items: center;
