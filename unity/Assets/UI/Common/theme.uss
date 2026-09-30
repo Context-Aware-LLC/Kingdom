@@ -1,5 +1,4 @@
 /* The settings overlay (gear + panel) is styled entirely in settings.uss. */
-@import url("/Assets/UI/Common/controls.uss");
 @import url("/Assets/UI/Common/settings.uss");
 
 /* ================================================================================================
