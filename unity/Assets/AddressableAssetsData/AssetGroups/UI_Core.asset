@@ -45,11 +45,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1a890b214e6bef044854c8ea4f0e4521
-    m_Address: materials/M_WordmarkEmberfall
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 23c42332aa507fb48bfdbb99665010e2
     m_Address: materials/Wood
     m_ReadOnly: 0

@@ -142,7 +142,6 @@
        scales uniformly with screen height; a token that ALSO steps would be scaling twice.
        If a future breakpoint is wanted it has to key on the panel's WIDTH, which is the only
        axis that still varies (1440 authored px on a 4:3 tablet, 2400 on a 20:9 phone). */
-    --type-wordmark: 56px;
     --type-display: 44px;
     --type-h1: 36px;
     --type-h2: 28px;

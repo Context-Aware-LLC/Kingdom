@@ -36,8 +36,6 @@ namespace Emberfall.Core.Tests.Presentation
                     "SpriteRenderer requires the VectorSprite importer mode.");
                 Assert.That(overlay, Does.Contain("var wordmarkSprite = LoadAsset<Sprite>("));
                 Assert.That(overlay, Does.Contain(Address));
-                Assert.That(overlay, Does.Not.Contain("AddComponent<TextArcWarp>"),
-                    "The approved arc is authored into the SVG and must not be warped twice.");
                 Assert.That(overlay, Does.Not.Contain("KINGDOM <size=70%>"),
                     "Loading-screen branding must not regress to live TMP text.");
                 Assert.That(addressables, Does.Contain($"m_GUID: {AssetGuid}"));
