@@ -174,7 +174,8 @@ namespace Emberfall.Presentation
             SealStamp.Clear(_card);
             Sprite seal = _sprites?.Get(SealStamp.SpriteKey);
             if (seal == null) return;
-            _card.schedule.Execute(() => SealStamp.Play(_card, seal, size: 170f, top: -60f, right: -50f))
+            Sprite tool = _sprites.Get(SealStamp.ToolSpriteKey);
+            _card.schedule.Execute(() => SealStamp.Play(_card, seal, tool, size: 170f, top: -60f, right: -50f))
                 .StartingIn(250);
         }
 

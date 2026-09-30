@@ -190,6 +190,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d3356f761934b2bb6e98390ca1a209f
+    m_Address: ui/ui_stamp_tool
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 96639c2fa6d74b4e95d61ef2653ab769
     m_Address: ui/hero-power
     m_ReadOnly: 0

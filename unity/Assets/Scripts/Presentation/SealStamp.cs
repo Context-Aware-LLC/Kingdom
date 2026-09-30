@@ -6,9 +6,9 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Slams the crown wax seal (<c>Art/UI/Chrome/ui_seal_crown.png</c>) down onto an element: it
-    /// drops in from above the screen, large and faint, squashes on impact while the target gives a
-    /// small jolt, then settles. The game's recurring "this is official" beat; the herald's
+    /// Slams the crown wax seal (<c>Art/UI/Chrome/ui_seal_crown.png</c>) down onto an element: the
+    /// hand stamp (<c>ui_stamp_tool.png</c>) drops in from above the screen, large and faint,
+    /// squashes on impact while the target gives a small jolt, then lifts away and leaves the wax. The game's recurring "this is official" beat; the herald's
     /// proclamation scroll (#403) is its first real consumer, the first-run tidbit card its first
     /// host.
     ///
@@ -24,17 +24,22 @@ namespace Emberfall.Presentation
     public static class SealStamp
     {
         public const string SpriteKey = "ui_seal_crown";
+        public const string ToolSpriteKey = "ui_stamp_tool";
         public const string SealClass = "emb-seal-stamp";
 
         // The beat schedule, in ms from the call.
         private const int DropMs = 150;    // fall from above to contact
         private const int SquashMs = 70;   // wax spreads, target jolts
         private const int SettleMs = 160;  // spring back to rest
+        private const int HoldMs = 90;     // the tool rests on the wax before lifting
+        private const int LiftMs = 220;    // the tool rises away, revealing the seal
 
         /// <summary>
         /// Stamp <paramref name="target"/>. The seal is added as its last child, absolutely placed, so
         /// the target's own layout does not move.
         /// </summary>
+        /// <param name="tool">The hand stamp (<c>ui_stamp_tool.png</c>). When given, it is what comes
+        /// down, holds on the wax and lifts away to reveal the seal; null slams the bare seal.</param>
         /// <param name="size">Seal diameter in authored px.</param>
         /// <param name="left">Offsets of the seal's edges from the target's, as USS absolute
         /// placement: set one of left/right and one of top/bottom. Negative overhangs the target's
@@ -49,6 +54,7 @@ namespace Emberfall.Presentation
         public static VisualElement Play(
             VisualElement target,
             Sprite seal,
+            Sprite tool = null,
             float size = 150f,
             float? left = null,
             float? top = null,
@@ -69,6 +75,8 @@ namespace Emberfall.Presentation
             float tilt = tiltDegrees ?? UnityEngine.Random.Range(-14f, 14f);
             if (sound != null) UiSfx.Preload(sound);
 
+            // The container carries the placement and the whole drop/squash; the wax and the tool
+            // are its children, so the tool lands exactly where the wax appears.
             var stamp = new VisualElement { pickingMode = PickingMode.Ignore };
             stamp.AddToClassList(SealClass);
             IStyle s = stamp.style;
@@ -87,8 +95,34 @@ namespace Emberfall.Presentation
             if (bottom.HasValue) s.bottom = bottom.Value;
             s.width = size;
             s.height = size;
-            s.backgroundImage = new StyleBackground(seal);
-            s.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+
+            var wax = new VisualElement { pickingMode = PickingMode.Ignore };
+            IStyle w = wax.style;
+            w.position = Position.Absolute;
+            w.left = 0; w.top = 0; w.right = 0; w.bottom = 0;
+            w.backgroundImage = new StyleBackground(seal);
+            w.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+            stamp.Add(wax);
+
+            VisualElement press = null;
+            if (tool != null)
+            {
+                // The tool is pressing the wax, so the wax is not there until it lifts. Sized and
+                // offset so the brass die sits over the seal: measured off ui_stamp_tool.png, the die
+                // is 35.4% of the image wide, centred at (49.8%, 84%).
+                w.opacity = 0f;
+                float t = size * 0.95f / 0.354f;
+                press = new VisualElement { pickingMode = PickingMode.Ignore };
+                IStyle p = press.style;
+                p.position = Position.Absolute;
+                p.width = t;
+                p.height = t;
+                p.left = size / 2f - 0.498f * t;
+                p.top = size / 2f - 0.84f * t;
+                p.backgroundImage = new StyleBackground(tool);
+                p.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                stamp.Add(press);
+            }
 
             // Start: well above its landing spot, big (close to the camera) and faint, tilted a
             // little past where it will come to rest.
@@ -129,7 +163,23 @@ namespace Emberfall.Presentation
                 target.style.translate = restingTarget;
             });
 
-            Beat(stamp, 16 + DropMs + SquashMs + SettleMs, () => onDone?.Invoke());
+            int doneAt = 16 + DropMs + SquashMs + SettleMs;
+            if (press != null)
+            {
+                // Hold, then lift the tool straight back up and away, leaving the wax behind.
+                Beat(stamp, 16 + DropMs + SquashMs + HoldMs, () =>
+                {
+                    w.opacity = 1f;
+                    Transition(press, LiftMs, EasingMode.EaseIn);
+                    press.style.translate = new Translate(0, -size * 2.2f);
+                    press.style.scale = new Scale(new Vector2(1.5f, 1.5f));
+                    press.style.opacity = 0f;
+                });
+                doneAt = 16 + DropMs + SquashMs + HoldMs + LiftMs;
+                Beat(stamp, doneAt, () => press.RemoveFromHierarchy());
+            }
+
+            Beat(stamp, doneAt, () => onDone?.Invoke());
 
             return stamp;
         }
