@@ -40,6 +40,7 @@ namespace Emberfall.Presentation
         private readonly List<int> _slotIndices = new List<int>();
         private int _slotCount;
         private float _cardScale = 1f;
+        private FacingCardRow.Solution _row;
 
         public void Init(PlayerId localPlayer, InputRouter router, ICardDatabase database,
                          BoardController board, IArtProvider art)
@@ -126,35 +127,21 @@ namespace Emberfall.Presentation
             if (_camera == null) _camera = Camera.main;
             if (_camera == null) return;
 
-            int screenWidth = Mathf.Max(1, Screen.width);
-            int screenHeight = Mathf.Max(1, Screen.height);
-            Rect safeArea = Screen.safeArea;
-            if (safeArea.width <= 0f || safeArea.height <= 0f)
-                safeArea = new Rect(0f, 0f, screenWidth, screenHeight);
-
-            float viewHeight = _camera.orthographic
-                ? 2f * _camera.orthographicSize
-                : 2f * CameraDistance * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
-            float viewWidth = viewHeight * _camera.aspect;
-            float safeWidth = viewWidth * safeArea.width / screenWidth;
-            float safeHeight = viewHeight * safeArea.height / screenHeight;
-            float centreX = viewWidth * (safeArea.center.x / screenWidth - 0.5f);
-            float centreY = viewHeight * (safeArea.center.y / screenHeight - 0.5f);
-
             // Keep the cards parallel to the screen and centered in its safe area. The board
             // remains visible behind them; the router still blocks gameplay until a choice lands.
-            _surface.transform.SetPositionAndRotation(
-                _camera.transform.TransformPoint(new Vector3(centreX, centreY, CameraDistance)),
-                _camera.transform.rotation);
-
+            // The row solve is shared with the mulligan row (FacingCardRow, #401).
             int count = Mathf.Max(1, _slotCount);
-            float unscaledWidth = count * BoardController.CardW + (count - 1) * CardGap;
-            _cardScale = Mathf.Min(MaxCardScale, Mathf.Min(
-                OfferWidthFraction * safeWidth / unscaledWidth,
-                CardHeightFraction * safeHeight / BoardController.CardH));
+            if (!FacingCardRow.TrySolve(_camera, FacingCardRow.SafeViewport(), CameraDistance, count,
+                    CardGap, MaxCardScale, OfferWidthFraction, CardHeightFraction,
+                    out FacingCardRow.Solution row))
+                return;
+
+            _row = row;
+            _surface.transform.SetPositionAndRotation(row.Centre, row.Rotation);
+            _cardScale = row.CardScale;
             _title.transform.localPosition = new Vector3(
                 0f, BoardController.CardH * _cardScale * 0.5f + 0.52f, -0.1f);
-            _title.rectTransform.sizeDelta = new Vector2(safeWidth * 0.9f, 0.7f);
+            _title.rectTransform.sizeDelta = new Vector2(row.BandWidth * 0.9f, 0.7f);
 
             for (int i = 0; i < _cards.Count; i++)
                 PositionSlot(_cards[i].transform, _slotIndices[i], count);
@@ -162,8 +149,7 @@ namespace Emberfall.Presentation
 
         private void PositionSlot(Transform anchor, int index, int count)
         {
-            float step = (BoardController.CardW + CardGap) * _cardScale;
-            anchor.localPosition = new Vector3((index - (count - 1) * 0.5f) * step, 0f, 0f);
+            anchor.localPosition = _row.SlotOffset(index, count);
             anchor.localScale = Vector3.one * _cardScale;
         }
 

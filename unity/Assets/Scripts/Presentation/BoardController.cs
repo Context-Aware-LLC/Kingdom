@@ -572,6 +572,16 @@ namespace Emberfall.Presentation
 
         // ── Private helpers ─────────────────────────────────────────────────────────
 
+        // The local human's seat has not confirmed its mulligan yet — the same test as
+        // DragTargetingModel.IsMulliganActive, which gates the taps. Only when a router exists:
+        // without one nobody can tap or confirm, so there is nothing to lay out for.
+        private bool LocalMulliganPending(GameState state)
+        {
+            if (_inputRouter == null || state == null || state.Phase != TurnPhase.Mulligan) return false;
+            int seat = state.SeatOf(_localHumanId);
+            return !(seat == 0 ? state.Mulligan0Done : state.Mulligan1Done);
+        }
+
         private void SyncZone(PlayerId owner, List<CardInstance> cards, Zone zone, bool ownerMayAct,
                               int spellDamageBonus)
         {
@@ -583,7 +593,12 @@ namespace Emberfall.Presentation
                 // Re-solve the fan BEFORE any hand anchor is resolved this tick: the fan's
                 // pitch is a function of hand count, so every card moves when one is drawn
                 // or played (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8).
-                boardAnchors?.SetHandCount(owner, cards.Count);
+                //
+                // While the local human is still choosing a mulligan, their hand is the head-on
+                // row instead (#401). Presentation only: the same presenters sit in the same
+                // slots, so taps, marks and the confirmed intent are unchanged.
+                boardAnchors?.SetHandCount(owner, cards.Count,
+                    mulliganRow: owner == _localHumanId && LocalMulliganPending(_currentState));
 
                 bool hidden = cards.Count > 0 && cards[0].Id.Value == 0;
                 SyncHiddenHand(owner, hidden ? cards.Count : 0);
@@ -722,7 +737,8 @@ namespace Emberfall.Presentation
                 }
             }
 
-            SetCardSorting(presenter, zone, slotIndex);
+            SetCardSorting(presenter, zone, slotIndex,
+                hoverAllowed: boardAnchors == null || !boardAnchors.IsMulliganRow(owner));
 
             // A card that appears in hand having had no presenter last tick was drawn (or
             // generated straight to hand, which deals the same way). Must run AFTER the
@@ -749,7 +765,13 @@ namespace Emberfall.Presentation
         // Hover-reveal is hand-only. Disabling the component on the board path is what returns a
         // played card to its resting pose — HandCardHover.OnDisable snaps the visual back, so a
         // card can never land on the board still lifted and enlarged.
-        private static void SetCardSorting(CardPresenter presenter, Zone zone, int slotIndex)
+        //
+        // hoverAllowed is false for the mulligan row (#401). Its cards sit side by side in a band
+        // sized to hold them, so the lift and the 1.2x emphasis would push a card into its
+        // neighbour and off the top of the band. Disabling the component also drops the hand's
+        // RestScale and collider back to board size, which is what MulliganRowLayout scales from.
+        private static void SetCardSorting(CardPresenter presenter, Zone zone, int slotIndex,
+                                           bool hoverAllowed = true)
         {
             bool inHand = zone == Zone.Hand;
             int  order  = inHand ? HandSortBase + slotIndex : 0;
@@ -760,8 +782,8 @@ namespace Emberfall.Presentation
             var hover = presenter.GetComponent<HandCardHover>();
             if (hover != null)
             {
-                hover.enabled = inHand;
-                if (inHand)
+                hover.enabled = inHand && hoverAllowed;
+                if (hover.enabled)
                 {
                     hover.SetBaseOrder(order);
                     return;

@@ -29,10 +29,48 @@ namespace Emberfall.Presentation
         // Re-solves this seat's ten hand anchors for the given hand count. Cheap and idempotent
         // (ten transform writes), so BoardController calls it every tick rather than tracking
         // the previous count — a stale fan is a worse failure than a redundant write.
-        public void SetHandCount(PlayerId player, int count)
+        //
+        // mulliganRow: this seat is choosing its mulligan, so its hand is laid out as the head-on
+        // row (MulliganRowLayout, #401) instead of the fan. The row is solved against the live
+        // camera, which the safe-area fit can move after the snapshot lands, so it is re-solved
+        // every LateUpdate while it is up — the same reason UnearthChoiceView re-lays itself out.
+        public void SetHandCount(PlayerId player, int count, bool mulliganRow = false)
         {
             SeatAnchors seat = ResolveSeat(player);
+            if (mulliganRow)
+            {
+                _rowSeat  = seat;
+                _rowCount = count;
+                if (MulliganRowLayout.Apply(seat.HandSlots, count, Camera.main)) return;
+            }
+            if (_rowSeat == seat) _rowSeat = null;
+            ApplyFan(seat, count);
+        }
+
+        /// <summary>True while <paramref name="player"/>'s hand is drawn as the mulligan row
+        /// rather than the fan. BoardController reads this to decide whether hand cards take the
+        /// hover lift, which the row has no room for.</summary>
+        public bool IsMulliganRow(PlayerId player) => _rowSeat != null && _rowSeat == ResolveSeat(player);
+
+        private SeatAnchors _rowSeat;
+        private int _rowCount;
+
+        private static void ApplyFan(SeatAnchors seat, int count)
+        {
+            // The row scales the slots; the fan never does, so it is the fan's job to undo it.
+            if (seat.HandSlots != null)
+                foreach (Transform slot in seat.HandSlots)
+                    if (slot != null) slot.localScale = Vector3.one;
             HandFanLayout.Apply(seat.HandSlots, count, seat.FanMirrored);
+        }
+
+        private void LateUpdate()
+        {
+            if (_rowSeat == null) return;
+            if (MulliganRowLayout.Apply(_rowSeat.HandSlots, _rowCount, Camera.main)) return;
+            SeatAnchors seat = _rowSeat;   // the band collapsed under a camera change: back to the fan
+            _rowSeat = null;
+            ApplyFan(seat, _rowCount);
         }
 
         // Re-solves this seat's board-row anchors so the occupied slots center in the row rather

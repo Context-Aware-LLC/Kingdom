@@ -53,6 +53,18 @@ namespace Emberfall.Presentation
         /// </summary>
         public static readonly Vector3 BoardPosition = new Vector3(0f, 0f, 0f);
 
+        // The "TAP CARDS TO REPLACE" prompt, above the button.
+        private const float InstructionY = 0.72f;
+        private const float InstructionH = 0.55f;
+
+        /// <summary>
+        /// World-space top of the prompt above the button. <see cref="MulliganRowLayout"/> seats the
+        /// opening cards above this line (#401): the row is nearer the camera than the button, so a
+        /// card drawn over it would win every press and the button would read as dead (#138 again).
+        /// </summary>
+        internal static Vector3 PromptTopWorld
+            => BoardPosition + new Vector3(0f, InstructionY + InstructionH * 0.5f, 0f);
+
         private PlayerId    _p0Id;
         private InputRouter _router;
         private Renderer    _face;
@@ -95,13 +107,13 @@ namespace Emberfall.Presentation
 
             var instructionGo = new GameObject("Instruction");
             instructionGo.transform.SetParent(transform, false);
-            instructionGo.transform.localPosition = new Vector3(0f, 0.72f, -0.01f);
+            instructionGo.transform.localPosition = new Vector3(0f, InstructionY, -0.01f);
             _instruction = instructionGo.AddComponent<TextMeshPro>();
             _instruction.fontSize  = 1.9f;
             _instruction.alignment = TextAlignmentOptions.Center;
             _instruction.color     = new Color(0.95f, 0.78f, 0.25f);
             _instruction.fontStyle = FontStyles.Bold;
-            _instruction.rectTransform.sizeDelta = new Vector2(5.2f, 0.55f);
+            _instruction.rectTransform.sizeDelta = new Vector2(5.2f, InstructionH);
             _instruction.textWrappingMode = TextWrappingModes.NoWrap;
             _instruction.text = "TAP CARDS TO REPLACE";
             BoardController.ApplyUiFont(_instruction);

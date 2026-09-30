@@ -13,7 +13,8 @@ namespace Emberfall.Presentation
 
         // Hand slots are not fixed transforms: the fan re-solves all ten as a function of hand
         // count (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8). Call before resolving a Zone.Hand anchor for this tick.
-        void SetHandCount(PlayerId player, int count);
+        // mulliganRow lays the hand out as the head-on mulligan row instead of the fan (#401).
+        void SetHandCount(PlayerId player, int count, bool mulliganRow = false);
 
         // Board slots center on the occupied count rather than sitting at a fixed span (Sam,
         // 2026-08-09). Call before resolving a Zone.Board anchor for this tick, same as
