@@ -1,91 +1,89 @@
 using System;
 using Emberfall.Core.Contracts;
-using TMPro;
 using UnityEngine;
 
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Visible turn clock (M2-KICKOFF §E2 minimal slice — a C1 entry requirement: "the timer C1
-    /// exercises must be seeable, or timer failures masquerade as hangs"). Procedurally built
-    /// world-space TMP, like <see cref="EndTurnButtonView"/> — no UXML/asset, so no per-clone
-    /// .meta GUID drift.
-    ///
-    /// Binds to <see cref="IMatchSession.OnTurnTimer"/>: the authority sends an ABSOLUTE Unix-epoch
-    /// deadline (arm / rope / reconnect) and this counts down <c>remaining = deadline - now</c>.
-    /// Cross-machine clock skew is cosmetic — the server enforces the real deadline (decision 23).
-    ///
-    /// SCOPE: this is the "seeable" floor (E2). Rope ANIMATION, opponent-thinking and reconnect
-    /// states are E3 — here the rope window only tints the label red. Never fires in hot-seat
-    /// (<see cref="LocalMatchSession"/> raises no timer); the view is verified against a stub session.
+    /// Server-driven Royal Council turn hourglass. It replaces the literal TURN/ROPE counter with
+    /// a physical object on the left fixture: procedural sand drains against the absolute deadline,
+    /// and the glass rocks and burns red during the final ten seconds. The server remains the only
+    /// authority; every animation here is cosmetic.
     /// </summary>
     public sealed class TurnClockView : MonoBehaviour
     {
-        /// <summary>Royal Council crown-fuse warning medallion at centre-left.</summary>
         public static readonly Vector3 BoardPosition = new(-6.3f, 0.6f, 0f);
         public static readonly Vector2 ArtworkUv =
             new(435f / 4612f, 1f - 942f / 2080f);
 
-        private static readonly Color NormalColor = new Color(0.86f, 0.88f, 0.95f);
-        private static readonly Color RopeColor   = new Color(0.90f, 0.25f, 0.22f);
-        private static readonly Color NormalPlate = new Color(0.12f, 0.14f, 0.19f);
-        private static readonly Color RopePlate   = new Color(0.30f, 0.08f, 0.07f);
-
-        private const float ClockW = 1.30f;
-        private const float ClockH = 0.46f;
-
-        // Presentation-side rope window (cosmetic tint only). The SERVER owns the real rope at
-        // _opts.RopeMs; this constant just decides when the on-screen number goes red, and does not
-        // need to agree with it to the millisecond.
+        private static readonly Color SandColor = new(0.96f, 0.63f, 0.16f, 1f);
+        private static readonly Color RopeSandColor = new(1.00f, 0.20f, 0.08f, 1f);
+        private static readonly Color RopeBodyTint = new(1.00f, 0.72f, 0.62f, 1f);
+        private const string HourglassSpriteKey = "turn-hourglass-royal-council";
         private const long RopeWindowMs = 10_000;
+        private const float HourglassW = 1.42f;
+        private const float HourglassH = 2.20f;
+        private const float SandHalfW = 0.19f;
+        private const float SandNeckY = 0.04f;
+        private const float SandTopH = 0.40f;
+        private const float SandBottomY = -0.48f;
+        private const float SandBottomH = 0.39f;
+        private const int SandOrder = 11;
+        private const int BodyOrder = 12;
 
-        private TextMeshPro _label;
-        private Renderer    _face;
+        private static readonly int[] TriangleIndices = { 0, 1, 2 };
+        private static readonly int[] QuadIndices = { 0, 1, 2, 0, 2, 3 };
+        private static readonly Vector2[] TriangleUvs = { Vector2.zero, Vector2.up, Vector2.one };
+        private static readonly Vector2[] QuadUvs =
+            { Vector2.zero, Vector2.right, Vector2.one, Vector2.up };
+
+        private SpriteRenderer _body;
+        private MeshRenderer _topSandRenderer;
+        private MeshRenderer _bottomSandRenderer;
+        private MeshRenderer _streamRenderer;
+        private Mesh _topSand;
+        private Mesh _bottomSand;
+        private Mesh _stream;
+        private readonly Vector3[] _topVertices = new Vector3[3];
+        private readonly Vector3[] _bottomVertices = new Vector3[3];
+        private readonly Vector3[] _streamVertices = new Vector3[4];
         private MaterialPropertyBlock _mpb;
-        private Func<long>  _nowMs;
-        private long?       _deadlineMs;
+        private Func<long> _nowMs;
+        private long? _deadlineMs;
+        private long _durationMs;
+        private float _flipStartedAt = -1f;
 
-        /// <param name="nowMs">Unix-epoch millisecond source; defaults to the wall clock. Injectable
-        /// so a stub session / test can drive the countdown deterministically.</param>
-        public void Init(Func<long> nowMs = null)
+        public void Init(Func<long> nowMs = null, IUiSpriteProvider uiSprites = null)
         {
             _nowMs = nowMs ?? (() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
             _mpb = new MaterialPropertyBlock();
 
-            var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            faceGo.name = "Face";
-            faceGo.transform.SetParent(transform, false);
-            faceGo.transform.localScale = new Vector3(ClockW, ClockH, 1f);
-            Destroy(faceGo.GetComponent<MeshCollider>());
-            _face = faceGo.GetComponent<Renderer>();
-            MaterialCatalog.Assign(_face, MaterialCatalog.Plate);
-            Tint(NormalPlate);
+#if UNITY_EDITOR
+            uiSprites ??= new EditorUiSpriteProvider();
+#else
+            uiSprites ??= new AddressableUiSpriteProvider();
+#endif
 
-            var labelGo = new GameObject("Label");
-            labelGo.transform.SetParent(transform, false);
-            labelGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
-            _label = labelGo.AddComponent<TextMeshPro>();
-            _label.fontSize        = 1.35f;
-            _label.alignment       = TextAlignmentOptions.Center;
-            _label.color           = NormalColor;
-            _label.fontStyle       = FontStyles.Bold;
-            _label.rectTransform.sizeDelta = new Vector2(ClockW, ClockH);
-            _label.textWrappingMode = TextWrappingModes.NoWrap;
-            _label.text            = string.Empty;
-            BoardController.ApplyUiFont(_label);
+            _topSandRenderer = CreateSandMesh("TopSand", out _topSand);
+            _bottomSandRenderer = CreateSandMesh("BottomSand", out _bottomSand);
+            _streamRenderer = CreateSandMesh("SandStream", out _stream);
+            InitializeTriangle(_topSand);
+            InitializeTriangle(_bottomSand);
+            InitializeQuad(_stream);
+            _body = CreateBody(uiSprites.Get(HourglassSpriteKey));
+            UpdateSand(1f, false);
             SetVisible(false);
         }
 
-        /// <summary>Bind to <see cref="IMatchSession.OnTurnTimer"/> (already main-thread-marshaled by
-        /// the networked decorator, so this runs on the Unity thread).</summary>
-        public void OnTurnTimer(TurnTimer t)
+        public void OnTurnTimer(TurnTimer timer)
         {
-            _deadlineMs = t.DeadlineMs;
+            long now = _nowMs();
+            _deadlineMs = timer.DeadlineMs;
+            _durationMs = Math.Max(1, timer.DeadlineMs - now);
+            _flipStartedAt = Time.unscaledTime;
             SetVisible(true);
         }
 
-        /// <summary>Hide when there is no live turn clock — the mulligan phase (the server arms the
-        /// turn clock only afterwards) and match end. Wired alongside the other views' state pump.</summary>
         public void OnStateUpdated(GameState state)
         {
             if (state == null) return;
@@ -98,27 +96,142 @@ namespace Emberfall.Presentation
 
         private void Update()
         {
-            if (_deadlineMs == null || _label == null) return;
+            if (_deadlineMs == null || _body == null) return;
+
             long remaining = Math.Max(0, _deadlineMs.Value - _nowMs());
-            int  secs      = (int)((remaining + 999) / 1000);   // ceil, so "1" shows through the final second
+            float fraction = Mathf.Clamp01(remaining / (float)Math.Max(1, _durationMs));
             bool rope = remaining <= RopeWindowMs;
-            _label.text  = rope ? $"ROPE {secs}" : $"TURN {secs}";
-            _label.color = rope ? RopeColor : NormalColor;
-            Tint(rope ? RopePlate : NormalPlate);
+            UpdateSand(fraction, rope);
+
+            float now = Time.unscaledTime;
+            float wobble = rope ? Mathf.Sin(now * 12f) * 3.1f : Mathf.Sin(now * 1.35f) * 0.45f;
+            float flip = 0f;
+            if (_flipStartedAt >= 0f)
+            {
+                float k = (now - _flipStartedAt) / 0.52f;
+                if (k < 1f) flip = Mathf.Sin(Mathf.Clamp01(k) * Mathf.PI) * 17f;
+                else _flipStartedAt = -1f;
+            }
+            transform.localRotation = Quaternion.Euler(0f, 0f, flip + wobble);
+            _body.color = rope ? RopeBodyTint : Color.white;
         }
 
-        private void SetVisible(bool on)
+        private SpriteRenderer CreateBody(Sprite sprite)
         {
-            if (_face != null) _face.gameObject.SetActive(on);
-            if (_label != null) _label.enabled = on;
+            var go = new GameObject("HourglassBody");
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = new Vector3(0f, 0.06f, -0.02f);
+            var sr = go.AddComponent<SpriteRenderer>();
+            SpriteMaterials.Set(sr, sprite);
+            sr.sortingOrder = BodyOrder;
+            if (sprite != null)
+            {
+                Vector2 native = sprite.bounds.size;
+                go.transform.localScale = new Vector3(HourglassW / native.x, HourglassH / native.y, 1f);
+            }
+            else
+            {
+                Debug.LogWarning($"[TurnClockView] no UI sprite '{HourglassSpriteKey}'.");
+            }
+            return sr;
         }
 
-        private void Tint(Color color)
+        private MeshRenderer CreateSandMesh(string name, out Mesh mesh)
         {
-            if (_face == null) return;
-            _face.GetPropertyBlock(_mpb);
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            go.transform.localPosition = new Vector3(0f, 0.02f, -0.01f);
+            var filter = go.AddComponent<MeshFilter>();
+            mesh = new Mesh { name = name };
+            filter.sharedMesh = mesh;
+            var renderer = go.AddComponent<MeshRenderer>();
+            MaterialCatalog.Assign(renderer, MaterialCatalog.Plate);
+            renderer.sortingOrder = SandOrder;
+            return renderer;
+        }
+
+        private void UpdateSand(float topFraction, bool rope)
+        {
+            float bottomFraction = 1f - topFraction;
+            float topY = SandNeckY + SandTopH * topFraction;
+            float topW = SandHalfW * Mathf.Sqrt(topFraction);
+            SetTriangle(_topSand, _topVertices,
+                new Vector3(0f, SandNeckY, 0f),
+                new Vector3(-topW, topY, 0f),
+                new Vector3(topW, topY, 0f));
+
+            float bottomW = SandHalfW * Mathf.Sqrt(bottomFraction);
+            float bottomApex = SandBottomY + SandBottomH * bottomFraction;
+            SetTriangle(_bottomSand, _bottomVertices,
+                new Vector3(-bottomW, SandBottomY, 0f),
+                new Vector3(bottomW, SandBottomY, 0f),
+                new Vector3(0f, bottomApex, 0f));
+
+            float streamBottom = Mathf.Max(SandBottomY + 0.02f, bottomApex);
+            SetQuad(_stream, _streamVertices,
+                new Vector3(-0.014f, SandNeckY, 0f),
+                new Vector3(0.014f, SandNeckY, 0f),
+                new Vector3(0.014f, streamBottom, 0f),
+                new Vector3(-0.014f, streamBottom, 0f));
+            _streamRenderer.gameObject.SetActive(topFraction > 0.002f && topFraction < 0.998f);
+
+            Color color = rope ? RopeSandColor : SandColor;
+            Tint(_topSandRenderer, color);
+            Tint(_bottomSandRenderer, color);
+            Tint(_streamRenderer, color);
+        }
+
+        private static void InitializeTriangle(Mesh mesh)
+        {
+            mesh.vertices = new Vector3[3];
+            mesh.uv = TriangleUvs;
+            mesh.triangles = TriangleIndices;
+        }
+
+        private static void InitializeQuad(Mesh mesh)
+        {
+            mesh.vertices = new Vector3[4];
+            mesh.uv = QuadUvs;
+            mesh.triangles = QuadIndices;
+        }
+
+        private static void SetTriangle(
+            Mesh mesh, Vector3[] vertices, Vector3 a, Vector3 b, Vector3 c)
+        {
+            vertices[0] = a;
+            vertices[1] = b;
+            vertices[2] = c;
+            mesh.vertices = vertices;
+            mesh.RecalculateBounds();
+        }
+
+        private static void SetQuad(
+            Mesh mesh, Vector3[] vertices, Vector3 a, Vector3 b, Vector3 c, Vector3 d)
+        {
+            vertices[0] = a;
+            vertices[1] = b;
+            vertices[2] = c;
+            vertices[3] = d;
+            mesh.vertices = vertices;
+            mesh.RecalculateBounds();
+        }
+
+        private void Tint(Renderer renderer, Color color)
+        {
+            if (renderer == null) return;
+            renderer.GetPropertyBlock(_mpb);
             _mpb.SetColor("_BaseColor", color);
-            _face.SetPropertyBlock(_mpb);
+            _mpb.SetColor("_Color", color);
+            renderer.SetPropertyBlock(_mpb);
+        }
+
+        private void SetVisible(bool visible)
+        {
+            if (_body != null) _body.gameObject.SetActive(visible);
+            if (_topSandRenderer != null) _topSandRenderer.gameObject.SetActive(visible);
+            if (_bottomSandRenderer != null) _bottomSandRenderer.gameObject.SetActive(visible);
+            if (_streamRenderer != null) _streamRenderer.gameObject.SetActive(visible);
+            if (!visible) transform.localRotation = Quaternion.identity;
         }
     }
 }

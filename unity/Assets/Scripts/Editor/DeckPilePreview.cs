@@ -8,12 +8,10 @@ namespace Emberfall.Editor
 {
     /// <summary>
     /// Renders the real <see cref="DeckPileView"/> at its real board position and true 1080p
-    /// pixel scale, once per deck count, into <c>artifacts/deck-pile-preview/</c>.
+    /// pixel scale, at representative deck counts, into <c>artifacts/deck-pile-preview/</c>.
     ///
-    /// The count sweep is the point. The pile's thickness is a FUNCTION of cards remaining, and a
-    /// live match only ever shows one value at a time — the same shape of thing that let the mana
-    /// rail ship with a divide-by-Max bug invisible at the single sampled state. Every layer
-    /// threshold is rendered here, plus the empty deck, plus the hover read-out.
+    /// Royal Council uses a separately rendered near-seat and far-seat stack. Count changes only
+    /// hover copy and zero-count visibility, so the sweep covers full, low, last-card and empty.
     ///
     /// Enters no play mode and mutates no scene, so it is safe against a live editor session.
     /// </summary>
@@ -30,9 +28,7 @@ namespace Emberfall.Editor
         private const float ViewW = 3.20f;
         private const float ViewH = 3.20f;
 
-        // Every threshold at which a layer is added or dropped (CardsPerLayer = 5), the full
-        // 30-card opening deck, the last card, and empty.
-        private static readonly int[] Counts = { 30, 26, 21, 16, 11, 6, 3, 1, 0 };
+        private static readonly int[] Counts = { 30, 3, 1, 0 };
 
         [MenuItem("Emberfall/Preview (offscreen)/Deck Pile")]
         public static void Render()

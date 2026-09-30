@@ -25,7 +25,9 @@ namespace Emberfall.Presentation
         // hero-frame.png is 1024x1536, so this keeps its native 2:3 aspect. Royal Council's
         // painted portrait fixtures have more room than the old board anchors; grow the complete
         // composition together so art, HP label and ClickableHero collider stay registered.
-        private const float FixtureScale = 1.16f;
+        private const float FixtureScale = 1.50f;
+        private static readonly Quaternion EnemyFixtureRotation =
+            Quaternion.Euler(-11f, 0f, -7f);
         internal const float PlateW = 2.16f * FixtureScale;
         internal const float PlateH = 3.24f * FixtureScale;
         private const float PortraitW = 1.566f * FixtureScale;
@@ -59,7 +61,11 @@ namespace Emberfall.Presentation
 
             transform.SetParent(heroAnchor, false);
             transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
+            // The far Royal Council portrait mount is painted as a foreshortened oval tilted
+            // down-left. Seat roots stay unrotated because the power/weapon satellites have their
+            // own fixture alignment; only the portrait assembly follows that recess.
+            bool isEnemyFixture = heroAnchor.position.y > 0f;
+            transform.localRotation = isEnemyFixture ? EnemyFixtureRotation : Quaternion.identity;
 
 #if UNITY_EDITOR
             uiSprites ??= new EditorUiSpriteProvider();

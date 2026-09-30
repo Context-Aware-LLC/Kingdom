@@ -37,7 +37,8 @@ namespace Emberfall.Presentation
         /// resource clusters register against artwork UVs after the backdrop fit, so their final
         /// world positions are device-dependent and do not define this box.
         ///
-        /// <para>7.88 -> 8.90 on 2026-09-04. Under the live perspective rig this is a FLOOR on
+        /// <para>7.88 -> 8.90 on 2026-09-04, then 8.90 -> 9.235 on 2026-09-30 when the Royal
+        /// Council deck became a wider tray-angle render. Under the live perspective rig this is a FLOOR on
         /// what must be visible, not a ceiling on what may exist, so widening it does not shrink
         /// anything on screen — the fit stays at its <c>CompositionRetreat</c> floor at every
         /// aspect the game ships to. What it buys is room for the deck pile and mana rail to stop
@@ -53,7 +54,7 @@ namespace Emberfall.Presentation
         /// number moves with them and the device-layout spec's §2 table restates it.
         /// DeviceLayoutVerify fails on the mismatch rather than letting it ship silently.
         /// </summary>
-        public const float DesignHalfWidth = 8.90f;
+        public const float DesignHalfWidth = 9.235f;
 
         /// <summary>
         /// <b>THIS DESCRIBES THE ORTHOGRAPHIC CAMERA, WHICH WAS RETIRED ON 2026-08-28. Do not
@@ -69,7 +70,7 @@ namespace Emberfall.Presentation
         /// the design box by RETREATING, so the box is a FLOOR on what must be visible rather than
         /// a ceiling on what may exist — and the fit does not leave its <c>CompositionRetreat</c>
         /// floor until aspect 1.465. Measured half-width at the bottom row: 9.23 at 4:3,
-        /// 11.24 at 16:9, 14.04 at 20:9, against this box's 8.90. Run
+        /// 11.24 at 16:9, 14.04 at 20:9, against this box's 9.235. Run
         /// <c>tooling/scripts/board_camera_fit.py</c>; it reads these constants and prints the
         /// solve.</para>
         ///

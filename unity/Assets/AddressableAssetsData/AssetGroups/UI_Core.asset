@@ -190,6 +190,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8b9c792d2971468c9506526237449386
+    m_Address: ui/deck-stack-player-royal-council
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e73678a62d6c4307b466ba7b80e2c135
+    m_Address: ui/deck-stack-enemy-royal-council
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2f7fde1a48d4f458f59e740e6e32d43
+    m_Address: ui/turn-hourglass-royal-council
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d3356f761934b2bb6e98390ca1a209f
     m_Address: ui/ui_stamp_tool
     m_ReadOnly: 0

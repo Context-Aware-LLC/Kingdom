@@ -5,127 +5,49 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The face-down draw pile for one player (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1 DeckAnchor).
-    ///
-    /// Nothing rendered here before this — the anchor existed only as the origin the draw
-    /// animation flies from. The pile is a stack of card-back sprites offset down-left so the
-    /// edges of the cards underneath show, and it THINS as the deck depletes: the stack is the
-    /// read, so a player can see fatigue coming without a number on screen at all times.
-    ///
-    /// COUNT IS THE ONLY LEGAL DATA. Deck contents are redacted for BOTH viewers, the owner
-    /// included — GameStateProjector.cs:69 — because deck ORDER is the future draw sequence.
-    /// PlayerState.Deck arrives as Count placeholders and nothing else, which is exactly what
-    /// this view consumes.
-    ///
-    /// The number itself is hover-only (Sam, 2026-07-25): permanently-on digits are one more
-    /// thing sitting in the corner of every frame, and the stack height already answers "am I
-    /// running out" at a glance. Hover is non-blocking and consumes no click — the pace rule.
-    ///
-    /// Created procedurally by GameBootstrap / NetworkedGameBootstrap — one instance per player.
+    /// Face-down draw pile for one player. Royal Council uses two pre-rendered piles, each painted
+    /// at the perspective of its actual tray; runtime yawing of a flat card back never seated
+    /// convincingly in those deep corner cradles. Count remains hover-only and the pile disappears
+    /// at zero. Deck contents stay redacted: only <see cref="PlayerState.Deck"/> count is consumed.
     /// </summary>
     public sealed class DeckPileView : MonoBehaviour
     {
-        // Royal Council seats the draw pile in a raised corner cradle. The card remains tall enough
-        // for its back to identify it, but is yawed below so it reads as a physical stack pictured
-        // partly on edge instead of another face-up board card.
-        internal const float PileW = 1.45f;
+        internal const float PileW = 2.12f;
         private const float PileH = 1.72f;
-        private const float SurfaceYawDeg = 36f;
-        private const float SurfaceRollDeg = 7.5f;
-
-        // Thickness. Six layers is the visual ceiling; past that the steps stop reading and just
-        // smear the silhouette. A full 30-card deck therefore starts at six and sheds one every
-        // five cards, which puts the last layer at 1-5 remaining — the range that matters.
-        private const int   MaxLayers     = 6;
-        private const int   CardsPerLayer = 5;
-        private const float LayerStep     = 0.028f;  // down-left, per layer
-        private const float LayerStepZ    = 0.003f;  // -z is toward the camera (see CreatePresenter)
-
-        // Layers below the top read as card EDGES, not faces: darkened toward the bottom of the
-        // stack so the offset steps show as shadowed slivers rather than six competing patterns.
-        private static readonly Color EdgeTint = new Color(0.30f, 0.28f, 0.26f, 1f);
-
         private const float BaseZ = -0.01f;
+        private const string PlayerStackKey = "deck-stack-player-royal-council";
+        private const string EnemyStackKey = "deck-stack-enemy-royal-council";
 
-        private Vector2 _stackDir;
-        private SpriteRenderer[] _layers;
-        private Transform _depthBacking;
+        private SpriteRenderer _stack;
         private TextMeshPro _countLabel;
         private PlayerId _playerId;
         private int _lastCount = -1;
 
         private static Material s_labelMaterial;
 
-        /// <summary>
-        /// Attach to a new GameObject and call Init once before the first OnStateUpdated.
-        /// Identified by PlayerId, never by seat index (HeroPlateView.Init precedent).
-        /// </summary>
+        /// <summary>Attach to a new GameObject and call once before the first state update.</summary>
         public void Init(PlayerId playerId, Transform anchor, IUiSpriteProvider uiSprites = null)
         {
             _playerId = playerId;
             transform.SetParent(anchor, false);
             transform.localPosition = Vector3.zero;
-            float yaw = anchor.position.x >= 0f ? -SurfaceYawDeg : SurfaceYawDeg;
-            transform.localRotation = Quaternion.Euler(0f, yaw, SurfaceRollDeg);
+            transform.localRotation = Quaternion.identity;
 
 #if UNITY_EDITOR
             uiSprites ??= new EditorUiSpriteProvider();
 #else
             uiSprites ??= new AddressableUiSpriteProvider();
 #endif
-            Sprite back = uiSprites.Get("card_back");
 
-            // A single shallow body gives the pile a readable physical edge under perspective;
-            // the offset sprites above it continue to communicate the actual count bands.
-            const float pileDepth = 0.28f;
-            _depthBacking = BoardFurnitureDepth.Create(transform, "DeckDepth",
-                new Vector2(PileW, PileH), pileDepth).transform;
+            // P0 is the near/lower seat after BoardBackdrop has registered the artwork anchors.
+            // Each sprite already contains its tray-specific foreshortening and shadow, so the
+            // runtime transform must stay flat and unrotated.
+            bool localSeat = anchor.position.y < 0f;
+            Sprite renderedStack = uiSprites.Get(localSeat ? PlayerStackKey : EnemyStackKey);
+            _stack = MakeStack(transform, renderedStack);
 
-            // WHICH WAY THE STACK GROWS, derived from the anchor so both seats mirror for free.
-            //   y: INWARD, toward the board. The top card's bottom edge sits exactly on the §1.3
-            //      baseline (|y| 4.445 against a screen edge at 4.6); growing outward instead put
-            //      the last layer 1.7px off the edge, which the first full-frame render showed as
-            //      a pile visibly clipped by the bottom of the screen.
-            //   x: OUTWARD, into the corner margin. §1.1 gives the pile +6.53..+7.83 and hands the
-            //      space below 6.53 to the mana rail — growing inward pushed dark card edges under
-            //      the rail's near end. Outward only spends margin (screen edge is 8.18).
-            _stackDir = new Vector2(Mathf.Sign(anchor.position.x), -Mathf.Sign(anchor.position.y));
-
-            _layers = new SpriteRenderer[MaxLayers];
-            for (int i = 0; i < MaxLayers; i++)
-            {
-                // i counts UP the stack; MaxLayers-1 is the top card, which sits dead on the
-                // anchor. Everything below steps down-left, so the anchor keeps meaning "where
-                // the top card is" no matter how many layers are showing — which is what the
-                // draw flight aims at.
-                int below = (MaxLayers - 1) - i;
-                var go = new GameObject($"Layer{i}");
-                go.transform.SetParent(transform, false);
-                go.transform.localPosition = new Vector3(
-                    below * LayerStep * _stackDir.x,
-                    below * LayerStep * _stackDir.y,
-                    BaseZ + below * LayerStepZ);
-
-                var sr = go.AddComponent<SpriteRenderer>();
-                sr.drawMode     = SpriteDrawMode.Sliced;   // .size sets exact world dims, PPU-independent
-                // SPRITE FIRST, THEN SIZE. Assigning a sprite resets .size to that sprite's native
-                // PPU extents — which is the whole reason CardPresenter has SetSpritePreserveSize.
-                // Sized first, this rendered the back at its native 14.6 x 20.5 world units and
-                // filled the screen with one chain link.
-                sr.sprite       = back;
-                sr.size         = new Vector2(PileW, PileH);
-                sr.color        = i == MaxLayers - 1 ? Color.white : EdgeTint;
-                sr.sortingOrder = i;
-                _layers[i] = sr;
-            }
-
-            // Hover target. On the view root, not a layer child: Unity delivers OnMouseEnter/Exit
-            // to the collider's own GameObject only, and the layers come and go with the count.
-            // Sized to the fully-fanned stack so the hit area does not shrink as the deck thins.
             var col = gameObject.AddComponent<BoxCollider>();
-            float spread = (MaxLayers - 1) * LayerStep;
-            col.size   = new Vector3(PileW + spread, PileH + spread, 0.1f);
-            col.center = new Vector3(spread * 0.5f * _stackDir.x, spread * 0.5f * _stackDir.y, 0f);
+            col.size = new Vector3(PileW, PileH, 0.1f);
 
             _countLabel = MakeCountLabel(transform);
             _countLabel.gameObject.SetActive(false);
@@ -133,40 +55,17 @@ namespace Emberfall.Presentation
 
         public void OnStateUpdated(GameState state)
         {
-            if (_layers == null) return;
+            if (_stack == null) return;
             SetCount(state.Players[state.SeatOf(_playerId)].Deck.Count);
         }
 
-        /// <summary>
-        /// Sets the pile depth directly. Public, not private: DeckPilePreview lives in
-        /// Emberfall.Editor and drives the count sweep through THIS method, so the offscreen
-        /// render exercises the shipping layer logic rather than a re-derivation of it. (Internal
-        /// does not reach across an asmdef boundary — that is what it was tried as first.) The
-        /// mana rail shipped a real bug behind a single sampled state; a parameterised thing gets
-        /// rendered across its parameter space.
-        /// </summary>
+        /// <summary>Public so the offscreen preview can sweep representative count states.</summary>
         public void SetCount(int count)
         {
             if (count == _lastCount) return;
             _lastCount = count;
 
-            // Ceil, not round: one card left is still a pile you can draw from, and showing
-            // nothing there would read as an empty deck one draw early.
-            int visible = Mathf.Clamp(Mathf.CeilToInt(count / (float)CardsPerLayer), 0, MaxLayers);
-
-            if (_depthBacking != null) _depthBacking.gameObject.SetActive(visible > 0);
-
-            for (int i = 0; i < _layers.Length; i++)
-            {
-                if (_layers[i] == null) continue;
-                bool on = i >= MaxLayers - visible;
-                _layers[i].gameObject.SetActive(on);
-                // The topmost SHOWING layer is the face; everything under it is an edge. Without
-                // this the face tint would stay pinned to index MaxLayers-1 and a thinned pile
-                // would render as an all-dark stack.
-                if (on) _layers[i].color = (i == MaxLayers - 1) ? Color.white : EdgeTint;
-            }
-
+            _stack.gameObject.SetActive(count > 0);
             if (_countLabel != null) _countLabel.text = count.ToString();
         }
 
@@ -180,6 +79,27 @@ namespace Emberfall.Presentation
             if (_countLabel != null) _countLabel.gameObject.SetActive(false);
         }
 
+        private static SpriteRenderer MakeStack(Transform parent, Sprite sprite)
+        {
+            var go = new GameObject("RenderedStack");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = new Vector3(0f, 0f, BaseZ);
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            SpriteMaterials.Set(sr, sprite);
+            sr.sortingOrder = 6;
+            if (sprite != null)
+            {
+                Vector2 native = sprite.bounds.size;
+                go.transform.localScale = new Vector3(PileW / native.x, PileH / native.y, 1f);
+            }
+            else
+            {
+                Debug.LogWarning("[DeckPileView] Royal Council rendered deck stack is missing.");
+            }
+            return sr;
+        }
+
         private static TextMeshPro MakeCountLabel(Transform parent)
         {
             var go = new GameObject("Count");
@@ -187,18 +107,15 @@ namespace Emberfall.Presentation
             go.transform.localPosition = new Vector3(0f, 0f, BaseZ - 0.01f);
 
             var tmp = go.AddComponent<TextMeshPro>();
-            tmp.GetComponent<Renderer>().sortingOrder = 20;   // over every layer
+            tmp.GetComponent<Renderer>().sortingOrder = 20;
             var font = BoardController.CardFont();
             if (font != null) tmp.font = font;
-            tmp.fontSize  = 3.4f;
+            tmp.fontSize = 3.4f;
             tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color     = Color.white;
+            tmp.color = Color.white;
             tmp.rectTransform.sizeDelta = new Vector2(PileW, PileH * 0.4f);
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
 
-            // White digits on a black rim, the same treatment as the card stat digits (§3.1) —
-            // it is what makes a number legible over painted art without needing a plate behind
-            // it. One shared material: per-label fontMaterial instances a material per pile.
             if (s_labelMaterial == null && tmp.font != null)
             {
                 s_labelMaterial = new Material(tmp.font.material);
