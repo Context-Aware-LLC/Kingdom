@@ -29,6 +29,7 @@ namespace Emberfall.Presentation
         private const float SandBottomY = -0.96f;
         private const float SandBottomH = 0.78f;
         private const float VisualOffsetX = 0.58f;
+        private const float VisualOffsetY = 0.28f;
         private const int SandOrder = 11;
         private const int BodyOrder = 12;
 
@@ -62,7 +63,7 @@ namespace Emberfall.Presentation
 
             var visualGo = new GameObject("HourglassVisual");
             visualGo.transform.SetParent(transform, false);
-            visualGo.transform.localPosition = new Vector3(VisualOffsetX, 0f, 0f);
+            visualGo.transform.localPosition = new Vector3(VisualOffsetX, VisualOffsetY, 0f);
             _visualRoot = visualGo.transform;
 
 #if UNITY_EDITOR

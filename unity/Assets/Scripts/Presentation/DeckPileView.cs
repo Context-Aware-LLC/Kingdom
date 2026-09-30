@@ -19,6 +19,7 @@ namespace Emberfall.Presentation
         private const float PileH = 1.72f;
         private const float RenderW = 4.24f;
         private const float RenderH = 3.44f;
+        private const float PlayerSeatOffsetX = 1.55f;
         private const float BaseZ = -0.01f;
         private const string PlayerStackKey = "deck-stack-player-royal-council";
         private const string EnemyStackKey = "deck-stack-enemy-royal-council";
@@ -48,6 +49,8 @@ namespace Emberfall.Presentation
             // Each sprite already contains its tray-specific foreshortening and shadow, so the
             // runtime transform must stay flat and unrotated.
             bool localSeat = anchor.position.y < 0f;
+            if (localSeat)
+                transform.localPosition = new Vector3(PlayerSeatOffsetX, 0f, 0f);
             Sprite renderedStack = uiSprites.Get(localSeat ? PlayerStackKey : EnemyStackKey);
             _stack = MakeStack(transform, renderedStack);
 
