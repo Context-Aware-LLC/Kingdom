@@ -21,13 +21,14 @@ namespace Emberfall.Presentation
         private static readonly Color RopeBodyTint = new(1.00f, 0.72f, 0.62f, 1f);
         private const string HourglassSpriteKey = "turn-hourglass-royal-council";
         private const long RopeWindowMs = 10_000;
-        private const float HourglassW = 1.42f;
-        private const float HourglassH = 2.20f;
-        private const float SandHalfW = 0.19f;
-        private const float SandNeckY = 0.04f;
-        private const float SandTopH = 0.40f;
-        private const float SandBottomY = -0.48f;
-        private const float SandBottomH = 0.39f;
+        private const float HourglassW = 2.84f;
+        private const float HourglassH = 4.40f;
+        private const float SandHalfW = 0.38f;
+        private const float SandNeckY = 0.08f;
+        private const float SandTopH = 0.80f;
+        private const float SandBottomY = -0.96f;
+        private const float SandBottomH = 0.78f;
+        private const float VisualOffsetX = 0.58f;
         private const int SandOrder = 11;
         private const int BodyOrder = 12;
 
@@ -38,6 +39,7 @@ namespace Emberfall.Presentation
             { Vector2.zero, Vector2.right, Vector2.one, Vector2.up };
 
         private SpriteRenderer _body;
+        private Transform _visualRoot;
         private MeshRenderer _topSandRenderer;
         private MeshRenderer _bottomSandRenderer;
         private MeshRenderer _streamRenderer;
@@ -57,6 +59,11 @@ namespace Emberfall.Presentation
         {
             _nowMs = nowMs ?? (() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
             _mpb = new MaterialPropertyBlock();
+
+            var visualGo = new GameObject("HourglassVisual");
+            visualGo.transform.SetParent(transform, false);
+            visualGo.transform.localPosition = new Vector3(VisualOffsetX, 0f, 0f);
+            _visualRoot = visualGo.transform;
 
 #if UNITY_EDITOR
             uiSprites ??= new EditorUiSpriteProvider();
@@ -112,15 +119,15 @@ namespace Emberfall.Presentation
                 if (k < 1f) flip = Mathf.Sin(Mathf.Clamp01(k) * Mathf.PI) * 17f;
                 else _flipStartedAt = -1f;
             }
-            transform.localRotation = Quaternion.Euler(0f, 0f, flip + wobble);
+            _visualRoot.localRotation = Quaternion.Euler(0f, 0f, flip + wobble);
             _body.color = rope ? RopeBodyTint : Color.white;
         }
 
         private SpriteRenderer CreateBody(Sprite sprite)
         {
             var go = new GameObject("HourglassBody");
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = new Vector3(0f, 0.06f, -0.02f);
+            go.transform.SetParent(_visualRoot, false);
+            go.transform.localPosition = new Vector3(0f, 0.12f, -0.02f);
             var sr = go.AddComponent<SpriteRenderer>();
             SpriteMaterials.Set(sr, sprite);
             sr.sortingOrder = BodyOrder;
@@ -139,8 +146,8 @@ namespace Emberfall.Presentation
         private MeshRenderer CreateSandMesh(string name, out Mesh mesh)
         {
             var go = new GameObject(name);
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = new Vector3(0f, 0.02f, -0.01f);
+            go.transform.SetParent(_visualRoot, false);
+            go.transform.localPosition = new Vector3(0f, 0.04f, -0.01f);
             var filter = go.AddComponent<MeshFilter>();
             mesh = new Mesh { name = name };
             filter.sharedMesh = mesh;
@@ -169,10 +176,10 @@ namespace Emberfall.Presentation
 
             float streamBottom = Mathf.Max(SandBottomY + 0.02f, bottomApex);
             SetQuad(_stream, _streamVertices,
-                new Vector3(-0.014f, SandNeckY, 0f),
-                new Vector3(0.014f, SandNeckY, 0f),
-                new Vector3(0.014f, streamBottom, 0f),
-                new Vector3(-0.014f, streamBottom, 0f));
+                new Vector3(-0.028f, SandNeckY, 0f),
+                new Vector3(0.028f, SandNeckY, 0f),
+                new Vector3(0.028f, streamBottom, 0f),
+                new Vector3(-0.028f, streamBottom, 0f));
             _streamRenderer.gameObject.SetActive(topFraction > 0.002f && topFraction < 0.998f);
 
             Color color = rope ? RopeSandColor : SandColor;
@@ -231,7 +238,7 @@ namespace Emberfall.Presentation
             if (_topSandRenderer != null) _topSandRenderer.gameObject.SetActive(visible);
             if (_bottomSandRenderer != null) _bottomSandRenderer.gameObject.SetActive(visible);
             if (_streamRenderer != null) _streamRenderer.gameObject.SetActive(visible);
-            if (!visible) transform.localRotation = Quaternion.identity;
+            if (!visible && _visualRoot != null) _visualRoot.localRotation = Quaternion.identity;
         }
     }
 }

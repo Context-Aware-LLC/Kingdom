@@ -12,8 +12,13 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class DeckPileView : MonoBehaviour
     {
+        // PileW/PileH remain the logical layout footprint so enlarging the artwork does not
+        // retreat the camera or disturb the hand. The rendered stack and its hover target are
+        // deliberately 2x the first tray-angle pass to fill the painted cradle.
         internal const float PileW = 2.12f;
         private const float PileH = 1.72f;
+        private const float RenderW = 4.24f;
+        private const float RenderH = 3.44f;
         private const float BaseZ = -0.01f;
         private const string PlayerStackKey = "deck-stack-player-royal-council";
         private const string EnemyStackKey = "deck-stack-enemy-royal-council";
@@ -47,7 +52,7 @@ namespace Emberfall.Presentation
             _stack = MakeStack(transform, renderedStack);
 
             var col = gameObject.AddComponent<BoxCollider>();
-            col.size = new Vector3(PileW, PileH, 0.1f);
+            col.size = new Vector3(RenderW, RenderH, 0.1f);
 
             _countLabel = MakeCountLabel(transform);
             _countLabel.gameObject.SetActive(false);
@@ -91,7 +96,7 @@ namespace Emberfall.Presentation
             if (sprite != null)
             {
                 Vector2 native = sprite.bounds.size;
-                go.transform.localScale = new Vector3(PileW / native.x, PileH / native.y, 1f);
+                go.transform.localScale = new Vector3(RenderW / native.x, RenderH / native.y, 1f);
             }
             else
             {
@@ -113,7 +118,7 @@ namespace Emberfall.Presentation
             tmp.fontSize = 3.4f;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color = Color.white;
-            tmp.rectTransform.sizeDelta = new Vector2(PileW, PileH * 0.4f);
+            tmp.rectTransform.sizeDelta = new Vector2(RenderW, RenderH * 0.4f);
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
 
             if (s_labelMaterial == null && tmp.font != null)
