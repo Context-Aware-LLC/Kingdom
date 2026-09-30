@@ -86,6 +86,16 @@ namespace Emberfall.Presentation
             cam.orthographicSize = BoardController.CardH * 0.5f;
             cam.aspect           = BoardController.CardW / BoardController.CardH;
             cam.targetTexture    = rt;
+
+            // SORTING GROUPS ARE ONLY RE-SORTED IN LATEUPDATE, and this render is not waiting for
+            // one. The card root carries a SortingGroup, and a child renderer activated since the
+            // last LateUpdate has not been placed in the group's order yet. CardFaceBaker rebinds
+            // one rig several times per frame, so every SetActive a bind makes (tribe banner,
+            // stat sockets) lands in the same frame as this Render. #402: a tribed minion baked
+            // right after a tribeless card re-activates only the tribe plate, and that stale plate
+            // drew over the attack/health rings while the rest of the face sorted correctly.
+            // Nothing in the scene graph looks wrong when it happens.
+            UnityEngine.Rendering.SortingGroup.UpdateAllSortingGroups();
             try
             {
                 cam.Render();
