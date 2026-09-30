@@ -67,15 +67,19 @@ namespace Emberfall.Presentation
         private const string PowerFrameKey = "hero-power";
         private const string WeaponFrameKey = "weapon-frame";
 
-        // WHERE THE NUMERALS GO, AND WHY THEY ARE NOT ON THE OLD BOSSES.
-        // The retired frames carried big square plaques at bottom-left and bottom-right (0.30/0.70
-        // across, 0.76 down), each sized to hold a digit. The re-cut rings do not: each carries two
-        // small brass rivets stacked vertically on ONE side, and bottom-left/bottom-right now lands
-        // on bare rim or on the ornament. Rivet centres measured off the aligned 1424 canvases;
-        // canvas fractions, top-left origin, which is the convention MakeStat consumes. The rivet
-        // plate is ~0.115 of the canvas.
-        private static readonly Vector2 WeaponAtkBolt  = new Vector2(0.8034f, 0.3996f);
-        private static readonly Vector2 WeaponDuraBolt = new Vector2(0.8006f, 0.5878f);
+        // WHERE THE WEAPON NUMERALS GO: attack at the ring's bottom-left, durability at its
+        // bottom-right, large and outlined, over bare rim (Sam, 2026-09-30: "move it to the bottom
+        // left and right of the frame ... and increase the size of them... alot"). They sat on the
+        // two stacked rivets at the right edge until then, and at a size the rivet could hold they
+        // were illegible on a phone. Canvas fractions of the 1424 canvas, top-left origin, which
+        // is the convention MakeStat consumes; the ring's rim runs ~0.19..0.82 down.
+        private static readonly Vector2 WeaponAtkAt  = new Vector2(0.24f, 0.80f);
+        private static readonly Vector2 WeaponDuraAt = new Vector2(0.80f, 0.80f);
+
+        /// <summary>Weapon numeral em height as a fraction of <see cref="FrameSize"/> — roughly
+        /// the hero's health numeral on screen, twice the card stat digit. Sized to be read at a
+        /// glance, not to fit any feature of the ring.</summary>
+        private const float WeaponDigitEmFrac = 0.36f;
 
         // THE HERO-POWER COST DOES NOT GO ON A RIVET, and that is not an oversight.
         // The original reason has expired and is recorded because it reads as still-live: the four
@@ -101,16 +105,20 @@ namespace Emberfall.Presentation
         // still smooth if the frames are ever drawn larger for a bake-off sheet.
         private const int DiscSegments = 64;
 
-        /// <summary>Numeral em height as a fraction of <see cref="FrameSize"/>.
+        /// <summary>Hero-power cost em height as a fraction of <see cref="FrameSize"/>.
         ///
-        /// STATED DIRECTLY, not as a fraction of the boss it sits on, because the boss is now
-        /// smaller than the numeral wants to be. It used to be 0.61 of a 0.22 plate — 0.134 of the
-        /// frame — and the rivet it now sits on is only 0.115 across. Left as a fraction OF THE
-        /// PLATE it would have shrunk the digits by a third for a reason that is invisible in the
-        /// number. 0.11 was chosen against a render at true board scale (a 1.32-unit socket is
-        /// about 155 px on a 1080-tall board): it reads, and it overhangs the rivet just enough to
-        /// look struck into it rather than etched on it.</summary>
-        private const float DigitEmFrac = 0.11f;
+        /// <para>0.11 -> 0.17 on 2026-09-30 (#400). 0.11 was judged against a 1.32-unit socket at
+        /// ~155 px on a 1080-tall board — the ORTHOGRAPHIC camera retired by f121a591. Under the
+        /// live perspective rig the socket is ~95 px and 0.11 drew ~8 px tall. 0.17 is just over
+        /// the card stat digit's em (StatDigitEm x CardH = 0.23 units), the smallest numeral the
+        /// board already proves readable. Size against the live camera, never against a unit
+        /// count.</para></summary>
+        private const float DigitEmFrac = 0.17f;
+
+        // Black outline, the recipe BoardController gives card stat digits, because these sit
+        // on bright brass rather than a dark boss. One shared material per face so the four
+        // labels on the board still batch.
+        private static Material s_statMaterial;
 
         private static readonly Color PowerReady = new Color(1.00f, 1.00f, 1.00f);
         private static readonly Color PowerSpent = new Color(0.42f, 0.42f, 0.48f);
@@ -161,7 +169,7 @@ namespace Emberfall.Presentation
                 _powerRing = MakeFrame(powerAnchor, "PowerFrame", uiSprites, PowerFrameKey);
                 _powerArt = MakeSocketArt(powerAnchor, "PowerArt", SocketDiameter,
                                            PowerApertureOffset);
-                _powerCost = MakeStat(powerAnchor, "PowerCost", PowerCostAt, Color.white);
+                _powerCost = MakeStat(powerAnchor, "PowerCost", PowerCostAt, Color.white, DigitEmFrac);
             }
 
             if (weaponAnchor != null)
@@ -175,8 +183,8 @@ namespace Emberfall.Presentation
                 _weaponArt = MakeSocketArt(wt, "WeaponArt", SocketDiameter,
                                             WeaponApertureOffset);
 
-                _weaponAttack     = MakeStat(wt, "Attack",     WeaponAtkBolt,  AttackText);
-                _weaponDurability = MakeStat(wt, "Durability", WeaponDuraBolt, DuraText);
+                _weaponAttack     = MakeStat(wt, "Attack",     WeaponAtkAt,  AttackText, WeaponDigitEmFrac);
+                _weaponDurability = MakeStat(wt, "Durability", WeaponDuraAt, DuraText,   WeaponDigitEmFrac);
 
                 _weaponRoot.SetActive(false);
             }
@@ -336,7 +344,7 @@ namespace Emberfall.Presentation
         /// centre in canvas fractions with a top-left origin, which is how both the splitter and
         /// the alignment run report it; y flips because world space grows upward.</summary>
         private static TextMeshPro MakeStat(Transform parent, string goName, Vector2 frac,
-                                            Color color)
+                                            Color color, float emFrac)
         {
             var go = new GameObject(goName);
             go.transform.SetParent(parent, false);
@@ -349,7 +357,19 @@ namespace Emberfall.Presentation
             tmp.alignment        = TextAlignmentOptions.Center;
             tmp.color            = color;
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            tmp.fontStyle        = FontStyles.Bold;   // ApplyUiFont swaps this for the bold CUT
             BoardController.ApplyUiFont(tmp);
+            if (tmp.font != null)
+            {
+                if (s_statMaterial == null || s_statMaterial.mainTexture != tmp.font.material.mainTexture)
+                {
+                    s_statMaterial = new Material(tmp.font.material) { name = "HeroSocketStat" };
+                    s_statMaterial.SetColor(ShaderUtilities.ID_OutlineColor, Color.black);
+                    s_statMaterial.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.25f);
+                    s_statMaterial.EnableKeyword(ShaderUtilities.Keyword_Outline);
+                }
+                tmp.fontSharedMaterial = s_statMaterial;
+            }
 
             // SAME RECIPE AS CardPresenter.PlaceDigit, deliberately: autosizing OFF, a rect
             // roomier than the glyph, and fontSize as em-height x 10.
@@ -359,8 +379,8 @@ namespace Emberfall.Presentation
             // quarter of the size of the digits on the cards (Sam spotted it on screen,
             // 2026-07-25). A numeral is one or two characters; it never needs to reflow.
             tmp.enableAutoSizing = false;
-            tmp.fontSize         = DigitEmFrac * FrameSize * 10f;
-            tmp.rectTransform.sizeDelta = new Vector2(0.5f, 0.35f);
+            tmp.fontSize         = emFrac * FrameSize * 10f;
+            tmp.rectTransform.sizeDelta = new Vector2(emFrac * FrameSize * 2f, emFrac * FrameSize * 1.4f);
 
             var mr = tmp.GetComponent<MeshRenderer>();
             if (mr != null) mr.sortingOrder = StatOrder;
