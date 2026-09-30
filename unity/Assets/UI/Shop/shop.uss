@@ -535,12 +535,12 @@
     width: 56px;
     height: 56px;
 }
-.shop-gem__stone--0 { left: 52px;  bottom: 0;    background-image: url("/Assets/Art/UI/Gems/gem_rare.png"); }
-.shop-gem__stone--1 { left: 4px;   bottom: 6px;  background-image: url("/Assets/Art/UI/Gems/gem_common.png"); }
-.shop-gem__stone--2 { left: 100px; bottom: 6px;  background-image: url("/Assets/Art/UI/Gems/gem_epic.png"); }
-.shop-gem__stone--3 { left: 28px;  bottom: 36px; background-image: url("/Assets/Art/UI/Gems/gem_legendary.png"); }
-.shop-gem__stone--4 { left: 76px;  bottom: 36px; background-image: url("/Assets/Art/UI/Gems/gem_rare.png"); }
-.shop-gem__stone--5 { left: 52px;  bottom: 58px; background-image: url("/Assets/Art/UI/Gems/gem_common.png"); }
+.shop-gem__stone--0 { left: 52px;  bottom: 0;    background-image: url("/Assets/Art/UI/Icons/icon_currency_gems.png"); }
+.shop-gem__stone--1 { left: 4px;   bottom: 6px;  background-image: url("/Assets/Art/UI/Icons/icon_currency_gems.png"); }
+.shop-gem__stone--2 { left: 100px; bottom: 6px;  background-image: url("/Assets/Art/UI/Icons/icon_currency_gems.png"); }
+.shop-gem__stone--3 { left: 28px;  bottom: 36px; background-image: url("/Assets/Art/UI/Icons/icon_currency_gems.png"); }
+.shop-gem__stone--4 { left: 76px;  bottom: 36px; background-image: url("/Assets/Art/UI/Icons/icon_currency_gems.png"); }
+.shop-gem__stone--5 { left: 52px;  bottom: 58px; background-image: url("/Assets/Art/UI/Icons/icon_currency_gems.png"); }
 
 /* Geometry and type only; chrome is theme.uss's `.unity-button`. */
 .shop-gem__amount {
