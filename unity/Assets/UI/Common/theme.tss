@@ -1,6 +1,5 @@
-
-@import url("/Assets/UI Toolkit/UnityThemes/UnityDefaultRuntimeTheme.tss");
 /* THE ONE PANEL THEME. Every PanelSettings points here, so theme.uss is the default style of every
  * panel and nothing else is a theme (Sam, 2026-09-30). Unity's default theme is NOT imported: the
  * controls this project renders get their structure from controls.uss, which theme.uss imports.
  * A new control type needs a block in controls.uss. */
+@import url("/Assets/UI/Common/theme.uss");
