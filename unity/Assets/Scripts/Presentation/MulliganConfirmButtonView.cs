@@ -13,10 +13,11 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class MulliganConfirmButtonView : MonoBehaviour
     {
-        private static readonly Color ButtonColor = new Color(0.32f, 0.68f, 0.28f);
-
-        private const float ButtonW = 1.7f;
-        private const float ButtonH = 0.55f;
+        // Ember menu chrome (BoardButtonChrome); was a flat green quad at 1.7 x 0.55, enlarged with
+        // the chrome (Sam, 2026-09-30). The prompt above moved up with it; PromptTopWorld follows.
+        private const float ButtonW = 2.80f;
+        private const float ButtonH = 0.90f;
+        private const int   ChromeOrder = 11;
 
         /// <summary>
         /// Where both bootstraps place this button. Owned here rather than typed at each call site,
@@ -54,7 +55,7 @@ namespace Emberfall.Presentation
         public static readonly Vector3 BoardPosition = new Vector3(0f, 0f, 0f);
 
         // The "TAP CARDS TO REPLACE" prompt, above the button.
-        private const float InstructionY = 0.72f;
+        private const float InstructionY = 0.85f;
         private const float InstructionH = 0.55f;
 
         /// <summary>
@@ -67,43 +68,30 @@ namespace Emberfall.Presentation
 
         private PlayerId    _p0Id;
         private InputRouter _router;
-        private Renderer    _face;
-        private Renderer    _depth;
+        private SpriteRenderer _face;
         private TextMeshPro _label;
         private TextMeshPro _instruction;
         private BoxCollider _collider;
-        private MaterialPropertyBlock _mpb;
 
         public void Init(PlayerId p0Id, InputRouter router)
         {
             _p0Id   = p0Id;
             _router = router;
-            _mpb    = new MaterialPropertyBlock();
 
-            _depth = BoardFurnitureDepth.Create(transform, "ButtonDepth",
-                new Vector2(ButtonW, ButtonH), depth: 0.10f, inset: 0.94f);
-
-            var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            faceGo.name = "Face";
-            faceGo.transform.SetParent(transform, false);
-            faceGo.transform.localScale = new Vector3(ButtonW, ButtonH, 1f);
-            Destroy(faceGo.GetComponent<MeshCollider>());
-            _face = faceGo.GetComponent<Renderer>();
-            MaterialCatalog.Assign(_face, MaterialCatalog.Plate);
-            _face.GetPropertyBlock(_mpb);
-            _mpb.SetColor("_BaseColor", ButtonColor);
-            _face.SetPropertyBlock(_mpb);
+            _face = BoardButtonChrome.Create(transform, new Vector2(ButtonW, ButtonH),
+                                             primary: true, ChromeOrder);
 
             var labelGo = new GameObject("Label");
             labelGo.transform.SetParent(transform, false);
             labelGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
             _label = labelGo.AddComponent<TextMeshPro>();
-            _label.fontSize  = 1.55f;
+            _label.fontSize  = 2.6f;
             _label.alignment = TextAlignmentOptions.Center;
-            _label.color     = Color.white;
+            _label.color     = BoardButtonChrome.PrimaryInk;
             _label.rectTransform.sizeDelta = new Vector2(ButtonW, ButtonH);
             _label.textWrappingMode = TextWrappingModes.NoWrap;
             BoardController.ApplyUiFont(_label);
+            _label.sortingOrder = ChromeOrder + 1;
 
             var instructionGo = new GameObject("Instruction");
             instructionGo.transform.SetParent(transform, false);
@@ -156,7 +144,6 @@ namespace Emberfall.Presentation
         private void SetVisible(bool on)
         {
             if (_face != null)     _face.gameObject.SetActive(on);
-            if (_depth != null)    _depth.gameObject.SetActive(on);
             if (_label != null)    _label.gameObject.SetActive(on);
             if (_instruction != null) _instruction.gameObject.SetActive(on);
             if (_collider != null) _collider.enabled = on;

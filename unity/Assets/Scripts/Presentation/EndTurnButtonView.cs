@@ -12,47 +12,38 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class EndTurnButtonView : MonoBehaviour
     {
-        private static readonly Color ReadyColor   = new Color(0.32f, 0.68f, 0.28f);
-        private static readonly Color WaitingColor = new Color(0.24f, 0.24f, 0.31f);
+        // Menu chrome, ember on your turn and slate on theirs (BoardButtonChrome). Was a flat
+        // green/grey quad at 1.30 x 0.52; enlarged with the chrome (Sam, 2026-09-30).
+        private const float ButtonW = 2.40f;
+        private const float ButtonH = 0.90f;
+        private const int   ChromeOrder = 11;
 
-        private const float ButtonW = 1.30f;
-        private const float ButtonH = 0.52f;
-
-        private PlayerId    _p0Id;
-        private InputRouter _router;
-        private Renderer    _face;
-        private TextMeshPro _label;
-        private MaterialPropertyBlock _mpb;
+        private PlayerId       _p0Id;
+        private InputRouter    _router;
+        private SpriteRenderer _face;
+        private TextMeshPro    _label;
+        private bool?          _ready;
 
         public void Init(PlayerId p0Id, InputRouter router)
         {
             _p0Id   = p0Id;
             _router = router;
-            _mpb    = new MaterialPropertyBlock();
 
-            BoardFurnitureDepth.Create(transform, "ButtonDepth",
-                new Vector2(ButtonW, ButtonH), depth: 0.10f, inset: 0.94f);
-
-            var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            faceGo.name = "Face";
-            faceGo.transform.SetParent(transform, false);
-            faceGo.transform.localScale = new Vector3(ButtonW, ButtonH, 1f);
-            Destroy(faceGo.GetComponent<MeshCollider>());
-            _face = faceGo.GetComponent<Renderer>();
-            MaterialCatalog.Assign(_face, MaterialCatalog.Plate);
-            Tint(WaitingColor);
+            _face = BoardButtonChrome.Create(transform, new Vector2(ButtonW, ButtonH),
+                                             primary: false, ChromeOrder);
 
             var labelGo = new GameObject("Label");
             labelGo.transform.SetParent(transform, false);
             labelGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
             _label = labelGo.AddComponent<TextMeshPro>();
-            _label.fontSize  = 1.6f;
+            _label.fontSize  = 2.7f;
             _label.alignment = TextAlignmentOptions.Center;
-            _label.color     = Color.white;
+            _label.color     = BoardButtonChrome.SecondaryInk;
             _label.rectTransform.sizeDelta = new Vector2(ButtonW, ButtonH);
             _label.textWrappingMode = TextWrappingModes.NoWrap;
             _label.text = "END TURN";
             BoardController.ApplyUiFont(_label);
+            _label.sortingOrder = ChromeOrder + 1;
 
             var col = gameObject.AddComponent<BoxCollider>();
             col.size = new Vector3(ButtonW, ButtonH, 0.1f);
@@ -62,17 +53,15 @@ namespace Emberfall.Presentation
         {
             if (_face == null || state == null) return;
             bool myTurn = state.ActivePlayer == _p0Id && state.Phase == TurnPhase.Main;
-            Tint(myTurn ? ReadyColor : WaitingColor);
+            if (_ready != myTurn)
+            {
+                _ready = myTurn;
+                BoardButtonChrome.Apply(_face, new Vector2(ButtonW, ButtonH), primary: myTurn);
+                _label.color = myTurn ? BoardButtonChrome.PrimaryInk : BoardButtonChrome.SecondaryInk;
+            }
             _label.text = myTurn ? "END TURN" : "ENEMY TURN";
         }
 
         private void OnMouseDown() => _router?.OnEndTurnClicked();
-
-        private void Tint(Color c)
-        {
-            _face.GetPropertyBlock(_mpb);
-            _mpb.SetColor("_BaseColor", c);
-            _face.SetPropertyBlock(_mpb);
-        }
     }
 }
