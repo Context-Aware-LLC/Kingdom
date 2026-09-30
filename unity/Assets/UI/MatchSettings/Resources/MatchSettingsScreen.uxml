@@ -41,7 +41,6 @@
 
                 <!-- Menu view -->
                 <ui:VisualElement name="view-menu" class="ms-view">
-                    <ui:Label text="Menu" class="ms-title" />
                     <ui:VisualElement name="audio-settings" class="ms-audio">
                         <ui:Toggle name="toggle-mute" label="Mute" class="ms-toggle" />
                         <ui:Slider name="slider-music" label="Music" low-value="0" high-value="1" class="ms-slider" />
