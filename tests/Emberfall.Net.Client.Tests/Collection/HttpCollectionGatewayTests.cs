@@ -12,10 +12,7 @@ namespace Emberfall.Net.Client.Tests.Collection
     /// The ledger read-down, client side (spec <c>docs/dev-docs/specs/card-ownership.md</c>, slice 3).
     ///
     /// <para><b>What every test here is really guarding is one distinction:</b> a collection that came
-    /// back EMPTY and a collection that did not come back. They arrive as the same absence of cards,
-    /// they are opposite statements about the player, and only one of them may be written to disk.
-    /// Cache an "offline" as "owns nothing" and every deck on the device becomes a draft; treat a real
-    /// empty as "unknown" and ownership is unenforceable. <see cref="CollectionSnapshot.ShouldReplaceCache"/>
+    /// back EMPTY and a collection that did not . <see cref="CollectionSnapshot.ShouldReplaceCache"/>
     /// is the single place that call is made, so it is what these assert against.</para>
     /// </summary>
     [TestFixture]
