@@ -95,7 +95,7 @@ namespace Emberfall.Presentation
                 "menu",
                 TidbitTrigger.MainMenuArrival,
                 "The Kingdom, is yours to explore.\n",
-                "Go questing, stare at your collection, or engage in glorious battle is \n" +
+                "Go questing, stare at your collection, or engage in glorious battle\n" +
                 "these are the quintissential joys of life in the Kingdom.",
                 "tidbit_menu"),
             new Tidbit(
