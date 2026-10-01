@@ -50,6 +50,41 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 27eac72de70d434e9ff3affaa786cec7
+    m_Address: ui/effect_bulwark_shields
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59d95ebe303f8b947976c4ec334624f0
+    m_Address: ui/effect_shroud_smoke_left
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0806a3c244fb5124498abf38fc803019
+    m_Address: ui/effect_shroud_smoke_right
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c0614db2a386df4a8a96cda99d2543a
+    m_Address: ui/effect_shroud_smoke_lower
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1388c0dd4c443a2865d24223c3798ca
+    m_Address: ui/effect_frost_crystals_left
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3d0ab896b5040a1b08f4650fb842413
+    m_Address: ui/effect_frost_crystals_right
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f6a417c05c2e4e6bad388519b296ea0a
+    m_Address: ui/effect_frost_crystals_lower
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 361d1e44f342b58459b738cdbeb5e3ce
     m_Address: ui/Orb_Confluence
     m_ReadOnly: 0

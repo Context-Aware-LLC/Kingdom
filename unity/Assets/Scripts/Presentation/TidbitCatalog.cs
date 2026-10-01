@@ -94,7 +94,7 @@ namespace Emberfall.Presentation
             new Tidbit(
                 "menu",
                 TidbitTrigger.MainMenuArrival,
-                "The Kingdom, is yours to explore.\n" +
+                "The Kingdom, is yours to explore.\n",
                 "Go questing, stare at your collection, or engage in glorious battle is \n" +
                 "these are the quintissential joys of life in the Kingdom.",
                 "tidbit_menu"),
@@ -117,7 +117,8 @@ namespace Emberfall.Presentation
             new Tidbit(
                 "characters",
                 TidbitTrigger.CharacterCreateArrival,
-                "Two classes, one character....why? Because everyone should have a side hustle." +
+                "Two classes, one character",
+                "....why? Because everyone should have a side hustle." +
                 "Your first choice determines your hero power the second adds to the card pool you build from.\n" +
                 "Two personalities is not usually enough to become King but you never know..",
                 "tidbit_characters"),
@@ -141,26 +142,28 @@ namespace Emberfall.Presentation
                 "vault",
                 TidbitTrigger.PackVaultArrival,
                 "The Card Vault",
-                "Drag packs to the center to open. Pick it up and hold it on the rail to open multiple",
+                "Drag packs to the center to open. Pick it up and hold it on the rail to open multiple\n" +
                 "Everything inside is yours. The paperwork has already been filed in triplicate.",
                 "tidbit_vault"),
             new Tidbit(
                 "shards",
                 TidbitTrigger.PackVaultGiftComplete,
-                "Shards",
-                "Ok now get out there and make the kingdom a better place.",
+                "Now entering the kingdom.",
+                "Probably a bad idea.\n" +
+                "Now get out there and make the kingdom a better place.",
                 "tidbit_shards"),
             new Tidbit(
                 "store",
                 TidbitTrigger.PackVaultGiftComplete,
                 "The Store",
                 "You don't have to be rich to live like a king." +
-                "If you are willing to toil every day completing quests you might grow up to be King.",
+                "If you are willing to toil every day completing quests you might grow up to be one.",
                 "tidbit_store"),
             new Tidbit(
                 "shop",
                 TidbitTrigger.ShopArrival,
-                "Like most things in the kingdom this is a tap situation." +
+                "Tap situation.",
+                "Like most things in the kingdom that's what this is a tap situation.\n" +
                 "Pay with your hard-earned Gold like every other peasant or purchase gems to skip the toil.\n" +
                 "Packs you buy end up in the Card Vault awaiting your tap.",
                 "tidbit_shop"),

@@ -66,6 +66,13 @@ namespace Emberfall.Presentation
         // Internal, not private: DeviceLayout.SelfCheck asserts the lane this leaves at the
         // centreline, the same reason ProceduralBoardSetup.HeroX and DeckX are internal.
         internal const float BulwarkRowOffset = 0.28f;
+        internal const string BulwarkEffectSpriteKey = "effect_bulwark_shields";
+        internal const string ShroudSmokeLeftSpriteKey = "effect_shroud_smoke_left";
+        internal const string ShroudSmokeRightSpriteKey = "effect_shroud_smoke_right";
+        internal const string ShroudSmokeLowerSpriteKey = "effect_shroud_smoke_lower";
+        internal const string FrostCrystalsLeftSpriteKey = "effect_frost_crystals_left";
+        internal const string FrostCrystalsRightSpriteKey = "effect_frost_crystals_right";
+        internal const string FrostCrystalsLowerSpriteKey = "effect_frost_crystals_lower";
 
         // WHERE THE STAT ROW SITS, as a fraction of CardH below the card's centre. The lowest thing
         // a minion carries, so it is the line the hand fan must not cover — the fan draws in FRONT
@@ -729,6 +736,10 @@ namespace Emberfall.Presentation
             if (_liveStates.TryGetValue(ci.Id, out CardLiveState liveState))
                 liveState.UpdateFrom(ci, zone == Zone.Board && ownerMayAct, spellDamageBonus);
 
+            // Large perimeter status treatments belong only to played minions. This also handles
+            // hand→board moves where the AuraSet itself did not change and emitted no aura event.
+            presenter.GetComponent<CardMaterialBinder>()?.SetBoardStatusEffectsVisible(zone == Zone.Board);
+
             // Re-parent to the correct anchor if the card moved slots.
             if (boardAnchors != null)
             {
@@ -1065,6 +1076,60 @@ namespace Emberfall.Presentation
             // when AuraSet.Frosted arrives, so an unfrosted card costs no draw call.
             frostRenderer.enabled = false;
 
+            // The shader freezes the card surface; these separate edge clusters give Frost a
+            // crystalline silhouette and a readable growth event. They sit in front of the frost
+            // quad and frame, but behind sockets and labels so the minion remains playable.
+            var frostCrystalRoot = new GameObject("FrostCrystals");
+            frostCrystalRoot.transform.SetParent(root.transform, false);
+            var frostCrystalLeft = MakeSprite(frostCrystalRoot.transform, "LeftGrowth",
+                new Vector3(0f, 0f, -0.009f), new Vector2(CardW + 0.28f, CardH + 0.48f));
+            var frostCrystalRight = MakeSprite(frostCrystalRoot.transform, "RightGrowth",
+                new Vector3(0f, 0f, -0.009f), new Vector2(CardW + 0.28f, CardH + 0.48f));
+            var frostCrystalLower = MakeSprite(frostCrystalRoot.transform, "LowerShelf",
+                new Vector3(0f, -CardH * 0.29f, -0.009f),
+                new Vector2(CardW + 0.54f, (CardW + 0.54f) / 1.776f));
+            frostCrystalLeft.sprite = _uiSprites?.Get(FrostCrystalsLeftSpriteKey);
+            frostCrystalRight.sprite = _uiSprites?.Get(FrostCrystalsRightSpriteKey);
+            frostCrystalLower.sprite = _uiSprites?.Get(FrostCrystalsLowerSpriteKey);
+            frostCrystalLeft.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
+            frostCrystalRight.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
+            frostCrystalLower.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
+            var frostCrystals = frostCrystalRoot.AddComponent<FrostCrystalView>();
+            frostCrystals.Setup(frostCrystalLeft, frostCrystalRight, frostCrystalLower);
+
+            // Bulwark/Taunt status treatment — the approved shields-only concept. The sprite
+            // straddles the card with an open centre, in front of the painted frame but behind
+            // the stat/tribe sockets and every label. It supplements the established front-row
+            // step instead of replacing that spatial rule during this first runtime trial.
+            var bulwarkRenderer = MakeSprite(root.transform, "BulwarkShields",
+                new Vector3(0f, -CardH * 0.06f, -0.007f),
+                new Vector2(CardW + 0.72f, (CardW + 0.72f) / 1.5f));
+            bulwarkRenderer.sprite = _uiSprites?.Get(BulwarkEffectSpriteKey);
+            bulwarkRenderer.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
+            bulwarkRenderer.enabled = false;
+
+            // Shroud/Stealth status treatment — three separately generated smoke pieces so the
+            // effect can gather around the minion instead of popping on as a static rectangle.
+            // Every source image leaves the reading area open and this layer remains behind all
+            // labels/sockets; the existing _ShroudAmount body fade supplies the spectral interior.
+            var shroudRoot = new GameObject("ShroudSmoke");
+            shroudRoot.transform.SetParent(root.transform, false);
+            var shroudLeft = MakeSprite(shroudRoot.transform, "LeftPlume",
+                new Vector3(0f, 0f, -0.007f), new Vector2(CardW + 0.22f, CardH + 0.42f));
+            var shroudRight = MakeSprite(shroudRoot.transform, "RightPlume",
+                new Vector3(0f, 0f, -0.007f), new Vector2(CardW + 0.22f, CardH + 0.42f));
+            var shroudLower = MakeSprite(shroudRoot.transform, "LowerBank",
+                new Vector3(0f, -CardH * 0.29f, -0.007f),
+                new Vector2(CardW + 0.62f, (CardW + 0.62f) / 1.777f));
+            shroudLeft.sprite = _uiSprites?.Get(ShroudSmokeLeftSpriteKey);
+            shroudRight.sprite = _uiSprites?.Get(ShroudSmokeRightSpriteKey);
+            shroudLower.sprite = _uiSprites?.Get(ShroudSmokeLowerSpriteKey);
+            shroudLeft.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
+            shroudRight.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
+            shroudLower.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
+            var shroudSmoke = shroudRoot.AddComponent<ShroudSmokeView>();
+            shroudSmoke.Setup(shroudLeft, shroudRight, shroudLower);
+
             // Rarity gem — set into the frame's upper-right socket; sprite (gem_{rarity}) and
             // final size assigned per-rarity by ApplyFrame, which is also where the socket
             // geometry is applied. Position and size here are only the pre-frame placeholder
@@ -1253,7 +1318,8 @@ namespace Emberfall.Presentation
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
             var binder = root.AddComponent<CardMaterialBinder>();
-            binder.SetupRenderers(bodyRenderer, glowRenderer, aegisRenderer, frostRenderer);
+            binder.SetupRenderers(bodyRenderer, glowRenderer, aegisRenderer, frostRenderer,
+                                  bulwarkRenderer, shroudSmoke, frostCrystals);
 
             return presenter;
         }

@@ -20,7 +20,13 @@ namespace Emberfall.Presentation
     ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (ARCANE_SURGE) only — attack-readiness
     ///                     used to also light it gold; Sam ruled it hideous and a duplicate of the
     ///                     exhausted-dim cue (CardPresenter.cs), removed 2026-08-16
-    ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield only; Bulwark is spatial (row offset)
+    ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield only
+    ///   Bulwark shields  → bulwarkRenderer toggled by AuraSet.Bulwark on board minions only;
+    ///                       the existing front-row offset remains the primary spatial cue
+    ///   Shroud smoke     → shroudSmoke animates three perimeter pieces on board minions only;
+    ///                       the body shader still supplies the readable spectral fade
+    ///   Frost crystals   → frostCrystals grows three edge pieces on board minions only;
+    ///                       SG_Frost remains the full-card freeze/thaw treatment
     ///
     /// DEATH IS NOT HERE. The death burn is <see cref="CardDeathDissolve"/>, driven by
     /// BoardController, because dissolving one renderer out of ~13 dissolves nothing a player can
@@ -34,6 +40,9 @@ namespace Emberfall.Presentation
         private Renderer _glowRenderer;   // null until SG_Glow shader asset assigned
         private Renderer _aegisRenderer;  // null until SG_Aegis shader asset assigned
         private Renderer _frostRenderer;  // wears M_Frost; the ONLY renderer that declares _FrostAmount
+        private Renderer _bulwarkRenderer; // paired-shield sprite; board-only status treatment
+        private ShroudSmokeView _shroudSmoke; // three-piece animated perimeter smoke; board-only
+        private FrostCrystalView _frostCrystals; // three-piece crystalline silhouette; board-only
 
         private InstanceId _id;
         private ICardLiveState _live;
@@ -45,6 +54,7 @@ namespace Emberfall.Presentation
         private Coroutine _shroudRoutine;
         private float _frostCurrent;
         private float _shroudCurrent;
+        private bool _boardStatusEffectsVisible;
 
         // Durations from hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §5 and shaders/README.md §3.
         private const float FlashDecay    = 0.25f;
@@ -54,13 +64,33 @@ namespace Emberfall.Presentation
 
         // ── Setup (called by BoardController before Init) ──────────────────────────
 
-        public void SetupRenderers(Renderer body, Renderer glow, Renderer aegis, Renderer frost = null)
+        public void SetupRenderers(Renderer body, Renderer glow, Renderer aegis, Renderer frost = null,
+                                   Renderer bulwark = null, ShroudSmokeView shroudSmoke = null,
+                                   FrostCrystalView frostCrystals = null)
         {
             _bodyRenderer  = body;
             _glowRenderer  = glow;
             _aegisRenderer = aegis;
             _frostRenderer = frost;
+            _bulwarkRenderer = bulwark;
+            _shroudSmoke = shroudSmoke;
+            _frostCrystals = frostCrystals;
             _mpb = new MaterialPropertyBlock();
+        }
+
+        /// <summary>
+        /// Printed/live status data also exists while a card is in hand. The large perimeter
+        /// treatments are board-minion effects, not hand-card decoration; BoardController updates
+        /// this gate whenever the presenter changes zones.
+        /// </summary>
+        public void SetBoardStatusEffectsVisible(bool visible)
+        {
+            if (_boardStatusEffectsVisible == visible) return;
+            _boardStatusEffectsVisible = visible;
+            AuraSet auras = _live != null ? _live.Auras : AuraSet.None;
+            ApplyBulwark(auras);
+            ApplyShroudSmoke(auras);
+            ApplyFrostCrystals(auras);
         }
 
         // ── Init (called by BoardController after ICardLiveState is created) ───────
@@ -182,10 +212,32 @@ namespace Emberfall.Presentation
             ApplyGlow();
 
             // Aegis underlay: Aegis only. Bulwark reads spatially (front row,
-            // decision 2026-07-17) — no keyword glow, so the shared gold bubble
-            // unambiguously means Shield.
+            // decision 2026-07-17), plus the paired-shield concept treatment below — no keyword
+            // glow, so the shared gold bubble unambiguously means Shield.
             if (_aegisRenderer != null)
                 _aegisRenderer.enabled = (auras & AuraSet.Shield) != 0;
+
+            ApplyBulwark(auras);
+            ApplyShroudSmoke(auras);
+            ApplyFrostCrystals(auras);
+        }
+
+        private void ApplyBulwark(AuraSet auras)
+        {
+            if (_bulwarkRenderer != null)
+                _bulwarkRenderer.enabled = _boardStatusEffectsVisible && (auras & AuraSet.Bulwark) != 0;
+        }
+
+        private void ApplyShroudSmoke(AuraSet auras)
+        {
+            if (_shroudSmoke != null)
+                _shroudSmoke.SetVisible(_boardStatusEffectsVisible && (auras & AuraSet.Shroud) != 0);
+        }
+
+        private void ApplyFrostCrystals(AuraSet auras)
+        {
+            if (_frostCrystals != null)
+                _frostCrystals.SetVisible(_boardStatusEffectsVisible && (auras & AuraSet.Frosted) != 0);
         }
 
         // ── MatchRunner.OnMatchEvent — one-shot damage/heal flash ─────────────────

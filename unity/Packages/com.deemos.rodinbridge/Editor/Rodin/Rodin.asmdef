@@ -1,0 +1,21 @@
+{
+    "name": "Rodin",
+    "rootNamespace": "Rodin",
+    "references": [
+        "GUID:18d18f811ba286c49814567a3cfba688",
+        "GUID:1a0324566af4ed544918d6837a1f4e11"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll",
+        "Fleck.dll",
+        "websocket-sharp.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

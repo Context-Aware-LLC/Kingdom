@@ -1,5 +1,15 @@
 {
   "dependencies": {
+    "com.deemos.rodinbridge": {
+      "version": "file:com.deemos.rodinbridge",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "2.0.0",
+        "com.unity.burst": "1.6.6",
+        "com.unity.collections": "1.2.4"
+      }
+    },
     "com.emberfall.core": {
       "version": "file:../../src/Emberfall.Core",
       "depth": 0,
