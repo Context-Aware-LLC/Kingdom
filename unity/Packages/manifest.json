@@ -22,7 +22,8 @@
     "com.unity.services.cloud-build": "2.0.8",
     "com.unity.ugui": "2.5.0",
     "com.unity.modules.particlesystem": "1.0.0",
-    "com.unity.modules.video": "1.0.0"
+    "com.unity.modules.video": "1.0.0",
+    "com.unity.pipeline": "0.8.0-exp.1"
   },
   "testables": [
     "com.besty.unity-skills"
