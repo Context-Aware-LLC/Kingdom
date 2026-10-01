@@ -94,77 +94,75 @@ namespace Emberfall.Presentation
             new Tidbit(
                 "menu",
                 TidbitTrigger.MainMenuArrival,
-                "The Kingdom, briefly",
-                "Find Game starts a match. Collection holds your cards and decks, and the Card Vault " +
-                "holds any packs you have not opened.\n" +
-                "Quests pay Gold when you finish them. No form is required, for now.",
+                "The Kingdom, is yours to explore.\n" +
+                "Go questing, stare at your collection, or engage in glorious battle is \n" +
+                "these are the quintissential joys of life in the Kingdom.",
                 "tidbit_menu"),
             new Tidbit(
                 "decks",
                 TidbitTrigger.RosterArrival,
                 "Your decks",
-                "Tap + to start a deck. Tap a deck once for its options, or twice to edit it. " +
-                "A gold border means it is ready for a match.\n" +
-                "You may keep eight. The Council has not said why.",
+                "Tap + to create a deck. Tap once a deck once to see options, or twice to edit it.\n" +
+                "The Council has determinned that you shall have not more thannine.\n" +
+                "Nine is the limit. Not 8 and not 10. Because the council said so, that is why.",
                 "tidbit_decks"),
             new Tidbit(
                 "match-pick",
                 TidbitTrigger.MatchPickArrival,
                 "Choose your deck",
-                "Tap the deck you want to play, then Continue. Only a deck with a gold border " +
-                "can join a match.\n" +
-                "Your opponent has also been told to choose wisely.",
+                "Tap the deck to select it, then press Continue.\n" +
+                "Yes. It is very complicated I know.\n" +
+                "If you are lucky your opponent will not figure this part out and you will be the champion.",
                 "tidbit_match_pick"),
             new Tidbit(
                 "characters",
                 TidbitTrigger.CharacterCreateArrival,
-                "Two classes, one character",
-                "Your character is two classes joined. Your first choice determines your hero power the second just adds to the card pool you can build from.  — " +
+                "Two classes, one character....why? Because everyone should have a side hustle." +
+                "Your first choice determines your hero power the second adds to the card pool you build from.\n" +
                 "Two personalities is not usually enough to become King but you never know..",
                 "tidbit_characters"),
             new Tidbit(
                 "collection",
                 TidbitTrigger.CollectionArrival,
                 "The collection",
-                "Every card you own is here. Tap one to Render another copy with shards, or to " +
-                "Reduce a spare into shards. Decks opens your decks.\n" +
-                "The filing took eleven years and is nearly finished.",
+                "Every card you own is here. Actually every card you wish you owned is here too.\n" +
+                "Tap one to Render a copy, or to Reduce a spare into shards.\n" +
+                "Decks opens your decks. Don't over think it.",
                 "tidbit_collection"),
             new Tidbit(
                 "deck-editor",
                 TidbitTrigger.DeckEditorArrival,
                 "Building a deck",
-                "Tap a card on the wall to add it, and tap it in the deck to take it out. A deck " +
-                "is 30 cards, with two copies of each at most and one of any Legendary.\n" +
-                "It saves itself, which is more than the Royal Archive can say.",
+                "Tap a card to add. Tap a row to subtract.\n" +
+                "A deck is 30 cards, two copies max, only one of any Legendary.\n" +
+                "Sing a little song to help you remember. Tap Add, Tap Subtract. Tap my foot.",
                 "tidbit_deck_editor"),
             new Tidbit(
                 "vault",
                 TidbitTrigger.PackVaultArrival,
                 "The Card Vault",
-                "Tap a pack to open it, or drag it out of the rack. You can stack up to ten and " +
-                "open them together.\n" +
-                "Everything inside is yours. The paperwork has already been filed.",
+                "Drag packs to the center to open. Pick it up and hold it on the rail to open multiple",
+                "Everything inside is yours. The paperwork has already been filed in triplicate.",
                 "tidbit_vault"),
             new Tidbit(
                 "shards",
                 TidbitTrigger.PackVaultGiftComplete,
                 "Shards",
-                "Cards you'll never play break down into shards. Shards craft any card you're missing.",
+                "Ok now get out there and make the kingdom a better place.",
                 "tidbit_shards"),
             new Tidbit(
                 "store",
                 TidbitTrigger.PackVaultGiftComplete,
                 "The Store",
-                "More packs live in the Store. Gold comes from playing.",
+                "You don't have to be rich to live like a king." +
+                "If you are willing to toil every day completing quests you might grow up to be King.",
                 "tidbit_store"),
             new Tidbit(
                 "shop",
                 TidbitTrigger.ShopArrival,
-                "Buying packs",
-                "Tap a pack, choose how many, and pay with Gold. Packs you buy wait unopened in " +
-                "the Card Vault.\n" +
-                "The Treasury thanks you in advance.",
+                "Like most things in the kingdom this is a tap situation." +
+                "Pay with your hard-earned Gold like every other peasant or purchase gems to skip the toil.\n" +
+                "Packs you buy end up in the Card Vault awaiting your tap.",
                 "tidbit_shop"),
         };
 
