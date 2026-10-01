@@ -73,16 +73,44 @@ namespace Emberfall.Presentation
             // Reached only for a key the catalog sweep did not cover — a miss, or a prewarm that
             // failed. Still synchronous, and still the reentrancy hazard above if it happens to
             // land inside a callback; CardFaceBaker's per-card guard is what bounds that.
-            var handle = Addressables.LoadAssetAsync<Sprite>($"{AddressPrefix}{key}");
-            Sprite result = handle.WaitForCompletion();
-            if (handle.Status != AsyncOperationStatus.Succeeded)
+            //
+            // ASK THE CATALOG BEFORE LOADING. LoadAssetAsync on an address the catalog does not
+            // publish makes Addressables log an InvalidKeyException at ERROR level by itself,
+            // before the status check below ever runs — so an illustration that is optional by
+            // design (FirstRunTidbit) read as a crash in the console. The warning is the miss
+            // report; the exception added nothing but a wrong severity.
+            string address = $"{AddressPrefix}{key}";
+            Sprite result = null;
+            if (IsPublished(address))
             {
-                Debug.LogWarning($"[AddressableUiSpriteProvider] no UI sprite at key '{AddressPrefix}{key}'");
-                result = null;
+                var handle = Addressables.LoadAssetAsync<Sprite>(address);
+                result = handle.WaitForCompletion();
+                if (handle.Status != AsyncOperationStatus.Succeeded) result = null;
+            }
+
+            if (result == null)
+            {
+                Debug.LogWarning($"[AddressableUiSpriteProvider] no UI sprite at key '{address}'");
+                _reportedMisses.Add(key);   // said once here; the cached-miss branch need not repeat it
             }
 
             _cache[key] = result; // cache misses too — a missing placeholder shouldn't re-hit Addressables.
             return result;
+        }
+
+        /// <summary>True when some loaded catalog publishes a Sprite at <paramref name="address"/>.
+        /// With no locator loaded at all there is nothing to ask, so it answers true and leaves
+        /// the verdict to the load.</summary>
+        private static bool IsPublished(string address)
+        {
+            bool any = false;
+            foreach (IResourceLocator locator in Addressables.ResourceLocators)
+            {
+                any = true;
+                if (locator.Locate(address, typeof(Sprite), out IList<IResourceLocation> at)
+                    && at != null && at.Count > 0) return true;
+            }
+            return !any;
         }
 
         /// <summary>
