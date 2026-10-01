@@ -61,6 +61,9 @@ namespace Emberfall.Presentation
         private int _lastSafeAreaScreenHeight = -1;
         private bool _collectionTransitioning;
 
+        /// <summary>True once <see cref="BeginFirstRun"/> has sent this launch to another scene.</summary>
+        private bool _leavingForFirstRun;
+
         private const float TopRailSafeAreaMarginPercent = 2f;
         private static readonly string StarterPackId = OnboardingGrant.StarterPack().Id;
 
@@ -252,6 +255,7 @@ namespace Emberfall.Presentation
             bool needsName = _account != null && _account.NeedsDisplayName;
             if (needsAccount || needsName)
             {
+                _leavingForFirstRun = true;
                 ScreenNav.Go(ScreenNav.AccountCreate);
                 return;
             }
@@ -276,6 +280,7 @@ namespace Emberfall.Presentation
             PackVaultController.Mode = FirstRunMarkers.Has(FirstRunMarkers.Gift)
                 ? PackVaultMode.Vault
                 : PackVaultMode.Gift;
+            _leavingForFirstRun = true;
             ScreenNav.Go(ScreenNav.PackVault);
         }
 
@@ -316,6 +321,11 @@ namespace Emberfall.Presentation
             // directly to the final state and makes the transition invisible.
             _root.schedule.Execute(() => _root.RemoveFromClassList("mm-root--entering"))
                 .ExecuteLater(16);
+
+            // First look (#403). FinishBootstrap reveals the menu even on a launch BeginFirstRun
+            // has already sent elsewhere, and a lesson shown under a pending scene change is one
+            // the player glimpses and never reads.
+            if (!_leavingForFirstRun) new FirstRunTidbit(_root).Show(TidbitTrigger.MainMenuArrival);
         }
 
         private void Wire(string name, System.Action onClick)

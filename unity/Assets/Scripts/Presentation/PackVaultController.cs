@@ -117,6 +117,11 @@ namespace Emberfall.Presentation
         private PackTearAnimator _tear;
         private IPackArtProvider _packArt;
         private PackRackDrag _drag;
+        private FirstRunTidbit _tidbit;
+
+        /// <summary>True once this visit has opened a pack. An empty rack means "the last pack is
+        /// gone" only when it does; a player who arrives at an empty vault has finished nothing.</summary>
+        private bool _openedAPack;
 
         private string _returnScene = "MainMenu";
 
@@ -223,6 +228,8 @@ namespace Emberfall.Presentation
             _revealFaceBaker = CreateRevealFaceBaker();
             _reveal = new PackRevealPanel(root, RevealDismissed, _revealFaceBaker);
             _tear = new PackTearAnimator();
+            _tidbit = new FirstRunTidbit(root);
+            _openedAPack = false;
             _cancel = new CancellationTokenSource();
 
             _drag = new PackRackDrag(root, _rack, _stage, _rail, ResolveSource,
@@ -265,6 +272,8 @@ namespace Emberfall.Presentation
         private void OnDisable()
         {
             _loadingTick?.Pause();
+            _tidbit?.Cancel();
+            _tidbit = null;
             _drag?.Dispose();
             _drag = null;
 
@@ -427,6 +436,9 @@ namespace Emberfall.Presentation
                 ShowBanner(false);
                 SetStageHint(false);
                 SetStatus("No packs waiting.");
+                // The tail of the gift (spec §4, slice 4): what to do with the cards, then where
+                // more come from. Both verbs have routes now, which is what held these back.
+                if (_openedAPack) _tidbit?.Show(TidbitTrigger.PackVaultGiftComplete);
                 return;
             }
 
@@ -444,6 +456,11 @@ namespace Emberfall.Presentation
                 _entrancePlayed = true;
                 PlayEntrance();
             }
+
+            // First look (#403), here rather than in OnEnable because the lesson is about the packs
+            // and must not sit over the spinner or over a failed read. The rack redraws after every
+            // open; FirstRunTidbit shows nothing once the card has been dismissed.
+            _tidbit?.Show(TidbitTrigger.PackVaultArrival);
         }
 
         /// <summary>
@@ -735,6 +752,7 @@ namespace Emberfall.Presentation
                     // means there is exactly one site that can.
                     MarkGiftSeen();
                     ReleaseGiftLock();
+                    _openedAPack = true;
                 }
 
                 if (receipts.Count == 0)

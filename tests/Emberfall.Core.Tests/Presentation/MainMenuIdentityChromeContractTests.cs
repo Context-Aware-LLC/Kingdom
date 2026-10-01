@@ -41,6 +41,7 @@ namespace Emberfall.Core.Tests.Presentation
                     "command",
                     "footer",
                     "leaderboard-modal",
+                    "tidbit-overlay",
                 }), "The root-level chrome inventory should not regain an identity panel under a new name.");
                 Assert.That(uxml, Does.Not.Contain("name=\"identity\""),
                     "The upper-left character/deck plate should not be in the main-menu tree.");

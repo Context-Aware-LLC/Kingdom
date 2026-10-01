@@ -99,8 +99,8 @@
              in its constructor, because a backdrop left up is a screen the player cannot use.
 
              The tree is copied per host, the shape PackRevealPanel established: the panel
-             queries `tidbit-*` out of whatever root it is handed, so a host styles the Got it
-             control in its own screen's language without the panel knowing.
+             queries `tidbit-*` out of whatever root it is handed. Every host carries the same
+             block and links Common/tidbit.uss, which sizes the Got it control.
 
              NOTE FOR ANYONE EDITING THIS COMMENT: a doubled hyphen is illegal inside an XML
              comment and voids the whole document. Naming a BEM modifier class here is what
@@ -117,7 +117,7 @@
                     <ui:Label name="tidbit-body" text="" class="tidbit-copy" />
                 </ui:VisualElement>
                 <ui:VisualElement class="tidbit-actions">
-                    <ui:Button name="btn-tidbit-done" text="Got it" class="roster-button emb-primary" />
+                    <ui:Button name="btn-tidbit-done" text="Got it" class="tidbit-done emb-primary" />
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

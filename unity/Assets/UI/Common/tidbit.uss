@@ -2,8 +2,9 @@
    FIRST-RUN TIDBIT — the one-card overlay
    Slice 4 of docs/dev-docs/specs/first-run-and-pack-opening.md.
 
-   Self-contained: backdrop, card surface and layout all live here. The Got it
-   control wears the host screen's own button classes.
+   Self-contained: backdrop, card surface, layout and the Got it control's size
+   all live here, so a host needs this sheet and theme.uss and nothing else. The
+   button's chrome is theme.uss's .emb-primary.
    ============================================================================ */
 
 /* Display, not opacity: an overlay left at opacity 0 still eats every touch on the
@@ -86,4 +87,14 @@
 .tidbit-actions {
     flex-direction: row;
     justify-content: flex-end;
+}
+
+/* The roster's .roster-button box, restated: that rule lives in character-roster.uss, which
+   only the roster and deck creation link, so on any other host the button had no size. */
+.tidbit-done {
+    min-width: 148px;
+    height: 68px;
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+    font-size: var(--type-body);
 }

@@ -1,6 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/Collection/collection.uss?fileID=7433441132597879392&amp;guid=8ec502da397030442998cd90701bbf86&amp;type=3#collection"/>
+    <Style src="project://database/Assets/UI/Common/tidbit.uss?fileID=7433441132597879392&amp;guid=59a3d1cad3c148f488a43eafde7ad1ee&amp;type=3#tidbit"/>
     <ui:VisualElement name="root" class="emb-root collection">
         <ui:VisualElement name="body" class="db-body" style="transform-origin: 25%; justify-content: flex-start; overflow: visible;">
             <ui:VisualElement name="collection-panel" class="db-panel db-collection chrome-panel chrome-panel--outer">
@@ -144,6 +145,25 @@
             </ui:VisualElement>
             <ui:VisualElement picking-mode="Ignore" class="craft-loading">
                 <ui:VisualElement name="craft-loading-icon" picking-mode="Ignore" class="craft-loading-icon"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <!-- TIDBIT: the first-look card, driven by FirstRunTidbit (#403). LAST CHILD ON PURPOSE:
+             UI Toolkit has no z-index, so document order is the only thing putting this over
+             everything else on the screen. It starts hidden in the markup AND FirstRunTidbit
+             hides it again in its constructor. The same block as CharacterCreateScreen.uxml,
+             which carries the notes. No doubled hyphen in this comment: it empties the screen. -->
+        <ui:VisualElement name="tidbit-overlay" class="tidbit-overlay tidbit-overlay--hidden">
+            <ui:VisualElement name="tidbit-card" class="tidbit-card">
+                <ui:VisualElement class="tidbit-header">
+                    <ui:Label name="tidbit-title" text="" class="tidbit-title"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="tidbit-body-row">
+                    <ui:VisualElement name="tidbit-art" class="tidbit-art" picking-mode="Ignore"/>
+                    <ui:Label name="tidbit-body" text="" class="tidbit-copy"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="tidbit-actions">
+                    <ui:Button name="btn-tidbit-done" text="Got it" class="tidbit-done emb-primary"/>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

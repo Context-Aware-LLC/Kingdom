@@ -5,21 +5,49 @@ namespace Emberfall.Presentation
     /// <summary>
     /// The moment a tidbit is offered at. A trigger is a place in the journey, not a screen and not
     /// a button: <see cref="CharacterCreateArrival"/> is "the player has just been asked to choose
-    /// classes", which is why its copy explains the choice rather than the screen.
+    /// classes", which is why its copy explains the choice rather than the screen. One screen can
+    /// own several — the roster teaches a different thing to a player managing decks than to one
+    /// choosing a deck to queue with.
     ///
     /// <para>A trigger maps to an ORDERED LIST, never to one entry — see
     /// <see cref="TidbitCatalog.For"/>.</para>
     /// </summary>
     public enum TidbitTrigger
     {
+        /// <summary>The main menu has been revealed and is staying on screen — not a launch that is
+        /// about to leave for account creation or the starter gift.</summary>
+        MainMenuArrival,
+
+        /// <summary>Arriving at <see cref="CharacterRosterController"/> to manage decks.</summary>
+        RosterArrival,
+
+        /// <summary>Arriving at <see cref="CharacterRosterController"/> from Find Game, to choose
+        /// the deck to queue with.</summary>
+        MatchPickArrival,
+
         /// <summary>Arriving at <see cref="CharacterCreateController"/>, before the first pick.</summary>
         CharacterCreateArrival,
 
+        /// <summary>Arriving at <see cref="CollectionController"/> with no deck open.</summary>
+        CollectionArrival,
+
+        /// <summary>A deck has just opened for editing in <see cref="CollectionController"/>,
+        /// whether the roster handed it in or the player chose it from the drawer.</summary>
+        DeckEditorArrival,
+
+        /// <summary>Inside <see cref="PackVaultController"/>, the first time the rack draws with a
+        /// pack on it.</summary>
+        PackVaultArrival,
+
         /// <summary>Inside <see cref="PackVaultController"/>, after the last granted pack is opened.</summary>
         PackVaultGiftComplete,
+
+        /// <summary>Arriving at <see cref="ShopScreenController"/>.</summary>
+        ShopArrival,
     }
 
-    /// <summary>One card of first-run copy. Title, at most two lines of body, one illustration.</summary>
+    /// <summary>One card of first-run copy. Title, a plain instruction, one dry line under it, one
+    /// illustration.</summary>
     public sealed class Tidbit
     {
         public Tidbit(string id, TidbitTrigger trigger, string title, string body, string artKey)
@@ -46,31 +74,47 @@ namespace Emberfall.Presentation
     }
 
     /// <summary>
-    /// The first-run copy, as data. Slice 4 of
+    /// The first-look copy for every screen that has one, as data (#403). It began as slice 4 of
     /// <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>.
     ///
-    /// <para><b>Built for three, registered for one — and that is a ruling, not an omission.</b>
-    /// Spec §4, slice 4: both tail tidbits describe verbs a player cannot perform. Crafting is a
-    /// <c>LogWarning</c> stub in <see cref="CollectionController"/> and the store still answers
-    /// <i>"Purchases are waiting for the server wallet connection."</i> Teaching a verb that is not
-    /// wired is worse than teaching nothing, so <see cref="Held"/> stays out of <see cref="For"/>
-    /// until those two have routes. Moving an entry across is a one-line change and is the whole
-    /// reason the held copy is written out here rather than left in the spec.</para>
+    /// <para><b>The instruction comes first and the joke second, on its own line.</b> A player who
+    /// reads only the first line must still know what to do on the screen underneath.</para>
+    ///
+    /// <para><b>Teach only a verb the player can perform.</b> An entry describing something that is
+    /// not wired is worse than no entry. Gem bundles are the one store verb with no route today, so
+    /// no copy here sends anyone to buy Gems.</para>
     ///
     /// <para><b>A trigger returns a SEQUENCE.</b> <see cref="TidbitTrigger.PackVaultGiftComplete"/>
-    /// is specified to fire shards and then store, back to back, so a one-entry return type would
-    /// have to be widened by the same commit that unblocks them.</para>
-    ///
-    /// <para><b>RETIREMENT TRIGGER:</b> when crafting gets a route, move the <c>shards</c> entry from
-    /// <see cref="Held"/> into <see cref="Registered"/>; when the store does, move <c>store</c>. When
-    /// both have moved, delete <see cref="Held"/> and this paragraph, and drop the "registered for
-    /// one" claim from the remarks above.</para>
+    /// fires shards and then store, back to back.</para>
     /// </summary>
     public static class TidbitCatalog
     {
-        /// <summary>What actually fires today.</summary>
         private static readonly Tidbit[] Registered =
         {
+            new Tidbit(
+                "menu",
+                TidbitTrigger.MainMenuArrival,
+                "The Kingdom, briefly",
+                "Find Game starts a match. Collection holds your cards and decks, and the Card Vault " +
+                "holds any packs you have not opened.\n" +
+                "Quests pay Gold when you finish them. No form is required, for now.",
+                "tidbit_menu"),
+            new Tidbit(
+                "decks",
+                TidbitTrigger.RosterArrival,
+                "Your decks",
+                "Tap + to start a deck. Tap a deck once for its options, or twice to edit it. " +
+                "A gold border means it is ready for a match.\n" +
+                "You may keep eight. The Council has not said why.",
+                "tidbit_decks"),
+            new Tidbit(
+                "match-pick",
+                TidbitTrigger.MatchPickArrival,
+                "Choose your deck",
+                "Tap the deck you want to play, then Continue. Only a deck with a gold border " +
+                "can join a match.\n" +
+                "Your opponent has also been told to choose wisely.",
+                "tidbit_match_pick"),
             new Tidbit(
                 "characters",
                 TidbitTrigger.CharacterCreateArrival,
@@ -78,14 +122,30 @@ namespace Emberfall.Presentation
                 "Your character is two classes joined. Your first choice determines your hero power the second just adds to the card pool you can build from.  — " +
                 "Two personalities is not usually enough to become King but you never know..",
                 "tidbit_characters"),
-        };
-
-        /// <summary>
-        /// Written, ordered, and deliberately unreachable — see the type remarks. These are not
-        /// drafts: the copy is final and the only thing missing is the verb it describes.
-        /// </summary>
-        private static readonly Tidbit[] Held =
-        {
+            new Tidbit(
+                "collection",
+                TidbitTrigger.CollectionArrival,
+                "The collection",
+                "Every card you own is here. Tap one to Render another copy with shards, or to " +
+                "Reduce a spare into shards. Decks opens your decks.\n" +
+                "The filing took eleven years and is nearly finished.",
+                "tidbit_collection"),
+            new Tidbit(
+                "deck-editor",
+                TidbitTrigger.DeckEditorArrival,
+                "Building a deck",
+                "Tap a card on the wall to add it, and tap it in the deck to take it out. A deck " +
+                "is 30 cards, with two copies of each at most and one of any Legendary.\n" +
+                "It saves itself, which is more than the Royal Archive can say.",
+                "tidbit_deck_editor"),
+            new Tidbit(
+                "vault",
+                TidbitTrigger.PackVaultArrival,
+                "The Card Vault",
+                "Tap a pack to open it, or drag it out of the rack. You can stack up to ten and " +
+                "open them together.\n" +
+                "Everything inside is yours. The paperwork has already been filed.",
+                "tidbit_vault"),
             new Tidbit(
                 "shards",
                 TidbitTrigger.PackVaultGiftComplete,
@@ -98,13 +158,19 @@ namespace Emberfall.Presentation
                 "The Store",
                 "More packs live in the Store. Gold comes from playing.",
                 "tidbit_store"),
+            new Tidbit(
+                "shop",
+                TidbitTrigger.ShopArrival,
+                "Buying packs",
+                "Tap a pack, choose how many, and pay with Gold. Packs you buy wait unopened in " +
+                "the Card Vault.\n" +
+                "The Treasury thanks you in advance.",
+                "tidbit_shop"),
         };
 
         /// <summary>
-        /// The tidbits that fire at <paramref name="trigger"/>, in the order they are shown. Empty
-        /// for a trigger whose entries are all still held, which is the normal state for
-        /// <see cref="TidbitTrigger.PackVaultGiftComplete"/> today — a host must therefore treat an
-        /// empty result as "carry on", never as a bug.
+        /// The tidbits that fire at <paramref name="trigger"/>, in the order they are shown. A host
+        /// must treat an empty result as "carry on", never as a bug.
         /// </summary>
         public static IReadOnlyList<Tidbit> For(TidbitTrigger trigger)
         {

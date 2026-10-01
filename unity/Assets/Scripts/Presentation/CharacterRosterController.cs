@@ -178,6 +178,13 @@ namespace Emberfall.Presentation
 
             TryPreselectLastPlayed();
             RebuildRoster();
+
+            // First look (#403), below both early returns for the reason CharacterCreateController
+            // gives: a player reading "Collection unavailable" has a problem, not a lesson. Find
+            // Game arrives here to choose a deck, which is a different lesson from managing them.
+            new FirstRunTidbit(_root).Show(MatchDeckSelection.Choosing
+                ? TidbitTrigger.MatchPickArrival
+                : TidbitTrigger.RosterArrival);
         }
 
         private void CacheElements()

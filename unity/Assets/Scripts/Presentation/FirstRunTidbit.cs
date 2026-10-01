@@ -7,13 +7,14 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The one-card first-run overlay: a title, one illustration, at most two lines, one <b>Got
-    /// it</b>. Slice 4 of <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>.
+    /// The one-card first-look overlay: a title, one illustration, an instruction and a dry line
+    /// under it, one <b>Got it</b>. Slice 4 of
+    /// <c>docs/dev-docs/specs/first-run-and-pack-opening.md</c>, and since #403 the first-look
+    /// lesson on every screen that has one.
     ///
     /// <para><b>Host-agnostic, on the contract <see cref="PackRevealPanel"/> established.</b> It
     /// queries its <c>tidbit-*</c> elements out of whatever root it is handed and reports
-    /// <see cref="IsBound"/>, so the same overlay serves character creation and — once crafting and
-    /// the store have routes — the tail of the gift.</para>
+    /// <see cref="IsBound"/>, so the same overlay serves every screen that carries the markup.</para>
     ///
     /// <para><b>A host without the markup HANDS THROUGH; it never swallows the callback.</b> That is
     /// the same failure <see cref="PackTearAnimator"/> guards, and it matters for the same reason:
@@ -28,7 +29,7 @@ namespace Emberfall.Presentation
     /// marker: a player who force-quits mid-card has not been told anything yet.</para>
     ///
     /// <para><b>It does not know what a pack or a class is.</b> Its entire input is a list of
-    /// <see cref="Tidbit"/>, which is why the two held entries cost nothing here.</para>
+    /// <see cref="Tidbit"/>.</para>
     /// </summary>
     public sealed class FirstRunTidbit
     {
@@ -83,8 +84,8 @@ namespace Emberfall.Presentation
         /// already dismissed, one after another, then call <paramref name="onDone"/>.
         /// </summary>
         /// <returns>
-        /// False when nothing was shown — an unbound host, a trigger whose entries are all still
-        /// held (<see cref="TidbitCatalog"/>), or a player who has seen them all.
+        /// False when nothing was shown — an unbound host, a trigger with no entries in
+        /// <see cref="TidbitCatalog"/>, or a player who has seen them all.
         /// <paramref name="onDone"/> has already been called in every one of those cases, so a
         /// caller that only wants to continue can ignore the return value entirely.
         /// </returns>
@@ -155,8 +156,9 @@ namespace Emberfall.Presentation
             if (_art == null) return;
 
             // RETIREMENT TRIGGER: none of Assets/Art/UI/Chrome/Tidbits/ exists yet (spec §6.5,
-            // files 15-17). Until tidbit_characters.png lands there AND is registered in the
-            // UI_Core Addressables group, this resolves to null and the card is title-and-copy —
+            // files 15-17, and one per TidbitCatalog entry since #403). Until a tidbit's .png lands
+            // there AND is registered in the UI_Core Addressables group, its key resolves to null
+            // and the card is title-and-copy —
             // which is a complete card, not a broken one. Delete this block's `else` branch only
             // when a missing illustration should become an error. AddressableUiSpriteProvider does
             // warn on the miss, so unlike PackArtProvider this absence is not silent in a build.

@@ -61,6 +61,10 @@ namespace Emberfall.Presentation
                 OpenVault,
                 RefreshCollectionWallet);
             _shop.Open();
+
+            // First look (#403). The catalog is already drawn by the constructor, so the card sits
+            // over a store the player can see, not over a fetch.
+            new FirstRunTidbit(root).Show(TidbitTrigger.ShopArrival);
         }
 
         private async void RefreshCollectionWallet()

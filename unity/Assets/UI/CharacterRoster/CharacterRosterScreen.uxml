@@ -1,6 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <Style src="../Common/theme.uss" />
     <Style src="character-roster.uss" />
+    <Style src="../Common/tidbit.uss" />
     <ui:VisualElement name="root" class="emb-root character-roster emb-bleed">
         <!--
           A FLAT LIST OF DECKS (ADR-0009, 2026-09-04). This screen was a roster of characters, each
@@ -114,5 +115,24 @@
           delete-character modal with its cascade warning. Deleting a deck is confirmed on the deck
           dialog's own Delete pane, which is where every other thing done to a deck already lives.
         -->
+        <!-- TIDBIT: the first-look card, driven by FirstRunTidbit (#403). LAST CHILD ON PURPOSE:
+             UI Toolkit has no z-index, so document order is the only thing putting this over
+             everything else on the screen. It starts hidden in the markup AND FirstRunTidbit
+             hides it again in its constructor. The same block as CharacterCreateScreen.uxml,
+             which carries the notes. No doubled hyphen in this comment: it empties the screen. -->
+        <ui:VisualElement name="tidbit-overlay" class="tidbit-overlay tidbit-overlay--hidden">
+            <ui:VisualElement name="tidbit-card" class="tidbit-card">
+                <ui:VisualElement class="tidbit-header">
+                    <ui:Label name="tidbit-title" text="" class="tidbit-title"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="tidbit-body-row">
+                    <ui:VisualElement name="tidbit-art" class="tidbit-art" picking-mode="Ignore"/>
+                    <ui:Label name="tidbit-body" text="" class="tidbit-copy"/>
+                </ui:VisualElement>
+                <ui:VisualElement class="tidbit-actions">
+                    <ui:Button name="btn-tidbit-done" text="Got it" class="tidbit-done emb-primary"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

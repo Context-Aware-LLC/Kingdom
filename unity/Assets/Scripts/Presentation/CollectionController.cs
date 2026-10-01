@@ -102,6 +102,7 @@ namespace Emberfall.Presentation
         // trade visibility.
         private VisualElement _root;
         private VisualElement _plate;
+        private FirstRunTidbit _tidbit;
         private ListView _collectionList;
         private CardWall _wall;
         private CollectionDeckDrag _deckDrag;
@@ -294,6 +295,21 @@ namespace Emberfall.Presentation
             ApplyQuery();
             WireCollectionScroll();
             OpenPendingDeckIfAny();
+
+            // Built after the pending deck has opened, so the one offer below teaches whichever
+            // state the player actually arrives in. It sits under the loading plate with the rest
+            // of the tree and is revealed with it.
+            _tidbit = new FirstRunTidbit(_root);
+            OfferFirstLook();
+        }
+
+        /// <summary>The first-look lesson for the state on screen (#403): the deck editor's while a
+        /// deck is open, the collection's otherwise. A lesson already showing is left alone, since
+        /// showing another would drop it unread.</summary>
+        private void OfferFirstLook()
+        {
+            if (_tidbit == null || _tidbit.IsShowing) return;
+            _tidbit.Show(EditingDeck ? TidbitTrigger.DeckEditorArrival : TidbitTrigger.CollectionArrival);
         }
 
         /// <summary>
@@ -551,6 +567,10 @@ namespace Emberfall.Presentation
 
         private void OnDisable()
         {
+            // OnEnable can run again on this controller and builds a new overlay over the same
+            // Got it button, so the old one must stop answering it.
+            _tidbit?.Cancel();
+            _tidbit = null;
             CancelDeckHold();
             HideDeckCardPreview();
             _root?.UnregisterCallback<PointerDownEvent>(OnDeckTouchDown, TrickleDown.TrickleDown);
@@ -840,6 +860,7 @@ namespace Emberfall.Presentation
             ApplyQuery();
             Refresh();
             ShowDrawerPane(editor: true);
+            OfferFirstLook();
         }
 
         private void EndDeckEditing()
