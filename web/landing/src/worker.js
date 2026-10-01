@@ -2,7 +2,7 @@
 // only owns /api/*. Early Access pre-registration is double opt-in: the form stores the
 // address unconfirmed and mails a confirm link; only a confirmed row counts as a sign-up.
 
-const CONSENT_VERSION = "2026-10-01";
+const CONSENT_VERSION = "2026-09-30";
 const RESEND_COOLDOWN_MS = 10 * 60 * 1000;
 const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
 
