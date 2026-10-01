@@ -34,13 +34,9 @@ def card_html(c):
     name = html.escape(c["name"].strip())
     cls = CLASS_LABEL.get(c["class"], c["class"].title())
     rarity = c["rarity"].title()
-    stats = f'<span class="chip cost" title="Cost">{c["cost"]}</span>'
-    if c["type"] == "MINION":
-        stats += f'<span class="chip atk" title="Attack">{c["attack"]}</span><span class="chip hp" title="Health">{c["health"]}</span>'
     return f'''      <figure class="card r-{c["rarity"].lower()}">
         <img src="/assets/cards/{c["handle"]}.webp" alt="{name}, a {rarity.lower()} {html.escape(cls)} card" width="{THUMB}" height="{THUMB}" loading="lazy">
         <figcaption>
-          <div class="stats">{stats}</div>
           <strong>{name}</strong>
           <em>{html.escape(cls)} &middot; {rarity}</em>
           <span>{html.escape(c["text"])}</span>

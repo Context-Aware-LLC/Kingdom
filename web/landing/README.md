@@ -2,9 +2,9 @@
 
 Static assets in `public/`, plus a small Worker (`src/worker.js`) that owns `/api/*` only
 (`run_worker_first`). `wrangler.jsonc` does not bind the domains: the apex and `www` are attached
-in the dashboard, and a zone redirect rule sends `www` to the apex. Nothing deploys on push.
+in the dashboard, and a zone redirect rule sends `www` to the apex. Pushes to master that touch `web/landing/` deploy automatically (`.github/workflows/deploy-site.yml`).
 
-Deploy from this folder. `wrangler deploy` only UPLOADS a version here (no workers.dev or route
+To deploy by hand from this folder. `wrangler deploy` only UPLOADS a version here (no workers.dev or route
 targets in the config), so promote it with the version id it prints:
 
     npx wrangler deploy

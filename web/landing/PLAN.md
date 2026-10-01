@@ -8,12 +8,13 @@ site is nordaware.com and is separate.
    is the list, no external tool.
 2. **Card gallery. Teaser only** (Sam, 2026-09-30). The generator publishes an allowlist of
    approved cards and nothing else, because card text still changes. Player-facing names only
-   ("Pendingham", never "Emberfall"). A `cards.json` built from shipped card data and the art webps.
+   ("Pendingham", never "Emberfall"). The page shows art, name, class, rarity and text, and no cost or stats (Sam, 2026-09-30: they do not read to a newcomer without the card frame). Built by `scripts/build-gallery.py` from shipped card data and the art.
 3. **Support and FAQ.** FAQ drafted from `docs/pub-docs/` (Early Access, connection required,
    accounts, deletion). Support form on the Worker with the same Turnstile check, mailing support@.
    Link the existing delete-account page.
 4. **Stubs.** Shared nav and layout. Events, Leaderboards and How-to say "coming at launch" and are
    `noindex` until real.
-5. **Deploy on push.** GitHub Action. A deploy must also run `wrangler versions deploy <id>@100`:
-   `wrangler deploy` here uploads a version but does not activate it (no workers.dev or route
-   targets in the config).
+5. **Deploy on push. DONE 2026-09-30.** `.github/workflows/deploy-site.yml`. It also promotes the
+   version, because `wrangler deploy` here only uploads one (no workers.dev or route targets).
+
+Phases 2-4 are built (support is the support@ email link; the form is optional).

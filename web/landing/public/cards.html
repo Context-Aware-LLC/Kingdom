@@ -41,14 +41,9 @@ h1 { font-family: var(--slab); font-weight: 400; font-size: clamp(2.2rem, 7vw, 4
 .card.r-epic { border-color: rgba(171,120,235,0.5); }
 .card img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; }
 .card figcaption { padding: 16px 18px 20px; }
-.stats { display: flex; gap: 8px; margin-bottom: 10px; }
-.chip { min-width: 34px; padding: 3px 10px; border-radius: 999px; text-align: center; font: 700 0.95rem var(--sans); color: #10141a; }
-.chip.cost { background: var(--frost); }
-.chip.atk { background: var(--ember); }
-.chip.hp { background: #e0594a; color: #fff; }
 .card strong { display: block; font-family: var(--slab); font-weight: 400; font-size: 1.2rem; letter-spacing: 0.02em; }
 .card em { display: block; font-style: normal; color: var(--frost); font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; margin: 4px 0 8px; }
-.card span:not(.chip) { display: block; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+.card span { display: block; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
 .more { text-align: center; padding: 0 0 80px; color: var(--muted); }
 footer { border-top: 1px solid var(--line); padding: 32px 0 44px; color: var(--muted); font-size: 0.9rem; }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
@@ -69,7 +64,6 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
       <figure class="card r-legendary">
         <img src="/assets/cards/ember_general_kira.webp" alt="General Kira, a legendary Emberward card" width="480" height="480" loading="lazy">
         <figcaption>
-          <div class="stats"><span class="chip cost" title="Cost">6</span><span class="chip atk" title="Attack">6</span><span class="chip hp" title="Health">6</span></div>
           <strong>General Kira</strong>
           <em>Emberward &middot; Legendary</em>
           <span>Fervor. Deal 3 damage to the enemy hero and give all friendly minions +1/+1.</span>
@@ -78,7 +72,6 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
       <figure class="card r-legendary">
         <img src="/assets/cards/tide_maren_avatar.webp" alt="Maren&#x27;s Avatar, a legendary Tidecaller card" width="480" height="480" loading="lazy">
         <figcaption>
-          <div class="stats"><span class="chip cost" title="Cost">8</span><span class="chip atk" title="Attack">6</span><span class="chip hp" title="Health">8</span></div>
           <strong>Maren&#x27;s Avatar</strong>
           <em>Tidecaller &middot; Legendary</em>
           <span>Aegis, Vanguard. Attack: Drown 2 random enemies.</span>
@@ -87,7 +80,6 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
       <figure class="card r-legendary">
         <img src="/assets/cards/grave_sealed_gate_keeper.webp" alt="Sealed Gate Keeper, a legendary Gravekeep card" width="480" height="480" loading="lazy">
         <figcaption>
-          <div class="stats"><span class="chip cost" title="Cost">6</span><span class="chip atk" title="Attack">4</span><span class="chip hp" title="Health">6</span></div>
           <strong>Sealed Gate Keeper</strong>
           <em>Gravekeep &middot; Legendary</em>
           <span>Toll: Summon a 5/5 Revenant.</span>
@@ -96,7 +88,6 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
       <figure class="card r-legendary">
         <img src="/assets/cards/verdant_world_titan.webp" alt="World-Titan, a legendary Verdant card" width="480" height="480" loading="lazy">
         <figcaption>
-          <div class="stats"><span class="chip cost" title="Cost">9</span><span class="chip atk" title="Attack">10</span><span class="chip hp" title="Health">10</span></div>
           <strong>World-Titan</strong>
           <em>Verdant &middot; Legendary</em>
           <span>Bulwark, Overwhelm.</span>
@@ -105,7 +96,6 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
       <figure class="card r-legendary">
         <img src="/assets/cards/clock_the_great_mechanism.webp" alt="The Great Mechanism, a legendary Clockwright card" width="480" height="480" loading="lazy">
         <figcaption>
-          <div class="stats"><span class="chip cost" title="Cost">8</span><span class="chip atk" title="Attack">6</span><span class="chip hp" title="Health">6</span></div>
           <strong>The Great Mechanism</strong>
           <em>Clockwright &middot; Legendary</em>
           <span>Aegis, Vanguard, Overwhelm.</span>
@@ -114,7 +104,6 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
       <figure class="card r-legendary">
         <img src="/assets/cards/night_kira_blade_of_shadows.webp" alt="Kira, Blade of Shadows, a legendary Nightveil card" width="480" height="480" loading="lazy">
         <figcaption>
-          <div class="stats"><span class="chip cost" title="Cost">6</span><span class="chip atk" title="Attack">5</span><span class="chip hp" title="Health">4</span></div>
           <strong>Kira, Blade of Shadows</strong>
           <em>Nightveil &middot; Legendary</em>
           <span>Shroud, Skirmish, Vanguard. Toll: Deal 4 damage to the enemy hero.</span>
@@ -123,7 +112,6 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
       <figure class="card r-legendary">
         <img src="/assets/cards/warden_duras_the_ironmount.webp" alt="Duras, the Ironmount, a legendary Stonewarden card" width="480" height="480" loading="lazy">
         <figcaption>
-          <div class="stats"><span class="chip cost" title="Cost">8</span><span class="chip atk" title="Attack">8</span><span class="chip hp" title="Health">6</span></div>
           <strong>Duras, the Ironmount</strong>
           <em>Stonewarden &middot; Legendary</em>
           <span>Overwhelm, Skirmish.</span>
@@ -132,7 +120,6 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
       <figure class="card r-legendary">
         <img src="/assets/cards/storm_zael_of_the_struck_sky.webp" alt="Zael of the Struck Sky, a legendary Tempest card" width="480" height="480" loading="lazy">
         <figcaption>
-          <div class="stats"><span class="chip cost" title="Cost">7</span><span class="chip atk" title="Attack">6</span><span class="chip hp" title="Health">6</span></div>
           <strong>Zael of the Struck Sky</strong>
           <em>Tempest &middot; Legendary</em>
           <span>Deal 3 damage to the enemy hero.</span>
