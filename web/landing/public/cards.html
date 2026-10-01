@@ -16,45 +16,13 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
-<link rel="stylesheet" href="/assets/site-nav.css">
 <link rel="preload" href="/assets/alfa-slab-one.woff2" as="font" type="font/woff2" crossorigin>
-<style>
-@font-face { font-family: "Alfa Slab One"; src: url("/assets/alfa-slab-one.woff2") format("woff2"); font-display: swap; }
-@font-face { font-family: "Google Sans"; src: url("/assets/google-sans.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
-:root { --ink: #0b0f14; --ink-2: #121821; --parchment: #efe4cf; --muted: #a9b1bb; --ember: #f08a3c; --frost: #6fd3e6; --line: rgba(239,228,207,0.14); --slab: "Alfa Slab One", Georgia, serif; --sans: "Google Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--ink); color: var(--parchment); font: 400 1.0625rem/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-a { color: var(--ember); }
-.wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
-header.top { padding: 22px 0; border-bottom: 1px solid var(--line); }
-header.top .wrap { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-header.top a { font-family: var(--slab); color: var(--parchment); text-decoration: none; font-size: 1.15rem; }
-header.top nav a { font: 400 0.95rem var(--sans); color: var(--muted); margin-left: 18px; }
-.intro { padding: 64px 0 36px; }
-.eyebrow { font-size: 0.8rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--frost); margin: 0 0 12px; }
-h1 { font-family: var(--slab); font-weight: 400; font-size: clamp(2.2rem, 7vw, 4rem); line-height: 1; margin: 0 0 14px; }
-.intro p { color: var(--muted); max-width: 52ch; margin: 0; }
-.roster { display: grid; gap: 22px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); padding-bottom: 72px; }
-.card { margin: 0; border-radius: 14px; overflow: hidden; background: var(--ink-2); border: 1px solid var(--line); transition: transform 0.25s ease, border-color 0.25s ease; }
-.card:hover { transform: translateY(-4px); }
-.card.r-legendary { border-color: rgba(240,138,60,0.55); }
-.card.r-epic { border-color: rgba(171,120,235,0.5); }
-.card img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; }
-.card figcaption { padding: 16px 18px 20px; }
-.card strong { display: block; font-family: var(--slab); font-weight: 400; font-size: 1.2rem; letter-spacing: 0.02em; }
-.card em { display: block; font-style: normal; color: var(--frost); font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; margin: 4px 0 8px; }
-.card span { display: block; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
-.more { text-align: center; padding: 0 0 80px; color: var(--muted); }
-footer { border-top: 1px solid var(--line); padding: 32px 0 44px; color: var(--muted); font-size: 0.9rem; }
-footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
-footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
-@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
-</style>
+<link rel="stylesheet" href="/assets/site.css">
 </head>
-<body>
-<header class="top"><div class="wrap"><a class="home-seal" href="/" aria-label="Kingdom of Bad Ideas home"><img src="/assets/seal.png" alt="" width="240" height="240"></a><nav><a href="/cards">Cards</a><a href="/events">Events</a><a href="/leaderboards">Leaderboards</a><a href="/how-to">How to play</a><a href="/faq">FAQ</a></nav></div></header>
+<body class="page">
+<header class="top"><div class="wrap"><a class="home-seal" href="/" aria-label="Kingdom of Bad Ideas home"><img src="/assets/seal.png" alt="" width="240" height="240"></a><nav aria-label="Main"><a href="/cards" aria-current="page">Cards</a><a href="/events">Events</a><a href="/leaderboards">Leaderboards</a><a href="/how-to">How to play</a><a href="/faq">FAQ</a></nav></div></header>
 <main>
-  <section class="intro wrap">
+  <section class="page-head wrap">
     <p class="eyebrow">A first look</p>
     <h1>The Cards</h1>
     <p>A small sample of the collection, shown with the Royal Council's reluctant permission. The rest will be revealed when somebody finds the key to the vault.</p>
@@ -126,14 +94,9 @@ footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
         </figcaption>
       </figure>
     </div>
+    <p class="more">More cards on the way. <a href="/#prereg">Join Early Access</a> to be first through the gates.</p>
   </section>
-  <p class="more">More cards on the way. <a href="/#prereg">Join Early Access</a> to be first through the gates.</p>
 </main>
-<footer>
-  <div class="wrap">
-    <span>&copy; 2026 Context Aware. All rights reserved, and several wrongs.</span>
-    <span class="links"><a href="/privacy">Privacy</a> <a href="/terms">Terms</a> <a href="mailto:support@kingdomofbadideas.com">support@kingdomofbadideas.com</a></span>
-  </div>
-</footer>
+<footer><div class="wrap"><span>&copy; 2026 Context Aware. All rights reserved, and several wrongs.</span><span class="links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:support@kingdomofbadideas.com">support@kingdomofbadideas.com</a></span></div></footer>
 </body>
 </html>

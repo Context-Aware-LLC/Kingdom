@@ -7,8 +7,6 @@
 <meta name="description" content="A collectible card game of sound strategy in a realm of unsound decisions. Coming to iOS and Android.">
 <meta name="theme-color" content="#0b0f14">
 <link rel="canonical" href="https://kingdomofbadideas.com/">
-<!-- Ensure your CSP header or meta tag includes the Cloudflare domain -->
-<meta http-equiv="Content-Security-Policy" content="font-src 'self' challenges.cloudflare.com;">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://kingdomofbadideas.com/">
 <meta property="og:title" content="Kingdom of Bad Ideas">
@@ -19,221 +17,10 @@
 <link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
 <link rel="preload" href="/assets/alfa-slab-one.woff2" as="font" type="font/woff2" crossorigin>
-<style>
-@font-face { font-family: "Alfa Slab One"; src: url("/assets/alfa-slab-one.woff2") format("woff2"); font-display: swap; }
-@font-face { font-family: "Google Sans"; src: url("/assets/google-sans.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
-
-:root {
-  --ink: #0b0f14;
-  --ink-2: #121821;
-  --parchment: #efe4cf;
-  --muted: #a9b1bb;
-  --ember: #f08a3c;
-  --ember-deep: #c2551f;
-  --frost: #6fd3e6;
-  --line: rgba(239, 228, 207, 0.14);
-  --slab: "Alfa Slab One", Georgia, serif;
-  --sans: "Google Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body {
-  margin: 0;
-  background: var(--ink);
-  color: var(--parchment);
-  font: 400 1.0625rem/1.6 var(--sans);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
-img { max-width: 100%; display: block; }
-a { color: inherit; }
-.wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
-
-/* ---------- hero ---------- */
-.hero {
-  position: relative;
-  min-height: 100svh;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  padding: 96px 0 72px;
-  isolation: isolate;
-}
-.hero::before {
-  content: "";
-  position: absolute; inset: 0; z-index: -2;
-  background: url("/assets/castle-overlook-sm.jpg") center 35% / cover no-repeat;
-}
-@media (min-width: 900px) { .hero::before { background-image: url("/assets/castle-overlook.jpg"); } }
-.hero::after {
-  content: "";
-  position: absolute; inset: 0; z-index: -1;
-  background:
-    radial-gradient(ellipse at 50% 40%, rgba(11,15,20,0.42), rgba(11,15,20,0.78) 72%),
-    linear-gradient(to bottom, rgba(11,15,20,0.24), rgba(11,15,20,0.08) 30%, rgba(11,15,20,0.35) 72%, var(--ink));
-}
-.hero-mark {
-  width: clamp(96px, 16vw, 148px);
-  height: auto;
-  margin: 0 auto 20px;
-  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6)) drop-shadow(0 0 30px rgba(190,40,25,0.35));
-  animation: stamp 0.55s cubic-bezier(0.3, 0, 0.2, 1) 0.25s both;
-}
-@keyframes stamp {
-  0% { opacity: 0; transform: scale(1.7) rotate(-8deg); }
-  60% { opacity: 1; transform: scale(0.94) rotate(2deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0); }
-}
-.eyebrow {
-  font-size: 0.8rem;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--frost);
-  margin: 0 0 14px;
-}
-h1 {
-  font-family: var(--slab);
-  font-weight: 400;
-  font-size: clamp(2.6rem, 9vw, 6.2rem);
-  line-height: 0.95;
-  margin: 0;
-  letter-spacing: 0.01em;
-  text-shadow: 0 4px 0 #000, 0 10px 40px rgba(0,0,0,0.8);
-}
-h1 .of { display: block; font-size: 0.42em; color: var(--ember); margin: 0.18em 0 0.12em; }
-.lede {
-  max-width: 34ch;
-  margin: 26px auto 0;
-  font-size: clamp(1.1rem, 2.4vw, 1.35rem);
-  color: var(--parchment);
-  text-shadow: 0 2px 12px rgba(0,0,0,0.9);
-}
-.platforms {
-  display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
-  margin-top: 34px;
-}
-.pill {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 12px 20px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(11,15,20,0.6);
-  backdrop-filter: blur(6px);
-  font-size: 0.95rem;
-}
-.pill svg { width: 18px; height: 18px; fill: currentColor; opacity: 0.85; }
-.pill small { color: var(--muted); font-size: 0.8rem; }
-.scroll-hint {
-  position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
-  color: var(--muted); font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase;
-  text-decoration: none;
-}
-
-
-.prereg { margin: 38px auto 0; max-width: 460px; }
-.prereg .row { display: flex; gap: 10px; }
-.prereg input[type=email] { flex: 1; min-width: 0; padding: 14px 18px; border-radius: 999px; border: 1px solid var(--line); background: rgba(11,15,20,0.7); color: var(--parchment); font: inherit; backdrop-filter: blur(6px); }
-.prereg input[type=email]:focus-visible, .prereg button:focus-visible { outline: 2px solid var(--frost); outline-offset: 2px; }
-.prereg button { padding: 14px 24px; border: 0; border-radius: 999px; background: var(--ember); color: #1a0d03; font: 700 1rem var(--sans); cursor: pointer; }
-.prereg button:disabled { opacity: 0.6; cursor: default; }
-.prereg .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; text-align: left; color: var(--muted); font-size: 0.85rem; line-height: 1.45; text-shadow: 0 2px 8px rgba(0,0,0,0.9); }
-.prereg .consent input { margin-top: 3px; }
-.prereg .cf-turnstile { margin-top: 12px; display: flex; justify-content: center; }
-.prereg .msg { min-height: 1.5em; margin: 12px 0 0; font-size: 0.95rem; }
-.prereg .msg.ok { color: var(--frost); }
-.prereg .msg.err { color: #ff9b85; }
-@media (max-width: 560px) { .prereg .row { flex-direction: column; } }
-
-/* ---------- sections ---------- */
-section { padding: 96px 0; }
-h2 {
-  font-family: var(--slab);
-  font-weight: 400;
-  font-size: clamp(1.9rem, 5vw, 3rem);
-  line-height: 1.05;
-  margin: 0 0 12px;
-}
-.section-sub { color: var(--muted); max-width: 52ch; margin: 0 0 48px; }
-
-.pillars { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.pillar {
-  padding: 28px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: linear-gradient(160deg, var(--ink-2), rgba(18,24,33,0.4));
-}
-.pillar h3 { font-family: var(--slab); font-weight: 400; font-size: 1.35rem; margin: 0 0 10px; color: var(--ember); }
-.pillar p { margin: 0; color: var(--muted); }
-
-.heroes {
-  position: relative;
-  isolation: isolate;
-}
-.heroes::before {
-  content: ""; position: absolute; inset: 0; z-index: -1;
-  background:
-    linear-gradient(var(--ink), rgba(11,15,20,0.82) 18%, rgba(11,15,20,0.82) 82%, var(--ink)),
-    url("/assets/hall.webp") center / cover no-repeat;
-}
-.roster { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
-.card {
-  margin: 0;
-  border-radius: 14px;
-  overflow: hidden;
-  background: var(--ink-2);
-  border: 1px solid var(--line);
-  transition: transform 0.25s ease, border-color 0.25s ease;
-}
-.card:hover { transform: translateY(-4px); border-color: rgba(240,138,60,0.5); }
-.card img { aspect-ratio: 1; width: 100%; height: auto; object-fit: cover; }
-.card figcaption { padding: 16px 18px 20px; }
-.card strong { display: block; font-family: var(--slab); font-weight: 400; font-size: 1.15rem; letter-spacing: 0.02em; }
-.card span { display: block; color: var(--muted); font-size: 0.95rem; margin-top: 6px; line-height: 1.5; }
-
-.decree { text-align: center; }
-.scroll {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 44px 32px;
-  color: #2a1d10;
-  background:
-    radial-gradient(ellipse at center, #f3e7cc 55%, #d9c296 100%);
-  border-radius: 6px;
-  box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 0 60px rgba(120,80,30,0.35);
-}
-.scroll .eyebrow { color: #8a3b12; }
-.scroll h2 { color: #2a1d10; font-size: clamp(1.6rem, 4.5vw, 2.4rem); }
-.scroll p { margin: 14px auto 0; max-width: 44ch; }
-.seal {
-  width: 64px; height: 64px; margin: 28px auto 0;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #d8603a, #8e1f12 70%);
-  box-shadow: 0 3px 0 #5e140b, inset 0 0 10px rgba(0,0,0,0.4);
-  display: grid; place-items: center;
-  font-family: var(--slab); color: #f3d3b8; font-size: 1.3rem;
-}
-
-footer {
-  border-top: 1px solid var(--line);
-  padding: 32px 0 44px;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
-footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-mark { animation: none; }
-  .card { transition: none; }
-  html { scroll-behavior: auto; }
-}
-@media (max-width: 560px) {
-  section { padding: 72px 0; }
-  .scroll { padding: 36px 22px; }
-}
-</style>
+<link rel="stylesheet" href="/assets/site.css">
 </head>
-<body>
+<body class="home">
+<header class="top top-over"><div class="wrap"><nav aria-label="Main"><a href="/cards">Cards</a><a href="/events">Events</a><a href="/leaderboards">Leaderboards</a><a href="/how-to">How to play</a><a href="/faq">FAQ</a></nav></div></header>
 
 <header class="hero">
   <div class="wrap">
@@ -315,12 +102,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: 
   </section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <span>&copy; 2026 Context Aware. All rights reserved, and several wrongs.</span>
-    <span class="links"><a href="/cards">Cards</a> <a href="/events">Events</a> <a href="/leaderboards">Leaderboards</a> <a href="/how-to">How to play</a> <a href="/faq">FAQ</a> <a href="/privacy">Privacy</a> <a href="/terms">Terms</a> <a href="mailto:support@kingdomofbadideas.com">support@kingdomofbadideas.com</a></span>
-  </div>
-</footer>
+<footer><div class="wrap"><span>&copy; 2026 Context Aware. All rights reserved, and several wrongs.</span><span class="links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:support@kingdomofbadideas.com">support@kingdomofbadideas.com</a></span></div></footer>
 
 <script src="/assets/prereg.js" defer></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
