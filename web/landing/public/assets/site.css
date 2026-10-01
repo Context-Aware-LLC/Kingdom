@@ -145,8 +145,8 @@ details .a p:last-child { margin: 0; }
 /* ---------- home page ---------- */
 .home h1 { text-shadow: 0 4px 0 #000, 0 10px 40px rgba(0,0,0,0.8); }
 .hero { position: relative; min-height: 100svh; display: grid; place-items: center; text-align: center; padding: var(--s-7) 0 72px; isolation: isolate; }
-.hero::before { content: ""; position: absolute; inset: 0; z-index: -2; background: url("/assets/castle-overlook-sm.jpg") center 35% / cover no-repeat; }
-@media (min-width: 900px) { .hero::before { background-image: url("/assets/castle-overlook.jpg"); } }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -2; background: url("/assets/castle-overlook-sm.webp") center 35% / cover no-repeat; }
+@media (min-width: 900px) { .hero::before { background-image: url("/assets/castle-overlook.webp"); } }
 .hero::after {
   content: ""; position: absolute; inset: 0; z-index: -1;
   background:
