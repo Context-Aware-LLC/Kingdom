@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cards · Kingdom of Bad Ideas</title>
+<meta name="description" content="A first look at the cards of Kingdom of Bad Ideas. A teaser of the collection, approved by committee.">
+<meta name="theme-color" content="#0b0f14">
+<link rel="canonical" href="https://kingdomofbadideas.com/cards">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://kingdomofbadideas.com/cards">
+<meta property="og:title" content="The Cards · Kingdom of Bad Ideas">
+<meta property="og:description" content="A first look at the cards of Kingdom of Bad Ideas.">
+<meta property="og:image" content="https://kingdomofbadideas.com/assets/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+<link rel="preload" href="/assets/alfa-slab-one.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Alfa Slab One"; src: url("/assets/alfa-slab-one.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Google Sans"; src: url("/assets/google-sans.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+:root { --ink: #0b0f14; --ink-2: #121821; --parchment: #efe4cf; --muted: #a9b1bb; --ember: #f08a3c; --frost: #6fd3e6; --line: rgba(239,228,207,0.14); --slab: "Alfa Slab One", Georgia, serif; --sans: "Google Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ink); color: var(--parchment); font: 400 1.0625rem/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: var(--ember); }
+.wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+header.top { padding: 22px 0; border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+header.top a { font-family: var(--slab); color: var(--parchment); text-decoration: none; font-size: 1.15rem; }
+header.top nav a { font: 400 0.95rem var(--sans); color: var(--muted); margin-left: 18px; }
+.intro { padding: 64px 0 36px; }
+.eyebrow { font-size: 0.8rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--frost); margin: 0 0 12px; }
+h1 { font-family: var(--slab); font-weight: 400; font-size: clamp(2.2rem, 7vw, 4rem); line-height: 1; margin: 0 0 14px; }
+.intro p { color: var(--muted); max-width: 52ch; margin: 0; }
+.roster { display: grid; gap: 22px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); padding-bottom: 72px; }
+.card { margin: 0; border-radius: 14px; overflow: hidden; background: var(--ink-2); border: 1px solid var(--line); transition: transform 0.25s ease, border-color 0.25s ease; }
+.card:hover { transform: translateY(-4px); }
+.card.r-legendary { border-color: rgba(240,138,60,0.55); }
+.card.r-epic { border-color: rgba(171,120,235,0.5); }
+.card img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; }
+.card figcaption { padding: 16px 18px 20px; }
+.stats { display: flex; gap: 8px; margin-bottom: 10px; }
+.chip { min-width: 34px; padding: 3px 10px; border-radius: 999px; text-align: center; font: 700 0.95rem var(--sans); color: #10141a; }
+.chip.cost { background: var(--frost); }
+.chip.atk { background: var(--ember); }
+.chip.hp { background: #e0594a; color: #fff; }
+.card strong { display: block; font-family: var(--slab); font-weight: 400; font-size: 1.2rem; letter-spacing: 0.02em; }
+.card em { display: block; font-style: normal; color: var(--frost); font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; margin: 4px 0 8px; }
+.card span:not(.chip) { display: block; color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+.more { text-align: center; padding: 0 0 80px; color: var(--muted); }
+footer { border-top: 1px solid var(--line); padding: 32px 0 44px; color: var(--muted); font-size: 0.9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
+footer .links { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><a href="/">Kingdom of Bad Ideas</a><nav><a href="/">Home</a></nav></div></header>
+<main>
+  <section class="intro wrap">
+    <p class="eyebrow">A first look</p>
+    <h1>The Cards</h1>
+    <p>A small sample of the collection, shown with the Royal Council's reluctant permission. The rest will be revealed when somebody finds the key to the vault.</p>
+  </section>
+  <section class="wrap">
+    <div class="roster">
+      <figure class="card r-legendary">
+        <img src="/assets/cards/ember_general_kira.webp" alt="General Kira, a legendary Emberward card" width="480" height="480" loading="lazy">
+        <figcaption>
+          <div class="stats"><span class="chip cost" title="Cost">6</span><span class="chip atk" title="Attack">6</span><span class="chip hp" title="Health">6</span></div>
+          <strong>General Kira</strong>
+          <em>Emberward &middot; Legendary</em>
+          <span>Fervor. Deal 3 damage to the enemy hero and give all friendly minions +1/+1.</span>
+        </figcaption>
+      </figure>
+      <figure class="card r-legendary">
+        <img src="/assets/cards/tide_maren_avatar.webp" alt="Maren&#x27;s Avatar, a legendary Tidecaller card" width="480" height="480" loading="lazy">
+        <figcaption>
+          <div class="stats"><span class="chip cost" title="Cost">8</span><span class="chip atk" title="Attack">6</span><span class="chip hp" title="Health">8</span></div>
+          <strong>Maren&#x27;s Avatar</strong>
+          <em>Tidecaller &middot; Legendary</em>
+          <span>Aegis, Vanguard. Attack: Drown 2 random enemies.</span>
+        </figcaption>
+      </figure>
+      <figure class="card r-legendary">
+        <img src="/assets/cards/grave_sealed_gate_keeper.webp" alt="Sealed Gate Keeper, a legendary Gravekeep card" width="480" height="480" loading="lazy">
+        <figcaption>
+          <div class="stats"><span class="chip cost" title="Cost">6</span><span class="chip atk" title="Attack">4</span><span class="chip hp" title="Health">6</span></div>
+          <strong>Sealed Gate Keeper</strong>
+          <em>Gravekeep &middot; Legendary</em>
+          <span>Toll: Summon a 5/5 Revenant.</span>
+        </figcaption>
+      </figure>
+      <figure class="card r-legendary">
+        <img src="/assets/cards/verdant_world_titan.webp" alt="World-Titan, a legendary Verdant card" width="480" height="480" loading="lazy">
+        <figcaption>
+          <div class="stats"><span class="chip cost" title="Cost">9</span><span class="chip atk" title="Attack">10</span><span class="chip hp" title="Health">10</span></div>
+          <strong>World-Titan</strong>
+          <em>Verdant &middot; Legendary</em>
+          <span>Bulwark, Overwhelm.</span>
+        </figcaption>
+      </figure>
+      <figure class="card r-legendary">
+        <img src="/assets/cards/clock_the_great_mechanism.webp" alt="The Great Mechanism, a legendary Clockwright card" width="480" height="480" loading="lazy">
+        <figcaption>
+          <div class="stats"><span class="chip cost" title="Cost">8</span><span class="chip atk" title="Attack">6</span><span class="chip hp" title="Health">6</span></div>
+          <strong>The Great Mechanism</strong>
+          <em>Clockwright &middot; Legendary</em>
+          <span>Aegis, Vanguard, Overwhelm.</span>
+        </figcaption>
+      </figure>
+      <figure class="card r-legendary">
+        <img src="/assets/cards/night_kira_blade_of_shadows.webp" alt="Kira, Blade of Shadows, a legendary Nightveil card" width="480" height="480" loading="lazy">
+        <figcaption>
+          <div class="stats"><span class="chip cost" title="Cost">6</span><span class="chip atk" title="Attack">5</span><span class="chip hp" title="Health">4</span></div>
+          <strong>Kira, Blade of Shadows</strong>
+          <em>Nightveil &middot; Legendary</em>
+          <span>Shroud, Skirmish, Vanguard. Toll: Deal 4 damage to the enemy hero.</span>
+        </figcaption>
+      </figure>
+      <figure class="card r-legendary">
+        <img src="/assets/cards/warden_duras_the_ironmount.webp" alt="Duras, the Ironmount, a legendary Stonewarden card" width="480" height="480" loading="lazy">
+        <figcaption>
+          <div class="stats"><span class="chip cost" title="Cost">8</span><span class="chip atk" title="Attack">8</span><span class="chip hp" title="Health">6</span></div>
+          <strong>Duras, the Ironmount</strong>
+          <em>Stonewarden &middot; Legendary</em>
+          <span>Overwhelm, Skirmish.</span>
+        </figcaption>
+      </figure>
+      <figure class="card r-legendary">
+        <img src="/assets/cards/storm_zael_of_the_struck_sky.webp" alt="Zael of the Struck Sky, a legendary Tempest card" width="480" height="480" loading="lazy">
+        <figcaption>
+          <div class="stats"><span class="chip cost" title="Cost">7</span><span class="chip atk" title="Attack">6</span><span class="chip hp" title="Health">6</span></div>
+          <strong>Zael of the Struck Sky</strong>
+          <em>Tempest &middot; Legendary</em>
+          <span>Deal 3 damage to the enemy hero.</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+  <p class="more">More cards on the way. <a href="/#prereg">Join Early Access</a> to be first through the gates.</p>
+</main>
+<footer>
+  <div class="wrap">
+    <span>&copy; 2026 Context Aware. All rights reserved, and several wrongs.</span>
+    <span class="links"><a href="/privacy">Privacy</a> <a href="/terms">Terms</a> <a href="mailto:support@kingdomofbadideas.com">support@kingdomofbadideas.com</a></span>
+  </div>
+</footer>
+</body>
+</html>
