@@ -202,3 +202,8 @@ unity/Assets/Resources/build-stamp.txt
 unity/Assets/Resources/build-stamp.txt.meta
 
 .gbrain-owner.json
+# Play upload signing material. Never commit a keystore; the public certificate rides along.
+*.keystore
+!/unity/keystore/debug.keystore
+*.jks
+/kobi-upload-certificate.pem
