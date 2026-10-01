@@ -19,7 +19,7 @@ Double opt-in. `POST /api/preregister` checks Turnstile, stores the address unco
 `GET /api/unsubscribe?t=` opts out. The form answers identically for new, pending and
 already-confirmed addresses.
 
-Secrets on the Worker: `TURNSTILE_SECRET` (set), `RESEND_API_KEY` (**not set**: until it is,
+Secrets on the Worker: `TURNSTILE_SECRET` (set), `RESEND_API_KEY` (set; without it
 sign-ups are stored but no confirmation email goes out). `MAIL_FROM` in `wrangler.jsonc` must be
 an address on a domain verified in Resend.
 
