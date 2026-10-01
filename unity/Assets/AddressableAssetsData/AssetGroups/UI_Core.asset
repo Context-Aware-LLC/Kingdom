@@ -20,6 +20,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0806a3c244fb5124498abf38fc803019
+    m_Address: ui/effect_shroud_smoke_right
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c0614db2a386df4a8a96cda99d2543a
+    m_Address: ui/effect_shroud_smoke_lower
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d3356f761934b2bb6e98390ca1a209f
+    m_Address: ui/ui_stamp_tool
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0f233e8d0e7206d4a81b4965fd1e24a6
     m_Address: ui/app_icon_adaptive_bg
     m_ReadOnly: 0
@@ -55,33 +70,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 59d95ebe303f8b947976c4ec334624f0
-    m_Address: ui/effect_shroud_smoke_left
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0806a3c244fb5124498abf38fc803019
-    m_Address: ui/effect_shroud_smoke_right
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0c0614db2a386df4a8a96cda99d2543a
-    m_Address: ui/effect_shroud_smoke_lower
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b1388c0dd4c443a2865d24223c3798ca
-    m_Address: ui/effect_frost_crystals_left
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e3d0ab896b5040a1b08f4650fb842413
-    m_Address: ui/effect_frost_crystals_right
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f6a417c05c2e4e6bad388519b296ea0a
-    m_Address: ui/effect_frost_crystals_lower
+  - m_GUID: 288a436c492d45f1b7e575702530ee2e
+    m_Address: ui/ui_seal_crown
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -112,6 +102,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 522629fbea2807c40b3067938b8aea99
     m_Address: ui/clock_hp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59d95ebe303f8b947976c4ec334624f0
+    m_Address: ui/effect_shroud_smoke_left
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -215,33 +210,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 91c4e6f72a1b43deb490ef0c6e2d5a13
-    m_Address: ui/ui_button_primary_ember
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 288a436c492d45f1b7e575702530ee2e
-    m_Address: ui/ui_seal_crown
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8b9c792d2971468c9506526237449386
     m_Address: ui/deck-stack-player-royal-council
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e73678a62d6c4307b466ba7b80e2c135
-    m_Address: ui/deck-stack-enemy-royal-council
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a2f7fde1a48d4f458f59e740e6e32d43
-    m_Address: ui/turn-hourglass-royal-council
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0d3356f761934b2bb6e98390ca1a209f
-    m_Address: ui/ui_stamp_tool
+  - m_GUID: 91c4e6f72a1b43deb490ef0c6e2d5a13
+    m_Address: ui/ui_button_primary_ember
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -255,8 +230,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2f7fde1a48d4f458f59e740e6e32d43
+    m_Address: ui/turn-hourglass-royal-council
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ab4e54501ebe4781ba0b3d37290aa542
     m_Address: materials/M_Frost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1388c0dd4c443a2865d24223c3798ca
+    m_Address: ui/effect_frost_crystals_left
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -320,6 +305,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3d0ab896b5040a1b08f4650fb842413
+    m_Address: ui/effect_frost_crystals_right
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e73678a62d6c4307b466ba7b80e2c135
+    m_Address: ui/deck-stack-enemy-royal-council
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f020d42c36da4dc6a874ccdeec3c4e35
     m_Address: ui/craft-shard-cyan-v1
     m_ReadOnly: 0
@@ -332,6 +327,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6444f22790c48b2ae717e6eb2aa444d
     m_Address: ui/ui_scroll_fade
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f6a417c05c2e4e6bad388519b296ea0a
+    m_Address: ui/effect_frost_crystals_lower
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

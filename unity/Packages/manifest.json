@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.deemos.rodinbridge": "file:C:/Users/User/Downloads/unity_rodin_bridge_v0.2.0",
     "com.emberfall.core": "file:../../src/Emberfall.Core",
     "com.emberfall.core.cards": "file:../../src/Emberfall.Core.Cards",
     "com.emberfall.core.collection": "file:../../src/Emberfall.Core.Collection",
@@ -17,13 +16,13 @@
     "com.unity.memoryprofiler": "1.1.12",
     "com.unity.mobile.android-logcat": "1.4.7",
     "com.unity.nuget.newtonsoft-json": "3.2.2",
+    "com.unity.pipeline": "0.8.0-exp.1",
     "com.unity.purchasing": "5.4.3",
     "com.unity.render-pipelines.universal": "17.5.0",
     "com.unity.services.cloud-build": "2.0.8",
     "com.unity.ugui": "2.5.0",
     "com.unity.modules.particlesystem": "1.0.0",
-    "com.unity.modules.video": "1.0.0",
-    "com.unity.pipeline": "0.8.0-exp.1"
+    "com.unity.modules.video": "1.0.0"
   },
   "testables": [
     "com.besty.unity-skills"

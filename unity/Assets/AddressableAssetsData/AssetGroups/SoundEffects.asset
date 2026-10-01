@@ -45,11 +45,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7783e385e3fa5cf47909f7e1012087fc
-    m_Address: sfx/Wax_stamp
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3e9713e720e1cb142b38a1326ac4f8d1
     m_Address: sfx/drake_summon_2
     m_ReadOnly: 0
@@ -87,6 +82,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 76264727b727f3f40a14e22d466bfb75
     m_Address: sfx/tide_summon_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7783e385e3fa5cf47909f7e1012087fc
+    m_Address: sfx/Wax_stamp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

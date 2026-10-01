@@ -50,6 +50,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d1323c8e57b4eef8b8c12df2f36c43b
+    m_Address: backgrounds/BoardPlate_ObsidianFortress_2026-09-30
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ae3f473153bbea1479ecae4a5d7aa266
     m_Address: backgrounds/BoardPlate_Master
     m_ReadOnly: 0
