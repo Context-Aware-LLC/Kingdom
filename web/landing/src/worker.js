@@ -30,6 +30,37 @@ async function turnstileOk(env, response, ip) {
   return r.ok && (await r.json()).success === true;
 }
 
+// Table layout and inline styles only: email clients ignore stylesheets and web fonts.
+function invitationHtml(origin, confirmUrl, unsubUrl) {
+  const serif = "Georgia,'Times New Roman',serif";
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"></head>
+<body style="margin:0;padding:0;background:#0b0f14;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b0f14;"><tr><td align="center" style="padding:32px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#f3e7cc;border:1px solid #c9ad76;border-radius:6px;">
+    <tr><td align="center" style="padding:40px 36px 8px;font-family:${serif};color:#2a1d10;">
+      <div style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#8a3b12;">By order of the Crown</div>
+      <h1 style="margin:18px 0 0;font-size:30px;line-height:1.15;font-weight:bold;color:#2a1d10;">You are cordially invited</h1>
+    </td></tr>
+    <tr><td align="center" style="padding:20px 40px 8px;font-family:${serif};font-size:17px;line-height:1.65;color:#2a1d10;">
+      His Royal Highness and Her Majesty the Queen cordially invite you to take your place among the first citizens of the Kingdom of Bad Ideas, when Early Access opens its gates.
+    </td></tr>
+    <tr><td align="center" style="padding:20px 40px 4px;font-family:${serif};font-size:15px;line-height:1.6;color:#5b4630;">
+      To accept, kindly affix your seal below. It is the only formality, which is remarkable for this kingdom.
+    </td></tr>
+    <tr><td align="center" style="padding:24px 40px 8px;">
+      <a href="${confirmUrl}" style="display:inline-block;padding:14px 30px;background:#8e1f12;color:#f3e7cc;font-family:${serif};font-size:17px;font-weight:bold;text-decoration:none;border-radius:4px;">Accept the Invitation</a>
+    </td></tr>
+    <tr><td align="center" style="padding:24px 0 4px;"><img src="${origin}/assets/seal.png" width="96" height="96" alt="The royal wax seal" style="display:block;border:0;"></td></tr>
+    <tr><td align="center" style="padding:8px 40px 36px;font-family:${serif};font-size:13px;line-height:1.6;color:#7a6548;">
+      Should you have received this in error, kindly disregard it. The Crown will trouble you no further.<br>
+      <a href="${unsubUrl}" style="color:#7a6548;">Withdraw from the register</a>
+    </td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
+}
+
 async function sendConfirmation(env, origin, email, confirmToken, unsubToken) {
   if (!env.RESEND_API_KEY) {
     console.warn("RESEND_API_KEY not set: confirmation email not sent");
@@ -43,12 +74,14 @@ async function sendConfirmation(env, origin, email, confirmToken, unsubToken) {
     body: JSON.stringify({
       from: env.MAIL_FROM,
       to: [email],
-      subject: "Confirm your place in the Kingdom of Bad Ideas",
+      subject: "You are cordially invited to the Kingdom of Bad Ideas",
+      html: invitationHtml(origin, confirmUrl, unsubUrl),
       text:
-        "Someone (hopefully you) asked to hear about Early Access for Kingdom of Bad Ideas.\n\n" +
-        `Confirm here: ${confirmUrl}\n\n` +
-        "If that wasn't you, ignore this email and we will never write again.\n\n" +
-        `Unsubscribe any time: ${unsubUrl}\n`,
+        "BY ORDER OF THE CROWN\n\n" +
+        "His Royal Highness and Her Majesty the Queen cordially invite you to take your place among the first citizens of the Kingdom of Bad Ideas, when Early Access opens its gates.\n\n" +
+        `To accept, affix your seal here: ${confirmUrl}\n\n` +
+        "Should you have received this in error, kindly disregard it. The Crown will trouble you no further.\n\n" +
+        `Withdraw from the register at any time: ${unsubUrl}\n`,
       headers: { "List-Unsubscribe": `<${unsubUrl}>` },
     }),
   });
