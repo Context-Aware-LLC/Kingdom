@@ -82,6 +82,33 @@ if (-not (Test-Path $UnityPath)) {
     exit 1
 }
 
+if ($PlayRelease) {
+    # Check the password against the keystore NOW. Gradle only opens the keystore in
+    # :launcher:signReleaseBundle, the last task of the build, so a mistyped password otherwise
+    # costs the whole IL2CPP + R8 run before it is reported. This proves the STORE password and
+    # that the alias exists; keytool -list never opens the key, so a key password that differs
+    # from the store's still fails at signing.
+    $keytool = [System.IO.Path]::Combine((Split-Path -Parent $UnityPath), 'Data', 'PlaybackEngines',
+        'AndroidPlayer', 'OpenJDK', 'bin', $(if ($IsWindows) { 'keytool.exe' } else { 'keytool' }))
+    if (Test-Path -LiteralPath $keytool) {
+        $env:EMBERFALL_KEYTOOL_PASS = $uploadPass
+        try {
+            $keytoolOut = & $keytool -list -keystore $Keystore -alias $KeyAlias `
+                -storepass:env EMBERFALL_KEYTOOL_PASS 2>&1
+            $keytoolExit = $LASTEXITCODE
+        } finally {
+            Remove-Item Env:EMBERFALL_KEYTOOL_PASS -ErrorAction SilentlyContinue
+        }
+        if ($keytoolExit -ne 0) {
+            Write-Error "Upload keystore rejected the password or alias '$KeyAlias': $keytoolOut"
+            exit 1
+        }
+        Write-Host "build-android: keystore password accepted for alias '$KeyAlias'"
+    } else {
+        Write-Host "build-android: WARNING - keytool not found at '$keytool'; password not pre-checked."
+    }
+}
+
 if (-not (Test-Path $PROJECT)) {
     Write-Error "Unity project not found at '$PROJECT'."
     exit 1
