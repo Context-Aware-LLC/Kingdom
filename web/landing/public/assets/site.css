@@ -116,6 +116,59 @@ body.status h1 { font-size: clamp(2rem, 7vw, 3.4rem); margin: 0 0 12px; }
 body.status p { color: var(--muted); max-width: 40ch; margin: 0 auto var(--s-3); }
 
 /* ---------- FAQ ---------- */
+body.faq-page {
+  position: relative;
+  isolation: isolate;
+  background: var(--ink);
+}
+body.faq-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image:
+    linear-gradient(90deg, rgba(7, 10, 14, 0.96) 0%, rgba(7, 10, 14, 0.9) 58%, rgba(7, 10, 14, 0.34) 72%, rgba(7, 10, 14, 0.1) 100%),
+    url("/assets/faq-classroom-sm.webp");
+  background-position: center, center top;
+  background-size: cover, cover;
+  background-repeat: no-repeat;
+}
+.faq-page header.top,
+.faq-page footer {
+  background: rgba(7, 10, 14, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.faq-page .page-head h1,
+.faq-page .page-head p,
+.faq-page .eyebrow {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+}
+.faq-page details,
+.faq-page .contact {
+  background: rgba(12, 17, 24, 0.88);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+@media (min-width: 900px) {
+  body.faq-page::before {
+    background-image:
+      linear-gradient(90deg, rgba(7, 10, 14, 0.96) 0%, rgba(7, 10, 14, 0.9) 58%, rgba(7, 10, 14, 0.34) 72%, rgba(7, 10, 14, 0.1) 100%),
+      url("/assets/faq-classroom.webp");
+  }
+}
+
+@media (max-width: 700px) {
+  body.faq-page::before {
+    background-image:
+      linear-gradient(rgba(7, 10, 14, 0.84), rgba(7, 10, 14, 0.94)),
+      url("/assets/faq-classroom-sm.webp");
+    background-position: center, 72% top;
+  }
+}
+
 details { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--ink-2); margin: 0 0 10px; }
 summary { cursor: pointer; padding: var(--s-2) 20px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: var(--s-2); }
 summary::-webkit-details-marker { display: none; }
