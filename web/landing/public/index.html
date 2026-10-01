@@ -123,6 +123,21 @@ h1 .of { display: block; font-size: 0.42em; color: var(--ember); margin: 0.18em 
   text-decoration: none;
 }
 
+
+.prereg { margin: 38px auto 0; max-width: 460px; }
+.prereg .row { display: flex; gap: 10px; }
+.prereg input[type=email] { flex: 1; min-width: 0; padding: 14px 18px; border-radius: 999px; border: 1px solid var(--line); background: rgba(11,15,20,0.7); color: var(--parchment); font: inherit; backdrop-filter: blur(6px); }
+.prereg input[type=email]:focus-visible, .prereg button:focus-visible { outline: 2px solid var(--frost); outline-offset: 2px; }
+.prereg button { padding: 14px 24px; border: 0; border-radius: 999px; background: var(--ember); color: #1a0d03; font: 700 1rem var(--sans); cursor: pointer; }
+.prereg button:disabled { opacity: 0.6; cursor: default; }
+.prereg .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; text-align: left; color: var(--muted); font-size: 0.85rem; line-height: 1.45; text-shadow: 0 2px 8px rgba(0,0,0,0.9); }
+.prereg .consent input { margin-top: 3px; }
+.prereg .cf-turnstile { margin-top: 12px; display: flex; justify-content: center; }
+.prereg .msg { min-height: 1.5em; margin: 12px 0 0; font-size: 0.95rem; }
+.prereg .msg.ok { color: var(--frost); }
+.prereg .msg.err { color: #ff9b85; }
+@media (max-width: 560px) { .prereg .row { flex-direction: column; } }
+
 /* ---------- sections ---------- */
 section { padding: 96px 0; }
 h2 {
@@ -217,7 +232,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: 
 <header class="hero">
   <div class="wrap">
     <img class="orb" src="/assets/orb.webp" alt="" width="148" height="148">
-    <p class="eyebrow">A collectible card game</p>
+    <p class="eyebrow">A collectible card game &middot; Early Access coming soon</p>
     <h1>Kingdom <span class="of">of</span> Bad Ideas</h1>
     <p class="lede">Sound strategy in a realm of unsound decisions. Every law here was approved by committee. Yours may be the first good idea in centuries.</p>
     <div class="platforms">
@@ -230,6 +245,15 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: 
         Android <small>coming soon</small>
       </span>
     </div>
+    <form class="prereg" id="prereg" action="/api/preregister" method="post" novalidate>
+      <div class="row">
+        <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required aria-label="Email address">
+        <button type="submit">Join Early Access</button>
+      </div>
+      <label class="consent"><input type="checkbox" name="consent" required> <span>Email me about Early Access and launch news for Kingdom of Bad Ideas. Unsubscribe any time. See the <a href="/privacy">Privacy Policy</a>.</span></label>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAFKxCKOcsj7h30H9" data-theme="dark"></div>
+      <p class="msg" id="prereg-msg" role="status" aria-live="polite"></p>
+    </form>
   </div>
   <a class="scroll-hint" href="#about">Proceed, unwisely</a>
 </header>
@@ -292,5 +316,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: 
   </div>
 </footer>
 
+<script src="/assets/prereg.js" defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </body>
 </html>

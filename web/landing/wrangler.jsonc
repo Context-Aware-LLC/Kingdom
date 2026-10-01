@@ -1,11 +1,20 @@
 {
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "kingdomofbadideas",
+  "main": "src/worker.js",
   "compatibility_date": "2026-09-28",
   "assets": {
     "directory": "./public",
-    "not_found_handling": "404-page"
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // Only /api/* reaches the script; every other request is served from assets directly.
+    "run_worker_first": ["/api/*"]
   },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "kobi-site", "database_id": "d9d0ed21-5218-448c-9b8c-2722f7fbe7ae", "migrations_dir": "migrations" }
+  ],
+  // Secrets (not here): TURNSTILE_SECRET, RESEND_API_KEY. `wrangler deploy` keeps them.
+  "vars": { "MAIL_FROM": "Kingdom of Bad Ideas <hello@kingdomofbadideas.com>" },
   // Custom domains (apex + www) are attached in the dashboard/API, not here: the local
   // CLOUDFLARE_API_TOKEN lacks the zone Workers Routes permission, so listing them makes
   // `wrangler deploy` fail after the upload. Attached domains survive deploys.
