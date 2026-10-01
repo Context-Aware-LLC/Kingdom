@@ -5,7 +5,7 @@
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 297,
-  "corpusDigest": "c1ba5ddfe32ac18b",
+  "corpusDigest": "835ff928b9513b76",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -3852,7 +3852,7 @@
     },
     {
       "id": 1089,
-      "name": " Zael of the Struck Sky",
+      "name": "Zael of the Struck Sky",
       "type": "MINION",
       "cost": 7,
       "attack": 6,
