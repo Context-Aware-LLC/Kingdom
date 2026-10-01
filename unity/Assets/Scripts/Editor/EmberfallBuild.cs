@@ -188,6 +188,18 @@ namespace Emberfall.Editor
                     ScriptingImplementation.IL2CPP);
                 PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
+                // R8 and Thin LTO are forced for the same reason. The Android build profile
+                // carries both, but a headless run in a fresh Library/ has no active profile and
+                // falls back to the global settings, where Release minify is off — and with it
+                // AndroidReleaseResourceShrinking, which is a no-op unless minify is on.
+                PlayerSettings.Android.minifyRelease = true;
+#if UNITY_ANDROID
+                // The Android editor assemblies are only referenced while Android is the active
+                // target, which this entry point already requires.
+                UnityEditor.Android.UserBuildSettings.linkTimeOptimization =
+                    Unity.Android.Types.AndroidLinkTimeOptimization.Thin;
+#endif
+
                 // This local APK path uses Unity's default debug signing. Do not silently persist
                 // a custom signing configuration into ProjectSettings whenever this menu runs.
                 PlayerSettings.Android.useCustomKeystore = false;
