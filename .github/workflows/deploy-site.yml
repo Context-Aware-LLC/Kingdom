@@ -1,0 +1,53 @@
+name: Deploy kingdomofbadideas.com
+
+# Publishes web/landing to the `kingdomofbadideas` Cloudflare Worker whenever the site changes on
+# master. `wrangler deploy` here only UPLOADS a version (the config has no workers.dev or route
+# targets), so the second step promotes it; skipping that step ships nothing.
+#
+# Needs the repo secret CLOUDFLARE_API_TOKEN: a token scoped to the Workers Scripts edit
+# permission on the one account, nothing else. The built pages are committed, so this job never
+# touches Unity or the card data (see web/landing/scripts/build-gallery.py to regenerate them).
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "web/landing/**"
+      - ".github/workflows/deploy-site.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-site
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 06b429870ba0d3cfe205728dd2d99ece
+    defaults:
+      run:
+        working-directory: web/landing
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Upload version
+        run: |
+          npx --yes wrangler@4 deploy | tee deploy.log
+          ID=$(grep -oE 'Version ID: [0-9a-f-]+' deploy.log | awk '{print $3}')
+          test -n "$ID" || { echo "no version id in wrangler output"; exit 1; }
+          echo "VERSION_ID=$ID" >> "$GITHUB_ENV"
+
+      - name: Promote to 100%
+        run: npx --yes wrangler@4 versions deploy "$VERSION_ID@100" -y
+
+      - name: Check the live site
+        run: |
+          sleep 20
+          curl -fsS https://kingdomofbadideas.com/faq -o /dev/null
+          curl -fsS https://kingdomofbadideas.com/ | grep -q 'id="prereg"'
