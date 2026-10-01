@@ -74,15 +74,10 @@ a { color: inherit; }
   width: clamp(96px, 16vw, 148px);
   height: auto;
   margin: 0 auto 20px;
-  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.6)) drop-shadow(0 0 30px rgba(190,40,25,0.35));
-  animation: stamp 0.55s cubic-bezier(0.3, 0, 0.2, 1) 0.25s both;
+  filter: drop-shadow(0 0 28px rgba(240,138,60,0.35)) drop-shadow(0 0 40px rgba(111,211,230,0.25));
+  animation: bob 7s ease-in-out infinite;
 }
-/* The seal drops from above, lands hard, and settles. */
-@keyframes stamp {
-  0% { opacity: 0; transform: scale(1.7) rotate(-8deg); }
-  60% { opacity: 1; transform: scale(0.94) rotate(2deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0); }
-}
+@keyframes bob { 50% { transform: translateY(-8px) rotate(4deg); } }
 .eyebrow {
   font-size: 0.8rem;
   letter-spacing: 0.24em;
@@ -236,7 +231,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: 
 
 <header class="hero">
   <div class="wrap">
-    <img class="orb" src="/assets/seal.webp" alt="The royal wax seal" width="148" height="148">
+    <img class="orb" src="/assets/orb.webp" alt="" width="148" height="148">
     <p class="eyebrow">A collectible card game &middot; Early Access coming soon</p>
     <h1>Kingdom <span class="of">of</span> Bad Ideas</h1>
     <p class="lede">Sound strategy in a realm of unsound decisions. Every law here was approved by committee. Yours may be the first good idea in centuries.</p>
