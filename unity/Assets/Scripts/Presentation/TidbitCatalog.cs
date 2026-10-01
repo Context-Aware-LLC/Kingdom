@@ -75,8 +75,8 @@ namespace Emberfall.Presentation
                 "characters",
                 TidbitTrigger.CharacterCreateArrival,
                 "Two classes, one character",
-                "Your character is two classes joined. It decides which cards you can bring — " +
-                "and you can keep more than one.",
+                "Your character is two classes joined. Your first choice determines your hero power the second just adds to the card pool you can build from.  — " +
+                "Two personalities is not usually enough to become King but you never know..",
                 "tidbit_characters"),
         };
 
