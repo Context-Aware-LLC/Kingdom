@@ -94,7 +94,7 @@
  * on a 2026-08-07 ruling -- a third deck had to make the other two narrower rather than dropping
  * below them, because a character taller than its share of the roster crowded out the next
  * character. There is nothing to be fair between now: this is the whole account, capped at
- * DeckCreation.MaxPerAccount plates plus the "+", and forcing nine onto one line would shrink
+ * DeckCreation.MaxPerAccount plates plus the "+", and forcing ten onto one line would shrink
  * every picture past the point of being one.
  *
  * A deck is a wide portrait of its two heroes (Sam, 2026-09-11), with no name on the plate.

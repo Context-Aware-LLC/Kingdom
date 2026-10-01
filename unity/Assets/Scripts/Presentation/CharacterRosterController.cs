@@ -602,7 +602,7 @@ namespace Emberfall.Presentation
         /// "one line, always"). That ruling was about a single character's decks: a third deck must
         /// not drop below the other two and make one character taller than its share of the roster.
         /// There are no characters to be fair between now — this is the whole account, up to
-        /// <see cref="DeckCreation.MaxPerAccount"/> plates plus the "+", and forcing nine of them
+        /// <see cref="DeckCreation.MaxPerAccount"/> plates plus the "+", and forcing ten of them
         /// onto one line would shrink every picture past the point of being one.</para>
         /// </summary>
         private VisualElement BuildDeckGrid(IReadOnlyList<DeckSummary> rows)
@@ -717,7 +717,7 @@ namespace Emberfall.Presentation
         /// </summary>
         private const float TargetPlate = 180f;
 
-        /// <summary>The most columns the grid will use however wide the window gets. Nine plates in
+        /// <summary>The most columns the grid will use however wide the window gets. Ten plates in
         /// one line is the shape the wrap exists to avoid; four keeps the full roster to three rows
         /// on any panel, which is a grid the eye takes in at once.</summary>
         private const int MaxColumns = 4;
@@ -728,7 +728,7 @@ namespace Emberfall.Presentation
         ///
         /// <para><b>3, not 2</b> (2026-09-08, Sam) — matching <see cref="MaxColumns"/>'s own doc
         /// comment, which already says four columns keeps a FULL roster (<see
-        /// cref="DeckCreation.MaxPerAccount"/> plus the "+", 9 tiles) to three rows. At 2 the height
+        /// cref="DeckCreation.MaxPerAccount"/> plus the "+", 10 tiles) to three rows. At 2 the height
         /// solve sized plates as if only two rows needed to fit, so the third row of a full roster
         /// ran off the bottom of the viewport into a scroll no plate count actually needed.</para>
         /// </summary>

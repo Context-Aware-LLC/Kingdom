@@ -37,7 +37,7 @@ namespace Emberfall.Core.Collection
     public static class DeckCreation
     {
         /// <summary>
-        /// How many decks one account may hold (Sam, 2026-09-04 — ADR-0009).
+        /// How many decks one account may hold (Sam, 2026-09-04 — ADR-0009; 8 → 9 on 2026-10-01).
         ///
         /// <para><b>A draft counts.</b> The cap is about how many decks a player keeps, not how many
         /// are legal, so a half-built deck occupies a slot exactly as a queue-ready one does. Any
@@ -62,7 +62,7 @@ namespace Emberfall.Core.Collection
         /// never refused, at any count, or a player at the limit could not edit what they own.</item>
         /// </list>
         /// </summary>
-        public const int MaxPerAccount = 8;
+        public const int MaxPerAccount = 9;
 
         /// <summary>
         /// Has this account room for another deck? The predicate the <c>+</c> plate is disabled by and
