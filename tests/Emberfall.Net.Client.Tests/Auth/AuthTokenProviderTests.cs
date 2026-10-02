@@ -196,6 +196,53 @@ namespace Emberfall.Net.Client.Tests.Auth
         }
 
         [Test]
+        public async Task Storing_the_name_trades_a_still_good_token_for_one_that_carries_it()
+        {
+            // The token in hand was minted before the name existed. It is hours from expiring, so
+            // nothing but this call would ever replace it in time for a friend to see the name.
+            var clock = new FakeClock();
+            var named = Signed(clock.NowMs + 3_600_000, access: "access-with-name", refresh: "refresh-2");
+            var backend = new FakeAuthBackend().OnRefresh(AuthResult.Succeeded(named));
+            var store = new InMemoryAuthSessionStore(Signed(clock.NowMs + 3_600_000));
+            var provider = new AuthTokenProvider(backend, store, clock);
+
+            AuthResult result = await provider.SetDisplayNameAsync("MrSoNord");
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(backend.LastDisplayNameAccessToken, Is.EqualTo("access-1"));
+            Assert.That(backend.LastRefreshToken, Is.EqualTo("refresh-1"));
+            Assert.That(await provider.TokenForConnectAsync(), Is.EqualTo("access-with-name"));
+        }
+
+        [Test]
+        public async Task A_name_that_was_not_stored_does_not_spend_a_refresh()
+        {
+            var clock = new FakeClock();
+            var backend = new FakeAuthBackend { SetDisplayNameResult = AuthResult.Failed(AuthFailure.Network) };
+            var provider = new AuthTokenProvider(
+                backend, new InMemoryAuthSessionStore(Signed(clock.NowMs + 3_600_000)), clock);
+
+            AuthResult result = await provider.SetDisplayNameAsync("MrSoNord");
+
+            Assert.That(result.Ok, Is.False);
+            Assert.That(backend.RefreshCalls, Is.Zero);
+        }
+
+        [Test]
+        public async Task A_stored_name_is_still_a_success_when_the_refresh_does_not_land()
+        {
+            var clock = new FakeClock();
+            var backend = new FakeAuthBackend().OnRefresh(AuthResult.Failed(AuthFailure.Network));
+            var provider = new AuthTokenProvider(
+                backend, new InMemoryAuthSessionStore(Signed(clock.NowMs + 3_600_000)), clock);
+
+            AuthResult result = await provider.SetDisplayNameAsync("MrSoNord");
+
+            Assert.That(result.Ok, Is.True, "the name is stored; only the token that carries it is late");
+            Assert.That(await provider.TokenForConnectAsync(), Is.EqualTo("access-1"));
+        }
+
+        [Test]
         public async Task Setting_a_password_with_no_session_never_reaches_the_backend()
         {
             var backend = new FakeAuthBackend();

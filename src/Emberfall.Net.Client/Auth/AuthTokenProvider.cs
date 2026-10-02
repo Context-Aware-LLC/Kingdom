@@ -116,7 +116,12 @@ namespace Emberfall.Net.Client.Auth
         /// would show the player as signed in forever while every connect silently fell back to guest.
         /// A request that never arrived says nothing about the credential, so it survives.</para>
         /// </summary>
-        public async Task<AuthResult> RefreshAsync(CancellationToken cancellationToken = default)
+        public Task<AuthResult> RefreshAsync(CancellationToken cancellationToken = default)
+            => RefreshAsync(force: false, cancellationToken);
+
+        /// <param name="force">Refresh even though the token is still good — for the one case where
+        /// the token is not stale by age but by CONTENT (see <see cref="SetDisplayNameAsync"/>).</param>
+        private async Task<AuthResult> RefreshAsync(bool force, CancellationToken cancellationToken)
         {
             await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
@@ -126,7 +131,7 @@ namespace Emberfall.Net.Client.Auth
                     return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
 
                 // Another caller may have refreshed while this one waited on the lock.
-                if (!session.NeedsRefresh(_clock.NowMs, _refreshSkewMs))
+                if (!force && !session.NeedsRefresh(_clock.NowMs, _refreshSkewMs))
                     return AuthResult.Succeeded(session);
 
                 // No ConfigureAwait(false): Adopt() below is a Unity PlayerPrefs write — see the note
@@ -266,20 +271,32 @@ namespace Emberfall.Net.Client.Auth
         /// Store the display name against the identity, so a returning player on a wiped device gets
         /// it back instead of being asked to choose a "permanent" name a second time.
         ///
-        /// <para><b>The stored session is deliberately NOT updated.</b> Supabase stamps
-        /// <c>user_metadata</c> into a JWT at mint time, so the token this device is holding still
-        /// carries the old name (or none) until it next refreshes. Writing the new name into
-        /// <see cref="Current"/> here would make this device's session disagree with its own token
-        /// about what the server said — and the device that just set the name has it on disk anyway.
-        /// It arrives where it is actually needed: the next sign-in, on the next install.</para>
+        /// <para><b>A successful write is followed by a forced token refresh, and it has to be.</b>
+        /// Supabase stamps <c>user_metadata</c> into a JWT at mint time, so the token this device is
+        /// holding was minted BEFORE the name existed and carries none. The match server reads the
+        /// name a player's friends see out of that token (#409), so without a fresh one a brand-new
+        /// player is shown to friends by their code until the token happens to expire. The session
+        /// is updated from the refreshed token, never written by hand, so it cannot disagree with
+        /// its own token about what the server said.</para>
+        ///
+        /// <para>The result is the WRITE's. A refresh that does not complete is logged and the old
+        /// token stands — the name is stored and will ride in the next token whenever it comes.</para>
         /// </summary>
         public async Task<AuthResult> SetDisplayNameAsync(string displayName, CancellationToken cancellationToken = default)
         {
             AuthSession session = Current;
             if (!session.IsPresent) return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
 
-            return await _backend.SetDisplayNameAsync(session.AccessToken, displayName, cancellationToken)
-                .ConfigureAwait(false);
+            // No ConfigureAwait(false): the refresh below ends in Adopt(), a Unity PlayerPrefs write
+            // — see the note on Adopt for why these awaits keep the caller's synchronization context.
+            AuthResult written = await _backend.SetDisplayNameAsync(session.AccessToken, displayName, cancellationToken);
+            if (!written.Ok) return written;
+
+            AuthResult refreshed = await RefreshAsync(force: true, cancellationToken);
+            if (!refreshed.Ok)
+                _log?.Invoke("[Auth] the display name was stored but the token refresh that carries it did not complete (" +
+                             refreshed.Failure + "); friends see this player's code until the next refresh.");
+            return written;
         }
 
         /// <summary>Forget the session on this device. Does not revoke it server-side — that is a
