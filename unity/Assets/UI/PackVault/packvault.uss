@@ -87,7 +87,8 @@
  *
  * One slot per pack LINE, down the left edge (Sam, 2026-09-27). It replaced a wrapping shelf of one
  * tile per pack, which at forty packs drew rows it could not scroll to. A slot carries the count in
- * a bubble, so the rack's height is bounded by the number of EXPANSIONS, not packs — five fit. The
+ * a bubble, so the rack's height is bounded by the number of EXPANSIONS, not packs. A slot is a
+ * third of the rack's height, so three packs fill the screen top to bottom (Sam, 2026-10-02). The
  * rightmost 18% is the vertical hold rail; the slots and rail sit directly on the backdrop. */
 .vault-rack {
     width: 22%;
@@ -101,15 +102,19 @@
 .vault-rack__slots {
     width: 82%;
     flex-shrink: 0;
-    justify-content: center;
+    /* Fewer than three lines spread over the whole height instead of bunching in the middle. */
+    justify-content: space-around;
+    align-items: center;
     padding-right: var(--space-3);
 }
 
+/* The pack, centred in the column, with its name under it. */
 .vault-slot {
     width: 100%;
-    flex-direction: row;
+    height: 33.3%;
+    flex-direction: column;
     align-items: center;
-    margin-bottom: var(--space-3);
+    justify-content: center;
     padding: var(--space-1) 0;
     background-color: rgba(0, 0, 0, 0);
 
@@ -139,24 +144,32 @@
 }
 
 .vault-slot__label {
-    flex-grow: 1;
-    flex-shrink: 1;
-    margin-left: var(--space-2);
+    flex-shrink: 0;
+    margin-top: var(--space-2);
     color: var(--ink-1);
     font-size: var(--type-label);
     -unity-font-style: bold;
+    -unity-text-align: middle-center;
     white-space: normal;
 }
 
 /* A pack miniature: the rack slot's, the parked stack's and the drag ghost's. 0.7 is the pack's
- * portrait ratio (see .vault-pack__face). No aspect-ratio here: both sides are set, and the ghost
- * overrides both. */
+ * portrait ratio (see .vault-pack__face). No aspect-ratio here: both sides are set, and the rack
+ * slot, the rail and the ghost each override them. */
 .vault-mini {
     width: 72px;
     height: 103px;
     flex-shrink: 0;
     background-color: rgba(0, 0, 0, 0);
     border-radius: var(--space-2);
+}
+
+/* The rack's pack. The panel is always 1080 tall (EmberfallPanelSettings matches height), which
+ * leaves a slot 320: 260 of pack, and the name under it. Pixels, so it does NOT shrink with the
+ * slot; a fourth pack line needs these two numbers cut. */
+.vault-slot .vault-mini {
+    width: 182px;
+    height: 260px;
 }
 
 /* Only once art actually resolved; an artless pack keeps the plain plate. */
@@ -312,8 +325,8 @@
  * and centred on the pointer from script. A little larger than the rack miniature: it is lifted. */
 .vault-ghost {
     position: absolute;
-    width: 118px;
-    height: 168px;
+    width: 196px;
+    height: 280px;
 }
 
 .vault-ghost__face {
