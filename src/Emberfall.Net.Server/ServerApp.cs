@@ -1282,6 +1282,11 @@ namespace Emberfall.Net.Server
         /// <c>blocked</c> carry the code ALONE, deliberately — see <see cref="FriendsEndpoint"/>
         /// for why a name there would be a lookup service.</para>
         ///
+        /// <para><b>A player with no name is sent <c>""</c>, never <c>null</c>.</b> The client's
+        /// reader keeps a bare literal as its raw text, so a JSON <c>null</c> arrives as the
+        /// four-character string "null" and would be drawn as a friend called null. An empty
+        /// string cannot be a name (<c>PlayerName.MinLength</c>) and reads as absent.</para>
+        ///
         /// <para><b>LATENT (security.md, "A friend's display name has no renderer yet").</b>
         /// <c>displayName</c> is peer-authored text. Whatever client screen first draws it is the
         /// second renderer of that string and owes what the nameplate owes: rich text OFF, and a
@@ -1300,7 +1305,7 @@ namespace Emberfall.Net.Server
             {
                 var rows = new List<object>(entries.Count);
                 foreach (FriendIdentity entry in entries)
-                    rows.Add(new { code = entry.Code, displayName = entry.DisplayName });
+                    rows.Add(new { code = entry.Code, displayName = entry.DisplayName ?? "" });
                 return rows;
             }
 
@@ -1316,7 +1321,7 @@ namespace Emberfall.Net.Server
             {
                 status,
                 code = list.Self.Code,
-                displayName = list.Self.DisplayName,
+                displayName = list.Self.DisplayName ?? "",
                 friends = Named(list.Friends),
                 incoming = Named(list.Incoming),
                 outgoing = CodeOnly(list.Outgoing),
