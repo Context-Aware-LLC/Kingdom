@@ -212,11 +212,11 @@ alter table quest_progress enable row level security;
 -- authenticate without one (Sam, 2026-10-01), and a friends graph that needed it would exclude them.
 
 -- A player's friend code — the only identifier of another player that ever reaches a client — and
--- the name they chose to show their friends. Minted lazily, on a player's first social request, so
+-- their sign-up name, copied here from the token so a friend can be shown it. Minted lazily, on a player's first social request, so
 -- a player who has never opened the social surface has no row and cannot be found by a code.
 --
 -- display_name is client-authored text rendered on SOMEBODY ELSE'S machine. It is stored only after
--- PlayerName.Check (FriendsEndpoint.SetNameAsync) — a hand-written UPDATE bypasses that.
+-- PlayerName.Check (FriendsEndpoint.SyncNameAsync) — a hand-written UPDATE bypasses that.
 create table if not exists friend_code (
   player_id     text        primary key,
   code          text        not null unique,   -- FriendCode canonical form: ten symbols, no hyphen

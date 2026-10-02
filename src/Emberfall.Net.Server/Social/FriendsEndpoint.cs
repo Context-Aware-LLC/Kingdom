@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -25,7 +26,6 @@ namespace Emberfall.Net.Server.Social
         Removed,
         Blocked,
         Unblocked,
-        Named,
 
         /// <summary>No bearer token, or one Supabase refused. 401.</summary>
         Unauthenticated,
@@ -36,9 +36,6 @@ namespace Emberfall.Net.Server.Social
         /// <summary>The code is not well-formed (wrong length, alphabet or check symbol). 400.
         /// Safe to say: the client can compute this itself, so it discloses nothing.</summary>
         InvalidCode,
-
-        /// <summary><c>PlayerName.Check</c> refused the name. 400.</summary>
-        InvalidName,
 
         /// <summary><c>POST /friends/accept</c>: no request from that code is waiting. 404.</summary>
         NotFound,
@@ -70,7 +67,6 @@ namespace Emberfall.Net.Server.Social
             FriendsStatus.Unauthenticated => 401,
             FriendsStatus.Unavailable => 503,
             FriendsStatus.InvalidCode => 400,
-            FriendsStatus.InvalidName => 400,
             FriendsStatus.NotFound => 404,
             FriendsStatus.AtCapacity => 409,
             FriendsStatus.RateLimited => 429,
@@ -90,7 +86,7 @@ namespace Emberfall.Net.Server.Social
         private readonly long _windowMs;
         private readonly object _lock = new object();
         private readonly Dictionary<string, (long WindowStart, int Count)> _windows =
-            new Dictionary<string, (long, int)>(System.StringComparer.Ordinal);
+            new Dictionary<string, (long, int)>(StringComparer.Ordinal);
 
         public FriendRequestLimiter(ITimeSource time, int max = 10, long windowMs = 60_000)
         {
@@ -293,26 +289,6 @@ namespace Emberfall.Net.Server.Social
             return await DoneAsync(FriendsStatus.Unblocked, playerId, ct).ConfigureAwait(false);
         }
 
-        /// <summary>
-        /// <c>PUT /friends/name {displayName}</c> — the name this player's friends see.
-        ///
-        /// <para>Client-authored text bound for another player's screen, so it passes the SAME
-        /// <see cref="PlayerName.Check"/> the match nameplate's does (VULN-002) and the normalized
-        /// form is what is stored. Unlike <c>MatchGate</c>, a refused name is an error rather than a
-        /// substitution: there is a text field on the other end of this call that can say why.</para>
-        /// </summary>
-        public async Task<FriendsResult> SetNameAsync(string? bearerToken, string? displayName, CancellationToken ct = default)
-        {
-            var (refusal, playerId) = await ResolveAsync(bearerToken, ct).ConfigureAwait(false);
-            if (refusal != null) return refusal;
-
-            NameCheck check = PlayerName.Check(displayName!);
-            if (!check.IsValid) return new FriendsResult(FriendsStatus.InvalidName);
-
-            await _friends.SetDisplayNameAsync(playerId, check.Normalized, ct).ConfigureAwait(false);
-            return await DoneAsync(FriendsStatus.Named, playerId, ct).ConfigureAwait(false);
-        }
-
         private Task ChangedAsync(CancellationToken ct, params string[] playerIds)
             => _hub is null ? Task.CompletedTask : _hub.GraphChangedAsync(playerIds, ct);
 
@@ -335,7 +311,28 @@ namespace Emberfall.Net.Server.Social
             var identity = verified.Identity!;
             Account account = await _accounts.ResolveOrCreateAsync(
                 "supabase", CredentialHash.Of(identity.Subject), identity.Email, ct).ConfigureAwait(false);
+            await SyncNameAsync(account.PlayerId, identity.DisplayName, ct).ConfigureAwait(false);
             return (null, account.PlayerId);
+        }
+
+        /// <summary>
+        /// The name a player's friends see is the one they gave themselves at sign-up, and nothing
+        /// else (Sam, 2026-10-02) — so there is no route that sets it. It arrives in the token on
+        /// every call and is copied into the store here whenever it differs.
+        ///
+        /// <para>It is still text another player typed, bound for somebody else's screen, so it
+        /// passes the SAME <see cref="PlayerName.Check"/> the match nameplate's does (VULN-002)
+        /// and the normalized form is what is stored. A name that fails is skipped, not an error:
+        /// the stored one stands, and a player with none is shown by their code.</para>
+        /// </summary>
+        private async Task SyncNameAsync(string playerId, string tokenName, CancellationToken ct)
+        {
+            NameCheck check = PlayerName.Check(tokenName);
+            if (!check.IsValid) return;
+
+            FriendIdentity stored = await _friends.EnsureIdentityAsync(playerId, ct).ConfigureAwait(false);
+            if (!string.Equals(stored.DisplayName, check.Normalized, StringComparison.Ordinal))
+                await _friends.SetDisplayNameAsync(playerId, check.Normalized, ct).ConfigureAwait(false);
         }
 
         /// <summary>The caller, and the holder of <paramref name="code"/> — null when nobody

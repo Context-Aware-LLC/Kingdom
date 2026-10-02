@@ -52,16 +52,17 @@ namespace Emberfall.Net.Server.Tests.Social
             {
                 using var http = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
 
-                using JsonDocument ann = await SendAsync(http, As("ann", HttpMethod.Get, "/friends"), HttpStatusCode.OK);
+                // Ann's token carries her sign-up name; that is the only way a name gets in.
+                using JsonDocument ann = await SendAsync(http, As("ann|Ann Bell", HttpMethod.Get, "/friends"), HttpStatusCode.OK);
                 using JsonDocument ben = await SendAsync(http, As("noemail-ben", HttpMethod.Get, "/friends"), HttpStatusCode.OK);
                 string annCode = ann.RootElement.GetProperty("code").GetString()!;
                 string benCode = ben.RootElement.GetProperty("code").GetString()!;
                 Assert.That(ann.RootElement.GetProperty("status").GetString(), Is.EqualTo("known"));
                 Assert.That(ann.RootElement.GetProperty("friends").GetArrayLength(), Is.EqualTo(0));
 
-                using JsonDocument named = await SendAsync(http,
-                    As("ann", HttpMethod.Put, "/friends/name", "{\"displayName\":\"Ann Bell\"}"), HttpStatusCode.OK);
-                Assert.That(named.RootElement.GetProperty("displayName").GetString(), Is.EqualTo("Ann Bell"));
+                Assert.That(ann.RootElement.GetProperty("displayName").GetString(), Is.EqualTo("Ann Bell"));
+                Assert.That(ben.RootElement.GetProperty("displayName").GetString(), Is.Empty,
+                    "no name is the empty string, never null — the client's reader would draw null as a name");
 
                 using JsonDocument sent = await SendAsync(http,
                     As("ann", HttpMethod.Post, "/friends/request", $"{{\"code\":\"{benCode}\"}}"), HttpStatusCode.OK);

@@ -30,11 +30,15 @@ namespace Emberfall.Net.Client.Tests.Social
     {
         private sealed class Clock : ITimeSource { public long NowMs => 1_700_000_000_000; }
 
-        /// <summary>The token is the subject.</summary>
+        /// <summary>The token is the subject; <c>subject|Name</c> carries a sign-up name.</summary>
         private sealed class Verifier : IIdentityTokenVerifier
         {
             public Task<TokenVerificationResult> VerifyAsync(string token, CancellationToken ct = default)
-                => Task.FromResult(TokenVerificationResult.Ok(new VerifiedIdentity(token, "", false)));
+            {
+                string[] parts = token.Split('|');
+                return Task.FromResult(TokenVerificationResult.Ok(
+                    new VerifiedIdentity(parts[0], "", false, parts.Length > 1 ? parts[1] : "")));
+            }
         }
 
         /// <summary><see cref="IAuthHttp"/> over a real <see cref="HttpClient"/>.</summary>
@@ -88,8 +92,8 @@ namespace Emberfall.Net.Client.Tests.Social
                 Assert.That(FriendCode.TryNormalize(ann.Code, out _), Is.True, "the server's code passes the client's check");
                 Assert.That(ann.DisplayName, Is.Empty, "no name chosen must not read as a name");
 
-                Assert.That((await gateway.SetNameAsync("ann", "ab")).Status, Is.EqualTo(FriendsCallStatus.InvalidName));
-                Assert.That((await gateway.SetNameAsync("ann", "Ann Bell")).DisplayName, Is.EqualTo("Ann Bell"));
+                Assert.That((await gateway.FetchAsync("ann|Ann Bell")).DisplayName, Is.EqualTo("Ann Bell"),
+                    "the sign-up name in the token is the name, with no call to set it");
 
                 FriendsSnapshot sent = await gateway.RequestAsync("ann", FriendCode.Display(ben.Code));
                 Assert.That(sent.Outgoing.Single().Code, Is.EqualTo(ben.Code));
@@ -154,7 +158,6 @@ namespace Emberfall.Net.Client.Tests.Social
         [TestCase(503, "{}", FriendsCallStatus.Unavailable)]
         [TestCase(429, "not json", FriendsCallStatus.RateLimited)]
         [TestCase(409, "{\"status\":\"atcapacity\"}", FriendsCallStatus.AtCapacity)]
-        [TestCase(400, "{\"status\":\"invalidname\"}", FriendsCallStatus.InvalidName)]
         [TestCase(400, "{\"status\":\"invalidcode\"}", FriendsCallStatus.InvalidCode)]
         public async Task Each_Refusal_Keeps_Its_Own_Status(int code, string body, FriendsCallStatus expected)
         {

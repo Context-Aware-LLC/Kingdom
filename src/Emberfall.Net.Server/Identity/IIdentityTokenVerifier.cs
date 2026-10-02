@@ -9,7 +9,13 @@ namespace Emberfall.Net.Server.Identity
     }
 
     /// <summary>The verified claims extracted from a Supabase JWT.</summary>
-    public sealed record VerifiedIdentity(string Subject, string Email, bool EmailVerified);
+    /// <param name="DisplayName">
+    /// The name the player gave themselves at sign-up (<c>user_metadata.display_name</c>), or
+    /// empty. <b>Verified means the token is genuine, not that this string is safe</b>: a signed-in
+    /// user can write anything into their own <c>user_metadata</c>, so this is peer-authored text
+    /// and goes through <c>PlayerName.Check</c> before it is stored or shown to anybody.
+    /// </param>
+    public sealed record VerifiedIdentity(string Subject, string Email, bool EmailVerified, string DisplayName = "");
 
     public enum TokenVerificationFailure
     {

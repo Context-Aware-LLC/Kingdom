@@ -23,7 +23,6 @@ namespace Emberfall.Net.Client.Social
         /// <summary>The code is not well-formed. <c>FriendCode.TryNormalize</c> catches this
         /// locally, so reaching the server with one is a client bug rather than a typo.</summary>
         InvalidCode,
-        InvalidName,
 
         /// <summary>Accept only: no request from that code is waiting.</summary>
         NotFound,
@@ -36,8 +35,8 @@ namespace Emberfall.Net.Client.Social
         Malformed,
     }
 
-    /// <summary>Another player as the friends list shows them. <see cref="DisplayName"/> is empty
-    /// when they have not chosen one, and always empty on outgoing requests and blocks, which the
+    /// <summary>Another player as the friends list shows them. <see cref="DisplayName"/> is their
+    /// sign-up name — there is no separate friends name — and is empty when the server holds none, and always empty on outgoing requests and blocks, which the
     /// server sends by code alone.
     ///
     /// <para><b><see cref="DisplayName"/> is text another player typed.</b> Whatever draws it owes
@@ -135,11 +134,6 @@ namespace Emberfall.Net.Client.Social
         public Task<FriendsSnapshot> UnblockAsync(string accessToken, string code, CancellationToken ct = default)
             => CallAsync(accessToken, "/friends/unblock", "code", code, ct);
 
-        /// <summary>Set the name this player's friends see. The server re-checks it with
-        /// <c>PlayerName.Check</c>; a local check is a courtesy, not the gate.</summary>
-        public Task<FriendsSnapshot> SetNameAsync(string accessToken, string displayName, CancellationToken ct = default)
-            => CallAsync(accessToken, "/friends/name", "displayName", displayName, ct);
-
         private async Task<FriendsSnapshot> CallAsync(
             string accessToken, string path, string? field, string? value, CancellationToken ct)
         {
@@ -158,9 +152,7 @@ namespace Emberfall.Net.Client.Social
             else
             {
                 string body = AuthJson.Object(AuthJson.Field(field, value ?? ""));
-                response = path == "/friends/name"
-                    ? await _http.PutJsonAsync(_baseUrl + path, body, headers, ct).ConfigureAwait(false)
-                    : await _http.PostJsonAsync(_baseUrl + path, body, headers, ct).ConfigureAwait(false);
+                response = await _http.PostJsonAsync(_baseUrl + path, body, headers, ct).ConfigureAwait(false);
             }
 
             if (response.IsTransportFailure) return FriendsSnapshot.Failed(FriendsCallStatus.Offline);
@@ -168,8 +160,8 @@ namespace Emberfall.Net.Client.Social
             return Parse(response.Body);
         }
 
-        /// <summary>The status code is the fallback; the body's <c>status</c> string wins where it
-        /// is readable, because 400 means two different things here.</summary>
+        /// <summary>The body's <c>status</c> string wins where it is readable; the status code
+        /// is the fallback for a refusal that never reached the route.</summary>
         private static FriendsCallStatus Refusal(AuthHttpResponse response)
         {
             if (AuthJson.TryReadTopLevel(response.Body, out var fields) &&
@@ -180,7 +172,6 @@ namespace Emberfall.Net.Client.Social
                     case "unauthenticated": return FriendsCallStatus.Unauthenticated;
                     case "unavailable": return FriendsCallStatus.Unavailable;
                     case "invalidcode": return FriendsCallStatus.InvalidCode;
-                    case "invalidname": return FriendsCallStatus.InvalidName;
                     case "notfound": return FriendsCallStatus.NotFound;
                     case "atcapacity": return FriendsCallStatus.AtCapacity;
                     case "ratelimited": return FriendsCallStatus.RateLimited;

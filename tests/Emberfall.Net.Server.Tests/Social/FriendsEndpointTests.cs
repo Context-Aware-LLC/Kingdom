@@ -18,15 +18,23 @@ namespace Emberfall.Net.Server.Tests.Social
     [Category("Unit")]
     public sealed class FriendsEndpointTests
     {
-        /// <summary>The token IS the subject, so each test names its players by token.</summary>
+        /// <summary>The token IS the subject, so each test names its players by token. A token
+        /// written <c>subject|Name</c> carries that sign-up name, as a real one carries
+        /// <c>user_metadata.display_name</c>.</summary>
         internal sealed class SubjectVerifier : IIdentityTokenVerifier
         {
             public Task<TokenVerificationResult> VerifyAsync(string rawToken, CancellationToken ct = default)
-                => Task.FromResult(rawToken.StartsWith("bad")
-                    ? TokenVerificationResult.Fail(TokenVerificationFailure.SignatureInvalid)
-                    // "noemail-…" is the account Sam's ruling exists for: signed in, no email.
-                    : TokenVerificationResult.Ok(new VerifiedIdentity(
-                        rawToken, rawToken.StartsWith("noemail") ? "" : rawToken + "@example.com", true)));
+            {
+                if (rawToken.StartsWith("bad"))
+                    return Task.FromResult(TokenVerificationResult.Fail(TokenVerificationFailure.SignatureInvalid));
+
+                string[] parts = rawToken.Split('|');
+                string subject = parts[0];
+                // "noemail-…" is the account Sam's ruling exists for: signed in, no email.
+                return Task.FromResult(TokenVerificationResult.Ok(new VerifiedIdentity(
+                    subject, subject.StartsWith("noemail") ? "" : subject + "@example.com", true,
+                    parts.Length > 1 ? parts[1] : "")));
+            }
         }
 
         private FakeTime _time = null!;
@@ -205,22 +213,36 @@ namespace Emberfall.Net.Server.Tests.Social
         // ── names ───────────────────────────────────────────────────────────────────────
 
         [Test]
-        public async Task A_Name_Is_Stored_Normalized_And_Refused_By_The_Nameplate_Rules()
+        public async Task The_Sign_Up_Name_In_The_Token_Is_The_Name_A_Friend_Sees()
         {
             var endpoint = Endpoint();
+            string annCode = (await endpoint.ReadAsync("ann|  Ann   Bell ")).List!.Self.Code;
+            string benCode = await CodeOf(endpoint, "ben");
+            await endpoint.RequestAsync("ann", benCode);
 
-            FriendsResult named = await endpoint.SetNameAsync("ann", "  Ann   Bell ");
-            Assert.That(named.Status, Is.EqualTo(FriendsStatus.Named));
-            Assert.That(named.List!.Self.DisplayName, Is.EqualTo("Ann Bell"));
+            FriendsResult accepted = await endpoint.AcceptAsync("ben", annCode);
 
-            foreach (string? refused in new[] { null, "ab", "SYSTEM", "Ann‮Bell" })
+            Assert.That(accepted.List!.Friends.Single().DisplayName, Is.EqualTo("Ann Bell"),
+                "stored normalized, and still there on a call whose token carried no name");
+            Assert.That(accepted.List.Self.DisplayName, Is.Null, "Ben signed up with none");
+
+            // A rename at sign-up level follows on the next call.
+            Assert.That((await endpoint.ReadAsync("ann|Annie")).List!.Self.DisplayName, Is.EqualTo("Annie"));
+        }
+
+        [Test]
+        public async Task A_Token_Name_The_Nameplate_Rules_Refuse_Is_Skipped_Not_Stored()
+        {
+            var endpoint = Endpoint();
+            await endpoint.ReadAsync("ann|Ann Bell");
+
+            // user_metadata is the player's own to write, so a genuine token can carry any of these.
+            foreach (string refused in new[] { "ab", "SYSTEM", "Ann\u202EBell", "<b>Ann</b>" })
             {
-                FriendsResult r = await endpoint.SetNameAsync("ann", refused);
-                Assert.That(r.Status, Is.EqualTo(FriendsStatus.InvalidName), refused ?? "null");
+                FriendsResult r = await endpoint.ReadAsync("ann|" + refused);
+                Assert.That(r.Status, Is.EqualTo(FriendsStatus.Known), "a bad name is not a failed call");
+                Assert.That(r.List!.Self.DisplayName, Is.EqualTo("Ann Bell"), refused);
             }
-
-            Assert.That((await endpoint.ReadAsync("ann")).List!.Self.DisplayName, Is.EqualTo("Ann Bell"),
-                "a refused name must not overwrite the stored one");
         }
     }
 }

@@ -188,6 +188,29 @@ namespace Emberfall.Net.Server.Tests.Identity
             Assert.That(result.Failure, Is.EqualTo(TokenVerificationFailure.UnknownKid));
         }
 
+        // ── The sign-up name (#409) ──────────────────────────────────────────────
+
+        [Test]
+        public async Task The_Sign_Up_Name_Is_Read_From_User_Metadata()
+        {
+            var metadata = new System.Collections.Generic.Dictionary<string, object> { ["display_name"] = "Ashe" };
+
+            var result = await _verifier.VerifyAsync(Mint(userMetadata: metadata));
+
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Identity!.DisplayName, Is.EqualTo("Ashe"));
+        }
+
+        [Test]
+        public async Task A_Token_With_No_Name_Or_A_Name_That_Is_Not_A_String_Has_None()
+        {
+            var numeric = new System.Collections.Generic.Dictionary<string, object> { ["display_name"] = 7 };
+
+            Assert.That((await _verifier.VerifyAsync(Mint())).Identity!.DisplayName, Is.Empty);
+            Assert.That((await _verifier.VerifyAsync(Mint(userMetadata: numeric))).Identity!.DisplayName, Is.Empty);
+            Assert.That((await _verifier.VerifyAsync(Mint(userMetadata: "not an object"))).Identity!.DisplayName, Is.Empty);
+        }
+
         // ── Helpers ──────────────────────────────────────────────────────────────
 
         private string Mint(
@@ -197,11 +220,15 @@ namespace Emberfall.Net.Server.Tests.Identity
             string audience = "authenticated",
             DateTime? expires = null,
             DateTime? notBefore = null,
-            SigningCredentials? creds = null)
+            SigningCredentials? creds = null,
+            object? userMetadata = null)
         {
             var sc = creds ?? new SigningCredentials(_key, SecurityAlgorithms.RsaSha256);
             return _handler.CreateToken(new SecurityTokenDescriptor
             {
+                Claims = userMetadata is null
+                    ? null
+                    : new System.Collections.Generic.Dictionary<string, object> { ["user_metadata"] = userMetadata },
                 Issuer = issuer,
                 Audience = audience,
                 Subject = new ClaimsIdentity(new[]

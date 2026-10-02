@@ -83,8 +83,9 @@ namespace Emberfall.Net.Server.Social
         /// <summary>The holder of a canonical code, or null. Never mints.</summary>
         Task<string?> FindPlayerIdByCodeAsync(string code, CancellationToken ct = default);
 
-        /// <summary>Sets the name this player's friends see. The caller has already run
-        /// <c>PlayerName.Check</c>; the store stores what it is given.</summary>
+        /// <summary>Sets the name this player's friends see — their sign-up name, copied in by
+        /// <see cref="FriendsEndpoint"/>. The caller has already run <c>PlayerName.Check</c>; the
+        /// store stores what it is given.</summary>
         Task SetDisplayNameAsync(string playerId, string displayName, CancellationToken ct = default);
 
         /// <summary>The whole graph around one player. Each list is ordered oldest first.</summary>

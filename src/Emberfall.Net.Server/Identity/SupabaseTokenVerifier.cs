@@ -147,7 +147,43 @@ namespace Emberfall.Net.Server.Identity
             bool emailVerified = claims.TryGetValue("email_confirmed_at", out object? ecaObj)
                 && !string.IsNullOrEmpty(ecaObj?.ToString());
 
-            return TokenVerificationResult.Ok(new VerifiedIdentity(subject, email, emailVerified));
+            return TokenVerificationResult.Ok(
+                new VerifiedIdentity(subject, email, emailVerified, DisplayNameFrom(claims)));
+        }
+
+        /// <summary>
+        /// <c>user_metadata.display_name</c> — where the client's sign-up writes the player's name
+        /// (<c>SupabaseAuthBackend.DisplayNameKey</c>). Empty when absent or not a string.
+        ///
+        /// <para>Supabase stamps <c>user_metadata</c> into a token when it MINTS it, so a rename is
+        /// seen here only after the player's next token refresh.</para>
+        /// </summary>
+        private static string DisplayNameFrom(IDictionary<string, object> claims)
+        {
+            if (!claims.TryGetValue("user_metadata", out object? metadata) || metadata is null) return "";
+
+            // The handler hands a nested object back as a JsonElement; a claim that arrived as a
+            // JSON string is parsed the same way.
+            try
+            {
+                System.Text.Json.JsonElement element;
+                if (metadata is System.Text.Json.JsonElement direct) element = direct;
+                else
+                {
+                    using var parsed = System.Text.Json.JsonDocument.Parse(metadata.ToString() ?? "");
+                    element = parsed.RootElement.Clone();
+                }
+
+                return element.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                       element.TryGetProperty("display_name", out var name) &&
+                       name.ValueKind == System.Text.Json.JsonValueKind.String
+                    ? name.GetString() ?? ""
+                    : "";
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return "";
+            }
         }
 
         private async Task<IList<SecurityKey>> GetKeysAsync(CancellationToken ct)

@@ -824,7 +824,7 @@ namespace Emberfall.Net.Server
             });
 
             // The /friends routes (#409) — a player's code, friends, requests and blocks. One JSON
-            // shape for all eight, because every 200 carries the caller's graph as it now stands
+            // shape for all of them, because every 200 carries the caller's graph as it now stands
             // and the client redraws from that rather than patching its own copy.
             //
             // BLOCK BODIES WITH `return`, NOT EXPRESSION BODIES. `async ctx => Json(...)` also
@@ -854,11 +854,8 @@ namespace Emberfall.Net.Server
                 });
             }
 
-            app.MapPut("/friends/name", async (HttpContext context) =>
-            {
-                return FriendsJson(context, await friends.SetNameAsync(BearerFrom(context),
-                    await SmallJsonStringAsync(context, "displayName"), context.RequestAborted));
-            });
+            // There is no route that sets the name a friend sees: it is the sign-up name, read
+            // out of the token (FriendsEndpoint.SyncNameAsync).
 
             // GET /collection — what the signed-in player owns, read down from the entitlement
             // ledger. This is the wire that makes a reinstall recoverable: the ledger has been the
