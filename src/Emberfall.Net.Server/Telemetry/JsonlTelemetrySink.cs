@@ -269,6 +269,7 @@ namespace Emberfall.Net.Server.Telemetry
         {
             TelemetrySource.AiSoak => "ai_soak",
             TelemetrySource.BotFill => "bot_fill",
+            TelemetrySource.Friendly => "friendly",
             _ => "ladder",
         };
     }

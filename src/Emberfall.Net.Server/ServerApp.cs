@@ -535,6 +535,9 @@ namespace Emberfall.Net.Server
                 }
             }
 
+            IFriendStore friendStore = cfg.FriendStore ?? new InMemoryFriendStore(time);
+            var challenges = new ChallengeBook(time, ticketTtlMs: cfg.Options.ChallengeArrivalTimeoutMs);
+
             var gate = new MatchGate(
                 cfg.Options,
                 time,
@@ -551,14 +554,36 @@ namespace Emberfall.Net.Server
                 matchSink,
                 trainingEpisodes,
                 onboarding,
-                cfg.EntitlementLedger);
+                cfg.EntitlementLedger,
+                challenges);
+
+            // The social surface (#409). The hub asks the gate who is in a match and the gate
+            // tells the hub when that changes; neither holds the other, so a box with no social
+            // traffic runs the gate exactly as before.
+            var socialHub = new SocialHub(
+                friendStore,
+                challenges,
+                playerId => gate.IsInMatch(AccountId.FromAuthenticatedAccount(playerId)),
+                new FriendRequestLimiter(time));
+            gate.MatchRosterChanged = (p0, p1) =>
+            {
+                // Fire and forget: this runs on the match's own start and end paths, and a slow
+                // friend-store read must not sit between two players and their match.
+                _ = socialHub.MatchRosterChangedAsync(p0.Value, p1.Value).ContinueWith(
+                    faulted => Console.Error.WriteLine("[social] presence announce faulted: {0}",
+                        faulted.Exception!.GetBaseException().Message),
+                    System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
+            };
+            builder.Services.AddSingleton<IHostedService>(new ChallengeSweeper(socialHub));
+            var socialSocket = new SocialSocket(socialHub, cfg.TokenVerifier, cfg.AccountStore, cfg.Options);
 
             var friends = new FriendsEndpoint(
                 cfg.TokenVerifier,
                 cfg.AccountStore,
-                cfg.FriendStore ?? new InMemoryFriendStore(time),
+                friendStore,
                 new FriendLimits(),
-                new FriendRequestLimiter(time));
+                new FriendRequestLimiter(time),
+                socialHub);
 
             var app = builder.Build();
             app.UseWebSockets();
@@ -1143,8 +1168,15 @@ namespace Emberfall.Net.Server
                         // EF-071: ?deck=1 opts the fresh socket into client-supplied decks — it owes a
                         // SubmitDeckMsg as its second handshake frame, revalidated server-side. Absent the
                         // flag the socket is dealt the prebuilt fallback (additive; existing clients unchanged).
+                        //
+                        // #409: ?challenge=<ticket> seats the socket against the one friend its
+                        // ticket names instead of queueing it. The ticket is judged against the
+                        // account the hello authenticates — see MatchGate.SeatChallengeAsync.
                         await gate.HandleFreshAsync(socket, context.RequestAborted,
-                            expectDeck: context.Request.Query.ContainsKey("deck"));
+                            expectDeck: context.Request.Query.ContainsKey("deck"),
+                            challengeTicket: context.Request.Query.TryGetValue("challenge", out var ticket)
+                                ? ticket.ToString()
+                                : null);
                 }
                 catch (Exception ex) when (!context.RequestAborted.IsCancellationRequested)
                 {
@@ -1172,6 +1204,26 @@ namespace Emberfall.Net.Server
                     {
                         Console.Error.WriteLine("[ws] close after fault also failed: {0}", closeEx.Message);
                     }
+                }
+            });
+
+            // /social — presence and the friend-challenge handshake (#409). A second socket
+            // because /ws lives for one match and these have to outlast it.
+            app.Map("/social", async context =>
+            {
+                if (!context.WebSockets.IsWebSocketRequest)
+                {
+                    context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                    return;
+                }
+                using var socket = await context.WebSockets.AcceptWebSocketAsync();
+                try
+                {
+                    await socialSocket.RunAsync(socket, context.RequestAborted);
+                }
+                catch (Exception ex) when (!context.RequestAborted.IsCancellationRequested)
+                {
+                    Console.Error.WriteLine("[social] handler faulted: {0}", ex);
                 }
             });
 

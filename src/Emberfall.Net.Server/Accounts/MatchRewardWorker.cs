@@ -137,6 +137,13 @@ namespace Emberfall.Net.Server.Accounts
         private bool IsPayable(RankedMatchResult result)
         {
             if (result.IsEligible) return true;
+
+            // A friend challenge pays like a ladder match and moves no rating (Sam, 2026-10-01).
+            // Two accounts one person owns can farm this; that was accepted knowingly.
+            if (result.Source == TelemetrySource.Friendly)
+                return result.P0.IsAttributed && result.P1.IsAttributed && result.P0 != result.P1
+                    && result.Outcome != MatchOutcome.InProgress;
+
             if (result.Source != TelemetrySource.BotFill || _isBotAccount is null) return false;
             if (!result.P0.IsAttributed || !result.P1.IsAttributed || result.P0 == result.P1) return false;
             if (result.Outcome == MatchOutcome.InProgress) return false;

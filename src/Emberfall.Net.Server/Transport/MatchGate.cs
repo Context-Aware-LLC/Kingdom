@@ -16,6 +16,7 @@ using Emberfall.Net.Server.Identity;
 using Emberfall.Net.Server.Matchmaking;
 using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Replay;
+using Emberfall.Net.Server.Social;
 using Emberfall.Net.Server.Telemetry;
 using Emberfall.Net.Server.Training;
 
@@ -69,6 +70,24 @@ namespace Emberfall.Net.Server.Transport
         /// </summary>
         private readonly IEntitlementLedger? _entitlementLedger;
 
+        /// <summary>
+        /// Judges a challenge ticket presented on <c>/ws?challenge=…</c> (#409). Null when the
+        /// social surface is not composed in, and then every ticket is refused.
+        /// </summary>
+        private readonly IChallengeTickets? _challenges;
+
+        /// <summary>The first player of each accepted challenge to arrive, parked until the
+        /// second does. Keyed by challenge id; never in <see cref="_matchmaking"/>.</summary>
+        private readonly Dictionary<string, WaitingPlayer> _challengeWaiting =
+            new Dictionary<string, WaitingPlayer>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// Raised with both seats' accounts when a match starts and again when it ends — the
+        /// social surface's cue to re-announce their presence. Called outside the gate's lock; a
+        /// handler that throws is logged and never costs anybody their match.
+        /// </summary>
+        public Action<AccountId, AccountId>? MatchRosterChanged { get; set; }
+
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
         private readonly Dictionary<string, WaitingPlayer> _waiting =
@@ -90,7 +109,8 @@ namespace Emberfall.Net.Server.Transport
             IRankedMatchSink? rankedMatchSink = null,
             ITrainingEpisodeStore? trainingEpisodes = null,
             OnboardingGrantService? onboarding = null,
-            IEntitlementLedger? entitlementLedger = null)
+            IEntitlementLedger? entitlementLedger = null,
+            IChallengeTickets? challenges = null)
             : this(
                 opts,
                 time,
@@ -107,7 +127,8 @@ namespace Emberfall.Net.Server.Transport
                 rankedMatchSink,
                 trainingEpisodes,
                 onboarding,
-                entitlementLedger)
+                entitlementLedger,
+                challenges)
         {
         }
 
@@ -120,7 +141,8 @@ namespace Emberfall.Net.Server.Transport
             IRankedMatchSink? rankedMatchSink = null,
             ITrainingEpisodeStore? trainingEpisodes = null,
             OnboardingGrantService? onboarding = null,
-            IEntitlementLedger? entitlementLedger = null)
+            IEntitlementLedger? entitlementLedger = null,
+            IChallengeTickets? challenges = null)
         {
             _opts = opts;
             _time = time;
@@ -138,6 +160,7 @@ namespace Emberfall.Net.Server.Transport
             _trainingEpisodes = trainingEpisodes;
             _onboarding = onboarding;
             _entitlementLedger = entitlementLedger;
+            _challenges = challenges;
         }
 
         public int LiveSessions
@@ -146,6 +169,17 @@ namespace Emberfall.Net.Server.Transport
         }
 
         public int MaxSessions => _opts.MaxSessions;
+
+        /// <summary>Is this account seated in a live match right now? Server-side only.</summary>
+        public bool IsInMatch(AccountId account)
+        {
+            lock (_lock)
+            {
+                foreach (var seats in _accounts.Values)
+                    if (seats.p0 == account || seats.p1 == account) return true;
+                return false;
+            }
+        }
 
         private sealed record Seating(SessionPump Pump, int Seat);
         private sealed record WaitingPlayer(
@@ -181,8 +215,11 @@ namespace Emberfall.Net.Server.Transport
 
         /// <summary>Drive one fresh socket: hello, (optional deck), pair, then run its receive loop until
         /// it dies. <paramref name="expectDeck"/> is set by the <c>/ws?deck=1</c> route (EF-071): the
-        /// socket then owes a <see cref="SubmitDeckMsg"/> as its second handshake frame.</summary>
-        public async Task HandleFreshAsync(WebSocket socket, CancellationToken ct, bool expectDeck = false)
+        /// socket then owes a <see cref="SubmitDeckMsg"/> as its second handshake frame.
+        /// <paramref name="challengeTicket"/> is set by <c>/ws?challenge=…</c> (#409): the socket
+        /// then skips the queue and is seated against the one player its ticket names.</summary>
+        public async Task HandleFreshAsync(WebSocket socket, CancellationToken ct, bool expectDeck = false,
+            string? challengeTicket = null)
         {
             var conn = new WebSocketConnection(socket);
 
@@ -364,11 +401,19 @@ namespace Emberfall.Net.Server.Transport
                 submitted = outcome.Seat;
             }
 
-            Seating? seating = await PairAsync(conn, account, checkedName, submitted, ct);
+            Seating? seating;
+            int refusalCode = 1013;
+            string refusal = "server full";
+            if (challengeTicket is null)
+                seating = await PairAsync(conn, account, checkedName, submitted, ct);
+            else
+                (seating, refusalCode, refusal) =
+                    await SeatChallengeAsync(conn, account, checkedName, submitted, challengeTicket, ct);
+
             if (seating is null)
             {
-                Console.Error.WriteLine("[gate] refused player_id={0}: no seat available", account.Value);
-                conn.Close(1013, "server full");
+                Console.Error.WriteLine("[gate] refused player_id={0}: {1}", account.Value, refusal);
+                conn.Close(refusalCode, refusal);
                 await conn.PumpTask;
                 return;
             }
@@ -457,6 +502,98 @@ namespace Emberfall.Net.Server.Transport
                 {
                     wakeCts.Cancel();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Seat a socket that arrived with a challenge ticket (#409). The queue is skipped
+        /// entirely — the two players chose each other — and the SAME <see cref="StartMatch"/>
+        /// runs, so seat minting, deck legality, replay and telemetry are a queued match's.
+        ///
+        /// <para><b>The ticket is judged against the AUTHENTICATED account, not taken on its
+        /// own.</b> <see cref="IChallengeTickets.Redeem"/> is handed the account this socket's
+        /// hello resolved to, so a ticket in the wrong hands — sniffed, guessed, or presented by
+        /// a guest — redeems nothing. A device-token guest can never hold one: tickets are only
+        /// issued over <c>/social</c>, which has no guest path.</para>
+        ///
+        /// <para>The first to arrive parks in <see cref="_challengeWaiting"/>; the second starts
+        /// the match. If the second never comes the first is told so after
+        /// <see cref="ServerOptions.ChallengeArrivalTimeoutMs"/> — a refusal with a reason, not a
+        /// socket that hangs until the player gives up.</para>
+        /// </summary>
+        private async Task<(Seating? Seating, int RefusalCode, string Refusal)> SeatChallengeAsync(
+            WebSocketConnection conn, AccountId account, string displayName, SeatDeck? submitted,
+            string challengeTicket, CancellationToken ct)
+        {
+            ChallengeSeat? seat = _challenges?.Redeem(challengeTicket, account.Value);
+            if (seat is null) return (null, 1008, "challenge refused");
+
+            var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var me = new WaitingPlayer(
+                new MatchmakingTicket("challenge-" + Guid.NewGuid().ToString("N"), _opts.Matchmaking.DefaultRating),
+                conn, account, displayName, submitted, "human", mySeating, _time.NowMs);
+
+            WaitingPlayer? opponent;
+            lock (_lock)
+            {
+                if (_challengeWaiting.Remove(seat.ChallengeId, out opponent))
+                {
+                    if (_sessions.Count + _pendingSessions >= _opts.MaxSessions)
+                    {
+                        opponent.Seated.TrySetResult(null);
+                        return (null, 1013, "server full");
+                    }
+                    _pendingSessions++;
+                }
+                else
+                {
+                    _challengeWaiting[seat.ChallengeId] = me;
+                }
+            }
+
+            if (opponent != null)
+            {
+                _challenges!.Finish(seat.ChallengeId);
+                StartMatch(opponent, me, friendly: true);
+                return (await mySeating.Task, 1013, "server full");
+            }
+
+            using (ct.Register(() => CancelChallengeWaiting(seat.ChallengeId, me)))
+            {
+                Task arrived = await Task.WhenAny(
+                    mySeating.Task, Task.Delay(TimeSpan.FromMilliseconds(_opts.ChallengeArrivalTimeoutMs), ct));
+                if (!ReferenceEquals(arrived, mySeating.Task))
+                    CancelChallengeWaiting(seat.ChallengeId, me);
+
+                // "server full" is the opponent arriving to a gate at its session cap, which is
+                // the only way a parked waiter is completed with null by somebody else.
+                bool timedOut = !ReferenceEquals(arrived, mySeating.Task);
+                return (await mySeating.Task, timedOut ? 1008 : 1013, timedOut ? "challenge expired" : "server full");
+            }
+        }
+
+        private void CancelChallengeWaiting(string challengeId, WaitingPlayer waiter)
+        {
+            lock (_lock)
+            {
+                // Only if it is still THIS waiter parked there: the opponent may have arrived and
+                // taken the entry a moment ago, and then the match is starting.
+                if (!_challengeWaiting.TryGetValue(challengeId, out var parked) || !ReferenceEquals(parked, waiter))
+                    return;
+                _challengeWaiting.Remove(challengeId);
+            }
+            waiter.Seated.TrySetResult(null);
+        }
+
+        private void RaiseRosterChanged(AccountId p0, AccountId p1)
+        {
+            try
+            {
+                MatchRosterChanged?.Invoke(p0, p1);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("[gate] MatchRosterChanged handler faulted: {0}", ex.Message);
             }
         }
 
@@ -584,7 +721,10 @@ namespace Emberfall.Net.Server.Transport
         private static string NameForSeat(string checkedName, PlayerId seat)
             => checkedName.Length > 0 ? checkedName : seat.Value;
 
-        private void StartMatch(WaitingPlayer first, WaitingPlayer second)
+        /// <param name="friendly">A friend challenge (#409): labelled
+        /// <see cref="TelemetrySource.Friendly"/> so it moves no rating. Everything else about
+        /// the match is identical, deliberately.</param>
+        private void StartMatch(WaitingPlayer first, WaitingPlayer second, bool friendly = false)
         {
             bool committed = false;
             string? matchKey = null;
@@ -605,7 +745,9 @@ namespace Emberfall.Net.Server.Transport
                 Func<AccountId, bool>? isBotAccount = _botPool is null ? null : _botPool.IsBotAccount;
                 var attribution = new MatchAttribution(
                     first.Account, second.Account,                                // FIFO seat order
-                    TelemetrySources.Classify(first.Account, second.Account, isBotAccount));
+                    friendly
+                        ? TelemetrySource.Friendly
+                        : TelemetrySources.Classify(first.Account, second.Account, isBotAccount));
 
                 // EF-071: deal from each seat's SUBMITTED deck where present, else the prebuilt fallback
                 // for that seat. HP + spark stay whatever the prebuilt pair uses (30 HP since
@@ -647,6 +789,7 @@ namespace Emberfall.Net.Server.Transport
                         _sessions.Remove(id.Value);
                         _accounts.Remove(id.Value);
                     }
+                    RaiseRosterChanged(attribution.P0, attribution.P1);
                     StartReadyMatches();
                 }, TaskScheduler.Default);
 
@@ -657,6 +800,7 @@ namespace Emberfall.Net.Server.Transport
                 // never later.
                 first.Seated.TrySetResult(new Seating(pump, 0));
                 second.Seated.TrySetResult(new Seating(pump, 1));
+                RaiseRosterChanged(attribution.P0, attribution.P1);
             }
             catch
             {

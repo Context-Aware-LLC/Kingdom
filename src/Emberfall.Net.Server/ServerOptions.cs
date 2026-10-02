@@ -81,5 +81,12 @@ namespace Emberfall.Net.Server
         /// for bot-fill, not exactly 10s.</para>
         /// </summary>
         public long BotFillDelayMs { get; init; } = 10_000;
+
+        /// <summary>
+        /// How long the first player to reach <c>/ws</c> with a challenge ticket waits for the
+        /// other (#409). Past it the socket is closed with "challenge expired" rather than left
+        /// hanging — the opponent's ticket died with the challenge, so nobody is coming.
+        /// </summary>
+        public long ChallengeArrivalTimeoutMs { get; init; } = 30_000;
     }
 }

@@ -148,19 +148,25 @@ namespace Emberfall.Net.Server.Social
         private readonly IFriendStore _friends;
         private readonly FriendLimits _limits;
         private readonly FriendRequestLimiter _limiter;
+        private readonly SocialHub? _hub;
 
+        /// <param name="hub">Told whenever a write changes somebody ELSE's view of the graph, so
+        /// a connected player hears about a request or a removal without polling. Null on a box
+        /// with no social socket; the routes are complete without it.</param>
         public FriendsEndpoint(
             IIdentityTokenVerifier? verifier,
             IAccountStore? accounts,
             IFriendStore friends,
             FriendLimits limits,
-            FriendRequestLimiter limiter)
+            FriendRequestLimiter limiter,
+            SocialHub? hub = null)
         {
             _verifier = verifier;
             _accounts = accounts;
             _friends = friends;
             _limits = limits;
             _limiter = limiter;
+            _hub = hub;
         }
 
         public FriendLimits Limits => _limits;
@@ -201,6 +207,11 @@ namespace Emberfall.Net.Server.Social
                 // Reachable only when a concurrent request filled the cap after the check above.
                 if (outcome == FriendRequestOutcome.AtCapacity)
                     return new FriendsResult(FriendsStatus.AtCapacity);
+
+                if (outcome == FriendRequestOutcome.Sent)
+                    await ChangedAsync(ct, target).ConfigureAwait(false);
+                else if (outcome == FriendRequestOutcome.Accepted)
+                    await ChangedAsync(ct, playerId, target).ConfigureAwait(false);
             }
 
             return await DoneAsync(FriendsStatus.Sent, playerId, ct).ConfigureAwait(false);
@@ -214,12 +225,16 @@ namespace Emberfall.Net.Server.Social
             if (refusal != null) return refusal;
             if (target is null) return new FriendsResult(FriendsStatus.NotFound);
 
-            return await _friends.AcceptAsync(playerId, target, _limits, ct).ConfigureAwait(false) switch
+            switch (await _friends.AcceptAsync(playerId, target, _limits, ct).ConfigureAwait(false))
             {
-                FriendAcceptOutcome.Accepted => await DoneAsync(FriendsStatus.Accepted, playerId, ct).ConfigureAwait(false),
-                FriendAcceptOutcome.AtCapacity => new FriendsResult(FriendsStatus.AtCapacity),
-                _ => new FriendsResult(FriendsStatus.NotFound),
-            };
+                case FriendAcceptOutcome.Accepted:
+                    await ChangedAsync(ct, playerId, target).ConfigureAwait(false);
+                    return await DoneAsync(FriendsStatus.Accepted, playerId, ct).ConfigureAwait(false);
+                case FriendAcceptOutcome.AtCapacity:
+                    return new FriendsResult(FriendsStatus.AtCapacity);
+                default:
+                    return new FriendsResult(FriendsStatus.NotFound);
+            }
         }
 
         /// <summary><c>POST /friends/decline {code}</c> — refuse a request, or withdraw one the
@@ -228,7 +243,8 @@ namespace Emberfall.Net.Server.Social
         {
             var (refusal, playerId, target) = await ResolveTargetAsync(bearerToken, code, limited: false, ct).ConfigureAwait(false);
             if (refusal != null) return refusal;
-            if (target != null) await _friends.DeclineAsync(playerId, target, ct).ConfigureAwait(false);
+            if (target != null && await _friends.DeclineAsync(playerId, target, ct).ConfigureAwait(false))
+                await ChangedAsync(ct, target).ConfigureAwait(false);
             return await DoneAsync(FriendsStatus.Declined, playerId, ct).ConfigureAwait(false);
         }
 
@@ -237,7 +253,8 @@ namespace Emberfall.Net.Server.Social
         {
             var (refusal, playerId, target) = await ResolveTargetAsync(bearerToken, code, limited: false, ct).ConfigureAwait(false);
             if (refusal != null) return refusal;
-            if (target != null) await _friends.RemoveAsync(playerId, target, ct).ConfigureAwait(false);
+            if (target != null && await _friends.RemoveAsync(playerId, target, ct).ConfigureAwait(false))
+                await ChangedAsync(ct, playerId, target).ConfigureAwait(false);
             return await DoneAsync(FriendsStatus.Removed, playerId, ct).ConfigureAwait(false);
         }
 
@@ -249,9 +266,20 @@ namespace Emberfall.Net.Server.Social
             var (refusal, playerId, target) = await ResolveTargetAsync(bearerToken, code, limited: true, ct).ConfigureAwait(false);
             if (refusal != null) return refusal;
 
-            if (target != null &&
-                await _friends.BlockAsync(playerId, target, _limits, ct).ConfigureAwait(false) == FriendBlockOutcome.AtCapacity)
-                return new FriendsResult(FriendsStatus.AtCapacity);
+            if (target != null)
+            {
+                // Read BEFORE the block, because the block is what erases the answer. The target
+                // is told only when something of theirs actually changed: nudging a stranger on
+                // being blocked would tell them somebody blocked them.
+                FriendList before = await _friends.ReadAsync(playerId, ct).ConfigureAwait(false);
+                bool related = before.Friends.Concat(before.Incoming).Concat(before.Outgoing)
+                    .Any(entry => entry.PlayerId == target);
+
+                if (await _friends.BlockAsync(playerId, target, _limits, ct).ConfigureAwait(false) == FriendBlockOutcome.AtCapacity)
+                    return new FriendsResult(FriendsStatus.AtCapacity);
+
+                if (related) await ChangedAsync(ct, playerId, target).ConfigureAwait(false);
+            }
 
             return await DoneAsync(FriendsStatus.Blocked, playerId, ct).ConfigureAwait(false);
         }
@@ -284,6 +312,9 @@ namespace Emberfall.Net.Server.Social
             await _friends.SetDisplayNameAsync(playerId, check.Normalized, ct).ConfigureAwait(false);
             return await DoneAsync(FriendsStatus.Named, playerId, ct).ConfigureAwait(false);
         }
+
+        private Task ChangedAsync(CancellationToken ct, params string[] playerIds)
+            => _hub is null ? Task.CompletedTask : _hub.GraphChangedAsync(playerIds, ct);
 
         private async Task<FriendsResult> DoneAsync(FriendsStatus status, string playerId, CancellationToken ct)
             => new FriendsResult(status, await _friends.ReadAsync(playerId, ct).ConfigureAwait(false));

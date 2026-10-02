@@ -21,8 +21,16 @@ namespace Emberfall.Net.Server.Telemetry
     /// sample would contaminate the balance data with matches that are not human-vs-human. It is
     /// also NOT <see cref="AiSoak"/> — that source means BOTH seats are synthetic soak accounts;
     /// here one seat is a real human. Filter it out of both when reading the balance dataset.</para>
+    ///
+    /// <para><b><see cref="Friendly"/></b> (#409) is two humans who CHOSE each other through a
+    /// friend challenge. Never derived by <see cref="TelemetrySources.Classify"/>: it is set by
+    /// <c>MatchGate</c> on the one path that seats a redeemed challenge ticket. It is NOT
+    /// <see cref="Ladder"/>, and that is the whole mechanism of Sam's ruling (2026-10-01) that a
+    /// friend match pays quests and Gold but not rank — <c>RankedMatchResult.IsEligible</c> asks
+    /// for Ladder, so a Friendly result moves no rating without anything having to remember to
+    /// skip it. Keep it out of the balance sample too: two friends can agree on the result.</para>
     /// </summary>
-    public enum TelemetrySource { Ladder, AiSoak, BotFill }
+    public enum TelemetrySource { Ladder, AiSoak, BotFill, Friendly }
 
     /// <summary>One seat's result. Mirrors the `result` column in telemetry-spec §1's per-seat block.</summary>
     public enum SeatResult { Win, Loss, Draw }
