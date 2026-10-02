@@ -1,4 +1,4 @@
-# Emberfall agent working environment
+# Kingdom agent working environment
 
 These project rules apply to every agent working in this repository. Role-specific instructions
 may narrow an agent's scope or forbid publishing; when they do, follow the stricter rule.
