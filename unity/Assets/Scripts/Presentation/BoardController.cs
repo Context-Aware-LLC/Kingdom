@@ -1088,9 +1088,13 @@ namespace Emberfall.Presentation
             var frostCrystalLower = MakeSprite(frostCrystalRoot.transform, "LowerShelf",
                 new Vector3(0f, -CardH * 0.29f, -0.009f),
                 new Vector2(CardW + 0.54f, (CardW + 0.54f) / 1.776f));
-            frostCrystalLeft.sprite = _uiSprites?.Get(FrostCrystalsLeftSpriteKey);
-            frostCrystalRight.sprite = _uiSprites?.Get(FrostCrystalsRightSpriteKey);
-            frostCrystalLower.sprite = _uiSprites?.Get(FrostCrystalsLowerSpriteKey);
+            // Assigning SpriteRenderer.sprite resets .size to the texture's native PPU extent.
+            // These generated pieces are 1024-1671 px, so direct assignment makes each one
+            // roughly 10-17 world units and fills most of the board. Restore the card-relative
+            // size MakeSprite established, and bind the per-texture sprite material as usual.
+            SpriteMaterials.SetPreservingSize(frostCrystalLeft, _uiSprites?.Get(FrostCrystalsLeftSpriteKey));
+            SpriteMaterials.SetPreservingSize(frostCrystalRight, _uiSprites?.Get(FrostCrystalsRightSpriteKey));
+            SpriteMaterials.SetPreservingSize(frostCrystalLower, _uiSprites?.Get(FrostCrystalsLowerSpriteKey));
             frostCrystalLeft.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
             frostCrystalRight.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
             frostCrystalLower.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
@@ -1104,7 +1108,7 @@ namespace Emberfall.Presentation
             var bulwarkRenderer = MakeSprite(root.transform, "BulwarkShields",
                 new Vector3(0f, -CardH * 0.06f, -0.007f),
                 new Vector2(CardW + 0.72f, (CardW + 0.72f) / 1.5f));
-            bulwarkRenderer.sprite = _uiSprites?.Get(BulwarkEffectSpriteKey);
+            SpriteMaterials.SetPreservingSize(bulwarkRenderer, _uiSprites?.Get(BulwarkEffectSpriteKey));
             bulwarkRenderer.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
             bulwarkRenderer.enabled = false;
 
@@ -1121,9 +1125,9 @@ namespace Emberfall.Presentation
             var shroudLower = MakeSprite(shroudRoot.transform, "LowerBank",
                 new Vector3(0f, -CardH * 0.29f, -0.007f),
                 new Vector2(CardW + 0.62f, (CardW + 0.62f) / 1.777f));
-            shroudLeft.sprite = _uiSprites?.Get(ShroudSmokeLeftSpriteKey);
-            shroudRight.sprite = _uiSprites?.Get(ShroudSmokeRightSpriteKey);
-            shroudLower.sprite = _uiSprites?.Get(ShroudSmokeLowerSpriteKey);
+            SpriteMaterials.SetPreservingSize(shroudLeft, _uiSprites?.Get(ShroudSmokeLeftSpriteKey));
+            SpriteMaterials.SetPreservingSize(shroudRight, _uiSprites?.Get(ShroudSmokeRightSpriteKey));
+            SpriteMaterials.SetPreservingSize(shroudLower, _uiSprites?.Get(ShroudSmokeLowerSpriteKey));
             shroudLeft.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
             shroudRight.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
             shroudLower.sortingOrder = FrameRarityCatalog.FrameOrder + 1;
