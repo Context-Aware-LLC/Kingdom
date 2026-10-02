@@ -20,7 +20,7 @@ namespace Emberfall.Presentation
     ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (ARCANE_SURGE) only — attack-readiness
     ///                     used to also light it gold; Sam ruled it hideous and a duplicate of the
     ///                     exhausted-dim cue (CardPresenter.cs), removed 2026-08-16
-    ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield only
+    ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield on board minions only
     ///   Bulwark shields  → bulwarkRenderer toggled by AuraSet.Bulwark on board minions only;
     ///                       the existing front-row offset remains the primary spatial cue
     ///   Shroud smoke     → shroudSmoke animates three perimeter pieces on board minions only;
@@ -88,6 +88,7 @@ namespace Emberfall.Presentation
             if (_boardStatusEffectsVisible == visible) return;
             _boardStatusEffectsVisible = visible;
             AuraSet auras = _live != null ? _live.Auras : AuraSet.None;
+            ApplyAegis(auras);
             ApplyBulwark(auras);
             ApplyShroudSmoke(auras);
             ApplyFrostCrystals(auras);
@@ -211,15 +212,19 @@ namespace Emberfall.Presentation
             // Glow: combined signal (aura / can-attack) — see ApplyGlow().
             ApplyGlow();
 
-            // Aegis underlay: Aegis only. Bulwark reads spatially (front row,
+            // Aegis underlay: board minions with Aegis only. Bulwark reads spatially (front row,
             // decision 2026-07-17), plus the paired-shield concept treatment below — no keyword
             // glow, so the shared gold bubble unambiguously means Shield.
-            if (_aegisRenderer != null)
-                _aegisRenderer.enabled = (auras & AuraSet.Shield) != 0;
-
+            ApplyAegis(auras);
             ApplyBulwark(auras);
             ApplyShroudSmoke(auras);
             ApplyFrostCrystals(auras);
+        }
+
+        private void ApplyAegis(AuraSet auras)
+        {
+            if (_aegisRenderer != null)
+                _aegisRenderer.enabled = _boardStatusEffectsVisible && (auras & AuraSet.Shield) != 0;
         }
 
         private void ApplyBulwark(AuraSet auras)

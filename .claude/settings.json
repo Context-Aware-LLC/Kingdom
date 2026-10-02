@@ -1,9 +1,4 @@
 {
-  "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "code-simplifier@claude-plugins-official": true
-  },
   "hooks": {
     "SessionStart": [
       {
@@ -43,6 +38,16 @@
           }
         ]
       }
+    ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "ClaudeInChromeDomain(hyper3d.ai)"
     ]
   }
 }

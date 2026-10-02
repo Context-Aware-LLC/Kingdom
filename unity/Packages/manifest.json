@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.deemos.rodinbridge": "file:C:/Users/User/Downloads/unity_rodin_bridge_v0.2.0 (1)",
     "com.emberfall.core": "file:../../src/Emberfall.Core",
     "com.emberfall.core.cards": "file:../../src/Emberfall.Core.Cards",
     "com.emberfall.core.collection": "file:../../src/Emberfall.Core.Collection",

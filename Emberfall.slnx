@@ -28,4 +28,10 @@
     <Project Path="tests/Emberfall.Net.Server.Tests/Emberfall.Net.Server.Tests.csproj" />
     <Project Path="tests/Emberfall.Training.Corpus.Tests/Emberfall.Training.Corpus.Tests.csproj" />
   </Folder>
+  <Folder Name="/unity/">
+    <Project Path="unity/Assembly-CSharp.csproj" />
+    <Project Path="unity/Google.Play.Games.csproj" />
+    <Project Path="unity/Google.Play.Games.Editor.csproj" />
+    <Project Path="unity/Unity.VisualStudio.Editor.csproj" />
+  </Folder>
 </Solution>

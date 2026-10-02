@@ -126,9 +126,9 @@ namespace Emberfall.Presentation
                 "collection",
                 TidbitTrigger.CollectionArrival,
                 "The collection",
-                "Every card you own is here. Actually every card you wish you owned is here too.\n" +
+                "Every card you own is here. Every card you wish you owned is here also.\n" +
                 "Tap one to Render a copy, or to Reduce a spare into shards.\n" +
-                "Decks opens your decks. Don't over think it.",
+                "The Decks button shows you the thing it says. Don't over think it.",
                 "tidbit_collection"),
             new Tidbit(
                 "deck-editor",
@@ -136,7 +136,7 @@ namespace Emberfall.Presentation
                 "Building a deck",
                 "Tap a card to add. Tap a row to subtract.\n" +
                 "A deck is 30 cards, two copies max, only one of any Legendary.\n" +
-                "Sing a little song to help you remember. Tap Add, Tap Subtract. Tap my foot.",
+                "Sing a little song to help you remember. Tap Add, Tap Subtract. Tap foot tap tap.",
                 "tidbit_deck_editor"),
             new Tidbit(
                 "vault",
@@ -150,14 +150,14 @@ namespace Emberfall.Presentation
                 TidbitTrigger.PackVaultGiftComplete,
                 "Now entering the kingdom.",
                 "Probably a bad idea.\n" +
-                "Now get out there and make the kingdom a better place.",
+                "Your going to go out there and make the kingdom a better place, I'm sure.",
                 "tidbit_shards"),
             new Tidbit(
                 "store",
                 TidbitTrigger.PackVaultGiftComplete,
                 "The Store",
-                "You don't have to be rich to live like a king." +
-                "If you are willing to toil every day completing quests you might grow up to be one.",
+                "You don't have to be rich to live like a king.\n" +
+                "If you are toil every day completing quests you might grow up to be one.",
                 "tidbit_store"),
             new Tidbit(
                 "shop",
