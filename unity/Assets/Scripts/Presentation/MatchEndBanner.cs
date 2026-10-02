@@ -9,7 +9,7 @@ namespace Emberfall.Presentation
     /// ("VICTORY" / "DEFEAT" / "DRAW") from the local seat's perspective. Built procedurally
     /// on demand by NetworkedGameBootstrap's OnMatchEnded handler — same primitives-only approach
     /// as HeroPlateView.
-    /// The banner remains visible briefly, then returns every match mode to the main menu.
+    /// The banner remains visible briefly, then returns every match mode to deck selection.
     /// </summary>
     public static class MatchEndBanner
     {

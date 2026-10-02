@@ -31,6 +31,17 @@ namespace Emberfall.Presentation
             _deckId = "";
         }
 
+        /// <summary>
+        /// Open the deck roster as the deck-selection step. Find Game and the end of a match both
+        /// land here, so a player who just finished a game is one pick away from the next.
+        /// </summary>
+        public static void OpenPicker()
+        {
+            BeginChoosing();
+            CharacterRosterController.ReturnScene = ScreenNav.MainMenu;
+            ScreenNav.Go(ScreenNav.CharacterRoster);
+        }
+
         public static void Cancel()
         {
             Choosing = false;

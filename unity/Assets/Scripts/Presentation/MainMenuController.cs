@@ -592,9 +592,7 @@ namespace Emberfall.Presentation
         /// </summary>
         private void OnFindGame()
         {
-            MatchDeckSelection.BeginChoosing();
-            CharacterRosterController.ReturnScene = ScreenNav.MainMenu;
-            ScreenNav.Go(ScreenNav.CharacterRoster);
+            MatchDeckSelection.OpenPicker();
         }
 
         /// <summary>

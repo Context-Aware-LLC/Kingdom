@@ -19,7 +19,7 @@ namespace Emberfall.Core.Tests.Presentation
                 fileName));
 
         [Test]
-        public void Shared_Result_Banner_Returns_To_MainMenu_After_Three_Real_Time_Seconds()
+        public void Shared_Result_Banner_Returns_To_Deck_Selection_After_Three_Real_Time_Seconds()
         {
             string bannerSource = StripComments(PresentationSource("MatchEndBanner.cs"));
             string returnSource = StripComments(PresentationSource("MatchEndMenuReturn.cs"));
@@ -27,13 +27,13 @@ namespace Emberfall.Core.Tests.Presentation
             Assert.Multiple(() =>
             {
                 Assert.That(bannerSource, Does.Contain("root.AddComponent<MatchEndMenuReturn>()"),
-                    "Showing the shared result banner must also schedule the menu return.");
+                    "Showing the shared result banner must also schedule the return.");
                 Assert.That(returnSource, Does.Match(@"ReturnDelaySeconds\s*=\s*3f"),
                     "The board-approved result-screen duration is three seconds.");
                 Assert.That(returnSource, Does.Contain("new WaitForSecondsRealtime(ReturnDelaySeconds)"),
                     "The automatic return must not stall when scaled game time is paused.");
-                Assert.That(returnSource, Does.Match(@"ScreenNav\.Go\(ScreenNav\.MainMenu\)"),
-                    "The scheduled destination must be the shared MainMenu scene constant.");
+                Assert.That(returnSource, Does.Match(@"MatchDeckSelection\.OpenPicker\(\)"),
+                    "The scheduled destination must be deck selection, by the same door Find Game uses.");
             });
         }
 
