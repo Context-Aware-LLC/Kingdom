@@ -1,0 +1,237 @@
+/*
+ * friends.uss — the friends button and its right-side drawer (FriendsDrawer.uxml, #409).
+ *
+ * EVERY RULE IS SCOPED UNDER `.fr-root`, for the reason settings.uss gives: theme.uss's one-class
+ * `.unity-button` rules would otherwise win a one-class tie.
+ *
+ * The drawer is always laid out and slides by `translate`; `.fr-root--open` is the only switch.
+ * A `display` toggle would skip the transition.
+ */
+
+.fr-root {
+    flex-grow: 1;
+}
+
+.fr-root .unity-button:hover:enabled,
+.fr-root .unity-button:focus:enabled,
+.fr-root .unity-button:active:enabled,
+.fr-root .unity-button:hover:active:enabled {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgba(0, 0, 0, 0);
+}
+
+/* ---------- Corner button ----------
+ * `.ms-gear` (settings.uss) with a different icon, one row up: the gear is 68 tall at
+ * bottom var(--space-6), so this sits a var(--space-4) gap above it — 24 + 68 + 16. Stacked rather
+ * than beside it because Collection already parks a button immediately left of the gear. */
+.fr-root .fr-button {
+    position: absolute;
+    bottom: 108px;
+    right: var(--space-6);
+    width: 68px;
+    height: 68px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 0;
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("/Assets/Art/UI/Chrome/ui_button_secondary_slate.png");
+    -unity-slice-left: 64;
+    -unity-slice-right: 64;
+    -unity-slice-top: 36;
+    -unity-slice-bottom: 36;
+    -unity-slice-scale: 0.5px;
+    -unity-background-image-tint-color: rgb(218, 224, 232);
+    transition-property: -unity-background-image-tint-color, translate;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.fr-root .fr-button:hover:enabled {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+.fr-root .fr-button:active:enabled {
+    -unity-background-image-tint-color: rgb(188, 195, 205);
+    translate: 0 1px;
+}
+/* A head and shoulders, in the gear bars' gold. */
+.fr-root .fr-icon-head {
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    margin-bottom: 3px;
+    background-color: rgb(232, 194, 132);
+}
+.fr-root .fr-icon-body {
+    width: 28px;
+    height: 13px;
+    border-top-left-radius: 13px;
+    border-top-right-radius: 13px;
+    background-color: rgb(232, 194, 132);
+}
+
+/* ---------- Scrim ---------- */
+.fr-root .fr-scrim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+    background-color: rgba(11, 14, 19, 0.68);
+}
+.fr-root--open .fr-scrim {
+    display: flex;
+}
+
+/* ---------- Drawer ----------
+ * Anchored to the right PANEL edge so it paints under the cutout, with the cutout's clearance
+ * spent as right padding (the `.emb-bleed` idea, on one side). */
+.fr-root .fr-drawer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 560px;
+    padding: var(--space-6);
+    padding-right: 76px;                 /* var(--space-6) + var(--edge-safe) */
+    background-color: var(--surface-1);
+    border-left-width: 2px;
+    border-left-color: var(--surface-3);
+    translate: 100% 0;
+    transition-property: translate;
+    transition-duration: 0.18s;
+    transition-timing-function: ease-out;
+}
+.fr-root--open .fr-drawer {
+    translate: 0 0;
+}
+
+.fr-root .fr-title {
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    margin-bottom: var(--space-4);
+}
+
+.fr-root .fr-code-row,
+.fr-root .fr-add-row {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: var(--space-3);
+}
+.fr-root .fr-own-code {
+    flex-grow: 1;
+    flex-shrink: 1;
+    font-size: var(--type-body);
+    color: var(--ink-2);
+}
+
+/* The recessed input chrome Collection's search uses (.chrome-input, collection.uss). */
+.fr-root .fr-input {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 56px;
+    height: 56px;
+    margin: 0;
+}
+.fr-root .fr-input > .unity-base-text-field__input {
+    min-height: 56px;
+    padding-left: 18px;
+    padding-right: 18px;
+    border-width: 0;
+    border-radius: 0;
+    color: var(--ink-1);
+    font-size: var(--type-body);
+    background-color: rgba(8, 12, 18, 0.98);
+    background-image: url("/Assets/Art/UI/Chrome/ui_input_recessed_slate.png");
+    -unity-slice-left: 48;
+    -unity-slice-right: 48;
+    -unity-slice-top: 28;
+    -unity-slice-bottom: 28;
+    -unity-slice-scale: 0.5px;
+}
+.fr-root .fr-input > .unity-base-text-field__input:focus {
+    -unity-background-image-tint-color: rgb(255, 239, 211);
+}
+
+.fr-root .fr-small-button {
+    flex-shrink: 0;
+    height: 56px;
+    min-width: 96px;
+    margin: 0 0 0 var(--space-3);
+    padding: 0 var(--space-4);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+}
+
+.fr-root .fr-status {
+    flex-shrink: 0;
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    white-space: normal;
+    margin-bottom: var(--space-3);
+}
+.fr-root .fr-status--error {
+    color: var(--negative);
+}
+
+.fr-root .fr-lists {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.fr-root .fr-section {
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    color: var(--ink-2);
+    margin-top: var(--space-4);
+    margin-bottom: var(--space-2);
+}
+.fr-root .fr-empty {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+    white-space: normal;
+    margin-top: var(--space-4);
+}
+
+.fr-root .fr-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 68px;
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-2);
+    background-color: var(--surface-2);
+    border-radius: var(--space-2);
+}
+/* A NAME IS TEXT ANOTHER PLAYER TYPED (security.md, friends renderer). This is the clip in
+ * PIXELS: the label may shrink to nothing and never widens the row, so no name can push the
+ * buttons out of the drawer. Rich text is switched off where the label is built, in
+ * FriendsDrawerController.NameLabel. Do not drop one for the other. */
+.fr-root .fr-row__name {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--type-body);
+    color: var(--ink-1);
+}
+.fr-root .fr-row__button {
+    flex-shrink: 0;
+    height: 52px;
+    min-width: 0;
+    margin: 0 0 0 var(--space-2);
+    padding: 0 var(--space-4);
+    font-size: var(--type-label);
+}
+
+.fr-root .fr-close {
+    flex-shrink: 0;
+    height: 68px;
+    margin: var(--space-4) 0 0 0;
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+}
