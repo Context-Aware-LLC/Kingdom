@@ -367,8 +367,9 @@ def already_depicted(seeds_by_set, rows_by_id, want_class, budget=90):
 
 
 def draft_request(card, facts, exemplars, taken):
-    return f"""You are writing art direction for one card in Emberfall, a painterly digital
-fantasy trading card game set in a world after a sky-fire cataclysm.
+    return f"""You are writing art direction for one card in Kingdom of Bad Ideas, a painterly
+digital fantasy trading card game set in a bright, warm storybook realm: an opulent capital
+(Pendingham) ringed by threadbare, cheerful villages, played completely straight.
 
 {SCHEMA_BLOCK}
 

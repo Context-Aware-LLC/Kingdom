@@ -203,7 +203,7 @@ Compose with generous margin — keep the subject's focal point centered, since 
 - Painterly digital fantasy illustration. Not photorealistic, not a 3D render, and not anime or cel-shaded."""
 
 STYLE = """STYLE
-Stylized fantasy trading-card-game illustration, painterly digital art, dramatic rim lighting, single clear subject with strong silhouette, rich saturated colors, dynamic composition, centered focal point, background supports but never competes with subject, professional card game art quality, no text, no border, no frame, no watermark."""
+Stylized fantasy trading-card-game illustration, painterly digital art, warm sunlit storybook lighting with a clean rim light, whimsical and charming, single clear subject with strong silhouette, rich saturated colors, dynamic composition, centered focal point, one deadpan comic detail in the background, background supports but never competes with subject, professional card game art quality, no text, no border, no frame, no watermark."""
 
 NEGATIVE_PROMPT = """NEGATIVE PROMPT
 text, letters, watermark, signature, frame, border, UI, photorealism, 3D render, anime, blurry, multiple competing subjects, cropped subject head"""
