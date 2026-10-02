@@ -1284,10 +1284,10 @@ namespace Emberfall.Net.Server
         /// four-character string "null" and would be drawn as a friend called null. An empty
         /// string cannot be a name (<c>PlayerName.MinLength</c>) and reads as absent.</para>
         ///
-        /// <para><b>LATENT (security.md, "A friend's display name has no renderer yet").</b>
-        /// <c>displayName</c> is peer-authored text. Whatever client screen first draws it is the
-        /// second renderer of that string and owes what the nameplate owes: rich text OFF, and a
-        /// clip in PIXELS. Building that screen discharges the entry.</para>
+        /// <para><c>displayName</c> is peer-authored text. Its renderer is
+        /// <c>FriendsDrawerController.NameLabel</c>, which owes what the nameplate owes: rich text
+        /// OFF, and a clip in PIXELS. A further renderer inherits both (security.md, "Friends
+        /// routes").</para>
         ///
         /// <para>Cache-Control: no-store, for the reason <c>/roster</c> sets it.</para>
         /// </summary>

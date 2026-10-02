@@ -564,6 +564,9 @@ namespace Emberfall.Presentation
         private void MountSettingsOverlay()
         {
             MatchSettingsController.Mount(onConcede: null, showConcede: false);
+            // #409: the friends button sits directly above the gear. Main menu only for now —
+            // Collection and the roster each park their own control beside that corner.
+            FriendsDrawerController.Mount();
         }
 
         // ── Shared modal plumbing ───────────────────────────────────────────────────────

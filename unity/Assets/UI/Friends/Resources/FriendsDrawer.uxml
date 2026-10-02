@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FriendsDrawer.uxml (#409). A corner button, modelled on the settings gear and parked directly
+  above it, that slides a friends drawer in from the right edge.
+
+  Loaded at runtime via Resources and bound by FriendsDrawerController, on the same PanelSettings
+  the settings overlay uses. Styled by ../friends.uss; every rule is scoped under .fr-root.
+
+  The root is picking-mode Ignore so whatever is behind keeps its clicks; only the button
+  (always) and the scrim and drawer (while open) are pickable.
+
+  The lists are built in code: their length is whatever the server answers.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../../Common/theme.uss" />
+    <Style src="../friends.uss" />
+
+    <ui:VisualElement name="root" class="emb-root fr-root" picking-mode="Ignore">
+
+        <!-- Persistent corner button. The icon is two shapes, not a glyph, so it is font-independent. -->
+        <ui:Button name="btn-friends" class="fr-button emb-edge">
+            <ui:VisualElement class="fr-icon-head" picking-mode="Ignore" />
+            <ui:VisualElement class="fr-icon-body" picking-mode="Ignore" />
+        </ui:Button>
+
+        <ui:VisualElement name="scrim" class="fr-scrim" />
+
+        <ui:VisualElement name="drawer" class="fr-drawer">
+            <ui:Label text="Friends" class="fr-title" />
+
+            <ui:VisualElement class="fr-code-row">
+                <ui:Label name="own-code" text=" " class="fr-own-code" />
+                <ui:Button name="btn-copy-code" text="Copy" class="fr-small-button" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="fr-add-row">
+                <ui:TextField name="add-code" max-length="16" placeholder-text="Friend code" hide-placeholder-on-focus="true" emoji-fallback-support="false" class="fr-input" />
+                <ui:Button name="btn-add" text="Add" class="fr-small-button emb-primary" />
+            </ui:VisualElement>
+
+            <ui:Label name="status" text=" " class="fr-status" />
+
+            <ui:ScrollView name="lists" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="fr-lists" />
+
+            <ui:Button name="btn-close" text="Close" class="fr-close" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

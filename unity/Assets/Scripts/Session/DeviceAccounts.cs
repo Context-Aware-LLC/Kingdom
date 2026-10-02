@@ -180,6 +180,7 @@ namespace Emberfall.Session
             // Nothing of this one's is written to disk, but it holds a transport pointed at a host that
             // BaseUrl can move underneath it, and it spends entitlements.
             PackGateway.Invalidate();
+            FriendsGateway.Invalidate();
         }
 
         /// <summary>
