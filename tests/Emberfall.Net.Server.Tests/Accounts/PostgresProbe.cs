@@ -41,7 +41,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
             await using var conn = new NpgsqlConnection(connString);
             await conn.OpenAsync();
             await using var cmd = new NpgsqlCommand(
-                "truncate table entitlement_grant, account, deck, character", conn);
+                "truncate table entitlement_grant, account, deck, friend_code, friendship, friend_block", conn);
             await cmd.ExecuteNonQueryAsync();
         }
     }

@@ -206,3 +206,59 @@ create index if not exists quest_progress_player_day_idx
 
 -- Server-private, like the ladder tables above: Supabase's Data API gets no policies and no rows.
 alter table quest_progress enable row level security;
+
+-- ── Friends (#409) ─────────────────────────────────────────────────────────────────────────────
+-- Keyed on player_id like everything else here, and on NOTHING from `account.email`: some accounts
+-- authenticate without one (Sam, 2026-10-01), and a friends graph that needed it would exclude them.
+
+-- A player's friend code — the only identifier of another player that ever reaches a client — and
+-- the name they chose to show their friends. Minted lazily, on a player's first social request, so
+-- a player who has never opened the social surface has no row and cannot be found by a code.
+--
+-- display_name is client-authored text rendered on SOMEBODY ELSE'S machine. It is stored only after
+-- PlayerName.Check (FriendsEndpoint.SetNameAsync) — a hand-written UPDATE bypasses that.
+create table if not exists friend_code (
+  player_id     text        primary key,
+  code          text        not null unique,   -- FriendCode canonical form: ten symbols, no hyphen
+  display_name  text,
+  created_at    timestamptz not null
+);
+
+-- One row per PAIR, whoever asked: the lower player_id is always player_lo, so A→B and B→A are the
+-- same row and cannot both exist. The comparison is pinned to "C" because the application orders
+-- the pair ordinally (InMemoryFriendStore.Key), and a database whose default collation disagreed
+-- would reject a row the application considers ordered.
+--
+-- A block is NOT a status here — see friend_block.
+create table if not exists friendship (
+  player_lo     text        not null,
+  player_hi     text        not null,
+  status        text        not null,
+  requested_by  text        not null,
+  created_at    timestamptz not null,
+  primary key (player_lo, player_hi),
+  constraint friendship_ordered check (player_lo collate "C" < player_hi collate "C"),
+  constraint friendship_status check (status in ('pending', 'accepted')),
+  constraint friendship_requester check (requested_by in (player_lo, player_hi))
+);
+
+-- The primary key serves the player_lo half of "every row touching this player".
+create index if not exists friendship_hi_idx on friendship (player_hi);
+
+-- Blocks are directional and each side's is its own row. Folding them into friendship.status would
+-- give a pair ONE block between them, so the first side to unblock would lift the other's too.
+create table if not exists friend_block (
+  blocker     text        not null,
+  blocked     text        not null,
+  created_at  timestamptz not null,
+  primary key (blocker, blocked),
+  constraint friend_block_distinct check (blocker <> blocked)
+);
+
+create index if not exists friend_block_blocked_idx on friend_block (blocked);
+
+-- Server-private, like the ladder and quest tables above: Supabase's Data API gets no policies and
+-- no rows.
+alter table friend_code enable row level security;
+alter table friendship enable row level security;
+alter table friend_block enable row level security;

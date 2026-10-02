@@ -24,6 +24,7 @@ using Emberfall.Net.Server.Matchmaking;
 using Emberfall.Net.Server.Quests;
 using Emberfall.Net.Server.Ranking;
 using Emberfall.Net.Server.Replay;
+using Emberfall.Net.Server.Social;
 using Emberfall.Net.Server.Telemetry;
 using Emberfall.Net.Server.Transport;
 using Emberfall.Net.Server.Training;
@@ -95,6 +96,15 @@ namespace Emberfall.Net.Server
         /// database; injected directly in tests.
         /// </summary>
         public IPlayerDataStore? PlayerDataStore { get; init; }
+
+        /// <summary>
+        /// The friends graph (#409) behind the <c>/friends</c> routes. Null (default) uses
+        /// <see cref="InMemoryFriendStore"/>, so on a box with no Postgres a restart forgets every
+        /// friendship AND re-mints every code — fine for dev, and the reason the durable adapter
+        /// exists. Shares the accounts database in production: the graph is keyed on the same
+        /// <c>player_id</c>.
+        /// </summary>
+        public IFriendStore? FriendStore { get; init; }
 
         /// <summary>
         /// The append-only entitlement ledger (EF-072) — where card, pack and currency ownership
@@ -204,6 +214,9 @@ namespace Emberfall.Net.Server
             IRatingStore? ratingStore = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresRatingStore(accountsDb!);
+            IFriendStore? friendStore = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new PostgresFriendStore(accountsDb!, new SystemTimeSource());
 
             // The entitlement ledger — the write path that makes an unowned card a real thing. It
             // falls back to the accounts connection because the ledger is keyed on Account.PlayerId
@@ -236,6 +249,7 @@ namespace Emberfall.Net.Server
                 TokenVerifier = tokenVerifier,
                 AccountStore = accountStore,
                 PlayerDataStore = playerDataStore,
+                FriendStore = friendStore,
                 EntitlementLedger = entitlementLedger,
                 QuestProgress = questProgress,
                 RatingStore = ratingStore,
@@ -539,6 +553,13 @@ namespace Emberfall.Net.Server
                 onboarding,
                 cfg.EntitlementLedger);
 
+            var friends = new FriendsEndpoint(
+                cfg.TokenVerifier,
+                cfg.AccountStore,
+                cfg.FriendStore ?? new InMemoryFriendStore(time),
+                new FriendLimits(),
+                new FriendRequestLimiter(time));
+
             var app = builder.Build();
             app.UseWebSockets();
 
@@ -775,6 +796,43 @@ namespace Emberfall.Net.Server
                     // "completed" | "unauthenticated" | "unavailable".
                     status = result.Status.ToString().ToLowerInvariant(),
                 }, statusCode: result.HttpStatus);
+            });
+
+            // The /friends routes (#409) — a player's code, friends, requests and blocks. One JSON
+            // shape for all eight, because every 200 carries the caller's graph as it now stands
+            // and the client redraws from that rather than patching its own copy.
+            //
+            // BLOCK BODIES WITH `return`, NOT EXPRESSION BODIES. `async ctx => Json(...)` also
+            // converts to RequestDelegate, which wins overload resolution and DISCARDS the result:
+            // the route answers 200 with an empty body and nothing fails to compile.
+            app.MapGet("/friends", async (HttpContext context) =>
+            {
+                return FriendsJson(context, await friends.ReadAsync(BearerFrom(context), context.RequestAborted));
+            });
+
+            // The six verbs that name another player by code.
+            var friendVerbs = new (string Route, Func<string?, string?, CancellationToken, System.Threading.Tasks.Task<FriendsResult>> Run)[]
+            {
+                ("/friends/request", friends.RequestAsync),
+                ("/friends/accept", friends.AcceptAsync),
+                ("/friends/decline", friends.DeclineAsync),
+                ("/friends/remove", friends.RemoveAsync),
+                ("/friends/block", friends.BlockAsync),
+                ("/friends/unblock", friends.UnblockAsync),
+            };
+            foreach (var verb in friendVerbs)
+            {
+                app.MapPost(verb.Route, async (HttpContext context) =>
+                {
+                    return FriendsJson(context, await verb.Run(BearerFrom(context),
+                        await SmallJsonStringAsync(context, "code"), context.RequestAborted));
+                });
+            }
+
+            app.MapPut("/friends/name", async (HttpContext context) =>
+            {
+                return FriendsJson(context, await friends.SetNameAsync(BearerFrom(context),
+                    await SmallJsonStringAsync(context, "displayName"), context.RequestAborted));
             });
 
             // GET /collection — what the signed-in player owns, read down from the entitlement
@@ -1118,6 +1176,100 @@ namespace Emberfall.Net.Server
             });
 
             return (app, gate);
+        }
+
+        /// <summary>
+        /// One string field out of a small JSON object body, or null if the body is absent,
+        /// malformed, oversized or the field is not a string — the endpoint then answers as it
+        /// would for a missing value.
+        ///
+        /// <para><b>The size cap is the point.</b> These routes read the body before they
+        /// authenticate, and an uncapped read would let an unauthenticated caller make the server
+        /// buffer whatever it was sent. Past the cap the read stops; nothing is buffered beyond it.</para>
+        /// </summary>
+        private static async System.Threading.Tasks.Task<string?> SmallJsonStringAsync(
+            HttpContext context, string field)
+        {
+            const int MaxBytes = 512;
+            if (context.Request.ContentLength > MaxBytes) return null;
+
+            var buffer = new byte[MaxBytes + 1];
+            int read = 0;
+            while (read < buffer.Length)
+            {
+                int n = await context.Request.Body.ReadAsync(
+                    buffer.AsMemory(read, buffer.Length - read), context.RequestAborted);
+                if (n == 0) break;
+                read += n;
+            }
+            if (read == 0 || read > MaxBytes) return null;
+
+            try
+            {
+                using var body = JsonDocument.Parse(buffer.AsMemory(0, read));
+                return body.RootElement.ValueKind == JsonValueKind.Object &&
+                       body.RootElement.TryGetProperty(field, out var value) &&
+                       value.ValueKind == JsonValueKind.String
+                    ? value.GetString()
+                    : null;
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// The one JSON shape every <c>/friends</c> route answers with.
+        ///
+        /// <para>The lists are OMITTED on anything but a 200, for the reason <c>/roster</c> omits
+        /// its decks: an absent field cannot be misread as "this player has no friends".</para>
+        ///
+        /// <para>Each list is an ARRAY OF FLAT OBJECTS with scalar values, which is the only
+        /// shape the client's <c>AuthJson.TryReadObjectArray</c> reads. <c>outgoing</c> and
+        /// <c>blocked</c> carry the code ALONE, deliberately — see <see cref="FriendsEndpoint"/>
+        /// for why a name there would be a lookup service.</para>
+        ///
+        /// <para><b>LATENT (security.md, "A friend's display name has no renderer yet").</b>
+        /// <c>displayName</c> is peer-authored text. Whatever client screen first draws it is the
+        /// second renderer of that string and owes what the nameplate owes: rich text OFF, and a
+        /// clip in PIXELS. Building that screen discharges the entry.</para>
+        ///
+        /// <para>Cache-Control: no-store, for the reason <c>/roster</c> sets it.</para>
+        /// </summary>
+        private static IResult FriendsJson(HttpContext context, FriendsResult result)
+        {
+            context.Response.Headers["Cache-Control"] = "no-store";
+            string status = result.Status.ToString().ToLowerInvariant();
+            if (result.List is not { } list)
+                return Results.Json(new { status }, statusCode: result.HttpStatus);
+
+            static List<object> Named(IReadOnlyList<FriendIdentity> entries)
+            {
+                var rows = new List<object>(entries.Count);
+                foreach (FriendIdentity entry in entries)
+                    rows.Add(new { code = entry.Code, displayName = entry.DisplayName });
+                return rows;
+            }
+
+            static List<object> CodeOnly(IReadOnlyList<FriendIdentity> entries)
+            {
+                var rows = new List<object>(entries.Count);
+                foreach (FriendIdentity entry in entries)
+                    rows.Add(new { code = entry.Code });
+                return rows;
+            }
+
+            return Results.Json(new
+            {
+                status,
+                code = list.Self.Code,
+                displayName = list.Self.DisplayName,
+                friends = Named(list.Friends),
+                incoming = Named(list.Incoming),
+                outgoing = CodeOnly(list.Outgoing),
+                blocked = CodeOnly(list.Blocked),
+            }, statusCode: result.HttpStatus);
         }
 
         private static string? BearerFrom(HttpContext context)
