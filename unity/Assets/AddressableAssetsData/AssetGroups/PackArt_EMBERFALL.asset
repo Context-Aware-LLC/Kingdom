@@ -20,18 +20,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3c895ac6e607eff4ea6e197daf9e7039
-    m_Address: pack_art/pack_ef_01_pyra_cinderbound_4
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4a7851a74a571b84c9a77bf60310a318
     m_Address: pack_art/pack_ef_04_thalen_smallest_force
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6385b144034fdb246bd60143b9153481
-    m_Address: pack_art/pack_ef_01_pyra_cinderbound_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -42,11 +32,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: afc96c4541b40344593efc2bdbf0b135
     m_Address: pack_art/pack_ef_01_pyra_cinderbound_1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b02669e90ae393f4a9fe49645f136762
-    m_Address: pack_art/pack_ef_01_pyra_cinderbound_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

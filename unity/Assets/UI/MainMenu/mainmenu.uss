@@ -198,14 +198,14 @@
     position: absolute;
     left: var(--space-1);
     bottom: 60px;
-    width: 104px;
+    width: 160px;
     align-items: center;
 }
 .mm-vault-button {
-    width: 104px;
-    height: 104px;
-    min-width: 104px;
-    min-height: 104px;
+    width: 160px;
+    height: 160px;
+    min-width: 160px;
+    min-height: 160px;
     flex-shrink: 0;
     padding: 0;
     align-items: center;
@@ -214,17 +214,17 @@
     background-image: none;
     border-width: 6px;
     border-color: rgb(86, 93, 104);
-    border-radius: 52px;
+    border-radius: 80px;
     overflow: hidden;
     transition-property: border-color, scale;
     transition-duration: 0.12s;
     transition-timing-function: ease-out;
 }
 .mm-vault-art {
-    width: 54px;
-    height: 82px;
+    width: 84px;
+    height: 128px;
     flex-shrink: 0;
-    background-image: url("/Assets/Art/Shop/Packs/EMBERFALL/pack_ef_01_pyra_cinderbound_4.png");
+    background-image: url("/Assets/Art/Shop/Packs/EMBERFALL/pack_ef_01_pyra_cinderbound_1.png");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: rgb(222, 227, 234);
     border-radius: var(--space-1);
