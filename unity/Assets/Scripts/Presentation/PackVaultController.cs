@@ -500,7 +500,7 @@ namespace Emberfall.Presentation
 
             slot.Add(BuildMini(packId, held));
 
-            var label = new Label(PackLineName(packId)) { pickingMode = PickingMode.Ignore };
+            var label = new Label(TokenText.PackName(packId)) { pickingMode = PickingMode.Ignore };
             label.AddToClassList("vault-slot__label");
             slot.Add(label);
             return slot;
@@ -526,16 +526,6 @@ namespace Emberfall.Presentation
             badge.AddToClassList("vault-count");
             mini.Add(badge);
             return mini;
-        }
-
-        /// <summary>"pack.emberfall" → "Emberfall"; "pack.emberfall.starter" → "Emberfall Starter".</summary>
-        private static string PackLineName(string packId)
-        {
-            string[] parts = packId?.Split('.');
-            if (parts == null || parts.Length < 2) return "Pack";
-            string name = TokenText.Pretty(parts[1]);
-            if (name.Length == 0) return "Pack";
-            return parts.Length > 2 ? name + " " + TokenText.Pretty(parts[2]) : name;
         }
 
         /// <summary>What <see cref="PackRackDrag"/> is pressing on: a rack slot, found by walking

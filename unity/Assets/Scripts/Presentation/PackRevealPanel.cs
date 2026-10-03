@@ -101,7 +101,7 @@ namespace Emberfall.Presentation
             _list?.Clear();
             _list?.AddToClassList(ListHiddenClass);
             _generation++;
-            if (_title != null) _title.text = TokenText.Pretty(receipt.PackId) + " opened";
+            if (_title != null) _title.text = TokenText.PackName(receipt.PackId) + " opened";
             if (_summary != null)
                 _summary.text = receipt.Awards.Count == 1
                     ? "1 card"
@@ -148,7 +148,7 @@ namespace Emberfall.Presentation
                 if (receipt != null) awards.AddRange(receipt.Awards);
 
             if (_title != null)
-                _title.text = receipts.Count == 1 ? TokenText.Pretty(receipts[0].PackId) + " opened"
+                _title.text = receipts.Count == 1 ? TokenText.PackName(receipts[0].PackId) + " opened"
                                                   : $"{receipts.Count} packs opened";
             if (_summary != null)
             {

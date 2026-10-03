@@ -1,6 +1,8 @@
-# The World of Emberfall
+# The World of the Kingdom of Bad Ideas
 
-Emberfall takes place after a sky-fire cataclysm. Embers still drift like snow in parts of the world, and every faction has learned to survive, rebuild, or claim power from what remains.
+The Kingdom of Bad Ideas takes place after a sky-fire cataclysm. Embers still drift like snow in parts of the realm, and every faction has learned to survive, rebuild, or claim power from what remains.
+
+Its capital is **Pendingham**, the seat of his royal majesty, and the name of the first card set.
 
 The setting favors worn materials, old ruins, practical magic, and the tension between destruction and renewal. Its people are not restoring the old world exactly as it was; they are deciding what should rise in its place.
 

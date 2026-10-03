@@ -204,7 +204,7 @@ namespace Emberfall.Net.Client.Shop
 
         public static IReadOnlyList<PackOffer> Packs { get; } = Array.AsReadOnly(new[]
         {
-            new PackOffer("pack.emberfall", "Emberfall Pack", 200, 200),
+            new PackOffer("pack.emberfall", "Pendingham Pack", 200, 200),
             new PackOffer("pack.rekindling", "Rekindling Pack", 200, 200),
         });
 

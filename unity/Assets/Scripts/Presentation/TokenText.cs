@@ -15,6 +15,19 @@ namespace Emberfall.Presentation
     /// </summary>
     internal static class TokenText
     {
+        /// <summary>What a player calls a pack: "pack.emberfall" → "Pendingham",
+        /// "pack.emberfall.starter" → "Pendingham Starter". The setId stays the codename
+        /// (<c>Emberfall</c>, issue #397); only this text changes, so every pack name a player sees
+        /// goes through here rather than through <see cref="Pretty"/> on the raw id.</summary>
+        internal static string PackName(string packId)
+        {
+            string[] parts = packId?.Split('.');
+            if (parts == null || parts.Length < 2) return "Pack";
+            string name = parts[1] == "emberfall" ? "Pendingham" : Pretty(parts[1]);
+            if (name.Length == 0) return "Pack";
+            return parts.Length > 2 ? name + " " + Pretty(parts[2]) : name;
+        }
+
         internal static string Pretty(string raw)
         {
             if (string.IsNullOrEmpty(raw)) return "";

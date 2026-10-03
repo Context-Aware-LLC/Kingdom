@@ -769,9 +769,9 @@ namespace Emberfall.Presentation
             _detailShell.style.scale = scale;
         }
 
-        /// <summary>The catalog's display names all end in " Pack" (e.g. "Emberfall Pack"); the
+        /// <summary>The catalog's display names all end in " Pack" (e.g. "Pendingham Pack"); the
         /// detail title already supplies the word via "... cards for your collection", so a
-        /// literal "Emberfall Pack cards" would double it. Falls back to the full name for
+        /// literal "Pendingham Pack cards" would double it. Falls back to the full name for
         /// anything that does not end that way rather than mangling it.</summary>
         private static string ShortName(string displayName)
         {
