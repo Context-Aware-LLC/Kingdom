@@ -46,6 +46,7 @@ namespace Emberfall.Presentation
 
             // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).
             MatchSettingsController.Mount();
+            FriendsDrawerController.Mount();
 
             // PackArt stays an override seam (a test or a future streamed loader can set it); with
             // nobody overriding it the rails come from the art folders on disk. The authenticated
