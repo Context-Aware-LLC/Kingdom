@@ -62,8 +62,10 @@ namespace Emberfall.Presentation
         // seats the table in the hall scene, not re-eyeballed. UVs start at bottom-left.
         // BoardBackdrop projects these through the fitted artwork plane, so the
         // clusters remain seated in their painted furniture at every aspect and safe-area inset.
+        // P0's hero is nudged off its socket centre (171, 618) up and inboard, twice as far
+        // across as up (Sam, 2026-10-02): the camera's crop cut the portrait at the left edge.
         private static readonly Vector2 P0HeroFixtureUv =
-            new(171f / 1867f, 1f - 618f / 842f);
+            new(251f / 1867f, 1f - 578f / 842f);
         private static readonly Vector2 P1HeroFixtureUv =
             new(1508f / 1867f, 1f - 169f / 842f);
         private static readonly Vector2 P0ResourceFixtureUv =
@@ -97,6 +99,11 @@ namespace Emberfall.Presentation
         // the cluster root is projected onto the painted deck cradle.
         internal const float ManaGridX = 6.83f;   // rail 6.37..7.29
         internal const float DeckX     = 8.175f;  // resized pile fallback still ends at 8.90
+
+        // The pile renders at 2x its footprint (DeckPileView.RenderW 4.24, half-width 2.12), and the
+        // rail at DeckX - ManaGridX (1.345) from it sat entirely under the stack. Another 1.5 rail
+        // widths inboard clears it (Sam, 2026-10-02): the rail now spans 2.27..3.19 from the pile.
+        private const float ManaClearOfPileX = 1.5f * ManaTrayView.RailW;
 
         // ── Vertical (§1.3) ─────────────────────────────────────────────────────────────
         // Fallback baseline used until the artwork fit projects each fixture root.
@@ -203,7 +210,7 @@ namespace Emberfall.Presentation
                 new Vector3(xSign * -DeckX, ySign * DeckY, 0f));
             seat.DeckAnchor = MakeChildAnchor(resourceCluster, $"{prefix}_Deck", Vector3.zero);
             seat.ManaTrayAnchor = MakeChildAnchor(resourceCluster, $"{prefix}_ManaTray",
-                new Vector3(xSign * (DeckX - ManaGridX),
+                new Vector3(xSign * (DeckX - ManaGridX + ManaClearOfPileX),
                             ySign * (ManaGridY - DeckY), 0f));
         }
 

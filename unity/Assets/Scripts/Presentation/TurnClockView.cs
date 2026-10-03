@@ -14,7 +14,9 @@ namespace Emberfall.Presentation
     {
         public static readonly Vector3 BoardPosition = new(-6.3f, 0.6f, 0f);
         public static readonly Vector2 ArtworkUv =
-            new(209f / 1867f, 1f - 363f / 842f);    // v2 composite; see ProceduralBoardSetup
+            // v2 composite; see ProceduralBoardSetup. Moved up the left rail, away from the
+            // player, from the box at (209, 363) (Sam, 2026-10-02).
+            new(240f / 1867f, 1f - 290f / 842f);
 
         private static readonly Color SandColor = new(0.96f, 0.63f, 0.16f, 1f);
         private static readonly Color RopeSandColor = new(1.00f, 0.20f, 0.08f, 1f);

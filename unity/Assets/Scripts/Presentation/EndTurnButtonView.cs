@@ -14,7 +14,9 @@ namespace Emberfall.Presentation
     {
         public static readonly Vector3 BoardPosition = new(6.3f, 0f, 0f);
         public static readonly Vector2 ArtworkUv =
-            new(1669f / 1867f, 1f - 387f / 842f);   // v2 composite; see ProceduralBoardSetup
+            // v2 composite; see ProceduralBoardSetup. A touch up and left of the seal press's
+            // centre (1669, 387) (Sam, 2026-10-02).
+            new(1644f / 1867f, 1f - 367f / 842f);
 
         private const float HitW = 3.20f;
         private const float HitH = 2.05f;
