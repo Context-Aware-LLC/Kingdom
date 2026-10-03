@@ -1,5 +1,5 @@
 /*
- * friends.uss — the friends button and its right-side drawer (FriendsDrawer.uxml, #409).
+ * friends.uss — the friends button, its right-side drawer and the chat window (FriendsDrawer.uxml, #409).
  *
  * EVERY RULE IS SCOPED UNDER `.fr-root`, for the reason settings.uss gives: theme.uss's one-class
  * `.unity-button` rules would otherwise win a one-class tie.
@@ -254,30 +254,36 @@
     font-size: var(--type-body);
     color: var(--ink-1);
 }
-/* ---------- Panes ----------
- * The drawer holds the friends list or one conversation, never both. */
-.fr-root .fr-pane {
-    flex-grow: 1;
-    flex-shrink: 1;
+/* ---------- Chat window ----------
+ * One conversation, floating over the screen and open independently of the drawer. It starts
+ * beside the corner buttons: clear of the friends button (24 + 68, then a var(--space-4) gap) and
+ * above the gear's row, where Collection parks a button of its own. Dragging the header swaps
+ * these anchors for inline left/top (FriendsDrawerController.PlaceChat). */
+.fr-root .fr-chat-window {
+    position: absolute;
+    right: 108px;
+    bottom: 108px;
+    width: 520px;
+    height: 600px;
+    padding: var(--space-4);
+    background-color: var(--surface-1);
+    border-width: 2px;
+    border-color: var(--surface-3);
+    border-radius: var(--space-2);
 }
-.fr-root .fr-chat-pane {
+.fr-root .fr-chat-window--hidden {
     display: none;
 }
-.fr-root .fr-drawer--chat .fr-friends-pane {
-    display: none;
-}
-.fr-root .fr-drawer--chat .fr-chat-pane {
-    display: flex;
+.fr-root .fr-chat-window .fr-add-row {
+    margin-bottom: 0;
 }
 
+/* The drag handle: as tall as its Close button, so the whole strip is a finger's worth. */
 .fr-root .fr-chat-header {
     flex-direction: row;
     align-items: center;
     flex-shrink: 0;
     margin-bottom: var(--space-3);
-}
-.fr-root .fr-chat-back {
-    margin: 0 var(--space-3) 0 0;
 }
 /* A friend's name: clipped in pixels, rich text off in code (see .fr-row__name). */
 .fr-root .fr-chat-title {
@@ -297,7 +303,7 @@
     margin-bottom: var(--space-2);
 }
 /* VULN-004: A CHAT LINE IS TEXT ANOTHER PLAYER TYPED. It wraps inside a box no wider than 80% of
- * the drawer and clips what still overflows (an unbroken string has no wrap point). Rich text and
+ * the window and clips what still overflows (an unbroken string has no wrap point). Rich text and
  * escape sequences are switched off where the label is built (FriendsDrawerController.ChatLine). */
 .fr-root .fr-chat-line {
     max-width: 80%;

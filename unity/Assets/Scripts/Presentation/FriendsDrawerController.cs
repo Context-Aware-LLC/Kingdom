@@ -11,7 +11,9 @@ namespace Emberfall.Presentation
 {
     /// <summary>
     /// The friends button and its right-side drawer (#409): the player's own code, add by code,
-    /// requests to answer, friends, and requests still out. Built at runtime via Resources the way
+    /// requests to answer, friends, and requests still out — and the chat window a friend's Chat
+    /// button opens, which floats over the screen, drags by its header and stays open with the
+    /// drawer shut and across the screens this is mounted on. Built at runtime via Resources the way
     /// <see cref="MatchSettingsController"/> is, on the same PanelSettings, and modelled on its
     /// corner gear.
     ///
@@ -49,15 +51,24 @@ namespace Emberfall.Presentation
         private Button _challengeNo;
         private int _challengeSecondsShown = -1;
 
-        private VisualElement _drawer;
         private Label _badge;
+        private VisualElement _chatWindow;
         private Label _chatTitle;
         private ScrollView _chatLines;
         private Label _chatStatus;
         private TextField _chatInput;
 
-        /// <summary>The friend whose conversation is open; empty while the list is showing.</summary>
-        private string _chatCode = "";
+        /// <summary>The friend whose conversation the chat window shows; empty while it is closed.
+        /// Static, like <see cref="_chatPlace"/>: the drawer is rebuilt per scene, and the window
+        /// is meant to stay open across them.</summary>
+        private static string _chatCode = "";
+
+        /// <summary>Where the player dragged the window to, in the root's space. Null until they
+        /// do, and the stylesheet's corner anchors hold.</summary>
+        private static Vector2? _chatPlace;
+
+        private int _dragPointer = -1;
+        private Vector2 _dragGrip;
 
         private string _ownCodeDisplay = "";
         private bool _busy;
@@ -140,8 +151,8 @@ namespace Emberfall.Presentation
                 else ChallengeFlow.Withdraw();
             });
 
-            _drawer     = _root.Q<VisualElement>("drawer");
             _badge      = _root.Q<Label>("unread-badge");
+            _chatWindow = _root.Q<VisualElement>("chat-window");
             _chatTitle  = _root.Q<Label>("chat-title");
             _chatLines  = _root.Q<ScrollView>("chat-lines");
             _chatStatus = _root.Q<Label>("chat-status");
@@ -151,7 +162,8 @@ namespace Emberfall.Presentation
                 _chatTitle.enableRichText = false;       // a friend's name: see NameLabel
                 _chatTitle.parseEscapeSequences = false;
             }
-            _root.Q<Button>("chat-back")?.RegisterCallback<ClickEvent>(_ => ShowChat(""));
+            _root.Q<Button>("chat-close")?.RegisterCallback<ClickEvent>(_ => ShowChat(""));
+            WireChatDrag(_root.Q<VisualElement>("chat-header"));
             _root.Q<Button>("chat-send")?.RegisterCallback<ClickEvent>(_ => SendChat());
             // Enter sends. TrickleDown, because the field's own handler would otherwise eat it.
             _chatInput?.RegisterCallback<KeyDownEvent>(e =>
@@ -169,41 +181,94 @@ namespace Emberfall.Presentation
             Close();
             RenderChallenge();
             RenderBadge();
+
+            // The conversation left open on the last screen, where it was left. The place is
+            // re-clamped once this panel has a size: it was measured against the previous one.
+            _root.RegisterCallback<GeometryChangedEvent>(_ => { if (_chatPlace.HasValue) PlaceChat(_chatPlace.Value); });
+            ShowChat(_chatCode, focus: false);
         }
 
         // ── chat (VULN-004) ─────────────────────────────────────────────────────────────
 
-        /// <summary>Open one friend's conversation, or the list again with an empty code.</summary>
-        private void ShowChat(string code)
+        /// <summary>Show the chat window on one friend's conversation, or hide it with an empty code.</summary>
+        private void ShowChat(string code, bool focus = true)
         {
             _chatCode = code;
-            _drawer?.EnableInClassList("fr-drawer--chat", code.Length > 0);
-            if (code.Length == 0)
-            {
-                if (_shown != null) Render(_shown);   // unread counts on the rows changed
-                return;
-            }
+            _chatWindow?.EnableInClassList("fr-chat-window--hidden", code.Length == 0);
+            if (code.Length == 0) return;
+
             if (_chatTitle != null) _chatTitle.text = ChallengeFlow.NameOf(code);
             SetChatStatus("");
             if (_chatInput != null) _chatInput.value = "";
             ChatLog.MarkRead(code);
             RenderChat();
-            _chatInput?.Focus();
+            if (focus) _chatInput?.Focus();
         }
 
         private void OnChatChanged(string code)
         {
-            if (_chatCode.Length > 0 && (code == _chatCode || code.Length == 0))
+            if (code.Length == 0)
             {
-                // Read while looking at it.
-                if (IsOpen) ChatLog.MarkRead(_chatCode);
+                // Every conversation was dropped (an account switch): this one is not theirs to see.
+                ShowChat("");
+            }
+            else if (code == _chatCode)
+            {
+                ChatLog.MarkRead(_chatCode);   // read while looking at it
                 RenderChat();
             }
-            else if (_shown != null && _chatCode.Length == 0 && IsOpen)
-            {
-                Render(_shown);
-            }
+            if (_shown != null && IsOpen) Render(_shown);   // unread counts on the rows
             RenderBadge();
+        }
+
+        /// <summary>
+        /// Drag the window by its header. The press has to land on the header itself — its title
+        /// ignores picking, its Close button does not — and the pointer is captured so a fast drag
+        /// that leaves the strip keeps hold of it.
+        /// </summary>
+        private void WireChatDrag(VisualElement header)
+        {
+            if (header == null || _chatWindow == null) return;
+
+            header.RegisterCallback<PointerDownEvent>(e =>
+            {
+                if (e.target != header || _dragPointer != -1) return;
+                _dragPointer = e.pointerId;
+                _dragGrip = (Vector2)_root.WorldToLocal(e.position) - _chatWindow.layout.position;
+                header.CapturePointer(e.pointerId);
+                e.StopPropagation();
+            });
+            header.RegisterCallback<PointerMoveEvent>(e =>
+            {
+                if (e.pointerId != _dragPointer) return;
+                PlaceChat((Vector2)_root.WorldToLocal(e.position) - _dragGrip);
+            });
+            header.RegisterCallback<PointerUpEvent>(e =>
+            {
+                if (e.pointerId == _dragPointer) header.ReleasePointer(e.pointerId);
+            });
+            header.RegisterCallback<PointerCaptureOutEvent>(_ => _dragPointer = -1);
+        }
+
+        /// <summary>
+        /// Put the window's top-left corner at a point in the root's space, kept wholly on the
+        /// panel. An unresolved layout is NaN, and every comparison with NaN is false, so the
+        /// clamp is simply skipped until there are sizes to clamp against.
+        /// </summary>
+        private void PlaceChat(Vector2 topLeft)
+        {
+            if (_chatWindow == null) return;
+
+            float maxX = _root.layout.width  - _chatWindow.layout.width;
+            float maxY = _root.layout.height - _chatWindow.layout.height;
+            if (maxX >= 0f) topLeft.x = Mathf.Clamp(topLeft.x, 0f, maxX);
+            if (maxY >= 0f) topLeft.y = Mathf.Clamp(topLeft.y, 0f, maxY);
+
+            _chatPlace = topLeft;
+            _chatWindow.style.right  = StyleKeyword.Auto;
+            _chatWindow.style.bottom = StyleKeyword.Auto;
+            _chatWindow.style.left   = topLeft.x;
+            _chatWindow.style.top    = topLeft.y;
         }
 
         private void RenderChat()
@@ -390,9 +455,6 @@ namespace Emberfall.Presentation
             _root?.RemoveFromClassList(OpenClass);
             _expanded = "";
             _confirming = "";
-            // The next open lands on the list, where the unread counts are.
-            _chatCode = "";
-            _drawer?.RemoveFromClassList("fr-drawer--chat");
         }
 
         private void CopyOwnCode()
@@ -523,7 +585,7 @@ namespace Emberfall.Presentation
                     if (canChallenge && SocialGateway.PresenceOf(code) == PresenceState.Online)
                         actions.Add(("Challenge", true, () => { Close(); ChallengeFlow.Challenge(code); }));
                     int unread = ChatLog.Unread(code);
-                    actions.Add((unread > 0 ? $"Chat ({unread})" : "Chat", unread > 0, () => ShowChat(code)));
+                    actions.Add((unread > 0 ? $"Chat ({unread})" : "Chat", unread > 0, () => { Close(); ShowChat(code); }));
                     actions.Add(("…", false, () => Expand(code)));
                 }
                 VisualElement row = Row(entry, actions.ToArray());
