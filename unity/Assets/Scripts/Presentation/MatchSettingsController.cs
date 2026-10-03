@@ -139,7 +139,6 @@ namespace Emberfall.Presentation
             if (concede != null) concede.style.display = showConcede ? DisplayStyle.Flex : DisplayStyle.None;
 
             Wire(root, "btn-concede", ConfirmConcede);
-            Wire(root, "btn-close", Close);
             Wire(root, "btn-confirm", () => { _onConfirm?.Invoke(); });
             Wire(root, "btn-cancel", ShowMenu);
             Wire(root, "btn-quit", OnQuit);

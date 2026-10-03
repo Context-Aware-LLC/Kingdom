@@ -47,7 +47,6 @@
                         <ui:Slider name="slider-sfx" label="SFX" low-value="0" high-value="1" class="ms-slider" />
                     </ui:VisualElement>
                     <ui:Button name="btn-concede" text="Concede" class="ms-item ms-item--danger" />
-                    <ui:Button name="btn-close" text="Close" class="ms-item emb-back" />
                     <!-- Dev/testing only (Sam, moved off the main menu identity plate 2026-08-09) —
                          hidden here in the UXML so a release build stays hidden even if the show
                          call is ever reached; MatchSettingsController reveals it under
