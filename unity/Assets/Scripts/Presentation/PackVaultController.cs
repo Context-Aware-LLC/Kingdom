@@ -171,11 +171,6 @@ namespace Emberfall.Presentation
         /// on screen, so dismissing may redraw from it without a fetch.</summary>
         private bool _shelfSettled;
 
-        /// <summary>The stack parked on the rail: a pack line and how many. Presentation only — no
-        /// pack is spent or reserved by parking it, and it is clamped to the balance on every render.</summary>
-        private string _parkedPack;
-        private int _parkedCount;
-
         /// <summary>The pack on the stage while an open is in flight, and what tears.</summary>
         private VisualElement _stagePack;
 
@@ -233,14 +228,11 @@ namespace Emberfall.Presentation
             _openedAPack = false;
             _cancel = new CancellationTokenSource();
 
-            _drag = new PackRackDrag(root, _rack, _stage, _rail, ResolveSource,
+            _drag = new PackRackDrag(root, _stage, _rail, ResolveSource,
                 canStart: () => !_busy && _shelfBalance != null,
                 held: packId => (int)Math.Min(Held(packId), int.MaxValue),
-                parkedCount: () => _parkedCount,
                 art: packId => FaceSpriteOrNull(packId, 0),
-                open: (packId, count) => OpenBatch(packId, count),
-                park: Park,
-                unpark: Unpark);
+                open: (packId, count) => OpenBatch(packId, count));
 
             _back = root.Q<Button>("btn-vault-back");
             if (_back != null) _back.clicked += Exit;
@@ -421,12 +413,7 @@ namespace Emberfall.Presentation
             }
             lines.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
 
-            // The park never outlives the packs it stands for.
-            if (_parkedPack != null)
-                _parkedCount = (int)Math.Min(_parkedCount, Math.Min(Held(_parkedPack), PackRackDrag.MaxBatch));
-            if (_parkedCount <= 0) { _parkedPack = null; _parkedCount = 0; }
             SetRailVisible(total > 0);
-            RenderRail();
 
             if (total == 0)
             {
@@ -519,7 +506,7 @@ namespace Emberfall.Presentation
             return slot;
         }
 
-        /// <summary>A pack miniature with its count bubble — the rack slot's and the parked stack's.
+        /// <summary>A rack slot's pack miniature with its count bubble.
         /// Everything inside ignores picking so the press lands on the slot that owns it.</summary>
         private VisualElement BuildMini(string packId, long count)
         {
@@ -551,47 +538,14 @@ namespace Emberfall.Presentation
             return parts.Length > 2 ? name + " " + TokenText.Pretty(parts[2]) : name;
         }
 
-        // ── The rail ────────────────────────────────────────────────────────────────────
-
-        private void Park(string packId, int count)
-        {
-            _parkedPack = packId;
-            _parkedCount = count;
-            RenderRail();
-        }
-
-        private void Unpark()
-        {
-            _parkedPack = null;
-            _parkedCount = 0;
-            RenderRail();
-        }
-
-        /// <summary>The parked stack on the vertical rail, if there is one.</summary>
-        private void RenderRail()
-        {
-            if (_rail == null) return;
-            _rail.Q<VisualElement>("vault-rail-stack")?.RemoveFromHierarchy();
-
-            bool parked = _parkedPack != null && _parkedCount > 0;
-            if (!parked) return;
-
-            var stack = new VisualElement { name = "vault-rail-stack", userData = _parkedPack };
-            stack.AddToClassList("vault-rail__stack");
-            stack.SetEnabled(!_busy);
-            stack.Add(BuildMini(_parkedPack, _parkedCount));
-            _rail.Add(stack);
-        }
-
-        /// <summary>What <see cref="PackRackDrag"/> is pressing on: a rack slot or the parked stack,
-        /// found by walking up from the event target to the element carrying a pack id.</summary>
+        /// <summary>What <see cref="PackRackDrag"/> is pressing on: a rack slot, found by walking
+        /// up from the event target to the element carrying a pack id.</summary>
         private PackRackDrag.Source ResolveSource(VisualElement target)
         {
             for (VisualElement e = target; e != null && e != _root; e = e.parent)
             {
                 if (!(e.userData is string packId)) continue;
-                if (e.ClassListContains("vault-slot")) return new PackRackDrag.Source(e, packId, false);
-                if (e.ClassListContains("vault-rail__stack")) return new PackRackDrag.Source(e, packId, true);
+                if (e.ClassListContains("vault-slot")) return new PackRackDrag.Source(e, packId);
             }
             return default;
         }
@@ -660,10 +614,6 @@ namespace Emberfall.Presentation
             if (_busy) return;
             count = (int)Math.Min(count, Math.Min(Held(packId), PackRackDrag.MaxBatch));
             if (count < 1) return;
-
-            // A stack taken off the rail is spent from the rail; any other open leaves the park as it
-            // is, and the render after dismissing clamps it to what is left.
-            if (packId == _parkedPack) Unpark();
 
             CancellationToken token = _cancel?.Token ?? CancellationToken.None;
 
@@ -946,7 +896,6 @@ namespace Emberfall.Presentation
             if (_rack != null)
                 foreach (VisualElement child in _rack.Children())
                     child.SetEnabled(!busy);
-            _rail?.Q<VisualElement>("vault-rail-stack")?.SetEnabled(!busy);
         }
 
         private void SetStatus(string text)
@@ -980,7 +929,6 @@ namespace Emberfall.Presentation
             SetStageHint(false);
             SetRailVisible(false);
             _shelfBalance = null;
-            Unpark();
             SetStatus(message);
         }
 

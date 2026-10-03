@@ -6,13 +6,15 @@ using PointerType = UnityEngine.UIElements.PointerType;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The vault's one gesture: take a pack off the rack (or the stack parked on the rail), and drop
-    /// it on the stage to open it or on the rail to park it. <b>Holding it over the rail counts up</b>
-    /// — one pack, two, three — capped at what the player holds and at <see cref="MaxBatch"/>, which is
-    /// how a player with forty packs opens ten without forty drags (Sam, 2026-09-27).
+    /// The vault's one gesture: take a pack off the rack and drop it on the stage to open it.
+    /// <b>Holding it over the rail on the way counts up</b> — one pack, two, three — capped at what
+    /// the player holds and at <see cref="MaxBatch"/>, which is how a player with forty packs opens ten
+    /// without forty drags (Sam, 2026-09-27). The rack slot's bubble counts DOWN as the held stack
+    /// counts up, so the two always add to what the player owns. A drop anywhere but the stage, the
+    /// rail included, sends the pack home: there is no parking (Sam, 2026-10-02).
     ///
-    /// <para><b>A tap is still an open.</b> A tap on a rack slot opens one pack and a tap on the
-    /// parked stack opens the whole stack, so the screen never REQUIRES a drag — the phone-drag
+    /// <para><b>A tap is still an open.</b> A tap on a rack slot opens one pack, so the screen
+    /// never REQUIRES a drag — the phone-drag
     /// capture race (<see cref="CollectionDeckDrag"/>'s history) is the thing most likely to break
     /// this, and a broken drag must not mean an unopenable pack.</para>
     ///
@@ -23,7 +25,7 @@ namespace Emberfall.Presentation
     /// (its hint, the pack that tears) must count as the stage.</para>
     ///
     /// <para>This class decides nothing about packs. It reports a pack id and a count; the controller
-    /// owns the balance, the park and the open.</para>
+    /// owns the balance and the open.</para>
     /// </summary>
     public sealed class PackRackDrag : IDisposable
     {
@@ -34,35 +36,29 @@ namespace Emberfall.Presentation
         /// <summary>How long the pack has to sit on the rail for each +1.</summary>
         private const int TickMs = 320;
 
-        /// <summary>What the finger went down on: a pack line, and whether it came off the rail.</summary>
+        /// <summary>What the finger went down on: a rack slot and its pack line.</summary>
         public readonly struct Source
         {
             public readonly VisualElement Element;
             public readonly string PackId;
-            public readonly bool FromRail;
 
-            public Source(VisualElement element, string packId, bool fromRail)
+            public Source(VisualElement element, string packId)
             {
                 Element = element;
                 PackId = packId;
-                FromRail = fromRail;
             }
 
             public bool IsEmpty => Element == null || string.IsNullOrEmpty(PackId);
         }
 
         private readonly VisualElement _root;
-        private readonly VisualElement _rack;
         private readonly VisualElement _stage;
         private readonly VisualElement _rail;
         private readonly Func<VisualElement, Source> _resolve;
         private readonly Func<bool> _canStart;
         private readonly Func<string, int> _held;
-        private readonly Func<int> _parkedCount;
         private readonly Func<string, Sprite> _art;
         private readonly Action<string, int> _open;
-        private readonly Action<string, int> _park;
-        private readonly Action _unpark;
 
         private Source _source;
         private int _pointer = -1;
@@ -70,32 +66,28 @@ namespace Emberfall.Presentation
         private int _count;
         private VisualElement _ghost;
         private Label _ghostBadge;
+
+        /// <summary>The source slot's own bubble, counted down while the ghost counts up, and what it
+        /// said before the lift so a drop on nothing can put it back.</summary>
+        private Label _sourceBadge;
+        private string _sourceBadgeText;
         private IVisualElementScheduledItem _tick;
 
         /// <param name="resolve">The pack under an event target, or an empty source.</param>
         /// <param name="held">How many unopened packs the player holds on a line.</param>
-        /// <param name="parkedCount">How many are parked on the rail now, which is where a drag off
-        /// the rail starts counting from.</param>
         /// <param name="open">Open this many of this line.</param>
-        /// <param name="park">Leave this many of this line on the rail, replacing whatever was there.</param>
-        /// <param name="unpark">Clear the rail.</param>
-        public PackRackDrag(VisualElement root, VisualElement rack, VisualElement stage, VisualElement rail,
+        public PackRackDrag(VisualElement root, VisualElement stage, VisualElement rail,
             Func<VisualElement, Source> resolve, Func<bool> canStart, Func<string, int> held,
-            Func<int> parkedCount, Func<string, Sprite> art,
-            Action<string, int> open, Action<string, int> park, Action unpark)
+            Func<string, Sprite> art, Action<string, int> open)
         {
             _root = root ?? throw new ArgumentNullException(nameof(root));
-            _rack = rack;
             _stage = stage;
             _rail = rail;
             _resolve = resolve;
             _canStart = canStart;
             _held = held;
-            _parkedCount = parkedCount;
             _art = art;
             _open = open;
-            _park = park;
-            _unpark = unpark;
 
             root.RegisterCallback<PointerDownEvent>(OnDown, TrickleDown.TrickleDown);
             root.RegisterCallback<PointerMoveEvent>(OnMove, TrickleDown.TrickleDown);
@@ -127,7 +119,7 @@ namespace Emberfall.Presentation
                 float threshold = evt.pointerType == PointerType.touch ? 6f : 10f;
                 if (delta.sqrMagnitude < threshold * threshold) return;
                 if (Cap < 1) { End(); return; }
-                _count = _source.FromRail ? Math.Min(Math.Max(1, _parkedCount()), Cap) : 1;
+                _count = 1;
                 CreateGhost();
                 _root.CapturePointer(_pointer);
             }
@@ -140,24 +132,24 @@ namespace Emberfall.Presentation
             if (evt.pointerId != _pointer) return;
             Source source = _source;
             bool dragging = _ghost != null;
-            Vector2 at = evt.position;
+            bool toStage = dragging && Over(_stage, evt.position);
             int count = _count;
+            // An open keeps the counted-down bubble: those packs are spent, and the rack redraws from
+            // the new balance once the reveal is dismissed. Restoring it would flash the old number.
+            if (toStage) _sourceBadge = null;
             End();
 
             if (!dragging)
             {
                 // A tap. Only on the thing the finger went down on — a press that slid off it and back
                 // under the threshold is still that thing, so the down target is the answer.
-                if (source.FromRail) _open(source.PackId, Math.Max(1, _parkedCount()));
-                else _open(source.PackId, 1);
+                _open(source.PackId, 1);
                 return;
             }
 
             evt.StopImmediatePropagation();
-            if (Over(_stage, at)) _open(source.PackId, count);
-            else if (Over(_rail, at)) _park(source.PackId, count);
-            else if (source.FromRail && Over(_rack, at)) _unpark();
-            // Anywhere else: a drop on nothing. A parked stack stays parked; a rack pack goes home.
+            if (toStage) _open(source.PackId, count);
+            // Anywhere else, the rail included, is a drop on nothing: the pack goes home.
         }
 
         private void Track(Vector2 position)
@@ -204,6 +196,8 @@ namespace Emberfall.Presentation
             if (_ghostBadge == null) return;
             _ghostBadge.text = _count.ToString();
             _ghostBadge.EnableInClassList("vault-count--max", _count >= Cap && Cap > 1);
+            if (_sourceBadge != null)
+                _sourceBadge.text = Math.Max(0, _held(_source.PackId) - _count).ToString();
         }
 
         private static bool Over(VisualElement target, Vector2 position)
@@ -230,6 +224,9 @@ namespace Emberfall.Presentation
             _ghostBadge.AddToClassList("vault-count");
             _ghostBadge.AddToClassList("vault-ghost__count");
             _ghost.Add(_ghostBadge);
+
+            _sourceBadge = _source.Element.Q<Label>(className: "vault-count");
+            _sourceBadgeText = _sourceBadge?.text;
             UpdateBadge();
 
             _source.Element.AddToClassList("vault-source--lifted");
@@ -253,6 +250,9 @@ namespace Emberfall.Presentation
             int pointer = _pointer;
             _pointer = -1;
             StopTick();
+            if (_sourceBadge != null) _sourceBadge.text = _sourceBadgeText;
+            _sourceBadge = null;
+            _sourceBadgeText = null;
             _source.Element?.RemoveFromClassList("vault-source--lifted");
             _source = default;
             _ghost?.RemoveFromHierarchy();
