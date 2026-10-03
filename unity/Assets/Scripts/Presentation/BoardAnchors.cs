@@ -96,6 +96,10 @@ namespace Emberfall.Presentation
             };
         }
 
+        // Artwork registration may place both seats above world y=0. Visual ownership must
+        // follow the player mapping, never the current position of a painted fixture.
+        public bool IsLocalPlayer(PlayerId player) => ResolveSeat(player) == p0;
+
         public Transform HeroAnchor(PlayerId player)      => ResolveSeat(player).HeroAnchor;
         public Transform HeroPowerAnchor(PlayerId player) => ResolveSeat(player).HeroPowerAnchor;
         public Transform ManaTrayAnchor(PlayerId player)  => ResolveSeat(player).ManaTrayAnchor;

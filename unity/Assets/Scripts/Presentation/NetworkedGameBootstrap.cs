@@ -594,7 +594,7 @@ namespace Emberfall.Presentation
             if (heroAnchor == null) return null;
             var go   = new GameObject($"HeroPlate_{playerId}");
             var view = go.AddComponent<HeroPlateView>();
-            view.Init(playerId, heroAnchor, artProvider, heroClass);
+            view.Init(playerId, heroAnchor, artProvider, heroClass, anchors.IsLocalPlayer(playerId));
             matchRunner.OnStateUpdated += view.OnStateUpdated;
 
             CreateHeroSockets(playerId, anchors, db, artProvider);
@@ -625,7 +625,7 @@ namespace Emberfall.Presentation
             if (anchor == null) return;
             var go   = new GameObject($"ManaTray_{playerId}");
             var view = go.AddComponent<ManaTrayView>();
-            view.Init(playerId, anchor);
+            view.Init(playerId, anchor, anchors.IsLocalPlayer(playerId));
             matchRunner.OnStateUpdated += view.OnStateUpdated;
         }
 
@@ -635,7 +635,7 @@ namespace Emberfall.Presentation
             if (anchor == null) return;
             var go   = new GameObject($"DeckPile_{playerId}");
             var view = go.AddComponent<DeckPileView>();
-            view.Init(playerId, anchor);
+            view.Init(playerId, anchor, anchors.IsLocalPlayer(playerId));
             matchRunner.OnStateUpdated += view.OnStateUpdated;
         }
 

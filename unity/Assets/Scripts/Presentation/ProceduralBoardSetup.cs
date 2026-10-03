@@ -57,17 +57,18 @@ namespace Emberfall.Presentation
         private const float P0Sign = -1f;
         private const float P1Sign =  1f;
 
-        // Measured fixture centres in BoardPlate_Master.png (4612 x 2080), expressed as sprite UV
-        // from bottom-left. BoardBackdrop projects these through the fitted artwork plane, so the
+        // Measured fixture centres in royal_council_battle_table_refined_v3.png (1869 x 842),
+        // normalized before building the 4612 x 2080 master. UVs start at bottom-left.
+        // BoardBackdrop projects these through the fitted artwork plane, so the
         // clusters remain seated in their painted furniture at every aspect and safe-area inset.
         private static readonly Vector2 P0HeroFixtureUv =
-            new(540f / 4612f, 1f - 1448f / 2080f);
+            new(365f / 1869f, 1f - 466f / 842f);
         private static readonly Vector2 P1HeroFixtureUv =
-            new(3686f / 4612f, 1f - 409f / 2080f);
+            new(1365f / 1869f, 1f - 122f / 842f);
         private static readonly Vector2 P0ResourceFixtureUv =
-            new(3876f / 4612f, 1f - 1572f / 2080f);
+            new(1465f / 1869f, 1f - 459f / 842f);
         private static readonly Vector2 P1ResourceFixtureUv =
-            new(806f / 4612f, 1f - 383f / 2080f);
+            new(500f / 1869f, 1f - 110f / 842f);
 
         // ── Royal Council fixture-local cluster geometry ───────────────────────────────
         // The Royal Council board keeps both circular satellites on the portrait's INBOARD side

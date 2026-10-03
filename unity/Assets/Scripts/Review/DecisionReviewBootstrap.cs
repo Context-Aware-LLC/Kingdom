@@ -466,7 +466,7 @@ namespace Emberfall.Review
             if (hero != null)
             {
                 plate = new GameObject($"HeroPlate_{playerId}").AddComponent<HeroPlateView>();
-                plate.Init(playerId, hero, _art, heroClass);
+                plate.Init(playerId, hero, _art, heroClass, _anchors.IsLocalPlayer(playerId));
                 _stateSinks.Add(plate.OnStateUpdated);
             }
 
@@ -483,7 +483,7 @@ namespace Emberfall.Review
             if (mana != null)
             {
                 var tray = new GameObject($"ManaTray_{playerId}").AddComponent<ManaTrayView>();
-                tray.Init(playerId, mana);
+                tray.Init(playerId, mana, _anchors.IsLocalPlayer(playerId));
                 _stateSinks.Add(tray.OnStateUpdated);
             }
 
@@ -491,7 +491,7 @@ namespace Emberfall.Review
             if (deck != null)
             {
                 var pile = new GameObject($"DeckPile_{playerId}").AddComponent<DeckPileView>();
-                pile.Init(playerId, deck);
+                pile.Init(playerId, deck, _anchors.IsLocalPlayer(playerId));
                 _stateSinks.Add(pile.OnStateUpdated);
             }
             return plate;

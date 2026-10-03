@@ -88,7 +88,7 @@ namespace Emberfall.Editor
                 // binder computes, never a re-derivation of its arithmetic in the harness.
                 GameState state = BuildState(c, out PlayerId localId);
                 var view = new GameObject("__ManaTray").AddComponent<ManaTrayView>();
-                view.Init(localId, anchor.transform);
+                view.Init(localId, anchor.transform, isLocalSeat: true);
                 view.OnStateUpdated(state);
                 view.transform.SetParent(root.transform, true);
 

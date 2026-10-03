@@ -172,7 +172,7 @@ namespace Emberfall.Editor
             anchor.transform.position = at;
 
             var view = new GameObject($"__DeckPile_{seat}").AddComponent<DeckPileView>();
-            view.Init(new Core.Contracts.PlayerId($"preview-{seat}"), anchor.transform);
+            view.Init(new Core.Contracts.PlayerId($"preview-{seat}"), anchor.transform, isLocalSeat: seat == "p0");
             view.SetCount(count);
             return view;
         }

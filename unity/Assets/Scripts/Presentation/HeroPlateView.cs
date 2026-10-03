@@ -53,7 +53,7 @@ namespace Emberfall.Presentation
         /// Identified by PlayerId, never by seat/visual index — a networked seat-1 local renders
         /// at visual bottom, so index-based state reads swap the players (found live, 2026-07-19).</summary>
         public void Init(PlayerId playerId, Transform heroAnchor,
-                         IArtProvider artProvider, CardClass heroClass,
+                         IArtProvider artProvider, CardClass heroClass, bool isLocalSeat,
                          IUiSpriteProvider uiSprites = null)
         {
             _playerId  = playerId;
@@ -64,8 +64,7 @@ namespace Emberfall.Presentation
             // The far Royal Council portrait mount is painted as a foreshortened oval tilted
             // down-left. Seat roots stay unrotated because the power/weapon satellites have their
             // own fixture alignment; only the portrait assembly follows that recess.
-            bool isEnemyFixture = heroAnchor.position.y > 0f;
-            transform.localRotation = isEnemyFixture ? EnemyFixtureRotation : Quaternion.identity;
+            transform.localRotation = isLocalSeat ? Quaternion.identity : EnemyFixtureRotation;
 
 #if UNITY_EDITOR
             uiSprites ??= new EditorUiSpriteProvider();

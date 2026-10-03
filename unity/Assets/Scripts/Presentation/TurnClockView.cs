@@ -14,7 +14,7 @@ namespace Emberfall.Presentation
     {
         public static readonly Vector3 BoardPosition = new(-6.3f, 0.6f, 0f);
         public static readonly Vector2 ArtworkUv =
-            new(435f / 4612f, 1f - 942f / 2080f);
+            new(370f / 1869f, 1f - 277f / 842f);
 
         private static readonly Color SandColor = new(0.96f, 0.63f, 0.16f, 1f);
         private static readonly Color RopeSandColor = new(1.00f, 0.20f, 0.08f, 1f);
@@ -28,8 +28,6 @@ namespace Emberfall.Presentation
         private const float SandTopH = 0.80f;
         private const float SandBottomY = -0.96f;
         private const float SandBottomH = 0.78f;
-        private const float VisualOffsetX = 0.58f;
-        private const float VisualOffsetY = 0.28f;
         private const int SandOrder = 11;
         private const int BodyOrder = 12;
 
@@ -63,7 +61,8 @@ namespace Emberfall.Presentation
 
             var visualGo = new GameObject("HourglassVisual");
             visualGo.transform.SetParent(transform, false);
-            visualGo.transform.localPosition = new Vector3(VisualOffsetX, VisualOffsetY, 0f);
+            // The refined table's artwork anchor is measured at the visual centre.
+            visualGo.transform.localPosition = Vector3.zero;
             _visualRoot = visualGo.transform;
 
 #if UNITY_EDITOR

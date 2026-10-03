@@ -47,7 +47,7 @@ namespace Emberfall.Presentation
         /// Attach to a new GameObject and call Init once before first OnStateUpdated.
         /// Identified by PlayerId, never by seat/visual index (see HeroPlateView.Init).
         /// </summary>
-        public void Init(PlayerId playerId, Transform anchor)
+        public void Init(PlayerId playerId, Transform anchor, bool isLocalSeat)
         {
             _playerId = playerId;
             transform.SetParent(anchor, false);
@@ -86,7 +86,7 @@ namespace Emberfall.Presentation
             _mpb.SetFloat(GridColumnsId, GridColumns);
             // Every portrait is upright. The local/bottom grid therefore starts at its top row
             // (toward the battlefield), while the opponent/top grid starts at its bottom row.
-            _mpb.SetFloat(FlipVerticalId, anchor.position.y < 0f ? 1f : 0f);
+            _mpb.SetFloat(FlipVerticalId, isLocalSeat ? 1f : 0f);
             _quad.SetPropertyBlock(_mpb);
         }
 

@@ -27,7 +27,9 @@ VISIBLE_H = 9.2    # 2 x BoardCamera ortho size 4.6
 MAX_HALF_W = 10.2  # 20:9 span
 SOURCE_W = 3696     # Existing 16:9 authored-frame contract.
 OUTPUT_H = 2080
-MASTER_ASPECT_TOLERANCE = 0.002
+# Generated masters can differ by a few pixels (e.g. 1869x842). Treat those as
+# master compositions too, rather than squeezing them into the legacy 16:9 frame.
+MASTER_ASPECT_TOLERANCE = 0.005
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 DEST = REPO / "unity" / "Assets" / "Art" / "Backgrounds" / "BoardPlate_Master.png"
@@ -38,7 +40,8 @@ def main() -> int:
         print(__doc__, file=sys.stderr)
         return 2
 
-    src = Image.open(sys.argv[1]).convert("RGB")
+    src = Image.open(sys.argv[1])
+    src = src.convert("RGBA" if "A" in src.getbands() or "transparency" in src.info else "RGB")
     original_size = src.size
     target_w = round(OUTPUT_H * (2 * MAX_HALF_W) / VISIBLE_H)
     target_w += target_w % 2
@@ -65,7 +68,7 @@ def main() -> int:
         print(f"input already covers 20:9 ({w}x{h})", file=sys.stderr)
         return 2
 
-    canvas = Image.new("RGB", (target_w, h))
+    canvas = Image.new(src.mode, (target_w, h))
     canvas.paste(src.crop((0, 0, bleed, h)).transpose(Image.FLIP_LEFT_RIGHT), (0, 0))
     canvas.paste(src, (bleed, 0))
     canvas.paste(src.crop((w - bleed, 0, w, h)).transpose(Image.FLIP_LEFT_RIGHT), (bleed + w, 0))
