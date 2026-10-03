@@ -25,11 +25,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1c894f4c38e2a564b801646a03b4ce06
-    m_Address: sfx/spell_cast_1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1ff20785fe51fb44792df93df690649d
     m_Address: sfx/big_lizard
     m_ReadOnly: 0
@@ -140,11 +135,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a2dd3aa0a86950549b57dea72bb03cc3
-    m_Address: sfx/magic1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a5b1627613b8bad40bd4c393abd7bcfe
     m_Address: sfx/magma_summon_4
     m_ReadOnly: 0
@@ -172,11 +162,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b79693fde2317a5449fc7f644138676f
     m_Address: sfx/wisp_summon_2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bdb43032b27fe5f4ba0ab8f5142c5dab
-    m_Address: sfx/door
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -60,11 +60,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 23c42332aa507fb48bfdbb99665010e2
-    m_Address: materials/Wood
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 27eac72de70d434e9ff3affaa786cec7
     m_Address: ui/effect_bulwark_shields
     m_ReadOnly: 0
