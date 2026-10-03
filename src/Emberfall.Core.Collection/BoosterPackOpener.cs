@@ -124,9 +124,10 @@ namespace Emberfall.Core.Collection
     /// stream — two players on the same seed and index get the same cards wherever their counters
     /// happen to sit. Reordering or adding a draw invalidates every baked fixture.</para>
     ///
-    /// <para><b>Seeding.</b> <c>DeterministicRandom.Substream(seed, packIndex)</c> — the same splitmix64
-    /// stream jumped to its <c>packIndex</c>-th cursor in O(1), so pack #4000 is reproducible without
-    /// replaying 3,999 packs, and no second entropy source enters the core.</para>
+    /// <para><b>Seeding.</b> <c>DeterministicRandom.Substream(seed, packIndex)</c> — a splitmix64 stream
+    /// seeded by the base stream's <c>packIndex</c>-th output in O(1), so pack #4000 is reproducible
+    /// without replaying 3,999 packs, shares no draws with pack #3999, and no second entropy source
+    /// enters the core.</para>
     /// </summary>
     public static class BoosterPackOpener
     {

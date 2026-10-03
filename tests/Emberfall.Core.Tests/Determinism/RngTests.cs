@@ -58,31 +58,45 @@ namespace Emberfall.Core.Tests.Determinism
         }
 
         /// <summary>
-        /// <c>Substream(seed, n)</c> must be the SAME stream jumped to its n-th cursor, not a second
-        /// entropy source — that equivalence is what keeps the O(1) jump inside the M1 algorithm lock.
+        /// <c>Substream(seed, n)</c> is seeded by the n-th OUTPUT of the base stream, never by its n-th
+        /// cursor — still splitmix64 and still O(1), so it stays inside the M1 algorithm lock.
         /// </summary>
         [Test]
-        public void Substream_Is_The_Same_Stream_Jumped_Ahead()
+        public void Substream_Is_Seeded_By_The_Base_Streams_Nth_Output()
         {
             const ulong Seed = 0xDEADBEEFCAFEF00DUL;
             var walked = new DeterministicRandom(Seed);
 
             for (int n = 0; n < 64; n++)
             {
-                ulong expected = walked.NextUInt64();               // the (n+1)-th value of the base stream
-                ulong jumped = DeterministicRandom.Substream(Seed, n).NextUInt64();
-                Assert.That(jumped, Is.EqualTo(expected), $"Substream({n}) diverged from the walked stream.");
+                var expected = new DeterministicRandom(walked.NextUInt64());
+                var sub = DeterministicRandom.Substream(Seed, n);
+                Assert.That(sub.NextUInt64(), Is.EqualTo(expected.NextUInt64()), $"Substream({n}) diverged.");
             }
         }
 
+        /// <summary>
+        /// The defect this replaced: seeding by the cursor made index n+1 the same stream one draw
+        /// later, so neighbours shared every value but one. No value in one sub-stream's window may
+        /// appear in its neighbour's.
+        /// </summary>
         [Test]
-        public void Substream_Zero_Is_The_Base_Stream()
+        public void Neighbouring_Substreams_Share_No_Draws()
         {
             const ulong Seed = 12345UL;
-            var jumped = DeterministicRandom.Substream(Seed, 0);
-            var direct = new DeterministicRandom(Seed);
-            for (int i = 0; i < 100; i++)
-                Assert.That(jumped.NextUInt64(), Is.EqualTo(direct.NextUInt64()));
+            const int Window = 32;
+
+            for (int n = 0; n < 64; n++)
+            {
+                var here = new System.Collections.Generic.HashSet<ulong>();
+                var a = DeterministicRandom.Substream(Seed, n);
+                for (int i = 0; i < Window; i++) here.Add(a.NextUInt64());
+
+                var b = DeterministicRandom.Substream(Seed, n + 1);
+                for (int i = 0; i < Window; i++)
+                    Assert.That(here.Contains(b.NextUInt64()), Is.False,
+                        $"Substream({n + 1}) draw {i} repeats a draw of Substream({n}).");
+            }
         }
 
         [Test]

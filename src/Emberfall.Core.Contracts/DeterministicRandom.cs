@@ -24,14 +24,18 @@ namespace Emberfall.Core.Contracts
         public DeterministicRandom(ulong seed) => _state = seed;
 
         /// <summary>
-        /// The independent sub-stream keyed by an integer — the cursor the stream seeded at
-        /// <paramref name="seed"/> would hold after <paramref name="index"/> draws, computed in O(1).
+        /// The independent sub-stream keyed by an integer, computed in O(1): a fresh stream SEEDED BY
+        /// the <paramref name="index"/>-th output of the stream seeded at <paramref name="seed"/>.
         ///
         /// <para>splitmix64 advances its cursor by a plain addition of <see cref="Gamma"/>, so the n-th
-        /// cursor is exactly <c>seed + n*Gamma</c> — no iteration required and no new algorithm
-        /// introduced. Skipping ahead is therefore <b>the same stream</b>, not a second entropy source:
-        /// <c>Substream(s, n).NextUInt64()</c> is bit-for-bit the (n+1)-th value of
-        /// <c>new DeterministicRandom(s)</c>, which is what makes it safe under the M1 algorithm lock.</para>
+        /// cursor is exactly <c>seed + n*Gamma</c> and its output is reachable without iteration. That
+        /// output — not the cursor — is the sub-stream's seed, which is splitmix64's own split and
+        /// introduces no second algorithm.</para>
+        ///
+        /// <para><b>The cursor itself must never be the seed.</b> Until 2026-10-03 it was, which made
+        /// <c>Substream(s, n)</c> the base stream shifted by ONE draw: consecutive indices shared every
+        /// value but one, so a 5-card pack re-rolled four of its neighbour's five rarities and a single
+        /// legendary roll paid out in five packs running.</para>
         ///
         /// <para>Use it where a family of independent, replayable streams is keyed by an integer and the
         /// caller must not have to replay the earlier members to reach the n-th — the booster-pack open
@@ -39,7 +43,10 @@ namespace Emberfall.Core.Contracts
         /// however many packs came before it.</para>
         /// </summary>
         public static DeterministicRandom Substream(ulong seed, long index)
-            => new DeterministicRandom(unchecked(seed + (Gamma * (ulong)index)));
+        {
+            var parent = new DeterministicRandom(unchecked(seed + (Gamma * (ulong)index)));
+            return new DeterministicRandom(parent.NextUInt64());
+        }
 
         /// <summary>The raw 64-bit cursor. Serialized with GameState for mid-match resume AND hashing.</summary>
         public ulong RawState => _state;
