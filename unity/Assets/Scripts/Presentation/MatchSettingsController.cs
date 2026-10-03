@@ -33,6 +33,14 @@ namespace Emberfall.Presentation
         private VisualElement _overlay;
         private VisualElement _viewMenu;
         private VisualElement _viewConfirm;
+        private VisualElement _viewAccount;
+
+        // The public site. Deletion is a web request (support mailbox), not an endpoint: the server
+        // has no delete-account path, and Play policy only needs the in-app entry to reach it.
+        private const string SiteRoot   = "https://kingdomofbadideas.com";
+        private const string PrivacyUrl = SiteRoot + "/privacy";
+        private const string TermsUrl   = SiteRoot + "/terms";
+        private const string DeleteUrl  = SiteRoot + "/privacy#delete";
 
         // The shared confirm view's contents, filled per use. Two things confirm now (concede and
         // sign out) and a second copy of the panel would drift from the first.
@@ -107,6 +115,7 @@ namespace Emberfall.Presentation
             _overlay     = root.Q<VisualElement>("overlay");
             _viewMenu    = root.Q<VisualElement>("view-menu");
             _viewConfirm = root.Q<VisualElement>("view-confirm");
+            _viewAccount = root.Q<VisualElement>("view-account");
 
             _confirmTitle    = root.Q<Label>("confirm-title");
             _confirmSubtitle = root.Q<Label>("confirm-subtitle");
@@ -134,6 +143,11 @@ namespace Emberfall.Presentation
             Wire(root, "btn-confirm", () => { _onConfirm?.Invoke(); });
             Wire(root, "btn-cancel", ShowMenu);
             Wire(root, "btn-quit", OnQuit);
+            Wire(root, "btn-account", ShowAccount);
+            Wire(root, "btn-account-back", ShowMenu);
+            Wire(root, "btn-privacy", () => Application.OpenURL(PrivacyUrl));
+            Wire(root, "btn-terms", () => Application.OpenURL(TermsUrl));
+            Wire(root, "btn-delete-account", () => Application.OpenURL(DeleteUrl));
 
             BindAudioSettings(root);
             BindSignOut(root);
@@ -171,6 +185,14 @@ namespace Emberfall.Presentation
         {
             if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.Flex;
             if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.None;
+            if (_viewAccount != null) _viewAccount.style.display = DisplayStyle.None;
+        }
+
+        private void ShowAccount()
+        {
+            if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.None;
+            if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.None;
+            if (_viewAccount != null) _viewAccount.style.display = DisplayStyle.Flex;
         }
 
         /// <summary>
@@ -193,6 +215,7 @@ namespace Emberfall.Presentation
             }
 
             if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.None;
+            if (_viewAccount != null) _viewAccount.style.display = DisplayStyle.None;
             if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.Flex;
         }
 

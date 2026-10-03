@@ -59,8 +59,18 @@
                          session either way. Hidden when nobody is signed in — the controller shows
                          it, because "is there a session" is not something the UXML can know. -->
                     <ui:Button name="btn-sign-out" text="Sign out" class="ms-item" style="display: none;" />
+                    <!-- Account (2026-10-02, #385): the legal links and the Play-policy delete entry. -->
+                    <ui:Button name="btn-account" text="Account" class="ms-item" />
                     <!-- Quit (Sam, 2026-09-27): styled as a regular .ms-item, same as the rest. -->
                     <ui:Button name="btn-quit" text="Quit" class="ms-item" />
+                </ui:VisualElement>
+
+                <!-- Account view (#385). Every row opens the website in the system browser. -->
+                <ui:VisualElement name="view-account" class="ms-view ms-hidden">
+                    <ui:Button name="btn-privacy" text="Privacy Policy" class="ms-item" />
+                    <ui:Button name="btn-terms" text="Terms of Service" class="ms-item" />
+                    <ui:Button name="btn-delete-account" text="Delete account" class="ms-item ms-item--danger" />
+                    <ui:Button name="btn-account-back" text="Back" class="ms-item emb-back" />
                 </ui:VisualElement>
 
                 <!-- Confirm view — SHARED, not concede's own (2026-09-02). Two things now need a
