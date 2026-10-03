@@ -52,6 +52,12 @@ namespace Emberfall.Presentation
         private Coroutine _flashRoutine;
         private Coroutine _frostRoutine;
         private Coroutine _shroudRoutine;
+        private Coroutine _aegisRoutine;
+        private bool _aegisOn;
+        private Vector3 _aegisBaseScale;
+        private Color _aegisBaseColor;
+        private float _aegisBaseIntensity;
+        private bool _aegisBaseCaptured;
         private float _frostCurrent;
         private float _shroudCurrent;
         private bool _boardStatusEffectsVisible;
@@ -61,6 +67,10 @@ namespace Emberfall.Presentation
         private const float FrostDur      = 0.30f;
         private const float ShroudDur    = 0.40f;
         private const float ShroudTarget = 0.60f; // spec: not full 1 — keeps minion readable under shroud
+        private const float AegisGainDur    = 0.35f; // bubble inflates in, small overshoot
+        private const float AegisBreakDur   = 0.40f; // bubble flares outward and fades when the shield is spent
+        private const float AegisBreakGrow  = 1.35f;
+        private const float AegisBreakFlare = 2.2f;  // intensity multiple at the instant it breaks
 
         // ── Setup (called by BoardController before Init) ──────────────────────────
 
@@ -223,8 +233,95 @@ namespace Emberfall.Presentation
 
         private void ApplyAegis(AuraSet auras)
         {
-            if (_aegisRenderer != null)
-                _aegisRenderer.enabled = _boardStatusEffectsVisible && (auras & AuraSet.Shield) != 0;
+            if (_aegisRenderer == null) return;
+            bool want = _boardStatusEffectsVisible && (auras & AuraSet.Shield) != 0;
+            if (want == _aegisOn) return;
+            bool wasOn = _aegisOn;
+            _aegisOn = want;
+            CaptureAegisBase();
+
+            // Gained: inflate in. Lost while still on the board (absorbed a hit, silenced): flare
+            // outward and fade. Leaving the board (or the board gate closing) hides it at once —
+            // there is nothing to see a break on.
+            if (want)
+            {
+                _aegisRenderer.enabled = true;
+                SetAegisLook(0f, 0.8f, 1f);
+                Restart(ref _aegisRoutine, AegisGainRoutine());
+                if (_aegisRoutine == null) SetAegisLook(1f, 1f, 1f);
+            }
+            else if (wasOn && _boardStatusEffectsVisible)
+            {
+                Restart(ref _aegisRoutine, AegisBreakRoutine());
+                if (_aegisRoutine == null) HideAegis();
+            }
+            else
+            {
+                HideAegis();
+            }
+        }
+
+        private void CaptureAegisBase()
+        {
+            if (_aegisBaseCaptured) return;
+            _aegisBaseCaptured = true;
+            _aegisBaseScale = _aegisRenderer.transform.localScale;
+            Material m = _aegisRenderer.sharedMaterial;
+            _aegisBaseColor = m != null && m.HasProperty(ShaderIds.AegisColor)
+                ? m.GetColor(ShaderIds.AegisColor) : Color.white;
+            _aegisBaseIntensity = m != null && m.HasProperty(ShaderIds.AegisIntensity)
+                ? m.GetFloat(ShaderIds.AegisIntensity) : 1f;
+        }
+
+        private void HideAegis()
+        {
+            if (_aegisRoutine != null) { StopCoroutine(_aegisRoutine); _aegisRoutine = null; }
+            _aegisRenderer.enabled = false;
+            SetAegisLook(1f, 1f, 1f);
+        }
+
+        // alpha scales the material's own alpha (the shell's opacity is saturate(rim) * colour.a);
+        // scale scales the quad, and with it the bubble; flare scales the HDR intensity.
+        private void SetAegisLook(float alpha, float scale, float flare)
+        {
+            _aegisRenderer.transform.localScale = _aegisBaseScale * scale;
+            Color c = _aegisBaseColor;
+            c.a *= alpha;
+            PushColorTo(_aegisRenderer, ShaderIds.AegisColor, c);
+            PushFloatTo(_aegisRenderer, ShaderIds.AegisIntensity, _aegisBaseIntensity * flare);
+        }
+
+        private IEnumerator AegisGainRoutine()
+        {
+            float elapsed = 0f;
+            while (elapsed < AegisGainDur)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / AegisGainDur);
+                // ease-out-back: overshoots ~10% then settles at 1.
+                float u = t - 1f;
+                float back = 1f + 2.70158f * u * u * u + 1.70158f * u * u;
+                SetAegisLook(Mathf.Clamp01(t * 2f), Mathf.LerpUnclamped(0.8f, 1f, back), 1f);
+                yield return null;
+            }
+            SetAegisLook(1f, 1f, 1f);
+            _aegisRoutine = null;
+        }
+
+        private IEnumerator AegisBreakRoutine()
+        {
+            float elapsed = 0f;
+            while (elapsed < AegisBreakDur)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / AegisBreakDur);
+                float easeOut = 1f - (1f - t) * (1f - t);
+                SetAegisLook(1f - t, Mathf.Lerp(1f, AegisBreakGrow, easeOut),
+                             Mathf.Lerp(AegisBreakFlare, 1f, t));
+                yield return null;
+            }
+            _aegisRoutine = null;
+            HideAegis();
         }
 
         private void ApplyBulwark(AuraSet auras)

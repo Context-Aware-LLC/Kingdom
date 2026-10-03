@@ -16,6 +16,11 @@ namespace Emberfall.Presentation
         // signal — see CardMaterialBinder.ApplyGlow.
         public static readonly int GlowColor      = Shader.PropertyToID("_GlowColor");
 
+        // SG_Aegis colour and intensity, driven per-instance for the gain / break transitions —
+        // see CardMaterialBinder.ApplyAegis.
+        public static readonly int AegisColor     = Shader.PropertyToID("_AegisColor");
+        public static readonly int AegisIntensity = Shader.PropertyToID("_AegisIntensity");
+
         // Not one of the four MPB floats: CardDeathDissolve pushes the flattened card snapshot
         // into SG_Dissolve's albedo slot on a per-death material instance.
         public static readonly int BaseMap        = Shader.PropertyToID("_BaseMap");

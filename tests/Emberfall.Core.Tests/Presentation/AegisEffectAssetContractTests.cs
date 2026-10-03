@@ -21,7 +21,7 @@ namespace Emberfall.Core.Tests.Presentation
             Assert.Multiple(() =>
             {
                 Assert.That(binder, Does.Contain(
-                        "_aegisRenderer.enabled = _boardStatusEffectsVisible && (auras & AuraSet.Shield) != 0;"),
+                        "bool want = _boardStatusEffectsVisible && (auras & AuraSet.Shield) != 0;"),
                     "Aegis is a board-minion treatment; a shielded card in hand must not show its quad.");
                 Assert.That(binder, Does.Contain("ApplyAegis(auras);"),
                     "The board-visibility transition must immediately refresh Aegis.");
