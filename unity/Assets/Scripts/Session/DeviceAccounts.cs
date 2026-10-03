@@ -181,6 +181,8 @@ namespace Emberfall.Session
             // BaseUrl can move underneath it, and it spends entitlements.
             PackGateway.Invalidate();
             FriendsGateway.Invalidate();
+            // The social socket is this account being online to its friends; it must not outlive it.
+            SocialGateway.Invalidate();
         }
 
         /// <summary>

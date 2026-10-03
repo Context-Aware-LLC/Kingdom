@@ -22,9 +22,12 @@ namespace Emberfall.Presentation
     ///
     /// <para><b>A friend's name is text another player typed</b> — see <see cref="NameLabel"/>.</para>
     ///
+    /// <para><b>Presence comes from <see cref="SocialGateway"/></b>, which mounting starts and
+    /// which outlives this drawer: the drawer is rebuilt per scene, the connection is not. A
+    /// <c>friends_changed</c> push re-reads the list while the drawer is open.</para>
+    ///
     /// <para>Not mounted in a match: UI Toolkit does not block Unity's physics input, and nothing
-    /// here is wired into <c>InputRouter.UiBlocksInput</c>. Presence, challenges and chat need the
-    /// client half of <c>/social</c>, which is unbuilt; this drawer is the surface they land on.</para>
+    /// here is wired into <c>InputRouter.UiBlocksInput</c>.</para>
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public sealed class FriendsDrawerController : MonoBehaviour
@@ -42,6 +45,7 @@ namespace Emberfall.Presentation
 
         private string _ownCodeDisplay = "";
         private bool _busy;
+        private FriendsSnapshot _shown;
 
         /// <summary>
         /// Build and bind the button and drawer. Returns null, and builds nothing, when nobody is
@@ -73,6 +77,7 @@ namespace Emberfall.Presentation
             var drawer = uiGo.AddComponent<FriendsDrawerController>();
             drawer.Init();
             _current = drawer;
+            SocialGateway.EnsureStarted();
             return drawer;
         }
 
@@ -98,12 +103,39 @@ namespace Emberfall.Presentation
             _root.Q<Button>("btn-copy-code")?.RegisterCallback<ClickEvent>(_ => CopyOwnCode());
             _addButton?.RegisterCallback<ClickEvent>(_ => AddFriend());
 
+            SocialGateway.Received += OnSocial;
+            SocialGateway.StateChanged += OnSocialState;
+
             Close();
         }
 
         private void OnDestroy()
         {
+            SocialGateway.Received -= OnSocial;
+            SocialGateway.StateChanged -= OnSocialState;
             if (_current == this) _current = null;
+        }
+
+        private bool IsOpen => _root != null && _root.ClassListContains(OpenClass);
+
+        private void OnSocial(SocialMsg msg)
+        {
+            switch (msg)
+            {
+                // Someone sent, accepted or withdrew something that involves this player.
+                case FriendsChangedMsg _ when IsOpen:
+                    Run(token => FriendsGateway.FetchAsync(token), okStatus: "");
+                    break;
+                case PresenceMsg _ when _shown != null:
+                    Render(_shown);
+                    break;
+            }
+        }
+
+        /// <summary>A drop clears presence, so the dots go back to unknown until it is live again.</summary>
+        private void OnSocialState(SocialState state)
+        {
+            if (_shown != null) Render(_shown);
         }
 
         private void Open()
@@ -194,6 +226,7 @@ namespace Emberfall.Presentation
 
         private void Render(FriendsSnapshot snapshot)
         {
+            _shown = snapshot;
             _ownCodeDisplay = FriendCode.Display(snapshot.Code);
             if (_ownCode != null) _ownCode.text = $"Your code: {_ownCodeDisplay}";
 
@@ -219,8 +252,13 @@ namespace Emberfall.Presentation
                 empty.AddToClassList("fr-empty");
                 _lists.Add(empty);
             }
+            bool live = SocialGateway.State == SocialState.Live;
             foreach (FriendEntry entry in snapshot.Friends)
-                _lists.Add(Row(entry));
+            {
+                VisualElement row = Row(entry);
+                row.Insert(0, PresenceDot(live, SocialGateway.PresenceOf(entry.Code)));
+                _lists.Add(row);
+            }
 
             if (snapshot.Outgoing.Count > 0)
             {
@@ -232,6 +270,25 @@ namespace Emberfall.Presentation
                         ("Cancel", false, () => Run(t => FriendsGateway.DeclineAsync(t, code), "Request withdrawn."))));
                 }
             }
+        }
+
+        /// <summary>
+        /// Green online, gold in a match, grey offline — and hollow when there is no live social
+        /// connection, because then this client does not know, and "offline" would be a claim.
+        /// </summary>
+        private static VisualElement PresenceDot(bool live, PresenceState state)
+        {
+            var dot = new VisualElement();
+            dot.AddToClassList("fr-presence");
+            dot.AddToClassList(!live ? "fr-presence--unknown"
+                : state == PresenceState.Online ? "fr-presence--online"
+                : state == PresenceState.InMatch ? "fr-presence--in-match"
+                : "fr-presence--offline");
+            dot.tooltip = !live ? "Status unknown"
+                : state == PresenceState.Online ? "Online"
+                : state == PresenceState.InMatch ? "In a match"
+                : "Offline";
+            return dot;
         }
 
         private static Label Section(string text)

@@ -219,6 +219,29 @@
     font-size: var(--type-body);
     color: var(--ink-1);
 }
+/* Presence, from the /social connection. Hollow = no live connection, so not known. */
+.fr-root .fr-presence {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    margin-right: var(--space-3);
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+}
+.fr-root .fr-presence--online {
+    background-color: rgb(96, 196, 112);
+}
+.fr-root .fr-presence--in-match {
+    background-color: rgb(232, 194, 132);
+}
+.fr-root .fr-presence--offline {
+    background-color: rgb(110, 116, 126);
+}
+.fr-root .fr-presence--unknown {
+    background-color: rgba(0, 0, 0, 0);
+    border-color: rgb(110, 116, 126);
+}
 .fr-root .fr-row__button {
     flex-shrink: 0;
     height: 52px;
