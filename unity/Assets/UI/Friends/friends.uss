@@ -70,6 +70,41 @@
     background-color: rgb(232, 194, 132);
 }
 
+/* ---------- Challenge strip ----------
+ * Top centre, under the open drawer's scrim (it is earlier in the tree), so the drawer still
+ * covers it. The strip spans the width and ignores picking; only the card takes clicks. */
+.fr-root .fr-challenge-strip {
+    position: absolute;
+    top: var(--space-6);
+    left: var(--edge-safe);
+    right: var(--edge-safe);
+    align-items: center;
+}
+.fr-root .fr-challenge {
+    flex-direction: row;
+    align-items: center;
+    max-width: 100%;
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--surface-1);
+    border-width: 2px;
+    border-color: rgb(232, 194, 132);
+    border-radius: var(--space-2);
+}
+.fr-root .fr-challenge--hidden {
+    display: none;
+}
+/* The sentence carries a FRIEND'S NAME, which another player typed: clipped here in pixels,
+ * rich text off where the label is bound. Same pair of obligations as .fr-row__name. */
+.fr-root .fr-challenge__text {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--type-body);
+    color: var(--ink-1);
+}
+
 /* ---------- Scrim ---------- */
 .fr-root .fr-scrim {
     position: absolute;

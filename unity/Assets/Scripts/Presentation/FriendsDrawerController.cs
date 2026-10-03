@@ -43,9 +43,18 @@ namespace Emberfall.Presentation
         private Button _addButton;
         private ScrollView _lists;
 
+        private VisualElement _challenge;
+        private Label _challengeText;
+        private Button _challengeYes;
+        private Button _challengeNo;
+        private int _challengeSecondsShown = -1;
+
         private string _ownCodeDisplay = "";
         private bool _busy;
         private FriendsSnapshot _shown;
+
+        /// <summary>Is there a drawer on this screen to show a challenge prompt in?</summary>
+        public static bool IsMounted => _current != null;
 
         /// <summary>
         /// Build and bind the button and drawer. Returns null, and builds nothing, when nobody is
@@ -77,6 +86,7 @@ namespace Emberfall.Presentation
             var drawer = uiGo.AddComponent<FriendsDrawerController>();
             drawer.Init();
             _current = drawer;
+            ChallengeFlow.Listen();
             SocialGateway.EnsureStarted();
             return drawer;
         }
@@ -103,17 +113,96 @@ namespace Emberfall.Presentation
             _root.Q<Button>("btn-copy-code")?.RegisterCallback<ClickEvent>(_ => CopyOwnCode());
             _addButton?.RegisterCallback<ClickEvent>(_ => AddFriend());
 
+            _challenge     = _root.Q<VisualElement>("challenge");
+            _challengeText = _root.Q<Label>("challenge-text");
+            _challengeYes  = _root.Q<Button>("challenge-yes");
+            _challengeNo   = _root.Q<Button>("challenge-no");
+            if (_challengeText != null)
+            {
+                // The sentence carries a friend's name: peer-authored, see NameLabel.
+                _challengeText.enableRichText = false;
+                _challengeText.parseEscapeSequences = false;
+            }
+            _challengeYes?.RegisterCallback<ClickEvent>(_ => ChallengeFlow.Accept());
+            _challengeNo?.RegisterCallback<ClickEvent>(_ =>
+            {
+                if (ChallengeFlow.Phase == ChallengePhase.None) ChallengeFlow.DismissNotice();
+                else ChallengeFlow.Withdraw();
+            });
+
             SocialGateway.Received += OnSocial;
             SocialGateway.StateChanged += OnSocialState;
+            ChallengeFlow.Changed += OnChallengeChanged;
 
             Close();
+            RenderChallenge();
         }
 
         private void OnDestroy()
         {
             SocialGateway.Received -= OnSocial;
             SocialGateway.StateChanged -= OnSocialState;
+            ChallengeFlow.Changed -= OnChallengeChanged;
             if (_current == this) _current = null;
+        }
+
+        /// <summary>Ticks the countdown once a second while an offer is open.</summary>
+        private void Update()
+        {
+            if (ChallengeFlow.ExpiresAt <= 0f) return;
+            if (SecondsLeft() != _challengeSecondsShown) RenderChallenge();
+        }
+
+        private void OnChallengeChanged()
+        {
+            // An offer from a friend this drawer has not drawn yet: fetch the list for the name.
+            if (ChallengeFlow.Phase == ChallengePhase.Incoming && !ChallengeFlow.KnowsName(ChallengeFlow.Code) && !_busy)
+                Run(token => FriendsGateway.FetchAsync(token), okStatus: "");
+            if (_shown != null) Render(_shown);   // the Challenge buttons depend on the phase
+            RenderChallenge();
+        }
+
+        private static int SecondsLeft() =>
+            ChallengeFlow.ExpiresAt <= 0f ? -1
+                : Mathf.Max(0, Mathf.CeilToInt(ChallengeFlow.ExpiresAt - Time.realtimeSinceStartup));
+
+        /// <summary>The challenge strip, from <see cref="ChallengeFlow"/> and nothing else.</summary>
+        private void RenderChallenge()
+        {
+            if (_challenge == null) return;
+
+            string name = ChallengeFlow.NameOf(ChallengeFlow.Code);
+            int seconds = SecondsLeft();
+            _challengeSecondsShown = seconds;
+            string clock = seconds >= 0 ? $" ({seconds}s)" : "";
+
+            string text = "", yes = "", no = "";
+            switch (ChallengeFlow.Phase)
+            {
+                case ChallengePhase.Incoming:
+                    text = $"{name} challenges you to a match{clock}"; yes = "Accept"; no = "Decline"; break;
+                case ChallengePhase.Sending:
+                    text = $"Sending a challenge to {name}…"; no = "Cancel"; break;
+                case ChallengePhase.WaitingForAnswer:
+                    text = $"Waiting for {name} to answer{clock}"; no = "Cancel"; break;
+                case ChallengePhase.Starting:
+                    text = "Starting the match…"; break;
+                case ChallengePhase.None when ChallengeFlow.Notice.Length > 0:
+                    text = ChallengeFlow.Notice; no = "OK"; break;
+                // Picking: the roster's own intro line says what is going on.
+            }
+
+            _challenge.EnableInClassList("fr-challenge--hidden", text.Length == 0);
+            if (_challengeText != null) _challengeText.text = text.Length == 0 ? " " : text;
+            SetButton(_challengeYes, yes);
+            SetButton(_challengeNo, no);
+        }
+
+        private static void SetButton(Button button, string text)
+        {
+            if (button == null) return;
+            button.style.display = text.Length == 0 ? DisplayStyle.None : DisplayStyle.Flex;
+            if (text.Length > 0) button.text = text;
         }
 
         private bool IsOpen => _root != null && _root.ClassListContains(OpenClass);
@@ -252,10 +341,15 @@ namespace Emberfall.Presentation
                 empty.AddToClassList("fr-empty");
                 _lists.Add(empty);
             }
+            ChallengeFlow.RememberNames(snapshot.Friends);
             bool live = SocialGateway.State == SocialState.Live;
+            bool canChallenge = live && ChallengeFlow.Phase == ChallengePhase.None;
             foreach (FriendEntry entry in snapshot.Friends)
             {
-                VisualElement row = Row(entry);
+                string code = entry.Code;
+                VisualElement row = canChallenge && SocialGateway.PresenceOf(code) == PresenceState.Online
+                    ? Row(entry, ("Challenge", true, () => { Close(); ChallengeFlow.Challenge(code); }))
+                    : Row(entry);
                 row.Insert(0, PresenceDot(live, SocialGateway.PresenceOf(entry.Code)));
                 _lists.Add(row);
             }

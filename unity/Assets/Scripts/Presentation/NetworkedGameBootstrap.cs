@@ -189,6 +189,11 @@ namespace Emberfall.Presentation
             _net = new NetworkedMatchSession(transport, clientOptions);
             _view = new MainThreadMatchSession(_net);
 
+            // A friend challenge (#409) seats this socket against that friend instead of the queue.
+            // The ticket rides the query string, not HelloMsg, so the wire contract did not move.
+            string challengeTicket = ChallengeFlow.TakeTicket();
+            bool challenge = challengeTicket.Length > 0;
+
             // RC-F10: marshal terminal transitions to the main thread and stop the runner.
             // The same handler feeds the loading overlay's status line (ConnectionState already
             // narrates the boot: Connecting → Pairing → Live); raises come from the background
@@ -198,17 +203,21 @@ namespace Emberfall.Presentation
                 switch (st)
                 {
                     case ConnectionState.Connecting: SetStatus("Connecting…"); break;
-                    case ConnectionState.Pairing:    SetStatus("Waiting for an opponent…"); break;
+                    case ConnectionState.Pairing:    SetStatus(challenge ? "Waiting for your friend…" : "Waiting for an opponent…"); break;
                     case ConnectionState.Live:       SetStatus("Opponent found"); break;
                 }
                 if (st == ConnectionState.Dead || st == ConnectionState.Ended)
                     matchRunner.StopMatch(_net.State == ConnectionState.Ended ? _view.Current.Outcome : MatchOutcome.InProgress);
             });
 
-            Debug.Log($"[NetworkedGameBootstrap] connecting to {serverUrl} …");
+            string connectUrl = !challenge
+                ? serverUrl
+                : serverUrl + (serverUrl.Contains("?") ? "&" : "?") + "challenge=" + Uri.EscapeDataString(challengeTicket);
+
+            Debug.Log($"[NetworkedGameBootstrap] connecting to {serverUrl}{(challenge ? " (friend challenge)" : "")} …");
             SetStatus("Connecting…");
             Task connect;
-            try { connect = _net.ConnectAsync(new Uri(serverUrl)); }
+            try { connect = _net.ConnectAsync(new Uri(connectUrl)); }
             catch (Exception ex)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] connect threw: {ex.Message}");

@@ -245,6 +245,8 @@ namespace Emberfall.Presentation
             // leaving this as the only button `WireChrome` wires at the top level.
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ =>
             {
+                // A receiver backing out of the pick declines; a sender had sent nothing yet.
+                ChallengeFlow.PickCancelled();
                 MatchDeckSelection.Cancel();
                 ScreenNav.Go(_returnScene);
             });
@@ -252,7 +254,14 @@ namespace Emberfall.Presentation
             if (MatchDeckSelection.Choosing)
             {
                 if (_rosterIntro != null)
-                    _rosterIntro.text = "Choose one of your queue-ready decks, then Continue.";
+                    _rosterIntro.text = ChallengeFlow.Phase switch
+                    {
+                        ChallengePhase.PickingToSend   => $"Choose a deck to challenge {ChallengeFlow.NameOf(ChallengeFlow.Code)} with.",
+                        ChallengePhase.PickingToAccept => $"Choose a deck to accept {ChallengeFlow.NameOf(ChallengeFlow.Code)}'s challenge.",
+                        _                              => "Choose one of your queue-ready decks, then Continue.",
+                    };
+                if (_matchContinue != null && ChallengeFlow.IsPicking)
+                    _matchContinue.text = ChallengeFlow.Phase == ChallengePhase.PickingToSend ? "Send Challenge" : "Accept";
                 _root.AddToClassList("character-roster--match-pick");
             }
             _matchContinue?.RegisterCallback<ClickEvent>(_ => ContinueToMatch());
@@ -1039,6 +1048,15 @@ namespace Emberfall.Presentation
                 ClearPick();
                 RebuildRoster();
                 SetStatus($"{deck.Name} is not queue ready: {queue.Reason}", isError: true);
+                return;
+            }
+
+            // A friend challenge (#409) does not go to the board yet: this player's half goes out,
+            // and ChallengeFlow loads the board when the server's ticket arrives.
+            if (ChallengeFlow.IsPicking)
+            {
+                ChallengeFlow.DeckChosen(deck.Id);
+                _matchContinue?.SetEnabled(false);
                 return;
             }
 
