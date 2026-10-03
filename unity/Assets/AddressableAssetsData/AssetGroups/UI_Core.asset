@@ -300,6 +300,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dfbd5f87b7184ebfadaf2104e8197ad5
+    m_Address: ui/effect_aegis_golden_dome
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e005acad0f5ea3844bfe7e42567e0f6c
     m_Address: ui/app_icon_1024
     m_ReadOnly: 0
