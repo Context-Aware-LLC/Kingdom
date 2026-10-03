@@ -245,6 +245,7 @@ namespace Emberfall.Presentation
 
             // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).
             MatchSettingsController.Mount();
+            FriendsDrawerController.Mount();
 
             try
             {

@@ -66,8 +66,9 @@ namespace Emberfall.Presentation
             var doc  = uiGo.AddComponent<UIDocument>();
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("FriendsDrawer");
-            // Above the settings overlay's document on the shared panel, so the open drawer covers
-            // the gear instead of sliding in underneath it.
+            // The top UI layer outside a match: the shared panel sorts at 100, over every screen's
+            // own panel (0), and 1 here puts it over the settings overlay's document (0) on that
+            // panel too, so the open drawer covers the gear instead of sliding in underneath it.
             doc.sortingOrder = 1;
             var drawer = uiGo.AddComponent<FriendsDrawerController>();
             drawer.Init();

@@ -565,7 +565,7 @@ namespace Emberfall.Presentation
         {
             MatchSettingsController.Mount(onConcede: null, showConcede: false);
             // #409: the friends button sits directly above the gear, on every top-level screen
-            // except Collection (Sam is reviewing that corner first) and the match.
+            // except the match.
             FriendsDrawerController.Mount();
         }
 
