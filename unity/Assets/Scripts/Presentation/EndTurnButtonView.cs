@@ -5,40 +5,37 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Royal Council's world-space End Turn control. The existing crown stamper rests over the
-    /// painted seal press while it is the local player's turn. Clicking slams it into the plate,
-    /// lifts the tool out of view and leaves the wax crown behind for the complete opponent turn.
+    /// Royal Council's world-space End Turn control: <b>the wax crown seal is the button</b>. It
+    /// sits centred on the painted seal press for the whole match — lit and pressable on the local
+    /// player's turn, dimmed while the opponent plays. Pressing it squashes and springs back.
     /// Authority still lives in <see cref="InputRouter.OnEndTurnClicked"/> and the subsequent state.
+    ///
+    /// <para>A stamper tool used to rest on the plate and slam the wax into it, with the wax only
+    /// appearing afterwards (removed 2026-10-02, Sam). Two sprites that each had to line up with a
+    /// painted fixture never did; one sprite centred on the plate has nothing to disagree with.</para>
     /// </summary>
     public sealed class EndTurnButtonView : MonoBehaviour
     {
         public static readonly Vector3 BoardPosition = new(6.3f, 0f, 0f);
-        public static readonly Vector2 ArtworkUv =
-            // v2 composite; see ProceduralBoardSetup. A touch up and left of the seal press's
-            // centre (1669, 387) (Sam, 2026-10-02).
-            new(1644f / 1867f, 1f - 367f / 842f);
 
-        private const float HitW = 3.20f;
-        private const float HitH = 2.05f;
-        private const float ToolSize = 2.55f;
+        // The centre of the seal press's face in royal_council_battle_table_v2_composite.png
+        // (1867 x 842), read off the plate's own ellipse. See ProceduralBoardSetup for the space.
+        public static readonly Vector2 ArtworkUv =
+            new(1666f / 1867f, 1f - 385f / 842f);
+
         private const float SealW = 1.72f;
         private const float SealH = 1.08f;
-        private const float ToolRestY = 0.72f;
-        // The wax and the stamper share this view's anchor, so they move together; these place
-        // each on the painted plate by eye (Sam, 2026-10-02). From a first guess at (-0.20,
-        // 0.15) the wax went one of its own radii right (SealW / 2) and one down (SealH / 2); the
-        // stamper rests one wax radius right of the anchor and slams down onto the wax.
-        private const float ToolRestX = SealW * 0.5f;
-        private static readonly Vector3 SealOffset =
-            new(-0.20f + SealW * 0.5f, 0.15f - SealH * 0.5f, 0f);
+        // The tap target tracks the wax, with a margin for a thumb.
+        private const float HitW = SealW * 1.25f;
+        private const float HitH = SealH * 1.35f;
         private const int SealOrder = 12;
-        private const int ToolOrder = 13;
+
+        private static readonly Color LitColor = Color.white;
+        private static readonly Color DimColor = new(0.50f, 0.46f, 0.46f, 1f);
 
         private PlayerId _p0Id;
         private InputRouter _router;
-        private SpriteRenderer _tool;
         private SpriteRenderer _seal;
-        private Vector3 _toolRestScale;
         private Vector3 _sealRestScale;
         private bool _myTurn;
         private bool _animating;
@@ -56,14 +53,8 @@ namespace Emberfall.Presentation
 
             _seal = MakeSprite(transform, "WaxSeal", uiSprites.Get(SealStamp.SpriteKey),
                 SealW, SealH, SealOrder);
-            _seal.transform.localPosition = SealOffset;
             _sealRestScale = _seal.transform.localScale;
-            _seal.gameObject.SetActive(false);
-
-            _tool = MakeSprite(transform, "StampTool", uiSprites.Get(SealStamp.ToolSpriteKey),
-                ToolSize, ToolSize, ToolOrder);
-            _tool.transform.localPosition = new Vector3(ToolRestX, ToolRestY, -0.02f);
-            _toolRestScale = _tool.transform.localScale;
+            _seal.color = DimColor;
 
             var col = gameObject.AddComponent<BoxCollider>();
             col.size = new Vector3(HitW, HitH, 0.1f);
@@ -73,76 +64,37 @@ namespace Emberfall.Presentation
 
         public void OnStateUpdated(GameState state)
         {
-            if (state == null || _tool == null || _seal == null) return;
+            if (state == null || _seal == null) return;
             _myTurn = state.ActivePlayer == _p0Id && state.Phase == TurnPhase.Main;
 
             if (_animating) return;
-            if (_myTurn) ResetForMyTurn();
-            else ShowOpponentSeal();
+            Show(_myTurn);
         }
 
         private void OnMouseDown()
         {
             if (!_myTurn || _animating) return;
             _router?.OnEndTurnClicked();
-            StartCoroutine(StampAndLift());
+            StartCoroutine(Press());
         }
 
-        private IEnumerator StampAndLift()
+        private IEnumerator Press()
         {
             _animating = true;
-            _tool.gameObject.SetActive(true);
-            _seal.gameObject.SetActive(false);
-            SetAlpha(_tool, 1f);
-
-            Vector3 restPosition = new(ToolRestX, ToolRestY, -0.02f);
-            Vector3 impactPosition = new(SealOffset.x, ToolRestY - 0.38f + SealOffset.y, -0.03f);
-            yield return AnimateTool(restPosition, impactPosition,
-                _toolRestScale, Vector3.Scale(_toolRestScale, new Vector3(1.08f, 0.88f, 1f)),
-                1f, 1f, 0.14f);
-
-            _seal.gameObject.SetActive(true);
-            _seal.transform.localScale = Vector3.Scale(_sealRestScale, new Vector3(0.52f, 0.38f, 1f));
             UiSfx.Play(UiSfx.WaxStamp);
 
-            yield return AnimateSeal(
-                Vector3.Scale(_sealRestScale, new Vector3(0.52f, 0.38f, 1f)),
-                Vector3.Scale(_sealRestScale, new Vector3(1.10f, 0.94f, 1f)), 0.08f);
+            Vector3 pressed = Vector3.Scale(_sealRestScale, new Vector3(0.90f, 0.84f, 1f));
+            yield return AnimateSeal(_sealRestScale, pressed, 0.07f);
+            _seal.color = DimColor;
+            yield return AnimateSeal(pressed, Vector3.Scale(_sealRestScale, new Vector3(1.05f, 1.03f, 1f)), 0.08f);
             yield return AnimateSeal(_seal.transform.localScale, _sealRestScale, 0.12f);
-            yield return new WaitForSecondsRealtime(0.08f);
 
-            Vector3 liftPosition = new(SealOffset.x, ToolRestY + SealOffset.y + 3.25f, -0.05f);
-            yield return AnimateTool(impactPosition, liftPosition, _tool.transform.localScale,
-                Vector3.Scale(_toolRestScale, new Vector3(1.28f, 1.28f, 1f)),
-                1f, 0f, 0.22f);
-
-            _tool.gameObject.SetActive(false);
             // Keep the press committed while the command crosses the network. A rejection that
-            // leaves authority on our turn restores it after this grace window; an accepted turn
-            // has already changed _myTurn and leaves the wax in place.
+            // leaves authority on our turn relights it after this grace window; an accepted turn
+            // has already changed _myTurn and leaves the seal dim.
             yield return new WaitForSecondsRealtime(1.0f);
             _animating = false;
-            if (_myTurn) ResetForMyTurn();
-            else ShowOpponentSeal();
-        }
-
-        private IEnumerator AnimateTool(
-            Vector3 fromPosition, Vector3 toPosition,
-            Vector3 fromScale, Vector3 toScale,
-            float fromAlpha, float toAlpha,
-            float duration)
-        {
-            float elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / duration);
-                float eased = t * t * (3f - 2f * t);
-                _tool.transform.localPosition = Vector3.LerpUnclamped(fromPosition, toPosition, eased);
-                _tool.transform.localScale = Vector3.LerpUnclamped(fromScale, toScale, eased);
-                SetAlpha(_tool, Mathf.Lerp(fromAlpha, toAlpha, eased));
-                yield return null;
-            }
+            Show(_myTurn);
         }
 
         private IEnumerator AnimateSeal(Vector3 fromScale, Vector3 toScale, float duration)
@@ -158,21 +110,10 @@ namespace Emberfall.Presentation
             }
         }
 
-        private void ResetForMyTurn()
+        private void Show(bool lit)
         {
-            _seal.gameObject.SetActive(false);
             _seal.transform.localScale = _sealRestScale;
-            _tool.gameObject.SetActive(true);
-            _tool.transform.localPosition = new Vector3(ToolRestX, ToolRestY, -0.02f);
-            _tool.transform.localScale = _toolRestScale;
-            SetAlpha(_tool, 1f);
-        }
-
-        private void ShowOpponentSeal()
-        {
-            _tool.gameObject.SetActive(false);
-            _seal.gameObject.SetActive(true);
-            _seal.transform.localScale = _sealRestScale;
+            _seal.color = lit ? LitColor : DimColor;
         }
 
         private static SpriteRenderer MakeSprite(
@@ -194,13 +135,6 @@ namespace Emberfall.Presentation
                 Debug.LogWarning($"[EndTurnButtonView] missing sprite for {name}.");
             }
             return sr;
-        }
-
-        private static void SetAlpha(SpriteRenderer renderer, float alpha)
-        {
-            Color color = renderer.color;
-            color.a = alpha;
-            renderer.color = color;
         }
     }
 }
