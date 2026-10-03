@@ -239,7 +239,8 @@ PlayerSettings:
   iOSLaunchScreenCustomStoryboardPath: 
   iOSLaunchScreeniPadCustomStoryboardPath: 
   iOSDeviceRequirements: []
-  iOSURLSchemes: []
+  iOSURLSchemes:
+  - emberfall
   macOSURLSchemes: []
   iOSBackgroundModes: 0
   iOSMetalForceHardShadows: 0
