@@ -30,8 +30,28 @@
   </Folder>
   <Folder Name="/unity/">
     <Project Path="unity/Assembly-CSharp.csproj" />
+    <Project Path="unity/Emberfall.AI.csproj" />
+    <Project Path="unity/Emberfall.Core.Cards.csproj" />
+    <Project Path="unity/Emberfall.Core.Collection.csproj" />
+    <Project Path="unity/Emberfall.Core.Contracts.csproj" />
+    <Project Path="unity/Emberfall.Core.csproj" />
+    <Project Path="unity/Emberfall.Core.Serialization.csproj" />
+    <Project Path="unity/Emberfall.Data.csproj" />
+    <Project Path="unity/Emberfall.Editor.csproj" />
+    <Project Path="unity/Emberfall.Net.Client.csproj" />
+    <Project Path="unity/Emberfall.Net.Protocol.csproj" />
+    <Project Path="unity/Emberfall.Presentation.csproj" />
+    <Project Path="unity/Emberfall.Review.csproj" />
+    <Project Path="unity/Emberfall.Review.Editor.csproj" />
+    <Project Path="unity/Emberfall.Session.csproj" />
     <Project Path="unity/Google.Play.Games.csproj" />
     <Project Path="unity/Google.Play.Games.Editor.csproj" />
+    <Project Path="unity/Mrsonord2240.Playgamespluginforunity.csproj" />
+    <Project Path="unity/Mrsonord2240.Playgamespluginforunity.Editor.csproj" />
+    <Project Path="unity/Mrsonord2240.Playgamespluginforunity.Editor.Tests.csproj" />
+    <Project Path="unity/Mrsonord2240.Playgamespluginforunity.Tests.csproj" />
+    <Project Path="unity/Rodin.csproj" />
+    <Project Path="unity/Unity.Services.CloudBuild.Editor.csproj" />
     <Project Path="unity/Unity.VisualStudio.Editor.csproj" />
   </Folder>
 </Solution>

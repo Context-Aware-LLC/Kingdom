@@ -207,3 +207,7 @@ unity/Assets/Resources/build-stamp.txt.meta
 !/unity/keystore/debug.keystore
 *.jks
 /kobi-upload-certificate.pem
+
+
+# build backups
+newest_BackUpThisFolder_ButDontShipItWithYourGame

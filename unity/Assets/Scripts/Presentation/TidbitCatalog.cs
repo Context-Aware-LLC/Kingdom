@@ -96,76 +96,102 @@ namespace Emberfall.Presentation
                 TidbitTrigger.MainMenuArrival,
                 "The Kingdom, is yours to explore.\n",
                 "Go questing, stare at your collection, or engage in glorious battle\n" +
-                "these are the quintissential joys of life in the Kingdom.",
+                "\n" +
+                "These are the quintissential joys of life in the Kingdom.",
                 "tidbit_menu"),
             new Tidbit(
                 "decks",
                 TidbitTrigger.RosterArrival,
-                "Your decks",
-                "Tap + to create a deck. Tap once a deck once to see options, or twice to edit it.\n" +
-                "The Council has determinned that you shall have not more thannine.\n" +
+                "Your Decks",
+                "Tap + to create a deck. Tap a deck once to see options, twice to edit it.\n" +
+                "The Council has determinned that you shall have not more than nine.\n" +
+                "\n" +
                 "Nine is the limit. Not 8 and not 10. Because the council said so, that is why.",
                 "tidbit_decks"),
             new Tidbit(
                 "match-pick",
                 TidbitTrigger.MatchPickArrival,
-                "Choose your deck",
-                "Tap the deck to select it, then press Continue.\n" +
-                "Yes. It is very complicated I know.\n" +
+                "Choose A Deck",
+                "Tap a deck to select it, then press Continue.\n" +
+                "Yes. It is complicated. You will get used to it.\n" +
+                "\n" +
                 "If you are lucky your opponent will not figure this part out and you will be the champion.",
                 "tidbit_match_pick"),
             new Tidbit(
                 "characters",
                 TidbitTrigger.CharacterCreateArrival,
-                "Two classes, one character",
-                "....why? Because everyone should have a side hustle." +
-                "Your first choice determines your hero power the second adds to the card pool you build from.\n" +
-                "Two personalities is not usually enough to become King but you never know..",
+                "Two Classes, One Character",
+                "....Why?\n" +
+                "These days, everyone needs a side hustle.\n" +
+                "\n" +
+                "Your first choice determines your hero power.\n" +
+                "The second adds to the card pool you build from.\n" +
+                "\n" +
+                "Two personalities is not usually enough to become King but you never know...",
                 "tidbit_characters"),
             new Tidbit(
                 "collection",
                 TidbitTrigger.CollectionArrival,
-                "The collection",
-                "Every card you own is here. Every card you wish you owned is here also.\n" +
+                "The Collection",
+                "Every card you own is here. The cards you wish you owned are here also.\n" +
                 "Tap one to Render a copy, or to Reduce a spare into shards.\n" +
+                "\n" +
+                "Cards come in 4 different rarity levels: \n" +
+                "Common - Pink, Rare - Blue, Epic - Purple, Legendary - Red.\n" +
+                "\n" +
                 "The Decks button shows you the thing it says. Don't over think it.",
                 "tidbit_collection"),
             new Tidbit(
                 "deck-editor",
                 TidbitTrigger.DeckEditorArrival,
-                "Building a deck",
+                "Build a Deck",
                 "Tap a card to add. Tap a row to subtract.\n" +
+                "\n" +
                 "A deck is 30 cards, two copies max, only one of any Legendary.\n" +
+                "\n" +
                 "Sing a little song to help you remember. Tap Add, Tap Subtract. Tap foot tap tap.",
                 "tidbit_deck_editor"),
             new Tidbit(
                 "vault",
                 TidbitTrigger.PackVaultArrival,
                 "The Card Vault",
-                "Drag packs to the center to open. Pick it up and hold it on the rail to open multiple\n" +
+                "Drag packs to the center to open.\n" +
+                "Pick one up and hold it over the rail to open multiple\n" +
+                "\n" +
                 "Everything inside is yours. The paperwork has already been filed in triplicate.",
                 "tidbit_vault"),
             new Tidbit(
                 "shards",
                 TidbitTrigger.PackVaultGiftComplete,
-                "Now entering the kingdom.",
-                "Probably a bad idea.\n" +
+                "Entering The Kingdom.",
+                "For most this would be a bad idea.\n" +
+                "\n" +
+                "You are something special. I can tell.\n" +
+                "\n" +
                 "Your going to go out there and make the kingdom a better place, I'm sure.",
                 "tidbit_shards"),
             new Tidbit(
                 "store",
                 TidbitTrigger.PackVaultGiftComplete,
-                "The Store",
+                "Earn Gold",
                 "You don't have to be rich to live like a king.\n" +
-                "If you are toil every day completing quests you might grow up to be one.",
+                "\n" +
+                "If you are toil every day completing quests you might grow up to be one.\n" +
+                "\n" +
+                "Or so I was told as a child.",
+
                 "tidbit_store"),
             new Tidbit(
                 "shop",
                 TidbitTrigger.ShopArrival,
-                "Tap situation.",
-                "Like most things in the kingdom that's what this is a tap situation.\n" +
-                "Pay with your hard-earned Gold like every other peasant or purchase gems to skip the toil.\n" +
-                "Packs you buy end up in the Card Vault awaiting your tap.",
+                "The Store",
+                "If you get into trouble in the kingdom you can usually tap your way out of it\n" +
+                "\n" +
+                "Just as easily you can tap your way into some new cards\n" +
+                "\n" +
+                "Packs you buy end up in the Card Vault awaiting your tap.\n" +
+                "\n" +
+                "Pay with your hard-earned Gold like every other peasant or purchase gems to skip the toil.",
                 "tidbit_shop"),
         };
 
