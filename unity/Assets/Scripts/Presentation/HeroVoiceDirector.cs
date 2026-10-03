@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Emberfall.Core.Contracts;
 using UnityEngine;
@@ -47,6 +48,15 @@ namespace Emberfall.Presentation
         /// apart from a reconnect resend by content — the countdown is the reliable signal.
         /// </summary>
         private const long RopeWindowMs = 10_000;
+
+        /// <summary>
+        /// How long the win/lose line waits for <see cref="CardSoundDirector.OnMatchEnded"/>'s
+        /// stinger, which fires on the same event (Sam, 2026-10-03: the two played on top of each
+        /// other). The stingers are 6.48s files whose music is over well before the file is — the
+        /// last window above -30 dB of peak falls between 4.15s and 5.0s across the five — so this
+        /// is the end of the music, not the length of the clip. Re-measure if a stinger is replaced.
+        /// </summary>
+        public const float StingerLeadSeconds = 4.5f;
 
         private const string MomentMatchStart = "match_start";
         private const string MomentTurnStart = "turn_start";
@@ -150,7 +160,16 @@ namespace Emberfall.Presentation
             // Draw is deliberately silent — no line is authored for it (voice-lines.json _moments).
             if (outcome == MatchOutcome.Draw || outcome == MatchOutcome.InProgress) return;
             bool won = outcome == (_localSeat == 0 ? MatchOutcome.Player0Win : MatchOutcome.Player1Win);
-            Play(won ? MomentWin : MomentLose);
+            StartCoroutine(PlayAfterStinger(won ? MomentWin : MomentLose));
+        }
+
+        private IEnumerator PlayAfterStinger(string moment)
+        {
+            string soundId = SoundId(moment);
+            _player.Preload(soundId);   // so the line lands on the beat, not a load after it
+            // Realtime: the line must not hang on a paused or slowed timeScale.
+            yield return new WaitForSecondsRealtime(StingerLeadSeconds);
+            _player.Play(soundId);
         }
 
         private void Update()
@@ -161,10 +180,12 @@ namespace Emberfall.Presentation
             Play(MomentRope);
         }
 
-        private void Play(string moment)
+        private void Play(string moment) => _player.Play(SoundId(moment));
+
+        private string SoundId(string moment)
         {
             int variant = UnityEngine.Random.Range(1, VariantsPerMoment + 1);
-            _player.Play($"vo_{_classToken}_{moment}_{variant}");
+            return $"vo_{_classToken}_{moment}_{variant}";
         }
 
         private void OnDestroy() => _player?.ReleaseAll();
