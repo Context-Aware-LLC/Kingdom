@@ -38,7 +38,8 @@
         <ui:VisualElement name="scrim" class="fr-scrim" />
 
         <ui:VisualElement name="drawer" class="fr-drawer">
-            <!-- The list. Hidden while a conversation is open (.fr-drawer--chat). -->
+            <!-- The list. Hidden while a conversation is open (the drawer's chat modifier class).
+                 Do not spell that class here: a double hyphen inside an XML comment fails the import. -->
             <ui:VisualElement name="friends-pane" class="fr-pane fr-friends-pane">
                 <ui:Label text="Friends" class="fr-title" />
 
