@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using Emberfall.Presentation;
 using UnityEditor;
@@ -39,7 +40,7 @@ namespace Emberfall.Editor
         private static readonly string AssetPath =
             ResourcesDir + "/" + BuildStamp.ResourceName + ".txt";
 
-        public void OnPreprocessBuild(BuildReport report) => Write();
+        public void OnPreprocessBuild(BuildReport report) => Write(report.summary.platform);
 
         // NO MENU ITEM (removed 2026-09-04, Sam auditing the Emberfall menu). There was a
         // "Build/Write Build Stamp (what a tester sees)" entry here, and it was redundant the day
@@ -48,7 +49,7 @@ namespace Emberfall.Editor
         // was to write a stamp OUTSIDE a build — i.e. to leave Assets/Resources holding a stamp
         // for a build that was never made, which is worse than no stamp at all.
 
-        private static string Write()
+        private static string Write(BuildTarget target)
         {
             string revision = Git("rev-list --count HEAD", "0");
             string sha = Git("rev-parse --short HEAD", "nogit");
@@ -56,7 +57,8 @@ namespace Emberfall.Editor
                 Application.version,
                 revision,
                 sha,
-                DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"));
+                DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                StoreBuild(target));
 
             if (revision == "0" || sha == "nogit")
                 Debug.LogWarning("[BuildStamp] git did not answer, so this build cannot name its "
@@ -68,6 +70,20 @@ namespace Emberfall.Editor
             File.WriteAllText(AssetPath, text);
             AssetDatabase.ImportAsset(AssetPath, ImportAssetOptions.ForceSynchronousImport);
             return text;
+        }
+
+        /// <summary>What the update gate compares against the server's minimum
+        /// (<see cref="BuildStamp.StoreBuild"/>). Read AFTER <see cref="StoreVersionBump"/> has
+        /// run, so a store build stamps the number it is uploaded under. An iOS build number set
+        /// by hand to a dotted form reads as 0 on the device, which is below every minimum — keep
+        /// it a plain integer, as <see cref="StoreVersionBump"/> does.</summary>
+        private static string StoreBuild(BuildTarget target)
+        {
+            if (target == BuildTarget.Android)
+                return PlayerSettings.Android.bundleVersionCode.ToString(CultureInfo.InvariantCulture);
+            if (target == BuildTarget.iOS)
+                return PlayerSettings.iOS.buildNumber;
+            return "0";
         }
 
         /// <summary>Run one git command in the repo, or return <paramref name="fallback"/>.</summary>

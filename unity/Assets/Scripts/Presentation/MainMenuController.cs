@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Emberfall.Core.Collection;
 using Emberfall.Net.Client.Auth;
 using Emberfall.Net.Client.Collection;
+using Emberfall.Net.Client.Gate;
 using Emberfall.Net.Client.Quests;
 using Emberfall.Net.Client.Shop;
 using Emberfall.Session;
@@ -152,11 +153,28 @@ namespace Emberfall.Presentation
         /// <para><b>async void is correct here and only here</b>, the same rule the gate follows: a
         /// Unity lifecycle method cannot be awaited, and the try/catch is what keeps it honest. The
         /// boot plate is still up for the duration, which is exactly the moment a player expects to
-        /// wait — and nothing below is skipped on a failure, because a bad network must not stop the
-        /// menu appearing.</para>
+        /// wait.</para>
+        ///
+        /// <para><b>The update gate comes first and is the only thing here that stops the menu.</b>
+        /// A build under the server's minimum, or one that cannot reach the server at all, never
+        /// gets past it: there is no offline mode, so a menu shown without a server only prepares a
+        /// match that cannot start. Once it has passed, the server was answering a moment ago, and a
+        /// sync that fails after that is a transient worth absorbing — which is why the catch below
+        /// still carries on.</para>
         /// </summary>
         private async void ResumeThenFinishBootstrap()
         {
+            // RETIREMENT TRIGGER: CLAUDE.md ("What does establish it is the update gate") states
+            // that the menu never shows unless the server answered at boot. Removing this call, or
+            // letting any verdict but Pass through, falsifies that paragraph — rewrite it here.
+            UpdateGateResult gate = await UpdateGateOverlay.CheckAsync();
+            if (this == null) return;
+            if (gate.Verdict != UpdateGateVerdict.Pass)
+            {
+                UpdateGateOverlay.Show(gate);
+                return;
+            }
+
             CollectionSnapshot collection = null;
             try
             {

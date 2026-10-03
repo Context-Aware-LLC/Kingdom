@@ -16,13 +16,18 @@ data: the usual argument for a mirror is offline usability, and here that argume
 **The login gate does NOT establish that a server is reachable, and its name says it does.**
 `SignInGateController.IsRequired` is `IsConfigured && !IsSignedIn && !Skipped`, and `IsSignedIn`
 reads a **stored session off local disk** — its own summary is *"True when a session is stored. Says
-nothing about the server accepting it."* So the gate blocks a first launch and **nothing after it**:
-a returning player with a stored token boots into the menu with no network at all. Do not reason
-"the menu is behind a login, therefore the code below it has a server."
+nothing about the server accepting it."* So the login gate blocks a first launch and **nothing after
+it**. Do not reason "the menu is behind a login, therefore the code below it has a server."
 
-**A graceful degrade is not free — it displaces the error.** That returning player's collection sync
-fails, an absent `owned-cards.json` means "do not constrain", the deck builder shows the full pool,
-they build from cards they do not own, and `MatchGate.cs:353` closes the socket when they queue. A
+**What does establish it is the update gate, and only ONCE PER LAUNCH.** `MainMenuController` asks
+`GET /update-gate` before the menu shows and blocks on anything but a pass — a stale build is sent
+to the store, an unreachable server gets Retry and nothing else (Sam, 2026-10-03). The pass is
+remembered for the life of the process, so it proves the server answered at boot, **not** that it is
+answering now: every screen below the menu can still lose the network underneath itself.
+
+**A graceful degrade is not free — it displaces the error.** A collection sync that fails leaves
+`owned-cards.json` absent, absent means "do not constrain", the deck builder shows the full pool,
+the player builds from cards they do not own, and `MatchGate` closes the socket when they queue. A
 legible failure becomes an illegible one, later, in a different screen. Distinguish *never synced*
 from *synced, then lost*; only the second is a transient worth absorbing silently.
 (Sam, 2026-09-01, correcting a spec written the same day.)

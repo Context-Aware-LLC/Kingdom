@@ -32,12 +32,37 @@ namespace Emberfall.Presentation
         /// <summary>Resources path, no extension — must match BuildStampWriter's output.</summary>
         public const string ResourceName = "build-stamp";
 
-        /// <summary>Field separator. Chosen because none of the four fields can contain it: a
-        /// version is dotted digits, the ordinal is digits, the SHA is hex, and the timestamp is
-        /// ISO-8601 with no spaces.</summary>
+        /// <summary>Field separator. Chosen because none of the five fields can contain it: a
+        /// version is dotted digits, the ordinal is digits, the SHA is hex, the timestamp is
+        /// ISO-8601 with no spaces, and the store build is digits.</summary>
         public const char Separator = '|';
 
+        /// <summary>No stamp, so no build ran: the Editor. Same value as
+        /// <c>HttpUpdateGate.UnknownBuild</c>, which is what reads it.</summary>
+        public const int UnknownStoreBuild = -1;
+
         private static string _display;
+
+        /// <summary>
+        /// The number the store orders builds by — Android versionCode, iOS build number — as
+        /// <c>BuildStampWriter</c> baked it. Unity exposes neither at runtime, which is the only
+        /// reason it rides in the stamp. A stamped build with no such field (one made before the
+        /// update gate, or a platform with no store) is 0: older than every minimum.
+        /// </summary>
+        public static int StoreBuild
+        {
+            get
+            {
+                var asset = Resources.Load<TextAsset>(ResourceName);
+                if (asset == null || string.IsNullOrWhiteSpace(asset.text)) return UnknownStoreBuild;
+
+                string[] parts = asset.text.Trim().Split(Separator);
+                return parts.Length > 4 && int.TryParse(parts[4], System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out int build)
+                    ? build
+                    : 0;
+            }
+        }
 
         /// <summary>
         /// What to show a tester, e.g. <c>v1.0 · r1127 · 6db4f123</c>. Never null and never empty —

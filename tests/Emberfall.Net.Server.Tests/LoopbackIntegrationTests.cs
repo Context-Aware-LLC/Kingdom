@@ -45,6 +45,11 @@ namespace Emberfall.Net.Server.Tests
                 string health = await http.GetStringAsync(new Uri(baseUri, "/healthz"));
                 Assert.That(health, Does.Contain("\"status\":\"ok\""));
 
+                string gate = await http.GetStringAsync(new Uri(baseUri, "/update-gate"));
+                Assert.That(gate, Is.EqualTo(
+                    "{\"contract\":\"" + ProtocolContract.Version +
+                    "\",\"minBuildAndroid\":0,\"minBuildIos\":0}"));
+
                 using var c0 = new ClientWebSocket();
                 using var c1 = new ClientWebSocket();
                 await c0.ConnectAsync(wsUri, CancellationToken.None);

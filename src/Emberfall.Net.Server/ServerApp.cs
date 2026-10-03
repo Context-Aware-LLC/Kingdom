@@ -181,6 +181,18 @@ namespace Emberfall.Net.Server
         public string? BotCheckpointPath { get; init; }
         public string? BotRlExportPath { get; init; }
 
+        /// <summary>
+        /// The oldest store build <c>GET /update-gate</c> lets play, per platform: Android
+        /// versionCode and iOS build number. 0 (default) holds nobody back. From
+        /// <c>EMBERFALL_MIN_BUILD_ANDROID</c> / <c>EMBERFALL_MIN_BUILD_IOS</c>.
+        ///
+        /// <para><b>Never raise one above the build the store is actually serving</b> — every
+        /// player on that platform is then sent to the store for an update that is not there, and
+        /// nothing on this side can tell.</para>
+        /// </summary>
+        public int MinClientBuildAndroid { get; init; }
+        public int MinClientBuildIos { get; init; }
+
         public static ServerConfig FromEnvironment()
         {
             string telemetryDir = Environment.GetEnvironmentVariable("EMBERFALL_TELEMETRY") ?? "telemetry";
@@ -259,7 +271,25 @@ namespace Emberfall.Net.Server
                 BotRosterPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_ROSTER"),
                 BotCheckpointPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_CHECKPOINT"),
                 BotRlExportPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_RL_EXPORT"),
+                MinClientBuildAndroid = MinBuildFromEnvironment("EMBERFALL_MIN_BUILD_ANDROID"),
+                MinClientBuildIos = MinBuildFromEnvironment("EMBERFALL_MIN_BUILD_IOS"),
             };
+        }
+
+        /// <summary>Unset is 0. A value that is not a non-negative integer is ALSO 0, and says so:
+        /// refusing to start over it would take the server down for a typo, while guessing a
+        /// number could lock every player out.</summary>
+        private static int MinBuildFromEnvironment(string name)
+        {
+            string? raw = Environment.GetEnvironmentVariable(name);
+            if (string.IsNullOrWhiteSpace(raw)) return 0;
+            if (int.TryParse(raw, System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out int min))
+                return min;
+
+            Console.Error.WriteLine("[update-gate] {0}='{1}' is not a build number — no minimum " +
+                                    "is enforced for that platform.", name, raw);
+            return 0;
         }
 
         /// <summary>
@@ -600,6 +630,16 @@ namespace Emberfall.Net.Server
                 corpus = corpusDigest,
                 cards = db.Count,
                 trainingCapture = trainingEpisodes is not null,
+            }));
+            // GET /update-gate — what the client asks before it shows a menu: may this build play.
+            // Unauthenticated and takes no input, because it is asked before sign-in. The contract
+            // rides along so a wire bump blocks older clients here, at boot, rather than at the
+            // queue with a close frame.
+            app.MapGet("/update-gate", () => Results.Json(new
+            {
+                contract = cfg.Options.WireContractVersion,
+                minBuildAndroid = cfg.MinClientBuildAndroid,
+                minBuildIos = cfg.MinClientBuildIos,
             }));
             app.MapGet("/leaderboard", async (HttpContext context) =>
             {

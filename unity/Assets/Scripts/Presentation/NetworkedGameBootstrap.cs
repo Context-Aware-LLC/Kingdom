@@ -10,6 +10,8 @@ using Emberfall.Core.Collection;
 using Emberfall.Core.Contracts;
 using Emberfall.Data;
 using Emberfall.Net.Client;
+using Emberfall.Net.Client.Gate;
+using Emberfall.Net.Client.Social;
 using Emberfall.Net.Protocol;
 using Emberfall.Session;
 using UnityEngine;
@@ -259,6 +261,23 @@ namespace Emberfall.Presentation
                 string reason = string.IsNullOrEmpty(_net.DeadReasonDetail)
                     ? _net.DeadReason.ToString()
                     : _net.DeadReasonDetail;
+
+                // A contract refusal is usually this build being out of date — a release landed
+                // while the app was open, after the menu's update gate had already passed. Ask the
+                // gate again: if it agrees, the player needs the store, not a Retry that can never
+                // work. If it does not (a build AHEAD of the server), fall through to the reason.
+                if (_net.DeadReason == DeadReason.ContractMismatch ||
+                    _net.DeadReasonDetail == SocialClient.ContractMismatchReason)
+                {
+                    Task<UpdateGateResult> gate = UpdateGateOverlay.CheckAsync(force: true);
+                    while (!gate.IsCompleted) yield return null;
+                    if (gate.Result.Verdict == UpdateGateVerdict.UpdateRequired)
+                    {
+                        UpdateGateOverlay.Show(gate.Result);
+                        yield break;
+                    }
+                }
+
                 BootFailed($"Couldn't reach the server — {reason}");
                 yield break;
             }
