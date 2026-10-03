@@ -36,6 +36,10 @@ namespace Emberfall.Net.Protocol
     /// already knows which the caller is.</summary>
     public sealed record ChallengeCloseMsg(string ChallengeId) : SocialMsg;
 
+    /// <summary>A direct message to the friend holding <paramref name="Code"/>. The server
+    /// re-cleans <paramref name="Text"/> with <see cref="ChatText"/>; the client's copy is advice.</summary>
+    public sealed record ChatSendMsg(string Code, string Text) : SocialMsg;
+
     // ── server → client ─────────────────────────────────────────────────────────────────
 
     public sealed record SocialPongMsg : SocialMsg;
@@ -100,6 +104,22 @@ namespace Emberfall.Net.Protocol
     }
 
     public sealed record ChallengeClosedMsg(string ChallengeId, ChallengeCloseReason Reason) : SocialMsg;
+
+    /// <summary>
+    /// A direct message, as the server cleaned it. <paramref name="Code"/> is always the OTHER
+    /// player: the sender when <paramref name="Mine"/> is false, the recipient when it is the
+    /// sender's own copy coming back — which is how the sender learns it was delivered, and sees
+    /// the text exactly as the friend will.
+    ///
+    /// <para><b><paramref name="Text"/> is text another player typed</b> (VULN-004). Nothing stores
+    /// it: a message to a friend who is not connected is not delivered and is gone.</para>
+    /// </summary>
+    public sealed record ChatMsg(string Code, string Text, bool Mine) : SocialMsg;
+
+    /// <summary>The message to <paramref name="Code"/> was not delivered. One answer for every
+    /// cause — not a friend, offline, too fast, nothing left after cleaning — for the same reason
+    /// as <see cref="ChallengeRefusedMsg"/>.</summary>
+    public sealed record ChatRefusedMsg(string Code) : SocialMsg;
 
     /// <summary>
     /// Encode and decode for <see cref="SocialMsg"/>. Hand-rolled over the same
@@ -183,6 +203,21 @@ namespace Emberfall.Net.Protocol
                     w.Name("id"); w.Str(m.ChallengeId);
                     w.Name("reason"); w.Str(ReasonName(m.Reason));
                     break;
+                case ChatSendMsg m:
+                    w.Str("chat_send");
+                    w.Name("code"); w.Str(m.Code);
+                    w.Name("text"); w.Str(m.Text);
+                    break;
+                case ChatMsg m:
+                    w.Str("chat");
+                    w.Name("code"); w.Str(m.Code);
+                    w.Name("text"); w.Str(m.Text);
+                    w.Name("mine"); w.Bool(m.Mine);
+                    break;
+                case ChatRefusedMsg m:
+                    w.Str("chat_refused");
+                    w.Name("code"); w.Str(m.Code);
+                    break;
                 default:
                     throw new ArgumentException("Unknown social message type " + msg.GetType().Name, nameof(msg));
             }
@@ -242,6 +277,19 @@ namespace Emberfall.Net.Protocol
                     if (!Str(root, "id", out string closedId) || !Str(root, "reason", out string reasonName) ||
                         !TryReason(reasonName, out ChallengeCloseReason reason)) return false;
                     msg = new ChallengeClosedMsg(closedId, reason);
+                    return true;
+                case "chat_send":
+                    if (!Str(root, "code", out string toCode) || !Str(root, "text", out string sendText)) return false;
+                    msg = new ChatSendMsg(toCode, sendText);
+                    return true;
+                case "chat":
+                    if (!Str(root, "code", out string chatCode) || !Str(root, "text", out string chatText) ||
+                        !root.TryGet("mine", out JVal mineVal) || !mineVal.TryBool(out bool mine)) return false;
+                    msg = new ChatMsg(chatCode, chatText, mine);
+                    return true;
+                case "chat_refused":
+                    if (!Str(root, "code", out string chatRefusedCode)) return false;
+                    msg = new ChatRefusedMsg(chatRefusedCode);
                     return true;
                 case "presence":
                     return TryPresence(root, out msg);

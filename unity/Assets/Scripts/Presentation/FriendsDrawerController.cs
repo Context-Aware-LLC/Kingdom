@@ -49,6 +49,16 @@ namespace Emberfall.Presentation
         private Button _challengeNo;
         private int _challengeSecondsShown = -1;
 
+        private VisualElement _drawer;
+        private Label _badge;
+        private Label _chatTitle;
+        private ScrollView _chatLines;
+        private Label _chatStatus;
+        private TextField _chatInput;
+
+        /// <summary>The friend whose conversation is open; empty while the list is showing.</summary>
+        private string _chatCode = "";
+
         private string _ownCodeDisplay = "";
         private bool _busy;
         private FriendsSnapshot _shown;
@@ -130,12 +140,148 @@ namespace Emberfall.Presentation
                 else ChallengeFlow.Withdraw();
             });
 
+            _drawer     = _root.Q<VisualElement>("drawer");
+            _badge      = _root.Q<Label>("unread-badge");
+            _chatTitle  = _root.Q<Label>("chat-title");
+            _chatLines  = _root.Q<ScrollView>("chat-lines");
+            _chatStatus = _root.Q<Label>("chat-status");
+            _chatInput  = _root.Q<TextField>("chat-input");
+            if (_chatTitle != null)
+            {
+                _chatTitle.enableRichText = false;       // a friend's name: see NameLabel
+                _chatTitle.parseEscapeSequences = false;
+            }
+            _root.Q<Button>("chat-back")?.RegisterCallback<ClickEvent>(_ => ShowChat(""));
+            _root.Q<Button>("chat-send")?.RegisterCallback<ClickEvent>(_ => SendChat());
+            // Enter sends. TrickleDown, because the field's own handler would otherwise eat it.
+            _chatInput?.RegisterCallback<KeyDownEvent>(e =>
+            {
+                if (e.keyCode != KeyCode.Return && e.keyCode != KeyCode.KeypadEnter) return;
+                SendChat();
+                e.StopPropagation();
+            }, TrickleDown.TrickleDown);
+
             SocialGateway.Received += OnSocial;
             SocialGateway.StateChanged += OnSocialState;
             ChallengeFlow.Changed += OnChallengeChanged;
+            ChatLog.Changed += OnChatChanged;
 
             Close();
             RenderChallenge();
+            RenderBadge();
+        }
+
+        // ── chat (VULN-004) ─────────────────────────────────────────────────────────────
+
+        /// <summary>Open one friend's conversation, or the list again with an empty code.</summary>
+        private void ShowChat(string code)
+        {
+            _chatCode = code;
+            _drawer?.EnableInClassList("fr-drawer--chat", code.Length > 0);
+            if (code.Length == 0)
+            {
+                if (_shown != null) Render(_shown);   // unread counts on the rows changed
+                return;
+            }
+            if (_chatTitle != null) _chatTitle.text = ChallengeFlow.NameOf(code);
+            SetChatStatus("");
+            if (_chatInput != null) _chatInput.value = "";
+            ChatLog.MarkRead(code);
+            RenderChat();
+            _chatInput?.Focus();
+        }
+
+        private void OnChatChanged(string code)
+        {
+            if (_chatCode.Length > 0 && (code == _chatCode || code.Length == 0))
+            {
+                // Read while looking at it.
+                if (IsOpen) ChatLog.MarkRead(_chatCode);
+                RenderChat();
+            }
+            else if (_shown != null && _chatCode.Length == 0 && IsOpen)
+            {
+                Render(_shown);
+            }
+            RenderBadge();
+        }
+
+        private void RenderChat()
+        {
+            if (_chatLines == null || _chatCode.Length == 0) return;
+            _chatLines.Clear();
+
+            IReadOnlyList<ChatLog.Line> lines = ChatLog.For(_chatCode);
+            if (lines.Count == 0)
+            {
+                var hint = new Label("Messages are not saved, and only reach a friend who is online.");
+                hint.AddToClassList("fr-empty");
+                _chatLines.Add(hint);
+            }
+            foreach (ChatLog.Line line in lines) _chatLines.Add(ChatLine(line));
+
+            // Stick to the newest line once layout has measured the content.
+            _chatLines.schedule.Execute(() =>
+                _chatLines.scrollOffset = new Vector2(0, _chatLines.contentContainer.layout.height));
+        }
+
+        /// <summary>
+        /// The one place a chat line is drawn. VULN-004: <b>the text is another player's</b>, so
+        /// rich text and escape sequences are OFF here, and <c>.fr-chat-line</c> bounds it in a
+        /// wrapping box that clips. A second renderer of chat text inherits all three.
+        /// </summary>
+        private static Label ChatLine(ChatLog.Line line)
+        {
+            var label = new Label(line.Text)
+            {
+                enableRichText = false,
+                parseEscapeSequences = false,
+            };
+            label.AddToClassList("fr-chat-line");
+            label.AddToClassList(line.Mine ? "fr-chat-line--mine" : "fr-chat-line--theirs");
+            if (line.State == ChatLog.LineState.Pending) label.AddToClassList("fr-chat-line--pending");
+            if (line.State == ChatLog.LineState.Failed)
+            {
+                label.AddToClassList("fr-chat-line--failed");
+                label.tooltip = "Not delivered";
+            }
+            return label;
+        }
+
+        private async void SendChat()
+        {
+            if (_chatCode.Length == 0 || _chatInput == null) return;
+
+            // The server cleans it again; this run is so the player sees what will actually go.
+            string text = ChatText.Clean(_chatInput.value);
+            if (text == null)
+            {
+                SetChatStatus(string.IsNullOrWhiteSpace(_chatInput.value) ? "" : $"Messages are at most {ChatText.MaxLength} characters.");
+                return;
+            }
+
+            string code = _chatCode;
+            _chatInput.value = "";
+            SetChatStatus("");
+            ChatLog.AddPending(code, text);
+
+            bool sent;
+            try { sent = await SocialGateway.SendAsync(new ChatSendMsg(code, text)); }
+            catch (Exception) { sent = false; }
+            if (!sent) ChatLog.FailOldestPending(code);
+        }
+
+        private void SetChatStatus(string message)
+        {
+            if (_chatStatus != null) _chatStatus.text = string.IsNullOrEmpty(message) ? " " : message;
+        }
+
+        private void RenderBadge()
+        {
+            if (_badge == null) return;
+            int unread = ChatLog.UnreadTotal;
+            _badge.text = unread > 99 ? "99+" : unread.ToString();
+            _badge.EnableInClassList("fr-badge--hidden", unread == 0);
         }
 
         private void OnDestroy()
@@ -143,6 +289,7 @@ namespace Emberfall.Presentation
             SocialGateway.Received -= OnSocial;
             SocialGateway.StateChanged -= OnSocialState;
             ChallengeFlow.Changed -= OnChallengeChanged;
+            ChatLog.Changed -= OnChatChanged;
             if (_current == this) _current = null;
         }
 
@@ -218,6 +365,10 @@ namespace Emberfall.Presentation
                 case PresenceMsg _ when _shown != null:
                     Render(_shown);
                     break;
+                // One answer for every cause, server-side by design; it is the same here.
+                case ChatRefusedMsg refused when refused.Code == _chatCode:
+                    SetChatStatus("Not delivered. They may be offline, or you are sending too fast.");
+                    break;
             }
         }
 
@@ -239,6 +390,9 @@ namespace Emberfall.Presentation
             _root?.RemoveFromClassList(OpenClass);
             _expanded = "";
             _confirming = "";
+            // The next open lands on the list, where the unread counts are.
+            _chatCode = "";
+            _drawer?.RemoveFromClassList("fr-drawer--chat");
         }
 
         private void CopyOwnCode()
@@ -368,6 +522,8 @@ namespace Emberfall.Presentation
                 {
                     if (canChallenge && SocialGateway.PresenceOf(code) == PresenceState.Online)
                         actions.Add(("Challenge", true, () => { Close(); ChallengeFlow.Challenge(code); }));
+                    int unread = ChatLog.Unread(code);
+                    actions.Add((unread > 0 ? $"Chat ({unread})" : "Chat", unread > 0, () => ShowChat(code)));
                     actions.Add(("…", false, () => Expand(code)));
                 }
                 VisualElement row = Row(entry, actions.ToArray());

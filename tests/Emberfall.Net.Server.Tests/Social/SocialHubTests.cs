@@ -34,7 +34,8 @@ namespace Emberfall.Net.Server.Tests.Social
             _store = new InMemoryFriendStore(_time);
             _book = new ChallengeBook(_time);
             _inMatch = new HashSet<string>();
-            _hub = new SocialHub(_store, _book, _inMatch.Contains, new FriendRequestLimiter(_time, max: 3));
+            _hub = new SocialHub(_store, _book, _inMatch.Contains, new FriendRequestLimiter(_time, max: 3),
+                new FriendRequestLimiter(_time, max: 3));
             _conns.Clear();
             _codes.Clear();
             foreach (string player in new[] { A, B, C })
@@ -328,6 +329,107 @@ namespace Emberfall.Net.Server.Tests.Social
             await _hub.HandleAsync(A, new ChallengeSendMsg(_codes[B]));
 
             Assert.That(b.CloseCode, Is.EqualTo(1008));
+        }
+
+        // ── chat (VULN-004) ─────────────────────────────────────────────────────────────
+
+        private async Task BothOnlineAsync()
+        {
+            await ConnectAsync(A);
+            await ConnectAsync(B);
+            Drain(A);
+            Drain(B);
+        }
+
+        [Test]
+        public async Task A_Message_Reaches_The_Friend_And_Comes_Back_To_The_Sender_As_Cleaned()
+        {
+            await BothOnlineAsync();
+
+            await _hub.HandleAsync(A, new ChatSendMsg(FriendCode.Display(_codes[B]), "  gg\n‮wp  "));
+
+            ChatMsg received = Single<ChatMsg>(B);
+            Assert.That(received.Code, Is.EqualTo(_codes[A]), "the recipient is told who sent it, by code");
+            Assert.That(received.Text, Is.EqualTo("gg wp"), "the server cleans whatever the client sent");
+            Assert.That(received.Mine, Is.False);
+
+            ChatMsg echo = Single<ChatMsg>(A);
+            Assert.That(echo.Code, Is.EqualTo(_codes[B]));
+            Assert.That(echo.Text, Is.EqualTo("gg wp"), "the sender sees exactly what the friend sees");
+            Assert.That(echo.Mine, Is.True);
+        }
+
+        [Test]
+        public async Task A_Stranger_Cannot_Message_And_Is_Told_The_Same_As_For_An_Offline_Friend()
+        {
+            await ConnectAsync(C);
+            await BothOnlineAsync();
+            Drain(C);
+
+            await _hub.HandleAsync(C, new ChatSendMsg(_codes[A], "hi"));
+            Assert.That(Drain(A), Is.Empty, "a stranger's text never reaches the screen");
+            ChatRefusedMsg toStranger = Single<ChatRefusedMsg>(C);
+
+            await _hub.DisconnectAsync(B, _conns[B]);
+            Drain(A);
+            await _hub.HandleAsync(A, new ChatSendMsg(_codes[B], "hi"));
+            ChatRefusedMsg toOffline = Single<ChatRefusedMsg>(A);
+
+            Assert.That(toStranger.GetType(), Is.EqualTo(toOffline.GetType()));
+            Assert.That(toStranger.Code, Is.EqualTo(_codes[A]));
+            Assert.That(toOffline.Code, Is.EqualTo(_codes[B]));
+        }
+
+        [Test]
+        public async Task A_Message_To_An_Offline_Friend_Is_Not_Kept_For_Later()
+        {
+            await ConnectAsync(A);
+            Drain(A);
+
+            await _hub.HandleAsync(A, new ChatSendMsg(_codes[B], "are you there"));
+            Single<ChatRefusedMsg>(A);
+
+            await ConnectAsync(B);
+            Assert.That(Drain(B).OfType<ChatMsg>(), Is.Empty, "chat is ephemeral: nothing is stored");
+        }
+
+        [Test]
+        public async Task A_Block_Mutes_Both_Ways()
+        {
+            await BothOnlineAsync();
+            await _store.BlockAsync(B, A, Limits);
+
+            await _hub.HandleAsync(A, new ChatSendMsg(_codes[B], "hey"));
+            await _hub.HandleAsync(B, new ChatSendMsg(_codes[A], "hey"));
+
+            Assert.That(Drain(A).OfType<ChatMsg>(), Is.Empty);
+            Assert.That(Drain(B).OfType<ChatMsg>(), Is.Empty);
+        }
+
+        [Test]
+        public async Task Unsendable_Text_And_A_Malformed_Code_Are_Refused_Without_Echoing_The_Raw_Code()
+        {
+            await BothOnlineAsync();
+
+            await _hub.HandleAsync(A, new ChatSendMsg(_codes[B], "​ \n"));
+            await _hub.HandleAsync(A, new ChatSendMsg(_codes[B], new string('a', ChatText.MaxLength + 1)));
+            await _hub.HandleAsync(A, new ChatSendMsg("<b>not-a-code</b>", "hi"));
+
+            List<SocialMsg> toA = Drain(A);
+            Assert.That(toA.OfType<ChatRefusedMsg>().Select(r => r.Code),
+                Is.EqualTo(new[] { _codes[B], _codes[B], "" }));
+            Assert.That(Drain(B), Is.Empty);
+        }
+
+        [Test]
+        public async Task Chat_Is_Rate_Limited_Per_Account()
+        {
+            await BothOnlineAsync();
+
+            for (int i = 0; i < 4; i++) await _hub.HandleAsync(A, new ChatSendMsg(_codes[B], "spam " + i));
+
+            Assert.That(Drain(B).OfType<ChatMsg>().Count(), Is.EqualTo(3), "the fixture's limiter allows three");
+            Assert.That(Drain(A).OfType<ChatRefusedMsg>().Count(), Is.EqualTo(1));
         }
     }
 }

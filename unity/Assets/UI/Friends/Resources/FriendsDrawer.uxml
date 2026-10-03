@@ -21,6 +21,8 @@
         <ui:Button name="btn-friends" class="fr-button emb-edge">
             <ui:VisualElement class="fr-icon-head" picking-mode="Ignore" />
             <ui:VisualElement class="fr-icon-body" picking-mode="Ignore" />
+            <!-- Unread chat lines, across all friends. Hidden at zero. -->
+            <ui:Label name="unread-badge" text="0" class="fr-badge fr-badge--hidden" picking-mode="Ignore" />
         </ui:Button>
 
         <!-- Friend challenge (#409): the incoming prompt, the sender's wait, and how it ended.
@@ -36,21 +38,38 @@
         <ui:VisualElement name="scrim" class="fr-scrim" />
 
         <ui:VisualElement name="drawer" class="fr-drawer">
-            <ui:Label text="Friends" class="fr-title" />
+            <!-- The list. Hidden while a conversation is open (.fr-drawer--chat). -->
+            <ui:VisualElement name="friends-pane" class="fr-pane fr-friends-pane">
+                <ui:Label text="Friends" class="fr-title" />
 
-            <ui:VisualElement class="fr-code-row">
-                <ui:Label name="own-code" text=" " class="fr-own-code" />
-                <ui:Button name="btn-copy-code" text="Copy" class="fr-small-button" />
+                <ui:VisualElement class="fr-code-row">
+                    <ui:Label name="own-code" text=" " class="fr-own-code" />
+                    <ui:Button name="btn-copy-code" text="Copy" class="fr-small-button" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="fr-add-row">
+                    <ui:TextField name="add-code" max-length="16" placeholder-text="Friend code" hide-placeholder-on-focus="true" emoji-fallback-support="false" class="fr-input" />
+                    <ui:Button name="btn-add" text="Add" class="fr-small-button emb-primary" />
+                </ui:VisualElement>
+
+                <ui:Label name="status" text=" " class="fr-status" />
+
+                <ui:ScrollView name="lists" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="fr-lists" />
             </ui:VisualElement>
 
-            <ui:VisualElement class="fr-add-row">
-                <ui:TextField name="add-code" max-length="16" placeholder-text="Friend code" hide-placeholder-on-focus="true" emoji-fallback-support="false" class="fr-input" />
-                <ui:Button name="btn-add" text="Add" class="fr-small-button emb-primary" />
+            <!-- One conversation (#409, VULN-004). The lines are built in code with rich text off. -->
+            <ui:VisualElement name="chat-pane" class="fr-pane fr-chat-pane">
+                <ui:VisualElement class="fr-chat-header">
+                    <ui:Button name="chat-back" text="Back" class="fr-small-button fr-chat-back" />
+                    <ui:Label name="chat-title" text=" " class="fr-chat-title" />
+                </ui:VisualElement>
+                <ui:ScrollView name="chat-lines" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="fr-chat-lines" />
+                <ui:Label name="chat-status" text=" " class="fr-status" />
+                <ui:VisualElement class="fr-add-row">
+                    <ui:TextField name="chat-input" max-length="200" placeholder-text="Message" hide-placeholder-on-focus="true" class="fr-input" />
+                    <ui:Button name="chat-send" text="Send" class="fr-small-button emb-primary" />
+                </ui:VisualElement>
             </ui:VisualElement>
-
-            <ui:Label name="status" text=" " class="fr-status" />
-
-            <ui:ScrollView name="lists" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="fr-lists" />
 
             <ui:Button name="btn-close" text="Close" class="fr-close" />
         </ui:VisualElement>

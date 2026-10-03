@@ -41,6 +41,10 @@ namespace Emberfall.Net.Protocol.Tests
                 new ChallengeClosedMsg("abc123", ChallengeCloseReason.Expired),
                 new ChallengeClosedMsg("abc123", ChallengeCloseReason.Left),
                 new ChallengeClosedMsg("abc123", ChallengeCloseReason.Gone),
+                new ChatSendMsg("2222222222", "gg \"wp\" \\ é 🎉"),
+                new ChatMsg("2222222222", "rematch?", Mine: false),
+                new ChatMsg("2222222222", "sure", Mine: true),
+                new ChatRefusedMsg("2222222222"),
             };
 
             foreach (SocialMsg msg in all)

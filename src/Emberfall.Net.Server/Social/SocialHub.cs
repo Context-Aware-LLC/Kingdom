@@ -30,6 +30,7 @@ namespace Emberfall.Net.Server.Social
         private readonly ChallengeBook _challenges;
         private readonly Func<string, bool> _isInMatch;
         private readonly FriendRequestLimiter _challengeLimiter;
+        private readonly FriendRequestLimiter _chatLimiter;
 
         private readonly object _lock = new object();
         private readonly Dictionary<string, IServerConnection> _online =
@@ -38,9 +39,11 @@ namespace Emberfall.Net.Server.Social
         /// <param name="isInMatch">Is this player id seated in a live match? Asked of the gate.</param>
         /// <param name="challengeLimiter">Caps <see cref="ChallengeSendMsg"/> per account — an
         /// offer is a prompt on somebody else's screen.</param>
+        /// <param name="chatLimiter">Caps <see cref="ChatSendMsg"/> per account, for the same reason.</param>
         public SocialHub(IFriendStore friends, ChallengeBook challenges, Func<string, bool> isInMatch,
-            FriendRequestLimiter challengeLimiter)
+            FriendRequestLimiter challengeLimiter, FriendRequestLimiter chatLimiter)
         {
+            _chatLimiter = chatLimiter;
             _friends = friends;
             _challenges = challenges;
             _isInMatch = isInMatch;
@@ -100,6 +103,9 @@ namespace Emberfall.Net.Server.Social
                     break;
                 case ChallengeCloseMsg close:
                     CloseChallenge(playerId, close.ChallengeId);
+                    break;
+                case ChatSendMsg chat:
+                    await SendChatAsync(playerId, chat.Code, chat.Text, ct).ConfigureAwait(false);
                     break;
                 // Anything else is a server-to-client type a client has no business sending.
             }
@@ -168,6 +174,38 @@ namespace Emberfall.Net.Server.Social
             int ttl = (int)_challenges.OfferTtlMs;
             Send(challenge.ToPlayerId, new ChallengeIncomingMsg(challenge.Id, mine!.Self.Code, ttl));
             Send(playerId, new ChallengeSentMsg(challenge.Id, code, ttl));
+        }
+
+        /// <summary>
+        /// A direct message (VULN-004). Delivered only to an accepted friend whose social socket is
+        /// open, re-cleaned here whatever the sender's client did, and never stored: a friend who
+        /// is not connected does not get it, and neither does anyone later. A block ends the
+        /// friendship, so it mutes both ways with no separate check.
+        ///
+        /// <para>The rate limit is taken before anything is looked up, so a refusal costs the same
+        /// whether or not the code is a friend's.</para>
+        /// </summary>
+        private async Task SendChatAsync(string playerId, string rawCode, string rawText, CancellationToken ct)
+        {
+            string code = FriendCode.TryNormalize(rawCode, out string canonical) ? canonical : "";
+            string? text = ChatText.Clean(rawText);
+
+            FriendList? mine = null;
+            FriendIdentity? target = null;
+            if (code.Length > 0 && text != null && _chatLimiter.TryTake(playerId))
+            {
+                mine = await _friends.ReadAsync(playerId, ct).ConfigureAwait(false);
+                target = mine.Friends.FirstOrDefault(f => f.Code == code);
+            }
+
+            if (target is null || !IsOnline(target.PlayerId))
+            {
+                Send(playerId, new ChatRefusedMsg(code));
+                return;
+            }
+
+            Send(target.PlayerId, new ChatMsg(mine!.Self.Code, text!, Mine: false));
+            Send(playerId, new ChatMsg(code, text!, Mine: true));
         }
 
         private void AcceptChallenge(string playerId, string challengeId)

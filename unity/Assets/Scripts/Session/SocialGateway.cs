@@ -69,13 +69,16 @@ namespace Emberfall.Session
             // if it came from the new one.
             client.Received += msg => MainThread.Enqueue(() =>
             {
-                if (_client == client) Received?.Invoke(msg);
+                if (_client != client) return;
+                ChatLog.OnSocial(msg);   // before listeners, so they read the settled log
+                Received?.Invoke(msg);
             });
             client.StateChanged += state => MainThread.Enqueue(() =>
             {
                 if (_client != client) return;
                 if (state == SocialState.Stopped)
                     Debug.LogWarning($"[Social] connection stopped: {client.StopReason}.");
+                if (state != SocialState.Live) ChatLog.FailAllPending();
                 StateChanged?.Invoke(state);
             });
 
@@ -85,16 +88,18 @@ namespace Emberfall.Session
             Task.Run(() => client.RunAsync(run.Token));
         }
 
-        /// <summary>A challenge, an accept or a close. False when there is no live connection.</summary>
+        /// <summary>A challenge, an accept, a close or a chat line. False when there is no live connection.</summary>
         public static Task<bool> SendAsync(SocialMsg msg) =>
             _client?.SendAsync(msg) ?? Task.FromResult(false);
 
-        /// <summary>Close the connection and forget it. Called from <see cref="DeviceAccounts.Invalidate"/>.</summary>
+        /// <summary>Close the connection and forget it, with this account's chat. Called from
+        /// <see cref="DeviceAccounts.Invalidate"/>.</summary>
         public static void Invalidate()
         {
             _run?.Cancel();
             _run = null;
             _client = null;
+            ChatLog.Clear();
         }
 
         private static Task<string> TokenOnMainThread(CancellationToken ct)

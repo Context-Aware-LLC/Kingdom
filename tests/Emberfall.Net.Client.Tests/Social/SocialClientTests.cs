@@ -110,6 +110,34 @@ namespace Emberfall.Net.Client.Tests.Social
         }
 
         [Test, CancelAfter(30_000)]
+        public async Task A_Chat_Line_Crosses_The_Real_Server_Cleaned()
+        {
+            string annCode = await CodeAsync("ann"), benCode = await CodeAsync("ben");
+            await PostCodeAsync("ben", "/friends/request", annCode);
+            await PostCodeAsync("ann", "/friends/accept", benCode);
+
+            ChatMsg? heard = null, echoed = null;
+            using var stop = new CancellationTokenSource();
+            var ann = new SocialClient(_social, _ => Task.FromResult("ann"), delay: NoWait);
+            var ben = new SocialClient(_social, _ => Task.FromResult("ben"), delay: NoWait);
+            ann.Received += msg => { if (msg is ChatMsg c) echoed = c; };
+            ben.Received += msg => { if (msg is ChatMsg c) heard = c; };
+            Task annRun = ann.RunAsync(stop.Token), benRun = ben.RunAsync(stop.Token);
+            await UntilAsync(() => ann.PresenceOf(benCode) == PresenceState.Online, "both are live");
+
+            Assert.That(await ann.SendAsync(new ChatSendMsg(benCode, "gg\n‮wp")), Is.True);
+            await UntilAsync(() => heard != null && echoed != null, "the line arrives and comes back");
+
+            Assert.That(heard!.Text, Is.EqualTo("gg wp"));
+            Assert.That(heard.Code, Is.EqualTo(annCode));
+            Assert.That(heard.Mine, Is.False);
+            Assert.That(echoed!.Mine, Is.True);
+
+            stop.Cancel();
+            await Task.WhenAll(annRun, benRun);
+        }
+
+        [Test, CancelAfter(30_000)]
         public async Task A_Change_To_The_Friends_Graph_Is_Pushed()
         {
             string benCode = await CodeAsync("ben");

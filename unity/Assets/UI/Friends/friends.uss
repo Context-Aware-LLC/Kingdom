@@ -254,6 +254,95 @@
     font-size: var(--type-body);
     color: var(--ink-1);
 }
+/* ---------- Panes ----------
+ * The drawer holds the friends list or one conversation, never both. */
+.fr-root .fr-pane {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+.fr-root .fr-chat-pane {
+    display: none;
+}
+.fr-root .fr-drawer--chat .fr-friends-pane {
+    display: none;
+}
+.fr-root .fr-drawer--chat .fr-chat-pane {
+    display: flex;
+}
+
+.fr-root .fr-chat-header {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: var(--space-3);
+}
+.fr-root .fr-chat-back {
+    margin: 0 var(--space-3) 0 0;
+}
+/* A friend's name: clipped in pixels, rich text off in code (see .fr-row__name). */
+.fr-root .fr-chat-title {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: var(--ink-1);
+}
+.fr-root .fr-chat-lines {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-bottom: var(--space-2);
+}
+/* VULN-004: A CHAT LINE IS TEXT ANOTHER PLAYER TYPED. It wraps inside a box no wider than 80% of
+ * the drawer and clips what still overflows (an unbroken string has no wrap point). Rich text and
+ * escape sequences are switched off where the label is built (FriendsDrawerController.ChatLine). */
+.fr-root .fr-chat-line {
+    max-width: 80%;
+    overflow: hidden;
+    white-space: normal;
+    font-size: var(--type-body);
+    color: var(--ink-1);
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-2);
+    border-radius: var(--space-2);
+}
+.fr-root .fr-chat-line--theirs {
+    align-self: flex-start;
+    background-color: var(--surface-2);
+}
+.fr-root .fr-chat-line--mine {
+    align-self: flex-end;
+    background-color: var(--surface-3);
+}
+.fr-root .fr-chat-line--pending {
+    opacity: 0.6;
+}
+.fr-root .fr-chat-line--failed {
+    border-width: 1px;
+    border-color: var(--negative);
+}
+
+.fr-root .fr-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 6px;
+    border-radius: 13px;
+    background-color: var(--negative);
+    color: rgb(255, 255, 255);
+    font-size: var(--type-caption);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+.fr-root .fr-badge--hidden {
+    display: none;
+}
+
 /* Presence, from the /social connection. Hollow = no live connection, so not known. */
 .fr-root .fr-presence {
     flex-shrink: 0;

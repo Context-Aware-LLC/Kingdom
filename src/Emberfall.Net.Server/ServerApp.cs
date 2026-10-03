@@ -564,7 +564,9 @@ namespace Emberfall.Net.Server
                 friendStore,
                 challenges,
                 playerId => gate.IsInMatch(AccountId.FromAuthenticatedAccount(playerId)),
-                new FriendRequestLimiter(time));
+                new FriendRequestLimiter(time),
+                // Chat: a burst of a few lines is conversation; a steady stream is a flood.
+                new FriendRequestLimiter(time, max: 8, windowMs: 10_000));
             gate.MatchRosterChanged = (p0, p1) =>
             {
                 // Fire and forget: this runs on the match's own start and end paths, and a slow
