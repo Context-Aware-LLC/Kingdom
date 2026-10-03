@@ -68,6 +68,9 @@ namespace Emberfall.Presentation
 
         private static string _ticket = "";
 
+        /// <summary>How long past its deadline an offer waits for the server's own close.</summary>
+        private const float ExpiryGraceSeconds = 3f;
+
         /// <summary>Subscribe to the social connection. Idempotent; the drawer calls it on mount.</summary>
         public static void Listen()
         {
@@ -149,6 +152,22 @@ namespace Emberfall.Presentation
             catch (Exception) { sent = false; }
 
             if (!sent) Abort("Not connected to friends right now. Try again in a moment.");
+        }
+
+        /// <summary>
+        /// End an unanswered offer whose own clock ran out without the server saying so. The
+        /// server's <c>Expired</c> close is the normal end; this is for the one that never
+        /// arrives — a socket that died half-open still reads as live, and nothing else would
+        /// take the prompt down. True when it ended one. The drawer calls it every frame.
+        /// </summary>
+        public static bool ExpireIfOverdue()
+        {
+            bool unanswered = Phase == ChallengePhase.Incoming || Phase == ChallengePhase.PickingToAccept ||
+                              Phase == ChallengePhase.WaitingForAnswer;
+            if (!unanswered || ExpiresAt <= 0f) return false;
+            if (Time.realtimeSinceStartup < ExpiresAt + ExpiryGraceSeconds) return false;
+            Abort(Describe(ChallengeCloseReason.Expired));
+            return true;
         }
 
         public static void DismissNotice()

@@ -27,9 +27,10 @@
         </ui:Button>
 
         <!-- Friend challenge (#409): the incoming prompt, the sender's wait, and how it ended.
-             Shown on every screen the drawer is on; filled by FriendsDrawerController.RenderChallenge. -->
+             On every screen the drawer is on, hidden until FriendsDrawerController.RenderChallenge
+             has something to say. -->
         <ui:VisualElement name="challenge-strip" class="fr-challenge-strip" picking-mode="Ignore">
-            <ui:VisualElement name="challenge" class="fr-challenge">
+            <ui:VisualElement name="challenge" class="fr-challenge fr-challenge--hidden">
                 <ui:Label name="challenge-text" text=" " class="fr-challenge__text" />
                 <ui:Button name="challenge-yes" text="Accept" class="fr-small-button emb-primary" />
                 <ui:Button name="challenge-no" text="Decline" class="fr-small-button" />

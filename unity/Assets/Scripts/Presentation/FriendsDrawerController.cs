@@ -362,6 +362,7 @@ namespace Emberfall.Presentation
         private void Update()
         {
             if (ChallengeFlow.ExpiresAt <= 0f) return;
+            if (ChallengeFlow.ExpireIfOverdue()) return;   // raises Changed, which redraws
             if (SecondsLeft() != _challengeSecondsShown) RenderChallenge();
         }
 
@@ -370,8 +371,8 @@ namespace Emberfall.Presentation
             // An offer from a friend this drawer has not drawn yet: fetch the list for the name.
             if (ChallengeFlow.Phase == ChallengePhase.Incoming && !ChallengeFlow.KnowsName(ChallengeFlow.Code) && !_busy)
                 Run(token => FriendsGateway.FetchAsync(token), okStatus: "");
-            if (_shown != null) Render(_shown);   // the Challenge buttons depend on the phase
             RenderChallenge();
+            if (_shown != null) Render(_shown);   // the Challenge buttons depend on the phase
         }
 
         private static int SecondsLeft() =>
