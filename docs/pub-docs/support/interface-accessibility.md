@@ -1,6 +1,6 @@
 # Interface Accessibility
 
-Emberfall's interface is being built around the standards below. This is an implementation target, not a final accessibility-conformance claim; release testing will determine which guarantees can be stated without qualification.
+Kingdoms's interface is being built around the standards below. This is an implementation target, not a final accessibility-conformance claim; release testing will determine which guarantees can be stated without qualification.
 
 ## Readability
 

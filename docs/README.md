@@ -1,4 +1,4 @@
-[![Emberfall CI — determinism gates](https://github.com/mrsonord2240/tcg-hearthlike/actions/workflows/ci.yml/badge.svg)](https://github.com/mrsonord2240/tcg-hearthlike/actions/workflows/ci.yml)
+[![Kingdom CI — determinism gates](https://github.com/mrsonord2240/tcg-hearthlike/actions/workflows/ci.yml/badge.svg)](https://github.com/mrsonord2240/tcg-hearthlike/actions/workflows/ci.yml)
 
 The maintained documentation is organized by audience and purpose:
 
