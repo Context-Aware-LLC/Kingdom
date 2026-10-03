@@ -24,6 +24,10 @@ namespace Emberfall.Presentation
         private const float SealW = 1.72f;
         private const float SealH = 1.08f;
         private const float ToolRestY = 0.72f;
+        // The wax and the stamper share this view's anchor, so they move together; this is the
+        // wax alone, a little left and up of it to sit centred on the painted plate (Sam,
+        // 2026-10-02). The stamper slams down onto this point, not onto the anchor.
+        private static readonly Vector3 SealOffset = new(-0.20f, 0.15f, 0f);
         private const int SealOrder = 12;
         private const int ToolOrder = 13;
 
@@ -49,6 +53,7 @@ namespace Emberfall.Presentation
 
             _seal = MakeSprite(transform, "WaxSeal", uiSprites.Get(SealStamp.SpriteKey),
                 SealW, SealH, SealOrder);
+            _seal.transform.localPosition = SealOffset;
             _sealRestScale = _seal.transform.localScale;
             _seal.gameObject.SetActive(false);
 
@@ -88,7 +93,7 @@ namespace Emberfall.Presentation
             SetAlpha(_tool, 1f);
 
             Vector3 restPosition = new(0f, ToolRestY, -0.02f);
-            Vector3 impactPosition = new(0f, ToolRestY - 0.38f, -0.03f);
+            Vector3 impactPosition = new(SealOffset.x, ToolRestY - 0.38f + SealOffset.y, -0.03f);
             yield return AnimateTool(restPosition, impactPosition,
                 _toolRestScale, Vector3.Scale(_toolRestScale, new Vector3(1.08f, 0.88f, 1f)),
                 1f, 1f, 0.14f);
