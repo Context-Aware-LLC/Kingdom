@@ -1,15 +1,5 @@
 {
   "dependencies": {
-    "com.deemos.rodinbridge": {
-      "version": "file:C:/Users/User/Downloads/unity_rodin_bridge_v0.2.0 (1)",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "2.0.0",
-        "com.unity.burst": "1.6.6",
-        "com.unity.collections": "1.2.4"
-      }
-    },
     "com.emberfall.core": {
       "version": "file:../../src/Emberfall.Core",
       "depth": 0,
