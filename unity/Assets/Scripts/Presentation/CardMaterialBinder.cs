@@ -20,7 +20,7 @@ namespace Emberfall.Presentation
     ///   SG_Glow enable  → glowRenderer   toggled by AuraSet.Glow (ARCANE_SURGE) only — attack-readiness
     ///                     used to also light it gold; Sam ruled it hideous and a duplicate of the
     ///                     exhausted-dim cue (CardPresenter.cs), removed 2026-08-16
-    ///   SG_Aegis enable → aegisRenderer  toggled by AuraSet.Shield on board minions only
+    ///   Aegis dome      → aegisRenderer  toggled by AuraSet.Shield on board minions only
     ///   Bulwark shields  → bulwarkRenderer toggled by AuraSet.Bulwark on board minions only;
     ///                       the existing front-row offset remains the primary spatial cue
     ///   Shroud smoke     → shroudSmoke animates three perimeter pieces on board minions only;
@@ -38,7 +38,7 @@ namespace Emberfall.Presentation
     {
         private Renderer _bodyRenderer;
         private Renderer _glowRenderer;   // null until SG_Glow shader asset assigned
-        private Renderer _aegisRenderer;  // null until SG_Aegis shader asset assigned
+        private Renderer _aegisRenderer;  // painted dome, M_Aegis material
         private Renderer _frostRenderer;  // wears M_Frost; the ONLY renderer that declares _FrostAmount
         private Renderer _bulwarkRenderer; // paired-shield sprite; board-only status treatment
         private ShroudSmokeView _shroudSmoke; // three-piece animated perimeter smoke; board-only
@@ -222,7 +222,7 @@ namespace Emberfall.Presentation
             // Glow: combined signal (aura / can-attack) — see ApplyGlow().
             ApplyGlow();
 
-            // Aegis underlay: board minions with Aegis only. Bulwark reads spatially (front row,
+            // Aegis dome: board minions with Aegis only. Bulwark reads spatially (front row,
             // decision 2026-07-17), plus the paired-shield concept treatment below — no keyword
             // glow, so the shared gold bubble unambiguously means Shield.
             ApplyAegis(auras);
@@ -234,6 +234,15 @@ namespace Emberfall.Presentation
         private void ApplyAegis(AuraSet auras)
         {
             if (_aegisRenderer == null) return;
+            // A break sets _aegisOn false while the renderer is still fading. Closing the
+            // board gate must cancel that tween even when the desired state has not changed.
+            if (!_boardStatusEffectsVisible)
+            {
+                _aegisOn = false;
+                CaptureAegisBase();
+                HideAegis();
+                return;
+            }
             bool want = _boardStatusEffectsVisible && (auras & AuraSet.Shield) != 0;
             if (want == _aegisOn) return;
             bool wasOn = _aegisOn;
@@ -280,7 +289,7 @@ namespace Emberfall.Presentation
             SetAegisLook(1f, 1f, 1f);
         }
 
-        // alpha scales the material's own alpha (the shell's opacity is saturate(rim) * colour.a);
+        // alpha scales the material's own alpha, multiplied by the painted dome's alpha;
         // scale scales the quad, and with it the bubble; flare scales the HDR intensity.
         private void SetAegisLook(float alpha, float scale, float flare)
         {

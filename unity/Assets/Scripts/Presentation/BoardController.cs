@@ -1007,24 +1007,21 @@ namespace Emberfall.Presentation
             // Renderer.enabled, which is inert on an inactive GameObject.
             glowRenderer.enabled = false;
 
-            // Aegis underlay — a shield/force-field bubble, just behind. SG_Aegis material
-            // assigned later. Sam, 2026-08-09: the old +0.21 margin (barely bigger than the glow
-            // overlay's +0.15) left the rim/fresnel bubble hugging the card's own edges instead of
-            // encompassing it — a shield effect reads as a shield only with real room around the
-            // card it's protecting. SG_Aegis has no exposed size/inset property (only color,
-            // intensity, rim power, pulse and noise — hist-docs SG_Aegis.shadergraph), and it's a
-            // plain Quad, so its UV space IS this transform's scale: enlarging this directly grows
-            // the rendered bubble.
+            // Painted Aegis dome: preserve the 1176x1337 source oval, with room around the
+            // card. The transparent shell sits over the face/frame but behind sockets and
+            // labels, so the curved rim remains visible where it crosses the card's corners.
+            const float aegisAspect = 1176f / 1337f;
+            float aegisHeight = CardH * 1.30f;
             var aegisGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            aegisGo.name = "AegisUnderlay";
+            aegisGo.name = "AegisDome";
             aegisGo.transform.SetParent(root.transform, false);
-            aegisGo.transform.localScale    = new Vector3(CardW + 0.55f, CardH + 0.55f, 1f);
-            aegisGo.transform.localPosition = new Vector3(0f, 0f, 0.01f);
+            aegisGo.transform.localScale    = new Vector3(aegisHeight * aegisAspect, aegisHeight, 1f);
+            aegisGo.transform.localPosition = new Vector3(0f, 0f, -0.007f);
             DestroyObj(aegisGo.GetComponent<MeshCollider>());
             var aegisRenderer = aegisGo.GetComponent<Renderer>();
             MaterialCatalog.Assign(aegisRenderer, MaterialCatalog.Aegis);
-            // Same as the glow overlay: active GO, disabled renderer (bulwark/shield ring
-            // never displayed before this — the binder's enable was a no-op).
+            aegisRenderer.sortingOrder = FrameRarityCatalog.FrameOrder;
+            // Keep the GO active: the binder controls the renderer and its gain/break tween.
             aegisRenderer.enabled = false;
 
             // Art window — upper card face, in front of BG, behind labels. Texture assigned

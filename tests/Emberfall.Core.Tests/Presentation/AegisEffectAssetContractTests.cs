@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.RegularExpressions;
 using Emberfall.Core.Tests.Support;
 using NUnit.Framework;
 
@@ -9,14 +10,50 @@ namespace Emberfall.Core.Tests.Presentation
     public sealed class AegisEffectAssetContractTests
     {
         [Test]
-        public void Aegis_is_board_only_and_masks_the_gold_quad_to_a_rounded_shell()
+        public void Aegis_material_bundles_the_painted_dome_and_preserves_its_alpha()
+        {
+            string assets = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets");
+            string shaderPath = Path.Combine(assets, "Shaders", "AegisDome.shader");
+            string texturePath = Path.Combine(assets, "Art", "UI", "Board", "effect_aegis_golden_dome.png");
+            string materialPath = Path.Combine(assets, "Materials", "M_Aegis.mat");
+            string shader = File.ReadAllText(shaderPath);
+            string textureMeta = File.ReadAllText(texturePath + ".meta");
+            string material = File.ReadAllText(materialPath);
+            string addresses = File.ReadAllText(Path.Combine(assets,
+                "AddressableAssetsData", "AssetGroups", "UI_Core.asset"));
+
+            // Follow the GUID links: a PNG sitting outside Assets, or an unreferenced shader,
+            // does not reach a player build even though the source files look correct.
+            Assert.Multiple(() =>
+            {
+                Assert.That(File.Exists(texturePath), Is.True);
+                Assert.That(material, Does.Contain("fileID: 4800000, guid: " + GuidOf(shaderPath)));
+                Assert.That(material, Does.Contain("fileID: 2800000, guid: " + GuidOf(texturePath)));
+                Assert.That(material, Does.Contain("- _BaseMap:"));
+                Assert.That(addresses, Does.Contain("m_GUID: " + GuidOf(materialPath)));
+                Assert.That(addresses, Does.Contain("m_Address: materials/M_Aegis"));
+                Assert.That(textureMeta, Does.Contain("alphaUsage: 1"));
+                Assert.That(textureMeta, Does.Contain("alphaIsTransparency: 1"));
+                Assert.That(textureMeta, Does.Contain("nPOTScale: 0"));
+                Assert.That(shader, Does.Contain("SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv)"));
+                Assert.That(shader, Does.Contain("dome.a * _AegisColor.a"),
+                    "Gain/break opacity must multiply the texture alpha, preserving its hollow centre.");
+                Assert.That(shader, Does.Contain("ZWrite Off"));
+                Assert.That(shader, Does.Contain("Blend SrcAlpha OneMinusSrcAlpha"));
+            });
+        }
+
+        [Test]
+        public void Board_gate_cancels_a_break_before_the_unchanged_state_early_return()
         {
             string binder = File.ReadAllText(Path.Combine(
                 RepoPaths.RepoRoot, "unity", "Assets", "Scripts", "Presentation", "CardMaterialBinder.cs"));
-            string rimSubgraph = File.ReadAllText(Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Assets", "Shaders", "SGF_RimFresnel.shadersubgraph"));
-            string material = File.ReadAllText(Path.Combine(
-                RepoPaths.RepoRoot, "unity", "Assets", "Materials", "M_Aegis.mat"));
+            int applyStart = binder.IndexOf("private void ApplyAegis(");
+            int applyEnd = binder.IndexOf("private void CaptureAegisBase(");
+            string apply = binder.Substring(applyStart, applyEnd - applyStart);
+            int gate = apply.IndexOf("if (!_boardStatusEffectsVisible)");
+            int earlyReturn = apply.IndexOf("if (want == _aegisOn) return;");
+            int hide = apply.IndexOf("HideAegis();");
 
             Assert.Multiple(() =>
             {
@@ -26,18 +63,14 @@ namespace Emberfall.Core.Tests.Presentation
                 Assert.That(binder, Does.Contain("ApplyAegis(auras);"),
                     "The board-visibility transition must immediately refresh Aegis.");
 
-                Assert.That(rimSubgraph, Does.Contain(
-                        "float outerMask = 1.0 - smoothstep(-aa, aa, sdf);"),
-                    "The Aegis quad needs a finite rounded silhouette whose alpha reaches zero before its bounds.");
-                Assert.That(rimSubgraph, Does.Contain(
-                        "float shell = saturate(outerMask - innerMask);"),
-                    "The visible gold should be a shell around the card, not a filled rectangular field.");
-                Assert.That(rimSubgraph, Does.Not.Contain(
-                        "float d = saturate(length(UV - float2(0.5, 0.5)) * 2.0);"),
-                    "Saturating radial distance makes the quad's entire outer region—including all four corners—opaque.");
-                Assert.That(material, Does.Contain("- _ShimmerAmount: 0"),
-                    "An untextured full-quad shimmer adds alpha outside the shell and recreates the gold rectangle.");
+                Assert.That(gate, Is.GreaterThanOrEqualTo(0));
+                Assert.That(hide, Is.GreaterThan(gate));
+                Assert.That(earlyReturn, Is.GreaterThan(hide),
+                    "A break already cleared _aegisOn: leaving the board must still hide its fading renderer.");
             });
         }
+
+        private static string GuidOf(string assetPath) =>
+            Regex.Match(File.ReadAllText(assetPath + ".meta"), @"(?m)^guid: (\w+)").Groups[1].Value;
     }
 }

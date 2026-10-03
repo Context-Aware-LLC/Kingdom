@@ -32,7 +32,7 @@ namespace Emberfall.Presentation
         public const string CaptureLayerName = "CardCapture";
 
         // Far enough back to clear the card's own z-spread (frame at -0.006, gem/icons at -0.012,
-        // aegis at +0.01) with room for a hovered card's forward offset, close enough that the
+        // aegis at -0.007) with room for a hovered card's forward offset, close enough that the
         // ortho near/far window stays tight.
         private const float CamDistance = 3f;
 

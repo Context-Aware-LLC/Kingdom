@@ -30,7 +30,11 @@ namespace Emberfall.Editor
             });
             Create("M_CardArt",  "Universal Render Pipeline/Unlit");
             Create("M_Glow",     "Shader Graphs/SG_Glow");
-            Create("M_Aegis",    "Shader Graphs/SG_Aegis");
+            Create("M_Aegis", "Emberfall/AegisDome", m =>
+            {
+                m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    "Assets/Art/UI/Board/effect_aegis_golden_dome.png"));
+            });
             Create("M_ManaFill", "Shader Graphs/SG_ManaFill");
             Create("M_Plate",    "Universal Render Pipeline/Unlit");
 
@@ -47,7 +51,7 @@ namespace Emberfall.Editor
                 m.SetFloat("_EdgeWidth",  0.08f);
             });
 
-            // Graph-backed like M_Aegis, M_CardBody and M_Glow; verified in-editor 2026-07-26 —
+            // Graph-backed like M_CardBody and M_Glow; verified in-editor 2026-07-26 —
             // SG_Frost compiles and the material carries all 13 of its properties.
             //
             // NEVER HAND-AUTHOR A .mat FOR A SHADER GRAPH. A graph's shader is a generated

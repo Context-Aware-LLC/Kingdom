@@ -32,8 +32,11 @@ namespace Emberfall.Core.Tests.Presentation
             Assert.Multiple(() =>
             {
                 Assert.That(board, Does.Contain(
-                        "aegisGo.transform.localScale    = new Vector3(CardW + 0.55f, CardH + 0.55f, 1f);"),
+                        "float aegisHeight = CardH * 1.30f;"),
                     "Aegis is a card-relative quad and must not become a board- or screen-sized shell.");
+                Assert.That(board, Does.Contain(
+                        "new Vector3(aegisHeight * aegisAspect, aegisHeight, 1f)"),
+                    "The dome must preserve its authored oval rather than stretching to the card aspect.");
 
                 foreach (string assignment in requiredAssignments)
                 {
