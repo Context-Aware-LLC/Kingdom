@@ -895,7 +895,7 @@
     "m_SourceType": 1,
     "m_FunctionName": "EmberRimUV",
     "m_FunctionSource": "",
-    "m_FunctionBody": "float p = (RimWidth <= 0.001) ? 2.5 : RimWidth;\nfloat2 point = abs(UV - float2(0.5, 0.5)) * 2.0;\nfloat2 halfSize = float2(0.96, 0.96);\nfloat cornerRadius = 0.18;\nfloat2 q = point - halfSize + cornerRadius;\nfloat sdf = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - cornerRadius;\nfloat aa = max(fwidth(sdf), 0.002);\nfloat outerMask = 1.0 - smoothstep(-aa, aa, sdf);\nfloat thickness = lerp(0.08, 0.18, saturate(p / 5.0));\nfloat innerMask = 1.0 - smoothstep(-thickness - aa, -thickness + aa, sdf);\nfloat shell = saturate(outerMask - innerMask);\nfloat pulse = 1.0 + PulseAmount * sin(Time * PulseSpeed * 6.2832);\nRim = saturate(shell * pulse);"
+    "m_FunctionBody": "float p = (RimWidth <= 0.001) ? 2.5 : RimWidth;\nfloat2 rimPoint = abs(UV - float2(0.5, 0.5)) * 2.0;\nfloat2 halfSize = float2(0.96, 0.96);\nfloat cornerRadius = 0.18;\nfloat2 q = rimPoint - halfSize + cornerRadius;\nfloat sdf = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - cornerRadius;\nfloat aa = max(fwidth(sdf), 0.002);\nfloat outerMask = 1.0 - smoothstep(-aa, aa, sdf);\nfloat thickness = lerp(0.08, 0.18, saturate(p / 5.0));\nfloat innerMask = 1.0 - smoothstep(-thickness - aa, -thickness + aa, sdf);\nfloat shell = saturate(outerMask - innerMask);\nfloat pulse = 1.0 + PulseAmount * sin(Time * PulseSpeed * 6.2832);\nRim = saturate(shell * pulse);"
 }
 
 {
