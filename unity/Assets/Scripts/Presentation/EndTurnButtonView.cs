@@ -24,10 +24,13 @@ namespace Emberfall.Presentation
         private const float SealW = 1.72f;
         private const float SealH = 1.08f;
         private const float ToolRestY = 0.72f;
-        // The wax and the stamper share this view's anchor, so they move together; this is the
-        // wax alone, a little left and up of it to sit centred on the painted plate (Sam,
-        // 2026-10-02). The stamper slams down onto this point, not onto the anchor.
-        private static readonly Vector3 SealOffset = new(-0.20f, 0.15f, 0f);
+        // The wax and the stamper share this view's anchor, so they move together; these place
+        // each on the painted plate by eye (Sam, 2026-10-02). From a first guess at (-0.20,
+        // 0.15) the wax went one of its own radii right (SealW / 2) and one down (SealH / 2); the
+        // stamper rests one wax radius right of the anchor and slams down onto the wax.
+        private const float ToolRestX = SealW * 0.5f;
+        private static readonly Vector3 SealOffset =
+            new(-0.20f + SealW * 0.5f, 0.15f - SealH * 0.5f, 0f);
         private const int SealOrder = 12;
         private const int ToolOrder = 13;
 
@@ -59,7 +62,7 @@ namespace Emberfall.Presentation
 
             _tool = MakeSprite(transform, "StampTool", uiSprites.Get(SealStamp.ToolSpriteKey),
                 ToolSize, ToolSize, ToolOrder);
-            _tool.transform.localPosition = new Vector3(0f, ToolRestY, -0.02f);
+            _tool.transform.localPosition = new Vector3(ToolRestX, ToolRestY, -0.02f);
             _toolRestScale = _tool.transform.localScale;
 
             var col = gameObject.AddComponent<BoxCollider>();
@@ -92,7 +95,7 @@ namespace Emberfall.Presentation
             _seal.gameObject.SetActive(false);
             SetAlpha(_tool, 1f);
 
-            Vector3 restPosition = new(0f, ToolRestY, -0.02f);
+            Vector3 restPosition = new(ToolRestX, ToolRestY, -0.02f);
             Vector3 impactPosition = new(SealOffset.x, ToolRestY - 0.38f + SealOffset.y, -0.03f);
             yield return AnimateTool(restPosition, impactPosition,
                 _toolRestScale, Vector3.Scale(_toolRestScale, new Vector3(1.08f, 0.88f, 1f)),
@@ -108,7 +111,7 @@ namespace Emberfall.Presentation
             yield return AnimateSeal(_seal.transform.localScale, _sealRestScale, 0.12f);
             yield return new WaitForSecondsRealtime(0.08f);
 
-            Vector3 liftPosition = new(0f, ToolRestY + 3.25f, -0.05f);
+            Vector3 liftPosition = new(SealOffset.x, ToolRestY + SealOffset.y + 3.25f, -0.05f);
             yield return AnimateTool(impactPosition, liftPosition, _tool.transform.localScale,
                 Vector3.Scale(_toolRestScale, new Vector3(1.28f, 1.28f, 1f)),
                 1f, 0f, 0.22f);
@@ -160,7 +163,7 @@ namespace Emberfall.Presentation
             _seal.gameObject.SetActive(false);
             _seal.transform.localScale = _sealRestScale;
             _tool.gameObject.SetActive(true);
-            _tool.transform.localPosition = new Vector3(0f, ToolRestY, -0.02f);
+            _tool.transform.localPosition = new Vector3(ToolRestX, ToolRestY, -0.02f);
             _tool.transform.localScale = _toolRestScale;
             SetAlpha(_tool, 1f);
         }
