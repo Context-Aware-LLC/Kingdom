@@ -14,7 +14,7 @@ namespace Emberfall.Presentation
     {
         public static readonly Vector3 BoardPosition = new(6.3f, 0f, 0f);
         public static readonly Vector2 ArtworkUv =
-            new(1477f / 1869f, 1f - 290f / 842f);
+            new(1669f / 1867f, 1f - 387f / 842f);   // v2 composite; see ProceduralBoardSetup
 
         private const float HitW = 3.20f;
         private const float HitH = 2.05f;
