@@ -54,6 +54,14 @@ namespace Emberfall.Net.Server.Accounts
         /// if <paramref name="playerId"/> names no account.
         /// </summary>
         Task<Account?> MarkOnboardedAsync(string playerId, CancellationToken ct = default);
+
+        /// <summary>
+        /// Stamps <see cref="Account.LastSeen"/> with the store's clock: this player just logged in.
+        /// Overwrites the previous stamp. Called by the login handshake and by nothing else, so the
+        /// value means "last login" and not "last request". Returns null if
+        /// <paramref name="playerId"/> names no account.
+        /// </summary>
+        Task<Account?> MarkSeenAsync(string playerId, CancellationToken ct = default);
     }
 
     /// <summary>
@@ -145,6 +153,20 @@ namespace Emberfall.Net.Server.Accounts
                     return Task.FromResult((Account?)null);
 
                 var updated = existing with { Onboarded = true };
+                _byPlayerId[playerId] = updated;
+                _byCredential[updated.CredentialKind + "\n" + updated.CredentialHash] = updated;
+                return Task.FromResult((Account?)updated);
+            }
+        }
+
+        public Task<Account?> MarkSeenAsync(string playerId, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                if (!_byPlayerId.TryGetValue(playerId, out var existing))
+                    return Task.FromResult((Account?)null);
+
+                var updated = existing with { LastSeen = DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs) };
                 _byPlayerId[playerId] = updated;
                 _byCredential[updated.CredentialKind + "\n" + updated.CredentialHash] = updated;
                 return Task.FromResult((Account?)updated);

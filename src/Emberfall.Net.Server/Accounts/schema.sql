@@ -63,6 +63,13 @@ alter table account add column if not exists kind text not null default 'standar
 -- replay onboarding for a player who already owns cards.
 alter table account add column if not exists onboarded boolean not null default false;
 
+-- When this player last logged in (Sam, 2026-10-02): stamped by GET /session, the handshake every
+-- client boot blocks on, from the server's clock. NULL means never recorded — every row that
+-- predates the column, and every bot, which never calls /session. Deliberately not backfilled from
+-- created_at: that would report a login nobody made. Overwritten in place, so this is the LAST
+-- login only; a history of logins would be its own append-only table.
+alter table account add column if not exists last_seen timestamptz;
+
 -- The append-only grant log. external_txn_id is the idempotency anchor (primary key ⇒ UNIQUE); qty is
 -- signed so a refund is simply a negative grant carrying its OWN transaction id (a refund's id differs
 -- from the purchase's, so it does not conflict with it and nets the balance correctly).

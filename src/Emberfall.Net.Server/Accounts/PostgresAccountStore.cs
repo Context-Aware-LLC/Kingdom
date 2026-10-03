@@ -46,8 +46,9 @@ namespace Emberfall.Net.Server.Accounts
         /// the client's account of it.</para>
         ///
         /// <para>PRECONDITION: every caller must be idempotent, because a retry re-runs the whole
-        /// unit. All four operations here are — the upsert is <c>ON CONFLICT DO NOTHING</c>, the
-        /// kind update is a scalar assignment, and the rest are reads.</para>
+        /// unit. Every operation here is — the upsert is <c>ON CONFLICT DO NOTHING</c>, the kind,
+        /// onboarded and last-seen updates are scalar assignments of a value fixed before the
+        /// first attempt, and the rest are reads.</para>
         /// </summary>
         private async Task<T> WithConnectionAsync<T>(
             Func<NpgsqlConnection, Task<T>> work, CancellationToken ct)
@@ -113,7 +114,7 @@ namespace Emberfall.Net.Server.Accounts
 
                 // Read the authoritative row — ours if we won the insert, the pre-existing one otherwise.
                 await using var sel = new NpgsqlCommand(
-                    "select player_id, credential_kind, credential_hash, email, created_at, kind, onboarded from account " +
+                    "select " + AccountColumns + " from account " +
                     "where credential_kind=$1 and credential_hash=$2", conn);
                 sel.Parameters.Add(P(NpgsqlDbType.Text, credentialKind));
                 sel.Parameters.Add(P(NpgsqlDbType.Text, credentialHash));
@@ -128,7 +129,7 @@ namespace Emberfall.Net.Server.Accounts
             => WithConnectionAsync(async conn =>
             {
                 await using var cmd = new NpgsqlCommand(
-                    "select player_id, credential_kind, credential_hash, email, created_at, kind, onboarded from account where player_id=$1", conn);
+                    "select " + AccountColumns + " from account where player_id=$1", conn);
                 cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
                 await using var r = await cmd.ExecuteReaderAsync(ct);
                 if (!await r.ReadAsync(ct)) return (Account?)null;
@@ -167,12 +168,35 @@ namespace Emberfall.Net.Server.Accounts
             return await FindByPlayerIdAsync(playerId, ct);
         }
 
+        public Task<Account?> MarkSeenAsync(string playerId, CancellationToken ct = default)
+        {
+            // Read outside the retry, so a retried attempt writes the same instant.
+            var seenAt = DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs);
+
+            return WithConnectionAsync(async conn =>
+            {
+                await using var upd = new NpgsqlCommand(
+                    "update account set last_seen=$1 where player_id=$2 returning " + AccountColumns, conn);
+                upd.Parameters.Add(P(NpgsqlDbType.TimestampTz, seenAt.UtcDateTime));
+                upd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+                await using var r = await upd.ExecuteReaderAsync(ct);
+                if (!await r.ReadAsync(ct)) return (Account?)null;
+                return ReadAccount(r);
+            }, ct);
+        }
+
+        /// <summary>The select list <see cref="ReadAccount"/> reads by ordinal. One copy, so a new
+        /// column cannot be added to one query and missed in another.</summary>
+        private const string AccountColumns =
+            "player_id, credential_kind, credential_hash, email, created_at, kind, onboarded, last_seen";
+
         private static Account ReadAccount(NpgsqlDataReader r)
             => new Account(r.GetString(0), r.GetString(1), r.GetString(2),
                 new DateTimeOffset(DateTime.SpecifyKind(r.GetDateTime(4), DateTimeKind.Utc)),
                 r.IsDBNull(3) ? null : r.GetString(3),
                 KindFromDb(r.IsDBNull(5) ? "standard" : r.GetString(5)),
-                !r.IsDBNull(6) && r.GetBoolean(6));
+                !r.IsDBNull(6) && r.GetBoolean(6),
+                r.IsDBNull(7) ? null : new DateTimeOffset(DateTime.SpecifyKind(r.GetDateTime(7), DateTimeKind.Utc)));
 
         private static string KindToDb(AccountKind kind) => kind switch
         {

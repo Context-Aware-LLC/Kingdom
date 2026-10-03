@@ -65,6 +65,9 @@ namespace Emberfall.Net.Server.Accounts
     /// resolved one. Idempotent on <c>signup:{playerId}</c>, so a third call site grants exactly
     /// once. A grant failure must NOT fail the handshake — that would turn a database blip into a
     /// game that will not start.</para>
+    ///
+    /// <para><b>It stamps <see cref="Account.LastSeen"/>.</b> The client's boot blocks on
+    /// this route, so the stamp means "last login".</para>
     /// </summary>
     public static class SessionEndpoint
     {
@@ -88,6 +91,17 @@ namespace Emberfall.Net.Server.Accounts
             var identity = verified.Identity!;
             Account account = await accountStore.ResolveOrCreateAsync(
                 "supabase", CredentialHash.Of(identity.Subject), identity.Email, ct).ConfigureAwait(false);
+
+            // This IS the login, so it is where last-seen is stamped. Same posture as the grant
+            // below: a failed stamp is logged and costs the player nothing.
+            try
+            {
+                await accountStore.MarkSeenAsync(account.PlayerId, ct).ConfigureAwait(false);
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.Error.WriteLine("[session] last-seen stamp failed: {0}", ex.Message);
+            }
 
             if (onboarding is not null)
             {

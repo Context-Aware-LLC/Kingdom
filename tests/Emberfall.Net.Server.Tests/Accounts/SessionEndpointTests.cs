@@ -95,6 +95,31 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         [Test]
+        public async Task A_Ready_Handshake_Stamps_LastSeen()
+        {
+            var store = new InMemoryAccountStore(new FixedTime());
+
+            SessionResult r = await SessionEndpoint.ReadAsync(Token, Accepts(), store, null);
+
+            Account? account = await store.FindByPlayerIdAsync(r.PlayerId);
+            Assert.That(account!.LastSeen,
+                Is.EqualTo(DateTimeOffset.FromUnixTimeMilliseconds(new FixedTime().NowMs)),
+                "the handshake is the login, so it is what records one");
+        }
+
+        [Test]
+        public async Task A_Rejected_Token_Stamps_Nothing()
+        {
+            var store = new InMemoryAccountStore(new FixedTime());
+            Account a = await store.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+
+            await SessionEndpoint.ReadAsync(Token, Rejects(), store, null);
+
+            Account? account = await store.FindByPlayerIdAsync(a.PlayerId);
+            Assert.That(account!.LastSeen, Is.Null, "a refused login is not a login");
+        }
+
+        [Test]
         public async Task The_Same_Subject_Resolves_To_The_Same_Player()
         {
             var store = new InMemoryAccountStore(new FixedTime());

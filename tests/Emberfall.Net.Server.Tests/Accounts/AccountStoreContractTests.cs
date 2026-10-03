@@ -15,6 +15,9 @@ namespace Emberfall.Net.Server.Tests.Accounts
     {
         protected abstract IAccountStore Store { get; }
 
+        /// <summary>The clock the store under test was built on.</summary>
+        protected abstract FakeTime Time { get; }
+
         [Test]
         public async Task ResolveOrCreate_Is_Idempotent_On_Credential()
         {
@@ -128,6 +131,58 @@ namespace Emberfall.Net.Server.Tests.Accounts
         [Test]
         public async Task MarkOnboarded_On_Unknown_Player_Is_Null()
             => Assert.That(await Store.MarkOnboardedAsync("no-such-player"), Is.Null);
+
+        // ── last seen (Sam, 2026-10-02) ──────────────────────────────────────────────────
+        // Null has to mean "never recorded": resolving an account is not a login, and a stamp that
+        // appeared on first sight would make every bot and every pre-column row look freshly active.
+
+        [Test]
+        public async Task New_Accounts_Have_Never_Been_Seen()
+        {
+            Account a = await Store.ResolveOrCreateAsync("device_token", "hash-seen-default");
+            Assert.That(a.LastSeen, Is.Null, "resolving an account is not a login");
+        }
+
+        [Test]
+        public async Task MarkSeen_Stamps_The_Clock_And_Persists()
+        {
+            Account a = await Store.ResolveOrCreateAsync("device_token", "hash-seen-mark");
+            Time.Advance(5_000);
+
+            Account? seen = await Store.MarkSeenAsync(a.PlayerId);
+            Assert.That(seen, Is.Not.Null);
+            Assert.That(seen!.LastSeen, Is.EqualTo(System.DateTimeOffset.FromUnixTimeMilliseconds(Time.NowMs)));
+
+            Account? reread = await Store.FindByPlayerIdAsync(a.PlayerId);
+            Assert.That(reread!.LastSeen, Is.EqualTo(seen.LastSeen),
+                "the stamp must persist, not just live on the returned instance");
+        }
+
+        [Test]
+        public async Task MarkSeen_Again_Moves_The_Stamp_Forward()
+        {
+            Account a = await Store.ResolveOrCreateAsync("device_token", "hash-seen-twice");
+            Account? first = await Store.MarkSeenAsync(a.PlayerId);
+            Time.Advance(60_000);
+
+            Account? second = await Store.MarkSeenAsync(a.PlayerId);
+            Assert.That(second!.LastSeen!.Value, Is.GreaterThan(first!.LastSeen!.Value),
+                "it is the LAST login, so a later one replaces the earlier");
+        }
+
+        [Test]
+        public async Task ResolveOrCreate_Does_Not_Clear_LastSeen()
+        {
+            Account a = await Store.ResolveOrCreateAsync("google", "sub-seen-return");
+            Account? seen = await Store.MarkSeenAsync(a.PlayerId);
+
+            Account again = await Store.ResolveOrCreateAsync("google", "sub-seen-return");
+            Assert.That(again.LastSeen, Is.EqualTo(seen!.LastSeen));
+        }
+
+        [Test]
+        public async Task MarkSeen_On_Unknown_Player_Is_Null()
+            => Assert.That(await Store.MarkSeenAsync("no-such-player"), Is.Null);
     }
 
     /// <summary>The in-memory implementation against the shared contract. Always runs.</summary>
@@ -136,10 +191,16 @@ namespace Emberfall.Net.Server.Tests.Accounts
     public sealed class InMemoryAccountStoreContractTests : AccountStoreContractTests
     {
         private InMemoryAccountStore _store = null!;
+        private FakeTime _time = null!;
         protected override IAccountStore Store => _store;
+        protected override FakeTime Time => _time;
 
         [SetUp]
-        public void SetUp() => _store = new InMemoryAccountStore(new FakeTime());
+        public void SetUp()
+        {
+            _time = new FakeTime();
+            _store = new InMemoryAccountStore(_time);
+        }
     }
 
     /// <summary>The identical suite against Postgres. Gated on <c>EMBERFALL_LEDGER_DB</c> (see
@@ -150,13 +211,15 @@ namespace Emberfall.Net.Server.Tests.Accounts
     {
         private string _conn = null!;
         private PostgresAccountStore _store = null!;
+        private readonly FakeTime _time = new FakeTime();
         protected override IAccountStore Store => _store;
+        protected override FakeTime Time => _time;
 
         [OneTimeSetUp]
         public async Task OneTimeSetUp()
         {
             _conn = PostgresProbe.RequireOrIgnore();
-            _store = new PostgresAccountStore(_conn, new FakeTime());
+            _store = new PostgresAccountStore(_conn, _time);
             await _store.EnsureSchemaAsync();
         }
 
