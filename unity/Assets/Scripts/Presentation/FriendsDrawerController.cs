@@ -234,7 +234,12 @@ namespace Emberfall.Presentation
             Run(token => FriendsGateway.FetchAsync(token), okStatus: "");
         }
 
-        private void Close() => _root?.RemoveFromClassList(OpenClass);
+        private void Close()
+        {
+            _root?.RemoveFromClassList(OpenClass);
+            _expanded = "";
+            _confirming = "";
+        }
 
         private void CopyOwnCode()
         {
@@ -330,7 +335,9 @@ namespace Emberfall.Presentation
                     string code = entry.Code;   // captured per row, not the loop variable
                     _lists.Add(Row(entry,
                         ("Accept",  true,  () => Run(t => FriendsGateway.AcceptAsync(t, code),  "Friend added.")),
-                        ("Decline", false, () => Run(t => FriendsGateway.DeclineAsync(t, code), "Request declined."))));
+                        ("Decline", false, () => Run(t => FriendsGateway.DeclineAsync(t, code), "Request declined.")),
+                        Confirmed("Block", "block:" + code,
+                            () => Run(t => FriendsGateway.BlockAsync(t, code), "Blocked."))));
                 }
             }
 
@@ -347,10 +354,24 @@ namespace Emberfall.Presentation
             foreach (FriendEntry entry in snapshot.Friends)
             {
                 string code = entry.Code;
-                VisualElement row = canChallenge && SocialGateway.PresenceOf(code) == PresenceState.Online
-                    ? Row(entry, ("Challenge", true, () => { Close(); ChallengeFlow.Challenge(code); }))
-                    : Row(entry);
-                row.Insert(0, PresenceDot(live, SocialGateway.PresenceOf(entry.Code)));
+                var actions = new List<(string, bool, Action)>();
+                if (_expanded == code)
+                {
+                    // The row's second face: what ends the friendship. Each asks once more.
+                    actions.Add(Confirmed("Remove", "remove:" + code,
+                        () => Run(t => FriendsGateway.RemoveAsync(t, code), "Friend removed.")));
+                    actions.Add(Confirmed("Block", "block:" + code,
+                        () => Run(t => FriendsGateway.BlockAsync(t, code), "Blocked.")));
+                    actions.Add(("Back", false, () => Expand("")));
+                }
+                else
+                {
+                    if (canChallenge && SocialGateway.PresenceOf(code) == PresenceState.Online)
+                        actions.Add(("Challenge", true, () => { Close(); ChallengeFlow.Challenge(code); }));
+                    actions.Add(("…", false, () => Expand(code)));
+                }
+                VisualElement row = Row(entry, actions.ToArray());
+                row.Insert(0, PresenceDot(live, SocialGateway.PresenceOf(code)));
                 _lists.Add(row);
             }
 
@@ -364,6 +385,46 @@ namespace Emberfall.Presentation
                         ("Cancel", false, () => Run(t => FriendsGateway.DeclineAsync(t, code), "Request withdrawn."))));
                 }
             }
+
+            if (snapshot.Blocked.Count > 0)
+            {
+                _lists.Add(Section($"BLOCKED ({snapshot.Blocked.Count})"));
+                foreach (FriendEntry entry in snapshot.Blocked)
+                {
+                    string code = entry.Code;
+                    _lists.Add(Row(entry,
+                        ("Unblock", false, () => Run(t => FriendsGateway.UnblockAsync(t, code), "Unblocked."))));
+                }
+            }
+        }
+
+        /// <summary>Which friend's row shows Remove and Block instead of Challenge. One at a time.</summary>
+        private string _expanded = "";
+
+        /// <summary>The action waiting for its second tap, as "verb:code". Cleared when the drawer
+        /// closes, so a stale "Sure?" never greets the next open to be pressed by accident.</summary>
+        private string _confirming = "";
+
+        private void Expand(string code)
+        {
+            _expanded = code;
+            _confirming = "";
+            if (_shown != null) Render(_shown);
+        }
+
+        /// <summary>
+        /// A button that needs two taps: the first turns it into "Sure?", the second does it.
+        /// Remove and Block both end a friendship that only the other player can restore.
+        /// </summary>
+        private (string, bool, Action) Confirmed(string text, string key, Action act)
+        {
+            if (_confirming == key)
+                return ("Sure?", true, () => { _confirming = ""; _expanded = ""; act(); });
+            return (text, false, () =>
+            {
+                _confirming = key;
+                if (_shown != null) Render(_shown);
+            });
         }
 
         /// <summary>

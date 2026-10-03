@@ -40,6 +40,16 @@ namespace Emberfall.Session
         public static Task<FriendsSnapshot> DeclineAsync(string accessToken, string code, CancellationToken ct = default)
             => Guard(g => g.DeclineAsync(accessToken, code, ct));
 
+        public static Task<FriendsSnapshot> RemoveAsync(string accessToken, string code, CancellationToken ct = default)
+            => Guard(g => g.RemoveAsync(accessToken, code, ct));
+
+        /// <summary>Block a code. Ends any friendship or request with it, both ways.</summary>
+        public static Task<FriendsSnapshot> BlockAsync(string accessToken, string code, CancellationToken ct = default)
+            => Guard(g => g.BlockAsync(accessToken, code, ct));
+
+        public static Task<FriendsSnapshot> UnblockAsync(string accessToken, string code, CancellationToken ct = default)
+            => Guard(g => g.UnblockAsync(accessToken, code, ct));
+
         /// <summary>The gateway is written not to throw, and a screen must not be the place that
         /// finds out it was wrong about that.</summary>
         private static async Task<FriendsSnapshot> Guard(Func<HttpFriendsGateway, Task<FriendsSnapshot>> call)
