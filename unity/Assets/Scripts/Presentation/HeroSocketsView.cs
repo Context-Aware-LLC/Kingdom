@@ -18,19 +18,23 @@ namespace Emberfall.Presentation
         /// visible ring was 1.008 units; these read about 30% larger.
         ///
         /// <para>THIS IS THE QUAD, NOT THE RING. Both sprites carry transparent margin, and the
-        /// ring's widest point spans only 0.7149 of the quad — so the drawn ring is 1.0795 units
-        /// here, not 1.51. Every "how big does it look" and "does it touch the plate" question is
+        /// ring's widest point spans only 0.7149 of the quad — so the drawn ring is 1.619 units
+        /// here, not 2.265. Every "how big does it look" and "does it touch the plate" question is
         /// answered against that fraction, never against this constant; see the separate offsets
         /// in <c>ProceduralBoardSetup</c>, which pay for the transparent margins.</para>
         ///
         /// <para>Raised 1.32 -> 1.51 on 2026-09-04 (Sam: bigger, and touching the hero frame).
         /// The current local offsets keep both quads distinct while their drawn metal rims meet
-        /// the hero frame.</para></summary>
-        public const float FrameSize = 1.51f;
+        /// the hero frame.</para>
+        ///
+        /// <para>Raised again 1.51 -> 2.265 on 2026-10-02 (Sam: larger by 50%); the drawn ring is
+        /// 1.619 units. <see cref="HitDiameter"/> and the offsets in <c>ProceduralBoardSetup</c>
+        /// moved with it.</para></summary>
+        public const float FrameSize = 2.265f;
 
         /// <summary>The hero power's tap target. Tracks the DRAWN ring rather than the quad —
         /// 1.19x the ring's widest point, the ratio the 1.32/1.12 pair carried.</summary>
-        public const float HitDiameter = 1.28f;
+        public const float HitDiameter = 1.92f;
 
         // BOTH RINGS ARE CO-REGISTERED, AND EVERY NUMBER BELOW DEPENDS ON THAT.
         // `tooling/scripts/align_socket_rings.py` writes the pair onto one square canvas with each

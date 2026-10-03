@@ -25,8 +25,10 @@ namespace Emberfall.Presentation
         // Each cell is 0.46 x 0.46 world units: RailW/2 == RailH/5. At _SocketRadius 0.47 an orb
         // is 0.432 units across, 28% larger than the old 0.338 horizontal rail orb, with a
         // 0.028-unit gap so adjacent bezels remain separate.
-        internal const float RailW = 0.92f;
-        internal const float RailH = 2.30f;
+        // Grown 40% on 2026-10-02 (Sam: larger), from 0.92 x 2.30: cells are now 0.644 and an orb
+        // 0.605 across. The shader sizes sockets from the cell, so nothing else follows.
+        internal const float RailW = 1.288f;
+        internal const float RailH = 3.22f;
         internal const int GridColumns = 2;
         internal const int GridRows = 5;
         private const float SurfaceRollDeg = 8f;

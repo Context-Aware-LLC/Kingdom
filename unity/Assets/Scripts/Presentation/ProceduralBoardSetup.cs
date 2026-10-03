@@ -62,10 +62,10 @@ namespace Emberfall.Presentation
         // seats the table in the hall scene, not re-eyeballed. UVs start at bottom-left.
         // BoardBackdrop projects these through the fitted artwork plane, so the
         // clusters remain seated in their painted furniture at every aspect and safe-area inset.
-        // P0's hero is nudged off its socket centre (171, 618) up and inboard, twice as far
-        // across as up (Sam, 2026-10-02): the camera's crop cut the portrait at the left edge.
+        // P0's hero sits up and inboard of its socket centre (171, 618), placed by eye (Sam,
+        // 2026-10-02): the frame's left edge almost kisses the screen edge.
         private static readonly Vector2 P0HeroFixtureUv =
-            new(251f / 1867f, 1f - 578f / 842f);
+            new(206f / 1867f, 1f - 578f / 842f);
         private static readonly Vector2 P1HeroFixtureUv =
             new(1508f / 1867f, 1f - 169f / 842f);
         private static readonly Vector2 P0ResourceFixtureUv =
@@ -82,10 +82,14 @@ namespace Emberfall.Presentation
         // The hero-power ring retains the approved 0.34-unit metal-on-metal overlap. The weapon
         // uses a smaller quad overlap because its painted metal is left-heavy. Both x offsets derive
         // from the hero width, so enlarging a portrait does not bury either satellite in it. Their
-        // offset delta remains 0.235 and their 1.568 centre distance keeps the 1.51 click targets
-        // distinct.
-        private const float HeroPowerOverlap = 0.34f;
-        private const float WeaponQuadOverlap = 0.105f;
+        // offset delta remains 0.235.
+        //
+        // Both frames grew 50% on 2026-10-02 (Sam; FrameSize 1.51 -> 2.265). The overlaps grew by
+        // the extra transparent margin (0.108 a side), so the drawn metal meets the hero frame
+        // exactly as before, and the vertical offsets below grew so the 2.282 centre distance
+        // still keeps the two quads distinct.
+        private const float HeroPowerOverlap = 0.448f;
+        private const float WeaponQuadOverlap = 0.213f;
         internal const float HeroPowerOffsetX =
             HeroPlateView.PlateW * 0.5f + HeroSocketsView.FrameSize * 0.5f - HeroPowerOverlap;
         internal const float WeaponOffsetX =
@@ -101,9 +105,10 @@ namespace Emberfall.Presentation
         internal const float DeckX     = 8.175f;  // resized pile fallback still ends at 8.90
 
         // The pile renders at 2x its footprint (DeckPileView.RenderW 4.24, half-width 2.12), and the
-        // rail at DeckX - ManaGridX (1.345) from it sat entirely under the stack. Another 1.5 rail
-        // widths inboard clears it (Sam, 2026-10-02): the rail now spans 2.27..3.19 from the pile.
-        private const float ManaClearOfPileX = 1.5f * ManaTrayView.RailW;
+        // rail at DeckX - ManaGridX (1.345) from it sat entirely under the stack. Another 1.6 rail
+        // widths inboard clears it (Sam, 2026-10-02, twice: "more left" after the rail grew 40%):
+        // the rail now spans 2.76..4.05 from the pile centre.
+        private const float ManaClearOfPileX = 1.6f * ManaTrayView.RailW;
 
         // ── Vertical (§1.3) ─────────────────────────────────────────────────────────────
         // Fallback baseline used until the artwork fit projects each fixture root.
@@ -112,9 +117,11 @@ namespace Emberfall.Presentation
 
         // The power sits toward the battlefield; the optional weapon sits toward the outer screen
         // edge. Multiplying both by ySign rotates the complete cluster 180 degrees for the opponent.
-        internal const float HeroPowerTowardCenterY = 0.55f;
-        internal const float WeaponTowardEdgeY = 1.00f;
-        internal const float ManaGridY = 3.35f;
+        // The power took nearly all of the extra separation the larger frames need: the opponent's
+        // weapon sits toward the TOP screen edge, and at 1.02 its ring still clears it.
+        internal const float HeroPowerTowardCenterY = 1.25f;
+        internal const float WeaponTowardEdgeY = 1.02f;
+        internal const float ManaGridY = 2.99f;   // 4.6 design edge less half the 3.22 rail
         private const float DeckY      = 3.59f;  // resized pile fallback remains on the baseline.
                                                 // The live root is artwork-registered; DeckAnchor
                                                 // remains the draw-flight source in either case.

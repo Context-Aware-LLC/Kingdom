@@ -49,9 +49,7 @@ namespace Emberfall.Presentation
             // runtime transform must stay flat and unrotated.
             // Both refined-table anchors are measured at their tray centres; the old
             // player-only correction would push the stack off the new cradle.
-            // The two sprites are crossed relative to their names on the v2 composite (Sam,
-            // 2026-10-02): the "enemy" stack is painted at the near-right cradle's angle.
-            Sprite renderedStack = uiSprites.Get(isLocalSeat ? EnemyStackKey : PlayerStackKey);
+            Sprite renderedStack = uiSprites.Get(isLocalSeat ? PlayerStackKey : EnemyStackKey);
             _stack = MakeStack(transform, renderedStack);
 
             var col = gameObject.AddComponent<BoxCollider>();
