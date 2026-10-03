@@ -435,7 +435,14 @@ namespace Emberfall.Core.Cards
         /// named seam means the next pool restriction lands in one place instead of ten. Collapsing
         /// this to a plain <c>Collectible</c> read at each call site would re-scatter it.</para>
         /// </summary>
-        public bool PoolEligible => Collectible;
+        public bool PoolEligible => Collectible && Lifecycle == CardLifecycle.PUBLISHED;
+
+        /// <summary>
+        /// Draft / published / retired (#398, #86). Independent of <see cref="Collectible"/>, which
+        /// is about the card's nature (a token is published and never collectible); this is about
+        /// whether the row is live. Only PUBLISHED rows can be <see cref="PoolEligible"/>.
+        /// </summary>
+        public CardLifecycle Lifecycle { get; }
 
         public CardDefinition(
             int id, string handle, string name, CardType type, int cost,
@@ -444,8 +451,10 @@ namespace Emberfall.Core.Cards
             IReadOnlyList<Keyword> keywords, IReadOnlyList<RuleDefinition> rules,
             string flavorText, string artId, SetId setId,
             bool collectible, Tribe? tribe, string factionId, string tooltip = "",
-            string text = "", IReadOnlyList<CardSoundEffect>? soundEffects = null)
+            string text = "", IReadOnlyList<CardSoundEffect>? soundEffects = null,
+            CardLifecycle lifecycle = CardLifecycle.PUBLISHED)
         {
+            Lifecycle = lifecycle;
             Id = id;
             Handle = handle ?? "";
             Name = name;

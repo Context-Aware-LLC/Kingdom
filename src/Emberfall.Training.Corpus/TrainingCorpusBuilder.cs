@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Emberfall.Core;
+using Emberfall.Core.Cards;
 using Emberfall.Core.Contracts;
 using Emberfall.Core.Projection;
 using Emberfall.Core.Serialization;
@@ -50,6 +51,9 @@ namespace Emberfall.Training.Corpus
                 {
                     foreach (EpisodeManifest episode in JsonlEpisodeManifestWriter.Read(manifests))
                     {
+                        // Draft rows are unreleased design (#398): never training data. A RETIRED
+                        // card stays in — old matches that used it are real history (#86).
+                        if (UsesDraftCard(episode)) continue;
                         if (!matchIds.Add(episode.MatchId))
                             throw new InvalidDataException(
                                 $"Episode manifest contains duplicate matchId '{episode.MatchId}'.");
@@ -108,6 +112,15 @@ namespace Emberfall.Training.Corpus
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(dataset, CorpusJson.Options);
             CorpusFiles.AtomicWrite(datasetPath, json);
             return new CorpusBuildResult(datasetPath, episodeCount, decisionCount);
+        }
+
+        private bool UsesDraftCard(EpisodeManifest episode)
+        {
+            foreach (IReadOnlyList<int> deck in new[] { episode.P0Deck, episode.P1Deck })
+                foreach (int id in deck)
+                    if (_db.TryGet(id, out CardDefinition def) && def.Lifecycle == CardLifecycle.DRAFT)
+                        return true;
+            return false;
         }
 
         private int MaterializeEpisode(EpisodeManifest episode, string sourceDirectory, FileStream output)

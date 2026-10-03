@@ -21,7 +21,7 @@ namespace Emberfall.Net.Server.Accounts
             if (verifier is null || accounts is null || crafting is null) return new("unavailable", 503);
             var verified = await verifier.VerifyAsync(bearerToken, ct).ConfigureAwait(false);
             if (!verified.IsSuccess || verified.Identity is null) return new("unauthenticated", 401);
-            if (cardId <= 0 || !cards.TryGet(cardId, out CardDefinition def) || !def.Collectible)
+            if (cardId <= 0 || !cards.TryGet(cardId, out CardDefinition def) || !def.PoolEligible)
                 return new("invalidcard", 400);
             if (action is not null && action != "render" && action != "reduce") return new("invalidaction", 400);
 

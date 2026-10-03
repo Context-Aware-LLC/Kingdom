@@ -84,7 +84,7 @@ SET_FILES = set_files()
 EDITABLE_FIELDS = frozenset({
     "name", "type", "cost", "attack", "health", "durability",
     "class", "rarity", "keywords", "text", "flavorText", "tooltip",
-    "setId", "collectible", "tribe", "factionId",
+    "setId", "collectible", "lifecycle", "tribe", "factionId",
 })
 
 # Never accepted from a client, at any nesting depth, for any reason.

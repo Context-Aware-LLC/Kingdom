@@ -220,6 +220,7 @@ function buildForm(card) {
   field(f, 'class', 'Class', select(state.options.class, card.class));
   field(f, 'rarity', 'Rarity', select(state.options.rarity, card.rarity));
   field(f, 'setId', 'Set', select(state.options.setId, card.setId));
+  field(f, 'lifecycle', 'Lifecycle', select(state.options.lifecycle, card.lifecycle || 'PUBLISHED'));
   if (card.tribe != null) field(f, 'tribe', 'Tribe', select(state.options.tribe, card.tribe));
 
   // Keywords

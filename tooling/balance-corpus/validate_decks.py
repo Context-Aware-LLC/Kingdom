@@ -67,6 +67,8 @@ def validate(path, cards):
                             % (card_id, card['class'], sorted(allowed)))
         if not card.get('collectible'):
             failures.append('not collectible: %s' % card_id)
+        if card.get('lifecycle', 'PUBLISHED') != 'PUBLISHED':
+            failures.append('L7 not published (%s): %s' % (card['lifecycle'], card_id))
         curve[card['cost']] += count
 
     ordered = [(cards[e['id']]['cost'], e['id']) for e in entries if e['id'] in cards]

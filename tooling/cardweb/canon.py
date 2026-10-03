@@ -107,7 +107,8 @@ CANONICAL_ORDER = [
     ("attack", "omit_none"), ("health", "omit_none"), ("durability", "omit_none"),
     ("class", "always"), ("rarity", "always"), ("keywords", "always"),
     ("tribe", "omit_none"),
-    ("setId", "always"), ("collectible", "always"), ("artId", "always"),
+    ("setId", "always"), ("collectible", "always"), ("lifecycle", "omit_published"),
+    ("artId", "always"),
     ("soundEffects", "omit_empty"),
     ("flavorText", "omit_empty"), ("tooltip", "omit_empty"), ("factionId", "omit_empty"),
     ("text", "omit_empty"),
@@ -135,6 +136,8 @@ def serialize_row(row: dict) -> str:
         if mode == "omit_none" and v is None:
             continue
         if mode == "omit_empty" and (v is None or v == "" or v == []):
+            continue
+        if mode == "omit_published" and v in (None, "PUBLISHED"):
             continue
         parts.append(f'"{escape(key)}":{_val(v)}')
     return "{" + ",".join(parts) + "}"

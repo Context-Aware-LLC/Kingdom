@@ -25,6 +25,22 @@ namespace Emberfall.Core.Contracts
     public enum SetId { CORE, EMBERFALL, REKINDLING }
 
     /// <summary>
+    /// Where a card row stands in its life (Sam, 2026-09-29, issue #398 — one field covering the
+    /// draft state and #86's retired state). Not game state: no serializer walks it, so it moves no
+    /// hash. PUBLISHED is ordinal 0 so that an absent field, and every row written before the
+    /// field existed, means PUBLISHED without a migration.
+    /// <list type="bullet">
+    /// <item><b>PUBLISHED</b> — live: eligible for packs, deck-building, bot decks.</item>
+    /// <item><b>DRAFT</b> — authored ahead of release (the next set, written straight into the
+    /// card JSON). Resolvable, never in a live pool, never in a deck, never in training data.</item>
+    /// <item><b>RETIRED</b> — #86: an id is permanent, so a card leaves play by retirement, not
+    /// deletion. Non-collectible, undraftable, still resolvable, so an old deck, a replay or an
+    /// ownership record keeps meaning one card.</item>
+    /// </list>
+    /// </summary>
+    public enum CardLifecycle { PUBLISHED, DRAFT, RETIRED }
+
+    /// <summary>
     /// Card tribes. HUMAN is appended rather than inserted: it arrived with main's tribe pass and
     /// appending keeps every existing ordinal where it was. Tribe is a CardDefinition field and
     /// reaches no canonical state — GameStateSerializer never walks it — so unlike Keyword this

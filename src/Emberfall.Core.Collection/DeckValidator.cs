@@ -36,6 +36,13 @@ namespace Emberfall.Core.Collection
 
         /// <summary>You used more copies of a card than you own (NOR-238).</summary>
         L6_Ownership,
+
+        /// <summary>
+        /// The card is a draft or retired row (#398, #86): resolvable, but not in the live pool, so
+        /// it cannot be in a deck. This is what keeps an "owns everything" superuser account from
+        /// building a deck out of an unreleased set — ownership says yes to every id.
+        /// </summary>
+        L7_NotPublished,
     }
 
     public readonly struct DeckViolation
@@ -72,6 +79,7 @@ namespace Emberfall.Core.Collection
     ///   L4  every card is NEUTRAL or one of the deck's two classes
     ///   L5  the deck's pairing is two distinct real classes
     ///   L6  you own at least the copies used  — only when an ownership source is supplied
+    ///   L7  every card is PUBLISHED — a draft or retired row resolves but cannot be drafted
     ///
     /// <para><b>The pairing is read off the deck (ADR-0009, 2026-09-04).</b> Every entry point here
     /// used to take a <c>Character</c> alongside the deck, purely to reach two enums; the deck now
@@ -173,6 +181,14 @@ namespace Emberfall.Core.Collection
                         $"Unknown card '{entry.CardId}'."));
                     continue;
                 }
+
+                // L7 — lifecycle. A retired card in a saved deck reads "(retired)" and is fixable by
+                // the player (#86); a draft one should never have arrived.
+                if (def.Lifecycle != CardLifecycle.PUBLISHED)
+                    violations.Add(new DeckViolation(DeckRule.L7_NotPublished,
+                        def.Lifecycle == CardLifecycle.RETIRED
+                            ? $"{def.Name} (retired) can't be played any more."
+                            : $"{def.Name} isn't released yet."));
 
                 // L2 / L3 — copy caps.
                 int max = MaxCopies(def.Rarity);

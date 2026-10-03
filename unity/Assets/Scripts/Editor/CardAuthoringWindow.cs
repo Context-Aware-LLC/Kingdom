@@ -505,6 +505,7 @@ namespace Emberfall.Editor
             card.Name = EditorGUILayout.TextField("name", card.Name);
             card.SetId = (SetId)EditorGUILayout.EnumPopup("setId", card.SetId);
             card.Collectible = EditorGUILayout.Toggle("collectible", card.Collectible);
+            card.Lifecycle = (CardLifecycle)EditorGUILayout.EnumPopup("lifecycle", card.Lifecycle);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Classification", EditorStyles.boldLabel);

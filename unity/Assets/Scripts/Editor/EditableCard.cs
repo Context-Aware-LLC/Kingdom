@@ -31,6 +31,7 @@ namespace Emberfall.Editor
         public string ArtId = "";
         public SetId SetId = SetId.CORE;
         public bool Collectible = true;
+        public CardLifecycle Lifecycle = CardLifecycle.PUBLISHED;
         public bool HasTribe; public Tribe Tribe;
         public string FactionId = "";
 
@@ -58,6 +59,7 @@ namespace Emberfall.Editor
             ArtId = def.ArtId,
             SetId = def.SetId,
             Collectible = def.Collectible,
+            Lifecycle = def.Lifecycle,
             HasTribe = def.Tribe.HasValue,
             Tribe = def.Tribe ?? default,
             FactionId = def.FactionId,
@@ -73,7 +75,8 @@ namespace Emberfall.Editor
             flavorText: FlavorText, artId: ArtId, setId: SetId,
             collectible: Collectible, tribe: HasTribe ? Tribe : (Tribe?)null,
             factionId: FactionId, tooltip: Tooltip, text: Text,
-            soundEffects: SoundEffects.Select(sound => sound.ToDefinition()).ToList());
+            soundEffects: SoundEffects.Select(sound => sound.ToDefinition()).ToList(),
+            lifecycle: Lifecycle);
 
         public EditableCard Clone() => FromDefinition(ToDefinition());
     }

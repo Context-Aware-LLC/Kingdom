@@ -53,6 +53,8 @@ def report(entry, cards):
             problems.append(f"L4: {d['name']} is {d['class']}")
         if not d.get("collectible", True):
             problems.append(f"non-collectible: {d['name']}")
+        if d.get("lifecycle", "PUBLISHED") != "PUBLISHED":
+            problems.append(f"L7 {d['lifecycle']}: {d['name']}")
     print("legality:", "OK" if not problems else "; ".join(problems))
 
     curve = collections.Counter()

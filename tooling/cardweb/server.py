@@ -142,7 +142,11 @@ def enum_options() -> dict:
                 seen[k].add(d[k])
         for kw in d.get("keywords", []) or []:
             seen["keywords"].add(kw)
-    return {k: sorted(v) for k, v in seen.items()}
+    out = {k: sorted(v) for k, v in seen.items()}
+    # Fixed vocabulary, not read off the corpus: no row carries DRAFT or RETIRED until one is
+    # authored, and a derived list would never offer them. Mirrors the CardLifecycle enum.
+    out["lifecycle"] = ["PUBLISHED", "DRAFT", "RETIRED"]
+    return out
 
 
 def staging_path() -> pathlib.Path:

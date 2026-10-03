@@ -94,6 +94,8 @@ namespace Emberfall.Editor
                 if (def.Tribe is { } tribe) w.WriteString("tribe", tribe.ToString());
                 w.WriteString("setId", def.SetId.ToString());
                 w.WriteBoolean("collectible", def.Collectible);
+                // Omitted when PUBLISHED: the default, and every row written before the field existed.
+                if (def.Lifecycle != CardLifecycle.PUBLISHED) w.WriteString("lifecycle", def.Lifecycle.ToString());
                 w.WriteString("artId", def.ArtId);
 
                 if (def.SoundEffects.Count > 0)

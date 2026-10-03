@@ -165,7 +165,7 @@ namespace Emberfall.Core.Collection
             int cost = ShardCosts.ForRarity(def.Rarity);
             if (copiesOwned < 0) copiesOwned = 0;
 
-            if (!def.Collectible) return new RenderOffer(RenderRefusal.NotCollectible, cost, copiesOwned, cap);
+            if (!def.PoolEligible) return new RenderOffer(RenderRefusal.NotCollectible, cost, copiesOwned, cap);
 
             // RETIREMENT TRIGGER: card-to-card TRADING between players. Sam capped crafting at the deck
             // limit on 2026-08-12 only because a spare copy has nowhere to go — he wants it uncapped once
@@ -185,7 +185,7 @@ namespace Emberfall.Core.Collection
             int payout = ShardValues.ForRarity(def.Rarity);
             if (copiesOwned < 0) copiesOwned = 0;
 
-            if (!def.Collectible) return new ReduceOffer(ReduceRefusal.NotCollectible, payout, copiesOwned, copiesOwned);
+            if (!def.PoolEligible) return new ReduceOffer(ReduceRefusal.NotCollectible, payout, copiesOwned, copiesOwned);
             if (copiesOwned <= 0) return new ReduceOffer(ReduceRefusal.OwnsNone, payout, 0, 0);
             return new ReduceOffer(ReduceRefusal.None, payout, copiesOwned, copiesOwned - 1);
         }

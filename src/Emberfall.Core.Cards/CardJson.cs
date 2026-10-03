@@ -18,7 +18,7 @@ namespace Emberfall.Core.Cards
             // Exhaustive: RejectUnknownProperties throws on any property absent from this set, so a
             // row carrying a retired one fails loudly instead of being silently ignored.
             "id", "handle", "name", "type", "cost", "attack", "health", "durability", "class", "rarity",
-            "setId", "tribe", "collectible", "artId",
+            "setId", "tribe", "collectible", "lifecycle", "artId",
             "flavorText", "tooltip", "factionId", "keywords", "text", "rules", "soundEffects", "_comment"
         };
 
@@ -80,6 +80,7 @@ namespace Emberfall.Core.Cards
             SetId setId = TryEnum<SetId>(el, "setId") ?? SetId.CORE;
             Tribe? tribe = TryEnum<Tribe>(el, "tribe");
             bool collectible = Bool(el, "collectible") ?? true;
+            CardLifecycle lifecycle = TryEnum<CardLifecycle>(el, "lifecycle") ?? CardLifecycle.PUBLISHED;
             string artId = Str(el, "artId") ?? "";
             string text = Str(el, "text") ?? "";
             string flavor = Str(el, "flavorText") ?? "";
@@ -114,7 +115,7 @@ namespace Emberfall.Core.Cards
             }
             return new CardDefinition(id, handle, name, type, cost, attack, health, durability, cls, rarity,
                 keywords, rules, flavor, artId, setId, collectible, tribe, faction, tooltip, text,
-                soundEffects);
+                soundEffects, lifecycle);
         }
 
         private static RuleDefinition RuleFromElement(JsonElement element)
