@@ -21,8 +21,8 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: M_Glow
-  m_Shader: {fileID: -6465566751694194690, guid: d0e95cd00a7cb0c20f556aac45edee0a, type: 3}
-  m_Parent: {fileID: 2100000, guid: ab4e54501ebe4781ba0b3d37290aa542, type: 2}
+  m_Shader: {fileID: -6465566751694194690, guid: 3906f2f337d4d354faa2f16b42f4a1a2, type: 3}
+  m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
@@ -36,9 +36,29 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _GLOW_PULSE: 0
+    - _GlowIntensity: 1.2
+    - _PulseAmount: 0.15
+    - _PulseSpeed: 2
+    - _QueueControl: 0
+    - _QueueOffset: 0
+    - _RimPower: 3
+    m_Colors:
+    - _GlowColor: {r: 1.6, g: 1.3, b: 0.2, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
