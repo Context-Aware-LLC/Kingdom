@@ -554,8 +554,8 @@ namespace Emberfall.Presentation
         {
             const float W = BoardController.CardW, H = BoardController.CardH;
 
-            // The right-hand socket holds health on a minion and durability on a weapon, and only
-            // health is red — durability keeps the neutral disc.
+            // Minions pair a yellow sword with a red health heart. Weapons pair a red power
+            // sword with a green toughness shield (the internal stat remains durability).
             Sprite cost   = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.CostSocketSprite) : null;
             Sprite attack = _hasPaintedFrame
                 ? _ui?.Get(_def.Type == CardType.MINION ? FrameRarityCatalog.MinionAttackSocketSprite
@@ -563,7 +563,7 @@ namespace Emberfall.Presentation
                 : null;
             Sprite right  = _hasPaintedFrame
                 ? _ui?.Get(FrameRarityCatalog.ShowHealth(_def.Type) ? FrameRarityCatalog.HealthSocketSprite
-                                                                    : FrameRarityCatalog.StatSocketSprite)
+                                                                    : FrameRarityCatalog.WeaponToughnessSocketSprite)
                 : null;
             Sprite bezel = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.GemSocketSprite) : null;
 

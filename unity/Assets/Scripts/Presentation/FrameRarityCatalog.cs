@@ -54,13 +54,15 @@ namespace Emberfall.Presentation
         // claim and the keep-clear zones in docs/dev-docs/specs/card-frame-geo.md both die.
         public const string FrameSprite      = "frame_card";
         // Coloured interiors are baked into the art: tinting the near-black neutral socket
-        // at runtime cannot lift it. Minions use a yellow fist and red heart (Sam, 2026-10-04),
+        // at runtime cannot lift it. Minions use a yellow sword and red heart; weapons use
+        // a red sword and green shield (Sam, 2026-10-04). These shape assets are
         // exported at 128px but drawn at the same authored footprint as the circular sockets.
         public const string CostSocketSprite   = "socket_cost";   // blue
-        public const string AttackSocketSprite = "socket_attack"; // yellow — weapons
-        public const string MinionAttackSocketSprite = "socket_attack_fist"; // yellow
+        public const string AttackSocketSprite = "socket_weapon_power_sword"; // red — weapon power
+        public const string MinionAttackSocketSprite = "socket_attack_sword"; // yellow
         public const string HealthSocketSprite = "socket_health_heart"; // red — minions
-        public const string StatSocketSprite   = "socket_stat";   // neutral — durability, and the source of the other three
+        public const string WeaponToughnessSocketSprite = "socket_weapon_toughness_shield"; // green — durability
+        public const string StatSocketSprite   = "socket_stat";   // preserved neutral source art
         public const string GemSocketSprite  = "socket_gem";  // the rope bezel the rarity gem sits in
         public const string TribePanelSprite = "tribe_plate";
 

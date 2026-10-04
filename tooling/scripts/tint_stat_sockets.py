@@ -8,8 +8,8 @@ black. The colour has to be in the texture.
 WHAT IT DOES. Reads socket_stat.png, repaints only the flat interior (the digit-safe disc inside
 the rope band) and writes one PNG per stat beside it. The band, the alpha and the canvas are
 copied untouched, so all four sprites stay interchangeable at FrameRarityCatalog.StatSocketPx.
-socket_stat.png itself is never written: it is the source, and it still ships as the durability
-socket.
+socket_stat.png itself is never written: it is the preserved neutral source. The shaped minion
+and weapon stat sprites are separate assets; this script only maintains the circular variants.
 
 Re-run after changing a colour below or after any re-export of socket_stat.png. Outputs are
 overwritten in place, which keeps each .meta guid and the Addressables entry pointing at it.

@@ -135,6 +135,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09f059975d024405a9a718da5e6e8e02
+    m_Address: ui/socket_attack_sword
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e11c277b09ac499bab18e08b6dbd1856
+    m_Address: ui/socket_weapon_power_sword
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d3c621d935824af88ef33d309c7c133c
+    m_Address: ui/socket_weapon_toughness_shield
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f2d807a80c064a2a97459c4c5c2595d5
     m_Address: ui/socket_attack_fist
     m_ReadOnly: 0
