@@ -55,7 +55,7 @@ namespace Emberfall.Presentation
         public const string FrameSprite      = "frame_card";
         // Coloured interiors are baked into the art: tinting the near-black neutral socket
         // at runtime cannot lift it. Minions use a yellow fist and red heart (Sam, 2026-10-04),
-        // on the same 256px canvas as the circular cost, weapon attack and durability sockets.
+        // exported at 128px but drawn at the same authored footprint as the circular sockets.
         public const string CostSocketSprite   = "socket_cost";   // blue
         public const string AttackSocketSprite = "socket_attack"; // yellow — weapons
         public const string MinionAttackSocketSprite = "socket_attack_fist"; // yellow
