@@ -212,6 +212,8 @@ unity/Assets/Resources/build-stamp.txt.meta
 # Unity build by-products, written beside the .aab under whatever name the build was given.
 # The il2cpp one is ~750 generated C++ files; tracked, it buried the code graph (916k nodes).
 *_BackUpThisFolder_ButDontShipItWithYourGame/
+# The debug-symbols archive for Play, written beside the .aab too. One was tracked at 29 MB.
+*.symbols.zip
 *_BurstDebugInformation_DoNotShip/
 
 # Written into Resources by Unity's performance-testing package during a build or test run,
