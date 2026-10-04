@@ -67,6 +67,17 @@ RETIREMENT TRIGGER: this table assumes an isolated worktree is a FULL checkout. 
 checkout. If a `provisionCommand` that narrows the checkout is ever restored to the project's
 execution-workspace policy, this table is wrong and the excluded paths become a second row.
 
+## Generated artwork
+
+- In this project, save generated images, review candidates, and their prompts under
+  `art-pipeline/<subject>/` by default, including when using the `imagegen` skill. Resolve this
+  path from the repository root, not the current subdirectory. Sam's explicit destination overrides
+  this default.
+- The built-in image generator may initially save under `$CODEX_HOME/generated_images/`; copy
+  its outputs into `art-pipeline/` before presenting the saved review paths. Use descriptive,
+  versioned filenames and preserve existing candidates. This project default replaces the generic
+  `output/imagegen/` destination; it does not change defaults for other projects.
+
 ## Worktree and file safety
 
 - Stage every commit by explicit path: `git add -- <path>`. Never use `git add -A`, `git add .`,

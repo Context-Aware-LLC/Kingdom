@@ -103,7 +103,7 @@ namespace Emberfall.Presentation
                 "decks",
                 TidbitTrigger.RosterArrival,
                 "Your Decks",
-                "Tap + to create a deck. Tap a deck once to see options, twice to edit it.\n" +
+                "Tap the "+" to create a deck. Tap a deck once to see options, twice to edit it.\n" +
                 "The Council has determinned that you shall have not more than nine.\n" +
                 "\n" +
                 "Nine is the limit. Not 8 and not 10. Because the council said so, that is why.",
