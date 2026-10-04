@@ -1,8 +1,8 @@
 /* ============================================================================
-   FIRST-RUN TIDBIT — the one-card overlay
+   FIRST-RUN TIDBIT — the one-scroll overlay
    Slice 4 of docs/dev-docs/specs/first-run-and-pack-opening.md.
 
-   Self-contained: backdrop, card surface, layout and the Got it control's size
+   Self-contained: backdrop, scroll surface, layout and the Got it control's size
    all live here, so a host needs this sheet and theme.uss and nothing else. The
    button's chrome is theme.uss's .emb-primary.
    ============================================================================ */
@@ -29,16 +29,49 @@
     justify-content: center;
 }
 
-/* Sized in the 2400 x 1080 authored panel (#349), on the same footing as the roster's
-   .delete-dialog: half the screen wide, theme surfaces and type steps. */
-.tidbit-card {
+/* THE SCROLL. FirstRunTidbit builds these three around .tidbit-card in code, so no host's
+   markup carries them: the wrapper holds the footprint, the clip is the window the sheet is
+   revealed through, and the two rollers ride the clip's edges.
+
+   Sized in the 2400 x 1080 authored panel (#349): half the screen wide. The rollers overhang
+   that on both sides and top and bottom, which is why nothing here clips but the clip. */
+.tidbit-scroll {
     width: 50%;
     max-width: 90%;
-    background-color: var(--surface-2);
-    border-width: 1px;
-    border-color: var(--surface-3);
-    border-radius: var(--space-2);
-    padding: var(--space-6);
+    align-items: center;
+}
+
+/* Its width is the unfurl: FirstRunTidbit drives it from 0 to the wrapper's width. flex-shrink 0
+   on it and on the card, because a shrinkable flex child with overflow: hidden deletes its
+   children outright in UI Toolkit. */
+.tidbit-scroll__clip {
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* One rolled scroll, used twice (the second mirrored). Position and size are set per frame in
+   code: they follow the clip's edges and the card's height, neither of which USS can express. */
+.tidbit-scroll__roller {
+    position: absolute;
+    background-image: url("/Assets/Art/UI/Surfaces/rolled-complete.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* The sheet. It is always laid out at its full width, so the copy never re-wraps while the clip
+   opens over it. The slices are paper.png's torn border plus its transparent margin (0 left,
+   18 top, 12 right, 32 bottom of 738 x 491).
+
+   Side padding clears the half of each roller that sits over the sheet: the roll itself is
+   about 40% of rolled-complete.png's width, so roughly 70px of a 520px-tall sheet. */
+.tidbit-card {
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("/Assets/Art/UI/Surfaces/paper.png");
+    -unity-slice-left: 60;
+    -unity-slice-right: 72;
+    -unity-slice-top: 78;
+    -unity-slice-bottom: 92;
+    padding: 72px 120px 84px 120px;
 }
 
 .tidbit-header {
@@ -51,7 +84,8 @@
 .tidbit-title {
     font-size: var(--type-h1);
     -unity-font-style: bold;
-    color: var(--ink-1);
+    /* Ink on parchment: the theme's --ink-* are light, for slate. */
+    color: rgb(58, 36, 18);
 }
 
 /* Art left, copy right. Two lines of body against a 4:3 illustration is the whole
@@ -81,7 +115,7 @@
     flex-basis: 0;
     white-space: normal;
     font-size: var(--type-body);
-    color: var(--ink-2);
+    color: rgb(84, 58, 34);
 }
 
 .tidbit-actions {
