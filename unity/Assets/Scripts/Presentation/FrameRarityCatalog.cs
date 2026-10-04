@@ -43,7 +43,7 @@ namespace Emberfall.Presentation
             _               => new Color(0.22f, 0.22f, 0.32f),
         };
 
-        // ── The four composited sprites ──────────────────────────────────────────────────────
+        // ── The composited sprites ───────────────────────────────────────────────────────────
         // All resolve through IUiSpriteProvider, which searches Assets/Art/UI by sprite NAME, so
         // the Frames/ subfolder they live in is organisational only.
         //
@@ -53,7 +53,14 @@ namespace Emberfall.Presentation
         // RETIREMENT TRIGGER: if a socket's housing is ever painted back INTO the frame, this
         // claim and the keep-clear zones in docs/dev-docs/specs/card-frame-geo.md both die.
         public const string FrameSprite      = "frame_card";
-        public const string StatSocketSprite = "socket_stat"; // cost, attack, health/durability — one sprite, drawn three times
+        // One disc per stat, same canvas and rope band, differing only in the colour of the
+        // interior (Sam, 2026-10-03). The three coloured ones are CUT from socket_stat by
+        // tooling/scripts/tint_stat_sockets.py — a SpriteRenderer tint multiplies, and the
+        // neutral disc is near-black, so the colour cannot be applied at runtime.
+        public const string CostSocketSprite   = "socket_cost";   // blue
+        public const string AttackSocketSprite = "socket_attack"; // yellow
+        public const string HealthSocketSprite = "socket_health"; // red
+        public const string StatSocketSprite   = "socket_stat";   // neutral — durability, and the source of the other three
         public const string GemSocketSprite  = "socket_gem";  // the rope bezel the rarity gem sits in
         public const string TribePanelSprite = "tribe_plate";
 

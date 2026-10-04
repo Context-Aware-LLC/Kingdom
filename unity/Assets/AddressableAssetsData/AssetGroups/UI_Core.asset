@@ -80,6 +80,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d0fc776f8071429da08550ae133cbbeb
+    m_Address: ui/socket_cost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6c773d4b799944d59e1a26634eb85528
+    m_Address: ui/socket_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e79c64ac84684ad78a660f8f5b30b0d4
+    m_Address: ui/socket_health
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4987a7cc92704fb49aa1b02ad97b7dce
     m_Address: ui/app_icon_adaptive_fg
     m_ReadOnly: 0

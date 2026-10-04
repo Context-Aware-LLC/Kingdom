@@ -541,9 +541,10 @@ namespace Emberfall.Presentation
         ///
         /// <para>These used to be painted into the frame art, which is why there were eight
         /// frames: a spell needed a copy with the two stat housings removed, and every rarity
-        /// needed its own metal. Lifting them out collapsed that to one frame plus two sprites
-        /// (2026-08-19) — the stat socket is a single sprite drawn three times, and rarity now
-        /// reads from the gem alone.</para>
+        /// needed its own metal. Lifting them out collapsed that to one frame plus the socket
+        /// sprites (2026-08-19) — one housing in four interior colours, see
+        /// <see cref="FrameRarityCatalog.StatSocketSprite"/> — and rarity now reads from the gem
+        /// alone.</para>
         ///
         /// <para>Sizing is by the sprite's CANVAS span, not its disc: each socket PNG centres its
         /// disc with a transparent margin so that drawing it at canvas span lands it concentric on
@@ -554,7 +555,14 @@ namespace Emberfall.Presentation
         {
             const float W = BoardController.CardW, H = BoardController.CardH;
 
-            Sprite stat = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.StatSocketSprite) : null;
+            // The right-hand socket holds health on a minion and durability on a weapon, and only
+            // health is red — durability keeps the neutral disc.
+            Sprite cost   = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.CostSocketSprite) : null;
+            Sprite attack = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.AttackSocketSprite) : null;
+            Sprite right  = _hasPaintedFrame
+                ? _ui?.Get(FrameRarityCatalog.ShowHealth(_def.Type) ? FrameRarityCatalog.HealthSocketSprite
+                                                                    : FrameRarityCatalog.StatSocketSprite)
+                : null;
             Sprite bezel = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.GemSocketSprite) : null;
 
             var statSize = new Vector2(
@@ -566,10 +574,10 @@ namespace Emberfall.Presentation
 
             // Cost is on every card; the two stat sockets follow the same visibility rules as the
             // digits that sit in them, so a weapon keeps both (attack + durability).
-            PlaceSocket(costSocketRenderer,   stat,  FrameRarityCatalog.CostSocket,      statSize,  true);
-            PlaceSocket(attackSocketRenderer, stat,  FrameRarityCatalog.StatSocketLeft,  statSize,
+            PlaceSocket(costSocketRenderer,   cost,   FrameRarityCatalog.CostSocket,      statSize,  true);
+            PlaceSocket(attackSocketRenderer, attack, FrameRarityCatalog.StatSocketLeft,  statSize,
                         FrameRarityCatalog.ShowAttack(_def.Type));
-            PlaceSocket(healthSocketRenderer, stat,  FrameRarityCatalog.StatSocketRight, statSize,
+            PlaceSocket(healthSocketRenderer, right,  FrameRarityCatalog.StatSocketRight, statSize,
                         FrameRarityCatalog.ShowHealth(_def.Type) || FrameRarityCatalog.ShowDurability(_def.Type));
             PlaceSocket(gemSocketRenderer,    bezel, FrameRarityCatalog.GemSocket,       bezelSize, true, z: -0.011f);
         }

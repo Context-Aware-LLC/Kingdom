@@ -1176,8 +1176,8 @@ namespace Emberfall.Presentation
 
             // Name — top strip
             TextMeshPro nameLabel   = MakeLabel(root.transform, "Name", new Vector3(0f,             CardH *  0.39f, -0.01f), 3.0f, Color.white);
-            // Cost — top-left boss. White + rim per §3.1; the blue recolor is a pending
-            // nudge-list item, deliberately not applied yet.
+            // Cost — top-left boss. White + rim per §3.1; the blue is in the socket disc behind
+            // it (FrameRarityCatalog.CostSocketSprite), not in the digit.
             TextMeshPro costLabel   = MakeLabel(root.transform, "Cost", new Vector3(-CardW * 0.38f,  CardH *  StatRowFrac, -0.01f), 3.75f, Color.white, statOutline: true);
             // Stat digits are white with a black rim (§3.1) — the rim is what keeps them
             // legible on any frame's boss art, any rarity.
