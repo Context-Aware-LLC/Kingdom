@@ -14,6 +14,7 @@ namespace Emberfall.Presentation
     public static class UiSfx
     {
         public const string WaxStamp = "Wax_stamp";
+        public const string ScrollUnfurls = "scroll-unfurls";
 
         private static AddressableSoundEffectPlayer _player;
 

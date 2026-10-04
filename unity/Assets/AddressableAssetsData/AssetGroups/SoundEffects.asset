@@ -60,6 +60,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 656355cc71ef1a540b84ab5cf529c979
+    m_Address: sfx/scroll-unfurls
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6a8633394cadfe84a8e691cb75a75d77
     m_Address: sfx/clockwright_spell_cast
     m_ReadOnly: 0

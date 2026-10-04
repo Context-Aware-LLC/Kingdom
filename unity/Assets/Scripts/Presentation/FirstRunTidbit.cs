@@ -80,6 +80,8 @@ namespace Emberfall.Presentation
         private float _motionStartedAt;
         // 0 is rolled shut, 1 is fully open.
         private float _open;
+        // The unfurl sound starts with the first frame that is drawn, not with Begin.
+        private bool _unfurlSounded;
 
         /// <param name="root">Any element the <c>tidbit-*</c> tree sits under.</param>
         /// <param name="sprites">Illustration source. Defaults to the same editor/addressable pair
@@ -247,6 +249,8 @@ namespace Emberfall.Presentation
                 // would flash the full screen tall.
                 _scroll.style.opacity = 0f;
                 _clip.style.width = 0f;
+                _unfurlSounded = false;
+                UiSfx.Preload(UiSfx.ScrollUnfurls);
             }
             _ticker.Resume();
         }
@@ -262,6 +266,11 @@ namespace Emberfall.Presentation
             float p;
             if (_motion == Motion.Opening)
             {
+                if (!_unfurlSounded)
+                {
+                    _unfurlSounded = true;
+                    UiSfx.Play(UiSfx.ScrollUnfurls);
+                }
                 p = Mathf.Clamp01((elapsed - HoldMs) / UnfurlMs);
                 float left = 1f - p;
                 _open = 1f - left * left * left;      // ease out: fast off the roll, slow to the stop
