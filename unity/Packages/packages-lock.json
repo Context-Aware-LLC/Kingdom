@@ -50,12 +50,6 @@
       "source": "local",
       "dependencies": {}
     },
-    "com.google.play.pc.sdk": {
-      "version": "file:C:/Users/User/Downloads/play_pc_sdk_unity_26.9.261.0.tgz",
-      "depth": 0,
-      "source": "local-tarball",
-      "dependencies": {}
-    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,
