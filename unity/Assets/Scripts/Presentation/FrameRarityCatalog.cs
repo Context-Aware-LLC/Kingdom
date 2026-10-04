@@ -55,7 +55,7 @@ namespace Emberfall.Presentation
         public const string FrameSprite      = "frame_card";
         // Coloured interiors are baked into the art: tinting the near-black neutral socket
         // at runtime cannot lift it. Power digits sit in the original circular sockets, with a
-        // separate sword behind them pointing up-left (Sam, 2026-10-04). Minions use yellow
+        // separate sword above the circle and below the digits, pointing up-left (Sam, 2026-10-04). Minions use yellow
         // power and red heart health; weapons use red power and green shield toughness.
         public const string CostSocketSprite   = "socket_cost";   // blue
         public const string AttackSocketSprite = "socket_health"; // original red circle — weapon power
@@ -78,11 +78,12 @@ namespace Emberfall.Presentation
         // Socket sprite canvas sizes, in master pixels. The disc is centred in its canvas with a
         // transparent margin, so the sprite is drawn at CANVAS span and lands concentric on the
         // socket centre — do not size these to the disc.
-        public const float StatSocketPx = 256f; // O246 disc, O210 flat interior, ~18px rope band
+        public const float StatSocketPx = 256f * 1.15f; // 15% larger display; texture resolution is unchanged
+        public const float StatSocketInsetPx = StatSocketPx * 0.5f + 8f; // keep captures clear of the card edge
         public const float PowerSwordScale = 1.8f; // blade and hilt extend well beyond the circle
         public const float PowerSwordAngle = 45f; // upright source turns counterclockwise, pointing up-left
         // Move only the sword slightly up/right. Both ends clear the original circle while
-        // remaining inside the card's capture bounds (the circle and digits never move).
+        // remaining inside the card's capture bounds.
         public static readonly Vector2 PowerSwordOffset = new(0.2f, 0.2f);
         public const float GemSocketPx  = 224f; // O206 bezel, O170 well
 
@@ -101,13 +102,13 @@ namespace Emberfall.Presentation
         // RETIREMENT TRIGGER: re-cutting the aperture moves this rect in the same commit.
         public static readonly Vector4 ArtWindow = new(0.045330f, 0.031250f, 0.953709f, 0.556152f); // 66, 64, 1389, 1139
 
-        public static readonly Vector2 CostSocket = new(0.091346f, 0.073242f); // 133, 150
+        public static readonly Vector2 CostSocket = new(StatSocketInsetPx / MasterW, StatSocketInsetPx / MasterH); // 155.2, 155.2
         public const float CostDigitEm = 200f / MasterH;
 
         // Minion/weapon-only — spells never show these (ShowAttack/ShowHealth/ShowDurability below),
         // and on a spell the two sockets are simply not drawn, leaving clean rail behind.
-        public static readonly Vector2 StatSocketLeft  = new(0.087912f, 0.934082f); // 128, 1913  attack
-        public static readonly Vector2 StatSocketRight = new(0.911401f, 0.933105f); // 1327, 1911 health / durability
+        public static readonly Vector2 StatSocketLeft  = new(StatSocketInsetPx / MasterW, 1f - StatSocketInsetPx / MasterH); // 155.2, 1892.8 attack
+        public static readonly Vector2 StatSocketRight = new(1f - StatSocketInsetPx / MasterW, 1f - StatSocketInsetPx / MasterH); // 1300.8, 1892.8 health / durability
         public const float StatDigitEm = 220f / MasterH;
 
         // Title band, between the art aperture and the rules parchment: y 1139..1369, 230 tall.
@@ -182,7 +183,8 @@ namespace Emberfall.Presentation
         public static readonly Vector2 TribeCanvasOffset = new(-2.5f / 2012f, 6f / 354f);
         public const int TribePanelOrder = 2;
         public const int StatSocketOrder = TribePanelOrder + 1;
-        public const int PowerCircleOrder = StatSocketOrder + 1; // sword stays behind the digit well
+        public const int PowerCircleOrder = StatSocketOrder;
+        public const int PowerSwordOrder = PowerCircleOrder + 1; // circle < sword < labels (10)
         public const float TribeEm = 100f / MasterH;
         public const float TribeEmFloor = 84f / MasterH;
 

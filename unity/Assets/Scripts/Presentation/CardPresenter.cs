@@ -557,8 +557,8 @@ namespace Emberfall.Presentation
         {
             const float W = BoardController.CardW, H = BoardController.CardH;
 
-            // Keep the original circular number well at its original position and size.
-            // A separate sword runs diagonally behind it, clear of the digits.
+            // A separate sword runs diagonally above the circular well and below its digits.
+            // Stat frames share a larger display size with inset corner anchors for capture safety.
             Sprite cost   = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.CostSocketSprite) : null;
             Sprite attack = _hasPaintedFrame
                 ? _ui?.Get(_def.Type == CardType.MINION ? FrameRarityCatalog.MinionAttackSocketSprite
@@ -588,7 +588,7 @@ namespace Emberfall.Presentation
                         FrameRarityCatalog.ShowAttack(_def.Type));
             PlaceSocket(powerSwordRenderer, sword, FrameRarityCatalog.StatSocketLeft,
                         statSize * FrameRarityCatalog.PowerSwordScale,
-                        FrameRarityCatalog.ShowAttack(_def.Type), z: -0.0085f);
+                        FrameRarityCatalog.ShowAttack(_def.Type), z: -0.0095f);
             if (powerSwordRenderer != null)
             {
                 powerSwordRenderer.transform.localRotation =
