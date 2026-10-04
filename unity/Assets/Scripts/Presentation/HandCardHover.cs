@@ -28,7 +28,7 @@ namespace Emberfall.Presentation
     // oscillate. Here the BoxCollider lives on the card ROOT and never moves; only the "Visual"
     // child rises. The pointer therefore cannot lose the card it is hovering, so no hysteresis and
     // no decoupled hover region are needed.
-    internal sealed class HandCardHover : MonoBehaviour
+    internal sealed class HandCardHover : MonoBehaviour, IPointerHoverTarget
     {
         // Enough to clear the screen edge for every card in the fan. DERIVED, not dialled: with
         // CentreY 3.56 the outermost card hides 17.2% of a 2.376-tall card (0.408 units) and the
@@ -132,14 +132,15 @@ namespace Emberfall.Presentation
             if (_group != null) _group.sortingOrder = _baseOrder;
         }
 
-        private void OnMouseEnter() => _hovered = true;
-        private void OnMouseExit()  => _hovered = false;
+        void IPointerHoverTarget.OnPointerEnter() => _hovered = true;
+        void IPointerHoverTarget.OnPointerExit()  => _hovered = false;
 
         /// <summary>
-        /// EF-049 / NOR-147. Raises the card from a source that is not the mouse. Even with the
-        /// hand raised (NOR-147), a small fraction of each card remains below the screen edge, and
-        /// a hover gesture must fully expose it. <c>OnMouseEnter</c>/<c>OnMouseExit</c> never fire
-        /// on touch, so the reveal layer's long-press drives it here instead.
+        /// EF-049 / NOR-147. Raises the card from a source that is not the pointer being over it.
+        /// Even with the hand raised (NOR-147), a small fraction of each card remains below the
+        /// screen edge, and a hover gesture must fully expose it. A finger is only over a card
+        /// while it is pressing, and the sticky read outlives the press, so the reveal layer's
+        /// long-press drives it here instead.
         /// </summary>
         internal void SetExternalReveal(bool revealed) => _externalReveal = revealed;
 

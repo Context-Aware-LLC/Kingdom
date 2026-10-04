@@ -251,8 +251,8 @@ namespace Emberfall.Presentation
                 // BEHIND the hero plate's box (z -0.05..0.05) so the plate keeps the strip where the
                 // ring laps onto it. The collider carries no ClickableCard, ClickableHero or
                 // ClickableHeroPower descriptor, so InputRouter.Probe walks straight past it:
-                // pressing, dragging and targeting behave exactly as before, and only Unity's
-                // OnMouse events — which the reveal trigger listens to — see it.
+                // pressing, dragging and targeting behave exactly as before, and only
+                // BoardPointerRelay — which the reveal trigger listens to — sees it.
                 var col = go.AddComponent<BoxCollider>();
                 col.size   = new Vector3(HitDiameter, HitDiameter, 0.1f);
                 col.center = new Vector3(WeaponApertureOffset.x, WeaponApertureOffset.y, 0.1f);

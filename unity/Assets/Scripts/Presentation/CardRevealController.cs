@@ -102,9 +102,9 @@ namespace Emberfall.Presentation
             float now         = Time.unscaledTime;
             bool  pointerHeld = PointerHeld();
 
-            // Release is POLLED, not taken from OnMouseUp. OnMouseUp is not delivered when the
-            // collider is destroyed mid-press — a card played from hand is exactly that — and a
-            // press left active would strand the panel on screen with no way to dismiss it.
+            // Release is POLLED, not delivered per collider. An up event cannot reach a collider
+            // destroyed mid-press — a card played from hand is exactly that — and a press left
+            // active would strand the panel on screen with no way to dismiss it.
             if (_pressActive && !pointerHeld)
             {
                 _pressActive = false;
@@ -114,8 +114,8 @@ namespace Emberfall.Presentation
             }
 
             // Dismiss a sticky reveal when the player presses something that is not a card.
-            // OnPointerDown (from CardRevealTrigger.OnMouseDown) sets _pressActive in the same
-            // frame it fires, so if a new press arrived without setting _pressActive the player
+            // OnPointerDown (from BoardPointerRelay, which runs before this Update) sets _pressActive
+            // in the same frame it fires, so if a new press arrived without setting _pressActive the player
             // tapped the board, a hero, or empty space — all of which should close the panel.
             bool newPress = pointerHeld && !_wasPointerHeld;
             if (newPress && !_pressActive && _model.Source == HoverRevealModel.RevealSource.Sticky)
@@ -165,7 +165,7 @@ namespace Emberfall.Presentation
             }
 
             // The lift is driven for the HOLD source only. On a mouse hover the card's own
-            // OnMouseEnter already raised it, and driving it from here as well would give one
+            // pointer enter already raised it, and driving it from here as well would give one
             // behaviour two owners.
             SetLift(_model.Source == HoverRevealModel.RevealSource.Hold ? t : null);
             _panel.Show(t);
@@ -189,7 +189,7 @@ namespace Emberfall.Presentation
         // one modal truth instead of creating a third wiring site that can silently drift.
         //
         // GestureInProgress is folded in here rather than left to expire on its own: a card being
-        // dragged is still "hovered" as far as OnMouseEnter is concerned, so without this the
+        // dragged is still "hovered" as far as the pointer relay is concerned, so without this the
         // inspect panel would pop open mid-drag and sit over the drop target.
         private bool Blocked() => _router != null && _router.BlocksCardInspection;
     }

@@ -238,7 +238,7 @@ namespace Emberfall.Presentation
     }
 
     /// <summary>Runtime-only click adapter for a detached definition card.</summary>
-    internal sealed class UnearthChoiceCardButton : MonoBehaviour
+    internal sealed class UnearthChoiceCardButton : MonoBehaviour, IPointerPressTarget
     {
         private InputRouter _router;
         private int _cardDefinitionId;
@@ -251,7 +251,7 @@ namespace Emberfall.Presentation
             _choiceSequence = choiceSequence;
         }
 
-        private void OnMouseDown()
+        void IPointerPressTarget.OnPointerDown()
             => _router?.OnUnearthChoiceClicked(_cardDefinitionId, _choiceSequence);
     }
 }

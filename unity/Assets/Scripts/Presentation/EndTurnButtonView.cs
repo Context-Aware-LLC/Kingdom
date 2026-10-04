@@ -14,7 +14,7 @@ namespace Emberfall.Presentation
     /// appearing afterwards (removed 2026-10-02, Sam). Two sprites that each had to line up with a
     /// painted fixture never did; one sprite centred on the plate has nothing to disagree with.</para>
     /// </summary>
-    public sealed class EndTurnButtonView : MonoBehaviour
+    public sealed class EndTurnButtonView : MonoBehaviour, IPointerPressTarget
     {
         public static readonly Vector3 BoardPosition = new(6.3f, 0f, 0f);
 
@@ -71,7 +71,7 @@ namespace Emberfall.Presentation
             Show(_myTurn);
         }
 
-        private void OnMouseDown()
+        void IPointerPressTarget.OnPointerDown()
         {
             if (!_myTurn || _animating) return;
             _router?.OnEndTurnClicked();

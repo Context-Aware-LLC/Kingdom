@@ -8,17 +8,17 @@ namespace Emberfall.Presentation
     /// EF-049. Per-card pointer relay for the reveal layer. Sits on the card ROOT, alongside
     /// ClickableCard and HandCardHover, because that is where the BoxCollider is.
     ///
-    /// <para>Only enter / exit / down are relayed. Release is polled by
-    /// <see cref="CardRevealController"/> rather than taken from <c>OnMouseUp</c> — a card played
-    /// from hand has its collider destroyed mid-press, and the up event that never arrives would
-    /// strand the panel on screen.</para>
+    /// <para>Only enter / exit / down are relayed (by <see cref="BoardPointerRelay"/>). Release
+    /// is polled by <see cref="CardRevealController"/> rather than delivered per collider — a card
+    /// played from hand has its collider destroyed mid-press, and the up event that never arrives
+    /// would strand the panel on screen.</para>
     ///
     /// <para>Attached to every card the local player can legitimately read: their own hand,
     /// both boards, and both heroes' equipped weapons (HeroSocketsView). Hidden cards (the opponent's projected hand) never reach this component at all
     /// — BoardController's card-back path skips the definition bind, so there is nothing to
     /// describe and no way for the reveal to leak hidden information.</para>
     /// </summary>
-    internal sealed class CardRevealTrigger : MonoBehaviour
+    internal sealed class CardRevealTrigger : MonoBehaviour, IPointerHoverTarget, IPointerPressTarget
     {
         internal InstanceId CardId { get; private set; }
         internal CardDefinition Definition => _def;
@@ -81,9 +81,9 @@ namespace Emberfall.Presentation
 
         private HandCardHover _hover;
 
-        private void OnMouseEnter() => _controller?.OnPointerEnter(this);
-        private void OnMouseExit()  => _controller?.OnPointerExit(this);
-        private void OnMouseDown()  => _controller?.OnPointerDown(this);
+        void IPointerHoverTarget.OnPointerEnter() => _controller?.OnPointerEnter(this);
+        void IPointerHoverTarget.OnPointerExit()  => _controller?.OnPointerExit(this);
+        void IPointerPressTarget.OnPointerDown()  => _controller?.OnPointerDown(this);
 
         private void OnDestroy() => _controller?.Unregister(this);
     }

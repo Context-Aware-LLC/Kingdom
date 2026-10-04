@@ -15,8 +15,8 @@ namespace Emberfall.Presentation
     //   y        CentreY seats the fan so the whole RULES BAND clears the bottom screen edge at
     //            rest — see CentreY below; the hidden fraction falls out of that, it is not a dial
     //   z        a per-index step toward the camera, so overlapping cards have a defined
-    //            draw order even where the material is opaque, and so Unity's OnMouseDown —
-    //            which fires on the NEAREST collider — resolves overlap topmost-wins (§8)
+    //            draw order even where the material is opaque, and so a raycast — which
+    //            takes the NEAREST collider — resolves overlap topmost-wins (§8)
     //
     // Seat 1 is this layout point-reflected through the origin, exactly as §1.1 specifies:
     // (x, y, rot) -> (-x, -y, rot). A point reflection is a 180° rotation, so each card's

@@ -205,6 +205,11 @@ namespace Emberfall.Presentation
             if (_revealController == null)
                 _revealController = CardRevealController.Create(transform, _inputRouter, this);
 
+            // Hover and press delivery for every collider on the board that is not a router
+            // gesture subject. Here rather than on the router: a router-less board still hovers.
+            if (GetComponent<BoardPointerRelay>() == null)
+                gameObject.AddComponent<BoardPointerRelay>();
+
             // Targeting-state visibility: while the router has a targeting state armed,
             // only valid targets glow (binder suppresses readiness glow for the duration).
             if (_inputRouter != null)
@@ -1175,7 +1180,7 @@ namespace Emberfall.Presentation
             // strip was reached. Four GameObjects plus four renderers on every card — a whole
             // collection wall's worth — to stay invisible.
 
-            // BoxCollider on root for OnMouseDown — sized to card face.
+            // BoxCollider on root for the router's probe and BoardPointerRelay — sized to card face.
             var col = root.AddComponent<BoxCollider>();
             col.size = new Vector3(CardW, CardH, 0.1f);
 
@@ -1261,7 +1266,7 @@ namespace Emberfall.Presentation
             // Length Audit, 2026-08-09). Sits at the very top edge, in front of every other layer
             // (z nearer the camera than the gem, the nearest thing before it) so it reads as a
             // solid strip laid over the name/cost bosses rather than a fourth thing competing with
-            // them. Hidden by default; CardPresenter toggles it on OnMouseEnter/Exit.
+            // them. Hidden by default; CardPresenter toggles it on pointer enter/exit.
             var tooltipBgGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             tooltipBgGo.name = "TooltipBg";
             tooltipBgGo.transform.SetParent(root.transform, false);
@@ -1319,7 +1324,7 @@ namespace Emberfall.Presentation
             // DISABLED 2026-09-08 (Sam): the on-card name-overflow banner sticks forever on touch
             // and covers the mana cost (#362) — same root cause hits the flavor-text-on-hover panel
             // it shares a trigger with. Leaving tooltipBanner/tooltipLabel/_flavorPanel unwired on
-            // CardPresenter keeps OnMouseEnter's checks false; both are already null-safe.
+            // CardPresenter keeps its pointer-enter checks false; both are already null-safe.
             // presenter.SetupTooltip(tooltipBgGo, tooltipLabel, _flavorPanel);
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.

@@ -11,7 +11,7 @@ namespace Emberfall.Presentation
     /// world-space TMP, the <see cref="EndTurnButtonView"/> idiom (no asset GUID trap). The label
     /// reflects the toss count — "KEEP ALL" at zero, "MULLIGAN (n)" otherwise.
     /// </summary>
-    public sealed class MulliganConfirmButtonView : MonoBehaviour
+    public sealed class MulliganConfirmButtonView : MonoBehaviour, IPointerPressTarget
     {
         // Ember menu chrome (BoardButtonChrome); was a flat green quad at 1.7 x 0.55, enlarged with
         // the chrome (Sam, 2026-09-30). The prompt above moved up with it; PromptTopWorld follows.
@@ -29,7 +29,7 @@ namespace Emberfall.Presentation
         /// negated for seat 0, ± half of <see cref="HandFanLayout.HandCardH"/> 2.376). The button was
         /// wholly inside the fan, and hand cards sit at z = 0, -0.03, -0.06… — <i>toward</i> the
         /// camera — so every press in that region hit a card instead. Nothing was wrong with
-        /// <c>OnMouseDown</c>; it was never the frontmost collider.</para>
+        /// the press handler; it was never the frontmost collider.</para>
         ///
         /// <para><b>Directly above the hand does not fit either.</b> The fan tops out at -2.31 and
         /// P0's board row starts at -2.125 (slot anchors at |y| 1.3, ± half of
@@ -139,7 +139,7 @@ namespace Emberfall.Presentation
                 _label.text = count == 0 ? "KEEP ALL" : $"MULLIGAN ({count})";
         }
 
-        private void OnMouseDown() => _router?.OnMulliganConfirmClicked();
+        void IPointerPressTarget.OnPointerDown() => _router?.OnMulliganConfirmClicked();
 
         private void SetVisible(bool on)
         {

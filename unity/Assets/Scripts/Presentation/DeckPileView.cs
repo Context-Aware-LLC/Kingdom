@@ -10,7 +10,7 @@ namespace Emberfall.Presentation
     /// convincingly in those deep corner cradles. Count remains hover-only and the pile disappears
     /// at zero. Deck contents stay redacted: only <see cref="PlayerState.Deck"/> count is consumed.
     /// </summary>
-    public sealed class DeckPileView : MonoBehaviour
+    public sealed class DeckPileView : MonoBehaviour, IPointerHoverTarget
     {
         // PileW/PileH remain the logical layout footprint so enlarging the artwork does not
         // retreat the camera or disturb the hand. The rendered stack and its hover target are
@@ -75,12 +75,12 @@ namespace Emberfall.Presentation
             if (_countLabel != null) _countLabel.text = count.ToString();
         }
 
-        private void OnMouseEnter()
+        void IPointerHoverTarget.OnPointerEnter()
         {
             if (_countLabel != null && _lastCount > 0) _countLabel.gameObject.SetActive(true);
         }
 
-        private void OnMouseExit()
+        void IPointerHoverTarget.OnPointerExit()
         {
             if (_countLabel != null) _countLabel.gameObject.SetActive(false);
         }

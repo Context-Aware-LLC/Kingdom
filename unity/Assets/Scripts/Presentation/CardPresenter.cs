@@ -12,7 +12,7 @@ namespace Emberfall.Presentation
     // Subscribes to ICardLiveState.Changed; never polls per-frame.
     // For Phase C step 2: primitive Unity visuals only — no shaders yet.
     // Setup(…) is called by BoardController when creating presenters at runtime.
-    public sealed class CardPresenter : MonoBehaviour, ICardPresenter
+    public sealed class CardPresenter : MonoBehaviour, ICardPresenter, IPointerHoverTarget
     {
         // Populated via Setup() (runtime) or serialized refs in a prefab (editor).
         [SerializeField] private TextMeshPro nameLabel;
@@ -108,7 +108,7 @@ namespace Emberfall.Presentation
         }
 
         // Wired by BoardController.CreatePresenter; banner starts inactive and is toggled by
-        // OnMouseEnter/OnMouseExit below, only when the bound card carries a non-empty Tooltip.
+        // OnPointerEnter/OnPointerExit below, only when the bound card carries a non-empty Tooltip.
         // flavorPanel is the match's one shared bottom-right surface (may be null in a detached/
         // preview build that never wires one).
         internal void SetupTooltip(GameObject banner, TextMeshPro label, CardFlavorTextPanel flavorPanel)
@@ -223,13 +223,12 @@ namespace Emberfall.Presentation
         // read this" read undo the click it also armed, which does not apply here — this is a
         // passive label with no side effect on the pending press, so it can just track the raw
         // pointer the same way HandCardHover's lift already does on this root.
-        private void OnMouseEnter()
+        void IPointerHoverTarget.OnPointerEnter()
         {
             if (_def == null) return;
-            // Unity synthesizes mouse enter from a touchscreen press but does not reliably send the
-            // matching exit when the finger lifts. Showing this small on-card banner on touch was
-            // therefore sticky and covered the mana cost. Touch has the full inspect surface; this
-            // immediate banner and the flavor corner remain desktop-hover affordances only.
+            // A finger enters only by pressing, so on touch this banner would flash up under every
+            // press and cover the mana cost. Touch has the full inspect surface; this immediate
+            // banner and the flavor corner remain desktop-hover affordances only.
             bool touchPressed = Touchscreen.current?.primaryTouch.press.isPressed == true;
             if (!ShouldShowDirectHover(touchPressed))
             {
@@ -247,7 +246,7 @@ namespace Emberfall.Presentation
 
         internal static bool ShouldShowDirectHover(bool touchPressed) => !touchPressed;
 
-        private void OnMouseExit()
+        void IPointerHoverTarget.OnPointerExit()
         {
             HideTooltip();
             HideFlavorText();

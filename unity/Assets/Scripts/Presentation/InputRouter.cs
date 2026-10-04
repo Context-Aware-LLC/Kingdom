@@ -32,7 +32,9 @@ namespace Emberfall.Presentation
     // are raycast descriptors now — identity and a collider — and this class does the one raycast per
     // frame itself. Unity's OnMouseDown does fire from touch (simulateMouseWithTouches), so the old
     // click machine was not broken on Android; what it could not express was a gesture with a
-    // beginning, a middle and an end, which is what targeting actually is.
+    // beginning, a middle and an end, which is what targeting actually is. Nothing in the tree
+    // uses the OnMouse* messages any more: the plain buttons and the hover affordances get their
+    // press / enter / exit from BoardPointerRelay.
     //
     // End turn : Enter or Space during Main phase, or the on-screen button.
     // Cancel   : Escape clears any active gesture.
@@ -93,7 +95,7 @@ namespace Emberfall.Presentation
 
         // True from the moment a card is pressed through to release (Pressed, Dragging and both
         // Awaiting* states). CardRevealController reads this to keep the hover/hold inspect panel
-        // from popping up mid-drag: the hover timer starts on OnMouseEnter, which happens before
+        // from popping up mid-drag: the hover timer starts on pointer enter, which happens before
         // the press, so a press that becomes a drag can still cross HoverDelaySeconds while the
         // card is being carried across the board (Sam, 2026-09-05 — the panel was opening under a
         // drag and obscuring the drop).
@@ -491,7 +493,7 @@ namespace Emberfall.Presentation
 
         // ONE raycast per pointer event, resolved against the four Clickable* descriptors. Anything
         // else the ray hits (the end-turn button, the mulligan confirm, the toast) reads as None here
-        // and cancels an in-flight gesture, while that object's own OnMouseDown still fires — which is
+        // and cancels an in-flight gesture, while BoardPointerRelay still presses that object — which is
         // the correct reading of "the player pressed something that is not the board".
         /// <summary>
         /// WHERE the release happened, in board coordinates — the half of a drop that no collider
