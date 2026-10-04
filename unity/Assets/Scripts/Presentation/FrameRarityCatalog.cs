@@ -54,12 +54,14 @@ namespace Emberfall.Presentation
         // claim and the keep-clear zones in docs/dev-docs/specs/card-frame-geo.md both die.
         public const string FrameSprite      = "frame_card";
         // Coloured interiors are baked into the art: tinting the near-black neutral socket
-        // at runtime cannot lift it. Minions use a yellow sword and red heart; weapons use
-        // a red sword and green shield (Sam, 2026-10-04). These shape assets are
-        // exported at 128px but drawn at the same authored footprint as the circular sockets.
+        // at runtime cannot lift it. Power digits sit in the original circular sockets, with a
+        // separate sword behind them pointing up-left (Sam, 2026-10-04). Minions use yellow
+        // power and red heart health; weapons use red power and green shield toughness.
         public const string CostSocketSprite   = "socket_cost";   // blue
-        public const string AttackSocketSprite = "socket_weapon_power_sword"; // red — weapon power
-        public const string MinionAttackSocketSprite = "socket_attack_sword"; // yellow
+        public const string AttackSocketSprite = "socket_health"; // original red circle — weapon power
+        public const string MinionAttackSocketSprite = "socket_attack"; // original yellow circle
+        public const string MinionPowerSwordSprite = "socket_attack_sword";
+        public const string WeaponPowerSwordSprite = "socket_weapon_power_sword";
         public const string HealthSocketSprite = "socket_health_heart"; // red — minions
         public const string WeaponToughnessSocketSprite = "socket_weapon_toughness_shield"; // green — durability
         public const string StatSocketSprite   = "socket_stat";   // preserved neutral source art
@@ -77,6 +79,11 @@ namespace Emberfall.Presentation
         // transparent margin, so the sprite is drawn at CANVAS span and lands concentric on the
         // socket centre — do not size these to the disc.
         public const float StatSocketPx = 256f; // O246 disc, O210 flat interior, ~18px rope band
+        public const float PowerSwordScale = 1.8f; // blade and hilt extend well beyond the circle
+        public const float PowerSwordAngle = 45f; // upright source turns counterclockwise, pointing up-left
+        // Move only the sword slightly up/right. Both ends clear the original circle while
+        // remaining inside the card's capture bounds (the circle and digits never move).
+        public static readonly Vector2 PowerSwordOffset = new(0.2f, 0.2f);
         public const float GemSocketPx  = 224f; // O206 bezel, O170 well
 
         public static string GemSprite(Rarity rarity) =>
@@ -175,6 +182,7 @@ namespace Emberfall.Presentation
         public static readonly Vector2 TribeCanvasOffset = new(-2.5f / 2012f, 6f / 354f);
         public const int TribePanelOrder = 2;
         public const int StatSocketOrder = TribePanelOrder + 1;
+        public const int PowerCircleOrder = StatSocketOrder + 1; // sword stays behind the digit well
         public const float TribeEm = 100f / MasterH;
         public const float TribeEmFloor = 84f / MasterH;
 

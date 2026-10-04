@@ -36,6 +36,7 @@ namespace Emberfall.Presentation
         // a spell just leaves the two stat sockets undrawn.
         [SerializeField] private SpriteRenderer costSocketRenderer;
         [SerializeField] private SpriteRenderer attackSocketRenderer;
+        [SerializeField] private SpriteRenderer powerSwordRenderer;
         [SerializeField] private SpriteRenderer healthSocketRenderer;
         [SerializeField] private SpriteRenderer gemSocketRenderer;
         private IUiSpriteProvider _ui;
@@ -89,13 +90,15 @@ namespace Emberfall.Presentation
         public void SetupFrameLayer(SpriteRenderer frame, SpriteRenderer gem,
                                     IUiSpriteProvider ui,
                                     SpriteRenderer costSocket = null, SpriteRenderer attackSocket = null,
-                                    SpriteRenderer healthSocket = null, SpriteRenderer gemSocket = null)
+                                    SpriteRenderer healthSocket = null, SpriteRenderer gemSocket = null,
+                                    SpriteRenderer powerSword = null)
         {
             frameRenderer        = frame;
             gemRenderer          = gem;
             _ui                  = ui;
             costSocketRenderer   = costSocket;
             attackSocketRenderer = attackSocket;
+            powerSwordRenderer   = powerSword;
             healthSocketRenderer = healthSocket;
             gemSocketRenderer    = gemSocket;
         }
@@ -554,8 +557,8 @@ namespace Emberfall.Presentation
         {
             const float W = BoardController.CardW, H = BoardController.CardH;
 
-            // Minions pair a yellow sword with a red health heart. Weapons pair a red power
-            // sword with a green toughness shield (the internal stat remains durability).
+            // Keep the original circular number well at its original position and size.
+            // A separate sword runs diagonally behind it, clear of the digits.
             Sprite cost   = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.CostSocketSprite) : null;
             Sprite attack = _hasPaintedFrame
                 ? _ui?.Get(_def.Type == CardType.MINION ? FrameRarityCatalog.MinionAttackSocketSprite
@@ -564,6 +567,10 @@ namespace Emberfall.Presentation
             Sprite right  = _hasPaintedFrame
                 ? _ui?.Get(FrameRarityCatalog.ShowHealth(_def.Type) ? FrameRarityCatalog.HealthSocketSprite
                                                                     : FrameRarityCatalog.WeaponToughnessSocketSprite)
+                : null;
+            Sprite sword = _hasPaintedFrame && FrameRarityCatalog.ShowAttack(_def.Type)
+                ? _ui?.Get(_def.Type == CardType.MINION ? FrameRarityCatalog.MinionPowerSwordSprite
+                                                       : FrameRarityCatalog.WeaponPowerSwordSprite)
                 : null;
             Sprite bezel = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.GemSocketSprite) : null;
 
@@ -579,6 +586,17 @@ namespace Emberfall.Presentation
             PlaceSocket(costSocketRenderer,   cost,   FrameRarityCatalog.CostSocket,      statSize,  true);
             PlaceSocket(attackSocketRenderer, attack, FrameRarityCatalog.StatSocketLeft,  statSize,
                         FrameRarityCatalog.ShowAttack(_def.Type));
+            PlaceSocket(powerSwordRenderer, sword, FrameRarityCatalog.StatSocketLeft,
+                        statSize * FrameRarityCatalog.PowerSwordScale,
+                        FrameRarityCatalog.ShowAttack(_def.Type), z: -0.0085f);
+            if (powerSwordRenderer != null)
+            {
+                powerSwordRenderer.transform.localRotation =
+                    Quaternion.Euler(0f, 0f, FrameRarityCatalog.PowerSwordAngle);
+                powerSwordRenderer.transform.localPosition += new Vector3(
+                    statSize.x * FrameRarityCatalog.PowerSwordOffset.x,
+                    statSize.y * FrameRarityCatalog.PowerSwordOffset.y, 0f);
+            }
             PlaceSocket(healthSocketRenderer, right,  FrameRarityCatalog.StatSocketRight, statSize,
                         FrameRarityCatalog.ShowHealth(_def.Type) || FrameRarityCatalog.ShowDurability(_def.Type));
             PlaceSocket(gemSocketRenderer,    bezel, FrameRarityCatalog.GemSocket,       bezelSize, true, z: -0.011f);

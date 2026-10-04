@@ -1158,6 +1158,7 @@ namespace Emberfall.Presentation
 
             var costSocket   = MakeSocket("CostSocket",   -0.009f);
             var attackSocket = MakeSocket("AttackSocket", -0.009f);
+            var powerSword = MakeSocket("PowerSword", -0.0085f);
             var healthSocket = MakeSocket("HealthSocket", -0.009f);
             var gemSocket    = MakeSocket("GemSocket",    -0.011f);
             gemSocket.sortingOrder = FrameRarityCatalog.GemSocketOrder;
@@ -1166,10 +1167,12 @@ namespace Emberfall.Presentation
             // every part of the disc that is not above the art aperture. Invisible while the
             // disc was black on black; half a blue disc once it had a colour (2026-10-03).
             costSocket.sortingOrder   = FrameRarityCatalog.StatSocketOrder;
-            attackSocket.sortingOrder = FrameRarityCatalog.StatSocketOrder;
+            powerSword.sortingOrder = FrameRarityCatalog.StatSocketOrder;
+            attackSocket.sortingOrder = FrameRarityCatalog.PowerCircleOrder;
             healthSocket.sortingOrder = FrameRarityCatalog.StatSocketOrder;
             costSocket.gameObject.SetActive(false);
             attackSocket.gameObject.SetActive(false);
+            powerSword.gameObject.SetActive(false);
             healthSocket.gameObject.SetActive(false);
             gemSocket.gameObject.SetActive(false);
 
@@ -1319,7 +1322,7 @@ namespace Emberfall.Presentation
             var presenter = root.AddComponent<CardPresenter>();
             presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer, bodyLabel);
             presenter.SetupFrameLayer(frameRenderer, gemRenderer, _uiSprites,
-                                      costSocket, attackSocket, healthSocket, gemSocket);
+                                      costSocket, attackSocket, healthSocket, gemSocket, powerSword);
             presenter.SetupTribe(tribeBanner, tribeLabel, tribePanel);
             // DISABLED 2026-09-08 (Sam): the on-card name-overflow banner sticks forever on touch
             // and covers the mana cost (#362) — same root cause hits the flavor-text-on-hover panel
