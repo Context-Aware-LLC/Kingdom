@@ -43,6 +43,22 @@ namespace Emberfall.Net.Server.Ranking
                 return value is null or DBNull ? DefaultRating : Convert.ToInt32(value);
             }, ct);
 
+        public Task<PlayerStanding?> GetStandingAsync(AccountId account, CancellationToken ct = default)
+            => WithConnectionAsync<PlayerStanding?>(async conn =>
+            {
+                await using var cmd = new NpgsqlCommand(
+                    "select rating, games_played from ladder_player where player_id=$1", conn);
+                cmd.Parameters.Add(P(NpgsqlDbType.Text, account.Value));
+                await using var reader = await cmd.ExecuteReaderAsync(ct);
+                if (!await reader.ReadAsync(ct)) return null;
+
+                // ApplyAsync inserts the row and counts the match in one transaction, so a row
+                // with no games is not reachable from the game. Answer it as unrated anyway: a
+                // hand-inserted row should not read as a standing somebody played for.
+                long games = reader.GetInt64(1);
+                return games > 0 ? new PlayerStanding(reader.GetInt32(0), games) : null;
+            }, ct);
+
         public Task<IReadOnlyList<LeaderboardEntry>> GetLeaderboardAsync(
             int limit,
             CancellationToken ct = default)

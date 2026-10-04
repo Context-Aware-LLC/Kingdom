@@ -40,6 +40,14 @@ namespace Emberfall.Net.Server.Ranking
                     : DefaultRating);
         }
 
+        public Task<PlayerStanding?> GetStandingAsync(AccountId account, CancellationToken ct = default)
+        {
+            lock (_lock)
+                return Task.FromResult(_players.TryGetValue(account, out var standing)
+                    ? new PlayerStanding(standing.Rating, standing.Games)
+                    : null);
+        }
+
         public Task<IReadOnlyList<LeaderboardEntry>> GetLeaderboardAsync(
             int limit,
             CancellationToken ct = default)

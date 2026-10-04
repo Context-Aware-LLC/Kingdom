@@ -656,6 +656,33 @@ namespace Emberfall.Net.Server
                 });
             });
 
+            // GET /rating — the bearer's own ladder standing. /leaderboard above is public and only
+            // answers the top of the ladder, so this is the one place a client learns its own.
+            //
+            // Cache-Control: no-store, for the reason /session gives: it is per-identity.
+            app.MapGet("/rating", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                RatingReadResult result = await RatingEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, ratingStore, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                return Results.Json(new
+                {
+                    // "ranked" | "unranked" | "unauthenticated" | "unavailable". Under "unranked"
+                    // the rating is the ladder default, not one the player earned.
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    rating = result.Rating,
+                    gamesPlayed = result.GamesPlayed,
+                }, statusCode: result.HttpStatus);
+            });
+
             // GET /quests — the player's active quests and their progress
             // (dev-docs/specs/daily-quests.md §8). There is deliberately no verb that moves
             // progress: the server is the only thing that may, so the surface is read-only by

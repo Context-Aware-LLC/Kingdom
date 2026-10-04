@@ -202,6 +202,9 @@ namespace Emberfall.Presentation
                     await RosterGateway.SyncAsync(accessToken);
                     RenderQuests(await questRequest);
 
+                    // Not awaited: nothing on this screen waits on Game Center, and it never throws.
+                    _ = GameCenterLadder.SyncAsync(accessToken);
+
                     // The bind may have switched accounts underneath the field captured in OnEnable.
                     _account = PlayerAccount.Local;
                 }

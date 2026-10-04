@@ -11,6 +11,13 @@ namespace Emberfall.Net.Server.Ranking
 
         Task<int> GetRatingAsync(AccountId account, CancellationToken ct = default);
 
+        /// <summary>
+        /// The player's own standing, or null when they have never finished a rated match.
+        /// <see cref="GetRatingAsync"/> answers <see cref="DefaultRating"/> for that player, which
+        /// is right for pairing them and wrong for showing them: it reads as a rating they earned.
+        /// </summary>
+        Task<PlayerStanding?> GetStandingAsync(AccountId account, CancellationToken ct = default);
+
         Task<IReadOnlyList<LeaderboardEntry>> GetLeaderboardAsync(
             int limit,
             CancellationToken ct = default);

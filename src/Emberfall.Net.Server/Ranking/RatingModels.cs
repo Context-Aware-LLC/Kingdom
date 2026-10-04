@@ -15,6 +15,10 @@ namespace Emberfall.Net.Server.Ranking
         long Losses,
         long Draws);
 
+    /// <summary>One player's own place on the ladder. Only exists once they have a rated match
+    /// behind them — a player who has never played one has no standing, not a default one.</summary>
+    public sealed record PlayerStanding(int Rating, long GamesPlayed);
+
     public sealed record RankedMatchResult(
         MatchId Match,
         DateTimeOffset EndedAtUtc,
