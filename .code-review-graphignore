@@ -1,0 +1,9 @@
+# Unity build by-products: generated il2cpp C++ and Burst debug info, written beside the .aab
+# under whatever name the build was given. Also gitignored; listed here because the graph walks
+# the disk when `git ls-files` is unavailable.
+#
+# Written as `name/*`, not `name/` or `name/**`: those two forms match a LITERAL directory name
+# only, so a wildcard in them silently matches nothing. This form goes through fnmatch, whose
+# `*` crosses slashes.
+*_BackUpThisFolder_ButDontShipItWithYourGame/*
+*_BurstDebugInformation_DoNotShip/*

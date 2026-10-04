@@ -209,8 +209,10 @@ unity/Assets/Resources/build-stamp.txt.meta
 /kobi-upload-certificate.pem
 
 
-# build backups
-newest_BackUpThisFolder_ButDontShipItWithYourGame
+# Unity build by-products, written beside the .aab under whatever name the build was given.
+# The il2cpp one is ~750 generated C++ files; tracked, it buried the code graph (916k nodes).
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+*_BurstDebugInformation_DoNotShip/
 
 # A second clone of this repo that was made inside the working copy. Committed once as a
 # submodule link with no .gitmodules, which breaks every tool that walks submodules.
