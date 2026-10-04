@@ -95,6 +95,7 @@ namespace Emberfall.Presentation
                 "menu",
                 TidbitTrigger.MainMenuArrival,
                 "The Kingdom, is yours to explore.\n",
+                "\n" +
                 "Go questing, stare at your collection, or engage in glorious battle\n" +
                 "\n" +
                 "These are the quintissential joys of life in the Kingdom.",
@@ -103,7 +104,8 @@ namespace Emberfall.Presentation
                 "decks",
                 TidbitTrigger.RosterArrival,
                 "Your Decks",
-                "Tap the "+" to create a deck. Tap a deck once to see options, twice to edit it.\n" +
+                "Tap the \'+\' to create a deck. Tap a deck once to see options, twice to edit it.\n" +
+                "\n" +
                 "The Council has determinned that you shall have not more than nine.\n" +
                 "\n" +
                 "Nine is the limit. Not 8 and not 10. Because the council said so, that is why.",
@@ -113,6 +115,7 @@ namespace Emberfall.Presentation
                 TidbitTrigger.MatchPickArrival,
                 "Choose A Deck",
                 "Tap a deck to select it, then press Continue.\n" +
+                "\n" +
                 "Yes. It is complicated. You will get used to it.\n" +
                 "\n" +
                 "If you are lucky your opponent will not figure this part out and you will be the champion.",
@@ -121,7 +124,6 @@ namespace Emberfall.Presentation
                 "characters",
                 TidbitTrigger.CharacterCreateArrival,
                 "Two Classes, One Character",
-                "....Why?\n" +
                 "These days, everyone needs a side hustle.\n" +
                 "\n" +
                 "Your first choice determines your hero power.\n" +
@@ -134,6 +136,7 @@ namespace Emberfall.Presentation
                 TidbitTrigger.CollectionArrival,
                 "The Collection",
                 "Every card you own is here. The cards you wish you owned are here also.\n" +
+                "\n" +
                 "Tap one to Render a copy, or to Reduce a spare into shards.\n" +
                 "\n" +
                 "Cards come in 4 different rarity levels: \n" +
@@ -156,6 +159,7 @@ namespace Emberfall.Presentation
                 TidbitTrigger.PackVaultArrival,
                 "The Card Vault",
                 "Drag packs to the center to open.\n" +
+                "\n" +
                 "Pick one up and hold it over the rail to open multiple\n" +
                 "\n" +
                 "Everything inside is yours. The paperwork has already been filed in triplicate.",
