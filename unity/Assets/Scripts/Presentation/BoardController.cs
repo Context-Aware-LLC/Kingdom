@@ -1156,6 +1156,11 @@ namespace Emberfall.Presentation
             var healthSocket = MakeSocket("HealthSocket", -0.009f);
             var gemSocket    = MakeSocket("GemSocket",    -0.011f);
             gemSocket.sortingOrder = FrameRarityCatalog.GemSocketOrder;
+            // The cost socket needs the explicit order as much as the other two: left at the
+            // frame's own order it loses the tie, and the frame's top-left corner paints over
+            // every part of the disc that is not above the art aperture. Invisible while the
+            // disc was black on black; half a blue disc once it had a colour (2026-10-03).
+            costSocket.sortingOrder   = FrameRarityCatalog.StatSocketOrder;
             attackSocket.sortingOrder = FrameRarityCatalog.StatSocketOrder;
             healthSocket.sortingOrder = FrameRarityCatalog.StatSocketOrder;
             costSocket.gameObject.SetActive(false);
