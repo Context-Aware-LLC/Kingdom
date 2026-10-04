@@ -135,6 +135,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2d807a80c064a2a97459c4c5c2595d5
+    m_Address: ui/socket_attack_fist
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ec13429942d46a49fa74aa5d5541c50
+    m_Address: ui/socket_health_heart
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6d133b261b356734ba03632d586991df
     m_Address: ui/splash_orb_icon
     m_ReadOnly: 0

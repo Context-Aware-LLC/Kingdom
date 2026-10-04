@@ -557,7 +557,10 @@ namespace Emberfall.Presentation
             // The right-hand socket holds health on a minion and durability on a weapon, and only
             // health is red — durability keeps the neutral disc.
             Sprite cost   = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.CostSocketSprite) : null;
-            Sprite attack = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.AttackSocketSprite) : null;
+            Sprite attack = _hasPaintedFrame
+                ? _ui?.Get(_def.Type == CardType.MINION ? FrameRarityCatalog.MinionAttackSocketSprite
+                                                       : FrameRarityCatalog.AttackSocketSprite)
+                : null;
             Sprite right  = _hasPaintedFrame
                 ? _ui?.Get(FrameRarityCatalog.ShowHealth(_def.Type) ? FrameRarityCatalog.HealthSocketSprite
                                                                     : FrameRarityCatalog.StatSocketSprite)
