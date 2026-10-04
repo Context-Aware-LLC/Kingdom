@@ -214,6 +214,11 @@ unity/Assets/Resources/build-stamp.txt.meta
 *_BackUpThisFolder_ButDontShipItWithYourGame/
 *_BurstDebugInformation_DoNotShip/
 
+# Written into Resources by Unity's performance-testing package during a build or test run,
+# and removed again afterwards.
+/unity/Assets/Resources/PerformanceTestRun*.json
+/unity/Assets/Resources/PerformanceTestRun*.json.meta
+
 # A second clone of this repo that was made inside the working copy. Committed once as a
 # submodule link with no .gitmodules, which breaks every tool that walks submodules.
 /Kingdom/
