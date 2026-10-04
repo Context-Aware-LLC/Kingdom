@@ -49,7 +49,7 @@
           a step at all.)
         -->
         <ui:VisualElement name="match-bar" picking-mode="Ignore" class="match-bar">
-            <ui:Button name="match-continue" text="Continue" class="roster-button emb-primary" />
+            <ui:Button name="match-continue" text="Play" class="roster-button emb-primary" />
         </ui:VisualElement>
 
         <!--

@@ -258,7 +258,7 @@ namespace Emberfall.Presentation
                     {
                         ChallengePhase.PickingToSend   => $"Choose a deck to challenge {ChallengeFlow.NameOf(ChallengeFlow.Code)} with.",
                         ChallengePhase.PickingToAccept => $"Choose a deck to accept {ChallengeFlow.NameOf(ChallengeFlow.Code)}'s challenge.",
-                        _                              => "Choose one of your queue-ready decks, then Continue.",
+                        _                              => "Choose one of your queue-ready decks, then Play.",
                     };
                 if (_matchContinue != null && ChallengeFlow.IsPicking)
                     _matchContinue.text = ChallengeFlow.Phase == ChallengePhase.PickingToSend ? "Send Challenge" : "Accept";

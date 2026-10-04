@@ -114,7 +114,7 @@ namespace Emberfall.Presentation
                 "match-pick",
                 TidbitTrigger.MatchPickArrival,
                 "Choose A Deck",
-                "Tap a deck to select it, then press Continue.\n" +
+                "Tap a deck to select it, then press Play.\n" +
                 "\n" +
                 "Yes. It is complicated. You will get used to it.\n" +
                 "\n" +
