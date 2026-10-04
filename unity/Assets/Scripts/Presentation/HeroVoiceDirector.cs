@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Emberfall.Core.Contracts;
 using UnityEngine;
@@ -49,15 +48,6 @@ namespace Emberfall.Presentation
         /// </summary>
         private const long RopeWindowMs = 10_000;
 
-        /// <summary>
-        /// How long the win/lose line waits for <see cref="CardSoundDirector.OnMatchEnded"/>'s
-        /// stinger, which fires on the same event (Sam, 2026-10-03: the two played on top of each
-        /// other). The stingers are 6.48s files whose music is over well before the file is — the
-        /// last window above -30 dB of peak falls between 4.15s and 5.0s across the five — so this
-        /// is the end of the music, not the length of the clip. Re-measure if a stinger is replaced.
-        /// </summary>
-        public const float StingerLeadSeconds = 4.5f;
-
         private const string MomentMatchStart = "match_start";
         private const string MomentTurnStart = "turn_start";
         private const string MomentRope = "rope";
@@ -74,6 +64,7 @@ namespace Emberfall.Presentation
         private long? _ropeDeadlineMs;   // null unless a LOCAL turn's deadline is still pending
         private bool _matchStartFired;
         private bool _ended;
+        private string _matchEndSoundId; // null unless a win/lose line is picked and not yet played
 
         /// <param name="heroClass">The local hero's class — <c>NEUTRAL</c> disables the director,
         /// since NEUTRAL is not pairable and no hero can be one.</param>
@@ -160,16 +151,21 @@ namespace Emberfall.Presentation
             // Draw is deliberately silent — no line is authored for it (voice-lines.json _moments).
             if (outcome == MatchOutcome.Draw || outcome == MatchOutcome.InProgress) return;
             bool won = outcome == (_localSeat == 0 ? MatchOutcome.Player0Win : MatchOutcome.Player1Win);
-            StartCoroutine(PlayAfterStinger(won ? MomentWin : MomentLose));
+            _matchEndSoundId = SoundId(won ? MomentWin : MomentLose);
+            _player.Preload(_matchEndSoundId);   // so the line lands on the beat, not a load after it
         }
 
-        private IEnumerator PlayAfterStinger(string moment)
+        /// <summary>
+        /// Plays the win/lose line <see cref="OnMatchEnded"/> picked. The timing is not this
+        /// class's to decide: <see cref="MatchEndSequence"/> calls it once the stinger's music is
+        /// over and the quest cards have had their beat (Sam, 2026-10-03 — the line and the
+        /// stinger played on top of each other when both fired on the match-end event).
+        /// </summary>
+        public void PlayMatchEndLine()
         {
-            string soundId = SoundId(moment);
-            _player.Preload(soundId);   // so the line lands on the beat, not a load after it
-            // Realtime: the line must not hang on a paused or slowed timeScale.
-            yield return new WaitForSecondsRealtime(StingerLeadSeconds);
-            _player.Play(soundId);
+            if (_player == null || _matchEndSoundId == null) return;
+            _player.Play(_matchEndSoundId);
+            _matchEndSoundId = null;
         }
 
         private void Update()

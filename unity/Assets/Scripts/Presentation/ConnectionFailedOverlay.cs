@@ -13,7 +13,7 @@ namespace Emberfall.Presentation
     /// Resources-loaded UXML/PanelSettings pattern <see cref="MatchSettingsController"/> uses.
     /// Retry reloads this scene (a fresh connect attempt, same shape as
     /// MatchSettingsController.ReloadThisScene); Back to menu loads MainMenu. An ordinary
-    /// match end goes to deck selection instead (MatchEndMenuReturn); a failed boot does not,
+    /// match end goes to deck selection instead (MatchEndSequence); a failed boot does not,
     /// because the picker would walk the player straight back into the same failure.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]

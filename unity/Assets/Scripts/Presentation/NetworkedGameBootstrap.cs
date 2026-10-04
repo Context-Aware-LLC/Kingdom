@@ -68,6 +68,7 @@ namespace Emberfall.Presentation
         [SerializeField] private VfxDirector vfxDirector;
 
         private NetworkedMatchSession _net;
+        private readonly MatchQuestWatch _questWatch = new MatchQuestWatch();
         private MainThreadMatchSession _view;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         private DesyncFaultInjector _faultInjector; // [DesyncDbg] dev tool — editor/dev builds only
@@ -438,6 +439,10 @@ namespace Emberfall.Presentation
             matchRunner.OnStateUpdated += heroVoice.OnStateUpdated;
             matchRunner.OnMatchEvent += heroVoice.OnMatchEvent;
 
+            // The quest baseline, read before anything in this match can move it; the result
+            // screen reads again at the end and shows the difference.
+            _questWatch.Begin();
+
             // ── Input router: TRUTH cadence, main-thread-marshaled via the decorator. ────────────
             if (inputRouter != null)
             {
@@ -577,8 +582,12 @@ namespace Emberfall.Presentation
             matchRunner.OnMatchEnded += outcome =>
             {
                 Debug.Log($"[NetworkedMatch] OVER — {outcome}");
-                MatchEndBanner.Show(outcome, localSeat: _net.Seat); // seat-aware — the server deals the seat
-                heroVoice.OnMatchEnded(outcome);                    // Draw is silent, by authoring
+                heroVoice.OnMatchEnded(outcome);                    // picks the line; Draw is silent, by authoring
+                // The banner's sequence owns the timing from here: stinger, quest cards, the
+                // voice line, then the linger. The quest read starts now so it runs under the music.
+                MatchEndBanner.Show(outcome, localSeat: _net.Seat,  // seat-aware — the server deals the seat
+                    quests: _questWatch.AdvancedAsync(),
+                    playVoiceLine: heroVoice.PlayMatchEndLine);
                 MusicDirector.FadeOutUntilSceneChange();            // the battle loop would clash with the stinger
                 cardSounds.OnMatchEnded(outcome, _net.Seat);
             };
@@ -688,7 +697,11 @@ namespace Emberfall.Presentation
             uiGo.AddComponent<ConnectionFailedOverlay>().Init(reason);
         }
 
-        private void OnDestroy() => _net?.Dispose();
+        private void OnDestroy()
+        {
+            _questWatch.Cancel();
+            _net?.Dispose();
+        }
 
         private static ICardDatabase LoadCardDatabase()
         {

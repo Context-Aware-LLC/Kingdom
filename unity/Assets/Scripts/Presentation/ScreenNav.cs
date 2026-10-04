@@ -28,7 +28,7 @@ namespace Emberfall.Presentation
     public static class ScreenNav
     {
         // The scene names, spelled once. Every one of these was a bare string literal at ~30 call
-        // sites, and two files (ConnectionFailedOverlay, MatchEndMenuReturn) had already
+        // sites, and two files (ConnectionFailedOverlay, and MatchEndSequence under its old name) had already
         // independently declared their own `private const string MainMenuSceneName` -- two separate
         // reaches for the same missing constant, which is what says it was missing.
         public const string MainMenu = "MainMenu";
