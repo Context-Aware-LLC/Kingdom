@@ -55,6 +55,7 @@ namespace Emberfall.Editor
             FullStackTwoStepHeraldKeyboard();
             OsCanceledDuringDrag();
             OsCanceledDuringAwaitingEffectDrag();
+            FullStackTurnNotYetShown();
             ProjectionRoundTrips();
             DragTargetingModelCore();
 
@@ -332,6 +333,38 @@ namespace Emberfall.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
             Check("release on the board after drag submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
+
+            harness.Cleanup();
+        }
+
+        // Truth is in our turn 3 while the playback queue is still showing turn 2: the hero power
+        // must not be spendable until the turn it belongs to is on screen.
+        private static void FullStackTurnNotYetShown()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+            var tap = new[]
+            {
+                new PointerSample(PointerPhase.Pressed,  new Vector2(300, 100)),
+                new PointerSample(PointerPhase.Released, new Vector2(300, 100)),
+            };
+
+            GameState shown = NewState();
+            shown.TurnNumber = s.TurnNumber - 1;
+            harness.Router.OnPresentedStateUpdated(shown);
+            harness.StepFrames(tap);
+            Check("hero power tap before the turn is shown submits nothing",
+                harness.SubmittedIntents.Count == 0);
+
+            harness.Router.OnEndTurnClicked();
+            harness.StepFrames();
+            Check("end turn before the turn is shown submits nothing",
+                harness.SubmittedIntents.Count == 0);
+
+            harness.Router.OnPresentedStateUpdated(s);
+            harness.StepFrames(tap);
+            Check("hero power tap once the turn is shown submits HeroPowerIntent",
+                harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is HeroPowerIntent);
 
             harness.Cleanup();
         }

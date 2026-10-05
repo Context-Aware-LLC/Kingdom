@@ -453,6 +453,9 @@ namespace Emberfall.Presentation
                     $"mana={s.Players[0].Mana.Available}/{s.Players[1].Mana.Available}");
                 _view.OnSnapshot += inputRouter.OnStateUpdated;
                 inputRouter.OnStateUpdated(_view.Current);
+                // ...and the playback cadence beside it, so a turn cannot be acted on before it
+                // has been shown.
+                matchRunner.OnStateUpdated += inputRouter.OnPresentedStateUpdated;
                 if (proceduralBoardSetup != null)
                     proceduralBoardSetup.SetupClickables(localId, remoteId, inputRouter);
             }

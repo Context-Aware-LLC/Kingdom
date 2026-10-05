@@ -78,6 +78,7 @@ namespace Emberfall.Presentation
         private void OnDestroy() => _pointer?.Dispose();
 
         private GameState          _currentState;
+        private GameState          _presentedState;
         private HotSeatInput       _p0Input;
         private PlayerId           _p0Id;
         private ICommandValidator  _validator;
@@ -194,6 +195,21 @@ namespace Emberfall.Presentation
             RefreshTargeting();
         }
 
+        // Subscribed to MatchRunner.OnStateUpdated — the PLAYBACK cadence, i.e. what is on screen.
+        // Truth alone is not enough to act on: the opponent's whole turn resolves in a few frames
+        // and then plays back over seconds, and for all of that time truth already says it is our
+        // turn. A tap on the hero power then spent it against a board the player had not been
+        // shown, with the socket still drawn dark, and the turn opened with the power gone (Sam,
+        // 2026-10-04). Space or Enter in the same window ended a turn nobody had seen start.
+        // Never fed in the modes that draw truth directly (decision review, the gesture verifier),
+        // which leaves this null and the gate open.
+        public void OnPresentedStateUpdated(GameState state) => _presentedState = state;
+
+        /// <summary>Truth has moved into a turn the playback queue has not reached yet. Lag INSIDE
+        /// a turn does not count: chaining plays ahead of your own animations stays legal.</summary>
+        private bool TurnNotYetShown => _presentedState != null && _currentState != null
+            && _presentedState.TurnNumber != _currentState.TurnNumber;
+
         // ── The machine ─────────────────────────────────────────────────────────────
 
         private void Update()
@@ -235,6 +251,10 @@ namespace Emberfall.Presentation
                     ToggleMulliganCard(subject.Id, presenter);
                 return;
             }
+
+            // Nothing arms against a board from an earlier turn; Submit holds the same line for
+            // the paths that never press anything.
+            if (TurnNotYetShown) return;
 
             // A placed card can still owe one or more effect targets. Pressing a glowing target
             // starts click confirmation; re-grabbing the source preserves the original drag
@@ -902,6 +922,10 @@ namespace Emberfall.Presentation
             // A pending interactive choice is the sole legal gameplay continuation. Keep all
             // board/button/keyboard paths quiet rather than manufacturing predictable rejections.
             if (ChoiceBlocksInput && intent is not UnearthChoiceIntent) return false;
+
+            // Quiet for the same reason: the player is early, not wrong. Concede is legal whatever
+            // is on screen.
+            if (TurnNotYetShown && intent is not ConcedeIntent) return false;
 
             if (_validator != null && _currentState != null
                 && !_validator.CanExecute(_currentState, intent, out RejectReason? reason))
