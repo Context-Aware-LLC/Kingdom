@@ -5,17 +5,23 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Tempest's Chain Spark, drawn: one bolt leaves the hero power socket, splits a quarter of
-    /// the way out, and a branch lands on every target at the same moment (Sam, 2026-10-04).
+    /// Tempest's Chain Spark, drawn: a thin arc jumps from the hero power socket to the first
+    /// target, then bounces from there to the next (Sam, 2026-10-04). These are one-damage pings,
+    /// so each hop is a small arc that is gone almost as it lands — an earlier version forked one
+    /// continuous bolt across the board, and it read as a board wipe.
+    ///
+    /// <para><b>The type and <c>HeroPowerDelivery.ForkedLightning</c> kept the old name.</b>
+    /// Nothing forks any more.</para>
     ///
     /// <para><b>One sprite, stretched between two points.</b> <c>effect_chain_spark_arc.png</c> is
-    /// a whole arc with a flare at each end, so a segment is that sprite rotated and scaled until
-    /// its flares sit on the segment's ends. The big flare goes where the energy is: on the socket
-    /// for the stem, on the target for a branch.</para>
+    /// a whole arc with a flare at each end, so a hop is that sprite rotated and scaled until its
+    /// flares sit on the hop's ends, big flare on whatever was struck. Only its LENGTH follows the
+    /// distance: its thickness stops at <see cref="MaxThickness"/>, or a hop the length of the
+    /// board would be as tall as a card.</para>
     ///
     /// <para><b>It is timed backwards from the strike.</b> The caller says how long until the
-    /// board redraws; the branches finish growing on that frame, so the health numbers change as
-    /// the bolt lands and not before.</para>
+    /// board redraws; the last hop lands on that frame, so the health numbers change as the spark
+    /// arrives and not before.</para>
     /// </summary>
     internal static class ForkedLightning
     {
@@ -26,12 +32,12 @@ namespace Emberfall.Presentation
         private static readonly Vector2 BigFlare   = new Vector2(0.1873f, 0.2573f);
         private static readonly Vector2 SmallFlare = new Vector2(0.8697f, 0.3859f);
 
-        /// <summary>How far from the socket toward its targets the bolt splits.</summary>
-        private const float ForkAt = 0.25f;
-        /// <summary>The stem's share of the lead time; the branches take the rest.</summary>
-        private const float StemShare = 0.4f;
-        private const float LingerSeconds = 0.10f;
-        private const float FadeSeconds = 0.22f;
+        /// <summary>The most the sprite is scaled ACROSS its length. At 1 the arc stands about
+        /// five world units tall; a card is two.</summary>
+        private const float MaxThickness = 0.2f;
+        /// <summary>How long a hop stays lit after it lands, and how long it takes to go.</summary>
+        private const float LingerSeconds = 0.06f;
+        private const float FadeSeconds = 0.16f;
 
         /// <summary>Card materials are opaque, so depth is what draws the bolt over them — it
         /// rides this fraction of the way from the board to the camera. Lifting along the camera
@@ -45,13 +51,12 @@ namespace Emberfall.Presentation
             public Transform Transform;
             public SpriteRenderer Renderer;
             public Vector3 From, To;      // world; the arc grows From → To
-            public bool BigFlareAtFrom;
             public bool Mirrored;
             public float GrowStart, GrowEnd;
         }
 
         /// <param name="strikeInSeconds">Seconds from now until the board redraws.</param>
-        /// <param name="leadSeconds">How long the bolt takes from first spark to strike.</param>
+        /// <param name="leadSeconds">How long the spark takes from the socket to its last target.</param>
         public static IEnumerator Play(Transform parent, Sprite sprite, Camera camera, Vector3 socket,
                                        IReadOnlyList<Vector3> targets, float strikeInSeconds,
                                        float leadSeconds)
@@ -63,37 +68,23 @@ namespace Emberfall.Presentation
             Vector3 eye = camera.transform.position;
             Vector3 Lift(Vector3 p) => Vector3.Lerp(p, eye, DepthFraction);
 
+            // One hop per target, each starting where the last one landed. Alternate the bow, or
+            // two hops off one sprite read as a copy of each other.
             var arcs = new List<Arc>();
-            if (targets.Count == 1)
+            float hop = leadSeconds / targets.Count;
+            Vector3 from = socket;
+            for (int i = 0; i < targets.Count; i++)
             {
-                // Nothing to fork to: one bolt, socket to target, over the whole lead.
-                arcs.Add(Make(parent, sprite, Lift(socket), Lift(targets[0]),
-                              bigFlareAtFrom: false, mirrored: false, 0f, leadSeconds));
-            }
-            else
-            {
-                Vector3 centre = Vector3.zero;
-                foreach (Vector3 t in targets) centre += t;
-                centre /= targets.Count;
-                Vector3 fork = Vector3.Lerp(socket, centre, ForkAt);
-
-                float stem = leadSeconds * StemShare;
-                arcs.Add(Make(parent, sprite, Lift(socket), Lift(fork),
-                              bigFlareAtFrom: true, mirrored: false, 0f, stem));
-                // Alternate the bow, or two branches off one sprite read as a copy of each other.
-                for (int i = 0; i < targets.Count; i++)
-                    arcs.Add(Make(parent, sprite, Lift(fork), Lift(targets[i]),
-                                  bigFlareAtFrom: false, mirrored: i % 2 == 1, stem, leadSeconds));
+                arcs.Add(Make(parent, sprite, Lift(from), Lift(targets[i]),
+                              mirrored: i % 2 == 1, i * hop, (i + 1) * hop));
+                from = targets[i];
             }
 
             float total = leadSeconds + LingerSeconds + FadeSeconds;
             for (float t = 0f; t < total; t += Time.deltaTime)
             {
                 if (parent == null) break;
-                float fade = t <= leadSeconds + LingerSeconds
-                    ? 1f
-                    : 1f - Mathf.Clamp01((t - leadSeconds - LingerSeconds) / FadeSeconds);
-                foreach (Arc arc in arcs) Pose(arc, sprite, t, fade);
+                foreach (Arc arc in arcs) Pose(arc, sprite, t);
                 yield return null;
             }
 
@@ -102,9 +93,9 @@ namespace Emberfall.Presentation
         }
 
         private static Arc Make(Transform parent, Sprite sprite, Vector3 from, Vector3 to,
-                                bool bigFlareAtFrom, bool mirrored, float growStart, float growEnd)
+                                bool mirrored, float growStart, float growEnd)
         {
-            var go = new GameObject("ForkedLightningArc");
+            var go = new GameObject("ChainSparkArc");
             go.transform.SetParent(parent, worldPositionStays: true);
             var sr = go.AddComponent<SpriteRenderer>();
             SpriteMaterials.Set(sr, sprite);
@@ -113,24 +104,24 @@ namespace Emberfall.Presentation
             return new Arc
             {
                 Transform = go.transform, Renderer = sr, From = from, To = to,
-                BigFlareAtFrom = bigFlareAtFrom, Mirrored = mirrored,
-                GrowStart = growStart, GrowEnd = growEnd,
+                Mirrored = mirrored, GrowStart = growStart, GrowEnd = growEnd,
             };
         }
 
-        private static void Pose(Arc arc, Sprite sprite, float t, float fade)
+        private static void Pose(Arc arc, Sprite sprite, float t)
         {
             if (arc.Transform == null) return;
-            if (t < arc.GrowStart) { arc.Renderer.enabled = false; return; }
+
+            // Each hop fades on its own clock, so the first is already going while the second is
+            // in the air: a spark that travels, not a web that builds up.
+            float fade = 1f - Mathf.Clamp01((t - arc.GrowEnd - LingerSeconds) / FadeSeconds);
+            if (t < arc.GrowStart || fade <= 0f) { arc.Renderer.enabled = false; return; }
 
             float span = Mathf.Max(arc.GrowEnd - arc.GrowStart, 0.0001f);
             float grown = Mathf.Clamp01((t - arc.GrowStart) / span);
             // Never zero length: the placement divides by it.
             Vector3 tip = Vector3.Lerp(arc.From, arc.To, Mathf.Max(grown, 0.05f));
-
-            Vector3 big   = arc.BigFlareAtFrom ? arc.From : tip;
-            Vector3 small = arc.BigFlareAtFrom ? tip : arc.From;
-            Place(arc.Transform, sprite, big, small, arc.Mirrored);
+            Place(arc.Transform, sprite, big: tip, small: arc.From, arc.Mirrored);
 
             // Lightning does not hold still: the brightness jumps every frame it is alive.
             Color c = Color.white;
@@ -154,15 +145,21 @@ namespace Emberfall.Presentation
             Vector2 e = Local(SmallFlare) - a;
             Vector2 d = small - big;
             float length = d.magnitude;
-            if (length < 0.0001f || e.sqrMagnitude < 0.0001f) return;
+            if (length < 0.0001f || Mathf.Abs(e.x) < 0.0001f) return;
 
-            float scale = length / e.magnitude;
-            float angle = Mathf.Atan2(d.y, d.x) - Mathf.Atan2(e.y, e.x);
+            // Uniform until the thickness cap, then only the length keeps stretching. The flares
+            // are not level in the art, so the along-scale is solved for rather than read off:
+            // the scaled flare-to-flare vector has to come out exactly `length` long.
+            float across = Mathf.Min(length / e.magnitude, MaxThickness);
+            float rise = e.y * across;
+            float along = Mathf.Sqrt(Mathf.Max(length * length - rise * rise, 0f)) / Mathf.Abs(e.x);
+
+            float angle = Mathf.Atan2(d.y, d.x) - Mathf.Atan2(rise, e.x * along);
             Quaternion rotation = Quaternion.Euler(0f, 0f, angle * Mathf.Rad2Deg);
 
             arc.rotation = rotation;
-            arc.localScale = new Vector3(scale, mirrored ? -scale : scale, 1f);
-            Vector3 offset = rotation * new Vector3(a.x * scale, a.y * scale, 0f);
+            arc.localScale = new Vector3(along, mirrored ? -across : across, 1f);
+            Vector3 offset = rotation * new Vector3(a.x * along, a.y * across, 0f);
             arc.position = new Vector3(big.x - offset.x, big.y - offset.y, big.z);
         }
     }
