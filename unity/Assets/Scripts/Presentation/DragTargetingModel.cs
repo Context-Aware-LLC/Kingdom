@@ -301,6 +301,24 @@ namespace Emberfall.Presentation
             }
         }
 
+        /// <summary>
+        /// Whether this source stays where it is and is AIMED, rather than carried (Sam,
+        /// 2026-10-04). True for the two things that have nowhere of their own to go: a targeted
+        /// card that takes no board slot — a spell, mostly — and a targeted hero power. A targeted
+        /// minion is still carried to its slot and picks its target by tap afterwards, and an
+        /// attacker is still dragged bodily onto what it hits.
+        /// </summary>
+        public bool AimsFromRest(DragSource source)
+        {
+            if (!source.NeedsTarget) return false;
+            switch (source.Kind)
+            {
+                case DragSourceKind.HeroPower: return true;
+                case DragSourceKind.HandCard:  return !HandCardOccupiesBoardSlot(source.Id);
+                default:                       return false;
+            }
+        }
+
         // ── Release: what intent does this gesture produce? ────────────────────────
 
         /// <summary>

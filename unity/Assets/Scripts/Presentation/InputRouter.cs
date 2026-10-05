@@ -24,7 +24,9 @@ namespace Emberfall.Presentation
     //                       → Pressed             : re-grab the banked card (legacy drag option)
     //
     // A true button action may still be a tap (untargeted hero power, mulligan, HUD controls).
-    // Cards, attacks and targeted powers begin with drag-and-drop. Once a minion placement is
+    // Cards, attacks and targeted powers begin with a drag. Minions, attackers and untargeted
+    // cards are CARRIED to where they go; a targeted spell or hero power stays put and is AIMED,
+    // with an AimTrail running out toward the pointer (2026-10-04). Once a minion placement is
     // banked, its on-play target can be clicked or keyboard-focused with Tab and confirmed with
     // Enter/Space; re-grab-and-drag remains accepted as a compatible fallback.
     //
@@ -61,6 +63,13 @@ namespace Emberfall.Presentation
         private Quaternion    _sourceRestLocalRot;
         private bool          _sourceIsOwnHero;
 
+        // How far an aimed card rises out of the fan, in the hand's own space: up, and toward the
+        // camera far enough to clear its neighbours (the fan staggers to -0.27).
+        private static readonly Vector3 AimLift = new Vector3(0f, 0.35f, -0.45f);
+
+        private bool     _aiming;     // this drag aims from rest; see DragTargetingModel.AimsFromRest
+        private AimTrail _aimTrail;
+
         private PointerSampler _pointer;
 
         private PointerSampler EnsurePointer() => _pointer ??= new PointerSampler();
@@ -75,7 +84,11 @@ namespace Emberfall.Presentation
             _pointer?.Disable();
         }
 
-        private void OnDestroy() => _pointer?.Dispose();
+        private void OnDestroy()
+        {
+            _pointer?.Dispose();
+            _aimTrail?.Dispose();
+        }
 
         private GameState          _currentState;
         private GameState          _presentedState;
@@ -301,7 +314,39 @@ namespace Emberfall.Presentation
                 ArmVisuals();
             }
 
-            if (_gesture == Gesture.Dragging) FollowPointer(screenPos);
+            if (_gesture != Gesture.Dragging) return;
+            if (_aiming) Aim(screenPos);
+            else         FollowPointer(screenPos);
+        }
+
+        /// <summary>
+        /// The aimed half of a drag (Sam, 2026-10-04): a targeted spell or hero power stays where
+        /// it is and an <see cref="AimTrail"/> runs out from it instead. Whatever a release here
+        /// would land on is focused NOW, through the same snap the release uses, so the target
+        /// that lights up is the one that gets hit.
+        /// </summary>
+        private void Aim(Vector2 screenPos)
+        {
+            PointerSubject raw = Probe(screenPos, out Transform hit, out _, skipGestureSource: true);
+            PointerSubject subject = SnapToTarget(screenPos, raw);
+            bool legal = IsActiveTarget(subject);
+            SetTargetFocus(legal ? subject.Id : (InstanceId?)null);
+
+            Camera cam = Camera.main;
+            if (cam == null || _sourceTransform == null) return;
+            if (!BoardPlaneProjection.TryScreenToPlane(cam, screenPos, planeZ: 0f, out Vector3 pointer))
+                return;
+
+            // A snapped target was never under the ray, so there is no transform to read its
+            // centre from; the pointer is within a thumb's width of it by construction.
+            Vector3? lockedOn = null;
+            if (legal)
+                lockedOn = hit != null && raw.Kind == subject.Kind && raw.Id.Equals(subject.Id)
+                    ? hit.position
+                    : pointer;
+
+            _aimTrail ??= new AimTrail();
+            _aimTrail.Track(cam, _sourceTransform.position, pointer, lockedOn);
         }
 
         /// <summary>Remembers where a source card rests so a cancelled drag can put it back
@@ -329,6 +374,10 @@ namespace Emberfall.Presentation
         ///
         /// <para>The hero power is still excluded. It is a socket, not a character, and an
         /// untargeted power is a tap.</para>
+        ///
+        /// <para>NOT EVERYTHING IS CARRIED ANY MORE. A targeted spell and a targeted hero power
+        /// are aimed from where they sit — see <see cref="Aim"/> — so this is now the path for
+        /// minions, attackers and untargeted cards only.</para>
         /// </summary>
         private void FollowPointer(Vector2 screenPos)
         {
@@ -350,6 +399,14 @@ namespace Emberfall.Presentation
         {
             if (IsMulliganActive()) return;   // the toggle already happened on press
             if (_gesture == Gesture.None) return;
+
+            // The trail belongs to the drag, not to whatever the release turns it into: a spell
+            // that still owes a second target goes on to collect it by tap.
+            if (_aiming && _gesture == Gesture.Dragging)
+            {
+                _aimTrail?.Hide();
+                SetTargetFocus(null);
+            }
 
             PointerSubject subject =
                 SnapToTarget(screenPos, Probe(screenPos, out _, out _, skipGestureSource: true));
@@ -455,6 +512,13 @@ namespace Emberfall.Presentation
         {
             _sourcePresenter?.SetSelectionHighlight(true);
             if (_sourceIsOwnHero) _p0HeroPlate?.SetSelected(true);
+
+            // An aimed card rises out of the fan and stays there: still readable, and an obvious
+            // place for the trail to start. The hero power socket does not move at all.
+            _aiming = _model.AimsFromRest(_source);
+            if (_aiming && _source.Kind == DragSourceKind.HandCard && _sourceTransform != null)
+                _sourceTransform.localPosition = _sourceRestLocalPos + AimLift;
+
             RefreshTargeting();
         }
 
@@ -469,6 +533,8 @@ namespace Emberfall.Presentation
             // for real; nothing ever relocates a hero, so leaving the plate at the release point
             // strands the portrait in the middle of the board until the scene is rebuilt.
             if (restoreVisual || _sourceIsOwnHero) RestoreSourceVisual();
+            _aimTrail?.Hide();
+            _aiming          = false;
             _sourcePresenter = null;
             _sourceTransform = null;
             _sourceIsOwnHero = false;
