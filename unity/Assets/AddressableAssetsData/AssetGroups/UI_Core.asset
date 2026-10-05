@@ -340,6 +340,20 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ae7f23eca8547098df8435f1ddb607a
+    m_Address: ui/effect_hero_cast_gravekeep
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+  - m_GUID: 1283afcf4b454be2864c28911ea9b9c6
+    m_Address: ui/effect_hero_cast_nightveil
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d998701999a244e58a9abf817306d392
+    m_Address: ui/effect_hero_power_searing_bolt
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6ef678e291f040d38a47433bbc87a1e9
     m_Address: ui/effect_hero_cast_tempest
     m_ReadOnly: 0

@@ -11,6 +11,12 @@ namespace Emberfall.Session
         /// <summary>One bolt off the socket that forks part-way and strikes every target at the
         /// same moment (Tempest's Chain Spark).</summary>
         ForkedLightning,
+        /// <summary>A thin green bolt from Gravekeep's power to one weakened minion.</summary>
+        GravekeepSappingBolt,
+        /// <summary>A single fire bolt from Pyra's socket to the Searing Bolt target.</summary>
+        EmberwardSearingBolt,
+        /// <summary>Nightveil's shadow rises beside the enemy hero for Backstab.</summary>
+        NightveilBackstabShadow,
     }
 
     /// <summary>How long a hero power entry is held, per look. Owned by the presentation, which
@@ -21,11 +27,18 @@ namespace Emberfall.Session
         public readonly float CastOnly;
         /// <summary>A cast followed by forked lightning, start of the cast to the strike.</summary>
         public readonly float ForkedLightning;
+        public readonly float GravekeepSappingBolt;
+        public readonly float EmberwardSearingBolt;
+        public readonly float NightveilBackstabShadow;
 
-        public HeroPowerHolds(float castOnly, float forkedLightning)
+        public HeroPowerHolds(float castOnly, float forkedLightning, float gravekeepSappingBolt = 0f,
+                              float emberwardSearingBolt = 0f, float nightveilBackstabShadow = 0f)
         {
             CastOnly = castOnly;
             ForkedLightning = forkedLightning;
+            GravekeepSappingBolt = gravekeepSappingBolt;
+            EmberwardSearingBolt = emberwardSearingBolt;
+            NightveilBackstabShadow = nightveilBackstabShadow;
         }
     }
 
@@ -78,23 +91,30 @@ namespace Emberfall.Session
                 if (!TryClassOf(snapshot, hero, out CardClass heroClass)) return null;
                 if (!TryLookFor(heroClass, out HeroPowerDelivery delivery)) return null;
 
-                // The power's own damage carries the hero as its source (ApplyHeroPower raises the
-                // effect with the hero's id). Anything a hit goes on to cause — a deathrattle, a
-                // retaliation — has another source and is not part of the delivery.
+                // The power's own result carries the hero as its source. Gravekeep weakens through
+                // StatsModified rather than damage; follow-up effects have their own source and
+                // are not part of this delivery.
                 var targets = new List<InstanceId>();
                 for (int j = i + 1; j < events.Count; j++)
                 {
                     GameEvent e = events[j];
-                    if (e.Kind != GameEventKind.DamageApplied || !e.Target.HasValue) continue;
+                    bool delivered = e.Kind == GameEventKind.DamageApplied
+                                  || (heroClass == CardClass.GRAVEKEEP && e.Kind == GameEventKind.StatsModified);
+                    if (!delivered || !e.Target.HasValue) continue;
                     if (!e.Source.HasValue || e.Source.Value != hero) continue;
                     if (!targets.Contains(e.Target.Value)) targets.Add(e.Target.Value);
                 }
 
                 // Lightning with nothing to strike is just the cast.
                 if (targets.Count == 0) delivery = HeroPowerDelivery.None;
-                float hold = delivery == HeroPowerDelivery.ForkedLightning
-                    ? holds.ForkedLightning
-                    : holds.CastOnly;
+                float hold = delivery switch
+                {
+                    HeroPowerDelivery.ForkedLightning => holds.ForkedLightning,
+                    HeroPowerDelivery.GravekeepSappingBolt => holds.GravekeepSappingBolt,
+                    HeroPowerDelivery.EmberwardSearingBolt => holds.EmberwardSearingBolt,
+                    HeroPowerDelivery.NightveilBackstabShadow => holds.NightveilBackstabShadow,
+                    _ => holds.CastOnly,
+                };
                 if (hold <= 0f) return null;
                 return new HeroPowerBeat(delivery, hero, targets, hold);
             }
@@ -108,8 +128,10 @@ namespace Emberfall.Session
         {
             switch (heroClass)
             {
-                case CardClass.EMBERWARD: delivery = HeroPowerDelivery.None; return true;
+                case CardClass.EMBERWARD: delivery = HeroPowerDelivery.EmberwardSearingBolt; return true;
                 case CardClass.TEMPEST:   delivery = HeroPowerDelivery.ForkedLightning; return true;
+                case CardClass.GRAVEKEEP: delivery = HeroPowerDelivery.GravekeepSappingBolt; return true;
+                case CardClass.NIGHTVEIL: delivery = HeroPowerDelivery.NightveilBackstabShadow; return true;
                 default:                  delivery = HeroPowerDelivery.None; return false;
             }
         }

@@ -85,7 +85,10 @@ namespace Emberfall.Presentation
         /// <see cref="RevealHolds"/>.</summary>
         public HeroPowerHolds HeroPowerHolds =>
             new HeroPowerHolds(heroCastSeconds,
-                               heroCastSeconds * BoltLeavesAtCast + heroPowerLeadSeconds);
+                               heroCastSeconds * BoltLeavesAtCast + heroPowerLeadSeconds,
+                               heroCastSeconds * BoltLeavesAtCast + heroPowerLeadSeconds,
+                               heroCastSeconds * BoltLeavesAtCast + heroPowerLeadSeconds,
+                               heroCastSeconds + heroPowerLeadSeconds + 0.28f);
 
         /// <summary>The tunables MatchRunner needs to know about — how long each card type's
         /// reveal holds up the rest of the command. Read by NetworkedGameBootstrap when it builds the
@@ -136,6 +139,66 @@ namespace Emberfall.Presentation
             HeroPlateView plate = caster != null ? caster.GetComponent<HeroPlateView>() : null;
             if (plate != null)
                 plate.PlayCast(Mathf.Max(0f, strikeInSeconds - beat.HoldSeconds), heroCastSeconds);
+
+            if (beat.Delivery == HeroPowerDelivery.NightveilBackstabShadow)
+            {
+#if UNITY_EDITOR
+                _uiSprites ??= new EditorUiSpriteProvider();
+#else
+                _uiSprites ??= new AddressableUiSpriteProvider();
+#endif
+                Sprite shadow = _uiSprites.Get(NightveilBackstabShadow.SpriteKey);
+                Transform target = beat.Targets.Count > 0 && _board != null
+                    ? _board.ResolveCombatVisual(beat.Targets[0]) : null;
+                if (shadow != null && target != null)
+                    StartCoroutine(NightveilBackstabShadow.Play(transform, shadow, target,
+                        strikeInSeconds, heroPowerLeadSeconds));
+                return;
+            }
+
+            if (beat.Delivery == HeroPowerDelivery.GravekeepSappingBolt)
+            {
+                Vector3? gravekeepSocket = null;
+                foreach (PlayerState ps in _state.Players)
+                    if (ps.Hero != null && ps.Hero.Id == beat.Hero)
+                    {
+                        Transform anchor = boardAnchors.HeroPowerAnchor(ps.Id);
+                        if (anchor != null) gravekeepSocket = anchor.position;
+                    }
+                if (gravekeepSocket == null || beat.Targets.Count == 0) return;
+                Transform target = _board != null ? _board.ResolveCombatVisual(beat.Targets[0]) : null;
+                Vector3? at = target != null ? target.position : ResolvePosition(beat.Targets[0]);
+                if (at.HasValue)
+                    StartCoroutine(GravekeepSappingStrike.Play(transform, gravekeepSocket.Value, at.Value,
+                                                                strikeInSeconds, heroPowerLeadSeconds));
+                return;
+            }
+
+            if (beat.Delivery == HeroPowerDelivery.EmberwardSearingBolt)
+            {
+                Vector3? emberwardSocket = null;
+                foreach (PlayerState ps in _state.Players)
+                    if (ps.Hero != null && ps.Hero.Id == beat.Hero)
+                    {
+                        Transform anchor = boardAnchors.HeroPowerAnchor(ps.Id);
+                        if (anchor != null) emberwardSocket = anchor.position;
+                    }
+                if (emberwardSocket == null || beat.Targets.Count == 0) return;
+                Transform target = _board != null ? _board.ResolveCombatVisual(beat.Targets[0]) : null;
+                Vector3? at = target != null ? target.position : ResolvePosition(beat.Targets[0]);
+                if (!at.HasValue) return;
+#if UNITY_EDITOR
+                _uiSprites ??= new EditorUiSpriteProvider();
+#else
+                _uiSprites ??= new AddressableUiSpriteProvider();
+#endif
+                Sprite firebolt = _uiSprites.Get(EmberwardSearingBolt.SpriteKey);
+                Camera camera = Camera.main;
+                if (firebolt != null && camera != null)
+                    StartCoroutine(EmberwardSearingBolt.Play(transform, firebolt, camera,
+                        emberwardSocket.Value, at.Value, strikeInSeconds, heroPowerLeadSeconds));
+                return;
+            }
 
             if (beat.Delivery != HeroPowerDelivery.ForkedLightning) return;
 

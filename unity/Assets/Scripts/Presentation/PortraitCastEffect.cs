@@ -5,12 +5,12 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The cast a hero power shows on its caster's portrait: the class's effect art, revealed from
-    /// the bottom of the portrait to the top, then faded (Sam, 2026-10-04).
+    /// The cast a hero power shows on its caster's portrait: the class's effect art, revealed
+    /// through the portrait and then faded (Sam, 2026-10-04).
     ///
     /// <para><b>The reveal and the oval are one mask.</b> The art is a full 2:3 sheet and has to be
-    /// cut to the portrait's oval AND wiped upward. Both are the same shape — the part of the oval
-    /// below a rising line — so a single <see cref="SpriteMask"/> carries it, and its sprite's
+    /// cut to the portrait's oval AND wiped along an advancing horizontal line. Both are the same
+    /// shape — a portion of the oval — so a single <see cref="SpriteMask"/> carries it, and its sprite's
     /// geometry is rebuilt each frame of the rise. No shader, and so nothing for the build
     /// stripper to lose.</para>
     ///
@@ -29,6 +29,8 @@ namespace Emberfall.Presentation
         private readonly GameObject _root;
         private readonly SpriteRenderer _art;
         private readonly Sprite _maskSprite;
+        private readonly bool _topDown;
+        private readonly float _opacity;
         private readonly Vector2[] _verts = new Vector2[(Rows + 1) * 2];
         private readonly ushort[] _tris = new ushort[Rows * 6];
 
@@ -38,6 +40,8 @@ namespace Emberfall.Presentation
         {
             CardClass.EMBERWARD => "effect_hero_cast_emberward",
             CardClass.TEMPEST   => "effect_hero_cast_tempest",
+            CardClass.GRAVEKEEP => "effect_hero_cast_gravekeep",
+            CardClass.NIGHTVEIL => "effect_hero_cast_nightveil",
             _                   => null,
         };
 
@@ -52,12 +56,14 @@ namespace Emberfall.Presentation
             string key = SpriteKeyFor(heroClass);
             Sprite art = key != null ? sprites?.Get(key) : null;
             if (art == null) return null;
-            return new PortraitCastEffect(plate, art, centre, width, height, sortingOrder);
+            return new PortraitCastEffect(plate, heroClass, art, centre, width, height, sortingOrder);
         }
 
-        private PortraitCastEffect(Transform plate, Sprite art, Vector3 centre,
+        private PortraitCastEffect(Transform plate, CardClass heroClass, Sprite art, Vector3 centre,
                                    float width, float height, int sortingOrder)
         {
+            _topDown = heroClass == CardClass.NIGHTVEIL;
+            _opacity = _topDown ? 0.52f : 1f;
             _root = new GameObject("CastEffect");
             _root.transform.SetParent(plate, false);
             // A hair nearer the camera than the portrait, which is opaque and writes depth.
@@ -69,14 +75,14 @@ namespace Emberfall.Presentation
             SpriteMaterials.Set(_art, art);
             _art.sortingOrder = sortingOrder;
             _art.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-            // As wide as the portrait, and standing on its bottom edge: the art is taller than the
-            // oval, and what overflows is the top, where the flames have thinned out anyway.
+            // Most casts span the portrait and sit on its bottom edge. Nightveil's compact shadow
+            // is centered so the top-down wipe reads as the shadow being cast into the ground.
             Bounds native = art.bounds;
-            float scale = width / native.size.x;
+            float scale = width * (_topDown ? 0.68f : 1f) / native.size.x;
             artGo.transform.localScale = new Vector3(scale, scale, 1f);
             artGo.transform.localPosition = new Vector3(
                 -native.center.x * scale,
-                -height * 0.5f - native.min.y * scale,
+                _topDown ? -native.center.y * scale : -height * 0.5f - native.min.y * scale,
                 0f);
 
             var tex = new Texture2D(MaskPixels, MaskPixels, TextureFormat.RGBA32, false)
@@ -113,7 +119,7 @@ namespace Emberfall.Presentation
             _root.SetActive(false);
             if (delaySeconds > 0f) yield return new WaitForSeconds(delaySeconds);
 
-            _art.color = Color.white;
+            _art.color = new Color(1f, 1f, 1f, _opacity);
             Reveal(0f);
             _root.SetActive(true);
 
@@ -128,7 +134,7 @@ namespace Emberfall.Presentation
 
             for (float e = 0f; e < FadeSeconds; e += Time.deltaTime)
             {
-                _art.color = new Color(1f, 1f, 1f, 1f - e / FadeSeconds);
+                _art.color = new Color(1f, 1f, 1f, _opacity * (1f - e / FadeSeconds));
                 yield return null;
             }
 
@@ -141,15 +147,16 @@ namespace Emberfall.Presentation
             if (_root != null) _root.SetActive(false);
         }
 
-        /// <summary>Cut the mask to the part of the oval below <paramref name="fraction"/> of its
-        /// height: 0 is nothing, 1 is the whole portrait.</summary>
+        /// <summary>Cut the mask to the part of the oval reached by the reveal: bottom-up for
+        /// ordinary casts, top-down for Nightveil.</summary>
         private void Reveal(float fraction)
         {
             // Never zero: a sprite with no area has no geometry to override.
-            float top = Mathf.Clamp(fraction, 0.02f, 1f);
+            float extent = Mathf.Clamp(fraction, 0.02f, 1f);
+            float start = _topDown ? 1f - extent : 0f;
             for (int i = 0; i <= Rows; i++)
             {
-                float y = top * i / Rows;                     // 0 at the bottom of the oval, 1 at the top
+                float y = start + extent * i / Rows;          // 0 at the bottom, 1 at the top
                 float fromCentre = y * 2f - 1f;
                 float half = 0.5f * Mathf.Sqrt(Mathf.Max(0f, 1f - fromCentre * fromCentre));
                 _verts[i * 2]     = new Vector2((0.5f - half) * MaskPixels, y * MaskPixels);
