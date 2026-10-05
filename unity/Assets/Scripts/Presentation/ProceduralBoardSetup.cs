@@ -9,7 +9,7 @@ namespace Emberfall.Presentation
     // When the scene is authoring-complete (anchors placed in editor), remove this component.
     //
     // Layout (logical board bounds are y ±4.6; BoardCameraRig fits them in perspective):
-    //   Board rows:  y = ±RowY (7 slots, x = ±4.86 at BoardRowGeometry.SlotSpacing) — outside §1.1
+    //   Board rows:  y = ±RowY (7 slots, x = ±5.10 at BoardRowGeometry.SlotSpacing) — outside §1.1
     //   Hand rows:   fanned by HandFanLayout — fixed 6-unit footprint, count-dependent pitch
     //   Hero and resource cluster ROOTS: registered to measured BoardPlate artwork UVs, because
     //   the generated table's fixtures are not a point-reflected pair and its cover fit moves in

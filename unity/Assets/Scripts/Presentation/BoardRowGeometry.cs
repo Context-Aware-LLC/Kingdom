@@ -25,8 +25,12 @@ namespace Emberfall.Presentation
         /// between adjacent minions does not close as they grow. A seven-slot row still fits
         /// comfortably inside the 7.88 design half-width; the board row is the narrowest thing in
         /// the layout, not the widest.</para>
+        ///
+        /// <para>1.62 -> 1.70 on 2026-10-04 (Sam: "a bit more space in between minion slots"). The
+        /// card did not change, so all of it is air: the gap between neighbours goes 0.104 -> 0.184
+        /// and a full row's outer edge 5.62 -> 5.86.</para>
         /// </summary>
-        public const float SlotSpacing = 1.62f;
+        public const float SlotSpacing = 1.70f;
 
         /// <summary>Where position <paramref name="index"/> sits when the row is centred about
         /// <paramref name="half"/>. Used both when the anchors are first built and every time the
