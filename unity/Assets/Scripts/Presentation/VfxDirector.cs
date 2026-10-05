@@ -42,6 +42,11 @@ namespace Emberfall.Presentation
                  "read at. See TryHeldPose for why this is a screen fraction and not a card multiple.")]
         [SerializeField, Range(0.3f, 0.9f)] private float heldScreenHeight = 0.6f;
 
+        [Header("Hero power delivery")]
+        [Tooltip("Seconds from the first spark off the socket to the strike. The command is held " +
+                 "for exactly this long, so the board redraws as the bolt lands.")]
+        [SerializeField, Range(0.1f, 1f)] private float heroPowerLeadSeconds = 0.24f;
+
         /// <summary>How far in front of everything the reveal card rides while it is in flight, so
         /// it never clips into the hand fan it is leaving or the board row it is joining.</summary>
         private const float RevealZBias = -0.2f;
@@ -68,6 +73,12 @@ namespace Emberfall.Presentation
         private GameState _state;
         private IArtProvider _artProvider;
         private BoardController _board;
+        private IUiSpriteProvider _uiSprites;
+
+        /// <summary>How long a hero power entry is held for its delivery. Read by
+        /// NetworkedGameBootstrap when it builds the classifier delegate, like
+        /// <see cref="RevealHolds"/>.</summary>
+        public float HeroPowerHoldSeconds => heroPowerLeadSeconds;
 
         /// <summary>The tunables MatchRunner needs to know about — how long each card type's
         /// reveal holds up the rest of the command. Read by NetworkedGameBootstrap when it builds the
@@ -104,6 +115,48 @@ namespace Emberfall.Presentation
 
         // Called by MatchRunner.OnStateUpdated — keeps _state current for anchor resolution.
         public void OnStateUpdated(GameState state) => _state = state;
+
+        /// <summary>Called by MatchRunner.OnHeroPowerBeat when a hero power entry reaches the front
+        /// of the queue. Positions are resolved NOW, against the pre-effect board — a minion the
+        /// power kills is still standing here — and the delivery is timed to land
+        /// <paramref name="strikeInSeconds"/> from now, which is when the entry releases.</summary>
+        public void ShowHeroPowerBeat(HeroPowerBeat beat, float strikeInSeconds)
+        {
+            if (boardAnchors == null || _state == null || beat.Targets == null) return;
+            if (beat.Delivery != HeroPowerDelivery.ForkedLightning) return;
+
+            Vector3? socket = null;
+            foreach (PlayerState ps in _state.Players)
+                if (ps.Hero != null && ps.Hero.Id == beat.Hero)
+                {
+                    Transform anchor = boardAnchors.HeroPowerAnchor(ps.Id);
+                    if (anchor != null) socket = anchor.position;
+                }
+            if (socket == null) return;
+
+            var hits = new List<Vector3>(beat.Targets.Count);
+            foreach (InstanceId id in beat.Targets)
+            {
+                // The live card or plate when there is one: a board slot anchor is where a card
+                // would sit, which is not always where this one is drawn.
+                Transform visual = _board != null ? _board.ResolveCombatVisual(id) : null;
+                Vector3? at = visual != null ? visual.position : ResolvePosition(id);
+                if (at.HasValue) hits.Add(at.Value);
+            }
+            if (hits.Count == 0) return;
+
+#if UNITY_EDITOR
+            _uiSprites ??= new EditorUiSpriteProvider();
+#else
+            _uiSprites ??= new AddressableUiSpriteProvider();
+#endif
+            Sprite arc = _uiSprites.Get(ForkedLightning.ArcSpriteKey);
+            Camera cam = Camera.main;
+            if (arc == null || cam == null) return;
+
+            StartCoroutine(ForkedLightning.Play(transform, arc, cam, socket.Value, hits,
+                                                strikeInSeconds, heroPowerLeadSeconds));
+        }
 
         /// <summary>Called by MatchRunner.OnPlayReveal, the instant a card-play entry begins its
         /// extra hold — flies the played card up to be read over its target (or centre stage, if it

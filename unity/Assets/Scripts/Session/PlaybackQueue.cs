@@ -42,6 +42,10 @@ namespace Emberfall.Session
             /// several entries before this one reaches the front (see <see cref="TryBeginHead"/>).</summary>
             public PlayReveal? Reveal { get; internal set; }
 
+            /// <summary>The hero power delivery to play while this entry holds, if its command
+            /// was one. Stored and fired on the same terms as <see cref="Reveal"/>.</summary>
+            public HeroPowerBeat? PowerBeat { get; internal set; }
+
             /// <summary>Latched by <see cref="TryBeginHead"/> so the begin signal fires once.</summary>
             internal bool Begun;
 
@@ -78,6 +82,35 @@ namespace Emberfall.Session
             if (_newest == null) return;
             _newest.Reveal = reveal;
             _newest.ExtraHoldSeconds = reveal.HoldSeconds;
+        }
+
+        /// <summary>Attach a hero power delivery to the most recent entry, on the same terms as
+        /// <see cref="SetRevealForNewest"/>.</summary>
+        public void SetPowerBeatForNewest(HeroPowerBeat beat)
+        {
+            if (_newest == null) return;
+            _newest.PowerBeat = beat;
+            _newest.ExtraHoldSeconds = beat.HoldSeconds;
+        }
+
+        /// <summary>
+        /// How long from <paramref name="now"/> until the head entry releases, given the same
+        /// <paramref name="delaySeconds"/> <see cref="TryDequeue"/> will be asked with.
+        ///
+        /// <para>A beat that has to LAND on the release cannot assume that is its own hold away:
+        /// mid-burst the normal pacing window is the longer of the two, and a short beat started
+        /// when the entry reached the front would be over before the board redrew.</para>
+        /// </summary>
+        public double SecondsUntilHeadRelease(double now, float delaySeconds)
+        {
+            if (_queue.Count == 0) return 0d;
+            Entry head = _queue.Peek();
+            if (head.Instant || delaySeconds <= 0f) return 0d;
+
+            double pacing = _lastRelease + delaySeconds - now;
+            double hold = (head.Begun ? head.BegunAt : now) + head.ExtraHoldSeconds - now;
+            double wait = pacing > hold ? pacing : hold;
+            return wait > 0d ? wait : 0d;
         }
 
         /// <summary>

@@ -14,7 +14,6 @@ namespace Emberfall.Presentation
     {
         private static readonly Color PlateColor   = Color.white;
         private static readonly Color HpFull       = Color.white;
-        private static readonly Color HpDamaged    = new Color(0.90f, 0.20f, 0.20f);
         private static readonly Color FrostedTint   = new Color(0.40f, 0.60f, 0.95f);
         // Matches CardPresenter.SelectedColor so hero-as-attacker selection reads
         // identically to minion selection.
@@ -47,6 +46,7 @@ namespace Emberfall.Presentation
         private Renderer     _plate;
         private Renderer     _portrait;
         private TextMeshPro  _hpLabel;
+        private HealthNumber _hp;
         private MaterialPropertyBlock _mpb;
 
         /// <summary>Attach to a new GameObject and call Init once before first OnStateUpdated.
@@ -107,8 +107,10 @@ namespace Emberfall.Presentation
             PlayerState ps   = state.Players[state.SeatOf(_playerId)];
             HeroInstance hero = ps.Hero;
 
-            _hpLabel.text  = hero.CurrentHealth.ToString();
-            _hpLabel.color = hero.CurrentHealth < hero.MaxHealth ? HpDamaged : HpFull;
+            // A hero's full health is never buffed, so there is no green here: white or the red scale.
+            _hp ??= new HealthNumber(this);
+            _hp.Show(_hpLabel, hero.CurrentHealth,
+                     HealthInk.Resting(hero.CurrentHealth, hero.MaxHealth, hero.MaxHealth));
 
             _frosted = hero.IsFrosted();
             ApplyPlateTint();

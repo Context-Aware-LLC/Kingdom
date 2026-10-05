@@ -577,6 +577,13 @@ namespace Emberfall.Presentation
                 // #236: hide the hand copy for the beat's duration, or it and the flying reveal
                 // both read on screen at once. See BoardController.OnPlayReveal.
                 matchRunner.OnPlayReveal += boardController.OnPlayReveal;
+
+                // Hero power delivery rides the same hold-then-apply beat as the reveal, and is
+                // covered by the retirement trigger above for the same reason.
+                float powerHold = vfxDirector.HeroPowerHoldSeconds;
+                matchRunner.HeroPowerBeatClassifier = (snapshot, events) =>
+                    HeroPowerBeatClassifier.Classify(snapshot, events, powerHold);
+                matchRunner.OnHeroPowerBeat += vfxDirector.ShowHeroPowerBeat;
             }
 
             matchRunner.OnMatchEnded += outcome =>

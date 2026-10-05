@@ -318,7 +318,7 @@ namespace Emberfall.Presentation
             _combatAttackerSorting.sortingOrder = 80;
         }
 
-        private Transform ResolveCombatVisual(InstanceId id)
+        internal Transform ResolveCombatVisual(InstanceId id)
         {
             if (_presenters.TryGetValue(id, out CardPresenter presenter) && presenter != null)
                 return presenter.transform;

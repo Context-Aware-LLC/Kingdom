@@ -63,6 +63,16 @@ namespace Emberfall.Session
         /// visual is on screen for exactly the beat the entry is held for.</summary>
         public event Action<PlayReveal> OnPlayReveal;
 
+        /// <summary>Per accepted command: decides whether the batch is a hero power with a
+        /// delivery to show. Null = no delivery beats. Set by the scene's bootstrap, on the same
+        /// terms as <see cref="PlayRevealClassifier"/>.</summary>
+        public Func<GameState, IReadOnlyList<GameEvent>, HeroPowerBeat?> HeroPowerBeatClassifier { get; set; }
+
+        /// <summary>Fires when a hero power entry reaches the front of the playback queue. The
+        /// second argument is how many seconds from now the entry releases — the moment the
+        /// delivery has to land on, which mid-burst is later than the beat's own hold.</summary>
+        public event Action<HeroPowerBeat, float> OnHeroPowerBeat;
+
         private IMatchSession[] _sessions;   // [0]=P0, [1]=P1
         private IIntentSource[] _sources;    // index-parallel to _sessions
         private readonly PlaybackQueue _playback = new PlaybackQueue();
@@ -131,6 +141,11 @@ namespace Emberfall.Session
                 PlayReveal? reveal = classify?.Invoke(view.Current, batch);
                 if (reveal.HasValue)
                     _playback.SetRevealForNewest(reveal.Value);
+
+                // A hero power plays no card, so a batch is never both.
+                HeroPowerBeat? beat = HeroPowerBeatClassifier?.Invoke(view.Current, batch);
+                if (beat.HasValue)
+                    _playback.SetPowerBeatForNewest(beat.Value);
             };
 
             _running = true;
@@ -192,8 +207,14 @@ namespace Emberfall.Session
             {
                 // Head reached the front → its hold window just started. Show its reveal now, so
                 // the beat the entry is held for is the beat the card is on screen for.
-                if (_playback.TryBeginHead(Time.timeAsDouble, out var begun) && begun.Reveal.HasValue)
-                    OnPlayReveal?.Invoke(begun.Reveal.Value);
+                if (_playback.TryBeginHead(Time.timeAsDouble, out var begun))
+                {
+                    if (begun.Reveal.HasValue)
+                        OnPlayReveal?.Invoke(begun.Reveal.Value);
+                    if (begun.PowerBeat.HasValue)
+                        OnHeroPowerBeat?.Invoke(begun.PowerBeat.Value,
+                            (float)_playback.SecondsUntilHeadRelease(Time.timeAsDouble, commandDelaySeconds));
+                }
 
                 if (_playback.TryDequeue(Time.timeAsDouble, commandDelaySeconds, out var entry))
                 {

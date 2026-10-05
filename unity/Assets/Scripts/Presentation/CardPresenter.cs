@@ -51,7 +51,7 @@ namespace Emberfall.Presentation
         private CardFlavorTextPanel _flavorPanel;
 
         private static readonly Color NormalColor   = new Color(0.22f, 0.22f, 0.32f);
-        private static readonly Color BuffColor     = new Color(0.20f, 0.80f, 0.25f);
+        private static readonly Color BuffColor     = HealthInk.Buffed;
         private static readonly Color DamageColor   = new Color(0.90f, 0.20f, 0.20f);
         private static readonly Color ShieldColor   = new Color(0.95f, 0.88f, 0.15f);
         private static readonly Color FrostedColor   = new Color(0.40f, 0.60f, 0.95f);
@@ -204,6 +204,8 @@ namespace Emberfall.Presentation
             _def  = staticDef;
             _live = liveState;
             _cardDatabase = cardDatabase;
+            // A rebound presenter is showing a different card: its first number is not a change.
+            Health().Forget();
             _live.Changed += OnChanged;
             ApplyAll();
         }
@@ -212,6 +214,7 @@ namespace Emberfall.Presentation
         {
             HideTooltip();
             HideFlavorText();
+            _health?.Forget();
             if (_live == null) return;
             _live.Changed -= OnChanged;
             _live = null;
@@ -302,6 +305,12 @@ namespace Emberfall.Presentation
         }
 
         private void OnDestroy() => Unbind();
+
+        // A disabled presenter's coroutines die with it; without this the number stays swollen.
+        private void OnDisable() => _health?.Settle();
+
+        private HealthNumber _health;
+        private HealthNumber Health() => _health ??= new HealthNumber(this);
 
         private void OnChanged(CardChange what)
         {
@@ -639,6 +648,7 @@ namespace Emberfall.Presentation
             if (_live.MaxHealth == 0)
             {
                 if (attackLabel != null) { attackLabel.text = (_def.Attack ?? 0).ToString(); attackLabel.color = Color.white; }
+                Health().Forget();
                 if (healthLabel != null) { healthLabel.text = (_def.Health ?? 0).ToString(); healthLabel.color = Color.white; }
                 return;
             }
@@ -655,10 +665,8 @@ namespace Emberfall.Presentation
             if (healthLabel != null)
             {
                 int baseHp = _def?.Health ?? _live.MaxHealth;
-                healthLabel.text  = _live.Health.ToString();
-                healthLabel.color = _live.Health < _live.MaxHealth ? DamageColor
-                                  : _live.MaxHealth > baseHp      ? BuffColor
-                                  : Color.white;
+                Health().Show(healthLabel, _live.Health,
+                              HealthInk.Resting(_live.Health, _live.MaxHealth, baseHp));
             }
         }
 
