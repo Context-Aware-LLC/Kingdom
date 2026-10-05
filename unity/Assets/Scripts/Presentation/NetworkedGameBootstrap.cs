@@ -578,11 +578,11 @@ namespace Emberfall.Presentation
                 // both read on screen at once. See BoardController.OnPlayReveal.
                 matchRunner.OnPlayReveal += boardController.OnPlayReveal;
 
-                // Hero power delivery rides the same hold-then-apply beat as the reveal, and is
+                // A hero power's cast rides the same hold-then-apply beat as the reveal, and is
                 // covered by the retirement trigger above for the same reason.
-                float powerHold = vfxDirector.HeroPowerHoldSeconds;
+                HeroPowerHolds powerHolds = vfxDirector.HeroPowerHolds;
                 matchRunner.HeroPowerBeatClassifier = (snapshot, events) =>
-                    HeroPowerBeatClassifier.Classify(snapshot, events, powerHold);
+                    HeroPowerBeatClassifier.Classify(snapshot, events, powerHolds);
                 matchRunner.OnHeroPowerBeat += vfxDirector.ShowHeroPowerBeat;
             }
 

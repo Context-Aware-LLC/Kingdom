@@ -42,9 +42,10 @@ namespace Emberfall.Presentation
                  "read at. See TryHeldPose for why this is a screen fraction and not a card multiple.")]
         [SerializeField, Range(0.3f, 0.9f)] private float heldScreenHeight = 0.6f;
 
-        [Header("Hero power delivery")]
-        [Tooltip("Seconds from the first spark off the socket to the strike. The command is held " +
-                 "for exactly this long, so the board redraws as the bolt lands.")]
+        [Header("Hero power cast")]
+        [Tooltip("Seconds the cast effect takes to rise up the caster's portrait.")]
+        [SerializeField, Range(0.1f, 1f)] private float heroCastSeconds = 0.35f;
+        [Tooltip("Seconds from the first spark off the socket to the strike.")]
         [SerializeField, Range(0.1f, 1f)] private float heroPowerLeadSeconds = 0.24f;
 
         /// <summary>How far in front of everything the reveal card rides while it is in flight, so
@@ -75,10 +76,16 @@ namespace Emberfall.Presentation
         private BoardController _board;
         private IUiSpriteProvider _uiSprites;
 
-        /// <summary>How long a hero power entry is held for its delivery. Read by
+        /// <summary>The bolt leaves the socket when the cast is this far up the portrait, so the
+        /// two overlap instead of queueing.</summary>
+        private const float BoltLeavesAtCast = 0.6f;
+
+        /// <summary>How long a hero power entry is held for its cast. Read by
         /// NetworkedGameBootstrap when it builds the classifier delegate, like
         /// <see cref="RevealHolds"/>.</summary>
-        public float HeroPowerHoldSeconds => heroPowerLeadSeconds;
+        public HeroPowerHolds HeroPowerHolds =>
+            new HeroPowerHolds(heroCastSeconds,
+                               heroCastSeconds * BoltLeavesAtCast + heroPowerLeadSeconds);
 
         /// <summary>The tunables MatchRunner needs to know about — how long each card type's
         /// reveal holds up the rest of the command. Read by NetworkedGameBootstrap when it builds the
@@ -118,11 +125,18 @@ namespace Emberfall.Presentation
 
         /// <summary>Called by MatchRunner.OnHeroPowerBeat when a hero power entry reaches the front
         /// of the queue. Positions are resolved NOW, against the pre-effect board — a minion the
-        /// power kills is still standing here — and the delivery is timed to land
-        /// <paramref name="strikeInSeconds"/> from now, which is when the entry releases.</summary>
+        /// power kills is still standing here — and everything is timed back from
+        /// <paramref name="strikeInSeconds"/>, which is when the entry releases.</summary>
         public void ShowHeroPowerBeat(HeroPowerBeat beat, float strikeInSeconds)
         {
             if (boardAnchors == null || _state == null || beat.Targets == null) return;
+
+            // The cast, on the caster's portrait. A plate with no art for its class does nothing.
+            Transform caster = _board != null ? _board.ResolveCombatVisual(beat.Hero) : null;
+            HeroPlateView plate = caster != null ? caster.GetComponent<HeroPlateView>() : null;
+            if (plate != null)
+                plate.PlayCast(Mathf.Max(0f, strikeInSeconds - beat.HoldSeconds), heroCastSeconds);
+
             if (beat.Delivery != HeroPowerDelivery.ForkedLightning) return;
 
             Vector3? socket = null;

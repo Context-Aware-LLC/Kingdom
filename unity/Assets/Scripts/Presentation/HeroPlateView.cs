@@ -31,6 +31,7 @@ namespace Emberfall.Presentation
         internal const float PlateH = 3.24f * FixtureScale;
         private const float PortraitW = 1.566f * FixtureScale;
         private const float PortraitH = 2.133f * FixtureScale;
+        private static readonly Vector3 PortraitCentre = new Vector3(0f, -0.02f, -0.01f);
         private const string FrameSpriteKey = "hero-frame";
         private const int FrameOrder = 8;
         private const int PortraitOrder = 9;
@@ -47,6 +48,11 @@ namespace Emberfall.Presentation
         private Renderer     _portrait;
         private TextMeshPro  _hpLabel;
         private HealthNumber _hp;
+        private CardClass _heroClass;
+        private IUiSpriteProvider _uiSprites;
+        private PortraitCastEffect _cast;
+        private bool _castBuilt;
+        private Coroutine _castRoutine;
         private MaterialPropertyBlock _mpb;
 
         /// <summary>Attach to a new GameObject and call Init once before first OnStateUpdated.
@@ -57,6 +63,7 @@ namespace Emberfall.Presentation
                          IUiSpriteProvider uiSprites = null)
         {
             _playerId  = playerId;
+            _heroClass = heroClass;
             _mpb       = new MaterialPropertyBlock();
 
             transform.SetParent(heroAnchor, false);
@@ -74,6 +81,7 @@ namespace Emberfall.Presentation
 
             // The clipped portrait fills the export's transparent opening. Its geometry sits a
             // hair nearer the camera, so stray near-transparent pixels cannot haze the artwork.
+            _uiSprites = uiSprites;
             _plate = MakeFrame(transform, uiSprites?.Get(FrameSpriteKey));
             _portrait = MakePortrait(transform);
             _portrait.gameObject.SetActive(false);
@@ -115,6 +123,28 @@ namespace Emberfall.Presentation
             _frosted = hero.IsFrosted();
             ApplyPlateTint();
         }
+
+        /// <summary>Play this hero's cast up the portrait: wait <paramref name="delaySeconds"/>,
+        /// then rise over <paramref name="riseSeconds"/>. Called by VfxDirector when this hero's
+        /// power fires. Does nothing for a class with no cast art.</summary>
+        public void PlayCast(float delaySeconds, float riseSeconds)
+        {
+            if (!isActiveAndEnabled) return;
+            if (!_castBuilt)
+            {
+                // Built on first use, and only tried once: a class with no art stays that way.
+                _castBuilt = true;
+                _cast = PortraitCastEffect.TryBuild(transform, _heroClass, _uiSprites, PortraitCentre,
+                                                    PortraitW, PortraitH, PortraitOrder);
+            }
+            if (_cast == null) return;
+
+            if (_castRoutine != null) StopCoroutine(_castRoutine);
+            _castRoutine = StartCoroutine(_cast.Play(delaySeconds, riseSeconds));
+        }
+
+        // A disabled plate's coroutine dies with it, which would leave the cast frozen on screen.
+        private void OnDisable() => _cast?.Hide();
 
         /// <summary>Hero-as-attacker selection cue — driven by InputRouter, mirrors
         /// CardPresenter.SetSelectionHighlight. Selection outranks the frosted tint.</summary>
@@ -175,7 +205,7 @@ namespace Emberfall.Presentation
         {
             var go = new GameObject("Portrait");
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = new Vector3(0f, -0.02f, -0.01f);
+            go.transform.localPosition = PortraitCentre;
             go.transform.localScale = new Vector3(PortraitW, PortraitH, 1f);
 
             go.AddComponent<MeshFilter>().sharedMesh = OvalMesh();
