@@ -410,46 +410,6 @@ MonoBehaviour:
     - line: '|       m_Kind: 1'
     - line: '|       m_SubKind: '
     - line: '|     - m_Textures:'
-    - line: '|       - {fileID: 2800000, guid: 5f40a26adfa50c648abecde604933e30,
-        type: 3}'
-    - line: '|       m_Width: 192'
-    - line: '|       m_Height: 192'
-    - line: '|       m_Kind: 0'
-    - line: '|       m_SubKind: '
-    - line: '|     - m_Textures:'
-    - line: '|       - {fileID: 2800000, guid: 4ec954ad4751ace44b472af076767917,
-        type: 3}'
-    - line: '|       m_Width: 144'
-    - line: '|       m_Height: 144'
-    - line: '|       m_Kind: 0'
-    - line: '|       m_SubKind: '
-    - line: '|     - m_Textures:'
-    - line: '|       - {fileID: 2800000, guid: 13ab2694acb9c324e8df932ca6d0f470,
-        type: 3}'
-    - line: '|       m_Width: 96'
-    - line: '|       m_Height: 96'
-    - line: '|       m_Kind: 0'
-    - line: '|       m_SubKind: '
-    - line: '|     - m_Textures:'
-    - line: '|       - {fileID: 2800000, guid: 2c5e8b91847a3904d985622dd295edf0,
-        type: 3}'
-    - line: '|       m_Width: 72'
-    - line: '|       m_Height: 72'
-    - line: '|       m_Kind: 0'
-    - line: '|       m_SubKind: '
-    - line: '|     - m_Textures:'
-    - line: '|       - {fileID: 2800000, guid: 43a830d89db89a04d9ffedaea3ea6080,
-        type: 3}'
-    - line: '|       m_Width: 48'
-    - line: '|       m_Height: 48'
-    - line: '|       m_Kind: 0'
-    - line: '|       m_SubKind: '
-    - line: '|     - m_Textures: []'
-    - line: '|       m_Width: 36'
-    - line: '|       m_Height: 36'
-    - line: '|       m_Kind: 0'
-    - line: '|       m_SubKind: '
-    - line: '|     - m_Textures:'
     - line: '|       - {fileID: 2800000, guid: c8e7f069f6c51ad4f88c096942183782,
         type: 3}'
     - line: '|       - {fileID: 2800000, guid: 97dee222e9b357343934b64df76b8f20,
@@ -498,6 +458,46 @@ MonoBehaviour:
     - line: '|       m_Width: 81'
     - line: '|       m_Height: 81'
     - line: '|       m_Kind: 2'
+    - line: '|       m_SubKind: '
+    - line: '|     - m_Textures:'
+    - line: '|       - {fileID: 2800000, guid: 5f40a26adfa50c648abecde604933e30,
+        type: 3}'
+    - line: '|       m_Width: 192'
+    - line: '|       m_Height: 192'
+    - line: '|       m_Kind: 0'
+    - line: '|       m_SubKind: '
+    - line: '|     - m_Textures:'
+    - line: '|       - {fileID: 2800000, guid: 4ec954ad4751ace44b472af076767917,
+        type: 3}'
+    - line: '|       m_Width: 144'
+    - line: '|       m_Height: 144'
+    - line: '|       m_Kind: 0'
+    - line: '|       m_SubKind: '
+    - line: '|     - m_Textures:'
+    - line: '|       - {fileID: 2800000, guid: 13ab2694acb9c324e8df932ca6d0f470,
+        type: 3}'
+    - line: '|       m_Width: 96'
+    - line: '|       m_Height: 96'
+    - line: '|       m_Kind: 0'
+    - line: '|       m_SubKind: '
+    - line: '|     - m_Textures:'
+    - line: '|       - {fileID: 2800000, guid: 2c5e8b91847a3904d985622dd295edf0,
+        type: 3}'
+    - line: '|       m_Width: 72'
+    - line: '|       m_Height: 72'
+    - line: '|       m_Kind: 0'
+    - line: '|       m_SubKind: '
+    - line: '|     - m_Textures:'
+    - line: '|       - {fileID: 2800000, guid: 43a830d89db89a04d9ffedaea3ea6080,
+        type: 3}'
+    - line: '|       m_Width: 48'
+    - line: '|       m_Height: 48'
+    - line: '|       m_Kind: 0'
+    - line: '|       m_SubKind: '
+    - line: '|     - m_Textures: []'
+    - line: '|       m_Width: 36'
+    - line: '|       m_Height: 36'
+    - line: '|       m_Kind: 0'
     - line: '|       m_SubKind: '
     - line: '|   m_BuildTargetBatching:'
     - line: '|   - m_BuildTarget: Standalone'
@@ -951,7 +951,7 @@ MonoBehaviour:
         m_ExportAsGoogleAndroidProject: 0
         m_DebugSymbolLevel: 2
         m_DebugSymbolFormat: 3
-        m_CurrentDeploymentTargetId: 17121JECB02670
+        m_CurrentDeploymentTargetId: __builtin__target_default
         m_BuildType: 2
         m_LinkTimeOptimization: 1
         m_BuildAppBundle: 1
@@ -969,13 +969,13 @@ MonoBehaviour:
   m_Script: {fileID: 15012, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: BuildAutomationSettings
   m_EditorClassIdentifier: UnityEditor.dll::UnityEditor.Build.Profile.BuildAutomationSettings
-  m_OperatingSystemValue: 
-  m_OperatingSystemFamily: 
-  m_XcodeVersion: 
-  m_AndroidSdkVersion: 
-  m_UnityArchitecture: 
-  m_MachineTypeId: 
-  m_CredentialsId: 
+  m_OperatingSystemValue: tahoe
+  m_OperatingSystemFamily: mac
+  m_XcodeVersion: default
+  m_AndroidSdkVersion: android_sdk_35
+  m_UnityArchitecture: AppleSilicon
+  m_MachineTypeId: orka_standard_v1
+  m_CredentialsId: 6e1ad17f-b42a-4bf8-818d-d5d94dbb7eef
   m_BuildTarget: 13
 --- !u!114 &9000562881829387034
 MonoBehaviour:

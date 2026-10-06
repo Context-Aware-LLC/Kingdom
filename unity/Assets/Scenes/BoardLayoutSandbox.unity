@@ -1708,7 +1708,7 @@ GameObject:
   m_Component:
   - component: {fileID: 71399471}
   m_Layer: 0
-  m_Name: P1_Board6
+  m_Name: OPPONENT — top seat — Minion Slot 07 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2283,7 +2283,7 @@ GameObject:
   m_Component:
   - component: {fileID: 101878305}
   m_Layer: 0
-  m_Name: P1_ResourceCluster
+  m_Name: OPPONENT — top seat — Deck and Mana Area (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2545,7 +2545,7 @@ GameObject:
   m_Component:
   - component: {fileID: 119436753}
   m_Layer: 0
-  m_Name: P1_Hand2
+  m_Name: OPPONENT — top seat — Hand Slot 03 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2667,7 +2667,7 @@ GameObject:
   m_Component:
   - component: {fileID: 124463361}
   m_Layer: 0
-  m_Name: P1_Hand7
+  m_Name: OPPONENT — top seat — Hand Slot 08 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2698,7 +2698,7 @@ GameObject:
   m_Component:
   - component: {fileID: 131415602}
   m_Layer: 0
-  m_Name: P0_Hand8
+  m_Name: PLAYER — bottom seat — Hand Slot 09 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3867,7 +3867,7 @@ GameObject:
   m_Component:
   - component: {fileID: 187871395}
   m_Layer: 0
-  m_Name: P1_Hand1
+  m_Name: OPPONENT — top seat — Hand Slot 02 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3899,7 +3899,7 @@ GameObject:
   m_Component:
   - component: {fileID: 199305189}
   m_Layer: 0
-  m_Name: P0_Board2
+  m_Name: PLAYER — bottom seat — Minion Slot 03 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4608,7 +4608,7 @@ GameObject:
   m_Component:
   - component: {fileID: 224397781}
   m_Layer: 0
-  m_Name: P0_Hand1
+  m_Name: PLAYER — bottom seat — Hand Slot 02 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6363,7 +6363,7 @@ GameObject:
   m_Component:
   - component: {fileID: 343557949}
   m_Layer: 0
-  m_Name: P0_Hand6
+  m_Name: PLAYER — bottom seat — Hand Slot 07 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7768,7 +7768,7 @@ GameObject:
   m_Component:
   - component: {fileID: 443612470}
   m_Layer: 0
-  m_Name: P1_Hand0
+  m_Name: OPPONENT — top seat — Hand Slot 01 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8438,7 +8438,7 @@ GameObject:
   m_Component:
   - component: {fileID: 495849008}
   m_Layer: 0
-  m_Name: P0_Board1
+  m_Name: PLAYER — bottom seat — Minion Slot 02 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8743,7 +8743,7 @@ GameObject:
   m_Component:
   - component: {fileID: 519077089}
   m_Layer: 0
-  m_Name: P0_Board4
+  m_Name: PLAYER — bottom seat — Minion Slot 05 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8864,7 +8864,7 @@ GameObject:
   m_Component:
   - component: {fileID: 530483028}
   m_Layer: 0
-  m_Name: P0_Hand3
+  m_Name: PLAYER — bottom seat — Hand Slot 04 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10354,7 +10354,7 @@ GameObject:
   m_Component:
   - component: {fileID: 597166813}
   m_Layer: 0
-  m_Name: P0_Hand0
+  m_Name: PLAYER — bottom seat — Hand Slot 01 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10943,7 +10943,7 @@ GameObject:
   m_Component:
   - component: {fileID: 605393299}
   m_Layer: 0
-  m_Name: P0_Hand5
+  m_Name: PLAYER — bottom seat — Hand Slot 06 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11042,7 +11042,7 @@ GameObject:
   m_Component:
   - component: {fileID: 613806649}
   m_Layer: 0
-  m_Name: P0_Weapon
+  m_Name: PLAYER — bottom seat — Weapon Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11121,7 +11121,7 @@ GameObject:
   m_Component:
   - component: {fileID: 614900546}
   m_Layer: 0
-  m_Name: P1_Deck
+  m_Name: OPPONENT — top seat — Deck Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11334,7 +11334,7 @@ GameObject:
   m_Component:
   - component: {fileID: 628515303}
   m_Layer: 0
-  m_Name: P0_Board5
+  m_Name: PLAYER — bottom seat — Minion Slot 06 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11818,7 +11818,7 @@ GameObject:
   m_Component:
   - component: {fileID: 646110123}
   m_Layer: 0
-  m_Name: P0_Hand9
+  m_Name: PLAYER — bottom seat — Hand Slot 10 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11895,7 +11895,7 @@ GameObject:
   m_Component:
   - component: {fileID: 650140763}
   m_Layer: 0
-  m_Name: P1_Hand4
+  m_Name: OPPONENT — top seat — Hand Slot 05 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12563,7 +12563,7 @@ GameObject:
   m_Component:
   - component: {fileID: 691047420}
   m_Layer: 0
-  m_Name: P0_Board0
+  m_Name: PLAYER — bottom seat — Minion Slot 01 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12867,7 +12867,7 @@ GameObject:
   m_Component:
   - component: {fileID: 725861428}
   m_Layer: 0
-  m_Name: P1_Hand5
+  m_Name: OPPONENT — top seat — Hand Slot 06 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13251,7 +13251,7 @@ GameObject:
   - component: {fileID: 761113403}
   - component: {fileID: 761113404}
   m_Layer: 0
-  m_Name: BoardBackdrop
+  m_Name: STAGE — Board Backdrop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13342,7 +13342,7 @@ GameObject:
   m_Component:
   - component: {fileID: 765859265}
   m_Layer: 0
-  m_Name: P0_HeroCluster
+  m_Name: PLAYER — bottom seat — Hero Area (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13514,7 +13514,7 @@ GameObject:
   - component: {fileID: 785417090}
   - component: {fileID: 785417091}
   m_Layer: 0
-  m_Name: Board Key Light
+  m_Name: STAGE — Key Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14293,7 +14293,7 @@ GameObject:
   m_Component:
   - component: {fileID: 807770471}
   m_Layer: 0
-  m_Name: P0_ResourceCluster
+  m_Name: PLAYER — bottom seat — Deck and Mana Area (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14626,7 +14626,7 @@ GameObject:
   m_Component:
   - component: {fileID: 827606054}
   m_Layer: 0
-  m_Name: P0_ManaTray
+  m_Name: PLAYER — bottom seat — Mana Tray Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14658,7 +14658,7 @@ GameObject:
   m_Component:
   - component: {fileID: 830228056}
   m_Layer: 0
-  m_Name: P1_Hand3
+  m_Name: OPPONENT — top seat — Hand Slot 04 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15767,7 +15767,7 @@ GameObject:
   m_Component:
   - component: {fileID: 939739463}
   m_Layer: 0
-  m_Name: P1_Hand6
+  m_Name: OPPONENT — top seat — Hand Slot 07 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16342,7 +16342,7 @@ GameObject:
   m_Component:
   - component: {fileID: 968387748}
   m_Layer: 0
-  m_Name: P0_Hand7
+  m_Name: PLAYER — bottom seat — Hand Slot 08 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17240,7 +17240,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1029700222}
   m_Layer: 0
-  m_Name: P0_Hero
+  m_Name: PLAYER — bottom seat — Hero Portrait Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -19183,7 +19183,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1164924701}
   m_Layer: 0
-  m_Name: P1_Board0
+  m_Name: OPPONENT — top seat — Minion Slot 01 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -19215,7 +19215,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1184540989}
   m_Layer: 0
-  m_Name: P1_Hand9
+  m_Name: OPPONENT — top seat — Hand Slot 10 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -19336,7 +19336,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1189259598}
   m_Layer: 0
-  m_Name: P0_Hand2
+  m_Name: PLAYER — bottom seat — Hand Slot 03 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -19549,7 +19549,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1194943263}
   m_Layer: 0
-  m_Name: P1_ManaTray
+  m_Name: OPPONENT — top seat — Mana Tray Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20632,7 +20632,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1240378858}
   m_Layer: 0
-  m_Name: P1_Board5
+  m_Name: OPPONENT — top seat — Minion Slot 06 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20932,7 +20932,7 @@ GameObject:
   - component: {fileID: 1259124438}
   - component: {fileID: 1259124437}
   m_Layer: 0
-  m_Name: Board Camera
+  m_Name: STAGE — Board Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -22607,7 +22607,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1365963812}
   m_Layer: 0
-  m_Name: P1_Weapon
+  m_Name: OPPONENT — top seat — Weapon Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -23005,7 +23005,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1441309268}
   m_Layer: 0
-  m_Name: P1_HeroCluster
+  m_Name: OPPONENT — top seat — Hero Area (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -24051,7 +24051,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1484879259}
   m_Layer: 0
-  m_Name: P1_Hand8
+  m_Name: OPPONENT — top seat — Hand Slot 09 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -24628,7 +24628,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1499608633}
   m_Layer: 0
-  m_Name: P1_Board1
+  m_Name: OPPONENT — top seat — Minion Slot 02 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25703,7 +25703,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1547628882}
   m_Layer: 0
-  m_Name: P0_Board3
+  m_Name: PLAYER — bottom seat — Minion Slot 04 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26668,7 +26668,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1646760216}
   m_Layer: 0
-  m_Name: P1_HeroPower
+  m_Name: OPPONENT — top seat — Hero Power Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27102,7 +27102,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1669286911}
   m_Layer: 0
-  m_Name: P0_Hand4
+  m_Name: PLAYER — bottom seat — Hand Slot 05 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27554,7 +27554,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1700748960}
   m_Layer: 0
-  m_Name: P1_Board2
+  m_Name: OPPONENT — top seat — Minion Slot 03 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29389,7 +29389,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1792072676}
   m_Layer: 0
-  m_Name: P1_Board3
+  m_Name: OPPONENT — top seat — Minion Slot 04 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29681,7 +29681,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1827110392}
   m_Layer: 0
-  m_Name: P0_Board6
+  m_Name: PLAYER — bottom seat — Minion Slot 07 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29712,7 +29712,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1828731109}
   m_Layer: 0
-  m_Name: P1_Board4
+  m_Name: OPPONENT — top seat — Minion Slot 05 (move this)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -30834,7 +30834,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1870195075}
   m_Layer: 0
-  m_Name: P0_Deck
+  m_Name: PLAYER — bottom seat — Deck Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -34243,7 +34243,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2040518927}
   m_Layer: 0
-  m_Name: P1_Hero
+  m_Name: OPPONENT — top seat — Hero Portrait Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36380,7 +36380,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2145201801}
   m_Layer: 0
-  m_Name: P0_HeroPower
+  m_Name: PLAYER — bottom seat — Hero Power Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
