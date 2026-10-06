@@ -13,9 +13,9 @@ namespace Emberfall.Presentation
     /// there: no tip, no arrowhead, no circle. It shows that the path is being tracked and
     /// nothing more.</para>
     ///
-    /// <para><b>Over a legal target it does three things, all slightly:</b> it fills in the rest
-    /// of the way to the target, swells and brightens. Over anything else it does none of them.
-    /// Keep them slight — the target's own focus glow is the loud half of that signal.</para>
+    /// <para><b>Over a legal target it fills in the rest of the way to the target, swells,
+    /// brightens and turns from yellow to red</b> (Sam, 2026-10-05). Over anything else it does
+    /// none of them.</para>
     ///
     /// <para>Built from sprites on <see cref="SpriteMaterials"/> and not a LineRenderer, which
     /// would need a shader found by name; see that class for why that fails in a player.</para>
@@ -24,7 +24,7 @@ namespace Emberfall.Presentation
     {
         private const int Dots = 12;
         /// <summary>How far toward the pointer the head goes when it has nothing to land on.</summary>
-        private const float TrailsAt = 0.8f;
+        private const float TrailsAt = 0.5f;
         /// <summary>The head's lag behind where it is going.</summary>
         private const float FollowSeconds = 0.09f;
         private const float LockSeconds = 0.10f;
@@ -33,8 +33,8 @@ namespace Emberfall.Presentation
         /// <summary>Dots drift toward the head at this many spacings a second.</summary>
         private const float FlowPerSecond = 1.4f;
         /// <summary>World diameter of the dot nearest the head.</summary>
-        private const float DotSize = 0.15f;
-        private const float IdleAlpha = 0.6f;
+        private const float DotSize = 0.2f;
+        private const float IdleAlpha = 0.5f;
         private const float LockedAlpha = 0.85f;
         private const float LockedSwell = 1.15f;
         /// <summary>Below this length the trail is still under the thing it left, so it fades in.</summary>
@@ -47,7 +47,8 @@ namespace Emberfall.Presentation
         private const int SortOrder = 80;
         private const int TextureSize = 32;
 
-        private static readonly Color Tint = new Color(1f, 0.96f, 0.86f, 1f);
+        private static readonly Color IdleTint = new Color(1f, 0.84f, 0.25f, 1f);
+        private static readonly Color LockedTint = new Color(1f, 0.22f, 0.16f, 1f);
 
         private Transform _root;
         private SpriteRenderer[] _dots;
@@ -103,7 +104,7 @@ namespace Emberfall.Presentation
                 SpriteRenderer dot = _dots[i];
                 dot.transform.position = Vector3.Lerp(at, eye, DepthFraction);
                 dot.transform.localScale = new Vector3(size, size, 1f);
-                Color c = Tint;
+                Color c = Color.Lerp(IdleTint, LockedTint, _lock);
                 c.a = presence * body * tip * Mathf.Lerp(IdleAlpha, LockedAlpha, _lock);
                 dot.color = c;
             }
