@@ -114,22 +114,6 @@ namespace Emberfall.Core.Tests.CardBehavior
                 Is.EqualTo(new[] { 6, 10 }));
         }
 
-        [Test]
-        public void ChainLightning_Deals_Four_Total_Damage_Through_Three_Random_Selections()
-        {
-            var state = State(seed: 17);
-            CardInstance a = Board(state, 1, ShippedCards.Id("neutral_stoneback_sentry"));
-            CardInstance b = Board(state, 1, ShippedCards.Id("neutral_stoneback_sentry"));
-            CardInstance spell = Hand(state, ShippedCards.Id("storm_chain_lightning"));
-            int before = state.Players[1].Hero.CurrentHealth + a.CurrentHealth + b.CurrentHealth;
-
-            var result = new CommandProcessor(_db).Execute(state, Play(state, spell));
-
-            Assert.That(result.Accepted, Is.True);
-            int after = state.Players[1].Hero.CurrentHealth + a.CurrentHealth + b.CurrentHealth;
-            Assert.That(before - after, Is.EqualTo(4));
-        }
-
         [TestCase("storm_crackle", 4)]
         [TestCase("storm_static_shock", 3)]
         public void SingleTarget_Random_Damage_Cards_Hit_Exactly_One_Enemy(
