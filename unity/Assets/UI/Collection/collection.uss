@@ -156,9 +156,10 @@
  * opacity on one element does not stack, but the two are still different facts. */
 
 /* Spent: the deck already holds every copy of this card you are allowed. Deckbuild only.
- * Matched to the unowned fade (Sam, 2026-10-05): at 0.1 you could barely tell a card was there. */
+ * Halfway between its old 0.1, where you could barely tell a card was there, and the unowned
+ * fade, so the two still read apart (Sam, 2026-10-05). */
 .card-tile--maxed {
-    opacity: 0.5;
+    opacity: 0.3;
 }
 
 /* Unowned: you hold no copy of this card. The opposite of spent — this is the one you are shopping
