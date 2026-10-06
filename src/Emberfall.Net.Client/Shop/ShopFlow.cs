@@ -210,12 +210,12 @@ namespace Emberfall.Net.Client.Shop
 
         public static IReadOnlyList<GemBundleOffer> GemBundles { get; } = Array.AsReadOnly(new[]
         {
-            new GemBundleOffer("gems.tier.200", 150, 199),
-            new GemBundleOffer("gems.tier.550", 400, 499),
-            new GemBundleOffer("gems.tier.1200", 800, 999),
-            new GemBundleOffer("gems.tier.2600", 1600, 1999),
-            new GemBundleOffer("gems.tier.7000", 4400, 4999),
-            new GemBundleOffer("gems.tier.15000", 9000, 9999),
+            new GemBundleOffer("gems.tier.200", 200, 199),
+            new GemBundleOffer("gems.tier.550", 550, 499),
+            new GemBundleOffer("gems.tier.1200", 1100, 999),
+            new GemBundleOffer("gems.tier.2600", 2300, 1999),
+            new GemBundleOffer("gems.tier.7000", 6000, 4999),
+            new GemBundleOffer("gems.tier.15000", 13000, 9999),
         });
     }
 
