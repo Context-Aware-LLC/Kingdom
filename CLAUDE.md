@@ -109,21 +109,14 @@ tables. The spec doc is a copy of those, and the copy is the thing to fix.
 have to move together are the canonical serializer, the projection and the snapshot codec — miss one
 and the client and server disagree about a state neither can prove wrong.
 
-**The suite is BLOCKING again, and a `dotnet test` matching zero tests exits 0.** The five .NET
-projects came back on 2026-08-24 (Sam's direction) minus the card-authoring block, ran advisory
-while they were red, and went blocking the same day they went green — `ci.yml` Stage 2 and
-`gates.ps1` Stage 2. All five must stay registered in `Emberfall.slnx`, because a run that matches
-nothing is green for the wrong reason. **Read the count, not the badge.**
+**A `dotnet test` that matches zero tests exits 0.** All five .NET test projects must stay
+registered in `Emberfall.slnx`, because a run that matches nothing is green for the wrong reason.
+**Read the count, not the badge.**
 
-**NOTHING pins the canonical hash any more, by decision.** `Known_Vector_Digest_Is_Pinned`, the 11
-golden replay fixtures and their rebaseline guard were deleted 2026-08-24 (Sam: the replays were
-fake) — they recorded a state the effect-model fork and the numeric card id had deliberately left
-behind, and with one developer and no live players a golden guards against a desync that cannot
-happen. What survives is RELATIVE and cannot go stale: the per-field mutation sweep in
-`CanonicalSerializationTests` (perturb a field, the digest must move), the committed field manifest,
-and NetSoak's zero-resync run. So a state-shape change still lands on review and a build, and
-**the reviewer is still the only guard**: read the three sites rather than hunting for a gate.
-The deleted copies are outside the repo in `emberfall-test-archive/returned-2026-08-24/`.
+**Nothing pins the canonical hash, by decision** — no golden digest, no replay fixtures. What
+exists is relative and cannot go stale: the per-field mutation sweep in `CanonicalSerializationTests`,
+the committed field manifest, and NetSoak's zero-resync run. So a state-shape change lands on review
+and a build, and **the reviewer is the only guard**: read the three sites rather than hunting for a gate.
 
 **A fixture's card id is minted, not written.** `Support/FixtureCard` maps a test-local mnemonic to
 a number above 1_000_000, far clear of every shipped row; `Support/ShippedCards` is the ONE place a
@@ -287,9 +280,6 @@ driving** — return `Application.dataPath` and read it before any eval that wri
 eval aimed at your worktree lands silently in somebody else's project. `-batchmode -executeMethod`
 is exempt: there `-projectPath` is the target, not a hint.
 
-**RETIREMENT TRIGGER:** the Unity MCP relay and its two skills were removed 2026-08-20 in favour of
-the CLI; if an MCP path is ever reinstated, this section and `.claude/skills/` change together.
-
 ## The shared headless Editor at `C:\claude-editor`, and its lock
 
 **Before you touch `C:\claude-editor` at all, read `C:\claude-editor\EDITOR-LOCK.md`.** Occupied
@@ -330,12 +320,17 @@ so in the file when you do.
 `EDITOR-LOCK.md`, and those two brain pointers.
 ## Ask the graph before you grep
 
-Judge that by **node count, not exit code**. A broken install — grammars invisible to its
-`python -I` probe, which is what `pip install --user` produces — reports `449 files, 2 nodes,
-10 edges` and exits 0. Install it as `uv tool install "code-review-graph[communities,embeddings]"`,
-never with `pip --user`. The graph refreshes itself from `.githooks/pre-commit` on every commit,
-and `built_at_commit` trailing HEAD by exactly one commit is correct — the hook runs before the
-commit exists. Do not "fix" that lag.
+A persistent `code-review-graph` of this repo answers *where is this defined, what calls it, which
+flow is it in*; grep answers *which files contain this string*. A `PreToolUse` hook injects the
+graph's answer ahead of every Grep, Glob, Read and Bash result, so you should not have to do
+anything. Two limits: its call edges mostly stop at the assembly boundary, so "Called by" means
+*within this project* and `code-review-graph dead-code` is unusable
+(`python tooling/scripts/graph_metrics.py` prints today's resolution rates); and its absence is
+invisible — the hook exits silently where the tool is not installed. If you have run several
+searches and never seen a `[code-review-graph]` block, run `code-review-graph status` and judge it
+by **node count, not exit code**: a broken install reports a handful of nodes and exits 0. Install
+with `uv tool install "code-review-graph[communities,embeddings]"`, never `pip --user`. It refreshes
+from `.githooks/pre-commit`, so `built_at_commit` trailing HEAD by one commit is correct.
 
 ## Skill routing
 
