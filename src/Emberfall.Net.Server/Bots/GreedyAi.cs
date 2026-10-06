@@ -32,8 +32,24 @@ namespace Emberfall.Net.Server.Bots
         /// <summary>Dataset provenance label. Bump whenever choice ordering or heuristics change.</summary>
         public const string PolicyVersion = "greedy-ai.v2";
 
+        /// <summary>
+        /// The label of the variant a HUMAN is seated against (Sam, 2026-10-05). Same loop, with the
+        /// choices that read as obviously not a person replaced: it takes lethal when it is on the
+        /// board, aims removal at the biggest threat and trades into what it can kill, where v2
+        /// takes the leftmost legal thing.
+        ///
+        /// <para><b>v2 is not edited, and that is deliberate.</b> The RL league holds
+        /// <c>greedy-ai.v2</c> as a permanent sanity opponent (<c>PolicyLeague.Validate</c> checks
+        /// the literal) and a frozen 1,008-game capture was played by it. Changing what v2 does
+        /// moves that yardstick with nothing reporting it, so every human-facing adjustment goes
+        /// behind <c>humanFacing</c> and bumps THIS label instead.</para>
+        /// </summary>
+        public const string HumanFacingVersion = "greedy-ai.v3";
+
         /// <summary>The intent this seat wants next, or null if it is not this seat's move.</summary>
-        public static PlayerIntent? Choose(GameState state, PlayerId me, ICommandValidator validator, ICardDatabase db)
+        /// <param name="humanFacing">Play the <see cref="HumanFacingVersion"/> variant.</param>
+        public static PlayerIntent? Choose(GameState state, PlayerId me, ICommandValidator validator,
+            ICardDatabase db, bool humanFacing = false)
         {
             if (state is null || state.Outcome != MatchOutcome.InProgress) return null;
 
@@ -64,13 +80,24 @@ namespace Emberfall.Net.Server.Bots
             PlayerState ps = state.Players[seat];
             PlayerState foe = state.Players[foeSeat];
 
+            // 0. Lethal. If what is already able to hit face kills, hit face — before a card or a
+            //    trade spends the turn on something else (Sam, 2026-10-05). The gap left over is
+            //    what a burn spell has to cover to finish the job, and step 1 aims by it.
+            int lethalGap = int.MaxValue;
+            if (humanFacing)
+            {
+                int swing = FaceDamage(state, me, ps, foe, validator, out AttackIntent? firstFace);
+                lethalGap = foe.Hero.CurrentHealth + foe.Hero.Armor - swing;
+                if (lethalGap <= 0 && firstFace is not null) return firstFace;
+            }
+
             // 1. First card in hand we can legally play, aimed if it needs aiming.
             foreach (CardInstance card in ps.Hand)
             {
                 CardDefinition def = db.Get(card.DefinitionId);
                 if (ps.Mana.Available < def.Cost) continue;
 
-                PlayCardIntent? play = TryPlay(state, me, card, def, validator, db, ps, foe);
+                PlayCardIntent? play = TryPlay(state, me, card, def, validator, db, ps, foe, humanFacing, lethalGap);
                 if (play is not null) return play;
             }
 
@@ -78,7 +105,8 @@ namespace Emberfall.Net.Server.Bots
             //    shroud — then the hero swings if a weapon is equipped.
             foreach (CardInstance attacker in ps.Board)
             {
-                AttackIntent? atk = TryAttack(state, me, attacker.Id, foe, validator, preferFace: false);
+                AttackIntent? atk = TryAttack(state, me, attacker.Id, attacker.CurrentAttack, foe,
+                    validator, preferFace: false, humanFacing);
                 if (atk is not null) return atk;
             }
 
@@ -86,7 +114,8 @@ namespace Emberfall.Net.Server.Bots
             {
                 // Face first for the hero: swinging into a minion means taking its attack back, and
                 // the weapon has durability to spend either way. Bulwark still forces the trade.
-                AttackIntent? swing = TryAttack(state, me, ps.Hero.Id, foe, validator, preferFace: true);
+                AttackIntent? swing = TryAttack(state, me, ps.Hero.Id, ps.Weapon.CurrentAttack, foe,
+                    validator, preferFace: true, humanFacing);
                 if (swing is not null) return swing;
             }
 
@@ -147,7 +176,8 @@ namespace Emberfall.Net.Server.Bots
 
         private static PlayCardIntent? TryPlay(
             GameState state, PlayerId me, CardInstance card, CardDefinition def,
-            ICommandValidator validator, ICardDatabase db, PlayerState ps, PlayerState foe)
+            ICommandValidator validator, ICardDatabase db, PlayerState ps, PlayerState foe,
+            bool humanFacing, int lethalGap)
         {
             int slot = ps.Board.Count;
 
@@ -172,7 +202,7 @@ namespace Emberfall.Net.Server.Bots
             // and supply exactly one ref, which the validator refused every time.
             if (plan.Count == 1 && plan[0].Binding.Length == 0 && plan[0].RequiredCount <= 1)
             {
-                foreach (TargetRef t in PlayCandidates(def, ps, foe))
+                foreach (TargetRef t in PlayCandidates(def, ps, foe, humanFacing, lethalGap))
                 {
                     var aimed = new PlayCardIntent(me, card.Id, slot, new[] { t });
                     if (validator.CanExecute(state, aimed, out _)) return aimed;
@@ -256,11 +286,35 @@ namespace Emberfall.Net.Server.Bots
             return null;
         }
 
-        private static List<TargetRef> PlayCandidates(CardDefinition def, PlayerState ps, PlayerState foe)
+        /// <param name="lethalGap">Enemy hero health the attackers on board cannot cover — a damage
+        /// spell that covers it goes face. Only read by the human-facing variant.</param>
+        private static List<TargetRef> PlayCandidates(CardDefinition def, PlayerState ps, PlayerState foe,
+            bool humanFacing, int lethalGap)
         {
             var list = new List<TargetRef>();
 
-            if (IsHostile(def))
+            if (IsHostile(def) && humanFacing)
+            {
+                // Removal goes at the biggest thing it can deal with. v2 below walks the board left
+                // to right, so a Destroy landed on whatever stood in slot 0 and the minions then
+                // traded into the threat it should have taken (Sam, 2026-10-05).
+                int dmg = DamageAmount(def);
+                List<CardInstance> threats = ByThreat(foe.Board);
+                if (dmg > 0)
+                {
+                    // Lethal first, then the best thing the damage actually kills, then face. Damage
+                    // that kills nothing is not spent chipping a minion.
+                    if (lethalGap <= dmg) list.Add(new TargetRef(foe.Hero.Id));
+                    foreach (CardInstance m in threats)
+                        if (m.CurrentHealth <= dmg) list.Add(new TargetRef(m.Id));
+                    list.Add(new TargetRef(foe.Hero.Id));
+                }
+                foreach (CardInstance m in threats) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(foe.Hero.Id));
+                foreach (CardInstance m in ps.Board) list.Add(new TargetRef(m.Id));
+                list.Add(new TargetRef(ps.Hero.Id));
+            }
+            else if (IsHostile(def))
             {
                 int dmg = DamageAmount(def);
                 foreach (CardInstance m in foe.Board)
@@ -281,6 +335,26 @@ namespace Emberfall.Net.Server.Bots
 
             return list;
         }
+
+        /// <summary>A board ordered biggest threat first: attack, then health, then board position
+        /// so the order is reproducible.</summary>
+        private static List<CardInstance> ByThreat(List<CardInstance> board)
+        {
+            var order = new List<int>(board.Count);
+            for (int i = 0; i < board.Count; i++) order.Add(i);
+            order.Sort((a, b) =>
+            {
+                int byAttack = board[b].CurrentAttack.CompareTo(board[a].CurrentAttack);
+                if (byAttack != 0) return byAttack;
+                int byHealth = board[b].CurrentHealth.CompareTo(board[a].CurrentHealth);
+                return byHealth != 0 ? byHealth : a.CompareTo(b);
+            });
+
+            var sorted = new List<CardInstance>(board.Count);
+            foreach (int i in order) sorted.Add(board[i]);
+            return sorted;
+        }
+
         private static bool IsHostile(CardDefinition def)
         {
             foreach (RuleDefinition rule in def.Rules)
@@ -309,9 +383,42 @@ namespace Emberfall.Net.Server.Bots
 
         // ── Attacking ─────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Total attack that can legally go face right now, and the first such attack. The
+        /// validator is asked per attacker, so a bulwark wall, a spent attack or a frost reads as
+        /// zero here rather than being modelled a second time.
+        /// </summary>
+        private static int FaceDamage(GameState state, PlayerId me, PlayerState ps, PlayerState foe,
+            ICommandValidator validator, out AttackIntent? first)
+        {
+            first = null;
+            int total = 0;
+            var face = new TargetRef(foe.Hero.Id);
+
+            foreach (CardInstance attacker in ps.Board)
+            {
+                var hit = new AttackIntent(me, attacker.Id, face);
+                if (!validator.CanExecute(state, hit, out _)) continue;
+                total += attacker.CurrentAttack;
+                first ??= hit;
+            }
+
+            if (ps.Weapon is not null)
+            {
+                var swing = new AttackIntent(me, ps.Hero.Id, face);
+                if (validator.CanExecute(state, swing, out _))
+                {
+                    total += ps.Weapon.CurrentAttack;
+                    first ??= swing;
+                }
+            }
+
+            return total;
+        }
+
         private static AttackIntent? TryAttack(
-            GameState state, PlayerId me, InstanceId attacker, PlayerState foe,
-            ICommandValidator validator, bool preferFace)
+            GameState state, PlayerId me, InstanceId attacker, int attackerAttack, PlayerState foe,
+            ICommandValidator validator, bool preferFace, bool humanFacing)
         {
             if (preferFace)
             {
@@ -319,7 +426,19 @@ namespace Emberfall.Net.Server.Bots
                 if (validator.CanExecute(state, face, out _)) return face;
             }
 
-            foreach (CardInstance defender in foe.Board)
+            // Trade into what this attacker kills, biggest first, before anything it only dents.
+            List<CardInstance> defenders = foe.Board;
+            if (humanFacing)
+            {
+                List<CardInstance> threats = ByThreat(foe.Board);
+                defenders = new List<CardInstance>(threats.Count);
+                foreach (CardInstance m in threats)
+                    if (m.CurrentHealth <= attackerAttack) defenders.Add(m);
+                foreach (CardInstance m in threats)
+                    if (m.CurrentHealth > attackerAttack) defenders.Add(m);
+            }
+
+            foreach (CardInstance defender in defenders)
             {
                 var trade = new AttackIntent(me, attacker, new TargetRef(defender.Id));
                 if (validator.CanExecute(state, trade, out _)) return trade;
