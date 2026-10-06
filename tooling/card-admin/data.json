@@ -4,8 +4,8 @@
     "unity/Assets/CardData/Emberfall.cards.json",
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 297,
-  "corpusDigest": "7449a11283fa8f9f",
+  "totalCards": 298,
+  "corpusDigest": "75cf84bff36831cc",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -24,10 +24,10 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 297,
+    "total": 298,
     "typeSplit": {
       "MINION": 193,
-      "SPELL": 82,
+      "SPELL": 83,
       "WEAPON": 14,
       "HERO_POWER": 8
     },
@@ -47,13 +47,13 @@
       "LIFEDRAIN": 6
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 67,
+      "ANY_FRIENDLY_MINION": 70,
       "ANY_ENEMY": 28,
-      "ANY_MINION": 28,
-      "ANY_ENEMY_MINION": 23,
-      "FRIENDLY_HERO": 18,
+      "ANY_MINION": 25,
+      "ANY_ENEMY_MINION": 24,
+      "FRIENDLY_HERO": 19,
       "ENEMY_HERO": 12,
-      "ANY_CHARACTER": 4,
+      "ANY_CHARACTER": 9,
       "ANY_FRIENDLY": 3,
       "OTHER_FRIENDLY_MINIONS": 2,
       "ANY_GRAVEYARD_MINION": 1,
@@ -61,7 +61,7 @@
       "SELF": 1
     },
     "actionFrequency": {
-      "DAMAGE_SINGLE": 33,
+      "DAMAGE_SINGLE": 37,
       "DAMAGE_AOE": 22,
       "REMOVAL": 12,
       "BOUNCE": 11,
@@ -70,7 +70,7 @@
     },
     "costDistribution": {
       "0": 5,
-      "1": 33,
+      "1": 34,
       "2": 77,
       "3": 71,
       "4": 47,
@@ -81,7 +81,7 @@
       "9": 2
     },
     "rarityBreakdown": {
-      "COMMON": 130,
+      "COMMON": 131,
       "RARE": 97,
       "EPIC": 52,
       "LEGENDARY": 18
@@ -102,18 +102,18 @@
     "attackDistribution": {
       "0": 3,
       "1": 28,
-      "2": 51,
+      "2": 52,
       "3": 42,
-      "4": 24,
-      "5": 25,
-      "6": 11,
+      "4": 23,
+      "5": 26,
+      "6": 10,
       "7": 6,
       "8": 2,
       "10": 1
     },
     "healthDistribution": {
-      "1": 20,
-      "2": 42,
+      "1": 17,
+      "2": 45,
       "3": 31,
       "4": 41,
       "5": 25,
@@ -191,10 +191,10 @@
       }
     },
     "EMBERWARD": {
-      "total": 32,
+      "total": 33,
       "typeSplit": {
         "MINION": 21,
-        "SPELL": 8,
+        "SPELL": 9,
         "WEAPON": 2,
         "HERO_POWER": 1
       },
@@ -209,20 +209,20 @@
         "LIFEDRAIN": 1
       },
       "selectorFrequency": {
-        "ANY_MINION": 6,
+        "ANY_CHARACTER": 7,
+        "ANY_FRIENDLY_MINION": 6,
         "ANY_ENEMY": 3,
-        "ANY_FRIENDLY_MINION": 3,
+        "ANY_MINION": 3,
         "ENEMY_HERO": 3,
-        "ANY_CHARACTER": 2,
-        "FRIENDLY_HERO": 2,
-        "ANY_ENEMY_MINION": 1
+        "FRIENDLY_HERO": 3,
+        "ANY_ENEMY_MINION": 2
       },
       "actionFrequency": {
-        "DAMAGE_SINGLE": 12,
+        "DAMAGE_SINGLE": 16,
         "DAMAGE_AOE": 5
       },
       "costDistribution": {
-        "1": 4,
+        "1": 5,
         "2": 7,
         "3": 7,
         "4": 5,
@@ -231,7 +231,7 @@
         "9": 1
       },
       "rarityBreakdown": {
-        "COMMON": 12,
+        "COMMON": 13,
         "RARE": 12,
         "EPIC": 6,
         "LEGENDARY": 2
@@ -244,16 +244,16 @@
       },
       "minionCount": 21,
       "attackDistribution": {
-        "2": 5,
+        "2": 6,
         "3": 3,
-        "4": 6,
-        "5": 3,
-        "6": 2,
+        "4": 5,
+        "5": 4,
+        "6": 1,
         "7": 2
       },
       "healthDistribution": {
-        "1": 4,
-        "2": 2,
+        "1": 1,
+        "2": 5,
         "3": 3,
         "4": 4,
         "5": 2,
@@ -958,7 +958,7 @@
       "type": "MINION",
       "cost": 1,
       "attack": 2,
-      "health": 1,
+      "health": 2,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "COMMON",
@@ -978,16 +978,21 @@
       "name": "Ember Zealot",
       "type": "MINION",
       "cost": 2,
-      "attack": 3,
-      "health": 1,
+      "attack": 2,
+      "health": 2,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "COMMON",
       "keywords": [
         "FERVOR"
       ],
-      "selectors": [],
-      "actionTags": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION",
+        "ANY_CHARACTER"
+      ],
+      "actionTags": [
+        "DAMAGE_SINGLE"
+      ],
       "tribe": "HUMAN",
       "setId": "EMBERFALL",
       "collectible": true,
@@ -4177,7 +4182,7 @@
       "type": "MINION",
       "cost": 2,
       "attack": 2,
-      "health": 1,
+      "health": 2,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "COMMON",
@@ -4226,7 +4231,7 @@
       "name": "Cinderplate Golem",
       "type": "MINION",
       "cost": 4,
-      "attack": 6,
+      "attack": 5,
       "health": 4,
       "durability": null,
       "class": "EMBERWARD",
@@ -4323,10 +4328,12 @@
       "rarity": "RARE",
       "keywords": [],
       "selectors": [
-        "ANY_MINION"
+        "ANY_ENEMY_MINION",
+        "FRIENDLY_HERO"
       ],
       "actionTags": [
-        "DAMAGE_AOE"
+        "DAMAGE_AOE",
+        "DAMAGE_SINGLE"
       ],
       "tribe": null,
       "setId": "EMBERFALL",
@@ -5024,8 +5031,12 @@
       "keywords": [
         "ARCANE_SURGE"
       ],
-      "selectors": [],
-      "actionTags": [],
+      "selectors": [
+        "ANY_CHARACTER"
+      ],
+      "actionTags": [
+        "DAMAGE_SINGLE"
+      ],
       "tribe": "HUMAN",
       "setId": "REKINDLING",
       "collectible": true,
@@ -5044,7 +5055,8 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [
-        "ANY_MINION"
+        "ANY_FRIENDLY_MINION",
+        "ANY_CHARACTER"
       ],
       "actionTags": [
         "DAMAGE_SINGLE"
@@ -5144,7 +5156,7 @@
       "name": "Coalition Blazer",
       "type": "MINION",
       "cost": 4,
-      "attack": 4,
+      "attack": 3,
       "health": 4,
       "durability": null,
       "class": "EMBERWARD",
@@ -5233,8 +5245,8 @@
       "rarity": "RARE",
       "keywords": [],
       "selectors": [
-        "ANY_MINION",
-        "ANY_FRIENDLY_MINION"
+        "ANY_FRIENDLY_MINION",
+        "ANY_CHARACTER"
       ],
       "actionTags": [
         "DAMAGE_SINGLE"
@@ -7201,6 +7213,30 @@
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "stone_petrify",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 233,
+      "name": "Kindle",
+      "type": "SPELL",
+      "cost": 1,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "EMBERWARD",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION",
+        "ANY_CHARACTER"
+      ],
+      "actionTags": [
+        "DAMAGE_SINGLE"
+      ],
+      "tribe": null,
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "ember_kindle",
       "sourceFile": "Rekindling.cards.json"
     }
   ]
