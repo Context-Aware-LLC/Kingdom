@@ -34,7 +34,6 @@
 				"requirepeer": "",
 				"hostaddr": "",
 				"options": "",
-				"connectionString": "postgresql://emberfall_app.cjoyljppqtqfeojtcghg:***REMOVED***@aws-0-us-east-1.pooler.supabase.com:5432/postgres",
 				"sshPassword": "",
 				"displayName": "Supabase",
 				"expiresOn": 0

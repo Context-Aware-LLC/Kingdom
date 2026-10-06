@@ -7,9 +7,22 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Net.Server.Bots
 {
     /// <summary>
-    /// The soak driver's decision function (C-G1-8 step 3b) — kept deliberately in step with the
-    /// shipped <c>Emberfall.AI.PlayingAi</c>, which lives in a Unity assembly and cannot be
-    /// referenced from a .NET tool. Fixes here belong there too, and vice versa.
+    /// The decision function for every greedy seat: the opponent the server seats against a human,
+    /// the soak driver (C-G1-8 step 3b), and the RL league's permanent sanity opponent. One bot, so
+    /// the thing the soak and the league measure is the thing a player faces.
+    ///
+    /// <para><b>2026-10-05 — v2 became v3, and the RL yardstick moved with it</b> (Sam). v3 takes
+    /// lethal when it is on the board, aims removal at the biggest threat and trades into what the
+    /// attacker kills; v2 took the leftmost legal target every time. v2 no longer exists in code.
+    /// Every arena score, league evaluation, action-value label and "agrees with Greedy" figure
+    /// recorded before this date was measured against v2 and does NOT compare to one measured
+    /// after. A league directory initialised against v2 is refused by <c>PolicyLeague.Validate</c>
+    /// rather than quietly continued — re-init it. See
+    /// <c>docs/dev-docs/project/rl-training-history.md</c> §14.</para>
+    ///
+    /// <para><b>The Unity <c>Emberfall.AI.PlayingAi</c> was NOT given the v3 changes.</b> It used
+    /// to be kept in step with this file; it only fills our own seat, so it was left at the v2
+    /// shape. Its own header still claims parity.</para>
     ///
     /// <para><b>Why a port rather than a stronger AI.</b> The sample this grinds is judged against
     /// the C4 balance bar, and a bar only means something if the thing measured is the thing that
@@ -30,26 +43,14 @@ namespace Emberfall.Net.Server.Bots
     public static class GreedyAi
     {
         /// <summary>Dataset provenance label. Bump whenever choice ordering or heuristics change.</summary>
-        public const string PolicyVersion = "greedy-ai.v2";
+        public const string PolicyVersion = "greedy-ai.v3";
 
-        /// <summary>
-        /// The label of the variant a HUMAN is seated against (Sam, 2026-10-05). Same loop, with the
-        /// choices that read as obviously not a person replaced: it takes lethal when it is on the
-        /// board, aims removal at the biggest threat and trades into what it can kill, where v2
-        /// takes the leftmost legal thing.
-        ///
-        /// <para><b>v2 is not edited, and that is deliberate.</b> The RL league holds
-        /// <c>greedy-ai.v2</c> as a permanent sanity opponent (<c>PolicyLeague.Validate</c> checks
-        /// the literal) and a frozen 1,008-game capture was played by it. Changing what v2 does
-        /// moves that yardstick with nothing reporting it, so every human-facing adjustment goes
-        /// behind <c>humanFacing</c> and bumps THIS label instead.</para>
-        /// </summary>
-        public const string HumanFacingVersion = "greedy-ai.v3";
+        /// <summary>The label every artifact before 2026-10-05 carries. Kept only so a tool can say
+        /// WHY it refuses one, never to select behaviour — the v2 play is gone.</summary>
+        public const string RetiredPolicyVersion = "greedy-ai.v2";
 
         /// <summary>The intent this seat wants next, or null if it is not this seat's move.</summary>
-        /// <param name="humanFacing">Play the <see cref="HumanFacingVersion"/> variant.</param>
-        public static PlayerIntent? Choose(GameState state, PlayerId me, ICommandValidator validator,
-            ICardDatabase db, bool humanFacing = false)
+        public static PlayerIntent? Choose(GameState state, PlayerId me, ICommandValidator validator, ICardDatabase db)
         {
             if (state is null || state.Outcome != MatchOutcome.InProgress) return null;
 
@@ -83,13 +84,9 @@ namespace Emberfall.Net.Server.Bots
             // 0. Lethal. If what is already able to hit face kills, hit face — before a card or a
             //    trade spends the turn on something else (Sam, 2026-10-05). The gap left over is
             //    what a burn spell has to cover to finish the job, and step 1 aims by it.
-            int lethalGap = int.MaxValue;
-            if (humanFacing)
-            {
-                int swing = FaceDamage(state, me, ps, foe, validator, out AttackIntent? firstFace);
-                lethalGap = foe.Hero.CurrentHealth + foe.Hero.Armor - swing;
-                if (lethalGap <= 0 && firstFace is not null) return firstFace;
-            }
+            int swing = FaceDamage(state, me, ps, foe, validator, out AttackIntent? firstFace);
+            int lethalGap = foe.Hero.CurrentHealth + foe.Hero.Armor - swing;
+            if (lethalGap <= 0 && firstFace is not null) return firstFace;
 
             // 1. First card in hand we can legally play, aimed if it needs aiming.
             foreach (CardInstance card in ps.Hand)
@@ -97,7 +94,7 @@ namespace Emberfall.Net.Server.Bots
                 CardDefinition def = db.Get(card.DefinitionId);
                 if (ps.Mana.Available < def.Cost) continue;
 
-                PlayCardIntent? play = TryPlay(state, me, card, def, validator, db, ps, foe, humanFacing, lethalGap);
+                PlayCardIntent? play = TryPlay(state, me, card, def, validator, db, ps, foe, lethalGap);
                 if (play is not null) return play;
             }
 
@@ -106,7 +103,7 @@ namespace Emberfall.Net.Server.Bots
             foreach (CardInstance attacker in ps.Board)
             {
                 AttackIntent? atk = TryAttack(state, me, attacker.Id, attacker.CurrentAttack, foe,
-                    validator, preferFace: false, humanFacing);
+                    validator, preferFace: false);
                 if (atk is not null) return atk;
             }
 
@@ -115,7 +112,7 @@ namespace Emberfall.Net.Server.Bots
                 // Face first for the hero: swinging into a minion means taking its attack back, and
                 // the weapon has durability to spend either way. Bulwark still forces the trade.
                 AttackIntent? swing = TryAttack(state, me, ps.Hero.Id, ps.Weapon.CurrentAttack, foe,
-                    validator, preferFace: true, humanFacing);
+                    validator, preferFace: true);
                 if (swing is not null) return swing;
             }
 
