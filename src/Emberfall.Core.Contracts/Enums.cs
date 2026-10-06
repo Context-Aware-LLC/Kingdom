@@ -165,6 +165,14 @@ namespace Emberfall.Core.Contracts
         AURA
     }
 
+    /// <summary>Which of the controller's own characters a play's chosen target turned out to be.
+    /// Read by <c>TARGET_IS_FRIENDLY</c>.</summary>
+    public enum FriendlyTargetKind
+    {
+        MINION,
+        HERO,
+    }
+
     /// <summary>How an effect source relates to the player whose turn is beginning.</summary>
     public enum TurnOwner
     {

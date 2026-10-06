@@ -58,6 +58,7 @@ namespace Emberfall.Core.Serialization
             WalkMana(w, p.Mana);
             w.Bool(p.HeroPowerUsedThisTurn);
             w.I32(p.HeroAttacksUsedThisTurn);
+            w.I32(p.HeroDamageTakenThisTurn);
             w.I32(p.NextTurnBackdraftLock);
         }
 

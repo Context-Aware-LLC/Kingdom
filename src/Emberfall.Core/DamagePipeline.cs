@@ -93,6 +93,9 @@ namespace Emberfall.Core
                     toHealth -= soak;
                 }
                 hero.CurrentHealth -= toHealth;
+                // Counted before armor, so a hit the armor soaked still charges whatever reads
+                // "your hero has taken damage this turn".
+                state.Players[target.Seat].HeroDamageTakenThisTurn += amount;
             }
             else
             {

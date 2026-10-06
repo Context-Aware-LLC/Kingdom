@@ -182,7 +182,8 @@ namespace Emberfall.Core
             while (_queue.Count > 0)
             {
                 var qe = _queue.Dequeue();
-                if (!ConditionEvaluator.Holds(_state, _db, qe.Source, qe.TriggerEvent, qe.Bindings))
+                if (!ConditionEvaluator.Holds(_state, _db, qe.Source, qe.TriggerEvent, qe.Bindings,
+                        qe.ChosenTargets))
                     continue; // defense in depth for self-triggers or invalid data; not a resolution
 
                 if (++_state.ActionResolutionsThisTurn > MatchEngine.ActionResolutionCap) break;
@@ -358,10 +359,26 @@ namespace Emberfall.Core
     internal static class ConditionEvaluator
     {
         public static bool Holds(GameState state, ICardDatabase db, EffectSourceContext source,
-            TriggerEventContext context, TargetBindingContext? bindings = null)
+            TriggerEventContext context, TargetBindingContext? bindings = null,
+            IReadOnlyList<TargetRef>? chosenTargets = null)
+            => Holds(source.Rule.Condition, state, db, source, context, bindings, chosenTargets);
+
+        /// <summary>
+        /// The same gate over a condition that is not the rule's own — the switch on a
+        /// <see cref="DamageAction.InsteadAmount"/> — so "your hero has taken damage this turn" is
+        /// answered by one piece of code whether it gates a rule or picks an amount.
+        /// </summary>
+        public static bool Holds(RuleCondition condition, GameState state, ICardDatabase db,
+            EffectSourceContext source, TriggerEventContext context,
+            TargetBindingContext? bindings = null, IReadOnlyList<TargetRef>? chosenTargets = null)
         {
-            switch (source.Rule.Condition)
+            switch (condition)
             {
+                case HeroDamagedThisTurnCondition _:
+                    return state != null &&
+                           state.PlayerOf(source.Controller).HeroDamageTakenThisTurn > 0;
+                case TargetIsFriendlyCondition friendly:
+                    return ChoseOwn(state, source.Controller, friendly.Kind, chosenTargets);
                 case CostPaidCondition _:
                     // Fail closed with no binding context: a gate whose cost cannot be observed has
                     // not seen a cost paid. The observer snapshot is the caller that has none, and
@@ -371,10 +388,10 @@ namespace Emberfall.Core
                     return RuleSemantics.TriggerOf(source.Rule) != Trigger.ON_TURN_START;
                 case ControlsCondition controls:
                     return ControlsMinionOf(state, db, source, controls);
-                case TurnOwnerCondition condition:
+                case TurnOwnerCondition turnOwner:
                     if (!context.IncomingTurnPlayer.HasValue) return false;
                     bool controllerTurn = source.Controller == context.IncomingTurnPlayer.Value;
-                    switch (condition.Owner)
+                    switch (turnOwner.Owner)
                     {
                         case TurnOwner.CONTROLLER: return controllerTurn;
                         case TurnOwner.OPPONENT: return !controllerTurn;
@@ -384,6 +401,30 @@ namespace Emberfall.Core
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Whether the one target this play chose is the controller's own hero, or one of his
+        /// board minions.
+        ///
+        /// <para><b>Read off the intent, not off the recorded bindings.</b> A minion rider is
+        /// authored AHEAD of the rule that chooses, so the buff lands before the damage and a
+        /// kindled body survives it; when the rider is gated, the chooser has not resolved and
+        /// has recorded nothing yet. The intent's targets were validated before any of this ran.</para>
+        ///
+        /// <para>Fails closed on anything but exactly one chosen target: an observer has none, and
+        /// C32 keeps a rider off any card where there could be two.</para>
+        /// </summary>
+        private static bool ChoseOwn(GameState state, PlayerId controller, FriendlyTargetKind kind,
+            IReadOnlyList<TargetRef>? chosenTargets)
+        {
+            if (state == null || chosenTargets == null || chosenTargets.Count != 1) return false;
+            InstanceId chosen = chosenTargets[0].Instance;
+            PlayerState own = state.PlayerOf(controller);
+            if (kind == FriendlyTargetKind.HERO) return own.Hero.Id == chosen;
+            for (int i = 0; i < own.Board.Count; i++)
+                if (own.Board[i].Id == chosen) return true;
+            return false;
         }
 
         /// <summary>

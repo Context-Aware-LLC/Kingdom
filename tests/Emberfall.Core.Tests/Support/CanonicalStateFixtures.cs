@@ -39,7 +39,7 @@ namespace Emberfall.Core.Tests.Support
             [typeof(PlayerState)] = new[]
             {
                 "Board", "Deck", "Graveyard", "Hand", "Hero", "HeroAttacksUsedThisTurn",
-                "HeroPowerUsedThisTurn", "Id", "Mana", "NextTurnBackdraftLock", "Weapon"
+                "HeroDamageTakenThisTurn", "HeroPowerUsedThisTurn", "Id", "Mana", "NextTurnBackdraftLock", "Weapon"
             },
             // EXPERIMENT (effect-model fork): IsFrosted and FrostThawPending left this inventory because
             // they stopped being state — they are now derived properties over Effects, and a derived view
@@ -119,6 +119,7 @@ namespace Emberfall.Core.Tests.Support
             ["PlayerState.Mana"] = s => s.Players[0].Mana = new ManaPool { Max = 9, Available = 9 },
             ["PlayerState.HeroPowerUsedThisTurn"] = s => s.Players[0].HeroPowerUsedThisTurn = !s.Players[0].HeroPowerUsedThisTurn,
             ["PlayerState.HeroAttacksUsedThisTurn"] = s => s.Players[0].HeroAttacksUsedThisTurn++,
+            ["PlayerState.HeroDamageTakenThisTurn"] = s => s.Players[0].HeroDamageTakenThisTurn++,
             ["PlayerState.NextTurnBackdraftLock"] = s => s.Players[0].NextTurnBackdraftLock++,
 
             // HeroInstance (seat 0's hero)
@@ -243,6 +244,7 @@ namespace Emberfall.Core.Tests.Support
             p0.Weapon.Keywords.Add(Keyword.LIFEDRAIN);
             p0.Mana = new ManaPool { Max = 5, Available = 3, Spent = 2, Locked = 1, Temporary = 1 };
             p0.HeroAttacksUsedThisTurn = 1;
+            p0.HeroDamageTakenThisTurn = 3;
             p0.NextTurnBackdraftLock = 2;
 
             // Seat 1: sparse on purpose (empty zones + null weapon are also canonical branches).

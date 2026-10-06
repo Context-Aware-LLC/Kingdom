@@ -101,6 +101,7 @@ namespace Emberfall.Core.Projection
             proj.Mana.Temporary = ps.Mana.Temporary;
             proj.HeroPowerUsedThisTurn = ps.HeroPowerUsedThisTurn;
             proj.HeroAttacksUsedThisTurn = ps.HeroAttacksUsedThisTurn;
+            proj.HeroDamageTakenThisTurn = ps.HeroDamageTakenThisTurn;
             proj.NextTurnBackdraftLock = ps.NextTurnBackdraftLock;
 
             return proj;

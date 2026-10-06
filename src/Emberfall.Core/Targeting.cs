@@ -134,6 +134,11 @@ namespace Emberfall.Core
         /// <summary>
         /// Build the ordered, binding-aware choice plan a client must satisfy. Effects sharing a
         /// binding share one choice; their candidate sets are intersected in canonical order.
+        ///
+        /// <para><b>A rider is not in the plan.</b> A rule gated on <c>TARGET_IS_FRIENDLY</c> acts
+        /// on the choice another rule makes, and only when that choice turned out to be the
+        /// controller's own. Letting it intersect here would narrow "a character" to "a friendly
+        /// minion" for the whole card — the exact shape the condition exists to avoid.</para>
         /// </summary>
         public static IReadOnlyList<TargetChoiceRequirement> PlayerChoicePlan(GameState state,
             ICardDatabase db, PlayerId controller, CardDefinition def, Trigger trigger,
@@ -144,7 +149,7 @@ namespace Emberfall.Core
             foreach (RuleDefinition rule in def.Rules)
             {
                 TargetSpec? candidateTarget = RuleSemantics.TargetOf(rule.Action);
-                if (!RuleSemantics.ActivatesOn(rule, trigger) || !IsPlayerChosen(candidateTarget)) continue;
+                if (!RuleSemantics.ActivatesOn(rule, trigger) || !RuleSemantics.Chooses(rule)) continue;
                 TargetSpec spec = candidateTarget!;
                 IReadOnlyList<TargetCandidate> candidates = Candidates(state, db, controller,
                     spec, rule.Action, source);
@@ -283,7 +288,7 @@ namespace Emberfall.Core
             foreach (RuleDefinition rule in def.Rules)
             {
                 if (!RuleSemantics.ActivatesOn(rule, trigger)) continue;
-                if (IsPlayerChosen(RuleSemantics.TargetOf(rule.Action))) playerRules.Add(rule);
+                if (RuleSemantics.Chooses(rule)) playerRules.Add(rule);
             }
 
             // No activating rule asks the player to choose, so every target the client sent is

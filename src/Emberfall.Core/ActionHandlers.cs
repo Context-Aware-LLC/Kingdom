@@ -76,7 +76,12 @@ namespace Emberfall.Core
     {
         public void Execute(in EffectContext ctx)
         {
-            int amount = ((DamageAction)ctx.Rule.Action).Amount;
+            var damage = (DamageAction)ctx.Rule.Action;
+            // Decided once, before the hit: a bolt aimed at your own hero must not charge itself.
+            int amount = damage.InsteadCondition != null &&
+                         ConditionEvaluator.Holds(damage.InsteadCondition, ctx.State, ctx.Db, ctx.Source, default)
+                ? damage.InsteadAmount!.Value
+                : damage.Amount;
             if (ctx.Source.Definition.Type == CardType.SPELL)
                 amount += ActionHandlers.SpellDamageBonus(ctx.State, ctx.Source.Controller);
 

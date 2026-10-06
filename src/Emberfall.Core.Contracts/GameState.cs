@@ -213,6 +213,10 @@ namespace Emberfall.Core.Contracts
         public ManaPool Mana = new ManaPool();
         public bool HeroPowerUsedThisTurn;
         public int HeroAttacksUsedThisTurn;
+        /// <summary>Damage this hero has taken since the current turn began, armor-absorbed damage
+        /// included. Cleared for BOTH players at every turn start, so "this turn" never reaches back
+        /// into the opponent's. Read by <c>HERO_DAMAGED_THIS_TURN</c>.</summary>
+        public int HeroDamageTakenThisTurn;
         public int NextTurnBackdraftLock; // crystals to lock at next start-of-turn
 
         public PlayerState(PlayerId id, HeroInstance hero)

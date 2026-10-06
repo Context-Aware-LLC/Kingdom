@@ -708,6 +708,10 @@ namespace Emberfall.Core
             state.Phase = TurnPhase.StartOfTurn;
             state.TurnNumber++;
             state.ActionResolutionsThisTurn = 0;
+            // Both seats, not just the incoming one: "this turn" is the turn now starting, and
+            // what a hero took during the turn that just ended belongs to that turn.
+            state.Players[0].HeroDamageTakenThisTurn = 0;
+            state.Players[1].HeroDamageTakenThisTurn = 0;
 
             // Mana: +1 max (cap 10) → apply backdraft locks → refill.
             ps.Mana.Max = System.Math.Min(ps.Mana.Max + 1, MatchEngine.MaxMana);

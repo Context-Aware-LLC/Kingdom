@@ -171,6 +171,12 @@ namespace Emberfall.Core.Cards
                             "rule.condition.tribe is NONE. A CONTROLS condition names a tribe to " +
                             "look for, and NONE is the absence of one.");
                     return new ControlsCondition(named, Bool(element, "other") ?? false);
+                case "TARGET_IS_FRIENDLY":
+                    RejectUnknownProperties(element, "rule.condition", Set("type", "kind"));
+                    return new TargetIsFriendlyCondition(ReqEnum<FriendlyTargetKind>(element, "kind"));
+                case "HERO_DAMAGED_THIS_TURN":
+                    RejectUnknownProperties(element, "rule.condition", Set("type"));
+                    return HeroDamagedThisTurnCondition.Instance;
                 default:
                     throw new FormatException($"Unknown rule condition type '{type}'.");
             }
@@ -204,8 +210,16 @@ namespace Emberfall.Core.Cards
             switch (type)
             {
                 case "DAMAGE":
-                    Fields(element, type, "amount", "target");
-                    return new DamageAction(Amount(element), TargetFromElement(element));
+                    Fields(element, type, "amount", "target", "instead");
+                    if (!element.TryGetProperty("instead", out JsonElement instead))
+                        return new DamageAction(Amount(element), TargetFromElement(element));
+                    if (instead.ValueKind != JsonValueKind.Object)
+                        throw new FormatException("rule.action.instead must be an object.");
+                    RejectUnknownProperties(instead, "rule.action.instead", Set("amount", "condition"));
+                    return new DamageAction(Amount(element), TargetFromElement(element),
+                        RequiredInt(instead, "amount", "rule.action.instead.amount"),
+                        ConditionFromElement(RequiredObject(instead, "condition",
+                            "rule.action.instead.condition")));
                 case "HEAL":
                     Fields(element, type, "amount", "target");
                     return new HealAction(Amount(element), TargetFromElement(element));

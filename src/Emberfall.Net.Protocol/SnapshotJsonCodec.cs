@@ -77,6 +77,7 @@ namespace Emberfall.Net.Protocol
             w.EndObject();
             w.Name("heroPowerUsedThisTurn"); w.Bool(p.HeroPowerUsedThisTurn);
             w.Name("heroAttacksUsedThisTurn"); w.I32(p.HeroAttacksUsedThisTurn);
+            w.Name("heroDamageTakenThisTurn"); w.I32(p.HeroDamageTakenThisTurn);
             w.Name("nextTurnBackdraftLock"); w.I32(p.NextTurnBackdraftLock);
             w.EndObject();
         }
@@ -312,9 +313,11 @@ namespace Emberfall.Net.Protocol
 
             if (!TryBoolField(obj, "heroPowerUsedThisTurn", out bool hpUsed, ref detail)) return false;
             if (!TryI32Field(obj, "heroAttacksUsedThisTurn", out int heroAtks, ref detail)) return false;
+            if (!TryI32Field(obj, "heroDamageTakenThisTurn", out int heroDamage, ref detail)) return false;
             if (!TryI32Field(obj, "nextTurnBackdraftLock", out int backdraft, ref detail)) return false;
             player.HeroPowerUsedThisTurn = hpUsed;
             player.HeroAttacksUsedThisTurn = heroAtks;
+            player.HeroDamageTakenThisTurn = heroDamage;
             player.NextTurnBackdraftLock = backdraft;
             return true;
         }

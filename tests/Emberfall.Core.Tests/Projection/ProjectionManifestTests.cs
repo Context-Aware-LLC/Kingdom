@@ -62,6 +62,7 @@ namespace Emberfall.Core.Tests.Projection
                 ["Mana"] = "PUBLIC",
                 ["HeroPowerUsedThisTurn"] = "PUBLIC",
                 ["HeroAttacksUsedThisTurn"] = "PUBLIC",
+                ["HeroDamageTakenThisTurn"] = "PUBLIC",
                 ["NextTurnBackdraftLock"] = "PUBLIC",
             },
             [typeof(HeroInstance)] = new()

@@ -139,6 +139,45 @@ namespace Emberfall.Core.Cards
         private CostPaidCondition() { }
     }
 
+    /// <summary>
+    /// Holds when the target the player chose for this play was one of his OWN characters of
+    /// <see cref="Kind"/> — the payoff half of a Kindle card: "Deal 2 damage to a character; a
+    /// friendly minion gains +2/+1" (Sam, 2026-10-06).
+    ///
+    /// <para><b>A rule carrying this is a RIDER: it never chooses.</b> It rides the choice an
+    /// unconditioned rule on the same trigger makes. <c>Targeting</c> leaves it out of the choice
+    /// plan, so its own narrower target does not shrink what the player may point at, and it
+    /// resolves against whatever was picked only when this holds. Bindings alone cannot say that:
+    /// two rules sharing a binding INTERSECT their candidates, which would narrow the whole card
+    /// to friendly minions.</para>
+    ///
+    /// <para><b>It names no binding, because a card with a rider has one choice to read</b> — the
+    /// same reasoning as <see cref="CostPaidCondition"/>. <c>CardValidator</c> C32 holds the
+    /// trigger to exactly one choosing rule taking one target, so "the chosen target" cannot be
+    /// ambiguous. RETIREMENT TRIGGER: a card wanting a rider beside two choices needs this to
+    /// name which one it reads.</para>
+    ///
+    /// <para><c>MINION</c> gates a rule that acts on the chosen minion. <c>HERO</c> gates an
+    /// untargeted payoff: "if it was your hero, draw a card".</para>
+    /// </summary>
+    public sealed class TargetIsFriendlyCondition : RuleCondition
+    {
+        public FriendlyTargetKind Kind { get; }
+        public TargetIsFriendlyCondition(FriendlyTargetKind kind) => Kind = kind;
+    }
+
+    /// <summary>
+    /// Holds while the controller's hero has taken damage since the current turn began
+    /// (<c>PlayerState.HeroDamageTakenThisTurn</c>). State-only: it reads no target and no
+    /// trigger, so it is equally a rule's gate and the switch on a
+    /// <see cref="DamageAction.InsteadAmount"/>.
+    /// </summary>
+    public sealed class HeroDamagedThisTurnCondition : RuleCondition
+    {
+        public static readonly HeroDamagedThisTurnCondition Instance = new HeroDamagedThisTurnCondition();
+        private HeroDamagedThisTurnCondition() { }
+    }
+
     public abstract class RuleLifetime { private protected RuleLifetime() { } }
 
     public sealed class SourceBoundLifetime : RuleLifetime
@@ -195,7 +234,37 @@ namespace Emberfall.Core.Cards
     public sealed class DamageAction : TargetedRuleAction
     {
         public int Amount { get; }
-        public DamageAction(int amount, TargetSpec target) : base(target) => Amount = amount;
+
+        /// <summary>
+        /// The amount dealt INSTEAD of <see cref="Amount"/> while <see cref="InsteadCondition"/>
+        /// holds — "Deal 1 damage. Deals 2 instead if your hero has taken damage this turn." Null,
+        /// with the condition, on every ordinary damage rule.
+        ///
+        /// <para><b>One rule with two amounts, not two rules with opposite conditions.</b> A
+        /// condition is re-read when its rule is dequeued, so a pair would race its own effect:
+        /// the base hit aimed at your own hero makes "your hero has taken damage" true in time
+        /// for the boosted rule behind it, and the card deals both. One hit has nothing to race.</para>
+        /// </summary>
+        public int? InsteadAmount { get; }
+        public RuleCondition? InsteadCondition { get; }
+
+        public DamageAction(int amount, TargetSpec target) : this(amount, target, null, null) { }
+
+        public DamageAction(int amount, TargetSpec target, int? insteadAmount,
+            RuleCondition? insteadCondition) : base(target)
+        {
+            if (insteadAmount.HasValue != (insteadCondition != null))
+                throw new ArgumentException(
+                    "A DAMAGE 'instead' is an amount AND the condition that switches to it; one " +
+                    "without the other says nothing.");
+            Amount = amount;
+            InsteadAmount = insteadAmount;
+            InsteadCondition = insteadCondition;
+        }
+
+        /// <summary>This rule with a different base amount and the same instead-clause.</summary>
+        public DamageAction WithAmounts(int amount, int? insteadAmount)
+            => new DamageAction(amount, Target, insteadAmount, InsteadCondition);
     }
 
     public sealed class HealAction : TargetedRuleAction
@@ -415,6 +484,17 @@ namespace Emberfall.Core.Cards
 
         public static TargetSpec? TargetOf(RuleAction action)
             => action is TargetedRuleAction targeted ? targeted.Target : null;
+
+        /// <summary>
+        /// Whether a rule rides another rule's choice instead of making one — see
+        /// <see cref="TargetIsFriendlyCondition"/>. The one place that decides it, so the choice
+        /// plan, the validator and the card text cannot each hold their own opinion.
+        /// </summary>
+        public static bool IsRider(RuleDefinition rule) => rule.Condition is TargetIsFriendlyCondition;
+
+        /// <summary>Whether a rule asks the player for a target: a player-chosen spec that is not a rider's.</summary>
+        public static bool Chooses(RuleDefinition rule)
+            => !IsRider(rule) && TargetSpec.IsPlayerChosen(TargetOf(rule.Action));
     }
 
     public static class RuleActionCapabilities

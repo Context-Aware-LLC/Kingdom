@@ -24,6 +24,7 @@ namespace Emberfall.Core
             {
                 int counter = seat == 0 ? ++state.FatigueCounter0 : ++state.FatigueCounter1;
                 ps.Hero.CurrentHealth -= counter;
+                ps.HeroDamageTakenThisTurn += counter;
                 buf.Emit(GameEventKind.FatigueDamage, target: ps.Hero.Id, amount: counter, flags: EventFlags.Fatigue);
                 return;
             }
