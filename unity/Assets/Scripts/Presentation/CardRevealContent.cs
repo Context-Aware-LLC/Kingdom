@@ -29,7 +29,7 @@ namespace Emberfall.Presentation
         internal string Body { get; }
 
         /// <summary>Flavor/lore line (CardDefinition.FlavorText). Kept OUT of <see cref="Body"/>
-        /// deliberately: it renders in its own screen-corner surface (CardRevealController /
+        /// deliberately: it renders on its own plate beside the focused card (CardRevealPanel /
         /// CardFlavorTextPanel), completely separate from both the rules glossary above and the
         /// on-card Tooltip banner (CardPresenter).</summary>
         internal string FlavorText { get; }
@@ -129,7 +129,7 @@ namespace Emberfall.Presentation
             }
 
             // FlavorText is deliberately not appended here — see CardRevealContent.FlavorText:
-            // it renders in its own bottom-right screen surface instead.
+            // it renders on its own plate beside the focused card instead.
 
             return sb.ToString();
         }

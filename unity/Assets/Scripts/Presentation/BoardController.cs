@@ -130,12 +130,6 @@ namespace Emberfall.Presentation
         private bool _combatAttackerSortingWasEnabled;
         private int _combatAttackerSortingOrder;
 
-        // Bottom-right flavor-text surface (CardDefinition.FlavorText), one per match, lazily
-        // built the first time a card needs it and shared by every CardPresenter. Screen-anchored
-        // (re-parents itself to Camera.main), so it does not belong to any one card's hierarchy.
-        private CardFlavorTextPanel _flavorPanel;
-        internal CardFlavorTextPanel FlavorPanel => _flavorPanel;
-
         private readonly Dictionary<InstanceId, CardPresenter>  _presenters  = new();
         private readonly Dictionary<InstanceId, CardLiveState>  _liveStates  = new();
 
@@ -244,9 +238,6 @@ namespace Emberfall.Presentation
             if (_matchRunner != null)
                 _matchRunner.OnMatchEvent -= OnMatchEvent;
             StopCombatMotion(restore: false);
-            // The shared flavor plate re-parents itself to the camera for screen anchoring and is
-            // therefore no longer beneath this hierarchy when the board is torn down.
-            if (_flavorPanel != null) DestroyObj(_flavorPanel.gameObject);
         }
 
         // EffectInterpreter.cs:148 and RulesEngine.cs:94 both emit CardDestroyed with SOURCE set and no
@@ -1317,18 +1308,15 @@ namespace Emberfall.Presentation
             hover.Init(visualGo.transform, root.GetComponent<UnityEngine.Rendering.SortingGroup>());
             hover.enabled = false;   // hand-only; ConfigureForZone turns it on
 
-            if (_flavorPanel == null) _flavorPanel = CardFlavorTextPanel.Create(transform);
-
             var presenter = root.AddComponent<CardPresenter>();
             presenter.Setup(nameLabel, costLabel, attackLabel, healthLabel, durabilityLabel, kwLabel, bodyRenderer, artRenderer, bodyLabel);
             presenter.SetupFrameLayer(frameRenderer, gemRenderer, _uiSprites,
                                       costSocket, attackSocket, healthSocket, gemSocket, powerSword);
             presenter.SetupTribe(tribeBanner, tribeLabel, tribePanel);
             // DISABLED 2026-09-08 (Sam): the on-card name-overflow banner sticks forever on touch
-            // and covers the mana cost (#362) — same root cause hits the flavor-text-on-hover panel
-            // it shares a trigger with. Leaving tooltipBanner/tooltipLabel/_flavorPanel unwired on
-            // CardPresenter keeps its pointer-enter checks false; both are already null-safe.
-            // presenter.SetupTooltip(tooltipBgGo, tooltipLabel, _flavorPanel);
+            // and covers the mana cost (#362). Leaving tooltipBanner/tooltipLabel unwired on
+            // CardPresenter keeps its pointer-enter check false; it is already null-safe.
+            // presenter.SetupTooltip(tooltipBgGo, tooltipLabel);
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
             var binder = root.AddComponent<CardMaterialBinder>();

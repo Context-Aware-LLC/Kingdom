@@ -27,6 +27,11 @@ namespace Emberfall.Presentation
         private const float OverlayDistance = 2f;
         internal const float CardHeightFraction = 1f;
 
+        // Offsets from that plane, which only order the three layers: the card and its flavor
+        // plate toward the camera, the dimmer behind them.
+        private const float FocusZ = -0.03f;
+        private const float DimmerZ = 0.05f;
+
         // Above the hand (HandSortBase 50, +20 while lifted) and below the match-end banner (100).
         private const int SortBase = 90;
 
@@ -36,6 +41,7 @@ namespace Emberfall.Presentation
         private Sprite _solidSprite;
         private BoardController _board;
         private CardPresenter _focusPresenter;
+        private CardFlavorTextPanel _flavor;
         private InstanceId _focusedCard;
         private bool _hasFocusedCard;
         private ICardLiveState _focusedLive;
@@ -80,11 +86,13 @@ namespace Emberfall.Presentation
                 new Vector2(0.5f, 0.5f), Texture2D.whiteTexture.width);
             var dimGo = new GameObject("Dimmer");
             dimGo.transform.SetParent(transform, false);
-            dimGo.transform.localPosition = new Vector3(0f, 0f, 0.05f);
+            dimGo.transform.localPosition = new Vector3(0f, 0f, DimmerZ);
             _dimmer = dimGo.AddComponent<SpriteRenderer>();
             _dimmer.sprite = _solidSprite;
             _dimmer.color = DimColor;
             _dimmer.sortingOrder = SortBase - 2;
+
+            _flavor = CardFlavorTextPanel.Create(transform, SortBase);
 
             ApplyLayout(force: true);
         }
@@ -130,19 +138,33 @@ namespace Emberfall.Presentation
                 safe.xMax / screenW, safe.yMax / screenH);
             CardRevealLayout layout = CardRevealLayout.Solve(viewW, viewH, safeViewport);
 
+            // The layout is solved on the plane at OverlayDistance, and under a perspective camera
+            // a layer off that plane draws at a different size: left alone, the dimmer stops 2.4%
+            // short of the screen edge and the card overruns the safe height by 1.5%. Each layer
+            // is scaled back onto the solve.
+            bool perspective = cam != null && !cam.orthographic;
+            float near = perspective ? (OverlayDistance + FocusZ) / OverlayDistance : 1f;
+            float far = perspective ? (OverlayDistance + DimmerZ) / OverlayDistance : 1f;
+
             if (_dimmer != null)
             {
-                _dimmer.transform.localPosition = new Vector3(0f, 0f, 0.05f);
-                _dimmer.transform.localScale = new Vector3(viewW, viewH, 1f);
+                _dimmer.transform.localPosition = new Vector3(0f, 0f, DimmerZ);
+                _dimmer.transform.localScale = new Vector3(viewW * far, viewH * far, 1f);
             }
-            _focusX = layout.CardCenter.x;
-            _focusY = layout.CardCenter.y;
-            _focusScale = layout.CardHeight / BoardController.CardH;
+            _focusX = layout.CardCenter.x * near;
+            _focusY = layout.CardCenter.y * near;
+            _focusScale = layout.CardHeight / BoardController.CardH * near;
             if (_focusPresenter != null)
             {
                 Transform focus = _focusPresenter.transform;
-                focus.localPosition = new Vector3(_focusX, _focusY, -0.03f);
+                focus.localPosition = new Vector3(_focusX, _focusY, FocusZ);
                 focus.localScale = Vector3.one * _focusScale;
+            }
+            if (_flavor != null)
+            {
+                Rect area = layout.FlavorArea;
+                _flavor.Place(new Rect(area.x * near, area.y * near, area.width * near, area.height * near),
+                              _focusScale, FocusZ);
             }
         }
 
@@ -176,15 +198,17 @@ namespace Emberfall.Presentation
             _hasFocusedCard = true;
             _focusedLive = trigger.LiveState;
             Transform focus = _focusPresenter.transform;
-            focus.localPosition = new Vector3(_focusX, _focusY, -0.03f);
+            focus.localPosition = new Vector3(_focusX, _focusY, FocusZ);
             focus.localRotation = Quaternion.identity;
             focus.localScale = Vector3.one * _focusScale;
             var group = focus.GetComponent<UnityEngine.Rendering.SortingGroup>();
             if (group != null) group.sortingOrder = SortBase + 1;
+            if (_flavor != null) _flavor.Show(trigger.Definition.FlavorText);
         }
 
         private void ReleaseFocusCard()
         {
+            if (_flavor != null) _flavor.Hide();
             _focusedCard = default;
             _hasFocusedCard = false;
             _focusedLive = null;
@@ -220,11 +244,24 @@ namespace Emberfall.Presentation
         internal float CardHeight { get; }
         internal float CardWidth { get; }
 
-        private CardRevealLayout(Vector2 cardCenter, float cardHeight, float cardWidth)
+        /// <summary>Where the flavor plate may draw: the column right of the card, rising from
+        /// the card's foot. Zero when the screen leaves no readable column there (4:3 and
+        /// narrower) — such a screen shows no flavor line rather than one laid over the card.</summary>
+        internal Rect FlavorArea { get; }
+
+        // All in card terms, so the plate keeps its proportion to the card on every screen.
+        private const float FlavorGap = 0.04f;        // of card height: card to plate, plate to safe edge
+        private const float FlavorFoot = 0.05f;       // of card height: plate foot above the card's
+        private const float FlavorMaxHeight = 0.45f;  // of card height
+        private const float FlavorMaxWidth = 1f;      // of card width
+        private const float FlavorMinWidth = 0.4f;    // of card width
+
+        private CardRevealLayout(Vector2 cardCenter, float cardHeight, float cardWidth, Rect flavorArea)
         {
             CardCenter = cardCenter;
             CardHeight = cardHeight;
             CardWidth = cardWidth;
+            FlavorArea = flavorArea;
         }
 
         internal static CardRevealLayout Solve(float viewWidth, float viewHeight, Rect safeViewport)
@@ -234,92 +271,84 @@ namespace Emberfall.Presentation
             float centreY = viewHeight * (safeViewport.center.y - 0.5f);
             float cardH = safeH * CardRevealPanel.CardHeightFraction;
             float cardW = cardH * BoardController.CardW / BoardController.CardH;
-            return new CardRevealLayout(new Vector2(centreX, centreY), cardH, cardW);
+
+            float gap = cardH * FlavorGap;
+            float flavorLeft = centreX + cardW * 0.5f + gap;
+            float safeRight = viewWidth * (Mathf.Clamp01(safeViewport.xMax) - 0.5f);
+            float flavorW = Mathf.Min(safeRight - gap - flavorLeft, cardW * FlavorMaxWidth);
+            Rect flavor = flavorW >= cardW * FlavorMinWidth
+                ? new Rect(flavorLeft, centreY - cardH * 0.5f + cardH * FlavorFoot,
+                           flavorW, cardH * FlavorMaxHeight)
+                : Rect.zero;
+            return new CardRevealLayout(new Vector2(centreX, centreY), cardH, cardW, flavor);
         }
     }
 
     /// <summary>
-    /// EF-049 follow-on. Flavor/lore line (CardDefinition.FlavorText), bottom-right of the screen —
-    /// completely separate from both <see cref="CardRevealPanel"/>'s focused card and
-    /// CardPresenter's on-card Tooltip banner. BoardController owns the one shared instance and
-    /// CardPresenter drives it from direct hover, keeping flavor text out of the enlarged focus
-    /// view while avoiding duplicate screen-anchored panels.
+    /// The flavor line (CardDefinition.FlavorText) of the card in the focus view: a small plate
+    /// beside the focused card, lower right. The card face has no room for it at any size, and
+    /// the focus view is the one read gesture that ends on touch as well as on a mouse — a plate
+    /// driven by raw hover never came down on a touchscreen (#362).
+    ///
+    /// <para>A child of <see cref="CardRevealPanel"/>, laid out in card units and scaled with the
+    /// focused card, so its type keeps one size against the card on every screen. No collider,
+    /// for the reason the panel has none.</para>
     /// </summary>
     internal sealed class CardFlavorTextPanel : MonoBehaviour
     {
-        private const float PanelW = BoardController.CardW * 1.9f;
-        private const float PanelH = BoardController.CardH * 0.62f;
-        private const int SortBase = 90;
-        private const float PanelZ = -1.5f;
-
-        // Bottom-right: positive X, negative Y from screen centre. Clear of the hand, which sits
-        // bottom-CENTRE. Y centre -2.9, half-height ~0.51 -> bottom of -3.4, well inside the
-        // +-4.6 safe half-height. The band above it (roughly y[-1.75, -0.65]) was reserved for the
-        // reject-toast stack until #268 deleted that surface; it is free now, but this panel's
-        // placement does not depend on it either way.
-        private const float PanelX = 4.6f;
-        private const float PanelY = -2.9f;
+        // Card units. The focused card's own rules text is 1.0 at its largest.
+        private const float FontMax = 0.9f;
+        private const float FontMin = 0.6f;
+        private const float PadX = 0.09f;
+        private const float PadY = 0.07f;
 
         private static readonly Color PlateColor = new Color(0.09f, 0.11f, 0.16f, 1f);
 
         private TextMeshPro _body;
         private Renderer _face;
+        private string _text = "";
+        private float _width;
+        private float _maxHeight;
+        private bool _hasRoom;
 
-        internal static CardFlavorTextPanel Create(Transform parent)
+        internal static CardFlavorTextPanel Create(Transform parent, int sortingOrder)
         {
             var go = new GameObject("CardFlavorTextPanel");
             go.transform.SetParent(parent, false);
             var panel = go.AddComponent<CardFlavorTextPanel>();
-            panel.Build();
+            panel.Build(sortingOrder);
             go.SetActive(false);
             return panel;
         }
 
-        private void Build()
+        private void Build(int sortingOrder)
         {
-            Camera cam = Camera.main;
-            if (cam != null)
-            {
-                transform.SetParent(cam.transform, false);
-                transform.localPosition = new Vector3(PanelX, PanelY, -cam.transform.position.z + PanelZ);
-                transform.localRotation = Quaternion.identity;
-            }
-            else
-            {
-                transform.position = new Vector3(PanelX, PanelY, PanelZ);
-            }
-
             var faceGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
             faceGo.name = "Face";
             faceGo.transform.SetParent(transform, false);
-            faceGo.transform.localScale = new Vector3(PanelW, PanelH, 1f);
             DestroyGenerated(faceGo.GetComponent<MeshCollider>());
-            var face = faceGo.GetComponent<Renderer>();
-            _face = face;
-            face.sortingOrder = SortBase;
-            MaterialCatalog.Assign(face, MaterialCatalog.Plate);
-            var mpb = new MaterialPropertyBlock();
-            face.GetPropertyBlock(mpb);
-            mpb.SetColor("_BaseColor", PlateColor);
-            face.SetPropertyBlock(mpb);
+            _face = faceGo.GetComponent<Renderer>();
+            _face.sortingOrder = sortingOrder;
+            MaterialCatalog.Assign(_face, MaterialCatalog.Plate);
 
-            float pad = PanelW * 0.10f;
+            // Pivot at the bottom-left, so the plate grows up and right from the foot of its area
+            // and a one-line flavor sits where the last line of a long one does.
             var bodyGo = new GameObject("Body");
             bodyGo.transform.SetParent(transform, false);
-            bodyGo.transform.localPosition = new Vector3(0f, 0f, -0.01f);
             _body = bodyGo.AddComponent<TextMeshPro>();
-            bodyGo.GetComponent<Renderer>().sortingOrder = SortBase + 1;
+            bodyGo.GetComponent<Renderer>().sortingOrder = sortingOrder + 1;
             TMP_FontAsset body = BoardController.BodyFont();
             if (body != null) _body.font = body;
-            _body.fontStyle       = FontStyles.Italic;
-            _body.alignment       = TextAlignmentOptions.MidlineRight;
-            _body.color           = new Color(0.80f, 0.82f, 0.88f);
+            _body.rectTransform.pivot = Vector2.zero;
+            _body.rectTransform.localPosition = new Vector3(PadX, PadY, -0.01f);
+            _body.fontStyle        = FontStyles.Italic;
+            _body.alignment        = TextAlignmentOptions.BottomLeft;
+            _body.color            = new Color(0.80f, 0.82f, 0.88f);
             _body.textWrappingMode = TextWrappingModes.Normal;
-            _body.rectTransform.sizeDelta = new Vector2(PanelW - pad * 2f, PanelH * 0.86f);
             _body.enableAutoSizing = true;
-            _body.fontSizeMax      = 0.85f;
-            _body.fontSizeMin      = 0.5f;
-            _body.overflowMode     = TextOverflowModes.Ellipsis;
+            _body.fontSizeMax      = FontMax;
+            _body.fontSizeMin      = FontMin;
+            _body.overflowMode     = TextOverflowModes.Truncate;
         }
 
         private static void DestroyGenerated(Object generated)
@@ -329,49 +358,62 @@ namespace Emberfall.Presentation
             else DestroyImmediate(generated);
         }
 
-        private object _owner;
-
-        /// <summary>
-        /// No-ops (stays hidden) for an empty flavor line — a blank plate in the corner would read
-        /// as a bug, not as "this card has none".
-        ///
-        /// <para><paramref name="owner"/> is an opaque token (the calling CardPresenter, or null)
-        /// recorded so a later <see cref="Hide"/> can tell a stale event from the live one — the
-        /// same hazard <see cref="HoverRevealModel.PointerExit"/> guards against: Unity delivers
-        /// enter/exit per collider with no ordering guarantee between two cards, so a stale exit
-        /// from the card the pointer just LEFT must not blank the panel for the card it just
-        /// ENTERED. The shared BoardController-owned surface therefore passes its CardPresenter as
-        /// owner; callers with exclusive ownership may leave it null and use unconditional hide.</para>
-        /// </summary>
-        internal void Show(string flavorText, object owner = null)
+        /// <summary><paramref name="area"/> is in the focus panel's plane, <paramref name="z"/> its
+        /// depth there, and <paramref name="scale"/> the focused card's, so everything inside is
+        /// in card units. A zero area means the screen has no room beside the card and nothing
+        /// is drawn.</summary>
+        internal void Place(Rect area, float scale, float z = 0f)
         {
-            _owner = owner;
-            if (_body == null || string.IsNullOrEmpty(flavorText))
+            _hasRoom = area.width > 0f && area.height > 0f && scale > 0f;
+            if (_hasRoom)
             {
-                gameObject.SetActive(false);
-                return;
+                transform.localPosition = new Vector3(area.xMin, area.yMin, z);
+                transform.localScale = Vector3.one * scale;
+                _width = area.width / scale;
+                _maxHeight = area.height / scale;
             }
-            ApplyPlateColor();
-            _body.text = flavorText;
-            gameObject.SetActive(true);
+            Refresh();
         }
 
-        private void ApplyPlateColor()
+        /// <summary>An empty line hides the plate: a blank one beside the card would read as a
+        /// bug, not as "this card has none".</summary>
+        internal void Show(string flavorText)
         {
-            if (_face == null) return;
+            _text = flavorText ?? "";
+            Refresh();
+        }
+
+        internal void Hide() => Show("");
+
+        private void Refresh()
+        {
+            if (this == null || _body == null || _face == null) return;
+            bool visible = _hasRoom && _text.Length > 0;
+            gameObject.SetActive(visible);
+            if (!visible) return;
+
+            float innerW = _width - PadX * 2f;
+            float innerH = _maxHeight - PadY * 2f;
+            _body.rectTransform.sizeDelta = new Vector2(innerW, innerH);
+            _body.text = _text;
+            // Measured now, and regardless of active state: the focus panel fills this in before
+            // it activates itself, and the plate has to fit the line on the first frame it shows.
+            _body.ForceMeshUpdate(true);
+
+            // A line TMP could not measure reports a zero, NaN or inverted box; take the whole
+            // area then, rather than draw a plate with no size.
+            Vector3 drawn = _body.textBounds.size;
+            float textW = !(drawn.x > 0f) ? innerW : Mathf.Min(drawn.x, innerW);
+            float textH = !(drawn.y > 0f) ? innerH : Mathf.Min(drawn.y, innerH);
+            float plateW = textW + PadX * 2f;
+            float plateH = textH + PadY * 2f;
+            _face.transform.localPosition = new Vector3(plateW * 0.5f, plateH * 0.5f, 0f);
+            _face.transform.localScale = new Vector3(plateW, plateH, 1f);
+
             var mpb = new MaterialPropertyBlock();
             _face.GetPropertyBlock(mpb);
             mpb.SetColor("_BaseColor", PlateColor);
             _face.SetPropertyBlock(mpb);
-        }
-
-        /// <summary>Unconditional when <paramref name="owner"/> is null; otherwise only hides if
-        /// it still matches whoever's <see cref="Show"/> is currently up.</summary>
-        internal void Hide(object owner = null)
-        {
-            if (owner != null && !Equals(owner, _owner)) return;
-            _owner = null;
-            if (this != null) gameObject.SetActive(false);
         }
     }
 }

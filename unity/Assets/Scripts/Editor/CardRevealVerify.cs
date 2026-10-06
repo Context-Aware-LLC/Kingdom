@@ -30,27 +30,32 @@ namespace Emberfall.Editor
         [MenuItem("Emberfall/Verify Card Reveal (EF-049 trigger + glossary)")]
         public static void Run()
         {
+            Func<int>[] checks =
+            {
+                TouchLongPressReveals,
+                TouchHoldRevealIsSticky,
+                NewPressOnSameCardDismissesSticky,
+                TouchTapDoesNotReveal,
+                MousePressNeverArmsHold,
+                MouseHoverReveals,
+                HoldOutranksHover,
+                StaleExitDoesNotCancelLiveHover,
+                EveryKeywordHasGlossary,
+                ContentUsesLiveStateOverPrint,
+                EquippedWeaponContentUsesLiveStats,
+                ReadableZonesIncludeHandAndBoard,
+                DirectTooltipSuppressesTouch,
+                LayoutFillsSafeHeight,
+                FlavorPlateSitsBesideTheCardOrNowhere,
+                FocusViewIsWiredToReadableCards,
+            };
             int failed = 0;
-            failed += TouchLongPressReveals();
-            failed += TouchHoldRevealIsSticky();
-            failed += NewPressOnSameCardDismissesSticky();
-            failed += TouchTapDoesNotReveal();
-            failed += MousePressNeverArmsHold();
-            failed += MouseHoverReveals();
-            failed += HoldOutranksHover();
-            failed += StaleExitDoesNotCancelLiveHover();
-            failed += EveryKeywordHasGlossary();
-            failed += ContentUsesLiveStateOverPrint();
-            failed += EquippedWeaponContentUsesLiveStats();
-            failed += ReadableZonesIncludeHandAndBoard();
-            failed += DirectTooltipSuppressesTouch();
-            failed += LayoutFillsSafeHeight();
-            failed += FocusViewIsWiredToReadableCards();
+            foreach (Func<int> check in checks) failed += check();
 
             if (failed > 0)
                 Debug.LogError($"[CardRevealVerify] {failed} check(s) FAILED.");
             else
-                Debug.Log("[CardRevealVerify] GREEN — 14/14 checks passed.");
+                Debug.Log($"[CardRevealVerify] GREEN — {checks.Length}/{checks.Length} checks passed.");
         }
 
         // ── Trigger policy ──────────────────────────────────────────────────────────
@@ -310,6 +315,51 @@ namespace Emberfall.Editor
             return Pass("LayoutFillsSafeHeight");
         }
 
+        private static int FlavorPlateSitsBesideTheCardOrNowhere()
+        {
+            const string name = "FlavorPlateSitsBesideTheCardOrNowhere";
+            // Same Pixel 5a viewport as above. The plate's area must clear the card on its left,
+            // the screen edge on its right, and stay inside the card's own height.
+            var phoneSafe = Rect.MinMaxRect(136f / 2400f, 0f, 1f, 1f);
+            CardRevealLayout phone = CardRevealLayout.Solve(20f / 9f, 1f, phoneSafe);
+            Rect area = phone.FlavorArea;
+            float cardRight = phone.CardCenter.x + phone.CardWidth * 0.5f;
+            float cardFoot = phone.CardCenter.y - phone.CardHeight * 0.5f;
+            if (!(area.width > 0f) || !(area.height > 0f))
+                return Fail(name, "a 20:9 phone got no flavor area");
+            if (area.xMin <= cardRight || area.xMax >= 0.5f * (20f / 9f))
+                return Fail(name, $"area x [{area.xMin:F3}, {area.xMax:F3}] touches the card ({cardRight:F3}) or the screen edge");
+            if (area.yMin <= cardFoot || area.yMax >= cardFoot + phone.CardHeight)
+                return Fail(name, $"area y [{area.yMin:F3}, {area.yMax:F3}] leaves the card's height");
+
+            // A 4:3 screen has a third of a card beside the card: no room, so no plate at all.
+            CardRevealLayout tablet = CardRevealLayout.Solve(4f / 3f, 1f, new Rect(0f, 0f, 1f, 1f));
+            if (tablet.FlavorArea.width > 0f)
+                return Fail(name, $"a 4:3 screen was given a {tablet.FlavorArea.width:F3}-wide flavor area");
+
+            var root = new GameObject("FlavorPlateVerifyRoot");
+            try
+            {
+                CardFlavorTextPanel plate = CardFlavorTextPanel.Create(root.transform, 0);
+                plate.Place(area, 1f);
+                plate.Show("A line of flavor.");
+                if (!plate.gameObject.activeSelf)
+                    return Fail(name, "a card with a flavor line showed no plate");
+                plate.Show("");
+                if (plate.gameObject.activeSelf)
+                    return Fail(name, "a card with no flavor line showed an empty plate");
+                plate.Place(tablet.FlavorArea, 1f);
+                plate.Show("A line of flavor.");
+                if (plate.gameObject.activeSelf)
+                    return Fail(name, "the plate drew with no area to draw in");
+                return Pass(name);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
         private static int FocusViewIsWiredToReadableCards()
         {
             var root = new GameObject("CardFocusVerifyRoot");
@@ -327,7 +377,8 @@ namespace Emberfall.Editor
 
                 var p0 = new PlayerId("focus-p0");
                 var p1 = new PlayerId("focus-p1");
-                CardDefinition def = MinionWith(Keyword.BULWARK);
+                const string flavor = "Verified, reluctantly.";
+                CardDefinition def = MinionWith(Keyword.BULWARK, flavor: flavor);
                 var db = new InMemoryCardDatabase(new[] { def });
                 var router = routerGo.AddComponent<InputRouter>();
                 var board = root.AddComponent<BoardController>();
@@ -378,6 +429,19 @@ namespace Emberfall.Editor
                     || panel.transform.Find("Body") != null)
                     return Fail("FocusViewIsWiredToReadableCards", "secondary detail panel still exists");
 
+                // The flavor line rides the focus view, and nothing else puts it on screen. The
+                // verify camera is whatever Camera.main happens to be, so a screen too narrow for
+                // the plate is legitimate here; what is asserted is that the line reached it.
+                CardFlavorTextPanel plate = panel.GetComponentInChildren<CardFlavorTextPanel>(true);
+                TMPro.TextMeshPro line = plate != null
+                    ? plate.GetComponentInChildren<TMPro.TextMeshPro>(true)
+                    : null;
+                if (plate == null || line == null)
+                    return Fail("FocusViewIsWiredToReadableCards", "focus panel has no flavor plate");
+                if (plate.gameObject.activeSelf && line.text != flavor)
+                    return Fail("FocusViewIsWiredToReadableCards",
+                        $"flavor plate reads '{line.text}', expected '{flavor}'");
+
                 return Pass("FocusViewIsWiredToReadableCards");
             }
             finally
@@ -386,12 +450,6 @@ namespace Emberfall.Editor
                 // it explicitly so an edit-mode verification can never leave visual debris in
                 // the open scene even if MonoBehaviour destruction callbacks are suppressed.
                 if (panel != null) UnityEngine.Object.DestroyImmediate(panel.gameObject);
-                if (root != null)
-                {
-                    BoardController board = root.GetComponent<BoardController>();
-                    if (board != null && board.FlavorPanel != null)
-                        UnityEngine.Object.DestroyImmediate(board.FlavorPanel.gameObject);
-                }
                 UnityEngine.Object.DestroyImmediate(root);
                 UnityEngine.Object.DestroyImmediate(routerGo);
                 if (cameraGo != null) UnityEngine.Object.DestroyImmediate(cameraGo);
@@ -419,7 +477,8 @@ namespace Emberfall.Editor
 
         private static InstanceId Card(int id) => new InstanceId(id);
 
-        private static CardDefinition MinionWith(Keyword kw, int attack = 1, int health = 1) =>
+        private static CardDefinition MinionWith(Keyword kw, int attack = 1, int health = 1,
+                                                 string flavor = "") =>
             new CardDefinition(
                 id: 9010, handle: "verify_minion", name: "Verify Minion", type: CardType.MINION, cost: 1,
                 attack: attack, health: health, durability: null,
@@ -428,7 +487,7 @@ namespace Emberfall.Editor
                 // `cardText:` with the switch to generated text (eec7c6c). Typed rules replace
                 // both; this fixture needs none, so an empty list is the faithful translation.
                 keywords: new[] { kw }, rules: Array.Empty<RuleDefinition>(),
-                flavorText: "", artId: "verify", setId: SetId.CORE,
+                flavorText: flavor, artId: "verify", setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "");
 
         private static CardDefinition WeaponWith(int attack, int durability) =>

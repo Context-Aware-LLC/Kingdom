@@ -45,11 +45,6 @@ namespace Emberfall.Presentation
         [SerializeField] private GameObject tooltipBanner;
         [SerializeField] private TextMeshPro tooltipLabel;
 
-        // Bottom-right flavor-text surface — one shared instance per match, owned by
-        // BoardController. Completely separate presentation from the tooltip banner above: same
-        // trigger (raw hover), different field (FlavorText, not Tooltip), different surface.
-        private CardFlavorTextPanel _flavorPanel;
-
         private static readonly Color NormalColor   = new Color(0.22f, 0.22f, 0.32f);
         private static readonly Color BuffColor     = HealthInk.Buffed;
         private static readonly Color DamageColor   = new Color(0.90f, 0.20f, 0.20f);
@@ -112,13 +107,10 @@ namespace Emberfall.Presentation
 
         // Wired by BoardController.CreatePresenter; banner starts inactive and is toggled by
         // OnPointerEnter/OnPointerExit below, only when the bound card carries a non-empty Tooltip.
-        // flavorPanel is the match's one shared bottom-right surface (may be null in a detached/
-        // preview build that never wires one).
-        internal void SetupTooltip(GameObject banner, TextMeshPro label, CardFlavorTextPanel flavorPanel)
+        internal void SetupTooltip(GameObject banner, TextMeshPro label)
         {
             tooltipBanner = banner;
             tooltipLabel  = label;
-            _flavorPanel  = flavorPanel;
         }
 
         // Called by BoardController once the IArtProvider resolves this card's illustration.
@@ -213,7 +205,6 @@ namespace Emberfall.Presentation
         public void Unbind()
         {
             HideTooltip();
-            HideFlavorText();
             _health?.Forget();
             if (_live == null) return;
             _live.Changed -= OnChanged;
@@ -234,12 +225,11 @@ namespace Emberfall.Presentation
             if (_def == null) return;
             // A finger enters only by pressing, so on touch this banner would flash up under every
             // press and cover the mana cost. Touch has the full inspect surface; this immediate
-            // banner and the flavor corner remain desktop-hover affordances only.
+            // banner remains a desktop-hover affordance only.
             bool touchPressed = Touchscreen.current?.primaryTouch.press.isPressed == true;
             if (!ShouldShowDirectHover(touchPressed))
             {
                 HideTooltip();
-                HideFlavorText();
                 return;
             }
             if (!string.IsNullOrEmpty(_def.Tooltip) && tooltipBanner != null)
@@ -247,25 +237,16 @@ namespace Emberfall.Presentation
                 if (tooltipLabel != null) tooltipLabel.text = _def.Tooltip;
                 tooltipBanner.SetActive(true);
             }
-            _flavorPanel?.Show(_def.FlavorText, this);
         }
 
         internal static bool ShouldShowDirectHover(bool touchPressed) => !touchPressed;
 
-        void IPointerHoverTarget.OnPointerExit()
-        {
-            HideTooltip();
-            HideFlavorText();
-        }
+        void IPointerHoverTarget.OnPointerExit() => HideTooltip();
 
         private void HideTooltip()
         {
             if (tooltipBanner != null) tooltipBanner.SetActive(false);
         }
-
-        // `this` as the owner token: a stale exit from a card the pointer already left must not
-        // blank the panel for whichever card it entered next (see CardFlavorTextPanel.Hide).
-        private void HideFlavorText() => _flavorPanel?.Hide(this);
 
         // Called by InputRouter to highlight this card as the active selection.
         // Sets _isSelected for the BG tint and exhausted-dim override; no rim glow (GH#173).
