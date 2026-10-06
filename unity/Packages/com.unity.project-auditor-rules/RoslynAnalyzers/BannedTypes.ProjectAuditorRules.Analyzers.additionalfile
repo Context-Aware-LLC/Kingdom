@@ -1,0 +1,8 @@
+[
+  {
+    "name": "System.Runtime.Serialization.Formatters.Binary.BinaryFormatter",
+    "recommendation": "<b>BinaryFormatter</b> is obsolete and is disabled under the CoreCLR (.NET) scripting runtime, where its serialization and deserialization methods throw at runtime. Replace <b>BinaryFormatter</b> with a supported serializer such as <b>JsonUtility</b>, <b>System.Text.Json</b>, or <b>DataContractSerializer</b>, or write the data manually with <b>BinaryReader</b> and <b>BinaryWriter</b>.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  }
+]

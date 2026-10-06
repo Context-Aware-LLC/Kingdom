@@ -1,0 +1,13 @@
+[
+  {
+    "name": "UnityEngine.Component.tag",
+    "recommendation": "Use Component.CompareTag() if possible, which does not allocate"
+  },
+  {
+    "name": "UnityEngine.GameObject.tag",
+    "recommendation": "Use GameObject.CompareTag() if possible, which does not allocate"
+  },
+  {
+    "name": "UnityEngine.Object.name"
+  }
+]

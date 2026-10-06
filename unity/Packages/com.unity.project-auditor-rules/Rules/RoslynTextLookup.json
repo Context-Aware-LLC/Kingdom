@@ -1,0 +1,32 @@
+[
+  {
+    "id": "UDR0001",
+    "description": "This script contains static fields, properties or static methods that register to static events, but does not contain a method with the <b>[RuntimeInitializeOnLoadMethod]</b> attribute. If Domain Reload is disabled to facilitate faster entering/exiting Play Mode, the values in the static fields and properties will not be reset, and the static methods would remain registered to the event(s).",
+    "recommendation": "Create a method with a <b>[RuntimeInitializeOnLoadMethod]</b> attribute and ensure that all static variables and properties are assigned values in this method, and static methods are registered in this method.",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/RuntimeInitializeOnLoadMethodAttribute.html"
+  },
+  {
+    "id": "UDR0002",
+    "description": "This script contains one or more static fields or properties and a method with the <b>[RuntimeInitializeOnLoadMethod]</b> attribute, but the method does not set the value of the fields or properties. If Domain Reload is disabled to facilitate faster entering/exiting Play Mode, the values in the static fields or properties will not be reset.",
+    "recommendation": "Ensure that the method with a <b>[RuntimeInitializeOnLoadMethod]</b> attribute assigns values to all static variables and properties declared in this class.",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/RuntimeInitializeOnLoadMethodAttribute.html"
+  },
+  {
+    "id": "UDR0003",
+    "description": "This script contains a static delegate which is registered to a static event, but the analyzer can't guarantee that the delegate is explicitly unsubscribed when leaving Play Mode. If Domain Reload is disabled to facilitate faster entering/exiting Play Mode, the event may end up with multiple duplicate registered delegates.",
+    "recommendation": "Unsubscribe callbacks from static events when they are no longer needed. For static delegates, the safest place to unsubscribe is a method with a <b>[RuntimeInitializeOnLoadMethod]</b> attribute.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/DomainReload.html"
+  },
+  {
+    "id": "UDR0004",
+    "description": "This script contains a non-static delegate which is registered to a static event, but the analyzer can't guarantee that the delegate is explicitly unsubscribed when leaving Play Mode. If Domain Reload is disabled to facilitate faster entering/exiting Play Mode, the event may end up with multiple duplicate registered delegates.",
+    "recommendation": "Unsubscribe callbacks from static events when they are no longer needed. For non-static delegates, the safest place to unsubscribe is in a <b>MonoBehaviour.OnDisable()</b> or <b>MonoBehaviour.OnDestroy()</b> method.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/DomainReload.html"
+  },
+  {
+    "id": "UDR0005",
+    "description": "This script contains a non-static delegate which is registered to a static event, but no corresponding <b>MonoBehaviour.OnDisable()</b> or <b>MonoBehaviour.OnDestroy()</b> method in which to unsubscribe when leaving Play Mode. If Domain Reload is disabled to facilitate faster entering/exiting Play Mode, the event may end up with multiple duplicate registered delegates.",
+    "recommendation": "Unsubscribe callbacks from static events when they are no longer needed. For non-static delegates, the safest place to unsubscribe is in a <b>MonoBehaviour.OnDisable()</b> or <b>MonoBehaviour.OnDestroy()</b> method.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/DomainReload.html"
+  }
+]

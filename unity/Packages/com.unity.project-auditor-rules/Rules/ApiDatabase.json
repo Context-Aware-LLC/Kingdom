@@ -1,0 +1,1952 @@
+[
+    {
+        "id": "PAC0000",
+        "type": "UnityEngine.Camera",
+        "method": "main",
+        "areas": ["CPU"],
+        "description": "<b>Camera.main</b> property uses <b>FindGameObjectsWithTag()</b> internally and doesn't cache the result.",
+        "recommendation": "It is advised to cache and use the camera component obtained from Game object instead.",
+        "maximumVersion": "2019.4.8",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Camera-main.html"
+    },
+    {
+        "id": "PAC0001",
+        "type": "UnityEngine.WebCamTexture",
+        "method": "GetPixels",
+        "areas": ["Memory"],
+        "description": "<b>WebCamTexture.GetPixels()</b> allocates managed memory.",
+        "recommendation": "Use WebCamTexture.GetPixels32() instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/WebCamTexture.GetPixels.html"
+    },
+    {
+        "id": "PAC0002",
+        "type": "UnityEngine.WebCamTexture",
+        "method": "GetPixels32",
+        "areas": ["Memory"],
+        "description": "<b>WebCamTexture.GetPixels32()</b> allocates managed memory if a suitable array is not provided as a parameter.",
+        "recommendation": "Ensure that you pass an array of <b>Color32[]</b> to this API method for it to fill out, to avoid creating a new array every time the method is called.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/WebCamTexture.GetPixels32.html"
+    },
+    {
+        "id": "PAC0003",
+        "type": "UnityEngine.GeometryUtility",
+        "method": "CalculateFrustumPlanes",
+        "returnType": "!void",
+        "areas": ["Memory"],
+        "description": "Some versions of <b>GeometryUtility.CalculateFrustumPlanes()</b> allocate managed memory.",
+        "recommendation": "Ensure that you use the <b>CalculateFrustumPlanes(Matrix4x4 worldToProjectionMatrix, Plane[] planes)</b> version of this API method, in order to be able to pass a pre-allocated Array of Planes.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/GeometryUtility.CalculateFrustumPlanes.html"
+    },
+    {
+        "id": "PAC0004",
+        "type": "UnityEngine.Resources",
+        "method": "FindObjectsOfTypeAll",
+        "areas": ["Memory"],
+        "description": "<b>Resources.FindObjectsOfTypeAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Resources.FindObjectsOfTypeNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Resources.FindObjectsOfTypeAll.html"
+    },
+    {
+        "id": "PAC0005",
+        "type": "UnityEngine.Texture2D",
+        "method": "GetPixels",
+        "areas": ["Memory"],
+        "description": "<b>Texture2D.GetPixels()</b> allocates managed memory.",
+        "recommendation": "Use <b>Texture2D.GetRawTextureData()</b> instead. This method returns a NativeArray of pixel data, and so does not allocate managed memory.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture2D.GetPixels.html"
+    },
+    {
+        "id": "PAC0006",
+        "type": "UnityEngine.Texture2D",
+        "method": "GetPixels32",
+        "areas": ["Memory"],
+        "description": "<b>Texture2D.GetPixels32()</b> allocates managed memory.",
+        "recommendation": "Use <b>Texture2D.GetRawTextureData()</b> instead. This method returns a NativeArray of pixel data, and so does not allocate managed memory.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture2D.GetPixels32.html"
+    },
+    {
+        "id": "PAC0007",
+        "type": "UnityEngine.Rigidbody",
+        "method": "SweepTestAll",
+        "areas": ["Memory"],
+        "description": "<b>Rigidbody.SweepTestAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Rigidbody.SweepTestNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Rigidbody.SweepTestAll.html"
+    },
+    {
+        "id": "PAC0008",
+        "type": "UnityEngine.Physics",
+        "method": "RaycastAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics.RaycastAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics.RaycastNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics.RaycastAll.html"
+    },
+    {
+        "id": "PAC0009",
+        "type": "UnityEngine.Physics",
+        "method": "CapsuleCastAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics.CapsuleCastAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics.CapsuleCastNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics.CapsuleCastAll.html"
+    },
+    {
+        "id": "PAC0010",
+        "type": "UnityEngine.Physics",
+        "method": "SphereCastAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics.SphereCastAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics.SphereCastNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics.SphereCastAll.html"
+    },
+    {
+        "id": "PAC0011",
+        "type": "UnityEngine.Physics",
+        "method": "BoxCastAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics.BoxCastAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics.BoxCastNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics.BoxCastAll.html"
+    },
+    {
+        "id": "PAC0012",
+        "type": "UnityEngine.Physics",
+        "method": "OverlapCapsule",
+        "areas": ["Memory"],
+        "description": "<b>Physics.OverlapCapsule()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics.OverlapCapsuleNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics.OverlapCapsule.html"
+    },
+    {
+        "id": "PAC0013",
+        "type": "UnityEngine.Physics",
+        "method": "OverlapSphere",
+        "areas": ["Memory"],
+        "description": "<b>Physics.OverlapSphere()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics.OverlapSphereNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics.OverlapSphere.html"
+    },
+    {
+        "id": "PAC0014",
+        "type": "UnityEngine.Physics",
+        "method": "OverlapBox",
+        "areas": ["Memory"],
+        "description": "<b>Physics.OverlapBox()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics.OverlapBoxNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics.OverlapBox.html"
+    },
+    {
+        "id": "PAC0015",
+        "type": "UnityEngine.Physics2D",
+        "method": "LinecastAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.LinecastAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.LinecastNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.LinecastAll.html"
+    },
+    {
+        "id": "PAC0016",
+        "type": "UnityEngine.Physics2D",
+        "method": "RaycastAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.RaycastAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.RaycastNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.RaycastAll.html"
+    },
+    {
+        "id": "PAC0017",
+        "type": "UnityEngine.Physics2D",
+        "method": "CircleCastAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.CircleCastAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.CircleCastNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.CircleCastAll.html"
+    },
+    {
+        "id": "PAC0018",
+        "type": "UnityEngine.Physics2D",
+        "method": "BoxCastAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.BoxCastAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.BoxCastNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.BoxCastAll.html"
+    },
+    {
+        "id": "PAC0019",
+        "type": "UnityEngine.Physics2D",
+        "method": "CapsuleCastAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.CapsuleCastAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.CapsuleCastNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.CapsuleCastAll.html"
+    },
+    {
+        "id": "PAC0020",
+        "type": "UnityEngine.Physics2D",
+        "method": "GetRayIntersectionAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.GetRayIntersectionAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.GetRayIntersectionNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.GetRayIntersectionAll.html"
+    },
+    {
+        "id": "PAC0021",
+        "type": "UnityEngine.Physics2D",
+        "method": "OverlapPointAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.OverlapPointAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.OverlapPointNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.OverlapPointAll.html"
+    },
+    {
+        "id": "PAC0022",
+        "type": "UnityEngine.Physics2D",
+        "method": "OverlapCircleAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.OverlapCircleAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.OverlapCircleNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.OverlapCircleAll.html"
+    },
+    {
+        "id": "PAC0023",
+        "type": "UnityEngine.Physics2D",
+        "method": "OverlapBoxAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.OverlapBoxAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.OverlapBoxNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.OverlapBoxAll.html"
+    },
+    {
+        "id": "PAC0024",
+        "type": "UnityEngine.Physics2D",
+        "method": "OverlapAreaAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.OverlapAreaAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.OverlapAreaNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.OverlapAreaAll.html"
+    },
+    {
+        "id": "PAC0025",
+        "type": "UnityEngine.Physics2D",
+        "method": "OverlapCapsuleAll",
+        "areas": ["Memory"],
+        "description": "<b>Physics2D.OverlapCapsuleAll()</b> allocates managed memory.",
+        "recommendation": "Use <b>Physics2D.OverlapCapsuleNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Physics2D.OverlapCapsuleAll.html"
+    },
+    {
+        "id": "PAC0026",
+        "type": "UnityEngine.Component",
+        "method": "GetComponentsInChildren",
+        "returnType": "!void",
+        "areas": ["Memory"],
+        "description": "<b>Component.GetComponentsInChildren()</b> allocates managed memory.",
+        "recommendation": "Ensure you are using one of the versions of <b>GameObject.GetComponentsInChildren()</b> which accepts a List<T> as a parameter and populates it with the components it finds.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Component.GetComponentsInChildren.html"
+    },
+    {
+        "id": "PAC0027",
+        "type": "UnityEngine.Component",
+        "method": "GetComponentsInParent",
+        "returnType": "!void",
+        "areas": ["Memory"],
+        "description": "<b>Component.GetComponentsInParent()</b> allocates managed memory.",
+        "recommendation": "Ensure you are using one of the versions of <b>GameObject.GetComponentsInParent()</b> which accepts a List<T> as a parameter and populates it with the components it finds.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Component.GetComponentsInParent.html"
+    },
+    {
+        "id": "PAC0028",
+        "type": "UnityEngine.GameObject",
+        "method": "GetComponentsInChildren",
+        "returnType": "!void",
+        "areas": ["Memory"],
+        "description": "Some versions of <b>GameObject.GetComponentsInChildren()</b> allocate managed memory.",
+        "recommendation": "Ensure you are using one of the versions of <b>GameObject.GetComponentsInChildren()</b> which accepts a List<T> as a parameter and populates it with the components it finds.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/GameObject.GetComponentsInChildren.html"
+    },
+    {
+        "id": "PAC0029",
+        "type": "UnityEngine.GameObject",
+        "method": "GetComponentsInParent",
+        "returnType": "!void",
+        "areas": ["Memory"],
+        "description": "Some versions of <b>GameObject.GetComponentsInParent()</b> allocate managed memory.",
+        "recommendation": "Ensure you are using one of the versions of <b>GameObject.GetComponentsInParent()</b> which accepts a List<T> as a parameter and populates it with the components it finds.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/GameObject.GetComponentsInParent.html"
+    },
+    {
+        "id": "PAC0030",
+        "type": "UnityEngine.Collider",
+        "method": "OnTriggerStay",
+        "areas": ["CPU"],
+        "description": "<b>OnTriggerStay()</b> methods can detrimentally affect performance if they perform a lot of processing or if there are many Colliders which implement this method.",
+        "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all <b>OnTriggerStay()</b> methods, and consider refactoring code to not use them.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnTriggerStay.html"
+    },
+    {
+        "id": "PAC0031",
+        "type": "UnityEngine.MonoBehaviour",
+        "method": "OnTriggerStay",
+        "areas": ["CPU"],
+        "description": "<b>OnTriggerStay()</b> methods can detrimentally affect performance if they perform a lot of processing or if there are many MonoBehaviours which implement this method.",
+        "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all <b>OnTriggerStay()</b> methods, and consider refactoring code to not use them.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnTriggerStay.html"
+    },
+    {
+        "id": "PAC0032",
+        "type": "UnityEngine.Collider2D",
+        "method": "OnTriggerStay2D",
+        "areas": ["CPU"],
+        "description": "<b>OnTriggerStay2D()</b> methods can detrimentally affect performance if they perform a lot of processing or if there are many Collider2Ds which implement this method.",
+        "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all <b>OnTriggerStay2D()</b> methods, and consider refactoring code to not use them.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnTriggerStay2D.html"
+    },
+    {
+        "id": "PAC0033",
+        "type": "UnityEngine.MonoBehaviour",
+        "method": "OnTriggerStay2D",
+        "areas": ["CPU"],
+        "description": "<b>OnTriggerStay2D()</b> methods can detrimentally affect performance if they perform a lot of processing or if there are many MonoBehaviours which implement this method.",
+        "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all <b>OnTriggerStay2D()</b> methods, and consider refactoring code to not use them.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnTriggerStay2D.html"
+    },
+    {
+        "id": "PAC0034",
+        "type": "UnityEngine.Collider",
+        "method": "OnCollisionStay",
+        "areas": ["CPU"],
+        "description": "<b>OnCollisionStay()</b> methods can detrimentally affect performance if they perform a lot of processing or if there are many Colliders which implement this method.",
+        "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all <b>OnCollisionStay()</b> methods, and consider refactoring code to not use them.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnCollisionStay.html"
+    },
+    {
+        "id": "PAC0035",
+        "type": "UnityEngine.MonoBehaviour",
+        "method": "OnCollisionStay",
+        "areas": ["CPU"],
+        "description": "<b>OnCollisionStay()</b> methods can detrimentally affect performance if they perform a lot of processing or if there are many MonoBehaviours which implement this method.",
+        "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all <b>OnCollisionStay()</b> methods, and consider refactoring code to not use them.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnCollisionStay.html"
+    },
+    {
+        "id": "PAC0036",
+        "type": "UnityEngine.Rigidbody",
+        "method": "OnCollisionStay",
+        "areas": ["CPU"],
+        "description": "<b>OnCollisionStay()</b> methods can detrimentally affect performance if they perform a lot of processing or if there are many RigidBodies which implement this method.",
+        "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all <b>OnCollisionStay()</b> methods, and consider refactoring code to not use them.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnCollisionStay.html"
+    },
+    {
+        "id": "PAC0037",
+        "type": "UnityEngine.ImageConversion",
+        "method": "LoadImage",
+        "areas": ["Memory"],
+        "description": "<b>ImageConversion.LoadImage()</b> defaults to maintaining a CPU-accessible copy of the image. This is a waste of memory if not needed.",
+        "recommendation": "If a CPU-accessible copy of the texture is not required, ensure that the markNonReadable flag passed into the method is set to true.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/ImageConversion.LoadImage.html"
+    },
+    {
+        "id": "PAC0039",
+        "type": "UnityEngine.Renderer",
+        "method": "material",
+        "areas": ["GPU"],
+        "description": "The <b>Renderer.material</b> property creates a unique copy of the Renderer's material. This breaks draw call batching and results in a higher number of draw calls, impacting rendering performance.",
+        "recommendation": "If possible, use <b>Renderer.sharedMaterial</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Renderer-material.html"
+    },
+    {
+        "id": "PAC0051",
+        "type": "UnityEngine.ComputeBuffer",
+        "method": "GetData",
+        "areas": ["CPU"],
+        "description": "<b>ComputeBuffer.GetData()</b> stalls the CPU until the GPU has finished accessing the buffer. This can lead to significant CPU performance problems.",
+        "recommendation": "Avoid reading back from ComputeBuffers if possible. If it's unavoidable, profile your project carefully and regularly to monitor the performance impact.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/ComputeBuffer.GetData.html"
+    },
+    {
+        "id": "PAC0052",
+        "type": "UnityEngine.Texture2D",
+        "method": "SetPixels",
+        "areas": ["CPU"],
+        "description": "<b>Texture2D.SetPixels()</b> is slower than <b>Texture2D.SetPixels32()</b>.",
+        "recommendation": "Use <b>Texture2D.SetPixels32()</b>, <b>Texture2D.GetRawTextureData()</b>, or <b>Texture2D.Apply()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture2D.SetPixels.html"
+    },
+    {
+        "id": "PAC0053",
+        "type": "UnityEngine.Texture3D",
+        "method": "SetPixels",
+        "areas": ["CPU"],
+        "description": "<b>Texture3D.SetPixels()</b> is slower than <b>Texture3D.SetPixels32()</b>.",
+        "recommendation": "Use <b>Texture3D.SetPixels32()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture3D.SetPixels.html"
+    },
+    {
+        "id": "PAC0054",
+        "type": "UnityEngine.Texture2DArray",
+        "method": "SetPixels",
+        "areas": ["CPU"],
+        "description": "<b>Texture2DArray.SetPixels()</b> is slower than <b>Texture2DArray.SetPixels32()</b>.",
+        "recommendation": "Use <b>Texture2DArray.SetPixels32()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture2DArray.SetPixels.html"
+    },
+    {
+        "id": "PAC0055",
+        "type": "UnityEngine.CubemapArray",
+        "method": "SetPixels",
+        "areas": ["CPU"],
+        "description": "<b>CubemapArray.SetPixels()</b> is slower than <b>CubemapArray.SetPixels32()</b>.",
+        "recommendation": "Use <b>CubemapArray.SetPixels32()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/CubemapArray.SetPixels.html"
+    },
+    {
+        "id": "PAC0056",
+        "type": "UnityEngine.GameObject",
+        "method": "SendMessage",
+        "areas": ["CPU"],
+        "description": "<b>GameObject.SendMessage()</b> is a very slow and CPU-intensive method.",
+        "recommendation": "Implement a custom system to replace SendMessage - get the components you want to send messages to and call methods directly on them.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/GameObject.SendMessage.html"
+    },
+    {
+        "id": "PAC0057",
+        "type": "UnityEngine.Component",
+        "method": "SendMessage",
+        "areas": ["CPU"],
+        "description": "<b>Component.SendMessage()</b> is a very slow and CPU-intensive method.",
+        "recommendation": "Implement a custom system to replace SendMessage - get the components you want to send messages to and call methods directly on them.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Component.SendMessage.html"
+    },
+    {
+        "id": "PAC0058",
+        "type": "UnityEngine.MonoBehaviour",
+        "method": "OnGUI",
+        "areas": ["CPU"],
+        "description": "<b>OnGUI()</b> is used by the legacy Immediate Mode GUI (IMGUI), which is extremely CPU-intensive. If a single OnGUI() method is present in a project's code, IMGUI will initialize and consume CPU time.",
+        "recommendation": "Remove all <b>OnGUI()</b> methods from the project code.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnGUI.html"
+    },
+    {
+        "id": "PAC0059",
+        "type": "UnityEngine.AI.NavMeshPath",
+        "method": "corners",
+        "areas": ["Memory"],
+        "description": "The property <b>AI.NavMeshPath.corners</b> allocates managed memory.",
+        "recommendation": "Use <b>AI.NavMeshPath.GetCornersNonAlloc()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/AI.NavMeshPath-corners.html"
+    },
+    {
+        "id": "PAC0060",
+        "type": "UnityEngine.Animator",
+        "method": "parameters",
+        "areas": ["Memory"],
+        "description": "The property Animator.parameters allocates managed memory.",
+        "recommendation": "Use <b>Animator.GetParameter()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Animator-parameters.html"
+    },
+    {
+        "id": "PAC0061",
+        "type": "UnityEngine.Animations.ParentConstraint",
+        "method": "translationOffsets",
+        "areas": ["Memory"],
+        "description": "The property <b>Animations.ParentConstraint.translationOffsets</b> allocates managed memory.",
+        "recommendation": "Use <b>Animations.ParentConstraint.GetTranslationOffset()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Animations.ParentConstraint-translationOffsets.html"
+    },
+    {
+        "id": "PAC0062",
+        "type": "UnityEngine.Animations.ParentConstraint",
+        "method": "rotationOffsets",
+        "areas": ["Memory"],
+        "description": "The property <b>Animations.ParentConstraint.rotationOffsets</b> allocates managed memory.",
+        "recommendation": "Use <b>Animations.ParentConstraint.GetRotationOffset()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Animations.ParentConstraint-rotationOffsets.html"
+    },
+    {
+        "id": "PAC0063",
+        "type": "UnityEngine.AnimationCurve",
+        "method": "keys",
+        "areas": ["Memory"],
+        "description": "The property <b>AnimationCurve.keys</b> allocates managed memory.",
+        "recommendation": "Use <b>AnimationCurve.AddKey()</b>, <b>AnimationCurve.MoveKey()</b> or <b>AnimationCurve.RemoveKey()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/AnimationCurve-keys.html"
+    },
+    {
+        "id": "PAC0066",
+        "type": "UnityEngine.Camera",
+        "method": "allCameras",
+        "areas": ["Memory"],
+        "description": "The property <b>Camera.allCameras</b> allocates managed memory.",
+        "recommendation": "Use <b>Camera.GetAllCameras()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Camera-allCameras.html"
+    },
+    {
+        "id": "PAC0067",
+        "type": "UnityEngine.Mesh",
+        "method": "boneWeights",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.boneWeights</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetAllBoneWeights()</b> instead. This method returns a NativeArray of BoneWeight1, and so does not allocate managed memory.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-boneWeights.html"
+    },
+    {
+        "id": "PAC0068",
+        "type": "UnityEngine.Mesh",
+        "method": "bindposes",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.bindposes</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetBindposes()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-bindposes.html"
+    },
+    {
+        "id": "PAC0069",
+        "type": "UnityEngine.Mesh",
+        "method": "vertices",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.vertices</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetVertices()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-vertices.html"
+    },
+    {
+        "id": "PAC0070",
+        "type": "UnityEngine.Mesh",
+        "method": "normals",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.normals</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetNormals()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-normals.html"
+    },
+    {
+        "id": "PAC0071",
+        "type": "UnityEngine.Mesh",
+        "method": "tangents",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.tangents</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetTangents()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-tangents.html"
+    },
+    {
+        "id": "PAC0072",
+        "type": "UnityEngine.Mesh",
+        "method": "uv",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.uv</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetUVs()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-uv.html"
+    },
+    {
+        "id": "PAC0074",
+        "type": "UnityEngine.Mesh",
+        "method": "uv2",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.uv2</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetUVs()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-uv2.html"
+    },
+    {
+        "id": "PAC0075",
+        "type": "UnityEngine.Mesh",
+        "method": "uv3",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.uv3</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetUVs()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-uv3.html"
+    },
+    {
+        "id": "PAC0076",
+        "type": "UnityEngine.Mesh",
+        "method": "uv4",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.uv4</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetUVs()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-uv4.html"
+    },
+    {
+        "id": "PAC0077",
+        "type": "UnityEngine.Mesh",
+        "method": "uv5",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.uv5</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetUVs()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-uv5.html"
+    },
+    {
+        "id": "PAC0078",
+        "type": "UnityEngine.Mesh",
+        "method": "uv6",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.uv6</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetUVs()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-uv6.html"
+    },
+    {
+        "id": "PAC0079",
+        "type": "UnityEngine.Mesh",
+        "method": "uv7",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.uv7</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetUVs()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-uv7.html"
+    },
+    {
+        "id": "PAC0080",
+        "type": "UnityEngine.Mesh",
+        "method": "uv8",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.uv8</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetUVs()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-uv8.html"
+    },
+    {
+        "id": "PAC0081",
+        "type": "UnityEngine.Mesh",
+        "method": "colors",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.colors</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetColors()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-colors.html"
+    },
+    {
+        "id": "PAC0082",
+        "type": "UnityEngine.Mesh",
+        "method": "colors32",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.colors32</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetColors()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-colors32.html"
+    },
+    {
+        "id": "PAC0083",
+        "type": "UnityEngine.Mesh",
+        "method": "triangles",
+        "areas": ["Memory"],
+        "description": "The property <b>Mesh.triangles</b> allocates managed memory.",
+        "recommendation": "Use <b>Mesh.GetTriangles()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Mesh-triangles.html"
+    },
+    {
+        "id": "PAC0084",
+        "type": "UnityEngine.Renderer",
+        "method": "materials",
+        "areas": ["Memory"],
+        "description": "The property <b>Renderer.materials</b> allocates managed memory.",
+        "recommendation": "Use <b>Renderer.GetMaterials()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Renderer-materials.html"
+    },
+    {
+        "id": "PAC0085",
+        "type": "UnityEngine.Renderer",
+        "method": "sharedMaterials",
+        "areas": ["Memory"],
+        "description": "The property <b>Renderer.sharedMaterials</b> allocates managed memory.",
+        "recommendation": "Use <b>Renderer.GetSharedMaterials()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Renderer-sharedMaterials.html"
+    },
+    {
+        "id": "PAC0094",
+        "type": "UnityEngine.Input",
+        "method": "touches",
+        "areas": ["Memory"],
+        "description": "The property <b>Input.touches</b> allocates managed memory.",
+        "recommendation": "Use <b>Input.GetTouch()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Input-touches.html"
+    },
+    {
+        "id": "PAC0095",
+        "type": "UnityEngine.Input",
+        "method": "accelerationEvents",
+        "areas": ["Memory"],
+        "description": "The property <b>Input.accelerationEvents</b> allocates managed memory.",
+        "recommendation": "Use <b>Input.GetAccelerationEvent()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Input-accelerationEvents.html"
+    },
+    {
+        "id": "PAC0096",
+        "type": "UnityEngine.iOS.NotificationServices",
+        "method": "localNotifications",
+        "areas": ["Memory"],
+        "description": "The property <b>iOS.NotificationServices.localNotifications</b> allocates managed memory.",
+        "recommendation": "Use <b>iOS.NotificationServices.GetLocalNotification()</b> instead.",
+        "maximumVersion": "2021.3",
+        "platforms": ["iOS"],
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/iOS.NotificationServices-localNotifications.html"
+    },
+    {
+        "id": "PAC0097",
+        "type": "UnityEngine.iOS.NotificationServices",
+        "method": "remoteNotifications",
+        "areas": ["Memory"],
+        "description": "The property <b>iOS.NotificationServices.remoteNotifications</b> allocates managed memory.",
+        "recommendation": "Use <b>iOS.NotificationServices.GetRemoteNotification()</b> instead.",
+        "maximumVersion": "2021.3",
+        "platforms": ["iOS"],
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/iOS.NotificationServices-remoteNotifications.html"
+    },
+    {
+        "id": "PAC0100",
+        "type": "UnityEngine.GUISkin",
+        "method": "customStyles",
+        "areas": ["Memory"],
+        "description": "The property <b>GUISkin.customStyles</b> allocates managed memory.",
+        "recommendation": "Use <b>GUISkin.GetStyle()</b> or <b>GUISkin.FindStyle()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/GUISkin-customStyles.html"
+    },
+    {
+        "id": "PAC0103",
+        "type": "UnityEngine.Collision",
+        "method": "contacts",
+        "areas": ["Memory"],
+        "description": "The property <b>Collision.contacts</b> allocates managed memory.",
+        "recommendation": "Use <b>Collision.GetContacts()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Collision-contacts.html"
+    },
+    {
+        "id": "PAC0104",
+        "type": "UnityEngine.Collision2D",
+        "method": "contacts",
+        "areas": ["Memory"],
+        "description": "The property <b>Collision2D.contacts</b> allocates managed memory.",
+        "recommendation": "Use <b>Collision2D.GetContacts()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Collision2D-contacts.html"
+    },
+    {
+        "id": "PAC0110",
+        "type": "UnityEngine.TerrainData",
+        "method": "treeInstances",
+        "areas": ["Memory"],
+        "description": "The property <b>TerrainData.treeInstances</b> allocates managed memory.",
+        "recommendation": "Use <b>TerrainData.GetTreeInstance()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TerrainData-treeInstances.html"
+    },
+    {
+        "id": "PAC0111",
+        "type": "UnityEngine.TerrainData",
+        "method": "alphamapTextures",
+        "areas": ["Memory"],
+        "description": "The property <b>TerrainData.alphamapTextures</b> allocates managed memory.",
+        "recommendation": "Use <b>TerrainData.GetAlphamapTexture()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TerrainData-alphamapTextures.html"
+    },
+    {
+        "id": "PAC0112",
+        "type": "UnityEngine.Font",
+        "method": "characterInfo",
+        "areas": ["Memory"],
+        "description": "The property <b>Font.characterInfo</b> allocates managed memory.",
+        "recommendation": "Use <b>Font.GetCharacterInfo()</b> instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Font-characterInfo.html"
+    },
+    {
+        "id": "PAC0115",
+        "type": "UnityEngine.Animator",
+        "method": "GetCurrentAnimatorClipInfo",
+        "areas": ["Memory"],
+        "description": "<b>Animator.GetCurrentAnimatorClipInfo()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Animator.GetCurrentAnimatorClipInfo.html"
+    },
+    {
+        "id": "PAC0116",
+        "type": "UnityEngine.Animator",
+        "method": "GetBehaviours",
+        "areas": ["Memory"],
+        "description": "<b>Animator.GetBehaviours()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Animator.GetBehaviours.html"
+    },
+    {
+        "id": "PAC0117",
+        "type": "UnityEngine.AssetBundle",
+        "method": "LoadAssetWithSubAssets",
+        "areas": ["Memory"],
+        "description": "<b>AssetBundle.LoadAssetWithSubAssets()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/AssetBundle.LoadAssetWithSubAssets.html"
+    },
+    {
+        "id": "PAC0118",
+        "type": "UnityEngine.AssetBundle",
+        "method": "LoadAllAssets",
+        "areas": ["Memory"],
+        "description": "<b>AssetBundle.LoadAllAssets()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/AssetBundle.LoadAllAssets.html"
+    },
+    {
+        "id": "PAC0119",
+        "type": "UnityEngine.AssetBundleManifest",
+        "method": "GetAllAssetBundles",
+        "areas": ["Memory"],
+        "description": "<b>AssetBundleManifest.GetAllAssetBundles()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/AssetBundleManifest.GetAllAssetBundles.html"
+    },
+    {
+        "id": "PAC0120",
+        "type": "UnityEngine.Resources",
+        "method": "LoadAll",
+        "areas": ["Memory"],
+        "description": "<b>Resources.LoadAll()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Resources.LoadAll.html"
+    },
+    {
+        "id": "PAC0121",
+        "type": "UnityEngine.Texture2D",
+        "method": "PackTextures",
+        "areas": ["Memory"],
+        "description": "<b>Texture2D.PackTextures()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture2D.PackTextures.html"
+    },
+    {
+        "id": "PAC0122",
+        "type": "UnityEngine.Cubemap",
+        "method": "GetPixels",
+        "areas": ["Memory"],
+        "description": "<b>Cubemap.GetPixels()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Cubemap.GetPixels.html"
+    },
+    {
+        "id": "PAC0123",
+        "type": "UnityEngine.Texture3D",
+        "method": "GetPixels",
+        "areas": ["Memory"],
+        "description": "<b>Texture3D.GetPixels()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture3D.GetPixels.html"
+    },
+    {
+        "id": "PAC0124",
+        "type": "UnityEngine.Texture3D",
+        "method": "GetPixels32",
+        "areas": ["Memory"],
+        "description": "<b>Texture3D.GetPixels32()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture3D.GetPixels32.html"
+    },
+    {
+        "id": "PAC0125",
+        "type": "UnityEngine.Texture2DArray",
+        "method": "GetPixels",
+        "areas": ["Memory"],
+        "description": "<b>Texture2DArray.GetPixels()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture2DArray.GetPixels.html"
+    },
+    {
+        "id": "PAC0126",
+        "type": "UnityEngine.Texture2DArray",
+        "method": "GetPixels32",
+        "areas": ["Memory"],
+        "description": "<b>Texture2DArray.GetPixels32()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture2DArray.GetPixels32.html"
+    },
+    {
+        "id": "PAC0127",
+        "type": "UnityEngine.CubemapArray",
+        "method": "GetPixels",
+        "areas": ["Memory"],
+        "description": "<b>CubemapArray.GetPixels()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/CubemapArray.GetPixels.html"
+    },
+    {
+        "id": "PAC0128",
+        "type": "UnityEngine.CubemapArray",
+        "method": "GetPixels32",
+        "areas": ["Memory"],
+        "description": "<b>CubemapArray.GetPixels32()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/CubemapArray.GetPixels32.html"
+    },
+    {
+        "id": "PAC0129",
+        "type": "UnityEngine.Object",
+        "method": "FindObjectsOfType",
+        "areas": ["CPU", "Memory"],
+        "description": "<b>Object.FindObjectsOfType()</b> allocates managed memory and can be slow.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Object.FindObjectsOfType.html"
+    },
+    {
+        "id": "PAC0130",
+        "type": "UnityEngine.Windows.Crypto",
+        "method": "ComputeMD5Hash",
+        "areas": ["Memory"],
+        "description": "<b>Windows.Crypto.ComputeMD5Hash()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Windows.Crypto.ComputeMD5Hash.html"
+    },
+    {
+        "id": "PAC0131",
+        "type": "UnityEngine.Windows.File",
+        "method": "ReadAllBytes",
+        "areas": ["Memory"],
+        "description": "<b>Windows.File.ReadAllBytes()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Windows.File.ReadAllBytes.html"
+    },
+    {
+        "id": "PAC0132",
+        "type": "UnityEngine.ImageConversion",
+        "method": "EncodeToJPG",
+        "areas": ["Memory"],
+        "description": "<b>ImageConversion.EncodeToJPG()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/ImageConversion.EncodeToJPG.html"
+    },
+    {
+        "id": "PAC0133",
+        "type": "UnityEngine.ImageConversion",
+        "method": "EncodeToEXR",
+        "areas": ["Memory"],
+        "description": "<b>ImageConversion.EncodeToEXR()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/ImageConversion.EncodeToEXR.html"
+    },
+    {
+        "id": "PAC0134",
+        "type": "UnityEngine.ImageConversion",
+        "method": "EncodeToTGA",
+        "areas": ["Memory"],
+        "description": "<b>ImageConversion.EncodeToTGA()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/ImageConversion.EncodeToTGA.html"
+    },
+    {
+        "id": "PAC0135",
+        "type": "UnityEngine.ImageConversion",
+        "method": "EncodeToPNG",
+        "areas": ["Memory"],
+        "description": "<b>ImageConversion.EncodeToPNG()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/ImageConversion.EncodeToPNG.html"
+    },
+    {
+        "id": "PAC0136",
+        "type": "UnityEngine.U2D.SpriteShapeUtility",
+        "method": "Generate",
+        "areas": ["Memory"],
+        "description": "<b>U2D.SpriteShapeUtility.Generate()</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "minimumVersion": "2019.3",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/U2D.SpriteShapeUtility.Generate.html"
+    },
+    {
+        "id": "PAC0138",
+        "type": "UnityEngine.AI.NavMeshTriangulation",
+        "method": "layers",
+        "areas": ["Memory"],
+        "description": "The property <b>AI.NavMeshTriangulation.layers</b> allocates managed memory.",
+        "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/AI.NavMeshTriangulation-layers.html"
+    },
+    {
+        "id": "PAC0139",
+        "type": "UnityEngine.AnimationClip",
+        "method": "events",
+        "areas": ["Memory"],
+        "description": "The property <b>AnimationClip.events</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/AnimationClip-events.html"
+    },
+    {
+        "id": "PAC0140",
+        "type": "UnityEngine.RuntimeAnimatorController",
+        "method": "animationClips",
+        "areas": ["Memory"],
+        "description": "The property <b>RuntimeAnimatorController.animationClips</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/RuntimeAnimatorController-animationClips.html"
+    },
+    {
+        "id": "PAC0141",
+        "type": "UnityEngine.HumanTrait",
+        "method": "MuscleName",
+        "areas": ["Memory"],
+        "description": "The property <b>HumanTrait.MuscleName</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/HumanTrait.MuscleName.html"
+    },
+    {
+        "id": "PAC0142",
+        "type": "UnityEngine.HumanTrait",
+        "method": "BoneName",
+        "areas": ["Memory"],
+        "description": "The property <b>HumanTrait.BoneName</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/HumanTrait.BoneName.html"
+    },
+    {
+        "id": "PAC0144",
+        "type": "UnityEngine.AssetBundleRequest",
+        "method": "allAssets",
+        "areas": ["Memory"],
+        "description": "The property <b>AssetBundleRequest.allAssets</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/AssetBundleRequest-allAssets.html"
+    },
+    {
+        "id": "PAC0145",
+        "type": "UnityEngine.Microphone",
+        "method": "devices",
+        "areas": ["Memory"],
+        "description": "The property <b>Microphone.devices</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Microphone-devices.html"
+    },
+    {
+        "id": "PAC0146",
+        "type": "UnityEngine.WebCamDevice",
+        "method": "availableResolutions",
+        "areas": ["Memory"],
+        "description": "The property <b>WebCamDevice.availableResolutions</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/WebCamDevice-availableResolutions.html"
+    },
+    {
+        "id": "PAC0147",
+        "type": "UnityEngine.WebCamTexture",
+        "method": "devices",
+        "areas": ["Memory"],
+        "description": "The property <b>WebCamTexture.devices</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/WebCamTexture-devices.html"
+    },
+    {
+        "id": "PAC0148",
+        "type": "UnityEngine.Cloth",
+        "method": "vertices",
+        "areas": ["Memory"],
+        "description": "The property <b>Cloth.vertices</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Cloth-vertices.html"
+    },
+    {
+        "id": "PAC0149",
+        "type": "UnityEngine.Cloth",
+        "method": "normals",
+        "areas": ["Memory"],
+        "description": "The property <b>Cloth.normals</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Cloth-normals.html"
+    },
+    {
+        "id": "PAC0150",
+        "type": "UnityEngine.Cloth",
+        "method": "coefficients",
+        "areas": ["Memory"],
+        "description": "The property <b>Cloth.coefficients</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Cloth-coefficients.html"
+    },
+    {
+        "id": "PAC0151",
+        "type": "UnityEngine.Cloth",
+        "method": "capsuleColliders",
+        "areas": ["Memory"],
+        "description": "The property <b>Cloth.capsuleColliders</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Cloth-capsuleColliders.html"
+    },
+    {
+        "id": "PAC0152",
+        "type": "UnityEngine.Cloth",
+        "method": "sphereColliders",
+        "areas": ["Memory"],
+        "description": "The property <b>Cloth.sphereColliders</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Cloth-sphereColliders.html"
+    },
+    {
+        "id": "PAC0153",
+        "type": "UnityEngine.Camera",
+        "method": "layerCullDistances",
+        "areas": ["Memory"],
+        "description": "The property <b>Camera.layerCullDistances</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Camera-layerCullDistances.html"
+    },
+    {
+        "id": "PAC0154",
+        "type": "UnityEngine.CrashReport",
+        "method": "reports",
+        "areas": ["Memory"],
+        "description": "The property CrashReport.reports allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/CrashReport-reports.html"
+    },
+    {
+        "id": "PAC0155",
+        "type": "UnityEngine.Gradient",
+        "method": "colorKeys",
+        "areas": ["Memory"],
+        "description": "The property <b>Gradient.colorKeys</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Gradient-colorKeys.html"
+    },
+    {
+        "id": "PAC0156",
+        "type": "UnityEngine.Gradient",
+        "method": "alphaKeys",
+        "areas": ["Memory"],
+        "description": "The property <b>Gradient.alphaKeys</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Gradient-alphaKeys.html"
+    },
+    {
+        "id": "PAC0157",
+        "type": "UnityEngine.Screen",
+        "method": "resolutions",
+        "areas": ["Memory"],
+        "description": "The property <b>Screen.resolutions</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Screen-resolutions.html"
+    },
+    {
+        "id": "PAC0158",
+        "type": "UnityEngine.LightmapSettings",
+        "method": "lightmaps",
+        "areas": ["Memory"],
+        "description": "The property <b>LightmapSettings.lightmaps</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/LightmapSettings-lightmaps.html"
+    },
+    {
+        "id": "PAC0159",
+        "type": "UnityEngine.LightProbes",
+        "method": "positions",
+        "areas": ["Memory"],
+        "description": "The property <b>LightProbes.positions</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/LightProbes-positions.html"
+    },
+    {
+        "id": "PAC0160",
+        "type": "UnityEngine.LightProbes",
+        "method": "bakedProbes",
+        "areas": ["Memory"],
+        "description": "The property <b>LightProbes.bakedProbes</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/LightProbes-bakedProbes.html"
+    },
+    {
+        "id": "PAC0161",
+        "type": "UnityEngine.LightProbes",
+        "method": "coefficients",
+        "areas": ["Memory"],
+        "description": "The property <b>LightProbes.coefficients</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/LightProbes-bakedProbes.html"
+    },
+    {
+        "id": "PAC0162",
+        "type": "UnityEngine.QualitySettings",
+        "method": "names",
+        "areas": ["Memory"],
+        "description": "The property <b>QualitySettings.names</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/QualitySettings-names.html"
+    },
+    {
+        "id": "PAC0163",
+        "type": "UnityEngine.Material",
+        "method": "shaderKeywords",
+        "areas": ["Memory"],
+        "description": "The property <b>Material.shaderKeywords</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Material-shaderKeywords.html"
+    },
+    {
+        "id": "PAC0164",
+        "type": "UnityEngine.Light",
+        "method": "layerShadowCullDistances",
+        "areas": ["Memory"],
+        "description": "The property <b>Light.layerShadowCullDistances</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Light-layerShadowCullDistances.html"
+    },
+    {
+        "id": "PAC0165",
+        "type": "UnityEngine.Rendering.RenderTargetBinding",
+        "method": "colorRenderTargets",
+        "areas": ["Memory"],
+        "description": "The property <b>Rendering.RenderTargetBinding.colorRenderTargets</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Rendering.RenderTargetBinding-colorRenderTargets.html"
+    },
+    {
+        "id": "PAC0166",
+        "type": "UnityEngine.Rendering.RenderTargetBinding",
+        "method": "colorLoadActions",
+        "areas": ["Memory"],
+        "description": "The property <b>Rendering.RenderTargetBinding.colorLoadActions</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Rendering.RenderTargetBinding-colorLoadActions.html"
+    },
+    {
+        "id": "PAC0167",
+        "type": "UnityEngine.Rendering.RenderTargetBinding",
+        "method": "colorStoreActions",
+        "areas": ["Memory"],
+        "description": "The property <b>Rendering.RenderTargetBinding.colorStoreActions</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Rendering.RenderTargetBinding-colorStoreActions.html"
+    },
+    {
+        "id": "PAC0168",
+        "type": "UnityEngine.SkinnedMeshRenderer",
+        "method": "bones",
+        "areas": ["Memory"],
+        "description": "The property <b>SkinnedMeshRenderer.bones</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/SkinnedMeshRenderer-bones.html"
+    },
+    {
+        "id": "PAC0169",
+        "type": "UnityEngine.LightProbeGroup",
+        "method": "probePositions",
+        "areas": ["Memory"],
+        "description": "The property <b>LightProbeGroup.probePositions</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/LightProbeGroup-probePositions.html"
+    },
+    {
+        "id": "PAC0170",
+        "type": "UnityEngine.Network",
+        "method": "connections",
+        "areas": ["Memory"],
+        "description": "The property <b>Network.connections</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "maximumVersion": "2018.4",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Network-connections.html"
+    },
+    {
+        "id": "PAC0171",
+        "type": "UnityEngine.HostData",
+        "method": "ip",
+        "areas": ["Memory"],
+        "description": "The property <b>HostData.ip</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "maximumVersion": "2018.4",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/HostData-ip.html"
+    },
+    {
+        "id": "PAC0172",
+        "type": "UnityEngine.SortingLayer",
+        "method": "layers",
+        "areas": ["Memory"],
+        "description": "The property <b>SortingLayer.layers</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/SortingLayer-layers.html"
+    },
+    {
+        "id": "PAC0173",
+        "type": "UnityEngine.TextAsset",
+        "method": "bytes",
+        "areas": ["Memory"],
+        "description": "The property <b>TextAsset.bytes</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TextAsset-bytes.html"
+    },
+    {
+        "id": "PAC0175",
+        "type": "UnityEngine.iOS.NotificationServices",
+        "method": "deviceToken",
+        "areas": ["Memory"],
+        "description": "The property <b>iOS.NotificationServices.deviceToken</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "maximumVersion": "2021.3",
+        "platforms": ["iOS"],
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/iOS.NotificationServices-deviceToken.html"
+    },
+    {
+        "id": "PAC0176",
+        "type": "UnityEngine.iOS.NotificationServices",
+        "method": "scheduledLocalNotifications",
+        "areas": ["Memory"],
+        "description": "The property <b>iOS.NotificationServices.scheduledLocalNotifications</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "maximumVersion": "2021.3",
+        "platforms": ["iOS"],
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/iOS.NotificationServices-scheduledLocalNotifications.html"
+    },
+    {
+        "id": "PAC0177",
+        "type": "UnityEngine.Sprite",
+        "method": "vertices",
+        "areas": ["Memory"],
+        "description": "The property <b>Sprite.vertices</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Sprite-vertices.html"
+    },
+    {
+        "id": "PAC0178",
+        "type": "UnityEngine.Sprite",
+        "method": "triangles",
+        "areas": ["Memory"],
+        "description": "The property <b>Sprite.triangles</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Sprite-triangles.html"
+    },
+    {
+        "id": "PAC0179",
+        "type": "UnityEngine.Sprite",
+        "method": "uv",
+        "areas": ["Memory"],
+        "description": "The property <b>Sprite.uv</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Sprite-uv.html"
+    },
+    {
+        "id": "PAC0180",
+        "type": "UnityEngine.SocialPlatforms.ILocalUser",
+        "method": "friends",
+        "areas": ["Memory"],
+        "description": "The property <b>SocialPlatforms.ILocalUser.friends</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/SocialPlatforms.ILocalUser-friends.html"
+    },
+    {
+        "id": "PAC0181",
+        "type": "UnityEngine.SocialPlatforms.ILeaderboard",
+        "method": "scores",
+        "areas": ["Memory"],
+        "description": "The property <b>SocialPlatforms.ILeaderboard.scores</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/SocialPlatforms.ILeaderboard-scores.html"
+    },
+    {
+        "id": "PAC0182",
+        "type": "UnityEngine.GUIStyleState",
+        "method": "scaledBackgrounds",
+        "areas": ["Memory"],
+        "description": "The property <b>GUIStyleState.scaledBackgrounds</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/GUIStyleState-scaledBackgrounds.html"
+    },
+    {
+        "id": "PAC0183",
+        "type": "UnityEngine.EdgeCollider2D",
+        "method": "points",
+        "areas": ["Memory"],
+        "description": "The property <b>EdgeCollider2D.points</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/EdgeCollider2D-points.html"
+    },
+    {
+        "id": "PAC0184",
+        "type": "UnityEngine.PolygonCollider2D",
+        "method": "points",
+        "areas": ["Memory"],
+        "description": "The property <b>PolygonCollider2D.points</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/PolygonCollider2D-points.html"
+    },
+    {
+        "id": "PAC0185",
+        "type": "UnityEngine.Terrain",
+        "method": "activeTerrains",
+        "areas": ["Memory"],
+        "description": "The property <b>Terrain.activeTerrains</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Terrain-activeTerrains.html"
+    },
+    {
+        "id": "PAC0186",
+        "type": "UnityEngine.TerrainData",
+        "method": "detailPrototypes",
+        "areas": ["Memory"],
+        "description": "The property <b>TerrainData.detailPrototypes</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TerrainData-detailPrototypes.html"
+    },
+    {
+        "id": "PAC0187",
+        "type": "UnityEngine.TerrainData",
+        "method": "treePrototypes",
+        "areas": ["Memory"],
+        "description": "The property <b>TerrainData.treePrototypes</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TerrainData-treePrototypes.html"
+    },
+    {
+        "id": "PAC0188",
+        "type": "UnityEngine.TerrainData",
+        "method": "splatPrototypes",
+        "areas": ["Memory"],
+        "description": "The property <b>TerrainData.splatPrototypes</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TerrainData-splatPrototypes.html"
+    },
+    {
+        "id": "PAC0189",
+        "type": "UnityEngine.TerrainData",
+        "method": "terrainLayers",
+        "areas": ["Memory"],
+        "description": "The property <b>TerrainData.terrainLayers</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TerrainData-terrainLayers.html"
+    },
+    {
+        "id": "PAC0190",
+        "type": "UnityEngine.Tilemaps.TileAnimationData",
+        "method": "animatedSprites",
+        "areas": ["Memory"],
+        "description": "The property <b>Tilemaps.TileAnimationData.animatedSprites</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Tilemaps.TileAnimationData-animatedSprites.html"
+    },
+  {
+    "id": "PAC0191",
+    "type": "UnityEngine.UIElements.UxmlAttributeDescription",
+    "method": "obsoleteNames",
+    "areas": [ "Memory" ],
+    "description": "The property <b>UIElements.UxmlAttributeDescription.obsoleteNames</b> allocates managed memory.",
+    "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+    "minimumVersion": "2019.1",
+    "maximumVersion": "6000.5",
+    "documentationUrl": "https://docs.unity3d.com/6000.5/Documentation/ScriptReference/UIElements.UxmlAttributeDescription-obsoleteNames.html"
+  },
+    {
+        "id": "PAC0200",
+        "type": "UnityEngine.Networking.IMultipartFormSection",
+        "method": "sectionData",
+        "areas": ["Memory"],
+        "description": "The property <b>Networking.IMultipartFormSection.sectionData</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Networking.IMultipartFormSection-sectionData.html"
+    },
+    {
+        "id": "PAC0201",
+        "type": "UnityEngine.Networking.MultipartFormDataSection",
+        "method": "sectionData",
+        "areas": ["Memory"],
+        "description": "The property <b>Networking.MultipartFormDataSection.sectionData</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Networking.MultipartFormDataSection-sectionData.html"
+    },
+    {
+        "id": "PAC0202",
+        "type": "UnityEngine.Networking.MultipartFormFileSection",
+        "method": "sectionData",
+        "areas": ["Memory"],
+        "description": "The property <b>Networking.MultipartFormFileSection.sectionData</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Networking.MultipartFormFileSection-sectionData.html"
+    },
+    {
+        "id": "PAC0203",
+        "type": "UnityEngine.WWWForm",
+        "method": "data",
+        "areas": ["Memory"],
+        "description": "The property <b>WWWForm.data</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/WWWForm-data.html"
+    },
+    {
+        "id": "PAC0204",
+        "type": "UnityEngine.Networking.DownloadHandler",
+        "method": "data",
+        "areas": ["Memory"],
+        "description": "The property Networking.DownloadHandler.data allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Networking.DownloadHandler-data.html"
+    },
+    {
+        "id": "PAC0208",
+        "type": "UnityEngine.Networking.UploadHandler",
+        "method": "data",
+        "areas": ["Memory"],
+        "description": "The property <b>Networking.UploadHandler.data</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Networking.UploadHandler-data.html"
+    },
+    {
+        "id": "PAC0215",
+        "type": "UnityEngine.Networking.NetworkMigrationManager",
+        "method": "peers",
+        "areas": ["Memory"],
+        "description": "The property <b>Networking.NetworkMigrationManager.peers</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "maximumVersion": "2018.4",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Networking.NetworkMigrationManager-peers.html"
+    },
+    {
+        "id": "PAC0216",
+        "type": "UnityEngine.Networking.NetworkServerSimple",
+        "method": "messageBuffer",
+        "areas": ["Memory"],
+        "description": "The property <b>Networking.NetworkServerSimple.messageBuffer</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "maximumVersion": "2018.4",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Networking.NetworkServerSimple-messageBuffer.html"
+    },
+    {
+        "id": "PAC0217",
+        "type": "UnityEngine.WWW",
+        "method": "bytes",
+        "areas": ["Memory"],
+        "description": "The property <b>WWW.bytes</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/WWW-bytes.html"
+    },
+    {
+        "id": "PAC0219",
+        "type": "UnityEngine.XR.XRSettings",
+        "method": "supportedDevices",
+        "areas": ["Memory"],
+        "description": "The property <b>XR.XRSettings.supportedDevices</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/XR.XRSettings-supportedDevices.html"
+    },
+    {
+        "id": "PAC0220",
+        "type": "UnityEngine.TestTools.Constraints.AllocatingGCMemoryConstraint",
+        "method": "Arguments",
+        "areas": ["Memory"],
+        "description": "The property <b>TestTools.Constraints.AllocatingGCMemoryConstraint.Arguments</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TestTools.Constraints.AllocatingGCMemoryConstraint-Arguments.html"
+    },
+    {
+        "id": "PAC0221",
+        "type": "UnityEngine.TestTools.UnityPlatformAttribute",
+        "method": "include",
+        "areas": ["Memory"],
+        "description": "The property <b>TestTools.UnityPlatformAttribute.include</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TestTools.UnityPlatformAttribute-include.html"
+    },
+    {
+        "id": "PAC0222",
+        "type": "UnityEngine.TestTools.UnityPlatformAttribute",
+        "method": "exclude",
+        "areas": ["Memory"],
+        "description": "The property <b>TestTools.UnityPlatformAttribute.exclude</b> allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/TestTools.UnityPlatformAttribute-exclude.html"
+    },
+    {
+        "id": "PAC0223",
+        "type": "UnityEngine.GameObject",
+        "method": "tag",
+        "areas": ["Memory"],
+        "description": "The <b>GameObject.tag</b> property allocates managed memory.",
+        "recommendation": "Try to avoid getting this property in frequently-updated code. Prefer using <b>GameObject.CompareTag()</b> instead, as this does not result in managed allocations.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/GameObject-tag.html"
+    },
+    {
+        "id": "PAC0224",
+        "type": "UnityEngine.Object",
+        "method": "Instantiate",
+        "areas": ["CPU","Memory"],
+        "description": "Creating Objects at runtime by calling <b>Object.Instantiate</b> can take a significant amount of CPU time and allocates managed memory.",
+        "recommendation": "Try to avoid calling <b>Object.Instantiate</b> in frequently-updated code. Consider implementing an Object Pool. The <b>ObjectPool</b> class is available from Unity 2021.1 as a convenience.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/Object.Instantiate.html"
+    },
+    {
+        "id": "PAC0225",
+        "type": "UnityEngine.GameObject",
+        "method": "AddComponent",
+        "areas": ["CPU","Memory"],
+        "description": "Adding components to GameObjects at runtime can take a significant amount of CPU time and allocates managed memory.",
+        "recommendation": "Try to avoid adding or removing components in frequently-updated code. Prefer instantiating GameObjects from Prefabs will all the necessary components instead.",
+        "documentationUrl": "https://docs.unity3d.com/ScriptReference/GameObject.AddComponent.html"
+    },
+    {
+      "id": "PAC0227",
+      "type": "UnityEngine.Shader",
+      "method": "WarmupAllShaders",
+      "areas": ["CPU"],
+      "defaultSeverity": "Major",
+      "description": "<b>WarmupAllShaders</b> does not work properly on Metal, Vulkan or DX12. This might result in unexpected CPU spikes due to shader compilation.",
+      "recommendation": "Implement a shader pre-warming mechanism which renders a small triangle for each combination of vertex format and shader used at runtime. One way to achieve this is with the <b>UnityEngine.Experimental.Rendering.ShaderWarmup</b> API.",
+      "documentationUrl": "https://docs.unity3d.com/ScriptReference/Shader.WarmupAllShaders.html"
+    },
+    {
+      "id": "PAC0228",
+      "type": "UnityEngine.ShaderVariantCollection",
+      "method": "WarmUp",
+      "areas": ["CPU"],
+      "defaultSeverity": "Major",
+      "description": "<b>WarmUp</b> does not work properly on Metal, Vulkan or DX12. This might result in unexpected CPU spikes due to shader compilation.",
+      "recommendation": "Implement a shader pre-warming mechanism which renders a small triangle for each combination of vertex format and shader variant used at runtime. One way to achieve this is with the <b>UnityEngine.Experimental.Rendering.ShaderWarmup</b> API.",
+      "documentationUrl": "https://docs.unity3d.com/ScriptReference/ShaderVariantCollection.WarmUp.html"
+    },
+    {
+      "id": "PAC0229",
+      "type": "UnityEngine.Component",
+      "method": "tag",
+      "areas": ["Memory"],
+      "description": "The <b>Component.tag</b> property allocates managed memory.",
+      "recommendation": "Try to avoid getting this property in frequently-updated code. Prefer using <b>CompareTag()</b> instead, as this does not result in managed allocations.",
+      "documentationUrl": "https://docs.unity3d.com/ScriptReference/Component-tag.html"
+    },
+    {
+      "id": "PAC0231",
+      "type": "UnityEngine.Object",
+      "method": "name",
+      "areas": ["Memory"],
+      "description": "The <b>Object.name</b> property allocates managed memory.",
+      "recommendation": "Try to avoid getting this property in frequently-updated code. Ideally, this property should only be used during initialisation, and the results should be cached if they need to be re-used.",
+      "documentationUrl": "https://docs.unity3d.com/ScriptReference/Object-name.html"
+    },
+    {
+      "id": "PAC1000",
+      "type": "System.Linq",
+      "method": "*",
+      "areas": ["CPU","Memory"],
+      "description": "Linq allocates large amounts of managed memory and exhibits poor CPU performance.",
+      "recommendation": "We strongly advise against using Linq in any frequently-updated code. Ban its usage from the project entirely, or confine it to initialization code and use it sparingly.",
+      "documentationUrl": "https://learn.microsoft.com/en-us/dotnet/csharp/linq/"
+    },
+    {
+      "id": "PAC1001",
+      "type": "System.Reflection",
+      "method": "*",
+      "areas": ["CPU"],
+      "description": "Reflection is slow, and not generally considered performant enough for runtime code.",
+      "recommendation": "Remove code which relies on reflection, or minimise its usage, particularly outside of initialization.",
+      "documentationUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.reflection"
+    },
+    {
+      "id": "PAC1002",
+      "type": "System.String",
+      "method": "Concat",
+      "areas": ["Memory"],
+      "defaultSeverity": "Minor",
+      "description": "String concatenation operations allocates managed memory.",
+      "recommendation": "Try to avoid concatenating strings in frequently-updated code. Prefer using a StringBuilder instead, as this minimizes managed allocations.",
+      "documentationUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.string.concat"
+    },
+    {
+      "id": "PAC1003",
+      "type": "System.DateTime",
+      "method": "Now",
+      "areas": ["CPU"],
+      "description": "<b>System.DateTime.Now</b> can take a lot of CPU time because it needs to figure out the current timezone and daylight saving time information.",
+      "recommendation": "Try to avoid using this method in frequently-updated code. Prefer UnityEngine.Time.time or, if precise time is needed, use DateTime.UtcNow.",
+      "documentationUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.datetime.now"
+    },
+    {
+      "id": "PAC1004",
+      "type": "System.AppDomain",
+      "method": "GetAssemblies",
+      "areas": [ "CPU", "MigrationToCoreCLR" ],
+      "description": "<b>System.AppDomain.GetAssemblies</b> can take a lot of CPU time.",
+      "recommendation": "Try to minimize calls to <b>System.AppDomain.GetAssemblies</b> by caching the returned assemblies. When possible, use <b>UnityEditor.TypeCache</b> for fast access to types, methods and fields. Under the CoreCLR (.NET) scripting runtime, prefer <b>CurrentAssemblies.GetLoadedAssemblies()</b> (in the UnityEngine.Assemblies namespace), which accounts for assemblies loaded and unloaded by code reloading.",
+      "documentationUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.appdomain.getassemblies"
+    },
+    {
+      "id": "PAC0232",
+      "type": "UnityEditor.AssetDatabase",
+      "method": "FindAssets",
+      "areas": ["CPU"],
+      "description": "<b>UnityEditor.AssetDatabase.FindAssets</b> is a CPU-intensive operation and can slow down the Editor for long periods of time on large projects.",
+      "recommendation": "Try to minimize calls to <b>UnityEditor.AssetDatabase.FindAssets</b>.",
+      "documentationUrl": "https://docs.unity3d.com/ScriptReference/AssetDatabase.FindAssets.html"
+    },
+    {
+      "id": "PAC0234",
+      "type": "UnityEngine.Object",
+      "method": "FindObjectOfType",
+      "areas": ["CPU", "Memory"],
+      "description": "<b>Object.FindObjectOfType()</b> allocates managed memory and can be slow.",
+      "recommendation": "Try to avoid calling this method in frequently-updated code. Ideally, this method should only be used during initialisation, and the results should be cached if they need to be re-used.",
+      "documentationUrl": "https://docs.unity3d.com/ScriptReference/Object.FindObjectOfType.html"
+    },
+        {
+      "id": "PAC1032",
+      "type": "UnityEngine.Camera",
+      "method": "AddCommandBuffer",
+      "areas": ["MigrationToURP"],
+      "description": "<b>Camera.AddCommandBuffer()</b> attaches a CommandBuffer to a Built-in Render Pipeline <b>CameraEvent</b>. These injection points do not exist in the Universal Render Pipeline, so the command buffer will silently stop executing when migrating from the Built-in Render Pipeline.",
+      "recommendation": "Reimplement the effect as a <b>ScriptableRendererFeature</b> with a custom <b>ScriptableRenderPass</b> in URP, instead of injecting CommandBuffers via Camera.AddCommandBuffer().",
+      "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html"
+    },
+    {
+      "id": "PAC1033",
+      "type": "UnityEngine.Rendering.PostProcessing",
+      "method": "*",
+      "areas": ["MigrationToURP"],
+      "description": "The <b>UnityEngine.Rendering.PostProcessing</b> namespace belongs to the Post Processing Stack v2 package, which targets the Built-in Render Pipeline. URP has its own integrated post-processing system, so this code will not work when migrating from the Built-in Render Pipeline.",
+      "recommendation": "Migrate Post Processing v2 effects and profiles to URP's Volume-based post-processing using the Render Pipeline Converter.",
+      "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html"
+    },
+    {
+      "id": "PAC1007",
+      "title": "Camera.allowHDR",
+      "type": "UnityEngine.Camera",
+      "method": "set_allowHDR",
+      "areas": ["MigrationToURP"],
+      "description": "Setting <b>Camera.allowHDR</b> has no effect under the Universal Render Pipeline, where HDR is controlled by the <b>HDR</b> option on the URP Asset and per-camera through <b>UniversalAdditionalCameraData</b>. Code that toggles this property will not change rendering when migrating from the Built-in Render Pipeline.",
+      "recommendation": "Control HDR via the <b>HDR</b> option on the URP Asset, or per-camera through <b>camera.GetUniversalAdditionalCameraData()</b>, instead of setting Camera.allowHDR.",
+      "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html"
+    },
+    {
+      "id": "PAC1008",
+      "title": "Camera.allowMSAA",
+      "type": "UnityEngine.Camera",
+      "method": "set_allowMSAA",
+      "areas": ["MigrationToURP"],
+      "description": "Setting <b>Camera.allowMSAA</b> has no effect under the Universal Render Pipeline, where MSAA is controlled by the <b>Anti Aliasing (MSAA)</b> setting on the URP Asset. Code that toggles this property will not change rendering when migrating from the Built-in Render Pipeline.",
+      "recommendation": "Configure MSAA through the <b>Anti Aliasing (MSAA)</b> setting on the URP Asset instead of setting Camera.allowMSAA.",
+      "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html"
+    },
+    {
+      "id": "PAC1009",
+      "title": "Camera.renderingPath",
+      "type": "UnityEngine.Camera",
+      "method": "set_renderingPath",
+      "areas": ["MigrationToURP"],
+      "description": "Setting <b>Camera.renderingPath</b> has no effect under the Universal Render Pipeline, which selects its rendering path through the assigned <b>Renderer</b> on the URP Asset rather than the per-camera Built-in Render Pipeline property.",
+      "recommendation": "Choose the rendering path by assigning the appropriate <b>Renderer</b> on the URP Asset instead of setting Camera.renderingPath.",
+      "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html"
+    },
+    {
+      "id": "PAC1010",
+      "title": "Camera.depthTextureMode",
+      "type": "UnityEngine.Camera",
+      "method": "set_depthTextureMode",
+      "areas": ["MigrationToURP"],
+      "description": "Setting <b>Camera.depthTextureMode</b> does not drive depth texture generation under the Universal Render Pipeline, which produces <b>_CameraDepthTexture</b> based on the <b>Depth Texture</b> setting on the URP Asset. Code relying on this property may not get the depth it expects when migrating from the Built-in Render Pipeline.",
+      "recommendation": "Enable <b>Depth Texture</b> on the URP Asset, or per-camera through <b>UniversalAdditionalCameraData</b>, instead of setting Camera.depthTextureMode.",
+      "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html"
+    },
+    {
+      "id": "PAC1011",
+      "title": "Camera.depth",
+      "type": "UnityEngine.Camera",
+      "method": "set_depth",
+      "areas": ["MigrationToURP"],
+      "description": "Setting <b>Camera.depth</b> controls how camera render outputs are ordered under the Built-in Render Pipeline. The Universal Render Pipeline composites multiple cameras through its Camera Stacking system (<b>Base</b> and <b>Overlay</b> cameras), so scripts relying on the Depth property for ordering may not produce the expected result when migrating from the Built-in Render Pipeline.",
+      "recommendation": "Review whether this camera relies on Depth-based ordering and, if so, use URP Camera Stacking — designate a <b>Base</b> camera and add the others as <b>Overlay</b> cameras on its <b>UniversalAdditionalCameraData</b> stack — instead of setting Camera.depth.",
+      "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html"
+    },
+    {
+      "id": "PAC1012",
+      "title": "ManagedDebugger usage",
+      "type": "UnityEditor.Scripting.ManagedDebugger",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Major",
+      "description": "<b>UnityEditor.Scripting.ManagedDebugger</b> is part of the Mono scripting backend and is not supported under the CoreCLR (.NET) scripting runtime. Code that depends on it will not behave as expected after migrating to CoreCLR.",
+      "recommendation": "Use <b>System.Diagnostics.Debugger</b> (for example, <b>Debugger.IsAttached</b>) instead of UnityEditor.Scripting.ManagedDebugger.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1013",
+      "title": "BinaryFormatter usage",
+      "type": "System.Runtime.Serialization.Formatters.Binary.BinaryFormatter",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Major",
+      "description": "<b>BinaryFormatter</b> is obsolete and is disabled under the CoreCLR (.NET) scripting runtime, where its serialization and deserialization methods throw at runtime.",
+      "recommendation": "Replace <b>BinaryFormatter</b> with a supported serializer such as <b>JsonUtility</b>, <b>System.Text.Json</b>, or <b>DataContractSerializer</b>, or write the data manually with <b>BinaryReader</b> and <b>BinaryWriter</b>.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1014",
+      "title": "Assembly.Location",
+      "type": "System.Reflection.Assembly",
+      "method": "Location",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Moderate",
+      "description": "<b>Assembly.Location</b> returns an empty string under the CoreCLR (.NET) scripting runtime, because assemblies are no longer guaranteed to be loaded from a file on disk.",
+      "recommendation": "Use <b>Assembly.GetLoadedAssemblyPath()</b> (an extension method in the UnityEngine namespace) to obtain an assembly's path instead of Assembly.Location.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1015",
+      "title": "Assembly.LoadFile",
+      "type": "System.Reflection.Assembly",
+      "method": "LoadFile",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Major",
+      "description": "<b>Assembly.LoadFile</b> is not supported under the CoreCLR (.NET) scripting runtime and fails to load assemblies that the Editor or player has not already loaded.",
+      "recommendation": "Load assemblies through <b>CurrentAssemblies.LoadFromPath(string)</b> or <b>CurrentAssemblies.LoadFromBytes(byte[])</b> (in the UnityEngine.Assemblies namespace) instead of Assembly.LoadFile.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1016",
+      "title": "Assembly.LoadFrom",
+      "type": "System.Reflection.Assembly",
+      "method": "LoadFrom",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Major",
+      "description": "<b>Assembly.LoadFrom</b> is not supported under the CoreCLR (.NET) scripting runtime and fails to load assemblies that the Editor or player has not already loaded.",
+      "recommendation": "Load assemblies through <b>CurrentAssemblies.LoadFromPath(string)</b> or <b>CurrentAssemblies.LoadFromBytes(byte[])</b> (in the UnityEngine.Assemblies namespace) instead of Assembly.LoadFrom.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1017",
+      "title": "AppDomain.DomainUnload",
+      "type": "System.AppDomain",
+      "method": "add_DomainUnload",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Moderate",
+      "description": "Subscribing to <b>AppDomain.DomainUnload</b> no longer reliably fires under the CoreCLR (.NET) scripting runtime, which does not unload the managed code space the way Mono does. Cleanup code that relies on this event may never run.",
+      "recommendation": "Move cleanup that depends on <b>AppDomain.DomainUnload</b> to the <b>[OnAssemblyUnloading]</b> lifecycle attribute instead.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1018",
+      "title": "IntPtr.ToInt32",
+      "type": "System.IntPtr",
+      "method": "ToInt32",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Minor",
+      "description": "<b>IntPtr.ToInt32</b> can throw <b>OverflowException</b> under the CoreCLR (.NET) scripting runtime when the pointer value does not fit in a 32-bit integer, which can happen on 64-bit platforms.",
+      "recommendation": "Verify that this conversion cannot overflow. Prefer <b>IntPtr.ToInt64()</b> or keep the value as an <b>IntPtr</b>, or catch <b>OverflowException</b> where a narrowing conversion is required.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1019",
+      "title": "UIntPtr.ToUInt32",
+      "type": "System.UIntPtr",
+      "method": "ToUInt32",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Minor",
+      "description": "<b>UIntPtr.ToUInt32</b> can throw <b>OverflowException</b> under the CoreCLR (.NET) scripting runtime when the pointer value does not fit in a 32-bit unsigned integer, which can happen on 64-bit platforms.",
+      "recommendation": "Verify that this conversion cannot overflow. Prefer <b>UIntPtr.ToUInt64()</b> or keep the value as a <b>UIntPtr</b>, or catch <b>OverflowException</b> where a narrowing conversion is required.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1020",
+      "title": "Encoding.GetEncoding",
+      "type": "System.Text.Encoding",
+      "method": "GetEncoding",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Minor",
+      "description": "<b>Encoding.GetEncoding</b> can throw <b>NotSupportedException</b> under the CoreCLR (.NET) scripting runtime, which registers fewer code pages by default than the Mono scripting runtime did. Requesting an uncommon code page such as Windows-1252 fails unless its encoding provider has been registered.",
+      "recommendation": "Prefer a built-in encoding such as <b>Encoding.UTF8</b> where possible. If a code-page encoding is required, register the provider once at startup with <b>Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)</b>.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1021",
+      "title": "ArrayPool.Return",
+      "type": "System.Buffers.ArrayPool`1",
+      "method": "Return",
+      "areas": ["Memory", "MigrationToCoreCLR"],
+      "defaultSeverity": "Minor",
+      "description": "Returning a buffer to <b>ArrayPool</b> without clearing it leaves any object references stored in the array alive, which can keep those objects from being collected and interfere with code reloading under the CoreCLR (.NET) scripting runtime.",
+      "recommendation": "Pass <b>clearArray: true</b> to <b>ArrayPool.Return</b>, or clear the buffer yourself before returning it, whenever the array holds references to managed objects.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1022",
+      "title": "System.Runtime.Remoting usage",
+      "type": "System.Runtime.Remoting",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Major",
+      "description": "<b>System.Runtime.Remoting</b> is part of .NET Framework remoting and is not available under the CoreCLR (.NET) scripting runtime. Code that uses it will fail to compile or run after migrating.",
+      "recommendation": "Remove the dependency on <b>System.Runtime.Remoting</b> and replace it with a supported inter-process communication mechanism; there is no drop-in replacement package.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1023",
+      "title": "System.ServiceModel (WCF) usage",
+      "type": "System.ServiceModel",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Major",
+      "description": "<b>System.ServiceModel</b> (Windows Communication Foundation) is not available under the CoreCLR (.NET) scripting runtime. Code that uses it will fail to compile or run after migrating.",
+      "recommendation": "Remove the dependency on <b>System.ServiceModel</b> and replace it with a supported networking or RPC library; WCF has no drop-in replacement package.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1024",
+      "title": "System.Web usage",
+      "type": "System.Web",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Major",
+      "description": "<b>System.Web</b> is part of ASP.NET on .NET Framework and is not available under the CoreCLR (.NET) scripting runtime. Code that uses it will fail to compile or run after migrating.",
+      "recommendation": "Remove the dependency on <b>System.Web</b> and replace it with a supported alternative such as <b>System.Net.Http</b> or ASP.NET Core APIs; there is no drop-in replacement package.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1025",
+      "title": "System.Security.Permissions usage",
+      "type": "System.Security.Permissions",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Major",
+      "description": "<b>System.Security.Permissions</b> and Code Access Security are not supported under the CoreCLR (.NET) scripting runtime, where these types are obsolete and have no effect.",
+      "recommendation": "Remove Code Access Security calls; they cannot be replicated under CoreCLR. Rely on operating-system and process-level security instead.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1026",
+      "title": "System.Security.Policy usage",
+      "type": "System.Security.Policy",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Major",
+      "description": "<b>System.Security.Policy</b> and Code Access Security are not supported under the CoreCLR (.NET) scripting runtime, where these types are obsolete and have no effect.",
+      "recommendation": "Remove Code Access Security policy code; it cannot be replicated under CoreCLR. Rely on operating-system and process-level security instead.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1027",
+      "title": "Microsoft.Win32.Registry usage",
+      "type": "Microsoft.Win32.Registry",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Moderate",
+      "description": "<b>Microsoft.Win32.Registry</b> is not part of the core libraries shipped with the CoreCLR (.NET) scripting runtime, so code that accesses the Windows registry through it will fail to resolve after migrating.",
+      "recommendation": "Add the <b>Microsoft.Win32.Registry</b> NuGet package to keep using the registry APIs, and remember that the registry is only available on Windows.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1028",
+      "title": "System.Configuration usage",
+      "type": "System.Configuration",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Moderate",
+      "description": "<b>System.Configuration</b> (the .NET Framework app.config and ConfigurationManager APIs) is not shipped with the CoreCLR (.NET) scripting runtime, so code that uses it will fail to resolve after migrating.",
+      "recommendation": "Add the <b>System.Configuration.ConfigurationManager</b> NuGet package, or move configuration to a supported format such as JSON.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1029",
+      "title": "System.Drawing usage",
+      "type": "System.Drawing",
+      "method": "*",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Moderate",
+      "description": "<b>System.Drawing</b> is not shipped with the CoreCLR (.NET) scripting runtime, so code that uses it will fail to resolve after migrating.",
+      "recommendation": "Add the <b>System.Drawing.Common</b> NuGet package (Windows only), or use Unity's own imaging APIs such as <b>Texture2D</b> instead.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1030",
+      "title": "AppDomain.CreateDomain",
+      "type": "System.AppDomain",
+      "method": "CreateDomain",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Moderate",
+      "description": "<b>AppDomain.CreateDomain</b> is not supported under the CoreCLR (.NET) scripting runtime, which cannot create additional application domains and throws when it is called.",
+      "recommendation": "Remove use of additional <b>AppDomain</b> instances. Isolate code with separate processes or an <b>AssemblyLoadContext</b> instead.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    },
+    {
+      "id": "PAC1031",
+      "title": "Thread.Abort",
+      "type": "System.Threading.Thread",
+      "method": "Abort",
+      "areas": ["MigrationToCoreCLR"],
+      "defaultSeverity": "Moderate",
+      "description": "<b>Thread.Abort</b> is not supported under the CoreCLR (.NET) scripting runtime and throws <b>PlatformNotSupportedException</b> when it is called.",
+      "recommendation": "Use cooperative cancellation with a <b>CancellationToken</b> to stop background work instead of <b>Thread.Abort</b>.",
+      "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html"
+    }
+]

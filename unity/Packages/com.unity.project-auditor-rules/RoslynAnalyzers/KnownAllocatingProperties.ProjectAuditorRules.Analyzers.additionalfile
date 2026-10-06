@@ -1,0 +1,138 @@
+[
+  {
+    "name": "UnityEngine.AI.NavMeshPath.corners",
+    "recommendation": "Use AI.NavMeshPath.GetCornersNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.AnimationCurve.keys",
+    "recommendation": "Use AnimationCurve.AddKey(), AnimationCurve.MoveKey() or AnimationCurve.RemoveKey() instead"
+  },
+  {
+    "name": "UnityEngine.Animations.ParentConstraint.rotationOffsets",
+    "recommendation": "Use Animations.ParentConstraint.GetRotationOffset() instead"
+  },
+  {
+    "name": "UnityEngine.Animations.ParentConstraint.translationOffsets",
+    "recommendation": "Use Animations.ParentConstraint.GetTranslationOffset() instead"
+  },
+  {
+    "name": "UnityEngine.Animator.parameters",
+    "recommendation": "Use Animator.GetParameter() instead"
+  },
+  {
+    "name": "UnityEngine.Camera.allCameras",
+    "recommendation": "Use Camera.GetAllCameras() instead"
+  },
+  {
+    "name": "UnityEngine.Collision.contacts",
+    "recommendation": "Use Collision.GetContacts() instead"
+  },
+  {
+    "name": "UnityEngine.Collision2D.contacts",
+    "recommendation": "Use Collision2D.GetContacts() instead"
+  },
+  {
+    "name": "UnityEngine.Font.characterInfo",
+    "recommendation": "Use Font.GetCharacterInfo() instead"
+  },
+  {
+    "name": "UnityEngine.GUISkin.customStyles",
+    "recommendation": "Use GUISkin.GetStyle() or GUISkin.FindStyle() instead"
+  },
+  {
+    "name": "UnityEngine.Input.accelerationEvents",
+    "recommendation": "Use Input.GetAccelerationEvent() instead"
+  },
+  {
+    "name": "UnityEngine.Input.touches",
+    "recommendation": "Use Input.GetTouch() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.bindposes",
+    "recommendation": "Use Mesh.GetBindposes() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.boneWeights",
+    "recommendation": "Use Mesh.GetAllBoneWeights() instead. This method returns a NativeArray of BoneWeight1, and so does not allocate managed memory"
+  },
+  {
+    "name": "UnityEngine.Mesh.colors",
+    "recommendation": "Use Mesh.GetColors() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.colors32",
+    "recommendation": "Use Mesh.GetColors() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.normals",
+    "recommendation": "Use Mesh.GetNormals() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.tangents",
+    "recommendation": "Use Mesh.GetTangents() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.triangles",
+    "recommendation": "Use Mesh.GetTriangles() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.uv",
+    "recommendation": "Use Mesh.GetUVs() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.uv2",
+    "recommendation": "Use Mesh.GetUVs() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.uv3",
+    "recommendation": "Use Mesh.GetUVs() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.uv4",
+    "recommendation": "Use Mesh.GetUVs() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.uv5",
+    "recommendation": "Use Mesh.GetUVs() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.uv6",
+    "recommendation": "Use Mesh.GetUVs() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.uv7",
+    "recommendation": "Use Mesh.GetUVs() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.uv8",
+    "recommendation": "Use Mesh.GetUVs() instead"
+  },
+  {
+    "name": "UnityEngine.Mesh.vertices",
+    "recommendation": "Use Mesh.GetVertices() instead"
+  },
+  {
+    "name": "UnityEngine.Renderer.materials",
+    "recommendation": "Use Renderer.GetMaterials() instead"
+  },
+  {
+    "name": "UnityEngine.Renderer.sharedMaterials",
+    "recommendation": "Use Renderer.GetSharedMaterials() instead"
+  },
+  {
+    "name": "UnityEngine.TerrainData.alphamapTextures",
+    "recommendation": "Use TerrainData.GetAlphamapTexture() instead"
+  },
+  {
+    "name": "UnityEngine.TerrainData.treeInstances",
+    "recommendation": "Use TerrainData.GetTreeInstance() instead"
+  },
+  {
+    "name": "UnityEngine.iOS.NotificationServices.localNotifications",
+    "recommendation": "Use iOS.NotificationServices.GetLocalNotification() instead"
+  },
+  {
+    "name": "UnityEngine.iOS.NotificationServices.remoteNotifications",
+    "recommendation": "Use iOS.NotificationServices.GetRemoteNotification() instead"
+  }
+]

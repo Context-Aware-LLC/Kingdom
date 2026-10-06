@@ -5,7 +5,7 @@
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 297,
-  "corpusDigest": "beb6fae05049a9ae",
+  "corpusDigest": "c2d21603baa88e13",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -33,24 +33,24 @@
     },
     "keywordFrequency": {
       "BULWARK": 38,
-      "SKIRMISH": 19,
+      "SKIRMISH": 18,
       "SHROUD": 15,
-      "OVERWHELM": 11,
-      "VANGUARD": 11,
+      "OVERWHELM": 12,
+      "VANGUARD": 12,
+      "REKINDLE": 11,
       "AEGIS": 10,
-      "REKINDLE": 10,
       "VENOM": 10,
       "ARCANE_SURGE": 8,
-      "FERVOR": 8,
       "DOUBLESTRIKE": 7,
+      "FERVOR": 7,
       "FROST": 6,
       "LIFEDRAIN": 6
     },
     "selectorFrequency": {
       "ANY_FRIENDLY_MINION": 66,
+      "ANY_ENEMY": 28,
       "ANY_MINION": 28,
-      "ANY_ENEMY": 27,
-      "ANY_ENEMY_MINION": 24,
+      "ANY_ENEMY_MINION": 23,
       "FRIENDLY_HERO": 17,
       "ENEMY_HERO": 11,
       "ANY_CHARACTER": 4,
@@ -69,16 +69,16 @@
       "SILENCE": 2
     },
     "costDistribution": {
-      "0": 4,
+      "0": 5,
       "1": 33,
       "2": 76,
       "3": 72,
-      "4": 50,
-      "5": 22,
-      "6": 20,
-      "7": 15,
+      "4": 47,
+      "5": 23,
+      "6": 21,
+      "7": 14,
       "8": 4,
-      "9": 1
+      "9": 2
     },
     "rarityBreakdown": {
       "COMMON": 130,
@@ -87,11 +87,11 @@
       "LEGENDARY": 18
     },
     "tribeBreakdown": {
-      "CONSTRUCT": 45,
+      "CONSTRUCT": 46,
       "HUMAN": 39,
       "UNDEAD": 24,
-      "ELEMENTAL": 23,
       "BEAST": 22,
+      "ELEMENTAL": 22,
       "FEY": 15,
       "SPIRIT": 13,
       "DRAGON": 6,
@@ -101,24 +101,24 @@
     "minionCount": 193,
     "attackDistribution": {
       "0": 3,
-      "1": 29,
-      "2": 52,
-      "3": 44,
-      "4": 25,
-      "5": 21,
-      "6": 11,
-      "7": 6,
+      "1": 28,
+      "2": 51,
+      "3": 42,
+      "4": 26,
+      "5": 24,
+      "6": 10,
+      "7": 7,
       "8": 1,
       "10": 1
     },
     "healthDistribution": {
-      "1": 23,
+      "1": 24,
       "2": 38,
-      "3": 30,
-      "4": 39,
-      "5": 29,
-      "6": 22,
-      "7": 7,
+      "3": 31,
+      "4": 40,
+      "5": 25,
+      "6": 21,
+      "7": 9,
       "8": 3,
       "10": 1,
       "12": 1
@@ -202,34 +202,33 @@
         "FERVOR": 4,
         "SKIRMISH": 4,
         "BULWARK": 3,
+        "VANGUARD": 3,
         "ARCANE_SURGE": 2,
         "OVERWHELM": 2,
-        "VANGUARD": 2,
         "AEGIS": 1,
-        "DOUBLESTRIKE": 1,
         "LIFEDRAIN": 1
       },
       "selectorFrequency": {
         "ANY_MINION": 6,
+        "ANY_ENEMY": 3,
         "ANY_FRIENDLY_MINION": 3,
         "ENEMY_HERO": 3,
         "ANY_CHARACTER": 2,
-        "ANY_ENEMY": 2,
-        "ANY_ENEMY_MINION": 2,
-        "FRIENDLY_HERO": 2
+        "FRIENDLY_HERO": 2,
+        "ANY_ENEMY_MINION": 1
       },
       "actionFrequency": {
         "DAMAGE_SINGLE": 12,
         "DAMAGE_AOE": 5
       },
       "costDistribution": {
-        "1": 3,
+        "1": 4,
         "2": 7,
         "3": 7,
-        "4": 7,
-        "5": 3,
-        "6": 4,
-        "7": 1
+        "4": 5,
+        "5": 2,
+        "6": 6,
+        "9": 1
       },
       "rarityBreakdown": {
         "COMMON": 12,
@@ -239,27 +238,27 @@
       },
       "tribeBreakdown": {
         "HUMAN": 8,
-        "ELEMENTAL": 5,
-        "CONSTRUCT": 4,
-        "DRAGON": 4
+        "CONSTRUCT": 5,
+        "DRAGON": 4,
+        "ELEMENTAL": 4
       },
       "minionCount": 21,
       "attackDistribution": {
-        "2": 6,
+        "2": 5,
         "3": 3,
-        "4": 5,
+        "4": 6,
         "5": 3,
-        "6": 3,
-        "7": 1
+        "6": 2,
+        "7": 2
       },
       "healthDistribution": {
-        "1": 3,
+        "1": 4,
         "2": 2,
-        "3": 4,
+        "3": 3,
         "4": 4,
-        "5": 3,
+        "5": 2,
         "6": 3,
-        "7": 2
+        "7": 3
       }
     },
     "GRAVEKEEP": {
@@ -551,11 +550,13 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "DOUBLESTRIKE": 4,
-        "FERVOR": 3,
-        "SKIRMISH": 3,
+        "DOUBLESTRIKE": 5,
+        "FERVOR": 2,
+        "SKIRMISH": 2,
         "ARCANE_SURGE": 1,
         "BULWARK": 1,
+        "OVERWHELM": 1,
+        "REKINDLE": 1,
         "VANGUARD": 1
       },
       "selectorFrequency": {
@@ -571,12 +572,12 @@
         "DAMAGE_SINGLE": 5
       },
       "costDistribution": {
-        "1": 8,
+        "0": 1,
+        "1": 7,
         "2": 10,
         "3": 6,
-        "4": 3,
-        "5": 1,
-        "6": 1,
+        "4": 2,
+        "5": 3,
         "7": 2
       },
       "rarityBreakdown": {
@@ -594,19 +595,19 @@
       },
       "minionCount": 15,
       "attackDistribution": {
-        "1": 1,
         "2": 6,
-        "3": 5,
+        "3": 3,
         "4": 1,
+        "5": 3,
         "6": 2
       },
       "healthDistribution": {
         "1": 3,
         "2": 5,
-        "3": 1,
-        "4": 1,
-        "5": 3,
-        "6": 2
+        "3": 2,
+        "4": 2,
+        "6": 2,
+        "7": 1
       }
     },
     "TIDECALLER": {
@@ -679,10 +680,10 @@
       "healthDistribution": {
         "1": 1,
         "2": 4,
-        "3": 1,
+        "3": 2,
         "4": 6,
         "5": 3,
-        "6": 4,
+        "6": 3,
         "8": 1
       }
     },
@@ -974,8 +975,8 @@
       "name": "Ember Zealot",
       "type": "MINION",
       "cost": 2,
-      "attack": 2,
-      "health": 3,
+      "attack": 3,
+      "health": 1,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "COMMON",
@@ -1038,7 +1039,7 @@
       "type": "MINION",
       "cost": 3,
       "attack": 3,
-      "health": 4,
+      "health": 3,
       "durability": null,
       "class": "TIDECALLER",
       "rarity": "COMMON",
@@ -1103,7 +1104,7 @@
       "type": "MINION",
       "cost": 4,
       "attack": 3,
-      "health": 6,
+      "health": 4,
       "durability": null,
       "class": "TIDECALLER",
       "rarity": "RARE",
@@ -1433,7 +1434,7 @@
       "id": 154,
       "name": "Twin Flame Strike",
       "type": "SPELL",
-      "cost": 4,
+      "cost": 6,
       "attack": null,
       "health": null,
       "durability": null,
@@ -1441,7 +1442,7 @@
       "rarity": "EPIC",
       "keywords": [],
       "selectors": [
-        "ANY_ENEMY_MINION"
+        "ANY_ENEMY"
       ],
       "actionTags": [
         "DAMAGE_AOE"
@@ -1456,9 +1457,9 @@
       "id": 1020,
       "name": "Pyra's Wrath",
       "type": "MINION",
-      "cost": 7,
-      "attack": 6,
-      "health": 5,
+      "cost": 9,
+      "attack": 7,
+      "health": 7,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "LEGENDARY",
@@ -2382,7 +2383,7 @@
       "id": 167,
       "name": "Stoke the Coals",
       "type": "SPELL",
-      "cost": 2,
+      "cost": 1,
       "attack": null,
       "health": null,
       "durability": null,
@@ -3631,7 +3632,7 @@
       "name": "Gust Sprite",
       "type": "MINION",
       "cost": 2,
-      "attack": 2,
+      "attack": 3,
       "health": 2,
       "durability": null,
       "class": "TEMPEST",
@@ -3678,7 +3679,9 @@
       "durability": null,
       "class": "TEMPEST",
       "rarity": "RARE",
-      "keywords": [],
+      "keywords": [
+        "REKINDLE"
+      ],
       "selectors": [
         "ANY_ENEMY",
         "ANY_ENEMY",
@@ -3723,7 +3726,7 @@
       "name": "Tempest Striker",
       "type": "MINION",
       "cost": 3,
-      "attack": 3,
+      "attack": 4,
       "health": 3,
       "durability": null,
       "class": "TEMPEST",
@@ -3767,13 +3770,13 @@
       "name": "Thunder Hoof",
       "type": "MINION",
       "cost": 4,
-      "attack": 3,
-      "health": 5,
+      "attack": 5,
+      "health": 3,
       "durability": null,
       "class": "TEMPEST",
       "rarity": "RARE",
       "keywords": [
-        "FERVOR"
+        "OVERWHELM"
       ],
       "selectors": [],
       "actionTags": [],
@@ -3860,7 +3863,9 @@
       "durability": null,
       "class": "TEMPEST",
       "rarity": "LEGENDARY",
-      "keywords": [],
+      "keywords": [
+        "DOUBLESTRIKE"
+      ],
       "selectors": [
         "ENEMY_HERO"
       ],
@@ -3878,7 +3883,7 @@
       "name": "Galecleaver",
       "type": "WEAPON",
       "cost": 1,
-      "attack": 3,
+      "attack": 4,
       "health": null,
       "durability": 2,
       "class": "TEMPEST",
@@ -4153,7 +4158,7 @@
       "class": "EMBERWARD",
       "rarity": "COMMON",
       "keywords": [
-        "DOUBLESTRIKE"
+        "FERVOR"
       ],
       "selectors": [],
       "actionTags": [],
@@ -4192,7 +4197,7 @@
       "id": 192,
       "name": "Fusillade",
       "type": "SPELL",
-      "cost": 3,
+      "cost": 2,
       "attack": null,
       "health": null,
       "durability": null,
@@ -4219,7 +4224,7 @@
       "type": "MINION",
       "cost": 4,
       "attack": 6,
-      "health": 3,
+      "health": 4,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "RARE",
@@ -4239,8 +4244,8 @@
       "name": "Vanguard Drake",
       "type": "MINION",
       "cost": 4,
-      "attack": 3,
-      "health": 4,
+      "attack": 4,
+      "health": 3,
       "durability": null,
       "class": "EMBERWARD",
       "rarity": "EPIC",
@@ -4297,7 +4302,7 @@
       ],
       "selectors": [],
       "actionTags": [],
-      "tribe": "ELEMENTAL",
+      "tribe": "CONSTRUCT",
       "setId": "EMBERFALL",
       "collectible": true,
       "artId": "ember_magmacore_warden",
@@ -4307,7 +4312,7 @@
       "id": 193,
       "name": "Heat Surge",
       "type": "SPELL",
-      "cost": 4,
+      "cost": 3,
       "attack": null,
       "health": null,
       "durability": null,
@@ -5265,7 +5270,7 @@
       "id": 203,
       "name": "Channeled Pyroclasm",
       "type": "SPELL",
-      "cost": 5,
+      "cost": 6,
       "attack": null,
       "health": null,
       "durability": null,
@@ -5295,7 +5300,7 @@
       "class": "EMBERWARD",
       "rarity": "LEGENDARY",
       "keywords": [
-        "FERVOR"
+        "VANGUARD"
       ],
       "selectors": [
         "ENEMY_HERO",
@@ -6425,14 +6430,12 @@
       "name": "Static Wisp",
       "type": "MINION",
       "cost": 1,
-      "attack": 1,
+      "attack": 2,
       "health": 1,
       "durability": null,
       "class": "TEMPEST",
       "rarity": "COMMON",
-      "keywords": [
-        "SKIRMISH"
-      ],
+      "keywords": [],
       "selectors": [],
       "actionTags": [],
       "tribe": "SPIRIT",
@@ -6512,9 +6515,9 @@
       "id": 1175,
       "name": "Voltaic Sentinel",
       "type": "MINION",
-      "cost": 4,
-      "attack": 3,
-      "health": 5,
+      "cost": 5,
+      "attack": 5,
+      "health": 7,
       "durability": null,
       "class": "TEMPEST",
       "rarity": "EPIC",
@@ -6562,7 +6565,7 @@
       "id": 222,
       "name": "Stormcaller's Pact",
       "type": "SPELL",
-      "cost": 6,
+      "cost": 5,
       "attack": null,
       "health": null,
       "durability": null,
@@ -6678,8 +6681,8 @@
       "name": "Gale Herald",
       "type": "MINION",
       "cost": 5,
-      "attack": 4,
-      "health": 5,
+      "attack": 5,
+      "health": 4,
       "durability": null,
       "class": "TEMPEST",
       "rarity": "EPIC",
@@ -6702,7 +6705,7 @@
       "id": 223,
       "name": "Overcharge",
       "type": "SPELL",
-      "cost": 1,
+      "cost": 0,
       "attack": null,
       "health": null,
       "durability": null,

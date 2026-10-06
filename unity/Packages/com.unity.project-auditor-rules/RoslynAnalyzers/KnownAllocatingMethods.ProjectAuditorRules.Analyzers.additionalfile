@@ -1,0 +1,192 @@
+[
+  {
+    "name": "System.String.Concat",
+    "recommendation": "Try to avoid concatenating strings in frequently-updated code. Prefer using a StringBuilder instead, as this minimizes managed allocations",
+    "documentationUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.string.concat"
+  },
+  {
+    "name": "UnityEngine.Animator.GetBehaviours"
+  },
+  {
+    "name": "UnityEngine.Animator.GetCurrentAnimatorClipInfo"
+  },
+  {
+    "name": "UnityEngine.AssetBundle.LoadAllAssets"
+  },
+  {
+    "name": "UnityEngine.AssetBundle.LoadAssetWithSubAssets"
+  },
+  {
+    "name": "UnityEngine.AssetBundleManifest.GetAllAssetBundles"
+  },
+  {
+    "name": "UnityEngine.GeometryUtility.CalculateFrustumPlanes",
+    "recommendation": "Ensure that you use the CalculateFrustumPlanes(Matrix4x4 worldToProjectionMatrix, Plane[] planes) version of this API method, in order to be able to pass a pre-allocated Array of Planes"
+  },
+  {
+    "name": "UnityEngine.Component.GetComponentsInChildren",
+    "recommendation": "Ensure you are using one of the versions of GameObject.GetComponentsInChildren() which accepts a List<T> as a parameter and populates it with the components it finds"
+  },
+  {
+    "name": "UnityEngine.Component.GetComponentsInParent",
+    "recommendation": "Ensure you are using one of the versions of GameObject.GetComponentsInParent() which accepts a List<T> as a parameter and populates it with the components it finds"
+  },
+  {
+    "name": "UnityEngine.Cubemap.GetPixels"
+  },
+  {
+    "name": "UnityEngine.CubemapArray.GetPixels"
+  },
+  {
+    "name": "UnityEngine.CubemapArray.GetPixels32"
+  },
+  {
+    "name": "UnityEngine.GameObject.AddComponent",
+    "recommendation": "Try to avoid adding or removing components in frequently-updated code. Prefer instantiating GameObjects from Prefabs with all the necessary components instead"
+  },
+  {
+    "name": "UnityEngine.ImageConversion.EncodeToEXR"
+  },
+  {
+    "name": "UnityEngine.ImageConversion.EncodeToJPG"
+  },
+  {
+    "name": "UnityEngine.ImageConversion.EncodeToPNG"
+  },
+  {
+    "name": "UnityEngine.ImageConversion.EncodeToTGA"
+  },
+  {
+    "name": "UnityEngine.Object.FindObjectOfType"
+  },
+  {
+    "name": "UnityEngine.Object.FindObjectsOfType"
+  },
+  {
+    "name": "UnityEngine.Object.Instantiate",
+    "recommendation": "Try to avoid calling Object.Instantiate in frequently-updated code. Consider implementing an Object Pool. The ObjectPool class is available from Unity 2021.1 as a convenience"
+  },
+  {
+    "name": "UnityEngine.Physics.BoxCastAll",
+    "recommendation": "Use Physics.BoxCastNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics.CapsuleCastAll",
+    "recommendation": "Use Physics.CapsuleCastNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics.OverlapBox",
+    "recommendation": "Use Physics.OverlapBoxNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics.OverlapCapsule",
+    "recommendation": "Use Physics.OverlapCapsuleNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics.OverlapSphere",
+    "recommendation": "Use Physics.OverlapSphereNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics.RaycastAll",
+    "recommendation": "Use Physics.RaycastNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics.SphereCastAll",
+    "recommendation": "Use Physics.SphereCastNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.BoxCastAll",
+    "recommendation": "Use Physics2D.BoxCastNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.CapsuleCastAll",
+    "recommendation": "Use Physics2D.CapsuleCastNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.CircleCastAll",
+    "recommendation": "Use Physics2D.CircleCastNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.GetRayIntersectionAll",
+    "recommendation": "Use Physics2D.GetRayIntersectionNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.LinecastAll",
+    "recommendation": "Use Physics2D.LinecastNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.OverlapAreaAll",
+    "recommendation": "Use Physics2D.OverlapAreaNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.OverlapBoxAll",
+    "recommendation": "Use Physics2D.OverlapBoxNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.OverlapCapsuleAll",
+    "recommendation": "Use Physics2D.OverlapCapsuleNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.OverlapCircleAll",
+    "recommendation": "Use Physics2D.OverlapCircleNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.OverlapPointAll",
+    "recommendation": "Use Physics2D.OverlapPointNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Physics2D.RaycastAll",
+    "recommendation": "Use Physics2D.RaycastNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Resources.FindObjectsOfTypeAll",
+    "recommendation": "Use Resources.FindObjectsOfTypeNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Resources.LoadAll"
+  },
+  {
+    "name": "UnityEngine.Rigidbody.SweepTestAll",
+    "recommendation": "Use Rigidbody.SweepTestNonAlloc() instead"
+  },
+  {
+    "name": "UnityEngine.Texture2D.GetPixels",
+    "recommendation": "Use Texture2D.GetRawTextureData() instead. This method returns a NativeArray of pixel data, and so does not allocate managed memory"
+  },
+  {
+    "name": "UnityEngine.Texture2D.GetPixels32",
+    "recommendation": "Use Texture2D.GetRawTextureData() instead. This method returns a NativeArray of pixel data, and so does not allocate managed memory"
+  },
+  {
+    "name": "UnityEngine.Texture2D.PackTextures"
+  },
+  {
+    "name": "UnityEngine.Texture2DArray.GetPixels"
+  },
+  {
+    "name": "UnityEngine.Texture2DArray.GetPixels32"
+  },
+  {
+    "name": "UnityEngine.Texture3D.GetPixels"
+  },
+  {
+    "name": "UnityEngine.Texture3D.GetPixels32"
+  },
+  {
+    "name": "UnityEngine.U2D.SpriteShapeUtility.Generate"
+  },
+  {
+    "name": "UnityEngine.WebCamTexture.GetPixels",
+    "recommendation": "Use WebCamTexture.GetPixels32() instead"
+  },
+  {
+    "name": "UnityEngine.WebCamTexture.GetPixels32",
+    "recommendation": "Ensure that you pass an array of Color32[] to this API method for it to fill out, to avoid creating a new array every time the method is called"
+  },
+  {
+    "name": "UnityEngine.Windows.Crypto.ComputeMD5Hash"
+  },
+  {
+    "name": "UnityEngine.Windows.File.ReadAllBytes"
+  }
+]

@@ -1,0 +1,416 @@
+[
+  {
+    "name": "UnityEngine.Input.GetAxis",
+    "recommendation": "Read an InputAction's value with action.ReadValue<T>(), obtaining the action via InputSystem.actions.FindAction(\"name\")",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetAxisRaw",
+    "recommendation": "Read an InputAction's unprocessed value with action.ReadUnprocessedValue()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetButton",
+    "recommendation": "Use action.IsPressed() on an InputAction obtained via InputSystem.actions.FindAction(\"name\")",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetButtonDown",
+    "recommendation": "Use action.WasPressedThisFrame() on an InputAction obtained via InputSystem.actions.FindAction(\"name\")",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetButtonUp",
+    "recommendation": "Use action.WasReleasedThisFrame() on an InputAction obtained via InputSystem.actions.FindAction(\"name\")",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetKey",
+    "recommendation": "Use the matching Keyboard.current key control, e.g. Keyboard.current.spaceKey.isPressed",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetKeyDown",
+    "recommendation": "Use the matching Keyboard.current key control, e.g. Keyboard.current.spaceKey.wasPressedThisFrame",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetKeyUp",
+    "recommendation": "Use the matching Keyboard.current key control, e.g. Keyboard.current.spaceKey.wasReleasedThisFrame",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetMouseButton",
+    "recommendation": "Use Mouse.current.leftButton/rightButton/middleButton.isPressed",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetMouseButtonDown",
+    "recommendation": "Use Mouse.current.leftButton/rightButton/middleButton.wasPressedThisFrame",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetMouseButtonUp",
+    "recommendation": "Use Mouse.current.leftButton/rightButton/middleButton.wasReleasedThisFrame",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetTouch",
+    "recommendation": "Use EnhancedTouch.Touch.activeTouches[i] after calling EnhancedTouch.Enable()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetJoystickNames",
+    "recommendation": "Enumerate connected devices via the Input System device APIs; there is no direct equivalent",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.IsJoystickPreconfigured",
+    "recommendation": "Not required with the Input System",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.ResetInputAxes",
+    "recommendation": "There is no direct equivalent in the Input System",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetAccelerationEvent",
+    "recommendation": "Read Accelerometer.current; see the accelerometer sampling documentation",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetPenEvent",
+    "recommendation": "Use Pen.current",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.GetLastPenContactEvent",
+    "recommendation": "Use Pen.current",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.ResetPenEvents",
+    "recommendation": "Use Pen.current",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.ClearLastPenContactEvent",
+    "recommendation": "Use Pen.current",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.mousePosition",
+    "recommendation": "Use Mouse.current.position.ReadValue()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.mousePresent",
+    "recommendation": "Check Mouse.current != null",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.anyKey",
+    "recommendation": "Subscribe to InputSystem.onAnyButtonPress",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.anyKeyDown",
+    "recommendation": "Use Keyboard.current.anyKey.wasUpdatedThisFrame",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.inputString",
+    "recommendation": "Subscribe to Keyboard.onTextInput",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.compositionCursorPos",
+    "recommendation": "Use Keyboard.current.SetIMECursorPosition(Vector2)",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.compositionString",
+    "recommendation": "Subscribe to Keyboard.onIMECompositionChange",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.imeCompositionMode",
+    "recommendation": "Use Keyboard.current.SetIMEEnabled(bool)",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.imeIsSelected",
+    "recommendation": "Use Keyboard.current.imeSelected",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.touchCount",
+    "recommendation": "Use EnhancedTouch.Touch.activeTouches.Count after calling EnhancedTouch.Enable()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.touches",
+    "recommendation": "Use EnhancedTouch.Touch.activeTouches after calling EnhancedTouch.Enable()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.touchSupported",
+    "recommendation": "Check Touchscreen.current != null",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.multiTouchEnabled",
+    "recommendation": "There is no direct equivalent in the Input System yet",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.simulateMouseWithTouches",
+    "recommendation": "There is no direct equivalent in the Input System yet",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.stylusTouchSupported",
+    "recommendation": "There is no direct equivalent in the Input System yet",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.touchPressureSupported",
+    "recommendation": "There is no direct equivalent in the Input System yet",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.backButtonLeavesApp",
+    "recommendation": "There is no direct equivalent in the Input System yet",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.acceleration",
+    "recommendation": "Use Accelerometer.current.acceleration.ReadValue()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.accelerationEventCount",
+    "recommendation": "See the accelerometer sampling documentation",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.accelerationEvents",
+    "recommendation": "See the accelerometer sampling documentation",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.compass",
+    "recommendation": "There is no direct equivalent in the Input System yet",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.compensateSensors",
+    "recommendation": "Use InputSystem.settings.compensateForScreenOrientation",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.deviceOrientation",
+    "recommendation": "There is no direct equivalent in the Input System yet",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.gyro",
+    "recommendation": "The legacy Gyroscope is split into Gyroscope, GravitySensor, AttitudeSensor, Accelerometer and LinearAccelerationSensor",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Input.location",
+    "recommendation": "There is no direct equivalent in the Input System yet",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Gyroscope.attitude",
+    "recommendation": "Use AttitudeSensor.current.orientation.ReadValue()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Gyroscope.enabled",
+    "recommendation": "Read Gyroscope.current.enabled; enable or disable with InputSystem.EnableDevice/DisableDevice(Gyroscope.current)",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Gyroscope.gravity",
+    "recommendation": "Use GravitySensor.current.gravity.ReadValue()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Gyroscope.rotationRate",
+    "recommendation": "Use Gyroscope.current.angularVelocity.ReadValue()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Gyroscope.rotationRateUnbiased",
+    "recommendation": "There is no direct equivalent in the Input System yet",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Gyroscope.updateInterval",
+    "recommendation": "Use Sensor.samplingFrequency (Hz = 1 / seconds)",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "UnityEngine.Gyroscope.userAcceleration",
+    "recommendation": "Use LinearAccelerationSensor.current.acceleration.ReadValue()",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/corresponding-old-new-api.html",
+    "minimumVersion": "6000.0"
+  },
+  {
+    "name": "System.AppDomain.GetAssemblies",
+    "recommendation": "Prefer <b>UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies()</b>, which accounts for assemblies loaded and unloaded by code reloading",
+    "documentationUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.appdomain.getassemblies",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "UnityEngine.Camera.AddCommandBuffer",
+    "recommendation": "<b>Camera.AddCommandBuffer()</b> attaches a CommandBuffer to a Built-in Render Pipeline <b>CameraEvent</b>. Reimplement the effect as a <b>ScriptableRendererFeature</b> with a custom <b>ScriptableRenderPass</b> in URP, instead of injecting CommandBuffers via Camera.AddCommandBuffer().",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html",
+    "area": "MigrationToURP"
+  },
+  {
+    "name": "UnityEngine.Camera.allowHDR",
+    "recommendation": "<b>Camera.allowHDR</b> has no effect under the Universal Render Pipeline, where HDR is controlled by the <b>HDR</b> option on the URP Asset and per-camera through <b>UniversalAdditionalCameraData</b>. Control HDR via the <b>HDR</b> option on the URP Asset, or per-camera through <b>camera.GetUniversalAdditionalCameraData()</b>, instead of setting Camera.allowHDR.",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html",
+    "area": "MigrationToURP"
+  },
+  {
+    "name": "UnityEngine.Camera.allowMSAA",
+    "recommendation": "<b>Camera.allowMSAA</b> has no effect under the Universal Render Pipeline, where MSAA is controlled by the <b>Anti Aliasing (MSAA)</b> setting on the URP Asset. Configure MSAA through the <b>Anti Aliasing (MSAA)</b> setting on the URP Asset instead of setting Camera.allowMSAA.",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html",
+    "area": "MigrationToURP"
+  },
+  {
+    "name": "UnityEngine.Camera.renderingPath",
+    "recommendation": "<b>Camera.renderingPath</b> has no effect under the Universal Render Pipeline, which selects its rendering path through the assigned <b>Renderer</b> on the URP Asset. Choose the rendering path by assigning the appropriate <b>Renderer</b> on the URP Asset instead of setting Camera.renderingPath.",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html",
+    "area": "MigrationToURP"
+  },
+  {
+    "name": "UnityEngine.Camera.depthTextureMode",
+    "recommendation": "<b>Camera.depthTextureMode</b> does not drive depth texture generation under the Universal Render Pipeline. Enable <b>Depth Texture</b> on the URP Asset, or per-camera through <b>UniversalAdditionalCameraData</b>, instead of setting Camera.depthTextureMode.",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html",
+    "area": "MigrationToURP"
+  },
+  {
+    "name": "UnityEngine.Camera.depth",
+    "recommendation": "<b>Camera.depth</b> controls how camera render outputs are ordered under the Built-in Render Pipeline. Review whether this camera relies on Depth-based ordering and, if so, use URP Camera Stacking — designate a <b>Base</b> camera and add the others as <b>Overlay</b> cameras on its <b>UniversalAdditionalCameraData</b> stack — instead of setting Camera.depth.",
+    "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@latest/index.html?subfolder=/manual/upgrade-guides.html",
+    "area": "MigrationToURP"
+  },
+  {
+    "name": "System.Reflection.Assembly.Location",
+    "recommendation": "Use <b>Assembly.GetLoadedAssemblyPath()</b> (an extension method in the UnityEngine namespace) to obtain an assembly's path instead of Assembly.Location.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "System.Reflection.Assembly.LoadFile",
+    "recommendation": "Load assemblies through <b>CurrentAssemblies.LoadFromPath(string)</b> or <b>CurrentAssemblies.LoadFromBytes(byte[])</b> (in the UnityEngine.Assemblies namespace) instead of Assembly.LoadFile.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "System.Reflection.Assembly.LoadFrom",
+    "recommendation": "Load assemblies through <b>CurrentAssemblies.LoadFromPath(string)</b> or <b>CurrentAssemblies.LoadFromBytes(byte[])</b> (in the UnityEngine.Assemblies namespace) instead of Assembly.LoadFrom.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "System.AppDomain.DomainUnload",
+    "recommendation": "Subscribing to <b>AppDomain.DomainUnload</b> no longer reliably fires under the CoreCLR (.NET) scripting runtime, which does not unload the managed code space the way Mono does. Move cleanup that depends on it to the <b>[OnAssemblyUnloading]</b> lifecycle attribute instead.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "System.IntPtr.ToInt32",
+    "recommendation": "<b>IntPtr.ToInt32</b> can throw <b>OverflowException</b> under the CoreCLR (.NET) scripting runtime when the pointer value does not fit in a 32-bit integer, which can happen on 64-bit platforms. Verify that this conversion cannot overflow. Prefer <b>IntPtr.ToInt64()</b> or keep the value as an <b>IntPtr</b>, or catch <b>OverflowException</b> where a narrowing conversion is required.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "System.UIntPtr.ToUInt32",
+    "recommendation": "<b>UIntPtr.ToUInt32</b> can throw <b>OverflowException</b> under the CoreCLR (.NET) scripting runtime when the pointer value does not fit in a 32-bit unsigned integer, which can happen on 64-bit platforms.. Verify that this conversion cannot overflow. Prefer <b>UIntPtr.ToUInt64()</b> or keep the value as a <b>UIntPtr</b>, or catch <b>OverflowException</b> where a narrowing conversion is required.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "System.Text.Encoding.GetEncoding",
+    "recommendation": "<b>Encoding.GetEncoding</b> can throw <b>NotSupportedException</b> under the CoreCLR (.NET) scripting runtime, which registers fewer code pages by default than the Mono scripting runtime did. Requesting an uncommon code page such as Windows-1252 fails unless its encoding provider has been registered. Prefer a built-in encoding such as <b>Encoding.UTF8</b> where possible. If a code-page encoding is required, register the provider once at startup with <b>Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)</b>.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "System.Buffers.ArrayPool<T>.Return",
+    "recommendation": "Returning a buffer to <b>ArrayPool</b> without clearing it leaves any object references stored in the array alive, which can keep those objects from being collected and interfere with code reloading under the CoreCLR (.NET) scripting runtime. Pass <b>clearArray: true</b> to <b>ArrayPool.Return</b>, or clear the buffer yourself before returning it, whenever the array holds references to managed objects.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "System.AppDomain.CreateDomain",
+    "recommendation": "Remove use of additional <b>AppDomain</b> instances. Isolate code with separate processes or an <b>AssemblyLoadContext</b> instead.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  },
+  {
+    "name": "System.Threading.Thread.Abort",
+    "recommendation": "Use cooperative cancellation with a <b>CancellationToken</b> to stop background work instead of <b>Thread.Abort</b>.",
+    "documentationUrl": "https://docs.unity3d.com/Manual/UpgradeGuides.html",
+    "area": "MigrationToCoreCLR"
+  }
+]

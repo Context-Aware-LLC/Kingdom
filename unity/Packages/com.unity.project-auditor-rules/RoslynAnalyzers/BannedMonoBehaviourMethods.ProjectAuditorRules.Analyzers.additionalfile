@@ -1,0 +1,22 @@
+[
+  {
+    "name": "OnTriggerStay",
+    "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all OnTriggerStay() methods, and consider refactoring code to not use them",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnTriggerStay.html"
+  },
+  {
+    "name": "OnTriggerStay2D",
+    "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all OnTriggerStay2D() methods, and consider refactoring code to not use them",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnTriggerStay2D.html"
+  },
+  {
+    "name": "OnCollisionStay",
+    "recommendation": "Profile CPU performance to look for bottlenecks, examine the contents of all OnCollisionStay() methods, and consider refactoring code to not use them",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnCollisionStay.html"
+  },
+  {
+    "name": "OnGUI",
+    "recommendation": "Remove all OnGUI() methods from the project code",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnGUI.html"
+  }
+]

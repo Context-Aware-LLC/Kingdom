@@ -1,0 +1,72 @@
+[
+  {
+    "name": "UnityEngine.ImageConversion.LoadImage",
+    "recommendation": "If a CPU-accessible copy of the texture is not required, ensure that the markNonReadable flag passed into the method is set to true",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/ImageConversion.LoadImage.html"
+  },
+  {
+    "name": "UnityEngine.Renderer.material",
+    "recommendation": "If possible, use Renderer.sharedMaterial instead",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/Renderer-material.html"
+  },
+  {
+    "name": "UnityEngine.ComputeBuffer.GetData",
+    "recommendation": "Avoid reading back from ComputeBuffers if possible. If it's unavoidable, profile your project carefully and regularly to monitor the performance impact",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/ComputeBuffer.GetData.html"
+  },
+  {
+    "name": "UnityEngine.Texture2D.SetPixels",
+    "recommendation": "Use Texture2D.SetPixels32(), Texture2D.GetRawTextureData(), or Texture2D.Apply() instead",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture2D.SetPixels.html"
+  },
+  {
+    "name": "UnityEngine.Texture3D.SetPixels",
+    "recommendation": "Use Texture3D.SetPixels32() instead",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture3D.SetPixels.html"
+  },
+  {
+    "name": "UnityEngine.Texture2DArray.SetPixels",
+    "recommendation": "Use Texture2DArray.SetPixels32() instead",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/Texture2DArray.SetPixels.html"
+  },
+  {
+    "name": "UnityEngine.CubemapArray.SetPixels",
+    "recommendation": "Use CubemapArray.SetPixels32() instead",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/CubemapArray.SetPixels.html"
+  },
+  {
+    "name": "UnityEngine.GameObject.SendMessage",
+    "recommendation": "Implement a custom system to replace SendMessage - get the components you want to send messages to and call methods directly on them",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/GameObject.SendMessage.html"
+  },
+  {
+    "name": "UnityEngine.Component.SendMessage",
+    "recommendation": "Implement a custom system to replace SendMessage - get the components you want to send messages to and call methods directly on them",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/Component.SendMessage.html"
+  },
+  {
+    "name": "UnityEngine.Shader.WarmupAllShaders",
+    "recommendation": "Implement a shader pre-warming mechanism which renders a small triangle for each combination of vertex format and shader used at runtime. One way to achieve this is with the UnityEngine.Experimental.Rendering.ShaderWarmup API",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/Shader.WarmupAllShaders.html"
+  },
+  {
+    "name": "UnityEngine.ShaderVariantCollection.WarmUp",
+    "recommendation": "Implement a shader pre-warming mechanism which renders a small triangle for each combination of vertex format and shader variant used at runtime. One way to achieve this is with the UnityEngine.Experimental.Rendering.ShaderWarmup API",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/ShaderVariantCollection.WarmUp.html"
+  },
+  {
+    "name": "System.DateTime.Now",
+    "recommendation": "Try to avoid using this in frequently-updated code. Prefer UnityEngine.Time.time or, if precise time is needed, use DateTime.UtcNow",
+    "documentationUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.datetime.now"
+  },
+  {
+    "name": "System.AppDomain.GetAssemblies",
+    "recommendation": "Try to minimize calls to System.AppDomain.GetAssemblies by caching the returned assemblies. When possible, use UnityEditor.TypeCache for fast access to types, methods and fields",
+    "documentationUrl": "https://learn.microsoft.com/en-us/dotnet/api/system.appdomain.getassemblies"
+  },
+  {
+    "name": "UnityEditor.AssetDatabase.FindAssets",
+    "recommendation": "Try to minimize calls to UnityEditor.AssetDatabase.FindAssets",
+    "documentationUrl": "https://docs.unity3d.com/ScriptReference/AssetDatabase.FindAssets.html"
+  }
+]

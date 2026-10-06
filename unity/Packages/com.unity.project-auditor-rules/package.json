@@ -1,0 +1,28 @@
+{
+  "name": "com.unity.project-auditor-rules",
+  "version": "3.0.0",
+  "displayName": "Project Auditor Rules",
+  "unity": "6000.0",
+  "description": "Project Auditor is a static analysis tool that analyzes assets, settings, and scripts inside Unity projects. Project Auditor lives inside the Unity Editor as a module, and uses the rules in this package to provide suggestions for improvement.",
+  "keywords": [
+    "performance",
+    "analysis"
+  ],
+  "dependencies": {},
+  "relatedPackages": {
+    "com.unity.project-auditor-rules.tests": "3.0.0"
+  },
+  "_upm": {
+    "changelog": "# Added\n* Package update version database.\n* Obsolete API detection for Unity 6.7.\n* URP migration advice.\n* CoreCLR migration advice."
+  },
+  "upmCi": {
+    "footprint": "8db0996704f26f62b68b3b8b290d168a83eee7f8"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.project-auditor-rules@3.0/manual/index.html",
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/ProjectAuditorRules.git",
+    "type": "git",
+    "revision": "4da02ae733fa9b645df9a362862965ed45494bb8"
+  },
+  "_fingerprint": "c7ec3bc1c7548cdf22a94e672f7514681c6a1942"
+}

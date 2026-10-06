@@ -1,0 +1,2789 @@
+{
+  "editorVersionPrefix": "6000.2",
+  "baseVersion": "6000.2.0f1",
+  "manifests": [
+    {
+      "version": "6000.2.0f1",
+      "schemaVersion": 4,
+      "metadataPackageName": "com.unity.package-manager.metadata-6000.2",
+      "packages": [
+        {
+          "name": "com.unity.sentis",
+          "minimumVersion": "2.2.0"
+        },
+        {
+          "name": "com.unity.collections",
+          "minimumVersion": "2.5.7",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.5.7"
+        },
+        {
+          "name": "com.unity.entities",
+          "minimumVersion": "1.3.14",
+          "isDiscoverable": true,
+          "version": "1.3.14"
+        },
+        {
+          "name": "com.unity.netcode",
+          "minimumVersion": "1.6.2",
+          "isDiscoverable": true,
+          "version": "1.6.2"
+        },
+        {
+          "name": "com.unity.charactercontroller",
+          "minimumVersion": "1.3.11",
+          "isDiscoverable": true,
+          "version": "1.3.11"
+        },
+        {
+          "name": "com.unity.physics",
+          "minimumVersion": "1.3.14",
+          "isDiscoverable": true,
+          "version": "1.3.14"
+        },
+        {
+          "name": "com.havok.physics",
+          "minimumVersion": "1.3.14",
+          "isDiscoverable": true,
+          "version": "1.3.14"
+        },
+        {
+          "name": "com.unity.logging",
+          "minimumVersion": "1.3.10",
+          "version": "1.3.10"
+        },
+        {
+          "name": "com.unity.entities.graphics",
+          "minimumVersion": "1.4.12",
+          "isDiscoverable": true,
+          "version": "1.4.12"
+        },
+        {
+          "name": "com.unity.feature.2d",
+          "minimumVersion": "2.0.1",
+          "isDiscoverable": true,
+          "version": "2.0.1"
+        },
+        {
+          "name": "com.unity.feature.ecs",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.feature.worldbuilding",
+          "minimumVersion": "1.0.1",
+          "isDiscoverable": true,
+          "version": "1.0.1"
+        },
+        {
+          "name": "com.unity.feature.characters-animation",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.feature.gameplay-storytelling",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.feature.mobile",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.feature.ar",
+          "minimumVersion": "1.0.2",
+          "isDiscoverable": true,
+          "version": "1.0.2"
+        },
+        {
+          "name": "com.unity.feature.vr",
+          "minimumVersion": "1.0.1",
+          "isDiscoverable": true,
+          "version": "1.0.1"
+        },
+        {
+          "name": "com.unity.feature.cinematic",
+          "deprecated": "Thisfeaturesetisnolongersupportedonthiseditorversion."
+        },
+        {
+          "name": "com.unity.feature.development",
+          "minimumVersion": "1.0.2",
+          "isDiscoverable": true,
+          "version": "1.0.2"
+        },
+        {
+          "name": "com.unity.device-simulator",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.2d.ik",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.2d.animation",
+          "minimumVersion": "12.0.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "12.0.2"
+        },
+        {
+          "name": "com.unity.2d.common",
+          "minimumVersion": "11.0.1",
+          "mustBeBundled": true,
+          "version": "11.0.1"
+        },
+        {
+          "name": "com.unity.2d.enhancers",
+          "isDiscoverable": true,
+          "nextVersion": "1.0.0-pre.1"
+        },
+        {
+          "name": "com.unity.2d.path",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.2d.pixel-perfect",
+          "minimumVersion": "5.1.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.1.0"
+        },
+        {
+          "name": "com.unity.2d.psdimporter",
+          "minimumVersion": "11.0.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "11.0.1"
+        },
+        {
+          "name": "com.unity.2d.sprite",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.2.0a7"
+        },
+        {
+          "name": "com.unity.2d.spriteshape",
+          "minimumVersion": "12.0.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "12.0.1"
+        },
+        {
+          "name": "com.unity.2d.tilemap",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.2.0a7"
+        },
+        {
+          "name": "com.unity.2d.tilemap.extras",
+          "minimumVersion": "5.0.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.0.1"
+        },
+        {
+          "name": "com.unity.2d.aseprite",
+          "minimumVersion": "2.0.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.0.1"
+        },
+        {
+          "name": "com.unity.adaptiveperformance",
+          "minimumVersion": "5.1.5",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.1.5"
+        },
+        {
+          "name": "com.unity.adaptiveperformance.google.android",
+          "minimumVersion": "5.1.5",
+          "mustBeBundled": true,
+          "version": "5.1.5"
+        },
+        {
+          "name": "com.unity.adaptiveperformance.samsung.android",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.Usecom.unity.adaptiveperformance.google.androidinstead."
+        },
+        {
+          "name": "com.unity.addressables",
+          "minimumVersion": "2.6.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.6.0"
+        },
+        {
+          "name": "com.unity.ads",
+          "minimumVersion": "4.4.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.4.2",
+          "introduced": "2018.2.0b8"
+        },
+        {
+          "name": "com.unity.ads.ios-support",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.analytics",
+          "minimumVersion": "3.8.1",
+          "mustBeBundled": false,
+          "version": "3.8.1",
+          "introduced": "2018.2.0b8"
+        },
+        {
+          "name": "com.unity.animation.rigging",
+          "minimumVersion": "1.3.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.3.0"
+        },
+        {
+          "name": "com.unity.barracuda",
+          "minimumVersion": "3.0.0",
+          "mustBeBundled": true,
+          "version": "3.0.0"
+        },
+        {
+          "name": "com.unity.burst",
+          "minimumVersion": "1.8.23",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.8.23"
+        },
+        {
+          "name": "com.unity.cinemachine",
+          "minimumVersion": "2.10.4",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.10.4"
+        },
+        {
+          "name": "com.unity.collab-proxy",
+          "minimumVersion": "2.8.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.8.2",
+          "introduced": "2018.3"
+        },
+        {
+          "name": "com.unity.editorcoroutines",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.ext.nunit",
+          "minimumVersion": "2.0.5",
+          "mustBeBundled": true,
+          "version": "2.0.5"
+        },
+        {
+          "name": "com.unity.formats.alembic",
+          "minimumVersion": "2.4.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.4.0"
+        },
+        {
+          "name": "com.unity.google.resonance.audio",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.ide.rider",
+          "minimumVersion": "3.0.36",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.0.36",
+          "introduced": "2019.2.0a12"
+        },
+        {
+          "name": "com.unity.ide.visualstudio",
+          "minimumVersion": "2.0.23",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.0.23",
+          "introduced": "2020.1.0a12"
+        },
+        {
+          "name": "com.unity.ide.vscode",
+          "deprecated": "VisualStudioCodepackageisnotsupportedanymore.Youcancontinuetouseit,butwewon'tprovideanyupdateanymore."
+        },
+        {
+          "name": "com.unity.inputsystem",
+          "minimumVersion": "1.14.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.14.1"
+        },
+        {
+          "name": "com.unity.live-capture",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion."
+        },
+        {
+          "name": "com.unity.localization",
+          "minimumVersion": "1.5.4",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.5.4"
+        },
+        {
+          "name": "com.unity.mathematics",
+          "minimumVersion": "1.3.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.3.2"
+        },
+        {
+          "name": "com.unity.ml-agents",
+          "minimumVersion": "2.0.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.0.1"
+        },
+        {
+          "name": "com.unity.mobile.android-logcat",
+          "minimumVersion": "1.4.5",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.4.5"
+        },
+        {
+          "name": "com.unity.mobile.notifications",
+          "minimumVersion": "2.4.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.4.1"
+        },
+        {
+          "name": "com.unity.modules.ai",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.androidjni",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.2.0a4",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.animation",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a11",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.assetbundle",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.audio",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a11",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.cloth",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.director",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a11",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.imageconversion",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.imgui",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.jsonserialize",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a5",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.nvidia",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.modules.amd",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.modules.particlesystem",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a11",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.physics",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.physics2d",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.screencapture",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.terrain",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.terrainphysics",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.tilemap",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.ui",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a11",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.uielements",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.umbra",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.unityanalytics",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.unitywebrequest",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a11",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.unitywebrequestassetbundle",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.unitywebrequestaudio",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.unitywebrequesttexture",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.unitywebrequestwww",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.vehicles",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.video",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a11",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.vr",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a5",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.wind",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2018.2.0b8",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.modules.xr",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2019.1.0a5",
+          "isDefault": true
+        },
+        {
+          "name": "nuget.mono-cecil",
+          "minimumVersion": "1.0.0",
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.nuget.mono-cecil",
+          "minimumVersion": "1.11.5",
+          "mustBeBundled": true,
+          "version": "1.11.5"
+        },
+        {
+          "name": "com.unity.nuget.newtonsoft-json",
+          "minimumVersion": "3.2.1",
+          "mustBeBundled": true,
+          "version": "3.2.1"
+        },
+        {
+          "name": "com.unity.package-manager-ui",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.performance.profile-analyzer",
+          "minimumVersion": "1.2.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.2.3"
+        },
+        {
+          "name": "com.unity.polybrush",
+          "minimumVersion": "1.1.8",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.8"
+        },
+        {
+          "name": "com.unity.postprocessing",
+          "minimumVersion": "3.5.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.5.0"
+        },
+        {
+          "name": "com.unity.probuilder",
+          "minimumVersion": "6.0.6",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.0.6"
+        },
+        {
+          "name": "com.unity.profiling.core",
+          "minimumVersion": "1.0.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.0.2"
+        },
+        {
+          "name": "com.unity.properties",
+          "minimumVersion": "2.1.0-exp.3"
+        },
+        {
+          "name": "com.unity.serialization",
+          "minimumVersion": "3.1.2",
+          "mustBeBundled": true,
+          "version": "3.1.2"
+        },
+        {
+          "name": "com.unity.properties.ui",
+          "minimumVersion": "2.0.0-exp.11"
+        },
+        {
+          "name": "com.unity.services.cloud-diagnostics",
+          "minimumVersion": "1.0.11",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.0.11"
+        },
+        {
+          "name": "com.unity.services.user-reporting",
+          "minimumVersion": "2.0.11",
+          "isDiscoverable": true,
+          "version": "2.0.11"
+        },
+        {
+          "name": "com.unity.purchasing",
+          "minimumVersion": "4.12.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.12.2",
+          "nextVersion": "5.0.0-pre.5",
+          "introduced": "2018.2.0b8"
+        },
+        {
+          "name": "com.unity.purchasing.udp",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.quicksearch",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.recorder",
+          "minimumVersion": "5.1.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.1.2"
+        },
+        {
+          "name": "com.unity.bindings.openimageio",
+          "minimumVersion": "1.0.0",
+          "mustBeBundled": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.remote-config",
+          "minimumVersion": "4.1.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.1.1"
+        },
+        {
+          "name": "com.unity.remote-config-runtime",
+          "minimumVersion": "4.0.2",
+          "mustBeBundled": true,
+          "version": "4.0.2"
+        },
+        {
+          "name": "com.unity.render-pipelines.core",
+          "minimumVersion": "17.2.0",
+          "isDiscoverable": true,
+          "version": "17.2.0"
+        },
+        {
+          "name": "com.unity.render-pipelines.high-definition",
+          "minimumVersion": "17.2.0",
+          "isDiscoverable": true,
+          "version": "17.2.0"
+        },
+        {
+          "name": "com.unity.render-pipelines.high-definition-config",
+          "minimumVersion": "17.2.0",
+          "version": "17.2.0"
+        },
+        {
+          "name": "com.unity.render-pipelines.universal",
+          "minimumVersion": "17.2.0",
+          "isDiscoverable": true,
+          "version": "17.2.0"
+        },
+        {
+          "name": "com.unity.render-pipelines.universal-config",
+          "minimumVersion": "17.0.3",
+          "version": "17.0.3"
+        },
+        {
+          "name": "com.unity.rendering.denoising",
+          "minimumVersion": "1.0.5",
+          "isDiscoverable": true,
+          "version": "1.0.5"
+        },
+        {
+          "name": "com.unity.rendering.light-transport",
+          "minimumVersion": "1.0.1",
+          "mustBeBundled": true,
+          "version": "1.0.1"
+        },
+        {
+          "name": "com.unity.path-tracing",
+          "minimumVersion": "1.0.0",
+          "mustBeBundled": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.render-pipelines.lightweight",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.scriptablebuildpipeline",
+          "minimumVersion": "2.4.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.4.0"
+        },
+        {
+          "name": "com.unity.searcher",
+          "minimumVersion": "4.9.2",
+          "mustBeBundled": true,
+          "version": "4.9.2"
+        },
+        {
+          "name": "com.unity.services.analytics",
+          "minimumVersion": "6.1.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.1.0"
+        },
+        {
+          "name": "com.unity.services.authentication",
+          "minimumVersion": "3.4.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.4.1"
+        },
+        {
+          "name": "com.unity.services.ccd.management",
+          "minimumVersion": "3.0.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.0.2"
+        },
+        {
+          "name": "com.unity.services.cloudcode",
+          "minimumVersion": "2.9.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.9.0"
+        },
+        {
+          "name": "com.unity.services.cloudsave",
+          "minimumVersion": "2.2.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.2.1"
+        },
+        {
+          "name": "com.unity.services.cloud-build",
+          "minimumVersion": "2.0.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.0.3"
+        },
+        {
+          "name": "com.unity.services.core",
+          "minimumVersion": "1.14.0",
+          "mustBeBundled": true,
+          "version": "1.14.0"
+        },
+        {
+          "name": "com.unity.services.economy",
+          "minimumVersion": "3.5.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.5.1"
+        },
+        {
+          "name": "com.unity.services.friends",
+          "minimumVersion": "1.1.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.0"
+        },
+        {
+          "name": "com.unity.services.leaderboards",
+          "minimumVersion": "2.2.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.2.1"
+        },
+        {
+          "name": "com.unity.services.lobby",
+          "minimumVersion": "1.2.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.2.2"
+        },
+        {
+          "name": "com.unity.services.matchmaker",
+          "minimumVersion": "1.1.5",
+          "isDiscoverable": true,
+          "version": "1.1.5"
+        },
+        {
+          "name": "com.unity.services.multiplay",
+          "minimumVersion": "1.2.5",
+          "isDiscoverable": true,
+          "version": "1.2.5"
+        },
+        {
+          "name": "com.unity.services.push-notifications",
+          "minimumVersion": "4.0.1",
+          "isDiscoverable": true,
+          "version": "4.0.1"
+        },
+        {
+          "name": "com.unity.services.qos",
+          "minimumVersion": "1.3.0",
+          "mustBeBundled": true,
+          "version": "1.3.0"
+        },
+        {
+          "name": "com.unity.services.relay",
+          "minimumVersion": "1.0.5",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.0.5"
+        },
+        {
+          "name": "com.unity.services.vivox",
+          "minimumVersion": "16.6.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "16.6.2"
+        },
+        {
+          "name": "com.unity.services.wire",
+          "minimumVersion": "1.3.0",
+          "mustBeBundled": true,
+          "version": "1.3.0"
+        },
+        {
+          "name": "com.unity.settings-manager",
+          "minimumVersion": "2.1.0",
+          "mustBeBundled": true,
+          "version": "2.1.0"
+        },
+        {
+          "name": "com.unity.shadergraph",
+          "minimumVersion": "17.2.0",
+          "isDiscoverable": true,
+          "version": "17.2.0"
+        },
+        {
+          "name": "com.unity.splines",
+          "minimumVersion": "2.8.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.8.1"
+        },
+        {
+          "name": "com.unity.standardevents",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.subsystemregistration",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.test-framework",
+          "minimumVersion": "1.5.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.5.1",
+          "introduced": "2019.2"
+        },
+        {
+          "name": "com.unity.test-framework.performance",
+          "minimumVersion": "3.1.0",
+          "isDiscoverable": true,
+          "version": "3.1.0"
+        },
+        {
+          "name": "com.unity.testtools.codecoverage",
+          "minimumVersion": "1.2.6",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.2.6"
+        },
+        {
+          "name": "com.unity.textmeshpro",
+          "minimumVersion": "5.0.0",
+          "deprecated": "Thispackageisnolongersupported.TextMeshProfunctionalitiesarenowincludedinthecom.unity.uguipackage.Tocontinueusingthem,consideraddingittoyourprojectdependencies.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.timeline",
+          "minimumVersion": "1.8.7",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.8.7",
+          "introduced": "2019.1.0a11"
+        },
+        {
+          "name": "com.unity.ugui",
+          "minimumVersion": "2.0.0",
+          "isDiscoverable": true,
+          "version": "2.0.0",
+          "introduced": "2019.2"
+        },
+        {
+          "name": "com.unity.ui",
+          "minimumVersion": "2.0.0"
+        },
+        {
+          "name": "com.unity.ui.builder",
+          "minimumVersion": "2.0.0"
+        },
+        {
+          "name": "com.unity.vectorgraphics",
+          "minimumVersion": "2.0.0-preview.2"
+        },
+        {
+          "name": "com.unity.visualeffectgraph",
+          "minimumVersion": "17.2.0",
+          "isDiscoverable": true,
+          "version": "17.2.0"
+        },
+        {
+          "name": "com.unity.visualscripting",
+          "minimumVersion": "1.9.7",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.9.7"
+        },
+        {
+          "name": "com.unity.xr.arcore",
+          "minimumVersion": "6.2.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.2.0"
+        },
+        {
+          "name": "com.unity.xr.arextensions",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.xr.arfoundation",
+          "minimumVersion": "6.2.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.2.0"
+        },
+        {
+          "name": "com.unity.xr.arkit",
+          "minimumVersion": "6.2.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.2.0"
+        },
+        {
+          "name": "com.unity.xr.arkit-face-tracking",
+          "minimumVersion": "5.0.2",
+          "mustBeBundled": true,
+          "version": "5.0.2"
+        },
+        {
+          "name": "com.unity.xr.arsubsystems",
+          "minimumVersion": "5.0.2",
+          "mustBeBundled": true,
+          "version": "5.0.2"
+        },
+        {
+          "name": "com.unity.xr.compositionlayers",
+          "minimumVersion": "2.1.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.1.0"
+        },
+        {
+          "name": "com.unity.xr.core-utils",
+          "minimumVersion": "2.5.2",
+          "mustBeBundled": true,
+          "version": "2.5.2"
+        },
+        {
+          "name": "com.unity.xr.facesubsystem",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.xr.googlevr.android",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.xr.googlevr.ios",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.xr.hands",
+          "minimumVersion": "1.5.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.5.0",
+          "nextVersion": "1.6.0-pre.3"
+        },
+        {
+          "name": "com.unity.xr.interaction.toolkit",
+          "minimumVersion": "3.2.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.2.0"
+        },
+        {
+          "name": "com.unity.xr.interactionsubsystems",
+          "minimumVersion": "2.0.0",
+          "mustBeBundled": true,
+          "version": "2.0.0"
+        },
+        {
+          "name": "com.unity.xr.legacyinputhelpers",
+          "minimumVersion": "2.1.12",
+          "mustBeBundled": true,
+          "version": "2.1.12",
+          "introduced": "2019.1.0a5"
+        },
+        {
+          "name": "com.unity.xr.magicleap",
+          "minimumVersion": "7.0.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "7.0.0"
+        },
+        {
+          "name": "com.unity.xr.management",
+          "minimumVersion": "4.5.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.5.1"
+        },
+        {
+          "name": "com.unity.xr.meta-openxr",
+          "minimumVersion": "2.2.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.2.0"
+        },
+        {
+          "name": "com.unity.xr.oculus",
+          "minimumVersion": "4.5.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.5.1"
+        },
+        {
+          "name": "com.unity.xr.oculus.android",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.xr.oculus.standalone",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.xr.openvr.standalone",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.xr.openxr",
+          "minimumVersion": "1.15.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.15.1"
+        },
+        {
+          "name": "com.unity.xr.windowsmr",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.xr.windowsmr.metro",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.formats.fbx",
+          "minimumVersion": "5.1.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.1.1"
+        },
+        {
+          "name": "com.autodesk.fbx",
+          "minimumVersion": "5.1.1",
+          "mustBeBundled": true,
+          "version": "5.1.1"
+        },
+        {
+          "name": "com.unity.connect.share",
+          "minimumVersion": "4.2.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.2.3"
+        },
+        {
+          "name": "com.unity.learn.iet-framework",
+          "minimumVersion": "5.0.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.0.0"
+        },
+        {
+          "name": "com.unity.learn.iet-framework.authoring",
+          "minimumVersion": "1.5.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.5.0"
+        },
+        {
+          "name": "com.unity.sequences",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion."
+        },
+        {
+          "name": "com.unity.multiplayer-hlapi",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.terrain-tools",
+          "minimumVersion": "5.3.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.3.0"
+        },
+        {
+          "name": "com.unity.profiling.systemmetrics.mali",
+          "minimumVersion": "1.0.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.0.3"
+        },
+        {
+          "name": "com.unity.device-simulator.devices",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.scripting.python",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion."
+        },
+        {
+          "name": "com.unity.scripting.python.windows",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion."
+        },
+        {
+          "name": "com.unity.scripting.python.macos",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion."
+        },
+        {
+          "name": "com.unity.scripting.python.linux",
+          "deprecated": "Thispackageisnolongersupportedonthiseditorversion."
+        },
+        {
+          "name": "com.unity.multiplayer.playmode",
+          "minimumVersion": "1.6.0",
+          "isDiscoverable": true,
+          "version": "1.6.0"
+        },
+        {
+          "name": "com.unity.transport",
+          "minimumVersion": "2.5.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.5.2"
+        },
+        {
+          "name": "com.unity.dedicated-server",
+          "minimumVersion": "1.6.0",
+          "isDiscoverable": true,
+          "version": "1.6.0"
+        },
+        {
+          "name": "com.unity.memoryprofiler",
+          "minimumVersion": "1.1.6",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.6"
+        },
+        {
+          "name": "com.unity.netcode.gameobjects",
+          "minimumVersion": "1.14.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.14.0"
+        },
+        {
+          "name": "com.unity.multiplayer.tools",
+          "minimumVersion": "2.2.5",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.2.5"
+        },
+        {
+          "name": "com.unity.ai.navigation",
+          "minimumVersion": "2.0.8",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.0.8",
+          "introduced": "2022.2"
+        },
+        {
+          "name": "com.unity.services.apis",
+          "minimumVersion": "1.1.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.0"
+        },
+        {
+          "name": "com.unity.services.deployment",
+          "minimumVersion": "1.4.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.4.1"
+        },
+        {
+          "name": "com.unity.services.deployment.api",
+          "minimumVersion": "1.1.2",
+          "mustBeBundled": true,
+          "version": "1.1.2"
+        },
+        {
+          "name": "com.unity.services.tooling",
+          "minimumVersion": "1.3.0",
+          "isDiscoverable": true,
+          "version": "1.3.0"
+        },
+        {
+          "name": "nuget.castle-core",
+          "minimumVersion": "2.0.0",
+          "version": "2.0.0"
+        },
+        {
+          "name": "nuget.moq",
+          "minimumVersion": "2.0.0",
+          "version": "2.0.0"
+        },
+        {
+          "name": "com.unity.sysroot",
+          "minimumVersion": "2.0.10",
+          "isDiscoverable": true,
+          "mustBeBundled": false,
+          "version": "2.0.10"
+        },
+        {
+          "name": "com.unity.sysroot.linux-x86_64",
+          "minimumVersion": "2.0.9",
+          "isDiscoverable": true,
+          "mustBeBundled": false,
+          "version": "2.0.9"
+        },
+        {
+          "name": "com.unity.toolchain.linux-x86_64",
+          "minimumVersion": "2.0.10",
+          "isDiscoverable": true,
+          "mustBeBundled": false,
+          "version": "2.0.10"
+        },
+        {
+          "name": "com.unity.toolchain.macos-x86_64-linux-x86_64",
+          "minimumVersion": "2.0.10",
+          "isDiscoverable": true,
+          "mustBeBundled": false,
+          "version": "2.0.10"
+        },
+        {
+          "name": "com.unity.toolchain.macos-arm64-linux-x86_64",
+          "minimumVersion": "2.0.4",
+          "isDiscoverable": true,
+          "mustBeBundled": false,
+          "version": "2.0.4"
+        },
+        {
+          "name": "com.unity.toolchain.win-x86_64-linux-x86_64",
+          "minimumVersion": "2.0.10",
+          "isDiscoverable": true,
+          "mustBeBundled": false,
+          "version": "2.0.10"
+        },
+        {
+          "name": "com.unity.toolchain.win-arm64-linux-x86_64",
+          "minimumVersion": "1.0.4",
+          "isDiscoverable": true,
+          "mustBeBundled": false,
+          "version": "1.0.4"
+        },
+        {
+          "name": "com.unity.services.ugc",
+          "deprecated": "Thispackageisnolongersupported.TheUGCserviceassociatedwiththispackageisnolongeraccessibleasofMay11th2025.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.services.ugc.bridge",
+          "deprecated": "Thispackageisnolongersupported.TheUGCserviceassociatedwiththispackageisnolongeraccessibleasofMay11th2025.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.modules.accessibility",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "version": "1.0.0",
+          "introduced": "2023.2.0a22",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.dt.app-ui",
+          "minimumVersion": "1.3.1",
+          "mustBeBundled": true,
+          "version": "1.3.1",
+          "nextVersion": "2.1.0-pre.2"
+        },
+        {
+          "name": "com.unity.services.moderation",
+          "minimumVersion": "1.0.1",
+          "isDiscoverable": true,
+          "version": "1.0.1"
+        },
+        {
+          "name": "com.unity.addressables.android",
+          "minimumVersion": "1.0.6",
+          "isDiscoverable": true,
+          "version": "1.0.6"
+        },
+        {
+          "name": "com.unity.microsoft.gdk",
+          "minimumVersion": "1.3.0",
+          "isDiscoverable": true,
+          "version": "1.3.0"
+        },
+        {
+          "name": "com.unity.microsoft.gdk.tools",
+          "minimumVersion": "1.3.0",
+          "isDiscoverable": true,
+          "version": "1.3.0"
+        },
+        {
+          "name": "com.unity.microsoft.gdk.discovery",
+          "minimumVersion": "1.0.0",
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.sharp-zip-lib",
+          "minimumVersion": "1.4.0",
+          "isDiscoverable": true,
+          "version": "1.4.0"
+        },
+        {
+          "name": "com.unity.muse.common",
+          "minimumVersion": "2.0.3",
+          "mustBeBundled": false,
+          "version": "2.0.3"
+        },
+        {
+          "name": "com.unity.muse.sprite",
+          "minimumVersion": "1.1.1",
+          "isDiscoverable": true,
+          "mustBeBundled": false,
+          "version": "1.1.1"
+        },
+        {
+          "name": "com.unity.muse.texture",
+          "minimumVersion": "1.1.1",
+          "isDiscoverable": true,
+          "mustBeBundled": false,
+          "version": "1.1.1"
+        },
+        {
+          "name": "com.unity.services.levelplay",
+          "minimumVersion": "8.10.0",
+          "version": "8.10.0"
+        },
+        {
+          "name": "com.unity.multiplayer.center",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.0.0",
+          "introduced": "6000.0.18f1",
+          "isDefault": true
+        },
+        {
+          "name": "com.unity.polyspatial",
+          "minimumVersion": "2.3.1",
+          "version": "2.3.1"
+        },
+        {
+          "name": "com.unity.polyspatial.visionos",
+          "minimumVersion": "2.3.1",
+          "isDiscoverable": true,
+          "version": "2.3.1"
+        },
+        {
+          "name": "com.unity.polyspatial.xr",
+          "minimumVersion": "2.3.1",
+          "version": "2.3.1"
+        },
+        {
+          "name": "com.unity.polyspatial.extensions",
+          "minimumVersion": "2.3.1",
+          "isDiscoverable": true,
+          "version": "2.3.1"
+        },
+        {
+          "name": "com.unity.xr.visionos",
+          "minimumVersion": "2.3.1",
+          "isDiscoverable": true,
+          "version": "2.3.1"
+        },
+        {
+          "name": "com.unity.ext.flatsharp",
+          "minimumVersion": "1.1.1",
+          "version": "1.1.1"
+        },
+        {
+          "name": "com.unity.services.multiplayer",
+          "minimumVersion": "1.1.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.0"
+        },
+        {
+          "name": "com.unity.multiplayer.widgets",
+          "minimumVersion": "1.0.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.0.0"
+        },
+        {
+          "name": "com.unity.asset-manager-for-unity",
+          "minimumVersion": "1.5.1",
+          "isDiscoverable": true,
+          "version": "1.5.1"
+        },
+        {
+          "name": "com.unity.project-auditor",
+          "minimumVersion": "1.0.1",
+          "isDiscoverable": true,
+          "version": "1.0.1"
+        },
+        {
+          "name": "com.unity.web.stripping-tool",
+          "minimumVersion": "1.1.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.0"
+        },
+        {
+          "name": "com.unity.meta-instant-games-sdk",
+          "minimumVersion": "1.2.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.2.0"
+        },
+        {
+          "name": "com.unity.xr.androidxr-openxr",
+          "isDiscoverable": true,
+          "nextVersion": "1.0.0-pre.2"
+        },
+        {
+          "name": "com.unity.ai.toolkit",
+          "nextVersion": "1.0.0-pre.8"
+        },
+        {
+          "name": "com.unity.ai.generators",
+          "isDiscoverable": true,
+          "nextVersion": "1.0.0-pre.8"
+        },
+        {
+          "name": "com.unity.ai.inference",
+          "minimumVersion": "2.2.1",
+          "isDiscoverable": true,
+          "version": "2.2.1"
+        },
+        {
+          "name": "com.unity.ai.assistant",
+          "isDiscoverable": true,
+          "nextVersion": "1.0.0-pre.7"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.1f1",
+      "packages": [
+        {
+          "name": "com.unity.charactercontroller",
+          "minimumVersion": "1.3.12",
+          "isDiscoverable": true,
+          "version": "1.3.12"
+        },
+        {
+          "name": "com.unity.addressables",
+          "minimumVersion": "2.7.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.7.0"
+        },
+        {
+          "name": "com.unity.burst",
+          "minimumVersion": "1.8.24",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.8.24"
+        },
+        {
+          "name": "com.unity.inputsystem",
+          "minimumVersion": "1.14.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.14.2"
+        },
+        {
+          "name": "com.unity.polybrush",
+          "minimumVersion": "1.2.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.2.0"
+        },
+        {
+          "name": "com.unity.scriptablebuildpipeline",
+          "minimumVersion": "2.4.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.4.1"
+        },
+        {
+          "name": "com.unity.services.wire",
+          "minimumVersion": "1.4.0",
+          "mustBeBundled": true,
+          "version": "1.4.0"
+        },
+        {
+          "name": "com.unity.timeline",
+          "minimumVersion": "1.8.9",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.8.9",
+          "introduced": "2019.1.0a11"
+        },
+        {
+          "name": "com.unity.learn.iet-framework",
+          "minimumVersion": "5.0.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.0.1"
+        },
+        {
+          "name": "com.unity.learn.iet-framework.authoring",
+          "minimumVersion": "1.5.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.5.1"
+        },
+        {
+          "name": "com.unity.transport",
+          "minimumVersion": "2.5.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.5.3"
+        },
+        {
+          "name": "com.unity.memoryprofiler",
+          "minimumVersion": "1.1.7",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.7"
+        },
+        {
+          "name": "com.unity.microsoft.gdk",
+          "minimumVersion": "1.4.4",
+          "isDiscoverable": true,
+          "version": "1.4.4"
+        },
+        {
+          "name": "com.unity.microsoft.gdk.tools",
+          "minimumVersion": "1.4.4",
+          "isDiscoverable": true,
+          "version": "1.4.4"
+        },
+        {
+          "name": "com.unity.microsoft.gdk.discovery",
+          "minimumVersion": "1.1.0",
+          "version": "1.1.0"
+        },
+        {
+          "name": "com.unity.services.levelplay",
+          "minimumVersion": "8.10.1",
+          "version": "8.10.1"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.2f1",
+      "packages": [
+        {
+          "name": "com.unity.addressables",
+          "minimumVersion": "2.7.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.7.2"
+        },
+        {
+          "name": "com.unity.xr.interaction.toolkit",
+          "minimumVersion": "3.2.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.2.1"
+        },
+        {
+          "name": "com.unity.memoryprofiler",
+          "minimumVersion": "1.1.8",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.8"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.3f1",
+      "packages": [
+        {
+          "name": "com.unity.collab-proxy",
+          "minimumVersion": "2.9.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.9.2",
+          "introduced": "2018.3"
+        },
+        {
+          "name": "com.unity.xr.oculus",
+          "minimumVersion": "4.5.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.5.2"
+        },
+        {
+          "name": "com.unity.netcode.gameobjects",
+          "minimumVersion": "1.14.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.14.1"
+        },
+        {
+          "name": "com.unity.multiplayer.tools",
+          "minimumVersion": "2.2.6",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.2.6"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.4f1",
+      "packages": [
+        {
+          "name": "com.unity.collab-proxy",
+          "minimumVersion": "2.9.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.9.3",
+          "introduced": "2018.3"
+        },
+        {
+          "name": "com.unity.probuilder",
+          "minimumVersion": "6.0.7",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.0.7"
+        },
+        {
+          "name": "com.unity.xr.core-utils",
+          "minimumVersion": "2.5.3",
+          "mustBeBundled": true,
+          "version": "2.5.3"
+        },
+        {
+          "name": "com.unity.learn.iet-framework",
+          "minimumVersion": "5.0.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.0.2"
+        },
+        {
+          "name": "com.unity.learn.iet-framework.authoring",
+          "minimumVersion": "1.5.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.5.2"
+        },
+        {
+          "name": "com.unity.ai.navigation",
+          "minimumVersion": "2.0.9",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.0.9",
+          "introduced": "2022.2"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.5f1",
+      "packages": [
+        {
+          "name": "com.unity.netcode",
+          "minimumVersion": "1.8.0",
+          "isDiscoverable": true,
+          "version": "1.8.0"
+        },
+        {
+          "name": "com.unity.adaptiveperformance",
+          "minimumVersion": "5.1.6",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.1.6"
+        },
+        {
+          "name": "com.unity.adaptiveperformance.google.android",
+          "minimumVersion": "5.1.6",
+          "mustBeBundled": true,
+          "version": "5.1.6"
+        },
+        {
+          "name": "com.unity.ide.rider",
+          "minimumVersion": "3.0.37",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.0.37",
+          "introduced": "2019.2.0a12"
+        },
+        {
+          "name": "com.unity.services.vivox",
+          "minimumVersion": "16.7.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "16.7.0"
+        },
+        {
+          "name": "com.unity.formats.fbx",
+          "minimumVersion": "5.1.4",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.1.4"
+        },
+        {
+          "name": "com.unity.ai.inference",
+          "minimumVersion": "2.3.0",
+          "isDiscoverable": true,
+          "version": "2.3.0"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.6f1",
+      "packages": [
+        {
+          "name": "com.unity.mobile.notifications",
+          "minimumVersion": "2.4.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.4.2"
+        },
+        {
+          "name": "com.unity.splines",
+          "minimumVersion": "2.8.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.8.2"
+        },
+        {
+          "name": "com.unity.test-framework",
+          "minimumVersion": "1.6.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.6.0",
+          "introduced": "2019.2"
+        },
+        {
+          "name": "com.unity.multiplayer.playmode",
+          "minimumVersion": "1.6.1",
+          "isDiscoverable": true,
+          "version": "1.6.1"
+        },
+        {
+          "name": "com.unity.dedicated-server",
+          "minimumVersion": "1.6.1",
+          "isDiscoverable": true,
+          "version": "1.6.1"
+        },
+        {
+          "name": "com.unity.memoryprofiler",
+          "minimumVersion": "1.1.9",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.9"
+        },
+        {
+          "name": "com.unity.web.stripping-tool",
+          "minimumVersion": "1.2.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.2.0"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.6f2",
+      "packages": [],
+      "removed": []
+    },
+    {
+      "version": "6000.2.7f2",
+      "packages": [
+        {
+          "name": "com.unity.netcode",
+          "minimumVersion": "1.9.0",
+          "isDiscoverable": true,
+          "version": "1.9.0"
+        },
+        {
+          "name": "com.unity.2d.aseprite",
+          "minimumVersion": "2.0.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.0.2"
+        },
+        {
+          "name": "com.unity.addressables",
+          "minimumVersion": "2.7.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.7.3"
+        },
+        {
+          "name": "com.unity.burst",
+          "minimumVersion": "1.8.25",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.8.25"
+        },
+        {
+          "name": "com.unity.ide.rider",
+          "minimumVersion": "3.0.38",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.0.38",
+          "introduced": "2019.2.0a12"
+        },
+        {
+          "name": "com.unity.scriptablebuildpipeline",
+          "minimumVersion": "2.4.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.4.2"
+        },
+        {
+          "name": "com.unity.test-framework.performance",
+          "minimumVersion": "3.2.0",
+          "isDiscoverable": true,
+          "version": "3.2.0"
+        }
+      ],
+      "removed": [
+        "com.unity.2d.enhancers"
+      ]
+    },
+    {
+      "version": "6000.2.8f1",
+      "packages": [
+        {
+          "name": "com.unity.addressables",
+          "minimumVersion": "2.7.4",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.7.4"
+        },
+        {
+          "name": "com.unity.localization",
+          "minimumVersion": "1.5.8",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.5.8"
+        },
+        {
+          "name": "com.unity.mobile.android-logcat",
+          "minimumVersion": "1.4.6",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.4.6"
+        },
+        {
+          "name": "com.unity.scriptablebuildpipeline",
+          "minimumVersion": "2.4.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.4.3"
+        },
+        {
+          "name": "com.unity.xr.compositionlayers",
+          "minimumVersion": "2.1.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.1.1"
+        },
+        {
+          "name": "com.unity.xr.hands",
+          "minimumVersion": "1.6.1",
+          "isDiscoverable": true,
+          "version": "1.6.1"
+        },
+        {
+          "name": "com.unity.xr.meta-openxr",
+          "minimumVersion": "2.2.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.2.1"
+        },
+        {
+          "name": "com.unity.terrain-tools",
+          "minimumVersion": "5.3.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.3.1"
+        },
+        {
+          "name": "com.unity.transport",
+          "minimumVersion": "2.6.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.6.0"
+        },
+        {
+          "name": "com.unity.polyspatial",
+          "minimumVersion": "2.4.2",
+          "version": "2.4.2"
+        },
+        {
+          "name": "com.unity.polyspatial.visionos",
+          "minimumVersion": "2.4.2",
+          "isDiscoverable": true,
+          "version": "2.4.2"
+        },
+        {
+          "name": "com.unity.polyspatial.xr",
+          "minimumVersion": "2.4.2",
+          "version": "2.4.2"
+        },
+        {
+          "name": "com.unity.polyspatial.extensions",
+          "minimumVersion": "2.4.2",
+          "isDiscoverable": true,
+          "version": "2.4.2"
+        },
+        {
+          "name": "com.unity.xr.visionos",
+          "minimumVersion": "2.4.2",
+          "isDiscoverable": true,
+          "version": "2.4.2"
+        },
+        {
+          "name": "com.unity.asset-manager-for-unity",
+          "minimumVersion": "1.7.0",
+          "isDiscoverable": true,
+          "version": "1.7.0"
+        },
+        {
+          "name": "com.unity.xr.androidxr-openxr",
+          "minimumVersion": "1.0.1",
+          "isDiscoverable": true,
+          "version": "1.0.1"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.9f1",
+      "packages": [
+        {
+          "name": "com.unity.collections",
+          "minimumVersion": "2.6.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.6.2"
+        },
+        {
+          "name": "com.unity.entities",
+          "minimumVersion": "1.4.2",
+          "isDiscoverable": true,
+          "version": "1.4.2"
+        },
+        {
+          "name": "com.unity.netcode",
+          "minimumVersion": "1.9.1",
+          "isDiscoverable": true,
+          "version": "1.9.1"
+        },
+        {
+          "name": "com.unity.physics",
+          "minimumVersion": "1.4.2",
+          "isDiscoverable": true,
+          "version": "1.4.2"
+        },
+        {
+          "name": "com.havok.physics",
+          "minimumVersion": "1.4.2",
+          "isDiscoverable": true,
+          "version": "1.4.2"
+        },
+        {
+          "name": "com.unity.entities.graphics",
+          "minimumVersion": "1.4.15",
+          "isDiscoverable": true,
+          "version": "1.4.15"
+        },
+        {
+          "name": "com.unity.collab-proxy",
+          "minimumVersion": "2.10.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.10.0",
+          "introduced": "2018.3"
+        },
+        {
+          "name": "com.unity.ide.visualstudio",
+          "minimumVersion": "2.0.25",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.0.25",
+          "introduced": "2020.1.0a12"
+        },
+        {
+          "name": "com.unity.services.user-reporting",
+          "minimumVersion": "2.0.14",
+          "isDiscoverable": true,
+          "version": "2.0.14"
+        },
+        {
+          "name": "com.unity.visualscripting",
+          "minimumVersion": "1.9.8",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.9.8"
+        },
+        {
+          "name": "com.unity.xr.hands",
+          "minimumVersion": "1.6.2",
+          "isDiscoverable": true,
+          "version": "1.6.2"
+        },
+        {
+          "name": "com.unity.xr.management",
+          "minimumVersion": "4.5.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.5.2"
+        },
+        {
+          "name": "com.unity.services.moderation",
+          "minimumVersion": "1.1.0",
+          "isDiscoverable": true,
+          "version": "1.1.0"
+        },
+        {
+          "name": "com.unity.services.levelplay",
+          "minimumVersion": "8.10.2",
+          "version": "8.10.2"
+        },
+        {
+          "name": "com.unity.generator.sound",
+          "deprecated": "Thispackageisnolongersupported.MuseisbeingreplacedwithUnityAI.",
+          "removeOnProjectUpgrade": true
+        },
+        {
+          "name": "com.unity.muse.spritepartners",
+          "deprecated": "Thispackageisnolongersupported.MuseisbeingreplacedwithUnityAI.",
+          "removeOnProjectUpgrade": true
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.10f1",
+      "packages": [
+        {
+          "name": "com.unity.formats.alembic",
+          "minimumVersion": "2.4.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.4.1"
+        },
+        {
+          "name": "com.unity.remote-config-runtime",
+          "minimumVersion": "4.0.4",
+          "mustBeBundled": true,
+          "version": "4.0.4"
+        },
+        {
+          "name": "com.unity.searcher",
+          "minimumVersion": "4.9.3",
+          "mustBeBundled": true,
+          "version": "4.9.3"
+        },
+        {
+          "name": "com.unity.xr.hands",
+          "minimumVersion": "1.7.0",
+          "isDiscoverable": true,
+          "version": "1.7.0"
+        },
+        {
+          "name": "com.unity.xr.management",
+          "minimumVersion": "4.5.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.5.3"
+        },
+        {
+          "name": "com.unity.profiling.systemmetrics.mali",
+          "minimumVersion": "1.1.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.1.0"
+        },
+        {
+          "name": "com.unity.muse.common",
+          "deprecated": "Thispackageisnolongersupported.MuseisbeingreplacedwithUnityAI."
+        },
+        {
+          "name": "com.unity.muse.sprite",
+          "deprecated": "Thispackageisnolongersupported.MuseisbeingreplacedwithUnityAI."
+        },
+        {
+          "name": "com.unity.muse.texture",
+          "deprecated": "Thispackageisnolongersupported.MuseisbeingreplacedwithUnityAI."
+        },
+        {
+          "name": "com.unity.xr.androidxr-openxr",
+          "minimumVersion": "1.0.2",
+          "isDiscoverable": true,
+          "version": "1.0.2"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.11f1",
+      "packages": [
+        {
+          "name": "com.unity.formats.alembic",
+          "minimumVersion": "2.4.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.4.2"
+        },
+        {
+          "name": "com.unity.xr.compositionlayers",
+          "minimumVersion": "2.2.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.2.0"
+        },
+        {
+          "name": "com.unity.xr.openxr",
+          "minimumVersion": "1.16.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.16.0"
+        },
+        {
+          "name": "com.unity.cloud.draco",
+          "minimumVersion": "5.3.0",
+          "mustBeBundled": false,
+          "version": "5.3.0"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.12f1",
+      "packages": [
+        {
+          "name": "com.unity.charactercontroller",
+          "minimumVersion": "1.4.1",
+          "isDiscoverable": true,
+          "version": "1.4.1"
+        },
+        {
+          "name": "com.unity.collab-proxy",
+          "minimumVersion": "2.10.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.10.1",
+          "introduced": "2018.3"
+        },
+        {
+          "name": "com.unity.addressables.android",
+          "minimumVersion": "1.0.8",
+          "isDiscoverable": true,
+          "version": "1.0.8"
+        },
+        {
+          "name": "com.unity.meta-instant-games-sdk",
+          "minimumVersion": "1.3.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.3.0"
+        },
+        {
+          "name": "com.unity.cloud.draco",
+          "minimumVersion": "5.4.0",
+          "mustBeBundled": false,
+          "version": "5.4.0"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.13f1",
+      "packages": [
+        {
+          "name": "com.unity.netcode",
+          "minimumVersion": "1.9.2",
+          "isDiscoverable": true,
+          "version": "1.9.2"
+        },
+        {
+          "name": "com.unity.collab-proxy",
+          "minimumVersion": "2.10.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.10.2",
+          "introduced": "2018.3"
+        },
+        {
+          "name": "com.unity.polybrush",
+          "minimumVersion": "1.2.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.2.1"
+        },
+        {
+          "name": "com.unity.xr.hands",
+          "minimumVersion": "1.7.1",
+          "isDiscoverable": true,
+          "version": "1.7.1"
+        },
+        {
+          "name": "com.unity.xr.interaction.toolkit",
+          "minimumVersion": "3.2.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "3.2.2"
+        },
+        {
+          "name": "com.unity.cloud.gltfast",
+          "minimumVersion": "6.14.1",
+          "mustBeBundled": false,
+          "version": "6.14.1"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.14f1",
+      "packages": [
+        {
+          "name": "com.unity.netcode",
+          "minimumVersion": "1.9.3",
+          "isDiscoverable": true,
+          "version": "1.9.3"
+        },
+        {
+          "name": "com.unity.animation.rigging",
+          "minimumVersion": "1.4.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.4.0"
+        },
+        {
+          "name": "com.unity.inputsystem",
+          "minimumVersion": "1.16.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "1.16.0"
+        },
+        {
+          "name": "com.unity.purchasing",
+          "minimumVersion": "4.14.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.14.0",
+          "introduced": "2018.2.0b8",
+          "nextVersion": "5.0.0-pre.5"
+        },
+        {
+          "name": "com.unity.services.core",
+          "minimumVersion": "1.16.0",
+          "mustBeBundled": true,
+          "version": "1.16.0"
+        },
+        {
+          "name": "com.unity.xr.arcore",
+          "minimumVersion": "6.2.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.2.1"
+        },
+        {
+          "name": "com.unity.xr.arfoundation",
+          "minimumVersion": "6.2.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.2.1"
+        },
+        {
+          "name": "com.unity.xr.arkit",
+          "minimumVersion": "6.2.1",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.2.1"
+        }
+      ],
+      "removed": []
+    },
+    {
+      "version": "6000.2.15f1",
+      "packages": [
+        {
+          "name": "com.unity.netcode",
+          "minimumVersion": "1.10.0",
+          "isDiscoverable": true,
+          "version": "1.10.0"
+        },
+        {
+          "name": "com.unity.2d.animation",
+          "minimumVersion": "12.0.3",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "12.0.3"
+        },
+        {
+          "name": "com.unity.2d.psdimporter",
+          "minimumVersion": "11.0.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "11.0.2"
+        },
+        {
+          "name": "com.unity.2d.spriteshape",
+          "minimumVersion": "12.0.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "12.0.2"
+        },
+        {
+          "name": "com.unity.2d.tilemap.extras",
+          "minimumVersion": "5.0.2",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "5.0.2"
+        },
+        {
+          "name": "com.unity.addressables",
+          "minimumVersion": "2.7.6",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.7.6"
+        },
+        {
+          "name": "com.unity.ads",
+          "minimumVersion": "4.16.4",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "4.16.4",
+          "introduced": "2018.2.0b8"
+        },
+        {
+          "name": "com.unity.probuilder",
+          "minimumVersion": "6.0.8",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "6.0.8"
+        },
+        {
+          "name": "com.unity.scriptablebuildpipeline",
+          "minimumVersion": "2.5.0",
+          "isDiscoverable": true,
+          "mustBeBundled": true,
+          "version": "2.5.0"
+        },
+        {
+          "name": "com.unity.asset-manager-for-unity",
+          "minimumVersion": "1.9.0",
+          "isDiscoverable": true,
+          "version": "1.9.0"
+        },
+        {
+          "name": "com.unity.ai.inference",
+          "minimumVersion": "2.4.1",
+          "isDiscoverable": true,
+          "version": "2.4.1"
+        },
+        {
+          "name": "com.unity.cloud.ktx",
+          "minimumVersion": "3.6.1",
+          "mustBeBundled": false,
+          "version": "3.6.1"
+        }
+      ],
+      "removed": []
+    }
+  ],
+  "overrides": [
+    {
+      "name": "com.unity.2d.muse",
+      "deprecated": "This package is no longer supported. Muse is being replaced with Unity AI."
+    },
+    {
+      "name": "com.unity.ads",
+      "recommendedVersion": "4.16.3"
+    },
+    {
+      "name": "com.unity.analytics",
+      "isDiscoverable": false
+    },
+    {
+      "name": "com.unity.asset-manager-for-unity",
+      "recommendedVersion": "1.9.0"
+    },
+    {
+      "name": "com.unity.behavior",
+      "isDiscoverable": true,
+      "recommendedVersion": "1.0.0"
+    },
+    {
+      "name": "com.unity.cinemachine",
+      "recommendedVersion": "3.1.0"
+    },
+    {
+      "name": "com.unity.digital-twins.actor-system",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity3d.com/Packages/com.unity.cloud.data-streaming@latest to evaluate it as a replacement for this package.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.annotation",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity3d.com/Packages/com.unity.cloud.collaboration@latest to evaluate it as a replacement for this package.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.data-streaming",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity3d.com/Packages/com.unity.cloud.data-streaming@latest to evaluate it as a replacement for this package.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.deep-linking",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity3d.com/Packages/com.unity.cloud.deep-linking@latest to evaluate it as a replacement for this package.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.identity",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity3d.com/Packages/com.unity.cloud.identity@latest to evaluate it as a replacement for this package.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.live.client",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity.com/en-us/cloud for more information on available packages and services to support your development.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.live.sdk",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity.com/en-us/cloud for more information on available packages and services to support your development.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.live.sdk.tools",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity.com/en-us/cloud for more information on available packages and services to support your development.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.live.ui",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity.com/en-us/cloud for more information on available packages and services to support your development.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.presence",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity.com/en-us/cloud for more information on available packages and services to support your development.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.digital-twins.storage",
+      "deprecated": "This package has been deprecated. You can visit https://docs.unity3d.com/Packages/com.unity.cloud.assets@latest to evaluate it as a replacement for this package.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.generator.sound",
+      "deprecated": "This package is no longer supported. Muse is being replaced with Unity AI."
+    },
+    {
+      "name": "com.unity.meta-instant-games-sdk",
+      "deprecated": "The Facebook Instant Games platform is deprecated. Use the Web platform instead.",
+      "discoverable": false
+    },
+    {
+      "name": "com.unity.multiplayer.tools",
+      "isDiscoverable": true,
+      "recommendedVersion": "2.2.0"
+    },
+    {
+      "name": "com.unity.muse.animate",
+      "deprecated": "This package is no longer supported. Muse is being replaced with Unity AI."
+    },
+    {
+      "name": "com.unity.muse.chat",
+      "deprecated": "This package is no longer supported. Muse is being replaced with Unity AI."
+    },
+    {
+      "name": "com.unity.muse.common",
+      "deprecated": "This package is no longer supported. Muse is being replaced with Unity AI."
+    },
+    {
+      "name": "com.unity.muse.sprite",
+      "deprecated": "This package is no longer supported. Muse is being replaced with Unity AI."
+    },
+    {
+      "name": "com.unity.muse.spritepartners",
+      "deprecated": "This package is no longer supported. Muse is being replaced with Unity AI."
+    },
+    {
+      "name": "com.unity.muse.texture",
+      "deprecated": "This package is no longer supported. Muse is being replaced with Unity AI."
+    },
+    {
+      "name": "com.unity.netcode.gameobjects",
+      "isDiscoverable": true,
+      "recommendedVersion": "2.7.0"
+    },
+    {
+      "name": "com.unity.purchasing",
+      "recommendedVersion": "5.0.0"
+    },
+    {
+      "name": "com.unity.remote-config",
+      "recommendedVersion": "4.2.1"
+    },
+    {
+      "name": "com.unity.services.analytics",
+      "recommendedVersion": "6.2.0"
+    },
+    {
+      "name": "com.unity.services.apis",
+      "isDiscoverable": true,
+      "recommendedVersion": "1.1.0"
+    },
+    {
+      "name": "com.unity.services.authentication",
+      "isDiscoverable": true,
+      "recommendedVersion": "3.5.1"
+    },
+    {
+      "name": "com.unity.services.cloud-diagnostics",
+      "isDiscoverable": true,
+      "recommendedVersion": "1.0.6"
+    },
+    {
+      "name": "com.unity.services.cloudcode",
+      "isDiscoverable": true,
+      "recommendedVersion": "2.10.0"
+    },
+    {
+      "name": "com.unity.services.cloudsave",
+      "recommendedVersion": "3.4.0"
+    },
+    {
+      "name": "com.unity.services.core",
+      "recommendedVersion": "1.16.0"
+    },
+    {
+      "name": "com.unity.services.core-test-utilities",
+      "recommendedVersion": "1.13.0"
+    },
+    {
+      "name": "com.unity.services.deployment",
+      "isDiscoverable": true,
+      "recommendedVersion": "1.6.2"
+    },
+    {
+      "name": "com.unity.services.deployment.api",
+      "recommendedVersion": "1.1.2"
+    },
+    {
+      "name": "com.unity.services.economy",
+      "recommendedVersion": "3.5.0"
+    },
+    {
+      "name": "com.unity.services.leaderboards",
+      "recommendedVersion": "2.3.0"
+    },
+    {
+      "name": "com.unity.services.levelplay",
+      "isDiscoverable": true,
+      "recommendedVersion": "9.4.1"
+    },
+    {
+      "name": "com.unity.services.lobby",
+      "deprecated": "The Lobby package is deprecated and will not receive further updates. The SDK is now part of the unified Multiplayer Services package (com.unity.services.multiplayer). Migrate to that package to access ongoing support and improvements."
+    },
+    {
+      "name": "com.unity.services.matchmaker",
+      "deprecated": "The Matchmaker package is deprecated and will not receive further updates. The SDK is now part of the unified Multiplayer Services package (com.unity.services.multiplayer). Migrate to that package to access ongoing support and improvements."
+    },
+    {
+      "name": "com.unity.services.mediation",
+      "isDiscoverable": false
+    },
+    {
+      "name": "com.unity.services.multiplay",
+      "deprecated": "The Multiplay package is deprecated and will not receive further updates. The SDK is now part of the unified Multiplayer Services package (com.unity.services.multiplayer). Migrate to that package to access ongoing support and improvements."
+    },
+    {
+      "name": "com.unity.services.playeraccounts",
+      "isDiscoverable": true,
+      "recommendedVersion": "1.0.0-pre.2"
+    },
+    {
+      "name": "com.unity.services.push-notifications",
+      "isDiscoverable": true,
+      "recommendedVersion": "4.0.0"
+    },
+    {
+      "name": "com.unity.services.relay",
+      "deprecated": "The Relay package is deprecated and will not receive further updates. The SDK is now part of the unified Multiplayer Services package (com.unity.services.multiplayer). Migrate to that package to access ongoing support and improvements."
+    },
+    {
+      "name": "com.unity.services.tooling",
+      "isDiscoverable": true,
+      "recommendedVersion": "1.4.0"
+    },
+    {
+      "name": "com.unity.services.ugc",
+      "isDiscoverable": true,
+      "recommendedVersion": "3.0.0"
+    },
+    {
+      "name": "com.unity.services.ugc.bridge",
+      "isDiscoverable": true,
+      "recommendedVersion": "3.0.0"
+    },
+    {
+      "name": "com.unity.services.vivox",
+      "isDiscoverable": true,
+      "recommendedVersion": "16.9.0"
+    },
+    {
+      "name": "com.unity.transport",
+      "recommendedVersion": "2.6.0"
+    },
+    {
+      "name": "com.unity.xr.meta-openxr",
+      "recommendedVersion": "2.2.0"
+    }
+  ]
+}
