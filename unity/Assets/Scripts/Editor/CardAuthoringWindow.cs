@@ -54,6 +54,11 @@ namespace Emberfall.Editor
         private readonly HashSet<int> _dirtyIds = new HashSet<int>();
         private int _selected = -1;
         private string _search = "";
+        // Library class filter: index 0 is "All", every later index is ClassFilterValues[index - 1].
+        private int _classFilter;
+        private static readonly CardClass[] ClassFilterValues = (CardClass[])Enum.GetValues(typeof(CardClass));
+        private static readonly string[] ClassFilterNames =
+            new[] { "All classes" }.Concat(ClassFilterValues.Select(c => c.ToString())).ToArray();
         private Vector2 _listScroll, _editScroll;
 
         // Assigned in OnEnable, NOT as field initializers: AddressablesArtCatalog's constructor reads
@@ -312,11 +317,13 @@ namespace Emberfall.Editor
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(240));
             _search = EditorGUILayout.TextField(_search, EditorStyles.toolbarSearchField);
+            _classFilter = EditorGUILayout.Popup(_classFilter, ClassFilterNames, EditorStyles.toolbarPopup);
 
             _listScroll = EditorGUILayout.BeginScrollView(_listScroll);
             for (int i = 0; i < _cards.Count; i++)
             {
                 var card = _cards[i];
+                if (_classFilter > 0 && card.Class != ClassFilterValues[_classFilter - 1]) continue;
                 // Searches the HANDLE, the name, and the ID. The id is in because it is the only
                 // field that is unique — when two rows print the same name, typing the number is
                 // the only way to reach a specific one, and until 2026-09-04 there was no way at
