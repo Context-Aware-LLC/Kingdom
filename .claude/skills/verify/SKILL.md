@@ -11,6 +11,15 @@ Reports the result of `tools/ci/unity-gate.ps1` (compile stage via `unity-compil
 (Presentation/Editor/AI/Data/Session, or a `Core`/`Net.Client`/`Net.Protocol` file it consumes as a local package), or touched an `.asmdef`/`.csproj` under `unity`, invoke this yourself
 before you report that work as done — a green cloud CI run tells you nothing about whether the Editor still compiles.
 
+## Scope first
+
+**The full gate is not the default.** `CLAUDE.md`, "Run the check the edit can break, not the
+suite", decides how much of this to run, and it outranks the trigger above. For an ordinary change
+under `unity/Assets/Scripts` that is `pwsh tools/ci/unity-compile.ps1` plus the one `HeadlessVerify`
+static covering the surface you touched. Run the procedure below, the whole gate, only when that
+section says to widen: a change whose reach you cannot bound, or Sam asking. Report which checks
+you ran and which you left out.
+
 ## Procedure
 
 1. **Get the current commit.** `git rev-parse HEAD` (and `git status --porcelain -- unity` for working-tree state).
@@ -54,7 +63,8 @@ The gate's checks do not themselves need a dedicated Editor — only the wrapper
 `CardSetValidator.RunAndLog`, and the rest — read the file, do not trust a list here), and the only
 reason it needs its own Editor is the `EditorApplication.Exit()` on its last line. Call the statics
 individually through `unity command eval` — same `logMessageReceived` capture, no `Exit` — and you
-get a PASS/FAIL answer against the Editor that is already open.
+get a PASS/FAIL answer against the Editor that is already open. Call the ones that cover what you
+changed, not all of them (see "Scope first").
 
 **Never `eval` `RunAll` itself: it will close the operator's Editor.**
 

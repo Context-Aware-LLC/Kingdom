@@ -211,6 +211,39 @@ again. **`Emberfall/Build/Restore Product Name` puts it back** (set through `Pla
 since Unity holds project settings in memory and overwrites a file edited underneath it). The
 rename is harmless while it stays in the working tree; only the commit is damaging.
 
+## Run the check the edit can break, not the suite
+
+**After an edit, run only what depends on the files you changed.** (Sam, 2026-10-06.) A full gate
+after every change spends minutes proving things the change could not have reached, and he waits
+through all of it. Reach follows the project references and runs one way: Unity consumes the core,
+`tests/` consumes `src/`, and nothing under `tests/` references a `unity/Assets/Scripts` assembly.
+
+| You changed | Run | Do not run |
+|---|---|---|
+| `unity/Assets/Scripts/**` | `pwsh tools/ci/unity-compile.ps1`, then the one `HeadlessVerify` static that covers that surface, if one does | `dotnet test`; the other statics |
+| `src/Emberfall.Core*`, `Net.Client`, `Net.Protocol` | the test classes that name the type you changed, then `unity-compile.ps1`, because Unity builds these too | the rest of the suite |
+| `src/Emberfall.Net.Server`, `Emberfall.Tools.*`, `Emberfall.Training.*` | the test classes that name the type you changed | anything Unity; it never loads these |
+| card JSON | the CardCi line of `gates.ps1` Stage 6 | the test suites |
+| `.uss`, `.uxml` | the Stage 1b or 1c line of `gates.ps1` | everything else |
+| a script under `tooling/` | that script's own test under `tests/python/` | |
+| docs, comments, memory | nothing | |
+
+Find the test classes by grepping `tests/` for the type, then
+`dotnet test tests/<that project> --filter "FullyQualifiedName~<TestClass>"`. **A filter that
+matches nothing exits 0** (see the suite rule above), so read the count of tests it ran.
+`unity-compile.ps1` has no per-assembly switch; it is already the smallest compile check there is.
+With an Editor open, run the one static through `unity command menu` or `eval`, never `RunAll`.
+
+**Widen only when you cannot bound the reach**, and then to the half that applies (`gates.ps1` for
+.NET, `unity-gate.ps1` for Unity): a change to game-state shape, the canonical serializer, the
+projection, the snapshot codec or the wire; a `.csproj`, `.asmdef`, `Directory.Build.props` or
+`Emberfall.slnx`; a type whose callers in other assemblies you did not enumerate; or Sam asking.
+
+**A push follows the same rule over the whole diff**: the union of what its commits touched, not
+the full gate by default. This outranks the "before every push" lines in the `tools/ci/` script
+headers and in the `/verify` skill; the daily cloud run is the backstop for everything else. Say
+in the report which checks you ran and which you left out, so a narrow run never reads as a full one.
+
 ## Two things about this working copy that will cost you a day
 
 **Stage every commit by explicit path. Never `git add -A`.** More than one session or worktree can
