@@ -67,6 +67,10 @@ namespace Emberfall.Core.Cards
                 // AURA is an activation, not a trigger, so it cannot come back through TryTrigger's
                 // enum sweep — it has no Trigger member to be. Its marker is taken first and the rest
                 // of the sentence reads exactly like any other run of effects.
+                // "Deals 2 instead if…" is not a rule of its own: it amends the damage the
+                // sentence before it read.
+                if (TryInstead(sentence, parsed)) continue;
+
                 string line = sentence;
                 bool isAura = TryAuraMarker(ref line);
 
@@ -84,6 +88,19 @@ namespace Emberfall.Core.Cards
                 // effects. The two never co-occur — a rule carries one condition, and a cost scope
                 // only renders for COST_PAID — so finding one settles the condition outright.
                 RuleCondition? qualifier = TryConditionPrefix(ref clause);
+                // A semicolon is only ever a rider's: the payoff clauses riding this sentence's
+                // one choice. They are read here, whole, because they come back as rules on
+                // BOTH sides of the rule that chooses.
+                if (clause.IndexOf("; ", StringComparison.Ordinal) >= 0)
+                {
+                    if (isAura || cost != null || qualifier != null)
+                    {
+                        reason = "a rider beside an aura, a cost or a condition: " + Quoted(sentence);
+                        return false;
+                    }
+                    if (!TryRiders(clause, names, trigger, parsed, out reason)) return false;
+                    continue;
+                }
                 if (cost != null)
                     parsed.Add(new RuleDefinition(
                         new RuleId("rule_" + (parsed.Count + 1).ToString(CultureInfo.InvariantCulture)),
@@ -342,6 +359,8 @@ namespace Emberfall.Core.Cards
         /// </summary>
         private static IEnumerable<RuleCondition> Conditions()
         {
+            yield return HeroDamagedThisTurnCondition.Instance;
+
             foreach (TurnOwner owner in (TurnOwner[])Enum.GetValues(typeof(TurnOwner)))
                 yield return new TurnOwnerCondition(owner);
 
@@ -354,6 +373,135 @@ namespace Emberfall.Core.Cards
                 yield return new ControlsCondition(tribe, excludesSource: true);
                 yield return new ControlsCondition(tribe, excludesSource: false);
             }
+        }
+
+        /// <summary>
+        /// Reads "Deals N instead if…" back onto the damage rule in front of it.
+        ///
+        /// <para>Generate-and-test like everything else here: the candidate is the previous rule's
+        /// damage with an instead-clause added, and it is taken only when the renderer prints this
+        /// exact sentence for it.</para>
+        /// </summary>
+        private static bool TryInstead(string sentence, List<RuleDefinition> parsed)
+        {
+            if (parsed.Count == 0 || !sentence.StartsWith("Deals ", StringComparison.Ordinal))
+                return false;
+            RuleDefinition last = parsed[parsed.Count - 1];
+            if (!(last.Action is DamageAction damage) || damage.InsteadAmount.HasValue) return false;
+
+            foreach (int amount in Amounts(sentence))
+            {
+                DamageAction candidate;
+                string printed;
+                try
+                {
+                    candidate = new DamageAction(damage.Amount, damage.Target, amount,
+                        HeroDamagedThisTurnCondition.Instance);
+                    printed = CardTextGenerator.DescribeInstead(candidate);
+                }
+                catch (Exception) { continue; }
+                if (!string.Equals(printed, sentence, StringComparison.Ordinal)) continue;
+
+                parsed[parsed.Count - 1] = new RuleDefinition(last.Id, last.Activation, last.Condition,
+                    last.Lifetime, candidate);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Reads a sentence with riders: the choosing action, then each payoff behind a semicolon.
+        ///
+        /// <para><b>The rules come back in RESOLVER order, not sentence order.</b> A minion rider
+        /// goes in front of the rule that chooses, so the buff lands before the damage; a hero
+        /// rider goes behind it. That is the order the renderer undoes — see
+        /// <c>CardTextGenerator.RidersBehindTheirChooser</c>.</para>
+        ///
+        /// <para>The head is read with " to a character" taken off, because that is the one place
+        /// the renderer names an unrestricted target and no action prints it standing alone.</para>
+        /// </summary>
+        private static bool TryRiders(string clause, CardNameIndex names, Trigger trigger,
+            List<RuleDefinition> parsed, out string reason)
+        {
+            const string NamedTarget = " to a character";
+            const string HeroLead = "if it was your hero, ";
+
+            string[] pieces = clause.TrimEnd('.').Split(new[] { "; " }, StringSplitOptions.None);
+            string head = pieces[0].EndsWith(NamedTarget, StringComparison.Ordinal)
+                ? pieces[0].Substring(0, pieces[0].Length - NamedTarget.Length)
+                : pieces[0];
+            if (!TryActions(head + ".", names, trigger, out IReadOnlyList<RuleAction> chooser, out reason))
+                return false;
+            if (chooser.Count != 1)
+            {
+                reason = "a rider needs exactly one action in front of it: " + Quoted(clause);
+                return false;
+            }
+
+            var minion = new TargetIsFriendlyCondition(FriendlyTargetKind.MINION);
+            var hero = new TargetIsFriendlyCondition(FriendlyTargetKind.HERO);
+            var before = new List<RuleAction>();
+            var after = new List<RuleAction>();
+            for (int i = 1; i < pieces.Length; i++)
+            {
+                string piece = pieces[i];
+                if (piece.StartsWith(HeroLead, StringComparison.Ordinal))
+                {
+                    if (!TryActions(Capitalized(piece.Substring(HeroLead.Length)) + ".", names, trigger,
+                            out IReadOnlyList<RuleAction> payoff, out reason))
+                        return false;
+                    if (payoff.Count != 1)
+                    {
+                        reason = "a hero rider is one payoff: " + Quoted(piece);
+                        return false;
+                    }
+                    after.Add(payoff[0]);
+                    continue;
+                }
+
+                RuleAction? found = null;
+                foreach (RuleAction candidate in MinionRiderCandidates(piece))
+                {
+                    string printed;
+                    try
+                    {
+                        printed = CardTextGenerator.DescribeRider(new RuleDefinition(new RuleId("rule_1"),
+                            Activation(false, trigger), minion, LifetimeFor(false, trigger), candidate), names);
+                    }
+                    catch (Exception) { continue; }
+                    if (!string.Equals(printed, piece, StringComparison.Ordinal)) continue;
+                    found = candidate;
+                    break;
+                }
+                if (found == null)
+                {
+                    reason = "no rider reads as " + Quoted(piece);
+                    return false;
+                }
+                before.Add(found);
+            }
+
+            void Add(RuleCondition condition, RuleAction action)
+                => parsed.Add(new RuleDefinition(
+                    new RuleId("rule_" + (parsed.Count + 1).ToString(CultureInfo.InvariantCulture)),
+                    Activation(false, trigger), condition, LifetimeFor(false, trigger), action));
+
+            foreach (RuleAction action in before) Add(minion, action);
+            Add(AlwaysCondition.Instance, chooser[0]);
+            foreach (RuleAction action in after) Add(hero, action);
+            reason = "";
+            return true;
+        }
+
+        /// <summary>Every action a minion rider can be: a stat change or a granted keyword, on the
+        /// one target shape <c>CardValidator</c> C32 allows it.</summary>
+        private static IEnumerable<RuleAction> MinionRiderCandidates(string piece)
+        {
+            var target = new TargetSpec("ANY_FRIENDLY_MINION", TargetSelection.Of(1));
+            foreach (KeyValuePair<int, int> delta in Deltas(piece))
+                yield return new ModifyStatsAction(delta.Key, delta.Value, target);
+            foreach (Keyword keyword in GrantableKeywords())
+                yield return new GrantKeywordAction(keyword, target);
         }
 
         /// <summary>Drops the words that mark a cost declinable, so the clause beneath can be

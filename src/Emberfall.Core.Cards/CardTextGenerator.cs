@@ -157,7 +157,8 @@ namespace Emberfall.Core.Cards
                 if (rule.Action is DamageAction damage)
                 {
                     effectiveRules.Add(new RuleDefinition(rule.Id, rule.Activation, rule.Condition,
-                        rule.Lifetime, new DamageAction(damage.Amount + spellDamageBonus, damage.Target)));
+                        rule.Lifetime, damage.WithAmounts(damage.Amount + spellDamageBonus,
+                            damage.InsteadAmount + spellDamageBonus)));
                     changed = true;
                 }
                 else
@@ -301,6 +302,8 @@ namespace Emberfall.Core.Cards
         {
             var lines = new List<string>();
             var groupActions = new List<RuleAction>();
+            // The payoff clauses riding the open run's choice — see RiderClause.
+            var groupRiders = new List<string>();
             string groupPrefix = "";
             string costPrefix = "";
             // A run only ever groups rules that share a prefix, and the trigger marker is part of
@@ -308,18 +311,35 @@ namespace Emberfall.Core.Cards
             // pronoun it licenses is a property of the run, not of the action.
             string groupPronoun = "";
 
-            foreach (RuleDefinition rule in rules)
+            void Close()
             {
+                if (groupActions.Count == 0) return;
+                lines.Add(Line(groupPrefix, RunSentence(groupActions, groupRiders, pool, groupPronoun)));
+                groupActions.Clear();
+                groupRiders.Clear();
+            }
+
+            IReadOnlyList<RuleDefinition> ordered = RidersBehindTheirChooser(rules);
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                RuleDefinition rule = ordered[i];
                 if (rule == null) throw new ArgumentNullException(nameof(rules));
+
+                if (RuleSemantics.IsRider(rule))
+                {
+                    // Directly behind the rule whose choice it reads, which opened a run of its
+                    // own below — so the open run is that one rule and nothing else. A COST that
+                    // chooses opens no run at all, and a payoff cannot ride a price.
+                    if (groupActions.Count != 1)
+                        throw Unsupported("condition", "TARGET_IS_FRIENDLY riding a cost");
+                    groupRiders.Add(RiderClause(rule, pool, groupPronoun));
+                    continue;
+                }
 
                 if (CostOf(rule) != CostKind.None)
                 {
                     // The cost opens a new clause, so whatever run was open is finished.
-                    if (groupActions.Count > 0)
-                    {
-                        lines.Add(Line(groupPrefix, JoinActions(groupActions, pool, groupPronoun)));
-                        groupActions.Clear();
-                    }
+                    Close();
                     costPrefix = CostPrefix(rule.Action, pool);
                     continue;
                 }
@@ -327,21 +347,138 @@ namespace Emberfall.Core.Cards
                 string prefix = TriggerMarker(rule.Activation) +
                     CostScope(rule.Condition, costPrefix) +
                     ConditionPrefix(rule.Condition) + LifetimePrefix(rule.Lifetime, rule.Activation);
-                if (groupActions.Count > 0 && prefix != groupPrefix)
-                {
-                    lines.Add(Line(groupPrefix, JoinActions(groupActions, pool, groupPronoun)));
-                    groupActions.Clear();
-                }
+                // A rule with riders behind it is a sentence to itself, on both sides: the
+                // semicolon attaches the payoff to ONE subject, so nothing joins it from in front
+                // and nothing joins after it.
+                bool headsRiders = i + 1 < ordered.Count && RuleSemantics.IsRider(ordered[i + 1]);
+                if (prefix != groupPrefix || headsRiders || groupRiders.Count > 0) Close();
 
                 groupPrefix = prefix;
                 groupPronoun = SourcePronoun(rule.Activation);
                 groupActions.Add(rule.Action);
             }
 
-            if (groupActions.Count > 0)
-                lines.Add(Line(groupPrefix, JoinActions(groupActions, pool, groupPronoun)));
+            Close();
             return lines;
         }
+
+        /// <summary>
+        /// The rules in the order the face speaks them: every rider directly behind the rule whose
+        /// choice it reads.
+        ///
+        /// <para><b>The face and the resolver want opposite orders, and the rule list serves the
+        /// resolver.</b> A minion rider is authored AHEAD of its damage so the buff lands first and
+        /// a kindled body survives; the sentence still has to open with what the card does to
+        /// whatever you point it at — "Deal 2 damage to a character; a friendly minion gains
+        /// +2/+1." Same ruling as <see cref="VocabularyFirst"/>: the canonical rendering decides
+        /// the word order, so the rules are free to say what the engine needs.</para>
+        ///
+        /// <para>Refuses a rider with no choosing rule on its trigger, or with two: either way the
+        /// count below comes out wrong, and a rider that reads no choice can never hold.
+        /// <c>CardValidator</c> C32 rejects the same rows first.</para>
+        /// </summary>
+        private static IReadOnlyList<RuleDefinition> RidersBehindTheirChooser(IReadOnlyList<RuleDefinition> rules)
+        {
+            bool any = false;
+            foreach (RuleDefinition rule in rules)
+                if (rule != null && RuleSemantics.IsRider(rule)) { any = true; break; }
+            if (!any) return rules;
+
+            var ordered = new List<RuleDefinition>(rules.Count);
+            foreach (RuleDefinition rule in rules)
+            {
+                if (rule == null) throw new ArgumentNullException(nameof(rules));
+                if (RuleSemantics.IsRider(rule)) continue;
+                ordered.Add(rule);
+                if (!RuleSemantics.Chooses(rule)) continue;
+                Trigger trigger = RuleSemantics.TriggerOf(rule);
+                foreach (RuleDefinition rider in rules)
+                    if (RuleSemantics.IsRider(rider) && RuleSemantics.TriggerOf(rider) == trigger)
+                        ordered.Add(rider);
+            }
+            if (ordered.Count != rules.Count)
+                throw Unsupported("condition", "TARGET_IS_FRIENDLY without exactly one choosing rule on its trigger");
+            return ordered;
+        }
+
+        /// <summary>One run as a sentence: its actions, the riders on its choice, and an instead-clause.</summary>
+        private static string RunSentence(IReadOnlyList<RuleAction> actions, IReadOnlyList<string> riders,
+            ICardDatabase pool, string sourcePronoun)
+        {
+            string sentence = riders.Count == 0
+                ? JoinActions(actions, pool, sourcePronoun)
+                : ChooserClause(actions[0], pool, sourcePronoun) + "; " + string.Join("; ", riders) + ".";
+
+            foreach (RuleAction action in actions)
+            {
+                if (!(action is DamageAction damage) || !damage.InsteadAmount.HasValue) continue;
+                // "Deals 2 instead" has to have one damage to stand in for. In a joined run it would
+                // read against whichever clause happened to come last.
+                if (actions.Count != 1) throw Unsupported("action", "DAMAGE with an instead-amount in a joined run");
+                sentence += " " + InsteadSentence(damage);
+            }
+            return sentence;
+        }
+
+        /// <summary>
+        /// The choosing rule's clause when a rider follows it — target NAMED, no full stop.
+        ///
+        /// <para>An unrestricted pick normally prints no target at all ("Deal 2 damage.", see
+        /// <see cref="NarrowsNothing"/>), because naming it tells the reader nothing. Beside a rider
+        /// it tells him the one thing the card turns on: that "a friendly minion" is among the
+        /// characters he may aim at. So here, and only here, it is spoken.</para>
+        /// </summary>
+        private static string ChooserClause(RuleAction action, ICardDatabase pool, string sourcePronoun)
+            => action is DamageAction damage && NarrowsNothing(damage.Target)
+                ? $"Deal {damage.Amount} damage to {Target(damage.Target, sourcePronoun)}"
+                : Undot(RenderAction(action, pool, sourcePronoun));
+
+        /// <summary>
+        /// A rider as the clause behind the semicolon: what the chosen target gains if it was your
+        /// minion, or what you get if it was your hero.
+        ///
+        /// <para>The minion form names its subject — "a friendly minion gains +2/+1" — because the
+        /// subject IS the condition: no "if" is needed to say the payoff belongs to your own. The
+        /// hero form has no such subject to lean on, the payoff being yours rather than the
+        /// target's, so it says the condition outright.</para>
+        /// </summary>
+        private static string RiderClause(RuleDefinition rule, ICardDatabase pool, string sourcePronoun)
+        {
+            var condition = (TargetIsFriendlyCondition)rule.Condition;
+            if (condition.Kind == FriendlyTargetKind.HERO)
+            {
+                if (RuleSemantics.TargetOf(rule.Action) != null)
+                    throw Unsupported("action", "a targeted action under TARGET_IS_FRIENDLY HERO");
+                return "if it was your hero, " +
+                       Decapitalize(Undot(RenderAction(rule.Action, pool, sourcePronoun)));
+            }
+
+            switch (rule.Action)
+            {
+                case ModifyStatsAction stats:
+                    return $"a friendly minion gains {Delta(stats.AttackDelta)}/{Delta(stats.HealthDelta)}";
+                case GrantKeywordAction grant:
+                    return $"a friendly minion gains {Name(grant.Keyword)}";
+                default:
+                    throw Unsupported("action", rule.Action.GetType().Name + " under TARGET_IS_FRIENDLY MINION");
+            }
+        }
+
+        /// <summary>"Deals 2 instead if your hero has taken damage this turn."</summary>
+        /// <remarks>The condition is spoken by <see cref="ConditionPrefix"/> and only re-cased here, so
+        /// a condition reads the same whether it gates a rule or switches an amount.</remarks>
+        private static string InsteadSentence(DamageAction damage)
+        {
+            string condition = ConditionPrefix(damage.InsteadCondition!).TrimEnd(' ', ',');
+            return $"Deals {damage.InsteadAmount!.Value} instead {Decapitalize(condition)}.";
+        }
+
+        /// <summary>How a rider is spoken, for a parser that must match what was printed.</summary>
+        internal static string DescribeRider(RuleDefinition rule, ICardDatabase pool)
+            => RiderClause(rule, pool, SourcePronoun(rule.Activation));
+
+        /// <summary>How an instead-clause is spoken, for the same parser.</summary>
+        internal static string DescribeInstead(DamageAction damage) => InsteadSentence(damage);
 
         /// <summary>Joins a run's sentence onto its prefix.</summary>
         /// <remarks>
@@ -930,6 +1067,9 @@ namespace Emberfall.Core.Cards
             if (condition is CostPaidCondition) return "";
             if (condition is TurnOwnerCondition turnOwner) return TurnOwnerPrefix(turnOwner.Owner);
             if (condition is ControlsCondition controls) return ControlsPrefix(controls);
+            if (condition is HeroDamagedThisTurnCondition) return "If your hero has taken damage this turn, ";
+            // TARGET_IS_FRIENDLY never reaches here: a rider prints behind its chooser's semicolon
+            // (RiderClause), not as a prefix of its own.
             throw UnsupportedNode("condition", condition);
         }
 

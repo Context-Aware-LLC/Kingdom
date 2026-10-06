@@ -211,6 +211,12 @@ namespace Emberfall.Core.Tests.Targeting
 
         private static string Sentence(RuleDefinition rule, ICardDatabase db)
         {
+            // Every check here reads what the sentence says about its TARGET. An instead-clause
+            // names a condition — "if your hero has taken damage this turn" — and its "your" is
+            // not a claim about whom the damage lands on, so it is left off.
+            if (rule.Action is DamageAction damage && damage.InsteadAmount.HasValue)
+                rule = new RuleDefinition(rule.Id, rule.Activation, rule.Condition, rule.Lifetime,
+                    new DamageAction(damage.Amount, damage.Target));
             try { return CardTextGenerator.Generate(new[] { rule }, db); }
             catch (Exception) { return "<unrenderable>"; }
         }

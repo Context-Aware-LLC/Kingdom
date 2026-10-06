@@ -286,6 +286,45 @@ namespace Emberfall.Core.Tests.CardBehavior
                 "both seats clear: what a hero took last turn is not this turn's");
         }
 
+        // ── the validator ─────────────────────────────────────────────────────────
+
+        private static IReadOnlyList<string> Codes(CardDefinition def)
+            => new CardValidator().Validate(def, new FakeCardDatabase().Register(def))
+                .Issues.Select(issue => issue.Code).ToList();
+
+        [Test]
+        public void A_Rider_With_No_Rule_To_Ride_Is_Refused()
+        {
+            CardDefinition orphan = Spell("orphan", MinionRider(2, 1));
+
+            Assert.That(Codes(orphan), Does.Contain("C32-RIDER-CHOICE"));
+        }
+
+        [Test]
+        public void A_Rider_Is_Refused_When_The_Choice_Can_Never_Be_Your_Own()
+        {
+            CardDefinition enemyOnly = Spell("enemy_only",
+                MinionRider(2, 1),
+                TestRules.Rule("burn", Trigger.ON_CAST,
+                    new DamageAction(2, new TargetSpec("ANY_ENEMY_MINION", TargetSelection.Of(1)))));
+
+            Assert.That(Codes(enemyOnly), Does.Contain("C32-RIDER-UNREACHABLE"));
+        }
+
+        [Test]
+        public void An_Instead_Amount_Must_Differ_And_Read_Game_State()
+        {
+            CardDefinition same = Spell("same",
+                TestRules.Rule("burn", Trigger.ON_CAST,
+                    new DamageAction(2, Character(), 2, HeroDamagedThisTurnCondition.Instance)));
+            CardDefinition wrongSwitch = Spell("wrong_switch",
+                TestRules.Rule("burn", Trigger.ON_CAST,
+                    new DamageAction(1, Character(), 2, new ControlsCondition(Tribe.CONSTRUCT, false))));
+
+            Assert.That(Codes(same), Does.Contain("C33-INSTEAD-AMOUNT"));
+            Assert.That(Codes(wrongSwitch), Does.Contain("C33-INSTEAD-CONDITION"));
+        }
+
         // ── the row ───────────────────────────────────────────────────────────────
 
         [Test]

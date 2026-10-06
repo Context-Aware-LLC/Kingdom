@@ -174,8 +174,8 @@ namespace Emberfall.Core.Cards
             var playerChoiceRuleCounts = new Dictionary<Trigger, int>();
             foreach (RuleDefinition rule in def.Rules)
             {
-                TargetSpec? target = RuleSemantics.TargetOf(rule.Action);
-                if (!TargetSpec.IsPlayerChosen(target)) continue;
+                // A rider's target is player-CHOSEN but the rule does not CHOOSE — see C32.
+                if (!RuleSemantics.Chooses(rule)) continue;
                 Trigger trigger = RuleSemantics.TriggerOf(rule);
                 playerChoiceRuleCounts.TryGetValue(trigger, out int count);
                 playerChoiceRuleCounts[trigger] = count + 1;
@@ -293,6 +293,71 @@ namespace Emberfall.Core.Cards
                         Err("C29-CONTROLS-OTHER-UNSPEAKABLE", $"{prefix}.condition",
                             $"other: true prints \"another {controls.Tribe}\", and this card is not " +
                             $"a {controls.Tribe} board minion for there to be another OF — drop it.");
+                }
+
+                // C32 — the rider. A TARGET_IS_FRIENDLY rule acts on the choice ANOTHER rule makes,
+                // and only when that choice turned out to be the controller's own. It names no
+                // binding, so every clause here exists to keep "the chosen target" singular and
+                // the rider's own row saying exactly what the runtime does with it.
+                if (rule.Condition is TargetIsFriendlyCondition friendly)
+                {
+                    int choosers = 0;
+                    TargetSpec? chosen = null;
+                    foreach (RuleDefinition other in def.Rules)
+                    {
+                        if (!RuleSemantics.Chooses(other) || RuleSemantics.TriggerOf(other) != trigger)
+                            continue;
+                        choosers++;
+                        chosen = RuleSemantics.TargetOf(other.Action);
+                    }
+
+                    if (choosers != 1 || chosen == null || chosen.Selection.Count != 1 || chosen.IsCost)
+                        Err("C32-RIDER-CHOICE", $"{prefix}.condition",
+                            "TARGET_IS_FRIENDLY reads the one target this play chose, so its trigger " +
+                            "needs exactly one other rule that asks the player for exactly one " +
+                            "target, and that rule may not be a cost.");
+                    else if (!CanProduceOwn(chosen.Selector, friendly.Kind))
+                        Err("C32-RIDER-UNREACHABLE", $"{prefix}.condition",
+                            $"'{chosen.Selector}' can never produce your own {friendly.Kind}, so " +
+                            "this rider could never hold and the face would promise a payoff " +
+                            "nobody can reach.");
+
+                    TargetSpec? riderTarget = RuleSemantics.TargetOf(rule.Action);
+                    if (friendly.Kind == FriendlyTargetKind.HERO)
+                    {
+                        if (riderTarget != null)
+                            Err("C32-RIDER-HERO-TARGETED", $"{prefix}.action.target",
+                                "a HERO rider is a payoff for YOU when the target was your hero " +
+                                "(draw, armor, mana); it takes no target of its own.");
+                    }
+                    else
+                    {
+                        bool acts = rule.Action is ModifyStatsAction || rule.Action is GrantKeywordAction;
+                        bool rides = riderTarget != null && riderTarget.Selector == "ANY_FRIENDLY_MINION" &&
+                                     riderTarget.Selection.Count == 1 && !riderTarget.Selection.IsRandom &&
+                                     riderTarget.Filter == null && riderTarget.DistinctFrom.Length == 0 &&
+                                     !riderTarget.IsCost && riderTarget.Binding == (chosen?.Binding ?? "");
+                        if (!acts || !rides)
+                            Err("C32-RIDER-MINION-SHAPE", $"{prefix}.action",
+                                "a MINION rider is MODIFY_STATS or GRANT_KEYWORD on " +
+                                "ANY_FRIENDLY_MINION, selection 1, no filter, on the same binding as " +
+                                "the rule that chooses. Its target is the chosen one; the selector " +
+                                "only says which choices it applies to.");
+                    }
+                }
+
+                // C33 — "Deals N instead if…". The amount is picked from game state before the hit
+                // lands, so the switch has to be a condition that reads state and nothing else.
+                if (rule.Action is DamageAction switched && switched.InsteadAmount.HasValue)
+                {
+                    if (switched.InsteadAmount.Value < 1 || switched.InsteadAmount.Value == switched.Amount)
+                        Err("C33-INSTEAD-AMOUNT", $"{prefix}.action.instead.amount",
+                            "instead.amount must be at least 1 and differ from amount, or the clause " +
+                            "prints a second number that changes nothing.");
+                    if (!(switched.InsteadCondition is HeroDamagedThisTurnCondition))
+                        Err("C33-INSTEAD-CONDITION", $"{prefix}.action.instead.condition",
+                            "instead.condition must be HERO_DAMAGED_THIS_TURN, the one condition " +
+                            "that reads game state alone.");
                 }
 
                 // C28 — the cost prefix. A cost is a price paid to play the card, and every clause
@@ -429,7 +494,7 @@ namespace Emberfall.Core.Cards
                 // the parser refuses it and a def reaching this validator cannot be holding one.
                 if (target != null)
                 {
-                    if (TargetSpec.IsPlayerChosen(target) && playerChoiceRuleCounts[trigger] > 1 &&
+                    if (RuleSemantics.Chooses(rule) && playerChoiceRuleCounts[trigger] > 1 &&
                         target.Binding.Length == 0)
                         Err("C14G-TARGET-BINDING-REQUIRED", $"{prefix}.action.target.binding",
                             "each rule in a multi-rule player choice must name its target binding explicitly.");
@@ -633,6 +698,15 @@ namespace Emberfall.Core.Cards
                 case TransformAction a: return a.CardId;
                 default: return null;
             }
+        }
+
+        /// <summary>Whether a selector can ever hand back the controller's own minion, or his hero.</summary>
+        private static bool CanProduceOwn(string selector, FriendlyTargetKind kind)
+        {
+            if (!TargetQueries.TryGet(selector, out TargetQuery query)) return false;
+            if (query.Side == TargetSide.Enemy || (query.Zones & TargetZones.Board) == 0) return false;
+            TargetTypes wanted = kind == FriendlyTargetKind.HERO ? TargetTypes.Hero : TargetTypes.Minion;
+            return (query.Types & wanted) != 0;
         }
 
         private static string ActionName(RuleAction action)
