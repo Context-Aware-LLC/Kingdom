@@ -170,6 +170,13 @@ namespace Emberfall.Editor
                 w.WriteString("tribe", controls.Tribe.ToString());
                 if (controls.ExcludesSource) w.WriteBoolean("other", true);
             }
+            else if (condition is TargetIsFriendlyCondition friendly)
+            {
+                w.WriteString("type", "TARGET_IS_FRIENDLY");
+                w.WriteString("kind", friendly.Kind.ToString());
+            }
+            else if (condition is HeroDamagedThisTurnCondition)
+                w.WriteString("type", "HERO_DAMAGED_THIS_TURN");
             else
                 throw Unknown("condition", condition);
             w.WriteEndObject();
@@ -197,7 +204,19 @@ namespace Emberfall.Editor
         private static void WriteAction(Utf8JsonWriter w, RuleAction action)
         {
             w.WriteStartObject("action");
-            if (action is DamageAction damage) { Type(w, "DAMAGE"); Amount(w, damage.Amount); Target(w, damage.Target); }
+            if (action is DamageAction damage)
+            {
+                Type(w, "DAMAGE");
+                Amount(w, damage.Amount);
+                if (damage.InsteadAmount.HasValue)
+                {
+                    w.WriteStartObject("instead");
+                    w.WriteNumber("amount", damage.InsteadAmount.Value);
+                    WriteCondition(w, damage.InsteadCondition);
+                    w.WriteEndObject();
+                }
+                Target(w, damage.Target);
+            }
             else if (action is HealAction heal) { Type(w, "HEAL"); Amount(w, heal.Amount); Target(w, heal.Target); }
             else if (action is ModifyStatsAction stats)
             {

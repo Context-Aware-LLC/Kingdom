@@ -139,6 +139,50 @@ namespace Emberfall.Net.Server.Tests.Bots
             Assert.That(attack.Defender.Instance, Is.EqualTo(state.Players[1].Hero.Id));
         }
 
+        /// <summary>A Kindle card with nothing to kill goes onto our own minion: +2/+1 on a body
+        /// beats 2 chip damage. Without this the bot reads every damage card as hostile and the
+        /// grow half of the card never appears in a soak.</summary>
+        [Test]
+        public void Kindles_Its_Own_Minion_When_There_Is_Nothing_To_Kill()
+        {
+            var db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            var validator = new CommandProcessor(db);
+            GameState state = ChoiceOpen(new List<int>(), manaMax: 1);
+            state.PendingChoice = null;
+            // 233 Kindle: "Deal 2 damage to a character; a friendly minion gains +2/+1."
+            state.Players[0].Hand.Add(new CardInstance(state.NextInstanceId(), 233, Me) { Zone = Zone.Hand });
+            var mine = new CardInstance(state.NextInstanceId(), 1061, Me)
+            {
+                Zone = Zone.Board, CurrentAttack = 3, CurrentHealth = 3, MaxHealth = 3,
+            };
+            state.Players[0].Board.Add(mine);
+            EnemyMinion(state, attack: 4, health: 5);
+
+            var play = (PlayCardIntent)GreedyAi.Choose(state, Me, validator, db)!;
+
+            Assert.That(play.Targets[0].Instance, Is.EqualTo(mine.Id));
+        }
+
+        /// <summary>…and still kills with it first when the damage finishes something.</summary>
+        [Test]
+        public void A_Kindle_Card_Kills_Before_It_Grows()
+        {
+            var db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
+            var validator = new CommandProcessor(db);
+            GameState state = ChoiceOpen(new List<int>(), manaMax: 1);
+            state.PendingChoice = null;
+            state.Players[0].Hand.Add(new CardInstance(state.NextInstanceId(), 233, Me) { Zone = Zone.Hand });
+            state.Players[0].Board.Add(new CardInstance(state.NextInstanceId(), 1061, Me)
+            {
+                Zone = Zone.Board, CurrentAttack = 3, CurrentHealth = 3, MaxHealth = 3,
+            });
+            CardInstance killable = EnemyMinion(state, attack: 4, health: 2);
+
+            var play = (PlayCardIntent)GreedyAi.Choose(state, Me, validator, db)!;
+
+            Assert.That(play.Targets[0].Instance, Is.EqualTo(killable.Id));
+        }
+
         private static CardInstance EnemyMinion(GameState state, int attack, int health)
         {
             // 1061 Gear Imp, a keywordless body; the live stats are what the driver reads.

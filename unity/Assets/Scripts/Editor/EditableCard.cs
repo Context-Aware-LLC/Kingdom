@@ -94,7 +94,7 @@ namespace Emberfall.Editor
         public CardSoundEffect ToDefinition() => new CardSoundEffect(SoundId, Trigger);
     }
 
-    public enum EditableConditionKind { Always, TurnOwner, CostPaid, Controls }
+    public enum EditableConditionKind { Always, TurnOwner, CostPaid, Controls, TargetIsFriendly, HeroDamagedThisTurn }
     public enum EditableLifetimeKind { SourceBound, OneShot, Finite, Permanent }
     public enum EditableRuleActionKind
     {
@@ -279,11 +279,15 @@ namespace Emberfall.Editor
         public TurnOwner TurnOwnerScope = TurnOwner.CONTROLLER;
         public Tribe ControlsTribe = Tribe.CONSTRUCT;
         public bool ControlsExcludesSource;
+        public FriendlyTargetKind FriendlyKind = FriendlyTargetKind.MINION;
         public EditableLifetimeKind LifetimeKind = EditableLifetimeKind.OneShot;
         public int Uses = 1;
         public EditableRuleActionKind ActionKind = EditableRuleActionKind.Damage;
 
         public int Amount = 1;
+        /// <summary>DAMAGE only: the amount dealt instead while the hero has taken damage this
+        /// turn. Zero is "no instead-clause" — C33 refuses a real one below 1.</summary>
+        public int InsteadAmount;
         public int AttackDelta;
         public int HealthDelta;
         public int Count = 1;
@@ -345,6 +349,13 @@ namespace Emberfall.Editor
                 editable.ControlsTribe = controls.Tribe;
                 editable.ControlsExcludesSource = controls.ExcludesSource;
             }
+            else if (rule.Condition is TargetIsFriendlyCondition friendly)
+            {
+                editable.ConditionKind = EditableConditionKind.TargetIsFriendly;
+                editable.FriendlyKind = friendly.Kind;
+            }
+            else if (rule.Condition is HeroDamagedThisTurnCondition)
+                editable.ConditionKind = EditableConditionKind.HeroDamagedThisTurn;
             else throw Unknown("condition", rule.Condition);
 
             if (rule.Lifetime is SourceBoundLifetime)
@@ -390,6 +401,10 @@ namespace Emberfall.Editor
                 case EditableConditionKind.CostPaid: return CostPaidCondition.Instance;
                 case EditableConditionKind.Controls:
                     return new ControlsCondition(ControlsTribe, ControlsExcludesSource);
+                case EditableConditionKind.TargetIsFriendly:
+                    return new TargetIsFriendlyCondition(FriendlyKind);
+                case EditableConditionKind.HeroDamagedThisTurn:
+                    return HeroDamagedThisTurnCondition.Instance;
                 default: throw Unknown("editable condition", ConditionKind);
             }
         }
@@ -411,7 +426,10 @@ namespace Emberfall.Editor
             TargetSpec target = Target.ToDefinition();
             switch (ActionKind)
             {
-                case EditableRuleActionKind.Damage: return new DamageAction(Amount, target);
+                case EditableRuleActionKind.Damage:
+                    return InsteadAmount > 0
+                        ? new DamageAction(Amount, target, InsteadAmount, HeroDamagedThisTurnCondition.Instance)
+                        : new DamageAction(Amount, target);
                 case EditableRuleActionKind.Heal: return new HealAction(Amount, target);
                 case EditableRuleActionKind.ModifyStats: return new ModifyStatsAction(AttackDelta, HealthDelta, target);
                 case EditableRuleActionKind.GrantKeyword: return new GrantKeywordAction(Keyword, target);
@@ -441,7 +459,13 @@ namespace Emberfall.Editor
 
         private void ReadAction(RuleAction action)
         {
-            if (action is DamageAction damage) { ActionKind = EditableRuleActionKind.Damage; Amount = damage.Amount; ReadTarget(damage); }
+            if (action is DamageAction damage)
+            {
+                ActionKind = EditableRuleActionKind.Damage;
+                Amount = damage.Amount;
+                InsteadAmount = damage.InsteadAmount ?? 0;
+                ReadTarget(damage);
+            }
             else if (action is HealAction heal) { ActionKind = EditableRuleActionKind.Heal; Amount = heal.Amount; ReadTarget(heal); }
             else if (action is ModifyStatsAction stats) { ActionKind = EditableRuleActionKind.ModifyStats; AttackDelta = stats.AttackDelta; HealthDelta = stats.HealthDelta; ReadTarget(stats); }
             else if (action is GrantKeywordAction grant) { ActionKind = EditableRuleActionKind.GrantKeyword; Keyword = grant.Keyword; ReadTarget(grant); }

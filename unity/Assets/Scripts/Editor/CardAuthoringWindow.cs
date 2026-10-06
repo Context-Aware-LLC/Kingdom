@@ -869,6 +869,9 @@ namespace Emberfall.Editor
                     rule.ControlsExcludesSource = EditorGUILayout.Toggle(
                         "condition.other", rule.ControlsExcludesSource);
                 }
+                if (rule.ConditionKind == EditableConditionKind.TargetIsFriendly)
+                    rule.FriendlyKind = (FriendlyTargetKind)EditorGUILayout.EnumPopup(
+                        "condition.kind", rule.FriendlyKind);
 
                 rule.LifetimeKind = (EditableLifetimeKind)EditorGUILayout.EnumPopup(
                     "lifetime.type", rule.LifetimeKind);
@@ -897,6 +900,12 @@ namespace Emberfall.Editor
             switch (rule.ActionKind)
             {
                 case EditableRuleActionKind.Damage:
+                    rule.Amount = EditorGUILayout.IntField("action.amount", rule.Amount);
+                    // 0 leaves the clause off. Any other value is dealt INSTEAD while your hero
+                    // has taken damage this turn — the only switch C33 admits.
+                    rule.InsteadAmount = EditorGUILayout.IntField(
+                        "action.instead.amount (0 = none)", rule.InsteadAmount);
+                    break;
                 case EditableRuleActionKind.Heal:
                 case EditableRuleActionKind.GainMana:
                 case EditableRuleActionKind.Backdraft:

@@ -43,6 +43,9 @@ namespace Emberfall.Net.Server.Bots
     public static class GreedyAi
     {
         /// <summary>Dataset provenance label. Bump whenever choice ordering or heuristics change.</summary>
+        /// <remarks>NOT bumped for the 2026-10-06 rider targets (<c>AddOwnPayoffTargets</c>): they add
+        /// choices only for cards carrying a <c>TARGET_IS_FRIENDLY</c> rule, a shape no card had
+        /// before that day, so no capture made under this label plays differently.</remarks>
         public const string PolicyVersion = "greedy-ai.v3";
 
         /// <summary>The label every artifact before 2026-10-05 carries. Kept only so a tool can say
@@ -304,6 +307,9 @@ namespace Emberfall.Net.Server.Bots
                     if (lethalGap <= dmg) list.Add(new TargetRef(foe.Hero.Id));
                     foreach (CardInstance m in threats)
                         if (m.CurrentHealth <= dmg) list.Add(new TargetRef(m.Id));
+                    // With nothing to finish and nothing to kill, a Kindle card is worth more
+                    // pointed at our own side than as chip damage.
+                    AddOwnPayoffTargets(def, ps, dmg, list);
                     list.Add(new TargetRef(foe.Hero.Id));
                 }
                 foreach (CardInstance m in threats) list.Add(new TargetRef(m.Id));
@@ -321,6 +327,36 @@ namespace Emberfall.Net.Server.Bots
             }
 
             return list;
+        }
+
+        /// <summary>
+        /// The friendly targets a card's riders pay off on — "Deal 2 damage to a character; a
+        /// friendly minion gains +2/+1" (Sam, 2026-10-06). Without this the bot reads every
+        /// damage card as hostile and the half of a Kindle card that grows your own board never
+        /// shows up in a soak.
+        ///
+        /// <para>Deliberately small. A minion is offered only if it survives the damage and comes
+        /// out ahead in attack, biggest attacker first; the hero only while it stays above ten,
+        /// the same margin a player would keep before paying life for a card. It adds targets for
+        /// cards that carry a rider and changes nothing for any card that does not.</para>
+        /// </summary>
+        private static void AddOwnPayoffTargets(CardDefinition def, PlayerState ps, int damage,
+            List<TargetRef> list)
+        {
+            foreach (RuleDefinition rule in def.Rules)
+            {
+                if (!(rule.Condition is TargetIsFriendlyCondition rider)) continue;
+
+                if (rider.Kind == FriendlyTargetKind.HERO)
+                {
+                    if (ps.Hero.CurrentHealth - damage >= 10) list.Add(new TargetRef(ps.Hero.Id));
+                    continue;
+                }
+
+                if (!(rule.Action is ModifyStatsAction stats) || stats.AttackDelta <= 0) continue;
+                foreach (CardInstance m in ByThreat(ps.Board))
+                    if (m.CurrentHealth + stats.HealthDelta > damage) list.Add(new TargetRef(m.Id));
+            }
         }
 
         /// <summary>A board ordered biggest threat first: attack, then health, then board position
