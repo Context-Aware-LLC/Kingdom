@@ -61,9 +61,10 @@ namespace Emberfall.Core.Collection
         /// pairing also gets NEUTRAL and a second class).
         /// </summary>
         public static bool CanGenerate(CardClass primary, CardClass secondary, ICardDatabase db,
-                                       IOwnedCardCounts? owned = null, int? maxSecondaryCopies = null)
+                                       IOwnedCardCounts? owned = null, int? maxSecondaryCopies = null,
+                                       bool includeNeutral = true)
             => db != null
-               && Capacity(Candidates(primary, secondary, db, owned, maxSecondaryCopies == 0), owned)
+               && Capacity(Candidates(primary, secondary, db, owned, maxSecondaryCopies == 0, !includeNeutral), owned)
                   >= DeckValidator.DeckSize;
 
         /// <summary>
@@ -91,9 +92,15 @@ namespace Emberfall.Core.Collection
         /// look — a completely excluded secondary was overcorrecting.
         /// </param>
         /// <exception cref="DeckGenerationException">The pool cannot supply 30 legal copies.</exception>
+        /// <param name="includeNeutral">
+        /// <c>false</c> drops NEUTRAL from the pool too, so the deck is the primary class alone
+        /// (Sam, 2026-10-06, for NetSoak's `matrix --primary-only`). Never for a player's deck: a
+        /// starter without neutrals is not the shipped format any more than one without a secondary.
+        /// </param>
         public static DeckList Generate(CardClass primary, CardClass secondary, ICardDatabase db,
                                         DeterministicRandom rng, string deckId, string? deckName = null,
-                                        IOwnedCardCounts? owned = null, int? maxSecondaryCopies = null)
+                                        IOwnedCardCounts? owned = null, int? maxSecondaryCopies = null,
+                                        bool includeNeutral = true)
         {
             if (db == null) throw new ArgumentNullException(nameof(db));
             if (rng == null) throw new ArgumentNullException(nameof(rng));
@@ -105,7 +112,7 @@ namespace Emberfall.Core.Collection
                     "required. Generating against it would produce a deck that fails L5 on its own face.",
                     nameof(primary));
 
-            var candidates = Candidates(primary, secondary, db, owned, maxSecondaryCopies == 0);
+            var candidates = Candidates(primary, secondary, db, owned, maxSecondaryCopies == 0, !includeNeutral);
             int capacity = Capacity(candidates, owned);
             if (capacity < DeckValidator.DeckSize)
                 throw new DeckGenerationException(
@@ -202,13 +209,14 @@ namespace Emberfall.Core.Collection
         /// </summary>
         private static List<CardDefinition> Candidates(CardClass primary, CardClass secondary,
                                                        ICardDatabase db, IOwnedCardCounts? owned = null,
-                                                       bool excludeSecondary = false)
+                                                       bool excludeSecondary = false, bool excludeNeutral = false)
         {
             var list = new List<CardDefinition>();
             if (db == null) return list;
             foreach (var def in db.AllCollectible())
             {
                 if (excludeSecondary && def.Class == secondary) continue;
+                if (excludeNeutral && def.Class == CardClass.NEUTRAL) continue;
                 if (DeckList.AllowsClass(primary, secondary, def.Class) && CapFor(def, owned) > 0) list.Add(def);
             }
             list.Sort((a, b) => a.Id.CompareTo(b.Id));
