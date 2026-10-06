@@ -70,14 +70,15 @@ UnityEditor.SyncVS.SyncSolution, because project generation needs a registered e
 To get them: open the project in the Editor once with VS / VS Code / Rider set under
 Edit > Preferences > External Tools, then use 'Regenerate project files' there.
 
-If you cannot get the Editor - it is single-writer, so someone else may have it - do not wait for
-it and do not try to copy csprojs from another machine or worktree (they hardcode absolute Unity
-and checkout paths). Run the full gate in WSL instead, which needs none of this:
-
-    pwsh tools/ci/unity-gate-wsl.ps1
+If you cannot get the Editor - it is single-writer, so someone else may have it - do not try to
+copy csprojs from another machine or worktree (they hardcode absolute Unity and checkout paths).
+Run the full gate from the shared headless worktree at C:\claude-editor instead (CLAUDE.md has
+the lock protocol); it needs none of this.
 "@
-    # RETIREMENT TRIGGER: if headless csproj generation is ever solved, the message above and the
-    # "WHY NOT JUST COPY THE CSPROJS OVER" section of unity-gate-wsl.ps1 both stop being true.
+    # RETIREMENT TRIGGER: if headless csproj generation is ever solved, the message above stops
+    # being true. (It used to point at tools/ci/unity-gate-wsl.ps1, which ran the gate in a WSL
+    # distro named 'agents' with its own Linux Editor; the distro was gone by 2026-10-06 and the
+    # script was deleted with it.)
     exit 1
 }
 
