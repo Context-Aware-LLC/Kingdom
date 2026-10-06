@@ -328,45 +328,7 @@ so in the file when you do.
 **RETIREMENT TRIGGER:** if `C:\claude-editor` is deleted, moved, or stops carrying its own
 `Library/`, this section dies with it — and so do the `AGENTS.md` mirror, the pointer block inside
 `EDITOR-LOCK.md`, and those two brain pointers.
-
 ## Ask the graph before you grep
-
-There is a persistent knowledge graph of this repo — csharp, sql, python, javascript, powershell,
-bash, c and cpp — built by `code-review-graph`. It answers *where is this defined, what calls it,
-what does it call, which flow is it in*. Grep answers *which files contain this string*. Reaching
-for the second when you wanted the first is the default failure, because grep always looks like it
-worked. Its size is printed at every session start; no count for it lives in this file.
-
-**Its callers/callees effectively stop at the assembly boundary, and it does not say so.** C# node
-keys are path-scoped (`...\CardDefinition.cs::TargetSpec.IsKnown`) while most `CALLS` targets are
-stored as bare names (`FromSeconds`, `nameof`), so a cross-project call usually does not resolve:
-re-measured 2026-09-13, `Emberfall.Net.Server` → `Emberfall.Core` resolves to **27 edges across
-1,409 Server symbols** (it was a flat 0 on 2026-08-20, before `tooling/scripts/csharp_resolver.py`),
-and `CALLS` is 78% unresolved. Treat "Called by" as *within this project*, and never as an
-exhaustive list. Everything derived from those edges inherits the hole — `caller_count`,
-`test_coverage` and `risk_score` are still mostly defaults, and **`code-review-graph dead-code` is
-therefore unusable**. **Believe the tool over this paragraph:**
-`python tooling/scripts/graph_metrics.py` prints today's resolution rates, and
-`tooling/scripts/graph_view.py` carries the history and a retirement trigger.
-
-**You should not normally have to do anything.** `.claude/settings.json` registers a
-`PreToolUse` hook on `Grep|Glob|Read|Bash` that runs `code-review-graph enrich`, which injects
-the graph's answer ahead of the tool result. On a `Read` it returns every symbol in the file
-with its callers, callees and flows. It costs about 0.9 s and it cannot block a tool call —
-the `|| true` is load-bearing, because **a `PreToolUse` hook that exits 2 blocks the tool**, and
-`timeout` returns 124 while a DB lock during a concurrent pre-commit `update` is a real
-possibility.
-
-**The hazard is that its absence is invisible.** The hook opens with
-`command -v code-review-graph >/dev/null 2>&1 || exit 0`, so on any machine where the tool is
-not installed — a fresh clone, a WSL agent checkout — you get no context, no warning and no
-error. It looks exactly like a repo with nothing interesting to say about itself. **If you have
-run several searches and never once seen a `[code-review-graph]` block, assume it is not
-installed rather than that the graph is empty**, and check:
-
-```
-code-review-graph status
-```
 
 Judge that by **node count, not exit code**. A broken install — grammars invisible to its
 `python -I` probe, which is what `pip install --user` produces — reports `449 files, 2 nodes,
