@@ -5,7 +5,7 @@
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 297,
-  "corpusDigest": "f0d1ea729e0a785f",
+  "corpusDigest": "65853f530f4b8be7",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -55,9 +55,9 @@
       "ENEMY_HERO": 11,
       "ANY_CHARACTER": 4,
       "ANY_FRIENDLY": 3,
+      "OTHER_FRIENDLY_MINIONS": 2,
       "ANY_GRAVEYARD_MINION": 1,
       "FRIENDLY_GRAVEYARD_MINION": 1,
-      "OTHER_FRIENDLY_MINIONS": 1,
       "SELF": 1
     },
     "actionFrequency": {
@@ -103,8 +103,8 @@
       "0": 3,
       "1": 28,
       "2": 51,
-      "3": 42,
-      "4": 26,
+      "3": 43,
+      "4": 25,
       "5": 24,
       "6": 10,
       "7": 7,
@@ -112,8 +112,8 @@
       "10": 1
     },
     "healthDistribution": {
-      "1": 24,
-      "2": 38,
+      "1": 20,
+      "2": 42,
       "3": 31,
       "4": 40,
       "5": 25,
@@ -424,7 +424,8 @@
         "ANY_FRIENDLY_MINION": 6,
         "ANY_MINION": 5,
         "ENEMY_HERO": 3,
-        "ANY_ENEMY": 1
+        "ANY_ENEMY": 1,
+        "OTHER_FRIENDLY_MINIONS": 1
       },
       "actionFrequency": {
         "DAMAGE_SINGLE": 6,
@@ -456,13 +457,13 @@
       "attackDistribution": {
         "1": 3,
         "2": 4,
-        "3": 3,
-        "4": 4,
+        "3": 4,
+        "4": 3,
         "5": 4
       },
       "healthDistribution": {
-        "1": 5,
-        "2": 2,
+        "1": 1,
+        "2": 6,
         "3": 3,
         "4": 3,
         "5": 5
@@ -3056,8 +3057,8 @@
       "name": "Shadow Stalker",
       "type": "MINION",
       "cost": 3,
-      "attack": 4,
-      "health": 1,
+      "attack": 3,
+      "health": 2,
       "durability": null,
       "class": "NIGHTVEIL",
       "rarity": "COMMON",
@@ -3148,6 +3149,7 @@
       "rarity": "RARE",
       "keywords": [],
       "selectors": [
+        "ANY_FRIENDLY_MINION",
         "ANY_FRIENDLY_MINION"
       ],
       "actionTags": [],
@@ -6073,7 +6075,7 @@
       "type": "MINION",
       "cost": 2,
       "attack": 1,
-      "health": 1,
+      "health": 2,
       "durability": null,
       "class": "NIGHTVEIL",
       "rarity": "COMMON",
@@ -6095,7 +6097,7 @@
       "type": "MINION",
       "cost": 2,
       "attack": 2,
-      "health": 1,
+      "health": 2,
       "durability": null,
       "class": "NIGHTVEIL",
       "rarity": "COMMON",
@@ -6196,7 +6198,7 @@
         "SHROUD"
       ],
       "selectors": [
-        "ANY_FRIENDLY_MINION"
+        "OTHER_FRIENDLY_MINIONS"
       ],
       "actionTags": [],
       "tribe": "HUMAN",
@@ -6792,7 +6794,7 @@
       "type": "MINION",
       "cost": 1,
       "attack": 1,
-      "health": 1,
+      "health": 2,
       "durability": null,
       "class": "NIGHTVEIL",
       "rarity": "COMMON",
