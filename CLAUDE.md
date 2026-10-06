@@ -232,7 +232,8 @@ Find the test classes by grepping `tests/` for the type, then
 `dotnet test tests/<that project> --filter "FullyQualifiedName~<TestClass>"`. **A filter that
 matches nothing exits 0** (see the suite rule above), so read the count of tests it ran.
 `unity-compile.ps1` has no per-assembly switch; it is already the smallest compile check there is.
-With an Editor open, run the one static through `unity command menu` or `eval`, never `RunAll`.
+With an Editor open, run the one static through `unity command menu` or `eval`, never `RunAll`,
+which exits the Editor.
 
 **Widen only when you cannot bound the reach**, and then to the half that applies (`gates.ps1` for
 .NET, `unity-gate.ps1` for Unity): a change to game-state shape, the canonical serializer, the

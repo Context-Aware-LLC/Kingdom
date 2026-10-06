@@ -1,5 +1,8 @@
 ---
 name: verify
+# Written for Paperclip agents. Switched off for automatic use 2026-10-06 (Sam): it ran the whole
+# Unity gate after every script edit. Delete the next line to bring it back; /verify by hand still works.
+disable-model-invocation: true
 description: Run automatically after producing any change Unity will have to compile — before calling that work done. TRIGGER — whenever a change touches a .cs file under unity/Assets/Scripts/{Presentation,Editor,AI,Data,Session}, an Emberfall.Core.*/.Net.Client/.Net.Protocol file or any .asmdef/.asmref/.csproj under unity.  SKIP only when nothing Unity-consumed changed: docs, Emberfall.Net.Server/.Tools.* (cloud-only, net10.0), non-Unity tooling scripts, or art with no accompanying code. Check the cached result in .agent/unity-gate.json before paying for a fresh run — the verify stage drives a real Editor and the Editor is a single-writer resource, so re-running it when a good answer already exists for this commit just contends with whoever else might have it open.
 ---
 
