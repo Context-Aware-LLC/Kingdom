@@ -53,8 +53,12 @@ namespace Emberfall.Policy
             string device = "auto",
             string? pythonExecutable = null,
             string? repositoryRoot = null,
-            TimeSpan? requestTimeout = null)
+            TimeSpan? requestTimeout = null,
+            int? intraOpThreads = null)
         {
+            if (intraOpThreads is <= 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(intraOpThreads), "A scorer needs at least one inference thread.");
             if (string.IsNullOrWhiteSpace(rlExport))
                 throw new ArgumentException("RL export path must not be empty.", nameof(rlExport));
             if (string.IsNullOrWhiteSpace(checkpoint))
@@ -93,6 +97,14 @@ namespace Emberfall.Policy
             start.ArgumentList.Add(checkpointPath);
             start.ArgumentList.Add("--device");
             start.ArgumentList.Add(device);
+            if (intraOpThreads is int threads)
+            {
+                // Every scorer otherwise sizes its own thread pool to the whole machine, and a
+                // pool of them spends its time contending for the same cores.
+                start.ArgumentList.Add("--threads");
+                start.ArgumentList.Add(
+                    threads.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            }
 
             Process process = Process.Start(start)
                 ?? throw new InvalidOperationException("Failed to start the Python checkpoint scorer.");
