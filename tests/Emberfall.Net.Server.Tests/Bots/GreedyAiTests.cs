@@ -108,7 +108,10 @@ namespace Emberfall.Net.Server.Tests.Bots
             state.PendingChoice = null;
             var attacker = new CardInstance(state.NextInstanceId(), 1061, Me)
             {
-                Zone = Zone.Board, CurrentAttack = 3, CurrentHealth = 3, MaxHealth = 3,
+                Zone = Zone.Board,
+                CurrentAttack = 3,
+                CurrentHealth = 3,
+                MaxHealth = 3,
             };
             state.Players[0].Board.Add(attacker);
             EnemyMinion(state, attack: 2, health: 8);
@@ -129,7 +132,10 @@ namespace Emberfall.Net.Server.Tests.Bots
             state.PendingChoice = null;
             state.Players[0].Board.Add(new CardInstance(state.NextInstanceId(), 1061, Me)
             {
-                Zone = Zone.Board, CurrentAttack = 3, CurrentHealth = 3, MaxHealth = 3,
+                Zone = Zone.Board,
+                CurrentAttack = 3,
+                CurrentHealth = 3,
+                MaxHealth = 3,
             });
             state.Players[1].Hero.CurrentHealth = 3;
             EnemyMinion(state, attack: 4, health: 3);
@@ -153,7 +159,10 @@ namespace Emberfall.Net.Server.Tests.Bots
             state.Players[0].Hand.Add(new CardInstance(state.NextInstanceId(), 233, Me) { Zone = Zone.Hand });
             var mine = new CardInstance(state.NextInstanceId(), 1061, Me)
             {
-                Zone = Zone.Board, CurrentAttack = 3, CurrentHealth = 3, MaxHealth = 3,
+                Zone = Zone.Board,
+                CurrentAttack = 3,
+                CurrentHealth = 3,
+                MaxHealth = 3,
             };
             state.Players[0].Board.Add(mine);
             EnemyMinion(state, attack: 4, health: 5);
@@ -174,7 +183,10 @@ namespace Emberfall.Net.Server.Tests.Bots
             state.Players[0].Hand.Add(new CardInstance(state.NextInstanceId(), 233, Me) { Zone = Zone.Hand });
             state.Players[0].Board.Add(new CardInstance(state.NextInstanceId(), 1061, Me)
             {
-                Zone = Zone.Board, CurrentAttack = 3, CurrentHealth = 3, MaxHealth = 3,
+                Zone = Zone.Board,
+                CurrentAttack = 3,
+                CurrentHealth = 3,
+                MaxHealth = 3,
             });
             CardInstance killable = EnemyMinion(state, attack: 4, health: 2);
 

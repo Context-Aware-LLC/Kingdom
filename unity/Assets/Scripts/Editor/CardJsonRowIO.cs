@@ -212,7 +212,7 @@ namespace Emberfall.Editor
                 {
                     w.WriteStartObject("instead");
                     w.WriteNumber("amount", damage.InsteadAmount.Value);
-                    WriteCondition(w, damage.InsteadCondition);
+                    WriteCondition(w, damage.InsteadCondition!);
                     w.WriteEndObject();
                 }
                 Target(w, damage.Target);

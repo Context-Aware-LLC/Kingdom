@@ -220,7 +220,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             GameState s = State();
             for (int i = 0; i < 4; i++)
                 s.Players[0].Deck.Add(new CardInstance(s.NextInstanceId(), filler.Id, s.Players[0].Id)
-                    { Zone = Zone.Deck });
+                { Zone = Zone.Deck });
 
             Play(s, db, ToHand(s, 0, brazier), s.Players[1].Hero.Id);
             Assert.That(s.Players[0].Hand, Is.Empty, "the enemy hero is not yours: no card");
@@ -273,7 +273,7 @@ namespace Emberfall.Core.Tests.CardBehavior
             s.Players[1].HeroDamageTakenThisTurn = 4;
             // A card to draw, or the incoming turn's fatigue would put damage straight back.
             s.Players[1].Deck.Add(new CardInstance(s.NextInstanceId(), filler.Id, s.Players[1].Id)
-                { Zone = Zone.Deck });
+            { Zone = Zone.Deck });
 
             Press(s, db, s.Players[0].Hero.Id);
             Assert.That(s.Players[0].Hero.CurrentHealth, Is.EqualTo(30));
