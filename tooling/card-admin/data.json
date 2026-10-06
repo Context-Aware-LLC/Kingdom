@@ -5,7 +5,7 @@
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 297,
-  "corpusDigest": "65853f530f4b8be7",
+  "corpusDigest": "7449a11283fa8f9f",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -32,14 +32,14 @@
       "HERO_POWER": 8
     },
     "keywordFrequency": {
-      "BULWARK": 38,
+      "BULWARK": 36,
       "SKIRMISH": 18,
       "SHROUD": 15,
-      "OVERWHELM": 12,
+      "OVERWHELM": 14,
       "VANGUARD": 12,
-      "REKINDLE": 11,
       "AEGIS": 10,
       "VENOM": 10,
+      "REKINDLE": 9,
       "ARCANE_SURGE": 8,
       "DOUBLESTRIKE": 7,
       "FERVOR": 7,
@@ -51,8 +51,8 @@
       "ANY_ENEMY": 28,
       "ANY_MINION": 28,
       "ANY_ENEMY_MINION": 23,
-      "FRIENDLY_HERO": 17,
-      "ENEMY_HERO": 11,
+      "FRIENDLY_HERO": 18,
+      "ENEMY_HERO": 12,
       "ANY_CHARACTER": 4,
       "ANY_FRIENDLY": 3,
       "OTHER_FRIENDLY_MINIONS": 2,
@@ -61,7 +61,7 @@
       "SELF": 1
     },
     "actionFrequency": {
-      "DAMAGE_SINGLE": 32,
+      "DAMAGE_SINGLE": 33,
       "DAMAGE_AOE": 22,
       "REMOVAL": 12,
       "BOUNCE": 11,
@@ -71,8 +71,8 @@
     "costDistribution": {
       "0": 5,
       "1": 33,
-      "2": 76,
-      "3": 72,
+      "2": 77,
+      "3": 71,
       "4": 47,
       "5": 23,
       "6": 21,
@@ -103,23 +103,23 @@
       "0": 3,
       "1": 28,
       "2": 51,
-      "3": 43,
-      "4": 25,
-      "5": 24,
-      "6": 10,
-      "7": 7,
-      "8": 1,
+      "3": 42,
+      "4": 24,
+      "5": 25,
+      "6": 11,
+      "7": 6,
+      "8": 2,
       "10": 1
     },
     "healthDistribution": {
       "1": 20,
       "2": 42,
       "3": 31,
-      "4": 40,
+      "4": 41,
       "5": 25,
-      "6": 21,
-      "7": 9,
-      "8": 3,
+      "6": 20,
+      "7": 8,
+      "8": 4,
       "10": 1,
       "12": 1
     }
@@ -270,8 +270,8 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "REKINDLE": 5,
         "BULWARK": 3,
+        "REKINDLE": 3,
         "LIFEDRAIN": 2,
         "FROST": 1,
         "SHROUD": 1,
@@ -280,7 +280,7 @@
       },
       "selectorFrequency": {
         "ANY_FRIENDLY_MINION": 12,
-        "FRIENDLY_HERO": 4,
+        "FRIENDLY_HERO": 5,
         "ANY_MINION": 3,
         "ANY_ENEMY_MINION": 2,
         "ENEMY_HERO": 2,
@@ -478,8 +478,8 @@
         "HERO_POWER": 1
       },
       "keywordFrequency": {
-        "BULWARK": 10,
-        "OVERWHELM": 4,
+        "BULWARK": 8,
+        "OVERWHELM": 6,
         "AEGIS": 2,
         "REKINDLE": 1,
         "SKIRMISH": 1,
@@ -489,21 +489,21 @@
         "ANY_FRIENDLY_MINION": 13,
         "ANY_ENEMY_MINION": 3,
         "FRIENDLY_HERO": 3,
+        "ENEMY_HERO": 2,
         "ANY_ENEMY": 1,
         "ANY_FRIENDLY": 1,
-        "ANY_MINION": 1,
-        "ENEMY_HERO": 1
+        "ANY_MINION": 1
       },
       "actionFrequency": {
         "DAMAGE_AOE": 3,
-        "DAMAGE_SINGLE": 2,
+        "DAMAGE_SINGLE": 3,
         "REMOVAL": 1
       },
       "costDistribution": {
         "0": 1,
         "1": 3,
-        "2": 7,
-        "3": 6,
+        "2": 8,
+        "3": 5,
         "4": 6,
         "5": 2,
         "6": 4,
@@ -525,20 +525,21 @@
         "0": 2,
         "1": 2,
         "2": 4,
-        "3": 2,
-        "4": 3,
-        "5": 3,
-        "7": 2,
-        "8": 1
+        "3": 1,
+        "4": 2,
+        "5": 4,
+        "6": 1,
+        "7": 1,
+        "8": 2
       },
       "healthDistribution": {
         "2": 2,
         "3": 2,
-        "4": 3,
+        "4": 4,
         "5": 4,
-        "6": 4,
-        "7": 2,
-        "8": 1,
+        "6": 3,
+        "7": 1,
+        "8": 2,
         "12": 1
       }
     },
@@ -1698,9 +1699,7 @@
       "durability": null,
       "class": "GRAVEKEEP",
       "rarity": "COMMON",
-      "keywords": [
-        "REKINDLE"
-      ],
+      "keywords": [],
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
@@ -1869,7 +1868,9 @@
       "class": "GRAVEKEEP",
       "rarity": "COMMON",
       "keywords": [],
-      "selectors": [],
+      "selectors": [
+        "FRIENDLY_HERO"
+      ],
       "actionTags": [],
       "tribe": "BEAST",
       "setId": "EMBERFALL",
@@ -1887,9 +1888,7 @@
       "durability": null,
       "class": "GRAVEKEEP",
       "rarity": "RARE",
-      "keywords": [
-        "REKINDLE"
-      ],
+      "keywords": [],
       "selectors": [
         "ENEMY_HERO"
       ],
@@ -3400,10 +3399,12 @@
       "rarity": "RARE",
       "keywords": [],
       "selectors": [
-        "ANY_ENEMY_MINION"
+        "ANY_ENEMY_MINION",
+        "ENEMY_HERO"
       ],
       "actionTags": [
-        "DAMAGE_AOE"
+        "DAMAGE_AOE",
+        "DAMAGE_SINGLE"
       ],
       "tribe": null,
       "setId": "EMBERFALL",
@@ -3416,7 +3417,7 @@
       "name": "Granite Guardian",
       "type": "MINION",
       "cost": 4,
-      "attack": 4,
+      "attack": 5,
       "health": 5,
       "durability": null,
       "class": "STONEWARDEN",
@@ -3458,13 +3459,13 @@
       "name": "Living Monolith",
       "type": "MINION",
       "cost": 4,
-      "attack": 4,
-      "health": 6,
+      "attack": 6,
+      "health": 4,
       "durability": null,
       "class": "STONEWARDEN",
       "rarity": "RARE",
       "keywords": [
-        "BULWARK"
+        "OVERWHELM"
       ],
       "selectors": [],
       "actionTags": [],
@@ -3526,13 +3527,12 @@
       "name": "Stone Colossus",
       "type": "MINION",
       "cost": 8,
-      "attack": 7,
-      "health": 7,
+      "attack": 8,
+      "health": 8,
       "durability": null,
       "class": "STONEWARDEN",
       "rarity": "EPIC",
       "keywords": [
-        "BULWARK",
         "OVERWHELM"
       ],
       "selectors": [],
@@ -6300,7 +6300,7 @@
       "id": 218,
       "name": "Earthen Rampart",
       "type": "SPELL",
-      "cost": 3,
+      "cost": 2,
       "attack": null,
       "health": null,
       "durability": null,
@@ -6323,7 +6323,7 @@
       "name": "Boulder Sentinel",
       "type": "MINION",
       "cost": 3,
-      "attack": 3,
+      "attack": 4,
       "health": 4,
       "durability": null,
       "class": "STONEWARDEN",
@@ -6955,7 +6955,9 @@
       "durability": null,
       "class": "STONEWARDEN",
       "rarity": "COMMON",
-      "keywords": [],
+      "keywords": [
+        "OVERWHELM"
+      ],
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",

@@ -29,7 +29,10 @@ for path in sorted(glob.glob(os.path.join(SOURCE, "*.cards.json"))):
         patch = patches.get(row.get("id"))
         if patch is None:
             continue
+        fresh_text = "text" in patch and "text" not in row
         row.update(patch)
+        if fresh_text and "rules" in row:   # the repo's rows keep text ahead of rules
+            row["rules"] = row.pop("rules")
         indent = line[: len(line) - len(line.lstrip())]
         lines[index] = indent + json.dumps(row, ensure_ascii=False, separators=(",", ":")) + trailing
         applied.add(row["id"])

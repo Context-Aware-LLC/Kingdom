@@ -1,0 +1,33 @@
+{
+  "1185": {"keywords": ["OVERWHELM"], "text": "Overwhelm."},
+  "183": {
+    "text": "Give all friendly minions +2/+0.",
+    "rules": [{"id": "rule_1", "activation": {"type": "TRIGGERED", "trigger": "ON_CAST"}, "condition": {"type": "ALWAYS"}, "lifetime": {"type": "ONE_SHOT"}, "action": {"type": "MODIFY_STATS", "attack": 2, "health": 0, "target": {"selector": "ANY_FRIENDLY_MINION", "selection": "7"}}}]
+  },
+  "1168": {"attack": 4},
+  "218": {
+    "cost": 2,
+    "text": "Give a friendly minion +2/+1 and Bulwark.",
+    "rules": [
+      {"id": "rule_1", "activation": {"type": "TRIGGERED", "trigger": "ON_CAST"}, "condition": {"type": "ALWAYS"}, "lifetime": {"type": "ONE_SHOT"}, "action": {"type": "MODIFY_STATS", "attack": 2, "health": 1, "target": {"selector": "ANY_FRIENDLY_MINION", "selection": "1", "binding": "target"}}},
+      {"id": "rule_2", "activation": {"type": "TRIGGERED", "trigger": "ON_CAST"}, "condition": {"type": "ALWAYS"}, "lifetime": {"type": "ONE_SHOT"}, "action": {"type": "GRANT_KEYWORD", "keyword": "BULWARK", "target": {"selector": "ANY_FRIENDLY_MINION", "selection": "1", "binding": "target"}}}
+    ]
+  },
+  "1080": {"attack": 6, "health": 4, "keywords": ["OVERWHELM"], "text": "Overwhelm."},
+  "1079": {"attack": 5},
+  "182": {
+    "text": "Deal 3 damage to all enemy minions and deal 3 damage to the enemy hero.",
+    "rules": [
+      {"id": "rule_1", "activation": {"type": "TRIGGERED", "trigger": "ON_CAST"}, "condition": {"type": "ALWAYS"}, "lifetime": {"type": "ONE_SHOT"}, "action": {"type": "DAMAGE", "amount": 3, "target": {"selector": "ANY_ENEMY_MINION", "selection": "7"}}},
+      {"id": "rule_2", "activation": {"type": "TRIGGERED", "trigger": "ON_CAST"}, "condition": {"type": "ALWAYS"}, "lifetime": {"type": "ONE_SHOT"}, "action": {"type": "DAMAGE", "amount": 3, "target": {"selector": "ENEMY_HERO", "selection": "1"}}}
+    ]
+  },
+  "1082": {"attack": 8, "health": 8, "keywords": ["OVERWHELM"], "text": "Overwhelm."},
+  "1034": {"keywords": [], "text": "Deal 2 damage to the enemy hero."},
+  "1026": {"keywords": [], "text": "Toll: Summon a 2/1 Shade."},
+  "1033": {
+    "text": "Toll: Restore 2 Health to your hero.",
+    "rules": [{"id": "rule_1", "activation": {"type": "TRIGGERED", "trigger": "ON_DEATH"}, "condition": {"type": "ALWAYS"}, "lifetime": {"type": "SOURCE_BOUND"}, "action": {"type": "HEAL", "amount": 2, "target": {"selector": "FRIENDLY_HERO", "selection": "1"}}}]
+  },
+  "1145": {"text": "Bulwark.", "rules": []}
+}
