@@ -47,10 +47,10 @@ namespace Emberfall.Net.Server.Accounts
         /// "no answer" distinct from false, or a failed read reads as a new player and reproduces the
         /// bug the flag removes.</para></summary>
         bool Onboarded = false,
-        /// <summary>When this player last completed the login handshake (<c>GET /session</c>), by
-        /// the server's clock — see <c>IAccountStore.MarkSeenAsync</c>. <b>Null means never
-        /// recorded</b>, not "never played": every account that predates the column is null until
-        /// its next login, and a bot never logs in at all. It is not backfilled from
+        /// <summary>When this player's client last synced its collection (<c>GET /collection</c>,
+        /// which every launch does), by the server's clock — see <c>IAccountStore.MarkSeenAsync</c>.
+        /// <b>Null means never recorded</b>, not "never played": every account that predates the
+        /// column is null until its next launch, and a bot never syncs at all. It is not backfilled from
         /// <see cref="CreatedAt"/>, which would invent a login nobody made.</summary>
         DateTimeOffset? LastSeen = null);
 }

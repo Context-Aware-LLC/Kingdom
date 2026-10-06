@@ -56,9 +56,11 @@ namespace Emberfall.Net.Server.Accounts
         Task<Account?> MarkOnboardedAsync(string playerId, CancellationToken ct = default);
 
         /// <summary>
-        /// Stamps <see cref="Account.LastSeen"/> with the store's clock: this player just logged in.
-        /// Overwrites the previous stamp. Called by the login handshake and by nothing else, so the
-        /// value means "last login" and not "last request". Returns null if
+        /// Stamps <see cref="Account.LastSeen"/> with the store's clock: this player's client just
+        /// reached the server signed in. Overwrites the previous stamp. Called by
+        /// <c>GET /collection</c>, which every launch syncs, and by the login handshake, which no
+        /// client calls yet — so the value means "last collection sync", which is every boot plus
+        /// every visit to the collection screen. Returns null if
         /// <paramref name="playerId"/> names no account.
         /// </summary>
         Task<Account?> MarkSeenAsync(string playerId, CancellationToken ct = default);

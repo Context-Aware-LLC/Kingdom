@@ -158,6 +158,25 @@ namespace Emberfall.Net.Server.Accounts
                 .ResolveOrCreateAsync("supabase", subHash, verified.Identity.Email, ct)
                 .ConfigureAwait(false);
 
+            // Last-seen is stamped HERE because this is the one authenticated route every launch
+            // reaches: both the sign-in gate and a restored-session boot sync the collection before
+            // the menu shows. GET /session stamps too, but no client calls it, so on its own the
+            // column never moved. A failed stamp is logged and costs the player nothing.
+            //
+            // RETIREMENT TRIGGER: when the client blocks its boot on GET /session
+            // (login-handshake.md §2), delete this stamp and restore "called by the handshake and
+            // by nothing else" on IAccountStore.MarkSeenAsync — the value goes back to meaning
+            // "last login" rather than "last collection sync".
+            try
+            {
+                await accountStore.MarkSeenAsync(account.PlayerId, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                Console.Error.WriteLine("[collection] last-seen stamp failed for player_id={0}: {1}",
+                    account.PlayerId, ex.Message);
+            }
+
             if (onboarding is not null)
             {
                 try

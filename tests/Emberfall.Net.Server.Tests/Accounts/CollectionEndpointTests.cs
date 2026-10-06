@@ -205,6 +205,36 @@ namespace Emberfall.Net.Server.Tests.Accounts
         }
 
         [Test]
+        public async Task Reading_the_collection_stamps_last_seen()
+        {
+            // The only authenticated route every launch reaches. GET /session stamps as well, but no
+            // client calls it, so without this the column stays null for every player for ever.
+            var store = new InMemoryAccountStore(new FixedTime());
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, new InMemoryEntitlementLedger(),
+                economy: null, onboarding: null);
+
+            Account? account = await store.FindByPlayerIdAsync(result.PlayerId);
+            Assert.That(account!.LastSeen,
+                Is.EqualTo(DateTimeOffset.FromUnixTimeMilliseconds(new FixedTime().NowMs)));
+        }
+
+        [Test]
+        public async Task A_refused_token_stamps_nothing()
+        {
+            var store = new InMemoryAccountStore(new FixedTime());
+            Account a = await store.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+
+            await CollectionEndpoint.ReadAsync(
+                Token, Rejects(), store, new InMemoryEntitlementLedger(),
+                economy: null, onboarding: null);
+
+            Account? account = await store.FindByPlayerIdAsync(a.PlayerId);
+            Assert.That(account!.LastSeen, Is.Null);
+        }
+
+        [Test]
         public async Task A_superuser_is_unconstrained_and_no_card_list_is_served()
         {
             var store = new InMemoryAccountStore(new FixedTime());

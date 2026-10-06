@@ -66,8 +66,9 @@ namespace Emberfall.Net.Server.Accounts
     /// once. A grant failure must NOT fail the handshake — that would turn a database blip into a
     /// game that will not start.</para>
     ///
-    /// <para><b>It stamps <see cref="Account.LastSeen"/>.</b> The client's boot blocks on
-    /// this route, so the stamp means "last login".</para>
+    /// <para><b>It stamps <see cref="Account.LastSeen"/>, and today that stamp never lands:</b>
+    /// no client calls this route yet. The stamp that actually moves the column is the one in
+    /// <c>CollectionEndpoint</c>, which carries the retirement trigger.</para>
     /// </summary>
     public static class SessionEndpoint
     {
