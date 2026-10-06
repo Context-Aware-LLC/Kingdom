@@ -21,8 +21,8 @@ param(
     # Hub's default install location, which differs per platform (and the Linux binary has no
     # .exe). Override with -UnityPath for any non-Hub install. Note an Android build also needs
     # the Android module installed for that Editor, which a bare headless install will not have.
-    [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe' }
-                           else            { "$HOME/Unity/Hub/Editor/6000.5.1f1/Editor/Unity" }),
+    [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.6.4f1\Editor\Unity.exe' }
+                           else            { "$HOME/Unity/Hub/Editor/6000.6.4f1/Editor/Unity" }),
     [switch]$PerfCapture,
     [switch]$PlayRelease,
     [string]$Keystore = 'C:\Users\User\keystores\KingdomOfBadIdeas\kobi-upload.keystore',
@@ -78,7 +78,7 @@ if ($PerfCapture -and $BUILD_DIRTY) {
 }
 
 if (-not (Test-Path $UnityPath)) {
-    Write-Error "Unity not found at '$UnityPath'. Pass -UnityPath or install Unity 6000.5.1f1."
+    Write-Error "Unity not found at '$UnityPath'. Pass -UnityPath or install Unity 6000.6.4f1."
     exit 1
 }
 

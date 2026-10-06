@@ -14,8 +14,8 @@ param(
     # .exe). Override with -UnityPath for any non-Hub install. The version is pinned to match
     # unity/ProjectSettings/ProjectVersion.txt; a mismatched Editor compiles against
     # different assemblies and makes this gate report on something you do not ship.
-    [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.5.1f1\Editor\Unity.exe' }
-                           else            { "$HOME/Unity/Hub/Editor/6000.5.1f1/Editor/Unity" })
+    [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.6.4f1\Editor\Unity.exe' }
+                           else            { "$HOME/Unity/Hub/Editor/6000.6.4f1/Editor/Unity" })
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,7 +29,7 @@ $TIMESTAMP  = (Get-Date -Format 'yyyyMMdd-HHmmss')
 $LOG        = Join-Path ([System.IO.Path]::GetTempPath()) "unity-verify-$TIMESTAMP.log"
 
 if (-not (Test-Path $UnityPath)) {
-    Write-Error "Unity not found at '$UnityPath'. Pass -UnityPath or install Unity 6000.5.1f1."
+    Write-Error "Unity not found at '$UnityPath'. Pass -UnityPath or install Unity 6000.6.4f1."
     exit 1
 }
 
