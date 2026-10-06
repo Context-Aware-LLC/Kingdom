@@ -15,21 +15,6 @@ MonoBehaviour:
   m_GroupName: UI_Core
   m_GUID: 3d766df806eca424e9276c2b8a291061
   m_SerializeEntries:
-  - m_GUID: 5174636e69764c33ba46cfa2759c1f5f
-    m_Address: ui/effect_hero_power_blueprint
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b237916dc1c040e88d1160476f4e0a8e
-    m_Address: ui/effect_hero_cast_clockwright
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ad564e9d4c1441c48844708d545546ab
-    m_Address: ui/effect_hero_cast_verdant
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 05a051793cd086f41a4a802805d9c268
     m_Address: materials/M_ManaFill
     m_ReadOnly: 0
@@ -37,6 +22,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0806a3c244fb5124498abf38fc803019
     m_Address: ui/effect_shroud_smoke_right
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 096fa26c6e0b468388d2119737825469
+    m_Address: ui/effect_hero_cast_nightveil
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09f059975d024405a9a718da5e6e8e02
+    m_Address: ui/socket_attack_sword
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -70,6 +65,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1283afcf4b454be2864c28911ea9b9c6
+    m_Address: ui/effect_hero_power_nightveil
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 162cd4daedce445287cd8e1d8eabe60c
     m_Address: ui/tribe_plate
     m_ReadOnly: 0
@@ -82,6 +82,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 288a436c492d45f1b7e575702530ee2e
     m_Address: ui/ui_seal_crown
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 28d406093f30c9849bfb85d539169b4c
+    m_Address: ui/pointer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 31af944168434dcbaa853d8cc0c5eac5
+    m_Address: ui/effect_hero_cast_emberward
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -100,6 +110,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4ae7f23eca8547098df8435f1ddb607a
+    m_Address: ui/effect_hero_cast_gravekeep
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4de6ac9c8bfa16941bdc2f87450939e1
     m_Address: ui/gem_legendary
     m_ReadOnly: 0
@@ -107,6 +122,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4fc84507c69d415994886bbe45c51623
     m_Address: ui/frame_card
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5174636e69764c33ba46cfa2759c1f5f
+    m_Address: ui/effect_hero_power_blueprint
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -145,33 +165,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67322842c6cbd7a42aa523b041480088
+    m_Address: ui/rolled-complete
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6c773d4b799944d59e1a26634eb85528
     m_Address: ui/socket_attack
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 09f059975d024405a9a718da5e6e8e02
-    m_Address: ui/socket_attack_sword
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e11c277b09ac499bab18e08b6dbd1856
-    m_Address: ui/socket_weapon_power_sword
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d3c621d935824af88ef33d309c7c133c
-    m_Address: ui/socket_weapon_toughness_shield
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f2d807a80c064a2a97459c4c5c2595d5
-    m_Address: ui/socket_attack_fist
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9ec13429942d46a49fa74aa5d5541c50
-    m_Address: ui/socket_health_heart
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -182,6 +182,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6e0d23c5f7ab48bfa96410e8c4d19b14
     m_Address: ui/ui_button_secondary_slate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ef678e291f040d38a47433bbc87a1e9
+    m_Address: ui/effect_hero_cast_tempest
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -240,6 +245,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a7b922312a3b184297e117a03d6b5cd
+    m_Address: ui/paper
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8aa77043ae5d46e0a7542e0c12cc4df9
     m_Address: ui/neutral_hp
     m_ReadOnly: 0
@@ -270,13 +280,33 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9aea4805334f46989e1cc92a1966805b
+    m_Address: ui/effect_hero_power_tempest
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ec13429942d46a49fa74aa5d5541c50
+    m_Address: ui/socket_health_heart
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a2f7fde1a48d4f458f59e740e6e32d43
     m_Address: ui/turn-hourglass-royal-council
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a8102c8a7f624ef9a7052111af114d01
+    m_Address: ui/effect_hero_cast_stonewarden
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ab4e54501ebe4781ba0b3d37290aa542
     m_Address: materials/M_Frost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad564e9d4c1441c48844708d545546ab
+    m_Address: ui/effect_hero_cast_verdant
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -290,8 +320,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b237916dc1c040e88d1160476f4e0a8e
+    m_Address: ui/effect_hero_cast_clockwright
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9203d9b80634fa0b8163222b0225e12
+    m_Address: ui/effect_hero_cast_tidecaller
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c0175aaa14ee4e63ae426830d30f0708
     m_Address: ui/Loading_Wordmark_KingdomOfBadIdeas
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0314eac917450b1c9274333c1336f23
+    m_Address: ui/effect_summon_stonewarden
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -320,8 +365,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1425fbd028561c2da384444d2447034
+    m_Address: ui/effect_summon_tidecaller
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d252c8982ccae1f43bf65ea2d9c3de73
     m_Address: materials/M_CardBody
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d3c621d935824af88ef33d309c7c133c
+    m_Address: ui/socket_weapon_toughness_shield
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -335,67 +390,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dbd56dadf571ea3439b341b3d5fa1271
-    m_Address: ui/verdant_hp
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: df41997c499025949bfe17a12747f50b
-    m_Address: ui/night_hp
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9aea4805334f46989e1cc92a1966805b
-    m_Address: ui/effect_hero_power_tempest
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 31af944168434dcbaa853d8cc0c5eac5
-    m_Address: ui/effect_hero_cast_emberward
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4ae7f23eca8547098df8435f1ddb607a
-    m_Address: ui/effect_hero_cast_gravekeep
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-  - m_GUID: 1283afcf4b454be2864c28911ea9b9c6
-    m_Address: ui/effect_hero_power_nightveil
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 096fa26c6e0b468388d2119737825469
-    m_Address: ui/effect_hero_cast_nightveil
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a8102c8a7f624ef9a7052111af114d01
-    m_Address: ui/effect_hero_cast_stonewarden
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: b9203d9b80634fa0b8163222b0225e12
-    m_Address: ui/effect_hero_cast_tidecaller
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d998701999a244e58a9abf817306d392
     m_Address: ui/effect_hero_power_emberward
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6ef678e291f040d38a47433bbc87a1e9
-    m_Address: ui/effect_hero_cast_tempest
+  - m_GUID: dbd56dadf571ea3439b341b3d5fa1271
+    m_Address: ui/verdant_hp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c0314eac917450b1c9274333c1336f23
-    m_Address: ui/effect_summon_stonewarden
+  - m_GUID: dda770f5467e2d8438c66bd3f1911a2c
+    m_Address: ui/roller
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d1425fbd028561c2da384444d2447034
-    m_Address: ui/effect_summon_tidecaller
+  - m_GUID: df41997c499025949bfe17a12747f50b
+    m_Address: ui/night_hp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -406,6 +417,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e005acad0f5ea3844bfe7e42567e0f6c
     m_Address: ui/app_icon_1024
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e11c277b09ac499bab18e08b6dbd1856
+    m_Address: ui/socket_weapon_power_sword
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -431,6 +447,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f2a3c4906e7d4b83a1c25f7098d6e431
     m_Address: ui/icon_currency_gold
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2d807a80c064a2a97459c4c5c2595d5
+    m_Address: ui/socket_attack_fist
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
