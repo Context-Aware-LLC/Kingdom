@@ -106,6 +106,7 @@ namespace Emberfall.Presentation
             var maskGo = new GameObject("Mask");
             maskGo.transform.SetParent(_root.transform, false);
             maskGo.transform.localScale = new Vector3(width, height, 1f);
+            // Reached only from code, so Assets/link.xml is what keeps SpriteMask in a player.
             maskGo.AddComponent<SpriteMask>().sprite = _maskSprite;
 
             for (int i = 0; i < Rows; i++)

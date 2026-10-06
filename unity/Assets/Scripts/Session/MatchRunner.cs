@@ -209,11 +209,22 @@ namespace Emberfall.Session
                 // the beat the entry is held for is the beat the card is on screen for.
                 if (_playback.TryBeginHead(Time.timeAsDouble, out var begun))
                 {
-                    if (begun.Reveal.HasValue)
-                        OnPlayReveal?.Invoke(begun.Reveal.Value);
-                    if (begun.PowerBeat.HasValue)
-                        OnHeroPowerBeat?.Invoke(begun.PowerBeat.Value,
-                            (float)_playback.SecondsUntilHeadRelease(Time.timeAsDouble, commandDelaySeconds));
+                    // Both are cosmetic and neither may take the loop with it: an exception that
+                    // escapes here ends this coroutine, no snapshot is ever applied again, and the
+                    // board freezes on a match the server is still running (2026-10-05, a stripped
+                    // SpriteMask in the hero power cast).
+                    try
+                    {
+                        if (begun.Reveal.HasValue)
+                            OnPlayReveal?.Invoke(begun.Reveal.Value);
+                        if (begun.PowerBeat.HasValue)
+                            OnHeroPowerBeat?.Invoke(begun.PowerBeat.Value,
+                                (float)_playback.SecondsUntilHeadRelease(Time.timeAsDouble, commandDelaySeconds));
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogException(e);
+                    }
                 }
 
                 if (_playback.TryDequeue(Time.timeAsDouble, commandDelaySeconds, out var entry))

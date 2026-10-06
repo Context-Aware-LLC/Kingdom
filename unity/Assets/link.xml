@@ -1,0 +1,14 @@
+<linker>
+  <!--
+    Engine classes reached ONLY from code. "Strip Engine Code" keeps a native class when a scene
+    or asset in the build carries it; one that exists solely as an AddComponent<T>() call is
+    dropped, and the call then returns null on a device while working in the Editor. The log line
+    is: AddComponent asking for "SpriteMask" which is not a Unity engine type.
+
+    SpriteMask: PortraitCastEffect, the hero power cast. Stripped, its constructor threw inside
+    MatchRunner.PlaybackLoop and froze the board on the first hero power of a match (2026-10-05).
+  -->
+  <assembly fullname="UnityEngine.SpriteMaskModule">
+    <type fullname="UnityEngine.SpriteMask" preserve="all"/>
+  </assembly>
+</linker>
