@@ -15,6 +15,21 @@ MonoBehaviour:
   m_GroupName: UI_Core
   m_GUID: 3d766df806eca424e9276c2b8a291061
   m_SerializeEntries:
+  - m_GUID: 5174636e69764c33ba46cfa2759c1f5f
+    m_Address: ui/effect_hero_power_blueprint
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b237916dc1c040e88d1160476f4e0a8e
+    m_Address: ui/effect_hero_cast_clockwright
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad564e9d4c1441c48844708d545546ab
+    m_Address: ui/effect_hero_cast_verdant
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 05a051793cd086f41a4a802805d9c268
     m_Address: materials/M_ManaFill
     m_ReadOnly: 0
@@ -331,7 +346,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9aea4805334f46989e1cc92a1966805b
-    m_Address: ui/effect_chain_spark_arc
+    m_Address: ui/effect_hero_power_tempest
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -345,17 +360,42 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
   - m_GUID: 1283afcf4b454be2864c28911ea9b9c6
+    m_Address: ui/effect_hero_power_nightveil
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 096fa26c6e0b468388d2119737825469
     m_Address: ui/effect_hero_cast_nightveil
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a8102c8a7f624ef9a7052111af114d01
+    m_Address: ui/effect_hero_cast_stonewarden
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9203d9b80634fa0b8163222b0225e12
+    m_Address: ui/effect_hero_cast_tidecaller
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d998701999a244e58a9abf817306d392
-    m_Address: ui/effect_hero_power_searing_bolt
+    m_Address: ui/effect_hero_power_emberward
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6ef678e291f040d38a47433bbc87a1e9
     m_Address: ui/effect_hero_cast_tempest
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c0314eac917450b1c9274333c1336f23
+    m_Address: ui/effect_summon_stonewarden
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1425fbd028561c2da384444d2447034
+    m_Address: ui/effect_summon_tidecaller
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

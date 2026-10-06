@@ -21,6 +21,7 @@ namespace Emberfall.Presentation
     {
         private const float HoldSeconds = 0.10f;
         private const float FadeSeconds = 0.30f;
+        internal static float TotalSeconds(float wipeSeconds) => wipeSeconds + HoldSeconds + FadeSeconds;
         /// <summary>Horizontal slices the mask is cut into. The oval's edge is this smooth.</summary>
         private const int Rows = 24;
         /// <summary>The mask sprite is this many pixels square; its geometry is in those pixels.</summary>
@@ -38,10 +39,14 @@ namespace Emberfall.Presentation
         /// <c>HeroPowerBeatClassifier.TryLookFor</c> too, or nothing ever asks for it.</summary>
         private static string SpriteKeyFor(CardClass heroClass) => heroClass switch
         {
+            CardClass.VERDANT => "effect_hero_cast_verdant",
+            CardClass.CLOCKWRIGHT => "effect_hero_cast_clockwright",
             CardClass.EMBERWARD => "effect_hero_cast_emberward",
             CardClass.TEMPEST   => "effect_hero_cast_tempest",
             CardClass.GRAVEKEEP => "effect_hero_cast_gravekeep",
             CardClass.NIGHTVEIL => "effect_hero_cast_nightveil",
+            CardClass.STONEWARDEN => "effect_hero_cast_stonewarden",
+            CardClass.TIDECALLER => "effect_hero_cast_tidecaller",
             _                   => null,
         };
 
@@ -63,7 +68,7 @@ namespace Emberfall.Presentation
                                    float width, float height, int sortingOrder)
         {
             _topDown = heroClass == CardClass.NIGHTVEIL;
-            _opacity = _topDown ? 0.52f : 1f;
+            _opacity = _topDown ? 0.95f : 1f;
             _root = new GameObject("CastEffect");
             _root.transform.SetParent(plate, false);
             // A hair nearer the camera than the portrait, which is opaque and writes depth.
@@ -75,14 +80,15 @@ namespace Emberfall.Presentation
             SpriteMaterials.Set(_art, art);
             _art.sortingOrder = sortingOrder;
             _art.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
-            // Most casts span the portrait and sit on its bottom edge. Nightveil's compact shadow
-            // is centered so the top-down wipe reads as the shadow being cast into the ground.
+            // Nightveil's Shroud wreath fits the complete oval: smoke stays around the inside
+            // rim, with its transparent centre leaving the face visible during the downward wipe.
             Bounds native = art.bounds;
-            float scale = width * (_topDown ? 0.68f : 1f) / native.size.x;
-            artGo.transform.localScale = new Vector3(scale, scale, 1f);
+            float scale = width / native.size.x;
+            float scaleY = _topDown ? height / native.size.y : scale;
+            artGo.transform.localScale = new Vector3(scale, scaleY, 1f);
             artGo.transform.localPosition = new Vector3(
                 -native.center.x * scale,
-                _topDown ? -native.center.y * scale : -height * 0.5f - native.min.y * scale,
+                _topDown ? -native.center.y * scaleY : -height * 0.5f - native.min.y * scale,
                 0f);
 
             var tex = new Texture2D(MaskPixels, MaskPixels, TextureFormat.RGBA32, false)

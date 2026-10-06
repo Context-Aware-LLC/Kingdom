@@ -88,7 +88,11 @@ namespace Emberfall.Presentation
                                heroCastSeconds * BoltLeavesAtCast + heroPowerLeadSeconds,
                                heroCastSeconds * BoltLeavesAtCast + heroPowerLeadSeconds,
                                heroCastSeconds * BoltLeavesAtCast + heroPowerLeadSeconds,
-                               heroCastSeconds + heroPowerLeadSeconds + 0.28f);
+                               PortraitCastEffect.TotalSeconds(NightveilBackstabShadow.PortraitWipeSeconds)
+                                   + NightveilBackstabShadow.RiseSeconds,
+                               1.35f,
+                               PortraitCastEffect.TotalSeconds(heroCastSeconds)
+                                   + ClockwrightBlueprintEffect.GatherSeconds);
 
         /// <summary>The tunables MatchRunner needs to know about — how long each card type's
         /// reveal holds up the rest of the command. Read by NetworkedGameBootstrap when it builds the
@@ -138,7 +142,51 @@ namespace Emberfall.Presentation
             Transform caster = _board != null ? _board.ResolveCombatVisual(beat.Hero) : null;
             HeroPlateView plate = caster != null ? caster.GetComponent<HeroPlateView>() : null;
             if (plate != null)
-                plate.PlayCast(Mathf.Max(0f, strikeInSeconds - beat.HoldSeconds), heroCastSeconds);
+                plate.PlayCast(Mathf.Max(0f, strikeInSeconds - beat.HoldSeconds),
+                    beat.Delivery == HeroPowerDelivery.NightveilBackstabShadow
+                        ? NightveilBackstabShadow.PortraitWipeSeconds : heroCastSeconds);
+
+            if (beat.Delivery == HeroPowerDelivery.StonewardenSummon ||
+                beat.Delivery == HeroPowerDelivery.TidecallerSummon)
+            {
+#if UNITY_EDITOR
+                _uiSprites ??= new EditorUiSpriteProvider();
+#else
+                _uiSprites ??= new AddressableUiSpriteProvider();
+#endif
+                string key = beat.Delivery == HeroPowerDelivery.StonewardenSummon
+                    ? "effect_summon_stonewarden" : "effect_summon_tidecaller";
+                Sprite sheet = _uiSprites.Get(key);
+                if (sheet != null && beat.SummonSlot >= 0)
+                {
+                    boardAnchors.SetBoardCount(beat.SummonController, beat.SummonBoardCount);
+                    Transform slot = boardAnchors.AnchorFor(beat.SummonController, Zone.Board, beat.SummonSlot);
+                    if (slot != null)
+                        StartCoroutine(SummonHeroPowerEffect.Play(transform, sheet, slot,
+                            strikeInSeconds));
+                }
+                return;
+            }
+
+            if (beat.Delivery == HeroPowerDelivery.ClockwrightBlueprint)
+            {
+#if UNITY_EDITOR
+                _uiSprites ??= new EditorUiSpriteProvider();
+#else
+                _uiSprites ??= new AddressableUiSpriteProvider();
+#endif
+                Sprite blueprint = _uiSprites.Get(ClockwrightBlueprintEffect.SpriteKey);
+                foreach (PlayerState ps in _state.Players)
+                    if (ps.Hero != null && ps.Hero.Id == beat.Hero)
+                    {
+                        Transform deck = boardAnchors.AnchorFor(ps.Id, Zone.Deck, 0);
+                        if (blueprint != null && deck != null)
+                            StartCoroutine(ClockwrightBlueprintEffect.Play(transform, blueprint,
+                                deck, strikeInSeconds));
+                        break;
+                    }
+                return;
+            }
 
             if (beat.Delivery == HeroPowerDelivery.NightveilBackstabShadow)
             {
@@ -152,7 +200,7 @@ namespace Emberfall.Presentation
                     ? _board.ResolveCombatVisual(beat.Targets[0]) : null;
                 if (shadow != null && target != null)
                     StartCoroutine(NightveilBackstabShadow.Play(transform, shadow, target,
-                        strikeInSeconds, heroPowerLeadSeconds));
+                        strikeInSeconds));
                 return;
             }
 

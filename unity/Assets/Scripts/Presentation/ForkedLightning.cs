@@ -13,7 +13,7 @@ namespace Emberfall.Presentation
     /// <para><b>The type and <c>HeroPowerDelivery.ForkedLightning</c> kept the old name.</b>
     /// Nothing forks any more.</para>
     ///
-    /// <para><b>One sprite, stretched between two points.</b> <c>effect_chain_spark_arc.png</c> is
+    /// <para><b>One sprite, stretched between two points.</b> <c>effect_hero_power_tempest.png</c> is
     /// a whole arc with a flare at each end, so a hop is that sprite rotated and scaled until its
     /// flares sit on the hop's ends, big flare on whatever was struck. Only its LENGTH follows the
     /// distance: its thickness stops at <see cref="MaxThickness"/>, or a hop the length of the
@@ -25,7 +25,7 @@ namespace Emberfall.Presentation
     /// </summary>
     internal static class ForkedLightning
     {
-        public const string ArcSpriteKey = "effect_chain_spark_arc";
+        public const string ArcSpriteKey = "effect_hero_power_tempest";
 
         // Where the two flares sit in the sprite, as fractions of it (x from the left, y from the
         // bottom). Measured off the art — re-measure if the file is ever replaced.

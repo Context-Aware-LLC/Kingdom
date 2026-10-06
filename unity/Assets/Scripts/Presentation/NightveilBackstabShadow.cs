@@ -6,16 +6,19 @@ namespace Emberfall.Presentation
     /// <summary>Nightveil's shadow rises beside the enemy hero as Backstab lands.</summary>
     internal static class NightveilBackstabShadow
     {
-        public const string SpriteKey = "effect_hero_cast_nightveil";
-        private const int SortOrder = 82;
+        public const string SpriteKey = "effect_hero_power_nightveil";
+        public const float PortraitWipeSeconds = 0.55f;
+        public const float RiseSeconds = 0.55f;
+        // The shadow sits behind the hero's frame (8) and portrait (9).
+        private const int SortOrder = 7;
         private const float PortraitScale = 0.62f;
-        private const float FadeSeconds = 0.18f;
+        private const float Opacity = 0.72f;
+        private const float FadeSeconds = 1.0f;
 
         public static IEnumerator Play(Transform parent, Sprite sprite, Transform enemyHero,
-                                       float strikeInSeconds, float riseSeconds)
+                                       float strikeInSeconds)
         {
-            riseSeconds = Mathf.Max(0.08f, riseSeconds);
-            float wait = strikeInSeconds - riseSeconds;
+            float wait = strikeInSeconds - RiseSeconds;
             if (wait > 0f) yield return new WaitForSeconds(wait);
             if (parent == null || enemyHero == null || sprite == null) yield break;
 
@@ -32,42 +35,56 @@ namespace Emberfall.Presentation
             float width = sprite.bounds.size.x * scale;
             Vector3 floor = bounds.center;
             floor.y = bounds.min.y + 0.04f;
-            floor += right * (bounds.extents.x * 0.72f + width * 0.24f);
-            floor.z = enemyHero.position.z - 0.04f;
+            floor += right * (bounds.extents.x + width * 0.30f);
+            // Behind even the tilted portrait's far edge, in front of the board backdrop.
+            floor.z = bounds.max.z + 0.025f;
             Vector3 landed = floor + Vector3.up * (height * 0.5f);
-            Vector3 emerged = landed + Vector3.up * (height * 0.52f);
+            Vector3 below = landed - Vector3.up * (height * 0.58f);
+            Vector3 emerged = landed + Vector3.up * (height * 0.08f);
 
             var go = new GameObject("NightveilBackstabShadow");
             go.transform.SetParent(parent, true);
-            go.transform.position = landed;
+            go.transform.position = below;
             go.transform.localScale = Vector3.one * scale;
 
             var renderer = go.AddComponent<SpriteRenderer>();
             SpriteMaterials.Set(renderer, sprite);
             renderer.sortingOrder = SortOrder;
-            renderer.color = new Color(0.025f, 0.025f, 0.035f, 0.52f);
+            Color shadowColor = new Color(0.10f, 0.085f, 0.12f, 0f);
+            renderer.color = shadowColor;
 
-            float elapsed = 0f;
-            while (elapsed < riseSeconds)
+            try
             {
-                if (parent == null || go == null) yield break;
-                elapsed += Time.deltaTime;
-                float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / riseSeconds));
-                go.transform.position = Vector3.Lerp(landed, emerged, t);
-                yield return null;
-            }
+                float elapsed = 0f;
+                while (elapsed < RiseSeconds)
+                {
+                    if (parent == null || go == null) yield break;
+                    elapsed += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsed / RiseSeconds);
+                    go.transform.position = Vector3.Lerp(below, emerged, Mathf.SmoothStep(0f, 1f, t));
+                    shadowColor.a = Opacity * Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.4f));
+                    renderer.color = shadowColor;
+                    yield return null;
+                }
 
-            float fade = 0f;
-            Color shadowColor = renderer.color;
-            while (fade < FadeSeconds)
-            {
-                if (parent == null || go == null) yield break;
-                fade += Time.deltaTime;
-                shadowColor.a = 0.52f * (1f - Mathf.Clamp01(fade / FadeSeconds));
-                renderer.color = shadowColor;
-                yield return null;
+                // Damage lands at full visibility. The figure then continues to drift upward
+                // throughout a full second of fading, rather than vanishing on the strike.
+                float fade = 0f;
+                while (fade < FadeSeconds)
+                {
+                    if (parent == null || go == null) yield break;
+                    fade += Time.deltaTime;
+                    float t = Mathf.Clamp01(fade / FadeSeconds);
+                    go.transform.position = emerged + Vector3.up * (height * 0.18f * t);
+                    shadowColor.a = Opacity * (1f - Mathf.SmoothStep(0f, 1f, t));
+                    renderer.color = shadowColor;
+                    yield return null;
+                }
             }
-            if (go != null) Object.Destroy(go);
+            finally
+            {
+                if (go != null) Object.Destroy(go);
+            }
         }
     }
 }

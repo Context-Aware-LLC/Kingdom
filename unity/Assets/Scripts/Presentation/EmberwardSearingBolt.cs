@@ -7,7 +7,7 @@ namespace Emberfall.Presentation
     /// selected character. The bloom lands just before the damage is applied.</summary>
     internal static class EmberwardSearingBolt
     {
-        public const string SpriteKey = "effect_hero_power_searing_bolt";
+        public const string SpriteKey = "effect_hero_power_emberward";
         private const int SortOrder = 82;
         private const float DepthFraction = 0.06f;
         private const float TrailThickness = 0.72f;
