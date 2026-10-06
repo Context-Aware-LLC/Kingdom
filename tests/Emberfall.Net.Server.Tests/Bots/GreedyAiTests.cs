@@ -79,11 +79,9 @@ namespace Emberfall.Net.Server.Tests.Bots
             Assert.That(GreedyAi.Choose(state, Me, validator, db), Is.Null);
         }
 
-        /// <summary>The human-facing variant spends removal on the biggest threat, and the frozen
-        /// reference still takes the leftmost minion — the second half is what keeps the RL
-        /// league's yardstick from moving under it.</summary>
+        /// <summary>Removal goes at the biggest threat, not the leftmost minion.</summary>
         [Test]
-        public void HumanFacing_Removal_Takes_The_Biggest_Threat_And_The_Reference_Does_Not()
+        public void Removal_Takes_The_Biggest_Threat()
         {
             var db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             var validator = new CommandProcessor(db);
@@ -92,20 +90,17 @@ namespace Emberfall.Net.Server.Tests.Bots
             // 178 Death Mark: "Destroy a minion."
             var removal = new CardInstance(state.NextInstanceId(), 178, Me) { Zone = Zone.Hand };
             state.Players[0].Hand.Add(removal);
-            CardInstance small = EnemyMinion(state, attack: 1, health: 1);
+            EnemyMinion(state, attack: 1, health: 1);
             CardInstance big = EnemyMinion(state, attack: 6, health: 6);
 
-            var served = (PlayCardIntent)GreedyAi.Choose(state, Me, validator, db, humanFacing: true)!;
-            var reference = (PlayCardIntent)GreedyAi.Choose(state, Me, validator, db)!;
+            var play = (PlayCardIntent)GreedyAi.Choose(state, Me, validator, db)!;
 
-            Assert.That(served.Targets[0].Instance, Is.EqualTo(big.Id));
-            Assert.That(reference.Targets[0].Instance, Is.EqualTo(small.Id));
+            Assert.That(play.Targets[0].Instance, Is.EqualTo(big.Id));
         }
 
-        /// <summary>The human-facing variant trades into what the attacker kills before what it
-        /// only dents.</summary>
+        /// <summary>An attacker trades into what it kills before what it only dents.</summary>
         [Test]
-        public void HumanFacing_Attack_Prefers_A_Defender_It_Kills()
+        public void Attack_Prefers_A_Defender_It_Kills()
         {
             var db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             var validator = new CommandProcessor(db);
@@ -119,15 +114,14 @@ namespace Emberfall.Net.Server.Tests.Bots
             EnemyMinion(state, attack: 2, health: 8);
             CardInstance killable = EnemyMinion(state, attack: 4, health: 3);
 
-            var attack = (AttackIntent)GreedyAi.Choose(state, Me, validator, db, humanFacing: true)!;
+            var attack = (AttackIntent)GreedyAi.Choose(state, Me, validator, db)!;
 
             Assert.That(attack.Defender.Instance, Is.EqualTo(killable.Id));
         }
 
-        /// <summary>With lethal on the board the human-facing variant goes face instead of
-        /// trading.</summary>
+        /// <summary>With lethal on the board it goes face instead of trading.</summary>
         [Test]
-        public void HumanFacing_Takes_Lethal_Over_A_Trade()
+        public void Takes_Lethal_Over_A_Trade()
         {
             var db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             var validator = new CommandProcessor(db);
@@ -140,7 +134,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             state.Players[1].Hero.CurrentHealth = 3;
             EnemyMinion(state, attack: 4, health: 3);
 
-            var attack = (AttackIntent)GreedyAi.Choose(state, Me, validator, db, humanFacing: true)!;
+            var attack = (AttackIntent)GreedyAi.Choose(state, Me, validator, db)!;
 
             Assert.That(attack.Defender.Instance, Is.EqualTo(state.Players[1].Hero.Id));
         }

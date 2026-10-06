@@ -70,7 +70,7 @@ namespace Emberfall.Net.Server.Bots
         {
             _db = db;
             _policyFactory = policyFactory
-                ?? (_ => new GreedySeatPolicy(new CommandProcessor(_db), _db, humanFacing: true));
+                ?? (_ => new GreedySeatPolicy(new CommandProcessor(_db), _db));
         }
 
         public void MarkReady(ResolvedBotAccount account)
