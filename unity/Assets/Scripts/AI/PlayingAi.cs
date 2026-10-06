@@ -356,7 +356,8 @@ namespace Emberfall.AI
                 {
                     case DamageAction _:
                     case DestroyAction _:
-                    case FrostAction _:
+                    // The negated form thaws, which is a favour, not an attack.
+                    case FrostAction frost when !frost.Negate:
                     case SilenceAction _:
                     case ReturnToHandAction _:
                     case TransformAction _:

@@ -729,6 +729,13 @@ namespace Emberfall.Core.Cards
         public const string FrostVerb = "Freeze";
 
         /// <summary>
+        /// The verb the FROST action prints with its negate switch set — "Unfreeze a minion."
+        /// (Sam, 2026-10-06). Public for the same reason <see cref="FrostVerb"/> is: the parser
+        /// proposes the negated <c>FrostAction</c> by looking for this verb at the head of a clause.
+        /// </summary>
+        public const string ThawVerb = "Unfreeze";
+
+        /// <summary>
         /// Every word this generator prints as game vocabulary rather than as ordinary English:
         /// carrier keyword names, timing labels, and the two labels that belong to neither list.
         /// Presentation emphasises exactly these (Unity's CardTextStyling).
@@ -745,7 +752,7 @@ namespace Emberfall.Core.Cards
             // Without this line "Freeze a minion." would be the one effect verb on any card that
             // renders unemphasised, because every other one — Silence, Backdraft — happens to be
             // spelled exactly like the keyword it belongs to.
-            var words = new List<string> { AuraLabel, UnearthLabel, FrostVerb };
+            var words = new List<string> { AuraLabel, UnearthLabel, FrostVerb, ThawVerb };
 
             foreach (Keyword keyword in (Keyword[])Enum.GetValues(typeof(Keyword)))
                 words.Add(Name(keyword));
@@ -1048,7 +1055,7 @@ namespace Emberfall.Core.Cards
                 TransformAction a => $"Transform {Target(a.Target, sourcePronoun)} into {NamedCard(a.CardId, pool)}.",
                 // NOT named through the keyword — see FrostVerb. This was `Name(Keyword.FROST)` until
                 // 2026-08-25, which is what made the action and the carrier print the same word.
-                FrostAction a => $"{FrostVerb} {Target(a.Target, sourcePronoun)}.",
+                FrostAction a => $"{(a.Negate ? ThawVerb : FrostVerb)} {Target(a.Target, sourcePronoun)}.",
                 DrownAction a => $"{Name(Keyword.DROWN)} {Target(a.Target, sourcePronoun)}.",
                 CopyAction a => $"Summon an exact copy of {Target(a.Target, sourcePronoun)}.",
                 TakeControlAction a => $"Take control of {Target(a.Target, sourcePronoun)}.",

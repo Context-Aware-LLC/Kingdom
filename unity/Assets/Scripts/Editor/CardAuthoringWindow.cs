@@ -922,6 +922,8 @@ namespace Emberfall.Editor
 
             if (rule.ActionKind == EditableRuleActionKind.GrantKeyword)
                 rule.Keyword = DrawCarrierKeywordPopup("action.keyword", rule.Keyword);
+            if (rule.ActionKind == EditableRuleActionKind.Frost)
+                rule.Negate = EditorGUILayout.Toggle("action.negate (Unfreeze)", rule.Negate);
             if (rule.ActionKind == EditableRuleActionKind.GainMana)
                 rule.ManaKind = (ManaGainKind)EditorGUILayout.EnumPopup("action.manaKind", rule.ManaKind);
             if (rule.IsTargeted) DrawTarget(rule.Target);

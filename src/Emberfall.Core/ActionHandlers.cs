@@ -587,15 +587,27 @@ namespace Emberfall.Core
     {
         public void Execute(in EffectContext ctx)
         {
+            bool thaw = ((FrostAction)ctx.Rule.Action).Negate;
             foreach (var t in ctx.Targets)
             {
+                IEffectHost? host = t.Host;
+                if (host == null) continue;
+
+                if (thaw)
+                {
+                    // The inverse: drop every Frost instance the target carries, whatever applied it
+                    // and however many turns it still owed. No event — nothing in the closed
+                    // GameEventKind vocabulary means "thawed", and the client reads the frost overlay
+                    // off the snapshot (CardLiveState.IsFrosted), so the state change is what it sees.
+                    EffectList.Remove(host.Effects, EffectKind.Frost);
+                    continue;
+                }
+
                 // One turn-scoped instance. It is aged at the START of the frozen character's own turn
                 // and expires at the END of a turn it entered already aged, so a unit frozen on its own
                 // turn (warden's ON_DEATH) still owes a full turn — NOR-367 without the second flag.
                 var frost = new EffectInstance(EffectKind.Frost, ctx.Source.Identity,
                     EffectScope.ControllerTurns, turnsRemaining: 1);
-                IEffectHost? host = t.Host;
-                if (host == null) continue;
                 EffectList.Apply(host.Effects, frost);
                 ctx.Events.Emit(GameEventKind.FrostApplied, source: ctx.Source.Identity, target: t.Id);
             }

@@ -252,9 +252,18 @@ namespace Emberfall.Core.Cards
             => CardId = Require(cardId);
     }
 
+    /// <summary>
+    /// Freezes the target, or with <see cref="Negate"/> set, thaws it (Sam, 2026-10-06). The negate
+    /// switch lives HERE and not on <see cref="GrantKeywordAction"/> because a frozen character is not
+    /// carrying the <c>FROST</c> keyword — it is carrying an <c>EffectKind.Frost</c> instance left by
+    /// this action or by the Frost damage rider. The keyword means "freezes what it damages"; removing
+    /// it would strip that carrier behaviour and thaw nobody.
+    /// </summary>
     public sealed class FrostAction : TargetedRuleAction
     {
-        public FrostAction(TargetSpec target) : base(target) { }
+        /// <summary>True for the inverse: clear the target's Frost instead of applying it.</summary>
+        public bool Negate { get; }
+        public FrostAction(TargetSpec target, bool negate = false) : base(target) => Negate = negate;
     }
 
     /// <summary>

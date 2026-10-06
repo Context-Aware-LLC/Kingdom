@@ -212,7 +212,14 @@ namespace Emberfall.Editor
             else if (action is ReanimateAction reanimate) { Type(w, "REANIMATE"); Target(w, reanimate.Target); }
             else if (action is SilenceAction silence) { Type(w, "SILENCE"); Target(w, silence.Target); }
             else if (action is TransformAction transform) { Type(w, "TRANSFORM"); w.WriteNumber("cardId", transform.CardId); Target(w, transform.Target); }
-            else if (action is FrostAction frost) { Type(w, "FROST"); Target(w, frost.Target); }
+            else if (action is FrostAction frost)
+            {
+                Type(w, "FROST");
+                // Written only when set, like the filter negate bits: absent is the Freeze every
+                // shipped row already means, and CardJson reads it as an optional boolean.
+                if (frost.Negate) w.WriteBoolean("negate", true);
+                Target(w, frost.Target);
+            }
             else if (action is DrownAction drown) { Type(w, "DROWN"); Target(w, drown.Target); }
             else if (action is CopyAction copy) { Type(w, "COPY"); Target(w, copy.Target); }
             else if (action is TakeControlAction takeControl) { Type(w, "TAKE_CONTROL"); Target(w, takeControl.Target); }

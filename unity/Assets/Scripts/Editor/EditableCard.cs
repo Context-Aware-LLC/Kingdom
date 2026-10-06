@@ -290,6 +290,8 @@ namespace Emberfall.Editor
         public int CardId;
         public Keyword Keyword;
         public ManaGainKind ManaKind = ManaGainKind.TEMPORARY;
+        /// <summary>FROST only: the negate switch that turns Freeze into Unfreeze.</summary>
+        public bool Negate;
         public EditableTarget Target = new EditableTarget();
 
         public bool IsTargeted => ActionKind == EditableRuleActionKind.Damage
@@ -418,7 +420,7 @@ namespace Emberfall.Editor
                 case EditableRuleActionKind.Reanimate: return new ReanimateAction(target);
                 case EditableRuleActionKind.Silence: return new SilenceAction(target);
                 case EditableRuleActionKind.Transform: return new TransformAction(CardId, target);
-                case EditableRuleActionKind.Frost: return new FrostAction(target);
+                case EditableRuleActionKind.Frost: return new FrostAction(target, Negate);
                 case EditableRuleActionKind.Drown: return new DrownAction(target);
                 case EditableRuleActionKind.Copy: return new CopyAction(target);
                 case EditableRuleActionKind.TakeControl: return new TakeControlAction(target);
@@ -448,7 +450,7 @@ namespace Emberfall.Editor
             else if (action is ReanimateAction reanimate) { ActionKind = EditableRuleActionKind.Reanimate; ReadTarget(reanimate); }
             else if (action is SilenceAction silence) { ActionKind = EditableRuleActionKind.Silence; ReadTarget(silence); }
             else if (action is TransformAction transform) { ActionKind = EditableRuleActionKind.Transform; CardId = transform.CardId; ReadTarget(transform); }
-            else if (action is FrostAction frost) { ActionKind = EditableRuleActionKind.Frost; ReadTarget(frost); }
+            else if (action is FrostAction frost) { ActionKind = EditableRuleActionKind.Frost; Negate = frost.Negate; ReadTarget(frost); }
             else if (action is DrownAction drownAction) { ActionKind = EditableRuleActionKind.Drown; ReadTarget(drownAction); }
             else if (action is CopyAction copyAction) { ActionKind = EditableRuleActionKind.Copy; ReadTarget(copyAction); }
             else if (action is TakeControlAction takeControl) { ActionKind = EditableRuleActionKind.TakeControl; ReadTarget(takeControl); }

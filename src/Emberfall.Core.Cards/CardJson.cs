@@ -234,8 +234,9 @@ namespace Emberfall.Core.Cards
                     return new TransformAction(RequiredCardId(element, "rule.action.cardId"),
                         TargetFromElement(element));
                 case "FROST":
-                    Fields(element, type, "target");
-                    return new FrostAction(TargetFromElement(element));
+                    Fields(element, type, "target", "negate");
+                    return new FrostAction(TargetFromElement(element),
+                        negate: OptionalBool(element, "negate", "rule.action.negate"));
                 case "DROWN":
                     Fields(element, type, "target");
                     return new DrownAction(TargetFromElement(element));

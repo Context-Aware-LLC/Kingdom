@@ -605,6 +605,7 @@ namespace Emberfall.Core.Cards
             yield return new TakeControlAction(target);
             yield return new TriggerTollAction(target);
             yield return new FrostAction(target);
+            yield return new FrostAction(target, negate: true);
             yield return new SilenceAction(target);
             yield return new DrownAction(target);
             yield return new CopyAction(target);
@@ -674,6 +675,7 @@ namespace Emberfall.Core.Cards
             bool Verb(string head) => clause.StartsWith(head, StringComparison.Ordinal);
 
             string frost = CardTextGenerator.FrostVerb + " ";
+            string thaw = CardTextGenerator.ThawVerb + " ";
             string silence = CardTextGenerator.DescribeKeyword(Keyword.SILENCE) + " ";
             string backdraft = CardTextGenerator.DescribeKeyword(Keyword.BACKDRAFT) + " ";
             string drown = CardTextGenerator.DescribeKeyword(Keyword.DROWN) + " ";
@@ -715,6 +717,7 @@ namespace Emberfall.Core.Cards
                 if (Verb("Take control of ")) yield return new TakeControlAction(spec);
                 if (Verb("Trigger ")) yield return new TriggerTollAction(spec);
                 if (Verb(frost)) yield return new FrostAction(spec);
+                if (Verb(thaw)) yield return new FrostAction(spec, negate: true);
                 if (Verb(silence)) yield return new SilenceAction(spec);
                 if (Verb(drown)) yield return new DrownAction(spec);
                 if (Verb("Summon an exact copy of ")) yield return new CopyAction(spec);

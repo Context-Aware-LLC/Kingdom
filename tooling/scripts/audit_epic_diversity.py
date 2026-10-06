@@ -81,7 +81,11 @@ def shape(card):
     tags = []
     for rule in card["rules"]:
         action = rule["action"]
-        names = SHAPES.get(action["type"])
+        # FROST with the negate switch thaws rather than freezes; it is a different shape.
+        if action["type"] == "FROST" and action.get("negate"):
+            names = ("unfreeze", "board-unfreeze")
+        else:
+            names = SHAPES.get(action["type"])
         tag = names[1 if is_board(action) else 0] if names else action["type"].lower()
         if tag not in tags:
             tags.append(tag)
