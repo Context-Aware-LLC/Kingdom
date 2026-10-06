@@ -374,5 +374,84 @@ namespace Emberfall.Core.Tests.HeroPower
 
             Assert.That(s.Players[0].HeroPowerUsedThisTurn, Is.False);
         }
+
+        // ── a second rule over an automatic, filtered set ─────────────────────────
+
+        // "Deal 2 damage to the enemy hero and give all friendly Shroud minions +1/+0." A hero
+        // power is REFUSED when a player-chosen target has no candidate (Targeting.CanFizzle is
+        // MINION/WEAPON only, and that refusal is what killed Shadow Mark). An automatic set is
+        // the other case: empty is a legal answer and the first rule still fires.
+        private static CardDefinition BackstabWithShroudBuff()
+            => HeroPower(FixtureCard.Id("hp_searing_bolt"), CardClass.EMBERWARD, new[]
+            {
+                TestRules.Rule("rule_1", Trigger.ON_CAST,
+                    new DamageAction(2, new TargetSpec("ENEMY_HERO", TargetSelection.Of(1)))),
+                TestRules.Rule("rule_2", Trigger.ON_CAST,
+                    new ModifyStatsAction(1, 0, new TargetSpec("ANY_FRIENDLY_MINION",
+                        TargetSelection.AllOf("ANY_FRIENDLY_MINION"),
+                        filter: new TargetFilterDef(keyword: Keyword.SHROUD)))),
+            });
+
+        [Test]
+        public void AutomaticSetRule_IsNotRefused_WhenTheSetIsEmpty()
+        {
+            var db = new FakeCardDatabase();
+            db.Register(BackstabWithShroudBuff());
+            var s = MainPhase(db);
+            var proc = new CommandProcessor(db);
+
+            var r = proc.Execute(s, UseHeroPower(s));
+
+            Assert.That(r.Accepted, Is.True, r.Reason.ToString());
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(28));
+        }
+
+        [Test]
+        public void AutomaticSetRule_BuffsOnlyFriendlyShroudMinions_AndStacksPerPress()
+        {
+            var db = new FakeCardDatabase();
+            db.Register(BackstabWithShroudBuff());
+            var lurker = Minion(FixtureCard.Id("lurker"), 2, 1, new[] { Keyword.SHROUD });
+            var plain = Minion(FixtureCard.Id("plain"), 2, 3);
+            db.Register(lurker);
+            db.Register(plain);
+            var s = MainPhase(db);
+            var mine = Board(s, 0, lurker);
+            var mineUnshrouded = Board(s, 0, plain);
+            var theirs = Board(s, 1, lurker);
+            var proc = new CommandProcessor(db);
+
+            Assert.That(proc.Execute(s, UseHeroPower(s)).Accepted, Is.True);
+            Assert.That(mine.CurrentAttack, Is.EqualTo(3));
+            Assert.That(mine.CurrentHealth, Is.EqualTo(1));
+            Assert.That(mineUnshrouded.CurrentAttack, Is.EqualTo(2));
+            Assert.That(theirs.CurrentAttack, Is.EqualTo(2));
+
+            s.Players[0].HeroPowerUsedThisTurn = false;   // the next turn's press
+            Assert.That(proc.Execute(s, UseHeroPower(s)).Accepted, Is.True);
+            Assert.That(mine.CurrentAttack, Is.EqualTo(4));
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(26));
+        }
+
+        [Test]
+        public void AutomaticSetRule_BuffOutlivesTheShroud()
+        {
+            var db = new FakeCardDatabase();
+            db.Register(BackstabWithShroudBuff());
+            var lurker = Minion(FixtureCard.Id("lurker"), 2, 1, new[] { Keyword.SHROUD });
+            db.Register(lurker);
+            var s = MainPhase(db);
+            var mine = Board(s, 0, lurker);
+            var proc = new CommandProcessor(db);
+            proc.Execute(s, UseHeroPower(s));
+
+            var r = proc.Execute(s, new AttackIntent(s.ActivePlayer, mine.Id,
+                new TargetRef(s.Players[1].Hero.Id)));
+
+            Assert.That(r.Accepted, Is.True, r.Reason.ToString());
+            Assert.That(mine.Keywords, Does.Not.Contain(Keyword.SHROUD));
+            Assert.That(mine.CurrentAttack, Is.EqualTo(3));
+            Assert.That(s.Players[1].Hero.CurrentHealth, Is.EqualTo(30 - 2 - 3));
+        }
     }
 }

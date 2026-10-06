@@ -38,6 +38,7 @@
 				"displayName": "Supabase",
 				"expiresOn": 0
 			}
-		]
+		],
+		"markdown.validate.enabled": true
 	}
 }

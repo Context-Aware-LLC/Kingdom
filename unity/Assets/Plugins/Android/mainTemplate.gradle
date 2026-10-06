@@ -1,7 +1,6 @@
 apply plugin: 'com.android.library'
 apply from: '../shared/keepUnitySymbols.gradle'
 apply from: '../shared/common.gradle'
-**APPLY_PLUGINS**
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -9,26 +8,13 @@ dependencies {
     implementation 'com.google.android.gms:play-services-games-v2:22.1.0' // Assets/GooglePlayGames/com.google.play.games/Editor/GooglePlayGamesPluginDependencies.xml:9
     implementation 'com.google.android.gms:play-services-nearby:18.5.0' // Assets/GooglePlayGames/com.google.play.games/Editor/GooglePlayGamesPluginDependencies.xml:14
 // Android Resolver Dependencies End
-**DEPS**}
-
-// Android Resolver Exclusions Start
-android {
-  packaging {
-      exclude ('/lib/armeabi/*' + '*')
-      exclude ('/lib/armeabi-v7a/*' + '*')
-      exclude ('/lib/mips/*' + '*')
-      exclude ('/lib/mips64/*' + '*')
-      exclude ('/lib/x86/*' + '*')
-      exclude ('/lib/x86_64/*' + '*')
-  }
 }
-// Android Resolver Exclusions End
+
 android {
     namespace "com.unity3d.player"
     ndkPath "**NDKPATH**"
     ndkVersion "**NDKVERSION**"
     compileSdk **APIVERSION**
-    buildToolsVersion "**BUILDTOOLS**"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -38,12 +24,7 @@ android {
     defaultConfig {
         minSdk **MINSDK**
         targetSdk **TARGETSDK**
-        ndk {
-            abiFilters **ABIFILTERS**
-            debugSymbolLevel **DEBUGSYMBOLLEVEL**
-        }
-        consumerProguardFiles 'proguard-unity.txt'**USER_PROGUARD**
-**DEFAULT_CONFIG_SETUP**
+        consumerProguardFiles('proguard-unity.txt')
     }
 
     lint {
@@ -51,10 +32,20 @@ android {
     }
 
     androidResources {
-        noCompress = **BUILTIN_NOCOMPRESS** + unityStreamingAssets.tokenize(', ')
+        noCompress = unityStreamingAssets.tokenize(', ')
         ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~"
-    }**PACKAGING**
+    }
+    // Android Resolver Exclusions Start
+    packagingOptions {
+        exclude ('/lib/armeabi/*' + '*')
+        exclude ('/lib/armeabi-v7a/*' + '*')
+        exclude ('/lib/mips/*' + '*')
+        exclude ('/lib/mips64/*' + '*')
+        exclude ('/lib/x86/*' + '*')
+        exclude ('/lib/x86_64/*' + '*')
+    }
+    // Android Resolver Exclusions End
 }
-**IL_CPP_BUILD_SETUP**
-**SOURCE_BUILD_SETUP**
-**EXTERNAL_SOURCES**
+// **IL_CPP_BUILD_SETUP**
+// **SOURCE_BUILD_SETUP**
+// **EXTERNAL_SOURCES**

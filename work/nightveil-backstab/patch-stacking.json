@@ -1,0 +1,24 @@
+{
+  "6": {
+    "text": "Deal 2 damage to the enemy hero and give all friendly Shroud minions +1/+0.",
+    "rules": [
+      {
+        "id": "rule_1",
+        "activation": {"type": "TRIGGERED", "trigger": "ON_CAST"},
+        "condition": {"type": "ALWAYS"},
+        "lifetime": {"type": "ONE_SHOT"},
+        "action": {"type": "DAMAGE", "amount": 2, "target": {"selector": "ENEMY_HERO", "selection": "1"}}
+      },
+      {
+        "id": "rule_2",
+        "activation": {"type": "TRIGGERED", "trigger": "ON_CAST"},
+        "condition": {"type": "ALWAYS"},
+        "lifetime": {"type": "ONE_SHOT"},
+        "action": {
+          "type": "MODIFY_STATS", "attack": 1, "health": 0,
+          "target": {"selector": "ANY_FRIENDLY_MINION", "selection": "7", "filter": {"keyword": "SHROUD"}}
+        }
+      }
+    ]
+  }
+}
