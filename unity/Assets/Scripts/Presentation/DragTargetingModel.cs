@@ -289,12 +289,20 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>The set the board should glow while this gesture is armed. Null = no aim needed
-        /// (a plain minion going to a slot, an untargeted hero power) and no banner.</summary>
+        /// (a plain minion going to a slot, an untargeted hero power) and no banner.
+        ///
+        /// <para>A targeted MINION glows nothing while it is carried (Sam, 2026-10-05). Its drop
+        /// only picks the slot, so targets lit during the carry read as "drop it on one of
+        /// these". They light once the placement is banked, through
+        /// <see cref="AwaitingTargets"/>.</para></summary>
         public HashSet<InstanceId> TargetsFor(DragSource source)
         {
             switch (source.Kind)
             {
-                case DragSourceKind.HandCard: return source.NeedsTarget ? SpellTargets(source.Id) : null;
+                case DragSourceKind.HandCard:
+                    return source.NeedsTarget && !HandCardOccupiesBoardSlot(source.Id)
+                        ? SpellTargets(source.Id)
+                        : null;
                 case DragSourceKind.Attacker: return AttackTargets(source.Id);
                 case DragSourceKind.HeroPower: return source.NeedsTarget ? HeroPowerTargets() : null;
                 default: return null;

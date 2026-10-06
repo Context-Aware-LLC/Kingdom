@@ -1009,8 +1009,10 @@ namespace Emberfall.Editor
             s.Players[0].Board.Add(Minion(P0, 13));
             DragSource armed = m.BeginSource(PointerSubject.OfCard(new InstanceId(20), P0, Zone.Hand));
             Check("the same herald owes a target once one exists", armed.NeedsTarget);
-            Check("...and glows exactly that minion",
-                m.TargetsFor(armed) is HashSet<InstanceId> set && set.Count == 1
+            Check("...but glows nothing while it is carried", m.TargetsFor(armed) == null);
+            m.Resolve(armed, PointerSubject.None, DropPoint.Board(-1.35f));
+            Check("...and glows exactly that minion once it is placed",
+                m.AwaitingTargets() is HashSet<InstanceId> set && set.Count == 1
                     && set.Contains(new InstanceId(13)));
         }
 
