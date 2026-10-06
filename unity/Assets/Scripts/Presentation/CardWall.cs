@@ -176,7 +176,7 @@ namespace Emberfall.Presentation
                     if (def != null) _pool.Add(def);
 
             RestartPoolBake();
-            // A pool replacement changes row identity and frequently row count (Owned/All and
+            // A pool replacement changes row identity and frequently row count (Owned/Unowned and
             // entering/leaving deck editing). RefreshItems only rebinds elements Unity currently
             // realizes, so rows from the wider pool can survive on screen after the source shrinks.
             // Rebuild clears that virtualization state. Pool changes are infrequent; text/facet/sort

@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The Owned / All scope control (#146).
+    /// The Owned / Unowned scope control (#146).
     ///
     /// <para><b>Not a fourth filter chip.</b> The pairing chips and the query bar both narrow a pool;
     /// this decides which pool exists. That is why it is not a chip on <see cref="CardQueryBar"/> —
@@ -19,10 +19,15 @@ namespace Emberfall.Presentation
     /// record scoped to it, and a record showing everything anyway. This control is the visible
     /// source of truth for the second and third; it does not exist in the first.</para>
     ///
+    /// <para><b>Two independent chips, never both off</b> (Sam, 2026-10-05). Owned alone is your
+    /// collection, Unowned alone is what you are shopping for, and both together is the game —
+    /// what the single All chip used to say. Pressing the only lit chip does nothing, because a
+    /// wall with neither half has no meaning.</para>
+    ///
     /// <para><b>Per visit, and deliberately not static.</b> A remembered scope is exactly the shape of
     /// the PendingDeckId failure the screen already guards: a browse visit that silently shows the
-    /// game because of a choice made on a previous one. You arrive at your collection; All is a thing
-    /// you ask for.</para>
+    /// game because of a choice made on a previous one. You arrive at your collection; Unowned is a
+    /// thing you ask for.</para>
     /// </summary>
     public sealed class CollectionScopeToggle
     {
@@ -30,21 +35,26 @@ namespace Emberfall.Presentation
         public event Action Changed;
 
         private VisualElement _row;
-        private Button _ownedButton, _allButton;
+        private Button _ownedButton, _unownedButton;
         private bool _hasRecord;
 
-        /// <summary>True when the player has asked to see only what they own. Meaningless without an
-        /// ownership record — read <see cref="OwnedOnly"/>, which is the predicate everything else
-        /// uses, so the pool and the controls can never disagree about what is being shown.</summary>
-        private bool _ownedScope = true;
+        /// <summary>Which halves the player has asked to see. Meaningless without an ownership
+        /// record — read <see cref="Includes"/>, which is the predicate everything else uses, so
+        /// the pool and the controls can never disagree about what is being shown.</summary>
+        private bool _showOwned = true, _showUnowned;
 
-        public bool OwnedOnly => _hasRecord && _ownedScope;
+        public bool OwnedOnly => _hasRecord && _showOwned && !_showUnowned;
+        public bool UnownedOnly => _hasRecord && _showUnowned && !_showOwned;
+
+        /// <summary>Whether a card belongs in the pool, given whether the account owns a copy.
+        /// Everything is included when there is no record to scope by.</summary>
+        public bool Includes(bool owned) => !_hasRecord || (owned ? _showOwned : _showUnowned);
 
         /// <summary>
         /// Declare whether this account has an ownership record at all.
         ///
         /// <para><b>Call this the moment ownership is loaded, BEFORE the first pool build — not from
-        /// <see cref="Bind"/>.</b> <see cref="OwnedOnly"/> is what the pool asks, and the pool is
+        /// <see cref="Bind"/>.</b> <see cref="Includes"/> is what the pool asks, and the pool is
         /// built before the UI is wired. Folding this into Bind means the first BuildPool sees
         /// no record, silently builds the FULL pool, and the player's first frame of their own
         /// collection is the whole game. It compiles and it looks plausible; it is wrong.</para>
@@ -55,17 +65,17 @@ namespace Emberfall.Presentation
             Repaint();
         }
 
-        public void Bind(VisualElement row, Button owned, Button all)
+        public void Bind(VisualElement row, Button owned, Button unowned)
         {
             _row = row;
             _ownedButton = owned;
-            _allButton = all;
+            _unownedButton = unowned;
 
-            if (_row == null || _ownedButton == null || _allButton == null)
+            if (_row == null || _ownedButton == null || _unownedButton == null)
             {
-                Debug.LogError("[Collection] the Owned/All scope row is missing from the UXML, so a " +
+                Debug.LogError("[Collection] the Owned/Unowned scope row is missing from the UXML, so a " +
                                "player with an ownership record can only ever see what they own. " +
-                               "Check CollectionScreen.uxml for 'scope-row', 'scope-owned', 'scope-all'.");
+                               "Check CollectionScreen.uxml for 'scope-row', 'scope-owned', 'scope-unowned'.");
                 return;
             }
 
@@ -73,14 +83,15 @@ namespace Emberfall.Presentation
             Repaint();
             if (!_hasRecord) return;
 
-            _ownedButton.RegisterCallback<ClickEvent>(_ => Set(true));
-            _allButton.RegisterCallback<ClickEvent>(_ => Set(false));
+            _ownedButton.RegisterCallback<ClickEvent>(_ => Set(!_showOwned, _showUnowned));
+            _unownedButton.RegisterCallback<ClickEvent>(_ => Set(_showOwned, !_showUnowned));
         }
 
-        private void Set(bool ownedOnly)
+        private void Set(bool owned, bool unowned)
         {
-            if (_ownedScope == ownedOnly) return;
-            _ownedScope = ownedOnly;
+            if (!owned && !unowned) return;
+            _showOwned = owned;
+            _showUnowned = unowned;
             Repaint();
             Changed?.Invoke();
         }
@@ -88,21 +99,22 @@ namespace Emberfall.Presentation
         /// <summary>Force the scope without raising <see cref="Changed"/> — for the caller that is
         /// already rebuilding the pool itself (opening and closing the deck editor). Raising here
         /// would rebuild it twice for one transition.</summary>
-        public void SetSilently(bool ownedOnly)
+        public void SetSilently(bool owned, bool unowned)
         {
-            _ownedScope = ownedOnly;
+            _showOwned = owned;
+            _showUnowned = unowned;
             Repaint();
         }
 
         /// <summary>The scope as the player last set it, ignoring whether a record exists — what the
         /// deck editor parks on entry so closing restores exactly what was there.</summary>
-        public bool RawScope => _ownedScope;
+        public (bool owned, bool unowned) RawScope => (_showOwned, _showUnowned);
 
         // Both chips are written on every change so neither can retain stale state.
         public void Repaint()
         {
-            _ownedButton?.EnableInClassList("db-chip--on", OwnedOnly);
-            _allButton?.EnableInClassList("db-chip--on", !OwnedOnly);
+            _ownedButton?.EnableInClassList("db-chip--on", Includes(true));
+            _unownedButton?.EnableInClassList("db-chip--on", Includes(false));
         }
     }
 }

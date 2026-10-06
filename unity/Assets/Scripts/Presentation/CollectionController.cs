@@ -32,7 +32,7 @@ namespace Emberfall.Presentation
     /// landed 2026-09-01) — a stale build predating that sync will never leave this state.</item>
     /// <item>A record, scoped to it — the wall shows only cards with at least one copy, and Owned is
     /// highlighted. This is the default the moment a grant path writes that record.</item>
-    /// <item>A record, showing everything anyway — the Owned/All toggle (#146). Same wall as the first
+    /// <item>A record, showing everything anyway — the Owned/Unowned toggle (#146). Same wall as the first
     /// state, with All highlighted, from a completely different reason.</item>
     /// </list>
     ///
@@ -48,7 +48,7 @@ namespace Emberfall.Presentation
     ///
     /// <para><b>Deck editing defaults ownership scope to Owned, same as browse</b> (#353) — All is a
     /// manual widen inside the editor, not the entry state. #150's visible-but-spent dimming for
-    /// unowned-but-eligible cards still applies once the player switches to All by hand. Closing the
+    /// unowned-but-eligible cards still applies once the player turns Unowned on by hand. Closing the
     /// editor restores the scope the player had before opening it. The query object itself stays
     /// mounted, so search, sort and facet selections survive the round trip.</para>
     ///
@@ -144,7 +144,7 @@ namespace Emberfall.Presentation
         private Button _decksButton;
         private bool _queryDrawerOpen;
         private bool _drawerOpen;
-        private bool _scopeBeforeEditing;
+        private (bool owned, bool unowned) _scopeBeforeEditing;
 
         private bool EditingDeck => _deck != null;
 
@@ -259,11 +259,12 @@ namespace Emberfall.Presentation
                 return;
             }
 
-            // OnEnable can run again on the same controller after deck editing parked browse on All.
-            // Every fresh collection entry starts from the player's cards; All remains opt-in.
-            _scope.SetSilently(true);
+            // OnEnable can run again on the same controller after deck editing parked browse on a
+            // wider scope. Every fresh collection entry starts from the player's cards; Unowned
+            // remains opt-in.
+            _scope.SetSilently(owned: true, unowned: false);
             LoadOwnership();
-            // Before the first BuildPool, which asks OwnedOnly — see SetOwnershipRecord.
+            // Before the first BuildPool, which asks the scope — see SetOwnershipRecord.
             _scope.SetOwnershipRecord(_owned != null);
 
             _collectionList = _root.Q<ListView>("collection-list");
@@ -375,7 +376,7 @@ namespace Emberfall.Presentation
         /// The wall's pool, scoped by the optional edit context.
         ///
         /// <para><b>Editing</b> — the character's pairing plus neutral, scoped to Owned by default
-        /// (#353) same as browse. If the player widens to All, an unowned card stays on the wall and
+        /// (#353) same as browse. If the player turns Unowned on, an unowned card stays on the wall and
         /// <see cref="AddCopy"/> refuses it at the copy cap, because the copy limit is already
         /// <c>min(MaxCopies, copies owned)</c>. Removing it from the pool instead would make a card
         /// you nearly own invisible, and #150 wants it dimmed.</para>
@@ -399,7 +400,7 @@ namespace Emberfall.Presentation
             foreach (var def in _db.AllCollectible())
             {
                 if (EditingDeck && !_deck.AllowsClass(def.Class)) continue;
-                if (OwnedOnly && _owned.CopiesOwned(def.Id) <= 0) continue;
+                if (_owned != null && !_scope.Includes(_owned.CopiesOwned(def.Id) > 0)) continue;
 
                 _pool.Add(def);
                 available.Add(def.Class);
@@ -713,7 +714,7 @@ namespace Emberfall.Presentation
             _classAxis.BindStrip(_root);
         }
 
-        /// <summary>Bind the Owned/All scope. Switching pools REBUILDS rather than re-queries —
+        /// <summary>Bind the Owned/Unowned scope. Switching pools REBUILDS rather than re-queries —
         /// see <see cref="CollectionScopeToggle"/> for why ownership is not a card facet.
         ///
         /// <para><c>CardWall.SetPool</c> scrolls the wall back to the top, which is the behaviour you
@@ -728,7 +729,7 @@ namespace Emberfall.Presentation
             };
             _scope.Bind(_root.Q<VisualElement>("scope-row"),
                         _root.Q<Button>("scope-owned"),
-                        _root.Q<Button>("scope-all"));
+                        _root.Q<Button>("scope-unowned"));
         }
 
         // ---- Right-side deck drawer (NOR-210) -----------------------------------------------
@@ -845,10 +846,10 @@ namespace Emberfall.Presentation
             if (EditingDeck) SaveDeck();
 
             _scopeBeforeEditing = _scope.RawScope;
-            // #353: the editor defaults to Owned, same as browse — All stays a manual widen, not the
-            // entry state. #150's visible-but-spent dimming for unowned cards still applies once the
-            // player switches to All. Silent because this method rebuilds the pool itself below.
-            _scope.SetSilently(true);
+            // #353: the editor defaults to Owned, same as browse — Unowned stays a manual widen, not
+            // the entry state. #150's dimming for unowned cards still applies once the player turns
+            // it on. Silent because this method rebuilds the pool itself below.
+            _scope.SetSilently(owned: true, unowned: false);
 
             _deck = deck;
             // Parks the browse class selection and adopts the deck's pairing — see
@@ -873,7 +874,7 @@ namespace Emberfall.Presentation
 
             _deck = null;
             _classAxis.EndEditing();          // restores the browse selection parked on entry
-            _scope.SetSilently(_scopeBeforeEditing);
+            _scope.SetSilently(_scopeBeforeEditing.owned, _scopeBeforeEditing.unowned);
             StampEditing();
 
             if (_deckList != null)
@@ -1472,13 +1473,15 @@ namespace Emberfall.Presentation
             // cannot get past: an account that owns nothing has an empty pool with no filter set, and
             // "Nothing matches those filters" would send them tapping Reset forever.
             //
-            // That message points at the toggle, and can: OwnedOnly is true only when a record exists,
-            // which is the same condition that puts the scope row on screen. The empty All pool is a
-            // broken card database rather than a state a player can reach, so it keeps the filter text.
+            // Those messages point at the toggle, and can: OwnedOnly and UnownedOnly are true only
+            // when a record exists, which is the same condition that puts the scope row on screen.
+            // An empty pool with both halves on is a broken card database rather than a state a
+            // player can reach, so it keeps the filter text.
             if (_emptyLabel != null)
             {
-                _emptyLabel.text = _pool.Count == 0 && OwnedOnly
-                    ? "You don't own any cards yet — switch to All to see the game."
+                _emptyLabel.text = _pool.Count != 0 ? "Nothing matches those filters."
+                    : OwnedOnly ? "You don't own any cards yet — turn on Unowned to see the game."
+                    : _scope.UnownedOnly ? "You own every card here."
                     : "Nothing matches those filters.";
                 _emptyLabel.EnableInClassList("col-empty--on", shown == 0);
             }

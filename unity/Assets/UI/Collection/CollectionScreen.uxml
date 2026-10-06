@@ -55,7 +55,7 @@
                 <ui:VisualElement class="col-query-utility-row">
                     <ui:VisualElement name="scope-row" class="col-scope">
                         <ui:Button name="scope-owned" text="Owned" class="db-chip db-chip--on"/>
-                        <ui:Button name="scope-all" text="All" class="db-chip"/>
+                        <ui:Button name="scope-unowned" text="Unowned" class="db-chip"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement class="col-chip-group">
