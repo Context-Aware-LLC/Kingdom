@@ -129,8 +129,8 @@ MonoBehaviour:
     - line: '|   resizableWindow: 0'
     - line: '|   useMacAppStoreValidation: 0'
     - line: '|   macAppStoreCategory: public.app-category.games'
-    - line: '|   gpuSkinning: 0'
-    - line: '|   meshDeformation: 0'
+    - line: '|   gpuSkinning: 1'
+    - line: '|   meshDeformation: 1'
     - line: '|   xboxPIXTextureCapture: 0'
     - line: '|   xboxEnableAvatar: 0'
     - line: '|   xboxEnableKinect: 0'
@@ -174,7 +174,7 @@ MonoBehaviour:
     - line: '|   loadStoreDebugModeEnabled: 0'
     - line: '|   visionOSBundleVersion: 1.0'
     - line: '|   tvOSBundleVersion: 1.0'
-    - line: '|   bundleVersion: 0.0.0.18'
+    - line: '|   bundleVersion: 0.0.0.19'
     - line: '|   preloadedAssets:'
     - line: '|   - {fileID: 11400000, guid: 158ac1de8ca4fa444a6ded6a44d720e0, type: 2}'
     - line: '|   metroInputSource: 0'
@@ -203,10 +203,10 @@ MonoBehaviour:
     - line: '|     iPhone: 0'
     - line: '|     tvOS: 0'
     - line: '|   overrideDefaultApplicationIdentifier: 1'
-    - line: '|   AndroidBundleVersionCode: 19'
+    - line: '|   AndroidBundleVersionCode: 20'
     - line: '|   AndroidMinSdkVersion: 26'
-    - line: '|   AndroidTargetSdkVersion: 28'
-    - line: '|   AndroidPreferredInstallLocation: 1'
+    - line: '|   AndroidTargetSdkVersion: 0'
+    - line: '|   AndroidPreferredInstallLocation: 0'
     - line: '|   AndroidPreferredDataLocation: 1'
     - line: '|   aotOptions: '
     - line: '|   stripEngineCode: 1'
@@ -299,7 +299,7 @@ MonoBehaviour:
     - line: '|   AndroidTargetArchitectures: 2'
     - line: '|   AndroidSplashScreenScale: 0'
     - line: '|   androidSplashScreen: {instanceID: 0}'
-    - line: '|   AndroidKeystoreName: C:/Users/User/keystores/KingdomOfBadIdeas/kobi-upload.keystore'
+    - line: '|   AndroidKeystoreName: ''{dedicated}: KingdomOfBadIdeas/kobi-upload.keystore'''
     - line: '|   AndroidKeyaliasName: kobi-upload'
     - line: '|   AndroidEnableArmv9SecurityFeatures: 0'
     - line: '|   AndroidEnableArm64MTE: 0'
@@ -320,10 +320,10 @@ MonoBehaviour:
     - line: '|   androidGamepadSupportLevel: 0'
     - line: '|   AndroidMinifyRelease: 1'
     - line: '|   AndroidMinifyDebug: 0'
-    - line: '|   AndroidValidateAppBundleSize: 1'
+    - line: '|   AndroidValidateAppBundleSize: 0'
     - line: '|   AndroidAppBundleSizeToValidate: 200'
     - line: '|   AndroidReportGooglePlayAppDependencies: 1'
-    - line: '|   androidSymbolsSizeThreshold: 800'
+    - line: '|   androidSymbolsSizeThreshold: -1'
     - line: '|   m_BuildTargetIcons:'
     - line: '|   - m_BuildTarget: '
     - line: '|     m_Icons:'
@@ -729,7 +729,8 @@ MonoBehaviour:
     - line: '|     Android: 1'
     - line: '|   il2cppCompilerConfiguration:'
     - line: '|     Android: 2'
-    - line: '|   il2cppCodeGeneration: {}'
+    - line: '|   il2cppCodeGeneration:'
+    - line: '|     Android: 1'
     - line: '|   il2cppLTOMode: {}'
     - line: '|   il2cppStacktraceInformation: {}'
     - line: '|   managedStrippingLevel: {}'
@@ -802,7 +803,7 @@ MonoBehaviour:
     - line: '|   XboxOneOverrideIdentityName: '
     - line: '|   XboxOneOverrideIdentityPublisher: '
     - line: '|   cloudServicesEnabled:'
-    - line: '|     Purchasing: 0'
+    - line: '|     Purchasing: 1'
     - line: '|   luminIcon:'
     - line: '|     m_Name: '
     - line: '|     m_ModelFolderPath: '
@@ -889,13 +890,13 @@ MonoBehaviour:
   m_Script: {fileID: 15012, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: BuildAutomationSettings
   m_EditorClassIdentifier: UnityEditor.dll::UnityEditor.Build.Profile.BuildAutomationSettings
-  m_OperatingSystemValue: tahoe
-  m_OperatingSystemFamily: mac
+  m_OperatingSystemValue: windows11_24h2
+  m_OperatingSystemFamily: windows
   m_XcodeVersion: default
-  m_AndroidSdkVersion: android_sdk_35
-  m_UnityArchitecture: AppleSilicon
-  m_MachineTypeId: orka_standard_v1
-  m_CredentialsId: 6e1ad17f-b42a-4bf8-818d-d5d94dbb7eef
+  m_AndroidSdkVersion: android_sdk_36
+  m_UnityArchitecture: 
+  m_MachineTypeId: win_micro_v1
+  m_CredentialsId: 383cf927-21c0-4d84-9496-e84383ae4e57
   m_BuildTarget: 13
 --- !u!114 &9000562881829387034
 MonoBehaviour:
