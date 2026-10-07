@@ -104,6 +104,37 @@ later public play removes one matching occurrence. Unknown draws never become kn
 instance id is retained. Sorting removes deck order and hidden-zone identity; the opponent's
 unrevealed deck remains excluded.
 
+### Search labels
+
+`rollout --selection fair-search` plays `FairSearchSeatPolicy` in both seats with one checkpoint
+and records what each searched decision found. The games are the search's own, so `--temperature`
+and `--epsilon` are refused; the budget is `--search-plays`, `--search-sims` and
+`--search-rollout-temperature`, `--scorer-processes` sizes the scorer pool (a seat runs a round's
+rollouts at once), and `--search-guess-pairing` withholds the opponent's second class.
+
+```powershell
+dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- rollout 2 `
+  "F:\EmberfallData\exports\<rl-export>" "F:\EmberfallData\runs\<run>\best-model.pt" `
+  "F:\EmberfallData\rollouts\<new-capture>" --all-classes --deck-dir "<deck pool>" `
+  --selection fair-search --search-plays 4 --search-sims 32 --workers 4 --scorer-processes 10
+```
+
+A searched decision's manifest row carries `searchVersion`, `searchCandidateActionIndices` (one
+legal-action index per candidate play), `searchVisits`, `searchMeanValues` (null where a candidate
+was never visited), `searchPlayPriors`, `searchChosenActionIndex`, and `searchPlayGroups` with
+`searchPlayKeySchemaVersion`: the distinct play of every legal action, from `DistinctPlayKey`.
+The fields are all present or all absent, and never beside the `behavior*` fields. A decision the
+seat did not search (one distinct play, a pending choice, no world it could build) is an ordinary
+row; the command's `[rollout] search:` line counts each kind.
+
+The seat never enumerates concede, so the builder replays a searched decision WITHOUT it: concede
+is listed first, and including it would shift every recorded index by one. Ordinary rows of the
+same game keep concede, as every earlier corpus does. For each searched row the builder checks
+that the candidates are legal, that the chosen index is the replayed intent, and that the play
+groups equal a fresh `DistinctPlayKey` computation over the replayed actions. The rule is handed
+to `TrainingCorpusBuilder` as a `PlayKeyRule` because this assembly sits beneath
+`Emberfall.Policy`; a builder given none refuses a corpus that carries search labels.
+
 ## Export
 
 The dependency-free streaming exporters validate this directory and can write all large artifacts
