@@ -115,6 +115,28 @@ namespace Emberfall.Policy
             return key.ToString();
         }
 
+        /// <summary>
+        /// Which play each listed action belongs to, plays numbered in order of first appearance.
+        /// The numbering is part of what a capture records: the corpus builder recomputes it from
+        /// this rule and compares the arrays as written.
+        /// </summary>
+        public static int[] GroupsOf(IReadOnlyList<PlayerIntent> actions, GameState state)
+        {
+            var groups = new int[actions.Count];
+            var byKey = new Dictionary<string, int>(actions.Count, System.StringComparer.Ordinal);
+            for (int i = 0; i < actions.Count; i++)
+            {
+                string key = Of(actions[i], state);
+                if (!byKey.TryGetValue(key, out int play))
+                {
+                    play = byKey.Count;
+                    byKey.Add(key, play);
+                }
+                groups[i] = play;
+            }
+            return groups;
+        }
+
         private static void AppendTargets(StringBuilder key, IReadOnlyList<TargetRef> targets)
         {
             key.Append("|t:");

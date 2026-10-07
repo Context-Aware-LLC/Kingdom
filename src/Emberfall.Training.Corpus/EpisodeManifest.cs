@@ -114,6 +114,7 @@ namespace Emberfall.Training.Corpus
                             $"{nameof(DecisionHashes)}[{i}] has an invalid behavior action index.");
                     ValidateSamplerSpecification(decision, i);
                 }
+                ValidateSearchLabel(decision, i, hasAnyBehavior);
             }
             if (P0Deck is null || P0Deck.Count == 0) throw new ArgumentException("P0Deck must not be empty.");
             if (P1Deck is null || P1Deck.Count == 0) throw new ArgumentException("P1Deck must not be empty.");
@@ -196,6 +197,119 @@ namespace Emberfall.Training.Corpus
                         + "distinct-play count and the grouping disagree.");
         }
 
+        /// <summary>
+        /// A searched decision carries the whole search result or none of it. Every field here is
+        /// a training target or the key a target is read through, so a row with a candidate list
+        /// and no visits, or visits that outnumber their candidates, would train on a number
+        /// nothing produced.
+        /// </summary>
+        private static void ValidateSearchLabel(EpisodeDecisionHash decision, int i, bool hasBehavior)
+        {
+            string where = $"{nameof(DecisionHashes)}[{i}]";
+            bool any = decision.SearchVersion is not null
+                       || decision.SearchCandidateActionIndices is not null
+                       || decision.SearchVisits is not null
+                       || decision.SearchMeanValues is not null
+                       || decision.SearchPlayPriors is not null
+                       || decision.SearchChosenActionIndex.HasValue
+                       || decision.SearchPlayGroups is not null
+                       || decision.SearchPlayKeySchemaVersion.HasValue;
+            if (!any) return;
+            if (string.IsNullOrWhiteSpace(decision.SearchVersion)
+                || decision.SearchCandidateActionIndices is null
+                || decision.SearchVisits is null
+                || decision.SearchMeanValues is null
+                || decision.SearchPlayPriors is null
+                || !decision.SearchChosenActionIndex.HasValue
+                || decision.SearchPlayGroups is null
+                || !decision.SearchPlayKeySchemaVersion.HasValue)
+                throw new ArgumentException($"{where} must provide all search-label fields or none.");
+            // The behavior fields say how many actions the SAMPLER saw and whether concede was one
+            // of them; a searching seat has its own answer to both (every action it grouped, never
+            // concede). Two answers on one row is how a legal set gets reconstructed wrongly.
+            if (hasBehavior)
+                throw new ArgumentException(
+                    $"{where} carries both on-policy behavior fields and a search label.");
+            if (decision.SearchPlayKeySchemaVersion.Value <= 0)
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.SearchPlayKeySchemaVersion)} must be positive.");
+
+            IReadOnlyList<int> groups = decision.SearchPlayGroups;
+            if (groups.Count < 2)
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.SearchPlayGroups)} must name a play for every legal "
+                    + "action, and a searched decision has at least two.");
+            int plays = 0;
+            foreach (int play in groups)
+            {
+                if (play < 0 || play >= groups.Count)
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchPlayGroups)} names play {play}, outside "
+                        + $"0..{groups.Count - 1}.");
+                plays = Math.Max(plays, play + 1);
+            }
+            var used = new bool[plays];
+            foreach (int play in groups) used[play] = true;
+            for (int play = 0; play < plays; play++)
+                if (!used[play])
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchPlayGroups)} never uses play {play}.");
+
+            IReadOnlyList<int> candidates = decision.SearchCandidateActionIndices;
+            if (candidates.Count < 2
+                || decision.SearchVisits.Count != candidates.Count
+                || decision.SearchMeanValues.Count != candidates.Count
+                || decision.SearchPlayPriors.Count != candidates.Count)
+                throw new ArgumentException(
+                    $"{where} search label needs at least two candidates and one visit count, mean "
+                    + "value and play prior for each.");
+            var candidatePlays = new bool[plays];
+            bool chosenIsCandidate = false;
+            for (int c = 0; c < candidates.Count; c++)
+            {
+                int action = candidates[c];
+                if (action < 0 || action >= groups.Count)
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchCandidateActionIndices)} names action "
+                        + $"{action}, outside 0..{groups.Count - 1}.");
+                // Candidates are distinct PLAYS. Two spellings of one play would split its visits,
+                // and the target over plays would no longer add up the way the search counted.
+                if (candidatePlays[groups[action]])
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchCandidateActionIndices)} names play "
+                        + $"{groups[action]} twice.");
+                candidatePlays[groups[action]] = true;
+
+                int visits = decision.SearchVisits[c];
+                double? mean = decision.SearchMeanValues[c];
+                if (visits < 0)
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchVisits)}[{c}] must not be negative.");
+                bool meanValid = visits == 0
+                    ? !mean.HasValue
+                    : mean.HasValue && double.IsFinite(mean.Value)
+                      && mean.Value >= -1.0 && mean.Value <= 1.0;
+                if (!meanValid)
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchMeanValues)}[{c}] must be in [-1, 1] where "
+                        + "the candidate was visited and absent where it was not.");
+                double prior = decision.SearchPlayPriors[c];
+                if (!double.IsFinite(prior) || prior < 0.0 || prior > 1.0 + 1e-9)
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchPlayPriors)}[{c}] must be a probability.");
+                if (action == decision.SearchChosenActionIndex.Value)
+                {
+                    chosenIsCandidate = true;
+                    if (visits == 0)
+                        throw new ArgumentException(
+                            $"{where} search chose a candidate it never visited.");
+                }
+            }
+            if (!chosenIsCandidate)
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.SearchChosenActionIndex)} is not a search candidate.");
+        }
+
         private static void Require(string value, string name)
         {
             if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException($"{name} must not be empty.", name);
@@ -252,5 +366,29 @@ namespace Emberfall.Training.Corpus
         // -- and re-deriving the grouping means a second implementation of the play-key rule that
         // will eventually disagree with the one that drew the action.
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        IReadOnlyList<int>? BehaviorPlayGroups = null);
+        IReadOnlyList<int>? BehaviorPlayGroups = null,
+
+        // WHAT A SEARCHING SEAT FOUND, when it searched. Present together or not at all, and never
+        // beside the Behavior* fields: a searched decision is a label, not an on-policy sample.
+        // Candidates are legal-action indices into the list the seat enumerated WITHOUT concede,
+        // one per distinct play; visits, mean values and play priors run parallel to them. A mean
+        // is null where the candidate was never visited (JSON has no NaN, and zero is a real
+        // value: a drawn rollout). The play groups cover every legal action, because the policy
+        // target is over plays and regrouping downstream would be a second DistinctPlayKey.
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        string? SearchVersion = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchCandidateActionIndices = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchVisits = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<double?>? SearchMeanValues = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<double>? SearchPlayPriors = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        int? SearchChosenActionIndex = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchPlayGroups = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        int? SearchPlayKeySchemaVersion = null);
 }
