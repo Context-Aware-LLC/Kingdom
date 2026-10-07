@@ -445,11 +445,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f2d807a80c064a2a97459c4c5c2595d5
-    m_Address: ui/socket_attack_fist
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6444f22790c48b2ae717e6eb2aa444d
     m_Address: ui/ui_scroll_fade
     m_ReadOnly: 0
