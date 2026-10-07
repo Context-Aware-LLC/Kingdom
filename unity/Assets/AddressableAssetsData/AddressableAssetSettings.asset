@@ -65,23 +65,17 @@ MonoBehaviour:
   m_GroupAssets:
   - {fileID: 11400000, guid: 941cf3650d62dce43923b9b41be3e267, type: 2}
   - {fileID: 11400000, guid: ed8545d663b733246944cfbf93a4a61e, type: 2}
-  - {fileID: 11400000, guid: b2e0513c080aff948972617aa11a0466, type: 2}
   - {fileID: 11400000, guid: b8c6952bc499c814ea444047533bbbe7, type: 2}
   - {fileID: 11400000, guid: 1e5d2c06e450b9a409050b4fab5124f0, type: 2}
-  - {fileID: 11400000, guid: ff539bf9f3fbf84478dc69edb0c6559c, type: 2}
   - {fileID: 11400000, guid: 8f6e44e455e6f1546b1fa9af4a1d3d71, type: 2}
   - {fileID: 11400000, guid: ec46b4d83b319b14d92da3bcd2f9f3e7, type: 2}
   - {fileID: 11400000, guid: df6146c378e8ce14b9febb17b525b1ab, type: 2}
-  - {fileID: 11400000, guid: 825545d6d0043304bb4db48bbe28a860, type: 2}
   - {fileID: 11400000, guid: 7ec269ca4f6b7614ca8404f0a2a8c2fa, type: 2}
   - {fileID: 11400000, guid: c3f43bd113627704397edaa8e4ddd069, type: 2}
-  - {fileID: 11400000, guid: a8a69275f25386c43862d550d7621bc6, type: 2}
   - {fileID: 11400000, guid: c7dc7cc78a8c13c46995c856dca973b2, type: 2}
   - {fileID: 11400000, guid: dabbee73785e52a4ea2f6310f270b39d, type: 2}
-  - {fileID: 11400000, guid: 033d865146c4d694a8eb42a26b77e973, type: 2}
   - {fileID: 11400000, guid: 8ba557bd2d1fc8548b94321bae61216f, type: 2}
   - {fileID: 11400000, guid: 1a8e610485dc0a345a9024d6c33b8fd1, type: 2}
-  - {fileID: 11400000, guid: d058e9e4860a5be4e9dff05015fbb94d, type: 2}
   - {fileID: 11400000, guid: 81c5956a08100fb44b185bd00f39c7f2, type: 2}
   - {fileID: 11400000, guid: 42c48ae3932e35f4e90964fedcae2eca, type: 2}
   m_BuildSettings:
@@ -140,9 +134,6 @@ MonoBehaviour:
     - music-battle
     - music-menu
     - music-vault
-    - Locale
-    - Locale-en
-    - Locale-es
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 45da866bd2506184bb300867b2311fb0, type: 2}
