@@ -103,6 +103,9 @@ TOKEN_EXCEPTIONS = {
     'match-bar':
         'transparent bottom rail bounded by the two safe edges; centering its button within '
         'that rail preserves the screen center without shifting it by an extra margin',
+    'fr-challenge-strip':
+        'transparent, picking-ignored strip bounded by the two safe edges so the challenge card '
+        'centres on the screen; only the card inside it takes clicks',
     'deck-drawer__manage':
         'its left edge is internal to the drawer; its right edge clears the screen token '
         'plus a 48px reserve under the neighboring Settings control',
@@ -168,6 +171,10 @@ ROOT_EXCEPTIONS = {
     'ms-root': (
         'a scrim host with no flow content of its own; the gear and the panel are absolute',
         ['ms-gear']),
+    'fr-root': (
+        'the root of the friends overlay, laid over whichever screen is up; it has no flow '
+        'content of its own, and everything in it that reaches a screen edge is absolute',
+        ['fr-button', 'fr-challenge-strip']),
 }
 
 ELEMENT_INTERNAL = {
@@ -264,12 +271,19 @@ def _rule_body(path, cls):
 
 
 def _owning_class(text, lineno):
-    """The class whose rule block contains 1-indexed `lineno`, or None."""
-    for m in re.finditer(r'(^[.#][\w\-]+(?:[.:][\w\-]+)*)[^{]*\{([^}]*)\}', text, re.M):
+    """The class whose rule block contains 1-indexed `lineno`, or None.
+
+    The owner is the selector's SUBJECT -- its last compound -- because that is the element
+    the declarations land on. friends.uss scopes every rule under `.fr-root`, and reading the
+    first class instead charged the whole stylesheet's spending to the root.
+    """
+    for m in re.finditer(r'(^[.#][^{]*)\{([^}]*)\}', text, re.M):
         first = text[:m.start()].count('\n') + 1
         last = text[:m.end()].count('\n') + 1
         if first <= lineno <= last:
-            return m.group(1).lstrip('.#').split(':')[0].split('.')[0]
+            compounds = re.split(r'[\s>+~]+', m.group(1).split(',')[0].strip())
+            named = [c for c in compounds if c[:1] in '.#'] or compounds[:1]
+            return named[-1].lstrip('.#').split(':')[0].split('.')[0]
     return None
 
 
