@@ -65,7 +65,7 @@ namespace Emberfall.Net.Server
         private readonly CommandProcessor _processor;
         private readonly LocalMatchHost _host;
         private readonly MatchSetup _setup;
-        private readonly ITelemetrySink _telemetry;
+        private readonly MatchTelemetryRecorder _telemetry;
         private readonly MatchAttribution _attribution;
         private readonly IRankedMatchSink _rankedMatchSink;
         private readonly ITrainingEpisodeStore? _trainingEpisodes;
@@ -73,19 +73,6 @@ namespace Emberfall.Net.Server
         private readonly string _p1Policy;
         private readonly Seat[] _seats = new Seat[2];
         private bool _trainingCaptureActive;
-
-        /// <summary>
-        /// Card definition ids each seat KEPT at mulligan (telemetry-spec §1 `mulliganKept`).
-        /// Captured at submit time because it is unrecoverable afterwards: the core replaces
-        /// discarded cards in place, so the post-mulligan hand cannot say what was thrown back.
-        /// </summary>
-        private readonly List<int>[] _mulliganKept = { new List<int>(), new List<int>() };
-
-        /// <summary>
-        /// Per-seat `card_seen` accumulators (telemetry-spec §2). Fed by <see cref="ObserveHands"/>
-        /// after the opening deal and after every accepted command; read once, at match end.
-        /// </summary>
-        private readonly CardSeenLedger[] _cardsSeen = { new CardSeenLedger(), new CardSeenLedger() };
 
         private long? _mulliganDeadlineMs;
         private long? _turnDeadlineMs;
@@ -124,7 +111,7 @@ namespace Emberfall.Net.Server
             _time = time;
             _replay = replay;
             _setup = setup;
-            _telemetry = telemetry ?? NullTelemetrySink.Instance;
+            _telemetry = new MatchTelemetryRecorder(id, setup, telemetry, attribution);
             _attribution = attribution ?? MatchAttribution.None;
             _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
             _trainingEpisodes = trainingEpisodes;
@@ -165,11 +152,7 @@ namespace Emberfall.Net.Server
             TryBeginTrainingCapture();
             _turnKey = TurnKey();
 
-            // The `inDeck` denominator, and the opening hands — which are the only draws that
-            // happen before any command exists to observe after (telemetry-spec §2).
-            _cardsSeen[0].NoteDeck(_setup.P0Deck);
-            _cardsSeen[1].NoteDeck(_setup.P1Deck);
-            ObserveHands();
+            _telemetry.AfterDeal(_host.State);
 
             for (int seat = 0; seat < 2; seat++)
             {
@@ -347,25 +330,15 @@ namespace Emberfall.Net.Server
         {
             string? captureBefore = CaptureObservationHash(intent.Player);
 
-            // Read the mulligan keeps BEFORE the core sees the intent — afterwards the hand has
-            // already been rewritten and the answer is gone (telemetry-spec §1 `mulliganKept`).
-            // Held aside rather than stored, so a REJECTED mulligan records nothing.
-            (int seat, List<int> kept)? keeps = CaptureMulliganKeeps(intent);
-
-            // Same reason, same timing: after the play resolves the card is on the board or in the
-            // graveyard and its hand slot is gone, so `firstPlayedTurn` has to be read now. Held
-            // aside rather than recorded, so a REJECTED play never counts as played.
-            (int seat, int defId, int turn)? play = CapturePlay(intent);
+            // Read the mulligan keeps and the played card BEFORE the core sees the intent —
+            // afterwards the hand has already been rewritten and the answer is gone.
+            MatchTelemetryRecorder.Pending observed = _telemetry.BeforeSubmit(_host.State, intent);
 
             var raw = _host.Submit(intent);
             if (!raw.Accepted) return raw;
 
-            if (keeps is { } k) _mulliganKept[k.seat] = k.kept;
-            if (play is { } p) _cardsSeen[p.seat].NotePlayed(p.defId, p.turn);
-
-            // Every accepted command is a draw observation point. Runs BEFORE the EndMatch branch
-            // below so the last command's draws are still in the sample.
-            ObserveHands();
+            // Runs BEFORE the EndMatch branch below so the last command's draws are still in the sample.
+            _telemetry.AfterAccepted(_host.State, observed);
 
             _replay.Append(_id, intent);
             TryRecordTrainingDecision(intent.Player, captureBefore);
@@ -411,60 +384,6 @@ namespace Emberfall.Net.Server
             }
 
             return raw;
-        }
-
-        /// <summary>
-        /// The card definition ids this intent would KEEP, if it is a mulligan resolution.
-        /// <c>AutoConfirmIntent</c> keeps the whole hand — that is what auto-confirm means, and a
-        /// timed-out mulligan is still a real data point about what the opening hand was.
-        /// </summary>
-        private (int seat, List<int> kept)? CaptureMulliganKeeps(PlayerIntent intent)
-        {
-            if (_host.State.Phase != TurnPhase.Mulligan) return null;
-            if (intent is not MulliganIntent && intent is not AutoConfirmIntent) return null;
-
-            int seat = _host.State.SeatOf(intent.Player);
-            var replaced = intent as MulliganIntent;
-            var kept = new List<int>();
-            foreach (var card in _host.State.Players[seat].Hand)
-            {
-                bool thrown = false;
-                if (replaced is not null)
-                    foreach (var id in replaced.ToReplace)
-                        if (id == card.Id) { thrown = true; break; }
-                if (!thrown) kept.Add(card.DefinitionId);
-            }
-            return (seat, kept);
-        }
-
-        /// <summary>
-        /// The def id behind a <see cref="PlayCardIntent"/>, resolved from the seat's hand while the
-        /// card is still in it. Null for anything else, and for an instance id that is not in that
-        /// seat's hand — a spoofed or stale id is the core's business to reject, and telemetry must
-        /// not record a play the core is about to refuse.
-        /// </summary>
-        private (int seat, int defId, int turn)? CapturePlay(PlayerIntent intent)
-        {
-            if (intent is not PlayCardIntent play) return null;
-            if (_host.State.Outcome != MatchOutcome.InProgress) return null;
-
-            int seat = _host.State.SeatOf(play.Player);
-            foreach (var card in _host.State.Players[seat].Hand)
-                if (card.Id == play.Card)
-                    return (seat, card.DefinitionId, _host.State.TurnNumber);
-            return null;
-        }
-
-        /// <summary>
-        /// Mark everything currently in either hand as drawn (telemetry-spec §2 `drawnThisMatch`).
-        /// Cheap and unconditional: two ≤10-card lists, and skipping it when nothing looks like a
-        /// draw would mean re-deriving which effects draw — exactly the coupling to card behaviour
-        /// this observational design avoids.
-        /// </summary>
-        private void ObserveHands()
-        {
-            for (int seat = 0; seat < 2; seat++)
-                _cardsSeen[seat].NoteHand(_host.State.Players[seat].Hand);
         }
 
         private (TurnPhase, PlayerId, int) TurnKey()
@@ -626,9 +545,7 @@ namespace Emberfall.Net.Server
 
             _replay.Abandon(_id);   // journal keeps the intents; the ladder gets nothing
             AbandonTrainingCapture();
-            Emit(() => _telemetry.MatchVoid(new MatchVoidEvent(
-                _id, NowUtc(), _host.State.TurnNumber, _attribution.Source,
-                _attribution.P0, _attribution.P1)));
+            _telemetry.Void(_host.State, NowUtc());
             Ended = true;
         }
 
@@ -647,19 +564,11 @@ namespace Emberfall.Net.Server
             _replay.Complete(_id, _host.State.Outcome);
             CompleteTrainingCapture();
 
-            // The balance sample (telemetry-spec §1). Emitted BEFORE the seats are torn down below,
-            // because the per-seat block reads hero class out of live state — and after the wire
-            // messages, because a telemetry problem must never cost a player their match-end screen.
+            // Emitted BEFORE the seats are torn down below, because the per-seat block reads hero
+            // class out of live state — and after the wire messages, because a telemetry problem
+            // must never cost a player their match-end screen.
             var outcome = _host.State.Outcome;
-            Emit(() => _telemetry.MatchComplete(new MatchCompleteEvent(
-                _id, NowUtc(), reason, outcome, _host.State.TurnNumber, _attribution.Source,
-                SeatBlock(0, outcome), SeatBlock(1, outcome))));
-
-            // The per-card sample (telemetry-spec §2), in one batched call. Emitted AFTER
-            // match_complete so a reader tailing the file sees the result before the cards that
-            // explain it, and in its own Emit so a failure in either cannot cost the other.
-            Emit(() => _telemetry.CardsSeen(new CardSeenEvent(
-                _id, NowUtc(), _attribution.Source, CardRows(outcome))));
+            _telemetry.Complete(_host.State, NowUtc(), reason);
 
             // Ratings are a projection of the authoritative result, never client input. The sink
             // rejects bot-fill, AI soak, self-play and unattributed matches before they can move it.
@@ -791,67 +700,6 @@ namespace Emberfall.Net.Server
                 ex.Message);
             AbandonTrainingCapture();
         }
-
-        /// <summary>
-        /// Two guards around every emit, both load-bearing.
-        ///
-        /// <para><b>Unattributed matches are dropped, not written blank.</b> A row keyed on an empty
-        /// account is worse than a missing row: it silently pollutes the per-class win-rate sample
-        /// the C4 exit bar is judged on, and it looks like real data. <see cref="AccountId"/>'s own
-        /// contract says the emitter refuses these — this is where that promise is kept.</para>
-        ///
-        /// <para><b>A throwing sink never kills a finished match.</b> The match is already over and
-        /// correct by the time we get here; losing a telemetry row costs one sample, while an
-        /// escaping exception would take down the session pump and, with it, whatever else it was
-        /// about to do.</para>
-        /// </summary>
-        private void Emit(System.Action emit)   // qualified: Contracts has its own `Action` (a card verb)
-        {
-            if (!_attribution.IsAttributed) return;
-            try { emit(); }
-            catch (Exception) { /* a dropped sample is not worth a dropped match */ }
-        }
-
-        private SeatOutcome SeatBlock(int seat, MatchOutcome outcome)
-        {
-            var deck = seat == 0 ? _setup.P0Deck : _setup.P1Deck;
-            var @class = _host.State.Players[seat].Hero.Class;
-            return new SeatOutcome(
-                seat == 0 ? _attribution.P0 : _attribution.P1,
-                @class,
-                DeckIdentity.IdFor(@class),
-                DeckIdentity.HashOf(deck),
-                ResultFor(seat, outcome),
-                _mulliganKept[seat]);
-        }
-
-        /// <summary>
-        /// Both seats' `card_seen` rows, seat 0 first (telemetry-spec §2).
-        ///
-        /// <para><b>A draw is not a win for either seat.</b> `matchWon` is the win-when-drawn
-        /// NUMERATOR, and a draw is a match nobody won — crediting it to both would inflate every
-        /// card in it past the 58% centralization threshold §3 gates on.</para>
-        /// </summary>
-        private IReadOnlyList<CardSeenRow> CardRows(MatchOutcome outcome)
-        {
-            var rows = new List<CardSeenRow>();
-            for (int seat = 0; seat < 2; seat++)
-            {
-                rows.AddRange(_cardsSeen[seat].Rows(
-                    seat == 0 ? _attribution.P0 : _attribution.P1,
-                    _host.State.Players[seat].Hero.Class,
-                    ResultFor(seat, outcome) == SeatResult.Win,
-                    _mulliganKept[seat]));
-            }
-            return rows;
-        }
-
-        private static SeatResult ResultFor(int seat, MatchOutcome outcome) => outcome switch
-        {
-            MatchOutcome.Player0Win => seat == 0 ? SeatResult.Win : SeatResult.Loss,
-            MatchOutcome.Player1Win => seat == 1 ? SeatResult.Win : SeatResult.Loss,
-            _ => SeatResult.Draw,
-        };
 
         // ── Outbound (enqueue-only — RC F5) ──────────────────────────────────────
 

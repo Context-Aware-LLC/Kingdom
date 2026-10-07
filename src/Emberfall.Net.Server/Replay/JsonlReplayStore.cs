@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Emberfall.Core.Contracts;
@@ -23,26 +24,58 @@ namespace Emberfall.Net.Server.Replay
 
         public string PathFor(MatchId id) => Path.Combine(_dir, id.Value + ".jsonl");
 
-        public void Begin(MatchId id, ulong seed, PlayerId p0, PlayerId p1)
-        {
-            // Hand-rolled header: values are a u64 and two ids we mint ourselves — no escaping needed.
-            string header = "{\"emberfallReplay\":1,\"seed\":" + seed.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        // Hand-rolled header: values are a u64 and two ids we mint ourselves — no escaping needed.
+        private static string Header(ulong seed, PlayerId p0, PlayerId p1)
+            => "{\"emberfallReplay\":1,\"seed\":" + seed.ToString(System.Globalization.CultureInfo.InvariantCulture)
                 + ",\"p0\":\"" + p0.Value + "\",\"p1\":\"" + p1.Value + "\"}\n";
-            File.WriteAllText(PathFor(id), header, new UTF8Encoding(false));
-        }
+
+        private static byte[] IntentRow(MatchId id, PlayerIntent intent)
+            => ProtocolCodec.Encode(new IntentMsg(0UL, intent), id, 0UL);
+
+        private static string Footer(MatchOutcome outcome) => "{\"outcome\":\"" + outcome + "\"}\n";
+
+        public void Begin(MatchId id, ulong seed, PlayerId p0, PlayerId p1)
+            => File.WriteAllText(PathFor(id), Header(seed, p0, p1), new UTF8Encoding(false));
 
         public void Append(MatchId id, PlayerIntent intent)
         {
-            byte[] row = ProtocolCodec.Encode(new IntentMsg(0UL, intent), id, 0UL);
+            byte[] row = IntentRow(id, intent);
             using var s = new FileStream(PathFor(id), FileMode.Append, FileAccess.Write, FileShare.Read);
             s.Write(row, 0, row.Length);
             s.WriteByte((byte)'\n');
         }
 
         public void Complete(MatchId id, MatchOutcome outcome)
+            => File.AppendAllText(PathFor(id), Footer(outcome), new UTF8Encoding(false));
+
+        /// <summary>
+        /// A whole match in one open: the bytes <see cref="Begin"/>, one <see cref="Append"/> per
+        /// intent and <see cref="Complete"/> would have left. A null <paramref name="outcome"/>
+        /// writes no footer, which is what a match still in flight looks like.
+        ///
+        /// <para>For an offline capture, which holds a finished game in memory and has nothing to
+        /// lose by writing it late. A live match must not use this: the journal's value there is
+        /// that every accepted intent is on disk before the next one is read.</para>
+        /// </summary>
+        public void WriteAll(
+            MatchId id, ulong seed, PlayerId p0, PlayerId p1,
+            IReadOnlyList<PlayerIntent> intents, MatchOutcome? outcome)
         {
-            string footer = "{\"outcome\":\"" + outcome + "\"}\n";
-            File.AppendAllText(PathFor(id), footer, new UTF8Encoding(false));
+            var utf8 = new UTF8Encoding(false);
+            using var s = new FileStream(PathFor(id), FileMode.Create, FileAccess.Write, FileShare.Read, 64 * 1024);
+            byte[] header = utf8.GetBytes(Header(seed, p0, p1));
+            s.Write(header, 0, header.Length);
+            for (int i = 0; i < intents.Count; i++)
+            {
+                byte[] row = IntentRow(id, intents[i]);
+                s.Write(row, 0, row.Length);
+                s.WriteByte((byte)'\n');
+            }
+            if (outcome is MatchOutcome ended)
+            {
+                byte[] footer = utf8.GetBytes(Footer(ended));
+                s.Write(footer, 0, footer.Length);
+            }
         }
 
         /// <summary>Decision 24 void: a footer that carries no outcome, so a reader can tell

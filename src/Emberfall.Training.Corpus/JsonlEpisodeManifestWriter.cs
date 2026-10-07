@@ -16,9 +16,16 @@ namespace Emberfall.Training.Corpus
         public const string FileName = "episode-manifests.jsonl";
         private readonly object _gate = new object();
         private readonly HashSet<string> _matchIds = new HashSet<string>(StringComparer.Ordinal);
+        private readonly bool _fsyncEachRow;
 
-        public JsonlEpisodeManifestWriter(string outputDirectory)
+        /// <param name="fsyncEachRow">
+        /// False for a capture fast enough that one fsync per episode is most of what its
+        /// committer does. Rows are still appended whole and in order; the caller makes them
+        /// durable once, with <see cref="FlushToDisk"/>, when the run is over.
+        /// </param>
+        public JsonlEpisodeManifestWriter(string outputDirectory, bool fsyncEachRow = true)
         {
+            _fsyncEachRow = fsyncEachRow;
             Directory.CreateDirectory(outputDirectory);
             Path = System.IO.Path.Combine(outputDirectory, FileName);
             if (!File.Exists(Path)) return;
@@ -65,10 +72,11 @@ namespace Emberfall.Training.Corpus
                 try
                 {
                     using var stream = new FileStream(Path, FileMode.Append, FileAccess.Write, FileShare.Read,
-                                                      64 * 1024, FileOptions.WriteThrough);
+                                                      64 * 1024,
+                                                      _fsyncEachRow ? FileOptions.WriteThrough : FileOptions.None);
                     stream.Write(json, 0, json.Length);
                     stream.WriteByte((byte)'\n');
-                    stream.Flush(flushToDisk: true);
+                    stream.Flush(flushToDisk: _fsyncEachRow);
                 }
                 catch (Exception appendError)
                 {
@@ -89,6 +97,17 @@ namespace Emberfall.Training.Corpus
                     }
                     throw;
                 }
+            }
+        }
+
+        /// <summary>Put every appended row on the volume.</summary>
+        public void FlushToDisk()
+        {
+            lock (_gate)
+            {
+                if (!File.Exists(Path)) return;
+                using var stream = new FileStream(Path, FileMode.Append, FileAccess.Write, FileShare.Read);
+                stream.Flush(flushToDisk: true);
             }
         }
 

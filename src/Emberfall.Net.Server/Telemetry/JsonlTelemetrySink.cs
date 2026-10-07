@@ -58,6 +58,7 @@ namespace Emberfall.Net.Server.Telemetry
 
         private readonly object _gate = new object();
         private readonly string _env;
+        private readonly bool _fsyncEachWrite;
 
         /// <summary>Full path of the file being appended to.</summary>
         public string Path { get; }
@@ -75,12 +76,18 @@ namespace Emberfall.Net.Server.Telemetry
         /// so a merged file has rows from two machines. `source` separates ai_soak from ladder but
         /// says nothing about *where*, and provenance is impossible to backfill once the rows exist.
         /// </param>
-        public JsonlTelemetrySink(string dataDir, string env)
+        /// <param name="fsyncEachWrite">
+        /// False only for an offline run that writes thousands of matches a minute and can simply
+        /// be run again: there the fsync per match is the whole cost of the committer, and the run
+        /// calls <see cref="FlushToDisk"/> once when it is done. A server leaves this alone.
+        /// </param>
+        public JsonlTelemetrySink(string dataDir, string env, bool fsyncEachWrite = true)
         {
             if (string.IsNullOrWhiteSpace(env))
                 throw new ArgumentException("An env label is required; provenance cannot be backfilled.", nameof(env));
 
             _env = env;
+            _fsyncEachWrite = fsyncEachWrite;
             Directory.CreateDirectory(dataDir);
             Path = System.IO.Path.Combine(dataDir, FileName);
         }
@@ -214,7 +221,7 @@ namespace Emberfall.Net.Server.Telemetry
                         s.Write(rows[i], 0, rows[i].Length);
                         s.WriteByte((byte)'\n');
                     }
-                    s.Flush(true);
+                    if (_fsyncEachWrite) s.Flush(true);
                 }
             }
             catch (Exception ex)
@@ -226,6 +233,21 @@ namespace Emberfall.Net.Server.Telemetry
                     DroppedRows += rows.Count;
                     LastError = ex;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Put everything written so far on the volume. The one fsync a sink constructed with
+        /// <c>fsyncEachWrite: false</c> ever does. Throws, unlike the event methods: the caller is
+        /// a run asking whether its file is safe, not a match that must not be interrupted.
+        /// </summary>
+        public void FlushToDisk()
+        {
+            lock (_gate)
+            {
+                if (!File.Exists(Path)) return;
+                using var s = new FileStream(Path, FileMode.Append, FileAccess.Write, FileShare.Read);
+                s.Flush(true);
             }
         }
 
