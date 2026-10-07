@@ -107,7 +107,7 @@ namespace Emberfall.Net.Server.Social
                 case ChatSendMsg chat:
                     await SendChatAsync(playerId, chat.Code, chat.Text, ct).ConfigureAwait(false);
                     break;
-                // Anything else is a server-to-client type a client has no business sending.
+                    // Anything else is a server-to-client type a client has no business sending.
             }
         }
 

@@ -322,8 +322,8 @@ namespace Emberfall.Presentation
             switch (source.Kind)
             {
                 case DragSourceKind.HeroPower: return true;
-                case DragSourceKind.HandCard:  return !HandCardOccupiesBoardSlot(source.Id);
-                default:                       return false;
+                case DragSourceKind.HandCard: return !HandCardOccupiesBoardSlot(source.Id);
+                default: return false;
             }
         }
 
