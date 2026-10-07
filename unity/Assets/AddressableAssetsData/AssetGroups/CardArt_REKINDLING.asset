@@ -375,6 +375,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2b6128cdaa24b6e8d7c60fb70e2c005
+    m_Address: card_art/ember_kindle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a77e927562d64e14a91445e1b6c4c9c2
     m_Address: card_art/ember_pyre_commander
     m_ReadOnly: 0

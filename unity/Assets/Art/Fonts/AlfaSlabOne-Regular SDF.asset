@@ -127,17 +127,17 @@ MonoBehaviour:
   m_FontFeatureTable:
     m_MultipleSubstitutionRecords: []
     m_LigatureSubstitutionRecords:
-    - m_ComponentGlyphIDs: 30010000300100003d010000
+    - m_ComponentGlyphIDs: 30010000300100003d010000u
       m_LigatureGlyphID: 475
-    - m_ComponentGlyphIDs: 300100003001000054010000
+    - m_ComponentGlyphIDs: 300100003001000054010000u
       m_LigatureGlyphID: 476
-    - m_ComponentGlyphIDs: 3001000030010000
+    - m_ComponentGlyphIDs: 3001000030010000u
       m_LigatureGlyphID: 474
-    - m_ComponentGlyphIDs: 300100003d010000
+    - m_ComponentGlyphIDs: 300100003d010000u
       m_LigatureGlyphID: 477
-    - m_ComponentGlyphIDs: 3001000054010000
+    - m_ComponentGlyphIDs: 3001000054010000u
       m_LigatureGlyphID: 478
-    - m_ComponentGlyphIDs: 730000006a01000022020000
+    - m_ComponentGlyphIDs: 730000006a01000022020000u
       m_LigatureGlyphID: 649
     m_GlyphPairAdjustmentRecords:
     - m_FirstAdjustmentRecord:
