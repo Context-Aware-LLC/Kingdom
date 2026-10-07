@@ -765,7 +765,7 @@ namespace Emberfall.Policy
             return result;
         }
 
-        private static IReadOnlyList<int> PubliclyPlayedDefinitions(
+        internal static IReadOnlyList<int> PubliclyPlayedDefinitions(
             GameState projectedAfter,
             IReadOnlyList<GameEvent> events,
             PlayerId viewer)
