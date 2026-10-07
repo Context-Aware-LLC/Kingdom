@@ -812,7 +812,7 @@
 /* The hero power's socket ring, on the right of the plate where there was dead space (#312).
  *
  * ITS SIZE IS DERIVED FROM THE SPRITE, NOT PICKED, AND THE DERIVATION IS THE MAINTENANCE BURDEN.
- * HeroPower_IronEmber.png was cut at 1424x1424 with a 730x747 aperture, so the hole is 0.5126 of
+ * Board/hero-power.png (the same ring the board loads) was cut at 1424x1424 with a 730x747 aperture, so the hole is 0.5126 of
  * the file. It ships at 512x512 (power-of-two, so the mipped texture can compress); the fraction
  * is unchanged.
  * Drawn at 200 the hole is ~103 across, and the glyph inside is sized to 92 so a little metal
@@ -832,7 +832,7 @@
     flex-shrink: 0;
     align-self: center;
     margin-left: var(--space-4);
-    background-image: url("/Assets/Art/UI/Frames/HeroPower_IronEmber.png");
+    background-image: url("/Assets/Art/UI/Board/hero-power.png");
     -unity-background-scale-mode: scale-to-fit;
     align-items: center;
     justify-content: center;

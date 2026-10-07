@@ -160,11 +160,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 64e81dc0c85219242ab77fdd070c609e
-    m_Address: ui/HeroPower_IronEmber
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 67322842c6cbd7a42aa523b041480088
     m_Address: ui/rolled-complete
     m_ReadOnly: 0
