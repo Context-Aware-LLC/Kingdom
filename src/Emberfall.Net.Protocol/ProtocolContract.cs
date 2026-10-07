@@ -33,7 +33,9 @@ namespace Emberfall.Net.Protocol
     {
         /// <summary>Wire contract label. v5 added <c>HelloMsg.AuthToken</c> (EF-074b); v6 renamed
         /// the <c>engineContractVersion</c> wire key to <c>wireContractVersion</c> (NOR-240), which
-        /// is a rename of the field, not a change to what it holds.</summary>
-        public const string Version = "interfaces.v6";
+        /// is a rename of the field, not a change to what it holds; v7 added
+        /// <c>heroDamageTakenThisTurn</c> to the snapshot and the canonical hash, so a v6 client
+        /// fails integrity on every snapshot a v7 server sends.</summary>
+        public const string Version = "interfaces.v7";
     }
 }
