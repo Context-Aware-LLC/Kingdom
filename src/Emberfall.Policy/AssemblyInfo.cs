@@ -13,3 +13,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Emberfall.Tools.NetSoak")]
 [assembly: InternalsVisibleTo("Emberfall.Net.Server")]
 [assembly: InternalsVisibleTo("Emberfall.Net.Server.Tests")]
+// The corpus tool hands DistinctPlayKey to the builder, which sits beneath this assembly and so
+// cannot name the rule it has to check search labels against.
+[assembly: InternalsVisibleTo("Emberfall.Tools.TrainingCorpus")]
+[assembly: InternalsVisibleTo("Emberfall.Training.Corpus.Tests")]

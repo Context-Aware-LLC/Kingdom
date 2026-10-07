@@ -13,7 +13,16 @@ using Emberfall.Net.Protocol;
 
 namespace Emberfall.Training.Corpus
 {
-    public sealed record CorpusBuildResult(string DatasetManifestPath, int Episodes, int Decisions);
+    public sealed record CorpusBuildResult(
+        string DatasetManifestPath, int Episodes, int Decisions, int SearchedDecisions = 0);
+
+    /// <summary>
+    /// The rule that says which legal actions are spellings of one play, handed in by the caller.
+    /// The rule itself is <c>Emberfall.Policy.DistinctPlayKey</c>, and this assembly sits beneath
+    /// that one, so it cannot name it; a copy here would be the second implementation the repo
+    /// forbids. A builder given no rule refuses a corpus that carries search labels.
+    /// </summary>
+    public sealed record PlayKeyRule(int SchemaVersion, Func<PlayerIntent, GameState, string> KeyOf);
 
     /// <summary>
     /// Materializes replay + episode sidecar into model-neutral decision rows. It replays through
@@ -27,8 +36,14 @@ namespace Emberfall.Training.Corpus
         public const string DatasetManifestFileName = "dataset-manifest.json";
 
         private readonly ICardDatabase _db;
+        private readonly PlayKeyRule? _playKey;
+        private int _searchedDecisions;
 
-        public TrainingCorpusBuilder(ICardDatabase db) => _db = db;
+        public TrainingCorpusBuilder(ICardDatabase db, PlayKeyRule? playKey = null)
+        {
+            _db = db;
+            _playKey = playKey;
+        }
 
         public CorpusBuildResult Build(string sourceManifestPath, string cardDataSha256, string outputDirectory)
         {
@@ -43,6 +58,7 @@ namespace Emberfall.Training.Corpus
             var matchIds = new HashSet<string>(StringComparer.Ordinal);
             int episodeCount = 0;
             int decisionCount = 0;
+            _searchedDecisions = 0;
 
             try
             {
@@ -111,7 +127,7 @@ namespace Emberfall.Training.Corpus
             string datasetPath = Path.Combine(outputDirectory, DatasetManifestFileName);
             byte[] json = JsonSerializer.SerializeToUtf8Bytes(dataset, CorpusJson.Options);
             CorpusFiles.AtomicWrite(datasetPath, json);
-            return new CorpusBuildResult(datasetPath, episodeCount, decisionCount);
+            return new CorpusBuildResult(datasetPath, episodeCount, decisionCount, _searchedDecisions);
         }
 
         private bool UsesDraftCard(EpisodeManifest episode)
@@ -155,8 +171,12 @@ namespace Emberfall.Training.Corpus
                 GameState projectedBeforeP1 = GameStateProjector.Project(host.State, p1);
                 GameState projectedBefore = intent.Player == p0 ? projectedBeforeP0 : projectedBeforeP1;
                 EpisodeDecisionHash expectedHashes = episode.DecisionHashes[index];
+                // A searching seat enumerates without concede and its candidate indices and play
+                // groups are positions in THAT list. Concede is enumerated first, so including it
+                // here would shift every one of them by one and still look plausible.
+                bool searched = expectedHashes.SearchVersion is not null;
                 IReadOnlyList<PlayerIntent> actions = legal.Enumerate(host.State, intent.Player,
-                    includeConcede: expectedHashes.BehaviorAllowsConcede ?? true);
+                    includeConcede: expectedHashes.BehaviorAllowsConcede ?? !searched);
                 List<JsonElement> actionJson = EncodeActions(actions, new MatchId(episode.MatchId));
                 PlayerIntent normalizedIntent = NormalizeIntent(host.State, intent);
                 JsonElement chosenJson = EncodeIntent(normalizedIntent, new MatchId(episode.MatchId));
@@ -176,6 +196,11 @@ namespace Emberfall.Training.Corpus
                     || !string.Equals(expectedHashes.BeforeSha256, beforeHash, StringComparison.Ordinal))
                     throw new InvalidDataException(
                         $"Episode '{episode.MatchId}' intent {index} pre-action observation hash disagrees with capture.");
+                if (searched)
+                {
+                    VerifySearchLabel(episode, index, expectedHashes, actions, chosenIndex, projectedBefore);
+                    _searchedDecisions++;
+                }
                 JsonElement observation = EncodeObservation(projectedBefore, new MatchId(episode.MatchId));
                 PlayerMemory playerMemory = EncodePlayerMemory(
                     host.State,
@@ -237,7 +262,14 @@ namespace Emberfall.Training.Corpus
                     expectedHashes.BehaviorEpsilon,
                     expectedHashes.BehaviorDistinctPlayCount,
                     expectedHashes.BehaviorPlayKeySchemaVersion,
-                    expectedHashes.BehaviorPlayGroups));
+                    expectedHashes.BehaviorPlayGroups,
+                    expectedHashes.SearchVersion,
+                    expectedHashes.SearchCandidateActionIndices,
+                    expectedHashes.SearchVisits,
+                    expectedHashes.SearchMeanValues,
+                    expectedHashes.SearchPlayPriors,
+                    expectedHashes.SearchPlayGroups,
+                    expectedHashes.SearchPlayKeySchemaVersion));
                 index++;
             }
 
@@ -252,6 +284,59 @@ namespace Emberfall.Training.Corpus
                 throw new InvalidDataException(
                     $"Episode '{episode.MatchId}' terminal observation hash disagrees with its manifest.");
             return index;
+        }
+
+        /// <summary>
+        /// A search label is only as good as the indices it is written in. The manifest validated
+        /// its own arithmetic; this checks it against the game: the action list the seat grouped is
+        /// the one replay reconstructs, the play it chose is the intent the replay holds, and the
+        /// groups are what the play-key rule says about this state today. The last one is what
+        /// catches a capture grouped by an older rule, which would otherwise train a target summed
+        /// over the wrong spellings.
+        /// </summary>
+        private void VerifySearchLabel(
+            EpisodeManifest episode, int index, EpisodeDecisionHash label,
+            IReadOnlyList<PlayerIntent> actions, int chosenIndex, GameState actorView)
+        {
+            string where = $"Episode '{episode.MatchId}' intent {index}";
+            if (_playKey is null)
+                throw new InvalidDataException(
+                    $"{where} carries a search label, and this builder was given no play-key rule "
+                    + "to check its play groups against.");
+            if (label.SearchPlayKeySchemaVersion != _playKey.SchemaVersion)
+                throw new InvalidDataException(
+                    $"{where} was grouped by play-key schema {label.SearchPlayKeySchemaVersion}; "
+                    + $"this builder checks schema {_playKey.SchemaVersion}.");
+            IReadOnlyList<int> groups = label.SearchPlayGroups!;
+            if (groups.Count != actions.Count)
+                throw new InvalidDataException(
+                    $"{where} search label groups {groups.Count} actions; replay reconstructs "
+                    + $"{actions.Count}.");
+            if (label.SearchChosenActionIndex != chosenIndex)
+                throw new InvalidDataException(
+                    $"{where} search chose action {label.SearchChosenActionIndex}; the replay holds "
+                    + $"action {chosenIndex}.");
+            foreach (int candidate in label.SearchCandidateActionIndices!)
+                if (candidate < 0 || candidate >= actions.Count)
+                    throw new InvalidDataException(
+                        $"{where} search candidate {candidate} is not a legal action.");
+
+            // Plays are numbered in order of first appearance, the same numbering capture uses, so
+            // the two arrays are compared as written.
+            var byKey = new Dictionary<string, int>(actions.Count, StringComparer.Ordinal);
+            for (int i = 0; i < actions.Count; i++)
+            {
+                string key = _playKey.KeyOf(actions[i], actorView);
+                if (!byKey.TryGetValue(key, out int play))
+                {
+                    play = byKey.Count;
+                    byKey.Add(key, play);
+                }
+                if (groups[i] != play)
+                    throw new InvalidDataException(
+                        $"{where} search label puts action {i} in play {groups[i]}; the play-key "
+                        + $"rule puts it in play {play}.");
+            }
         }
 
         private static void ValidateReplayHeader(EpisodeManifest episode, ReplayRecord replay)
@@ -419,7 +504,23 @@ namespace Emberfall.Training.Corpus
             [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             int? BehaviorPlayKeySchemaVersion = null,
             [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-            IReadOnlyList<int>? BehaviorPlayGroups = null);
+            IReadOnlyList<int>? BehaviorPlayGroups = null,
+            // A searched decision's label, verified against the replayed legal set. The chosen
+            // index is not repeated: it was checked equal to ChosenActionIndex above.
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            string? SearchVersion = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchCandidateActionIndices = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchVisits = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<double?>? SearchMeanValues = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<double>? SearchPlayPriors = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchPlayGroups = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            int? SearchPlayKeySchemaVersion = null);
 
         private sealed record PlayerMemory(
             IReadOnlyList<int> SelfRemainingDeck,
