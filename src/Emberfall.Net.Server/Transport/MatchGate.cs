@@ -773,7 +773,8 @@ namespace Emberfall.Net.Server.Transport
                     _rankedMatchSink,
                     _trainingEpisodes,
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : first.PolicyIdentity,
-                    attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : second.PolicyIdentity);
+                    attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : second.PolicyIdentity,
+                    seat0.SecondaryClass, seat1.SecondaryClass);
                 var pump = new SessionPump(session);
                 lock (_lock)
                 {

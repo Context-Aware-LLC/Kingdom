@@ -95,7 +95,7 @@ namespace Emberfall.Net.Server.Bots
                 if (account.Kind != AccountKind.Superuser)
                     await _store.SetKindAsync(account.PlayerId, AccountKind.Superuser, ct).ConfigureAwait(false);
 
-                var deck = new SeatDeck(entry.PrimaryClass, entry.Cards);
+                var deck = new SeatDeck(entry.PrimaryClass, entry.Cards, entry.SecondaryClass);
                 _sink.MarkReady(new ResolvedBotAccount(
                     entry.AccountUsername,
                     AccountId.FromAuthenticatedAccount(account.PlayerId),

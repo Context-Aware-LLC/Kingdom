@@ -15,10 +15,16 @@ namespace Emberfall.Net.Server.Decks
         public readonly CardClass HeroClass;
         public readonly IReadOnlyList<int> Deck;
 
-        public SeatDeck(CardClass heroClass, IReadOnlyList<int> deck)
+        /// <summary>The pairing's second class, which the opposite seat is told at match start.
+        /// <c>NEUTRAL</c> for the prebuilt fallback, which is not a paired deck.</summary>
+        public readonly CardClass SecondaryClass;
+
+        public SeatDeck(CardClass heroClass, IReadOnlyList<int> deck,
+                        CardClass secondaryClass = CardClass.NEUTRAL)
         {
             HeroClass = heroClass;
             Deck = deck;
+            SecondaryClass = secondaryClass;
         }
 
         /// <summary>The prebuilt <see cref="MatchSetup"/>'s seat, decomposed so a non-submitting seat
@@ -112,7 +118,7 @@ namespace Emberfall.Net.Server.Decks
             foreach (var id in order)
                 for (int i = 0; i < summed[id]; i++) ordered.Add(id);
 
-            return DeckSubmissionResult.Ok(new SeatDeck(msg.PrimaryClass, ordered));
+            return DeckSubmissionResult.Ok(new SeatDeck(msg.PrimaryClass, ordered, msg.SecondaryClass));
         }
     }
 }

@@ -301,6 +301,39 @@ namespace Emberfall.Net.Protocol.Tests
         }
 
         [Test]
+        public void MatchStart_Carries_Both_Seats_Second_Class()
+        {
+            var s = CanonicalStateFixtures.BuildSeedState();
+            var msg = new MatchStartMsg(new PlayerId("p0"), 0, ProtocolContract.Version,
+                new OpponentInfo(new PlayerId("p1"), "Rival", CardClass.NIGHTVEIL), SnapshotMsg.Of(s),
+                SecondaryClass: CardClass.VERDANT);
+            var m = RoundTrip<MatchStartMsg>(msg);
+            Assert.That(m.SecondaryClass, Is.EqualTo(CardClass.VERDANT));
+            Assert.That(m.Opponent.SecondaryClass, Is.EqualTo(CardClass.NIGHTVEIL));
+        }
+
+        [Test]
+        public void MatchStart_Without_A_Second_Class_Decodes_As_Neutral_And_A_Bad_One_Is_Refused()
+        {
+            // Additive on the reconnect token's terms: an encoder that predates the field omits it.
+            var s = CanonicalStateFixtures.BuildSeedState();
+            var msg = new MatchStartMsg(new PlayerId("p0"), 0, ProtocolContract.Version,
+                new OpponentInfo(new PlayerId("p1"), "Rival", CardClass.NIGHTVEIL), SnapshotMsg.Of(s),
+                SecondaryClass: CardClass.VERDANT);
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(msg, M, 1));
+            Assert.That(json, Does.Contain(",\"secondaryClass\":\"NIGHTVEIL\"").And.Contain(",\"secondaryClass\":\"VERDANT\""));
+
+            string stripped = json.Replace(",\"secondaryClass\":\"NIGHTVEIL\"", "").Replace(",\"secondaryClass\":\"VERDANT\"", "");
+            var res = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(stripped));
+            Assert.That(res.Ok, Is.True, $"{res.Error} {res.Detail}");
+            var m = (MatchStartMsg)res.Message!;
+            Assert.That((m.SecondaryClass, m.Opponent.SecondaryClass), Is.EqualTo((CardClass.NEUTRAL, CardClass.NEUTRAL)));
+
+            var bad = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json.Replace("\"secondaryClass\":\"NIGHTVEIL\"", "\"secondaryClass\":\"NOT_A_CLASS\"")));
+            Assert.That(bad.Ok, Is.False, "a second class that is not a CardClass must not decode");
+        }
+
+        [Test]
         public void Version_Mismatch_Is_Refused_Before_The_Body()
         {
             var bytes = ProtocolCodec.Encode(new AckMsg(1), M, 1);

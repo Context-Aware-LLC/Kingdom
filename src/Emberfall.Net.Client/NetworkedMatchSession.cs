@@ -39,6 +39,8 @@ namespace Emberfall.Net.Client
         private int _seat = -1;
         private PlayerId _player;
         private string _opponentName = string.Empty;
+        private CardClass _secondaryClass = CardClass.NEUTRAL;
+        private CardClass _opponentSecondaryClass = CardClass.NEUTRAL;
 
         private ulong _outSeq;
         private long _lastSendMs;
@@ -134,6 +136,13 @@ namespace Emberfall.Net.Client
         /// defense in depth and not the fix</b> — but obligation 4 of VULN-002 §4 is genuinely
         /// client-side, so a NEW renderer of this string owns it and does not inherit it.</para></summary>
         public string OpponentName { get { lock (_lock) return _opponentName; } }
+        /// <summary><c>MatchStartMsg.SecondaryClass</c> — the second class of the pairing the server
+        /// seated us with. <c>NEUTRAL</c> until the match starts, and after it when the seat has no
+        /// pairing (the prebuilt fallback) or the server predates the field. Each seat's PRIMARY
+        /// class is its hero's and is read off the snapshot, not here.</summary>
+        public CardClass SecondaryClass { get { lock (_lock) return _secondaryClass; } }
+        /// <summary><c>MatchStartMsg.Opponent.SecondaryClass</c>, on the same terms.</summary>
+        public CardClass OpponentSecondaryClass { get { lock (_lock) return _opponentSecondaryClass; } }
         public ConnectionState State { get { lock (_lock) return _state; } }
         public DeadReason DeadReason { get { lock (_lock) return _deadReason; } }
         /// <summary>The server's close-frame reason text, when it sent one (#232) — null for a local
@@ -319,6 +328,8 @@ namespace Emberfall.Net.Client
                 _seat = ms.Seat;
                 _player = ms.PlayerId;
                 _opponentName = ms.Opponent.DisplayName ?? string.Empty;
+                _secondaryClass = ms.SecondaryClass;
+                _opponentSecondaryClass = ms.Opponent.SecondaryClass;
                 _current = ms.Snapshot.State;   // initial mirror; no OnSnapshot for the initial (a4 §3)
                 SetStateUnlocked(ConnectionState.Live);
             }
