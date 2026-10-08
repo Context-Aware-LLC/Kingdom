@@ -981,25 +981,31 @@ details .a p:last-child {
   }
 }
 
-/* ---------- docs: a side menu that is always open, content beside it ---------- */
+/* ---------- docs: side menu on the left, the page, its own sections on the right ---------- */
 .docs {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: 200px minmax(0, 1fr) 180px;
   gap: var(--s-5);
   align-items: start;
 }
 
-.docs-nav {
+.docs-nav,
+.docs-toc {
   position: sticky;
   top: 0;
-  max-height: 100vh;
+  height: 100vh;
   overflow-y: auto;
-  padding: var(--s-6) var(--s-3) var(--s-4) 0;
-  border-right: 1px solid var(--line);
+  padding: var(--s-6) 0 var(--s-4);
   font-size: var(--t-small);
 }
 
-.docs-nav p {
+.docs-nav {
+  padding-right: var(--s-3);
+  border-right: 1px solid var(--line);
+}
+
+.docs-nav p,
+.docs-toc p {
   font-size: var(--t-eyebrow);
   letter-spacing: 0.24em;
   text-transform: uppercase;
@@ -1007,23 +1013,20 @@ details .a p:last-child {
   margin: var(--s-3) 0 var(--s-1);
 }
 
-.docs-nav p:first-child {
+.docs-nav p:first-child,
+.docs-toc p:first-child {
   margin-top: 0;
 }
 
-.docs-nav ul {
+.docs-nav ul,
+.docs-toc ul {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.docs-nav ul ul {
-  margin: 2px 0 6px;
-  padding-left: 12px;
-  border-left: 1px solid var(--line);
-}
-
-.docs-nav a {
+.docs-nav a,
+.docs-toc a {
   display: block;
   padding: 3px 0;
   color: var(--muted);
@@ -1031,6 +1034,7 @@ details .a p:last-child {
 }
 
 .docs-nav a:hover,
+.docs-toc a:hover,
 .docs-nav a[aria-current] {
   color: var(--parchment);
 }
@@ -1043,7 +1047,20 @@ details .a p:last-child {
   padding-bottom: var(--s-6);
 }
 
-@media (max-width: 760px) {
+/* Narrower than this the page's own sections go; the side menu stays at the side. */
+@media (max-width: 1000px) {
+  .docs {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: var(--s-4);
+  }
+
+  .docs-toc {
+    display: none;
+  }
+}
+
+/* On a phone there is no side to put it at: the menu runs across the top in short rows. */
+@media (max-width: 560px) {
   .docs {
     grid-template-columns: 1fr;
     gap: 0;
@@ -1051,13 +1068,12 @@ details .a p:last-child {
 
   .docs-nav {
     position: static;
-    max-height: none;
+    height: auto;
     padding: var(--s-3) 0;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 
-  /* On a phone the menu runs across, not down, so the page starts on the first screen. */
   .docs-nav ul {
     display: flex;
     flex-wrap: wrap;
@@ -1066,10 +1082,5 @@ details .a p:last-child {
 
   .docs-nav p {
     margin: var(--s-2) 0 2px;
-  }
-
-  /* A page's own sections would push its content off a phone screen. */
-  .docs-nav ul ul {
-    display: none;
   }
 }

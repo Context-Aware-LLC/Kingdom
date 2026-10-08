@@ -13,6 +13,7 @@ there, and a name the glossary does not hold fails the build. Run from anywhere:
 python web/landing/scripts/build-gallery.py
 """
 import glob
+import hashlib
 import html
 import json
 import re
@@ -70,21 +71,22 @@ def keyword_anchor(k):
     return k.lower().replace("_", "-")
 
 
-def docs_nav(current, heroes, sections):
-    """The side menu every docs page carries. `sections` are the current page's own anchors."""
+def docs_toc(sections):
+    """The page's own anchors, shown on the right. Empty for a page with none."""
+    if not sections:
+        return ""
+    links = "\n".join(f'      <li><a href="{a}">{html.escape(s)}</a></li>' for s, a in sections)
+    return f'  <nav class="docs-toc" aria-label="On this page">\n    <p>On this page</p>\n    <ul>\n{links}\n    </ul>\n  </nav>'
+
+
+def docs_nav(current):
+    """The side menu every docs page carries. It lists the docs and nothing else (Sam, 2026-10-08)."""
     def item(label, href):
         here = ' aria-current="page"' if href == current else ""
-        inner = ""
-        if here and sections:
-            inner = "<ul>" + "".join(f'<li><a href="{a}">{html.escape(s)}</a></li>' for s, a in sections) + "</ul>"
-        return f'      <li><a href="{href}"{here}>{html.escape(label)}</a>{inner}</li>'
+        return f'      <li><a href="{href}"{here}>{html.escape(label)}</a></li>'
 
-    groups = (("Docs", DOCS_PAGES),
-              ("Heroes", [(h["name"], f'/heroes/{h["slug"]}') for h in heroes]),
-              ("More", [("FAQ", "/faq")]))
-    body = "\n".join(f"    <p>{title}</p>\n    <ul>\n" + "\n".join(item(l, u) for l, u in links) + "\n    </ul>"
-                     for title, links in groups)
-    return f'  <nav class="docs-nav" aria-label="Docs">\n{body}\n  </nav>'
+    items = "\n".join(item(label, href) for label, href in DOCS_PAGES)
+    return f'  <nav class="docs-nav" aria-label="Docs">\n    <p>Docs</p>\n    <ul>\n{items}\n    </ul>\n  </nav>'
 
 
 def card_html(c):
@@ -171,7 +173,8 @@ def main():
     for template, out, href, sections in (("docs.template.html", "docs.html", "/docs", []),
                                           ("keywords.template.html", "docs/keywords.html", "/docs/keywords", anchors)):
         page = (SITE / "scripts" / template).read_text(encoding="utf-8")
-        page = page.replace("{{DOCS_NAV}}", docs_nav(href, heroes, sections)).replace("{{KEYWORDS}}", entries)
+        page = (page.replace("{{DOCS_NAV}}", docs_nav(href)).replace("{{DOCS_TOC}}", docs_toc(sections))
+                .replace("{{KEYWORDS}}", entries))
         (SITE / "public" / out).write_text(page, encoding="utf-8", newline="\n")
     print(f"published {len(keywords)} keywords")
     template = (SITE / "scripts" / "hero.template.html").read_text(encoding="utf-8")
@@ -191,6 +194,16 @@ def main():
     if n != 1:
         sys.exit("index.html: roster markers not found")
     index.write_text(text, encoding="utf-8", newline="\n")
+
+    # /assets/* is cached for a week, so a changed stylesheet reaches nobody who already has the
+    # old one unless its address changes too. Every page links it by content hash.
+    version = hashlib.sha256((SITE / "public" / "assets" / "site.css").read_bytes()).hexdigest()[:10]
+    for page in (SITE / "public").rglob("*.html"):
+        text = page.read_text(encoding="utf-8")
+        stamped = re.sub(r'/assets/site\.css(\?v=[\w-]+)?"', f'/assets/site.css?v={version}"', text)
+        if stamped != text:
+            page.write_text(stamped, encoding="utf-8", newline="\n")
+    print(f"stylesheet version {version}")
 
 
 if __name__ == "__main__":
