@@ -40,8 +40,9 @@ def card_html(c):
     name = html.escape(c["name"].strip())
     cls = CLASS_LABEL.get(c["class"], c["class"].title())
     rarity = c["rarity"].title()
+    article = "an" if rarity[0] in "AEIOU" else "a"
     return f'''      <figure class="card r-{c["rarity"].lower()}">
-        <img src="/assets/cards/{c["handle"]}.webp" alt="{name}, a {rarity.lower()} {html.escape(cls)} card" width="{THUMB}" height="{THUMB}" loading="lazy">
+        <img src="/assets/cards/{c["handle"]}.webp" alt="{name}, {article} {rarity.lower()} {html.escape(cls)} card" width="{THUMB}" height="{THUMB}" loading="lazy">
         <figcaption>
           <strong>{name}</strong>
           <em>{html.escape(cls)} &middot; {rarity}</em>
