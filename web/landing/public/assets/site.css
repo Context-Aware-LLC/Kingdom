@@ -980,3 +980,96 @@ details .a p:last-child {
     max-width: 380px;
   }
 }
+
+/* ---------- docs: a side menu that is always open, content beside it ---------- */
+.docs {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: var(--s-5);
+  align-items: start;
+}
+
+.docs-nav {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  padding: var(--s-6) var(--s-3) var(--s-4) 0;
+  border-right: 1px solid var(--line);
+  font-size: var(--t-small);
+}
+
+.docs-nav p {
+  font-size: var(--t-eyebrow);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--frost);
+  margin: var(--s-3) 0 var(--s-1);
+}
+
+.docs-nav p:first-child {
+  margin-top: 0;
+}
+
+.docs-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.docs-nav ul ul {
+  margin: 2px 0 6px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+}
+
+.docs-nav a {
+  display: block;
+  padding: 3px 0;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.docs-nav a:hover,
+.docs-nav a[aria-current] {
+  color: var(--parchment);
+}
+
+.docs-nav a[aria-current] {
+  font-weight: 700;
+}
+
+.docs-body {
+  padding-bottom: var(--s-6);
+}
+
+@media (max-width: 760px) {
+  .docs {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .docs-nav {
+    position: static;
+    max-height: none;
+    padding: var(--s-3) 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* On a phone the menu runs across, not down, so the page starts on the first screen. */
+  .docs-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--s-2);
+  }
+
+  .docs-nav p {
+    margin: var(--s-2) 0 2px;
+  }
+
+  /* A page's own sections would push its content off a phone screen. */
+  .docs-nav ul ul {
+    display: none;
+  }
+}

@@ -1,5 +1,5 @@
 """Builds the public card teaser, the hero pages and the keyword glossary: public/cards.html,
-public/heroes/*.html, public/keywords.html, public/assets/cards/*.webp, and the hero roster inside
+public/heroes/*.html, public/docs.html, public/docs/keywords.html, public/assets/cards/*.webp, and the hero roster inside
 public/index.html.
 
 Only handles listed in gallery-allowlist.json are published, in that order. Everything else in
@@ -35,6 +35,8 @@ UNPUBLISHED_KEYWORDS = {"REINFORCE"}
 # Toll is a trigger label (CardTextGenerator.TriggerLabel), not a Keyword, so the game holds no
 # glossary line for it. It is the one definition written here.
 TRIGGER_TERMS = {"TOLL": "Happens when this minion dies."}
+# The docs section's own pages, in side-menu order. A new one needs a template and a line here.
+DOCS_PAGES = [("Start here", "/docs"), ("Keywords", "/docs/keywords")]
 THUMB = 480
 
 CLASS_LABEL = {"EMBERWARD": "Emberward", "TIDECALLER": "Tidecaller", "GRAVEKEEP": "Gravekeep", "VERDANT": "Verdant",
@@ -66,6 +68,23 @@ def load_keywords():
 
 def keyword_anchor(k):
     return k.lower().replace("_", "-")
+
+
+def docs_nav(current, heroes, sections):
+    """The side menu every docs page carries. `sections` are the current page's own anchors."""
+    def item(label, href):
+        here = ' aria-current="page"' if href == current else ""
+        inner = ""
+        if here and sections:
+            inner = "<ul>" + "".join(f'<li><a href="{a}">{html.escape(s)}</a></li>' for s, a in sections) + "</ul>"
+        return f'      <li><a href="{href}"{here}>{html.escape(label)}</a>{inner}</li>'
+
+    groups = (("Docs", DOCS_PAGES),
+              ("Heroes", [(h["name"], f'/heroes/{h["slug"]}') for h in heroes]),
+              ("More", [("FAQ", "/faq")]))
+    body = "\n".join(f"    <p>{title}</p>\n    <ul>\n" + "\n".join(item(l, u) for l, u in links) + "\n    </ul>"
+                     for title, links in groups)
+    return f'  <nav class="docs-nav" aria-label="Docs">\n{body}\n  </nav>'
 
 
 def card_html(c):
@@ -106,7 +125,7 @@ def hero_page(template, heroes, i, cards, published, keywords):
     if unknown:
         sys.exit(f'{h["slug"]}: keywords not in the glossary: {", ".join(unknown)}')
     points = "\n".join(f"        <li>{html.escape(p)}</li>" for p in h["points"])
-    links = " &middot; ".join(f'<a href="/keywords#{keyword_anchor(k)}">{html.escape(keywords[k][0])}</a>' for k in h["keywords"])
+    links = " &middot; ".join(f'<a href="/docs/keywords#{keyword_anchor(k)}">{html.escape(keywords[k][0])}</a>' for k in h["keywords"])
     fields = {
         "NAME": html.escape(h["name"]), "CLASS": CLASS_LABEL[h["class"]], "SLUG": h["slug"],
         "TAGLINE": html.escape(h["tagline"]), "ALT": html.escape(h["alt"]),
@@ -142,14 +161,19 @@ def main():
     for h in handles:
         print(" ", h)
 
-    keywords = load_keywords()
-    entries = "\n".join(f'        <dt id="{keyword_anchor(k)}">{html.escape(name)}</dt>\n        <dd>{html.escape(text)}</dd>'
-                        for k, (name, text) in sorted(keywords.items(), key=lambda kv: kv[1][0]))
-    page = (SITE / "scripts" / "keywords.template.html").read_text(encoding="utf-8").replace("{{KEYWORDS}}", entries)
-    (SITE / "public" / "keywords.html").write_text(page, encoding="utf-8", newline="\n")
-    print(f"published {len(keywords)} keywords")
-
     heroes = json.load(open(SITE / "heroes.json", encoding="utf-8"))
+    keywords = load_keywords()
+    ordered = sorted(keywords.items(), key=lambda kv: kv[1][0])
+    entries = "\n".join(f'        <dt id="{keyword_anchor(k)}">{html.escape(name)}</dt>\n        <dd>{html.escape(text)}</dd>'
+                        for k, (name, text) in ordered)
+    anchors = [(name, f"#{keyword_anchor(k)}") for k, (name, _) in ordered]
+    (SITE / "public" / "docs").mkdir(parents=True, exist_ok=True)
+    for template, out, href, sections in (("docs.template.html", "docs.html", "/docs", []),
+                                          ("keywords.template.html", "docs/keywords.html", "/docs/keywords", anchors)):
+        page = (SITE / "scripts" / template).read_text(encoding="utf-8")
+        page = page.replace("{{DOCS_NAV}}", docs_nav(href, heroes, sections)).replace("{{KEYWORDS}}", entries)
+        (SITE / "public" / out).write_text(page, encoding="utf-8", newline="\n")
+    print(f"published {len(keywords)} keywords")
     template = (SITE / "scripts" / "hero.template.html").read_text(encoding="utf-8")
     OUT_HEROES.mkdir(parents=True, exist_ok=True)
     OUT_POWERS.mkdir(parents=True, exist_ok=True)
