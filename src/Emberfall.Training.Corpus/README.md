@@ -127,6 +127,32 @@ The fields are all present or all absent, and never beside the `behavior*` field
 seat did not search (one distinct play, a pending choice, no world it could build) is an ordinary
 row; the command's `[rollout] search:` line counts each kind.
 
+### Resuming a killed rollout
+
+Run the same `rollout` command again with `--resume` added. Games already committed are skipped,
+the rest are played, and `episode-manifests.jsonl`, `rollout-progress.jsonl`, the replays and the
+closing summary end as an uninterrupted run's would: a game's seeds come from its place in the
+schedule, and games are committed in schedule order at any `--workers`. Without `--resume` an
+existing output directory is refused, as before. With it, a directory that does not exist is an
+ordinary new capture.
+
+`rollout-progress.jsonl` is what makes this possible. Its first line records every setting that
+decides the bytes a run writes (selection and its budget or sampler, checkpoint SHA, games per
+pair, classes, both seed offsets, device, deck-pool hash, card-data hash, build revision, contract
+versions); each later line is one committed game and what it added to the summary, clean or not.
+A resume is refused, naming each field, unless this invocation matches that line, and again unless
+every committed manifest row is the one this invocation would have written (seed, classes, decks,
+policy identities, checkpoint, card data, build and contract versions) with its replay still
+hashing to `replaySha256`. `--workers`, `--scorer-processes` and `--python` may differ: they change
+how long a capture takes and nothing it writes.
+
+The committed games are always a prefix of the schedule. A game that finished on a worker ahead of
+that prefix was never written, so it is played again, and its replay file is deleted first along
+with any a kill cut off mid-game. A capture whose manifest has rows and no
+`rollout-progress.jsonl` predates this and cannot be resumed. `buildRevision` is compared, so a
+resume must run the build that started the capture; `EMBERFALL_BUILD_REVISION` pins it for a
+rebuild that is known not to change play.
+
 The seat never enumerates concede, so the builder replays a searched decision WITHOUT it: concede
 is listed first, and including it would shift every recorded index by one. Ordinary rows of the
 same game keep concede, as every earlier corpus does. For each searched row the builder checks
