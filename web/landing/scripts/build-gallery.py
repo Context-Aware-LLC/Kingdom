@@ -1,12 +1,15 @@
-"""Builds the public card teaser and the hero pages: public/cards.html, public/heroes/*.html,
-public/assets/cards/*.webp, and the hero roster inside public/index.html.
+"""Builds the public card teaser, the hero pages and the keyword glossary: public/cards.html,
+public/heroes/*.html, public/keywords.html, public/assets/cards/*.webp, and the hero roster inside
+public/index.html.
 
 Only handles listed in gallery-allowlist.json are published, in that order. Everything else in
 unity/Assets/CardData stays private, because card text and stats still change before launch.
 A handle that is missing from the card data, or has no art, fails the build rather than
 publishing a half-card. Each hero in heroes.json gets a page showing its copy, its class's hero
 power as the card data words it, and that class's allowlisted cards; a hero with no hero power or
-no allowlisted card fails the build too. Run from anywhere:
+no allowlisted card fails the build too. A keyword is defined once, on the glossary page, in the
+words the game itself uses (KeywordCopy.Glossary); a hero page only names its keywords and links
+there, and a name the glossary does not hold fails the build. Run from anywhere:
 python web/landing/scripts/build-gallery.py
 """
 import glob
@@ -22,6 +25,13 @@ SITE = Path(__file__).resolve().parent.parent
 UNITY = SITE.parent.parent / "unity" / "Assets"
 OUT_IMG = SITE / "public" / "assets" / "cards"
 OUT_HEROES = SITE / "public" / "heroes"
+KEYWORD_COPY = UNITY / "Scripts" / "Presentation" / "KeywordCopy.cs"
+KEYWORD_SEMANTICS = SITE.parent.parent / "src" / "Emberfall.Core.Cards" / "KeywordSemantics.cs"
+# REINFORCE's glossary line is a placeholder no player meets; KeywordCopy says so at the line.
+UNPUBLISHED_KEYWORDS = {"REINFORCE"}
+# Toll is a trigger label (CardTextGenerator.TriggerLabel), not a Keyword, so the game holds no
+# glossary line for it. It is the one definition written here.
+TRIGGER_TERMS = {"TOLL": "Happens when this minion dies."}
 THUMB = 480
 
 CLASS_LABEL = {"EMBERWARD": "Emberward", "TIDECALLER": "Tidecaller", "GRAVEKEEP": "Gravekeep", "VERDANT": "Verdant",
@@ -34,6 +44,25 @@ def load_cards():
         for c in json.load(open(f, encoding="utf-8")):
             cards[c["handle"]] = c
     return cards
+
+
+def load_keywords():
+    """Keyword id -> (printed name, definition), read from the game's own copy."""
+    # The game prints a keyword as its humanised id unless KeywordSemantics.AuthoredName overrides
+    # it. Nothing does today; if that changes, this build must read the override rather than guess.
+    semantics = KEYWORD_SEMANTICS.read_text(encoding="utf-8")
+    if not re.search(r"AuthoredName\(Keyword keyword\)(?:\s*//[^\n]*)*\s*=> null;", semantics):
+        sys.exit("KeywordSemantics.AuthoredName now names a keyword: teach load_keywords to read it")
+    found = re.findall(r'Keyword\.(\w+) =>\s*"((?:[^"\\]|\\.)*)"', KEYWORD_COPY.read_text(encoding="utf-8"))
+    if not found:
+        sys.exit(f"no glossary lines found in {KEYWORD_COPY}")
+    terms = {k: text for k, text in found if k not in UNPUBLISHED_KEYWORDS}
+    terms.update(TRIGGER_TERMS)
+    return {k: (" ".join(w.capitalize() for w in k.split("_")), text) for k, text in terms.items()}
+
+
+def keyword_anchor(k):
+    return k.lower().replace("_", "-")
 
 
 def card_html(c):
@@ -52,14 +81,13 @@ def card_html(c):
 
 
 def roster_html(h):
-    name = CLASS_LABEL[h["class"]]
     return (f'        <figure class="card"><a href="/heroes/{h["slug"]}"><img src="/assets/hero-{h["slug"]}.webp" alt="{html.escape(h["alt"])}" '
-            f'width="560" height="560" loading="lazy"><figcaption><strong>{name}</strong><span>{html.escape(h["tagline"])}</span></figcaption></a></figure>')
+            f'width="560" height="560" loading="lazy"><figcaption><strong>{html.escape(h["name"])}</strong><em>{CLASS_LABEL[h["class"]]}</em>'
+            f'<span>{html.escape(h["tagline"])}</span></figcaption></a></figure>')
 
 
-def hero_page(template, heroes, i, cards, published):
+def hero_page(template, heroes, i, cards, published, keywords):
     h = heroes[i]
-    name = CLASS_LABEL[h["class"]]
     powers = [c for c in cards.values() if c["class"] == h["class"] and c["type"] == "HERO_POWER"]
     if len(powers) != 1:
         sys.exit(f'{h["slug"]}: expected one hero power, found {len(powers)}')
@@ -67,15 +95,20 @@ def hero_page(template, heroes, i, cards, published):
     if not own:
         sys.exit(f'{h["slug"]}: no allowlisted cards')
     prev, nxt = heroes[i - 1], heroes[(i + 1) % len(heroes)]
-    traits = "\n".join(f"        <dt>{html.escape(t)}</dt>\n        <dd>{html.escape(d)}</dd>" for t, d in h["traits"])
+    unknown = [k for k in h["keywords"] if k not in keywords]
+    if unknown:
+        sys.exit(f'{h["slug"]}: keywords not in the glossary: {", ".join(unknown)}')
+    points = "\n".join(f"        <li>{html.escape(p)}</li>" for p in h["points"])
+    links = " &middot; ".join(f'<a href="/keywords#{keyword_anchor(k)}">{html.escape(keywords[k][0])}</a>' for k in h["keywords"])
     fields = {
-        "NAME": name, "SLUG": h["slug"], "TAGLINE": html.escape(h["tagline"]), "ALT": html.escape(h["alt"]),
-        "PLAY": html.escape(h["play"]), "TRAITS": traits,
+        "NAME": html.escape(h["name"]), "CLASS": CLASS_LABEL[h["class"]], "SLUG": h["slug"],
+        "TAGLINE": html.escape(h["tagline"]), "ALT": html.escape(h["alt"]),
+        "STYLE": html.escape(h["style"]), "POINTS": points, "KEYWORDS": links,
         "POWER_NAME": html.escape(powers[0]["name"].strip()), "POWER_TEXT": html.escape(powers[0]["text"]),
         "POWER_COST": str(powers[0]["cost"]),
         "CARDS": "\n".join(card_html(c) for c in own),
-        "PREV_SLUG": prev["slug"], "PREV_NAME": CLASS_LABEL[prev["class"]],
-        "NEXT_SLUG": nxt["slug"], "NEXT_NAME": CLASS_LABEL[nxt["class"]],
+        "PREV_SLUG": prev["slug"], "PREV_NAME": html.escape(prev["name"]),
+        "NEXT_SLUG": nxt["slug"], "NEXT_NAME": html.escape(nxt["name"]),
     }
     return re.sub(r"\{\{(\w+)\}\}", lambda m: fields[m.group(1)], template), len(own)
 
@@ -102,12 +135,19 @@ def main():
     for h in handles:
         print(" ", h)
 
+    keywords = load_keywords()
+    entries = "\n".join(f'        <dt id="{keyword_anchor(k)}">{html.escape(name)}</dt>\n        <dd>{html.escape(text)}</dd>'
+                        for k, (name, text) in sorted(keywords.items(), key=lambda kv: kv[1][0]))
+    page = (SITE / "scripts" / "keywords.template.html").read_text(encoding="utf-8").replace("{{KEYWORDS}}", entries)
+    (SITE / "public" / "keywords.html").write_text(page, encoding="utf-8", newline="\n")
+    print(f"published {len(keywords)} keywords")
+
     heroes = json.load(open(SITE / "heroes.json", encoding="utf-8"))
     template = (SITE / "scripts" / "hero.template.html").read_text(encoding="utf-8")
     OUT_HEROES.mkdir(parents=True, exist_ok=True)
     print(f"published {len(heroes)} hero pages")
     for i, h in enumerate(heroes):
-        page, n = hero_page(template, heroes, i, cards, published)
+        page, n = hero_page(template, heroes, i, cards, published, keywords)
         (OUT_HEROES / f'{h["slug"]}.html').write_text(page, encoding="utf-8", newline="\n")
         print(f'  {h["slug"]}: {n} cards')
 

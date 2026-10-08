@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{NAME}} · Kingdom of Bad Ideas</title>
-<meta name="description" content="{{NAME}}, one of the eight heroes of Kingdom of Bad Ideas. {{TAGLINE}}">
+<title>{{NAME}} the {{CLASS}} · Kingdom of Bad Ideas</title>
+<meta name="description" content="{{NAME}} the {{CLASS}}, one of the eight heroes of Kingdom of Bad Ideas. {{TAGLINE}}">
 <meta name="theme-color" content="#0b0f14">
 <link rel="canonical" href="https://kingdomofbadideas.com/heroes/{{SLUG}}">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://kingdomofbadideas.com/heroes/{{SLUG}}">
-<meta property="og:title" content="{{NAME}} · Kingdom of Bad Ideas">
+<meta property="og:title" content="{{NAME}} the {{CLASS}} · Kingdom of Bad Ideas">
 <meta property="og:description" content="{{TAGLINE}}">
 <meta property="og:image" content="https://kingdomofbadideas.com/assets/og.jpg">
 <meta name="twitter:card" content="summary_large_image">
@@ -23,18 +23,20 @@
 <header class="top"><div class="wrap"><a class="home-seal" href="/" aria-label="Kingdom of Bad Ideas home"><img src="/assets/seal.png" alt="" width="240" height="240"></a><nav aria-label="Main"><a href="/cards">Cards</a><a href="/events">Events</a><a href="/leaderboards">Leaderboards</a><a href="/how-to">How to play</a><a href="/faq">FAQ</a></nav></div></header>
 <main>
   <section class="page-head wrap">
-    <p class="eyebrow">One of eight heroes</p>
+    <p class="eyebrow">The {{CLASS}}</p>
     <h1>{{NAME}}</h1>
     <p>{{TAGLINE}}</p>
   </section>
   <section class="wrap hero-sheet">
     <img class="portrait" src="/assets/hero-{{SLUG}}.webp" alt="{{ALT}}" width="560" height="560">
     <div class="prose">
-      <h2>How {{NAME}} plays</h2>
-      <p>{{PLAY}}</p>
-      <dl class="traits">
-{{TRAITS}}
-      </dl>
+      <h2>Style of Battle</h2>
+      <p>{{STYLE}}</p>
+      <ul>
+{{POINTS}}
+      </ul>
+      <h3>Keywords</h3>
+      <p class="keywords">{{KEYWORDS}}</p>
       <div class="summary power">
         <p class="eyebrow">Hero power</p>
         <h3>{{POWER_NAME}}</h3>
@@ -44,7 +46,7 @@
     </div>
   </section>
   <section class="wrap">
-    <h2>From the {{NAME}} deck</h2>
+    <h2>From the {{CLASS}} deck</h2>
     <div class="roster">
 {{CARDS}}
     </div>
