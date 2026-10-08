@@ -50,6 +50,42 @@ function Invoke-Stage {
     }
 }
 
+# The first Python that actually RUNS and can import what the stage needs, or $null.
+#
+# IT READS WHAT THE INTERPRETER PRINTS, NEVER $LASTEXITCODE. On this machine `python3` resolves
+# to C:\Users\User\bin\python3, an extensionless sh shim written for Git Bash. PowerShell cannot
+# execute it: `& python3 file.py` returns at once, runs nothing, prints nothing, and leaves
+# $LASTEXITCODE holding whatever the PREVIOUS command set. So after a passing stage the old
+# `import numpy` probe read a stale 0, chose python3, and three stages "passed" in 0.2s having
+# run no tests (measured 2026-10-07: ALL GATES PASS with the exporter, resolver and trainer
+# suites silent). After a FAILING stage the same probe read a stale 1 and fell through to a
+# real interpreter, which is why the suites appeared to run some days and not others.
+function Find-Python {
+    param([string]$Import = '')
+    $candidates = [System.Collections.Generic.List[string]]::new()
+    if ($env:EMBERFALL_TRAINING_PYTHON) {
+        $candidates.Add($env:EMBERFALL_TRAINING_PYTHON)
+    }
+    $candidates.Add('python3')
+    $candidates.Add('python')
+    $unslothPython = Join-Path $env:USERPROFILE '.unsloth/studio/unsloth_studio/Scripts/python.exe'
+    if (Test-Path -LiteralPath $unslothPython) {
+        $candidates.Add($unslothPython)
+    }
+    $probe = "print('emberfall-python-ok')"
+    if ($Import) { $probe = "import $Import; $probe" }
+    foreach ($candidate in $candidates) {
+        if (-not (Test-Path -LiteralPath $candidate) -and
+            -not (Get-Command $candidate -ErrorAction SilentlyContinue)) {
+            continue
+        }
+        $out = $null
+        try { $out = & $candidate -c $probe 2>$null } catch { }
+        if ("$out".Trim() -eq 'emberfall-python-ok') { return $candidate }
+    }
+    return $null
+}
+
 Invoke-Stage 'Restore' { dotnet restore Emberfall.slnx }
 Invoke-Stage 'Build (Release)' { dotnet build Emberfall.slnx -c Release --no-restore }
 
@@ -129,58 +165,23 @@ Invoke-Stage 'Stage 6c · UI edge-clearance audit' {
     python tests/python/test_audit_edge_safety.py -v
 }
 Invoke-Stage 'Stage 6c · Training exporter tests' {
-    $candidates = [System.Collections.Generic.List[string]]::new()
-    if ($env:EMBERFALL_TRAINING_PYTHON) {
-        $candidates.Add($env:EMBERFALL_TRAINING_PYTHON)
-    }
-    $candidates.Add('python3')
-    $unslothPython = Join-Path $env:USERPROFILE '.unsloth/studio/unsloth_studio/Scripts/python.exe'
-    if (Test-Path -LiteralPath $unslothPython) {
-        $candidates.Add($unslothPython)
-    }
-    $exportPython = $null
-    foreach ($candidate in $candidates) {
-        if (-not (Test-Path -LiteralPath $candidate) -and
-            -not (Get-Command $candidate -ErrorAction SilentlyContinue)) {
-            continue
-        }
-        & $candidate -c 'import numpy' 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            $exportPython = $candidate
-            break
-        }
-    }
+    $exportPython = Find-Python -Import 'numpy'
     if (-not $exportPython) {
         throw 'No Python with NumPy found; set EMBERFALL_TRAINING_PYTHON'
     }
     & $exportPython tests/python/test_training_exporters.py -v
 }
 Invoke-Stage 'Stage 6c2 · C# graph resolver tests' {
-    python3 tests/python/test_capture_my_games.py -v
-    python3 tests/python/test_csharp_resolver.py -v
+    $resolverPython = Find-Python
+    if (-not $resolverPython) {
+        throw 'No runnable Python found; set EMBERFALL_TRAINING_PYTHON'
+    }
+    & $resolverPython tests/python/test_capture_my_games.py -v
+    if ($LASTEXITCODE -ne 0) { throw "capture tests exit $LASTEXITCODE" }
+    & $resolverPython tests/python/test_csharp_resolver.py -v
 }
 Invoke-Stage 'Stage 6d · Training trainer tests' {
-    $candidates = [System.Collections.Generic.List[string]]::new()
-    if ($env:EMBERFALL_TRAINING_PYTHON) {
-        $candidates.Add($env:EMBERFALL_TRAINING_PYTHON)
-    }
-    $candidates.Add('python3')
-    $unslothPython = Join-Path $env:USERPROFILE '.unsloth/studio/unsloth_studio/Scripts/python.exe'
-    if (Test-Path -LiteralPath $unslothPython) {
-        $candidates.Add($unslothPython)
-    }
-    $trainingPython = $null
-    foreach ($candidate in $candidates) {
-        if (-not (Test-Path -LiteralPath $candidate) -and
-            -not (Get-Command $candidate -ErrorAction SilentlyContinue)) {
-            continue
-        }
-        & $candidate -c 'import numpy, torch' 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            $trainingPython = $candidate
-            break
-        }
-    }
+    $trainingPython = Find-Python -Import 'numpy, torch'
     if (-not $trainingPython) {
         throw 'No Python with NumPy and Torch found; set EMBERFALL_TRAINING_PYTHON'
     }
