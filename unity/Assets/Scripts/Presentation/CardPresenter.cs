@@ -580,13 +580,8 @@ namespace Emberfall.Presentation
                         Vector2.Scale(statSize, FrameRarityCatalog.PowerSwordScale),
                         FrameRarityCatalog.ShowAttack(_def.Type), z: -0.0085f);
             if (powerSwordRenderer != null)
-            {
                 powerSwordRenderer.transform.localRotation =
                     Quaternion.Euler(0f, 0f, FrameRarityCatalog.PowerSwordAngle);
-                powerSwordRenderer.transform.localPosition += new Vector3(
-                    statSize.x * FrameRarityCatalog.PowerSwordOffset.x,
-                    statSize.y * FrameRarityCatalog.PowerSwordOffset.y, 0f);
-            }
             PlaceSocket(healthSocketRenderer, right,  FrameRarityCatalog.StatSocketRight, statSize,
                         FrameRarityCatalog.ShowHealth(_def.Type) || FrameRarityCatalog.ShowDurability(_def.Type));
             PlaceSocket(gemSocketRenderer,    bezel, FrameRarityCatalog.GemSocket,       bezelSize, true, z: -0.011f);

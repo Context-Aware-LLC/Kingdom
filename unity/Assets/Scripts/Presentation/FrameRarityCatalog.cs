@@ -82,12 +82,11 @@ namespace Emberfall.Presentation
         public const float StatSocketPx = 256f * 1.15f; // 15% larger display; texture resolution is unchanged
         public const float StatSocketInsetPx = StatSocketPx * 0.5f + 8f; // keep captures clear of the card edge
         // In stat canvases, across the blade and along it. The source sword is squeezed to a
-        // third of its drawn width so only a slim hilt and point show past the circle.
-        public static readonly Vector2 PowerSwordScale = new(0.55f, 1.7f);
+        // third of its drawn width so only a slim hilt and point show past the circle. It is
+        // centred on the circle, and 1.43 is as long as it gets there: both ends stop about
+        // 8 master px inside the card's capture bounds.
+        public static readonly Vector2 PowerSwordScale = new(0.5f, 1.43f);
         public const float PowerSwordAngle = -135f; // upright source turns to hilt upper-left, point lower-right
-        // Move only the sword slightly up/right, away from the card corner. Both ends clear the
-        // circle while remaining 8 master px inside the card's capture bounds.
-        public static readonly Vector2 PowerSwordOffset = new(0.1f, 0.1f);
         public const float GemSocketPx  = 224f; // O206 bezel, O170 well
 
         public static string GemSprite(Rarity rarity) =>
