@@ -60,6 +60,7 @@ namespace Emberfall.Presentation
         public const string CostSocketSprite   = "socket_cost";   // blue
         public const string AttackSocketSprite = "socket_health"; // original red circle — weapon power
         public const string MinionAttackSocketSprite = "socket_attack"; // original yellow circle
+        // Both swords are the same steel art (2026-10-07): the circle carries the colour.
         public const string MinionPowerSwordSprite = "socket_attack_sword";
         public const string WeaponPowerSwordSprite = "socket_weapon_power_sword";
         public const string HealthSocketSprite = "socket_health_heart"; // red — minions
@@ -86,7 +87,7 @@ namespace Emberfall.Presentation
         public const float PowerSwordAngle = -135f; // upright source turns to hilt upper-left, point lower-right
         // Move only the sword slightly up/right, away from the card corner. Both ends clear the
         // circle while remaining 8 master px inside the card's capture bounds.
-        public static readonly Vector2 PowerSwordOffset = new(0.08f, 0.08f);
+        public static readonly Vector2 PowerSwordOffset = new(0.1f, 0.1f);
         public const float GemSocketPx  = 224f; // O206 bezel, O170 well
 
         public static string GemSprite(Rarity rarity) =>
