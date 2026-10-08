@@ -35,7 +35,7 @@ namespace Emberfall.Net.Server.Tests.Bots
                 return logits;
             });
             var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
-                setup.P0Deck, null, CheckpointSelection.Argmax, new string('a', 64));
+                setup.P0Deck, CheckpointSelection.Argmax, new string('a', 64));
             PlayerIntent? intent = await policy.ChooseAsync(ProjectOpeningState(db, setup), P0);
             Assert.That(intent, Is.TypeOf<MulliganIntent>(), "Concede must not be an exploration action");
             Assert.That(policy.LastDecision!.AllowsConcede, Is.False);
@@ -53,7 +53,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             int viewerSeat = host.State.SeatOf(viewer);
             var scorer = new FakeScorer(count => new double[count]);
             var policy = new CheckpointSeatPolicy(scorer, db, processor,
-                viewerSeat == 0 ? setup.P0Deck : setup.P1Deck, null, CheckpointSelection.Argmax, new string('a', 64));
+                viewerSeat == 0 ? setup.P0Deck : setup.P1Deck, CheckpointSelection.Argmax, new string('a', 64));
             foreach (PlayerId player in new[] { P0, P1 })
             {
                 GameState before = GameStateProjector.Project(host.State, viewer);
@@ -102,7 +102,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             var scorer = new FakeScorer(count => new double[count]);
             var processor = new CommandProcessor(db);
             var policy = new CheckpointSeatPolicy(scorer, db, processor,
-                secondSeat ? setup.P1Deck : setup.P0Deck, null,
+                secondSeat ? setup.P1Deck : setup.P0Deck,
                 CheckpointSelection.Argmax, new string('a', 64));
             var warnings = new List<string>();
             var served = new LearnedBotSeatPolicy(policy, new GreedySeatPolicy(processor, db), warnings.Add);
@@ -136,7 +136,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             int remainingDefinition = setup.P0Deck[0];
             int movedDefinition = setup.P0Deck[1];
             var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
-                new[] { remainingDefinition, movedDefinition }, null, CheckpointSelection.Argmax, new string('a', 64));
+                new[] { remainingDefinition, movedDefinition }, CheckpointSelection.Argmax, new string('a', 64));
             _ = await policy.ChooseAsync(before, P0);
 
             GameState after = GameStateProjector.Project(before, P0);
@@ -151,23 +151,6 @@ namespace Emberfall.Net.Server.Tests.Bots
             JsonElement deck = scorer.LastMemory.GetProperty("selfRemainingDeck");
             Assert.That(deck.GetArrayLength(), Is.EqualTo(1));
             Assert.That(deck[0].GetInt32(), Is.EqualTo(remainingDefinition));
-        }
-
-        [TestCase(CardClass.TIDECALLER, "TIDECALLER")]
-        [TestCase(null, null)]
-        public async Task Memory_Names_The_Opponents_Second_Class_Even_When_It_Is_Unknown(
-            CardClass? told, string? expected)
-        {
-            FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
-            MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
-            var scorer = new FakeScorer(count => new double[count]);
-            var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
-                setup.P0Deck, told, CheckpointSelection.Argmax, new string('a', 64));
-            _ = await policy.ChooseAsync(ProjectOpeningState(db, setup), P0);
-
-            // The encoder refuses a memory that does not name it, so null has to be written.
-            Assert.That(scorer.LastMemory.TryGetProperty("opponentSecondClass", out JsonElement named), Is.True);
-            Assert.That(named.ValueKind == JsonValueKind.Null ? null : named.GetString(), Is.EqualTo(expected));
         }
 
         [Test]
@@ -186,7 +169,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             self.Board.Add(new CardInstance(new InstanceId(300), 10, P0) { Zone = Zone.Board });
             var scorer = new FakeScorer(count => new double[count]);
             var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
-                new[] { 10, 20 }, null, CheckpointSelection.Argmax, new string('a', 64));
+                new[] { 10, 20 }, CheckpointSelection.Argmax, new string('a', 64));
             GameState bounced = GameStateProjector.Project(before, P0);
             bounced.PlayerOf(P0).Board.Clear();
             bounced.PlayerOf(P0).Hand.Add(new CardInstance(new InstanceId(301), 10, P0) { Zone = Zone.Hand });
@@ -225,7 +208,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             self.Deck.Add(new CardInstance(new InstanceId(0), 0, P0) { Zone = Zone.Deck });
             var scorer = new FakeScorer(count => new double[count]);
             var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
-                new[] { 10, 20 }, null, CheckpointSelection.Argmax, new string('a', 64));
+                new[] { 10, 20 }, CheckpointSelection.Argmax, new string('a', 64));
             _ = await policy.ChooseAsync(before, P0);
 
             GameState after = GameStateProjector.Project(before, P0);
@@ -258,7 +241,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             GameState state = ProjectOpeningState(db, setup);
             var scorer = new FakeScorer(count => new double[count]);
             var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
-                setup.P0Deck, null, CheckpointSelection.Argmax, new string('a', 64));
+                setup.P0Deck, CheckpointSelection.Argmax, new string('a', 64));
             _ = await policy.ChooseAsync(state, P0);
             int calls = scorer.Calls;
             switch (scenario)
@@ -300,7 +283,7 @@ namespace Emberfall.Net.Server.Tests.Bots
                 return logits;
             });
             var policy = new CheckpointSeatPolicy(scorer, db, new CommandProcessor(db),
-                setup.P0Deck, null, CheckpointSelection.Argmax, new string('a', 64));
+                setup.P0Deck, CheckpointSelection.Argmax, new string('a', 64));
             Assert.That(await policy.ChooseAsync(state, P0), Is.TypeOf<UnearthChoiceIntent>());
             Assert.That(scorer.Calls, Is.EqualTo(1));
         }
@@ -321,7 +304,7 @@ namespace Emberfall.Net.Server.Tests.Bots
                 scorer,
                 db,
                 new CommandProcessor(db),
-                setup.P0Deck, null,
+                setup.P0Deck,
                 CheckpointSelection.Argmax,
                 new string('a', 64));
 
@@ -361,7 +344,7 @@ namespace Emberfall.Net.Server.Tests.Bots
                 new FakeScorer(count => new double[count]),
                 db,
                 new CommandProcessor(db),
-                setup.P0Deck, null,
+                setup.P0Deck,
                 CheckpointSelection.Sample(0.75, seed),
                 new string('b', 64));
         }
@@ -377,7 +360,7 @@ namespace Emberfall.Net.Server.Tests.Bots
                 new FakeScorer(count => new double[count]),
                 db,
                 new CommandProcessor(db),
-                setup.P0Deck, null,
+                setup.P0Deck,
                 CheckpointSelection.Sample(0.5, 19UL),
                 checkpointSha);
 
@@ -428,7 +411,7 @@ namespace Emberfall.Net.Server.Tests.Bots
                 scorer,
                 db,
                 new CommandProcessor(db),
-                setup.P0Deck, null,
+                setup.P0Deck,
                 CheckpointSelection.Argmax,
                 new string('c', 64));
 

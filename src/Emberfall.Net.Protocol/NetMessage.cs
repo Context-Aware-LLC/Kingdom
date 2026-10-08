@@ -170,37 +170,23 @@ namespace Emberfall.Net.Protocol
     /// projected snapshot. <b>The seed is server-side only and is NEVER sent</b> (ADR-0004 / decision 19).
     /// <see cref="ReconnectToken"/> is the B1 additive field (dev-docs/contracts/wire-protocol.md:41, RC F2):
     /// the opaque credential the client must present in <see cref="ReconnectMsg"/>. Empty on decode
-    /// when an older encoder omitted it (A5 §8 forward-compat).
-    ///
-    /// <para><see cref="SecondaryClass"/> is the recipient's own deck pairing's second class, and
-    /// <see cref="OpponentInfo.SecondaryClass"/> is the other seat's. The pairing is PUBLIC (Sam,
-    /// 2026-10-07) and it is NOT game state: each seat's primary class is its hero's and rides the
-    /// snapshot, while the second class decided only which cards were legal in the deck, so it
-    /// travels here, once, beside the names, and moves no hash. Additive in the same way as the
-    /// token: <c>NEUTRAL</c> means "none", which is what a seat dealt the prebuilt fallback has and
-    /// what an older encoder's omission decodes as.</para></summary>
+    /// when an older encoder omitted it (A5 §8 forward-compat).</summary>
     public sealed record MatchStartMsg(
         PlayerId PlayerId,
         int Seat,
         string WireContractVersion,
         OpponentInfo Opponent,
         SnapshotMsg Snapshot,
-        string ReconnectToken = "",
-        CardClass SecondaryClass = CardClass.NEUTRAL) : NetMessage;
+        string ReconnectToken = "") : NetMessage;
 
     public readonly struct OpponentInfo
     {
         public readonly PlayerId PlayerId;
         public readonly string DisplayName;
-        /// <summary>The opponent's deck pairing's second class; <c>NEUTRAL</c> when they have none.
-        /// See <see cref="MatchStartMsg"/>.</summary>
-        public readonly CardClass SecondaryClass;
-        public OpponentInfo(PlayerId playerId, string displayName,
-                            CardClass secondaryClass = CardClass.NEUTRAL)
+        public OpponentInfo(PlayerId playerId, string displayName)
         {
             PlayerId = playerId;
             DisplayName = displayName;
-            SecondaryClass = secondaryClass;
         }
     }
 

@@ -189,11 +189,6 @@ namespace Emberfall.Net.Server.Tests
                 var own1 = s1.Snapshot.State.Players[s1.Seat].Hero.Class;
                 Assert.That(new[] { own0, own1 }, Is.EquivalentTo(new[] { CardClass.GRAVEKEEP, CardClass.VERDANT }),
                     "both seats were dealt their submitted deck's PRIMARY class, not the prebuilt EMBERWARD/TIDECALLER");
-
-                // The pairing is public: each seat is told its own second class and the other seat's.
-                // The two submissions are mirror images, so each seat's second class is the other's hero.
-                Assert.That((s0.SecondaryClass, s0.Opponent.SecondaryClass), Is.EqualTo((own1, own0)));
-                Assert.That((s1.SecondaryClass, s1.Opponent.SecondaryClass), Is.EqualTo((own0, own1)));
             });
         }
 
@@ -245,9 +240,6 @@ namespace Emberfall.Net.Server.Tests
                     s1.Snapshot.State.Players[s1.Seat].Hero.Class,
                 };
                 Assert.That(classes, Is.EquivalentTo(new[] { CardClass.EMBERWARD, CardClass.TIDECALLER }));
-                // The prebuilt pair is not a paired deck, so neither seat has a second class to announce.
-                Assert.That(new[] { s0.SecondaryClass, s0.Opponent.SecondaryClass, s1.SecondaryClass, s1.Opponent.SecondaryClass },
-                    Is.All.EqualTo(CardClass.NEUTRAL));
             });
         }
 

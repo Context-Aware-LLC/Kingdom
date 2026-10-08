@@ -178,7 +178,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             for (ulong seed = 1; seed <= 64; seed++)
             {
                 var policy = new CheckpointSeatPolicy(
-                    new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck, null,
+                    new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck,
                     CheckpointSelection.Mixture(1.0, Epsilon, seed), new string('a', 64));
                 PlayerIntent? intent = await policy.ChooseAsync(state, P0);
                 Assert.That(intent, Is.Not.Null);
@@ -206,7 +206,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             for (ulong seed = 1; seed <= 256; seed++)
             {
                 var policy = new CheckpointSeatPolicy(
-                    new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck, null,
+                    new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck,
                     CheckpointSelection.Mixture(1.0, Epsilon, seed), new string('a', 64));
                 _ = await policy.ChooseAsync(state, P0);
                 seen.Add(policy.LastDecision!.SelectedActionIndex);
@@ -218,7 +218,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             for (ulong seed = 1; seed <= 16; seed++)
             {
                 var policy = new CheckpointSeatPolicy(
-                    new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck, null,
+                    new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck,
                     CheckpointSelection.Argmax, new string('a', 64));
                 _ = await policy.ChooseAsync(state, P0);
                 argmaxSeen.Add(policy.LastDecision!.SelectedActionIndex);
@@ -234,7 +234,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             FileCardDatabase db = FileCardDatabase.LoadDirectory(SessionHarness.CardDataDir());
             MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
             var policy = new CheckpointSeatPolicy(
-                new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck, null,
+                new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck,
                 CheckpointSelection.Sample(4.0, 11UL), new string('a', 64));
             _ = await policy.ChooseAsync(OpeningState(db, setup), P0);
             CheckpointDecisionTrace trace = policy.LastDecision!;
@@ -254,7 +254,7 @@ namespace Emberfall.Net.Server.Tests.Bots
             MatchSetup setup = PrebuiltDecks.EmberwardVsTidecaller();
             GameState state = OpeningState(db, setup);
             var policy = new CheckpointSeatPolicy(
-                new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck, null,
+                new SaturatedScorer(), db, new CommandProcessor(db), setup.P0Deck,
                 CheckpointSelection.Mixture(1.0, Epsilon, 5UL), new string('a', 64));
             _ = await policy.ChooseAsync(state, P0);
 

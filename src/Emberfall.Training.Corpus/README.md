@@ -110,9 +110,8 @@ unrevealed deck remains excluded.
 and records what each searched decision found. The games are the search's own, so `--temperature`
 and `--epsilon` are refused; the budget is `--search-plays`, `--search-sims` and
 `--search-rollout-temperature`, `--scorer-processes` sizes the scorer pool (a seat runs a round's
-rollouts at once), and `--search-guess-pairing` withholds the opponent's second class from the
-world sampler. The checkpoint is told it either way: it is a model input, sent as
-`playerMemory.opponentSecondClass` on every score.
+rollouts at once). A deck's second class is hidden, so the seat infers the opponent's from the
+cards shown.
 
 ```powershell
 dotnet run --project src/Emberfall.Tools.NetSoak -c Release -- rollout 2 `

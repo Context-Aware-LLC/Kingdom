@@ -32,20 +32,15 @@ namespace Emberfall.Net.Server
 
         private sealed class Seat
         {
-            public Seat(PlayerId player, string token, string displayName, CardClass secondaryClass)
+            public Seat(PlayerId player, string token, string displayName)
             {
                 Player = player;
                 ReconnectToken = token;
                 DisplayName = displayName;
-                SecondaryClass = secondaryClass;
             }
 
             public PlayerId Player { get; }
             public string ReconnectToken { get; }
-
-            /// <summary>The seat's deck pairing's second class, told to both seats at match start.
-            /// <c>NEUTRAL</c> when the seat was dealt the prebuilt fallback.</summary>
-            public CardClass SecondaryClass { get; }
 
             /// <summary>
             /// What the OPPOSITE seat's nameplate renders (VULN-002 §4.2). Server-authored or
@@ -108,9 +103,7 @@ namespace Emberfall.Net.Server
             IRankedMatchSink? rankedMatchSink = null,
             ITrainingEpisodeStore? trainingEpisodes = null,
             string p0Policy = "unspecified",
-            string p1Policy = "unspecified",
-            CardClass p0SecondaryClass = CardClass.NEUTRAL,
-            CardClass p1SecondaryClass = CardClass.NEUTRAL)
+            string p1Policy = "unspecified")
         {
             _id = id;
             _seed = seed;
@@ -126,8 +119,8 @@ namespace Emberfall.Net.Server
             _p1Policy = p1Policy;
             _processor = new CommandProcessor(db);
             _host = new LocalMatchHost(_processor, db, setup);
-            _seats[0] = new Seat(p0, MintToken(), string.IsNullOrEmpty(p0Name) ? p0.Value : p0Name!, p0SecondaryClass);
-            _seats[1] = new Seat(p1, MintToken(), string.IsNullOrEmpty(p1Name) ? p1.Value : p1Name!, p1SecondaryClass);
+            _seats[0] = new Seat(p0, MintToken(), string.IsNullOrEmpty(p0Name) ? p0.Value : p0Name!);
+            _seats[1] = new Seat(p1, MintToken(), string.IsNullOrEmpty(p1Name) ? p1.Value : p1Name!);
         }
 
         public MatchId Id => _id;
@@ -169,10 +162,9 @@ namespace Emberfall.Net.Server
                     me.Player, seat, _opts.WireContractVersion,
                     // VULN-002 §4.2: opp.DisplayName, never a value read off a wire message here.
                     // The Seat holds it precisely so this line cannot be the place a raw name enters.
-                    new OpponentInfo(opp.Player, opp.DisplayName, opp.SecondaryClass),
+                    new OpponentInfo(opp.Player, opp.DisplayName),
                     SnapshotMsg.Of(_host.Snapshot(me.Player)),
-                    me.ReconnectToken,
-                    me.SecondaryClass));
+                    me.ReconnectToken));
             }
 
             _mulliganDeadlineMs = now + _opts.MulliganMs;

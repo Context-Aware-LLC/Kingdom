@@ -31,24 +31,16 @@ namespace Emberfall.Presentation
         public struct Data
         {
             public CardClass LocalClass, RemoteClass;
-            /// <summary>Each deck pairing's second class, named after the primary on the class
-            /// line. NEUTRAL means the seat has none to show, and the line is the primary alone.
-            /// The medallion stays the PRIMARY's hero: the second class contributes no hero.</summary>
-            public CardClass LocalSecondaryClass, RemoteSecondaryClass;
             public string LocalName, RemoteName;
             public int OrbVariant;   // 0..2, from OrbVariantForMatch(matchId)
 
             /// <summary>The normal construction: names as given, orb derived from the match id so
             /// both clients land on the same variant (spec §4.2).</summary>
             public static Data For(CardClass localClass, string localName,
-                                   CardClass remoteClass, string remoteName, string matchId,
-                                   CardClass localSecondaryClass = CardClass.NEUTRAL,
-                                   CardClass remoteSecondaryClass = CardClass.NEUTRAL) => new Data
+                                   CardClass remoteClass, string remoteName, string matchId) => new Data
             {
                 LocalClass  = localClass,
                 RemoteClass = remoteClass,
-                LocalSecondaryClass  = localSecondaryClass,
-                RemoteSecondaryClass = remoteSecondaryClass,
                 LocalName   = localName,
                 RemoteName  = remoteName,
                 OrbVariant  = OrbVariantForMatch(matchId),
@@ -251,8 +243,8 @@ namespace Emberfall.Presentation
             //    layout must still read deliberate with them blank.
             BuildText($"NameLocal",  SanitizeName(data.LocalName),  LeftMedallionXFrac * h,  NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true, plainText: true);
             BuildText($"NameRemote", SanitizeName(data.RemoteName), RightMedallionXFrac * h, NameplateYFrac * h, NameSizeFrac * h, NameTint,  h, bold: true, plainText: true);
-            BuildText($"ClassLocal",  ClassLine(data.LocalClass,  data.LocalSecondaryClass),  LeftMedallionXFrac * h,  ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking, underlay: true);
-            BuildText($"ClassRemote", ClassLine(data.RemoteClass, data.RemoteSecondaryClass), RightMedallionXFrac * h, ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking, underlay: true);
+            BuildText($"ClassLocal",  ClassName(data.LocalClass),  LeftMedallionXFrac * h,  ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking, underlay: true);
+            BuildText($"ClassRemote", ClassName(data.RemoteClass), RightMedallionXFrac * h, ClassYFrac * h, ClassSizeFrac * h, ClassTint, h, tracking: ClassTracking, underlay: true);
 
             // ── Status / tip — centred, live. Empty until SetStatus; doubles as the failure surface.
             _status = BuildText("StatusLine", "", 0f, StatusYFrac * h, StatusSizeFrac * h, StatusTint, h, tracking: StatusTracking);
@@ -399,21 +391,16 @@ namespace Emberfall.Presentation
                 Destroy(gameObject);
         }
 
-        // The class line: the primary (the hero in the medallion above it), then the pairing's second
-        // class when the seat has one. A seat with no second class reads as the primary alone.
-        private static string ClassLine(CardClass primary, CardClass secondary) =>
-            secondary == CardClass.NEUTRAL || secondary == primary
-                ? ClassName(primary)
-                : ClassName(primary) + " · " + ClassName(secondary);
-
         // Class display name — title-case, not the ALL-CAPS enum (spec §6:
-        // "Emberward / Tidecaller / Gravekeep / Verdant"). Derived from the enum name, so a class
-        // added to CardClass reads correctly here without being listed.
-        private static string ClassName(CardClass c)
+        // "Emberward / Tidecaller / Gravekeep / Verdant").
+        private static string ClassName(CardClass c) => c switch
         {
-            string n = c.ToString();
-            return n.Length == 0 ? n : char.ToUpperInvariant(n[0]) + n.Substring(1).ToLowerInvariant();
-        }
+            CardClass.EMBERWARD  => "Emberward",
+            CardClass.TIDECALLER => "Tidecaller",
+            CardClass.GRAVEKEEP  => "Gravekeep",
+            CardClass.VERDANT    => "Verdant",
+            _                    => "Neutral",
+        };
 
         private static float EaseOutCubic(float x) => 1f - (1f - x) * (1f - x) * (1f - x);
 

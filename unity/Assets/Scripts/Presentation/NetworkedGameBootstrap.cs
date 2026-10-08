@@ -382,10 +382,7 @@ namespace Emberfall.Presentation
             _versus = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
                 localClass,  PlayerAccount.LocalDisplayNameOr("You"),
                 remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? "Opponent" : _net.OpponentName,
-                s0.Id.Value,
-                // Both second classes are the SERVER'S, off match_start, including our own: it is
-                // the pairing the server seated us with, which is the one the opponent is shown.
-                _net.SecondaryClass, _net.OpponentSecondaryClass), artProvider);
+                s0.Id.Value), artProvider);
             // Carry the narration across the handover rather than letting the line blink empty —
             // "Opponent found" was posted to the plate a frame ago and is still the true state.
             SetStatus("Opponent found");

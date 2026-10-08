@@ -365,12 +365,8 @@ namespace Emberfall.Net.Server
             return deck =>
             {
                 var validator = new CommandProcessor(db);
-                // LATENT: the opponent's second class is a model input and this seat is never
-                // told it, so a schema-9 checkpoint plays here with that feature blank. The pool
-                // builds a bot's policy before it has an opponent; match_start carries the
-                // pairing, so the fix is to hand it to the policy from there, not to this factory.
                 var learned = new CheckpointSeatPolicy(
-                    scorer, db, validator, deck.Deck, null, CheckpointSelection.Argmax);
+                    scorer, db, validator, deck.Deck, CheckpointSelection.Argmax);
                 return new LearnedBotSeatPolicy(
                     learned, new GreedySeatPolicy(validator, db));
             };

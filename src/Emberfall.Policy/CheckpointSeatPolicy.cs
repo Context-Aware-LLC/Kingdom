@@ -94,7 +94,6 @@ namespace Emberfall.Policy
         private readonly LegalActionEnumerator _legal;
         private readonly CheckpointSelection _selection;
         private readonly List<int> _remainingDeck;
-        private readonly string? _opponentSecondClass;
         private readonly string _checkpointSha256;
         private readonly string _identity;
         private readonly ICardDatabase _cards;
@@ -107,19 +106,13 @@ namespace Emberfall.Policy
         private KnownOpponentHandTracker? _opponentHand;
         private ulong _randomState;
 
-        /// <param name="opponentSecondClass">The class the opposing deck pairs with its hero's.
-        /// It is public and it is a model input, so the caller says it or says null for "this
-        /// deck shows no single one"; there is no default, because a seat that was simply never
-        /// told would score every position with the feature blank and nothing would report it.</param>
         public CheckpointSeatPolicy(
             CheckpointScorerProcess scorer,
             ICardDatabase db,
             ICommandValidator validator,
             IReadOnlyList<int> startingDeck,
-            CardClass? opponentSecondClass,
             CheckpointSelection selection)
-            : this(scorer, db, validator, startingDeck, opponentSecondClass, selection,
-                scorer.CheckpointSha256)
+            : this(scorer, db, validator, startingDeck, selection, scorer.CheckpointSha256)
         {
         }
 
@@ -128,7 +121,6 @@ namespace Emberfall.Policy
             ICardDatabase db,
             ICommandValidator validator,
             IReadOnlyList<int> startingDeck,
-            CardClass? opponentSecondClass,
             CheckpointSelection selection,
             string checkpointSha256)
         {
@@ -151,7 +143,6 @@ namespace Emberfall.Policy
 
             _remainingDeck = new List<int>(startingDeck);
             _remainingDeck.Sort();
-            _opponentSecondClass = opponentSecondClass?.ToString();
             _randomState = selection.Seed;
             string sha = checkpointSha256.ToLowerInvariant();
             _checkpointSha256 = sha;
@@ -224,8 +215,7 @@ namespace Emberfall.Policy
                     _remainingDeck.ToArray(),
                     SortedDefinitions(self.Graveyard),
                     SortedDefinitions(opponent.Graveyard),
-                    _opponentHand!.Snapshot(),
-                    _opponentSecondClass);
+                    _opponentHand!.Snapshot());
             }
 
             IReadOnlyList<PlayerIntent> actions = _legal.Enumerate(state, player, includeConcede: false);
@@ -808,9 +798,7 @@ namespace Emberfall.Policy
             IReadOnlyList<int> SelfRemainingDeck,
             IReadOnlyList<int> SelfGraveyard,
             IReadOnlyList<int> OpponentGraveyard,
-            IReadOnlyList<int> KnownOpponentHand,
-            // Written even when null: the encoder refuses a memory that does not name it.
-            string? OpponentSecondClass);
+            IReadOnlyList<int> KnownOpponentHand);
     }
 
     internal interface ICheckpointScorer

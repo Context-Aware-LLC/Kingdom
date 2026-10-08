@@ -168,12 +168,10 @@ namespace Emberfall.Net.Protocol
                     w.BeginObject();
                     w.Name("playerId"); w.Str(m.Opponent.PlayerId.Value);
                     w.Name("displayName"); w.Str(m.Opponent.DisplayName);
-                    w.Name("secondaryClass"); w.Str(m.Opponent.SecondaryClass.ToString());
                     w.EndObject();
                     w.Name("snapshot");
                     WriteSnapshotBody(w, m.Snapshot);
                     w.Name("reconnectToken"); w.Str(m.ReconnectToken);
-                    w.Name("secondaryClass"); w.Str(m.SecondaryClass.ToString());
                     w.EndObject();
                     break;
                 case MatchEndMsg m:
@@ -526,22 +524,9 @@ namespace Emberfall.Net.Protocol
             if (body.TryGet("reconnectToken", out var tokVal) && !tokVal.TryStr(out token))
                 return DecodeResult.Fail(ProtocolError.BadField, "bad 'reconnectToken'", matchId, seq);
 
-            // Additive on the same terms: absent → NEUTRAL ("no second class"), present-but-bad → refused.
-            if (!TryReadOptionalClass(body, "secondaryClass", out CardClass secondary))
-                return DecodeResult.Fail(ProtocolError.BadField, "bad 'secondaryClass'", matchId, seq);
-            if (!TryReadOptionalClass(oppVal, "secondaryClass", out CardClass oppSecondary))
-                return DecodeResult.Fail(ProtocolError.BadField, "bad 'opponent.secondaryClass'", matchId, seq);
-
             var msg = new MatchStartMsg(new PlayerId(player), seat, wcv,
-                new OpponentInfo(new PlayerId(oppId), oppName, oppSecondary), snapshot, token, secondary);
+                new OpponentInfo(new PlayerId(oppId), oppName), snapshot, token);
             return DecodeResult.Success(msg, matchId, seq);
-        }
-
-        private static bool TryReadOptionalClass(JVal obj, string key, out CardClass value)
-        {
-            value = CardClass.NEUTRAL;
-            if (!obj.TryGet(key, out var v)) return true;
-            return v.TryStr(out string s) && WirePrimitives.TryEnum(s, out value);
         }
 
         private static DecodeResult ReadMatchEnd(JVal body, MatchId matchId, ulong seq)
