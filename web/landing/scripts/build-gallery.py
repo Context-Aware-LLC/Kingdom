@@ -25,6 +25,9 @@ SITE = Path(__file__).resolve().parent.parent
 UNITY = SITE.parent.parent / "unity" / "Assets"
 OUT_IMG = SITE / "public" / "assets" / "cards"
 OUT_HEROES = SITE / "public" / "heroes"
+OUT_POWERS = SITE / "public" / "assets" / "powers"
+# Twice the size the page shows it at, for dense screens.
+POWER_ICON = 192
 KEYWORD_COPY = UNITY / "Scripts" / "Presentation" / "KeywordCopy.cs"
 KEYWORD_SEMANTICS = SITE.parent.parent / "src" / "Emberfall.Core.Cards" / "KeywordSemantics.cs"
 # REINFORCE's glossary line is a placeholder no player meets; KeywordCopy says so at the line.
@@ -91,6 +94,10 @@ def hero_page(template, heroes, i, cards, published, keywords):
     powers = [c for c in cards.values() if c["class"] == h["class"] and c["type"] == "HERO_POWER"]
     if len(powers) != 1:
         sys.exit(f'{h["slug"]}: expected one hero power, found {len(powers)}')
+    icon = UNITY / "Art" / "Cards" / powers[0]["setId"] / f'{powers[0]["artId"]}.png'
+    if not icon.exists():
+        sys.exit(f'{h["slug"]}: no hero power art: {icon}')
+    Image.open(icon).convert("RGB").resize((POWER_ICON, POWER_ICON), Image.LANCZOS).save(OUT_POWERS / f'{h["slug"]}.webp', quality=82, method=6)
     own = [c for c in published if c["class"] == h["class"]]
     if not own:
         sys.exit(f'{h["slug"]}: no allowlisted cards')
@@ -145,6 +152,7 @@ def main():
     heroes = json.load(open(SITE / "heroes.json", encoding="utf-8"))
     template = (SITE / "scripts" / "hero.template.html").read_text(encoding="utf-8")
     OUT_HEROES.mkdir(parents=True, exist_ok=True)
+    OUT_POWERS.mkdir(parents=True, exist_ok=True)
     print(f"published {len(heroes)} hero pages")
     for i, h in enumerate(heroes):
         page, n = hero_page(template, heroes, i, cards, published, keywords)

@@ -927,12 +927,24 @@ details .a p:last-child {
   color: var(--muted);
 }
 
+/* The icon is as tall as the three lines beside it: name, rules text, cost. */
 .power {
-  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
 }
 
-.power .eyebrow {
-  margin-bottom: var(--s-1);
+.power img {
+  flex: none;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+}
+
+.power p {
+  margin: 0;
 }
 
 .power h3 {
