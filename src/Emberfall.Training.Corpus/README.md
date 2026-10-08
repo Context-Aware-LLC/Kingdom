@@ -125,8 +125,9 @@ legal-action index per candidate play), `searchVisits`, `searchMeanValues` (null
 was never visited), `searchPlayPriors`, `searchChosenActionIndex`, and `searchPlayGroups` with
 `searchPlayKeySchemaVersion`: the distinct play of every legal action, from `DistinctPlayKey`.
 The fields are all present or all absent, and never beside the `behavior*` fields. A decision the
-seat did not search (one distinct play, a pending choice, no world it could build) is an ordinary
-row; the command's `[rollout] search:` line counts each kind.
+seat did not search (one distinct play, a pending choice, no world it could build, or an action
+that wins on the spot, which `fair-search.v2` plays without searching) is an ordinary row; the
+command's `[rollout] search:` line counts each kind.
 
 ### Resuming a killed rollout
 
