@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{NAME}} · Kingdom of Bad Ideas</title>
+<meta name="description" content="{{NAME}}, one of the eight heroes of Kingdom of Bad Ideas. {{TAGLINE}}">
+<meta name="theme-color" content="#0b0f14">
+<link rel="canonical" href="https://kingdomofbadideas.com/heroes/{{SLUG}}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://kingdomofbadideas.com/heroes/{{SLUG}}">
+<meta property="og:title" content="{{NAME}} · Kingdom of Bad Ideas">
+<meta property="og:description" content="{{TAGLINE}}">
+<meta property="og:image" content="https://kingdomofbadideas.com/assets/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+<link rel="preload" href="/assets/alfa-slab-one.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css">
+</head>
+<body class="page">
+<header class="top"><div class="wrap"><a class="home-seal" href="/" aria-label="Kingdom of Bad Ideas home"><img src="/assets/seal.png" alt="" width="240" height="240"></a><nav aria-label="Main"><a href="/cards">Cards</a><a href="/events">Events</a><a href="/leaderboards">Leaderboards</a><a href="/how-to">How to play</a><a href="/faq">FAQ</a></nav></div></header>
+<main>
+  <section class="page-head wrap">
+    <p class="eyebrow">One of eight heroes</p>
+    <h1>{{NAME}}</h1>
+    <p>{{TAGLINE}}</p>
+  </section>
+  <section class="wrap hero-sheet">
+    <img class="portrait" src="/assets/hero-{{SLUG}}.webp" alt="{{ALT}}" width="560" height="560">
+    <div class="prose">
+      <h2>How {{NAME}} plays</h2>
+      <p>{{PLAY}}</p>
+      <dl class="traits">
+{{TRAITS}}
+      </dl>
+      <div class="summary power">
+        <p class="eyebrow">Hero power</p>
+        <h3>{{POWER_NAME}}</h3>
+        <p>{{POWER_TEXT}}</p>
+        <p class="fine">Costs {{POWER_COST}} mana. Usable once per turn.</p>
+      </div>
+    </div>
+  </section>
+  <section class="wrap">
+    <h2>From the {{NAME}} deck</h2>
+    <div class="roster">
+{{CARDS}}
+    </div>
+    <p class="more">More cards on the way. <a href="/#prereg">Join Early Access</a> to be first through the gates.</p>
+    <nav class="hero-nav" aria-label="Heroes"><a href="/heroes/{{PREV_SLUG}}">&larr; {{PREV_NAME}}</a><a href="/#heroes">All eight heroes</a><a href="/heroes/{{NEXT_SLUG}}">{{NEXT_NAME}} &rarr;</a></nav>
+  </section>
+</main>
+<footer><div class="wrap"><span>&copy; 2026 Context Aware. All rights reserved, and several wrongs.</span><span class="links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:support@kingdomofbadideas.com">support@kingdomofbadideas.com</a></span></div></footer>
+</body>
+</html>

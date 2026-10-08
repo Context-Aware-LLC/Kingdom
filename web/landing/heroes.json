@@ -1,0 +1,98 @@
+[
+  {
+    "slug": "emberward",
+    "class": "EMBERWARD",
+    "alt": "Emberward, a hero wreathed in fire",
+    "tagline": "Settles disputes quickly and warmly. Afterward there is no dispute, and usually no building.",
+    "play": "Emberward wins before the other side has finished unpacking. It throws fire at anything that stands still, sends in attackers that swing the turn they arrive, and cheerfully spends its own Health to draw cards and hit harder.",
+    "traits": [
+      ["Fire, applied directly", "Spells and minions that deal damage to whatever you point them at, the enemy hero included."],
+      ["Burns its own furniture", "Several cards hurt your own hero in exchange for cards or bigger numbers, and the hero power hits harder on a turn your hero has taken damage."],
+      ["No waiting period", "Many Emberward minions can attack on the turn they are played, so the pressure starts at once."]
+    ]
+  },
+  {
+    "slug": "clockwright",
+    "class": "CLOCKWRIGHT",
+    "alt": "Clockwright, an inventor holding a crackling brass sphere",
+    "tagline": "Built a machine that solves every problem. The machine is now the problem.",
+    "play": "Clockwright builds a machine out of small parts. Gear Wisps arrive one at a time, every Construct on the board makes the others bigger, and the hero power keeps your hand full while the engine warms up.",
+    "traits": [
+      ["Many small parts", "Card after card summons a 1/1 Gear Wisp. One of them is a rounding error. Six of them are a workforce."],
+      ["Constructs improve Constructs", "Buffs that reach every friendly Construct at once turn a wide board into a tall one."],
+      ["Never out of ideas", "Blueprint draws a card every turn, and a few spells pick a minion back up so it can be played again."]
+    ]
+  },
+  {
+    "slug": "gravekeep",
+    "class": "GRAVEKEEP",
+    "alt": "Gravekeep, a hooded skeletal figure with a lantern",
+    "tagline": "Keeps the cemetery, and is concerned by how many residents keep leaving it.",
+    "play": "Gravekeep treats a minion's death as the start of its career. Its minions leave something behind when they die, some of them get back up, and a few cards will sacrifice one of your own to collect the benefit early.",
+    "traits": [
+      ["Toll", "A Toll effect happens when the minion dies: a card, some Health, a fresh pair of Shades. Losing a fight is often the plan."],
+      ["Sacrifice", "Spend a friendly minion to draw cards, summon more, or take an enemy minion for yourself."],
+      ["They come back", "Rekindle returns a minion once with 1 Health, and the largest spells empty the graveyard back onto the board."]
+    ]
+  },
+  {
+    "slug": "nightveil",
+    "class": "NIGHTVEIL",
+    "alt": "Nightveil, a masked assassin on a moonlit rooftop",
+    "tagline": "Nobody saw Nightveil arrive. Three complaints about it have been filed anyway.",
+    "play": "Nightveil picks its fights. Shrouded minions cannot be attacked or targeted until they strike, Venom destroys any minion it damages, and anything too large to kill is sent back to its owner's hand.",
+    "traits": [
+      ["Shroud", "Enemies cannot attack or target a Shrouded minion until it attacks. You decide when the fight starts."],
+      ["Venom", "Any minion damaged by Venom is destroyed, whatever its size."],
+      ["Removal on request", "Destroy effects, returns to hand, and the occasional enemy minion persuaded to change sides."]
+    ]
+  },
+  {
+    "slug": "stonewarden",
+    "class": "STONEWARDEN",
+    "alt": "Stonewarden, an armored giant with a tower shield",
+    "tagline": "Built a wall, then built a second wall to protect the first one.",
+    "play": "Stonewarden builds a wall and stands behind it for as long as it takes. Bulwark minions must be attacked first, Health buffs make them very hard to remove, and once the wall is finished the heavy minions walk through whatever is left.",
+    "traits": [
+      ["Bulwark", "Enemies have to attack a Bulwark minion before anything else, and Earthwall adds another one every turn."],
+      ["Thicker walls", "Buffs add Health and Aegis, which cancels the first damage a minion would take."],
+      ["Overwhelm", "The big finishers carry their leftover damage through a blocker and into the enemy hero."]
+    ]
+  },
+  {
+    "slug": "tempest",
+    "class": "TEMPEST",
+    "alt": "Tempest, a storm mage hurling lightning",
+    "tagline": "Treats the weather as a suggestion. The suggestion is usually lightning.",
+    "play": "Tempest is the fastest class in the kingdom and the least predictable. Its minions attack twice, its lightning picks its own targets, and its strongest cards borrow mana from next turn without asking.",
+    "traits": [
+      ["Doublestrike", "A Doublestrike minion attacks twice each turn."],
+      ["Lightning goes where it likes", "Much of the damage lands on a random enemy. It is cheap for what it does, and now and then it is exactly what you wanted."],
+      ["Backdraft", "Strong now, expensive later: a Backdraft card locks some of your Mana Crystals on your next turn."]
+    ]
+  },
+  {
+    "slug": "tidecaller",
+    "class": "TIDECALLER",
+    "alt": "Tidecaller, a sea mystic holding a driftwood staff",
+    "tagline": "Summons the tide twice a day, which the tide was already doing without help.",
+    "play": "Tidecaller is in no hurry. It freezes attackers where they stand, drowns large minions down to size, sends the rest back to their owner's hand, and wins with whatever is still standing.",
+    "traits": [
+      ["Frost", "A frozen character misses its next chance to attack."],
+      ["Drown", "Drown deals damage equal to half of a character's current Health, rounded up. The larger the minion, the worse it goes."],
+      ["Return to sender", "Minions go back to their owner's hand, to be paid for a second time."]
+    ]
+  },
+  {
+    "slug": "verdant",
+    "class": "VERDANT",
+    "alt": "Verdant, an ancient tree spirit cradling a sapling",
+    "tagline": "Heals the land, and has since sent the land an invoice.",
+    "play": "Verdant plays the long game. It heals through the early turns, grows extra Mana Crystals ahead of schedule, and then lands minions too large to argue with.",
+    "traits": [
+      ["Outlasts everyone", "Healing arrives on spells, on minions, on a weapon and on the hero power."],
+      ["Grows its own mana", "Some cards add an empty Mana Crystal, so the big turns come early."],
+      ["Too big to fence in", "The late-game minions have Overwhelm, which pushes leftover damage into the enemy hero, and the buffs make them larger still."]
+    ]
+  }
+]

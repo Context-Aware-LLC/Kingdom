@@ -880,3 +880,91 @@ details .a p:last-child {
   color: var(--parchment);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
+/* ---------- hero pages, and the home roster cards that link to them ---------- */
+.card>a {
+  display: block;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.card>a:focus-visible {
+  outline: 2px solid var(--frost);
+  outline-offset: -2px;
+  border-radius: var(--r-md);
+}
+
+.hero-sheet {
+  display: grid;
+  gap: var(--s-4) var(--s-5);
+  grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.hero-sheet .portrait {
+  width: 100%;
+  height: auto;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+}
+
+.hero-sheet h2 {
+  margin-top: 0;
+}
+
+.traits {
+  margin: var(--s-3) 0 var(--s-4);
+}
+
+.traits dt {
+  font-weight: 700;
+  color: var(--parchment);
+  margin-top: var(--s-2);
+}
+
+.traits dd {
+  margin: 0;
+  color: var(--muted);
+}
+
+.power {
+  margin-bottom: 0;
+}
+
+.power .eyebrow {
+  margin-bottom: var(--s-1);
+}
+
+.power h3 {
+  font-family: var(--slab);
+  font-weight: 400;
+  font-size: 1.35rem;
+  color: var(--ember);
+  margin: 0 0 6px;
+}
+
+.power .fine {
+  color: var(--muted);
+  font-size: var(--t-small);
+  margin-top: 6px;
+}
+
+.hero-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+  margin-top: var(--s-5);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 760px) {
+  .hero-sheet {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-sheet .portrait {
+    max-width: 380px;
+  }
+}

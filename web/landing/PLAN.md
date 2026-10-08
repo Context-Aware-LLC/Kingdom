@@ -17,4 +17,8 @@ site is nordaware.com and is separate.
 5. **Deploy on push. DONE 2026-09-30.** `.github/workflows/deploy-site.yml`. It also promotes the
    version, because `wrangler deploy` here only uploads one (no workers.dev or route targets).
 
+6. **Hero pages. DONE 2026-10-07.** `/heroes/<name>`, one per hero, linked from the home roster:
+   playstyle, hero power, and that class's allowlisted cards. The allowlist grew to four per class
+   (Sam, 2026-10-07: reveals may go public and change, there is no traffic yet).
+
 Phases 2-4 are built (support is the support@ email link; the form is optional).

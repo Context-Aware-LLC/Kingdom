@@ -29,3 +29,12 @@ an address on a domain verified in Resend.
 `public/assets/` holds web encodes of files under `unity/Assets/Art/` (the backdrops,
 hero portraits, splash orb, and the Alfa Slab One and Google Sans fonts subset to Latin). When
 the art changes, re-encode from those sources rather than editing the encodes.
+
+## Card teaser and hero pages
+
+`python web/landing/scripts/build-gallery.py` writes `public/cards.html`, `public/heroes/*.html`,
+the card encodes, and the roster inside `public/index.html` (between the `roster:` markers; edit
+`heroes.json`, not that block). `gallery-allowlist.json` is the only gate on which cards are
+public: `/cards` shows all of them and each hero page shows its own class's. Hero copy lives in
+`heroes.json`; the hero power text is read from the card data, so rebuild after it changes.
+A new hero page also needs a line in `public/sitemap.xml`.
