@@ -547,7 +547,7 @@ namespace Emberfall.Presentation
         {
             const float W = BoardController.CardW, H = BoardController.CardH;
 
-            // A separate sword runs diagonally above the circular well and below its digits.
+            // A separate sword runs diagonally behind the circular well; only hilt and point show.
             // Stat frames share a larger display size with inset corner anchors for capture safety.
             Sprite cost   = _hasPaintedFrame ? _ui?.Get(FrameRarityCatalog.CostSocketSprite) : null;
             Sprite attack = _hasPaintedFrame
@@ -577,8 +577,8 @@ namespace Emberfall.Presentation
             PlaceSocket(attackSocketRenderer, attack, FrameRarityCatalog.StatSocketLeft,  statSize,
                         FrameRarityCatalog.ShowAttack(_def.Type));
             PlaceSocket(powerSwordRenderer, sword, FrameRarityCatalog.StatSocketLeft,
-                        statSize * FrameRarityCatalog.PowerSwordScale,
-                        FrameRarityCatalog.ShowAttack(_def.Type), z: -0.0095f);
+                        Vector2.Scale(statSize, FrameRarityCatalog.PowerSwordScale),
+                        FrameRarityCatalog.ShowAttack(_def.Type), z: -0.0085f);
             if (powerSwordRenderer != null)
             {
                 powerSwordRenderer.transform.localRotation =

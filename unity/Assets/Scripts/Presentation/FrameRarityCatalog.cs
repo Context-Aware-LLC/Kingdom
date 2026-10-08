@@ -80,11 +80,13 @@ namespace Emberfall.Presentation
         // socket centre — do not size these to the disc.
         public const float StatSocketPx = 256f * 1.15f; // 15% larger display; texture resolution is unchanged
         public const float StatSocketInsetPx = StatSocketPx * 0.5f + 8f; // keep captures clear of the card edge
-        public const float PowerSwordScale = 1.8f; // blade and hilt extend well beyond the circle
-        public const float PowerSwordAngle = 45f; // upright source turns counterclockwise, pointing up-left
-        // Move only the sword slightly up/right. Both ends clear the original circle while
-        // remaining inside the card's capture bounds.
-        public static readonly Vector2 PowerSwordOffset = new(0.2f, 0.2f);
+        // In stat canvases, across the blade and along it. The source sword is squeezed to a
+        // third of its drawn width so only a slim hilt and point show past the circle.
+        public static readonly Vector2 PowerSwordScale = new(0.55f, 1.7f);
+        public const float PowerSwordAngle = -135f; // upright source turns to hilt upper-left, point lower-right
+        // Move only the sword slightly up/right, away from the card corner. Both ends clear the
+        // circle while remaining 8 master px inside the card's capture bounds.
+        public static readonly Vector2 PowerSwordOffset = new(0.08f, 0.08f);
         public const float GemSocketPx  = 224f; // O206 bezel, O170 well
 
         public static string GemSprite(Rarity rarity) =>
@@ -183,8 +185,8 @@ namespace Emberfall.Presentation
         public static readonly Vector2 TribeCanvasOffset = new(-2.5f / 2012f, 6f / 354f);
         public const int TribePanelOrder = 2;
         public const int StatSocketOrder = TribePanelOrder + 1;
-        public const int PowerCircleOrder = StatSocketOrder;
-        public const int PowerSwordOrder = PowerCircleOrder + 1; // circle < sword < labels (10)
+        public const int PowerSwordOrder = StatSocketOrder;
+        public const int PowerCircleOrder = PowerSwordOrder + 1; // sword < circle < labels (10)
         public const float TribeEm = 100f / MasterH;
         public const float TribeEmFloor = 84f / MasterH;
 

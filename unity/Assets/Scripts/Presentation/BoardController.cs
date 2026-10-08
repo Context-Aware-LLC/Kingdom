@@ -1149,7 +1149,7 @@ namespace Emberfall.Presentation
 
             var costSocket   = MakeSocket("CostSocket",   -0.009f);
             var attackSocket = MakeSocket("AttackSocket", -0.009f);
-            var powerSword = MakeSocket("PowerSword", -0.0095f);
+            var powerSword = MakeSocket("PowerSword", -0.0085f);
             var healthSocket = MakeSocket("HealthSocket", -0.009f);
             var gemSocket    = MakeSocket("GemSocket",    -0.011f);
             gemSocket.sortingOrder = FrameRarityCatalog.GemSocketOrder;
