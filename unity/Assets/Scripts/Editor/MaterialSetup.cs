@@ -43,8 +43,8 @@ namespace Emberfall.Editor
             // 20 puts ~7 px between noise cells and the burn reads as fizz rather than as fire.
             // 12 gives a cell the eye can resolve; the wider edge carries the ember colour.
             // Emberfall/SG_Dissolve is the hand-HLSL shader, NOT Shader Graphs/SG_Dissolve —
-            // the .shadergraph has never compiled (see the .shader header) and any material
-            // built on it renders magenta.
+            // the .shader is transparent where the graph is opaque with alpha clip (see the
+            // .shader header for why that matters on the burn's first frame).
             Create("M_Dissolve", "Emberfall/SG_Dissolve", m =>
             {
                 m.SetFloat("_NoiseScale", 12f);

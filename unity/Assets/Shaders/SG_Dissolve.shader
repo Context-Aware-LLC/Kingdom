@@ -1,11 +1,10 @@
 // SG_Dissolve — the death burn. Eats a whole card away, ember-edged, over 0.40s.
 //
-// Supersedes SG_Dissolve.shadergraph, which HAS NEVER COMPILED: its SGF_DissolveCore
-// subgraph emits a Simple Noise node whose output is referenced from the generated
-// VERTEX program where it was never declared, so ShaderUtil.ShaderHasError is true for
-// both the Unlit and ShadowCaster passes and every material built on it renders magenta.
-// Authored as hand-HLSL on 2026-07-25 for the same reason SG_ManaFill was on 2026-07-18:
-// the graph cannot be safely repaired without the Shader Graph editor. The orphaned
+// Supersedes SG_Dissolve.shadergraph, which no material references. Authored as hand-HLSL
+// on 2026-07-25 because the graph did not compile then: its SGF_DissolveCore subgraph
+// named the noise node's type `SimpleNoiseNode`, a class Shader Graph does not have (it
+// is `NoiseNode`), so no code was generated for the node and its output was undeclared
+// wherever it was read. The type name was corrected on 2026-10-08. The orphaned
 // Assets/Shaders/Functions/SGF_DissolveCore.hlsl documents itself as a Custom Function
 // node the subgraph does not contain — its clip/edge-band logic is reimplemented below,
 // which is the only copy that now runs.

@@ -883,8 +883,8 @@
 }
 
 {
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.SimpleNoiseNode",
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.NoiseNode",
     "m_ObjectId": "ed60b7ea4ae0694a1ce55e8c0774ac72",
     "m_Group": {
         "m_Id": ""
@@ -920,7 +920,8 @@
     "m_PreviewMode": 0,
     "m_CustomColors": {
         "m_SerializableColors": []
-    }
+    },
+    "m_HashType": 0
 }
 
 {
