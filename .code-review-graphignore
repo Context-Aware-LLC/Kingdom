@@ -7,3 +7,9 @@
 # `*` crosses slashes.
 *_BackUpThisFolder_ButDontShipItWithYourGame/*
 *_BurstDebugInformation_DoNotShip/*
+
+# Vendored third-party C#, tracked in git but not ours: Unity's embedded packages and the Google
+# Play Games plugin. Together they were about a quarter of the graph's nodes, and their symbols
+# answered searches meant for the game's own code.
+unity/Packages/*
+unity/Assets/GooglePlayGames/*
