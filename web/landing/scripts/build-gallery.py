@@ -31,6 +31,9 @@ OUT_POWERS = SITE / "public" / "assets" / "powers"
 # Twice the size the page shows it at, for dense screens.
 POWER_ICON = 192
 GEM_ICON = 80
+# Keywords whose glossary entry carries a picture, and the size it is encoded at (twice the drawn size).
+KEYWORD_SHOTS = ("AEGIS", "BULWARK", "FROST", "SHROUD")
+KEYWORD_SHOT_SIZE = (494, 610)
 KEYWORD_COPY = UNITY / "Scripts" / "Presentation" / "KeywordCopy.cs"
 KEYWORD_SEMANTICS = SITE.parent.parent / "src" / "Emberfall.Core.Cards" / "KeywordSemantics.cs"
 # REINFORCE's glossary line is a placeholder no player meets; KeywordCopy says so at the line.
@@ -243,8 +246,28 @@ def main():
     heroes = json.load(open(SITE / "heroes.json", encoding="utf-8"))
     keywords = load_keywords()
     ordered = sorted(keywords.items(), key=lambda kv: kv[1][0])
-    entries = "\n".join(f'        <dt id="{keyword_anchor(k)}">{html.escape(name)}</dt>\n        <dd>{html.escape(text)}</dd>'
-                        for k, (name, text) in ordered)
+    # A status keyword also shows a board minion wearing it. The pictures come out of the game:
+    # Emberfall/Preview (offscreen)/Keyword States writes them to artifacts/keyword-preview, which
+    # is not committed, so they are re-encoded only when a fresh render is there to encode.
+    shots = SITE / "public" / "assets" / "keywords"
+    shots.mkdir(parents=True, exist_ok=True)
+    for k in KEYWORD_SHOTS:
+        src = SITE.parent.parent / "artifacts" / "keyword-preview" / f"{k.lower()}.png"
+        if src.exists():
+            Image.open(src).convert("RGB").resize(KEYWORD_SHOT_SIZE, Image.LANCZOS).save(
+                shots / f"{k.lower()}.webp", quality=85, method=6)
+        elif not (shots / f"{k.lower()}.webp").exists():
+            sys.exit(f"no picture for {k}: run the Keyword States preview in Unity")
+
+    def keyword_entry(k, name, text):
+        shot = ""
+        if k in KEYWORD_SHOTS:
+            w, h = KEYWORD_SHOT_SIZE
+            shot = (f'\n          <img src="/assets/keywords/{k.lower()}.webp" alt="A minion on the board with {html.escape(name)}" '
+                    f'width="{w}" height="{h}" loading="lazy">')
+        return f'        <dt id="{keyword_anchor(k)}">{html.escape(name)}</dt>\n        <dd>{html.escape(text)}{shot}</dd>'
+
+    entries = "\n".join(keyword_entry(k, name, text) for k, (name, text) in ordered)
     anchors = [(name, f"#{keyword_anchor(k)}") for k, (name, _) in ordered]
     (SITE / "public" / "docs").mkdir(parents=True, exist_ok=True)
     # The eight hero cards are built once and used twice: on the home page and as the docs' heroes index.

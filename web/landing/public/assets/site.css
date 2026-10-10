@@ -970,6 +970,17 @@ details .a p:last-child {
   color: var(--muted);
 }
 
+/* A board minion wearing the keyword, under its definition. */
+.traits dd img {
+  display: block;
+  width: 247px;
+  max-width: 100%;
+  height: auto;
+  margin: var(--s-2) 0 var(--s-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+}
+
 /* The icon is as tall as the three lines beside it: name, rules text, cost. */
 .power {
   display: flex;
