@@ -1047,33 +1047,26 @@ details .a p:last-child {
   padding-bottom: var(--s-6);
 }
 
+/* A page with no sections of its own takes the column they would have had. */
+.docs-body.wide {
+  grid-column: 2 / -1;
+}
+
 /* Inside the docs layout the page is narrower, so the portrait gives up width to the text. */
 .docs .hero-sheet {
   grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
 }
 
-/* The heroes fold away under one entry, opened by a click or by being on a hero page. */
-.docs-nav details {
-  border: 0;
-  border-radius: 0;
-  background: none;
-  margin: 0;
-}
-
-.docs-nav summary {
-  display: block;
+/* "Heroes" is a heading that is also a link, to the heroes index. */
+.docs-nav p a {
+  display: inline;
   padding: 0;
-  font-weight: 400;
-  font-size: var(--t-eyebrow);
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--frost);
-  margin: var(--s-3) 0 var(--s-1);
-  cursor: pointer;
+  color: inherit;
 }
 
-.docs-nav summary::after {
-  content: none;
+.docs-nav p a:hover,
+.docs-nav p a[aria-current] {
+  color: var(--parchment);
 }
 
 .docs-nav summary:hover {

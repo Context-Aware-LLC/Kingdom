@@ -79,23 +79,27 @@ def docs_toc(sections):
     return f'  <nav class="docs-toc" aria-label="On this page">\n    <p>On this page</p>\n    <ul>\n{links}\n    </ul>\n  </nav>'
 
 
+HEROES_HREF = "/docs/heroes"
+
+
 def hero_href(h):
-    return f'/docs/heroes/{h["slug"]}'
+    return f'{HEROES_HREF}/{h["slug"]}'
 
 
 def docs_nav(current, heroes):
     """The side menu every docs page carries. It lists the docs and nothing else (Sam, 2026-10-08).
-    The hero pages are docs pages (Sam, 2026-10-10), so they are listed too, by class, under a
-    "Heroes" entry that stays folded until it is clicked or the page is one of them."""
+    The hero pages are docs pages (Sam, 2026-10-10). "Heroes" links to their index, and the eight
+    are listed under it, by class, only while the reader is on that index or on one of them."""
     def item(label, href):
         here = ' aria-current="page"' if href == current else ""
         return f'      <li><a href="{href}"{here}>{html.escape(label)}</a></li>'
 
     items = "\n".join(item(label, href) for label, href in DOCS_PAGES)
     roster = "\n".join(item(CLASS_LABEL[h["class"]], hero_href(h)) for h in heroes)
+    here = ' aria-current="page"' if current == HEROES_HREF else ""
+    sub = f'    <ul>\n{roster}\n    </ul>\n' if current.startswith(HEROES_HREF) else ""
     return (f'  <nav class="docs-nav" aria-label="Docs">\n    <p>Docs</p>\n    <ul>\n{items}\n    </ul>\n'
-            f'    <details{" open" if current.startswith("/docs/heroes/") else ""}>\n      <summary>Heroes</summary>\n'
-            f'    <ul>\n{roster}\n    </ul>\n    </details>\n  </nav>')
+            f'    <p><a href="{HEROES_HREF}"{here}>Heroes</a></p>\n{sub}  </nav>')
 
 
 def card_html(c):
@@ -182,11 +186,14 @@ def main():
                         for k, (name, text) in ordered)
     anchors = [(name, f"#{keyword_anchor(k)}") for k, (name, _) in ordered]
     (SITE / "public" / "docs").mkdir(parents=True, exist_ok=True)
+    # The eight hero cards are built once and used twice: on the home page and as the docs' heroes index.
+    roster = "\n".join(roster_html(h) for h in heroes)
     for template, out, href, sections in (("docs.template.html", "docs.html", "/docs", []),
-                                          ("keywords.template.html", "docs/keywords.html", "/docs/keywords", anchors)):
+                                          ("keywords.template.html", "docs/keywords.html", "/docs/keywords", anchors),
+                                          ("heroes.template.html", "docs/heroes.html", HEROES_HREF, [])):
         page = (SITE / "scripts" / template).read_text(encoding="utf-8")
         page = (page.replace("{{DOCS_NAV}}", docs_nav(href, heroes)).replace("{{DOCS_TOC}}", docs_toc(sections))
-                .replace("{{KEYWORDS}}", entries))
+                .replace("{{KEYWORDS}}", entries).replace("{{ROSTER}}", roster))
         (SITE / "public" / out).write_text(page, encoding="utf-8", newline="\n")
     print(f"published {len(keywords)} keywords")
     template = (SITE / "scripts" / "hero.template.html").read_text(encoding="utf-8")
@@ -201,8 +208,8 @@ def main():
     # The home page is hand-written apart from the roster, which links to the pages above.
     index = SITE / "public" / "index.html"
     text = index.read_text(encoding="utf-8")
-    roster = "<!-- roster:start -->\n" + "\n".join(roster_html(h) for h in heroes) + "\n        <!-- roster:end -->"
-    text, n = re.subn(r"<!-- roster:start -->.*?<!-- roster:end -->", lambda m: roster, text, flags=re.S)
+    block = "<!-- roster:start -->\n" + roster + "\n        <!-- roster:end -->"
+    text, n = re.subn(r"<!-- roster:start -->.*?<!-- roster:end -->", lambda m: block, text, flags=re.S)
     if n != 1:
         sys.exit("index.html: roster markers not found")
     index.write_text(text, encoding="utf-8", newline="\n")

@@ -33,7 +33,7 @@ the art changes, re-encode from those sources rather than editing the encodes.
 ## Card teaser and hero pages
 
 `python web/landing/scripts/build-gallery.py` writes `public/cards.html`, `public/docs/heroes/*.html`,
-`public/docs.html`, `public/docs/keywords.html`, the card encodes, and the roster inside `public/index.html` (between the
+`public/docs.html`, `public/docs/keywords.html`, `public/docs/heroes.html`, the card encodes, and the roster inside `public/index.html` (between the
 `roster:` markers; edit `heroes.json`, not that block). A hero page is about the character, not
 the class: `heroes.json` holds the name, and the page only lists that hero's keywords. The
 definitions live once, on `/docs/keywords`, read from `KeywordCopy.cs` so the site says what the game says.
