@@ -85,7 +85,8 @@ def hero_href(h):
 
 def docs_nav(current, heroes):
     """The side menu every docs page carries. It lists the docs and nothing else (Sam, 2026-10-08).
-    The hero pages are docs pages (Sam, 2026-10-10), so they are listed too, by class."""
+    The hero pages are docs pages (Sam, 2026-10-10), so they are listed too, by class, under a
+    "Heroes" entry that stays folded until it is clicked or the page is one of them."""
     def item(label, href):
         here = ' aria-current="page"' if href == current else ""
         return f'      <li><a href="{href}"{here}>{html.escape(label)}</a></li>'
@@ -93,7 +94,8 @@ def docs_nav(current, heroes):
     items = "\n".join(item(label, href) for label, href in DOCS_PAGES)
     roster = "\n".join(item(CLASS_LABEL[h["class"]], hero_href(h)) for h in heroes)
     return (f'  <nav class="docs-nav" aria-label="Docs">\n    <p>Docs</p>\n    <ul>\n{items}\n    </ul>\n'
-            f'    <p>Heroes</p>\n    <ul>\n{roster}\n    </ul>\n  </nav>')
+            f'    <details{" open" if current.startswith("/docs/heroes/") else ""}>\n      <summary>Heroes</summary>\n'
+            f'    <ul>\n{roster}\n    </ul>\n    </details>\n  </nav>')
 
 
 def card_html(c):

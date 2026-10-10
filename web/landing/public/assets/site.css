@@ -1052,6 +1052,20 @@ details .a p:last-child {
   grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
 }
 
+/* The heroes fold away under one entry, opened by a click or by being on a hero page. */
+.docs-nav summary {
+  font-size: var(--t-eyebrow);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--frost);
+  margin: var(--s-3) 0 var(--s-1);
+  cursor: pointer;
+}
+
+.docs-nav summary:hover {
+  color: var(--parchment);
+}
+
 /* Narrower than this the page's own sections go; the side menu stays at the side. */
 @media (max-width: 1000px) {
   .docs {
