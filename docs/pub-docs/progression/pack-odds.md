@@ -1,6 +1,6 @@
 # Pack Odds
 
-Each pack contains **5 cards** drawn from the Core set combined with the pack's own set. All packs of the same type use the same odds and the same card pool, whether you bought them or earned them.
+Each pack contains **5 cards** drawn from that pack's set. All packs of the same type use the same odds and the same card pool, whether you bought them or earned them.
 
 ## Base odds per slot
 
