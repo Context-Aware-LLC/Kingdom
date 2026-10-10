@@ -1,5 +1,5 @@
 """Builds the public card teaser, the hero pages and the keyword glossary: public/cards.html,
-public/heroes/*.html, public/docs.html, public/docs/keywords.html, public/assets/cards/*.webp, and the hero roster inside
+public/docs/heroes/*.html, public/docs.html, public/docs/keywords.html, public/assets/cards/*.webp, and the hero roster inside
 public/index.html.
 
 Only handles listed in gallery-allowlist.json are published, in that order. Everything else in
@@ -25,7 +25,7 @@ from PIL import Image
 SITE = Path(__file__).resolve().parent.parent
 UNITY = SITE.parent.parent / "unity" / "Assets"
 OUT_IMG = SITE / "public" / "assets" / "cards"
-OUT_HEROES = SITE / "public" / "heroes"
+OUT_HEROES = SITE / "public" / "docs" / "heroes"
 OUT_POWERS = SITE / "public" / "assets" / "powers"
 # Twice the size the page shows it at, for dense screens.
 POWER_ICON = 192
@@ -79,14 +79,21 @@ def docs_toc(sections):
     return f'  <nav class="docs-toc" aria-label="On this page">\n    <p>On this page</p>\n    <ul>\n{links}\n    </ul>\n  </nav>'
 
 
-def docs_nav(current):
-    """The side menu every docs page carries. It lists the docs and nothing else (Sam, 2026-10-08)."""
+def hero_href(h):
+    return f'/docs/heroes/{h["slug"]}'
+
+
+def docs_nav(current, heroes):
+    """The side menu every docs page carries. It lists the docs and nothing else (Sam, 2026-10-08).
+    The hero pages are docs pages (Sam, 2026-10-10), so they are listed too, by class."""
     def item(label, href):
         here = ' aria-current="page"' if href == current else ""
         return f'      <li><a href="{href}"{here}>{html.escape(label)}</a></li>'
 
     items = "\n".join(item(label, href) for label, href in DOCS_PAGES)
-    return f'  <nav class="docs-nav" aria-label="Docs">\n    <p>Docs</p>\n    <ul>\n{items}\n    </ul>\n  </nav>'
+    roster = "\n".join(item(CLASS_LABEL[h["class"]], hero_href(h)) for h in heroes)
+    return (f'  <nav class="docs-nav" aria-label="Docs">\n    <p>Docs</p>\n    <ul>\n{items}\n    </ul>\n'
+            f'    <p>Heroes</p>\n    <ul>\n{roster}\n    </ul>\n  </nav>')
 
 
 def card_html(c):
@@ -105,7 +112,7 @@ def card_html(c):
 
 
 def roster_html(h):
-    return (f'        <figure class="card"><a href="/heroes/{h["slug"]}"><img src="/assets/hero-{h["slug"]}.webp" alt="{html.escape(h["alt"])}" '
+    return (f'        <figure class="card"><a href="{hero_href(h)}"><img src="/assets/hero-{h["slug"]}.webp" alt="{html.escape(h["alt"])}" '
             f'width="560" height="560" loading="lazy"><figcaption><strong>{html.escape(h["name"])}</strong><em>{CLASS_LABEL[h["class"]]}</em>'
             f'<span>{html.escape(h["tagline"])}</span></figcaption></a></figure>')
 
@@ -137,6 +144,9 @@ def hero_page(template, heroes, i, cards, published, keywords):
         "CARDS": "\n".join(card_html(c) for c in own),
         "PREV_SLUG": prev["slug"], "PREV_NAME": html.escape(prev["name"]),
         "NEXT_SLUG": nxt["slug"], "NEXT_NAME": html.escape(nxt["name"]),
+        "DOCS_NAV": docs_nav(hero_href(h), heroes),
+        "DOCS_TOC": docs_toc([("Style of Battle", "#style"), (powers[0]["name"].strip(), "#power"),
+                              (f'From the {CLASS_LABEL[h["class"]]} deck', "#cards")]),
     }
     return re.sub(r"\{\{(\w+)\}\}", lambda m: fields[m.group(1)], template), len(own)
 
@@ -173,7 +183,7 @@ def main():
     for template, out, href, sections in (("docs.template.html", "docs.html", "/docs", []),
                                           ("keywords.template.html", "docs/keywords.html", "/docs/keywords", anchors)):
         page = (SITE / "scripts" / template).read_text(encoding="utf-8")
-        page = (page.replace("{{DOCS_NAV}}", docs_nav(href)).replace("{{DOCS_TOC}}", docs_toc(sections))
+        page = (page.replace("{{DOCS_NAV}}", docs_nav(href, heroes)).replace("{{DOCS_TOC}}", docs_toc(sections))
                 .replace("{{KEYWORDS}}", entries))
         (SITE / "public" / out).write_text(page, encoding="utf-8", newline="\n")
     print(f"published {len(keywords)} keywords")

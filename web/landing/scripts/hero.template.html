@@ -6,9 +6,9 @@
 <title>{{NAME}} the {{CLASS}} · Kingdom of Bad Ideas</title>
 <meta name="description" content="{{NAME}} the {{CLASS}}, one of the eight heroes of Kingdom of Bad Ideas. {{TAGLINE}}">
 <meta name="theme-color" content="#0b0f14">
-<link rel="canonical" href="https://kingdomofbadideas.com/heroes/{{SLUG}}">
+<link rel="canonical" href="https://kingdomofbadideas.com/docs/heroes/{{SLUG}}">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://kingdomofbadideas.com/heroes/{{SLUG}}">
+<meta property="og:url" content="https://kingdomofbadideas.com/docs/heroes/{{SLUG}}">
 <meta property="og:title" content="{{NAME}} the {{CLASS}} · Kingdom of Bad Ideas">
 <meta property="og:description" content="{{TAGLINE}}">
 <meta property="og:image" content="https://kingdomofbadideas.com/assets/og.jpg">
@@ -21,23 +21,25 @@
 </head>
 <body class="page">
 <header class="top"><div class="wrap"><a class="home-seal" href="/" aria-label="Kingdom of Bad Ideas home"><img src="/assets/seal.png" alt="" width="240" height="240"></a><nav aria-label="Main"><a href="/cards">Cards</a><a href="/events">Events</a><a href="/leaderboards">Leaderboards</a><a href="/docs">Docs</a><a href="/faq">FAQ</a></nav></div></header>
-<main>
-  <section class="page-head wrap">
+<main class="wrap docs">
+{{DOCS_NAV}}
+  <div class="docs-body">
+  <section class="page-head">
     <p class="eyebrow">The {{CLASS}}</p>
     <h1>{{NAME}}</h1>
     <p>{{TAGLINE}}</p>
   </section>
-  <section class="wrap hero-sheet">
+  <section class="hero-sheet">
     <img class="portrait" src="/assets/hero-{{SLUG}}.webp" alt="{{ALT}}" width="560" height="560">
     <div class="prose">
-      <h2>Style of Battle</h2>
+      <h2 id="style">Style of Battle</h2>
       <p>{{STYLE}}</p>
       <ul>
 {{POINTS}}
       </ul>
       <h3>Keywords</h3>
       <p class="keywords">{{KEYWORDS}}</p>
-      <div class="power">
+      <div class="power" id="power">
         <img src="/assets/powers/{{SLUG}}.webp" alt="{{POWER_NAME}}, {{NAME}}'s hero power" width="192" height="192" loading="lazy">
         <div>
           <h3>{{POWER_NAME}}</h3>
@@ -47,14 +49,16 @@
       </div>
     </div>
   </section>
-  <section class="wrap">
-    <h2>From the {{CLASS}} deck</h2>
+  <section>
+    <h2 id="cards">From the {{CLASS}} deck</h2>
     <div class="roster">
 {{CARDS}}
     </div>
     <p class="more">More cards on the way. <a href="/#prereg">Join Early Access</a> to be first through the gates.</p>
-    <nav class="hero-nav" aria-label="Heroes"><a href="/heroes/{{PREV_SLUG}}">&larr; {{PREV_NAME}}</a><a href="/#heroes">All eight heroes</a><a href="/heroes/{{NEXT_SLUG}}">{{NEXT_NAME}} &rarr;</a></nav>
+    <nav class="hero-nav" aria-label="Heroes"><a href="/docs/heroes/{{PREV_SLUG}}">&larr; {{PREV_NAME}}</a><a href="/#heroes">All eight heroes</a><a href="/docs/heroes/{{NEXT_SLUG}}">{{NEXT_NAME}} &rarr;</a></nav>
   </section>
+  </div>
+{{DOCS_TOC}}
 </main>
 <footer><div class="wrap"><span>&copy; 2026 Context Aware. All rights reserved, and several wrongs.</span><span class="links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:support@kingdomofbadideas.com">support@kingdomofbadideas.com</a></span></div></footer>
 </body>

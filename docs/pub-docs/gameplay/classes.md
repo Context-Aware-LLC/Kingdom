@@ -4,7 +4,7 @@ There are eight classes, and each has its own hero. A deck's primary class decid
 
 Every Hero Power below costs 2 mana and may be used once per turn.
 
-## Emberward
+## [Emberward](https://kingdomofbadideas.com/docs/heroes/emberward)
 
 **Hero:** Pyra
 
@@ -16,7 +16,7 @@ She has one answer, and it is fire. She aims it at the enemy hero from the first
 
 **Searing Bolt:** Deal 1 damage. Deals 2 instead if your hero has taken damage this turn.
 
-## Clockwright
+## [Clockwright](https://kingdomofbadideas.com/docs/heroes/clockwright)
 
 **Hero:** Fenwick
 
@@ -27,7 +27,7 @@ He builds machines out of small parts. He spends most of his time in his worksho
 
 **Blueprint:** Draw a card.
 
-## Gravekeep
+## [Gravekeep](https://kingdomofbadideas.com/docs/heroes/gravekeep)
 
 **Hero:** Sorrow
 
@@ -39,7 +39,7 @@ He treats a death as the start of a career. What he buries pays him on the way d
 
 **Weaken:** Give a minion -1/+0.
 
-## Nightveil
+## [Nightveil](https://kingdomofbadideas.com/docs/heroes/nightveil)
 
 **Hero:** Liss
 
@@ -51,7 +51,7 @@ She picks her fights and is gone before the next one. What she cannot kill, she 
 
 **Backstab:** Deal 2 damage to the enemy hero and give all friendly Shroud minions +1/+0.
 
-## Stonewarden
+## [Stonewarden](https://kingdomofbadideas.com/docs/heroes/stonewarden)
 
 **Hero:** Hodge
 
@@ -63,7 +63,7 @@ He stands behind his wall for as long as it takes. When it is finished, he walks
 
 **Earthwall:** Summon a 0/3 Stone Shard with Bulwark.
 
-## Tempest
+## [Tempest](https://kingdomofbadideas.com/docs/heroes/tempest)
 
 **Hero:** Cassian
 
@@ -75,7 +75,7 @@ He is the fastest thing in the kingdom and the least sure where he is aiming. Th
 
 **Chain Spark:** Deal 1 damage twice to random enemies.
 
-## Tidecaller
+## [Tidecaller](https://kingdomofbadideas.com/docs/heroes/tidecaller)
 
 **Hero:** Maren
 
@@ -87,7 +87,7 @@ He is in no hurry. He freezes whatever comes at him, drowns the largest of it do
 
 **Tidal Ward:** Summon a 1/2 Tide Wisp with Bulwark.
 
-## Verdant
+## [Verdant](https://kingdomofbadideas.com/docs/heroes/verdant)
 
 **Hero:** Thalen
 

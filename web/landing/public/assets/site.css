@@ -1047,6 +1047,11 @@ details .a p:last-child {
   padding-bottom: var(--s-6);
 }
 
+/* Inside the docs layout the page is narrower, so the portrait gives up width to the text. */
+.docs .hero-sheet {
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+}
+
 /* Narrower than this the page's own sections go; the side menu stays at the side. */
 @media (max-width: 1000px) {
   .docs {

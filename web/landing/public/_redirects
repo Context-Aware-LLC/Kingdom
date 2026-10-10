@@ -1,2 +1,3 @@
 /keywords /docs/keywords 301
 /how-to /docs 301
+/heroes/* /docs/heroes/:splat 301
