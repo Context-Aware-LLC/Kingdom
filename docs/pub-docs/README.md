@@ -18,7 +18,7 @@ The kingdom is always growing and subject to the whims of his Majesty and the Qu
 ## Economy
 
 - [Economy](economy/economy.md) — the promises that govern cards and purchases.
-- [Earning Gold](economy/earning-gold.md) — every way to earn Gold by playing.
+- [Currency](economy/currency.md) — how to earn Gold and get Gems.
 - [Booster Packs](economy/booster-packs.md) — prices, drop rates, guarantees, duplicate rules, and starter packs.
 
 ## The wider game

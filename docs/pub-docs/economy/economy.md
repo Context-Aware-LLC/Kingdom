@@ -12,4 +12,4 @@ Every price, drop rate, and guarantee is published on the [Booster Packs](booste
 
 ## A viable free path
 
-The King and Queen wish that a free player build a competitive deck through ordinary play. New player grants, quests, earned currency, and crafting shorten the path to power. [Earning Gold](earning-gold.md) lists every way to earn it.
+The King and Queen wish that a free player build a competitive deck through ordinary play. New player grants, quests, earned currency, and crafting shorten the path to power. [Currency](currency.md) lists every way to earn Gold.
