@@ -61,7 +61,7 @@ He stands behind his wall for as long as it takes. When it is finished, he walks
 - Buffs that add Health.
 - Large minions whose extra damage carries through to the enemy hero.
 
-**Earthwall:** Summon a 0/3 Stone Shard.
+**Earthwall:** Summon a 0/3 Stone Shard with Bulwark.
 
 ## Tempest
 
@@ -85,7 +85,7 @@ He is in no hurry. He freezes whatever comes at him, drowns the largest of it do
 - Damage that grows with the target's Health.
 - Spells that return minions to their owner's hand.
 
-**Tidal Ward:** Summon a 1/2 Tide Wisp.
+**Tidal Ward:** Summon a 1/2 Tide Wisp with Bulwark.
 
 ## Verdant
 

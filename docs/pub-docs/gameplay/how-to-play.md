@@ -1,6 +1,6 @@
 # How to Play
 
-Your goal is to reduce the opposing hero from 30 Health to 0. Emberfall is turn-based: you spend mana, play cards, attack, and choose when to end your turn.
+Your goal is to reduce the opposing hero from 30 Health to 0. The game is turn-based: you spend mana, play cards, attack, and choose when to end your turn.
 
 ## Match setup
 

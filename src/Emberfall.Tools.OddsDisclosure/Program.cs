@@ -63,7 +63,7 @@ namespace Emberfall.Tools.OddsDisclosure
 
             sb.AppendLine($"<!-- GENERATED — do not edit by hand. Regenerate with: {RegenerateCommand} -->");
             sb.AppendLine();
-            sb.AppendLine("# Pack Odds — Emberfall");
+            sb.AppendLine("# Pack Odds — Pendingham");
             sb.AppendLine();
             sb.AppendLine($"Each pack contains **{BoosterPack.DefaultCardCount} cards** drawn from");
             sb.AppendLine("the Core set combined with the pack's expansion set.");
@@ -95,7 +95,7 @@ namespace Emberfall.Tools.OddsDisclosure
             sb.AppendLine($"- **Legendary pity.** After your first Legendary, one is guaranteed");
             sb.AppendLine($"  every {PackPityState.LegendaryPityPacks} consecutive packs from that set without one.");
             sb.AppendLine();
-            sb.AppendLine("**Counters are per expansion set.** Opening Emberfall packs does not affect");
+            sb.AppendLine("**Counters are per expansion set.** Opening Pendingham packs does not affect");
             sb.AppendLine("your pity counter for any other set.");
             sb.AppendLine();
             sb.AppendLine("When a pack owes both an Epic and a Legendary, it delivers both —");

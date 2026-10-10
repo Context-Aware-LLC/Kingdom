@@ -1,6 +1,6 @@
 <!-- GENERATED — do not edit by hand. Regenerate with: dotnet run --project src/Emberfall.Tools.OddsDisclosure -- docs/pub-docs/progression/pack-odds.md -->
 
-# Pack Odds — Emberfall
+# Pack Odds — Pendingham
 
 Each pack contains **5 cards** drawn from
 the Core set combined with the pack's expansion set.
@@ -30,7 +30,7 @@ After the base draw, each pack is adjusted to honour the following rules:
 - **Legendary pity.** After your first Legendary, one is guaranteed
   every 40 consecutive packs from that set without one.
 
-**Counters are per expansion set.** Opening Emberfall packs does not affect
+**Counters are per expansion set.** Opening Pendingham packs does not affect
 your pity counter for any other set.
 
 When a pack owes both an Epic and a Legendary, it delivers both —

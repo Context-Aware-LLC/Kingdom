@@ -1,8 +1,8 @@
-# Emberfall Player Guide
+# Kingdom of Bad Ideas Player Guide
 
-Emberfall is a turn-based digital card game about assembling a 30-card deck and outplaying one opponent at a time. This guide collects the rules and policies a player needs without the project history or implementation detail behind them.
+Kingdom of Bad Ideas is a turn-based digital card game about assembling a 30-card deck and outplaying one opponent at a time. This guide collects the rules and policies a player needs without the project history or implementation detail behind them.
 
-Emberfall is still in development. These pages describe the current rules baseline, not a release announcement. Features, balance values, availability, pricing, and platform support may change before launch.
+The game is still in development. These pages describe the current rules baseline, not a release announcement. Features, balance values, availability, pricing, and platform support may change before launch.
 
 ## Start here
 
@@ -18,7 +18,7 @@ Emberfall is still in development. These pages describe the current rules baseli
 
 ## The wider game
 
-- [The World of Emberfall](world/the-world-of-pendingham.md) — a short, spoiler-light setting guide.
+- [The World of Pendingham](world/the-world-of-pendingham.md) — a short, spoiler-light setting guide.
 - [Economy Principles](progression/economy-principles.md) — the promises that govern cards and purchases.
 - [Pack Odds](progression/pack-odds.md) — the exact drop rates, guarantees, and duplicate rules for every booster pack.
 - [Interface Accessibility](support/interface-accessibility.md) — the accessibility standard the interface is being built toward.
