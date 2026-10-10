@@ -113,6 +113,11 @@ namespace Emberfall.Net.Server.Quests
             _ => new QuestDefinition(
                 "long-game", "Win a match that runs past turn 15", 1,
                 f => f.Won && f.TurnCount > 15 ? 1 : 0),
+
+            // Summed across matches, like the card quests: every enemy minion that dies counts,
+            // whatever killed it — the match-end event records deaths, not who dealt the blow.
+            _ => new QuestDefinition(
+                "minion-hunter", "Destroy 50 minions", 50, f => f.EnemyMinionsDestroyed),
         };
 
         /// <summary>The one quest this player holds for this UTC day.</summary>

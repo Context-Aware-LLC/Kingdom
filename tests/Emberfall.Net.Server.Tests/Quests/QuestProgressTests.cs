@@ -125,6 +125,7 @@ namespace Emberfall.Net.Server.Tests.Quests
                 Assert.That(seat.DistinctCardsPlayedOf(CardClass.NEUTRAL), Is.Zero, "an unplayed card was counted");
                 Assert.That(seat.Won, Is.True);
                 Assert.That(seat.TurnCount, Is.EqualTo(8));
+                Assert.That(seat.EnemyMinionsDestroyed, Is.EqualTo(4), "the seat's own count, not the opponent's");
             });
         }
 
@@ -473,6 +474,7 @@ namespace Emberfall.Net.Server.Tests.Quests
                 // progress and payment rather than about which predicate happened to be drawn.
                 TurnCount: quest.Id == "quick-win" ? 8 : 16,
                 DistinctCardsPlayed: quest.Goal,
+                EnemyMinionsDestroyed: quest.Goal,
                 DistinctCardsPlayedByClass: byClass);
         }
 
@@ -494,10 +496,10 @@ namespace Emberfall.Net.Server.Tests.Quests
                 new MatchId("match-1"), Now, MatchEndReason.Win, outcome, turns, source,
                 new SeatOutcome(p0, @class, "deck-0", "hash-0",
                     outcome == MatchOutcome.Player0Win ? SeatResult.Win : SeatResult.Loss,
-                    Array.Empty<int>()),
+                    Array.Empty<int>(), EnemyMinionsDestroyed: 4),
                 new SeatOutcome(p1, @class, "deck-1", "hash-1",
                     outcome == MatchOutcome.Player1Win ? SeatResult.Win : SeatResult.Loss,
-                    Array.Empty<int>()));
+                    Array.Empty<int>(), EnemyMinionsDestroyed: 1));
 
         private static CardSeenRow Row(
             AccountId account, CardClass @class, bool won, int cardId, int? firstPlayedTurn)

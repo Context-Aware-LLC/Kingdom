@@ -13,8 +13,10 @@ namespace Emberfall.Net.Server.Quests
     /// deliberately no route from a predicate back to the rules engine, so a quest can never ask a
     /// question the match-end events do not already answer.
     ///
-    /// <para><b>Damage, healing and kills are absent because the events do not carry them.</b> That
-    /// is the constraint the spec's §3 exists to state, and this type is where it is enforced.</para>
+    /// <para><b>Damage and healing are absent because the events do not carry them.</b> That is the
+    /// constraint the spec's §3 exists to state, and this type is where it is enforced. Minion
+    /// deaths were absent for the same reason until <see cref="SeatOutcome.EnemyMinionsDestroyed"/>
+    /// landed (Sam, 2026-10-10), which is the route any further counter has to take.</para>
     /// </summary>
     public sealed record QuestMatchFacts(
         string MatchId,
@@ -25,6 +27,7 @@ namespace Emberfall.Net.Server.Quests
         SeatResult Result,
         int TurnCount,
         int DistinctCardsPlayed,
+        int EnemyMinionsDestroyed,
         IReadOnlyDictionary<CardClass, int> DistinctCardsPlayedByClass)
     {
         public bool Won => Result == SeatResult.Win;
@@ -96,6 +99,7 @@ namespace Emberfall.Net.Server.Quests
                 seat.Result,
                 complete.TurnCount,
                 played.Total,
+                seat.EnemyMinionsDestroyed,
                 (IReadOnlyDictionary<CardClass, int>?)played.ByClass
                     ?? new Dictionary<CardClass, int>()));
         }
