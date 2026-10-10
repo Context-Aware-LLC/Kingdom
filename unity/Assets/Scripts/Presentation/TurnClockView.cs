@@ -7,7 +7,7 @@ namespace Emberfall.Presentation
     /// <summary>
     /// Server-driven Royal Council turn hourglass. It replaces the literal TURN/ROPE counter with
     /// a physical object on the left fixture: procedural sand drains against the absolute deadline,
-    /// and the glass rocks and burns red during the final ten seconds. The server remains the only
+    /// and the glass rocks and burns red during the final fifteen seconds. The server remains the only
     /// authority; every animation here is cosmetic.
     /// </summary>
     public sealed class TurnClockView : MonoBehaviour
@@ -22,7 +22,7 @@ namespace Emberfall.Presentation
         private static readonly Color RopeSandColor = new(1.00f, 0.20f, 0.08f, 1f);
         private static readonly Color RopeBodyTint = new(1.00f, 0.72f, 0.62f, 1f);
         private const string HourglassSpriteKey = "turn-hourglass-royal-council";
-        private const long RopeWindowMs = 10_000;
+        private const long RopeWindowMs = 15_000;   // matches HeroVoiceDirector and ServerOptions.RopeMs
         private const float HourglassW = 2.84f;
         private const float HourglassH = 4.40f;
         private const float SandHalfW = 0.38f;

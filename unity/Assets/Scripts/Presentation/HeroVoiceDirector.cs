@@ -41,12 +41,14 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// Client-side rope window, deliberately owned here rather than read off the server's
-        /// <c>ServerOptions.RopeMs</c> (15s): the line should land when the player SEES the clock
-        /// go red, which <see cref="TurnClockView"/> does at 10s. The server's rope broadcast is a
+        /// <c>ServerOptions.RopeMs</c>: the line should land when the player SEES the clock go red,
+        /// which <see cref="TurnClockView"/> does on its own copy of this number. All three are 15s
+        /// (Sam, 2026-10-10 — the two client ones were 10s, against a published 15); move them
+        /// together. The server's rope broadcast is a
         /// second <c>TurnTimerMsg</c> carrying the SAME deadline as the arm, so it cannot be told
         /// apart from a reconnect resend by content — the countdown is the reliable signal.
         /// </summary>
-        private const long RopeWindowMs = 10_000;
+        private const long RopeWindowMs = 15_000;
 
         private const string MomentMatchStart = "match_start";
         private const string MomentTurnStart = "turn_start";
