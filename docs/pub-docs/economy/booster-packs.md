@@ -23,6 +23,8 @@ These odds apply to each card draw on its own, before the guarantees below.
 
 ## Guarantees
 
+The Council has ruled that luck is to have limits:
+
 - **Rare floor.** Every pack contains at least one Rare or better.
 - **Epic pity.** If you open 9 packs in a row from a set without an Epic, your next pack from that set contains one.
 - **First Legendary.** Your first Legendary from a set arrives by your 10th pack from that set.

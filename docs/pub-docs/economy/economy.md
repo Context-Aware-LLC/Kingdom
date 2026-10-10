@@ -1,5 +1,7 @@
 # Economy
 
+The King and Queen have decreed three rules for the kingdom's economy. The Council was asked for a fourth and is still deliberating.
+
 ## No exclusive power for money
 
 - Every gameplay card is available without paying.
@@ -8,7 +10,7 @@
 
 ## Clear pack rules
 
-Every price, drop rate, and guarantee is published on the [Booster Packs](booster-packs.md) page.
+By royal decree, every price, drop rate, and guarantee is published on the [Booster Packs](booster-packs.md) page.
 
 ## A viable free path
 

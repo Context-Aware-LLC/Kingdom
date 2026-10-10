@@ -1,6 +1,6 @@
 # Currency
 
-There are two currencies: Gold and Gems. Either one buys [Booster Packs](booster-packs.md).
+In the kingdom, His Majesty and the Council have approved the use of two currencies: Gold and Gems. Either one buys [Booster Packs](booster-packs.md).
 
 ## Gold
 
@@ -22,7 +22,7 @@ Your first win each day pays 50 Gold on top of the match reward. The day resets 
 
 ### Daily quests
 
-You receive one new quest each day and can hold up to three at once. Each quest pays 60 Gold when you complete it. A quest asks for something like winning 2 matches, playing 3 matches as a named class, or playing 15 cards.
+The Council posts one new quest for you each day, and you can hold up to three at once. Each quest pays 60 Gold when you complete it. A quest asks for something like winning 2 matches, playing 3 matches as a named class, or playing 15 cards.
 
 ## Gems
 

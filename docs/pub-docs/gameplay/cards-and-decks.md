@@ -1,6 +1,6 @@
 # Cards and Decks
 
-A deck contains exactly 30 collectible cards.
+By royal decree, a deck contains exactly 30 collectible cards.
 
 ## Classes
 

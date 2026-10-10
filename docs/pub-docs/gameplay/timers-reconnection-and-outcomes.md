@@ -1,6 +1,6 @@
 # Timers, Reconnection, and Match Outcomes
 
-Match time is enforced by the server so both players follow the same clock.
+The Council keeps one clock for every match. It runs on the server, so both players follow the same time.
 
 ## Match clocks
 
