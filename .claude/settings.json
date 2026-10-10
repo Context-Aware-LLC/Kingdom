@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "ClaudeInChromeDomain(hyper3d.ai)",
-      "ClaudeInChromeDomain(cloud.unity.com)"
+      "ClaudeInChromeDomain(cloud.unity.com)",
+      "ClaudeInChromeDomain(127.0.0.1:8765)"
     ]
   },
   "hooks": {
@@ -38,7 +39,7 @@
   },
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": false,
     "code-simplifier@claude-plugins-official": true
   }
 }

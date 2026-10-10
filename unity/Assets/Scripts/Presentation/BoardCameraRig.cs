@@ -62,7 +62,6 @@ namespace Emberfall.Presentation
             camera.fieldOfView = FieldOfView;
             camera.nearClipPlane = NearClip;
             camera.farClipPlane = FarClip;
-            camera.allowHDR = true;
             camera.depthTextureMode |= DepthTextureMode.Depth;
             camera.transform.SetPositionAndRotation(AuthoredPosition, AuthoredRotation);
         }

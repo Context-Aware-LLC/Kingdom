@@ -129,7 +129,6 @@ namespace Emberfall.Presentation
             s_captureCam.nearClipPlane   = 0.05f;
             s_captureCam.farClipPlane    = CamDistance * 2f;
             s_captureCam.allowMSAA       = false;
-            s_captureCam.allowHDR        = false;
             return s_captureCam;
         }
     }
