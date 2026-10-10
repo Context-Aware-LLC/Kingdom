@@ -28,8 +28,10 @@ namespace Emberfall.Editor
     /// </summary>
     public static class CardDissolvePreview
     {
-        private const string OutDir =
-            @"C:\Users\User\AppData\Local\Temp\claude\c--Users-User-Documents-tcg-hearthlike\480b197c-f84e-4171-8649-1f8ea038db39\scratchpad";
+        // Unity's working directory is the PROJECT folder (unity), not the repo root, so
+        // a relative path here lands two levels too deep. Application.dataPath is Assets/.
+        private static string OutDir =>
+            Path.GetFullPath(Path.Combine(Application.dataPath, "../../artifacts/dissolve-preview"));
 
         private const float PxPerUnit = 1080f / 9.2f;   // BoardCamera ortho 4.6 => 9.2 units => 1080px
 
