@@ -10,7 +10,7 @@ These are the principles that guide how we build the game and this website. We w
 - **Sight.** Text is large enough to read on a phone and has strong contrast against its background. It follows your device's text size setting, up to 200%, without cutting off labels.
 - **Hearing.** Nothing depends on sound alone. Every sound that tells you something has a visible signal to match, and the game is fully playable muted.
 - **Hands.** Buttons and cards are large enough to tap and kept clear of notches and rounded corners. Anything you can do by hovering or dragging, you can also do with a plain tap or click. Menus work with a keyboard or a gamepad, with a visible focus indicator.
-- **Motion and flashing.** A reduced-motion setting quiets decorative animation without hiding what happened in the match. Effects do not flash rapidly.
+- **Motion and flashing.** A reduced-motion setting quiets decorative animation without hiding what happened in the match. Effects do not flicker or strobe.
 - **Clarity.** When the game refuses an action, it says why in plain language.
 
 ## Where we are
