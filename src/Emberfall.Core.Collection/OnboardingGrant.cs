@@ -88,7 +88,9 @@ namespace Emberfall.Core.Collection
         public const int StarterPackCardCount = 8;
 
         /// <summary>
-        /// Starter-pack odds, richer than <see cref="PackRarityOdds.Default"/> (715/230/45/10).
+        /// Starter-pack odds. They were written to be richer than <see cref="PackRarityOdds.Default"/>
+        /// when that was 715/230/45/10, and are NOT richer than today's 600/270/100/30 on Epic or
+        /// Legendary (Sam's retail retune, 2026-10-10, did not move these).
         ///
         /// <para><b>Why they are boosted at all.</b> At retail odds the whole grant yields 0.2
         /// legendaries across 25 cards, so a new player almost certainly opens none — the worst

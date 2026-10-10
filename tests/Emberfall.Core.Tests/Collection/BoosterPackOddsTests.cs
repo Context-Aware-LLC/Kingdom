@@ -31,14 +31,13 @@ namespace Emberfall.Core.Tests.Collection
         // the economy cannot happen silently — every other assertion here reads PackRarityOdds and
         // would follow a retune without complaint.
         //
-        // RETUNED by Sam 2026-08-20, from the NOR-109 brief's 715/230/45/10, and confirmed
-        // 2026-08-24 as the canonical baseline. Epic was the lever: at 4.5% a player broadened too
-        // slowly across a 27-card epic tier while epic pity kept forcing slots onto the handful
-        // they already held. The 7.5pp it and Rare gained came off Common.
-        private const int BriefCommon = 640;      // 64%
-        private const int BriefRare = 265;        // 26.5%
-        private const int BriefEpic = 80;         // 8%
-        private const int BriefLegendary = 15;    // 1.5%
+        // RETUNED by Sam 2026-10-10 to round numbers, from 640/265/80/15 (his 2026-08-20 retune of
+        // the NOR-109 brief's 715/230/45/10, which opened Epic). Epic and Legendary rose, Rare
+        // gained half a point, and the 4pp came off Common.
+        private const int BriefCommon = 600;      // 60%
+        private const int BriefRare = 270;        // 27%
+        private const int BriefEpic = 100;        // 10%
+        private const int BriefLegendary = 30;    // 3%
 
         [Test]
         public void Rarity_Draw_Matches_The_Published_Odds_Within_Tolerance()

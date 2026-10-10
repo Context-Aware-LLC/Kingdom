@@ -48,16 +48,19 @@ namespace Emberfall.Core.Collection
         }
 
         /// <summary>
-        /// The shipped table (NOR-109 §3, SOURCE OF TRUTH — do not retune here): Common 64%,
-        /// Rare 26.5%, Epic 8%, Legendary 1.5%.
+        /// The shipped table (NOR-109 §3, SOURCE OF TRUTH — do not retune here): Common 60%,
+        /// Rare 27%, Epic 10%, Legendary 3%.
         ///
-        /// <para>Retuned by Sam 2026-08-20 from 715/230/45/10. Epic went 4.5% -> 8% (+3.5pp),
-        /// Rare 23% -> 26.5% (+3.5pp), Legendary 1% -> 1.5% (+0.5pp), the whole 7.5pp coming off
-        /// Common, which drops 71.5% -> 64%. Epic was the lever
-        /// that opened it: at 4.5% a player broadened too slowly across a 27-card epic tier while
-        /// epic pity kept forcing slots that landed on the handful they already held.</para>
+        /// <para>Retuned by Sam 2026-10-10 from 640/265/80/15 to round numbers: Epic 8% -> 10%,
+        /// Legendary 1.5% -> 3%, Rare 26.5% -> 27%, the 4pp coming off Common. The retune before it
+        /// (Sam, 2026-08-20, from the brief's 715/230/45/10) is the one that opened Epic: at 4.5% a
+        /// player broadened too slowly across a 27-card epic tier while epic pity kept forcing slots
+        /// that landed on the handful they already held.</para>
+        ///
+        /// <para><b>The starter pack no longer beats this on Epic or Legendary.</b>
+        /// <see cref="OnboardingGrant.StarterOdds"/> is 8.5% / 2.5% and was not moved with it.</para>
         /// </summary>
-        public static readonly PackRarityOdds Default = new PackRarityOdds(640, 265, 80, 15);
+        public static readonly PackRarityOdds Default = new PackRarityOdds(600, 270, 100, 30);
 
         public int PermilleOf(Rarity rarity) => rarity switch
         {

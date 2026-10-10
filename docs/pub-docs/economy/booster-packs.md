@@ -6,7 +6,6 @@ Each set has its own booster pack. A pack contains **5 cards** drawn from that p
 
 - A pack costs **200 Gold** or **200 Gems**.
 - You may buy up to 10 packs in one purchase.
-- A purchase gives you unopened packs.
 
 All packs of the same type use the same odds and the same card pool, whether you bought them or earned them.
 
@@ -16,10 +15,10 @@ These odds apply to each card draw on its own, before the guarantees below.
 
 | Rarity | Chance per draw |
 |---|---|
-| Common | 64.0% |
-| Rare | 26.5% |
-| Epic | 8.0% |
-| Legendary | 1.5% |
+| Common | 60.0% |
+| Rare | 27.0% |
+| Epic | 10.0% |
+| Legendary | 3.0% |
 
 ## Guarantees
 
