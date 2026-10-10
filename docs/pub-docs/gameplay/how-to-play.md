@@ -51,4 +51,4 @@ If your deck is empty when you would draw, your hero takes fatigue damage instea
 - You lose when your hero reaches 0 Health or when you concede.
 - If both heroes reach 0 or less from the same resolution, the hero with the lower final Health loses. The match is a draw only when their final Health totals are equal.
 
-Online timers, disconnects, and voided matches are covered in [Timers, Reconnection, and Match Outcomes](../online-play/timers-reconnection-and-outcomes.md).
+Timers, disconnects, and voided matches are covered in [Timers, Reconnection, and Match Outcomes](timers-reconnection-and-outcomes.md).

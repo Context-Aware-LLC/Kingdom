@@ -4,16 +4,16 @@ Kingdom of Bad Ideas is a turn-based digital card game about assembling a 30-car
 
 The kingdom is always growing and subject to the whims of his Majesty and the Queen. These pages describe the current rules and are subject to change.
 
-## Start here
+## Gameplay
 
 - [How to Play](gameplay/how-to-play.md) — match setup, turns, mana, combat, and victory.
 - [Cards and Decks](gameplay/cards-and-decks.md) — card types and deck-building rules.
 - [Classes](gameplay/classes.md) — the eight classes, their heroes, and their Hero Powers.
 - [Keyword Glossary](gameplay/keywords.md) — the rules carried by named abilities.
 
-## Playing
+### Network
 
-- [Timers, Reconnection, and Match Outcomes](online-play/timers-reconnection-and-outcomes.md)
+- [Timers, Reconnection, and Match Outcomes](gameplay/timers-reconnection-and-outcomes.md) — turn clocks, disconnects, and how a match can end.
 
 ## The wider game
 

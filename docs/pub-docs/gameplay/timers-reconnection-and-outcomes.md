@@ -1,6 +1,6 @@
 # Timers, Reconnection, and Match Outcomes
 
-Online match time is enforced by the server so both players follow the same clock.
+Match time is enforced by the server so both players follow the same clock.
 
 ## Match clocks
 
