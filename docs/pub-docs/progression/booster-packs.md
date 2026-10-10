@@ -50,13 +50,4 @@ These are relative weights, not percentages. Copies you received earlier in the 
 
 A new account receives **5 starter packs** for Pendingham, along with one copy of every Common and Rare card in the set and 50 Shards.
 
-A starter pack contains **8 cards** and uses richer odds than a pack from the shop:
-
-| Rarity | Chance per draw |
-|---|---|
-| Common | 55.0% |
-| Rare | 34.0% |
-| Epic | 8.5% |
-| Legendary | 2.5% |
-
-Starter packs keep their own Epic and Legendary counts, separate from the packs you buy.
+A starter pack contains **8 cards** and has a higher than normal chance to contain Epic and Legendary cards.
