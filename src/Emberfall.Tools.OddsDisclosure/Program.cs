@@ -68,7 +68,7 @@ namespace Emberfall.Tools.OddsDisclosure
             sb.AppendLine("# Pack Odds — Pendingham");
             sb.AppendLine();
             sb.AppendLine($"Each pack contains **{BoosterPack.DefaultCardCount} cards** drawn from");
-            sb.AppendLine("the Core set combined with the pack's expansion set.");
+            sb.AppendLine("that pack's set.");
             sb.AppendLine("All packs of the same type use identical odds and the same card pool,");
             sb.AppendLine("whether purchased with premium or earned currency.");
             sb.AppendLine();

@@ -22,6 +22,11 @@ namespace Emberfall.Core.Contracts
 
     public enum Rarity { COMMON, RARE, EPIC, LEGENDARY }
 
+    /// <summary>
+    /// <b><see cref="CORE"/> is not a set a player can see or open</b> (Sam, 2026-10-10). It is the
+    /// home for things that take the form of a card without being a collectible one: the hero powers
+    /// and the coin. Nothing in it is collectible, so never describe it to a player as a set.
+    /// </summary>
     public enum SetId { CORE, EMBERFALL, REKINDLING }
 
     /// <summary>
