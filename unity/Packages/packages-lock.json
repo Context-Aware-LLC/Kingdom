@@ -120,7 +120,7 @@
       "depth": 0,
       "source": "builtin",
       "dependencies": {
-        "com.unity.ide.visualstudio": "2.0.26",
+        "com.unity.ide.visualstudio": "2.0.27",
         "com.unity.ide.rider": "3.0.40",
         "com.unity.editorcoroutines": "6.6.0",
         "com.unity.performance.profile-analyzer": "1.4.0",
@@ -144,12 +144,13 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "file:com.unity.ide.visualstudio",
+      "version": "2.0.27",
       "depth": 0,
-      "source": "embedded",
+      "source": "registry",
       "dependencies": {
         "com.unity.test-framework": "1.1.33"
-      }
+      },
+      "url": "https://packages.unity.com"
     },
     "com.unity.inputsystem": {
       "version": "1.20.1",
@@ -208,17 +209,18 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.pipeline": {
-      "version": "file:com.unity.pipeline",
+      "version": "0.8.0-exp.1",
       "depth": 0,
-      "source": "embedded",
+      "source": "registry",
       "dependencies": {
         "com.unity.test-framework": "1.1.33",
-        "com.unity.modules.jsonserialize": "1.0.0",
-        "com.unity.nuget.newtonsoft-json": "3.0.2",
         "com.unity.nuget.mono-cecil": "1.11.6",
         "com.unity.modules.uielements": "1.0.0",
-        "com.unity.modules.screencapture": "1.0.0"
-      }
+        "com.unity.modules.jsonserialize": "1.0.0",
+        "com.unity.modules.screencapture": "1.0.0",
+        "com.unity.nuget.newtonsoft-json": "3.0.2"
+      },
+      "url": "https://packages.unity.com"
     },
     "com.unity.profiling.core": {
       "version": "1.0.3",
@@ -228,10 +230,11 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.project-auditor-rules": {
-      "version": "file:com.unity.project-auditor-rules",
+      "version": "3.0.0",
       "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
     },
     "com.unity.purchasing": {
       "version": "5.4.4",
@@ -294,14 +297,15 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.services.cloud-build": {
-      "version": "file:com.unity.services.cloud-build",
+      "version": "2.0.8",
       "depth": 0,
-      "source": "embedded",
+      "source": "registry",
       "dependencies": {
+        "com.unity.collab-proxy": "2.11.3",
         "com.unity.services.core": "1.16.0",
-        "com.unity.nuget.newtonsoft-json": "3.2.2",
-        "com.unity.collab-proxy": "2.11.3"
-      }
+        "com.unity.nuget.newtonsoft-json": "3.2.2"
+      },
+      "url": "https://packages.unity.com"
     },
     "com.unity.services.core": {
       "version": "1.18.0",
