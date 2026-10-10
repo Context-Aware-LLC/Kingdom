@@ -6,12 +6,11 @@ Keywords compress recurring rules into a short name. If a card's full text confl
 |---|---|
 | **Aegis** | The first instance of damage this minion would take is prevented, then Aegis is removed. It does not stop destroy or silence effects. |
 | **Arcane Surge** | Your damage-dealing spells deal 1 extra damage for each friendly Arcane Surge in play. |
-| **Backdraft (N)** | Playing the card locks N of your Mana Crystals on your next turn. |
-| **Bulwark** | While you control a Bulwark minion, enemies must attack a Bulwark before other legal targets. |
+| **Backdraft (N)** | Locks N of your Mana Crystals on your next turn. |
+| **Bulwark** | While you control a Bulwark minion, enemies must attack it before other legal targets. |
 | **Doublestrike** | This character may attack twice each turn. |
 | **Fervor** | This minion may attack any legal target on the turn it is played. |
-| **Frost** | A character under Frost misses its next opportunity to attack, then thaws. |
-| **Herald** | The listed effect happens when the card is played from hand. Being summoned by another effect does not trigger it. |
+| **Frost** | A frosted character loses its next opportunity to attack, then thaws. |
 | **Lifedrain** | Damage dealt by this source also restores that much Health to its controller's hero. |
 | **Overwhelm** | When this minion attacks a minion, Attack beyond the defender's remaining Health carries through to the enemy hero. |
 | **Rekindle** | The first time this minion dies, it returns with 1 Health. It keeps its printed keywords but loses enchantments. |

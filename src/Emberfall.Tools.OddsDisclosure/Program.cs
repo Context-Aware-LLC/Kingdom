@@ -7,9 +7,11 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Tools.OddsDisclosure
 {
     /// <summary>
-    /// EF-080f / NOR-260. Generates the published pack-odds disclosure from the live constants in
-    /// PackRarityOdds, PackPityState, BoosterPack, and DeckValidator. The output is a player-facing
-    /// Markdown file committed to docs/pub-docs/progression/pack-odds.md.
+    /// EF-080f / NOR-260. Generates the pack-odds reference from the live constants in
+    /// PackRarityOdds, PackPityState, BoosterPack, and DeckValidator. The output is committed to
+    /// docs/dev-docs/data/pack-odds.md. Nothing generated goes in docs/pub-docs (Sam, 2026-10-10):
+    /// the player-facing page, docs/pub-docs/progression/pack-odds.md, is hand-authored from this one,
+    /// so a change to a constant here means regenerating AND editing that page.
     ///
     /// ShardValues is deliberately NOT read here any more. A pack converts nothing to shards
     /// (Sam, 2026-08-20), so a shard payout table on a page about what packs contain would be
@@ -17,15 +19,15 @@ namespace Emberfall.Tools.OddsDisclosure
     /// collection, and to whatever disclosure covers crafting.
     ///
     /// Usage: Emberfall.Tools.OddsDisclosure [outputPath]
-    ///   outputPath  path to write; defaults to docs/pub-docs/progression/pack-odds.md relative to cwd.
+    ///   outputPath  path to write; defaults to docs/dev-docs/data/pack-odds.md relative to cwd.
     ///
     /// Running without a path prints to stdout so the output can be reviewed or diffed before commit.
     /// </summary>
     internal static class Program
     {
-        private const string DefaultOutputPath = "docs/pub-docs/progression/pack-odds.md";
+        private const string DefaultOutputPath = "docs/dev-docs/data/pack-odds.md";
         private const string RegenerateCommand =
-            "dotnet run --project src/Emberfall.Tools.OddsDisclosure -- docs/pub-docs/progression/pack-odds.md";
+            "dotnet run --project src/Emberfall.Tools.OddsDisclosure -- docs/dev-docs/data/pack-odds.md";
 
         private static int Main(string[] args)
         {

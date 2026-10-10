@@ -45,7 +45,7 @@ Weapons give the hero Attack and durability. Equipping a new weapon replaces the
 
 ### Hero Powers and tokens
 
-A deck's Hero Power comes from its primary class. They cost 2 mana and may be used once per turn unless a rule explicitly says otherwise.
+A deck's Hero Power comes from its primary class. Every Hero Power costs 2 mana and may be used once per turn unless a card says otherwise.
 
 Tokens are created by other cards or powers. They are not collectible and cannot be placed in a deck.
 

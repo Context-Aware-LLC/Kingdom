@@ -4,7 +4,7 @@ Online match time is enforced by the server so both players follow the same cloc
 
 ## Match clocks
 
-| Clock | Current rules baseline |
+| Clock | Rule |
 |---|---|
 | Mulligan | 45 seconds; an unfinished mulligan is automatically confirmed when time expires |
 | Turn | 75 seconds |

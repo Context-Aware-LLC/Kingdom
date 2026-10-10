@@ -1,8 +1,8 @@
 # Kingdom of Bad Ideas Player Guide
 
-Kingdom of Bad Ideas is a turn-based digital card game about assembling a 30-card deck and outplaying one opponent at a time. This guide collects the rules and policies a player needs without the project history or implementation detail behind them.
+Kingdom of Bad Ideas is a turn-based digital card game about assembling a 30-card deck and outplaying one opponent at a time. This guide collects the rules and policies a player needs.
 
-The game is still in development. These pages describe the current rules baseline, not a release announcement. Features, balance values, availability, pricing, and platform support may change before launch.
+The kingdom is always growing and subject to the whims of his Majesty and the Queen. These pages describe the current rules and are subject to change.
 
 ## Start here
 
@@ -11,7 +11,7 @@ The game is still in development. These pages describe the current rules baselin
 - [Classes](gameplay/classes.md) — the eight classes, their heroes, and their Hero Powers.
 - [Keyword Glossary](gameplay/keywords.md) — the rules carried by named abilities.
 
-## Playing online
+## Playing
 
 - [Timers, Reconnection, and Match Outcomes](online-play/timers-reconnection-and-outcomes.md)
 - [Fair Play and Hidden Information](trust/fair-play-and-hidden-information.md)
@@ -19,10 +19,6 @@ The game is still in development. These pages describe the current rules baselin
 ## The wider game
 
 - [The World of Pendingham](world/the-world-of-pendingham.md) — a short, spoiler-light setting guide.
-- [Economy Principles](progression/economy-principles.md) — the promises that govern cards and purchases.
+- [Economy](progression/economy-principles.md) — the promises that govern cards and purchases.
 - [Pack Odds](progression/pack-odds.md) — the exact drop rates, guarantees, and duplicate rules for every booster pack.
-- [Interface Accessibility](support/interface-accessibility.md) — the accessibility standard the interface is being built toward.
-
-## Publication boundary
-
-This set intentionally omits unreleased card lists, draft starter decks, tentative balance targets, unannounced store numbers, internal production plans, infrastructure details, and security reports. Those materials are not player documentation.
+- [Accessibility](support/interface-accessibility.md) — the accessibility standard the interface is being built toward.

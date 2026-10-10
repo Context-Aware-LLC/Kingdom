@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Emberfall.Tools.OddsDisclosure: generates docs/pub-docs/progression/pack-odds.md from
+    Emberfall.Tools.OddsDisclosure: generates docs/dev-docs/data/pack-odds.md from
     the live PackRarityOdds, PackPityState, BoosterPack, and ShardValues constants (EF-080f,
     NOR-260). The artifact is committed alongside the tool. See Program.cs for the regenerate
-    command. Store-listing and in-game link targets always point at the committed file.
+    command. The player-facing page, docs/pub-docs/progression/pack-odds.md, is hand-authored from it.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
