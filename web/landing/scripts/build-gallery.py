@@ -30,6 +30,7 @@ OUT_HEROES = SITE / "public" / "docs" / "heroes"
 OUT_POWERS = SITE / "public" / "assets" / "powers"
 # Twice the size the page shows it at, for dense screens.
 POWER_ICON = 192
+GEM_ICON = 80
 KEYWORD_COPY = UNITY / "Scripts" / "Presentation" / "KeywordCopy.cs"
 KEYWORD_SEMANTICS = SITE.parent.parent / "src" / "Emberfall.Core.Cards" / "KeywordSemantics.cs"
 # REINFORCE's glossary line is a placeholder no player meets; KeywordCopy says so at the line.
@@ -256,6 +257,15 @@ def main():
                 .replace("{{KEYWORDS}}", entries).replace("{{ROSTER}}", roster))
         (SITE / "public" / out).write_text(page, encoding="utf-8", newline="\n")
     print(f"published {len(keywords)} keywords")
+    # The rarity gems the docs show beside each rarity's name. Twice the drawn size, alpha kept.
+    gems = SITE / "public" / "assets" / "gems"
+    gems.mkdir(parents=True, exist_ok=True)
+    for rarity in ("common", "rare", "epic", "legendary"):
+        src = UNITY / "Art" / "UI" / "Gems" / f"gem_{rarity}.png"
+        if not src.exists():
+            sys.exit(f"no gem art: {src}")
+        Image.open(src).convert("RGBA").resize((GEM_ICON, GEM_ICON), Image.LANCZOS).save(
+            gems / f"gem-{rarity}.webp", quality=90, method=6)
     page_template = (SITE / "scripts" / "page.template.html").read_text(encoding="utf-8")
     for source, href, _, grp in MD_PAGES:
         out = SITE / "public" / (href.lstrip("/") + ".html")

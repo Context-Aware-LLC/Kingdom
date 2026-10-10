@@ -1,7 +1,5 @@
 # Cards and Decks
 
-By royal decree, a deck contains exactly 30 collectible cards.
-
 ## Classes
 
 Every deck pairs two different classes, chosen in order when the deck is created:
@@ -33,7 +31,7 @@ An incomplete or otherwise illegal deck may be kept as a draft, but it is not el
 
 Minions have a mana cost, Attack, Health, and sometimes a tribe, keywords, or triggered effects. They remain on the board until destroyed, returned to hand, or transformed.
 
-New minions normally have summoning sickness and cannot attack that turn. Fervor and Skirmish are the exceptions described in the [Keyword Glossary](keywords.md).
+Freshly summoned minions have summoning sickness and cannot attack that turn unless they have [Fervor](keywords.md) or [Skirmish](keywords.md)
 
 ### Spells
 
@@ -45,10 +43,17 @@ Weapons give the hero Attack and durability. Equipping a new weapon replaces the
 
 ### Hero Powers and tokens
 
-A deck's Hero Power comes from its primary class. Every Hero Power costs 2 mana and may be used once per turn unless a card says otherwise.
+A deck's Hero Power comes from its primary class and may be used once per turn unless a card says otherwise.
 
 Tokens are created by other cards or powers. They are not collectible and cannot be placed in a deck.
 
 ## Rarity
 
-Cards may be Common, Rare, Epic, or Legendary. Rarity controls deck copy limits and presentation; it does not grant an automatic rules advantage. Foil or golden treatments are cosmetic versions of the same gameplay card.
+Every card has one of four rarities, shown by the gem on its frame.
+
+| Gem | Rarity |
+|---|---|
+| ![Common gem](https://kingdomofbadideas.com/assets/gems/gem-common.webp) | Common |
+| ![Rare gem](https://kingdomofbadideas.com/assets/gems/gem-rare.webp) | Rare |
+| ![Epic gem](https://kingdomofbadideas.com/assets/gems/gem-epic.webp) | Epic |
+| ![Legendary gem](https://kingdomofbadideas.com/assets/gems/gem-legendary.webp) | Legendary |

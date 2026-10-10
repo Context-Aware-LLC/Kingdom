@@ -287,6 +287,21 @@ body.page main {
   font-weight: 700;
 }
 
+/* An icon in a table cell, such as a rarity gem beside its name. */
+.prose td img {
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+
+.prose td:has(img) {
+  width: 64px;
+}
+
+.prose tr:has(img) td {
+  vertical-align: middle;
+}
+
 .summary {
   border: 1px solid var(--line);
   background: var(--ink-2);
