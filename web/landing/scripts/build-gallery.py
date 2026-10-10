@@ -1,5 +1,5 @@
-"""Builds the public card teaser, the hero pages and the keyword glossary: public/cards.html,
-public/docs/heroes/*.html, public/docs.html, public/docs/keywords.html, public/assets/cards/*.webp, and the hero roster inside
+"""Builds the public card teaser, the hero pages and the docs pages: public/cards.html,
+public/docs/heroes/*.html, public/docs.html, public/docs/*.html, public/assets/cards/*.webp, and the hero roster inside
 public/index.html.
 
 Only handles listed in gallery-allowlist.json are published, in that order. Everything else in
@@ -7,9 +7,10 @@ unity/Assets/CardData stays private, because card text and stats still change be
 A handle that is missing from the card data, or has no art, fails the build rather than
 publishing a half-card. Each hero in heroes.json gets a page showing its copy, its class's hero
 power as the card data words it, and that class's allowlisted cards; a hero with no hero power or
-no allowlisted card fails the build too. A keyword is defined once, on the glossary page, in the
-words the game itself uses (KeywordCopy.Glossary); a hero page only names its keywords and links
-there, and a name the glossary does not hold fails the build. Run from anywhere:
+no allowlisted card fails the build too. A keyword is defined once, on the glossary page, which is
+docs/pub-docs/gameplay/keywords.md (Sam, 2026-10-10: the page is built from the public docs, not from
+the game's copy); a hero page only names its keywords and links there, and a name the glossary does not
+hold fails the build. Run from anywhere:
 python web/landing/scripts/build-gallery.py
 """
 import glob
@@ -34,27 +35,22 @@ GEM_ICON = 80
 # Keywords whose glossary entry carries a picture, and the size it is encoded at (twice the drawn size).
 KEYWORD_SHOTS = ("AEGIS", "BULWARK", "FROST", "SHROUD")
 KEYWORD_SHOT_SIZE = (494, 610)
-KEYWORD_COPY = UNITY / "Scripts" / "Presentation" / "KeywordCopy.cs"
-KEYWORD_SEMANTICS = SITE.parent.parent / "src" / "Emberfall.Core.Cards" / "KeywordSemantics.cs"
-# REINFORCE's glossary line is a placeholder no player meets; KeywordCopy says so at the line.
-UNPUBLISHED_KEYWORDS = {"REINFORCE"}
-# Toll is a trigger label (CardTextGenerator.TriggerLabel), not a Keyword, so the game holds no
-# glossary line for it. It is the one definition written here.
-TRIGGER_TERMS = {"TOLL": "Happens when this minion dies."}
 # Player docs written by hand in docs/pub-docs and published as they are: (source, address, menu
 # label, menu group). A new page is a Markdown file there and a line here.
 PUB_DOCS = SITE.parent.parent / "docs" / "pub-docs"
+KEYWORDS_MD = "gameplay/keywords.md"
 MD_PAGES = [
     ("gameplay/how-to-play.md", "/docs/how-to-play", "How to Play", "Gameplay"),
     ("gameplay/cards-and-decks.md", "/docs/cards-and-decks", "Cards and Decks", "Gameplay"),
+    (KEYWORDS_MD, "/docs/keywords", "Keywords", "Gameplay"),
     ("gameplay/timers-reconnection-and-outcomes.md", "/docs/timers", "Timers and Reconnection", "Gameplay"),
     ("economy/economy.md", "/docs/economy", "Economy", "Economy"),
     ("economy/currency.md", "/docs/economy/currency", "Currency", "Economy"),
     ("economy/booster-packs.md", "/docs/economy/booster-packs", "Booster Packs", "Economy"),
 ]
-# Where a link to a pub-docs file that is NOT published from Markdown lands instead: the keyword
-# glossary is built from the game's own copy, and the classes page is the heroes section.
-MD_LINK_OVERRIDES = {"gameplay/keywords.md": "/docs/keywords", "gameplay/classes.md": "/docs/heroes"}
+# Where a link to a pub-docs file that is NOT published from Markdown lands instead: the classes
+# page is the heroes section.
+MD_LINK_OVERRIDES = {"gameplay/classes.md": "/docs/heroes"}
 ECONOMY_HREF = "/docs/economy"
 THUMB = 480
 
@@ -71,18 +67,17 @@ def load_cards():
 
 
 def load_keywords():
-    """Keyword id -> (printed name, definition), read from the game's own copy."""
-    # The game prints a keyword as its humanised id unless KeywordSemantics.AuthoredName overrides
-    # it. Nothing does today; if that changes, this build must read the override rather than guess.
-    semantics = KEYWORD_SEMANTICS.read_text(encoding="utf-8")
-    if not re.search(r"AuthoredName\(Keyword keyword\)(?:\s*//[^\n]*)*\s*=> null;", semantics):
-        sys.exit("KeywordSemantics.AuthoredName now names a keyword: teach load_keywords to read it")
-    found = re.findall(r'Keyword\.(\w+) =>\s*"((?:[^"\\]|\\.)*)"', KEYWORD_COPY.read_text(encoding="utf-8"))
-    if not found:
-        sys.exit(f"no glossary lines found in {KEYWORD_COPY}")
-    terms = {k: text for k, text in found if k not in UNPUBLISHED_KEYWORDS}
-    terms.update(TRIGGER_TERMS)
-    return {k: (" ".join(w.capitalize() for w in k.split("_")), text) for k, text in terms.items()}
+    """Keyword id -> printed name, read from the glossary table in the public docs: every row whose
+    first cell is a bold term. "Backdraft (N)" is the keyword BACKDRAFT."""
+    names = re.findall(r"^\|\s*\*\*(.+?)\*\*\s*\|", (PUB_DOCS / KEYWORDS_MD).read_text(encoding="utf-8"), re.M)
+    if not names:
+        sys.exit(f"no keyword rows found in {KEYWORDS_MD}")
+    return {term_slug(n).upper().replace("-", "_"): n for n in names}
+
+
+def term_slug(name):
+    """The anchor of a glossary row: its term without any parenthetical, lower-case, hyphenated."""
+    return re.sub(r"\s+", "-", re.sub(r"\(.*?\)", "", name).strip().lower())
 
 
 def keyword_anchor(k):
@@ -121,7 +116,6 @@ def docs_nav(current, heroes):
         return f'<a href="{href}"{here}>{label}</a>'
 
     gameplay = [(label, href) for _, href, label, grp in MD_PAGES if grp == "Gameplay"]
-    gameplay.insert(2, ("Keywords", "/docs/keywords"))
     economy = [(label, href) for _, href, label, grp in MD_PAGES if grp == "Economy" and href != ECONOMY_HREF]
     roster = "\n".join(item(CLASS_LABEL[h["class"]], hero_href(h)) for h in heroes)
     sub = f'    <ul>\n{roster}\n    </ul>\n' if current.startswith(HEROES_HREF) else ""
@@ -159,7 +153,17 @@ def md_page(template, source, href, group, heroes):
         return f'href="{links[target]}"'
 
     body, lead_html = (re.sub(r'href="([^":]+\.md)"', relink, x) for x in (body, lead_html))
-    sections = [(t["name"], f'#{t["id"]}') for t in md.toc_tokens if t["level"] == 2]
+    # A table whose rows open on a bold term is a glossary: each row can be linked to, and is
+    # listed among the page's sections ahead of its headings.
+    terms = []
+
+    def anchor_row(match):
+        slug = term_slug(html.unescape(match.group(1)))
+        terms.append((html.unescape(match.group(1)), "#" + slug))
+        return f'<tr id="{slug}">\n<td><strong>{match.group(1)}</strong></td>'
+
+    body = re.sub(r"<tr>\n<td><strong>(.+?)</strong></td>", anchor_row, body)
+    sections = terms + [(t["name"], f'#{t["id"]}') for t in md.toc_tokens if t["level"] == 2]
     description = html.escape(re.sub(r"<[^>]+>", "", lead_html).strip() or title, quote=True)
     fields = {"TITLE": html.escape(title), "DESCRIPTION": description, "HREF": href, "EYEBROW": group,
               "LEAD": lead_html, "BODY": body, "DOCS_NAV": docs_nav(href, heroes), "DOCS_TOC": docs_toc(sections)}
@@ -204,7 +208,7 @@ def hero_page(template, heroes, i, cards, published, keywords):
     if unknown:
         sys.exit(f'{h["slug"]}: keywords not in the glossary: {", ".join(unknown)}')
     points = "\n".join(f"        <li>{html.escape(p)}</li>" for p in h["points"])
-    links = " &middot; ".join(f'<a href="/docs/keywords#{keyword_anchor(k)}">{html.escape(keywords[k][0])}</a>' for k in h["keywords"])
+    links = " &middot; ".join(f'<a href="/docs/keywords#{keyword_anchor(k)}">{html.escape(keywords[k])}</a>' for k in h["keywords"])
     fields = {
         "NAME": html.escape(h["name"]), "CLASS": CLASS_LABEL[h["class"]], "SLUG": h["slug"],
         "TAGLINE": html.escape(h["tagline"]), "ALT": html.escape(h["alt"]),
@@ -245,8 +249,7 @@ def main():
 
     heroes = json.load(open(SITE / "heroes.json", encoding="utf-8"))
     keywords = load_keywords()
-    ordered = sorted(keywords.items(), key=lambda kv: kv[1][0])
-    # A status keyword also shows a board minion wearing it. The pictures come out of the game:
+    # The glossary shows a board minion wearing each status keyword. The pictures come out of the game:
     # Emberfall/Preview (offscreen)/Keyword States writes them to artifacts/keyword-preview, which
     # is not committed, so they are re-encoded only when a fresh render is there to encode.
     shots = SITE / "public" / "assets" / "keywords"
@@ -259,27 +262,15 @@ def main():
         elif not (shots / f"{k.lower()}.webp").exists():
             sys.exit(f"no picture for {k}: run the Keyword States preview in Unity")
 
-    def keyword_entry(k, name, text):
-        shot = ""
-        if k in KEYWORD_SHOTS:
-            w, h = KEYWORD_SHOT_SIZE
-            shot = (f'\n          <img src="/assets/keywords/{k.lower()}.webp" alt="A minion on the board with {html.escape(name)}" '
-                    f'width="{w}" height="{h}" loading="lazy">')
-        return f'        <dt id="{keyword_anchor(k)}">{html.escape(name)}</dt>\n        <dd>{html.escape(text)}{shot}</dd>'
-
-    entries = "\n".join(keyword_entry(k, name, text) for k, (name, text) in ordered)
-    anchors = [(name, f"#{keyword_anchor(k)}") for k, (name, _) in ordered]
     (SITE / "public" / "docs").mkdir(parents=True, exist_ok=True)
     # The eight hero cards are built once and used twice: on the home page and as the docs' heroes index.
     roster = "\n".join(roster_html(h) for h in heroes)
     for template, out, href, sections in (("docs.template.html", "docs.html", "/docs", []),
-                                          ("keywords.template.html", "docs/keywords.html", "/docs/keywords", anchors),
                                           ("heroes.template.html", "docs/heroes.html", HEROES_HREF, [])):
         page = (SITE / "scripts" / template).read_text(encoding="utf-8")
         page = (page.replace("{{DOCS_NAV}}", docs_nav(href, heroes)).replace("{{DOCS_TOC}}", docs_toc(sections))
-                .replace("{{KEYWORDS}}", entries).replace("{{ROSTER}}", roster))
+                .replace("{{ROSTER}}", roster))
         (SITE / "public" / out).write_text(page, encoding="utf-8", newline="\n")
-    print(f"published {len(keywords)} keywords")
     # The rarity gems the docs show beside each rarity's name. Twice the drawn size, alpha kept.
     gems = SITE / "public" / "assets" / "gems"
     gems.mkdir(parents=True, exist_ok=True)

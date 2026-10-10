@@ -295,19 +295,35 @@ body.page main {
   margin: var(--s-2) 0;
 }
 
-/* An icon in a table cell, such as a rarity gem beside its name. */
-.prose td img {
+/* An icon in a table's first column, such as a rarity gem beside its name. */
+.prose td:first-child img {
   display: block;
   width: 40px;
   height: 40px;
 }
 
-.prose td:has(img) {
+.prose td:first-child:has(img) {
   width: 64px;
 }
 
-.prose tr:has(img) td {
+.prose tr:has(td:first-child img) td {
   vertical-align: middle;
+}
+
+/* A picture under the text of a later column, such as a board minion wearing a keyword. */
+.prose td:not(:first-child) img {
+  display: block;
+  width: 247px;
+  max-width: 100%;
+  height: auto;
+  margin: var(--s-2) 0;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+}
+
+/* A glossary's terms keep to one line. */
+.prose td:first-child strong {
+  white-space: nowrap;
 }
 
 .summary {
@@ -968,17 +984,6 @@ details .a p:last-child {
 .traits dd {
   margin: 0;
   color: var(--muted);
-}
-
-/* A board minion wearing the keyword, under its definition. */
-.traits dd img {
-  display: block;
-  width: 247px;
-  max-width: 100%;
-  height: auto;
-  margin: var(--s-2) 0 var(--s-3);
-  border-radius: var(--r-md);
-  border: 1px solid var(--line);
 }
 
 /* The icon is as tall as the three lines beside it: name, rules text, cost. */
