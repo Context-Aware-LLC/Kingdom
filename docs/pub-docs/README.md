@@ -24,4 +24,4 @@ The kingdom is always growing and subject to the whims of his Majesty and the Qu
 ## The wider game
 
 - [The World of Pendingham](world/the-world-of-pendingham.md) — a short, spoiler-light setting guide.
-- [Accessibility](support/interface-accessibility.md) — the accessibility standard the interface is being built toward.
+- [Accessibility](support/accessibility.md) — what we are building toward, and how to report a problem.
