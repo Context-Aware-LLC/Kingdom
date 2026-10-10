@@ -1053,13 +1053,27 @@ details .a p:last-child {
 }
 
 /* The heroes fold away under one entry, opened by a click or by being on a hero page. */
+.docs-nav details {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  margin: 0;
+}
+
 .docs-nav summary {
+  display: block;
+  padding: 0;
+  font-weight: 400;
   font-size: var(--t-eyebrow);
   letter-spacing: 0.24em;
   text-transform: uppercase;
   color: var(--frost);
   margin: var(--s-3) 0 var(--s-1);
   cursor: pointer;
+}
+
+.docs-nav summary::after {
+  content: none;
 }
 
 .docs-nav summary:hover {
