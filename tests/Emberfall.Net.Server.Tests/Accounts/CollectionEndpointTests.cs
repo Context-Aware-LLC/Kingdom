@@ -104,7 +104,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
                 attack: 1, health: 1, durability: null,
                 @class: CardClass.NEUTRAL, rarity: rarity,
                 keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
-                flavorText: "", artId: "art", setId: SetId.CORE,
+                flavorText: "", artId: "art", setId: SetId.EMBERFALL,
                 collectible: true, tribe: null, factionId: "");
 
         private static string CardItem(int cardId) => BoosterPackGrantService.CardItemPrefix + cardId;

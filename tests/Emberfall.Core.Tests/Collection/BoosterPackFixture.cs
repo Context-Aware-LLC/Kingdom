@@ -35,15 +35,15 @@ namespace Emberfall.Core.Tests.Collection
             collectible: true, tribe: null, factionId: "");
 
         /// <summary>
-        /// A pool with <paramref name="perRarity"/> cards of every rarity, split across CORE and the
-        /// expansion so the pairing itself is exercised rather than assumed.
+        /// A pool with <paramref name="perRarity"/> cards of every rarity, all in the expansion —
+        /// CORE holds nothing collectible, so a pack draws from its own set alone.
         /// </summary>
         internal static List<CardDefinition> Pool(SetId expansion, int perRarity)
         {
             var cards = new List<CardDefinition>();
             foreach (Rarity rarity in new[] { Rarity.COMMON, Rarity.RARE, Rarity.EPIC, Rarity.LEGENDARY })
                 for (int i = 0; i < perRarity; i++)
-                    cards.Add(Card(i % 4 == 0 ? SetId.CORE : expansion, rarity, i));
+                    cards.Add(Card(expansion, rarity, i));
             return cards;
         }
 

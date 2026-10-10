@@ -113,7 +113,7 @@ namespace Emberfall.Tools.OddsDisclosure
             sb.AppendLine();
             sb.AppendLine("**Legendary slots never give you a Legendary you already own.** While a copy is");
             sb.AppendLine("in your collection it is taken out of your Legendary draws entirely. Reduce it");
-            sb.AppendLine("and it becomes available again. Once you own every Legendary in the pairing,");
+            sb.AppendLine("and it becomes available again. Once you own every Legendary in the set,");
             sb.AppendLine("further Legendary slots can only repeat one — they still give you the card.");
             sb.AppendLine();
             sb.AppendLine("**Common, Rare and Epic slots lean toward cards you are missing, but nothing is");

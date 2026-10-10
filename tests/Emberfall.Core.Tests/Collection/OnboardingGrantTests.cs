@@ -8,7 +8,7 @@ namespace Emberfall.Core.Tests.Collection
 {
     /// <summary>
     /// The guard <see cref="OnboardingGrant"/>'s <c>LaunchExpansion</c> RETIREMENT TRIGGER names —
-    /// <c>GrantIsEveryCollectibleCommonAndRareInThePairing</c>. It was named there before it existed: this
+    /// <c>GrantIsEveryCollectibleCommonAndRareInTheStarterSet</c>. It was named there before it existed: this
     /// repo has never held a file called <c>OnboardingGrantTests</c>, so the trigger had nothing to
     /// point at and the second expansion would have landed against no check at all.
     ///
@@ -29,9 +29,9 @@ namespace Emberfall.Core.Tests.Collection
         private static ICardDatabase Db => LiveCardSet.Db;
 
         /// <summary>
-        /// The card half is every collectible COMMON and RARE in the pairing — no more, no less, and
+        /// The card half is every collectible COMMON and RARE in the starter pack's set — no more, no less, and
         /// in the same order. This is the assertion the retirement trigger sends the second
-        /// expansion's author to: it fails the moment "the launch pairing" stops meaning "what a new
+        /// expansion's author to: it fails the moment "the launch set" stops meaning "what a new
         /// account gets", which is the decision that must not be made by default.
         ///
         /// <para><b>Rares joined the grant 2026-09-02 (Sam).</b> Commons alone left 7 of the 28
@@ -39,7 +39,7 @@ namespace Emberfall.Core.Tests.Collection
         /// 28 on CLOCKWRIGHT+STONEWARDEN. Commons plus rares is 45–60, none under 30.</para>
         /// </summary>
         [Test]
-        public void GrantIsEveryCollectibleCommonAndRareInThePairing()
+        public void GrantIsEveryCollectibleCommonAndRareInTheStarterSet()
         {
             BoosterPack pack = OnboardingGrant.StarterPack();
 

@@ -86,7 +86,7 @@ namespace Emberfall.Core.Tests.Collection
                     {
                         Assert.That(db.TryGet(a.CardId, out var def), Is.True, $"{a.CardId} is not a real card.");
                         Assert.That(def.Rarity, Is.EqualTo(a.Rarity), $"{a.CardId} awarded at the wrong rarity.");
-                        Assert.That(pack.Contains(def.SetId), Is.True, $"{a.CardId} is outside {pack.Id}'s pairing.");
+                        Assert.That(pack.Contains(def.SetId), Is.True, $"{a.CardId} is outside {pack.Id}'s set.");
                         if (a.Rarity >= Rarity.RARE) rareOrBetter = true;
                         owned.Set(a.CardId, owned.CopiesOwned(a.CardId) + 1);
                     }

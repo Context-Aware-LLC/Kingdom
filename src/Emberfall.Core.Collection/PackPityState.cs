@@ -5,7 +5,7 @@ using Emberfall.Core.Contracts;
 namespace Emberfall.Core.Collection
 {
     /// <summary>
-    /// The pity counters for one player against one pack (NOR-109 §4). <b>Per set pairing</b> — packs of
+    /// The pity counters for one player against one pack (NOR-109 §4). <b>Per pack</b> — packs of
     /// different expansions never share a counter, so grinding Rekindling cannot mature an Emberfall
     /// legendary.
     ///

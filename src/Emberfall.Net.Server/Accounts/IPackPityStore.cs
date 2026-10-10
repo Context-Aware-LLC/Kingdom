@@ -11,7 +11,7 @@ namespace Emberfall.Net.Server.Accounts
 {
     /// <summary>
     /// Where a player's booster-pack pity counters live (NOR-109 §4 — "persisted on the account").
-    /// Keyed by <c>(playerId, packId)</c>, so each set pairing carries its own clocks.
+    /// Keyed by <c>(playerId, packId)</c>, so each pack carries its own clocks.
     ///
     /// <para>Production derives this cursor from completed ledger opens, so a crash between the
     /// completion marker and a separate cursor write cannot lose a paid pack's pity progress.

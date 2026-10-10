@@ -150,17 +150,18 @@ namespace Emberfall.Core.Collection
     }
 
     /// <summary>
-    /// A booster pack: a <b>set pairing</b> (the Core set plus exactly one expansion) and how many
-    /// cards it yields (NOR-109 §1).
+    /// A booster pack: one set, and how many cards it yields (NOR-109 §1).
     ///
-    /// <para><b>The pairing is the pack's identity, and the pool follows from it</b> — there is no
+    /// <para><b>The set is the pack's identity, and the pool follows from it</b> — there is no
     /// hand-maintained card list to drift. A card added to <see cref="SetId.REKINDLING"/> is in the
     /// Rekindling pack the moment it is collectible, which is the only arrangement that survives a
     /// live-service content cadence.</para>
     ///
-    /// <para><b>Core is in every pack and is never the expansion half.</b> A "Core pack" would be a
-    /// different product with a different pool, so <see cref="SetId.CORE"/> is rejected as an
-    /// <see cref="Expansion"/> rather than quietly producing a Core-only pack.</para>
+    /// <para><b>Core is in no pack</b> (Sam, 2026-10-10). <see cref="SetId.CORE"/> holds what is shaped
+    /// like a card without being a collectible one — hero powers, the coin — so it contributes nothing
+    /// to a pool and is rejected as a pack's <see cref="Expansion"/>. Until that date a pack was
+    /// modelled as "Core plus one expansion"; the pool it produced was the same, because Core has
+    /// never held a collectible card.</para>
     ///
     /// <para>This type is pure data. It resolves a pool from an <see cref="ICardDatabase"/> and knows
     /// nothing about currency, pricing or the store (NOR-107b), nor about who is opening it.</para>
@@ -199,7 +200,7 @@ namespace Emberfall.Core.Collection
         /// </summary>
         public string Id { get; }
 
-        /// <summary>The expansion half of the pairing. Never <see cref="SetId.CORE"/>.</summary>
+        /// <summary>The set this pack draws from. Never <see cref="SetId.CORE"/>.</summary>
         public SetId Expansion { get; }
 
         public int CardCount { get; }
@@ -207,7 +208,7 @@ namespace Emberfall.Core.Collection
         public PackRarityOdds Odds { get; }
 
         /// <param name="sku">
-        /// Optional suffix distinguishing a non-retail product built from the same pairing — today only
+        /// Optional suffix distinguishing a non-retail product built from the same set — today only
         /// <see cref="StarterSku"/>. Null or empty yields the plain retail id, so every existing call
         /// site keeps the id it already had.
         /// </param>
@@ -216,7 +217,7 @@ namespace Emberfall.Core.Collection
         {
             if (expansion == SetId.CORE)
                 throw new ArgumentException(
-                    "A pack is the Core set PLUS one expansion; CORE is not itself an expansion half.",
+                    "CORE holds no collectible cards (hero powers, the coin); it is not a set a pack can draw from.",
                     nameof(expansion));
             if (cardCount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(cardCount), "A pack yields at least one card.");
@@ -237,11 +238,11 @@ namespace Emberfall.Core.Collection
             return packs;
         }
 
-        /// <summary>Is this set one of the pack's two halves?</summary>
-        public bool Contains(SetId setId) => setId == SetId.CORE || setId == Expansion;
+        /// <summary>Is this the set the pack draws from?</summary>
+        public bool Contains(SetId setId) => setId == Expansion;
 
         /// <summary>
-        /// The pack's card pool: every collectible card in either half, <b>sorted by id</b>.
+        /// The pack's card pool: every collectible card in its set, <b>sorted by id</b>.
         ///
         /// <para>The sort is load-bearing, not tidiness. <see cref="ICardDatabase.AllCollectible"/>
         /// makes no ordering promise (it is a dictionary walk on both implementations), and the opener

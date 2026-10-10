@@ -96,7 +96,7 @@ namespace Emberfall.Core.Collection
         /// roughly 22 commons, 13.6 rares, 3.4 epics and 1.0 legendaries: a legendary in expectation.</para>
         ///
         /// <para>Weight moves off COMMON deliberately. The card half of this same grant means the player
-        /// already holds one of every common in the pairing, so a common slot can only ever top them
+        /// already holds one of every common in the set, so a common slot can only ever top them
         /// up toward the deck limit — real value, but never a discovery.</para>
         ///
         /// <para><b>OPEN, and these odds have NOT been re-tuned for it (2026-09-02).</b> The card half
@@ -150,7 +150,7 @@ namespace Emberfall.Core.Collection
         /// that own identical collections.</para>
         ///
         /// <para>Membership is <see cref="BoosterPack.Contains"/> on the starter pack, not a literal
-        /// set list, so the cards granted and the pool the packs draw from are the same two sets by
+        /// set list, so the cards granted and the pool the packs draw from are the same set by
         /// construction.</para>
         /// </summary>
         public static IReadOnlyList<int> CardGrant(ICardDatabase db)
@@ -203,7 +203,7 @@ namespace Emberfall.Core.Collection
     /// <summary>The resolved onboarding grant: what to add, and what to open.</summary>
     public sealed class OnboardingGrantPlan
     {
-        /// <summary>One copy of each collectible common and rare in the pairing, sorted by id.</summary>
+        /// <summary>One copy of each collectible common and rare in the pack's set, sorted by id.</summary>
         public IReadOnlyList<int> GrantedCardIds { get; }
 
         /// <summary>The starter packs, unopened. The caller supplies the seed and the pity state.</summary>

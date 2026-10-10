@@ -165,7 +165,7 @@ namespace Emberfall.Core.Collection
             var byRarity = GroupByRarity(pool);
             if (TotalCards(byRarity) == 0)
                 throw new ArgumentException(
-                    $"Pack '{pack.Id}' has an empty pool — no collectible {SetId.CORE}/{pack.Expansion} cards.",
+                    $"Pack '{pack.Id}' has an empty pool — no collectible {pack.Expansion} cards.",
                     nameof(pool));
 
             var rng = DeterministicRandom.Substream(seed, packIndex);
@@ -449,7 +449,7 @@ namespace Emberfall.Core.Collection
         ///
         /// <para><b>Two fail-open paths, both deliberate.</b> A null <c>owned</c> means ownership is
         /// unknown, not that nothing is owned, so it constrains nothing — the same reading
-        /// <see cref="DeckValidator"/> gives it. And a player holding EVERY legendary in the pairing
+        /// <see cref="DeckValidator"/> gives it. And a player holding EVERY legendary in the pack's set
         /// gets the full list back rather than an empty draw: at that point a duplicate is the only
         /// thing the slot can be, and it is still a card, because a pack converts nothing to shards.</para>
         /// </summary>

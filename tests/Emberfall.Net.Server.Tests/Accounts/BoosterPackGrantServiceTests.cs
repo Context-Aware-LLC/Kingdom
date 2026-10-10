@@ -111,7 +111,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
                         attack: 1, health: 1, durability: null,
                         @class: CardClass.NEUTRAL, rarity: rarity,
                         keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
-                        flavorText: "", artId: "art", setId: i % 3 == 0 ? SetId.CORE : SetId.EMBERFALL,
+                        flavorText: "", artId: "art", setId: SetId.EMBERFALL,
                         collectible: true, tribe: null, factionId: ""));
             return new StubCardDatabase(cards);
         }

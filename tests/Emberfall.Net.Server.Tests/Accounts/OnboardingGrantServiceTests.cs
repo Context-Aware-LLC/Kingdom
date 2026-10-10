@@ -41,7 +41,7 @@ namespace Emberfall.Net.Server.Tests.Accounts
         {
             var cards = new List<CardDefinition>();
             for (int i = 0; i < 8; i++)
-                cards.Add(Card($"common_{i:000}", Rarity.COMMON, i % 2 == 0 ? SetId.CORE : SetId.EMBERFALL));
+                cards.Add(Card($"common_{i:000}", Rarity.COMMON, SetId.EMBERFALL));
             for (int i = 0; i < 4; i++)
                 cards.Add(Card($"rare_{i:000}", Rarity.RARE, SetId.EMBERFALL));
             cards.Add(Card("token_000", Rarity.COMMON, SetId.CORE, collectible: false));
