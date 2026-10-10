@@ -156,6 +156,12 @@ namespace Emberfall.Editor
         // at 110-384px, and without a mip chain their filigree and ember cracks alias into speckle
         // (2026-09-15, compared side by side in art-pipeline/mip-compare/). Sliced sprites still
         // work with mips; heavily shrunk slices only go slightly soft.
+        //
+        // MIPS ON A NON-POWER-OF-TWO SPRITE IMPORT UNCOMPRESSED, and nothing says so: the ASTC
+        // override below is ignored and the texture ships as RGBA32 (frame_card alone was 5.46 MB,
+        // and 17 of these were 39 MB of the UI_Core bundle, 2026-10-10). A sprite in this lane
+        // only compresses once it is a packable of Assets/Art/UI/BoardSprites.spriteatlasv2, so
+        // adding one here means adding it there.
         static void ApplyUiFrame(TextureImporter importer) => ApplyUiAtlas(importer, mips: true);
 
         static void ApplyUiAtlas(TextureImporter importer, bool mips)
