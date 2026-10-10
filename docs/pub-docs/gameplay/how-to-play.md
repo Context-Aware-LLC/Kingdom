@@ -17,7 +17,7 @@ At the start of your turn:
 3. Start-of-turn rules resolve.
 4. You draw one card.
 
-During the main phase, you may act in any order while you can pay the costs. You may play cards, attack with ready characters, and use your Hero Power once for 2 mana. End your turn when you are finished.
+During the main phase, you may act in any order while you can pay the costs. You may play cards, attack with ready characters, and use your Hero Power. End your turn when you are finished.
 
 End-of-turn effects then resolve and play passes to your opponent.
 
@@ -29,11 +29,11 @@ Permanent Mana Crystals refill each turn. Some effects grant temporary mana for 
 
 - **Minions** occupy the board and can attack. A minion normally cannot attack on the turn it enters play.
 - **Spells** resolve their effects and then leave play.
-- **Weapons** let your hero attack. Each attack spends one durability; the weapon breaks at zero.
+- **Weapons** let your hero attack. Each attack spends one durability; when it's gone the weapon breaks.
 
 Each player may control up to seven minions and hold up to ten cards. A summon beyond the board limit fails. A card drawn into a full hand is revealed as burned and does not enter your hand.
 
-See [Cards, Decks, and Characters](cards-decks-and-characters.md) for deck construction and [Keyword Glossary](keywords.md) for named abilities.
+See [Cards and Decks](cards-and-decks.md) for deck construction and [Keyword Glossary](keywords.md) for named abilities.
 
 ## Combat
 

@@ -1,65 +1,102 @@
 # Classes
 
-Emberfall has eight class identities at different stages of development. **Emberward and Tidecaller are the current vertical-slice playable pair.** At the July 26 content-readiness check, Gravekeep and Verdant had executable baseline Hero Powers but no collectible cards available in the playable build. Clockwright, Nightveil, Stonewarden, and Tempest are expansion designs and should not be read as currently available classes.
-
-When the wider Character system is released, a Character combines two classes, uses the primary class's Hero Power, and may build with cards from both classes plus Neutral cards.
+There are eight classes, and each has its own hero. A deck's primary class decides which hero you play and which Hero Power you use.
 
 Every Hero Power below costs 2 mana and may be used once per turn.
 
-## Current playable pair
+## Emberward
 
-### Emberward
+**Hero:** Pyra
 
-Fast fire and weapon pressure. Emberward uses cheap attackers, direct damage, and front-loaded power to finish a match before slower plans stabilize.
+She has one answer, and it is fire. She aims it at the enemy hero from the first turn and will burn herself to keep the heat coming.
 
-**Searing Bolt:** Deal 1 damage to any target.
+- Spells that deal damage to minions or the enemy hero.
+- Cards that trade Health for power.
+- Minions that attack the turn you play them.
 
-### Tidecaller
+**Searing Bolt:** Deal 1 damage. Deals 2 instead if your hero has taken damage this turn.
 
-Patient tempo and control. Tidecaller protects the board, freezes threats, returns cards to hand, and turns inexpensive spells into long-game advantage.
+## Clockwright
 
-**Tidal Ward:** Summon a 0/2 Tide Wisp with Bulwark.
+**Hero:** Fenwick
 
-## Later class baselines
+He builds machines out of small parts. He spends most of his time in his workshop or his library. His constructs overwhelm opponents while his Hero Power keeps his options open.
 
-### Gravekeep
-
-Death, remembrance, and recursion. Gravekeep profits when its own minions die, builds value from Toll and Rekindle effects, and wins long resource battles.
-
-**Toll the Bell:** Restore 2 Health to your hero.
-
-### Verdant
-
-Growth, healing, and oversized threats. Verdant buys time, accelerates its mana plan through class cards, and aims to dominate the late game.
-
-**Quicken, current executable baseline:** Restore 3 Health to your hero.
-
-Verdant's longer-term identity includes permanent mana growth, but a ramp version of Quicken remains pre-release and unsettled. It is not part of the current player rules.
-
-## Expansion designs
-
-### Clockwright
-
-Constructs, precision, and card advantage. Clockwright assembles engines whose parts reinforce one another, then draws toward an inevitable payoff.
+- Buffs that reach every friendly Construct at once turn a wide board into a tall one.
+- Blueprint draws a card every turn, and a few spells pick a minion back up so it can be played again.
 
 **Blueprint:** Draw a card.
 
-### Nightveil
+## Gravekeep
 
-Shrouded attackers, Venom, and tempo disruption. Nightveil protects important minions, removes large threats efficiently, and reuses cards by returning them to hand.
+**Hero:** Sorrow
 
-**Shadow Mark:** Give a friendly minion Shroud.
+He treats a death as the start of a career. What he buries pays him on the way down, and some of it gets back up.
 
-### Stonewarden
+- Minions that pay out when they die.
+- Cards that sacrifice one of your own minions for a reward.
+- Spells that return dead minions to the board.
 
-Fortress control. Stonewarden builds high-Health Bulwark lines, clears small attackers, and converts a defended board into an Overwhelm finish.
+**Weaken:** Give a minion -1/+0.
 
-**Earthwall:** Summon a 0/3 Stone Shard with Bulwark.
+## Nightveil
 
-### Tempest
+**Hero:** Liss
 
-Lightning aggression and calculated risk. Tempest combines Doublestrike pressure, Backdraft burst, and random targeting for explosive but variable turns.
+She picks her fights and is gone before the next one. What she cannot kill, she sends home.
 
-**Chain Spark:** Deal 1 damage to a random enemy twice.
+- Minions that cannot be attacked or targeted until they strike.
+- Minions that destroy whatever they damage.
+- Spells that destroy a minion or return it to its owner's hand.
 
-Neutral cards belong to no class and may be used by every Character.
+**Backstab:** Deal 2 damage to the enemy hero and give all friendly Shroud minions +1/+0.
+
+## Stonewarden
+
+**Hero:** Hodge
+
+He stands behind his wall for as long as it takes. When it is finished, he walks through whatever is left.
+
+- Minions that must be attacked first.
+- Buffs that add Health.
+- Large minions whose extra damage carries through to the enemy hero.
+
+**Earthwall:** Summon a 0/3 Stone Shard.
+
+## Tempest
+
+**Hero:** Cassian
+
+He is the fastest thing in the kingdom and the least sure where he is aiming. The lightning picks its own targets, and he borrows from tomorrow to pay for it.
+
+- Minions that attack twice each turn.
+- Damage that lands on random enemies.
+- Strong cards that lock some of your mana next turn.
+
+**Chain Spark:** Deal 1 damage twice to random enemies.
+
+## Tidecaller
+
+**Hero:** Maren
+
+He is in no hurry. He freezes whatever comes at him, drowns the largest of it down to size, and wins with what is still standing.
+
+- Cards that freeze attackers where they stand.
+- Damage that grows with the target's Health.
+- Spells that return minions to their owner's hand.
+
+**Tidal Ward:** Summon a 1/2 Tide Wisp.
+
+## Verdant
+
+**Hero:** Thalen
+
+He plays the long game. He heals through the early turns, grows his mana ahead of schedule, and then sets down something too large to argue with.
+
+- Healing from spells, minions and the Hero Power.
+- Cards that add Mana Crystals early.
+- Large minions whose extra damage carries through to the enemy hero.
+
+**Quicken:** Restore 3 Health to your hero.
+
+Neutral cards belong to no class and may be used in every deck.
