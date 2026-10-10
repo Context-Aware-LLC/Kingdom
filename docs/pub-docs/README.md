@@ -14,7 +14,6 @@ The kingdom is always growing and subject to the whims of his Majesty and the Qu
 ## Playing
 
 - [Timers, Reconnection, and Match Outcomes](online-play/timers-reconnection-and-outcomes.md)
-- [Fair Play and Hidden Information](trust/fair-play-and-hidden-information.md)
 
 ## The wider game
 
