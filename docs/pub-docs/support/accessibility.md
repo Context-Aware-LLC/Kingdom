@@ -4,7 +4,7 @@ We want everyone to be able to play. The game is still in development and has no
 
 ## Our principles
 
-These are the principles that guide how we build the game and this website.
+These are the principles that guide how we build the game and this website. We work from the [Game Accessibility Guidelines](https://gameaccessibilityguidelines.com/basic/), and our aim is to meet every item on its Basic list that applies to a card game.
 
 - **Color.** Color is never the only signal. Anything shown in color is also shown by shape, text, an icon or motion, so the game plays the same for colorblind players.
 - **Sight.** Text is large enough to read on a phone and has strong contrast against its background. It follows your device's text size setting, up to 200%, without cutting off labels.
