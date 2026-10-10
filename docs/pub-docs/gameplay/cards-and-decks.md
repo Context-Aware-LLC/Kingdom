@@ -31,7 +31,7 @@ An incomplete or otherwise illegal deck may be kept as a draft, but it is not el
 
 Minions have a mana cost, Attack, Health, and sometimes a tribe, keywords, or triggered effects. They remain on the board until destroyed, returned to hand, or transformed.
 
-Freshly summoned minions have summoning sickness and cannot attack that turn unless they have [Fervor](keywords.md) or [Skirmish](keywords.md)
+Freshly summoned minions have summoning sickness and cannot attack that turn unless they have [Fervor](keywords.md) or [Skirmish](keywords.md).
 
 ### Spells
 
