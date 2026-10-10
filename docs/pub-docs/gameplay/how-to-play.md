@@ -26,7 +26,13 @@ End-of-turn effects then resolve and play passes to your opponent.
 
 ## Mana
 
-Permanent Mana Crystals refill each turn. Some effects grant temporary mana for the current turn, increase your permanent maximum, or lock crystals on your next turn. Your maximum permanent mana is 10.
+You gain one Mana Crystal at the start of each turn until you have 10, and your crystals refill every turn. Ten is the most mana you can ever have. No card takes you past it.
+
+Some cards change your mana along the way:
+
+- **Extra mana this turn.** A temporary crystal that is gone when the turn ends.
+- **A crystal ahead of schedule.** A permanent crystal now, so you reach 10 sooner.
+- **Locked crystals.** Some strong cards lock part of your mana on your next turn.
 
 ## Playing cards
 
