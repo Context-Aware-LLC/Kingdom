@@ -4,7 +4,7 @@
     Emberfall.Tools.OddsDisclosure: generates docs/dev-docs/data/pack-odds.md from
     the live PackRarityOdds, PackPityState, BoosterPack, and ShardValues constants (EF-080f,
     NOR-260). The artifact is committed alongside the tool. See Program.cs for the regenerate
-    command. The player-facing page, docs/pub-docs/progression/booster-packs.md, is hand-authored from it.
+    command. The player-facing page, docs/pub-docs/economy/booster-packs.md, is hand-authored from it.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>

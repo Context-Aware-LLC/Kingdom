@@ -10,7 +10,7 @@ namespace Emberfall.Tools.OddsDisclosure
     /// EF-080f / NOR-260. Generates the pack-odds reference from the live constants in
     /// PackRarityOdds, PackPityState, BoosterPack, and DeckValidator. The output is committed to
     /// docs/dev-docs/data/pack-odds.md. Nothing generated goes in docs/pub-docs (Sam, 2026-10-10):
-    /// the player-facing page, docs/pub-docs/progression/booster-packs.md, is hand-authored from this one,
+    /// the player-facing page, docs/pub-docs/economy/booster-packs.md, is hand-authored from this one,
     /// so a change to a constant here means regenerating AND editing that page.
     ///
     /// ShardValues is deliberately NOT read here any more. A pack converts nothing to shards

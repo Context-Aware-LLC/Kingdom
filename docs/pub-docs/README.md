@@ -15,9 +15,13 @@ The kingdom is always growing and subject to the whims of his Majesty and the Qu
 
 - [Timers, Reconnection, and Match Outcomes](gameplay/timers-reconnection-and-outcomes.md) — turn clocks, disconnects, and how a match can end.
 
+## Economy
+
+- [Economy](economy/economy.md) — the promises that govern cards and purchases.
+- [Earning Gold](economy/earning-gold.md) — every way to earn Gold by playing.
+- [Booster Packs](economy/booster-packs.md) — prices, drop rates, guarantees, duplicate rules, and starter packs.
+
 ## The wider game
 
 - [The World of Pendingham](world/the-world-of-pendingham.md) — a short, spoiler-light setting guide.
-- [Economy](progression/economy-principles.md) — the promises that govern cards and purchases.
-- [Booster Packs](progression/booster-packs.md) — prices, drop rates, guarantees, duplicate rules, and starter packs.
 - [Accessibility](support/interface-accessibility.md) — the accessibility standard the interface is being built toward.

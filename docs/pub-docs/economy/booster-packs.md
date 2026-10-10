@@ -6,7 +6,7 @@ Each set has its own booster pack. A pack contains **5 cards** drawn from that p
 
 - A pack costs **200 Gold** or **200 Gems**.
 - You may buy up to 10 packs in one purchase.
-- A purchase gives you unopened packs. You choose when to open them.
+- A purchase gives you unopened packs.
 
 All packs of the same type use the same odds and the same card pool, whether you bought them or earned them.
 
