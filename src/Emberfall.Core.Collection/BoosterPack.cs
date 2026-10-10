@@ -56,9 +56,6 @@ namespace Emberfall.Core.Collection
         /// (Sam, 2026-08-20, from the brief's 715/230/45/10) is the one that opened Epic: at 4.5% a
         /// player broadened too slowly across a 27-card epic tier while epic pity kept forcing slots
         /// that landed on the handful they already held.</para>
-        ///
-        /// <para><b>The starter pack no longer beats this on Epic or Legendary.</b>
-        /// <see cref="OnboardingGrant.StarterOdds"/> is 8.5% / 2.5% and was not moved with it.</para>
         /// </summary>
         public static readonly PackRarityOdds Default = new PackRarityOdds(600, 270, 100, 30);
 

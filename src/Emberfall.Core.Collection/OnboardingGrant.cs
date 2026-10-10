@@ -88,29 +88,27 @@ namespace Emberfall.Core.Collection
         public const int StarterPackCardCount = 8;
 
         /// <summary>
-        /// Starter-pack odds. They were written to be richer than <see cref="PackRarityOdds.Default"/>
-        /// when that was 715/230/45/10, and are NOT richer than today's 600/270/100/30 on Epic or
-        /// Legendary (Sam's retail retune, 2026-10-10, did not move these).
+        /// Starter-pack odds: Common 55%, Rare 27%, Epic 12%, Legendary 6%. Richer than
+        /// <see cref="PackRarityOdds.Default"/> (600/270/100/30) on Epic and Legendary, level on Rare.
         ///
-        /// <para><b>Why they are boosted at all.</b> At retail odds the whole grant yields 0.2
-        /// legendaries across 25 cards, so a new player almost certainly opens none — the worst
-        /// possible version of the moment the packs exist to create. Over 40 cards these odds give
-        /// roughly 22 commons, 13.6 rares, 3.4 epics and 1.0 legendaries: a legendary in expectation.</para>
+        /// <para><b>Retuned by Sam 2026-10-10 from 550/340/85/25.</b> The same day's retail retune
+        /// had left a starter pack WORSE than a shop pack on Epic and Legendary. The 7 points of
+        /// Rare that sat above retail went half to Epic and half to Legendary. It also settles the
+        /// question left open here on 2026-09-02: the card half of the grant hands out every RARE, so
+        /// a rare slot is a top-up, and only EPIC and LEGENDARY are still discoveries.</para>
+        ///
+        /// <para><b>Why they are boosted at all.</b> The packs exist to create one moment, and a new
+        /// player who opens no legendary gets the worst version of it. Over the grant's 40 cards
+        /// these odds give roughly 22 commons, 10.8 rares, 4.8 epics and 2.4 legendaries.</para>
         ///
         /// <para>Weight moves off COMMON deliberately. The card half of this same grant means the player
         /// already holds one of every common in the set, so a common slot can only ever top them
         /// up toward the deck limit — real value, but never a discovery.</para>
         ///
-        /// <para><b>OPEN, and these odds have NOT been re-tuned for it (2026-09-02).</b> The card half
-        /// now grants every RARE as well, so the same argument applies to the 340 weight on RARE: a
-        /// rare slot is now a top-up too, and only EPIC and LEGENDARY are still discoveries. Whether
-        /// to shift weight further up is a design call, not a mechanical consequence, so it is raised
-        /// here rather than taken.</para>
-        ///
         /// <para><b>Contained to onboarding.</b> Live pack odds are untouched:
         /// <see cref="BoosterPack.All"/> still builds retail packs on the default odds.</para>
         /// </summary>
-        public static readonly PackRarityOdds StarterOdds = new PackRarityOdds(550, 340, 85, 25);
+        public static readonly PackRarityOdds StarterOdds = new PackRarityOdds(550, 270, 120, 60);
 
         /// <summary>
         /// The pack a starter pack is: launch pairing, <see cref="StarterPackCardCount"/> cards,
