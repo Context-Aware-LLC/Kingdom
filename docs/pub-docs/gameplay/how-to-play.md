@@ -4,9 +4,9 @@ Your goal is to reduce the opposing hero from 30 Health to 0. The game is turn-b
 
 ## Match setup
 
-- A coin flip chooses the first player.
-- The first player draws three cards. The second draws four and then receives **The Spark**, a free one-use card that grants one temporary Mana Crystal for that turn.
-- During the mulligan, each player may replace any number of opening cards once. The Spark cannot be replaced.
+- The player to go first is chosen randomly when the game starts.
+- That player draws three cards. The other draws four and then receives **The Spark**, a free one-use card that grants one temporary Mana Crystal for that turn.
+- Then both players "Mulligan", one chance to replace an opening card with a different one. The Spark cannot be replaced.
 
 ## Your turn
 
@@ -17,7 +17,10 @@ At the start of your turn:
 3. Start-of-turn rules resolve.
 4. You draw one card.
 
-During the main phase, you may act in any order while you can pay the costs. You may play cards, attack with ready characters, and use your Hero Power. End your turn when you are finished.
+During your turn you may take actions in any order. You may play cards, attack with ready characters, and use your Hero Power.
+When you are finished, end your turn by activating the royal stamp of approval on the right side of the board.
+
+![The royal stamp of approval: a red wax seal and its wooden stamper](https://kingdomofbadideas.com/assets/seal-stamper.webp)
 
 End-of-turn effects then resolve and play passes to your opponent.
 

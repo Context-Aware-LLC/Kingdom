@@ -287,6 +287,14 @@ body.page main {
   font-weight: 700;
 }
 
+/* A picture standing as its own paragraph in a docs page. */
+.prose p > img:only-child {
+  display: block;
+  width: 128px;
+  height: auto;
+  margin: var(--s-2) 0;
+}
+
 /* An icon in a table cell, such as a rarity gem beside its name. */
 .prose td img {
   display: block;
