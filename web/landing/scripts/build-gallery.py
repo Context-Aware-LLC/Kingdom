@@ -122,7 +122,7 @@ def docs_nav(current, heroes):
     roster = "\n".join(item(CLASS_LABEL[h["class"]], hero_href(h)) for h in heroes)
     sub = f'    <ul>\n{roster}\n    </ul>\n' if current.startswith(HEROES_HREF) else ""
     return ('  <nav class="docs-nav" aria-label="Docs">\n'
-            + group("Docs", [("Start here", "/docs")])
+            + f'    <p>{linked("Docs", "/docs")}</p>\n'
             + group("Gameplay", gameplay)
             + f'    <p>{linked("Heroes", HEROES_HREF)}</p>\n{sub}'
             + group(linked("Economy", ECONOMY_HREF), economy)
