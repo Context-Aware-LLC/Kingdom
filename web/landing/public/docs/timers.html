@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timers, Reconnection, and Match Outcomes · Kingdom of Bad Ideas</title>
+<meta name="description" content="The Council keeps one clock for every match. It runs on the server, so both players follow the same time.">
+<meta name="theme-color" content="#0b0f14">
+<link rel="canonical" href="https://kingdomofbadideas.com/docs/timers">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://kingdomofbadideas.com/docs/timers">
+<meta property="og:title" content="Timers, Reconnection, and Match Outcomes · Kingdom of Bad Ideas">
+<meta property="og:description" content="The Council keeps one clock for every match. It runs on the server, so both players follow the same time.">
+<meta property="og:image" content="https://kingdomofbadideas.com/assets/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+<link rel="preload" href="/assets/alfa-slab-one.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css?v=213c2073b3">
+</head>
+<body class="page">
+<header class="top"><div class="wrap"><a class="home-seal" href="/" aria-label="Kingdom of Bad Ideas home"><img src="/assets/seal.png" alt="" width="240" height="240"></a><nav aria-label="Main"><a href="/cards">Cards</a><a href="/events">Events</a><a href="/leaderboards">Leaderboards</a><a href="/docs" aria-current="page">Docs</a><a href="/faq">FAQ</a></nav></div></header>
+<main class="wrap docs">
+  <nav class="docs-nav" aria-label="Docs">
+    <p>Docs</p>
+    <ul>
+      <li><a href="/docs">Start here</a></li>
+    </ul>
+    <p>Gameplay</p>
+    <ul>
+      <li><a href="/docs/how-to-play">How to Play</a></li>
+      <li><a href="/docs/cards-and-decks">Cards and Decks</a></li>
+      <li><a href="/docs/keywords">Keywords</a></li>
+      <li><a href="/docs/timers" aria-current="page">Timers and Reconnection</a></li>
+    </ul>
+    <p><a href="/docs/heroes">Heroes</a></p>
+    <p><a href="/docs/economy">Economy</a></p>
+    <ul>
+      <li><a href="/docs/economy/currency">Currency</a></li>
+      <li><a href="/docs/economy/booster-packs">Booster Packs</a></li>
+    </ul>
+  </nav>
+  <div class="docs-body">
+    <section class="page-head">
+      <p class="eyebrow">Gameplay</p>
+      <h1>Timers, Reconnection, and Match Outcomes</h1>
+<p>The Council keeps one clock for every match. It runs on the server, so both players follow the same time.</p>
+    </section>
+    <div class="prose">
+<h2 id="match-clocks">Match clocks</h2>
+<table>
+<thead>
+<tr>
+<th>Clock</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mulligan</td>
+<td>45 seconds; an unfinished mulligan is automatically confirmed when time expires</td>
+</tr>
+<tr>
+<td>Turn</td>
+<td>75 seconds</td>
+</tr>
+<tr>
+<td>Final warning</td>
+<td>Begins with 15 seconds remaining</td>
+</tr>
+</tbody>
+</table>
+<p>When a turn expires, the server ends it automatically. One timed-out turn is not an immediate loss. Two consecutive turns auto-ended for the same player cause that player to forfeit. Any accepted voluntary action resets that player's idle count.</p>
+<h2 id="if-one-player-disconnects">If one player disconnects</h2>
+<p>The match keeps moving. The connected player continues taking normal turns, while the missing player's turns expire automatically.</p>
+<p>A returning player may reconnect while the match still exists. Reconnection restores the current board state; it does not replay every animation or event that happened while the player was away. If the match cannot be found after reconnecting, it has already ended or been voided.</p>
+<p>There is no separate disconnect grace timer and the opponent's clock is never paused. A disconnected player loses only through the same two-turn idle rule that applies to anyone who stops participating.</p>
+<h2 id="if-both-players-disconnect">If both players disconnect</h2>
+<p>When no player remains connected, the match is voided immediately. A void has no winner, no loser, and no ranking change. It is not recorded as a draw.</p>
+    </div>
+  </div>
+  <nav class="docs-toc" aria-label="On this page">
+    <p>On this page</p>
+    <ul>
+      <li><a href="#match-clocks">Match clocks</a></li>
+      <li><a href="#if-one-player-disconnects">If one player disconnects</a></li>
+      <li><a href="#if-both-players-disconnect">If both players disconnect</a></li>
+    </ul>
+  </nav>
+</main>
+<footer><div class="wrap"><span>&copy; 2026 Context Aware. All rights reserved, and several wrongs.</span><span class="links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/accessibility">Accessibility</a><a href="mailto:support@kingdomofbadideas.com">support@kingdomofbadideas.com</a></span></div></footer>
+</body>
+</html>

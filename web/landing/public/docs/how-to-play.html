@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Play · Kingdom of Bad Ideas</title>
+<meta name="description" content="Your goal is to reduce the opposing hero from 30 Health to 0. The game is turn-based: you spend mana, play cards, attack, and choose when to end your turn.">
+<meta name="theme-color" content="#0b0f14">
+<link rel="canonical" href="https://kingdomofbadideas.com/docs/how-to-play">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://kingdomofbadideas.com/docs/how-to-play">
+<meta property="og:title" content="How to Play · Kingdom of Bad Ideas">
+<meta property="og:description" content="Your goal is to reduce the opposing hero from 30 Health to 0. The game is turn-based: you spend mana, play cards, attack, and choose when to end your turn.">
+<meta property="og:image" content="https://kingdomofbadideas.com/assets/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+<link rel="preload" href="/assets/alfa-slab-one.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css?v=213c2073b3">
+</head>
+<body class="page">
+<header class="top"><div class="wrap"><a class="home-seal" href="/" aria-label="Kingdom of Bad Ideas home"><img src="/assets/seal.png" alt="" width="240" height="240"></a><nav aria-label="Main"><a href="/cards">Cards</a><a href="/events">Events</a><a href="/leaderboards">Leaderboards</a><a href="/docs" aria-current="page">Docs</a><a href="/faq">FAQ</a></nav></div></header>
+<main class="wrap docs">
+  <nav class="docs-nav" aria-label="Docs">
+    <p>Docs</p>
+    <ul>
+      <li><a href="/docs">Start here</a></li>
+    </ul>
+    <p>Gameplay</p>
+    <ul>
+      <li><a href="/docs/how-to-play" aria-current="page">How to Play</a></li>
+      <li><a href="/docs/cards-and-decks">Cards and Decks</a></li>
+      <li><a href="/docs/keywords">Keywords</a></li>
+      <li><a href="/docs/timers">Timers and Reconnection</a></li>
+    </ul>
+    <p><a href="/docs/heroes">Heroes</a></p>
+    <p><a href="/docs/economy">Economy</a></p>
+    <ul>
+      <li><a href="/docs/economy/currency">Currency</a></li>
+      <li><a href="/docs/economy/booster-packs">Booster Packs</a></li>
+    </ul>
+  </nav>
+  <div class="docs-body">
+    <section class="page-head">
+      <p class="eyebrow">Gameplay</p>
+      <h1>How to Play</h1>
+<p>Your goal is to reduce the opposing hero from 30 Health to 0. The game is turn-based: you spend mana, play cards, attack, and choose when to end your turn.</p>
+    </section>
+    <div class="prose">
+<h2 id="match-setup">Match setup</h2>
+<ul>
+<li>A coin flip chooses the first player.</li>
+<li>The first player draws three cards. The second draws four and then receives <strong>The Spark</strong>, a free one-use card that grants one temporary Mana Crystal for that turn.</li>
+<li>During the mulligan, each player may replace any number of opening cards once. The Spark cannot be replaced.</li>
+</ul>
+<h2 id="your-turn">Your turn</h2>
+<p>At the start of your turn:</p>
+<ol>
+<li>Your maximum mana increases by one, to a maximum of 10.</li>
+<li>Your mana refills.</li>
+<li>Start-of-turn rules resolve.</li>
+<li>You draw one card.</li>
+</ol>
+<p>During the main phase, you may act in any order while you can pay the costs. You may play cards, attack with ready characters, and use your Hero Power. End your turn when you are finished.</p>
+<p>End-of-turn effects then resolve and play passes to your opponent.</p>
+<h2 id="mana">Mana</h2>
+<p>Permanent Mana Crystals refill each turn. Some effects grant temporary mana for the current turn, increase your permanent maximum, or lock crystals on your next turn. Your maximum permanent mana is 10.</p>
+<h2 id="playing-cards">Playing cards</h2>
+<ul>
+<li><strong>Minions</strong> occupy the board and can attack. A minion normally cannot attack on the turn it enters play.</li>
+<li><strong>Spells</strong> resolve their effects and then leave play.</li>
+<li><strong>Weapons</strong> let your hero attack. Each attack spends one durability; when it's gone the weapon breaks.</li>
+</ul>
+<p>Each player may control up to seven minions and hold up to ten cards. A summon beyond the board limit fails. A card drawn into a full hand is revealed as burned and does not enter your hand.</p>
+<p>See <a href="/docs/cards-and-decks">Cards and Decks</a> for deck construction and <a href="/docs/keywords">Keyword Glossary</a> for named abilities.</p>
+<h2 id="combat">Combat</h2>
+<p>Choose a ready attacker, then a legal enemy target. In minion combat, both sides deal their Attack as damage at the same time unless an ability changes the order. A hero attacking a minion with a weapon also takes that minion's retaliation damage.</p>
+<p>Minions at 0 Health die. Death effects resolve after combat damage, in board order. Protective and targeting abilities such as Bulwark, Aegis, and Shroud may change which attacks are legal or how damage resolves.</p>
+<h2 id="running-out-of-cards">Running out of cards</h2>
+<p>If your deck is empty when you would draw, your hero takes fatigue damage instead. The first missed draw deals 1 damage, the next deals 2, then 3, and so on for the rest of the match.</p>
+<h2 id="winning-drawing-and-conceding">Winning, drawing, and conceding</h2>
+<ul>
+<li>You win when the opposing hero reaches 0 Health.</li>
+<li>You lose when your hero reaches 0 Health or when you concede.</li>
+<li>If both heroes reach 0 or less from the same resolution, the hero with the lower final Health loses. The match is a draw only when their final Health totals are equal.</li>
+</ul>
+<p>Timers, disconnects, and voided matches are covered in <a href="/docs/timers">Timers, Reconnection, and Match Outcomes</a>.</p>
+    </div>
+  </div>
+  <nav class="docs-toc" aria-label="On this page">
+    <p>On this page</p>
+    <ul>
+      <li><a href="#match-setup">Match setup</a></li>
+      <li><a href="#your-turn">Your turn</a></li>
+      <li><a href="#mana">Mana</a></li>
+      <li><a href="#playing-cards">Playing cards</a></li>
+      <li><a href="#combat">Combat</a></li>
+      <li><a href="#running-out-of-cards">Running out of cards</a></li>
+      <li><a href="#winning-drawing-and-conceding">Winning, drawing, and conceding</a></li>
+    </ul>
+  </nav>
+</main>
+<footer><div class="wrap"><span>&copy; 2026 Context Aware. All rights reserved, and several wrongs.</span><span class="links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/accessibility">Accessibility</a><a href="mailto:support@kingdomofbadideas.com">support@kingdomofbadideas.com</a></span></div></footer>
+</body>
+</html>

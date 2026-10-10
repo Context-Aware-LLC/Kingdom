@@ -20,6 +20,7 @@ import re
 import sys
 from pathlib import Path
 
+import markdown
 from PIL import Image
 
 SITE = Path(__file__).resolve().parent.parent
@@ -36,8 +37,21 @@ UNPUBLISHED_KEYWORDS = {"REINFORCE"}
 # Toll is a trigger label (CardTextGenerator.TriggerLabel), not a Keyword, so the game holds no
 # glossary line for it. It is the one definition written here.
 TRIGGER_TERMS = {"TOLL": "Happens when this minion dies."}
-# The docs section's own pages, in side-menu order. A new one needs a template and a line here.
-DOCS_PAGES = [("Start here", "/docs"), ("Keywords", "/docs/keywords")]
+# Player docs written by hand in docs/pub-docs and published as they are: (source, address, menu
+# label, menu group). A new page is a Markdown file there and a line here.
+PUB_DOCS = SITE.parent.parent / "docs" / "pub-docs"
+MD_PAGES = [
+    ("gameplay/how-to-play.md", "/docs/how-to-play", "How to Play", "Gameplay"),
+    ("gameplay/cards-and-decks.md", "/docs/cards-and-decks", "Cards and Decks", "Gameplay"),
+    ("gameplay/timers-reconnection-and-outcomes.md", "/docs/timers", "Timers and Reconnection", "Gameplay"),
+    ("economy/economy.md", "/docs/economy", "Economy", "Economy"),
+    ("economy/currency.md", "/docs/economy/currency", "Currency", "Economy"),
+    ("economy/booster-packs.md", "/docs/economy/booster-packs", "Booster Packs", "Economy"),
+]
+# Where a link to a pub-docs file that is NOT published from Markdown lands instead: the keyword
+# glossary is built from the game's own copy, and the classes page is the heroes section.
+MD_LINK_OVERRIDES = {"gameplay/keywords.md": "/docs/keywords", "gameplay/classes.md": "/docs/heroes"}
+ECONOMY_HREF = "/docs/economy"
 THUMB = 480
 
 CLASS_LABEL = {"EMBERWARD": "Emberward", "TIDECALLER": "Tidecaller", "GRAVEKEEP": "Gravekeep", "VERDANT": "Verdant",
@@ -94,12 +108,58 @@ def docs_nav(current, heroes):
         here = ' aria-current="page"' if href == current else ""
         return f'      <li><a href="{href}"{here}>{html.escape(label)}</a></li>'
 
-    items = "\n".join(item(label, href) for label, href in DOCS_PAGES)
+    def group(heading, entries):
+        rows = "\n".join(item(label, href) for label, href in entries)
+        return f'    <p>{heading}</p>\n    <ul>\n{rows}\n    </ul>\n'
+
+    def linked(label, href):
+        here = ' aria-current="page"' if href == current else ""
+        return f'<a href="{href}"{here}>{label}</a>'
+
+    gameplay = [(label, href) for _, href, label, grp in MD_PAGES if grp == "Gameplay"]
+    gameplay.insert(2, ("Keywords", "/docs/keywords"))
+    economy = [(label, href) for _, href, label, grp in MD_PAGES if grp == "Economy" and href != ECONOMY_HREF]
     roster = "\n".join(item(CLASS_LABEL[h["class"]], hero_href(h)) for h in heroes)
-    here = ' aria-current="page"' if current == HEROES_HREF else ""
     sub = f'    <ul>\n{roster}\n    </ul>\n' if current.startswith(HEROES_HREF) else ""
-    return (f'  <nav class="docs-nav" aria-label="Docs">\n    <p>Docs</p>\n    <ul>\n{items}\n    </ul>\n'
-            f'    <p><a href="{HEROES_HREF}"{here}>Heroes</a></p>\n{sub}  </nav>')
+    return ('  <nav class="docs-nav" aria-label="Docs">\n'
+            + group("Docs", [("Start here", "/docs")])
+            + group("Gameplay", gameplay)
+            + f'    <p>{linked("Heroes", HEROES_HREF)}</p>\n{sub}'
+            + group(linked("Economy", ECONOMY_HREF), economy)
+            + '  </nav>')
+
+
+def md_page(template, source, href, group, heroes):
+    """One pub-docs Markdown file as a docs page: its title, its opening paragraph as the lead, the
+    rest as the body, and its second-level headings as the page's own section list."""
+    text = (PUB_DOCS / source).read_text(encoding="utf-8")
+    m = re.match(r"\s*# (.+?)\n+(.*)", text, re.S)
+    if not m:
+        sys.exit(f"{source}: no title")
+    title, rest = m.group(1).strip(), m.group(2)
+    lead = ""
+    if not rest.lstrip().startswith(("#", "|", "-")):
+        lead, _, rest = rest.partition("\n\n")
+    md = markdown.Markdown(extensions=["tables", "toc"])
+    body = md.convert(rest)
+    lead_html = markdown.markdown(lead) if lead else ""
+
+    links = {s: h for s, h, _, _ in MD_PAGES}
+    links.update(MD_LINK_OVERRIDES)
+
+    def relink(match):
+        target = (Path(source).parent / match.group(1)).as_posix()
+        target = re.sub(r"(^|/)[^/]+/\.\./", r"\1", target)
+        if target not in links:
+            sys.exit(f"{source}: link to {match.group(1)}, which is not a published page")
+        return f'href="{links[target]}"'
+
+    body, lead_html = (re.sub(r'href="([^":]+\.md)"', relink, x) for x in (body, lead_html))
+    sections = [(t["name"], f'#{t["id"]}') for t in md.toc_tokens if t["level"] == 2]
+    description = html.escape(re.sub(r"<[^>]+>", "", lead_html).strip() or title, quote=True)
+    fields = {"TITLE": html.escape(title), "DESCRIPTION": description, "HREF": href, "EYEBROW": group,
+              "LEAD": lead_html, "BODY": body, "DOCS_NAV": docs_nav(href, heroes), "DOCS_TOC": docs_toc(sections)}
+    return re.sub(r"\{\{(\w+)\}\}", lambda x: fields[x.group(1)], template)
 
 
 def card_html(c):
@@ -196,6 +256,12 @@ def main():
                 .replace("{{KEYWORDS}}", entries).replace("{{ROSTER}}", roster))
         (SITE / "public" / out).write_text(page, encoding="utf-8", newline="\n")
     print(f"published {len(keywords)} keywords")
+    page_template = (SITE / "scripts" / "page.template.html").read_text(encoding="utf-8")
+    for source, href, _, grp in MD_PAGES:
+        out = SITE / "public" / (href.lstrip("/") + ".html")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(md_page(page_template, source, href, grp, heroes), encoding="utf-8", newline="\n")
+    print(f"published {len(MD_PAGES)} pages from docs/pub-docs")
     template = (SITE / "scripts" / "hero.template.html").read_text(encoding="utf-8")
     OUT_HEROES.mkdir(parents=True, exist_ok=True)
     OUT_POWERS.mkdir(parents=True, exist_ok=True)

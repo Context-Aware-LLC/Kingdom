@@ -267,6 +267,26 @@ body.page main {
   margin: 6px 0;
 }
 
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--s-3) 0 var(--s-4);
+}
+
+.prose th,
+.prose td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid var(--line);
+  color: #d9d2c3;
+}
+
+.prose th {
+  color: var(--parchment);
+  font-weight: 700;
+}
+
 .summary {
   border: 1px solid var(--line);
   background: var(--ink-2);
