@@ -193,6 +193,7 @@ namespace Emberfall.Net.Server.Telemetry
             IReadOnlyList<int> kept = s.MulliganKept;
             for (int i = 0; i < kept.Count; i++) w.I32(kept[i]);
             w.EndArray();
+            w.Name("enemyMinionsDestroyed"); w.I32(s.EnemyMinionsDestroyed);
             w.EndObject();
         }
 

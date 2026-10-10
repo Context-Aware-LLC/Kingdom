@@ -23,14 +23,33 @@ namespace Emberfall.Net.Server.Telemetry
         /// Held aside rather than stored, so a REJECTED intent records nothing.</summary>
         public readonly struct Pending
         {
-            internal Pending((int seat, List<int> kept)? keeps, (int seat, int defId, int turn)? play)
+            internal Pending((int seat, List<int> kept)? keeps, (int seat, int defId, int turn)? play,
+                             BoardWatch watch)
             {
                 Keeps = keeps;
                 Play = play;
+                Watch = watch;
             }
 
             internal (int seat, List<int> kept)? Keeps { get; }
             internal (int seat, int defId, int turn)? Play { get; }
+            internal BoardWatch Watch { get; }
+        }
+
+        /// <summary>
+        /// Where every card was just before a command, which is what lets <see cref="MinionDeaths"/>
+        /// tell a minion that died on the board from every other way a card reaches a graveyard —
+        /// a spell resolving, a card destroyed in hand, a card burned off the deck.
+        /// </summary>
+        internal sealed class BoardWatch
+        {
+            /// <summary>The death clock before the command: anything stamped at or past it died in it.</summary>
+            public int DeathClock;
+            public readonly HashSet<InstanceId> OnBoard = new HashSet<InstanceId>();
+            public readonly HashSet<InstanceId> InHandOrDeck = new HashSet<InstanceId>();
+            /// <summary>The card this command plays, if it plays one: in hand before, possibly a
+            /// minion on the board and dead again before the command is over.</summary>
+            public InstanceId? Played;
         }
 
         private readonly MatchId _id;
@@ -50,6 +69,10 @@ namespace Emberfall.Net.Server.Telemetry
         /// after the opening deal and after every accepted command; read once, at match end.
         /// </summary>
         private readonly CardSeenLedger[] _cardsSeen = { new CardSeenLedger(), new CardSeenLedger() };
+
+        /// <summary>Board minions each seat has LOST. A seat's <see cref="SeatOutcome.EnemyMinionsDestroyed"/>
+        /// is the other seat's entry here.</summary>
+        private readonly int[] _minionsLost = new int[2];
 
         public MatchTelemetryRecorder(
             MatchId id, MatchSetup setup, ITelemetrySink? telemetry, MatchAttribution? attribution)
@@ -73,7 +96,7 @@ namespace Emberfall.Net.Server.Telemetry
 
         /// <summary>Read the mulligan keeps and the played card's def id while the hand still holds them.</summary>
         public Pending BeforeSubmit(GameState state, PlayerIntent intent)
-            => new Pending(CaptureMulliganKeeps(state, intent), CapturePlay(state, intent));
+            => new Pending(CaptureMulliganKeeps(state, intent), CapturePlay(state, intent), Watch(state, intent));
 
         /// <summary>
         /// Every accepted command is a draw observation point. Run it BEFORE ending the match, so
@@ -84,6 +107,48 @@ namespace Emberfall.Net.Server.Telemetry
             if (pending.Keeps is { } k) _mulliganKept[k.seat] = k.kept;
             if (pending.Play is { } p) _cardsSeen[p.seat].NotePlayed(p.defId, p.turn);
             ObserveHands(state);
+            for (int seat = 0; seat < 2; seat++) _minionsLost[seat] += MinionDeaths(state, pending.Watch, seat);
+        }
+
+        internal static BoardWatch Watch(GameState state, PlayerIntent intent)
+        {
+            var watch = new BoardWatch { DeathClock = state.NextDeathSequence };
+            if (intent is PlayCardIntent play) watch.Played = play.Card;
+            foreach (PlayerState ps in state.Players)
+            {
+                foreach (CardInstance c in ps.Board) watch.OnBoard.Add(c.Id);
+                foreach (CardInstance c in ps.Hand) watch.InHandOrDeck.Add(c.Id);
+                foreach (CardInstance c in ps.Deck) watch.InHandOrDeck.Add(c.Id);
+            }
+            return watch;
+        }
+
+        /// <summary>
+        /// How many board minions <paramref name="seat"/> lost to this command. Observational, like the rest of
+        /// this class: it reads the two graveyards rather than the event stream, so it does not
+        /// have to know which effects kill.
+        ///
+        /// <para>A graveyard is append-only in death order, so the cards this command sent there
+        /// are the tail stamped at or past the clock read beforehand. One of them was a board minion
+        /// if it was on a board before the command, or if it has a minion's Health and either is the
+        /// card the command played or did not exist beforehand (a token summoned and killed in one
+        /// resolution). That leaves out exactly the non-deaths: a resolved spell, a card destroyed
+        /// in hand, a card burned off the deck.</para>
+        /// </summary>
+        internal static int MinionDeaths(GameState state, BoardWatch watch, int seat)
+        {
+            int died = 0;
+            List<CardInstance> graveyard = state.Players[seat].Graveyard;
+            for (int i = graveyard.Count - 1; i >= 0; i--)
+            {
+                CardInstance c = graveyard[i];
+                if (c.DiedAtSequence < watch.DeathClock) break;
+
+                bool arrivedThisCommand = c.Id == watch.Played || !watch.InHandOrDeck.Contains(c.Id);
+                if (watch.OnBoard.Contains(c.Id) || (arrivedThisCommand && c.MaxHealth > 0))
+                    died++;
+            }
+            return died;
         }
 
         /// <summary>
@@ -192,7 +257,8 @@ namespace Emberfall.Net.Server.Telemetry
                 DeckIdentity.IdFor(@class),
                 DeckIdentity.HashOf(deck),
                 ResultFor(seat, outcome),
-                _mulliganKept[seat]);
+                _mulliganKept[seat],
+                _minionsLost[1 - seat]);
         }
 
         /// <summary>

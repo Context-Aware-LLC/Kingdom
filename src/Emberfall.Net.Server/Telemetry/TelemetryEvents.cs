@@ -97,13 +97,21 @@ namespace Emberfall.Net.Server.Telemetry
     }
 
     /// <summary>Per-seat block of <see cref="MatchCompleteEvent"/> (telemetry-spec §1).</summary>
+    /// <param name="EnemyMinionsDestroyed">
+    /// How many of the OPPONENT's board minions died during the match, whatever killed them (Sam,
+    /// 2026-10-10 — the counter the "destroy minions" quest reads). Counted by
+    /// <see cref="MatchTelemetryRecorder"/>; it is a count of deaths on the other side of the
+    /// board, not an attribution of who dealt the blow, which the engine does not record. Defaults
+    /// to 0 so a row written before the field existed reads as none.
+    /// </param>
     public sealed record SeatOutcome(
         AccountId Account,
         CardClass Class,
         string DeckId,
         string DeckHash,
         SeatResult Result,
-        IReadOnlyList<int> MulliganKept);
+        IReadOnlyList<int> MulliganKept,
+        int EnemyMinionsDestroyed = 0);
 
     /// <summary>
     /// `match_complete` — emitted once per finished match. THIS EVENT IS THE ≥200-MATCH SAMPLE the
