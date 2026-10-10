@@ -19,5 +19,5 @@ The kingdom is always growing and subject to the whims of his Majesty and the Qu
 
 - [The World of Pendingham](world/the-world-of-pendingham.md) — a short, spoiler-light setting guide.
 - [Economy](progression/economy-principles.md) — the promises that govern cards and purchases.
-- [Pack Odds](progression/pack-odds.md) — the exact drop rates, guarantees, and duplicate rules for every booster pack.
+- [Booster Packs](progression/booster-packs.md) — prices, drop rates, guarantees, duplicate rules, and starter packs.
 - [Accessibility](support/interface-accessibility.md) — the accessibility standard the interface is being built toward.
