@@ -42,7 +42,7 @@ namespace Kingdom.Core.Tests.Targeting
         public void Json_Negate_Is_An_Optional_Boolean_On_FROST(string negateField, bool expected)
         {
             string json = @"{""id"":1000155,""handle"":""t_unfreeze"",""name"":""Thaw"",""type"":""SPELL"",""cost"":1,"
-                + @"""class"":""TIDECALLER"",""rarity"":""COMMON"",""keywords"":[],""setId"":""EMBERFALL"",""collectible"":true,"
+                + @"""class"":""TIDECALLER"",""rarity"":""COMMON"",""keywords"":[],""setId"":""PENDINGHAM"",""collectible"":true,"
                 + @"""artId"":""t_unfreeze"",""text"":""Unfreeze a character."",""rules"":[{""id"":""rule_1"","
                 + @"""activation"":{""type"":""TRIGGERED"",""trigger"":""ON_CAST""},""condition"":{""type"":""ALWAYS""},"
                 + @"""lifetime"":{""type"":""ONE_SHOT""},""action"":{""type"":""FROST""," + negateField

@@ -29,7 +29,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
         private const string Player = "player-0001";
         private const ulong Seed = 0xB005_7E12_3456_789AUL;
 
-        private static readonly BoosterPack Pack = new BoosterPack(SetId.EMBERFALL);
+        private static readonly BoosterPack Pack = new BoosterPack(SetId.PENDINGHAM);
 
         // ── fixture plumbing ─────────────────────────────────────────────────────────────────
 
@@ -111,7 +111,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
                         attack: 1, health: 1, durability: null,
                         @class: CardClass.NEUTRAL, rarity: rarity,
                         keywords: Array.Empty<Keyword>(), rules: Array.Empty<RuleDefinition>(),
-                        flavorText: "", artId: "art", setId: SetId.EMBERFALL,
+                        flavorText: "", artId: "art", setId: SetId.PENDINGHAM,
                         collectible: true, tribe: null, factionId: ""));
             return new StubCardDatabase(cards);
         }

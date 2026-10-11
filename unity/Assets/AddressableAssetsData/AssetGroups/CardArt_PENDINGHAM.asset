@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
-  m_Name: CardArt_EMBERFALL
+  m_Name: CardArt_PENDINGHAM
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
-  m_GroupName: CardArt_EMBERFALL
+  m_GroupName: CardArt_PENDINGHAM
   m_GUID: c822dcf5640f1324e8e1a90a7c71000f
   m_SerializeEntries:
   - m_GUID: 0451fb6009a369740a88d41176641cb1

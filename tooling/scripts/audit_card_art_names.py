@@ -166,9 +166,9 @@ def main():
     for file_name, card in all_rows:
         art, set_id = card["artId"], card.get("setId", "CORE")
         # A row's art belongs under its own setId, with no exception. The 2026-08-08 rule
-        # carved one out for non-hero-power CORE rows, whose art shipped under EMBERFALL;
+        # carved one out for non-hero-power CORE rows, whose art shipped under PENDINGHAM;
         # Sam's 2026-08-15 ruling made setId CORE mean HERO_POWER and moved those 24 rows
-        # to EMBERFALL in the data, so the carve-out became unreachable and was removed.
+        # to PENDINGHAM in the data, so the carve-out became unreachable and was removed.
         # RETIREMENT TRIGGER: a legitimate non-hero-power CORE row needs it back here, and
         # retires the CORE paragraph in dev-docs/specs/card-schema.md.
         expected_folder = set_id

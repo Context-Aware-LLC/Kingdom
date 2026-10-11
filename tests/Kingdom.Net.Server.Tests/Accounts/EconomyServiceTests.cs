@@ -62,7 +62,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             await ledger.GrantAsync(new EntitlementGrant(
                 account.PlayerId, EconomyItems.Gold, 200, "quest", "quest-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
-            var pack = new BoosterPack(SetId.EMBERFALL);
+            var pack = new BoosterPack(SetId.PENDINGHAM);
 
             PackPurchaseOutcome result = await economy.PurchasePackAsync(
                 account, pack, EconomyCurrency.Gold, "purchase-1");
@@ -85,7 +85,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             await ledger.GrantAsync(new EntitlementGrant(
                 account.PlayerId, EconomyItems.Gold, 1000, "quest", "quest-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
-            var pack = new BoosterPack(SetId.EMBERFALL);
+            var pack = new BoosterPack(SetId.PENDINGHAM);
 
             PackPurchaseOutcome result = await economy.PurchasePackAsync(
                 account, pack, EconomyCurrency.Gold, "purchase-1", 3);
@@ -103,7 +103,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             await ledger.GrantAsync(new EntitlementGrant(
                 account.PlayerId, EconomyItems.Gold, 599, "quest", "quest-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
-            var pack = new BoosterPack(SetId.EMBERFALL);
+            var pack = new BoosterPack(SetId.PENDINGHAM);
 
             PackPurchaseOutcome result = await economy.PurchasePackAsync(
                 account, pack, EconomyCurrency.Gold, "purchase-1", 3);
@@ -122,7 +122,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
 
             Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
                 await economy.PurchasePackAsync(AuthenticatedAccount(),
-                    new BoosterPack(SetId.EMBERFALL), EconomyCurrency.Gold, "purchase-1", quantity));
+                    new BoosterPack(SetId.PENDINGHAM), EconomyCurrency.Gold, "purchase-1", quantity));
         }
 
         [Test]
@@ -133,7 +133,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             await ledger.GrantAsync(new EntitlementGrant(
                 account.PlayerId, EconomyItems.Gems, 199, "play_billing", "store-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
-            var pack = new BoosterPack(SetId.EMBERFALL);
+            var pack = new BoosterPack(SetId.PENDINGHAM);
 
             PackPurchaseOutcome result = await economy.PurchasePackAsync(
                 account, pack, EconomyCurrency.Gems, "purchase-1");
@@ -159,7 +159,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
 
             Assert.ThrowsAsync<InvalidOperationException>(async () =>
                 await economy.PurchasePackAsync(
-                    account, new BoosterPack(SetId.EMBERFALL), EconomyCurrency.Gold, "purchase-1"));
+                    account, new BoosterPack(SetId.PENDINGHAM), EconomyCurrency.Gold, "purchase-1"));
 
             Assert.That(await ledger.HistoryAsync(account.PlayerId), Has.Count.EqualTo(1));
             Assert.That(await ledger.BalanceAsync(account.PlayerId, EconomyItems.Gold), Is.EqualTo(200));
@@ -173,7 +173,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             await ledger.GrantAsync(new EntitlementGrant(
                 account.PlayerId, EconomyItems.Gold, 400, "quest", "quest-1", At));
             var economy = new EconomyService(ledger, new FixedTime());
-            var pack = new BoosterPack(SetId.EMBERFALL);
+            var pack = new BoosterPack(SetId.PENDINGHAM);
 
             PackPurchaseOutcome first = await economy.PurchasePackAsync(
                 account, pack, EconomyCurrency.Gold, "purchase-1");

@@ -19,7 +19,7 @@ namespace Kingdom.Core.Tests.Collection
     ///
     /// <para><b>The fifth arrived from a live failure (2026-09-03): the deck has to be one the
     /// player can QUEUE with.</b> Passing L1-L5 is not that. The generator drew from the whole
-    /// collectible pool while a new account is granted only the CORE+EMBERFALL commons and rares,
+    /// collectible pool while a new account is granted only the CORE+PENDINGHAM commons and rares,
     /// so 31-46% of every pairing's draw weight was a card the player had never been given — and the
     /// deck it handed them died at the socket with "deck rejected: You don't own Repair Drone."
     /// <see cref="Every_Pairing_Generates_A_Deck_The_Signup_Grant_Can_Queue_With"/> is that failure

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5834b5087d578d24c926ce20cd31e6d6, type: 3}
-  m_Name: CardArt_EMBERFALL_ContentUpdateGroupSchema
+  m_Name: PackArt_PENDINGHAM_ContentUpdateGroupSchema
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.GroupSchemas.ContentUpdateGroupSchema
-  m_Group: {fileID: 11400000, guid: 8ba557bd2d1fc8548b94321bae61216f, type: 2}
+  m_Group: {fileID: 11400000, guid: ed8545d663b733246944cfbf93a4a61e, type: 2}
   m_StaticContent: 0

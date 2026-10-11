@@ -12,7 +12,7 @@ namespace Kingdom.Net.Client.Tests.Shop
     {
         private const string Snapshot =
             "{\"status\":\"ready\",\"vaultCount\":2,\"wallet\":{\"gold\":500,\"gems\":30,\"shards\":5}," +
-            "\"packs\":[{\"packId\":\"pack.emberfall\",\"displayName\":\"Kingdom Pack\"," +
+            "\"packs\":[{\"packId\":\"pack.pendingham\",\"displayName\":\"Kingdom Pack\"," +
             "\"goldPrice\":200,\"gemPrice\":200}]}";
 
         private static HttpShopGateway Gateway(FakeAuthHttp http)
@@ -46,8 +46,8 @@ namespace Kingdom.Net.Client.Tests.Shop
         {
             var http = new FakeAuthHttp().Reply(200,
                 Snapshot.Replace("\"ready\"", "\"purchased\"").Replace("\"vaultCount\":2", "\"vaultCount\":3").Replace(
-                    "\"packs\":", "\"packId\":\"pack.emberfall\",\"unopenedCount\":1,\"packs\":"));
-            var request = new PackPurchaseRequest("pack.emberfall", ShopCurrency.Gold,
+                    "\"packs\":", "\"packId\":\"pack.pendingham\",\"unopenedCount\":1,\"packs\":"));
+            var request = new PackPurchaseRequest("pack.pendingham", ShopCurrency.Gold,
                 "bd6ad741-7d8b-4e51-a581-154425424370");
 
             PackPurchaseResult result = await Gateway(http).PurchaseAsync(request);
@@ -57,7 +57,7 @@ namespace Kingdom.Net.Client.Tests.Shop
             Assert.That(http.Requests, Has.Count.EqualTo(1));
             Assert.That(http.Requests[0].Url, Is.EqualTo("https://emberfall.fly.dev/shop/purchase"));
             Assert.That(http.Requests[0].Body, Is.EqualTo(
-                "{\"packId\":\"pack.emberfall\",\"currency\":\"gold\"," +
+                "{\"packId\":\"pack.pendingham\",\"currency\":\"gold\"," +
                 "\"requestId\":\"bd6ad741-7d8b-4e51-a581-154425424370\",\"quantity\":1}"));
         }
 
@@ -65,8 +65,8 @@ namespace Kingdom.Net.Client.Tests.Shop
         public async Task A_multi_pack_purchase_sends_its_quantity()
         {
             var http = new FakeAuthHttp().Reply(200, Snapshot.Replace("\"ready\"", "\"purchased\"").Replace(
-                "\"packs\":", "\"packId\":\"pack.emberfall\",\"unopenedCount\":3,\"packs\":"));
-            var request = new PackPurchaseRequest("pack.emberfall", ShopCurrency.Gems,
+                "\"packs\":", "\"packId\":\"pack.pendingham\",\"unopenedCount\":3,\"packs\":"));
+            var request = new PackPurchaseRequest("pack.pendingham", ShopCurrency.Gems,
                 "bd6ad741-7d8b-4e51-a581-154425424370", 3);
 
             await Gateway(http).PurchaseAsync(request);
@@ -79,8 +79,8 @@ namespace Kingdom.Net.Client.Tests.Shop
         {
             var http = new FakeAuthHttp().ReplyTransportFailure().Reply(200,
                 Snapshot.Replace("\"ready\"", "\"replayed\"").Replace(
-                    "\"packs\":", "\"packId\":\"pack.emberfall\",\"unopenedCount\":1,\"packs\":"));
-            var request = new PackPurchaseRequest("pack.emberfall", ShopCurrency.Gems,
+                    "\"packs\":", "\"packId\":\"pack.pendingham\",\"unopenedCount\":1,\"packs\":"));
+            var request = new PackPurchaseRequest("pack.pendingham", ShopCurrency.Gems,
                 "bd6ad741-7d8b-4e51-a581-154425424370");
 
             await Gateway(http).PurchaseAsync(request);
@@ -93,7 +93,7 @@ namespace Kingdom.Net.Client.Tests.Shop
         public void Two_lost_responses_report_an_uncertain_purchase()
         {
             var http = new FakeAuthHttp().ReplyTransportFailure().ReplyTransportFailure();
-            var request = new PackPurchaseRequest("pack.emberfall", ShopCurrency.Gold,
+            var request = new PackPurchaseRequest("pack.pendingham", ShopCurrency.Gold,
                 "bd6ad741-7d8b-4e51-a581-154425424370");
 
             ShopPurchaseException? error = Assert.ThrowsAsync<ShopPurchaseException>(async () =>
@@ -106,7 +106,7 @@ namespace Kingdom.Net.Client.Tests.Shop
         public void Insufficient_funds_is_a_definite_decline_not_an_uncertain_charge()
         {
             var http = new FakeAuthHttp().Reply(409, "{\"status\":\"insufficientfunds\"}");
-            var request = new PackPurchaseRequest("pack.emberfall", ShopCurrency.Gold,
+            var request = new PackPurchaseRequest("pack.pendingham", ShopCurrency.Gold,
                 "bd6ad741-7d8b-4e51-a581-154425424370");
 
             ShopPurchaseException? error = Assert.ThrowsAsync<ShopPurchaseException>(async () =>

@@ -33,7 +33,7 @@ namespace Kingdom.Core.Collection
     /// <para><b>It draws from what the player OWNS, not from the pool (2026-09-03).</b> Until this
     /// date it drew from <see cref="ICardDatabase.AllCollectible"/> unfiltered, and the deck it
     /// handed a brand-new player was therefore illegal for that player to queue with: the
-    /// signup grant is every common and rare in the CORE+EMBERFALL pairing
+    /// signup grant is every common and rare in the CORE+PENDINGHAM pairing
     /// (<see cref="OnboardingGrant"/>), while the collectible pool is that plus all of REKINDLING
     /// plus every epic and legendary. Measured against the live card data, <b>31–46% of every
     /// pairing's draw weight was a card the account had never been granted</b>, so effectively

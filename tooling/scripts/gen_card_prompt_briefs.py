@@ -51,9 +51,9 @@ clearly-marked placeholder built from name/tribe/keywords. That placeholder is
 to and rewrite, never a finished brief to submit as-is.
 
 Usage:
-  gen_card_prompt_briefs.py --set EMBERFALL --card ember_scalded_striker --card tide_venomfin
-  gen_card_prompt_briefs.py --set EMBERFALL --class verdant
-  gen_card_prompt_briefs.py --set EMBERFALL          # every collectible card in the set
+  gen_card_prompt_briefs.py --set PENDINGHAM --card ember_scalded_striker --card tide_venomfin
+  gen_card_prompt_briefs.py --set PENDINGHAM --class verdant
+  gen_card_prompt_briefs.py --set PENDINGHAM          # every collectible card in the set
 """
 
 import argparse

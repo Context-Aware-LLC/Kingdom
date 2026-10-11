@@ -72,12 +72,12 @@ namespace Kingdom.Net.Server.Tests.Accounts
         {
             var cards = new List<CardDefinition>();
             for (int i = 0; i < 12; i++)
-                cards.Add(Card($"common_{i:000}", Rarity.COMMON, SetId.EMBERFALL));
+                cards.Add(Card($"common_{i:000}", Rarity.COMMON, SetId.PENDINGHAM));
             for (int i = 0; i < 6; i++)
-                cards.Add(Card($"rare_{i:000}", Rarity.RARE, SetId.EMBERFALL));
+                cards.Add(Card($"rare_{i:000}", Rarity.RARE, SetId.PENDINGHAM));
             for (int i = 0; i < 3; i++)
-                cards.Add(Card($"epic_{i:000}", Rarity.EPIC, SetId.EMBERFALL));
-            cards.Add(Card("legendary_000", Rarity.LEGENDARY, SetId.EMBERFALL));
+                cards.Add(Card($"epic_{i:000}", Rarity.EPIC, SetId.PENDINGHAM));
+            cards.Add(Card("legendary_000", Rarity.LEGENDARY, SetId.PENDINGHAM));
             return new StubCardDatabase(cards);
         }
 

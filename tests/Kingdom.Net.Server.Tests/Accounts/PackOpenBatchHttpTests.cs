@@ -56,7 +56,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 http.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", "valid");
                 using var content = new StringContent(
-                    "{\"packId\":\"pack.emberfall.starter\",\"count\":3}",
+                    "{\"packId\":\"pack.pendingham.starter\",\"count\":3}",
                     Encoding.UTF8,
                     "application/json");
 

@@ -110,7 +110,7 @@ def load_rows():
 
 
 def has_art(card):
-    return (CARD_ART / card.get("setId", "EMBERFALL")
+    return (CARD_ART / card.get("setId", "PENDINGHAM")
             / f"{card['artId'].replace('/', '_')}.png").exists()
 
 
@@ -280,7 +280,7 @@ def card_facts(card, class_descriptors, world_tone):
         f"id: {card['id']}",
         f"type: {card.get('type', 'MINION')}",
         f"class: {cls}",
-        f"set: {card.get('setId', 'EMBERFALL')}",
+        f"set: {card.get('setId', 'PENDINGHAM')}",
         f"rarity: {card.get('rarity', 'COMMON')}",
         f"cost: {card.get('cost', 0)}",
     ]
@@ -511,7 +511,7 @@ def main() -> int:
 
     targets = [c for c in rows if c.get("artId") and briefs.seed_key(c) not in seeded]
     if args.set_id:
-        targets = [c for c in targets if c.get("setId", "EMBERFALL") == args.set_id]
+        targets = [c for c in targets if c.get("setId", "PENDINGHAM") == args.set_id]
     if args.only_missing_art:
         targets = [c for c in targets if not has_art(c)]
 
@@ -532,7 +532,7 @@ def main() -> int:
         print(f"stage 0 FROM-DRAFTS: {len(scraped)} brief(s) parsed "
               f"({skipped} unusable), {len(from_drafts)} of them unseeded and in scope")
         for cid, seed in from_drafts.items():
-            set_id = rows_by_id[cid].get("setId", "EMBERFALL")
+            set_id = rows_by_id[cid].get("setId", "PENDINGHAM")
             seeds_by_set.setdefault(set_id, {})[cid] = seed
             written[set_id] += 1
         seeded |= set(from_drafts)
@@ -556,7 +556,7 @@ def main() -> int:
                 print(f"  [{stage}] --limit {args.limit} reached, "
                       f"{len(cards) - n} card(s) NOT processed")
                 break
-            set_id = card.get("setId", "EMBERFALL")
+            set_id = card.get("setId", "PENDINGHAM")
             if set_id not in world_cache:
                 world_cache[set_id] = briefs.load_world_tone(set_id)
             ex = exemplar_block(seeds_by_set, rows_by_id, card.get("class") or "NEUTRAL")

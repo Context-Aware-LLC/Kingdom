@@ -40,7 +40,7 @@ namespace Kingdom.Presentation
     /// </summary>
     public interface IPackArtProvider
     {
-        /// <param name="packId">A <c>PackOffer.PackId</c>, e.g. <c>pack.emberfall</c>.</param>
+        /// <param name="packId">A <c>PackOffer.PackId</c>, e.g. <c>pack.pendingham</c>.</param>
         /// <param name="onLoaded">Given every piece the set's manifest declares and that resolved.
         /// An empty list is an ordinary answer — a set whose art has not been drawn yet.</param>
         void LoadPackArt(string packId, Action<IReadOnlyList<PackArtPiece>> onLoaded);
@@ -49,15 +49,15 @@ namespace Kingdom.Presentation
     /// <summary>
     /// The one place that knows how a pack id and an art folder find each other. <c>BoosterPack.Id</c>
     /// is <c>pack.&lt;expansion&gt;[.&lt;sku&gt;]</c>, and it names its candidate folders MOST
-    /// SPECIFIC FIRST: <c>pack.emberfall.starter</c> offers <c>STARTER</c> then <c>EMBERFALL</c>,
-    /// while <c>pack.emberfall</c> offers only <c>EMBERFALL</c>.
+    /// SPECIFIC FIRST: <c>pack.pendingham.starter</c> offers <c>STARTER</c> then <c>PENDINGHAM</c>,
+    /// while <c>pack.pendingham</c> offers only <c>PENDINGHAM</c>.
     ///
     /// <para><b>The fallback is what makes a SKU's packaging optional.</b> A product that has been
     /// drawn its own gets it; one that has not falls through to its expansion's, so a new SKU stays
     /// a ledger change rather than an art commission. Resolving the expansion ONLY — which this did
     /// until 2026-09-03 — made a folder drawn for a SKU inert on disk with nothing anywhere
     /// reporting it, because a folder nobody reads cannot be missing. The five STARTER faces shipped
-    /// that way and the shelf wore EMBERFALL's.</para>
+    /// that way and the shelf wore PENDINGHAM's.</para>
     ///
     /// <para>Matching <c>Assets/Art/Cards/&lt;setId&gt;/</c> is the point: one convention for where a
     /// set's art lives, whichever kind of art it is.</para>

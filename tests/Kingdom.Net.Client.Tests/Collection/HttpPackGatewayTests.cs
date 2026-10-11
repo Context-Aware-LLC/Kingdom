@@ -25,7 +25,7 @@ namespace Kingdom.Net.Client.Tests.Collection
     public sealed class HttpPackGatewayTests
     {
         private const string Base = "https://emberfall.fly.dev";
-        private const string Starter = "pack.emberfall.starter";
+        private const string Starter = "pack.pendingham.starter";
 
         private static HttpPackGateway Gateway(FakeAuthHttp http)
             => new HttpPackGateway(Base, http);

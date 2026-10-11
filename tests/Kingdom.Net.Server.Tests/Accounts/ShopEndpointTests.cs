@@ -17,7 +17,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
     {
         private const string Subject = "shop-buyer";
         private const string Token = "valid-token";
-        private const string PackId = "pack.emberfall";
+        private const string PackId = "pack.pendingham";
         private const string RequestId = "a904f47b-39dc-4802-9453-c076e2eb1774";
 
         private sealed class Clock : ITimeSource { public long NowMs => 1_700_000_000_000; }

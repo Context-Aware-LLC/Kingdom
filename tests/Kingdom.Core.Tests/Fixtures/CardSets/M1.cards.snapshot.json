@@ -11,7 +11,7 @@
     "rarity": "COMMON",
     "keywords": [],
     "rules": [],
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "ember_recruit"
   },
@@ -29,7 +29,7 @@
       "FERVOR"
     ],
     "rules": [],
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "ember_zealot"
   },
@@ -41,7 +41,7 @@
     "cost": 1,
     "class": "EMBERWARD",
     "rarity": "COMMON",
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "ember_flame_bolt",
     "rules": [
@@ -81,7 +81,7 @@
     "keywords": [],
     "rules": [],
     "tribe": "DRAGON",
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "ember_cinder_drake"
   },
@@ -97,7 +97,7 @@
     "rarity": "COMMON",
     "keywords": [],
     "rules": [],
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "tide_initiate"
   },
@@ -115,7 +115,7 @@
       "BULWARK"
     ],
     "rules": [],
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "tide_oracle"
   },
@@ -127,7 +127,7 @@
     "cost": 2,
     "class": "TIDECALLER",
     "rarity": "COMMON",
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "tide_frost_ripple",
     "rules": [
@@ -166,7 +166,7 @@
     "rarity": "RARE",
     "keywords": [],
     "rules": [],
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "tide_wave_caller"
   },
@@ -185,7 +185,7 @@
     ],
     "rules": [],
     "tribe": "CONSTRUCT",
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "stone_sentry"
   },
@@ -202,7 +202,7 @@
     "keywords": [],
     "rules": [],
     "tribe": "BEAST",
-    "setId": "EMBERFALL",
+    "setId": "PENDINGHAM",
     "collectible": true,
     "artId": "wandering_scout"
   },

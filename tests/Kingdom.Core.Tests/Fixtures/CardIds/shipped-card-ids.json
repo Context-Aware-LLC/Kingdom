@@ -51,67 +51,67 @@
     "id": 51,
     "handle": "ember_cinder_lance",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 52,
     "handle": "grave_bell_maul",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 53,
     "handle": "verdant_grasping_thornvine",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 54,
     "handle": "tide_deepfrost_spear",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 55,
     "handle": "clock_mainspring_halberd",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 56,
     "handle": "night_shadow_blade",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 57,
     "handle": "warden_earthwardens_maul",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 58,
     "handle": "storm_galecleaver",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 59,
     "handle": "neutral_searing_quill",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 60,
     "handle": "ember_scorch_blade",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 61,
     "handle": "tide_coldsnap_knife",
     "type": "WEAPON",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 62,
@@ -135,43 +135,43 @@
     "id": 151,
     "handle": "ember_flame_bolt",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 152,
     "handle": "tide_frost_ripple",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 153,
     "handle": "ember_scorch",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 154,
     "handle": "ember_twin_flame",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 155,
     "handle": "tide_frostbind",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 156,
     "handle": "tide_undertow",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 157,
     "handle": "tide_maerns_deep_bargain",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 158,
@@ -183,43 +183,43 @@
     "id": 159,
     "handle": "grave_last_rite",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 160,
     "handle": "grave_sorrows_blessing",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 161,
     "handle": "grave_wailing_chorus",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 162,
     "handle": "verdant_seedling_rite",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 163,
     "handle": "verdant_menders_bloom",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 164,
     "handle": "verdant_sapsurge",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 165,
     "handle": "verdant_wild_bloom",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 166,
@@ -231,199 +231,199 @@
     "id": 167,
     "handle": "ember_stoke_the_coals",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 168,
     "handle": "tide_fathom_crush",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 169,
     "handle": "tide_hoarfrost_lash",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 170,
     "handle": "clock_snap_bolt",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 171,
     "handle": "clock_gear_overhaul",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 172,
     "handle": "clock_temporal_rewinder",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 173,
     "handle": "clock_mass_recall",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 174,
     "handle": "night_shadow_dart",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 175,
     "handle": "night_finish_the_job",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 176,
     "handle": "night_vanishing_act",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 177,
     "handle": "night_fade_out",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 178,
     "handle": "night_death_mark",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 179,
     "handle": "night_shadow_walk",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 180,
     "handle": "warden_stone_throw",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 181,
     "handle": "warden_earth_barrier",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 182,
     "handle": "warden_stone_rain",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 183,
     "handle": "warden_earthen_blessing",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 184,
     "handle": "warden_stomp",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 185,
     "handle": "storm_lightning_bolt",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 186,
     "handle": "storm_chain_lightning",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 187,
     "handle": "storm_crackle",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 188,
     "handle": "storm_static_shock",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 189,
     "handle": "storm_static_discharge",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 190,
     "handle": "storm_hurricane",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 191,
     "handle": "storm_lightning_storm",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 192,
     "handle": "ember_fusillade",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 193,
     "handle": "ember_heat_surge",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 194,
     "handle": "tide_glacial_echo",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 195,
     "handle": "tide_deep_channel",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 196,
     "handle": "grave_bone_horde",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 197,
     "handle": "grave_echoing_knell",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 198,
     "handle": "verdant_primal_mend",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 199,
     "handle": "verdant_thorn_swarm",
     "type": "SPELL",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 200,
@@ -627,721 +627,721 @@
     "id": 1001,
     "handle": "ember_recruit",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1002,
     "handle": "ember_zealot",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1003,
     "handle": "ember_cinder_drake",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1004,
     "handle": "tide_initiate",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1005,
     "handle": "tide_oracle",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1006,
     "handle": "tide_wave_caller",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1007,
     "handle": "neutral_stone_sentry",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1008,
     "handle": "neutral_wandering_scout",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1009,
     "handle": "neutral_emberling_pup",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1010,
     "handle": "neutral_stoneback_sentry",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1011,
     "handle": "neutral_hollow_acolyte",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1012,
     "handle": "neutral_lantern_bearer",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1013,
     "handle": "neutral_aegis_templar",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1014,
     "handle": "neutral_veilstalker",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1015,
     "handle": "verdant_grove_mender",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1016,
     "handle": "neutral_arclight_adept",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1017,
     "handle": "neutral_bonehound",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1018,
     "handle": "neutral_throneless_king",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1019,
     "handle": "ember_overheat_golem",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1020,
     "handle": "ember_pyras_wrath",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1021,
     "handle": "tide_siren",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1022,
     "handle": "tide_reefguard",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1023,
     "handle": "token_wisp_1_1",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1024,
     "handle": "token_tide_wisp",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1025,
     "handle": "grave_gatewatch_whelp",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1026,
     "handle": "grave_sable_watcher",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1027,
     "handle": "grave_charnel_priest",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1028,
     "handle": "grave_ashen_archivist",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1029,
     "handle": "grave_custodian",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1030,
     "handle": "grave_last_gate_warden",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1031,
     "handle": "grave_harrower_of_ash",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1032,
     "handle": "grave_bell_novice",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1033,
     "handle": "grave_tollkeeper_moth",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1034,
     "handle": "grave_chained_revenant",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1035,
     "handle": "grave_sealed_gate_keeper",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1036,
     "handle": "verdant_thornback_cub",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1037,
     "handle": "verdant_bramblehide_guardian",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1038,
     "handle": "verdant_elderroot_colossus",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1039,
     "handle": "verdant_canopy_seer",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1040,
     "handle": "verdant_ironbark_elder",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1041,
     "handle": "verdant_worldroot_behemoth",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1042,
     "handle": "verdant_thalens_ancient",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1043,
     "handle": "verdant_rootweaver",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1044,
     "handle": "verdant_mosshide_stag",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1045,
     "handle": "verdant_thornfang_matron",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1046,
     "handle": "core_thistleguard_sprig",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1047,
     "handle": "relic_bound_revenant",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1048,
     "handle": "relic_corpse_cart",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1049,
     "handle": "token_revenant_5_5_bulwark",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1050,
     "handle": "token_thorn_cub_1_2",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1051,
     "handle": "ember_slagshell_bulwark",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1052,
     "handle": "ember_forgeheart_colossus",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1053,
     "handle": "tide_glacial_leviathan",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1054,
     "handle": "ember_ashfall_wyrm",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1055,
     "handle": "ember_kiln_warden",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1056,
     "handle": "ember_emberdrinker",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1057,
     "handle": "tide_drowned_titan",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1058,
     "handle": "tide_hollowshell_warden",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1059,
     "handle": "token_gear_wisp",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1060,
     "handle": "token_stone_shard",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1061,
     "handle": "clock_gear_imp",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1062,
     "handle": "clock_bronze_frame",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1063,
     "handle": "clock_spring_coil",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1064,
     "handle": "clock_assembly_drone",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1065,
     "handle": "clock_overclocker",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1066,
     "handle": "clock_clockwork_sniper",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1067,
     "handle": "clock_modular_stalker",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1068,
     "handle": "clock_chrono_construct",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1069,
     "handle": "clock_the_great_mechanism",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1070,
     "handle": "night_lurk_wisp",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1071,
     "handle": "night_viper_fang",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1072,
     "handle": "night_shadow_stalker",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1073,
     "handle": "night_venom_asp",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1074,
     "handle": "night_void_shriek",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1075,
     "handle": "night_kira_blade_of_shadows",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1076,
     "handle": "warden_pebble_sentinel",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1077,
     "handle": "warden_boulderhide",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1078,
     "handle": "warden_rock_golem",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1079,
     "handle": "warden_granite_guardian",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1080,
     "handle": "warden_living_monolith",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1081,
     "handle": "warden_siege_golem",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1082,
     "handle": "warden_stone_colossus",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1083,
     "handle": "warden_duras_the_ironmount",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1084,
     "handle": "storm_spark_imp",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1085,
     "handle": "storm_gust_sprite",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1086,
     "handle": "storm_wind_rider",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1087,
     "handle": "storm_tempest_striker",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1088,
     "handle": "storm_thunder_hoof",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1089,
     "handle": "storm_zael_of_the_struck_sky",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1090,
     "handle": "neutral_galewind_runner",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1091,
     "handle": "neutral_razorcoil_adder",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1092,
     "handle": "neutral_phantom_duelist",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1093,
     "handle": "neutral_doublestrike_hawk",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1094,
     "handle": "neutral_lifeclaw_bat",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1095,
     "handle": "neutral_spellwarden",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1096,
     "handle": "neutral_ironclad_bulwark",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1097,
     "handle": "neutral_soulbound_revenant",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1098,
     "handle": "neutral_venomscale_drake",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1099,
     "handle": "neutral_duneborn_construct",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1100,
     "handle": "neutral_bog_crawler",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1101,
     "handle": "ember_blazewing",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1102,
     "handle": "ember_scalded_striker",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1103,
     "handle": "ember_cinderplate_golem",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1104,
     "handle": "ember_vanguard_drake",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1105,
     "handle": "ember_magmacore_warden",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1106,
     "handle": "tide_venomfin",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1107,
     "handle": "tide_frostwhisper",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1108,
     "handle": "tide_icescale_whelp",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1109,
     "handle": "tide_icecrown_herald",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1110,
     "handle": "tide_abyssal_devourer",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1111,
     "handle": "tide_maren_avatar",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1112,
     "handle": "grave_deathweaver",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1113,
     "handle": "grave_spectral_wolf",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1114,
     "handle": "grave_boneshield_sentinel",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1115,
     "handle": "grave_plague_bringer",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1116,
     "handle": "grave_warden_of_dusk",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1117,
     "handle": "verdant_venomthorn",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1118,
     "handle": "verdant_windroot_sprinter",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1119,
     "handle": "verdant_greatroot_speaker",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1120,
     "handle": "verdant_world_titan",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1121,
@@ -1767,7 +1767,7 @@
     "id": 1191,
     "handle": "token_shade",
     "type": "MINION",
-    "setId": "EMBERFALL"
+    "setId": "PENDINGHAM"
   },
   {
     "id": 1192,

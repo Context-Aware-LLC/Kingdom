@@ -1,11 +1,11 @@
 {
   "generatedFrom": [
     "unity/Assets/CardData/Core.cards.json",
-    "unity/Assets/CardData/Emberfall.cards.json",
+    "unity/Assets/CardData/Pendingham.cards.json",
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 298,
-  "corpusDigest": "75cf84bff36831cc",
+  "totalCards": 300,
+  "corpusDigest": "7639bd572b779496",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -24,9 +24,9 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 298,
+    "total": 300,
     "typeSplit": {
-      "MINION": 193,
+      "MINION": 195,
       "SPELL": 83,
       "WEAPON": 14,
       "HERO_POWER": 8
@@ -55,7 +55,7 @@
       "ENEMY_HERO": 12,
       "ANY_CHARACTER": 9,
       "ANY_FRIENDLY": 3,
-      "OTHER_FRIENDLY_MINIONS": 2,
+      "OTHER_FRIENDLY_MINIONS": 3,
       "ANY_GRAVEYARD_MINION": 1,
       "FRIENDLY_GRAVEYARD_MINION": 1,
       "SELF": 1
@@ -72,8 +72,8 @@
       "0": 5,
       "1": 34,
       "2": 77,
-      "3": 71,
-      "4": 47,
+      "3": 72,
+      "4": 48,
       "5": 23,
       "6": 21,
       "7": 14,
@@ -84,11 +84,11 @@
       "COMMON": 131,
       "RARE": 97,
       "EPIC": 52,
-      "LEGENDARY": 18
+      "LEGENDARY": 20
     },
     "tribeBreakdown": {
       "CONSTRUCT": 46,
-      "HUMAN": 39,
+      "HUMAN": 41,
       "UNDEAD": 24,
       "BEAST": 22,
       "ELEMENTAL": 22,
@@ -98,11 +98,11 @@
       "MERFOLK": 4,
       "CATFOLK": 1
     },
-    "minionCount": 193,
+    "minionCount": 195,
     "attackDistribution": {
       "0": 3,
-      "1": 28,
-      "2": 52,
+      "1": 29,
+      "2": 53,
       "3": 42,
       "4": 23,
       "5": 26,
@@ -114,8 +114,8 @@
     "healthDistribution": {
       "1": 17,
       "2": 45,
-      "3": 31,
-      "4": 41,
+      "3": 32,
+      "4": 42,
       "5": 25,
       "6": 20,
       "7": 8,
@@ -334,9 +334,9 @@
       }
     },
     "NEUTRAL": {
-      "total": 39,
+      "total": 41,
       "typeSplit": {
-        "MINION": 36,
+        "MINION": 38,
         "SPELL": 1,
         "WEAPON": 2,
         "HERO_POWER": 0
@@ -356,26 +356,26 @@
       "selectorFrequency": {
         "ANY_FRIENDLY_MINION": 3,
         "FRIENDLY_HERO": 2,
-        "OTHER_FRIENDLY_MINIONS": 1
+        "OTHER_FRIENDLY_MINIONS": 2
       },
       "actionFrequency": {},
       "costDistribution": {
         "0": 2,
         "1": 6,
         "2": 11,
-        "3": 11,
-        "4": 5,
+        "3": 12,
+        "4": 6,
         "5": 2,
         "7": 2
       },
       "rarityBreakdown": {
         "COMMON": 28,
         "RARE": 6,
-        "EPIC": 3,
-        "LEGENDARY": 2
+        "LEGENDARY": 4,
+        "EPIC": 3
       },
       "tribeBreakdown": {
-        "HUMAN": 9,
+        "HUMAN": 11,
         "BEAST": 8,
         "UNDEAD": 7,
         "CONSTRUCT": 5,
@@ -384,10 +384,10 @@
         "DRAGON": 1,
         "ELEMENTAL": 1
       },
-      "minionCount": 36,
+      "minionCount": 38,
       "attackDistribution": {
-        "1": 9,
-        "2": 13,
+        "1": 10,
+        "2": 14,
         "3": 7,
         "4": 4,
         "5": 3
@@ -395,8 +395,8 @@
       "healthDistribution": {
         "1": 6,
         "2": 11,
-        "3": 7,
-        "4": 5,
+        "3": 8,
+        "4": 6,
         "5": 4,
         "6": 1,
         "7": 2
@@ -968,10 +968,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_recruit",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1002,
@@ -994,10 +994,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_zealot",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 151,
@@ -1017,10 +1017,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_flame_bolt",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1003,
@@ -1036,10 +1036,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "DRAGON",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_cinder_drake",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1004,
@@ -1057,10 +1057,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_initiate",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1005,
@@ -1078,10 +1078,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "MERFOLK",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_oracle",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 152,
@@ -1101,10 +1101,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_frost_ripple",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1006,
@@ -1122,10 +1122,10 @@
       ],
       "actionTags": [],
       "tribe": "MERFOLK",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_wave_caller",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1007,
@@ -1143,10 +1143,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_stone_sentry",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1008,
@@ -1162,10 +1162,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_wandering_scout",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1009,
@@ -1183,10 +1183,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_emberling_pup",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1010,
@@ -1204,10 +1204,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_stoneback_sentry",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1011,
@@ -1223,10 +1223,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "SPIRIT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_hollow_acolyte",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1012,
@@ -1242,10 +1242,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "SPIRIT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_lantern_bearer",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1013,
@@ -1263,10 +1263,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "SPIRIT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_aegis_templar",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1014,
@@ -1284,10 +1284,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CATFOLK",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_veilstalker",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1015,
@@ -1305,10 +1305,10 @@
       ],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_grove_mender",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1016,
@@ -1326,10 +1326,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_arclight_adept",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1017,
@@ -1347,10 +1347,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_ravenous_bonehound",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1018,
@@ -1370,10 +1370,10 @@
       ],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_throneless_king",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 51,
@@ -1391,10 +1391,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_cinder_lance",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 153,
@@ -1414,10 +1414,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_scorch",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1019,
@@ -1433,10 +1433,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_overheat_golem",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 154,
@@ -1456,10 +1456,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_twin_flame_strike",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1020,
@@ -1481,10 +1481,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_pyras_wrath",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 155,
@@ -1502,10 +1502,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_frostbind",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 156,
@@ -1525,10 +1525,10 @@
         "REMOVAL"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_undertow",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1021,
@@ -1546,10 +1546,10 @@
       ],
       "actionTags": [],
       "tribe": "MERFOLK",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_hollow_tide_siren",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1022,
@@ -1567,10 +1567,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "SPIRIT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_reefguard_wisp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 157,
@@ -1586,10 +1586,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_marens_deep_bargain",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1023,
@@ -1605,10 +1605,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "SPIRIT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": false,
       "artId": "neutral_token_wisp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1191,
@@ -1624,10 +1624,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": false,
       "artId": "neutral_token_shade",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1024,
@@ -1645,10 +1645,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "SPIRIT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": false,
       "artId": "tide_token_wisp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1025,
@@ -1666,10 +1666,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_gatewatch_whelp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 159,
@@ -1689,10 +1689,10 @@
         "REMOVAL"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_last_rite",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1026,
@@ -1708,10 +1708,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_sable_watcher",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 160,
@@ -1729,10 +1729,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_sorrows_blessing",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1027,
@@ -1752,10 +1752,10 @@
         "REMOVAL"
       ],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_charnel_priest",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1028,
@@ -1771,10 +1771,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_ashen_archivist",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1029,
@@ -1790,10 +1790,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_gravekeep_custodian",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1030,
@@ -1813,10 +1813,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_last_gate_warden",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1031,
@@ -1836,10 +1836,10 @@
         "REMOVAL"
       ],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_harrower_of_ash",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1032,
@@ -1857,10 +1857,10 @@
       ],
       "actionTags": [],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_bell_novice",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1033,
@@ -1878,10 +1878,10 @@
       ],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_tollkeepers_moth",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1034,
@@ -1901,10 +1901,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_chained_revenant",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 161,
@@ -1925,10 +1925,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_wailing_chorus",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 52,
@@ -1947,10 +1947,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_maul",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1035,
@@ -1966,10 +1966,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_keeper_of_the_sealed_gate",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1036,
@@ -1987,10 +1987,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_thornback_cub",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 162,
@@ -2006,10 +2006,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_seedling_rite",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1037,
@@ -2027,10 +2027,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_bramblehide_guardian",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 163,
@@ -2049,10 +2049,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_menders_bloom",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1038,
@@ -2068,10 +2068,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_elderroot_colossus",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1039,
@@ -2087,10 +2087,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_canopy_seer",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1040,
@@ -2108,10 +2108,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_ironbark_elder",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1041,
@@ -2129,10 +2129,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_world_root_behemoth",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1042,
@@ -2151,10 +2151,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_thalens_ancient",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 53,
@@ -2172,10 +2172,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_grasping_thornvine",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 164,
@@ -2193,10 +2193,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_sapsurge",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1043,
@@ -2212,10 +2212,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_rootweaver",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1044,
@@ -2235,10 +2235,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_mosshide_stag",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 165,
@@ -2257,10 +2257,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_wild_bloom",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1045,
@@ -2276,10 +2276,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_thornfang_matron",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1046,
@@ -2297,10 +2297,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_thistleguard_sprig",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1047,
@@ -2319,10 +2319,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_bound_revenant",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1048,
@@ -2338,10 +2338,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_corpse_cart",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1049,
@@ -2359,10 +2359,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": false,
       "artId": "neutral_token_revenant",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1050,
@@ -2380,10 +2380,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": false,
       "artId": "neutral_token_thorn_cub",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 167,
@@ -2403,10 +2403,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_stoke_the_coals",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1051,
@@ -2424,10 +2424,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_slagshell_bulwark",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1052,
@@ -2445,10 +2445,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_forgeheart_colossus",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 168,
@@ -2468,10 +2468,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_fathom_crush",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 54,
@@ -2489,10 +2489,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_deepfrost_spear",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1053,
@@ -2512,10 +2512,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_glacierborn_leviathan",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1054,
@@ -2534,10 +2534,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "DRAGON",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_ashfall_wyrm",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1055,
@@ -2556,10 +2556,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_kiln_warden",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1056,
@@ -2577,10 +2577,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_emberdrinker",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1057,
@@ -2600,10 +2600,10 @@
         "BOUNCE"
       ],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_drowned_titan",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1058,
@@ -2624,10 +2624,10 @@
       ],
       "actionTags": [],
       "tribe": "SPIRIT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_hollowshell_warden",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 169,
@@ -2647,10 +2647,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_hoarfrost_lash",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1059,
@@ -2668,10 +2668,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": false,
       "artId": "clock_token_gear_wisp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1060,
@@ -2689,10 +2689,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": false,
       "artId": "stone_token_shard",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1061,
@@ -2708,10 +2708,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_gear_imp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1062,
@@ -2727,10 +2727,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_bronze_frame",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1063,
@@ -2749,10 +2749,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_spring_coil",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 170,
@@ -2772,10 +2772,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_snap_bolt",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1064,
@@ -2791,10 +2791,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_assembly_drone",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1065,
@@ -2812,10 +2812,10 @@
       ],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_overclocker",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1066,
@@ -2835,10 +2835,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_clockwork_sniper",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 171,
@@ -2856,10 +2856,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_gear_overhaul",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 172,
@@ -2879,10 +2879,10 @@
         "BOUNCE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_temporal_rewinder",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1067,
@@ -2898,10 +2898,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_modular_stalker",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1068,
@@ -2920,10 +2920,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_chrono_construct",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 173,
@@ -2943,10 +2943,10 @@
         "BOUNCE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_mass_recall",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1069,
@@ -2966,10 +2966,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_the_great_mechanism",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 55,
@@ -2985,10 +2985,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "clock_mainspring_halberd",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1070,
@@ -3006,10 +3006,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "SPIRIT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_lurk_wisp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 174,
@@ -3029,10 +3029,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_shadow_dart",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1071,
@@ -3051,10 +3051,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_viper_fang",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1072,
@@ -3072,10 +3072,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_shadow_stalker",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 175,
@@ -3095,10 +3095,10 @@
         "REMOVAL"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_finish_the_job",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1073,
@@ -3117,10 +3117,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_venom_asp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 56,
@@ -3136,10 +3136,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_shadow_blade",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 176,
@@ -3158,10 +3158,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_vanishing_act",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 177,
@@ -3181,10 +3181,10 @@
         "BOUNCE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_fade_out",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 178,
@@ -3204,10 +3204,10 @@
         "REMOVAL"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_death_mark",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 179,
@@ -3227,10 +3227,10 @@
         "BOUNCE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_shadow_walk",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1074,
@@ -3250,10 +3250,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": "SPIRIT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_void_shriek",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1075,
@@ -3277,10 +3277,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_kira_blade_of_shadows",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1076,
@@ -3298,10 +3298,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_pebble_sentinel",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 180,
@@ -3321,10 +3321,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_throw",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1077,
@@ -3342,10 +3342,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_boulderhide",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 181,
@@ -3366,10 +3366,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_earth_barrier",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1078,
@@ -3387,10 +3387,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_rock_golem",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 182,
@@ -3412,10 +3412,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_rain",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1079,
@@ -3433,10 +3433,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_granite_guardian",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 183,
@@ -3454,10 +3454,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_earthen_blessing",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1080,
@@ -3475,10 +3475,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_living_monolith",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 184,
@@ -3499,10 +3499,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_stomp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1081,
@@ -3522,10 +3522,10 @@
       ],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_siege_golem",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1082,
@@ -3543,10 +3543,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_colossus",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1083,
@@ -3565,10 +3565,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_duras_the_ironmount",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 57,
@@ -3586,10 +3586,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "stone_earthwardens_maul",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1084,
@@ -3607,10 +3607,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_spark_imp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 185,
@@ -3630,10 +3630,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_lightning_bolt",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1085,
@@ -3651,10 +3651,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_gust_sprite",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1086,
@@ -3672,10 +3672,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_wind_rider",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 186,
@@ -3701,10 +3701,10 @@
         "DAMAGE_RANDOM"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_chain_lightning",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 187,
@@ -3724,10 +3724,10 @@
         "DAMAGE_RANDOM"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_crackle",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1087,
@@ -3745,10 +3745,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_tempest_striker",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 188,
@@ -3768,10 +3768,10 @@
         "DAMAGE_RANDOM"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_static_shock",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1088,
@@ -3789,10 +3789,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_thunder_hoof",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 189,
@@ -3812,10 +3812,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_static_discharge",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 190,
@@ -3833,10 +3833,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_hurricane",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 191,
@@ -3856,10 +3856,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_lightning_storm",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1089,
@@ -3881,10 +3881,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_zael_of_the_struck_sky",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 58,
@@ -3900,10 +3900,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_galecleaver",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1090,
@@ -3921,10 +3921,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_galewind_runner",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1091,
@@ -3942,10 +3942,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_razorcoil_adder",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1092,
@@ -3963,10 +3963,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_phantom_duelist",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1093,
@@ -3984,10 +3984,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_doublestrike_hawk",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1094,
@@ -4006,10 +4006,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_lifeclaw_bat",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1095,
@@ -4027,10 +4027,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_spellwarden",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1096,
@@ -4049,10 +4049,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_ironclad_bulwark",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1097,
@@ -4068,10 +4068,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_soulbound_revenant",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1098,
@@ -4089,10 +4089,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "DRAGON",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_venomscale_drake",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1099,
@@ -4110,10 +4110,10 @@
       ],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_duneborn_construct",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1100,
@@ -4131,10 +4131,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_bog_crawler",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 59,
@@ -4150,10 +4150,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "neutral_searing_quill",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1101,
@@ -4171,10 +4171,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "DRAGON",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_blazewing",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1102,
@@ -4196,10 +4196,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": "HUMAN",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_scalded_striker",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 192,
@@ -4221,10 +4221,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_fusillade",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1103,
@@ -4242,10 +4242,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_cinderplate_golem",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1104,
@@ -4267,10 +4267,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": "DRAGON",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_vanguard_drake",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 60,
@@ -4290,10 +4290,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_scorch_blade",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1105,
@@ -4311,10 +4311,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "CONSTRUCT",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_magmacore_warden",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 193,
@@ -4336,10 +4336,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "ember_heat_surge",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1106,
@@ -4357,10 +4357,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_venomfin",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1107,
@@ -4378,10 +4378,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_frostwhisper",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1108,
@@ -4399,10 +4399,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "DRAGON",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_icescale_whelp",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 194,
@@ -4421,10 +4421,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_glacial_echo",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1109,
@@ -4444,10 +4444,10 @@
       ],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_icecrown_herald",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1110,
@@ -4469,10 +4469,10 @@
         "BOUNCE"
       ],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_abyssal_devourer",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1111,
@@ -4493,10 +4493,10 @@
       ],
       "actionTags": [],
       "tribe": "ELEMENTAL",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_marens_avatar",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 195,
@@ -4516,10 +4516,10 @@
         "BOUNCE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_deep_channel",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 61,
@@ -4537,10 +4537,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "tide_coldsnap_knife",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1112,
@@ -4556,10 +4556,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_deathweaver",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1113,
@@ -4582,10 +4582,10 @@
         "DAMAGE_SINGLE"
       ],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_spectral_wolf",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1114,
@@ -4603,10 +4603,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_boneshield_sentinel",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 196,
@@ -4622,10 +4622,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_bone_horde",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1115,
@@ -4643,10 +4643,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_plague_bringer",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 197,
@@ -4664,10 +4664,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_echoing_knell",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1116,
@@ -4690,10 +4690,10 @@
         "REMOVAL"
       ],
       "tribe": "UNDEAD",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "grave_warden_of_dusk",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1117,
@@ -4712,10 +4712,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_venomthorn",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1118,
@@ -4735,10 +4735,10 @@
       ],
       "actionTags": [],
       "tribe": "BEAST",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_windroot_sprinter",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1119,
@@ -4756,10 +4756,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_greatroot_speaker",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 198,
@@ -4778,10 +4778,10 @@
       ],
       "actionTags": [],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_primal_mend",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1120,
@@ -4800,10 +4800,10 @@
       "selectors": [],
       "actionTags": [],
       "tribe": "FEY",
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_world_titan",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 199,
@@ -4824,10 +4824,10 @@
         "DAMAGE_AOE"
       ],
       "tribe": null,
-      "setId": "EMBERFALL",
+      "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "verdant_thorn_swarm",
-      "sourceFile": "Emberfall.cards.json"
+      "sourceFile": "Pendingham.cards.json"
     },
     {
       "id": 1121,
@@ -7237,6 +7237,46 @@
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "ember_kindle",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1194,
+      "name": "Royal Herald",
+      "type": "MINION",
+      "cost": 3,
+      "attack": 1,
+      "health": 3,
+      "durability": null,
+      "class": "NEUTRAL",
+      "rarity": "LEGENDARY",
+      "keywords": [],
+      "selectors": [],
+      "actionTags": [],
+      "tribe": "HUMAN",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "neutral_royal_herald",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1195,
+      "name": "Queen Belle Ideal",
+      "type": "MINION",
+      "cost": 4,
+      "attack": 2,
+      "health": 4,
+      "durability": null,
+      "class": "NEUTRAL",
+      "rarity": "LEGENDARY",
+      "keywords": [],
+      "selectors": [
+        "OTHER_FRIENDLY_MINIONS"
+      ],
+      "actionTags": [],
+      "tribe": "HUMAN",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "neutral_belle_ideal",
       "sourceFile": "Rekindling.cards.json"
     }
   ]

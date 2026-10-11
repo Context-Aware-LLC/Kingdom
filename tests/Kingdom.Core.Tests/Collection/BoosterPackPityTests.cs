@@ -21,8 +21,8 @@ namespace Kingdom.Core.Tests.Collection
     {
         private const ulong Seed = 0x5EED_0000_0000_0001UL;
 
-        private static BoosterPack Pack => new BoosterPack(SetId.EMBERFALL);
-        private static ICardDatabase Db => BoosterPackFixture.Db(SetId.EMBERFALL, perRarity: 40);
+        private static BoosterPack Pack => new BoosterPack(SetId.PENDINGHAM);
+        private static ICardDatabase Db => BoosterPackFixture.Db(SetId.PENDINGHAM, perRarity: 40);
 
         // ── the Rare floor ───────────────────────────────────────────────────────────────────
 

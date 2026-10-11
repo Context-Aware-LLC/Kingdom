@@ -9,7 +9,7 @@ namespace Kingdom.Editor
 {
     /// <summary>
     /// Editor-owned load/save over the flat Kingdom card-row array
-    /// (unity/Assets/Resources/cards/Emberfall.cards.json). This is the pragmatic stand-in for
+    /// (unity/Assets/Resources/cards/Pendingham.cards.json). This is the pragmatic stand-in for
     /// the spec's per-file `cards/&lt;setId&gt;/&lt;id&gt;.card.json` + ScriptedImporter convention
     /// (dev-docs/pipelines/card-authoring-and-import.md:5) — deliberately not adopted this pass since the
     /// Kingdom set already lives as one file; see the plan's "explicitly deferred" list.
@@ -20,8 +20,8 @@ namespace Kingdom.Editor
     public static class CardJsonRowIO
     {
         // Migrated out of Resources/ (M2 D1) — served to the runtime via the CardData
-        // Addressables group at address "cards/Emberfall.cards".
-        public const string DefaultKingdomJsonPath = "Assets/CardData/Emberfall.cards.json";
+        // Addressables group at address "cards/Pendingham.cards".
+        public const string DefaultKingdomJsonPath = "Assets/CardData/Pendingham.cards.json";
 
         /// <summary>
         /// The file a row belongs in, decided by its <see cref="SetId"/> rather than by where it
@@ -37,7 +37,7 @@ namespace Kingdom.Editor
         public static string PathForSet(SetId set) => set switch
         {
             SetId.CORE => "Assets/CardData/Core.cards.json",
-            SetId.EMBERFALL => DefaultKingdomJsonPath,
+            SetId.PENDINGHAM => DefaultKingdomJsonPath,
             SetId.REKINDLING => "Assets/CardData/Rekindling.cards.json",
             _ => throw new System.ArgumentOutOfRangeException(nameof(set), set,
                 "No card-data file is defined for this set."),

@@ -198,7 +198,8 @@ The naming convention itself, and everything that checks it, lives in that scrip
 
 It was `Emberfall` until 2026-09-28. Sam renamed it before any store upload, because it is the
 label under the app icon. The codename and the folder names are `Kingdom` (renamed from
-`Emberfall` 2026-10-10); the setId is still `EMBERFALL`.
+`Emberfall` 2026-10-10); the first set's setId is `PENDINGHAM` (renamed from `EMBERFALL`
+2026-10-11, with its folders, card file and pack ids).
 
 On Windows, `Application.persistentDataPath` is `AppData/LocalLow/<companyName>/<productName>`
 and PlayerPrefs are keyed the same way, so that one string keys the desktop player's **entire

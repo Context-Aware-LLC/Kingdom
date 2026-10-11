@@ -60,7 +60,7 @@ from gen_card_prompt_briefs import art_file  # noqa: E402
 # authority on which sets exist; this mirrors it and a new set means editing both.
 SET_FILENAMES = {
     "CORE": "Core.cards.json",
-    "EMBERFALL": "Emberfall.cards.json",
+    "PENDINGHAM": "Pendingham.cards.json",
     "REKINDLING": "Rekindling.cards.json",
 }
 

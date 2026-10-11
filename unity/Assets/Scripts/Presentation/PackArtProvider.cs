@@ -7,8 +7,8 @@ namespace Kingdom.Presentation
     /// <summary>
     /// Reads <c>Assets/Art/Shop/Packs/&lt;setId&gt;/</c> — the manifest, then the sprites it names.
     /// <see cref="PackArtSet"/> offers the candidate folders most specific first, and THE FIRST ONE
-    /// WITH A MANIFEST WINS: <c>pack.emberfall.starter</c> takes <c>STARTER</c> when that folder has
-    /// been drawn and falls through to <c>EMBERFALL</c> when it has not.
+    /// WITH A MANIFEST WINS: <c>pack.pendingham.starter</c> takes <c>STARTER</c> when that folder has
+    /// been drawn and falls through to <c>PENDINGHAM</c> when it has not.
     /// Addressables in a build, AssetDatabase in the Editor, the same two-path shape
     /// <see cref="CardDatabaseLoader"/> uses so tools work before a catalog has been built.
     ///

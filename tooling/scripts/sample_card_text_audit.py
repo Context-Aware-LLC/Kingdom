@@ -12,7 +12,7 @@ shows up only on a sweep or a random pick would never appear in the sample.
 """
 import json, collections, sys
 
-SETS = ["unity/Assets/CardData/Emberfall.cards.json",
+SETS = ["unity/Assets/CardData/Pendingham.cards.json",
         "unity/Assets/CardData/Rekindling.cards.json"]
 
 

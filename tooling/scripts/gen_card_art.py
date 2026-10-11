@@ -146,7 +146,7 @@ def load_seed_cards() -> list[dict]:
         seed = seeds.get(briefs.seed_key(row))
         if not seed or not row.get("artId"):
             continue
-        set_id = row.get("setId", "EMBERFALL")
+        set_id = row.get("setId", "PENDINGHAM")
         if set_id not in world_tone:
             world_tone[set_id] = briefs.load_world_tone(set_id)
 

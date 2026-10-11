@@ -69,8 +69,8 @@ namespace Kingdom.Net.Server.Tests.Accounts
         {
             var ledger = new InMemoryEntitlementLedger();
             await Grant(ledger, EconomyItems.Gold, 500, "t1");
-            await Grant(ledger, new BoosterPack(Kingdom.Core.Contracts.SetId.EMBERFALL).Id, 3, "t2");
-            await Grant(ledger, BoosterPackGrantService.OpenedItemPrefix + "pack.emberfall", 1, "t3");
+            await Grant(ledger, new BoosterPack(Kingdom.Core.Contracts.SetId.PENDINGHAM).Id, 3, "t2");
+            await Grant(ledger, BoosterPackGrantService.OpenedItemPrefix + "pack.pendingham", 1, "t3");
 
             OwnedCardCounts owned = await LedgerOwnedCounts.LoadAsync(ledger, Player);
 

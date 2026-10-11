@@ -69,9 +69,9 @@ namespace Kingdom.Core.Collection
         /// current one — and update this constant, the XML above, and
         /// <c>OnboardingGrantTests.GrantIsEveryCollectibleCommonAndRareInTheStarterSet</c>
         /// (<c>tests/Kingdom.Core.Tests/Collection/OnboardingGrantTests.cs</c>). Leaving it pointing
-        /// at EMBERFALL is a decision, not a default, and should be a deliberate one.</para>
+        /// at PENDINGHAM is a decision, not a default, and should be a deliberate one.</para>
         /// </summary>
-        public const SetId LaunchExpansion = SetId.EMBERFALL;
+        public const SetId LaunchExpansion = SetId.PENDINGHAM;
 
         /// <summary>Packs handed over with the grant.</summary>
         public const int StarterPackCount = 5;
@@ -113,7 +113,7 @@ namespace Kingdom.Core.Collection
         /// <summary>
         /// The pack a starter pack is: launch pairing, <see cref="StarterPackCardCount"/> cards,
         /// boosted odds — and its own <see cref="BoosterPack.StarterSku"/> entitlement item,
-        /// <c>pack.emberfall.starter</c>.
+        /// <c>pack.pendingham.starter</c>.
         ///
         /// <para><b>The sku is load-bearing, not cosmetic.</b> The ledger reserves and debits by
         /// <see cref="BoosterPack.Id"/> while the opener takes the card count and odds from its caller,

@@ -5,7 +5,7 @@ Run to get the correct pinned hash after adding/changing cards.
 import json
 import hashlib
 
-EMBERFALL = "unity/Assets/CardData/Emberfall.cards.json"
+PENDINGHAM = "unity/Assets/CardData/Pendingham.cards.json"
 REKINDLING = "unity/Assets/CardData/Rekindling.cards.json"
 
 SEP_FIELD = ""
@@ -22,13 +22,13 @@ def referenced_card_id(action):
 
 
 def main():
-    with open(EMBERFALL, encoding="utf-8") as f:
-        emberfall = json.load(f)
+    with open(PENDINGHAM, encoding="utf-8") as f:
+        pendingham = json.load(f)
     with open(REKINDLING, encoding="utf-8") as f:
         rekindling = json.load(f)
 
-    all_cards = emberfall + rekindling
-    print(f"Kingdom: {len(emberfall)}, Rekindling: {len(rekindling)}, Total: {len(all_cards)}")
+    all_cards = pendingham + rekindling
+    print(f"Pendingham: {len(pendingham)}, Rekindling: {len(rekindling)}, Total: {len(all_cards)}")
 
     rows = []
     for c in all_cards:

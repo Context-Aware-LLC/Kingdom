@@ -24,16 +24,16 @@ namespace Kingdom.Net.Client.Tests
                 new WalletBalances(200, 200, 85),
                 new List<PackOffer>(),
                 new List<GemBundleOffer>(), vaultCount: 3);
-            var authoritative = new PackPurchaseResult(after, "pack.emberfall", 1);
+            var authoritative = new PackPurchaseResult(after, "pack.pendingham", 1);
             var gateway = new RecordingShopGateway(before, authoritative);
             var flow = new ShopFlow(gateway);
 
             await flow.RefreshAsync();
-            PackPurchaseResult result = await flow.PurchaseAsync("pack.emberfall", ShopCurrency.Gold);
+            PackPurchaseResult result = await flow.PurchaseAsync("pack.pendingham", ShopCurrency.Gold);
 
             Assert.Multiple(() =>
             {
-                Assert.That(gateway.LastRequest.PackId, Is.EqualTo("pack.emberfall"));
+                Assert.That(gateway.LastRequest.PackId, Is.EqualTo("pack.pendingham"));
                 Assert.That(gateway.LastRequest.Currency, Is.EqualTo(ShopCurrency.Gold));
                 Assert.That(System.Guid.TryParse(gateway.LastRequest.RequestId, out _), Is.True);
                 Assert.That(result, Is.SameAs(authoritative));

@@ -314,13 +314,13 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             var http = new FakeAuthHttp().Reply(200,
                 "{\"ownership\":\"known\",\"cards\":{}," +
-                "\"packs\":{\"pack.emberfall.starter\":5,\"pack.emberfall\":1}}");
+                "\"packs\":{\"pack.pendingham.starter\":5,\"pack.pendingham\":1}}");
 
             CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
-            Assert.That(snapshot.PackCount("pack.emberfall.starter"), Is.EqualTo(5));
-            Assert.That(snapshot.PackCount("pack.emberfall"), Is.EqualTo(1));
+            Assert.That(snapshot.PackCount("pack.pendingham.starter"), Is.EqualTo(5));
+            Assert.That(snapshot.PackCount("pack.pendingham"), Is.EqualTo(1));
             Assert.That(snapshot.PackCount("pack.rekindling"), Is.EqualTo(0),
                 "a line the player holds nothing of is 0, not a missing key the caller has to handle");
         }
@@ -332,13 +332,13 @@ namespace Kingdom.Net.Client.Tests.Collection
             // account, so one that could not see its own starter packs would make the whole first-run
             // flow untestable on the only device it is built on.
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"unconstrained\",\"packs\":{\"pack.emberfall.starter\":5}}");
+                "{\"ownership\":\"unconstrained\",\"packs\":{\"pack.pendingham.starter\":5}}");
 
             CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Unconstrained));
             Assert.That(snapshot.Cards, Is.Null);
-            Assert.That(snapshot.PackCount("pack.emberfall.starter"), Is.EqualTo(5));
+            Assert.That(snapshot.PackCount("pack.pendingham.starter"), Is.EqualTo(5));
         }
 
         [Test]
@@ -376,12 +376,12 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             var http = new FakeAuthHttp().Reply(200,
                 "{\"ownership\":\"known\",\"cards\":{}," +
-                "\"packs\":{\"pack.emberfall.starter\":3,\"pack.broken\":\"x\",\"pack.spent\":0}}");
+                "\"packs\":{\"pack.pendingham.starter\":3,\"pack.broken\":\"x\",\"pack.spent\":0}}");
 
             CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
-            Assert.That(snapshot.PackCount("pack.emberfall.starter"), Is.EqualTo(3));
+            Assert.That(snapshot.PackCount("pack.pendingham.starter"), Is.EqualTo(3));
             Assert.That(snapshot.Packs.Count, Is.EqualTo(1));
         }
     }

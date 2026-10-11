@@ -26,7 +26,7 @@ LEGENDARY_CAP = 1
 
 def load_cards():
     cards = {}
-    for name in ('Emberfall.cards.json', 'Rekindling.cards.json'):
+    for name in ('Pendingham.cards.json', 'Rekindling.cards.json'):
         with open(os.path.join(CARD_DATA, name), encoding='utf-8') as fh:
             for card in json.load(fh):
                 cards[card['id']] = card

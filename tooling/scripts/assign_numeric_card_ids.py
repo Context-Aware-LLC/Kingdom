@@ -14,7 +14,7 @@ Bands, not one run, so a later set appends inside its own type without ever coll
 the next one. Numbering starts at 1 and never at 0: `default(int)` is 0, so a card id of 0
 is indistinguishable from an unset field at every boundary it crosses.
 
-ORDER WITHIN A BAND is the order the rows appear on disk today -- Emberfall.cards.json then
+ORDER WITHIN A BAND is the order the rows appear on disk today -- Pendingham.cards.json then
 Rekindling.cards.json, each row in file order. Deterministic and reproducible, which is the
 only property that matters, because the number is meaningless by design.
 
@@ -35,7 +35,7 @@ REPO = Path(__file__).resolve().parents[2]
 CARD_DATA = REPO / "unity" / "Assets" / "CardData"
 # Core first: the system cards (hero powers, the coin) belong to no expansion because
 # they never rotate. Order only decides who gets the next free number in a band.
-FILES = ["Core.cards.json", "Emberfall.cards.json", "Rekindling.cards.json"]
+FILES = ["Core.cards.json", "Pendingham.cards.json", "Rekindling.cards.json"]
 
 # (first, last) inclusive. `None` for a band that runs to infinity.
 BANDS = {

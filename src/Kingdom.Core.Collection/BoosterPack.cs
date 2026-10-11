@@ -195,7 +195,7 @@ namespace Kingdom.Core.Collection
 
         /// <summary>
         /// Stable id — the store SKU, the ledger entitlement item, the pity-counter key and the
-        /// pack-seed key. <c>pack.emberfall</c> for a retail pack, <c>pack.emberfall.starter</c> for
+        /// pack-seed key. <c>pack.pendingham</c> for a retail pack, <c>pack.pendingham.starter</c> for
         /// the granted onboarding pack. See <see cref="StarterSku"/> for why the two must differ.
         /// </summary>
         public string Id { get; }

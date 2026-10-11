@@ -307,7 +307,7 @@ namespace Kingdom.Core.Tests.Targeting
         internal static List<CardDefinition> ShippedCards()
         {
             var defs = new List<CardDefinition>();
-            foreach (string file in new[] { "Core.cards.json", "Emberfall.cards.json", "Rekindling.cards.json" })
+            foreach (string file in new[] { "Core.cards.json", "Pendingham.cards.json", "Rekindling.cards.json" })
                 defs.AddRange(CardJson.DeserializeArray(File.ReadAllText(Path.Combine(
                     RepoPaths.RepoRoot, "unity", "Assets", "CardData", file))));
             return defs;

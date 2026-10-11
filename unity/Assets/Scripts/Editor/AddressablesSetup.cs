@@ -64,7 +64,7 @@ namespace Kingdom.Editor
             AddFolderAssets(settings, uiCore, "Assets/Materials", "materials", "t:Material");
             // One CardArt_<setId> group per SET FOLDER FOUND ON DISK, not a hardcoded list.
             // REKINDLING shipped card rows and art with no group because the previous three lines
-            // named CORE and EMBERFALL literally: EditorArtProvider resolves by AssetDatabase and
+            // named CORE and PENDINGHAM literally: EditorArtProvider resolves by AssetDatabase and
             // finds art whether or not it is addressable, so an unregistered set looks correct in
             // the Editor and renders BLANK in a player build, silently. Enumerating the folder
             // means a new set cannot be forgotten — it only has to exist.
@@ -117,8 +117,8 @@ namespace Kingdom.Editor
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 if (!path.EndsWith(".cards.json")) continue;
-                string setFile = Path.GetFileName(path);                       // "Emberfall.cards.json"
-                string address = "cards/" + setFile.Substring(0, setFile.Length - ".json".Length); // "cards/Emberfall.cards"
+                string setFile = Path.GetFileName(path);                       // "Pendingham.cards.json"
+                string address = "cards/" + setFile.Substring(0, setFile.Length - ".json".Length); // "cards/Pendingham.cards"
                 var entry = settings.CreateOrMoveEntry(guid, dataGroup);
                 entry.SetAddress(address);
             }

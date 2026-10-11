@@ -8,7 +8,7 @@ using Kingdom.Core.Tests.Support;
 namespace Kingdom.Core.Tests.Collection
 {
     /// <summary>
-    /// The <b>live</b> Kingdom card set — <c>unity/Assets/CardData/Emberfall.cards.json</c>,
+    /// The <b>live</b> Kingdom card set — <c>unity/Assets/CardData/Pendingham.cards.json</c>,
     /// the same rows the game ships — loaded for the deck-legality tests.
     ///
     /// <para>Deliberately not the pinned golden-replay snapshot. Those two files answer different

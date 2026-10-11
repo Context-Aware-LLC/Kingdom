@@ -27,7 +27,7 @@ namespace Kingdom.Core.Contracts
     /// home for things that take the form of a card without being a collectible one: the hero powers
     /// and the coin. Nothing in it is collectible, so never describe it to a player as a set.
     /// </summary>
-    public enum SetId { CORE, EMBERFALL, REKINDLING }
+    public enum SetId { CORE, PENDINGHAM, REKINDLING }
 
     /// <summary>
     /// Where a card row stands in its life (Sam, 2026-09-29, issue #398 — one field covering the

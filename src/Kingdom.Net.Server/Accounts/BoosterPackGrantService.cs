@@ -119,7 +119,7 @@ namespace Kingdom.Net.Server.Accounts
         /// <summary>Ledger item prefix for the durable "fully opened" marker.</summary>
         public const string OpenedItemPrefix = "pack_opened:";
 
-        /// <summary>Ledger item prefix for the durable seed row: <c>pack_seed:pack.emberfall</c>.</summary>
+        /// <summary>Ledger item prefix for the durable seed row: <c>pack_seed:pack.pendingham</c>.</summary>
         public const string SeedItemPrefix = "pack_seed:";
 
         /// <summary>Transaction id suffix for the seed row: <c>packopen:{instanceId}:seed</c>.</summary>

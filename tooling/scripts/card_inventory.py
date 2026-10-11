@@ -5,7 +5,7 @@ from pathlib import Path
 
 # Define the files to analyze
 files = [
-    "unity/Assets/CardData/Emberfall.cards.json",
+    "unity/Assets/CardData/Pendingham.cards.json",
     "unity/Assets/CardData/Rekindling.cards.json"
 ]
 

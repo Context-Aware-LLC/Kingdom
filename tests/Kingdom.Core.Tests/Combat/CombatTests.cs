@@ -276,7 +276,7 @@ namespace Kingdom.Core.Tests.Combat
                 keywords: System.Array.Empty<Keyword>(),
                 rules: new[] { TestRules.Rule("rule_1", Trigger.ON_ATTACK,
                     new HealAction(2, new TargetSpec("FRIENDLY_HERO", TargetSelection.Of(1)))) },
-                flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
+                flavorText: "", artId: "art/x", setId: SetId.PENDINGHAM,
                 collectible: true, tribe: null, factionId: "");
 
             var db = new Support.FakeCardDatabase().Register(weaponDef);
@@ -311,7 +311,7 @@ namespace Kingdom.Core.Tests.Combat
                 keywords: System.Array.Empty<Keyword>(),
                 rules: new[] { TestRules.Rule("rule_1", Trigger.ON_ATTACK,
                     new HealAction(2, new TargetSpec("FRIENDLY_HERO", TargetSelection.Of(1)))) },
-                flavorText: "", artId: "art/x", setId: SetId.EMBERFALL,
+                flavorText: "", artId: "art/x", setId: SetId.PENDINGHAM,
                 collectible: true, tribe: null, factionId: "");
 
             var db = new Support.FakeCardDatabase().Register(attackerDef);

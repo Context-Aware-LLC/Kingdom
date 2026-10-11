@@ -62,7 +62,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 Assert.That(beforeVaultCount, Is.GreaterThanOrEqualTo(2),
                     "The badge includes both existing packs and any onboarding gift.");
 
-                const string body = "{\"packId\":\"pack.emberfall\",\"currency\":\"gold\"," +
+                const string body = "{\"packId\":\"pack.pendingham\",\"currency\":\"gold\"," +
                                     "\"requestId\":\"e448172b-6775-41d3-9f6b-89a3cd93a925\"}";
                 using var first = await http.PostAsync("/shop/purchase",
                     new StringContent(body, Encoding.UTF8, "application/json"));
@@ -81,9 +81,9 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 Assert.That(receipt.RootElement.TryGetProperty("awards", out _), Is.False,
                     "purchase must not reveal cards");
                 Assert.That(await ledger.BalanceAsync(buyer.PlayerId, EconomyItems.Gold), Is.EqualTo(200));
-                Assert.That(await ledger.BalanceAsync(buyer.PlayerId, "pack.emberfall"), Is.EqualTo(1));
+                Assert.That(await ledger.BalanceAsync(buyer.PlayerId, "pack.pendingham"), Is.EqualTo(1));
                 using JsonDocument collection = JsonDocument.Parse(await http.GetStringAsync("/collection"));
-                Assert.That(collection.RootElement.GetProperty("packs").GetProperty("pack.emberfall")
+                Assert.That(collection.RootElement.GetProperty("packs").GetProperty("pack.pendingham")
                     .GetInt64(), Is.EqualTo(1), "the existing Vault shelf reads this balance");
             }
             finally

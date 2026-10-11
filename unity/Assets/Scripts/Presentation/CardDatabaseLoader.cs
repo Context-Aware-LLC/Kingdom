@@ -20,7 +20,7 @@ namespace Kingdom.Presentation
         private static readonly (string address, string editorPath)[] CardSets =
         {
             ("cards/Core.cards", "Assets/CardData/Core.cards.json"),
-            ("cards/Emberfall.cards", "Assets/CardData/Emberfall.cards.json"),
+            ("cards/Pendingham.cards", "Assets/CardData/Pendingham.cards.json"),
             ("cards/Rekindling.cards", "Assets/CardData/Rekindling.cards.json"),
         };
 

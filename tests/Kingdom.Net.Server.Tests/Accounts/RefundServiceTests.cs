@@ -39,7 +39,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             // Buy 200 gems via store receipt
             await ledger.GrantAsync(GemGrant(account.PlayerId, 200, "store-txn-1"));
             // Spend 200 gems on 2 packs (100 gems each)
-            var pack = new Kingdom.Core.Collection.BoosterPack(Kingdom.Core.Contracts.SetId.EMBERFALL);
+            var pack = new Kingdom.Core.Collection.BoosterPack(Kingdom.Core.Contracts.SetId.PENDINGHAM);
             await economy.PurchasePackAsync(account, pack, EconomyCurrency.Gems, "server-spend-1");
             await economy.PurchasePackAsync(account, pack, EconomyCurrency.Gems, "server-spend-2");
 
@@ -67,7 +67,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
 
             // Buy 200 gems, spend them on 2 packs, then get refunded → -200
             await ledger.GrantAsync(GemGrant(account.PlayerId, 200, "store-txn-1"));
-            var pack = new Kingdom.Core.Collection.BoosterPack(Kingdom.Core.Contracts.SetId.EMBERFALL);
+            var pack = new Kingdom.Core.Collection.BoosterPack(Kingdom.Core.Contracts.SetId.PENDINGHAM);
             await economy.PurchasePackAsync(account, pack, EconomyCurrency.Gems, "server-spend-1");
             await economy.PurchasePackAsync(account, pack, EconomyCurrency.Gems, "server-spend-2");
             await service.RefundAsync(account, new ValidatedStoreRefund("refund-id-1", "store-txn-1", account.PlayerId));
@@ -93,7 +93,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
 
             // Buy 200 gems, spend them, so the refund will drive gems negative
             await ledger.GrantAsync(GemGrant(account.PlayerId, 200, "store-txn-1"));
-            var pack = new Kingdom.Core.Collection.BoosterPack(Kingdom.Core.Contracts.SetId.EMBERFALL);
+            var pack = new Kingdom.Core.Collection.BoosterPack(Kingdom.Core.Contracts.SetId.PENDINGHAM);
             await economy.PurchasePackAsync(account, pack, EconomyCurrency.Gems, "server-spend-1");
             await economy.PurchasePackAsync(account, pack, EconomyCurrency.Gems, "server-spend-2");
 
