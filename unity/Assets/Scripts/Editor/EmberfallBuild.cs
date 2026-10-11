@@ -12,7 +12,7 @@ namespace Emberfall.Editor
     /// <summary>
     /// M2 D1 player-build entry point: Addressables content build + Windows standalone player
     /// in one step (content must be rebuilt whenever addressable assets change, or the player
-    /// ships a stale catalog). Output: unity/Builds/Windows/Emberfall.exe.
+    /// ships a stale catalog). Output: unity/Builds/Windows/Bad Ideas.exe.
     /// </summary>
     public static class EmberfallBuild
     {
@@ -50,8 +50,8 @@ namespace Emberfall.Editor
             MenuScenePath, ScenePath, RosterScenePath, CreateScenePath, AccountScenePath,
             CollectionScenePath, ShopScenePath, PackVaultScenePath,
         };
-        private const string OutputPath = "Builds/Windows/Emberfall.exe";
-        private const string DevOutputPath = "Builds/WindowsDev/Emberfall.exe";
+        private const string OutputPath = "Builds/Windows/Bad Ideas.exe";
+        private const string DevOutputPath = "Builds/WindowsDev/Bad Ideas.exe";
 
         /// <summary>
         /// A second seat for local testing: boots the main menu, and is a <b>development</b> player so
@@ -506,9 +506,9 @@ namespace Emberfall.Editor
         {
             var summary = report.summary;
 
-            // MUST throw, not log. A failed player build leaves the PREVIOUS run's Emberfall.exe
+            // MUST throw, not log. A failed player build leaves the PREVIOUS run's Bad Ideas.exe
             // sitting next to freshly-rebuilt Addressables content, and neither the exe's timestamp
-            // (Unity skips rewriting a content-identical launcher stub) nor Emberfall_Data's
+            // (Unity skips rewriting a content-identical launcher stub) nor Bad Ideas_Data's
             // directory mtime moves — so a stale build is indistinguishable from a good one by
             // inspection. Failing loudly is the only thing that tells you.
             if (summary.result != BuildResult.Succeeded)

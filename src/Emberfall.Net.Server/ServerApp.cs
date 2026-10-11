@@ -620,7 +620,7 @@ namespace Emberfall.Net.Server
             var app = builder.Build();
             app.UseWebSockets();
 
-            app.MapGet("/", () => "Emberfall match server. Connect a WebSocket to /ws.");
+            app.MapGet("/", () => "Kingdom of Bad Ideas match server. Connect a WebSocket to /ws.");
             app.MapGet("/healthz", () => Results.Json(new
             {
                 status = "ok",
