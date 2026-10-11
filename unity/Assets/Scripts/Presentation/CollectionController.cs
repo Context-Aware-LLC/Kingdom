@@ -152,7 +152,6 @@ namespace Kingdom.Presentation
 
         /// <summary>The bulk Reduce panel. See <see cref="BuildSparesPanel"/>.</summary>
         private SparesPanel _sparesPanel;
-        private Button _sparesButton;
 
         /// <summary>True when the wall is scoped to what this account owns. Delegates to the scope
         /// control so the pool and the chips can never disagree about which pool is on screen.</summary>
@@ -439,7 +438,6 @@ namespace Kingdom.Presentation
             _manageDecksButton   = _root.Q<Button>("manage-decks-button");
             _backToDecksButton   = _root.Q<Button>("choose-another-deck");
             _decksButton         = _root.Q<Button>("decks-button");
-            _sparesButton        = _root.Q<Button>("spares-button");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -745,7 +743,6 @@ namespace Kingdom.Presentation
             _drawerOpen = true;
             _drawer.AddToClassList("deck-drawer--open");
             if (_decksButton != null) _decksButton.style.display = DisplayStyle.None;
-            if (_sparesButton != null) _sparesButton.style.display = DisplayStyle.None;
             if (EditingDeck) ShowDrawerPane(editor: true);
             else
             {
@@ -765,7 +762,6 @@ namespace Kingdom.Presentation
             _drawer?.RemoveFromClassList("deck-drawer--open");
             _deckDrawerScrim?.RemoveFromClassList("deck-drawer-scrim--open");
             if (_decksButton != null) _decksButton.style.display = DisplayStyle.Flex;
-            if (_sparesButton != null) _sparesButton.style.display = DisplayStyle.Flex;
         }
 
         private void ShowDeckChooser()
@@ -1316,12 +1312,18 @@ namespace Kingdom.Presentation
             if (!_sparesPanel.IsBound)
             {
                 Debug.LogError("[Collection] the spares panel is missing elements on the plate, so the " +
-                               "Spares button will do nothing. Check CollectionScreen.uxml for the " +
-                               "spares block.");
+                               "craft modal's Reduce Spares button will do nothing. Check " +
+                               "CollectionScreen.uxml for the spares block.");
                 return;
             }
 
-            _sparesButton?.RegisterCallback<ClickEvent>(_ => OpenSpares());
+            // The way in is on the craft modal (Sam, 2026-10-11). The modal closes first: the two
+            // share one frame, and a card left open underneath would be a second thing to dismiss.
+            _craftModal.SparesRequested += () =>
+            {
+                _craftModal.Close();
+                OpenSpares();
+            };
             _sparesPanel.IncludeLegendaryChanged += () => ShowSpares();
             _sparesPanel.ReduceRequested += CommitSpares;
         }
@@ -1329,7 +1331,7 @@ namespace Kingdom.Presentation
         private void OpenSpares()
         {
             if (_sparesPanel == null || !_sparesPanel.IsBound || _craftBusy || _craftModal?.IsOpen == true) return;
-            SetQueryDrawerOpen(false);
+            _craftVersion++;   // retires any read still in flight for the card that was just closed
             _sparesPanel.Open();
             // No ownership record is "never synced", not "owns nothing spare" — say so rather than
             // drawing an empty list that reads as a clean collection.

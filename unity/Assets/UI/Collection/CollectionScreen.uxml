@@ -37,7 +37,6 @@
                 </ui:VisualElement>
             </ui:Button>
             <ui:VisualElement picking-mode="Ignore" class="col-query-actions">
-                <ui:Button name="spares-button" text="Spares" class="col-button col-button--spares chrome-button chrome-button--secondary"/>
                 <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
             </ui:VisualElement>
         </ui:VisualElement>
@@ -106,6 +105,7 @@
                     <ui:Label name="craft-shard-balance" text="0" class="craft-wallet-value"/>
                     <ui:VisualElement class="craft-shard-icon craft-shard-icon--wallet" tooltip="Shards"/>
                 </ui:VisualElement>
+                <ui:Button name="craft-spares" text="Reduce Spares" class="col-button craft-spares chrome-button chrome-button--secondary"/>
                 <ui:Button name="craft-close" text="Close" class="col-button chrome-button chrome-button--secondary emb-back"/>
             </ui:VisualElement>
             <ui:VisualElement class="craft-feedback">

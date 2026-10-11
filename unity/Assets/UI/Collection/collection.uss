@@ -536,10 +536,6 @@
 .col-query-actions .col-button--decks {
     min-width: 96px;
 }
-.col-query-actions .col-button--spares {
-    min-width: 96px;
-    margin-right: var(--space-2);
-}
 /* BACK MOVES TO THE BOTTOM-LEFT (Sam, 2026-09-07): it used to share `.col-query-actions`' top-right
  * row with Decks, crowding both against the deck-drawer's own Close when the drawer was open.
  * The canonical `.emb-back-button` (theme.uss, 2026-09-27) is what every screen's Back control
@@ -1378,6 +1374,11 @@
     flex-direction: row;
     align-items: flex-end;
     margin-right: var(--space-6);
+}
+/* The way into the bulk Reduce. It sits with the balance because that is what it changes. */
+.craft-spares {
+    flex-shrink: 0;
+    margin-right: var(--space-4);
 }
 .craft-wallet-value {
     font-size: var(--type-h2);

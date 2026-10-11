@@ -47,6 +47,7 @@ namespace Kingdom.Presentation
         private readonly Label _status;
         private readonly Button _retry;
         private readonly Button _close;
+        private readonly Button _spares;
         private readonly VisualElement _loadingIcon;
         private readonly IVisualElementScheduledItem _loadingTick;
         private bool _submitting;
@@ -87,6 +88,9 @@ namespace Kingdom.Presentation
         public event Action<CardDefinition, int> ReduceRequested;
         public event Action<CardDefinition> RefreshRequested;
 
+        /// <summary>Raised when the player asks for the bulk Reduce. The host swaps this modal for <see cref="SparesPanel"/>.</summary>
+        public event Action SparesRequested;
+
         /// <summary>
         /// Binds against an already-cloned plate. Every element is required: a null here is a broken
         /// UXML rather than a configuration, exactly as on <see cref="CollectionController"/>, so the
@@ -107,6 +111,7 @@ namespace Kingdom.Presentation
             _status = rootPlate.Q<Label>("craft-status");
             _retry = rootPlate.Q<Button>("craft-retry");
             _close = rootPlate.Q<Button>("craft-close");
+            _spares = rootPlate.Q<Button>("craft-spares");
             _loadingIcon = rootPlate.Q<VisualElement>("craft-loading-icon");
             if (_loadingIcon != null)
             {
@@ -150,6 +155,10 @@ namespace Kingdom.Presentation
                 _scrim.RegisterCallback<ClickEvent>(_ => Close());
             _modal?.RegisterCallback<ClickEvent>(e => e.StopPropagation());
             _close?.RegisterCallback<ClickEvent>(_ => Close());
+            _spares?.RegisterCallback<ClickEvent>(_ =>
+            {
+                if (!_submitting) SparesRequested?.Invoke();
+            });
 
             Close();
         }
@@ -161,7 +170,7 @@ namespace Kingdom.Presentation
             _renderHalf != null && _renderButton != null && _renderCost != null && _renderNote != null &&
             _reduceHalf != null && _reduceButton != null && _reducePayout != null && _reduceNote != null &&
             _reduceLess != null && _reduceMore != null && _reduceCountLabel != null &&
-            _status != null && _retry != null && _close != null && _loadingIcon != null;
+            _status != null && _retry != null && _close != null && _spares != null && _loadingIcon != null;
 
         /// <summary>
         /// Show the modal for one card, drawn entirely from the two offers.
@@ -178,6 +187,7 @@ namespace Kingdom.Presentation
             _submitting = false;
             _balancesUnknown = false;
             _close?.SetEnabled(true);
+            _spares?.SetEnabled(true);
             _status.style.display = DisplayStyle.None;
             _retry.style.display = DisplayStyle.None;
             SetLoading(_cardTexture == null && _baker != null);
@@ -290,6 +300,7 @@ namespace Kingdom.Presentation
             SetLoading(unknown);
             _submitting = submitting;
             _close?.SetEnabled(!submitting);
+            _spares?.SetEnabled(!submitting);
             _renderButton.SetEnabled(false);
             _reduceButton.SetEnabled(false);
             _reduceLess.SetEnabled(false);
