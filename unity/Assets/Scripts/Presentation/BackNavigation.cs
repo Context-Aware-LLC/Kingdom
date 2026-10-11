@@ -105,8 +105,7 @@ namespace Emberfall.Presentation
 
         private static VisualElement FindTopmostBackControl()
         {
-            var docs = Object.FindObjectsByType<UIDocument>(FindObjectsInactive.Exclude,
-                                                            FindObjectsSortMode.None);
+            var docs = Object.FindObjectsByType<UIDocument>(FindObjectsInactive.Exclude);
             VisualElement best = null;
             int bestDepth = -1;
 

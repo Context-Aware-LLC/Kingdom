@@ -101,7 +101,7 @@ namespace Emberfall.Presentation
             w.position = Position.Absolute;
             w.left = 0; w.top = 0; w.right = 0; w.bottom = 0;
             w.backgroundImage = new StyleBackground(seal);
-            w.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+            w.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
             stamp.Add(wax);
 
             VisualElement press = null;
@@ -120,7 +120,7 @@ namespace Emberfall.Presentation
                 p.left = size / 2f - 0.498f * t;
                 p.top = size / 2f - 0.84f * t;
                 p.backgroundImage = new StyleBackground(tool);
-                p.unityBackgroundScaleMode = ScaleMode.ScaleToFit;
+                p.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
                 stamp.Add(press);
             }
 

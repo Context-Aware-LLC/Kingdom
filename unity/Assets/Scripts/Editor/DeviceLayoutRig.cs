@@ -123,7 +123,7 @@ namespace Emberfall.Editor
         public static string Measure(params string[] selectors)
         {
             var sb = new StringBuilder();
-            var docs = UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
+            var docs = UnityEngine.Object.FindObjectsByType<UIDocument>();
             if (docs.Length == 0) return "no UIDocument in the scene (are you in play mode?)";
 
             foreach (var doc in docs)
@@ -165,7 +165,7 @@ namespace Emberfall.Editor
         public static string MeasureWallPacking()
         {
             var sb = new StringBuilder();
-            foreach (var doc in UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None))
+            foreach (var doc in UnityEngine.Object.FindObjectsByType<UIDocument>())
             {
                 VisualElement root = doc.rootVisualElement;
                 if (root == null) continue;
