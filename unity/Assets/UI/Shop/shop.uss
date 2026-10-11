@@ -431,7 +431,7 @@
 }
 
 /* A SHARED PERCENTAGE COLUMN, NOT CONTENT WIDTH (Sam, 2026-09-07): sizing-to-content (previous
- * pass) let "Rekindling" claim more width than "Emberfall", so each row's art-rail started at a
+ * pass) let "Rekindling" claim more width than "Kingdom", so each row's art-rail started at a
  * different x and the second row read as shifted right. Every `.shop-pack` row is the same width
  * (100% of `.shop-pack-list`), so a percentage here lands every row's name column -- and therefore
  * every rail's left edge -- at the identical x regardless of which set's name is longest. Same

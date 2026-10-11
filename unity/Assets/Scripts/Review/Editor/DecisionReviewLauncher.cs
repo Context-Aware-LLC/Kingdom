@@ -1,10 +1,10 @@
 using System.IO;
-using Emberfall.Presentation;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace Emberfall.Review
+namespace Kingdom.Review
 {
     /// <summary>
     /// Opens the decision reviewer.
@@ -17,9 +17,9 @@ namespace Emberfall.Review
     /// </summary>
     public static class DecisionReviewLauncher
     {
-        private const string BundleKey = "Emberfall.Review.BundleDirectory";
+        private const string BundleKey = "Kingdom.Review.BundleDirectory";
 
-        [MenuItem("Emberfall/Review/Open Decision Reviewer %#r", priority = 100)]
+        [MenuItem("Kingdom/Review/Open Decision Reviewer %#r", priority = 100)]
         public static void Open()
         {
             string directory = EditorPrefs.GetString(BundleKey, "");
@@ -32,7 +32,7 @@ namespace Emberfall.Review
             Launch(directory);
         }
 
-        [MenuItem("Emberfall/Review/Open Decision Reviewer (choose bundle)…", priority = 101)]
+        [MenuItem("Kingdom/Review/Open Decision Reviewer (choose bundle)…", priority = 101)]
         public static void OpenWithPrompt()
         {
             string directory = Prompt(EditorPrefs.GetString(BundleKey, ""));
@@ -41,7 +41,7 @@ namespace Emberfall.Review
             Launch(directory);
         }
 
-        [MenuItem("Emberfall/Review/Capture One Action (game view)", priority = 103)]
+        [MenuItem("Kingdom/Review/Capture One Action (game view)", priority = 103)]
         public static void OpenNativeCapture()
         {
             string directory = EditorPrefs.GetString(BundleKey, "");
@@ -54,7 +54,7 @@ namespace Emberfall.Review
             Launch(directory, captureOneAction: true);
         }
 
-        [MenuItem("Emberfall/Review/Capture One Action (choose bundle)…", priority = 104)]
+        [MenuItem("Kingdom/Review/Capture One Action (choose bundle)…", priority = 104)]
         public static void OpenNativeCaptureWithPrompt()
         {
             string directory = Prompt(EditorPrefs.GetString(BundleKey, ""));
@@ -73,7 +73,7 @@ namespace Emberfall.Review
                 EditorUtility.DisplayDialog(
                     "Not a review bundle",
                     $"'{chosen}' has no bundle-manifest.json.\n\nBuild one with:\n"
-                    + "dotnet run --project src/Emberfall.Tools.DecisionReview -- build "
+                    + "dotnet run --project src/Kingdom.Tools.DecisionReview -- build "
                     + "--corpus <dir> --sample <file> --cards <dir> --out <dir>",
                     "OK");
                 return "";

@@ -2,17 +2,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
-    /// Editor-owned load/save over the flat Emberfall card-row array
+    /// Editor-owned load/save over the flat Kingdom card-row array
     /// (unity/Assets/Resources/cards/Emberfall.cards.json). This is the pragmatic stand-in for
     /// the spec's per-file `cards/&lt;setId&gt;/&lt;id&gt;.card.json` + ScriptedImporter convention
     /// (dev-docs/pipelines/card-authoring-and-import.md:5) — deliberately not adopted this pass since the
-    /// Emberfall set already lives as one file; see the plan's "explicitly deferred" list.
+    /// Kingdom set already lives as one file; see the plan's "explicitly deferred" list.
     ///
     /// Reuses the shared <see cref="CardJson"/> parser for reads (no second deserializer, R1) and
     /// adds the one thing core doesn't have: a canonical writer, since CardJson has no Serialize.
@@ -21,7 +21,7 @@ namespace Emberfall.Editor
     {
         // Migrated out of Resources/ (M2 D1) — served to the runtime via the CardData
         // Addressables group at address "cards/Emberfall.cards".
-        public const string DefaultEmberfallJsonPath = "Assets/CardData/Emberfall.cards.json";
+        public const string DefaultKingdomJsonPath = "Assets/CardData/Emberfall.cards.json";
 
         /// <summary>
         /// The file a row belongs in, decided by its <see cref="SetId"/> rather than by where it
@@ -37,7 +37,7 @@ namespace Emberfall.Editor
         public static string PathForSet(SetId set) => set switch
         {
             SetId.CORE => "Assets/CardData/Core.cards.json",
-            SetId.EMBERFALL => DefaultEmberfallJsonPath,
+            SetId.EMBERFALL => DefaultKingdomJsonPath,
             SetId.REKINDLING => "Assets/CardData/Rekindling.cards.json",
             _ => throw new System.ArgumentOutOfRangeException(nameof(set), set,
                 "No card-data file is defined for this set."),

@@ -1,8 +1,8 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using TMPro;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Mulligan confirm button (M2-KICKOFF §E2 minimal slice; C-G1-2b). Visible only during the

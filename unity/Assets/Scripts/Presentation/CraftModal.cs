@@ -1,13 +1,13 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The crafting modal: one card, and the two directions you can move it in — <b>Render</b> (spend
@@ -27,7 +27,7 @@ namespace Emberfall.Presentation
     /// <see cref="Crafting"/>, which is the same pure predicate the server binds to
     /// <c>IEntitlementLedger</c> — so an offer this modal draws cannot be one the server then refuses.
     /// That shared-function property is the whole reason <c>Crafting.cs</c> lives in
-    /// <c>Emberfall.Core.Collection</c> (netstandard2.1) rather than server-side, and it is worth not
+    /// <c>Kingdom.Core.Collection</c> (netstandard2.1) rather than server-side, and it is worth not
     /// breaking: if you ever find yourself computing a cost or a refusal in this file, the number you
     /// want already exists on <see cref="RenderOffer"/> or <see cref="ReduceOffer"/>.</para>
     ///

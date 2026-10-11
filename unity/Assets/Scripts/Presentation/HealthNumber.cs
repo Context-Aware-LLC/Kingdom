@@ -2,7 +2,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The colour a health number rests at — "the redder the deader" (Sam, 2026-10-04).

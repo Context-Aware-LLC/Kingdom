@@ -58,7 +58,7 @@ $compileRun = Invoke-GateScript 'unity-compile.ps1' @('-Configuration', $Configu
 $compileRun.Output | ForEach-Object { Write-Host "  $_" }
 
 $compilePass = ($compileRun.ExitCode -eq 0)
-$compileSummary = $compileRun.Output | Select-String -Pattern '^(PASS - all (\d+) Emberfall assemblies compile\.)|(FAIL - (\d+) of (\d+) assemblies do not compile: (.+))$' | Select-Object -Last 1
+$compileSummary = $compileRun.Output | Select-String -Pattern '^(PASS - all (\d+) Kingdom assemblies compile\.)|(FAIL - (\d+) of (\d+) assemblies do not compile: (.+))$' | Select-Object -Last 1
 
 $compileStage = [ordered]@{
     pass             = $compilePass

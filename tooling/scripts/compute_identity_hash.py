@@ -28,7 +28,7 @@ def main():
         rekindling = json.load(f)
 
     all_cards = emberfall + rekindling
-    print(f"Emberfall: {len(emberfall)}, Rekindling: {len(rekindling)}, Total: {len(all_cards)}")
+    print(f"Kingdom: {len(emberfall)}, Rekindling: {len(rekindling)}, Total: {len(all_cards)}")
 
     rows = []
     for c in all_cards:

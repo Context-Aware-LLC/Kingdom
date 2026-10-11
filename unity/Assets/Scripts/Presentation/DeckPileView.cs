@@ -1,8 +1,8 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using TMPro;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Face-down draw pile for one player. Royal Council uses two pre-rendered piles, each painted

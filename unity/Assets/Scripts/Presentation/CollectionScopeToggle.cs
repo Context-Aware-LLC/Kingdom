@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The Owned / Unowned scope control (#146).

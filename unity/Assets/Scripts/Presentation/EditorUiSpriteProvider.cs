@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Editor-only IUiSpriteProvider: resolves frame/gem/icon sprites straight from AssetDatabase
     // under Assets/Art/UI/, card backs under CardBackCatalog.ArtFolder, and shared sheets under Assets/Sprites. Serves the M1

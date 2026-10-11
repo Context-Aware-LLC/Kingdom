@@ -5,7 +5,7 @@ using UnityEditor.Android;
 using UnityEditor.Build;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Keeps Kotlin's split stdlib artifacts on one version in generated Android builds.
@@ -46,7 +46,7 @@ allprojects {
                 return;
 
             File.AppendAllText(rootGradlePath, AlignmentBlock);
-            Debug.Log($"[EmberfallBuild] Aligned Kotlin stdlib artifacts in '{rootGradlePath}'.");
+            Debug.Log($"[KingdomBuild] Aligned Kotlin stdlib artifacts in '{rootGradlePath}'.");
         }
 
         private static string FindRootGradleFile(string projectPath)
@@ -63,7 +63,7 @@ allprojects {
             }
 
             throw new BuildFailedException(
-                $"[EmberfallBuild] Could not locate the generated root Gradle project above '{projectPath}'.");
+                $"[KingdomBuild] Could not locate the generated root Gradle project above '{projectPath}'.");
         }
     }
 }

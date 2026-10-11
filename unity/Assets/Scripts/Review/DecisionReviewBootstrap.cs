@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
+using Kingdom.Core;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Emberfall.Review
+namespace Kingdom.Review
 {
     /// <summary>
-    /// Puts one training decision on the real Emberfall board.
+    /// Puts one training decision on the real Kingdom board.
     ///
     /// It is NOT a match. There is no session, no runner and no server. In native capture mode
     /// the ordinary InputRouter feeds a local queue, but no command is ever applied to the state.
@@ -17,9 +17,9 @@ namespace Emberfall.Review
     ///
     /// THIS COMPONENT MUST NOT LIVE IN AN EDITOR-ONLY ASSEMBLY. It did, for one commit, and Unity
     /// refused to attach it — "Can't add script behaviour ... because it is an editor script" —
-    /// which surfaced as a NullReferenceException on the AddComponent result. Emberfall.Review is a
+    /// which surfaced as a NullReferenceException on the AddComponent result. Kingdom.Review is a
     /// runtime assembly constrained to UNITY_EDITOR, so it still cannot reach a player build; the
-    /// menu command that drives it lives in Emberfall.Review.Editor next door.
+    /// menu command that drives it lives in Kingdom.Review.Editor next door.
     ///
     /// The chrome helpers below are DUPLICATED from NetworkedGameBootstrap rather than extracted
     /// from it. Extracting would change how the shipping board boots, for a proof that may be
@@ -29,7 +29,7 @@ namespace Emberfall.Review
     public sealed class DecisionReviewBootstrap : MonoBehaviour
     {
         [Tooltip("Directory holding bundle-manifest.json, frames.jsonl and cards/. Built by " +
-                 "Emberfall.Tools.DecisionReview.")]
+                 "Kingdom.Tools.DecisionReview.")]
         [SerializeField] private string bundleDirectory = "";
 
         [Tooltip("Which frame to open on. Clamped to the bundle.")]

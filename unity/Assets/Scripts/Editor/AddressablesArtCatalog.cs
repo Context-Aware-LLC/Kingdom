@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Real IAddressableArtCatalog (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §4.4) backed by the project's

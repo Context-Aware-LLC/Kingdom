@@ -5,7 +5,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.iOS.Xcode;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Declares in the generated Xcode project's <c>Info.plist</c> that the game uses no

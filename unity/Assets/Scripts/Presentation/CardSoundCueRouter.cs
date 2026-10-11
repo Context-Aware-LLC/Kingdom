@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Unity-free bridge from semantic match events to authored card sound ids. It deliberately

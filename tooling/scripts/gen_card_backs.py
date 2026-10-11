@@ -59,7 +59,7 @@ hairline scrollwork, NO tiny repeated rivets, NO delicate filigree. Anything
 thinner than a heavy stroke dissolves into grey noise at display size. Detail
 that cannot survive being shrunk to a thumbnail is worse than no detail.
 
-The world is "Emberfall": a land after a sky-fire cataclysm, where embers still
+The world is "Kingdom": a land after a sky-fire cataclysm, where embers still
 fall like snow. The mood is old, weathered and hand-made — a forged and painted
 object, not a digital graphic.
 """

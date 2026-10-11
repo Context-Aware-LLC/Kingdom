@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.Json;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Reader for the editor-comment sidecar the web authoring tool writes
@@ -16,7 +16,7 @@ namespace Emberfall.Editor
     /// so the authoring tools can show it in the right place. <c>_comment</c> looks like the
     /// obvious home and is the worst one: it already means something else (it annotates test
     /// FIXTURE rows in M1.cards.snapshot.json), and it does not round-trip — nothing reads it
-    /// into <see cref="Emberfall.Core.Cards.CardDefinition"/> and
+    /// into <see cref="Kingdom.Core.Cards.CardDefinition"/> and
     /// <see cref="CardJsonRowIO.Serialize"/> never writes it back, so a comment stored there
     /// survives exactly until this window's next SaveAll and is then dropped in silence.</para>
     ///
@@ -63,7 +63,7 @@ namespace Emberfall.Editor
         {
             get
             {
-                // Assets -> Emberfall -> unity -> <repo root>
+                // Assets -> Kingdom -> unity -> <repo root>
                 var repo = new DirectoryInfo(Application.dataPath).Parent?.Parent?.Parent;
                 return repo == null
                     ? null

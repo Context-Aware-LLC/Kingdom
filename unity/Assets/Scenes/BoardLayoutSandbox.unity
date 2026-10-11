@@ -2352,7 +2352,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79e5d3ef58da467994bdbf2cd13b933c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ShroudSmokeView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ShroudSmokeView
 --- !u!1 &105841610
 GameObject:
   m_ObjectHideFlags: 0
@@ -4219,7 +4219,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f0bf07c126c85d44b1ef57137bcd400, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HeroSocketsView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HeroSocketsView
 --- !u!4 &207819400
 Transform:
   m_ObjectHideFlags: 0
@@ -5952,7 +5952,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d01ceec7fa34e34af9368dd821726bb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.FrostCrystalView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.FrostCrystalView
 --- !u!1 &324736993
 GameObject:
   m_ObjectHideFlags: 0
@@ -7160,7 +7160,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79e5d3ef58da467994bdbf2cd13b933c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ShroudSmokeView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ShroudSmokeView
 --- !u!1 &404362809
 GameObject:
   m_ObjectHideFlags: 0
@@ -8841,7 +8841,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0e9804e5194e1614182c4f5a783bd663, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ManaTrayView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ManaTrayView
 --- !u!1 &555107642
 GameObject:
   m_ObjectHideFlags: 0
@@ -9618,7 +9618,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d01ceec7fa34e34af9368dd821726bb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.FrostCrystalView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.FrostCrystalView
 --- !u!1 &580685883
 GameObject:
   m_ObjectHideFlags: 0
@@ -10930,7 +10930,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79e5d3ef58da467994bdbf2cd13b933c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ShroudSmokeView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ShroudSmokeView
 --- !u!1 &614900545
 GameObject:
   m_ObjectHideFlags: 0
@@ -11704,7 +11704,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 1726643574}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardFlavorTextPanel
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardFlavorTextPanel
 --- !u!1 &650140762
 GameObject:
   m_ObjectHideFlags: 0
@@ -12877,7 +12877,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d01ceec7fa34e34af9368dd821726bb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.FrostCrystalView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.FrostCrystalView
 --- !u!1 &752838879
 GameObject:
   m_ObjectHideFlags: 0
@@ -13214,7 +13214,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8f76501c17dc4b945b6359940155221a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.BoardAnchors
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.BoardAnchors
   p0:
     DeckAnchor: {fileID: 1870195075}
     HandSlots:
@@ -13466,7 +13466,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79e5d3ef58da467994bdbf2cd13b933c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ShroudSmokeView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ShroudSmokeView
 --- !u!1 &788028120
 GameObject:
   m_ObjectHideFlags: 0
@@ -15484,7 +15484,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d01ceec7fa34e34af9368dd821726bb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.FrostCrystalView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.FrostCrystalView
 --- !u!1 &938488819
 GameObject:
   m_ObjectHideFlags: 0
@@ -18279,7 +18279,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abab24b8aeb61e346bb294a67a47abe2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardMaterialBinder
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardMaterialBinder
 --- !u!114 &1108845637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18291,7 +18291,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3d338a1cb7478446ab0d6ea92df9651, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardPresenter
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardPresenter
   nameLabel: {fileID: 589884325}
   costLabel: {fileID: 565731987}
   attackLabel: {fileID: 642223540}
@@ -18324,7 +18324,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e751ff96c0950d47a85867199b6d86b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HandCardHover
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HandCardHover
 --- !u!65 &1108845639
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -20520,7 +20520,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d01ceec7fa34e34af9368dd821726bb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.FrostCrystalView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.FrostCrystalView
 --- !u!1 &1242332848
 GameObject:
   m_ObjectHideFlags: 0
@@ -20661,7 +20661,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abab24b8aeb61e346bb294a67a47abe2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardMaterialBinder
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardMaterialBinder
 --- !u!114 &1252176635
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20673,7 +20673,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3d338a1cb7478446ab0d6ea92df9651, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardPresenter
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardPresenter
   nameLabel: {fileID: 324736995}
   costLabel: {fileID: 1734435502}
   attackLabel: {fileID: 1463839261}
@@ -20706,7 +20706,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e751ff96c0950d47a85867199b6d86b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HandCardHover
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HandCardHover
 --- !u!65 &1252176637
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -21149,7 +21149,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79e5d3ef58da467994bdbf2cd13b933c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ShroudSmokeView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ShroudSmokeView
 --- !u!1 &1277089746
 GameObject:
   m_ObjectHideFlags: 0
@@ -21539,7 +21539,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f0bf07c126c85d44b1ef57137bcd400, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HeroSocketsView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HeroSocketsView
 --- !u!4 &1286650518
 Transform:
   m_ObjectHideFlags: 0
@@ -21969,7 +21969,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abab24b8aeb61e346bb294a67a47abe2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardMaterialBinder
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardMaterialBinder
 --- !u!114 &1345941390
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21981,7 +21981,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3d338a1cb7478446ab0d6ea92df9651, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardPresenter
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardPresenter
   nameLabel: {fileID: 2048268153}
   costLabel: {fileID: 1093087816}
   attackLabel: {fileID: 1228503469}
@@ -22014,7 +22014,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e751ff96c0950d47a85867199b6d86b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HandCardHover
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HandCardHover
 --- !u!65 &1345941392
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -22366,7 +22366,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7dbe5a370dcb05a48b3d466c62cbc689, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HeroPlateView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HeroPlateView
 --- !u!21 &1363618657
 Material:
   serializedVersion: 8
@@ -24033,7 +24033,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abab24b8aeb61e346bb294a67a47abe2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardMaterialBinder
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardMaterialBinder
 --- !u!114 &1486670316
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24045,7 +24045,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3d338a1cb7478446ab0d6ea92df9651, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardPresenter
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardPresenter
   nameLabel: {fileID: 99869893}
   costLabel: {fileID: 951460878}
   attackLabel: {fileID: 576224201}
@@ -24078,7 +24078,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e751ff96c0950d47a85867199b6d86b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HandCardHover
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HandCardHover
 --- !u!65 &1486670318
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -24267,7 +24267,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abab24b8aeb61e346bb294a67a47abe2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardMaterialBinder
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardMaterialBinder
 --- !u!114 &1492193436
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24279,7 +24279,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3d338a1cb7478446ab0d6ea92df9651, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardPresenter
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardPresenter
   nameLabel: {fileID: 1082127940}
   costLabel: {fileID: 367403568}
   attackLabel: {fileID: 1556023648}
@@ -24312,7 +24312,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e751ff96c0950d47a85867199b6d86b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HandCardHover
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HandCardHover
 --- !u!65 &1492193438
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -25151,7 +25151,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0e9804e5194e1614182c4f5a783bd663, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ManaTrayView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ManaTrayView
 --- !u!1 &1545737420
 GameObject:
   m_ObjectHideFlags: 0
@@ -26331,7 +26331,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abab24b8aeb61e346bb294a67a47abe2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardMaterialBinder
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardMaterialBinder
 --- !u!114 &1628953843
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26343,7 +26343,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3d338a1cb7478446ab0d6ea92df9651, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardPresenter
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardPresenter
   nameLabel: {fileID: 294268654}
   costLabel: {fileID: 1200072492}
   attackLabel: {fileID: 2089451349}
@@ -26376,7 +26376,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e751ff96c0950d47a85867199b6d86b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HandCardHover
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HandCardHover
 --- !u!65 &1628953845
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -26478,7 +26478,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 52dfaff807ad94246860a38cc87faa0f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.DeckPileView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.DeckPileView
 --- !u!1 &1646760215
 GameObject:
   m_ObjectHideFlags: 0
@@ -27408,8 +27408,8 @@ MonoScript:
   m_Type: 0
   m_ExecutionOrder: 0
   m_ClassName: CardFlavorTextPanel
-  m_Namespace: Emberfall.Presentation
-  m_AssemblyName: Emberfall.Presentation
+  m_Namespace: Kingdom.Presentation
+  m_AssemblyName: Kingdom.Presentation
 --- !u!1 &1727197362
 GameObject:
   m_ObjectHideFlags: 0
@@ -28477,7 +28477,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79e5d3ef58da467994bdbf2cd13b933c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ShroudSmokeView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ShroudSmokeView
 --- !u!1 &1761160398
 GameObject:
   m_ObjectHideFlags: 0
@@ -29095,7 +29095,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7dbe5a370dcb05a48b3d466c62cbc689, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HeroPlateView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HeroPlateView
 --- !u!1 &1822654669
 GameObject:
   m_ObjectHideFlags: 0
@@ -30369,7 +30369,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d01ceec7fa34e34af9368dd821726bb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.FrostCrystalView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.FrostCrystalView
 --- !u!1 &1868527898
 GameObject:
   m_ObjectHideFlags: 0
@@ -32262,7 +32262,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 52dfaff807ad94246860a38cc87faa0f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.DeckPileView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.DeckPileView
 --- !u!1 &1948352250
 GameObject:
   m_ObjectHideFlags: 0
@@ -34767,7 +34767,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 79e5d3ef58da467994bdbf2cd13b933c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ShroudSmokeView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ShroudSmokeView
 --- !u!1 &2092972335
 GameObject:
   m_ObjectHideFlags: 0
@@ -35689,7 +35689,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1d01ceec7fa34e34af9368dd821726bb, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.FrostCrystalView
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.FrostCrystalView
 --- !u!1 &2117629359
 GameObject:
   m_ObjectHideFlags: 0
@@ -35734,7 +35734,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ead48ecc5818199469ee438fd922e7f2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardRevealPanel
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardRevealPanel
 --- !u!1 &2126560587
 GameObject:
   m_ObjectHideFlags: 0
@@ -35875,7 +35875,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: abab24b8aeb61e346bb294a67a47abe2, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardMaterialBinder
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardMaterialBinder
 --- !u!114 &2127146632
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -35887,7 +35887,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e3d338a1cb7478446ab0d6ea92df9651, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.CardPresenter
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.CardPresenter
   nameLabel: {fileID: 1996475282}
   costLabel: {fileID: 1217930179}
   attackLabel: {fileID: 597381872}
@@ -35920,7 +35920,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8e751ff96c0950d47a85867199b6d86b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.HandCardHover
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.HandCardHover
 --- !u!65 &2127146634
 BoxCollider:
   m_ObjectHideFlags: 0

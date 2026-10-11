@@ -250,7 +250,7 @@ def main():
     heroes = json.load(open(SITE / "heroes.json", encoding="utf-8"))
     keywords = load_keywords()
     # The glossary shows a board minion wearing each status keyword. The pictures come out of the game:
-    # Emberfall/Preview (offscreen)/Keyword States writes them to artifacts/keyword-preview, which
+    # Kingdom/Preview (offscreen)/Keyword States writes them to artifacts/keyword-preview, which
     # is not committed, so they are re-encoded only when a fresh render is there to encode.
     shots = SITE / "public" / "assets" / "keywords"
     shots.mkdir(parents=True, exist_ok=True)

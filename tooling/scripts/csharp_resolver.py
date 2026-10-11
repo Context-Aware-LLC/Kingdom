@@ -11,7 +11,7 @@ correct and this script keeps it verbatim.
 
 It builds "files that this file imports" by taking each IMPORTS_FROM target and
 splitting on `::` to get a file path. For Python or TypeScript that works: an
-import target IS a module path. For C#, `using Emberfall.Core.Contracts;` names a
+import target IS a module path. For C#, `using Kingdom.Core.Contracts;` names a
 NAMESPACE, and a namespace is not a file. Measured on 2026-08-20:
 
     IMPORTS_FROM targets that resolve to a known file_path :     5 / 1845

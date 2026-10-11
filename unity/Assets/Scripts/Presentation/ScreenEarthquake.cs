@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// A brief, damped translation of the match camera. Because the board and match HUD are

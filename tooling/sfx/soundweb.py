@@ -52,7 +52,7 @@ CLEARING THE BOARD BETWEEN CHUNKS
 
 WHAT IT DELIBERATELY DOES NOT DO
     Delete anything, write a card-data file, or touch Addressables. Promotion puts a file on
-    disk; the Editor still has to run Emberfall/Addressables/Setup Groups + Migrate Card Data
+    disk; the Editor still has to run Kingdom/Addressables/Setup Groups + Migrate Card Data
     before that file has an address, and until it does the clip resolves to nothing and fails
     SILENTLY -- the page says so on every promote, because nothing else will. (The .meta Unity
     writes by itself on the next Editor focus; it only needs committing, and git status shows it.)
@@ -301,7 +301,7 @@ def destination(path: pathlib.Path, variant: bool = False) -> pathlib.Path:
 
 
 PAGE_HEAD = """<!doctype html>
-<meta charset="utf-8"><title>Emberfall sound preview</title>
+<meta charset="utf-8"><title>Kingdom sound preview</title>
 <style>
  :root { color-scheme: light dark; }
  body { font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 20px 24px 80px;
@@ -349,7 +349,7 @@ PAGE_HEAD = """<!doctype html>
  #toast { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 24px;
           background: Canvas; border-top: 1px solid; font-size: 13px; }
 </style>
-<h1>Emberfall sound preview</h1>
+<h1>Kingdom sound preview</h1>
 <p class="sub">Promote copies the clip into the Unity tree under its canonical stem.
 <b>+alt</b> keeps a take <i>as well as</i> the promoted one &mdash; it lands in the next free
 <code>_2</code>/<code>_3</code> slot and the game picks among them at random, so a sound shared by
@@ -708,7 +708,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 verb = "Replaced" if existed else "Promoted"
             self._json(200, {
                 "ok": True, "dest": rel(dest),
-                "message": "%s %s -> %s. Run Emberfall/Addressables/Setup Groups in the Editor "
+                "message": "%s %s -> %s. Run Kingdom/Addressables/Setup Groups in the Editor "
                            "-- until then it has no address and fails silently." % (
                                verb, src.name, rel(dest)),
             })

@@ -6,7 +6,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Emberfall.Review
+namespace Kingdom.Review
 {
     /// <summary>
     /// The grading sidecar. Labels live here and NOWHERE ELSE — the bundle is evidence and this

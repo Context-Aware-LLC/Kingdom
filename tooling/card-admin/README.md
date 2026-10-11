@@ -1,6 +1,6 @@
 # Card Corpus Admin Panel
 
-An offline browser panel for exploring the Emberfall card corpus, plus the script that feeds it.
+An offline browser panel for exploring the Kingdom card corpus, plus the script that feeds it.
 
 ## Files
 
@@ -44,7 +44,7 @@ SERVER_CORPUS=stale
 
 `SERVER_CORPUS=` is the line to quote: `in-sync`, `stale`, `deployed`, `deploy-failed`,
 `deploy-unconfirmed`, or `unreachable`. The digest is `CorpusDigest` in
-`src/Emberfall.Net.Server/Data/`, reported on `/healthz`, and computed here by `corpus_digest()`.
+`src/Kingdom.Net.Server/Data/`, reported on `/healthz`, and computed here by `corpus_digest()`.
 **The two implementations are mirrored by hand and must move together** --
 `CorpusDigestTests.Python_Computes_The_Same_Digest_Over_The_Same_Directory` is what holds them so.
 

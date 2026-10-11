@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kingdom.Core.Cards — card POCO model + the single shared CardJson parser (dev-docs/specs/card-schema.md:5).
+    Plain C#, ZERO UnityEngine references. Both the client SO and the headless server deserialize
+    through THIS parser, so they can never drift (R1).
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Kingdom.Core.Cards</AssemblyName>
+    <RootNamespace>Kingdom.Core.Cards</RootNamespace>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kingdom.Core.Contracts\Kingdom.Core.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- System.Text.Json is Unity-compatible (netstandard2.0/2.1) and the canonical-data parser. -->
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+  </ItemGroup>
+
+</Project>

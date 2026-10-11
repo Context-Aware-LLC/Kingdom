@@ -1,4 +1,4 @@
-# Fly.io deploy — Emberfall match server (trial spike, 2026-07-21).
+# Fly.io deploy — Kingdom match server (trial spike, 2026-07-21).
 # Build context is the repo ROOT (RC F4: Dockerfile.server needs src/ + card data),
 # which is exactly where this file sits — so the dockerfile path is all Fly needs.
 

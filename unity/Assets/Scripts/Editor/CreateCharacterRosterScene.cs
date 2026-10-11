@@ -1,12 +1,12 @@
 using System;
-using Emberfall.Presentation;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>Editor authoring entry point for the CharacterRoster scene.</summary>
     public static class CreateCharacterRosterScene
@@ -20,12 +20,12 @@ namespace Emberfall.Editor
         /// </summary>
         private const string TemplateScenePath = "Assets/Scenes/Collection.unity";
         private const string UxmlPath = "Assets/UI/CharacterRoster/CharacterRosterScreen.uxml";
-        private const string PanelPath = "Assets/UI/Common/EmberfallPanelSettings.asset";
+        private const string PanelPath = "Assets/UI/Common/KingdomPanelSettings.asset";
 
-        // MOVED OUT OF "Emberfall/UI/" AND GATED 2026-09-04 — see the note on the sibling in
+        // MOVED OUT OF "Kingdom/UI/" AND GATED 2026-09-04 — see the note on the sibling in
         // CreateCollectionScene. Same hazard: NewScene(EmptyScene, Single) then SaveScene over
         // ScenePath, no undo, one menu item away from read-only checks.
-        [MenuItem("Emberfall/Rebuild Scene — OVERWRITES/Character Roster")]
+        [MenuItem("Kingdom/Rebuild Scene — OVERWRITES/Character Roster")]
         public static void Build()
         {
             // Interactive only — see the sibling in CreateCollectionScene for why batchmode skips it.
@@ -95,7 +95,7 @@ namespace Emberfall.Editor
             if (!EditorSceneManager.SaveScene(scene, ScenePath))
                 throw new InvalidOperationException($"Unity could not save {ScenePath}.");
 
-            EmberfallBuild.SyncSceneList();
+            KingdomBuild.SyncSceneList();
             AssetDatabase.SaveAssets();
             Debug.Log($"[CreateCharacterRosterScene] Authored {ScenePath}; UIDocument has source + panel settings.");
         }

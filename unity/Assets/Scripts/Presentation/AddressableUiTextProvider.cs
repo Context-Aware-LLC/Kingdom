@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Shipping IUiTextProvider: resolves UI data-file keys from the UI_Core Addressables group at
     // address "ui/<key>", the same address shape AddressableUiSpriteProvider uses, because these

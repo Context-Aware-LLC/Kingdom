@@ -1,0 +1,28 @@
+{
+  "name": "Kingdom.Review",
+  "rootNamespace": "Kingdom.Review",
+  "references": [
+    "Kingdom.Core",
+    "Kingdom.Core.Contracts",
+    "Kingdom.Core.Cards",
+    "Kingdom.Core.Serialization",
+    "Kingdom.Net.Protocol",
+    "Kingdom.Data",
+    "Kingdom.Session",
+    "Kingdom.Presentation",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_EDITOR"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

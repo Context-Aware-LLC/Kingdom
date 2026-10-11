@@ -1,8 +1,8 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using TMPro;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The versus / match-load screen (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/versus-screen.md). Split from
@@ -253,7 +253,7 @@ namespace Emberfall.Presentation
 
         private void BuildMedallion(CardClass heroClass, float x, float y, float dia, float h, string name)
         {
-            var shader = Shader.Find("Emberfall/SG_MedallionMask");
+            var shader = Shader.Find("Kingdom/SG_MedallionMask");
             if (shader == null) return;
 
             var quad = GameObject.CreatePrimitive(PrimitiveType.Quad);

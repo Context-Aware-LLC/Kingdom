@@ -2,7 +2,7 @@
 """EF-033a (NOR-186) — diff two balance-matrix CSVs cell by cell.
 
 Both files are `matrix-winrate.csv` as written by
-`dotnet run --project src/Emberfall.Tools.NetSoak -- matrix <N> <outDir>`.
+`dotnet run --project src/Kingdom.Tools.NetSoak -- matrix <N> <outDir>`.
 
 Investigation-only. It reads; it changes nothing. The question it exists to answer is
 narrow: does a degenerate cell (<=10% or >=90%) stay degenerate when the same harness

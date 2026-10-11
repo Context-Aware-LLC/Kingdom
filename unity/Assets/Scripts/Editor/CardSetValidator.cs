@@ -1,22 +1,22 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Batch "validate entire card pool" (dev-docs/pipelines/card-authoring-and-import.md:21):
-    /// loads Emberfall+Rekindling and logs a grouped console report.
+    /// loads Kingdom+Rekindling and logs a grouped console report.
     /// </summary>
     public static class CardSetValidator
     {
         private static readonly string[] SetPaths =
         {
             "Assets/CardData/Core.cards.json",
-            CardJsonRowIO.DefaultEmberfallJsonPath,
+            CardJsonRowIO.DefaultKingdomJsonPath,
             "Assets/CardData/Rekindling.cards.json",
         };
 

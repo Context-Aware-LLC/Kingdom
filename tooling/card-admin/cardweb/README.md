@@ -134,7 +134,7 @@ cards that validate and do nothing. Rules stay a Unity job.
 ## `canon.py`, and why it is the risky part
 
 `CardJsonRowIO.Serialize` is the only thing that writes a card row and it lives in
-`Emberfall.Editor`, an Editor-only assembly. `CardJson` in Core is a **reader only**. So nothing
+`Kingdom.Editor`, an Editor-only assembly. `CardJson` in Core is a **reader only**. So nothing
 outside Unity can write a card row, and the reconcile step has to reproduce the format exactly —
 field order, omit-when-empty, and System.Text.Json's default escaping, which is *not*
 `json.dumps`:
@@ -152,7 +152,7 @@ file and compares bytes; reconcile runs it and refuses to write if it fails. Run
 change to `canon.py` **or** to `CardJsonRowIO.Serialize` — a field added to the C# writer and not
 to `CANONICAL_ORDER` surfaces there and nowhere else.
 
-> **RETIREMENT TRIGGER:** if `Serialize` ever moves into `Emberfall.Core.Cards` where a `net10.0`
+> **RETIREMENT TRIGGER:** if `Serialize` ever moves into `Kingdom.Core.Cards` where a `net10.0`
 > tool could call it directly, delete `canon.py` and have reconcile shell out to that instead.
 > Two implementations of one format is a standing cost, paid here only because there is currently
 > no second way to write a row.

@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Social;
-using Emberfall.Net.Protocol;
-using Emberfall.Session;
+using Kingdom.Net.Client.Social;
+using Kingdom.Net.Protocol;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The friends button and its right-side drawer (#409): the player's own code, add by code,

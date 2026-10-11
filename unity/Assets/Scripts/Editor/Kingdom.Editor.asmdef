@@ -1,0 +1,30 @@
+{
+  "name": "Kingdom.Editor",
+  "rootNamespace": "Kingdom.Editor",
+  "references": [
+    "Kingdom.Core.Contracts",
+    "Kingdom.Core.Cards",
+    "Kingdom.Core.Collection",
+    "Kingdom.Core.Serialization",
+    "Kingdom.Net.Protocol",
+    "Kingdom.Net.Client",
+    "Kingdom.Data",
+    "Kingdom.Session",
+    "Kingdom.Presentation",
+    "Unity.TextMeshPro",
+    "Unity.Addressables",
+    "Unity.Addressables.Editor",
+    "Unity.ResourceManager"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

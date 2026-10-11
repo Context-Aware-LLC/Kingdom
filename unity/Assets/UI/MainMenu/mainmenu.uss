@@ -17,7 +17,7 @@
  * in a comment, so the importer fails the WHOLE file, CloneTree() returns zero children,
  * every Q<>() is null, and NOTHING is logged — the screen is simply empty. Refer to modifier
  * classes in words ("the hidden modifier"), never by writing the literal class name in a
- * comment. `Emberfall/UI/Check UXML Integrity` catches it if it happens again.
+ * comment. `Kingdom/UI/Check UXML Integrity` catches it if it happens again.
  */
 
 .main-menu {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Where the local player's opening cards sit while they choose what to replace (#401): one

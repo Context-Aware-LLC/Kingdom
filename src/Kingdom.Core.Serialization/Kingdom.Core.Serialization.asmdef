@@ -1,0 +1,14 @@
+{
+  "name": "Kingdom.Core.Serialization",
+  "rootNamespace": "Kingdom.Core.Serialization",
+  "references": ["Kingdom.Core.Contracts"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

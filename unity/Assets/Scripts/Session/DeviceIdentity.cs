@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// The guest device token (C-G1-8; telemetry-spec §0, accounts posture decision 6a).

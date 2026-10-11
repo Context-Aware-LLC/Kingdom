@@ -1,12 +1,12 @@
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
-using Emberfall.Data;
+using Kingdom.Core.Contracts;
+using Kingdom.Data;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
-    /// Loads all card sets (Emberfall, Rekindling) as one merged <see cref="ICardDatabase"/>.
+    /// Loads all card sets (Kingdom, Rekindling) as one merged <see cref="ICardDatabase"/>.
     /// Tries each Addressables address first; in the Editor falls back to direct AssetDatabase
     /// loads so tools work before the Addressables catalog has been built.
     /// </summary>
@@ -49,7 +49,7 @@ namespace Emberfall.Presentation
 #endif
                 throw new System.Exception(
                     $"Card data not found — '{address}' not in Addressables. " +
-                    "Run Emberfall/Addressables/Setup Groups + Migrate Card Data.");
+                    "Run Kingdom/Addressables/Setup Groups + Migrate Card Data.");
             }
 
             return new JsonCardDatabase(payloads);

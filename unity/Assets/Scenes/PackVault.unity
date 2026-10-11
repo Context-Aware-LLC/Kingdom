@@ -285,7 +285,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5e9e2e0fed23420394e8da76ee6ec702, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.PackVaultController
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.PackVaultController
 --- !u!114 &1360996464
 MonoBehaviour:
   m_ObjectHideFlags: 0

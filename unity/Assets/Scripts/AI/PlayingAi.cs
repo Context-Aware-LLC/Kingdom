@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
-using Emberfall.Session;
+using Kingdom.Core;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
+using Kingdom.Session;
 using UnityEngine;
 
-namespace Emberfall.AI
+namespace Kingdom.AI
 {
     /// <summary>
     /// Greedy AI for the vertical slice. Each turn: play the first affordable card (aiming it if it
@@ -14,7 +14,7 @@ namespace Emberfall.AI
     /// hero power, then end the turn. Every intent is gated through <see cref="ICommandValidator"/>
     /// before it is queued, so rejections are near-impossible.
     ///
-    /// <para><b>Kept in step with <c>Emberfall.Tools.NetSoak.GreedyAi</c>.</b> That is the driver
+    /// <para><b>Kept in step with <c>Kingdom.Tools.NetSoak.GreedyAi</c>.</b> That is the driver
     /// that grinds the `ai_soak` balance sample, and a balance bar only means something if the AI
     /// being measured is the AI that ships. Fix one, fix the other.</para>
     ///
@@ -29,7 +29,7 @@ namespace Emberfall.AI
     /// <para><b>This is not a single-player opponent, and there is no offline mode.</b> It fills OUR
     /// OWN seat, from the one site that constructs it — <c>NetworkedGameBootstrap</c>, when no input
     /// router is present — inside a live networked match. Every opponent bot lives server-side in
-    /// <c>Emberfall.Net.Server/Bots/</c>. An earlier version of this remark said "the shipped
+    /// <c>Kingdom.Net.Server/Bots/</c>. An earlier version of this remark said "the shipped
     /// single-player game", which is why more than one session read offline play as supported.</para>
     ///
     /// Replace with a search-based AI in M2.
@@ -79,7 +79,7 @@ namespace Emberfall.AI
             // rejects every other intent with ChoicePending while one is open, END TURN INCLUDED,
             // which is also why OnRejected's EndTurn fallback cannot break the deadlock. Unearth is
             // the only kind (Q1 ruling, 2026-07-15) and card 230 Gear Cache is the only collectible
-            // that raises it. Kept in step with Emberfall.Net.Server.Bots.GreedyAi.ChooseUnearth.
+            // that raises it. Kept in step with Kingdom.Net.Server.Bots.GreedyAi.ChooseUnearth.
             var pending = state.PendingChoice;
             if (pending != null && pending.Chooser == _playerId)
             {
@@ -238,7 +238,7 @@ namespace Emberfall.AI
         /// Channeled Pyroclasm's "Deal 6 damage to 2 enemies" among them — permanently unplayable by
         /// this driver, with no rejection to see because the intent was never submitted.</para>
         ///
-        /// <para>Kept in step with Emberfall.Net.Server.Bots.GreedyAi.TryGroups.</para>
+        /// <para>Kept in step with Kingdom.Net.Server.Bots.GreedyAi.TryGroups.</para>
         /// </summary>
         private PlayCardIntent TryGroups(GameState state, CardInstance card, int slot,
             List<List<TargetRef>> perGroup, List<int> perGroupCount, List<TargetRef> chosen, int depth)

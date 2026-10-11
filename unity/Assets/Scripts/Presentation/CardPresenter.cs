@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Text;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // World-space card visual (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.1).
     // Subscribes to ICardLiveState.Changed; never polls per-frame.

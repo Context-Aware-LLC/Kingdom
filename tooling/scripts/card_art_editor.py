@@ -108,7 +108,7 @@ def compose_blank(card, class_descriptors, world_tone):
     palette, motifs, mood = class_descriptors.get(cls, ("", "", ""))
     bg_hint = BACKGROUND_OPPOSITION_HINTS.get(cls, "oppose the subject palette in hue or temperature")
 
-    header = f"Generate one Emberfall card illustration for {card['name']} ({card['id']})."
+    header = f"Generate one Kingdom card illustration for {card['name']} ({card['id']})."
     delivery = delivery_block(card)
     subj_opp = (
         "SUBJECT AND BACKGROUND OPPOSITION\n"

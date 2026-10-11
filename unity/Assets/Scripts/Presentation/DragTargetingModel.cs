@@ -1,10 +1,10 @@
 #nullable disable
 using System.Collections.Generic;
-using Emberfall.Core;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>What the pointer is over. Produced by <see cref="InputRouter"/>'s raycast; consumed
     /// by <see cref="DragTargetingModel"/>, which never touches a collider or a Transform.</summary>
@@ -58,7 +58,7 @@ namespace Emberfall.Presentation
     ///
     /// <para>The hand threshold is decided by <c>InputRouter</c> against
     /// <c>HandFanLayout.TopEdgeY</c> rather than in here. That is not tidiness: this file is
-    /// compiled into <c>tests/Emberfall.Core.Tests</c> with no Unity assemblies present, so a
+    /// compiled into <c>tests/Kingdom.Core.Tests</c> with no Unity assemblies present, so a
     /// reference to either of those types would break the headless build. The x, which this model
     /// DOES read, is resolved through <see cref="BoardRowGeometry"/>, which is Unity-free for the
     /// same reason and linked into that csproj alongside this file.</para>
@@ -113,7 +113,7 @@ namespace Emberfall.Presentation
     /// collider and camera. Everything that decides WHETHER a gesture is legal and WHAT intent it
     /// produces lives here; <see cref="InputRouter"/> is reduced to pointer sampling, raycasting and
     /// visuals. That split is what makes the machine testable without a scene — see
-    /// <c>Emberfall.Editor.InputGestureVerify</c>, which drives every transition headlessly.
+    /// <c>Kingdom.Editor.InputGestureVerify</c>, which drives every transition headlessly.
     ///
     /// <para>Legality here is a COURTESY affordance, not authority (ADR-0004, and the same doctrine
     /// as the old click machine): the target sets exist so the board can glow, and the validator plus

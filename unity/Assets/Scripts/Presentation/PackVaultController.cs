@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Emberfall.Net.Client.Collection;
-using Emberfall.Net.Client.Shop;
-using Emberfall.Session;
+using Kingdom.Net.Client.Collection;
+using Kingdom.Net.Client.Shop;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Which of the vault's two faces is being shown. <b>One scene, not two</b> — two would mean two

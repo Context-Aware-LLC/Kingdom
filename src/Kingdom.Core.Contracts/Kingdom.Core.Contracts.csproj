@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kingdom.Core.Contracts — the integration surface (dev-docs/architecture/system-overview.md:11).
+    Plain C#, ZERO UnityEngine references (dev-docs/architecture/system-overview.md:9).
+    Targets netstandard2.1 so the identical DLL loads in Unity (LTS), the
+    headless dedicated server, and plain `dotnet test` CI (dev-docs/quality/testing-and-ci.md:20).
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Kingdom.Core.Contracts</AssemblyName>
+    <RootNamespace>Kingdom.Core.Contracts</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Firewall, layer 1: no Unity engine refs are even available here. -->
+  </PropertyGroup>
+
+  <!-- Friend assemblies are declared in AssemblyInfo.cs, NOT here. Unity builds this project
+       from its .asmdef and never reads this file, so a csproj-only friend is invisible to it -
+       which silently broke every Unity assembly downstream of Contracts on 2026-08-06. See the
+       comment in AssemblyInfo.cs before moving them back. -->
+
+</Project>

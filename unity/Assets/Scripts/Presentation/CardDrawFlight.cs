@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Flies a newly-spawned hand card from its owner's deck pile into its fan slot.

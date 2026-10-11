@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Art resolution seam (dev-docs/pipelines/art-and-rendering.md:13): CardView/presenter code asks
     // for art by artId and never knows where it comes from. The shipping implementation is

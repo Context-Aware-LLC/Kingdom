@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using System.Reflection;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Renders one board minion per status keyword — Aegis, Bulwark, Shroud, Frost — with that
@@ -42,7 +42,7 @@ namespace Emberfall.Editor
 
         private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        [MenuItem("Emberfall/Preview (offscreen)/Keyword States")]
+        [MenuItem("Kingdom/Preview (offscreen)/Keyword States")]
         public static void Render()
         {
             Directory.CreateDirectory(OutDir);

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Kingdom.Core.Contracts\Kingdom.Core.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Core.Cards\Kingdom.Core.Cards.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Core.Serialization\Kingdom.Core.Serialization.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Core\Kingdom.Core.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Net.Protocol\Kingdom.Net.Protocol.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Net.Server\Kingdom.Net.Server.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Training.Corpus\Kingdom.Training.Corpus.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Tools.NetSoak\Kingdom.Tools.NetSoak.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Tools.DecisionReview\Kingdom.Tools.DecisionReview.csproj" />
+    <!-- FixtureCard/ShippedCards: one definition of "a card id in a fixture", shared. -->
+    <ProjectReference Include="..\Kingdom.Core.Tests\Kingdom.Core.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

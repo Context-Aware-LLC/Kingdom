@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kingdom.Tools.DeterminismGate — the determinism + assembly firewall, as a tool.
+
+    RESTORED 2026-08-22 (Sam's call). These checks were CI Stage 4, implemented as
+    BannedApiTests / FirewallTests / ServerFirewallTests and one assertion from
+    HostileDecodeAndFirewallTests. They were archived out with the rest of the .NET suites in
+    a9eaa0e3 (2026-08-18) — but ci.yml kept advertising "Stage 4 Assembly firewall + banned
+    BLOCKING", and BoosterPack.cs / BotSeatRunner.cs kept telling readers the bans were
+    enforced. They were not: for four days a float field in a core type or a System.Random in
+    server code compiled green and shipped.
+
+    It came back as a TOOL, not a test project, because that is what the archive commit itself
+    argued for: "the guards that carry real weight were never in tests/ at all" — CardCi,
+    NetSoak, the drift guard. This is one of those. Mirrors Kingdom.Tools.CardCi exactly:
+    pure .NET, license-free, runs on any runner, exit 0/1.
+
+    These are STATIC STRUCTURAL assertions, which is why they do not carry the failure-surface
+    cost the archive commit removed. They cannot block routine work by being wrong about
+    behaviour — they have no opinion about behaviour. If one fires, it is a desync waiting to
+    happen.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Kingdom.Tools.DeterminismGate</AssemblyName>
+    <RootNamespace>Kingdom.Tools.DeterminismGate</RootNamespace>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Referenced so Assembly.Load(simpleName) resolves them out of this tool's output dir.
+         Every assembly named in CoreAssemblies/ServerAssembly/ClientAssembly must appear here. -->
+    <ProjectReference Include="..\Kingdom.Core\Kingdom.Core.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Cards\Kingdom.Core.Cards.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Contracts\Kingdom.Core.Contracts.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Serialization\Kingdom.Core.Serialization.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Collection\Kingdom.Core.Collection.csproj" />
+    <ProjectReference Include="..\Kingdom.Net.Protocol\Kingdom.Net.Protocol.csproj" />
+    <ProjectReference Include="..\Kingdom.Net.Client\Kingdom.Net.Client.csproj" />
+    <ProjectReference Include="..\Kingdom.Net.Server\Kingdom.Net.Server.csproj" />
+  </ItemGroup>
+
+</Project>

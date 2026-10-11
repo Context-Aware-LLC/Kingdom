@@ -2,14 +2,14 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using Emberfall.Presentation;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// #195 — stamps the build's version, ordinal and commit into <c>Assets/Resources</c> so
@@ -17,7 +17,7 @@ namespace Emberfall.Editor
     ///
     /// <para>Runs as <see cref="IPreprocessBuildWithReport"/>, so every build gets a stamp with no
     /// one having to remember — including the ones driven from
-    /// <c>Emberfall/Build/Android APK</c>.</para>
+    /// <c>Kingdom/Build/Android APK</c>.</para>
     ///
     /// <para><b>The ordinal is the git commit count</b>, not a number CI stores. See
     /// <see cref="BuildStamp"/> for why that is the better of the two.</para>
@@ -42,7 +42,7 @@ namespace Emberfall.Editor
 
         public void OnPreprocessBuild(BuildReport report) => Write(report.summary.platform);
 
-        // NO MENU ITEM (removed 2026-09-04, Sam auditing the Emberfall menu). There was a
+        // NO MENU ITEM (removed 2026-09-04, Sam auditing the Kingdom menu). There was a
         // "Build/Write Build Stamp (what a tester sees)" entry here, and it was redundant the day
         // it was written: this class is an IPreprocessBuildWithReport, so OnPreprocessBuild above
         // stamps EVERY build with no one having to remember. The menu item's only distinct effect

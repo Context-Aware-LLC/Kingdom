@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Burns a whole dying card away — art, frame, gem, keyword icons and every TMP label at once —
@@ -23,7 +23,7 @@ namespace Emberfall.Presentation
     ///
     /// WHERE IT SITS. The quad is planted at the visual's exact world pose — same position, same
     /// rotation, same size — so the swap from real hierarchy to snapshot is invisible on the frame
-    /// it happens. M_Dissolve (Emberfall/SG_Dissolve, hand-HLSL) alpha-blends at queue Transparent
+    /// it happens. M_Dissolve (Kingdom/SG_Dissolve, hand-HLSL) alpha-blends at queue Transparent
     /// with ZWrite off, which is safe here for one specific reason: board cards never overlap, and
     /// a minion only ever dies on the board. Anything that dies while overlapping would need the
     /// depth-vs-sort-order argument re-made from scratch.
@@ -69,7 +69,7 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// Capture + hide + build the burn quad, leaving _DissolveAmount at 0. Split from
-        /// <see cref="Play"/> so Emberfall/Preview Card Dissolve can drive the real component
+        /// <see cref="Play"/> so Kingdom/Preview Card Dissolve can drive the real component
         /// through a parameter sweep without a play-mode coroutine.
         /// </summary>
         public bool Prepare(Transform visual)

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Session;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The first-look overlay, a proclamation scroll: a title, one illustration, an instruction and

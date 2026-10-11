@@ -224,7 +224,7 @@ def rule(ch="-", n=94):
 
 def main() -> int:
     print("EF-062 · Resolution, aspect and safe area")
-    print("Emberfall board = orthographic world-space scene. Every figure below is derived")
+    print("Kingdom board = orthographic world-space scene. Every figure below is derived")
     print("from the constants in the table, which are parsed from the shipping source.")
     print()
 

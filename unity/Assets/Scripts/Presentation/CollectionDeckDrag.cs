@@ -1,10 +1,10 @@
 using System;
-using Emberfall.Core.Cards;
+using Kingdom.Core.Cards;
 using UnityEngine;
 using UnityEngine.UIElements;
 using PointerType = UnityEngine.UIElements.PointerType;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Collection-only transfer gesture. Like the design-system draggable, it owns a preview,

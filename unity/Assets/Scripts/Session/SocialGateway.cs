@@ -2,11 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Social;
-using Emberfall.Net.Protocol;
+using Kingdom.Net.Client.Social;
+using Kingdom.Net.Protocol;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// The game's one <see cref="SocialClient"/> (#409): the <c>/social</c> connection that makes

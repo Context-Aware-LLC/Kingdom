@@ -1,0 +1,16 @@
+{
+  "name": "Kingdom.Core.Cards",
+  "rootNamespace": "Kingdom.Core.Cards",
+  "references": [
+    "Kingdom.Core.Contracts"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

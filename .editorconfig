@@ -1,4 +1,4 @@
-# Emberfall — code formatting conventions.
+# Kingdom — code formatting conventions.
 #
 # EF-003: before this file, `dotnet format` (a blocking CI stage, ci.yml Stage 1) fell
 # back to the PLATFORM newline. On Windows (core.autocrlf=true) it expected CRLF and

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Hover-reveal for cards in hand (hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/match-hud.md §8, revised by Sam 2026-07-24).
     //

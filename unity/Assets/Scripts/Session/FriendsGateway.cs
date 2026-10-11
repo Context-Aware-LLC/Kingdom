@@ -1,10 +1,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Social;
+using Kingdom.Net.Client.Social;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// The game's one <see cref="HttpFriendsGateway"/> (#409). Composed on first touch like

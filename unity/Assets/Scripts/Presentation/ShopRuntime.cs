@@ -1,6 +1,6 @@
-using Emberfall.Net.Client.Shop;
+using Kingdom.Net.Client.Shop;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Optional override of the shop's authenticated HTTP gateway. With no override,

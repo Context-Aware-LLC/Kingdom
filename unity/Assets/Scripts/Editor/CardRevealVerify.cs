@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
-using Emberfall.Data;
-using Emberfall.Presentation;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
+using Kingdom.Data;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// EF-049 named verify. Gates the two halves of the reveal layer that can be wrong without
@@ -27,7 +27,7 @@ namespace Emberfall.Editor
     /// </summary>
     public static class CardRevealVerify
     {
-        [MenuItem("Emberfall/Verify Card Reveal (EF-049 trigger + glossary)")]
+        [MenuItem("Kingdom/Verify Card Reveal (EF-049 trigger + glossary)")]
         public static void Run()
         {
             Func<int>[] checks =

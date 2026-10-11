@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Collection;
+using Kingdom.Core.Collection;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// Which player is sitting at this machine, and which others exist on it

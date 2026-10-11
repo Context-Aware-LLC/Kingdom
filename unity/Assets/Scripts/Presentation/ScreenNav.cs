@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The one way a screen hands off to another screen, and the one place scene names are spelled.
@@ -20,7 +20,7 @@ namespace Emberfall.Presentation
     /// it rejects every load it was written to protect.</para>
     ///
     /// <para><b>The build-list hazard.</b> A scene missing from the build list fails here, not at
-    /// author time — the button simply does nothing. <c>Emberfall/Build/Sync Scene List</c> fixes it
+    /// author time — the button simply does nothing. <c>Kingdom/Build/Sync Scene List</c> fixes it
     /// in the open Editor, but that menu item does NOT reach <c>EditorBuildSettings.asset</c> on
     /// disk; hand-edit the asset to match, or the fix is lost the next time the Editor is closed.
     /// This warning previously existed in exactly one of the seven copies.</para>
@@ -70,7 +70,7 @@ namespace Emberfall.Presentation
             if (Application.CanStreamedLevelBeLoaded(sceneName)) return true;
             Debug.LogError(
                 $"[Nav] Scene '{sceneName}' is not in the build list, so this cannot do " +
-                "anything. Run Emberfall/Build/Sync Scene List — and note that menu item does " +
+                "anything. Run Kingdom/Build/Sync Scene List — and note that menu item does " +
                 "not reach EditorBuildSettings.asset on disk, so hand-edit it to match.");
             return false;
         }

@@ -5,7 +5,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.SceneManagement;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Background music, in POOLS chosen by screen. Each pool is one subfolder of
@@ -129,7 +129,7 @@ namespace Emberfall.Presentation
             if (_heldScene == null && !_source.isPlaying) PlayNext(want);
         }
 
-        // Scene names, not paths: SceneManager reports the name, and EmberfallBuild's list holds
+        // Scene names, not paths: SceneManager reports the name, and KingdomBuild's list holds
         // the paths these came from. Anything unlisted is a menu screen.
         private static string PoolForScene(string scene) => scene switch
         {
@@ -142,7 +142,7 @@ namespace Emberfall.Presentation
         ///
         /// <para><c>runInBackground</c> is 1 in ProjectSettings and stays 1 — a match holds a live
         /// socket and has to survive the player glancing at a notification. The cost is that
-        /// nothing else stops this player when Emberfall leaves the foreground: Unity keeps
+        /// nothing else stops this player when Kingdom leaves the foreground: Unity keeps
         /// Update()-ing, the AudioSource keeps its clip, and Android keeps the process cached long
         /// past the point the player believes they closed the game.</para>
         ///

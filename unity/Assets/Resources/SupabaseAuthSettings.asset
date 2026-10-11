@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 367ff370669943f2a9492651095fcafe, type: 3}
   m_Name: SupabaseAuthSettings
-  m_EditorClassIdentifier: Emberfall.Session::Emberfall.Session.SupabaseAuthSettings
+  m_EditorClassIdentifier: Kingdom.Session::Kingdom.Session.SupabaseAuthSettings
   projectUrl: https://cjoyljppqtqfeojtcghg.supabase.co
   anonKey: sb_publishable_8LbZnSa-7bM63s17zlaCMA_1ZTYCrNz
   redirectUrl: emberfall://auth

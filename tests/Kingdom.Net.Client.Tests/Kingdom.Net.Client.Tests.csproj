@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kingdom.Net.Client.Tests — the B3 client-seam tests (dev-docs/quality/testing-and-ci.md:22),
+    hard-blocking via the existing CI category stages (Unit/Contract), slnx membership IS the
+    enrollment (a5 §11 / b1 §2). The peer is B1's REAL MatchSession over the loopback transport
+    (§8, RC-F9): this project references Kingdom.Net.Server so the authority under test is the
+    shipped one, never a hand-written fake. Kingdom.Net.Client itself must NEVER reference the
+    server — that direction is asserted by FirewallTests (§11.8, OQ-B).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <PackageReference Include="NUnit.Analyzers" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Kingdom.Core.Contracts\Kingdom.Core.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Core.Cards\Kingdom.Core.Cards.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Core.Serialization\Kingdom.Core.Serialization.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Core\Kingdom.Core.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Net.Protocol\Kingdom.Net.Protocol.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Net.Server\Kingdom.Net.Server.csproj" />
+    <ProjectReference Include="..\..\src\Kingdom.Net.Client\Kingdom.Net.Client.csproj" />
+    <!-- FixtureCard/ShippedCards: one definition of "a card id in a fixture", shared. -->
+    <ProjectReference Include="..\Kingdom.Core.Tests\Kingdom.Core.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

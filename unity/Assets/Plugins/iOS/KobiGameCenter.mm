@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <GameKit/GameKit.h>
 
-// Game Center bridge for Emberfall.Session.GameCenterLadder (GameCenterLadder.cs). Two entry
+// Game Center bridge for Kingdom.Session.GameCenterLadder (GameCenterLadder.cs). Two entry
 // points, both called on Unity's main thread, which on iOS is the app's main thread — the same
 // one GameKit invokes authenticateHandler on. Nothing here is touched from anywhere else, so the
 // statics below need no lock.

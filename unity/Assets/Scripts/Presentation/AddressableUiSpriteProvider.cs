@@ -6,7 +6,7 @@ using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Shipping IUiSpriteProvider (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §2): resolves frame/gem/icon keys from the
     // UI_Core Addressables group at address "ui/<key>". UI chrome is small and always

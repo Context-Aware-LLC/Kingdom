@@ -23,11 +23,11 @@
 // at a 0.5 alpha threshold would make the card visibly POP to jagged corners on the frame
 // the burn starts, so _DissolveAmount = 0 would not match the live card it replaces. Alpha
 // blending keeps that first frame pixel-faithful (which is exactly what
-// Emberfall/Preview Card Dissolve's live-reference render checks) while the burn holes stay
+// Kingdom/Preview Card Dissolve's live-reference render checks) while the burn holes stay
 // hard-edged, because they come from a step() and not from the blend. Safe against the
 // depth-vs-sort-order trap this project keeps paying for: board cards never overlap, and a
 // minion only ever dies on the board.
-Shader "Emberfall/SG_Dissolve"
+Shader "Kingdom/SG_Dissolve"
 {
     Properties
     {

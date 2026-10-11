@@ -1,0 +1,22 @@
+{
+  "name": "Kingdom.Session",
+  "rootNamespace": "Kingdom.Session",
+  "references": [
+    "Kingdom.Core.Contracts",
+    "Kingdom.Core.Cards",
+    "Kingdom.Core",
+    "Kingdom.Core.Collection",
+    "Kingdom.Data",
+    "Kingdom.Net.Client",
+    "Kingdom.Net.Protocol"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

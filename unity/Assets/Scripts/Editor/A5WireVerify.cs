@@ -1,10 +1,10 @@
 using UnityEditor;
 using UnityEngine;
-using Emberfall.Core.Contracts;
-using Emberfall.Core.Serialization;
-using Emberfall.Net.Protocol;
+using Kingdom.Core.Contracts;
+using Kingdom.Core.Serialization;
+using Kingdom.Net.Protocol;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// A5 commit-2 named verify (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/a5-wire-protocol-design.md §11 / §12 finding 9): Serialization's
@@ -14,7 +14,7 @@ namespace Emberfall.Editor
     /// </summary>
     public static class A5WireVerify
     {
-        [MenuItem("Emberfall/Verify A5 Wire (hasher + round-trip)")]
+        [MenuItem("Kingdom/Verify A5 Wire (hasher + round-trip)")]
         public static void Run()
         {
             var p0Id = new PlayerId("p0");

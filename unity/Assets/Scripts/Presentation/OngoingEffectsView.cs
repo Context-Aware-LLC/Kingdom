@@ -1,10 +1,10 @@
 using System.Text;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 using TMPro;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Compact, read-only HUD list of the ongoing effects visible in projected state.</summary>
     public sealed class OngoingEffectsView : MonoBehaviour

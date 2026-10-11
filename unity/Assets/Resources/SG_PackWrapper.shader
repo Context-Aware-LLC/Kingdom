@@ -4,7 +4,7 @@
 // UI Toolkit, whose background-image API cannot accept a custom Material. The source already has
 // its foil, seals and transparent silhouette; sampling it unchanged keeps the tear matched to the
 // intact sprite. Motion belongs to the pack-opening animation around these pieces.
-Shader "Emberfall/SG_PackWrapper"
+Shader "Kingdom/SG_PackWrapper"
 {
     Properties
     {

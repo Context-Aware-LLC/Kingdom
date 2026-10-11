@@ -1,6 +1,6 @@
 // Painted Aegis shell. Preserve the PNG's alpha, including its transparent centre;
 // the binder animates tint alpha and intensity independently for gain/break.
-Shader "Emberfall/AegisDome"
+Shader "Kingdom/AegisDome"
 {
     Properties
     {

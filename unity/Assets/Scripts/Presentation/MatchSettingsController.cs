@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Collection;
-using Emberfall.Session;
+using Kingdom.Core.Collection;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Settings overlay (C-G1-3 / decision 23 §5), mounted both in-match and on the main menu

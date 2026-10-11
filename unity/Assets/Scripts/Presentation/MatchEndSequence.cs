@@ -2,12 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Quests;
+using Kingdom.Net.Client.Quests;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Paces the result screen and then returns the player to deck selection (Sam, 2026-10-03):

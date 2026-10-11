@@ -1,7 +1,7 @@
-using Emberfall.Core;
+using Kingdom.Core;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// EF-062. Defines the board's logical world-space bounds and the device-facing layout
@@ -292,7 +292,7 @@ namespace Emberfall.Presentation
         /// Asserts that <see cref="DesignHalfWidth"/> still equals what the board actually
         /// builds, and that <see cref="Solve"/> does what it claims. Called from the EF-001
         /// headless harness through <c>DeviceLayoutVerify</c>; lives here because the layout
-        /// constants it reads are assembly-private to Emberfall.Presentation.
+        /// constants it reads are assembly-private to Kingdom.Presentation.
         /// </summary>
         /// <param name="report">Human-readable lines, one per assertion, pass or fail.</param>
         /// <returns>True when every assertion holds.</returns>

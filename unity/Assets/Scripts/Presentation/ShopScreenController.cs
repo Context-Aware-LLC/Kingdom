@@ -1,9 +1,9 @@
-using Emberfall.Net.Client.Shop;
-using Emberfall.Session;
+using Kingdom.Net.Client.Shop;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Scene host for the store — the peer of <see cref="CollectionController"/> and

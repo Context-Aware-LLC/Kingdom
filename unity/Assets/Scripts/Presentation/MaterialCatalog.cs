@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Resolves the shared materials for runtime-built board geometry (M2 D2, shaders/README.md §3).
     // Runtime primitives ship with Unity's built-in Default-Material, whose Standard shader is
@@ -18,7 +18,7 @@ namespace Emberfall.Presentation
         public const string CardEdge = "M_CardEdge";  // URP Lit — shallow physical card/deck backing
         public const string CardArt  = "M_CardArt";   // URP Unlit — CardPresenter/HeroPlateView push _BaseMap
         public const string Glow     = "M_Glow";      // SG_Glow
-        public const string Aegis    = "M_Aegis";     // Emberfall/AegisDome; texture bundled with material
+        public const string Aegis    = "M_Aegis";     // Kingdom/AegisDome; texture bundled with material
         public const string ManaFill = "M_ManaFill";  // SG_ManaFill — ManaTrayView pushes _FillLevel
         public const string Plate    = "M_Plate";     // URP Unlit — tinted per-instance via _BaseColor
         public const string Dissolve = "M_Dissolve";  // SG_Dissolve — CardDeathDissolve instances it per death
@@ -38,7 +38,7 @@ namespace Emberfall.Presentation
             mat = handle.WaitForCompletion();
 #endif
             if (mat == null)
-                Debug.LogWarning($"[MaterialCatalog] material '{name}' not found — run Emberfall/Addressables setup after Emberfall/Materials setup");
+                Debug.LogWarning($"[MaterialCatalog] material '{name}' not found — run Kingdom/Addressables setup after Kingdom/Materials setup");
 
             _cache[name] = mat;
             return mat;

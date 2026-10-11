@@ -43,7 +43,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Apk = "unity/Builds/Android/Emberfall.apk",
+    [string]$Apk = "unity/Builds/Android/Kingdom.apk",
     [string]$PackageName,
     [int]$Seconds = 120,
     [string]$OutDir,

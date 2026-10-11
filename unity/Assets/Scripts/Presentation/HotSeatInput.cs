@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
-using Emberfall.Session;
+using Kingdom.Core.Contracts;
+using Kingdom.Session;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Human player intent source for hot-seat local mode (ARCHITECTURE §6).
     // InputRouter pushes intents here; MatchRunner drains them each frame.

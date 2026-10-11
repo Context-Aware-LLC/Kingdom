@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.IO;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
 using UnityEngine;
 using UnityEditor;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Bakes real cards through the real <see cref="CardFaceBaker"/> and composites them into one
@@ -51,7 +51,7 @@ namespace Emberfall.Editor
         // --surface-1, the screen background the wall sits on (UI/Common/theme.uss).
         private static readonly Color Surface1 = new Color32(20, 25, 34, 255);
 
-        [MenuItem("Emberfall/Preview (offscreen)/Card Faces")]
+        [MenuItem("Kingdom/Preview (offscreen)/Card Faces")]
         public static void Render()
         {
             ICardDatabase db = CardDatabaseLoader.Load();
@@ -143,7 +143,7 @@ namespace Emberfall.Editor
         }
 
         // THE EMBERWARD/TIDECALLER BATCH MENU ITEM WAS REMOVED 2026-09-04 (Sam, auditing the
-        // Emberfall menu: "so many of those are one offs and have no future use"). It was a fixed
+        // Kingdom menu: "so many of those are one offs and have no future use"). It was a fixed
         // list of the twelve cards imported on 2026-07-26, kept to prove that VANGUARD and
         // LIFEDRAIN pills and the first weapon face rendered at all. They have rendered for weeks,
         // both keywords ship on more cards than those two, and the id list could only ever go

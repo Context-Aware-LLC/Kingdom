@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Concrete, mutable implementation of ICardLiveState (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.1 + §5.2).
     // BoardController owns these; it diffs successive GameState snapshots and calls UpdateFrom.

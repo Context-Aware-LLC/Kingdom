@@ -1,7 +1,7 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Implements IBoardAnchors: maps (PlayerId, Zone, slotIndex) to named scene transforms.
     // Anchor data is authored in the editor (via Inspector) OR assigned at runtime by

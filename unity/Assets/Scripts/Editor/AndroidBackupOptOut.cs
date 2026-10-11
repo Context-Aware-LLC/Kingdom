@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using UnityEditor.Android;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Turns Android's automatic cloud backup OFF for this app.
@@ -53,7 +53,7 @@ namespace Emberfall.Editor
             {
                 // Loud, because silence here is indistinguishable from success and the consequence
                 // is a build that quietly keeps restoring stale data.
-                Debug.LogError($"[EmberfallBuild] No AndroidManifest.xml at '{manifestPath}' — " +
+                Debug.LogError($"[KingdomBuild] No AndroidManifest.xml at '{manifestPath}' — " +
                                "auto-backup could NOT be disabled and this build will restore " +
                                "stale local data on reinstall.");
                 return;
@@ -63,7 +63,7 @@ namespace Emberfall.Editor
 
             if (manifest.Contains("android:allowBackup=\"false\"", StringComparison.Ordinal))
             {
-                Debug.Log("[EmberfallBuild] Android auto-backup already disabled.");
+                Debug.Log("[KingdomBuild] Android auto-backup already disabled.");
                 return;
             }
 
@@ -74,13 +74,13 @@ namespace Emberfall.Editor
 
             if (ReferenceEquals(updated, manifest) || updated == manifest)
             {
-                Debug.LogError("[EmberfallBuild] Could not find an <application> element to disable " +
+                Debug.LogError("[KingdomBuild] Could not find an <application> element to disable " +
                                "auto-backup on. This build will restore stale local data on reinstall.");
                 return;
             }
 
             File.WriteAllText(manifestPath, updated);
-            Debug.Log($"[EmberfallBuild] Android auto-backup DISABLED in '{manifestPath}'. " +
+            Debug.Log($"[KingdomBuild] Android auto-backup DISABLED in '{manifestPath}'. " +
                       "Uninstall now clears the device; the account is what restores a player.");
         }
     }

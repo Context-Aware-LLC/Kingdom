@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kingdom.Core — GameState rules, command processor, match-start sequence, turn loop.
+    Plain C#, ZERO UnityEngine references (dev-docs/architecture/system-overview.md:9). The identical DLL is the authority on
+    the headless server, the predictor on the client, and the system-under-test in CI.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Kingdom.Core</AssemblyName>
+    <RootNamespace>Kingdom.Core</RootNamespace>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kingdom.Core.Contracts\Kingdom.Core.Contracts.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Cards\Kingdom.Core.Cards.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      EF-017a. DerivedStats.RemoveBySource is the unapply half of the derived-stat layer and has no
+      in-engine caller until AURA lands (EF-017b), so behaviour tests cannot reach it. Testing it
+      directly is what stops it shipping as unproven scaffolding. Same seam Kingdom.Net.Server
+      already uses for its own internals.
+    -->
+    <InternalsVisibleTo Include="Kingdom.Core.Tests" />
+  </ItemGroup>
+
+</Project>

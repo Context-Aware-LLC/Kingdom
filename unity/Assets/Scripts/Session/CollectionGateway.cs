@@ -1,11 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Core.Collection;
-using Emberfall.Net.Client.Collection;
+using Kingdom.Core.Collection;
+using Kingdom.Net.Client.Collection;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// The game's one <see cref="HttpCollectionGateway"/>, and the only place a server answer is

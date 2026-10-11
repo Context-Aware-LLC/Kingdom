@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.IO;
-using Emberfall.Presentation;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.AddressableAssets.Settings.GroupSchemas;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// One-shot (idempotent) Addressables bootstrap per hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §8:
@@ -50,7 +50,7 @@ namespace Emberfall.Editor
         /// closing log reports the run rather than a list someone has to remember to edit.</summary>
         private static readonly List<string> SyncedGroups = new List<string>();
 
-        [MenuItem("Emberfall/Addressables/Setup Groups + Migrate Card Data")]
+        [MenuItem("Kingdom/Addressables/Setup Groups + Migrate Card Data")]
         public static void Run()
         {
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);

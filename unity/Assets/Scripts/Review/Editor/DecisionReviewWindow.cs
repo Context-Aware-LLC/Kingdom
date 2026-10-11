@@ -4,7 +4,7 @@ using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Review
+namespace Kingdom.Review
 {
     /// <summary>
     /// The reviewer's panel: where you are in the bundle, what the policy chose, and what it could
@@ -22,7 +22,7 @@ namespace Emberfall.Review
         private DecisionReviewBootstrap _reviewer;
         private Vector2 _scroll;
 
-        [MenuItem("Emberfall/Review/Decision Reviewer Panel", priority = 102)]
+        [MenuItem("Kingdom/Review/Decision Reviewer Panel", priority = 102)]
         public static void Open()
         {
             DecisionReviewWindow window = GetWindow<DecisionReviewWindow>("Decision Review");
@@ -75,7 +75,7 @@ namespace Emberfall.Review
                 EditorGUILayout.HelpBox(
                     EditorApplication.isPlaying
                         ? "No DecisionReviewBootstrap in the scene."
-                        : "Not in play mode. Use Emberfall ▸ Review ▸ Open Decision Reviewer.",
+                        : "Not in play mode. Use Kingdom ▸ Review ▸ Open Decision Reviewer.",
                     MessageType.Info);
                 return;
             }

@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Gravekeep's Weaken: a narrow green siphon from the power socket, ending in a
     /// brief emerald flash over the minion as its stats change.</summary>

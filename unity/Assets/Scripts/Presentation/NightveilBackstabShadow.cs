@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Nightveil's shadow rises beside the enemy hero as Backstab lands.</summary>
     internal static class NightveilBackstabShadow

@@ -1,9 +1,9 @@
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;   // ICardDatabase lives here, not in Core.Cards
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;   // ICardDatabase lives here, not in Core.Cards
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The eight-bucket mana curve strip under a deck being edited: costs 0..6, then 7+.

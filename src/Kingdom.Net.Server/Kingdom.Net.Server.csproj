@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Kingdom.Net.Server — the authoritative match server (B1, dev-docs/architecture/system-overview.md:18).
+    Kestrel/wss host over the deterministic core: MatchSession composes LocalMatchHost (zero rules
+    surface here), all lifecycle time is session-layer synthetic intents through Submit, every
+    outbound state payload is a projected Snapshot(viewer). NOT a UPM package — this exe targets
+    net10.0 and never compiles inside Unity; the sibling netstandard2.1 assemblies it references do.
+    ZERO UnityEngine references (Firewall category), no float in anything state-adjacent.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Kingdom.Net.Server</AssemblyName>
+    <RootNamespace>Kingdom.Net.Server</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Kingdom.Net.Server.Tests" />
+    <InternalsVisibleTo Include="Kingdom.Tools.TelemetryVerify" />
+    <InternalsVisibleTo Include="Kingdom.Tools.StoreReconcile" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The durable telemetry store (C-G1-8). Only the off-box drain needs a DB driver;
+         nothing state-adjacent touches Npgsql, so the Firewall/no-float rules are unaffected. -->
+    <PackageReference Include="Npgsql" Version="9.0.3" />
+    <!-- EF-074a / NOR-227: Supabase JWT verification (asymmetric RS256/ES256 only).
+         Do not hand-roll — alg:none and RS/HS confusion are the classic hand-rolled failure modes. -->
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The canonical telemetry DDL. Embedded so TelemetryDrain applies EXACTLY this text on
+         startup and there is no second copy to drift (bookkeeping-is-part-of-done). -->
+    <EmbeddedResource Include="Telemetry\schema.sql" />
+    <!-- The canonical accounts + entitlement DDL (EF-072). Same reason: the Postgres account store
+         and entitlement ledger apply EXACTLY this text; there is no second copy to drift. -->
+    <EmbeddedResource Include="Accounts\schema.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kingdom.Core.Contracts\Kingdom.Core.Contracts.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Cards\Kingdom.Core.Cards.csproj" />
+    <!-- NOR-109: the booster-pack model + open algorithm are core (netstandard2.1, float-free);
+         only the ledger/pity binding lives here.
+         EF-073/VULN-002 leans on this SAME reference for PlayerName.Check, so the display name
+         arriving in HelloMsg is judged by the IDENTICAL predicate the client uses rather than a
+         re-implementation free to drift from it. This assembly is UnityEngine-free precisely so
+         the server can take this reference — do not drop it if the pack binding ever moves out. -->
+    <ProjectReference Include="..\Kingdom.Core.Collection\Kingdom.Core.Collection.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Serialization\Kingdom.Core.Serialization.csproj" />
+    <ProjectReference Include="..\Kingdom.Core\Kingdom.Core.csproj" />
+    <!-- EF-071: the deckbuilder's own L1-L5 predicate, re-run server-side on client-submitted decks
+         (never trust the client). UnityEngine-free + float-free, so it does not touch the Firewall. -->
+    <ProjectReference Include="..\Kingdom.Core.Collection\Kingdom.Core.Collection.csproj" />
+    <ProjectReference Include="..\Kingdom.Net.Protocol\Kingdom.Net.Protocol.csproj" />
+    <!-- Live human-game capture emits the same raw episode contract consumed by the corpus builder. -->
+    <ProjectReference Include="..\Kingdom.Training.Corpus\Kingdom.Training.Corpus.csproj" />
+    <ProjectReference Include="..\Kingdom.Policy\Kingdom.Policy.csproj" />
+    <!-- Task 6 (AI opponent matchmaking): BotSeatRunner wraps the production LoopbackTransport and
+         drives a real NetworkedMatchSession — the same client class a human uses — so a bot seat
+         needs the client assembly. -->
+    <ProjectReference Include="..\Kingdom.Net.Client\Kingdom.Net.Client.csproj" />
+  </ItemGroup>
+
+</Project>

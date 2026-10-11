@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Ring, socket and stat-boss geometry for one hero-frame material, read from the

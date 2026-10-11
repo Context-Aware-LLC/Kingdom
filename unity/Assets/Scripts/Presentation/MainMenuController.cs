@@ -2,17 +2,17 @@ using System;
 using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Core.Collection;
-using Emberfall.Net.Client.Auth;
-using Emberfall.Net.Client.Collection;
-using Emberfall.Net.Client.Gate;
-using Emberfall.Net.Client.Quests;
-using Emberfall.Net.Client.Shop;
-using Emberfall.Session;
+using Kingdom.Core.Collection;
+using Kingdom.Net.Client.Auth;
+using Kingdom.Net.Client.Collection;
+using Kingdom.Net.Client.Gate;
+using Kingdom.Net.Client.Quests;
+using Kingdom.Net.Client.Shop;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The front door — the first screen a player sees (dev-docs/ui/client-surfaces.md:7).
@@ -691,7 +691,7 @@ namespace Emberfall.Presentation
             }
         }
 
-        private void RenderVaultEntry(Emberfall.Net.Client.Collection.CollectionSnapshot snapshot)
+        private void RenderVaultEntry(Kingdom.Net.Client.Collection.CollectionSnapshot snapshot)
         {
             if (_vaultPackCount == null) return;
 

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Implemented by a component on a collider's GameObject that wants to know the
     /// pointer is over it. See <see cref="BoardPointerRelay"/>.</summary>

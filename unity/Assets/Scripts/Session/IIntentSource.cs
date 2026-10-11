@@ -1,6 +1,6 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// Provides PlayerIntents to the MatchRunner loop (ARCHITECTURE §5 / §6).

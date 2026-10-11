@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The trace an aimed spell or hero power leaves between where it sits and where the player is

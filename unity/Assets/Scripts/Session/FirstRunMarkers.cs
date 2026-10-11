@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Emberfall.Core.Collection;
+using Kingdom.Core.Collection;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// What this player has already been shown once — the beats that must not play twice.

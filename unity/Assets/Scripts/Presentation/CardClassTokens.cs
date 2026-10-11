@@ -1,7 +1,7 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Turning a <see cref="CardClass"/> or a <see cref="Rarity"/> into the strings the UI needs:

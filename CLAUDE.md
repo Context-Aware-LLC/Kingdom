@@ -6,7 +6,7 @@ A digital, turn-based **1v1 collectible trading card game**
 **There is no client-side prediction** (ADR-0004): the client mirrors server snapshots wholesale and never speculates. Mobile-first, architected for Desktop
 
 **THE GAME REQUIRES A CONNECTION. THERE IS NO OFFLINE MODE, and no code will tell you so.**
-Every bot lives in `src/Emberfall.Net.Server/Bots/` and runs server-side; the one client-side AI
+Every bot lives in `src/Kingdom.Net.Server/Bots/` and runs server-side; the one client-side AI
 (`PlayingAi`) is constructed at a single site inside `NetworkedGameBootstrap`, in a networked match.
 So there is no local match path and **nothing a player can do without a server** — the screens that
 still render offline (roster, collection, deck builder) exist only to prepare a match they cannot
@@ -42,7 +42,7 @@ Read the code, the data and the tests; they cannot drift from themselves. Do not
 
 ## Where things are
 
-`src/` and `tests/` hold the deterministic rules core (solution `Emberfall.slnx` — note `.slnx`, not `.sln`). `unity/` is the Unity project.
+`src/` and `tests/` hold the deterministic rules core (solution `Kingdom.slnx` — note `.slnx`, not `.sln`). `unity/` is the Unity project.
 `art-pipeline/` holds source art and generated candidates, and is gitignored.
 `tooling/fonts/` holds variable font sources that `tooling/scripts/instance_font.py` cuts into
 the static fonts Unity ships, because Unity cannot set a variable font's axes.
@@ -50,9 +50,9 @@ the static fonts Unity ships, because Unity cannot set a variable font's axes.
 See `src/README.md` for the engine map.
 
 **The core is `netstandard2.1`, NOT .NET 10.**
-Every `Emberfall.Core.*` project, plus `Emberfall.Net.Client` and `Emberfall.Net.Protocol`, targets `netstandard2.1` because:
-**Unity consumes them as local packages** and cannot load a `net10.0` assembly. Only `Emberfall.Net.Server`
-and the `Emberfall.Tools.*` projects are `net10.0`. Reaching for a .NET 10 API or a newer C#
+Every `Kingdom.Core.*` project, plus `Kingdom.Net.Client` and `Kingdom.Net.Protocol`, targets `netstandard2.1` because:
+**Unity consumes them as local packages** and cannot load a `net10.0` assembly. Only `Kingdom.Net.Server`
+and the `Kingdom.Tools.*` projects are `net10.0`. Reaching for a .NET 10 API or a newer C#
 language feature inside the core compiles nowhere and breaks Unity's consumption of it — so check
 the `.csproj` before using anything modern. Confirm with:
 `git grep -h '<TargetFramework>' -- 'src/**/*.csproj' | sort | uniq -c`
@@ -64,9 +64,9 @@ and never opens the `.csproj` at all. An `.asmdef` has no friend mechanism, so
 Unity cannot compile the consumer.** Declare friends as `[assembly: InternalsVisibleTo(...)]` in
 a `.cs` file, which both toolchains compile. This cost a session on 2026-08-06: an `internal`
 field read across two assemblies took down every Unity assembly downstream of it, surfacing as a
-Burst *"Failed to resolve assembly: 'Emberfall.AI'"* and a vanished `Emberfall/` menu — neither of
+Burst *"Failed to resolve assembly: 'Kingdom.AI'"* and a vanished `Kingdom/` menu — neither of
 which points at an access modifier. The live declarations are in
-`src/Emberfall.Core.Contracts/AssemblyInfo.cs`; that file carries the retirement trigger.
+`src/Kingdom.Core.Contracts/AssemblyInfo.cs`; that file carries the retirement trigger.
 
 **`<Nullable>enable</Nullable>` is the same trap, and its fix has two of its own.** Unity takes
 compiler switches from a file named exactly `csc.rsp` beside the `.asmdef`; each Unity-consumed
@@ -75,7 +75,7 @@ word — `<AssemblyName>.rsp` sat inert from 2026-08-23 to 2026-10-10 while 296 
 filled the console. And the file takes **arguments only**: a `#` comment line is split into words
 and every word becomes a source file, which fails the compile with CS2001 naming a word, not the
 file. Confirm a switch arrived with
-`grep -c -- -nullable unity/Library/Bee/artifacts/*.dag/Emberfall.Core.Cards.rsp`. A project that
+`grep -c -- -nullable unity/Library/Bee/artifacts/*.dag/Kingdom.Core.Cards.rsp`. A project that
 stops being consumed by Unity takes its `csc.rsp` with its `.asmdef`.
 
 ## Source of truth
@@ -110,7 +110,7 @@ that. `CardValidator` rule C21 enforces the real relation — **assign the exact
 in the same commit that lands its raise path.**
 
 **When the doc and the code disagree, the code wins.** The `Trigger` enum in
-`src/Emberfall.Core.Contracts/Enums.cs` carries a liveness marker, raise site and retirement
+`src/Kingdom.Core.Contracts/Enums.cs` carries a liveness marker, raise site and retirement
 trigger per member; `EffectSourceCapabilities`, `AuraCapabilities` and `CardValidator` hold the
 tables. The spec doc is a copy of those, and the copy is the thing to fix.
 
@@ -120,7 +120,7 @@ have to move together are the canonical serializer, the projection and the snaps
 and the client and server disagree about a state neither can prove wrong.
 
 **A `dotnet test` that matches zero tests exits 0.** All five .NET test projects must stay
-registered in `Emberfall.slnx`, because a run that matches nothing is green for the wrong reason.
+registered in `Kingdom.slnx`, because a run that matches nothing is green for the wrong reason.
 **Read the count, not the badge.**
 
 **Nothing pins the canonical hash, by decision** — no golden digest, no replay fixtures. What
@@ -196,8 +196,8 @@ The naming convention itself, and everything that checks it, lives in that scrip
 
 **Before committing `unity/ProjectSettings/ProjectSettings.asset`, `git diff` it and confirm `productName` is still exactly `Bad Ideas`.**
 
-It was `Emberfall` until 2026-09-28. Sam renamed it before any store upload, because it is the
-label under the app icon. The codename, the setId and the folder names stay `Emberfall`.
+It was `Kingdom` until 2026-09-28. Sam renamed it before any store upload, because it is the
+label under the app icon. The codename, the setId and the folder names stay `Kingdom`.
 
 On Windows, `Application.persistentDataPath` is `AppData/LocalLow/<companyName>/<productName>`
 and PlayerPrefs are keyed the same way, so that one string keys the desktop player's **entire
@@ -210,7 +210,7 @@ On Android and iOS the save root is keyed on the package id (`com.contextaware.k
 rewrites `productName` to its role name. The project's only scenario asset was deleted
 2026-08-26, so nothing triggers this today — but Multiplayer Play Mode is a built-in editor
 module, not a package, so authoring a new scenario under `Assets/Settings/PlayMode/` arms it
-again. **`Emberfall/Build/Restore Product Name` puts it back** (set through `PlayerSettings`,
+again. **`Kingdom/Build/Restore Product Name` puts it back** (set through `PlayerSettings`,
 since Unity holds project settings in memory and overwrites a file edited underneath it). The
 rename is harmless while it stays in the working tree; only the commit is damaging.
 
@@ -224,8 +224,8 @@ through all of it. Reach follows the project references and runs one way: Unity 
 | You changed | Run | Do not run |
 |---|---|---|
 | `unity/Assets/Scripts/**` | `pwsh tools/ci/unity-compile.ps1`, then the one `HeadlessVerify` static that covers that surface, if one does | `dotnet test`; the other statics |
-| `src/Emberfall.Core*`, `Net.Client`, `Net.Protocol` | the test classes that name the type you changed, then `unity-compile.ps1`, because Unity builds these too | the rest of the suite |
-| `src/Emberfall.Net.Server`, `Emberfall.Tools.*`, `Emberfall.Training.*` | the test classes that name the type you changed | anything Unity; it never loads these |
+| `src/Kingdom.Core*`, `Net.Client`, `Net.Protocol` | the test classes that name the type you changed, then `unity-compile.ps1`, because Unity builds these too | the rest of the suite |
+| `src/Kingdom.Net.Server`, `Kingdom.Tools.*`, `Kingdom.Training.*` | the test classes that name the type you changed | anything Unity; it never loads these |
 | card JSON | the CardCi line of `gates.ps1` Stage 6 | the test suites |
 | `.uss`, `.uxml` | the Stage 1b or 1c line of `gates.ps1` | everything else |
 | a script under `tooling/` | that script's own test under `tests/python/` | |
@@ -241,7 +241,7 @@ which exits the Editor.
 **Widen only when you cannot bound the reach**, and then to the half that applies (`gates.ps1` for
 .NET, `unity-gate.ps1` for Unity): a change to game-state shape, the canonical serializer, the
 projection, the snapshot codec or the wire; a `.csproj`, `.asmdef`, `Directory.Build.props` or
-`Emberfall.slnx`; a type whose callers in other assemblies you did not enumerate; or Sam asking.
+`Kingdom.slnx`; a type whose callers in other assemblies you did not enumerate; or Sam asking.
 
 **A push follows the same rule over the whole diff**: the union of what its commits touched, not
 the full gate by default. This outranks the "before every push" lines in the `tools/ci/` script

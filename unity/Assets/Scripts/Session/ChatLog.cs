@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Net.Protocol;
+using Kingdom.Net.Protocol;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// This session's direct messages, per friend (#409). <b>Memory only</b>: chat is ephemeral by

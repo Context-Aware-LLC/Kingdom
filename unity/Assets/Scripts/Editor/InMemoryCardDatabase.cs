@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// ICardDatabase over the authoring window's current in-memory (possibly unsaved) rows, so

@@ -1,6 +1,6 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// EF-049. Decides WHEN a card reveal is up and WHICH card it is showing, from pointer events

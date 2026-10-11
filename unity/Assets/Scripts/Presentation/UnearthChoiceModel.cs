@@ -1,9 +1,9 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     public enum UnearthChoiceAudience
     {

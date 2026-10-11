@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngine.SceneManagement;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// EF-064 - on-device frame capture. Samples every frame into memory, then writes one CSV

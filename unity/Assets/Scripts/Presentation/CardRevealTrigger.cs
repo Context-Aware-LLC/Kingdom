@@ -1,8 +1,8 @@
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// EF-049. Per-card pointer relay for the reveal layer. Sits on the card ROOT, alongside

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Emberfall.Core.Contracts;
-using Emberfall.Net.Client.Quests;
+using Kingdom.Core.Contracts;
+using Kingdom.Net.Client.Quests;
 using TMPro;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// End-of-match presentation: a translucent scrim over the board with the verdict

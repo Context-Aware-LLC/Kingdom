@@ -1,4 +1,4 @@
-# Emberfall web card authoring tool.
+# Kingdom web card authoring tool.
 #
 # Build context is the repo ROOT (it needs tooling/cardweb + the card data), the same as
 # deploy/walking-skeleton/Dockerfile.server.

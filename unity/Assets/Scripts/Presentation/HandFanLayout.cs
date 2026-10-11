@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Positions the ten hand anchors as a fan whose footprint is FIXED
     // (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1.1): hand count changes overlap, never span.
@@ -21,7 +21,7 @@ namespace Emberfall.Presentation
     // Seat 1 is this layout point-reflected through the origin, exactly as §1.1 specifies:
     // (x, y, rot) -> (-x, -y, rot). A point reflection is a 180° rotation, so each card's
     // own tilt is unchanged by it.
-    // Public, not internal: DeckPilePreview (Emberfall.Editor, across an asmdef boundary) solves
+    // Public, not internal: DeckPilePreview (Kingdom.Editor, across an asmdef boundary) solves
     // the REAL fan to place the draw flight's destination. A preview that guessed where a hand
     // slot is would be judging the animation against a made-up target.
     public static class HandFanLayout
@@ -52,7 +52,7 @@ namespace Emberfall.Presentation
         // Run `python tooling/scripts/device_layout.py` and read §5 and §6 of the stdout. Those
         // numbers are derived from THIS constant; the ones in this comment are a copy and can rot.
         //
-        // Public, for the same reason Apply() is: DeckPilePreview (Emberfall.Editor, across an
+        // Public, for the same reason Apply() is: DeckPilePreview (Kingdom.Editor, across an
         // asmdef boundary) draws the draw-flight's destination card, and a preview that guessed the
         // size of a hand slot would be judging the animation against a made-up target.
         //

@@ -1,12 +1,12 @@
-using Emberfall.Net.Client.Auth;
+using Kingdom.Net.Client.Auth;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// Which Supabase project this build signs into, as a project asset.
     ///
-    /// <para><b>Create it at <c>Assets/Resources/SupabaseAuthSettings.asset</c></b> (Create ▸ Emberfall
+    /// <para><b>Create it at <c>Assets/Resources/SupabaseAuthSettings.asset</c></b> (Create ▸ Kingdom
     /// ▸ Supabase Auth Settings) once the project exists. The name and folder are load-bearing:
     /// <see cref="AuthGateway"/> finds it with <c>Resources.Load</c> and nothing else looks for it.</para>
     ///
@@ -19,7 +19,7 @@ namespace Emberfall.Session
     /// its own; every Supabase site ships it to browsers. The service key is the one that can mint
     /// tokens, and it must never be in this asset, in this repo, or in a build.</para>
     /// </summary>
-    [CreateAssetMenu(menuName = "Emberfall/Supabase Auth Settings", fileName = "SupabaseAuthSettings")]
+    [CreateAssetMenu(menuName = "Kingdom/Supabase Auth Settings", fileName = "SupabaseAuthSettings")]
     public sealed class SupabaseAuthSettings : ScriptableObject
     {
         [Tooltip("https://<ref>.supabase.co — the SAME project the server reads from " +

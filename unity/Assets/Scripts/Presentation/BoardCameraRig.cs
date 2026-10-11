@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Owns the live board camera's authored perspective pose and fits the logical board box into
@@ -67,7 +67,7 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Fit the logical Emberfall board bounds into the safe viewport without letterboxing.
+        /// Fit the logical Kingdom board bounds into the safe viewport without letterboxing.
         /// The solve is analytic for right/up translation and binary only for the minimum camera
         /// retreat. It allocates on safe-area changes, never per frame.
         /// </summary>

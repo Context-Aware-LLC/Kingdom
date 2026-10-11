@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// The presentation playback queue (decisions/ADR-0004's latency-smoother;

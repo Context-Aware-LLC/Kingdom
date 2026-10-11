@@ -3,7 +3,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Editor-only IArtProvider: resolves art straight from AssetDatabase under Assets/Art/.
     // Serves the M1 vertical slice (in-editor play mode) until Addressables groups exist —

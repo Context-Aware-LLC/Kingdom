@@ -1,8 +1,8 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using TMPro;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// EF-049. The in-play card focus view: a full-safe-height, live copy of the real card face.

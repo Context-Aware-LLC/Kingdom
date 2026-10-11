@@ -9,7 +9,7 @@ so a call did not resolve to a node across a file, let alone across an assembly.
 Measured on 2026-08-20, BEFORE `tooling/scripts/csharp_resolver.py` existed:
 
     edges whose target is not a node in the graph : 16814 / 25114  (67%)
-    edges joining Emberfall.Net.Server -> Core    : 0
+    edges joining Kingdom.Net.Server -> Core    : 0
     distinct cross-project pairs (CALLS/INHERITS) : 1   (and it is a Python one)
     distinct cross-community pairs, all kinds     : 9
 
@@ -151,7 +151,7 @@ def build(db: str, area_filter, min_loc: int, with_symbols: bool):
     return root, {"symbols": totals["symbols"], "loc": totals["loc"], "files": len(totals["files"])}
 
 
-TEMPLATE = """<title>Emberfall — code map</title>
+TEMPLATE = """<title>Kingdom — code map</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -176,7 +176,7 @@ TEMPLATE = """<title>Emberfall — code map</title>
   #tip div { color:#8b94a3; margin-top:2px; word-break:break-all; }
 </style>
 <header>
-  <b>Emberfall — code map</b>
+  <b>Kingdom — code map</b>
   <span id="crumb"></span>
   <span class="stats" id="stats"></span>
 </header>

@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Gathers blueprint light at the draw-flight origin, then fades as the card leaves.</summary>
     internal static class ClockwrightBlueprintEffect

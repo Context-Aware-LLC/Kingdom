@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>How a hero power's effect travels from its socket to what it hits.</summary>
     public enum HeroPowerDelivery

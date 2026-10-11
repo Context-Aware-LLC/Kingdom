@@ -1,8 +1,8 @@
 using System.Collections;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The cast a hero power shows on its caster's portrait: the class's effect art, revealed

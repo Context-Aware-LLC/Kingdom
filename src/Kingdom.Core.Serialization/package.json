@@ -1,0 +1,8 @@
+{
+  "name": "com.kingdom.core.serialization",
+  "version": "0.1.0",
+  "displayName": "Kingdom Core Serialization",
+  "description": "Canonical GameState serializer + hasher — the one field-order source of truth (A2, dev-docs/architecture/determinism-and-projection.md:13).",
+  "unity": "6000.0",
+  "type": "library"
+}

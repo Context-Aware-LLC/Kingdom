@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>Editor-time, metadata-only art lookup (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §4.4). No sprite/GPU load.</summary>
     public interface IAddressableArtCatalog

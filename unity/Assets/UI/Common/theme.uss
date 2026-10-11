@@ -25,7 +25,7 @@
  * has been left standing deliberately it says so, because the DECISION it records is usually still
  * sound even though the arithmetic under it moved.
  *
- * HOW TO CHECK RATHER THAN ASSUME: `Emberfall/Debug/Device Layout Rig` sets the Game View to
+ * HOW TO CHECK RATHER THAN ASSUME: `Kingdom/Debug/Device Layout Rig` sets the Game View to
  * 2400x1080, which now reproduces the device exactly (same resolution, same panel — there is no
  * dpi left to correct for), then `DeviceLayoutRig.Measure(...)` prints worldBound off the live
  * tree. Issue #349 is the full account.
@@ -294,7 +294,7 @@
    deleted here. Their values now live in the base `.emb-root` block at the top of this file.
 
    WHY, in one line: the panel stopped being sized in physical units, so the axis they keyed
-   on stopped varying. `EmberfallPanelSettings` runs ScaleWithScreenSize against 1920x1080
+   on stopped varying. `KingdomPanelSettings` runs ScaleWithScreenSize against 1920x1080
    matched on HEIGHT, which makes the panel's authored height exactly 1080 on every device
    and in every Game View. The classes keyed on the SHORT axis with Material 3's thresholds
    (600 / 840), so 1080 landed in `expanded` always and unconditionally — one branch of three
@@ -484,7 +484,7 @@
    trick as the scroller rules above. Bold on every button, including the ones whose own class does
    not ask for it: Modern Antiqua ships one weight, so this is UI Toolkit's synthetic bold, and Sam
    chose it over the regular face on sight (2026-09-30).
-   The asset is built by Emberfall/Fonts/Build Menu Button Font Asset. */
+   The asset is built by Kingdom/Fonts/Build Menu Button Font Asset. */
 .unity-button.unity-button {
     -unity-font-definition: url("/Assets/Art/Fonts/ModernAntiqua-Regular UITK.asset");
     -unity-font-style: bold;

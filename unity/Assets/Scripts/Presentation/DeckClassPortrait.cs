@@ -1,8 +1,8 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// One ordered class pair drawn from the prepared 2x4 hero sheet. The primary class owns the

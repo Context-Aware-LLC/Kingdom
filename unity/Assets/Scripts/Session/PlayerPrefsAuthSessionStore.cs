@@ -1,8 +1,8 @@
 using System;
-using Emberfall.Net.Client.Auth;
+using Kingdom.Net.Client.Auth;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// Keeps the signed-in session across launches, in <c>PlayerPrefs</c> beside the device token and

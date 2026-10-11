@@ -1,9 +1,9 @@
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
-using Emberfall.Session;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
+using Kingdom.Session;
 using UnityEngine;
 
-namespace Emberfall.AI
+namespace Kingdom.AI
 {
     /// <summary>
     /// Minimal dummy AI for the M1 vertical slice. Keeps all cards in mulligan, then immediately

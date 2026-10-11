@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
-using Emberfall.Session;
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
+using Kingdom.Session;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Editor tools for the player account — the profile + decks that
@@ -34,7 +34,7 @@ namespace Emberfall.Editor
         /// then run this while the sign-in screen is up in Play mode. The code is single-use and
         /// pairs with the most recent Google button press, so use the URL from that attempt.
         /// </summary>
-        [MenuItem("Emberfall/Player Account/Deliver Deep Link From Clipboard")]
+        [MenuItem("Kingdom/Player Account/Deliver Deep Link From Clipboard")]
         public static void DeliverDeepLinkFromClipboard()
         {
             string url = (GUIUtility.systemCopyBuffer ?? "").Trim().Trim('\'', '"');
@@ -54,7 +54,7 @@ namespace Emberfall.Editor
             Debug.Log("[SignIn] Delivered the deep link from the clipboard.");
         }
 
-        [MenuItem("Emberfall/Player Account/Show This Device's Account")]
+        [MenuItem("Kingdom/Player Account/Show This Device's Account")]
         public static void ShowAccount()
         {
             PlayerAccount account;
@@ -123,7 +123,7 @@ namespace Emberfall.Editor
         /// cascade now, and the assertion that replaced it is the opposite one: deleting the LAST
         /// deck succeeds, where the old roster refused it.</para>
         /// </summary>
-        [MenuItem("Emberfall/Player Account/Self-Check (scratch directory)")]
+        [MenuItem("Kingdom/Player Account/Self-Check (scratch directory)")]
         public static void SelfCheck()
         {
             string root = Path.Combine(Path.GetTempPath(), "emberfall-account-selfcheck");

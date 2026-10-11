@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Headless Unity verification harness (EF-001). Aggregates the local self-checks
     /// and exits non-zero on any compile error or check failure.
     ///
     /// <para>Run via: <c>Unity.exe -batchmode -nographics -quit -projectPath &lt;path&gt;
-    /// -logFile &lt;file&gt; -executeMethod Emberfall.Editor.HeadlessVerify.RunAll</c></para>
+    /// -logFile &lt;file&gt; -executeMethod Kingdom.Editor.HeadlessVerify.RunAll</c></para>
     ///
     /// <para>B3TransportVerify is deliberately excluded — it opens live WebSocket connections and
     /// requires the droplet to be reachable.</para>
     /// </summary>
     public static class HeadlessVerify
     {
-        [MenuItem("Emberfall/Headless Verify (all local checks)")]
+        [MenuItem("Kingdom/Headless Verify (all local checks)")]
         public static void RunAll()
         {
             // unity-verify.ps1 refuses a locked project and advances every project-owned compilation

@@ -1,0 +1,31 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kingdom.Core.Cards/Kingdom.Core.Cards.csproj" />
+    <Project Path="src/Kingdom.Core.Collection/Kingdom.Core.Collection.csproj" />
+    <Project Path="src/Kingdom.Core.Contracts/Kingdom.Core.Contracts.csproj" />
+    <Project Path="src/Kingdom.Core.Serialization/Kingdom.Core.Serialization.csproj" />
+    <Project Path="src/Kingdom.Core/Kingdom.Core.csproj" />
+    <Project Path="src/Kingdom.Net.Client/Kingdom.Net.Client.csproj" />
+    <Project Path="src/Kingdom.Net.Protocol/Kingdom.Net.Protocol.csproj" />
+    <Project Path="src/Kingdom.Policy/Kingdom.Policy.csproj" />
+    <Project Path="src/Kingdom.Net.Server/Kingdom.Net.Server.csproj" />
+    <Project Path="src/Kingdom.Tools.CardCi/Kingdom.Tools.CardCi.csproj" />
+    <Project Path="src/Kingdom.Tools.CollectionMigrate/Kingdom.Tools.CollectionMigrate.csproj" />
+    <Project Path="src/Kingdom.Tools.CollectionSelfCheck/Kingdom.Tools.CollectionSelfCheck.csproj" />
+    <Project Path="src/Kingdom.Tools.DecisionReview/Kingdom.Tools.DecisionReview.csproj" />
+    <Project Path="src/Kingdom.Tools.DeterminismGate/Kingdom.Tools.DeterminismGate.csproj" />
+    <Project Path="src/Kingdom.Tools.NetSoak/Kingdom.Tools.NetSoak.csproj" />
+    <Project Path="src/Kingdom.Tools.OddsDisclosure/Kingdom.Tools.OddsDisclosure.csproj" />
+    <Project Path="src/Kingdom.Tools.TelemetryVerify/Kingdom.Tools.TelemetryVerify.csproj" />
+    <Project Path="src/Kingdom.Tools.TrainingCorpus/Kingdom.Tools.TrainingCorpus.csproj" />
+    <Project Path="src/Kingdom.Tools.StoreReconcile/Kingdom.Tools.StoreReconcile.csproj" />
+    <Project Path="src/Kingdom.Training.Corpus/Kingdom.Training.Corpus.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Kingdom.Core.Tests/Kingdom.Core.Tests.csproj" />
+    <Project Path="tests/Kingdom.Net.Client.Tests/Kingdom.Net.Client.Tests.csproj" />
+    <Project Path="tests/Kingdom.Net.Protocol.Tests/Kingdom.Net.Protocol.Tests.csproj" />
+    <Project Path="tests/Kingdom.Net.Server.Tests/Kingdom.Net.Server.Tests.csproj" />
+    <Project Path="tests/Kingdom.Training.Corpus.Tests/Kingdom.Training.Corpus.Tests.csproj" />
+  </Folder>
+</Solution>

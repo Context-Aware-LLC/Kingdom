@@ -1,9 +1,9 @@
 using System.IO;
-using Emberfall.Presentation;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// EF-062. Holds <see cref="DeviceLayout"/>'s constants against the three things outside
@@ -21,7 +21,7 @@ namespace Emberfall.Editor
     {
         private const string BackdropTex = "Assets/Art/Backgrounds/BoardPlate_Master.png";
 
-        [MenuItem("Emberfall/Verify Device Layout (EF-062)")]
+        [MenuItem("Kingdom/Verify Device Layout (EF-062)")]
         public static void Check()
         {
             bool ok = DeviceLayout.SelfCheck(out string report);

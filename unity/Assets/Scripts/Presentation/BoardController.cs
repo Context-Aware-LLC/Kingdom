@@ -1,15 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
-using Emberfall.Core;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
-using Emberfall.Data;
-using Emberfall.Session;
+using Kingdom.Core;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
+using Kingdom.Data;
+using Kingdom.Session;
 using TMPro;
 using UnityEngine;
 
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Owns all CardPresenter instances on the board and in hand.
     // Called by NetworkedGameBootstrap: Initialize() once, then OnStateUpdated() on every engine tick.
@@ -946,7 +946,7 @@ namespace Emberfall.Presentation
 #if UNITY_EDITOR
         /// <summary>
         /// Builds one real card through the shipping <see cref="CreatePresenter"/>/GetOrCreate path
-        /// for Emberfall/Preview Card Dissolve. Editor-only: the preview must burn the actual card
+        /// for Kingdom/Preview Card Dissolve. Editor-only: the preview must burn the actual card
         /// hierarchy — every renderer, real frame art, real TMP labels — because a mock card would
         /// only ever prove the harness agrees with itself.
         /// </summary>

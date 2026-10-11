@@ -25,7 +25,7 @@ script reported CLEAN on 2026-08-18 for a row whose artId was missing a separato
 art therefore resolved to nothing. Step 2 replays the three blocking gates from
 .github/workflows/ci.yml Stage 6 so the failure lands here instead of on the runner:
 
-  2a. Emberfall.Tools.CardCi          — rows parse; C-series validation
+  2a. Kingdom.Tools.CardCi          — rows parse; C-series validation
   2b. audit_card_art_names.py         — every artId resolves to a png, and every seed key
                                         resolves to a row (--fail-missing-only --check-seeds)
 
@@ -61,7 +61,7 @@ ADMIN_OUTPUTS = (
     ROOT / "tooling" / "card-admin" / "data.json",
     ROOT / "tooling" / "card-admin" / "data.js",
 )
-CARD_CI_PROJECT = ROOT / "src" / "Emberfall.Tools.CardCi"
+CARD_CI_PROJECT = ROOT / "src" / "Kingdom.Tools.CardCi"
 ART_AUDIT = ROOT / "tooling" / "scripts" / "audit_card_art_names.py"
 CARD_DIR = ROOT / "unity" / "Assets" / "CardData"
 ART_DIR = ROOT / "unity" / "Assets" / "Art"
@@ -146,7 +146,7 @@ def step_gates(write, skip):
 
     failed = []
 
-    print("-- 2a  Emberfall.Tools.CardCi --")
+    print("-- 2a  Kingdom.Tools.CardCi --")
     code, _ = run([
         "dotnet", "run", "--project", str(CARD_CI_PROJECT), "-c", "Release",
         "--", str(CARD_DIR), str(ART_DIR),

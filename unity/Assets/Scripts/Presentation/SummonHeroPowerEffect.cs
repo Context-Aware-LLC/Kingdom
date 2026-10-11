@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Plays a 4x4 authored sheet at the already-resolved summon slot. The playback entry
     /// releases while the effect is still visible, so the new minion appears through its settling tail.</summary>

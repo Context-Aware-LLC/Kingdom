@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Review
+namespace Kingdom.Review
 {
     /// <summary>
     /// Optional real-bundle smoke check for the append/resume/legal-match lane. Runs against a
     /// private temporary copy, never Sam's original bundle or annotation sidecars.
-    /// Set EMBERFALL_REVIEW_BUNDLE and invoke -executeMethod Emberfall.Review.NativeActionCaptureVerify.Run.
+    /// Set EMBERFALL_REVIEW_BUNDLE and invoke -executeMethod Kingdom.Review.NativeActionCaptureVerify.Run.
     /// </summary>
     public static class NativeActionCaptureVerify
     {

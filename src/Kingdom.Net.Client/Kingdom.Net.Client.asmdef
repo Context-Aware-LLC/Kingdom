@@ -1,0 +1,14 @@
+{
+  "name": "Kingdom.Net.Client",
+  "rootNamespace": "Kingdom.Net.Client",
+  "references": ["Kingdom.Core.Contracts", "Kingdom.Core.Collection", "Kingdom.Core.Serialization", "Kingdom.Net.Protocol"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

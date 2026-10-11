@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Sort + filter controls over a card pool, as a module both the Collection screen and the

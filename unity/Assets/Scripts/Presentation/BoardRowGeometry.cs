@@ -1,4 +1,4 @@
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The board row's arithmetic: where a position sits, and which position an x falls in. One
@@ -7,13 +7,13 @@ namespace Emberfall.Presentation
     /// <para>NO <c>UnityEngine</c>, DELIBERATELY, AND THAT IS LOAD-BEARING. Since #139 the drop's x
     /// is what decides where a minion is played, which means <see cref="DragTargetingModel"/> —
     /// documented as free of MonoBehaviour, Transform, collider and camera — has to be able to ask.
-    /// It is not a style rule: <c>tests/Emberfall.Core.Tests</c> compiles that model in with a
+    /// It is not a style rule: <c>tests/Kingdom.Core.Tests</c> compiles that model in with a
     /// <c>&lt;Compile Include&gt;</c> and no Unity assemblies at all, so a <c>Mathf</c> or a
     /// <c>Vector3</c> reached from there breaks `dotnet test` while Unity stays green.</para>
     ///
     /// <para>RETIREMENT TRIGGER: this file is linked into that csproj by path. If you rename or move
     /// it, or add a UnityEngine dependency to it, fix
-    /// <c>tests/Emberfall.Core.Tests/Emberfall.Core.Tests.csproj</c> in the same commit — a broken
+    /// <c>tests/Kingdom.Core.Tests/Kingdom.Core.Tests.csproj</c> in the same commit — a broken
     /// link there fails the headless build, not the Unity one.</para>
     /// </summary>
     public static class BoardRowGeometry

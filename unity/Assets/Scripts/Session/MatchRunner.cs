@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>Whose projection the presentation events carry (dev-docs/contracts/gameplay-and-session.md:5).
     /// ActiveSeat (two-human hot-seat view flip) is reserved — it has no input driver yet

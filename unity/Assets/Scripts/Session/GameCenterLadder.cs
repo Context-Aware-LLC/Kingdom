@@ -5,7 +5,7 @@ using UnityEngine;
 using System.Runtime.InteropServices;
 #endif
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// Copies the signed-in player's ladder rating onto the Game Center leaderboard. iOS only; a

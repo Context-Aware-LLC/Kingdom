@@ -1,10 +1,10 @@
 using System.Linq;
 using System.Text.RegularExpressions;
-using Emberfall.Core.Cards;
+using Kingdom.Core.Cards;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
-    // CardTextGenerator (Emberfall.Core.Cards) emits plain prose — no markup, no delimiters — which
+    // CardTextGenerator (Kingdom.Core.Cards) emits plain prose — no markup, no delimiters — which
     // is what CardQuery's search index and ContentLinter's E7-TEXT-LENGTH check read, so the core
     // stays presentation-agnostic. Anything a player actually reads runs through this first, which
     // emphasises the game's own vocabulary: keyword names and timing labels become bold + a size

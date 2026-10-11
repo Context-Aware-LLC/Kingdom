@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Net.Client.Social;
-using Emberfall.Net.Protocol;
-using Emberfall.Session;
+using Kingdom.Net.Client.Social;
+using Kingdom.Net.Protocol;
+using Kingdom.Session;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Where this player is in a friend challenge (#409).</summary>
     public enum ChallengePhase

@@ -2,13 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
-using Emberfall.Net.Client.Collection;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
+using Kingdom.Net.Client.Collection;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// The player, on this device: their name and their decks
@@ -21,7 +21,7 @@ namespace Emberfall.Session
     /// player owns, and <see cref="DeckCreation.MaxPerAccount"/> is how many of them they may have.</para>
     ///
     /// <para><b>This class is the missing wire, and it is the only reason it exists.</b>
-    /// <c>Emberfall.Core.Collection</c> shipped complete and green, and until now nothing under
+    /// <c>Kingdom.Core.Collection</c> shipped complete and green, and until now nothing under
     /// <c>Assets/</c> referenced a single line of it — so no collection file had ever been written on
     /// any machine. That assembly deliberately takes its storage root and its identity key as
     /// arguments and mints no ids, which leaves exactly one job undone: somebody has to know that the

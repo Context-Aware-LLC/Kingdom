@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Renders the death burn across its whole parameter range — _DissolveAmount at 0, 0.25, 0.5,
@@ -46,7 +46,7 @@ namespace Emberfall.Editor
         // frame, gem, keyword icons and six TMP labels rather than a bare body quad.
         private const int CardId = 1003;   // ember_cinder_drake
 
-        [MenuItem("Emberfall/Preview (offscreen)/Card Dissolve")]
+        [MenuItem("Kingdom/Preview (offscreen)/Card Dissolve")]
         public static void Render()
         {
             Directory.CreateDirectory(OutDir);
@@ -81,7 +81,7 @@ namespace Emberfall.Editor
                 {
                     Debug.LogError("[CardDissolvePreview] CardDeathDissolve.Prepare failed — " +
                                    "check the CardCapture layer exists and M_Dissolve is on disk " +
-                                   "(Emberfall/Materials/Create Shared Materials).");
+                                   "(Kingdom/Materials/Create Shared Materials).");
                     return;
                 }
 

@@ -3,7 +3,7 @@
 
 WHY THIS IS A CHECK AND NOT A FIXER
 -----------------------------------
-The obvious version of this runs `Emberfall/Addressables/Setup Groups + Migrate Card Data` for you.
+The obvious version of this runs `Kingdom/Addressables/Setup Groups + Migrate Card Data` for you.
 It takes about a second in an open Editor, so the cost is not the objection. Two things are:
 
 1. **A pre-commit hook must not write to the working tree in this repo.** `.githooks/pre-commit`
@@ -51,7 +51,7 @@ ROOTS = {
     "Art/Cards": "CardArt_",
 }
 
-MENU_ITEM = "Emberfall/Addressables/Setup Groups + Migrate Card Data"
+MENU_ITEM = "Kingdom/Addressables/Setup Groups + Migrate Card Data"
 
 
 def staged_paths() -> list[str]:
@@ -124,7 +124,7 @@ def main() -> int:
     print(f"  Fix, about a second in an open Editor:   {MENU_ITEM}")
     print("  Headless (needs the FULL type name, and no Editor holding the project lock):")
     print("    Unity.exe -batchmode -nographics -quit -projectPath unity \\")
-    print("      -executeMethod Emberfall.Editor.AddressablesSetup.Run -logFile <log>")
+    print("      -executeMethod Kingdom.Editor.AddressablesSetup.Run -logFile <log>")
     print()
     print("  Then stage the AddressableAssetsData changes yourself. THIS HOOK DELIBERATELY DOES NOT")
     print("  RUN IT FOR YOU -- see the module docstring, and the account in .githooks/pre-commit of")

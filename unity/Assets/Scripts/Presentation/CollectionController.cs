@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
-using Emberfall.Net.Client.Collection;
-using Emberfall.Session;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
+using Kingdom.Net.Client.Collection;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The one persistent card-collection screen (NOR-210). Browsing is the screen; editing a deck is

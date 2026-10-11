@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kingdom.Net.Client — the B3 client seam (dev-docs/architecture/system-overview.md:17).
+    NetworkedMatchSession : IMatchSession over an IWireTransport, the connection state machine,
+    verify-GATED wholesale snapshot apply (RC-F8), the RC-F7 TrySetResult+log interim, and the
+    in-memory LoopbackTransport that peers against B1's REAL MatchSession (§8). netstandard2.1 so
+    it compiles inside Unity (UPM package) on Mono/IL2CPP desktop; ZERO UnityEngine references, no
+    float code path. References Contracts + Serialization (to re-hash the mirror) + Protocol; it
+    NEVER references Kingdom.Core — the client decodes an already-projected snapshot and touches
+    no rules/host/projector (ADR-0006).
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Kingdom.Net.Client</AssemblyName>
+    <RootNamespace>Kingdom.Net.Client</RootNamespace>
+    <Deterministic>true</Deterministic>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kingdom.Core.Contracts\Kingdom.Core.Contracts.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Collection\Kingdom.Core.Collection.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Serialization\Kingdom.Core.Serialization.csproj" />
+    <ProjectReference Include="..\Kingdom.Net.Protocol\Kingdom.Net.Protocol.csproj" />
+  </ItemGroup>
+
+</Project>

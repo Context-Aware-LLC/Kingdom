@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.IO;
-using Emberfall.Presentation;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Renders the real <see cref="DeckPileView"/> at its real board position and true 1080p
@@ -30,7 +30,7 @@ namespace Emberfall.Editor
 
         private static readonly int[] Counts = { 30, 3, 1, 0 };
 
-        [MenuItem("Emberfall/Preview (offscreen)/Deck Pile")]
+        [MenuItem("Kingdom/Preview (offscreen)/Deck Pile")]
         public static void Render()
         {
             string outDir = Path.Combine(RepoRoot(), "artifacts", "deck-pile-preview");

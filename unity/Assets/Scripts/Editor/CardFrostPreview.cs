@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Renders the frost cue across its whole parameter range — _FrostAmount at 0, 0.25, 0.5,
@@ -45,7 +45,7 @@ namespace Emberfall.Editor
         // parchment and stat bosses rather than a flat quad.
         private const int CardId = 1003;   // ember_cinder_drake
 
-        [MenuItem("Emberfall/Preview (offscreen)/Card Frost")]
+        [MenuItem("Kingdom/Preview (offscreen)/Card Frost")]
         public static void Render()
         {
             Directory.CreateDirectory(OutDir);
@@ -54,7 +54,7 @@ namespace Emberfall.Editor
             if (mat == null)
             {
                 Debug.LogError("[CardFrostPreview] M_Frost.mat missing — run " +
-                               "Emberfall/Materials/Create Shared Materials.");
+                               "Kingdom/Materials/Create Shared Materials.");
                 return;
             }
             if (mat.shader == null || mat.shader.name == "Hidden/InternalErrorShader")

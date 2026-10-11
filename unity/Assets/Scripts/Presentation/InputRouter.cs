@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Pointer state machine (EF-048): converts press / drag / release into PlayerIntents for the local
     // human player and routes them to HotSeatInput (ARCHITECTURE §6).

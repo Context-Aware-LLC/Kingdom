@@ -10,7 +10,7 @@
 //
 // The orb art is deliberately constant across expansion plates (Sam, 2026-07-19):
 // plates are hot-swappable skins, the orb is the brand mark. No recolor params.
-Shader "Emberfall/SG_LoadingOrb"
+Shader "Kingdom/SG_LoadingOrb"
 {
     Properties
     {

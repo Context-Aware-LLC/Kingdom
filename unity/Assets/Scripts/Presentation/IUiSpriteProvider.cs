@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // UI atlas resolution seam (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/pipeline.md §2 — frames/gems/icons live on a Sprite Atlas,
     // distinct from streamed per-card illustrations served by IArtProvider). The rendering layer

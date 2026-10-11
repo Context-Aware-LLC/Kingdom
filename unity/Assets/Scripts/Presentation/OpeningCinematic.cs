@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.IO;
-using Emberfall.Session;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The game's opening sequence: a splash card, then the opening film, then MainMenu underneath
@@ -38,7 +38,7 @@ namespace Emberfall.Presentation
         private const string CacheFileName = "intro.mp4";
 
         /// <summary>Bucket/object path under Supabase Storage's public object endpoint. NOT
-        /// "Emberfall" anything (Sam, 2026-09-27) -- that is the internal codename, not the
+        /// "Kingdom" anything (Sam, 2026-09-27) -- that is the internal codename, not the
         /// published name (still undecided, see the game-name thread), and this path is public: it
         /// is fetched over plain HTTP by every client. A path mismatch here is a 404 that the
         /// download-failure branch below quietly swallows into "skip to menu".</summary>

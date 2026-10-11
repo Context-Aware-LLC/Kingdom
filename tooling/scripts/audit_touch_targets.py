@@ -73,7 +73,7 @@ SCRIPTS = REPO / "unity" / "Assets" / "Scripts"
 
 FLOOR_DP = 48
 
-# The panel's authored height, from EmberfallPanelSettings' 1920x1080 reference matched on
+# The panel's authored height, from KingdomPanelSettings' 1920x1080 reference matched on
 # height. Every authored px is 1/1080 of the screen's short side, on every device.
 PANEL_SHORT_AXIS = 1080
 

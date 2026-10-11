@@ -1,6 +1,6 @@
 # Walking Skeleton — deploy scaffold (C-G0-6 → B1)
 
-**Status:** ✅ B1 — the scaffold fronts the REAL match server (`Emberfall.Net.Server`,
+**Status:** ✅ B1 — the scaffold fronts the REAL match server (`Kingdom.Net.Server`,
 `hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md`). Live at `wss://emberfall.fly.dev/ws` on **fly.io**
 (app `emberfall`, region `sjc`); Fly terminates TLS with its own `*.fly.dev` cert.
 
@@ -12,7 +12,7 @@ directly and Cloudflare is out of this path entirely.
 
 History: the original wss **echo** proved transport + TLS + off-network reachability on
 2026-07-15 (condition C-G0-6, ADR-0005 single-box topology) and was deleted in B1 commit 2 as
-designed — "do not grow the echo; start `Emberfall.Net.Server` fresh."
+designed — "do not grow the echo; start `Kingdom.Net.Server` fresh."
 
 ## Deploying an update
 
@@ -28,7 +28,7 @@ No `.env`, no Caddy, no box to sync to — Fly builds from the repo and provisio
 ## Files
 - `Caddyfile` — auto-TLS reverse proxy, terminates `wss://`, forwards to `emberfall-server:8080`
   (service name + port move together with `docker-compose.yml`).
-- `Dockerfile.server` — multi-stage build of `Emberfall.Net.Server`; bakes in the canonical card
+- `Dockerfile.server` — multi-stage build of `Kingdom.Net.Server`; bakes in the canonical card
   data from `unity/Assets/CardData/`.
 - `docker-compose.yml` — Caddy + server, one command. Keeps the `dns:` pin on the caddy service
   (systemd-resolved stub resolver breaks ACME inside the container netns — documented gotcha).

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Presentation-layer traits copy for the character-creation detail overlay (NOR-281).

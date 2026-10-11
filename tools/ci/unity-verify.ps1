@@ -85,7 +85,7 @@ $unityArgs = @(
     '-nographics',
     '-quit',
     '-projectPath', "`"$PROJECT`"",
-    '-executeMethod', 'Emberfall.Editor.HeadlessVerify.RunAll',
+    '-executeMethod', 'Kingdom.Editor.HeadlessVerify.RunAll',
     '-logFile', "`"$LOG`""
 )
 

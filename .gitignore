@@ -18,7 +18,7 @@ Thumbs.db
 tcg-hearthlike.code-workspace
 
 
-# .NET build output (the Emberfall.Core solution)
+# .NET build output (the Kingdom.Core solution)
 [Bb]in/
 [Oo]bj/
 .dotnet-build/
@@ -41,7 +41,7 @@ artifacts/
 #
 # This is why the stock Unity .gitignore CANNOT be pasted in whole. Its `*.csproj`, `*.sln` and
 # `*.slnx` lines would cover 17 hand-authored project files under src/ and tests/ plus the root
-# Emberfall.slnx — the actual build. Only Unity's own generated ones are ignored, below.
+# Kingdom.slnx — the actual build. Only Unity's own generated ones are ignored, below.
 #
 # The other half of that template is inert here for a different reason: it assumes the Unity
 # project sits at the REPO ROOT, so every `/`-anchored rule (`/[Ll]ibrary/`, `/[Aa]ssets/...`)

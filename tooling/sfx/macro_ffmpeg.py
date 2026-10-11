@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Apply the "Emberfall VO Trim" treatment to clips with ffmpeg instead of Audacity.
+"""Apply the "Kingdom VO Trim" treatment to clips with ffmpeg instead of Audacity.
 
     python tooling/sfx/macro_ffmpeg.py art-pipeline/sfx/_tomacro --out unity/Assets/Sound/SFX
     python tooling/sfx/macro_ffmpeg.py <dir> --dry-run          # measure and print, write nothing
 
 WHAT IT REPRODUCES, LINE FOR LINE
-    %APPDATA%\\audacity\\Macros\\Emberfall VO Trim.txt:
+    %APPDATA%\\audacity\\Macros\\Kingdom VO Trim.txt:
 
       TruncateSilence: Threshold=-45  Minimum=0.2  Truncate=0.1  Independent=0
       Normalize:       PeakLevel=-3   RemoveDcOffset=1  StereoIndependent=0

@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
-using Emberfall.Session;
+using Kingdom.Core.Contracts;
+using Kingdom.Session;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Drives the 4 per-instance MaterialPropertyBlock shader floats on a card's renderers

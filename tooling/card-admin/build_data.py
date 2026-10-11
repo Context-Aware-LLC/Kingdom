@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Aggregate the Emberfall card corpus into a single data file for the admin panel.
+"""Aggregate the Kingdom card corpus into a single data file for the admin panel.
 
 Reads every *.cards.json under unity/Assets/CardData/ and emits
 tooling/card-admin/data.json: a normalized per-card array plus precomputed
@@ -199,7 +199,7 @@ def int_keyed(counter):
 def corpus_digest():
     """Digest the working tree's card files, byte for byte.
 
-    MIRRORS CorpusDigest.Compute IN src/Emberfall.Net.Server/Data/CorpusDigest.cs and the two
+    MIRRORS CorpusDigest.Compute IN src/Kingdom.Net.Server/Data/CorpusDigest.cs and the two
     must agree exactly -- this is the value compared against what the live server reports. Per
     file, in relative-path order: "<relative path>\\n<sha256 of its bytes>\\n" fed into one
     running sha256, truncated to 16 hex characters.

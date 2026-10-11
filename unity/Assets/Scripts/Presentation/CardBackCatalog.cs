@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Emberfall.Core.Collection;
+using Kingdom.Core.Collection;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Unity art resolution for the shared numeric card-back catalog. The picker filters
     /// these definitions through the server's ownership response. Match backs still use card_back;

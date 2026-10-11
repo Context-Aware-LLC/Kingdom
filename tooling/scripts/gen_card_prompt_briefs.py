@@ -451,7 +451,7 @@ def compose_brief(card, class_descriptors, world_tone, seed):
     tone = (seed or {}).get("tone") or mood
     notes = (seed or {}).get("notes") or ""
 
-    header = f"Generate one Emberfall card illustration for {card['name']} ({card['id']})."
+    header = f"Generate one Kingdom card illustration for {card['name']} ({card['id']})."
     delivery = delivery_block(card)
     subj_opp = (
         "SUBJECT AND BACKGROUND OPPOSITION\n"

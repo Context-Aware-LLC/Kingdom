@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using Emberfall.Core.Contracts;
-using Emberfall.Core.Serialization;
-using Emberfall.Data;
-using Emberfall.Net.Protocol;
+using Kingdom.Core.Contracts;
+using Kingdom.Core.Serialization;
+using Kingdom.Data;
+using Kingdom.Net.Protocol;
 using Newtonsoft.Json.Linq;
 
-namespace Emberfall.Review
+namespace Kingdom.Review
 {
     /// <summary>
-    /// Loads a decision-review bundle produced by <c>Emberfall.Tools.DecisionReview build</c>, and
+    /// Loads a decision-review bundle produced by <c>Kingdom.Tools.DecisionReview build</c>, and
     /// REFUSES anything it cannot prove.
     ///
     /// Every load path here ends in one of two places: a state the engine agrees with, or an

@@ -1,7 +1,7 @@
-# Deck-building skill — Emberfall balance corpus
+# Deck-building skill — Kingdom balance corpus
 
 What was learned drafting the first hand-built decks for the balance matrix
-(`tests/Emberfall.Core.Tests/Fixtures/BalanceCorpus/`). This file exists so the next person
+(`tests/Kingdom.Core.Tests/Fixtures/BalanceCorpus/`). This file exists so the next person
 drafting a corpus deck does not have to re-derive the card pool's shape from scratch.
 
 **Read the card data, not the card names.** Every claim below was checked against
@@ -9,7 +9,7 @@ drafting a corpus deck does not have to re-derive the card pool's shape from scr
 source. Where a brief and the data disagreed, the data won — see *Corrections to briefs* at the
 bottom, which is the most load-bearing section in this file.
 
-**Write about keywords using Emberfall's own vocabulary.** Describe what a keyword *does*; do not
+**Write about keywords using Kingdom's own vocabulary.** Describe what a keyword *does*; do not
 reach for the word another game uses. The one deliberate exception is **Freeze**, permitted by
 ruling — see the `FROST` row below. This was enforced by a CI scan until 2026-08-18; it is now a
 convention you follow rather than a gate that stops you, because the scan only ever caught innocent
@@ -118,15 +118,15 @@ Read from the whole pool, not from a handful of marquee cards.
 Rekindling (`rekind_*`) is not a power-creep set; it is a *shape* set. The pattern across its 73
 cards is a second small effect stapled onto a familiar body.
 
-- **A Rekindling card is usually the better version of an Emberfall card at the same cost**, at the
+- **A Rekindling card is usually the better version of an Kingdom card at the same cost**, at the
   price of being narrower. `grave_tomb_warden` (1/3, `BULWARK`, `ON_DEATH: draw 1`) does two
   jobs where `grave_deathweaver` does one. Prefer Rekindling for a slot you already knew you wanted;
-  prefer Emberfall when you want flexibility.
+  prefer Kingdom when you want flexibility.
 - **The Rekindling legendaries are build-arounds, not just big bodies.** `ward_aldric` and
   `clock_cogsworth` each convert a stalled board into a threat in one card. If a deck wants a
   top end, check that class's Rekindling legendary first.
 - **How much Rekindling a deck ends up with is an outcome, not a target.** These three landed at
-  12, 13 and 4 cards of 30 respectively — the aggro deck is low because Emberfall's Tempest spells
+  12, 13 and 4 cards of 30 respectively — the aggro deck is low because Kingdom's Tempest spells
   are already the cheapest reach in the pool and Rekindling adds no cheaper one.
 - **CLOCKWRIGHT / TEMPEST gets tempo draw plus deterministic reach.** Blueprint Archive and
   Tinker's Gambit replace themselves, Storm Channeler supports the dense spell package,
@@ -165,7 +165,7 @@ cards is a second small effect stapled onto a familiar body.
 ## Corrections to briefs — read this before you trust a hero-power description
 
 The NOR-319 brief described hero powers that do not match the shipped data. The card data and
-`src/Emberfall.Core.Cards/HeroPowers.cs` are the source of truth.
+`src/Kingdom.Core.Cards/HeroPowers.cs` are the source of truth.
 
 | Class | Brief said | `HeroPowers.cs` + card data actually says |
 |---|---|---|
@@ -194,4 +194,4 @@ python tooling/balance-corpus/validate_decks.py
 
 It checks L1 (exactly 30), L2/L3 (copy caps by rarity), L4 (class membership), `collectible: true`,
 duplicate entries, unknown ids, and `(cost, id)` sort order. It mirrors
-`src/Emberfall.Core.Collection/DeckValidator.cs`; if the two ever disagree, the C# validator wins.
+`src/Kingdom.Core.Collection/DeckValidator.cs`; if the two ever disagree, the C# validator wins.

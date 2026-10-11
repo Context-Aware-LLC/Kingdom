@@ -1,10 +1,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Collection;
+using Kingdom.Net.Client.Collection;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// The game's one <see cref="HttpPackGateway"/> — the verb half of pack opening, shaped like

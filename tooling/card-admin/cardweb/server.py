@@ -331,9 +331,9 @@ def run_validation() -> dict:
     would report on a state that exists nowhere. It is here so an author can see whether the
     corpus they are editing against is clean.
     """
-    proj = REPO / "src" / "Emberfall.Tools.CardCi"
+    proj = REPO / "src" / "Kingdom.Tools.CardCi"
     if not proj.exists():
-        return {"ok": False, "output": "Emberfall.Tools.CardCi not found."}
+        return {"ok": False, "output": "Kingdom.Tools.CardCi not found."}
     try:
         r = subprocess.run(
             ["dotnet", "run", "--project", str(proj), "--",
@@ -350,7 +350,7 @@ def run_validation() -> dict:
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
-    server_version = "EmberfallCardWeb/1.0"
+    server_version = "KingdomCardWeb/1.0"
 
     def log_message(self, fmt, *a):  # quieter than the default
         sys.stderr.write(f"  {self.address_string()} {fmt % a}\n")
@@ -408,7 +408,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def _challenge(self) -> None:
         body = b'{"error":"authentication required"}'
         self.send_response(401)
-        self.send_header("WWW-Authenticate", 'Basic realm="Emberfall card authoring"')
+        self.send_header("WWW-Authenticate", 'Basic realm="Kingdom card authoring"')
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()

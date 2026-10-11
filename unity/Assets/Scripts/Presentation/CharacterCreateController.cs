@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
-using Emberfall.Net.Client.Collection;
-using Emberfall.Session;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
+using Kingdom.Net.Client.Collection;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Deck creation, as a scene. Three sequential views over one class picker: pick the primary

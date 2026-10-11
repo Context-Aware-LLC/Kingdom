@@ -1,11 +1,11 @@
 using System;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Auth;
-using Emberfall.Session;
+using Kingdom.Net.Client.Auth;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The first-launch registration overlay (EF-074e / NOR-231). An email address, then the
@@ -278,7 +278,7 @@ namespace Emberfall.Presentation
         /// Stands in for <see cref="Application.deepLinkActivated"/> in the Editor, where nothing ever
         /// raises it: Windows has no handler registered for <c>emberfall://</c>, so the browser stops
         /// at "the scheme does not have a registered handler" and the Google redirect never reaches
-        /// the game. <c>Emberfall/Auth/Deliver Deep Link From Clipboard</c> feeds the copied URL in
+        /// the game. <c>Kingdom/Auth/Deliver Deep Link From Clipboard</c> feeds the copied URL in
         /// here, and it takes the same path a device link takes. Editor-only; a player build compiles
         /// none of it.
         /// </summary>

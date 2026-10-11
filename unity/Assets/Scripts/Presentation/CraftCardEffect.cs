@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // The same normalized trajectory fractures the baked face or assembles it in reverse.
     internal sealed class CraftCardEffect : VisualElement

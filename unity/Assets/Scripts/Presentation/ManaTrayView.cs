@@ -1,8 +1,8 @@
-using Emberfall.Core;
-using Emberfall.Core.Contracts;
+using Kingdom.Core;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// World-space mana tray for one player (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1 ManaTrayAnchor, hist-docs/source-snapshots/2026-07-31-pre-reorganization/ui/design-system.md §4.4).

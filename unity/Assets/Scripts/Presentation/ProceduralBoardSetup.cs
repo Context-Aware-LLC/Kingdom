@@ -1,7 +1,7 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Creates the full D6 anchor hierarchy at runtime so the board works without a hand-crafted
     // Unity scene. Runs before NetworkedGameBootstrap.Start() (Awake order).

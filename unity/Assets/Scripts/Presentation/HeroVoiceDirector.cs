@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Plays the LOCAL hero's voice lines at match and turn moments. Presentation-only: it reads

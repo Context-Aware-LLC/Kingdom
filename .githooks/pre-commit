@@ -85,7 +85,7 @@ fi
 # and the fixtures plus DefaultDeckFixtureTests it told you to re-run were archived in a9eaa0e3
 # (2026-08-18). It detected real drift and then printed a dotnet test command that exits MSB1003.
 #
-# What DOES gate card rows is CI Stage 6 — Emberfall.Tools.CardCi over every row of every set — plus
+# What DOES gate card rows is CI Stage 6 — Kingdom.Tools.CardCi over every row of every set — plus
 # Stage 6b's trigger/selector drift guard. Neither needs a commit hook. If you want the local
 # equivalent before pushing: python tooling/scripts/rebake_card_data.py --check
 

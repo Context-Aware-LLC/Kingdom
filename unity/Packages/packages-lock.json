@@ -1,51 +1,51 @@
 {
   "dependencies": {
-    "com.emberfall.core": {
-      "version": "file:../../src/Emberfall.Core",
+    "com.kingdom.core": {
+      "version": "file:../../src/Kingdom.Core",
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.emberfall.core.contracts": "0.1.0",
-        "com.emberfall.core.cards": "0.1.0"
+        "com.kingdom.core.contracts": "0.1.0",
+        "com.kingdom.core.cards": "0.1.0"
       }
     },
-    "com.emberfall.core.cards": {
-      "version": "file:../../src/Emberfall.Core.Cards",
+    "com.kingdom.core.cards": {
+      "version": "file:../../src/Kingdom.Core.Cards",
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.emberfall.core.contracts": "0.1.0"
+        "com.kingdom.core.contracts": "0.1.0"
       }
     },
-    "com.emberfall.core.collection": {
-      "version": "file:../../src/Emberfall.Core.Collection",
+    "com.kingdom.core.collection": {
+      "version": "file:../../src/Kingdom.Core.Collection",
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.emberfall.core.contracts": "0.1.0",
-        "com.emberfall.core.cards": "0.1.0"
+        "com.kingdom.core.contracts": "0.1.0",
+        "com.kingdom.core.cards": "0.1.0"
       }
     },
-    "com.emberfall.core.contracts": {
-      "version": "file:../../src/Emberfall.Core.Contracts",
+    "com.kingdom.core.contracts": {
+      "version": "file:../../src/Kingdom.Core.Contracts",
       "depth": 0,
       "source": "local",
       "dependencies": {}
     },
-    "com.emberfall.core.serialization": {
-      "version": "file:../../src/Emberfall.Core.Serialization",
+    "com.kingdom.core.serialization": {
+      "version": "file:../../src/Kingdom.Core.Serialization",
       "depth": 0,
       "source": "local",
       "dependencies": {}
     },
-    "com.emberfall.net.client": {
-      "version": "file:../../src/Emberfall.Net.Client",
+    "com.kingdom.net.client": {
+      "version": "file:../../src/Kingdom.Net.Client",
       "depth": 0,
       "source": "local",
       "dependencies": {}
     },
-    "com.emberfall.net.protocol": {
-      "version": "file:../../src/Emberfall.Net.Protocol",
+    "com.kingdom.net.protocol": {
+      "version": "file:../../src/Kingdom.Net.Protocol",
       "depth": 0,
       "source": "local",
       "dependencies": {}

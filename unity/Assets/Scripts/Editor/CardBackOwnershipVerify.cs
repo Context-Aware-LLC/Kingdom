@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Emberfall.Core.Collection;
-using Emberfall.Net.Client.Collection;
-using Emberfall.Presentation;
+using Kingdom.Core.Collection;
+using Kingdom.Net.Client.Collection;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     public static class CardBackOwnershipVerify
     {

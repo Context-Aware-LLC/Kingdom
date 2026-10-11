@@ -1,20 +1,20 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// M2 D2 (shader-to-material wiring): creates the shared .mat assets under Assets/Materials
     /// that MaterialCatalog serves to the runtime-built board geometry. Idempotent — existing
     /// materials are left untouched so hand-tuned inspector values survive re-runs.
-    /// Run Emberfall/Addressables/Setup afterwards to sync the folder into the UI_Core group
+    /// Run Kingdom/Addressables/Setup afterwards to sync the folder into the UI_Core group
     /// (that reference is what compiles the SG shaders into player builds).
     /// </summary>
     public static class MaterialSetup
     {
         private const string Folder = "Assets/Materials";
 
-        [MenuItem("Emberfall/Materials/Create Shared Materials")]
+        [MenuItem("Kingdom/Materials/Create Shared Materials")]
         public static void Run()
         {
             if (!AssetDatabase.IsValidFolder(Folder))
@@ -30,7 +30,7 @@ namespace Emberfall.Editor
             });
             Create("M_CardArt",  "Universal Render Pipeline/Unlit");
             Create("M_Glow",     "Shader Graphs/SG_Glow");
-            Create("M_Aegis", "Emberfall/AegisDome", m =>
+            Create("M_Aegis", "Kingdom/AegisDome", m =>
             {
                 m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(
                     "Assets/Art/UI/Board/effect_aegis_golden_dome.png"));
@@ -42,10 +42,10 @@ namespace Emberfall.Editor
             // on screen (ortho 4.6 => ~117 px/world unit), so SG_Dissolve's default _NoiseScale of
             // 20 puts ~7 px between noise cells and the burn reads as fizz rather than as fire.
             // 12 gives a cell the eye can resolve; the wider edge carries the ember colour.
-            // Emberfall/SG_Dissolve is the hand-HLSL shader, NOT Shader Graphs/SG_Dissolve —
+            // Kingdom/SG_Dissolve is the hand-HLSL shader, NOT Shader Graphs/SG_Dissolve —
             // the .shader is transparent where the graph is opaque with alpha clip (see the
             // .shader header for why that matters on the burn's first frame).
-            Create("M_Dissolve", "Emberfall/SG_Dissolve", m =>
+            Create("M_Dissolve", "Kingdom/SG_Dissolve", m =>
             {
                 m.SetFloat("_NoiseScale", 12f);
                 m.SetFloat("_EdgeWidth",  0.08f);

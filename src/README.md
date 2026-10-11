@@ -1,4 +1,4 @@
-# Emberfall.Core — the deterministic rules core
+# Kingdom.Core — the deterministic rules core
 
 This is the **`UnityEngine`-free, zero-float, server-authoritative rules engine** that the whole
 architecture hangs off (`dev-docs/architecture/system-overview.md:5`). The identical DLLs run headless on the
@@ -10,12 +10,12 @@ firewall + RNG + canonical serialization + the R1 golden-replay gate + CI.
 
 | Project | Target | UnityEngine? | Holds |
 |---|---|:--:|---|
-| `Emberfall.Core.Contracts` | netstandard2.1 | **No** | Enums, DTOs, `PlayerIntent` (+ `[ReplayTag]`), `GameEvent`, `CommandResult`, the `GameState` POCO graph, **`DeterministicRandom` (splitmix64)**, core interfaces. |
-| `Emberfall.Core.Cards` | netstandard2.1 | **No** | `CardDefinition`, typed `RuleDefinition` nodes, the single shared `CardJson` parser, `ICardDatabase`/`ICardValidator`. |
-| `Emberfall.Core` | netstandard2.1 | **No** | `MatchEngine.BeginMatch` (core-driven opening), `CommandProcessor` (Validate→Apply→Emit turn loop), `LocalMatchHost`. |
+| `Kingdom.Core.Contracts` | netstandard2.1 | **No** | Enums, DTOs, `PlayerIntent` (+ `[ReplayTag]`), `GameEvent`, `CommandResult`, the `GameState` POCO graph, **`DeterministicRandom` (splitmix64)**, core interfaces. |
+| `Kingdom.Core.Cards` | netstandard2.1 | **No** | `CardDefinition`, typed `RuleDefinition` nodes, the single shared `CardJson` parser, `ICardDatabase`/`ICardValidator`. |
+| `Kingdom.Core` | netstandard2.1 | **No** | `MatchEngine.BeginMatch` (core-driven opening), `CommandProcessor` (Validate→Apply→Emit turn loop), `LocalMatchHost`. |
 
 Each project ships both a `.csproj` (for license-free `dotnet` CI) and a Unity `.asmdef` with
-`noEngineReferences: true` (firewall layer 1). The `Emberfall.Core.Tests` project (`tests/`) holds the
+`noEngineReferences: true` (firewall layer 1). The `Kingdom.Core.Tests` project (`tests/`) holds the
 headless determinism base: golden-replay (R1), the assembly-firewall + banned-API scans, contract, and
 unit layers.
 
@@ -33,9 +33,9 @@ unit layers.
 ## Build & test
 
 ```bash
-dotnet build Emberfall.slnx -c Release
-dotnet test  Emberfall.slnx -c Release           # all layers
-dotnet test  Emberfall.slnx --filter Category=GoldenReplay   # just the R1 gate
+dotnet build Kingdom.slnx -c Release
+dotnet test  Kingdom.slnx -c Release           # all layers
+dotnet test  Kingdom.slnx --filter Category=GoldenReplay   # just the R1 gate
 EMBERFALL_REBASELINE=<name> dotnet test --filter Category=GoldenReplay   # deliberate re-bake
 ```
 

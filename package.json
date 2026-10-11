@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "format": "dotnet format Emberfall.slnx --no-restore",
+    "format": "dotnet format Kingdom.slnx --no-restore",
     "lint:uss": "stylelint \"unity/Assets/UI/**/*.uss\""
   },
   "devDependencies": {

@@ -1,0 +1,20 @@
+{
+  "name": "Kingdom.Review.Editor",
+  "rootNamespace": "Kingdom.Review",
+  "references": [
+    "Kingdom.Core.Contracts",
+    "Kingdom.Presentation",
+    "Kingdom.Review"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

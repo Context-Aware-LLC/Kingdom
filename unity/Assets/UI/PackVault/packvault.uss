@@ -164,7 +164,7 @@
     border-radius: var(--space-2);
 }
 
-/* The rack's pack. The panel is always 1080 tall (EmberfallPanelSettings matches height), which
+/* The rack's pack. The panel is always 1080 tall (KingdomPanelSettings matches height), which
  * leaves a slot 320: 260 of pack, and the name under it. Pixels, so it does NOT shrink with the
  * slot; a fourth pack line needs these two numbers cut. */
 .vault-slot .vault-mini {

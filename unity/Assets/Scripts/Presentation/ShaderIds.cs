@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Cached Shader.PropertyToID values for the 4 per-instance MPB shader floats (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.2).
     // ManaTrayView owns its own local IDs for the mana params (_FillLevel etc.).

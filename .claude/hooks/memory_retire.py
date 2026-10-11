@@ -61,7 +61,7 @@ MEMORY_DIR = os.path.join(
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CACHE = os.path.join(REPO_ROOT, ".agent", "memory-retire.json")
 
-# A check is a shell one-liner over a repo the size of Emberfall; ls-remote against
+# A check is a shell one-liner over a repo the size of Kingdom; ls-remote against
 # a cold origin is the slow case. Anything past this is a broken check, not a slow one.
 TIMEOUT_SECONDS = 45
 

@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// EF-048 named verify: drives the complete press/drag/release machine through an actual
@@ -37,7 +37,7 @@ namespace Emberfall.Editor
         private static int _passed;
         private static int _failed;
 
-        [MenuItem("Emberfall/Verify Input Gestures (EF-048 drag targeting)")]
+        [MenuItem("Kingdom/Verify Input Gestures (EF-048 drag targeting)")]
         public static void Run()
         {
             _passed = 0;

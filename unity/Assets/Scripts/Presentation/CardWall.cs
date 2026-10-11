@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Collection;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Collection;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Presents the collection as virtualized rows of five pre-baked card faces. The host supplies one

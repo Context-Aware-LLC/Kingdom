@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Editor-only IUiTextProvider: resolves UI data files straight from AssetDatabase under
     // Assets/Art/UI/, the EditorUiSpriteProvider recipe with t:TextAsset in place of t:Sprite.

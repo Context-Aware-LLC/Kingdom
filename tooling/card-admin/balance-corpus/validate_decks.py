@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate every deck fixture in the balance corpus against DeckValidator rules L1-L4.
 
-Mirrors src/Emberfall.Core.Collection/DeckValidator.cs so a hand-authored corpus deck can be
+Mirrors src/Kingdom.Core.Collection/DeckValidator.cs so a hand-authored corpus deck can be
 checked without a Unity seat or a dotnet build. It is a *pre-flight* check, not a substitute for
 the engine's own validator: if the two ever disagree, DeckValidator.cs wins.
 
@@ -17,7 +17,7 @@ from collections import Counter
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CARD_DATA = os.path.join(REPO, 'unity', 'Assets', 'CardData')
-CORPUS = os.path.join(REPO, 'tests', 'Emberfall.Core.Tests', 'Fixtures', 'BalanceCorpus')
+CORPUS = os.path.join(REPO, 'tests', 'Kingdom.Core.Tests', 'Fixtures', 'BalanceCorpus')
 
 DECK_SIZE = 30
 COPY_CAP = 2

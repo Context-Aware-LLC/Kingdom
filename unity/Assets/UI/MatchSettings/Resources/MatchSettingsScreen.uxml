@@ -4,7 +4,7 @@
   A persistent corner "menu" button that opens a modal panel. In-match, the top item is
   CONCEDE, gated behind a confirm because leaving IS forfeiting. Sound landed 2026-09-05 as
   the mute toggle + music/SFX sliders in #audio-settings, bound by
-  MatchSettingsController.BindAudioSettings and applied through Emberfall.Presentation.AudioSettings.
+  MatchSettingsController.BindAudioSettings and applied through Kingdom.Presentation.AudioSettings.
   Video is still deferred.
 
   Loaded at runtime by the bootstraps AND by MainMenuController (Sam, 2026-08-09 — the gear is

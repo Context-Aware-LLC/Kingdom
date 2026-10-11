@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// EF-049. Owns the one <see cref="HoverRevealModel"/> and the one <see cref="CardRevealPanel"/>

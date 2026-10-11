@@ -1,16 +1,16 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using PointerType = UnityEngine.UIElements.PointerType;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>Real UI Toolkit event routing, capture and ghost checks, with production deck mutations.</summary>
     public static class CollectionDeckDragVerify

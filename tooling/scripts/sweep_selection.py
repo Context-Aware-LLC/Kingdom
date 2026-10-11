@@ -19,7 +19,7 @@ The oracle for the rewrite is NOT this script. It is `CardCi` rule C26, which re
 every card's text from its rules and compares it to the authored string — so a row whose
 term changed what the card MEANS would change what it SAYS. Run it after:
 
-    dotnet run --project src/Emberfall.Tools.CardCi -- \
+    dotnet run --project src/Kingdom.Tools.CardCi -- \
         unity/Assets/CardData unity/Assets/Art/Cards
 
 Exit 1 if a row cannot be given a term.
@@ -120,7 +120,7 @@ def sweep_card_files(paths, tally, log):
 
 def main() -> int:
     sets = sorted((ROOT / "unity" / "Assets" / "CardData").glob("*.cards.json"))
-    fixtures = sorted((ROOT / "tests" / "Emberfall.Core.Tests" / "Fixtures" / "CardSets")
+    fixtures = sorted((ROOT / "tests" / "Kingdom.Core.Tests" / "Fixtures" / "CardSets")
                       .glob("*.cards.snapshot.json"))
     if not sets:
         print("no *.cards.json found — wrong repo root?", file=sys.stderr)

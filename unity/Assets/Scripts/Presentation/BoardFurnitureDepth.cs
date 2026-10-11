@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Creates the shared shallow backing used by cards and world-space board HUD.</summary>
     internal static class BoardFurnitureDepth

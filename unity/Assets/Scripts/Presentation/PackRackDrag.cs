@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using PointerType = UnityEngine.UIElements.PointerType;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The vault's one gesture: take a pack off the rack and drop it on the stage to open it.

@@ -1,8 +1,8 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Collection;
+using Kingdom.Net.Client.Collection;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     public static class CraftingGateway
     {

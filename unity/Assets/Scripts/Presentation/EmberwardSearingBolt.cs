@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Pyra's Searing Bolt: the portrait cast sends a visible fire projectile to its
     /// selected character. The bloom lands just before the damage is applied.</summary>

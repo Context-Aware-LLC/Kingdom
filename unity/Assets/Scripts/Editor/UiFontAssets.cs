@@ -5,7 +5,7 @@ using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 using UnityEngine.TextCore.LowLevel;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Builds the TMP font assets for the board-label cuts of Google Sans Flex and registers them in
@@ -22,14 +22,14 @@ namespace Emberfall.Editor
         private const string Folder = "Assets/Art/Fonts";
         private static readonly string[] Cuts = { "GoogleSansFlex-UI", "GoogleSansFlex-UIBold" };
 
-        [MenuItem("Emberfall/Fonts/Build Board Label Font Assets")]
+        [MenuItem("Kingdom/Fonts/Build Board Label Font Assets")]
         public static void Build()
         {
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
             AddressableAssetGroup group = settings.FindGroup("Fonts");
             if (group == null)
             {
-                Debug.LogError("[UiFontAssets] no Fonts group — run Emberfall/Addressables/Setup Groups first.");
+                Debug.LogError("[UiFontAssets] no Fonts group — run Kingdom/Addressables/Setup Groups first.");
                 return;
             }
 
@@ -74,7 +74,7 @@ namespace Emberfall.Editor
         /// referenced from USS, so it needs no Addressables entry.</summary>
         public const string MenuButtonFontPath = "Assets/Art/Fonts/ModernAntiqua-Regular UITK.asset";
 
-        [MenuItem("Emberfall/Fonts/Build Menu Button Font Asset")]
+        [MenuItem("Kingdom/Fonts/Build Menu Button Font Asset")]
         public static void BuildMenuButtonFont()
         {
             const string ttfPath = "Assets/Art/Fonts/ModernAntiqua-Regular.ttf";

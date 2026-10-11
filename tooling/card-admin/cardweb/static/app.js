@@ -1,4 +1,4 @@
-/* Emberfall card authoring — web front end.
+/* Kingdom card authoring — web front end.
  *
  * The client never holds a card id, a handle or an artId. It holds a `token` the server minted
  * and hands that token back when staging an edit. There is nowhere in this file that could send

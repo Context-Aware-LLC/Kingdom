@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Flattens a card's visual subtree — art, frame, gem, keyword icons and every TMP label at

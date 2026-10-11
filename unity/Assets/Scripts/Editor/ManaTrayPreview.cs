@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using System.IO;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Renders the mana grid through the real <see cref="ManaTrayView"/> for a spread of ManaPool
@@ -13,7 +13,7 @@ namespace Emberfall.Editor
     /// size the rail actually occupies on a 1080p screen. A named one-click check of a slice the
     /// .NET tests cannot show — they prove the binder computes the right count, only the engine
     /// shows the crystals. (This used to cite TurnClockVerify and B3TransportVerify as siblings;
-    /// both were deleted in the 2026-09-04 Emberfall-menu audit as spent one-offs.)
+    /// both were deleted in the 2026-09-04 Kingdom-menu audit as spent one-offs.)
     ///
     /// Why the states below and not a single sample: the rail was previously signed off from one
     /// offscreen render at Max = 10, which is the only cap at which the old binder's divide-by-Max
@@ -56,7 +56,7 @@ namespace Emberfall.Editor
             new Case("cap-full",         10, 10, 0, 0, 0),
         };
 
-        [MenuItem("Emberfall/Preview (offscreen)/Mana Tray")]
+        [MenuItem("Kingdom/Preview (offscreen)/Mana Tray")]
         public static void Render()
         {
             string outDir = Path.Combine(RepoRoot(), "artifacts", "mana-tray-preview");

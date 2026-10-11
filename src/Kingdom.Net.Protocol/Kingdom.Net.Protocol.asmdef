@@ -1,0 +1,14 @@
+{
+  "name": "Kingdom.Net.Protocol",
+  "rootNamespace": "Kingdom.Net.Protocol",
+  "references": ["Kingdom.Core.Contracts", "Kingdom.Core.Serialization"],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

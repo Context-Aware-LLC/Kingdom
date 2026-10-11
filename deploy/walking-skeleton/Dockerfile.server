@@ -1,4 +1,4 @@
-# Emberfall.Net.Server image (B1 commit 2, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §11).
+# Kingdom.Net.Server image (B1 commit 2, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b1-match-server-design.md §11).
 # BUILD CONTEXT IS THE REPO ROOT (RC F4): the server references five sibling src/ projects and
 # bakes in the canonical card data — the echo's self-contained single-project context does not
 # transfer. From deploy/walking-skeleton: docker compose build (context: ../..).
@@ -6,7 +6,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /repo
 COPY src/ src/
-RUN dotnet publish src/Emberfall.Net.Server/Emberfall.Net.Server.csproj -c Release -o /app
+RUN dotnet publish src/Kingdom.Net.Server/Kingdom.Net.Server.csproj -c Release -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
@@ -26,4 +26,4 @@ ENV EMBERFALL_CARDS=/app/cards \
     EMBERFALL_TELEMETRY=/data \
     ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "Emberfall.Net.Server.dll"]
+ENTRYPOINT ["dotnet", "Kingdom.Net.Server.dll"]

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Emberfall.Core.Contracts;
-using Emberfall.Presentation;
-using Emberfall.Session;
+using Kingdom.Core.Contracts;
+using Kingdom.Presentation;
+using Kingdom.Session;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>Exercises the real event subscriber after a played card has been hidden.</summary>
     public static class CardMaterialBinderVerify
@@ -127,7 +127,7 @@ namespace Emberfall.Editor
             public IReadOnlyCollection<Keyword> Keywords => Array.Empty<Keyword>();
             public AuraSet Auras { get; }
             public int BoardSlot => 0;
-            public AttackReadiness AttackReadiness => Emberfall.Presentation.AttackReadiness.None;
+            public AttackReadiness AttackReadiness => Kingdom.Presentation.AttackReadiness.None;
             public int SpellDamageBonus => 0;
             public int? Durability => null;
             public event Action<CardChange> Changed { add { } remove { } }

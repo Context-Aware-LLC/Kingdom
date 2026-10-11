@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     [Serializable]
     public sealed class LeaderboardResponse

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>Device-only haptic adapter. Match-event interpretation lives in the pure policy.</summary>
     internal static class HeroHaptics

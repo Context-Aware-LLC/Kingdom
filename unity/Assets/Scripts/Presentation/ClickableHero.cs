@@ -1,7 +1,7 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Attached to the Hero anchor by ProceduralBoardSetup.SetupClickables.
     //

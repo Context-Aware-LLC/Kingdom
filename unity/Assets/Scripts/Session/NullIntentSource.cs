@@ -1,6 +1,6 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// An <see cref="IIntentSource"/> that never acts (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b3-networked-session-design.md §3.1). Sits at

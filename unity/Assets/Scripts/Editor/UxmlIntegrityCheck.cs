@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Prove every meta-screen's UXML still parses and still clones to a populated tree.
@@ -60,7 +60,7 @@ namespace Emberfall.Editor
             return files;
         }
 
-        [MenuItem("Emberfall/UI/Check UXML Integrity")]
+        [MenuItem("Kingdom/UI/Check UXML Integrity")]
         public static void Check()
         {
             var report = new System.Text.StringBuilder();

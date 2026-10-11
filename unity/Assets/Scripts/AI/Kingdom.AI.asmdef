@@ -1,0 +1,20 @@
+{
+  "name": "Kingdom.AI",
+  "rootNamespace": "Kingdom.AI",
+  "references": [
+    "Kingdom.Core.Contracts",
+    "Kingdom.Core.Cards",
+    "Kingdom.Core",
+    "Kingdom.Data",
+    "Kingdom.Session"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

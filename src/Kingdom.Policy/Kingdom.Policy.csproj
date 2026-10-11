@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The learned-policy seat stack: a checkpoint scorer process and the seat policy that drives it.
+
+    WHY IT IS NOT IN Kingdom.Net.Server. That assembly is enrolled in the determinism firewall and
+    `ServerFirewallTests.No_Float_Or_Double_Field_In_Server_Types` forbids float/double FIELDS in
+    every type it contains. A policy holds a temperature, an epsilon and a logit buffer, so it cannot
+    live there — and should not: the firewall guards ENGINE types, and a seat policy is not one. It
+    consumes floats and emits a discrete intent.
+
+    WHY IT IS NOT IN Kingdom.Tools.NetSoak, where it started. The server needs it to serve a
+    learned bot, and the server must not reference a tools executable.
+
+    NOTE FOR ANYONE ADDING FLOAT MATH ELSEWHERE: a replay stores the INTENTS a policy chose, never
+    how it chose them, so re-simulation stays deterministic however this assembly computes. That is
+    what makes serving a learned bot safe, and it is a property of the replay format rather than of
+    this project.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Kingdom.Policy</AssemblyName>
+    <RootNamespace>Kingdom.Policy</RootNamespace>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kingdom.Core.Contracts\Kingdom.Core.Contracts.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Cards\Kingdom.Core.Cards.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Serialization\Kingdom.Core.Serialization.csproj" />
+    <ProjectReference Include="..\Kingdom.Core\Kingdom.Core.csproj" />
+    <!--
+      DELIBERATELY NOT Kingdom.Net.Server. The server references THIS project, so a reference back
+      is a cycle. That direction is also the point of the extraction: the seat-policy contract
+      (ISeatPolicy) lives here, beneath the server, rather than the server owning a contract that a
+      lower layer has to implement.
+    -->
+    <ProjectReference Include="..\Kingdom.Net.Protocol\Kingdom.Net.Protocol.csproj" />
+    <ProjectReference Include="..\Kingdom.Training.Corpus\Kingdom.Training.Corpus.csproj" />
+  </ItemGroup>
+
+</Project>

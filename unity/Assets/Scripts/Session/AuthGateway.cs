@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Auth;
+using Kingdom.Net.Client.Auth;
 using UnityEngine;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// The game's one <see cref="AuthTokenProvider"/>, composed from the project settings asset, the

@@ -1,12 +1,12 @@
 using System;
-using Emberfall.Core.Collection;
-using Emberfall.Net.Client.Auth;
-using Emberfall.Session;
+using Kingdom.Core.Collection;
+using Kingdom.Net.Client.Auth;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// First launch, as a SCENE (Sam, 2026-08-25): create the account, then name it. Two sequential

@@ -132,25 +132,25 @@ class CsharpResolverTests(unittest.TestCase):
     # ---- namespace index -------------------------------------------------
 
     def test_namespace_index_maps_namespace_to_every_declaring_file(self) -> None:
-        self._file("src/Core/A.cs", ["Emberfall.Core"])
-        self._file("src/Core/B.cs", ["Emberfall.Core"])
-        self._file("src/Net/C.cs", ["Emberfall.Net"])
+        self._file("src/Core/A.cs", ["Kingdom.Core"])
+        self._file("src/Core/B.cs", ["Kingdom.Core"])
+        self._file("src/Net/C.cs", ["Kingdom.Net"])
         self._file("tooling/x.py", [], language="python")
 
         index = build_namespace_index(self.conn)
 
-        self.assertEqual({"src/Core/A.cs", "src/Core/B.cs"}, index["Emberfall.Core"])
-        self.assertEqual({"src/Net/C.cs"}, index["Emberfall.Net"])
+        self.assertEqual({"src/Core/A.cs", "src/Core/B.cs"}, index["Kingdom.Core"])
+        self.assertEqual({"src/Net/C.cs"}, index["Kingdom.Net"])
         self.assertNotIn("", index)
 
     # ---- CALLS -----------------------------------------------------------
 
     def test_resolves_bare_call_through_imported_namespace(self) -> None:
-        self._file("src/Net/Server.cs", ["Emberfall.Net"])
-        self._file("src/Core/Rules.cs", ["Emberfall.Core"])
+        self._file("src/Net/Server.cs", ["Kingdom.Net"])
+        self._file("src/Core/Rules.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Net/Server.cs", "Handle", parent="Server")
         callee = self._symbol("src/Core/Rules.cs", "ApplyDamage", parent="RuleEngine")
-        self._edge("IMPORTS_FROM", "src/Net/Server.cs", "Emberfall.Core", "src/Net/Server.cs")
+        self._edge("IMPORTS_FROM", "src/Net/Server.cs", "Kingdom.Core", "src/Net/Server.cs")
         edge = self._edge("CALLS", caller, "ApplyDamage", "src/Net/Server.cs")
 
         stats = self._resolve(src__Net__Server="RuleEngine engine; engine.ApplyDamage(x);")
@@ -160,8 +160,8 @@ class CsharpResolverTests(unittest.TestCase):
 
     def test_resolves_bare_call_within_same_namespace_without_using(self) -> None:
         """C# makes same-namespace types visible with no using directive."""
-        self._file("src/Core/A.cs", ["Emberfall.Core"])
-        self._file("src/Core/B.cs", ["Emberfall.Core"])
+        self._file("src/Core/A.cs", ["Kingdom.Core"])
+        self._file("src/Core/B.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Core/A.cs", "Run", parent="A")
         callee = self._symbol("src/Core/B.cs", "Helper", parent="B")
         edge = self._edge("CALLS", caller, "Helper", "src/Core/A.cs")
@@ -172,8 +172,8 @@ class CsharpResolverTests(unittest.TestCase):
 
     def test_skips_call_whose_owning_type_is_absent_from_the_call_site(self) -> None:
         """`sb.Append(x)` on a StringBuilder must not bind to an internal Append."""
-        self._file("src/Corpus/Files.cs", ["Emberfall.Corpus"])
-        self._file("src/Corpus/Writer.cs", ["Emberfall.Corpus"])
+        self._file("src/Corpus/Files.cs", ["Kingdom.Corpus"])
+        self._file("src/Corpus/Writer.cs", ["Kingdom.Corpus"])
         caller = self._symbol("src/Corpus/Files.cs", "Hex", parent="CorpusFiles")
         self._symbol("src/Corpus/Writer.cs", "Append", parent="ManifestWriter")
         edge = self._edge("CALLS", caller, "Append", "src/Corpus/Files.cs")
@@ -187,8 +187,8 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual(1, stats.skipped_receiver_unproven)
 
     def test_owning_type_must_match_as_a_whole_word(self) -> None:
-        self._file("src/Core/A.cs", ["Emberfall.Core"])
-        self._file("src/Core/B.cs", ["Emberfall.Core"])
+        self._file("src/Core/A.cs", ["Kingdom.Core"])
+        self._file("src/Core/B.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Core/A.cs", "Run", parent="A")
         self._symbol("src/Core/B.cs", "Tick", parent="Clock")
         edge = self._edge("CALLS", caller, "Tick", "src/Core/A.cs")
@@ -199,8 +199,8 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual(1, stats.skipped_receiver_unproven)
 
     def test_skips_call_when_call_site_source_is_unreadable(self) -> None:
-        self._file("src/Core/A.cs", ["Emberfall.Core"])
-        self._file("src/Core/B.cs", ["Emberfall.Core"])
+        self._file("src/Core/A.cs", ["Kingdom.Core"])
+        self._file("src/Core/B.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Core/A.cs", "Run", parent="A")
         self._symbol("src/Core/B.cs", "Helper", parent="B")
         edge = self._edge("CALLS", caller, "Helper", "src/Core/A.cs")
@@ -213,8 +213,8 @@ class CsharpResolverTests(unittest.TestCase):
     def test_reads_call_site_source_from_disk_when_no_reader_is_given(self) -> None:
         source_file = self.temp / "A.cs"
         source_file.write_text("void Run() { B.Helper(); }", encoding="utf-8")
-        self._file(str(source_file), ["Emberfall.Core"])
-        self._file("src/Core/B.cs", ["Emberfall.Core"])
+        self._file(str(source_file), ["Kingdom.Core"])
+        self._file("src/Core/B.cs", ["Kingdom.Core"])
         caller = self._symbol(str(source_file), "Run", parent="A")
         callee = self._symbol("src/Core/B.cs", "Helper", parent="B")
         edge = self._edge("CALLS", caller, "Helper", str(source_file))
@@ -225,13 +225,13 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual(1, stats.resolved_calls)
 
     def test_skips_ambiguous_candidates_rather_than_guessing(self) -> None:
-        self._file("src/Net/Server.cs", ["Emberfall.Net"])
-        self._file("src/Core/A.cs", ["Emberfall.Core"])
-        self._file("src/Core/B.cs", ["Emberfall.Core"])
+        self._file("src/Net/Server.cs", ["Kingdom.Net"])
+        self._file("src/Core/A.cs", ["Kingdom.Core"])
+        self._file("src/Core/B.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Net/Server.cs", "Handle", parent="Server")
         self._symbol("src/Core/A.cs", "Apply", parent="Alpha")
         self._symbol("src/Core/B.cs", "Apply", parent="Beta")
-        self._edge("IMPORTS_FROM", "src/Net/Server.cs", "Emberfall.Core", "src/Net/Server.cs")
+        self._edge("IMPORTS_FROM", "src/Net/Server.cs", "Kingdom.Core", "src/Net/Server.cs")
         edge = self._edge("CALLS", caller, "Apply", "src/Net/Server.cs")
 
         stats = self._resolve(src__Net__Server="Alpha a; Beta b; a.Apply(); b.Apply();")
@@ -242,8 +242,8 @@ class CsharpResolverTests(unittest.TestCase):
 
     def test_skips_candidate_with_no_import_evidence(self) -> None:
         """A globally unique name is not evidence -- upstream's rule, kept."""
-        self._file("src/Net/Server.cs", ["Emberfall.Net"])
-        self._file("src/Core/Rules.cs", ["Emberfall.Core"])
+        self._file("src/Net/Server.cs", ["Kingdom.Net"])
+        self._file("src/Core/Rules.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Net/Server.cs", "Handle", parent="Server")
         self._symbol("src/Core/Rules.cs", "ApplyDamage", parent="RuleEngine")
         edge = self._edge("CALLS", caller, "ApplyDamage", "src/Net/Server.cs")
@@ -255,7 +255,7 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual(1, stats.skipped_no_evidence)
 
     def test_external_target_with_no_candidate_is_counted_separately(self) -> None:
-        self._file("src/Net/Server.cs", ["Emberfall.Net"])
+        self._file("src/Net/Server.cs", ["Kingdom.Net"])
         caller = self._symbol("src/Net/Server.cs", "Handle", parent="Server")
         edge = self._edge("CALLS", caller, "FromSeconds", "src/Net/Server.cs")
 
@@ -265,7 +265,7 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual(1, stats.skipped_no_candidate)
 
     def test_never_creates_a_self_edge(self) -> None:
-        self._file("src/Core/A.cs", ["Emberfall.Core"])
+        self._file("src/Core/A.cs", ["Kingdom.Core"])
         recurse = self._symbol("src/Core/A.cs", "Recurse", parent="A")
         edge = self._edge("CALLS", recurse, "Recurse", "src/Core/A.cs")
 
@@ -276,8 +276,8 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual(1, stats.skipped_self)
 
     def test_dotted_call_targets_are_left_alone(self) -> None:
-        self._file("src/Core/A.cs", ["Emberfall.Core"])
-        self._file("src/Core/B.cs", ["Emberfall.Core"])
+        self._file("src/Core/A.cs", ["Kingdom.Core"])
+        self._file("src/Core/B.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Core/A.cs", "Run", parent="A")
         self._symbol("src/Core/B.cs", "Empty", parent="Array")
         edge = self._edge("CALLS", caller, "System.Array.Empty", "src/Core/A.cs")
@@ -289,8 +289,8 @@ class CsharpResolverTests(unittest.TestCase):
 
     def test_universal_object_members_are_never_resolved(self) -> None:
         """`digest[i].ToString("x2")` is not a call into your code."""
-        self._file("src/Core/Ident.cs", ["Emberfall.Core"])
-        self._file("src/Core/Hash.cs", ["Emberfall.Core"])
+        self._file("src/Core/Ident.cs", ["Kingdom.Core"])
+        self._file("src/Core/Hash.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Core/Hash.cs", "HashOf", parent="DeckIdentity")
         self._symbol("src/Core/Ident.cs", "ToString", parent="MatchId")
         edge = self._edge("CALLS", caller, "ToString", "src/Core/Hash.cs")
@@ -304,7 +304,7 @@ class CsharpResolverTests(unittest.TestCase):
     # ---- INHERITS --------------------------------------------------------
 
     def test_resolves_inherits_against_class_nodes(self) -> None:
-        self._file("src/Core/Rules.cs", ["Emberfall.Core"])
+        self._file("src/Core/Rules.cs", ["Kingdom.Core"])
         child = self._symbol("src/Core/Rules.cs", "DamageAction", kind="Class")
         parent = self._symbol("src/Core/Rules.cs", "TargetedRuleAction", kind="Class")
         edge = self._edge("INHERITS", child, "TargetedRuleAction", "src/Core/Rules.cs")
@@ -315,8 +315,8 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual(1, stats.resolved_inherits)
 
     def test_strips_generic_arguments_before_matching(self) -> None:
-        self._file("src/Core/Model.cs", ["Emberfall.Core"])
-        self._file("src/Core/Compare.cs", ["Emberfall.Core"])
+        self._file("src/Core/Model.cs", ["Kingdom.Core"])
+        self._file("src/Core/Compare.cs", ["Kingdom.Core"])
         child = self._symbol("src/Core/Model.cs", "RuleRef", kind="Class")
         iface = self._symbol("src/Core/Compare.cs", "IComparableRef", kind="Class")
         edge = self._edge("INHERITS", child, "IComparableRef<RuleRef>", "src/Core/Model.cs")
@@ -326,7 +326,7 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual(iface, self._target(edge))
 
     def test_inherits_from_external_type_is_left_alone(self) -> None:
-        self._file("src/Core/Model.cs", ["Emberfall.Core"])
+        self._file("src/Core/Model.cs", ["Kingdom.Core"])
         child = self._symbol("src/Core/Model.cs", "RuleRef", kind="Class")
         edge = self._edge("INHERITS", child, "IEquatable<RuleRef>", "src/Core/Model.cs")
 
@@ -335,7 +335,7 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual("IEquatable<RuleRef>", self._target(edge))
 
     def test_inherits_does_not_match_a_function_of_the_same_name(self) -> None:
-        self._file("src/Core/Rules.cs", ["Emberfall.Core"])
+        self._file("src/Core/Rules.cs", ["Kingdom.Core"])
         child = self._symbol("src/Core/Rules.cs", "DamageAction", kind="Class")
         self._symbol("src/Core/Rules.cs", "RuleAction", kind="Function", parent="X")
         edge = self._edge("INHERITS", child, "RuleAction", "src/Core/Rules.cs")
@@ -359,7 +359,7 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual("helper", self._target(edge))
 
     def test_leaves_already_qualified_targets_untouched(self) -> None:
-        self._file("src/Core/A.cs", ["Emberfall.Core"])
+        self._file("src/Core/A.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Core/A.cs", "Run", parent="A")
         callee = self._symbol("src/Core/A.cs", "Helper", parent="A")
         edge = self._edge("CALLS", caller, callee, "src/Core/A.cs")
@@ -370,11 +370,11 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual(0, stats.resolved_calls)
 
     def test_dry_run_reports_without_writing(self) -> None:
-        self._file("src/Net/Server.cs", ["Emberfall.Net"])
-        self._file("src/Core/Rules.cs", ["Emberfall.Core"])
+        self._file("src/Net/Server.cs", ["Kingdom.Net"])
+        self._file("src/Core/Rules.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Net/Server.cs", "Handle", parent="Server")
         self._symbol("src/Core/Rules.cs", "ApplyDamage", parent="RuleEngine")
-        self._edge("IMPORTS_FROM", "src/Net/Server.cs", "Emberfall.Core", "src/Net/Server.cs")
+        self._edge("IMPORTS_FROM", "src/Net/Server.cs", "Kingdom.Core", "src/Net/Server.cs")
         edge = self._edge("CALLS", caller, "ApplyDamage", "src/Net/Server.cs")
 
         stats = self._resolve(
@@ -385,11 +385,11 @@ class CsharpResolverTests(unittest.TestCase):
         self.assertEqual("ApplyDamage", self._target(edge))
 
     def test_is_idempotent(self) -> None:
-        self._file("src/Net/Server.cs", ["Emberfall.Net"])
-        self._file("src/Core/Rules.cs", ["Emberfall.Core"])
+        self._file("src/Net/Server.cs", ["Kingdom.Net"])
+        self._file("src/Core/Rules.cs", ["Kingdom.Core"])
         caller = self._symbol("src/Net/Server.cs", "Handle", parent="Server")
         callee = self._symbol("src/Core/Rules.cs", "ApplyDamage", parent="RuleEngine")
-        self._edge("IMPORTS_FROM", "src/Net/Server.cs", "Emberfall.Core", "src/Net/Server.cs")
+        self._edge("IMPORTS_FROM", "src/Net/Server.cs", "Kingdom.Core", "src/Net/Server.cs")
         edge = self._edge("CALLS", caller, "ApplyDamage", "src/Net/Server.cs")
 
         source = "RuleEngine engine; engine.ApplyDamage(x);"

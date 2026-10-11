@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using Emberfall.Core.Contracts;
-using Emberfall.Net.Protocol;
+using Kingdom.Core.Contracts;
+using Kingdom.Net.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-namespace Emberfall.Review
+namespace Kingdom.Review
 {
     /// <summary>
     /// A separate, append-only lane for one demonstrated action per frozen state. These are not

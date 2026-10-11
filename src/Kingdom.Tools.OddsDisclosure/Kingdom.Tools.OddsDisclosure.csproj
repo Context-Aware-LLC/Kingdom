@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kingdom.Tools.OddsDisclosure: generates docs/dev-docs/data/pack-odds.md from
+    the live PackRarityOdds, PackPityState, BoosterPack, and ShardValues constants (EF-080f,
+    NOR-260). The artifact is committed alongside the tool. See Program.cs for the regenerate
+    command. The player-facing page, docs/pub-docs/economy/booster-packs.md, is hand-authored from it.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Kingdom.Tools.OddsDisclosure</AssemblyName>
+    <RootNamespace>Kingdom.Tools.OddsDisclosure</RootNamespace>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kingdom.Core.Collection\Kingdom.Core.Collection.csproj" />
+  </ItemGroup>
+
+</Project>

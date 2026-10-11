@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
-using Emberfall.Session;
-using Emberfall.Net.Client.Collection;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
+using Kingdom.Session;
+using Kingdom.Net.Client.Collection;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Scene-to-scene handoff for the deck explicitly chosen at the Find Game door. The id is

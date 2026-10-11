@@ -8,7 +8,7 @@ site is nordaware.com and is separate.
    is the list, no external tool.
 2. **Card gallery. Teaser only** (Sam, 2026-09-30). The generator publishes an allowlist of
    approved cards and nothing else, because card text still changes. Player-facing names only
-   ("Pendingham", never "Emberfall"). The page shows art, name, class, rarity and text, and no cost or stats (Sam, 2026-09-30: they do not read to a newcomer without the card frame). Built by `scripts/build-gallery.py` from shipped card data and the art.
+   ("Pendingham", never "Kingdom"). The page shows art, name, class, rarity and text, and no cost or stats (Sam, 2026-09-30: they do not read to a newcomer without the card frame). Built by `scripts/build-gallery.py` from shipped card data and the art.
 3. **Support and FAQ.** FAQ drafted from `docs/pub-docs/` (Early Access, connection required,
    accounts, deletion). Support form on the Worker with the same Turnstile check, mailing support@.
    Link the existing delete-account page.

@@ -4,11 +4,11 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Authors <c>Assets/Resources/Audio/MasterMixer.mixer</c> — the AudioMixer
-    /// <see cref="Emberfall.Presentation.AudioSettings"/> loads via
+    /// <see cref="Kingdom.Presentation.AudioSettings"/> loads via
     /// <c>Resources.Load&lt;AudioMixer&gt;("Audio/MasterMixer")</c>. Master (the default root) gets
     /// two child groups, Music and SFX, each exposing its Volume attenuation as a float parameter
     /// named MusicVolume / SfxVolume — the exact names AudioSettings calls SetFloat/GetFloat with.
@@ -18,7 +18,7 @@ namespace Emberfall.Editor
     /// anywhere on the asset's path — <c>AssetDatabase.LoadAssetAtPath</c> does not have that
     /// restriction, so a mixer placed at a flat <c>Assets/Audio/MasterMixer.mixer</c> would still
     /// satisfy an editor-time existence check while returning null at runtime, the exact failure
-    /// <see cref="Emberfall.Presentation.AudioSettings.EnsureMixer"/> is built to degrade
+    /// <see cref="Kingdom.Presentation.AudioSettings.EnsureMixer"/> is built to degrade
     /// silently from. This repo's existing convention (<c>Assets/Resources/SupabaseAuthSettings.asset</c>,
     /// <c>Assets/UI/MatchSettings/Resources/MatchSettingsScreen.uxml</c>) is a <c>Resources</c>
     /// folder holding the exact relative path the loader asks for.</para>
@@ -50,7 +50,7 @@ namespace Emberfall.Editor
         private const BindingFlags AnyMember = BindingFlags.Public | BindingFlags.NonPublic
             | BindingFlags.Instance | BindingFlags.Static;
 
-        [MenuItem("Emberfall/Audio/Create Master Mixer")]
+        [MenuItem("Kingdom/Audio/Create Master Mixer")]
         public static void Run()
         {
             if (AssetDatabase.LoadAssetAtPath<AudioMixer>(AssetPath) != null)

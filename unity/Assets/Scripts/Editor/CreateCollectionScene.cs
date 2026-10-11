@@ -1,12 +1,12 @@
 using System;
-using Emberfall.Presentation;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>Editor authoring entry point for the Collection scene.</summary>
     public static class CreateCollectionScene
@@ -26,14 +26,14 @@ namespace Emberfall.Editor
         /// </summary>
         private const string TemplateScenePath = "Assets/Scenes/CharacterRoster.unity";
         private const string UxmlPath = "Assets/UI/Collection/CollectionScreen.uxml";
-        private const string PanelPath = "Assets/UI/Common/EmberfallPanelSettings.asset";
+        private const string PanelPath = "Assets/UI/Common/KingdomPanelSettings.asset";
 
-        // MOVED OUT OF "Emberfall/UI/" AND GATED 2026-09-04 (Sam: "so they aren't liable to be
+        // MOVED OUT OF "Kingdom/UI/" AND GATED 2026-09-04 (Sam: "so they aren't liable to be
         // accidentally triggered"). This sits one item away from Check UXML Integrity, which is a
         // read-only check — and it is not: NewScene(EmptyScene, Single) followed by SaveScene over
         // ScenePath discards whatever is in that scene, with no undo. The submenu keeps it off the
         // path of a stray click; the dialog below is what actually stops it.
-        [MenuItem("Emberfall/Rebuild Scene — OVERWRITES/Collection")]
+        [MenuItem("Kingdom/Rebuild Scene — OVERWRITES/Collection")]
         public static void Build()
         {
             // Interactive only. A -batchmode caller asked for this by name and has no one to
@@ -106,7 +106,7 @@ namespace Emberfall.Editor
             if (!EditorSceneManager.SaveScene(scene, ScenePath))
                 throw new InvalidOperationException($"Unity could not save {ScenePath}.");
 
-            EmberfallBuild.SyncSceneList();
+            KingdomBuild.SyncSceneList();
             AssetDatabase.SaveAssets();
             Debug.Log($"[CreateCollectionScene] Authored {ScenePath}; UIDocument has source + panel settings.");
         }

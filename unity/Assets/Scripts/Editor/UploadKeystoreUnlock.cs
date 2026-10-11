@@ -1,7 +1,7 @@
 using System;
 using UnityEditor;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Fills the Android keystore passwords from the environment whenever the Editor loads, so a

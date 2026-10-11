@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Shipping IArtProvider (dev-docs/pipelines/art-and-rendering.md:13): resolves artId → Addressables key
     // "card_art/<flattened artId>" and streams the sprite on demand. Replaces

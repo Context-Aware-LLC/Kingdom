@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// How long a played card of each type holds the playback queue for its reveal beat, in

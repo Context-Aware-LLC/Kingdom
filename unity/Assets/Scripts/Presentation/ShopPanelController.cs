@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Collection;
-using Emberfall.Net.Client.Collection;
-using Emberfall.Net.Client.Shop;
+using Kingdom.Core.Collection;
+using Kingdom.Net.Client.Collection;
+using Kingdom.Net.Client.Shop;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Binds the store's catalog and purchase flow. Pricing and placeholder art slots may render

@@ -1,0 +1,44 @@
+{
+	"folders": [
+		{
+			"name": "tcg-hearthlike",
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.asset": "yaml",
+			"*.meta": "yaml",
+			"*.prefab": "yaml",
+			"*.unity": "yaml"
+		},
+		"dotnet.defaultSolution": "Kingdom.slnx",
+		"pgsql.connections": [
+			{
+				"id": "B2F11B84-7230-40AB-A702-83C171FA1ACE",
+				"groupId": "81754116-2C82-4344-B399-FD0FD4686F6E",
+				"authenticationType": "SqlLogin",
+				"connectTimeout": 15,
+				"applicationName": "vscode-pgsql",
+				"clientEncoding": "utf8",
+				"sslmode": "require",
+				"sshSavePassword": true,
+				"savePassword": true,
+				"sslRootCertMode": "none",
+				"server": "aws-0-us-east-1.pooler.supabase.com",
+				"user": "emberfall_app.cjoyljppqtqfeojtcghg",
+				"password": "",
+				"database": "postgres",
+				"profileName": "Supabase",
+				"port": "5432",
+				"requirepeer": "",
+				"hostaddr": "",
+				"options": "",
+				"sshPassword": "",
+				"displayName": "Supabase",
+				"expiresOn": 0
+			}
+		],
+		"markdown.validate.enabled": true
+	}
+}

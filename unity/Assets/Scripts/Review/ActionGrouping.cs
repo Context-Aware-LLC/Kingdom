@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Emberfall.Review
+namespace Kingdom.Review
 {
     /// <summary>
     /// Groups a frame's legal actions into the distinct PLAYS they represent, and sums the policy's
@@ -148,7 +148,7 @@ namespace Emberfall.Review
         /// "sacrifice this minion" into one play on 381 decisions in the current corpus. Sam's
         /// ruling, 2026-09-09: they are different, *by extension* — you must target a minion in
         /// order to sacrifice it, so a sacrifice is a target plus more, never the same play. That
-        /// also makes this agree with DistinctPlayKey in Emberfall.Tools.NetSoak, which the
+        /// also makes this agree with DistinctPlayKey in Kingdom.Tools.NetSoak, which the
         /// exploration sampler mixes over; the two disagreeing about what a play IS would have
         /// meant the reviewer grading a grouping the sampler never used.
         /// </summary>

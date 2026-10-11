@@ -1,0 +1,14 @@
+{
+  "name": "Kingdom.Core.Contracts",
+  "rootNamespace": "Kingdom.Core.Contracts",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": true
+}

@@ -1,4 +1,4 @@
-# Fly.io deploy — Emberfall web card authoring tool (2026-08-27).
+# Fly.io deploy — Kingdom web card authoring tool (2026-08-27).
 #
 # Separate app from `emberfall` (the match server) on purpose: this one holds no game state, has
 # a completely different uptime profile, and a bad deploy here must not be able to take a live

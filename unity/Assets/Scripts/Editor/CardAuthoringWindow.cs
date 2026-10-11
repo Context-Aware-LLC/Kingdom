@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
-using Emberfall.Data;
-using Emberfall.Presentation;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
+using Kingdom.Data;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Card Authoring EditorWindow (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M1-KICKOFF.md Phase B, dev-docs/pipelines/card-authoring-and-import.md:9). Edits the
@@ -44,10 +44,10 @@ namespace Emberfall.Editor
         private static readonly string[] CarrierKeywordNames =
             CarrierKeywordOptions.Select(keyword => keyword.ToString()).ToArray();
 
-        [MenuItem("Emberfall/Card Authoring Tool")]
+        [MenuItem("Kingdom/Card Authoring Tool")]
         public static void Open() => GetWindow<CardAuthoringWindow>("Card Authoring");
 
-        [MenuItem("Emberfall/Validate All Cards")]
+        [MenuItem("Kingdom/Validate All Cards")]
         public static void ValidateAllMenuItem() => CardSetValidator.RunAndLog();
 
         private readonly List<EditableCard> _cards = new List<EditableCard>();
@@ -115,7 +115,7 @@ namespace Emberfall.Editor
         private void LoadAll()
         {
             _cards.Clear();
-            // EVERY set file, not just Emberfall. Loading one file made this window wrong in two
+            // EVERY set file, not just Kingdom. Loading one file made this window wrong in two
             // ways at once, both silent: LiveDb() could not resolve a rule naming a card from
             // another set (reported as C12-TOKEN-UNRESOLVED against a card that is fine), and
             // NextIdInBand scanned 179 of 268 rows, so the id it minted collided with an existing
@@ -131,7 +131,7 @@ namespace Emberfall.Editor
                 // out of LoadRows, and before 2026-08-25 that exception left the loop — so the sets
                 // after the bad one never loaded, and SaveAll then wrote each of them as `[]`.
                 // It happened for real: an authored `target.filter.keyword` against a stale
-                // Emberfall.Core.Cards.dll took REKINDLING's 105 rows down to an empty array, and
+                // Kingdom.Core.Cards.dll took REKINDLING's 105 rows down to an empty array, and
                 // the only reason the corpus survived was that it had been committed minutes
                 // earlier. The parse failure is what should be loud; the file is what must be left
                 // alone.

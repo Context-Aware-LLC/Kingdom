@@ -1,9 +1,9 @@
 using System;
-using Emberfall.Net.Client.Shop;
+using Kingdom.Net.Client.Shop;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The tear: the pack the player dropped on the vault's stage comes apart WHERE THEY PUT IT, and

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Quests;
-using Emberfall.Session;
+using Kingdom.Net.Client.Quests;
+using Kingdom.Session;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Finds out which daily quests one match moved, for the result screen (Sam, 2026-10-03). It

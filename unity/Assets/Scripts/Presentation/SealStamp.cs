@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Slams the crown wax seal (<c>Art/UI/Chrome/ui_seal_crown.png</c>) down onto an element: the

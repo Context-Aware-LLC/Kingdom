@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Emberfall.Core;
-using Emberfall.Core.Contracts;
+using Kingdom.Core;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// Unity-free interpretation of authoritative match events for hero-impact feedback. Keeping

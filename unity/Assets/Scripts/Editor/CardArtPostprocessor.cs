@@ -1,8 +1,8 @@
 using UnityEditor;
 using UnityEngine;
-using Emberfall.Presentation;
+using Kingdom.Presentation;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Enforces import settings for all card/hero/UI/VFX art by folder path,

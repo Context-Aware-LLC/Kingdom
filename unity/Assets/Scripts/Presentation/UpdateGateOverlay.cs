@@ -1,12 +1,12 @@
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Gate;
-using Emberfall.Net.Protocol;
-using Emberfall.Session;
+using Kingdom.Net.Client.Gate;
+using Kingdom.Net.Protocol;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The forced-update gate: asked once per launch, before the main menu shows, and again when a

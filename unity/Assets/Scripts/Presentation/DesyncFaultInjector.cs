@@ -2,10 +2,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Net.Client;
+using Kingdom.Net.Client;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // [DesyncDbg] dev tool — C-G1-4 positive-path proof + resync-ladder repro (2026-07-21).
     // Kept (not stripped): constructed in the editor and dev builds only, by NetworkedGameBootstrap's

@@ -2,7 +2,7 @@
 
 WHY THIS EXISTS, AND WHY IT IS DELICATE
 `CardJsonRowIO.Serialize` is the only thing that writes a card row, and it lives in
-`Emberfall.Editor` -- an Editor-only assembly. `CardJson` in Core.Cards is a READER only. So
+`Kingdom.Editor` -- an Editor-only assembly. `CardJson` in Core.Cards is a READER only. So
 nothing outside Unity can write a card row, which is exactly why the web tool stages edits
 instead of applying them, and why this module has to exist for the reconcile step.
 
@@ -30,7 +30,7 @@ VERIFY, DO NOT TRUST. `--selftest` re-serializes every row of every set file and
 bytes. Run it after any change here, and after any change to the C# writer. A field added to
 CardJsonRowIO.Serialize and not to CANONICAL_ORDER shows up there and nowhere else.
 
-RETIREMENT TRIGGER: if `Serialize` ever moves from Emberfall.Editor into Emberfall.Core.Cards
+RETIREMENT TRIGGER: if `Serialize` ever moves from Kingdom.Editor into Kingdom.Core.Cards
 (where a net10.0 tool could call it directly), this module should be deleted and the reconcile
 step should shell out to that instead. Two implementations of one format is a standing cost;
 it is only paid here because there is currently no second way to write a row.

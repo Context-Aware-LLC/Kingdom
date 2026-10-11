@@ -4,8 +4,8 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $assetPath = Join-Path $repoRoot 'unity\Assets\Settings\ActionSet.inputactions'
 $metaPath = "$assetPath.meta"
 $presentationPath = Join-Path $repoRoot 'unity\Assets\Scripts\Presentation'
-$wrapperPath = Join-Path $presentationPath 'EmberfallActions.cs'
-$assemblyPath = Join-Path $presentationPath 'Emberfall.Presentation.asmdef'
+$wrapperPath = Join-Path $presentationPath 'KingdomActions.cs'
+$assemblyPath = Join-Path $presentationPath 'Kingdom.Presentation.asmdef'
 
 $asset = Get-Content -LiteralPath $assetPath -Raw | ConvertFrom-Json
 $map = $asset.maps | Where-Object name -eq 'ScreenActions'
@@ -34,14 +34,14 @@ if (@($map.actions | Where-Object name -in @('Drag', 'Release', 'TapClick')).Cou
 
 $meta = Get-Content -LiteralPath $metaPath -Raw
 if ($meta -notmatch '(?m)^\s*generateWrapperCode:\s*1\s*$' -or
-    $meta -notmatch '(?m)^\s*wrapperCodePath:\s*Assets/Scripts/Presentation/EmberfallActions\.cs\s*$' -or
+    $meta -notmatch '(?m)^\s*wrapperCodePath:\s*Assets/Scripts/Presentation/KingdomActions\.cs\s*$' -or
     -not (Test-Path -LiteralPath $wrapperPath)) {
-    throw 'ActionSet must generate EmberfallActions.cs inside the Presentation assembly.'
+    throw 'ActionSet must generate KingdomActions.cs inside the Presentation assembly.'
 }
 
 $assembly = Get-Content -LiteralPath $assemblyPath -Raw | ConvertFrom-Json
 if ('Unity.InputSystem' -notin @($assembly.references)) {
-    throw 'Emberfall.Presentation must reference the Unity.InputSystem assembly.'
+    throw 'Kingdom.Presentation must reference the Unity.InputSystem assembly.'
 }
 
 $invalid = Get-ChildItem -LiteralPath $presentationPath -Filter '*.cs' -Recurse |

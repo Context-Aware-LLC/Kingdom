@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// EF-062. Keeps the board inside <c>Screen.safeArea</c> on Android without letterboxing.

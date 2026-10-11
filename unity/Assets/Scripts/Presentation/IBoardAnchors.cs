@@ -1,7 +1,7 @@
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Contracts;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Position → named scene anchor (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/interfaces.md §5.1, D6 zones).
     // BoardAnchors implements this; BoardController and VfxDirector consume it.

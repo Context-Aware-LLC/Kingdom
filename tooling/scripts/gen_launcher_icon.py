@@ -1,4 +1,4 @@
-"""Generate launcher-icon candidates for Emberfall.
+"""Generate launcher-icon candidates for Kingdom.
 
 # NOR-345 smoke-test: gate-flow verification (safe to remove after PR merges).
 
@@ -39,7 +39,7 @@ from gen_card_art import EDGE, ENV_KEY, MODEL, REPO, _conform, _post  # noqa: E4
 OUT = REPO / "art-pipeline" / "ui" / "brand" / "icons"
 
 COMMON = """
-A launcher/app icon for a dark-fantasy digital game called "Emberfall", square
+A launcher/app icon for a dark-fantasy digital game called "Kingdom", square
 format, subject filling the entire frame edge to edge. FULL BLEED — no border,
 no frame, no vignette, no rounded-corner mockup, no phone/device mockup, no
 drop shadow, no background gradient sitting behind a small centered logo.
@@ -65,7 +65,7 @@ bronze for any hard material. Do not introduce a palette family the game
 hasn't already established (no random flat pastels, no bright saturated
 primary red/purple/pink).
 
-The world: "Emberfall" — a land after a sky-fire cataclysm, where embers still
+The world: "Kingdom" — a land after a sky-fire cataclysm, where embers still
 fall like snow. Mood is old, weathered, hand-forged and painterly — not a flat
 vector logo, not a photo, not 3D-render-clean. A dark, painted, atmospheric
 object.

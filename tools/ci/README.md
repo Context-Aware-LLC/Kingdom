@@ -40,17 +40,17 @@ clean — trust the byte read.
 pwsh tools/ci/unity-compile.ps1
 ```
 
-Compiles the 12 `Emberfall.*` assemblies through `dotnet`. **No Editor, no Unity licence, no
+Compiles the 12 `Kingdom.*` assemblies through `dotnet`. **No Editor, no Unity licence, no
 domain reload**, about a minute. Exits nonzero listing each assembly that fails and one line per
 distinct error.
 
 **Why it is not optional.** Cloud CI runs `ubuntu-latest` and licence-free, so Stages 7–8 are
-informational and *nothing* gates the Unity-side C#. `Emberfall.Presentation`, `.Editor`, `.AI`,
+informational and *nothing* gates the Unity-side C#. `Kingdom.Presentation`, `.Editor`, `.AI`,
 `.Data` and `.Session` are compiled by Unity and by nothing else — code passes every cloud stage
 and still puts the Editor in Safe Mode. That is not hypothetical: on 2026-08-06 an
 `InternalsVisibleTo` declared in a `.csproj` (invisible to Unity, which builds from the
 `.asmdef`) plus three call sites left on APIs the NOR-31 refactor retired did exactly that, and
-surfaced as a Burst *"Failed to resolve assembly"* and a vanished `Emberfall/` menu.
+surfaced as a Burst *"Failed to resolve assembly"* and a vanished `Kingdom/` menu.
 
 It also works while the Editor is open, which `unity-verify.ps1` does not — the Editor is a
 single-writer resource.

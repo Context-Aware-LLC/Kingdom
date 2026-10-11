@@ -6,7 +6,7 @@ may narrow an agent's scope or forbid publishing; when they do, follow the stric
 ## Product identity and tone
 
 - **The public game is _Kingdom of Bad Ideas_**, at `kingdomofbadideas.com`. `Bad Ideas` is the
-  app-icon label (`productName`) and `com.contextaware.kobi` is the package id. `Emberfall` remains
+  app-icon label (`productName`) and `com.contextaware.kobi` is the package id. `Kingdom` remains
   the internal codename and `EMBERFALL` remains a set id; do not casually rename handles, ids,
   `artId`s, namespaces, repository paths, or other internal identifiers to match the public name.
 - **The world is ridiculous and the performance is deadpan.** The tonal ingredients are original

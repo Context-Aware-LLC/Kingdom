@@ -1,4 +1,4 @@
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Text sibling of IUiSpriteProvider, for the small always-resident data files that ride
     // alongside UI chrome — currently HeroFrames_<Material>.json, the measured ring/socket/boss

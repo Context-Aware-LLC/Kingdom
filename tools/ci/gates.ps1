@@ -86,12 +86,12 @@ function Find-Python {
     return $null
 }
 
-Invoke-Stage 'Restore' { dotnet restore Emberfall.slnx }
-Invoke-Stage 'Build (Release)' { dotnet build Emberfall.slnx -c Release --no-restore }
+Invoke-Stage 'Restore' { dotnet restore Kingdom.slnx }
+Invoke-Stage 'Build (Release)' { dotnet build Kingdom.slnx -c Release --no-restore }
 
 if (-not $Quick) {
     Invoke-Stage 'Stage 1 · Lint (dotnet format)' {
-        dotnet format Emberfall.slnx --verify-no-changes --no-restore
+        dotnet format Kingdom.slnx --verify-no-changes --no-restore
     }
 
     # Gates USS PARSEABILITY, not style — .stylelintrc.json carries zero rules on purpose. Unity
@@ -143,10 +143,10 @@ if (-not $Quick) {
 # stage names its own failures now, and a second voice saying so was only ever noise.
 #
 # A `dotnet test` MATCHING ZERO TESTS EXITS 0, so blocking is not the same as verified: all five
-# projects must stay registered in Emberfall.slnx or this stage is green for the wrong reason.
+# projects must stay registered in Kingdom.slnx or this stage is green for the wrong reason.
 # Read the count, not the badge.
 Invoke-Stage 'Stage 2 · .NET test suites' {
-    dotnet test Emberfall.slnx -c Release --no-build --nologo
+    dotnet test Kingdom.slnx -c Release --no-build --nologo
 }
 
 # What runs below was never in tests/ and carries weight the suite does not: CardCi validates every
@@ -154,10 +154,10 @@ Invoke-Stage 'Stage 2 · .NET test suites' {
 # drift guard, format, stylelint and warnings-as-errors are all untouched.
 
 Invoke-Stage 'Stage 5b · Networked AI soak' {
-    dotnet run --project src/Emberfall.Tools.NetSoak -c Release --no-build -- liveai 5
+    dotnet run --project src/Kingdom.Tools.NetSoak -c Release --no-build -- liveai 5
 }
 Invoke-Stage 'Stage 6 · Content C-series card gate' {
-    dotnet run --project src/Emberfall.Tools.CardCi -c Release --no-build -- unity/Assets/CardData unity/Assets/Art
+    dotnet run --project src/Kingdom.Tools.CardCi -c Release --no-build -- unity/Assets/CardData unity/Assets/Art
 }
 Invoke-Stage 'Stage 6c · UI edge-clearance audit' {
     python tooling/scripts/audit_edge_safety.py

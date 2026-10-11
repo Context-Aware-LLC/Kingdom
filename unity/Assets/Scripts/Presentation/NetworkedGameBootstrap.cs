@@ -4,22 +4,22 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Emberfall.AI;
-using Emberfall.Core;
-using Emberfall.Core.Collection;
-using Emberfall.Core.Contracts;
-using Emberfall.Data;
-using Emberfall.Net.Client;
-using Emberfall.Net.Client.Gate;
-using Emberfall.Net.Client.Social;
-using Emberfall.Net.Protocol;
-using Emberfall.Session;
+using Kingdom.AI;
+using Kingdom.Core;
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
+using Kingdom.Data;
+using Kingdom.Net.Client;
+using Kingdom.Net.Client.Gate;
+using Kingdom.Net.Client.Social;
+using Kingdom.Net.Protocol;
+using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using Action = System.Action;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The match entry point (dev-docs/architecture/system-overview.md:17), and since 2026-08-21
@@ -53,7 +53,7 @@ namespace Emberfall.Presentation
 
         [Header("Server")]
         [Tooltip("wss endpoint. The live server is wss://emberfall.fly.dev/ws; a local " +
-                 "dev server is ws://localhost:8080/ws (Emberfall/Net/Start Local Server).")]
+                 "dev server is ws://localhost:8080/ws (Kingdom/Net/Start Local Server).")]
         [SerializeField] private string serverUrl = "wss://emberfall.fly.dev/ws";
 
         [Header("Board (optional, null = console-only)")]
@@ -557,7 +557,7 @@ namespace Emberfall.Presentation
 
                 // Play reveal — THE SAME FOUR LINES GameBootstrap RUNS. They were missing here,
                 // which is the whole reason the beat never showed up in a real game: this is the
-                // bootstrap the shipped build uses (EmberfallBuild ships BoardNetworked.unity and
+                // bootstrap the shipped build uses (KingdomBuild ships BoardNetworked.unity and
                 // nothing else) and the one Find Game loads. Board.unity/GameBootstrap — Single
                 // Player only — had the beat; every other way into a match had none, and the
                 // absence is invisible from the outside, because an entry with no hold just looks

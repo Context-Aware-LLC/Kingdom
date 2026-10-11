@@ -1,0 +1,11 @@
+{
+  "name": "com.kingdom.core.cards",
+  "version": "0.1.0",
+  "displayName": "Kingdom Core Cards",
+  "description": "CardDefinition, typed rule nodes, and the shared CardJson parser (dev-docs/specs/card-schema.md:5).",
+  "unity": "6000.0",
+  "type": "library",
+  "dependencies": {
+    "com.kingdom.core.contracts": "0.1.0"
+  }
+}

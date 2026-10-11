@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The boot loading screen (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §4/§5) — a camera-parented

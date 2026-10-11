@@ -6,7 +6,7 @@ using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Standing guard (EF-041): walks every literal Addressable address string in
@@ -20,7 +20,7 @@ namespace Emberfall.Editor
     /// in doc comments do not produce false positives.</para>
     ///
     /// <para>If this check fails, run
-    /// <b>Emberfall / Addressables / Setup Groups + Migrate Card Data</b> then
+    /// <b>Kingdom / Addressables / Setup Groups + Migrate Card Data</b> then
     /// commit the updated <c>AddressableAssetsData/</c> files.</para>
     /// </summary>
     public static class AddressablesGuard
@@ -45,7 +45,7 @@ namespace Emberfall.Editor
         private static readonly Regex BlockComment = new Regex(@"/\*.*?\*/",
             RegexOptions.Compiled | RegexOptions.Singleline);
 
-        [MenuItem("Emberfall/Addressables/Guard — Verify All Script Addresses")]
+        [MenuItem("Kingdom/Addressables/Guard — Verify All Script Addresses")]
         public static void Check()
         {
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(false);

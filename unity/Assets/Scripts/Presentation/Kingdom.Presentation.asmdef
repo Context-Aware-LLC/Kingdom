@@ -1,0 +1,28 @@
+{
+  "name": "Kingdom.Presentation",
+  "rootNamespace": "Kingdom.Presentation",
+  "references": [
+    "Kingdom.Core.Contracts",
+    "Kingdom.Core.Cards",
+    "Kingdom.Core",
+    "Kingdom.Core.Collection",
+    "Kingdom.Data",
+    "Kingdom.Session",
+    "Kingdom.AI",
+    "Kingdom.Net.Client",
+    "Kingdom.Net.Protocol",
+    "Unity.TextMeshPro",
+    "Unity.Addressables",
+    "Unity.ResourceManager",
+    "Unity.InputSystem"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

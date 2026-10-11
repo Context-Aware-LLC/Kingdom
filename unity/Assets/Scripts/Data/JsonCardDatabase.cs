@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
 
-namespace Emberfall.Data
+namespace Kingdom.Data
 {
     /// <summary>
     /// Loads the canonical card-row JSON array and serves it as ICardDatabase (dev-docs/specs/card-schema.md:5).

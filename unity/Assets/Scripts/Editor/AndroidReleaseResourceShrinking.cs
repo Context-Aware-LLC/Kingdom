@@ -6,7 +6,7 @@ using UnityEditor.Android;
 using UnityEditor.Build;
 using UnityEngine;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Turns on resource shrinking for the release build type of the generated launcher module.
@@ -29,7 +29,7 @@ namespace Emberfall.Editor
             string launcherGradle = Path.GetFullPath(Path.Combine(projectPath, "..", "launcher", "build.gradle"));
             if (!File.Exists(launcherGradle))
                 throw new BuildFailedException(
-                    $"[EmberfallBuild] Could not locate the generated launcher Gradle file at '{launcherGradle}'.");
+                    $"[KingdomBuild] Could not locate the generated launcher Gradle file at '{launcherGradle}'.");
 
             string contents = File.ReadAllText(launcherGradle);
             if (contents.Contains("shrinkResources", StringComparison.Ordinal))
@@ -40,7 +40,7 @@ namespace Emberfall.Editor
                 return;
 
             File.WriteAllText(launcherGradle, updated);
-            Debug.Log($"[EmberfallBuild] Enabled release resource shrinking in '{launcherGradle}'.");
+            Debug.Log($"[KingdomBuild] Enabled release resource shrinking in '{launcherGradle}'.");
         }
     }
 }

@@ -245,7 +245,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ede6a3a604f8ade4bb97c0db970d939f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.BoardController
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.BoardController
   boardAnchors: {fileID: 0}
 --- !u!114 &558931580
 MonoBehaviour:
@@ -258,7 +258,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e3f689da50bfc54db9cbf9eecd4c45e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ProceduralBoardSetup
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ProceduralBoardSetup
 --- !u!114 &558931581
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -270,7 +270,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8f76501c17dc4b945b6359940155221a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.BoardAnchors
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.BoardAnchors
   p0:
     DeckAnchor: {fileID: 0}
     HandSlots:
@@ -332,7 +332,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 19da0ef5af09150449ed981ecc207892, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Session::Emberfall.Session.MatchRunner
+  m_EditorClassIdentifier: Kingdom.Session::Kingdom.Session.MatchRunner
   commandDelaySeconds: 0.75
 --- !u!4 &558931583
 Transform:
@@ -360,7 +360,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0dbcc9c101369424d8bf0250789003cc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.VfxDirector
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.VfxDirector
   table: []
   boardAnchors: {fileID: 558931581}
 --- !u!114 &558931585
@@ -374,7 +374,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 10f2056993b1b974283fa51b22c04d3c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.InputRouter
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.InputRouter
 --- !u!114 &558931586
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -386,7 +386,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0b5b19a0c2374ce49fa9bcec6ada5110, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.NetworkedGameBootstrap
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.NetworkedGameBootstrap
   matchRunner: {fileID: 558931582}
   serverUrl: wss://emberfall.fly.dev/ws
   boardAnchors: {fileID: 558931581}

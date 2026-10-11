@@ -5,7 +5,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Emberfall.Review
+namespace Kingdom.Review
 {
     /// <summary>
     /// The label vocabulary — EDITABLE, and deliberately not part of the bundle.

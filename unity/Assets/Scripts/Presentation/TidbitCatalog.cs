@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The moment a tidbit is offered at. A trigger is a place in the journey, not a screen and not

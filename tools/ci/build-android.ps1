@@ -1,6 +1,6 @@
 # EF-060 · Headless Android APK build harness
 #
-# Switches Unity to the Android build target, runs EmberfallBuild.BuildAndroid()
+# Switches Unity to the Android build target, runs KingdomBuild.BuildAndroid()
 # headlessly (IL2CPP + ARM64, debug keystore), and exits non-zero on any failure.
 #
 # IMPORTANT: compile errors arrive in the Unity log typed as Log, not Error.
@@ -38,7 +38,7 @@ $PROJECT    = [System.IO.Path]::Combine($REPO_ROOT, 'unity')
 $TIMESTAMP  = (Get-Date -Format 'yyyyMMdd-HHmmss')
 $LOG        = Join-Path ([System.IO.Path]::GetTempPath()) "unity-build-android-$TIMESTAMP.log"
 $APK        = if ($PlayRelease) { [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'KingdomOfBadIdeas.aab') }
-              else              { [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'Emberfall.apk') }
+              else              { [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'Kingdom.apk') }
 $BUILD_INFO = "$APK.build.json"
 
 $BUILD_COMMIT = (& git -C $REPO_ROOT rev-parse HEAD).Trim()
@@ -161,7 +161,7 @@ $unityArgs = @(
     '-quit',
     '-buildTarget', 'android',
     '-projectPath', "`"$PROJECT`"",
-    '-executeMethod', 'Emberfall.Editor.EmberfallBuild.BuildAndroid',
+    '-executeMethod', 'Kingdom.Editor.KingdomBuild.BuildAndroid',
     '-logFile', "`"$LOG`""
 )
 
@@ -220,9 +220,9 @@ if ($compileErrors) {
 }
 
 # ── Build result detection ────────────────────────────────────────────────────
-$buildSucceeded = $logLines | Where-Object { $_ -match '\[EmberfallBuild\] Player build Succeeded' }
-$buildFailed    = $logLines | Where-Object { $_ -match '\[EmberfallBuild\] Player build.*FAILED\|BuildFailedException' }
-$apkLine        = $logLines | Where-Object { $_ -match 'Builds[/\\]Android[/\\](Emberfall\.apk|KingdomOfBadIdeas\.aab)' } | Select-Object -Last 1
+$buildSucceeded = $logLines | Where-Object { $_ -match '\[KingdomBuild\] Player build Succeeded' }
+$buildFailed    = $logLines | Where-Object { $_ -match '\[KingdomBuild\] Player build.*FAILED\|BuildFailedException' }
+$apkLine        = $logLines | Where-Object { $_ -match 'Builds[/\\]Android[/\\](Kingdom\.apk|KingdomOfBadIdeas\.aab)' } | Select-Object -Last 1
 
 Write-Host "build-android: =============================="
 Write-Host "build-android: Last 60 log lines:"

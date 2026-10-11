@@ -7,7 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Editor
+namespace Kingdom.Editor
 {
     /// <summary>
     /// Points the Editor's Game View at the reference device's resolution and measures what the
@@ -36,7 +36,7 @@ namespace Emberfall.Editor
     /// 1280x720, so a 2400x1080 view comes back horizontally squashed and circles read as ovals.
     /// Measure <c>worldBound</c>.</para>
     ///
-    /// <para>RETIREMENT TRIGGER: if <c>EmberfallPanelSettings</c> leaves ScaleWithScreenSize, or its
+    /// <para>RETIREMENT TRIGGER: if <c>KingdomPanelSettings</c> leaves ScaleWithScreenSize, or its
     /// reference resolution stops being 1920x1080 matched on height, then the Editor stops
     /// reproducing the device by resolution alone and this file needs its scale half back. The
     /// deleted version is in git at 2026-09-03.</para>
@@ -47,9 +47,9 @@ namespace Emberfall.Editor
         public const int DeviceWidth = 2400;
         public const int DeviceHeight = 1080;
 
-        private const string SizeLabel = "Emberfall Device (2400x1080)";
+        private const string SizeLabel = "Kingdom Device (2400x1080)";
 
-        [MenuItem("Emberfall/Debug/Device Layout Rig/Apply (Pixel 5a, 2400x1080)")]
+        [MenuItem("Kingdom/Debug/Device Layout Rig/Apply (Pixel 5a, 2400x1080)")]
         public static void Apply()
         {
             Debug.Log($"[DeviceLayoutRig] {SetGameViewSize()}. The panel matches the device by "

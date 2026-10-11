@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Presentation.Input;
+using Kingdom.Presentation.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>One frame of the abstract pointer (EF-048).</summary>
     public enum PointerPhase
@@ -61,7 +61,7 @@ namespace Emberfall.Presentation
         private bool    _gestureActive;    // a press is in flight and has not ended yet
         private bool    _enabled;
 
-        private readonly EmberfallActions _actions = new EmberfallActions();
+        private readonly KingdomActions _actions = new KingdomActions();
 
         private Queue<PointerSample> _syntheticFrames;  // test-only queue
 

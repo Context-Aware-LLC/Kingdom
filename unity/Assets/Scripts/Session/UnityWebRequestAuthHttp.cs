@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Emberfall.Net.Client.Auth;
+using Kingdom.Net.Client.Auth;
 using UnityEngine.Networking;
 
-namespace Emberfall.Session
+namespace Kingdom.Session
 {
     /// <summary>
     /// <see cref="IAuthHttp"/> over <c>UnityWebRequest</c>.
@@ -47,7 +47,7 @@ namespace Emberfall.Session
             CancellationToken cancellationToken = default)
             => SendJsonAsync(UnityWebRequest.kHttpVerbPUT, url, jsonBody, headers, cancellationToken);
 
-        /// <summary>Non-Supabase: <c>GET /collection</c> and <c>GET /roster</c> off Emberfall's own
+        /// <summary>Non-Supabase: <c>GET /collection</c> and <c>GET /roster</c> off Kingdom's own
         /// server. A null body is what distinguishes it — <c>UnityWebRequest</c> will happily attach
         /// an upload handler to a GET, and some proxies drop the request when it does.</summary>
         public Task<AuthHttpResponse> GetAsync(

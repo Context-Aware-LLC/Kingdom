@@ -169,7 +169,7 @@ def main():
     w("paragraph.\n")
     w("---\n")
 
-    for card_set in ("Emberfall", "Rekindling"):
+    for card_set in ("Kingdom", "Rekindling"):
         relative = "unity/Assets/CardData/%s.cards.json" % card_set
         mine = rows(os.path.join(repo, relative))
         theirs = rows(os.path.join(fork_root, relative))

@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Serializable holder for one player's D6 anchor transforms (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/board-and-vfx.md §1).
     // Authored in the editor scene OR populated at runtime by ProceduralBoardSetup.

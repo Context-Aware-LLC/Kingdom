@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Emberfall.Core.Cards;
-using Emberfall.Core.Contracts;
-using Emberfall.Net.Client.Shop;
+using Kingdom.Core.Cards;
+using Kingdom.Core.Contracts;
+using Kingdom.Net.Client.Shop;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     /// <summary>
     /// The pack-opening moment: a <see cref="PackOpenReceipt"/> dealt out as a row of cards that

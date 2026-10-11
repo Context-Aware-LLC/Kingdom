@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Emberfall.Presentation
+namespace Kingdom.Presentation
 {
     // Centers a seat's occupied board slots in the row instead of packing them against the
     // leftmost anchors (Sam, 2026-08-09: "everything's jammed up against the left... we could

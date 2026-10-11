@@ -9,7 +9,7 @@
 // Deliberately dumb: no motion, no lighting. The orb is the live element on this
 // screen (SG_LoadingOrb); the medallions are still. _Fade rides the overlay's
 // reveal/dismiss alongside the plate and orb.
-Shader "Emberfall/SG_MedallionMask"
+Shader "Kingdom/SG_MedallionMask"
 {
     Properties
     {

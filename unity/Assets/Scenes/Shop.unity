@@ -285,7 +285,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9f9cb37a586349d493ffbd67a8e58091, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Emberfall.Presentation::Emberfall.Presentation.ShopScreenController
+  m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.ShopScreenController
 --- !u!114 &733914622
 MonoBehaviour:
   m_ObjectHideFlags: 0
