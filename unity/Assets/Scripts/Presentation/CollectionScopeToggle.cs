@@ -7,7 +7,7 @@ namespace Emberfall.Presentation
     /// <summary>
     /// The Owned / Unowned scope control (#146).
     ///
-    /// <para><b>Not a fourth filter chip.</b> The pairing chips and the query bar both narrow a pool;
+    /// <para><b>Not a fourth filter chip.</b> The class strip and the query bar both narrow a pool;
     /// this decides which pool exists. That is why it is not a chip on <see cref="CardQueryBar"/> —
     /// the bar's chips are generated from the card enums and filter a pool, while this says which
     /// pool there is. It therefore asks the controller to REBUILD rather than re-query, and

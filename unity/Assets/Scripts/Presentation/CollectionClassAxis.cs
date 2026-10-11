@@ -7,19 +7,12 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// The class filter, as ONE axis with two affordances: the nine-tab strip across the top edge,
-    /// and the pairing chips offered while editing a deck.
-    ///
-    /// <para><b>They are not two filters.</b> Both controls write the same set, and every repaint is
-    /// driven from that set rather than from whichever control was touched — so pressing a chip
-    /// lights the matching tab, and a deck whose primary and secondary coincide cannot leave one
-    /// chip's highlight stale. Splitting this out of CollectionController is what makes that
-    /// invariant a property of a type instead of a convention four methods had to keep.</para>
+    /// The class filter: the nine-tab strip across the top edge, and the set it writes.
     ///
     /// <para>Empty means unconstrained, the all-off convention the rest of the query bar uses. The
     /// axis never touches the wall itself: it raises <see cref="Changed"/> and the controller
     /// composes it with the query bar at its single ApplyQuery site, so neither surface clobbers the
-    /// other (and, critically, a chip press does not reset the player's chosen sort).</para>
+    /// other (and, critically, a tab press does not reset the player's chosen sort).</para>
     /// </summary>
     public sealed class CollectionClassAxis
     {
@@ -34,15 +27,10 @@ namespace Emberfall.Presentation
         private readonly Dictionary<CardClass, VisualElement> _tabs =
             new Dictionary<CardClass, VisualElement>();
 
-        private Button _primaryChip, _secondaryChip, _neutralChip;
-        private CardClass? _primary, _secondary;
-
         /// <summary>The selected classes, or empty for unconstrained. Read by ApplyQuery.</summary>
         public IReadOnlyCollection<CardClass> Selected => _selected;
 
         public bool IsConstrained => _selected.Count > 0;
-
-        private bool Editing => _primary.HasValue;
 
         // ---- binding -------------------------------------------------------------------------
 
@@ -92,24 +80,6 @@ namespace Emberfall.Presentation
             if (ApplyAvailability()) Changed?.Invoke();
         }
 
-        /// <summary>
-        /// Bind the pairing chips — a shortcut onto the same axis, offered while editing: the deck's
-        /// primary class, its secondary, and NEUTRAL, which together are the whole of what the pool
-        /// holds then. Labels are written at runtime from the real class names, so a rename cannot
-        /// drift.
-        /// </summary>
-        public void BindChips(Button primary, Button secondary, Button neutral)
-        {
-            _primaryChip = primary;
-            _secondaryChip = secondary;
-            _neutralChip = neutral;
-
-            _primaryChip?.RegisterCallback<ClickEvent>(_ => TogglePairing(_primary));
-            _secondaryChip?.RegisterCallback<ClickEvent>(_ => TogglePairing(_secondary));
-            _neutralChip?.RegisterCallback<ClickEvent>(_ => TogglePairing(
-                Editing ? CardClass.NEUTRAL : (CardClass?)null));
-        }
-
         // ---- state ---------------------------------------------------------------------------
 
         /// <summary>
@@ -155,7 +125,7 @@ namespace Emberfall.Presentation
         }
 
         /// <summary>
-        /// Enter deck-editing: park the browse selection, adopt the deck's pairing, relabel the chips.
+        /// Enter deck-editing: park the browse selection and open unconstrained.
         ///
         /// <para>A deck opens on its whole pairing, not on whatever class the player happened to be
         /// browsing — usually one this deck cannot play anyway, which would open the editor on a
@@ -163,18 +133,11 @@ namespace Emberfall.Presentation
         /// unchanged; <see cref="SetAvailable"/> would otherwise have deselected it for being out of
         /// pool.</para>
         /// </summary>
-        public void BeginEditing(CardClass primary, CardClass secondary)
+        public void BeginEditing()
         {
             _parked.Clear();
             _parked.UnionWith(_selected);
             _selected.Clear();
-
-            _primary = primary;
-            _secondary = secondary;
-
-            if (_primaryChip != null) _primaryChip.text = CardClassTokens.Label(primary);
-            if (_secondaryChip != null) _secondaryChip.text = CardClassTokens.Label(secondary);
-            if (_neutralChip != null) _neutralChip.text = CardClassTokens.Label(CardClass.NEUTRAL);
             Repaint();
         }
 
@@ -182,8 +145,6 @@ namespace Emberfall.Presentation
         /// <see cref="BeginEditing"/>.</summary>
         public void EndEditing()
         {
-            _primary = null;
-            _secondary = null;
             _selected.Clear();
             _selected.UnionWith(_parked);
             Repaint();
@@ -198,11 +159,9 @@ namespace Emberfall.Presentation
             Repaint();
         }
 
-        /// <summary>The one write to the axis, whichever control was pressed.</summary>
+        /// <summary>The one write to the axis.</summary>
         public void Toggle(CardClass klass)
         {
-            // A tab the pool has nothing behind is already picking-disabled; the guard is here too
-            // because the pairing chips reach this by a different path.
             if (!_available.Contains(klass)) return;
 
             if (!_selected.Remove(klass)) _selected.Add(klass);
@@ -210,16 +169,7 @@ namespace Emberfall.Presentation
             Changed?.Invoke();
         }
 
-        private void TogglePairing(CardClass? klass)
-        {
-            if (!Editing || !klass.HasValue) return;
-            Toggle(klass.Value);
-        }
-
-        /// <summary>
-        /// Repaint every control from the set, not just the one that was pressed — see the type
-        /// docstring for why that is the whole point of this class.
-        /// </summary>
+        /// <summary>Repaint every tab from the set, not just the one that was pressed.</summary>
         public void Repaint()
         {
             bool constrained = IsConstrained;
@@ -230,11 +180,6 @@ namespace Emberfall.Presentation
                 pair.Value.EnableInClassList("class-tab_art--on", selected);
                 pair.Value.EnableInClassList("class-tab_art--muted", constrained && available && !selected);
             }
-
-            if (!Editing) return;
-            _primaryChip?.EnableInClassList("db-chip--on", _selected.Contains(_primary.Value));
-            _secondaryChip?.EnableInClassList("db-chip--on", _selected.Contains(_secondary.Value));
-            _neutralChip?.EnableInClassList("db-chip--on", _selected.Contains(CardClass.NEUTRAL));
         }
     }
 }

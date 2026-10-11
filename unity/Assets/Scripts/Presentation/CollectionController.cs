@@ -94,8 +94,7 @@ namespace Emberfall.Presentation
         /// three-state ownership rule.</summary>
         private readonly CollectionScopeToggle _scope = new CollectionScopeToggle();
 
-        /// <summary>The class filter — the nine-tab strip and the pairing chips, which are one axis
-        /// with two affordances. See <see cref="CollectionClassAxis"/>.</summary>
+        /// <summary>The class filter — the nine-tab strip. See <see cref="CollectionClassAxis"/>.</summary>
         private readonly CollectionClassAxis _classAxis = new CollectionClassAxis();
 
         // Cached elements. The collection shell is permanent; only the drawer's chooser/editor panes
@@ -703,14 +702,10 @@ namespace Emberfall.Presentation
                 };
         }
 
-        /// <summary>Bind the class strip and the pairing chips — one axis, two affordances. See
-        /// <see cref="CollectionClassAxis"/>, which owns the set and both control surfaces.</summary>
+        /// <summary>Bind the class strip. See <see cref="CollectionClassAxis"/>, which owns the set.</summary>
         private void WireClassAxis()
         {
             _classAxis.Changed += ApplyQuery;
-            _classAxis.BindChips(_root.Q<Button>("filter-primary"),
-                                 _root.Q<Button>("filter-secondary"),
-                                 _root.Q<Button>("filter-neutral"));
             _classAxis.BindStrip(_root);
         }
 
@@ -852,9 +847,9 @@ namespace Emberfall.Presentation
             _scope.SetSilently(owned: true, unowned: false);
 
             _deck = deck;
-            // Parks the browse class selection and adopts the deck's pairing — see
-            // CollectionClassAxis.BeginEditing for why parking rather than dropping.
-            _classAxis.BeginEditing(deck.PrimaryClass, deck.SecondaryClass);
+            // Parks the browse class selection — see CollectionClassAxis.BeginEditing for why
+            // parking rather than dropping.
+            _classAxis.BeginEditing();
 
             StampEditing();
             BuildPool();
@@ -1418,13 +1413,11 @@ namespace Emberfall.Presentation
 
         /// <summary>
         /// The one site that writes the wall query. Composes the two filter surfaces — the query bar
-        /// and (while editing) the pairing chips — into a single <see cref="CardFilter"/>, so neither
-        /// clobbers the other the way two separate <c>SetQuery</c> writers did before #160.
+        /// and the class strip — into a single <see cref="CardFilter"/>, so neither clobbers the
+        /// other the way two separate <c>SetQuery</c> writers did before #160.
         ///
-        /// <para>The class axis is one set with two controls on it — the left strip and, while
-        /// editing, the pairing chips — so there is nothing to suppress or reconcile here; it applies
-        /// the same way in both states. The browse selection is parked across an edit and restored on
-        /// close, the same shape as the ownership scope.</para>
+        /// <para>The class axis applies the same way browsing and editing. The browse selection is
+        /// parked across an edit and restored on close, the same shape as the ownership scope.</para>
         ///
         /// <para>Runs with or without an edit context; on a plate that declares no query controls the filter is empty,
         /// which matches everything. The sort is always the bar's own — a chip press no longer reverts

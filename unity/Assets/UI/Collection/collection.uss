@@ -67,7 +67,6 @@
 }
 
 /* ---------- Filter chips ---------- */
-.db-filter-row { flex-direction: row; margin-bottom: var(--space-3); }
 .db-chip {
     font-size: var(--type-label);
     color: var(--ink-2);
@@ -630,34 +629,6 @@
     -unity-text-align: middle-center;
 }
 
-/* ---------- Active-deck pairing + cost chip sizing (#160) ----------
- *
- * All of this is scoped under .collection--editing so browse is pixel-identical (the pairing chips
- * do not exist at rest, and the cost chips there keep their content-driven size). It is NOT put on
- * the shared .db-chip at the top of this file on purpose: that class is also worn by the scope toggle and
- * MatchSettings, and a width there would reach screens outside this issue (see GH#161).
- *
- * Sam ruling 4 (2026-08-11): a chip's width must not be driven by its label length — a row of chips
- * should read as a set of equal things. Exact pixels were left to the implementer; this is the
- * min-width-plus-centred-text shape Sam sketched. Pixels rather than percentages match every other
- * control dimension in this file (.col-sort 200px, .col-sort-dir 132px, .db-chip height 56px) — the
- * percentage-over-pixels house ruling is about responsive layout, not fixed control chrome. */
-
-/* The three pairing chips: one floor width so they read as a set, text centred within it. */
-.collection--editing .db-filter-row .db-chip {
-    min-width: 100px;
-    -unity-text-align: middle-center;
-}
-
-/* Ruling 3 sat the pairing chips on the SAME LINE as search/sort, with a small gap after Reset —
- * `margin-bottom: 0; margin-left: var(--space-3)`. That ruling was about a full-width top drawer
- * where the four controls shared one line and a second row of chips was the thing being avoided.
- * .col-query-row is a column now, so the chips are already on their own line and the horizontal gap
- * would only indent them out of alignment with everything above. */
-.collection--editing .col-query-row .db-filter-row {
-    margin-bottom: var(--space-2);
-}
-
 /* ---------- Wall ---------- */
 
 /* Shown by CollectionController only when a query matches nothing. A wall that goes blank with no
@@ -674,17 +645,11 @@
 }
 
 /* ---------- Persistent collection shell (NOR-210) ---------- */
-.collection .db-filter-row {
-    display: none;
-}
 .collection .db-collection {
     flex-grow: 1;
     background-color: rgba(0, 0, 0, 0);
     padding: 0;
     margin-right: 0;
-}
-.collection--editing .db-filter-row {
-    display: flex;
 }
 /* NOTHING hides the plate here. `.collection--editing` is stamped on the PLATE
  * (CollectionController.StampEditing), so a bare `display: none` on it removes the whole
