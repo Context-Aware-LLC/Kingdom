@@ -79,7 +79,7 @@ He is the fastest thing in the kingdom and the least sure where he is aiming. Th
 
 **Hero:** Maren
 
-He is in no hurry. He freezes whatever comes at him, drowns the largest of it down to size, and wins with what is still standing.
+She is in no hurry. She freezes whatever comes at her, drowns the largest of it down to size, and wins with what is still standing.
 
 - Cards that freeze attackers where they stand.
 - Damage that grows with the target's Health.
