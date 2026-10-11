@@ -196,8 +196,9 @@ The naming convention itself, and everything that checks it, lives in that scrip
 
 **Before committing `unity/ProjectSettings/ProjectSettings.asset`, `git diff` it and confirm `productName` is still exactly `Bad Ideas`.**
 
-It was `Kingdom` until 2026-09-28. Sam renamed it before any store upload, because it is the
-label under the app icon. The codename, the setId and the folder names stay `Kingdom`.
+It was `Emberfall` until 2026-09-28. Sam renamed it before any store upload, because it is the
+label under the app icon. The codename and the folder names are `Kingdom` (renamed from
+`Emberfall` 2026-10-10); the setId is still `EMBERFALL`.
 
 On Windows, `Application.persistentDataPath` is `AppData/LocalLow/<companyName>/<productName>`
 and PlayerPrefs are keyed the same way, so that one string keys the desktop player's **entire
