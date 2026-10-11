@@ -99,8 +99,6 @@ namespace Kingdom.Editor
     public enum EditableLifetimeKind { SourceBound, OneShot, Finite, Permanent }
     public enum EditableRuleActionKind
     {
-        PreventLethalDamage,
-        RepeatNextMinionPlay,
         Damage,
         Heal,
         ModifyStats,
@@ -123,6 +121,8 @@ namespace Kingdom.Editor
         Backdraft,
         Unearth,
         GainArmor,
+        PreventLethalDamage,
+        RepeatNextMinionPlay,
     }
 
     /// <summary>

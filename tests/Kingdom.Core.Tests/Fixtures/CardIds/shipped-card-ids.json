@@ -1780,5 +1780,17 @@
     "handle": "grave_silent_reaper",
     "type": "MINION",
     "setId": "REKINDLING"
+  },
+  {
+    "id": 1194,
+    "handle": "neutral_royal_herald",
+    "type": "MINION",
+    "setId": "REKINDLING"
+  },
+  {
+    "id": 1195,
+    "handle": "neutral_belle_ideal",
+    "type": "MINION",
+    "setId": "REKINDLING"
   }
 ]

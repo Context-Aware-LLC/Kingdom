@@ -128,6 +128,9 @@ namespace Kingdom.Core.Tests.Targeting
                 // One expression where there were two: a count that has reached the selector's
                 // maximum clamps to the candidate list anyway, which is what "all" always meant.
                 int reaches = Math.Min(spec.Selection.Count, resolved.Count);
+                // Prevention watches the whole friendly set, but replaces just one lethal hit
+                // per source per turn. The sentence describes the saved minion, not that set.
+                if (rule.Action is PreventLethalDamageAction) reaches = Math.Min(1, reaches);
 
                 if (resolved.Count == 0)
                     findings.Add($"NO-CANDIDATES  \"{sentence}\" — selector {spec.Selector} finds " +
@@ -175,7 +178,20 @@ namespace Kingdom.Core.Tests.Targeting
             // CanonicalStateFixtures.Manifest, so borrowing it means this flag cannot miss a field.
             string before = GameStateHasher.Hash(state);
             var interpreter = new EffectInterpreter(state, db, new EventBuffer(state));
-            interpreter.RaiseSelf(carrier, trigger, chosen, TurnContext(card, state, controller));
+            if (trigger == Trigger.AURA)
+            {
+                // Auras are continuous state, not queued events. Exercise their actual runtime
+                // path: stat recomputation, or a lethal hit for damage replacement.
+                AuraEngine.Recompute(state, db);
+                if (card.Rules.Any(r => r.Action is PreventLethalDamageAction))
+                {
+                    CardInstance subject = state.Players[0].Board.First(c => c.Id != carrier.Id);
+                    subject.HasAegisShield = false;
+                    DamagePipeline.ApplyDamage(interpreter, CharacterRef.OfMinion(0, subject),
+                        subject.CurrentHealth, null, null);
+                }
+            }
+            else interpreter.RaiseSelf(carrier, trigger, chosen, TurnContext(card, state, controller));
             interpreter.Drain();
             if (GameStateHasher.Hash(state) == before)
                 findings.Add("NO-STATE-CHANGE  the whole card resolved and changed no canonical state.");

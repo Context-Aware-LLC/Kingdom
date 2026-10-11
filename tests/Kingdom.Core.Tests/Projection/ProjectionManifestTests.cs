@@ -122,6 +122,7 @@ namespace Kingdom.Core.Tests.Projection
                 ["Source"] = "chooser-only (sentinel for non-chooser)",
                 ["Options"] = "chooser-only (EMPTY for non-chooser — count undisclosed)",
                 ["ChoiceSequence"] = "chooser-only (0 for non-chooser)",
+                ["RemainingOffers"] = "chooser-only (0 for non-chooser)",
             },
         };
 

@@ -23,7 +23,7 @@ namespace Kingdom.Core.Tests.Collection
     public sealed class CardQueryTests
     {
         private static List<CardDefinition> Pool()
-            => LiveCardSet.Cards.Where(c => c.Collectible).ToList();
+            => LiveCardSet.Cards.Where(c => c.PoolEligible).ToList();
 
         private static ICardDatabase Db => LiveCardSet.Db;
 

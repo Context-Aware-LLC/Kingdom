@@ -215,7 +215,8 @@ namespace Kingdom.Core.Cards
                         "it does not stay on the board to bound one. SELF and BESIDE are minion-only: " +
                         "a spell's aura has no board position for them to resolve against. A tribe " +
                         "filter is allowed; a damaged filter is not, because a stat aura writes the " +
-                        "health it would be selecting on.");
+                        "health it would be selecting on. PREVENT_LETHAL_DAMAGE also supports " +
+                        "an ALWAYS, SOURCE_BOUND MINION aura over all other friendly minions.");
 
                 // C9 — stable, card-scoped identity. The same syntax as a card id keeps rule ids
                 // portable across JSON, logs and deterministic snapshots.

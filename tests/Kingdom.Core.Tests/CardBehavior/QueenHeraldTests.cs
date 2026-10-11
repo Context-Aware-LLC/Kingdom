@@ -44,8 +44,12 @@ namespace Kingdom.Core.Tests.CardBehavior
                 new PlayerState(p0, new HeroInstance(new InstanceId(1), p0, CardClass.GRAVEKEEP, 30)),
                 new PlayerState(p1, new HeroInstance(new InstanceId(2), p1, CardClass.CLOCKWRIGHT, 30)))
             {
-                ActivePlayer = p0, Phase = TurnPhase.Main, TurnNumber = 3,
-                NextInstanceCounter = 3, Mulligan0Done = true, Mulligan1Done = true,
+                ActivePlayer = p0,
+                Phase = TurnPhase.Main,
+                TurnNumber = 3,
+                NextInstanceCounter = 3,
+                Mulligan0Done = true,
+                Mulligan1Done = true,
             };
             foreach (PlayerState player in _state.Players)
             {
@@ -71,6 +75,9 @@ namespace Kingdom.Core.Tests.CardBehavior
                 Does.Contain(DeckRule.L7_NotPublished));
             var editable = EditableCard.FromDefinition(card);
             Assert.That(CardTextGenerator.Generate(editable.ToDefinition(), _db), Is.EqualTo(card.Text));
+            CardDefinition reloaded = CardJson.DeserializeArray("[" + CardJsonRowIO.Serialize(editable.ToDefinition()) + "]").Single();
+            Assert.That(CardTextGenerator.Generate(reloaded, _db), Is.EqualTo(card.Text));
+            Assert.That(reloaded.Lifecycle, Is.EqualTo(CardLifecycle.DRAFT));
             Assert.That(CardTextParser.TryParse(card, new CardNameIndex(ShippedCards.Cards), out var rules, out var reason),
                 Is.True, reason);
             Assert.That(rules, Has.Count.EqualTo(1));
@@ -163,6 +170,21 @@ namespace Kingdom.Core.Tests.CardBehavior
         }
 
         [Test]
+        public void Venom_After_Nonzero_Damage_Bypasses_The_Queens_Protection()
+        {
+            var queen = OnBoard(Queen);
+            var subject = OnBoard(Body);
+            var attacker = OnBoard(Body, 1);
+            attacker.Keywords.Add(Keyword.VENOM);
+            var interpreter = new EffectInterpreter(_state, _db, new EventBuffer(_state));
+            DamagePipeline.ApplyDamage(interpreter, CharacterRef.OfMinion(0, subject), 1,
+                attacker.Id, attacker.Keywords);
+            interpreter.Drain();
+            Assert.That(subject.Zone, Is.EqualTo(Zone.Graveyard));
+            Assert.That(EffectList.Has(queen.Effects, EffectKind.LethalDamagePreventionSpent), Is.False);
+        }
+
+        [Test]
         public void Herald_Repeats_Only_The_Next_Play_Even_After_He_Dies()
         {
             var herald = Play(Herald);
@@ -197,12 +219,14 @@ namespace Kingdom.Core.Tests.CardBehavior
             Assert.That(_state.Players[0].Hand, Has.Count.EqualTo(2));
         }
 
-        [Test]
-        public void Repeated_Targeted_Effects_Keep_Their_Target_And_Fizzle_If_It_Dies()
+        [TestCase(2)]
+        [TestCase(4)]
+        public void Repeated_Targeted_Effects_Keep_Their_Target_And_Fizzle_If_It_Dies(int health)
         {
             int boltMinion = ShippedCards.Id("clock_clockwork_sniper");
             Play(Herald);
             var target = OnBoard(Body, 1);
+            target.CurrentHealth = health;
             var bystander = OnBoard(Body, 1);
             Play(boltMinion, target.Id);
             Assert.That(target.Zone, Is.EqualTo(Zone.Graveyard));
@@ -276,9 +300,11 @@ namespace Kingdom.Core.Tests.CardBehavior
             CardDefinition definition = _db.Get(id);
             var card = new CardInstance(_state.NextInstanceId(), id, owner.Id)
             {
-                Zone = Zone.Board, Position = owner.Board.Count,
+                Zone = Zone.Board,
+                Position = owner.Board.Count,
                 CurrentAttack = definition.Attack!.Value,
-                CurrentHealth = definition.Health!.Value, MaxHealth = definition.Health.Value,
+                CurrentHealth = definition.Health!.Value,
+                MaxHealth = definition.Health.Value,
             };
             owner.Board.Add(card);
             return card;

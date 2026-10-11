@@ -6,7 +6,7 @@ namespace Kingdom.Core
 {
     /// <summary>
     /// The single damage/heal door (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/game-state-and-actions.md §7 combat, hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/card-system.md §4.1 keyword
-    /// hooks). The fixed order is: <b>Aegis absorb → health/armor → Lifedrain heal → Venom lethality
+    /// hooks). The fixed order is: <b>Aegis absorb → lethal-damage replacement → health/armor → Lifedrain heal → Venom lethality
     /// → Frost frost</b>. The one exception: <c>ignoresAegis</c> (DROWN only) skips the Aegis step
     /// entirely rather than reordering it — the shield is never spent, just irrelevant to that hit.
     /// Both DEAL_DAMAGE effects (spells/battlecries) and the Attack command (step 2) route through here so
