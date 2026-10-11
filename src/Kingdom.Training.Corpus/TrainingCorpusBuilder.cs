@@ -269,7 +269,20 @@ namespace Kingdom.Training.Corpus
                     expectedHashes.SearchMeanValues,
                     expectedHashes.SearchPlayPriors,
                     expectedHashes.SearchPlayGroups,
-                    expectedHashes.SearchPlayKeySchemaVersion));
+                    expectedHashes.SearchPlayKeySchemaVersion,
+                    expectedHashes.SearchDecisionSeed,
+                    expectedHashes.SearchRootValue,
+                    expectedHashes.SearchCandidateDroppedRound,
+                    expectedHashes.SearchRoundWorlds,
+                    expectedHashes.SearchNullRollouts,
+                    expectedHashes.SearchRolloutValues,
+                    expectedHashes.SearchRolloutOwnHealth,
+                    expectedHashes.SearchRolloutOwnArmor,
+                    expectedHashes.SearchRolloutOpponentHealth,
+                    expectedHashes.SearchRolloutOpponentArmor,
+                    expectedHashes.SearchRolloutPlies,
+                    expectedHashes.SearchRolloutEndTurn,
+                    expectedHashes.SearchRolloutCapped));
                 index++;
             }
 
@@ -520,7 +533,37 @@ namespace Kingdom.Training.Corpus
             [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             IReadOnlyList<int>? SearchPlayGroups = null,
             [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-            int? SearchPlayKeySchemaVersion = null);
+            int? SearchPlayKeySchemaVersion = null,
+            // Every rollout behind the label, as the manifest holds it and under the same names:
+            // EpisodeDecisionHash documents the order. Absent on a capture older than
+            // fair-search.v3. Nothing here is re-derived, so the manifest's own check that the
+            // rollouts add up to the visits and means is the one that covers them.
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            ulong? SearchDecisionSeed = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            double? SearchRootValue = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchCandidateDroppedRound = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchRoundWorlds = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            int? SearchNullRollouts = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<double?>? SearchRolloutValues = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchRolloutOwnHealth = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchRolloutOwnArmor = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchRolloutOpponentHealth = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchRolloutOpponentArmor = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchRolloutPlies = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchRolloutEndTurn = null,
+            [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+            IReadOnlyList<int>? SearchRolloutCapped = null);
 
         private sealed record PlayerMemory(
             IReadOnlyList<int> SelfRemainingDeck,

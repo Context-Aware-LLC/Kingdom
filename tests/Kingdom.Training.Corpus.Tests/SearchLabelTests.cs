@@ -108,6 +108,150 @@ namespace Kingdom.Training.Corpus.Tests
         private static TestCaseData Broken(string name, EpisodeDecisionHash label)
             => new TestCaseData(label).SetArgDisplayNames(name);
 
+        [Test]
+        public void A_label_with_its_rollouts_validates_and_round_trips_in_the_recorded_order()
+        {
+            string root = TempDirectory();
+            try
+            {
+                var writer = new JsonlEpisodeManifestWriter(root);
+                writer.Append(ManifestWith(LabelWithRollouts()));
+
+                string line = File.ReadAllLines(writer.Path).Single();
+                Assert.That(line, Does.Contain(
+                    "\"searchRolloutValues\":[1,1,-1,-1,null,null,1,1,0,-1,null,null,null,null]"),
+                    "a rollout with no value is null; zero is a rollout that stopped at the ply cap or drew");
+                Assert.That(line, Does.Contain("\"searchDecisionSeed\":18446744073709551615"),
+                    "the seed is the whole 64 bits, as a number");
+                EpisodeDecisionHash read = JsonlEpisodeManifestWriter.ReadAll(writer.Path)[0].DecisionHashes[0];
+                Assert.Multiple(() =>
+                {
+                    Assert.That(read.SearchDecisionSeed, Is.EqualTo(ulong.MaxValue));
+                    Assert.That(read.SearchRootValue, Is.EqualTo(0.25));
+                    Assert.That(read.SearchCandidateDroppedRound, Is.EqualTo(new[] { -1, 1, 0 }));
+                    Assert.That(read.SearchRoundWorlds, Is.EqualTo(new[] { 2, 4 }));
+                    Assert.That(read.SearchNullRollouts, Is.EqualTo(6));
+                    Assert.That(read.SearchRolloutValues, Is.EqualTo(LabelWithRollouts().SearchRolloutValues));
+                    Assert.That(read.SearchRolloutOpponentHealth,
+                        Is.EqualTo(LabelWithRollouts().SearchRolloutOpponentHealth));
+                    Assert.That(read.SearchRolloutPlies, Is.EqualTo(LabelWithRollouts().SearchRolloutPlies));
+                    Assert.That(read.SearchRolloutCapped, Is.EqualTo(new[] { 8 }));
+                });
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+
+        private static IEnumerable<TestCaseData> BrokenRollouts()
+        {
+            EpisodeDecisionHash good = LabelWithRollouts();
+            double?[] values = good.SearchRolloutValues!.ToArray();
+            yield return Broken("rollouts without a label", new EpisodeDecisionHash(
+                0, "p0", new string('e', 64), new string('f', 64)) { SearchRootValue = 0.25 });
+            yield return Broken("missing seed", good with { SearchDecisionSeed = null });
+            yield return Broken("missing one rollout array", good with { SearchRolloutPlies = null });
+            yield return Broken("root value is not finite", good with { SearchRootValue = double.NaN });
+            yield return Broken("dropped round per candidate",
+                good with { SearchCandidateDroppedRound = new[] { -1, 1 } });
+            yield return Broken("dropped in a round that was not played",
+                good with { SearchCandidateDroppedRound = new[] { -1, 2, 0 } });
+            yield return Broken("two survivors", good with { SearchCandidateDroppedRound = new[] { -1, -1, 0 } });
+            yield return Broken("no survivor", good with { SearchCandidateDroppedRound = new[] { 1, 1, 0 } });
+            yield return Broken("survivor is not the chosen play",
+                good with { SearchCandidateDroppedRound = new[] { 1, -1, 0 } });
+            yield return Broken("a round with no worlds", good with { SearchRoundWorlds = new[] { 2, 0 } });
+            yield return Broken("rounds imply another rollout count",
+                good with { SearchRoundWorlds = new[] { 2, 3 } });
+            yield return Broken("one array shorter than the rest",
+                good with { SearchRolloutEndTurn = good.SearchRolloutEndTurn!.Take(13).ToArray() });
+            yield return Broken("null count", good with { SearchNullRollouts = 5 });
+            // The first candidate's two round-0 values traded with the second's: every array is
+            // still the right length, and only the sums say the layout was read wrongly.
+            yield return Broken("rollouts that do not add up to the visits and means", good with
+            {
+                SearchRolloutValues = new double?[]
+                    { -1.0, -1.0, 1.0, 1.0 }.Concat(values.Skip(4)).ToArray(),
+            });
+            yield return Broken("value outside [-1, 1]", good with
+            {
+                SearchRolloutValues = new double?[] { 3.0, -1.0 }.Concat(values.Skip(2)).ToArray(),
+            });
+            yield return Broken("capped rollout with a result", good with { SearchRolloutCapped = new[] { 0 } });
+            yield return Broken("capped rollout with no value", good with { SearchRolloutCapped = new[] { 4 } });
+            yield return Broken("capped position past the end", good with { SearchRolloutCapped = new[] { 8, 14 } });
+            yield return Broken("capped positions out of order", good with { SearchRolloutCapped = new[] { 8, 8 } });
+            yield return Broken("negative plies", good with
+            {
+                SearchRolloutPlies = new[] { -1 }.Concat(good.SearchRolloutPlies!.Skip(1)).ToArray(),
+            });
+        }
+
+        [TestCaseSource(nameof(BrokenRollouts))]
+        public void Search_rollouts_that_disagree_with_their_label_are_refused(EpisodeDecisionHash label)
+            => Assert.Throws<ArgumentException>(() => ManifestWith(label).Validate());
+
+        [Test]
+        public void Builder_carries_the_rollouts_of_a_search_label_into_its_corpus_row()
+        {
+            string root = TempDirectory();
+            try
+            {
+                FileCardDatabase db = FileCardDatabase.LoadDirectory(FindCardData());
+                // One round of three worlds over the fixture's two candidates: the chosen play
+                // won two and lost one, the other lost the one world it could be played in.
+                (string manifestPath, string cardHash, _) = Capture(root, db, label => label with
+                {
+                    SearchVersion = "fair-search.v3",
+                    SearchDecisionSeed = 12345678901234567890UL,
+                    SearchRootValue = -0.125,
+                    SearchCandidateDroppedRound = new[] { -1, 0 },
+                    SearchRoundWorlds = new[] { 3 },
+                    SearchNullRollouts = 2,
+                    SearchRolloutValues = new double?[] { 1.0, 1.0, -1.0, -1.0, null, null },
+                    SearchRolloutOwnHealth = new[] { 12, 30, 0, -2, 0, 0 },
+                    SearchRolloutOwnArmor = new[] { 0, 3, 0, 0, 0, 0 },
+                    SearchRolloutOpponentHealth = new[] { 0, -4, 9, 17, 0, 0 },
+                    SearchRolloutOpponentArmor = new[] { 0, 0, 2, 0, 0, 0 },
+                    SearchRolloutPlies = new[] { 41, 60, 38, 77, 0, 0 },
+                    SearchRolloutEndTurn = new[] { 9, 12, 8, 14, 0, 0 },
+                    SearchRolloutCapped = Array.Empty<int>(),
+                });
+
+                new TrainingCorpusBuilder(db, RealRule).Build(manifestPath, cardHash, Path.Combine(root, "built"));
+                string[] rows = File.ReadAllLines(
+                    Path.Combine(root, "built", TrainingCorpusBuilder.DecisionsFileName));
+                using JsonDocument searched = JsonDocument.Parse(rows[0]);
+                using JsonDocument plain = JsonDocument.Parse(rows[1]);
+                JsonElement row = searched.RootElement;
+                int[] Ints(string name) => row.GetProperty(name).EnumerateArray().Select(v => v.GetInt32()).ToArray();
+                Assert.Multiple(() =>
+                {
+                    Assert.That(row.GetProperty("searchDecisionSeed").GetUInt64(), Is.EqualTo(12345678901234567890UL));
+                    Assert.That(row.GetProperty("searchRootValue").GetDouble(), Is.EqualTo(-0.125));
+                    Assert.That(Ints("searchCandidateDroppedRound"), Is.EqualTo(new[] { -1, 0 }));
+                    Assert.That(Ints("searchRoundWorlds"), Is.EqualTo(new[] { 3 }));
+                    Assert.That(row.GetProperty("searchNullRollouts").GetInt32(), Is.EqualTo(2));
+                    Assert.That(row.GetProperty("searchRolloutValues").GetRawText(),
+                        Is.EqualTo("[1,1,-1,-1,null,null]"));
+                    Assert.That(Ints("searchRolloutOwnHealth"), Is.EqualTo(new[] { 12, 30, 0, -2, 0, 0 }));
+                    Assert.That(Ints("searchRolloutOwnArmor"), Is.EqualTo(new[] { 0, 3, 0, 0, 0, 0 }));
+                    Assert.That(Ints("searchRolloutOpponentHealth"), Is.EqualTo(new[] { 0, -4, 9, 17, 0, 0 }));
+                    Assert.That(Ints("searchRolloutOpponentArmor"), Is.EqualTo(new[] { 0, 0, 2, 0, 0, 0 }));
+                    Assert.That(Ints("searchRolloutPlies"), Is.EqualTo(new[] { 41, 60, 38, 77, 0, 0 }));
+                    Assert.That(Ints("searchRolloutEndTurn"), Is.EqualTo(new[] { 9, 12, 8, 14, 0, 0 }));
+                    Assert.That(Ints("searchRolloutCapped"), Is.Empty);
+                    Assert.That(plain.RootElement.EnumerateObject().Select(field => field.Name),
+                        Has.None.StartsWith("search"), "an unsearched row has no search field at all");
+                });
+            }
+            finally
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+
         [TestCaseSource(nameof(BrokenLabels))]
         public void A_search_label_is_refused(EpisodeDecisionHash label)
             => Assert.Throws<ArgumentException>(() => ManifestWith(label).Validate());
@@ -298,6 +442,34 @@ namespace Kingdom.Training.Corpus.Tests
                 SearchChosenActionIndex = 0,
                 SearchPlayGroups = new[] { 0, 0, 1, 2 },
                 SearchPlayKeySchemaVersion = 1,
+            };
+
+        /// <summary>
+        /// <see cref="Label"/> with the rollouts behind it. Two rounds, of two and four worlds:
+        /// all three candidates played the first, the third never got a world it could play and
+        /// was cut, and the second could not be played in any world of the second round. Laid
+        /// out round by round, candidate by candidate:
+        /// round 0: c0 [1, 1], c1 [-1, -1], c2 [null, null]; round 1: c0 [1, 1, 0, -1], c1 [null x4].
+        /// The 0 is a rollout that ran into the ply cap, at position 8.
+        /// </summary>
+        private static EpisodeDecisionHash LabelWithRollouts()
+            => Label() with
+            {
+                SearchVersion = "fair-search.v3",
+                SearchDecisionSeed = ulong.MaxValue,
+                SearchRootValue = 0.25,
+                SearchCandidateDroppedRound = new[] { -1, 1, 0 },
+                SearchRoundWorlds = new[] { 2, 4 },
+                SearchNullRollouts = 6,
+                SearchRolloutValues = new double?[]
+                    { 1.0, 1.0, -1.0, -1.0, null, null, 1.0, 1.0, 0.0, -1.0, null, null, null, null },
+                SearchRolloutOwnHealth = new[] { 20, 14, 0, -3, 0, 0, 7, 30, 11, 0, 0, 0, 0, 0 },
+                SearchRolloutOwnArmor = new[] { 0, 2, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0 },
+                SearchRolloutOpponentHealth = new[] { 0, -2, 18, 9, 0, 0, 0, -6, 4, 22, 0, 0, 0, 0 },
+                SearchRolloutOpponentArmor = new[] { 0, 0, 1, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0 },
+                SearchRolloutPlies = new[] { 31, 48, 27, 52, 0, 0, 36, 44, 2400, 19, 0, 0, 0, 0 },
+                SearchRolloutEndTurn = new[] { 11, 14, 10, 15, 0, 0, 12, 13, 61, 9, 0, 0, 0, 0 },
+                SearchRolloutCapped = new[] { 8 },
             };
 
         private static EpisodeManifest ManifestWith(EpisodeDecisionHash decision)

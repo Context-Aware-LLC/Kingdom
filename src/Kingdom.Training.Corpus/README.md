@@ -113,6 +113,12 @@ and `--epsilon` are refused; the budget is `--search-plays`, `--search-sims` and
 rollouts at once). A deck's second class is hidden, so the seat infers the opponent's from the
 cards shown.
 
+Ending the turn is a candidate at every searched decision where it is legal: when the prior
+ranks it out of the top `--search-plays`, it takes the last place. `--search-keep-end-turn false`
+is the older rule (the prior's top plays as they stand), and the flag is part of the seat's
+identity and of the resume identity. The seat's own pending choice (Unearth) is searched, with
+the offers as the candidates.
+
 ```powershell
 dotnet run --project src/Kingdom.Tools.NetSoak -c Release -- rollout 2 `
   "F:\EmberfallData\exports\<rl-export>" "F:\EmberfallData\runs\<run>\best-model.pt" `
@@ -125,9 +131,33 @@ legal-action index per candidate play), `searchVisits`, `searchMeanValues` (null
 was never visited), `searchPlayPriors`, `searchChosenActionIndex`, and `searchPlayGroups` with
 `searchPlayKeySchemaVersion`: the distinct play of every legal action, from `DistinctPlayKey`.
 The fields are all present or all absent, and never beside the `behavior*` fields. A decision the
-seat did not search (one distinct play, a pending choice, no world it could build, or an action
-that wins on the spot, which `fair-search.v2` plays without searching) is an ordinary row; the
-command's `[rollout] search:` line counts each kind.
+seat did not search (one distinct play, no world it could build, or an action that wins on the
+spot, which is played without searching) is an ordinary row; the command's `[rollout] search:`
+line counts each kind. `pendingChoice` there is the pending choices that were NOT searched and
+`searchedChoices` the ones that were, which are also counted in `searched`.
+
+From `fair-search.v3` the row also carries every rollout behind the label, so a new training
+target is a new export and not a new capture. These too are all present or all absent, and a
+capture older than v3 has none of them:
+
+- `searchDecisionSeed`, `searchRootValue` (the value head at the root, which the search never
+  reads), `searchNullRollouts` (rollouts with no value).
+- `searchCandidateDroppedRound`: per candidate, the round after which it was cut; -1 for the
+  survivor. `searchRoundWorlds`: how many sampled worlds each round ran.
+- `searchRolloutValues`, `searchRolloutOwnHealth`, `searchRolloutOwnArmor`,
+  `searchRolloutOpponentHealth`, `searchRolloutOpponentArmor`, `searchRolloutPlies`,
+  `searchRolloutEndTurn`: parallel arrays, one entry per rollout. `searchRolloutCapped` lists the
+  positions that stopped at the ply cap.
+
+The parallel arrays do not say which rollout is whose, because the two short arrays imply it:
+round by round; inside a round, the candidates that played it (dropped round -1, or at least
+that round) in ascending candidate position; inside a candidate, world by world. Round `r` ran
+`searchRoundWorlds[r]` worlds, numbered on from the rounds before, and every candidate of a
+round played the same worlds. World `w` is rebuilt from the random stream seeded
+`searchDecisionSeed + (w + 1) * 0x9E3779B97F4A7C15` mod 2^64. A value is null where the world
+could not be built or played, and the facts beside it are then zero and mean nothing.
+`EpisodeManifest.Validate` recomputes the visits and the means from the rollouts and refuses a
+row where they differ, which is what catches a layout read wrongly.
 
 ### Resuming a killed rollout
 

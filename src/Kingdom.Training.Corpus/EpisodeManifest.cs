@@ -214,7 +214,13 @@ namespace Kingdom.Training.Corpus
                        || decision.SearchChosenActionIndex.HasValue
                        || decision.SearchPlayGroups is not null
                        || decision.SearchPlayKeySchemaVersion.HasValue;
-            if (!any) return;
+            if (!any)
+            {
+                if (HasAnyRolloutField(decision))
+                    throw new ArgumentException(
+                        $"{where} carries search rollouts without the search label they belong to.");
+                return;
+            }
             if (string.IsNullOrWhiteSpace(decision.SearchVersion)
                 || decision.SearchCandidateActionIndices is null
                 || decision.SearchVisits is null
@@ -308,6 +314,142 @@ namespace Kingdom.Training.Corpus
             if (!chosenIsCandidate)
                 throw new ArgumentException(
                     $"{where}.{nameof(decision.SearchChosenActionIndex)} is not a search candidate.");
+            ValidateSearchRollouts(decision, where);
+        }
+
+        private static bool HasAnyRolloutField(EpisodeDecisionHash decision)
+            => decision.SearchDecisionSeed.HasValue
+               || decision.SearchRootValue.HasValue
+               || decision.SearchCandidateDroppedRound is not null
+               || decision.SearchRoundWorlds is not null
+               || decision.SearchNullRollouts.HasValue
+               || decision.SearchRolloutValues is not null
+               || decision.SearchRolloutOwnHealth is not null
+               || decision.SearchRolloutOwnArmor is not null
+               || decision.SearchRolloutOpponentHealth is not null
+               || decision.SearchRolloutOpponentArmor is not null
+               || decision.SearchRolloutPlies is not null
+               || decision.SearchRolloutEndTurn is not null
+               || decision.SearchRolloutCapped is not null;
+
+        /// <summary>
+        /// The rollouts are recorded in an order two short arrays imply, so the arrays have to
+        /// agree with each other or every rollout is read as some other candidate's. The check
+        /// that makes a mislaid layout impossible to miss is the last one: the visits and means of
+        /// the label are recomputed from the rollouts and must come out the same.
+        /// </summary>
+        private static void ValidateSearchRollouts(EpisodeDecisionHash decision, string where)
+        {
+            if (!HasAnyRolloutField(decision)) return;
+            if (!decision.SearchDecisionSeed.HasValue
+                || !decision.SearchRootValue.HasValue
+                || decision.SearchCandidateDroppedRound is null
+                || decision.SearchRoundWorlds is null
+                || !decision.SearchNullRollouts.HasValue
+                || decision.SearchRolloutValues is null
+                || decision.SearchRolloutOwnHealth is null
+                || decision.SearchRolloutOwnArmor is null
+                || decision.SearchRolloutOpponentHealth is null
+                || decision.SearchRolloutOpponentArmor is null
+                || decision.SearchRolloutPlies is null
+                || decision.SearchRolloutEndTurn is null
+                || decision.SearchRolloutCapped is null)
+                throw new ArgumentException($"{where} must provide all search-rollout fields or none.");
+            if (!double.IsFinite(decision.SearchRootValue.Value))
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.SearchRootValue)} must be finite.");
+
+            IReadOnlyList<int> candidates = decision.SearchCandidateActionIndices!;
+            IReadOnlyList<int> dropped = decision.SearchCandidateDroppedRound;
+            IReadOnlyList<int> worlds = decision.SearchRoundWorlds;
+            if (dropped.Count != candidates.Count || worlds.Count == 0)
+                throw new ArgumentException(
+                    $"{where} needs a dropped round for each search candidate and at least one round.");
+            int survivor = -1;
+            for (int c = 0; c < dropped.Count; c++)
+            {
+                if (dropped[c] < -1 || dropped[c] >= worlds.Count)
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchCandidateDroppedRound)}[{c}] is not a round.");
+                if (dropped[c] != -1) continue;
+                if (survivor >= 0)
+                    throw new ArgumentException($"{where} search has more than one survivor.");
+                survivor = c;
+            }
+            if (survivor < 0 || candidates[survivor] != decision.SearchChosenActionIndex!.Value)
+                throw new ArgumentException(
+                    $"{where} search survivor is not the action the search chose.");
+
+            IReadOnlyList<double?> values = decision.SearchRolloutValues;
+            int expected = 0;
+            for (int round = 0; round < worlds.Count; round++)
+            {
+                if (worlds[round] <= 0)
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchRoundWorlds)}[{round}] must be positive.");
+                for (int c = 0; c < dropped.Count; c++)
+                    if (dropped[c] == -1 || dropped[c] >= round) expected += worlds[round];
+            }
+            if (values.Count != expected
+                || decision.SearchRolloutOwnHealth.Count != expected
+                || decision.SearchRolloutOwnArmor.Count != expected
+                || decision.SearchRolloutOpponentHealth.Count != expected
+                || decision.SearchRolloutOpponentArmor.Count != expected
+                || decision.SearchRolloutPlies.Count != expected
+                || decision.SearchRolloutEndTurn.Count != expected)
+                throw new ArgumentException(
+                    $"{where} search rounds imply {expected} rollouts; every rollout array must "
+                    + "hold exactly that many.");
+
+            int previous = -1;
+            foreach (int position in decision.SearchRolloutCapped)
+            {
+                if (position <= previous || position >= expected)
+                    throw new ArgumentException(
+                        $"{where}.{nameof(decision.SearchRolloutCapped)} must be ascending rollout positions.");
+                if (values[position] != 0.0)
+                    throw new ArgumentException(
+                        $"{where} rollout {position} stopped at the ply cap with a value that is not zero.");
+                previous = position;
+            }
+
+            var totals = new double[dropped.Count];
+            var visits = new int[dropped.Count];
+            int missing = 0;
+            int next = 0;
+            for (int round = 0; round < worlds.Count; round++)
+                for (int c = 0; c < dropped.Count; c++)
+                {
+                    if (dropped[c] != -1 && dropped[c] < round) continue;
+                    for (int w = 0; w < worlds[round]; w++, next++)
+                    {
+                        if (decision.SearchRolloutPlies[next] < 0)
+                            throw new ArgumentException(
+                                $"{where}.{nameof(decision.SearchRolloutPlies)}[{next}] must not be negative.");
+                        if (values[next] is not double value)
+                        {
+                            missing++;
+                            continue;
+                        }
+                        if (!double.IsFinite(value) || value < -1.0 || value > 1.0)
+                            throw new ArgumentException(
+                                $"{where}.{nameof(decision.SearchRolloutValues)}[{next}] must be in [-1, 1].");
+                        totals[c] += value;
+                        visits[c]++;
+                    }
+                }
+            if (missing != decision.SearchNullRollouts.Value)
+                throw new ArgumentException(
+                    $"{where}.{nameof(decision.SearchNullRollouts)} is {decision.SearchNullRollouts.Value}; "
+                    + $"{missing} rollouts have no value.");
+            for (int c = 0; c < dropped.Count; c++)
+            {
+                double? mean = decision.SearchMeanValues![c];
+                if (visits[c] != decision.SearchVisits![c]
+                    || (visits[c] > 0 && Math.Abs(totals[c] / visits[c] - mean!.Value) > 1e-9))
+                    throw new ArgumentException(
+                        $"{where} search candidate {c} has visits and a mean its rollouts do not add up to.");
+            }
         }
 
         private static void Require(string value, string name)
@@ -390,5 +532,49 @@ namespace Kingdom.Training.Corpus
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         IReadOnlyList<int>? SearchPlayGroups = null,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        int? SearchPlayKeySchemaVersion = null);
+        int? SearchPlayKeySchemaVersion = null,
+
+        // EVERY ROLLOUT BEHIND THE LABEL (fair-search.v3 on). Present together or not at all, and
+        // only beside the label above; a v1 or v2 capture has none of them. Visits and means are
+        // sums over these, and Validate holds the two to each other.
+        //
+        // The SearchRollout* arrays run parallel, one entry per rollout, in an order the entries
+        // do not repeat because two short arrays imply it: round by round; inside a round, the
+        // candidates that played it in ascending candidate position; inside a candidate, world by
+        // world. Candidate c played round r when SearchCandidateDroppedRound[c] is -1 (the
+        // survivor) or at least r. Round r ran SearchRoundWorlds[r] worlds, numbered on from the
+        // rounds before it, and every candidate of a round played the same worlds. World w's
+        // random stream is seeded SearchDecisionSeed + (w + 1) * 0x9E3779B97F4A7C15 mod 2^64.
+        //
+        // A value is null where the world could not be built or played, and the health, armor,
+        // plies and turn beside it are then zero and mean nothing. Health and armor are the two
+        // heroes' at the rollout's last position, Own being the searching seat. Plies counts
+        // moves after the candidate. SearchRolloutCapped lists the positions that stopped at the
+        // ply cap (value 0, game unfinished), ascending; it is almost always empty.
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        ulong? SearchDecisionSeed = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        double? SearchRootValue = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchCandidateDroppedRound = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchRoundWorlds = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        int? SearchNullRollouts = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<double?>? SearchRolloutValues = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchRolloutOwnHealth = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchRolloutOwnArmor = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchRolloutOpponentHealth = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchRolloutOpponentArmor = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchRolloutPlies = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchRolloutEndTurn = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        IReadOnlyList<int>? SearchRolloutCapped = null);
 }
