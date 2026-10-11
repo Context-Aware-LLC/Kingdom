@@ -28,4 +28,11 @@
     <Project Path="tests/Kingdom.Net.Server.Tests/Kingdom.Net.Server.Tests.csproj" />
     <Project Path="tests/Kingdom.Training.Corpus.Tests/Kingdom.Training.Corpus.Tests.csproj" />
   </Folder>
+  <Folder Name="/unity/">
+    <Project Path="unity/Assembly-CSharp.csproj" />
+    <Project Path="unity/Emberfall.Core.Cards.csproj" />
+    <Project Path="unity/Emberfall.Core.Contracts.csproj" />
+    <Project Path="unity/Google.Play.Games.csproj" />
+    <Project Path="unity/Google.Play.Games.Editor.csproj" />
+  </Folder>
 </Solution>

@@ -156,6 +156,10 @@
           "The mechanism will not wait.",
           "Tick. Tick. Decide."
         ],
+        "hero_power": [
+          "AHA!! Now you'll be sorry!",
+          "I know it's around here somewhere."
+        ],
         "win": [
           "Exactly as designed.",
           "The machine does not err.",
