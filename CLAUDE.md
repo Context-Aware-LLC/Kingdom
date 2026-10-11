@@ -68,6 +68,16 @@ Burst *"Failed to resolve assembly: 'Emberfall.AI'"* and a vanished `Emberfall/`
 which points at an access modifier. The live declarations are in
 `src/Emberfall.Core.Contracts/AssemblyInfo.cs`; that file carries the retirement trigger.
 
+**`<Nullable>enable</Nullable>` is the same trap, and its fix has two of its own.** Unity takes
+compiler switches from a file named exactly `csc.rsp` beside the `.asmdef`; each Unity-consumed
+`src/` project carries one holding `-nullable:enable`. Any other filename is ignored without a
+word — `<AssemblyName>.rsp` sat inert from 2026-08-23 to 2026-10-10 while 296 CS8632 warnings
+filled the console. And the file takes **arguments only**: a `#` comment line is split into words
+and every word becomes a source file, which fails the compile with CS2001 naming a word, not the
+file. Confirm a switch arrived with
+`grep -c -- -nullable unity/Library/Bee/artifacts/*.dag/Emberfall.Core.Cards.rsp`. A project that
+stops being consumed by Unity takes its `csc.rsp` with its `.asmdef`.
+
 ## Source of truth
 
 - **Your task brief is the source of truth.** For un-built behavior, ask the operator rather than inferring a decision from a document.

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -38,7 +39,7 @@ namespace Emberfall.Session
     /// </summary>
     public sealed class PlayerAccount
     {
-        private static PlayerAccount _local;
+        private static PlayerAccount? _local;
 
         /// <summary>
         /// The signed-in player, composed on first touch from <see cref="DeviceAccounts.Root"/> and the
@@ -62,7 +63,7 @@ namespace Emberfall.Session
         private readonly IDeckStore _decks;
         private readonly IProfileStore _profiles;
         private readonly IOwnedCardStore _ownedCards;
-        private PlayerProfile _profile;
+        private PlayerProfile? _profile;
 
         /// <summary>The directory the scope folder sits in — <c>persistentDataPath</c> for the real account.</summary>
         public string RootDirectory { get; }
@@ -201,7 +202,7 @@ namespace Emberfall.Session
         /// <para>Fresh off disk on every call, like the roster: ownership changes underneath a screen
         /// whenever a pack is opened, and this is a few kilobytes.</para>
         /// </summary>
-        public IOwnedCardCounts OwnedCards() => _ownedCards.Load();
+        public IOwnedCardCounts? OwnedCards() => _ownedCards.Load();
 
         /// <summary>
         /// Replace this account's ownership record with what the server just said it owns.
