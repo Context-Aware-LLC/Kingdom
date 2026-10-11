@@ -16,7 +16,7 @@ namespace Kingdom.Policy
     /// process so a late response can never be mistaken for a later decision.
     /// </summary>
     public sealed class CheckpointScorerProcess :
-        ICheckpointScorer, ICheckpointStateEmbeddingScorer, IAsyncDisposable
+        ICheckpointScorer, ICheckpointStateEmbeddingScorer, ICheckpointBatchScorer, IAsyncDisposable
     {
         private const string Protocol = "emberfall-policy-scorer-v1";
 
@@ -151,10 +151,7 @@ namespace Kingdom.Policy
             await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                if (_faulted)
-                    throw new InvalidOperationException("Checkpoint scorer process is faulted and cannot accept more requests.");
-                if (_process.HasExited)
-                    throw ScorerFailure($"Checkpoint scorer exited with code {_process.ExitCode}.");
+                ThrowIfUnusable();
 
                 long requestId = Interlocked.Increment(ref _nextRequestId);
                 string request = JsonSerializer.Serialize(new
@@ -165,48 +162,8 @@ namespace Kingdom.Policy
                     legalActions,
                     includeStateEmbedding,
                 }, JsonOptions);
-                try
-                {
-                    await _process.StandardInput.WriteLineAsync(request.AsMemory(), cancellationToken)
-                        .ConfigureAwait(false);
-                    await _process.StandardInput.FlushAsync(cancellationToken).ConfigureAwait(false);
-                }
-                catch (IOException ex)
-                {
-                    FaultProcess();
-                    throw ScorerFailure(
-                        $"Checkpoint scorer closed stdin before request {requestId}: {ex.Message}");
-                }
-
-                string? line;
-                try
-                {
-                    // StreamReader's token-aware read can remain parked in the underlying Windows
-                    // pipe after cancellation. WaitAsync owns the deadline outside that pipe read,
-                    // so an unresponsive scorer cannot strand an arena indefinitely.
-                    line = await _process.StandardOutput.ReadLineAsync()
-                        .WaitAsync(_requestTimeout, cancellationToken).ConfigureAwait(false);
-                }
-                catch (TimeoutException)
-                {
-                    FaultProcess();
-                    throw new TimeoutException(
-                        $"Checkpoint scorer did not answer request {requestId} within "
-                        + $"{_requestTimeout.TotalSeconds:0.###} seconds.");
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    FaultProcess();
-                    throw;
-                }
-                catch (IOException ex)
-                {
-                    FaultProcess();
-                    throw ScorerFailure(
-                        $"Checkpoint scorer stdout failed during request {requestId}: {ex.Message}");
-                }
-                if (line is null)
-                    throw ScorerFailure("Checkpoint scorer closed stdout before returning a response.");
+                string line = await ExchangeAsync(requestId, request, cancellationToken)
+                    .ConfigureAwait(false);
 
                 ScorerResponse response;
                 try
@@ -246,6 +203,145 @@ namespace Kingdom.Policy
             {
                 _gate.Release();
             }
+        }
+
+        /// <summary>
+        /// Scores several decisions in ONE forward pass through a batch frame: a `batch` array
+        /// under one request id, answered by a `results` array in the same order. A decision
+        /// the scorer could not score carries its own error and the rest are answered; a
+        /// failure of the frame (a fault, a timeout, a refused frame) throws, because no
+        /// decision in it has an answer.
+        ///
+        /// <para>The token is the FRAME's, not one decision's: cancelling it kills the process,
+        /// as it does for a single request, so a batcher passes its own.</para>
+        /// </summary>
+        async Task<IReadOnlyList<BatchScore>> ICheckpointBatchScorer.ScoreBatchAsync(
+            IReadOnlyList<BatchDecision> decisions, CancellationToken cancellationToken)
+        {
+            if (decisions.Count == 0)
+                throw new ArgumentException("A batch needs at least one decision.", nameof(decisions));
+            await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                ThrowIfUnusable();
+
+                long requestId = Interlocked.Increment(ref _nextRequestId);
+                string request = JsonSerializer.Serialize(
+                    new { requestId, batch = decisions }, JsonOptions);
+                string line = await ExchangeAsync(requestId, request, cancellationToken)
+                    .ConfigureAwait(false);
+
+                BatchResponse response;
+                try
+                {
+                    response = JsonSerializer.Deserialize<BatchResponse>(line, JsonOptions)
+                        ?? throw new JsonException("response decoded as null");
+                }
+                catch (JsonException ex)
+                {
+                    FaultProcess();
+                    throw new InvalidDataException($"Checkpoint scorer returned invalid JSON: {ex.Message}", ex);
+                }
+                if (response.RequestId != requestId)
+                {
+                    FaultProcess();
+                    throw new InvalidDataException(
+                        $"Checkpoint scorer response id {response.RequestId} did not match request {requestId}.");
+                }
+                if (!string.IsNullOrWhiteSpace(response.Error))
+                    throw new InvalidOperationException(
+                        $"Checkpoint scorer rejected batch {requestId}: {response.Error}");
+                if (response.Results is null || response.Results.Count != decisions.Count)
+                {
+                    // Pairing is by position, so a short or long answer pairs nothing.
+                    FaultProcess();
+                    throw new InvalidDataException(
+                        $"Checkpoint scorer answered batch {requestId} of {decisions.Count} with "
+                        + $"{response.Results?.Count ?? 0} results.");
+                }
+
+                var scores = new BatchScore[decisions.Count];
+                for (int i = 0; i < scores.Length; i++)
+                {
+                    BatchResult result = response.Results[i];
+                    if (!string.IsNullOrWhiteSpace(result.Error))
+                        scores[i] = new BatchScore(null, new InvalidOperationException(
+                            $"Checkpoint scorer rejected decision {i} of batch {requestId}: {result.Error}"));
+                    else if (result.Logits is null)
+                        scores[i] = new BatchScore(null, new InvalidDataException(
+                            "Checkpoint scorer response omitted logits."));
+                    else
+                        scores[i] = new BatchScore(new PolicyScore(result.Logits, result.Value), null);
+                }
+                return scores;
+            }
+            catch
+            {
+                if (_process.HasExited) _faulted = true;
+                throw;
+            }
+            finally
+            {
+                _gate.Release();
+            }
+        }
+
+        private void ThrowIfUnusable()
+        {
+            if (_faulted)
+                throw new InvalidOperationException("Checkpoint scorer process is faulted and cannot accept more requests.");
+            if (_process.HasExited)
+                throw ScorerFailure($"Checkpoint scorer exited with code {_process.ExitCode}.");
+        }
+
+        /// <summary>Writes one request line and reads the one line that answers it. The caller
+        /// holds the gate: stdin and stdout are one ordered stream.</summary>
+        private async Task<string> ExchangeAsync(
+            long requestId, string request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _process.StandardInput.WriteLineAsync(request.AsMemory(), cancellationToken)
+                    .ConfigureAwait(false);
+                await _process.StandardInput.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (IOException ex)
+            {
+                FaultProcess();
+                throw ScorerFailure(
+                    $"Checkpoint scorer closed stdin before request {requestId}: {ex.Message}");
+            }
+
+            string? line;
+            try
+            {
+                // StreamReader's token-aware read can remain parked in the underlying Windows
+                // pipe after cancellation. WaitAsync owns the deadline outside that pipe read,
+                // so an unresponsive scorer cannot strand an arena indefinitely.
+                line = await _process.StandardOutput.ReadLineAsync()
+                    .WaitAsync(_requestTimeout, cancellationToken).ConfigureAwait(false);
+            }
+            catch (TimeoutException)
+            {
+                FaultProcess();
+                throw new TimeoutException(
+                    $"Checkpoint scorer did not answer request {requestId} within "
+                    + $"{_requestTimeout.TotalSeconds:0.###} seconds.");
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                FaultProcess();
+                throw;
+            }
+            catch (IOException ex)
+            {
+                FaultProcess();
+                throw ScorerFailure(
+                    $"Checkpoint scorer stdout failed during request {requestId}: {ex.Message}");
+            }
+            if (line is null)
+                throw ScorerFailure("Checkpoint scorer closed stdout before returning a response.");
+            return line;
         }
 
         public ValueTask DisposeAsync()
@@ -348,6 +444,12 @@ namespace Kingdom.Policy
             IReadOnlyList<double>? StateEmbedding,
             IReadOnlyList<double>? StateFusionInput,
             string? Error);
+
+        private sealed record BatchResponse(
+            long RequestId, IReadOnlyList<BatchResult>? Results, string? Error);
+
+        private sealed record BatchResult(
+            IReadOnlyList<double>? Logits, double Value, int SelectedActionIndex, string? Error);
 
         private sealed record ScorerReady(bool Ready, string? Protocol);
     }

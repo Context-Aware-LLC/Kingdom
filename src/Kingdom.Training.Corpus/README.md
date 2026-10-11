@@ -119,6 +119,15 @@ is the older rule (the prior's top plays as they stand), and the flag is part of
 identity and of the resume identity. The seat's own pending choice (Unearth) is searched, with
 the offers as the candidates.
 
+`--scorer-batch N` gathers the scorer calls waiting at the same time into batch requests of at
+most N, one forward pass each, and `--scorer-batch-wait-ms` holds a batch open that long for
+latecomers (default 0: send what is waiting). It is faster and it is not the same numbers: a batch
+moves logits by about 1e-4, the rollouts sample from them, and which calls share a batch is decided
+by timing. So a batched capture is its own label lineage, is **not reproducible run to run**, and
+records `scorerBatch` in its identity: it cannot resume an unbatched capture, nor one made at
+another batch size. Without the flag nothing changes. Measurements and the configuration to use are
+in `work/gpu-batching/result-20261011.md`.
+
 ```powershell
 dotnet run --project src/Kingdom.Tools.NetSoak -c Release -- rollout 2 `
   "F:\EmberfallData\exports\<rl-export>" "F:\EmberfallData\runs\<run>\best-model.pt" `
