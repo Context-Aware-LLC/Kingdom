@@ -180,7 +180,7 @@ namespace Emberfall.Presentation
                 "Earn Gold",
                 "You don't have to be rich to live like a king.\n" +
                 "\n" +
-                "If you are toil every day completing quests you might grow up to be one.\n" +
+                "If you toil every day completing quests you might grow up to be one.\n" +
                 "\n" +
                 "Or so I was told as a child.",
 
