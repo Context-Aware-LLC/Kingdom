@@ -499,7 +499,7 @@ namespace Kingdom.Presentation
                 LocalAccount created = DeviceAccounts.Create();
                 Debug.Log($"[MatchSettings] created local account {created.Id}. This seat did NOT move — " +
                           "press Switch on it to sign in here, or pin another process to it with " +
-                          "-emberfallAccount.");
+                          "-kingdomAccount.");
                 // Rebuild rather than reload: creating an account for the other seat must leave this
                 // one exactly where it was (DeviceAccounts.Create).
                 RebuildAccountList();

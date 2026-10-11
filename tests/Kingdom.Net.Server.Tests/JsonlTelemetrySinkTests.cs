@@ -30,7 +30,7 @@ namespace Kingdom.Net.Server.Tests
         [SetUp]
         public void SetUp()
         {
-            _dir = Path.Combine(Path.GetTempPath(), "emberfall-telemetry-" + Guid.NewGuid().ToString("N"));
+            _dir = Path.Combine(Path.GetTempPath(), "kingdom-telemetry-" + Guid.NewGuid().ToString("N"));
         }
 
         [TearDown]

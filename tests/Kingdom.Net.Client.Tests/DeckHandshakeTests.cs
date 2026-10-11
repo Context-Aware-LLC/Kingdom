@@ -82,7 +82,7 @@ namespace Kingdom.Net.Client.Tests
         [NonParallelizable]
         public async Task Selected_Decks_Are_Dealt_By_The_Real_Server()
         {
-            string replays = Path.Combine(Path.GetTempPath(), "emberfall-client-deck-" + Guid.NewGuid().ToString("N"));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-client-deck-" + Guid.NewGuid().ToString("N"));
             var app = ServerApp.Build(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",

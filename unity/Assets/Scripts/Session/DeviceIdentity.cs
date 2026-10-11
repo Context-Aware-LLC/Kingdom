@@ -21,7 +21,8 @@ namespace Kingdom.Session
     /// </summary>
     public static class DeviceIdentity
     {
-        private const string PrefsKey = "emberfall.device.token";
+        private const string PrefsKey = "kingdom.device.token";
+        private const string FormerPrefsKey = "emberfall.device.token";
 
         private static string _cached;
 
@@ -32,7 +33,7 @@ namespace Kingdom.Session
             {
                 if (!string.IsNullOrEmpty(_cached)) return _cached;
 
-                string existing = PlayerPrefs.GetString(PrefsKey, string.Empty);
+                string existing = RenamedPrefs.GetString(PrefsKey, FormerPrefsKey);
                 if (!string.IsNullOrEmpty(existing))
                 {
                     _cached = existing;

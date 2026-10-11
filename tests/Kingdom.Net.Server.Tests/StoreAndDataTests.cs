@@ -20,7 +20,7 @@ namespace Kingdom.Net.Server.Tests
         [Test]
         public void JsonlReplayStore_Rows_Decode_Back_To_The_Same_Intents()
         {
-            string dir = Path.Combine(Path.GetTempPath(), "emberfall-replay-" + Guid.NewGuid().ToString("N"));
+            string dir = Path.Combine(Path.GetTempPath(), "kingdom-replay-" + Guid.NewGuid().ToString("N"));
             try
             {
                 var store = new JsonlReplayStore(dir);
@@ -89,7 +89,7 @@ namespace Kingdom.Net.Server.Tests
         [Test]
         public void FileCardDatabase_Refuses_An_Empty_Directory()
         {
-            string dir = Path.Combine(Path.GetTempPath(), "emberfall-empty-" + Guid.NewGuid().ToString("N"));
+            string dir = Path.Combine(Path.GetTempPath(), "kingdom-empty-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {

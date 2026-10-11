@@ -13,7 +13,7 @@ namespace Kingdom.Net.Server.Tests.Bots
     {
         private static string WriteTemp(string json)
         {
-            string path = Path.Combine(Path.GetTempPath(), "emberfall-bot-roster-" + Guid.NewGuid().ToString("N") + ".json");
+            string path = Path.Combine(Path.GetTempPath(), "kingdom-bot-roster-" + Guid.NewGuid().ToString("N") + ".json");
             File.WriteAllText(path, json);
             return path;
         }

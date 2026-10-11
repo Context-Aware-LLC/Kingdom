@@ -269,7 +269,7 @@ namespace Kingdom.Net.Server.Tests
 
         private static async Task WithServerAsync(Func<Uri, Task> body)
         {
-            string replays = Path.Combine(Path.GetTempPath(), "emberfall-deck-" + Guid.NewGuid().ToString("N"));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-deck-" + Guid.NewGuid().ToString("N"));
             var app = ServerApp.Build(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",

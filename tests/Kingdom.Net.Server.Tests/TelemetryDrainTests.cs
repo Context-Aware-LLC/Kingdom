@@ -33,7 +33,7 @@ namespace Kingdom.Net.Server.Tests
 
         [SetUp]
         public void SetUp() =>
-            _dir = Path.Combine(Path.GetTempPath(), "emberfall-drain-" + Guid.NewGuid().ToString("N"));
+            _dir = Path.Combine(Path.GetTempPath(), "kingdom-drain-" + Guid.NewGuid().ToString("N"));
 
         [TearDown]
         public void TearDown()

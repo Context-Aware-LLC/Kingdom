@@ -34,7 +34,7 @@ namespace Kingdom.Net.Server.Tests.Bots
                 "ember_knight",
                 new Decks.SeatDeck(CardClass.EMBERWARD, PrebuiltDecks.EmberwardDeck())));
 
-            string replays = Path.Combine(Path.GetTempPath(), "emberfall-botfill-" + Guid.NewGuid().ToString("N"));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-botfill-" + Guid.NewGuid().ToString("N"));
             var built = ServerApp.BuildWithGate(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",

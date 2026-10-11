@@ -55,7 +55,7 @@ namespace Kingdom.Net.Server.Tests.Bots
         {
             string rosterPath = FindRepoFile("tooling", "data", "bot-roster.json");
 
-            string replays = Path.Combine(Path.GetTempPath(), "emberfall-botfill-e2e-" + Guid.NewGuid().ToString("N"));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-botfill-e2e-" + Guid.NewGuid().ToString("N"));
             var built = ServerApp.BuildWithGate(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",
@@ -135,7 +135,7 @@ namespace Kingdom.Net.Server.Tests.Bots
                 "ember_knight",
                 new Decks.SeatDeck(CardClass.EMBERWARD, PrebuiltDecks.EmberwardDeck())));
 
-            string replays = Path.Combine(Path.GetTempPath(), "emberfall-botfill-release-" + Guid.NewGuid().ToString("N"));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-botfill-release-" + Guid.NewGuid().ToString("N"));
             var built = ServerApp.BuildWithGate(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",

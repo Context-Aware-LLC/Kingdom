@@ -126,7 +126,7 @@ namespace Kingdom.Editor
         [MenuItem("Kingdom/Player Account/Self-Check (scratch directory)")]
         public static void SelfCheck()
         {
-            string root = Path.Combine(Path.GetTempPath(), "emberfall-account-selfcheck");
+            string root = Path.Combine(Path.GetTempPath(), "kingdom-account-selfcheck");
             try
             {
                 if (Directory.Exists(root)) Directory.Delete(root, recursive: true);

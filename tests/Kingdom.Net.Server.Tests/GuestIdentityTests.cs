@@ -175,7 +175,7 @@ namespace Kingdom.Net.Server.Tests
             Func<Uri, Kingdom.Net.Server.Transport.MatchGate, Task> body,
             long helloTimeoutMs = DefaultHelloTimeoutMs)
         {
-            string replays = Path.Combine(Path.GetTempPath(), "emberfall-identity-" + Guid.NewGuid().ToString("N"));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-identity-" + Guid.NewGuid().ToString("N"));
             var built = ServerApp.BuildWithGate(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",

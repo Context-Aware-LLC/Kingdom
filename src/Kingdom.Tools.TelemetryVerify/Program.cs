@@ -53,7 +53,7 @@ namespace Kingdom.Tools.TelemetryVerify
             Console.WriteLine(new string('-', 60));
 
             // Work off a temp copy so the offset checkpoint never lands in artifacts/ and each pass is fresh.
-            string workDir = Path.Combine(Path.GetTempPath(), "emberfall-verify-" + Guid.NewGuid().ToString("N"));
+            string workDir = Path.Combine(Path.GetTempPath(), "kingdom-verify-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(workDir);
             string workJsonl = Path.Combine(workDir, "telemetry.jsonl");
             File.Copy(sample, workJsonl);

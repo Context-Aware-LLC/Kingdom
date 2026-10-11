@@ -42,11 +42,12 @@ namespace Kingdom.Session
         /// migrate: the registry becomes a server table, while "who is signed in" becomes a session
         /// token in this same slot.
         /// </summary>
-        private const string ActivePrefsKey = "emberfall.account.active";
+        private const string ActivePrefsKey = "kingdom.account.active";
+        private const string FormerActivePrefsKey = "emberfall.account.active";
 
         /// <summary>
-        /// Launch argument that pins this process to one account: <c>-emberfallAccount 2</c> (a 1-based
-        /// position) or <c>-emberfallAccount &lt;id&gt;</c>.
+        /// Launch argument that pins this process to one account: <c>-kingdomAccount 2</c> (a 1-based
+        /// position) or <c>-kingdomAccount &lt;id&gt;</c>.
         ///
         /// <para><b>This is what makes two seats on one machine actually work.</b> PlayerPrefs and
         /// <see cref="Application.persistentDataPath"/> are both keyed on companyName/productName, so
@@ -59,7 +60,7 @@ namespace Kingdom.Session
         /// <para><b>Read-only, and never written back.</b> Persisting it would clobber the other seat's
         /// pointer through the very prefs store they share, which is the bug this exists to avoid.</para>
         /// </summary>
-        private const string AccountArgument = "-emberfallAccount";
+        private const string AccountArgument = "-kingdomAccount";
 
         private static LocalAccount _active;
 
@@ -105,7 +106,7 @@ namespace Kingdom.Session
                     return _active;
                 }
 
-                string wanted = PlayerPrefs.GetString(ActivePrefsKey, string.Empty);
+                string wanted = RenamedPrefs.GetString(ActivePrefsKey, FormerActivePrefsKey);
                 var found = LocalAccountRoster.Find(all, wanted);
 
                 if (found == null && !string.IsNullOrEmpty(wanted))
@@ -242,7 +243,7 @@ namespace Kingdom.Session
         /// prefs store, came up on the new account too. Both seats landed on one account and wrote two
         /// characters into it before anyone noticed (2026-07-27). Creating a seat must never move the
         /// seat you are sitting in; use <see cref="SwitchTo"/> deliberately, or pin the other process
-        /// with <c>-emberfallAccount</c>.</para>
+        /// with <c>-kingdomAccount</c>.</para>
         ///
         /// <para>Two ids, minted separately. <see cref="LocalAccount.Id"/> names a directory and is
         /// logged; <see cref="LocalAccount.WireToken"/> is a bearer credential and is not. Only the

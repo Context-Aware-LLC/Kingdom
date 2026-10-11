@@ -28,7 +28,7 @@ namespace Kingdom.Net.Client.Tests
         [CancelAfter(60_000)]
         public async Task Two_Clients_Over_Real_Sockets_Pair_Play_And_Reach_A_Decided_End()
         {
-            string replays = Path.Combine(Path.GetTempPath(), "emberfall-client-ws-" + Guid.NewGuid().ToString("N"));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-client-ws-" + Guid.NewGuid().ToString("N"));
             var app = ServerApp.Build(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",

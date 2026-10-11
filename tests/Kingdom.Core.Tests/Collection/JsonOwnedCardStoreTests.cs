@@ -25,7 +25,7 @@ namespace Kingdom.Core.Tests.Collection
         [SetUp]
         public void SetUp()
         {
-            _root = Path.Combine(Path.GetTempPath(), "emberfall-owned-tests", Guid.NewGuid().ToString("N"));
+            _root = Path.Combine(Path.GetTempPath(), "kingdom-owned-tests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_root);
         }
 

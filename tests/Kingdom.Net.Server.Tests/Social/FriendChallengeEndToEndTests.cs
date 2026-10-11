@@ -34,7 +34,7 @@ namespace Kingdom.Net.Server.Tests.Social
         [CancelAfter(90_000)]
         public async Task Friends_Challenge_Play_A_Private_Match_That_Pays_Gold_And_Moves_No_Rating()
         {
-            string replays = Path.Combine(Path.GetTempPath(), "emberfall-challenge-" + Guid.NewGuid().ToString("N"));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-challenge-" + Guid.NewGuid().ToString("N"));
             var accounts = new InMemoryAccountStore(new FakeTime());
             var ledger = new InMemoryEntitlementLedger();
             var ratings = new InMemoryRatingStore();

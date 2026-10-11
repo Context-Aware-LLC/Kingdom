@@ -26,7 +26,7 @@ namespace Kingdom.Net.Server.Tests
         public async Task Gate_Uses_Injected_Queue_Ratings_And_Wake_Contract()
         {
             string replays = Path.Combine(
-                Path.GetTempPath(), "emberfall-matchmaking-" + Guid.NewGuid().ToString("N"));
+                Path.GetTempPath(), "kingdom-matchmaking-" + Guid.NewGuid().ToString("N"));
             var queue = new ControlledQueue();
             AccountId accountA = AccountId.FromDeviceToken(TokenA);
             AccountId accountB = AccountId.FromDeviceToken(TokenB);
@@ -75,7 +75,7 @@ namespace Kingdom.Net.Server.Tests
         public async Task Built_In_Queue_Seats_Incompatible_Sockets_After_The_Band_Widens()
         {
             string replays = Path.Combine(
-                Path.GetTempPath(), "emberfall-band-widening-" + Guid.NewGuid().ToString("N"));
+                Path.GetTempPath(), "kingdom-band-widening-" + Guid.NewGuid().ToString("N"));
             AccountId accountA = AccountId.FromDeviceToken(TokenA);
             AccountId accountB = AccountId.FromDeviceToken(TokenB);
             var built = ServerApp.BuildWithGate(new ServerConfig
@@ -128,7 +128,7 @@ namespace Kingdom.Net.Server.Tests
         public async Task Gate_Rejects_A_Mismatched_Client_Contract_Before_Queueing()
         {
             string replays = Path.Combine(
-                Path.GetTempPath(), "emberfall-contract-gate-" + Guid.NewGuid().ToString("N"));
+                Path.GetTempPath(), "kingdom-contract-gate-" + Guid.NewGuid().ToString("N"));
             var queue = new ControlledQueue();
             var built = ServerApp.BuildWithGate(new ServerConfig
             {

@@ -24,8 +24,10 @@ namespace Kingdom.Session
     /// </summary>
     public sealed class PlayerPrefsAuthSessionStore : IAuthSessionStore
     {
-        private const string SessionPrefix = "emberfall.auth.session.";
-        private const string PendingPrefix = "emberfall.auth.pending.";
+        private const string SessionPrefix = "kingdom.auth.session.";
+        private const string PendingPrefix = "kingdom.auth.pending.";
+        private const string FormerSessionPrefix = "emberfall.auth.session.";
+        private const string FormerPendingPrefix = "emberfall.auth.pending.";
 
         /// <summary>Field separator. A unit separator cannot occur in a JWT, a base64url verifier, an
         /// email or a decimal — all of which are the only things written here.</summary>
@@ -53,10 +55,12 @@ namespace Kingdom.Session
 
         private string SessionKey => SessionPrefix + _scope;
         private string PendingKey => PendingPrefix + _scope;
+        private string FormerSessionKey => FormerSessionPrefix + _scope;
+        private string FormerPendingKey => FormerPendingPrefix + _scope;
 
         public AuthSession Load()
         {
-            string raw = PlayerPrefs.GetString(SessionKey, string.Empty);
+            string raw = RenamedPrefs.GetString(SessionKey, FormerSessionKey);
             if (string.IsNullOrEmpty(raw)) return AuthSession.None;
 
             string[] parts = raw.Split(Separator);
@@ -89,12 +93,13 @@ namespace Kingdom.Session
         public void Clear()
         {
             PlayerPrefs.DeleteKey(SessionKey);
+            PlayerPrefs.DeleteKey(FormerSessionKey);
             PlayerPrefs.Save();
         }
 
         public PendingSignIn LoadPending()
         {
-            string raw = PlayerPrefs.GetString(PendingKey, string.Empty);
+            string raw = RenamedPrefs.GetString(PendingKey, FormerPendingKey);
             if (string.IsNullOrEmpty(raw)) return PendingSignIn.None;
 
             string[] parts = raw.Split(Separator);
@@ -115,6 +120,7 @@ namespace Kingdom.Session
         public void ClearPending()
         {
             PlayerPrefs.DeleteKey(PendingKey);
+            PlayerPrefs.DeleteKey(FormerPendingKey);
             PlayerPrefs.Save();
         }
     }

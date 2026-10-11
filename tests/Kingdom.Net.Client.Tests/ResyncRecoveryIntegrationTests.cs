@@ -39,7 +39,7 @@ namespace Kingdom.Net.Client.Tests
         [CancelAfter(120_000)]
         public async Task A_Resync_Lost_On_The_Wire_Is_Retried_And_The_Client_Recovers()
         {
-            string replays = Path.Combine(Path.GetTempPath(), "emberfall-resync-" + Guid.NewGuid().ToString("N"));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-resync-" + Guid.NewGuid().ToString("N"));
             var app = ServerApp.Build(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",
