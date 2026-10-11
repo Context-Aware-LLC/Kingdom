@@ -230,3 +230,5 @@ backups/**
 deploy/**
 tooling/auditor/**
 card-admin/cardweb
+# Profiler captures: generated, and a single .data file runs past the 100 MB GitHub limit.
+unity/ProfilerCaptures/
