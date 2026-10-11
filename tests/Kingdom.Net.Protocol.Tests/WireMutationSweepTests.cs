@@ -37,14 +37,13 @@ namespace Kingdom.Net.Protocol.Tests
             //
             // A SINGLE-MEMBER enum therefore has no round-trippable mutation: the only way to
             // perturb its canonical int is to cast past the one member it defines, and the wire's
-            // correct answer to that is a typed refusal. Both entries below are that shape --
-            // PendingChoiceKind and EffectKind each define exactly one member today. Each one's
+            // correct answer to that is a typed refusal. PendingChoiceKind has that shape. Its
             // wire coverage is proven by its SIBLING mutations, which the reader cannot parse at
             // all without first reading a valid 'kind'.
             //
             // This is a list, not a taxonomy: an enum leaves it the moment it gains a second
-            // member, and both enums carry a RETIREMENT TRIGGER saying so at their declaration.
-            if (key == "PendingChoice.Kind" || key == "EffectInstance.Kind")
+            // member, and the enum carries a RETIREMENT TRIGGER saying so at its declaration.
+            if (key == "PendingChoice.Kind")
             {
                 Assert.That(decoded.Ok, Is.False,
                     $"{key}: an undefined enum member silently crossed the wire — strict enum parse regressed.");

@@ -14,14 +14,12 @@ namespace Kingdom.Core.Contracts
     /// </summary>
     public enum EffectKind
     {
-        // RETIREMENT TRIGGER: adding a second member here ends this enum's carve-out in
-        // WireMutationSweepTests.Mutated_Field_Survives_The_Wire. While only one member exists the
-        // "EffectInstance.Kind" mutation can only cast past it, so the wire's correct answer is a
-        // typed refusal rather than a round-trip, and the sweep asserts the refusal. With a second
-        // member the mutation becomes a real round-trip: drop "EffectInstance.Kind" from that
-        // branch in the same commit, or the sweep will demand a failure the wire no longer produces.
         /// <summary>Cannot act. Migrated off <c>IsFrosted</c> + <c>FrostThawPending</c>.</summary>
         Frost = 0,
+        /// <summary>This source has spent its lethal-damage prevention for the current turn.</summary>
+        LethalDamagePreventionSpent = 1,
+        /// <summary>On a hero: its controller's next played minion repeats its play effect.</summary>
+        RepeatNextMinionPlay = 2,
     }
 
     /// <summary>
@@ -39,6 +37,8 @@ namespace Kingdom.Core.Contracts
         /// <summary>Never ticks. Removed only by something that removes it.</summary>
         Permanent = 0,
         ControllerTurns = 1,
+        /// <summary>Expires after the current turn's end effects, regardless of controller.</summary>
+        CurrentTurn = 2,
     }
 
     /// <summary>
@@ -185,5 +185,8 @@ namespace Kingdom.Core.Contracts
         /// </summary>
         public static void ExpireControllerTurnEnd(List<EffectInstance> effects)
             => effects.RemoveAll(e => e.Scope == EffectScope.ControllerTurns && e.TurnsRemaining <= 0);
+
+        public static void ExpireCurrentTurn(List<EffectInstance> effects)
+            => effects.RemoveAll(e => e.Scope == EffectScope.CurrentTurn);
     }
 }

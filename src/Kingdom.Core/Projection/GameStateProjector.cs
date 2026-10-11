@@ -198,6 +198,7 @@ namespace Kingdom.Core.Projection
                     Kind = pc.Kind,
                     Source = Track(pc.Source, ref max),
                     ChoiceSequence = pc.ChoiceSequence,
+                    RemainingOffers = pc.RemainingOffers,
                 };
                 foreach (var o in pc.Options) full.Options.Add(o);
                 return full;
@@ -211,6 +212,7 @@ namespace Kingdom.Core.Projection
                 Kind = pc.Kind,
                 Source = Sentinel,
                 ChoiceSequence = 0,
+                RemainingOffers = 0,
             };
         }
 

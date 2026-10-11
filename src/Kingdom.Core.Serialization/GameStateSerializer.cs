@@ -160,6 +160,7 @@ namespace Kingdom.Core.Serialization
             // the Unearth pool — the walk is order-PRESERVING only, never an ordering source.
             foreach (var id in pc.Options) w.I32(id);
             w.U64(pc.ChoiceSequence);
+            w.I32(pc.RemainingOffers);
         }
 
         private static void WalkOngoingEffects(ICanonicalWriter w,

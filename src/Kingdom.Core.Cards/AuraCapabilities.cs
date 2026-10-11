@@ -7,6 +7,14 @@ namespace Kingdom.Core.Cards
     {
         public static bool Supports(CardType sourceType, RuleDefinition rule)
         {
+            if (rule.Action is PreventLethalDamageAction prevention)
+                return sourceType == CardType.MINION && rule.Activation is AuraActivation &&
+                    rule.Condition is AlwaysCondition && rule.Lifetime is SourceBoundLifetime &&
+                    prevention.Target.Selector == "OTHER_FRIENDLY_MINIONS" &&
+                    prevention.Target.IsEveryCandidate && prevention.Target.Filter == null &&
+                    prevention.Target.Binding.Length == 0 && prevention.Target.DistinctFrom.Length == 0 &&
+                    !prevention.Target.IsCost;
+
             if (!(rule.Activation is AuraActivation) || !(rule.Condition is AlwaysCondition) ||
                 !(rule.Action is ModifyStatsAction)) return false;
             if (!LifetimeFits(sourceType, rule.Lifetime)) return false;

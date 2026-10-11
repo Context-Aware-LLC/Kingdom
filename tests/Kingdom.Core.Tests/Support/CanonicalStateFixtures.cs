@@ -34,7 +34,7 @@ namespace Kingdom.Core.Tests.Support
             },
             [typeof(PendingChoice)] = new[]
             {
-                "ChoiceSequence", "Chooser", "Kind", "Options", "Source"
+                "ChoiceSequence", "Chooser", "Kind", "Options", "RemainingOffers", "Source"
             },
             [typeof(PlayerState)] = new[]
             {
@@ -102,6 +102,7 @@ namespace Kingdom.Core.Tests.Support
             ["PendingChoice.Source"] = s => s.PendingChoice!.Source = new InstanceId(70),
             ["PendingChoice.Options"] = s => s.PendingChoice!.Options.Add(FixtureCard.Id("disc_seed_extra")),
             ["PendingChoice.ChoiceSequence"] = s => s.PendingChoice!.ChoiceSequence++,
+            ["PendingChoice.RemainingOffers"] = s => s.PendingChoice!.RemainingOffers++,
 
             // PlayerState (seat 0)
             ["PlayerState.Id"] = s =>
@@ -165,7 +166,7 @@ namespace Kingdom.Core.Tests.Support
             // EffectInstance (the seeded hand card's effect). Each mutation perturbs one canonical
             // field of the instance rather than the presence of the list, which CardInstance.Effects
             // already covers.
-            ["EffectInstance.Kind"] = s => SeededEffect(s).Kind = (EffectKind)1,   // no second member yet; the cast perturbs the canonical int
+            ["EffectInstance.Kind"] = s => SeededEffect(s).Kind = EffectKind.LethalDamagePreventionSpent,
             ["EffectInstance.Source"] = s => SeededEffect(s).Source = new InstanceId(67),
             ["EffectInstance.Scope"] = s => SeededEffect(s).Scope = EffectScope.Permanent,
             ["EffectInstance.TurnsRemaining"] = s => SeededEffect(s).TurnsRemaining++,

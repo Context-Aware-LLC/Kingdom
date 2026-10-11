@@ -99,6 +99,8 @@ namespace Kingdom.Editor
     public enum EditableLifetimeKind { SourceBound, OneShot, Finite, Permanent }
     public enum EditableRuleActionKind
     {
+        PreventLethalDamage,
+        RepeatNextMinionPlay,
         Damage,
         Heal,
         ModifyStats,
@@ -312,7 +314,8 @@ namespace Kingdom.Editor
             || ActionKind == EditableRuleActionKind.Drown
             || ActionKind == EditableRuleActionKind.Copy
             || ActionKind == EditableRuleActionKind.TakeControl
-            || ActionKind == EditableRuleActionKind.TriggerToll;
+            || ActionKind == EditableRuleActionKind.TriggerToll
+            || ActionKind == EditableRuleActionKind.PreventLethalDamage;
 
         public int ReferencedCardId => ActionKind == EditableRuleActionKind.Summon
             || ActionKind == EditableRuleActionKind.AddToHand
@@ -432,6 +435,8 @@ namespace Kingdom.Editor
                         ? new DamageAction(Amount, target, InsteadAmount, HeroDamagedThisTurnCondition.Instance)
                         : new DamageAction(Amount, target);
                 case EditableRuleActionKind.Heal: return new HealAction(Amount, target);
+                case EditableRuleActionKind.PreventLethalDamage: return new PreventLethalDamageAction(target);
+                case EditableRuleActionKind.RepeatNextMinionPlay: return new RepeatNextMinionPlayAction();
                 case EditableRuleActionKind.ModifyStats: return new ModifyStatsAction(AttackDelta, HealthDelta, target);
                 case EditableRuleActionKind.GrantKeyword: return new GrantKeywordAction(Keyword, target);
                 case EditableRuleActionKind.Destroy: return new DestroyAction(target);
@@ -468,6 +473,8 @@ namespace Kingdom.Editor
                 ReadTarget(damage);
             }
             else if (action is HealAction heal) { ActionKind = EditableRuleActionKind.Heal; Amount = heal.Amount; ReadTarget(heal); }
+            else if (action is PreventLethalDamageAction prevention) { ActionKind = EditableRuleActionKind.PreventLethalDamage; ReadTarget(prevention); }
+            else if (action is RepeatNextMinionPlayAction) { ActionKind = EditableRuleActionKind.RepeatNextMinionPlay; }
             else if (action is ModifyStatsAction stats) { ActionKind = EditableRuleActionKind.ModifyStats; AttackDelta = stats.AttackDelta; HealthDelta = stats.HealthDelta; ReadTarget(stats); }
             else if (action is GrantKeywordAction grant) { ActionKind = EditableRuleActionKind.GrantKeyword; Keyword = grant.Keyword; ReadTarget(grant); }
             else if (action is DestroyAction destroy) { ActionKind = EditableRuleActionKind.Destroy; ReadTarget(destroy); }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Kingdom.Core.Cards;
 using Kingdom.Core.Contracts;
 
 namespace Kingdom.Core
@@ -43,6 +44,26 @@ namespace Kingdom.Core
     /// </summary>
     internal static class DamagePipeline
     {
+        private static bool TryPreventLethalDamage(EffectInterpreter interp, CharacterRef target)
+        {
+            foreach (CardInstance protector in interp.State.Players[target.Seat].Board)
+            {
+                if (protector.Id == target.Id || protector.IsSilenced ||
+                    protector.Zone != Zone.Board ||
+                    EffectList.Has(protector.Effects, EffectKind.LethalDamagePreventionSpent)) continue;
+                CardDefinition definition = interp.Db.Get(protector.DefinitionId);
+                foreach (RuleDefinition rule in definition.Rules)
+                {
+                    if (!(rule.Action is PreventLethalDamageAction) ||
+                        !AuraCapabilities.Supports(definition.Type, rule)) continue;
+                    EffectList.Apply(protector.Effects, new EffectInstance(
+                        EffectKind.LethalDamagePreventionSpent, protector.Id, EffectScope.CurrentTurn, 0));
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Deal <paramref name="amount"/> damage to <paramref name="target"/>, using <paramref name="interp"/>
         /// for state/events and to enqueue any on-damage trigger. <paramref name="sourceKeywords"/> is the
@@ -80,6 +101,19 @@ namespace Kingdom.Core
                 target.Minion.HasAegisShield = false;
                 buf.Emit(GameEventKind.DamageApplied, source: source, target: target.Id, amount: 0, flags: EventFlags.AegisAbsorbed);
                 return;
+            }
+
+            // Replacement, not healing: reduce the hit before damage riders and ON_DAMAGED.
+            // Like other auras, a source lasts until the batch death checkpoint removes it.
+            if (target.IsMinion && target.Minion!.CurrentHealth > 0 &&
+                amount >= target.Minion.CurrentHealth && TryPreventLethalDamage(interp, target))
+            {
+                amount = target.Minion.CurrentHealth - 1;
+                if (amount == 0)
+                {
+                    buf.Emit(GameEventKind.DamageApplied, source: source, target: target.Id, amount: 0);
+                    return;
+                }
             }
 
             if (target.IsHero)

@@ -223,6 +223,12 @@ namespace Kingdom.Core.Cards
                 case "HEAL":
                     Fields(element, type, "amount", "target");
                     return new HealAction(Amount(element), TargetFromElement(element));
+                case "PREVENT_LETHAL_DAMAGE":
+                    Fields(element, type, "target");
+                    return new PreventLethalDamageAction(TargetFromElement(element));
+                case "REPEAT_NEXT_MINION_PLAY":
+                    Fields(element, type);
+                    return new RepeatNextMinionPlayAction();
                 case "MODIFY_STATS":
                     Fields(element, type, "attack", "health", "target");
                     return new ModifyStatsAction(

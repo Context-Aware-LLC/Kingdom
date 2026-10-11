@@ -544,6 +544,22 @@ namespace Kingdom.Core.Cards
         {
             actions = Array.Empty<RuleAction>();
 
+            // Whole-sentence primitives are tested before splitting at commas/conjunctions.
+            // The renderer is still the only spelling of their grammar.
+            foreach (RuleAction candidate in new RuleAction[]
+            {
+                new PreventLethalDamageAction(new TargetSpec("OTHER_FRIENDLY_MINIONS", TargetSelection.Of(6))),
+                new RepeatNextMinionPlayAction(),
+            })
+            {
+                var single = new[] { candidate };
+                if (!string.Equals(CardTextGenerator.DescribeActions(single, names, trigger), sentence,
+                        StringComparison.Ordinal)) continue;
+                actions = single;
+                reason = "";
+                return true;
+            }
+
             foreach (List<RuleAction> run in FoldedDamage(sentence))
             {
                 string folded;

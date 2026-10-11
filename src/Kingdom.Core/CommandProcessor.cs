@@ -302,6 +302,16 @@ namespace Kingdom.Core
             foreach (var m in activePs.Board)
                 EffectList.ExpireControllerTurnEnd(m.Effects);
 
+            // A current-turn promise/allowance expires on EITHER player's turn boundary,
+            // after all end effects have resolved. Frost retains its controller-turn clock.
+            foreach (PlayerState player in state.Players)
+            {
+                EffectList.ExpireCurrentTurn(player.Hero.Effects);
+                foreach (CardInstance minion in player.Board)
+                    EffectList.ExpireCurrentTurn(minion.Effects);
+                if (player.Weapon != null) EffectList.ExpireCurrentTurn(player.Weapon.Effects);
+            }
+
             // A spell aura ages on the SAME clock as the turn-scoped effects just above, and for the
             // same reason: it costs a FULL turn of its controller's, never a partial one. Filtering
             // to the ending player is what makes `uses: 3` mean three of YOUR turns — both seats are
@@ -396,6 +406,7 @@ namespace Kingdom.Core
         private void ApplyUnearthChoice(GameState state, UnearthChoiceIntent choice, EventBuffer buf)
         {
             PlayerState chooser = state.PlayerOf(choice.Player);
+            PendingChoice pending = state.PendingChoice!;
             state.PendingChoice = null;
 
             // Fizzle, not reject: the offer already failed closed on a full hand (UnearthHandler),
@@ -414,6 +425,9 @@ namespace Kingdom.Core
             // The newly minted instance id is the immutable event identity. Emit after the card
             // enters hand so EventBuffer captures owner-only visibility at the point of truth.
             buf.Emit(GameEventKind.CardCreatedInHand, source: created.Id, flags: EventFlags.IsToken);
+            if (pending.RemainingOffers > 1)
+                UnearthHandler.Offer(state, _db, buf, pending.Chooser, pending.Source,
+                    pending.RemainingOffers - 1);
         }
 
         private void ApplyPlayCard(GameState state, PlayCardIntent p, EventBuffer buf)
@@ -433,9 +447,14 @@ namespace Kingdom.Core
             switch (def.Type)
             {
                 case CardType.MINION:
+                    bool repeatPlay = EffectList.Has(ps.Hero.Effects, EffectKind.RepeatNextMinionPlay);
+                    // Consume before raising any effects: a doubled Herald arms the NEXT minion,
+                    // and a vanilla minion still spends the promise. Summons never come here.
+                    EffectList.Remove(ps.Hero.Effects, EffectKind.RepeatNextMinionPlay);
                     RulesEngine.EnterBoard(state, card, def, seat, p.BoardSlot, _db);
                     buf.Emit(GameEventKind.CardPlayed, source: card.Id);
                     interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);                 // Herald
+                    if (repeatPlay) interp.RaiseSelf(card, Trigger.ON_PLAY, p.Targets);
                     // SCOPE IS THE SUMMONER'S SIDE ONLY (#272, Sam, 2026-09-04) — unlike the two
                     // sweep triggers below, and by decision rather than by inheritance. The
                     // controller is named explicitly because the sweep cannot infer it: this arm

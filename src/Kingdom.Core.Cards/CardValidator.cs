@@ -177,6 +177,7 @@ namespace Kingdom.Core.Cards
                 // A rider's target is player-CHOSEN but the rule does not CHOOSE — see C32.
                 if (!RuleSemantics.Chooses(rule)) continue;
                 Trigger trigger = RuleSemantics.TriggerOf(rule);
+
                 playerChoiceRuleCounts.TryGetValue(trigger, out int count);
                 playerChoiceRuleCounts[trigger] = count + 1;
             }
@@ -195,6 +196,16 @@ namespace Kingdom.Core.Cards
                 string ruleId = rule.Id.Value ?? "";
                 string actionName = ActionName(rule.Action);
                 Trigger trigger = RuleSemantics.TriggerOf(rule);
+
+                if (rule.Action is PreventLethalDamageAction &&
+                    !AuraCapabilities.Supports(def.Type, rule))
+                    Err("C34-PREVENT-LETHAL-SHAPE", $"{prefix}.action",
+                        "PREVENT_LETHAL_DAMAGE requires a source-bound MINION aura over all other friendly minions.");
+                if (rule.Action is RepeatNextMinionPlayAction &&
+                    (def.Type != CardType.MINION || trigger != Trigger.ON_PLAY ||
+                     !(rule.Lifetime is OneShotLifetime)))
+                    Err("C35-REPEAT-PLAY-SHAPE", $"{prefix}.action",
+                        "REPEAT_NEXT_MINION_PLAY requires a one-shot MINION ON_PLAY rule.");
 
                 if (rule.Activation is AuraActivation && !AuraCapabilities.Supports(def.Type, rule))
                     Err("C21-AURA-UNSUPPORTED", $"{prefix}.activation",
@@ -715,6 +726,8 @@ namespace Kingdom.Core.Cards
             {
                 case DamageAction _: return "DAMAGE";
                 case HealAction _: return "HEAL";
+                case PreventLethalDamageAction _: return "PREVENT_LETHAL_DAMAGE";
+                case RepeatNextMinionPlayAction _: return "REPEAT_NEXT_MINION_PLAY";
                 case ModifyStatsAction _: return "MODIFY_STATS";
                 case GrantKeywordAction _: return "GRANT_KEYWORD";
                 case DestroyAction _: return "DESTROY";

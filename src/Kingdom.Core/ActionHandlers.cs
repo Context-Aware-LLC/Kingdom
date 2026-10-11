@@ -58,6 +58,11 @@ namespace Kingdom.Core
                 case BackdraftAction _: new BackdraftHandler().Execute(context); return;
                 case DrownAction _: new DrownHandler().Execute(context); return;
                 case CopyAction _: new CopyHandler().Execute(context); return;
+                case RepeatNextMinionPlayAction _:
+                    EffectList.Apply(context.State.PlayerOf(context.Source.Controller).Hero.Effects,
+                        new EffectInstance(EffectKind.RepeatNextMinionPlay, context.Source.Identity,
+                            EffectScope.CurrentTurn, 0));
+                    return;
                 default:
                     throw new System.InvalidOperationException(
                         $"Rule action '{context.Rule.Action.GetType().Name}' has no runtime handler.");
@@ -533,15 +538,31 @@ namespace Kingdom.Core
     {
         public void Execute(in EffectContext ctx)
         {
-            PlayerState chooser = ctx.State.PlayerOf(ctx.Source.Controller);
+            PendingChoice? existing = ctx.State.PendingChoice;
+            if (existing != null)
+            {
+                // Repeating this source's Unearth owes another independent offer; it must not
+                // overwrite the first or silently drop the second. Other choosers stay isolated.
+                if (existing.Kind == PendingChoiceKind.Unearth &&
+                    existing.Chooser == ctx.Source.Controller && existing.Source == ctx.Source.Identity)
+                    existing.RemainingOffers++;
+                return;
+            }
+            Offer(ctx.State, ctx.Db, ctx.Events, ctx.Source.Controller, ctx.Source.Identity);
+        }
+
+        internal static void Offer(GameState state, ICardDatabase db, EventBuffer events,
+            PlayerId controller, InstanceId source, int remainingOffers = 1)
+        {
+            PlayerState chooser = state.PlayerOf(controller);
 
             // Never overwrite an unresolved choice or open a choice that cannot be completed. An
             // empty eligible pool fails closed without consuming RNG. There is no longer an authored
             // count to be invalid — the offer size is UnearthAction.Options.
-            if (ctx.State.PendingChoice != null || chooser.Hand.Count >= MatchEngine.HandCap)
+            if (state.PendingChoice != null || chooser.Hand.Count >= MatchEngine.HandCap || remainingOffers <= 0)
                 return;
 
-            List<int> remaining = CanonicalEligiblePool(ctx.Db);
+            List<int> remaining = CanonicalEligiblePool(db);
             if (remaining.Count == 0) return;
 
             int offerCount = System.Math.Min(UnearthAction.Options, remaining.Count);
@@ -549,23 +570,24 @@ namespace Kingdom.Core
             {
                 Chooser = chooser.Id,
                 Kind = PendingChoiceKind.Unearth,
-                Source = ctx.Source.Identity,
+                Source = source,
+                RemainingOffers = remainingOffers,
                 // The offer event consumes this same cursor value immediately below. This gives
                 // choices a match-wide monotonic correlation id without a second serialized cursor.
-                ChoiceSequence = ctx.State.NextEventSequence,
+                ChoiceSequence = state.NextEventSequence,
             };
 
             // Sampling is without replacement. The canonical sort happens BEFORE RNG; sampled
             // order is the player-visible option order and must never be sorted afterward.
             for (int i = 0; i < offerCount; i++)
             {
-                int index = ctx.State.Rng.NextInt(remaining.Count);
+                int index = state.Rng.NextInt(remaining.Count);
                 pending.Options.Add(remaining[index]);
                 remaining.RemoveAt(index);
             }
 
-            ctx.State.PendingChoice = pending;
-            ctx.Events.Emit(GameEventKind.UnearthOffered, source: ctx.Source.Identity);
+            state.PendingChoice = pending;
+            events.Emit(GameEventKind.UnearthOffered, source: source);
         }
 
         private static List<int> CanonicalEligiblePool(ICardDatabase db)

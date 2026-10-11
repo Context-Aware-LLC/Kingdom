@@ -117,7 +117,7 @@ namespace Kingdom.Core
             ApplyStats(c, def, damageTaken);
 
             c.HasAegisShield = c.Keywords.Contains(Keyword.AEGIS);
-            EffectList.Remove(c.Effects, EffectKind.Frost);
+            c.Effects.Clear();
             c.IsSilenced = false;
         }
 
@@ -139,7 +139,7 @@ namespace Kingdom.Core
             c.Keywords.Clear();
             ApplyStats(c, def, damageTaken);
             c.HasAegisShield = false;
-            EffectList.Remove(c.Effects, EffectKind.Frost);
+            c.Effects.Clear();
             c.IsSilenced = true;
         }
 

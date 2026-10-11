@@ -273,6 +273,16 @@ namespace Kingdom.Core.Cards
         public HealAction(int amount, TargetSpec target) : base(target) => Amount = amount;
     }
 
+    /// <summary>A source-bound replacement: spare the first lethal hit to another friendly
+    /// minion each turn. DamagePipeline consumes the source's turn-scoped allowance.</summary>
+    public sealed class PreventLethalDamageAction : TargetedRuleAction
+    {
+        public PreventLethalDamageAction(TargetSpec target) : base(target) { }
+    }
+
+    /// <summary>The controller's next minion played this turn resolves its ON_PLAY rules twice.</summary>
+    public sealed class RepeatNextMinionPlayAction : RuleAction { }
+
     public sealed class ModifyStatsAction : TargetedRuleAction
     {
         public int AttackDelta { get; }
@@ -595,6 +605,7 @@ namespace Kingdom.Core.Cards
                     return new TargetShape(TargetZones.Board, TargetTypes.Hero | TargetTypes.Minion);
                 case ModifyStatsAction _:
                 case GrantKeywordAction _:
+                case PreventLethalDamageAction _:
                 // Board minions only, and NOT weapons, though a weapon can carry a toll (EF-020).
                 // An equipped weapon's rattle fires when the weapon BREAKS; re-raising it on a
                 // weapon still in the slot would run a rattle for a break that did not happen, and
@@ -629,6 +640,7 @@ namespace Kingdom.Core.Cards
                 case GainArmorAction _:
                 case BackdraftAction _:
                 case UnearthAction _:
+                case RepeatNextMinionPlayAction _:
                     return TargetShape.None;
                 default:
                     throw new InvalidOperationException(

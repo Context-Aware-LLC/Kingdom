@@ -28,7 +28,8 @@ namespace Kingdom.Core
                     if (definition.Type != CardType.MINION) continue;
                     foreach (RuleDefinition rule in definition.Rules)
                     {
-                        if (!AuraCapabilities.Supports(definition.Type, rule)) continue;
+                        if (!(rule.Action is ModifyStatsAction) ||
+                            !AuraCapabilities.Supports(definition.Type, rule)) continue;
                         Apply(state, db, source.Id, source.Controller, (ModifyStatsAction)rule.Action);
                     }
                 }
@@ -49,7 +50,8 @@ namespace Kingdom.Core
                 foreach (RuleDefinition rule in definition.Rules)
                 {
                     if (rule.Id.Value != effect.RuleId) continue;
-                    if (!AuraCapabilities.Supports(definition.Type, rule)) continue;
+                    if (!(rule.Action is ModifyStatsAction) ||
+                        !AuraCapabilities.Supports(definition.Type, rule)) continue;
                     Apply(state, db, effect.Id, effect.Controller, (ModifyStatsAction)rule.Action);
                 }
             }

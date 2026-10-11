@@ -322,6 +322,9 @@ namespace Kingdom.Core.Contracts
         public List<int> Options = new List<int>();
         /// <summary>REDACTED (default-deny; OBL-5 revisit). Deterministic resume/timer correlation id.</summary>
         public ulong ChoiceSequence;
+        /// <summary>Offers still owed, including this one. Repeated Unearth resolves them one at
+        /// a time. Private to the chooser; zero is the opponent projection sentinel.</summary>
+        public int RemainingOffers = 1;
     }
 
     /// <summary>Kinds of mid-command pending choice. Hash-canonical — extend only via a §7
@@ -329,8 +332,8 @@ namespace Kingdom.Core.Contracts
     public enum PendingChoiceKind
     {
         // RETIREMENT TRIGGER: adding a second member here ends this enum's carve-out in
-        // WireMutationSweepTests.Mutated_Field_Survives_The_Wire — see the identical note on
-        // EffectKind. Drop "PendingChoice.Kind" from that branch in the same commit.
+        // WireMutationSweepTests.Mutated_Field_Survives_The_Wire.
+        // Drop "PendingChoice.Kind" from that branch in the same commit.
         Unearth = 0,
     }
 

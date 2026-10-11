@@ -218,6 +218,8 @@ namespace Kingdom.Editor
                 Target(w, damage.Target);
             }
             else if (action is HealAction heal) { Type(w, "HEAL"); Amount(w, heal.Amount); Target(w, heal.Target); }
+            else if (action is PreventLethalDamageAction prevention) { Type(w, "PREVENT_LETHAL_DAMAGE"); Target(w, prevention.Target); }
+            else if (action is RepeatNextMinionPlayAction) { Type(w, "REPEAT_NEXT_MINION_PLAY"); }
             else if (action is ModifyStatsAction stats)
             {
                 Type(w, "MODIFY_STATS");

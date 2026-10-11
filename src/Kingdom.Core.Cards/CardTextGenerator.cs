@@ -1168,6 +1168,10 @@ namespace Kingdom.Core.Cards
             {
                 DamageAction a => $"Deal {a.Amount} damage{To(a.Target, sourcePronoun)}.",
                 HealAction a => $"Restore {a.Amount} Health{To(a.Target, sourcePronoun)}.",
+                PreventLethalDamageAction _ =>
+                    "The first time each turn another friendly minion would take lethal damage, it survives with 1 Health instead.",
+                RepeatNextMinionPlayAction _ =>
+                    "The next minion you play this turn triggers its play effect twice.",
                 // Prints the stats rather than a marker word, unlike its sibling action markers below.
                 // A flat +1/+1 has a definition shorter than any word for it, needs no glossary entry,
                 // and cannot be misread as the on-play marker it would sit beside.

@@ -188,6 +188,7 @@ namespace Kingdom.Net.Protocol
             foreach (var o in pc.Options) w.I32(o);
             w.EndArray();
             w.Name("choiceSequence"); w.U64(pc.ChoiceSequence);
+            w.Name("remainingOffers"); w.I32(pc.RemainingOffers);
             w.EndObject();
         }
 
@@ -468,6 +469,8 @@ namespace Kingdom.Net.Protocol
             if (!obj.TryGet("options", out var optVal) || optVal.Kind != JKind.Array)
             { detail = "missing options"; return false; }
             if (!TryU64Field(obj, "choiceSequence", out ulong choiceSeq, ref detail)) return false;
+            if (!TryI32Field(obj, "remainingOffers", out int remainingOffers, ref detail)) return false;
+            if (remainingOffers < 0) { detail = "negative remainingOffers"; return false; }
 
             var result = new PendingChoice
             {
@@ -475,6 +478,7 @@ namespace Kingdom.Net.Protocol
                 Kind = kind,
                 Source = src,
                 ChoiceSequence = choiceSeq,
+                RemainingOffers = remainingOffers,
             };
             foreach (var item in optVal.Items!)
             {

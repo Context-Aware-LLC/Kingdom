@@ -35,7 +35,8 @@ namespace Kingdom.Net.Protocol
         /// the <c>engineContractVersion</c> wire key to <c>wireContractVersion</c> (NOR-240), which
         /// is a rename of the field, not a change to what it holds; v7 added
         /// <c>heroDamageTakenThisTurn</c> to the snapshot and the canonical hash, so a v6 client
-        /// fails integrity on every snapshot a v7 server sends.</summary>
-        public const string Version = "interfaces.v7";
+        /// fails integrity on every snapshot a v7 server sends. v8 adds repeated Unearth's
+        /// remainingOffers and the current-turn effect kinds used by the Queen and Herald.</summary>
+        public const string Version = "interfaces.v8";
     }
 }
