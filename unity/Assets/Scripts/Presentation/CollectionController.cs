@@ -1342,25 +1342,9 @@ namespace Emberfall.Presentation
         // The Android system back gesture (and keyboard Escape on PC) routes through
         // NavigationCancelEvent. The gesture closes the drawer first, then exits Collection on the
         // next invocation, regardless of wall scroll position.
-        //
-        // The development-build block logs the data the issue asks for: scroll offset, list content
-        // height, and layout call count sampled every 500ms. On a loop-free build the layout count
-        // should only tick up on resize or filter changes, not while idle or during a scroll gesture.
         private void WireCollectionScroll()
         {
             _root.RegisterCallback<NavigationCancelEvent>(_ => HandleBack());
-
-            if (!Debug.isDebugBuild) return;
-            var scroll = _collectionList?.Q<ScrollView>();
-            if (scroll != null && _wall != null)
-            {
-                scroll.schedule.Execute(() =>
-                {
-                    Debug.Log($"[NOR-360] offset={scroll.scrollOffset.y:F1} " +
-                              $"content.h={scroll.contentContainer.resolvedStyle.height:F1} " +
-                              $"layouts={_wall.LayoutCount}");
-                }).Every(500);
-            }
         }
 
         // ---- Chrome (buttons) ----

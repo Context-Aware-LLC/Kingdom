@@ -109,7 +109,6 @@ namespace Emberfall.Presentation
         private int _bakeGeneration;
         private int _bakesOutstanding;
 
-        public int LayoutCount { get; private set; }
 
         public event Action<CardDefinition> TileClicked;
 
@@ -405,7 +404,6 @@ namespace Emberfall.Presentation
 
         private void Layout()
         {
-            LayoutCount++;
             HideScrollbars();
 
             float available = (_viewport?.resolvedStyle.width ?? _list.resolvedStyle.width)
