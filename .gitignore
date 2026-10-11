@@ -224,3 +224,9 @@ unity/Assets/Resources/build-stamp.txt.meta
 # A second clone of this repo that was made inside the working copy. Committed once as a
 # submodule link with no .gitmodules, which breaks every tool that walks submodules.
 /Kingdom/
+
+.pytest_cache/
+backups/**
+deploy/**
+tooling/auditor/**
+card-admin/cardweb

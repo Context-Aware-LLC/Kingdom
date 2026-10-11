@@ -8,6 +8,8 @@ namespace Emberfall.Presentation
     /// One ordered class pair drawn from the prepared 2x4 hero sheet. The primary class owns the
     /// larger left field; the secondary owns the right. Both quads share the same two seam vertices,
     /// so there is no spacer, stroke or transparent gutter between them.
+    /// Every cell is exactly half the sheet wide and a quarter tall, with no gutter: a cell cut to
+    /// any other size shows a strip of its neighbour along the tile's edge.
     /// </summary>
     public sealed class DeckClassPortrait : VisualElement
     {
@@ -180,7 +182,7 @@ namespace Emberfall.Presentation
             switch (cardClass)
             {
                 case CardClass.TEMPEST: cell = new Cell(0, 0, 0.50f); return true;
-                case CardClass.TIDECALLER: cell = new Cell(1, 0, 0.64f); return true;
+                case CardClass.TIDECALLER: cell = new Cell(1, 0, 0.53f); return true;
                 case CardClass.STONEWARDEN: cell = new Cell(0, 1, 0.50f); return true;
                 case CardClass.VERDANT: cell = new Cell(1, 1, 0.58f); return true;
                 case CardClass.GRAVEKEEP: cell = new Cell(0, 2, 0.63f); return true;
