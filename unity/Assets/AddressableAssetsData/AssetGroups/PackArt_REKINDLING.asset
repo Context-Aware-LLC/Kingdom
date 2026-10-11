@@ -20,28 +20,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1d471a1a27ad57547a2bfe185ebde8e7
-    m_Address: pack_art/pack_rk_03_duras_ironmount
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 564b0cab67932da4eb06dd2a04c19c5e
     m_Address: pack_art/REKINDLING.manifest
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ce4aabb3561e5a6409703299859c1157
-    m_Address: pack_art/pack_rk_01_tessalt_cogbound
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f56d92489c8c70c40957a901c848d188
-    m_Address: pack_art/pack_rk_04_zael_struck_sky
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f900cad954706654aab54d03b0aba26f
-    m_Address: pack_art/pack_rk_02_kira_blade_of_shadows
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

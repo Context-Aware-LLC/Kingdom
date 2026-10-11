@@ -15,16 +15,6 @@ MonoBehaviour:
   m_GroupName: CardArt_REKINDLING
   m_GUID: 6cf09b507d2ec234ba1d9448da3e4797
   m_SerializeEntries:
-  - m_GUID: 7752b5c524924cb8ab4a576dfad5cd77
-    m_Address: card_art/neutral_belle_ideal
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 3e6e8bca542c4ef0a117e89468a7f9c5
-    m_Address: card_art/neutral_royal_herald
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 006330def8f242d1807241eec4421505
     m_Address: card_art/clock_masterwork_constructor
     m_ReadOnly: 0
@@ -142,6 +132,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3e6563731dee45dd8b9a2d862b3662bf
     m_Address: card_art/stone_unbreakable_wall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e6e8bca542c4ef0a117e89468a7f9c5
+    m_Address: card_art/neutral_royal_herald
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -272,6 +267,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 76e8c006c31df0845a2128fd7b620ba0
     m_Address: card_art/clock_ticking_automaton
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7752b5c524924cb8ab4a576dfad5cd77
+    m_Address: card_art/neutral_belle_ideal
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -1,5 +1,11 @@
 # Web card authoring
 
+**Retired 2026-10-11 (Sam): kept, not deleted.** The hosted copy is switched off — Fly app
+`emberfall-cardweb`, machine stopped with autostart off; the app, its volume and the
+`cards.outofcontext.to` certificate are all still there. `fly deploy -c deploy/cardweb/fly.toml .`
+brings it back. The image it last ran predates the `PENDINGHAM` setId, and the volume holds seven
+staged edits from 2026-08-29 that name `EMBERFALL`; five are already in the card data.
+
 A browser front end for the card corpus that can run anywhere — including off this machine —
 without Unity, and without any way to clobber a local editor.
 
