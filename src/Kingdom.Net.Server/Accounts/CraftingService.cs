@@ -34,7 +34,7 @@ namespace Kingdom.Net.Server.Accounts
     /// <summary>How a Reduce request resolved.</summary>
     public enum ReduceStatus
     {
-        /// <summary>A copy was destroyed and <see cref="ShardValues"/> paid out by this call.</summary>
+        /// <summary>The copies asked for were destroyed and <see cref="ShardValues"/> paid out by this call.</summary>
         Reduced,
 
         /// <summary>This transaction id had already been applied. <b>Nothing was destroyed and nothing paid.</b></summary>
@@ -43,8 +43,47 @@ namespace Kingdom.Net.Server.Accounts
         /// <summary>The player holds no copy. Nothing was written.</summary>
         OwnsNone,
 
+        /// <summary>The player holds fewer copies than the call asked to destroy. <b>Nothing was written</b> — never a partial Reduce.</summary>
+        NotEnoughCopies,
+
         /// <summary>No such collectible card. Nothing was written.</summary>
         NotReducible,
+    }
+
+    /// <summary>How a Reduce-every-spare request resolved.</summary>
+    public enum ReduceSparesStatus
+    {
+        /// <summary>Every spare copy was destroyed and paid for by this call, in one ledger batch.</summary>
+        Reduced,
+
+        /// <summary>This transaction id had already been applied. <b>Nothing was destroyed and nothing paid.</b></summary>
+        Replayed,
+
+        /// <summary>The player holds nothing past a deck cap. Nothing was written.</summary>
+        NoSpares,
+    }
+
+    /// <summary>What a Reduce-every-spare call moved, and the shard balance it left.</summary>
+    public sealed class ReduceSparesOutcome
+    {
+        public ReduceSparesStatus Status { get; }
+
+        /// <summary>Copies destroyed by this call, across every card. 0 unless <see cref="ReduceSparesStatus.Reduced"/>.</summary>
+        public int CopiesReduced { get; }
+
+        /// <summary>Shards paid by this call. 0 unless <see cref="ReduceSparesStatus.Reduced"/>.</summary>
+        public long ShardDelta { get; }
+
+        /// <summary>Shard balance after the call.</summary>
+        public long Shards { get; }
+
+        public ReduceSparesOutcome(ReduceSparesStatus status, int copiesReduced, long shardDelta, long shards)
+        {
+            Status = status;
+            CopiesReduced = copiesReduced;
+            ShardDelta = shardDelta;
+            Shards = shards;
+        }
     }
 
     /// <summary>
@@ -228,16 +267,21 @@ namespace Kingdom.Net.Server.Accounts
         }
 
         /// <summary>
-        /// Destroy one copy of <paramref name="cardId"/> and pay <see cref="ShardValues"/> (GH#158).
-        /// The payout table is LOCKED (Sam, 2026-08-02, NOR-109) — it is read here, never re-priced.
+        /// Destroy <paramref name="count"/> copies of <paramref name="cardId"/> and pay
+        /// <see cref="ShardValues"/> for each (GH#158). All of them or none: the copies and the
+        /// payout are one ledger batch. The payout table is LOCKED (Sam, 2026-08-02, NOR-109) — it is
+        /// read here, never re-priced.
         /// </summary>
         public async Task<ReduceOutcome> ReduceAsync(
             Account account,
             int cardId,
+            int count,
             string serverTransactionId,
             CancellationToken ct = default)
         {
             RequireCraftArguments(account, cardId, serverTransactionId);
+            if (count < 1)
+                throw new ArgumentOutOfRangeException(nameof(count), count, "A Reduce breaks down at least one copy.");
 
             await using IAsyncDisposable gate =
                 await _ledger.AcquirePlayerMutationLockAsync(account.PlayerId, ct).ConfigureAwait(false);
@@ -249,10 +293,15 @@ namespace Kingdom.Net.Server.Accounts
             if (!replaying)
             {
                 int owned = await CopiesOwnedAsync(account.PlayerId, cardId, ct).ConfigureAwait(false);
-                ReduceOffer offer = Crafting.OfferReduce(def, owned);
+                ReduceOffer offer = Crafting.OfferReduce(def, owned, count);
                 if (!offer.Offerable)
                     return new ReduceOutcome(
-                        offer.Refusal == ReduceRefusal.OwnsNone ? ReduceStatus.OwnsNone : ReduceStatus.NotReducible,
+                        offer.Refusal switch
+                        {
+                            ReduceRefusal.OwnsNone => ReduceStatus.OwnsNone,
+                            ReduceRefusal.NotEnoughCopies => ReduceStatus.NotEnoughCopies,
+                            _ => ReduceStatus.NotReducible,
+                        },
                         await ProjectAsync(account.PlayerId, cardId, 0, ct).ConfigureAwait(false));
             }
             else if (def == null)
@@ -262,17 +311,17 @@ namespace Kingdom.Net.Server.Accounts
                     await ProjectAsync(account.PlayerId, cardId, 0, ct).ConfigureAwait(false));
             }
 
-            int payout = ShardValues.ForRarity(def!.Rarity);
+            int payout = ShardValues.ForRarity(def!.Rarity) * count;
             string cardItem = BoosterPackGrantService.CardItemPrefix + cardId;
             var batch = new EntitlementBatch(
                 account.PlayerId,
                 txnId,
                 new List<EntitlementDelta>
                 {
-                    new EntitlementDelta(cardItem, -1, ReduceSource),
+                    new EntitlementDelta(cardItem, -count, ReduceSource),
                     new EntitlementDelta(ShardValues.LedgerItem, payout, ReduceSource),
                 },
-                new EntitlementBalanceRequirement(cardItem, 1),
+                new EntitlementBalanceRequirement(cardItem, count),
                 DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs));
 
             EntitlementBatchResult applied = await _ledger.ApplyBatchAsync(batch, ct).ConfigureAwait(false);
@@ -287,6 +336,73 @@ namespace Kingdom.Net.Server.Accounts
                     : ReduceStatus.OwnsNone;
             int delta = applied.Applied ? payout : 0;
             return new ReduceOutcome(status, await ProjectAsync(account.PlayerId, cardId, delta, ct).ConfigureAwait(false));
+        }
+
+        /// <summary>
+        /// Destroy every copy held past a deck cap and pay <see cref="ShardValues"/> for each, in one
+        /// ledger batch — the bulk Reduce. <see cref="Crafting.Spares"/> decides which copies those
+        /// are, against the ledger; the collection screen totals the same function over its synced
+        /// copy to draw the offer.
+        ///
+        /// <para><b>The caller names no card and no count</b>, only whether Legendaries are in. What
+        /// is spare is read here, under the mutation lock, so a stale or hostile client cannot ask
+        /// for a copy that is not one.</para>
+        ///
+        /// <para><b>No <see cref="EntitlementBalanceRequirement"/></b>, because a batch carries one
+        /// and this needs one per card. The mutation lock stands in for it: the balances are read and
+        /// the batch applied inside one hold, and every path that takes a card away holds the same
+        /// lock.</para>
+        /// </summary>
+        public async Task<ReduceSparesOutcome> ReduceSparesAsync(
+            Account account,
+            bool includeLegendary,
+            string serverTransactionId,
+            CancellationToken ct = default)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            if (string.IsNullOrWhiteSpace(serverTransactionId))
+                throw new ArgumentException(
+                    "A server-minted craft transaction id is required; it is the idempotency key.",
+                    nameof(serverTransactionId));
+            EconomyAccountPolicy.RequireDurable(account);
+
+            await using IAsyncDisposable gate =
+                await _ledger.AcquirePlayerMutationLockAsync(account.PlayerId, ct).ConfigureAwait(false);
+
+            // A replay cannot rebuild its batch: the spares it destroyed are gone, so the list read
+            // now is a different set of movements. Report it rather than reduce whatever is spare now.
+            string txnId = TxnPrefix + serverTransactionId;
+            if (await AlreadyAppliedAsync(account.PlayerId, txnId, ct).ConfigureAwait(false))
+                return new ReduceSparesOutcome(ReduceSparesStatus.Replayed, 0, 0,
+                    await ShardBalanceAsync(account, ct).ConfigureAwait(false));
+
+            OwnedCardCounts owned = await LedgerOwnedCounts.LoadAsync(_ledger, account.PlayerId, ct).ConfigureAwait(false);
+            IReadOnlyList<SpareCopies> spares = Crafting.Spares(_cards.AllCollectible(), owned, includeLegendary);
+            if (spares.Count == 0)
+                return new ReduceSparesOutcome(ReduceSparesStatus.NoSpares, 0, 0,
+                    await ShardBalanceAsync(account, ct).ConfigureAwait(false));
+
+            var deltas = new List<EntitlementDelta>(spares.Count + 1);
+            int copies = 0;
+            long payout = 0;
+            for (int i = 0; i < spares.Count; i++)
+            {
+                deltas.Add(new EntitlementDelta(
+                    BoosterPackGrantService.CardItemPrefix + spares[i].Card.Id, -spares[i].Copies, ReduceSource));
+                copies += spares[i].Copies;
+                payout += spares[i].Payout;
+            }
+            deltas.Add(new EntitlementDelta(ShardValues.LedgerItem, payout, ReduceSource));
+
+            EntitlementBatchResult applied = await _ledger.ApplyBatchAsync(
+                new EntitlementBatch(account.PlayerId, txnId, deltas, null,
+                    DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs)), ct).ConfigureAwait(false);
+            if (!applied.Applied)
+                throw new InvalidOperationException(
+                    "The craft transaction id is already bound to a different set of entitlement movements.");
+
+            return new ReduceSparesOutcome(ReduceSparesStatus.Reduced, copies, payout,
+                await ShardBalanceAsync(account, ct).ConfigureAwait(false));
         }
 
         /// <summary>

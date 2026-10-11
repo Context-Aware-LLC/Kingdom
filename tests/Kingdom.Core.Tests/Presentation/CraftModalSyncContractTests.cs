@@ -18,7 +18,7 @@ namespace Kingdom.Core.Tests.Presentation
                 "private async void OpenCraft(CardDefinition def)",
                 "private bool CraftIsCurrent");
             string commitCraft = Between(controller,
-                "private async void CommitCraft(CardDefinition def, bool render)",
+                "private async void CommitCraft(CardDefinition def, bool render, int count = 1)",
                 "private static string CraftError");
 
             Assert.Multiple(() =>

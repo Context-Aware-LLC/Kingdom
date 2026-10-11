@@ -1195,14 +1195,46 @@ namespace Kingdom.Net.Server
                 }, statusCode: result.HttpStatus);
             });
 
+            // A craft body is optional and tiny: an absent, empty or malformed one is an empty object,
+            // so every field falls back to its default and the endpoint owns the status vocabulary.
+            async Task<System.Text.Json.JsonDocument> CraftBodyAsync(HttpContext context)
+            {
+                try
+                {
+                    if (context.Request.ContentLength is null or > 0)
+                    {
+                        var body = await System.Text.Json.JsonDocument
+                            .ParseAsync(context.Request.Body, cancellationToken: context.RequestAborted)
+                            .ConfigureAwait(false);
+                        if (body.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object) return body;
+                        body.Dispose();
+                    }
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                }
+                return System.Text.Json.JsonDocument.Parse("{}");
+            }
+
             async Task<IResult> HandleCraft(HttpContext context, int cardId, string? action)
             {
                 string? header = context.Request.Headers["Authorization"];
                 string? bearer = header?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true
                     ? header.Substring("Bearer ".Length).Trim() : null;
+                int count = 1;
+                if (action == "reduce")
+                {
+                    using System.Text.Json.JsonDocument body = await CraftBodyAsync(context).ConfigureAwait(false);
+                    // Present but not a whole number in range is refused, not defaulted: a Reduce that
+                    // quietly became one copy would report success for something the player did not ask.
+                    if (body.RootElement.TryGetProperty("count", out var countElement) &&
+                        (countElement.ValueKind != System.Text.Json.JsonValueKind.Number ||
+                         !countElement.TryGetInt32(out count)))
+                        count = 0;
+                }
                 CraftingResult result = await CraftingEndpoint.ExecuteAsync(
                     bearer, cardId, action, cfg.TokenVerifier, cfg.AccountStore,
-                    crafting, db, context.RequestAborted);
+                    crafting, db, context.RequestAborted, count);
                 context.Response.Headers["Cache-Control"] = "no-store";
                 return Results.Json(new
                 {
@@ -1216,6 +1248,28 @@ namespace Kingdom.Net.Server
             app.MapGet("/crafting/{cardId:int}", (HttpContext context, int cardId) => HandleCraft(context, cardId, null));
             app.MapPost("/crafting/{cardId:int}/render", (HttpContext context, int cardId) => HandleCraft(context, cardId, "render"));
             app.MapPost("/crafting/{cardId:int}/reduce", (HttpContext context, int cardId) => HandleCraft(context, cardId, "reduce"));
+
+            app.MapPost("/crafting/spares/reduce", async (HttpContext context) =>
+            {
+                string? header = context.Request.Headers["Authorization"];
+                string? bearer = header?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true
+                    ? header.Substring("Bearer ".Length).Trim() : null;
+                bool includeLegendary;
+                using (System.Text.Json.JsonDocument body = await CraftBodyAsync(context).ConfigureAwait(false))
+                    includeLegendary = body.RootElement.TryGetProperty("includeLegendary", out var flag) &&
+                                       flag.ValueKind == System.Text.Json.JsonValueKind.True;
+                ReduceSparesResult result = await CraftingEndpoint.ReduceSparesAsync(
+                    bearer, includeLegendary, cfg.TokenVerifier, cfg.AccountStore,
+                    crafting, context.RequestAborted);
+                context.Response.Headers["Cache-Control"] = "no-store";
+                return Results.Json(new
+                {
+                    status = result.Status,
+                    copiesReduced = result.Spares?.CopiesReduced,
+                    shardsGained = result.Spares?.ShardDelta,
+                    shards = result.Spares?.Shards,
+                }, statusCode: result.HttpStatus);
+            });
 
             app.Map("/ws", async context =>
             {

@@ -11,7 +11,7 @@ namespace Kingdom.Presentation
 {
     /// <summary>
     /// The crafting modal: one card, and the two directions you can move it in — <b>Render</b> (spend
-    /// shards, mint a copy, GH#157) and <b>Reduce</b> (destroy a copy, collect shards, GH#158).
+    /// shards, mint a copy, GH#157) and <b>Reduce</b> (destroy copies, collect shards, GH#158).
     ///
     /// <para><b>The two halves are the screen</b> (Sam, 2026-08-12). Whichever direction the card
     /// cannot go right now is present and dead rather than absent: a card you own none of shows a live
@@ -61,6 +61,11 @@ namespace Kingdom.Presentation
         private readonly Label _reducePayout;
         private readonly Label _reduceNote;
         private readonly VisualElement _reduceHalf;
+        private readonly Button _reduceLess;
+        private readonly Button _reduceMore;
+        private readonly Label _reduceCountLabel;
+        private int _reduceOwned;
+        private int _reduceCount = 1;
 
         private readonly CardFaceBaker _baker;
         private Texture2D _cardTexture;
@@ -75,8 +80,11 @@ namespace Kingdom.Presentation
         /// <summary>Raised when the player commits a Render. The host spends; this never does.</summary>
         public event Action<CardDefinition> RenderRequested;
 
-        /// <summary>Raised when the player commits a Reduce. The host destroys; this never does.</summary>
-        public event Action<CardDefinition> ReduceRequested;
+        /// <summary>
+        /// Raised when the player commits a Reduce, with how many copies the stepper was on. The host
+        /// destroys; this never does.
+        /// </summary>
+        public event Action<CardDefinition, int> ReduceRequested;
         public event Action<CardDefinition> RefreshRequested;
 
         /// <summary>
@@ -120,11 +128,20 @@ namespace Kingdom.Presentation
             _reduceButton = rootPlate.Q<Button>("craft-reduce-button");
             _reducePayout = rootPlate.Q<Label>("craft-reduce-payout");
             _reduceNote = rootPlate.Q<Label>("craft-reduce-note");
+            _reduceLess = rootPlate.Q<Button>("craft-reduce-less");
+            _reduceMore = rootPlate.Q<Button>("craft-reduce-more");
+            _reduceCountLabel = rootPlate.Q<Label>("craft-reduce-count");
 
             if (_renderButton != null)
-                _renderButton.RegisterCallback<ClickEvent>(_ => Commit(RenderRequested));
+                _renderButton.RegisterCallback<ClickEvent>(_ => Commit(def => RenderRequested?.Invoke(def)));
             if (_reduceButton != null)
-                _reduceButton.RegisterCallback<ClickEvent>(_ => Commit(ReduceRequested));
+                _reduceButton.RegisterCallback<ClickEvent>(_ =>
+                {
+                    int count = _reduceCount;
+                    Commit(def => ReduceRequested?.Invoke(def, count));
+                });
+            _reduceLess?.RegisterCallback<ClickEvent>(_ => StepReduce(-1));
+            _reduceMore?.RegisterCallback<ClickEvent>(_ => StepReduce(1));
 
             // Dismiss on the scrim and on the explicit close, but NOT on the modal body — a click that
             // lands on the panel must not fall through to the scrim behind it and close the thing the
@@ -143,6 +160,7 @@ namespace Kingdom.Presentation
             _cardRarity != null && _shardBalance != null && _copiesOwned != null &&
             _renderHalf != null && _renderButton != null && _renderCost != null && _renderNote != null &&
             _reduceHalf != null && _reduceButton != null && _reducePayout != null && _reduceNote != null &&
+            _reduceLess != null && _reduceMore != null && _reduceCountLabel != null &&
             _status != null && _retry != null && _close != null && _loadingIcon != null;
 
         /// <summary>
@@ -179,9 +197,11 @@ namespace Kingdom.Presentation
             _renderNote.text = RenderNote(render);
             SetHalfEnabled(_renderHalf, _renderButton, render.Offerable);
 
-            _reducePayout.text = reduce.Payout.ToString();
-            _reduceNote.text = ReduceNote(reduce, def);
-            SetHalfEnabled(_reduceHalf, _reduceButton, reduce.Offerable);
+            // Every open starts back on one copy: a count carried over from the last card, or from
+            // before a refusal, is a number the player did not choose for what is on screen now.
+            _reduceOwned = reduce.CopiesOwned;
+            _reduceCount = 1;
+            DrawReduce();
 
             // The real card front, baked — never a second UI Toolkit re-implementation of the card
             // face. Same baker and same cache the wall uses, so opening this modal on a card already
@@ -239,6 +259,32 @@ namespace Kingdom.Presentation
             handler?.Invoke(committed);
         }
 
+        private void StepReduce(int by)
+        {
+            if (_card == null || _submitting) return;
+            int next = Mathf.Clamp(_reduceCount + by, 1, Mathf.Max(1, _reduceOwned));
+            if (next == _reduceCount) return;
+            _reduceCount = next;
+            DrawReduce();
+        }
+
+        /// <summary>
+        /// The Reduce half for the count the stepper is on. The offer is asked for again rather than
+        /// multiplied here, so the price of three copies is <see cref="Crafting"/>'s answer and not
+        /// this file's arithmetic.
+        /// </summary>
+        private void DrawReduce()
+        {
+            ReduceOffer reduce = Crafting.OfferReduce(_card, _reduceOwned, _reduceCount);
+            _reducePayout.text = reduce.Payout.ToString();
+            _reduceNote.text = ReduceNote(reduce);
+            _reduceCountLabel.text = reduce.Count.ToString();
+            _reduceButton.text = reduce.Count > 1 ? $"Reduce {reduce.Count}" : "Reduce";
+            SetHalfEnabled(_reduceHalf, _reduceButton, reduce.Offerable);
+            _reduceLess.SetEnabled(reduce.Offerable && reduce.Count > 1);
+            _reduceMore.SetEnabled(reduce.Offerable && reduce.Count < reduce.CopiesOwned);
+        }
+
         public void SetWorking(string message, bool submitting = false, bool unknown = false)
         {
             SetLoading(unknown);
@@ -246,6 +292,8 @@ namespace Kingdom.Presentation
             _close?.SetEnabled(!submitting);
             _renderButton.SetEnabled(false);
             _reduceButton.SetEnabled(false);
+            _reduceLess.SetEnabled(false);
+            _reduceMore.SetEnabled(false);
             _status.text = message;
             _status.style.display = unknown || submitting || string.IsNullOrEmpty(message)
                 ? DisplayStyle.None : DisplayStyle.Flex;
@@ -315,18 +363,19 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>Mirror of <see cref="RenderNote"/> for the other direction.</summary>
-        private static string ReduceNote(ReduceOffer offer, CardDefinition def)
+        private static string ReduceNote(ReduceOffer offer)
         {
             switch (offer.Refusal)
             {
                 case ReduceRefusal.None:
                     // "Down to your last one" is the sentence that stops a regretted click, and it is
                     // the only thing this half knows that the payout number does not say.
-                    return offer.CopiesAfter == 0
-                        ? "This is your last copy."
-                        : $"You would keep {offer.CopiesAfter}.";
+                    if (offer.CopiesAfter > 0) return $"You would keep {offer.CopiesAfter}.";
+                    return offer.Count > 1 ? "This is every copy you have." : "This is your last copy.";
                 case ReduceRefusal.OwnsNone:
                     return "You don't have this card.";
+                case ReduceRefusal.NotEnoughCopies:
+                    return "You don't have that many copies.";
                 case ReduceRefusal.NotCollectible:
                     return "This card cannot be broken down.";
                 case ReduceRefusal.UnknownCard:

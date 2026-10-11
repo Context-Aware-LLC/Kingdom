@@ -37,6 +37,7 @@
                 </ui:VisualElement>
             </ui:Button>
             <ui:VisualElement picking-mode="Ignore" class="col-query-actions">
+                <ui:Button name="spares-button" text="Spares" class="col-button col-button--spares chrome-button chrome-button--secondary"/>
                 <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
             </ui:VisualElement>
         </ui:VisualElement>
@@ -128,18 +129,49 @@
                     </ui:VisualElement>
                     <ui:VisualElement name="craft-reduce-half" class="craft-half chrome-panel chrome-panel--recessed">
                         <ui:Label text="Reduce" class="craft-half-title"/>
-                        <ui:Label text="Break a copy down for shards." class="craft-half-blurb"/>
+                        <ui:Label text="Break copies down for shards." class="craft-half-blurb"/>
                         <ui:VisualElement class="craft-price">
                             <ui:Label name="craft-reduce-payout" text="0" class="craft-price-value"/>
                             <ui:VisualElement class="craft-shard-icon" tooltip="Shards"/>
                         </ui:VisualElement>
                         <ui:Label name="craft-reduce-note" text="" class="craft-half-note"/>
+                        <ui:VisualElement class="craft-stepper">
+                            <ui:Button name="craft-reduce-less" text="-" class="craft-stepper__button chrome-button chrome-button--secondary"/>
+                            <ui:Label name="craft-reduce-count" text="1" class="craft-stepper__count"/>
+                            <ui:Button name="craft-reduce-more" text="+" class="craft-stepper__button chrome-button chrome-button--secondary"/>
+                        </ui:VisualElement>
                         <ui:Button name="craft-reduce-button" text="Reduce" class="craft-action craft-action--ghost chrome-button chrome-button--secondary"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement picking-mode="Ignore" class="craft-loading">
                 <ui:VisualElement name="craft-loading-icon" picking-mode="Ignore" class="craft-loading-icon"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <!-- SPARES: the bulk Reduce, driven by SparesPanel. It borrows the craft modal's frame and
+             type classes so the two read as one surface; only the spares-* names are its own. -->
+        <ui:VisualElement name="spares-scrim" class="craft-scrim emb-bleed"/>
+        <ui:VisualElement name="spares-panel" class="craft-modal spares-panel chrome-panel chrome-panel--outer">
+            <ui:VisualElement class="craft-head">
+                <ui:VisualElement class="craft-heading">
+                    <ui:Label text="Reduce Spares" class="craft-name"/>
+                    <ui:Label name="spares-summary" text="" class="spares-summary"/>
+                </ui:VisualElement>
+                <ui:Button name="spares-close" text="Close" class="col-button chrome-button chrome-button--secondary emb-back"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="craft-body">
+                <ui:ScrollView name="spares-list" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="spares-list chrome-panel chrome-panel--recessed"/>
+                <ui:VisualElement class="spares-side chrome-panel chrome-panel--recessed">
+                    <ui:Label text="Break every spare down for" class="craft-half-blurb"/>
+                    <ui:VisualElement class="craft-price">
+                        <ui:Label name="spares-total" text="0" class="craft-price-value"/>
+                        <ui:VisualElement class="craft-shard-icon" tooltip="Shards"/>
+                    </ui:VisualElement>
+                    <ui:Label name="spares-note" text="" class="craft-half-note"/>
+                    <ui:Toggle name="spares-legendary" label="Include Legendaries" class="spares-toggle"/>
+                    <ui:Label name="spares-status" class="craft-status spares-status" style="display: none;"/>
+                    <ui:Button name="spares-reduce" text="Reduce All" class="craft-action chrome-button chrome-button--primary"/>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <!-- TIDBIT: the first-look card, driven by FirstRunTidbit (#403). LAST CHILD ON PURPOSE:

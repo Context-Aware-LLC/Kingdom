@@ -536,6 +536,10 @@
 .col-query-actions .col-button--decks {
     min-width: 96px;
 }
+.col-query-actions .col-button--spares {
+    min-width: 96px;
+    margin-right: var(--space-2);
+}
 /* BACK MOVES TO THE BOTTOM-LEFT (Sam, 2026-09-07): it used to share `.col-query-actions`' top-right
  * row with Decks, crowding both against the deck-drawer's own Close when the drawer was open.
  * The canonical `.emb-back-button` (theme.uss, 2026-09-27) is what every screen's Back control
@@ -1520,6 +1524,120 @@
 .craft-action--ghost:disabled {
     background-color: rgba(0, 0, 0, 0);
     color: var(--ink-2);
+}
+
+/* How many copies one Reduce takes. Below the note so the price above it and the button below it
+ * both read as answers to the number in the middle. */
+.craft-stepper {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-bottom: var(--space-4);
+}
+.craft-stepper__button {
+    width: 64px;
+    height: 64px;
+    min-height: 64px;
+    padding: 0;
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+}
+.craft-stepper__count {
+    min-width: 72px;
+    color: var(--ink-1);
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* ---- Spares: the bulk Reduce. The frame, head and price are the craft modal's own classes. ---- */
+.spares-summary {
+    font-size: var(--type-label);
+    color: var(--ink-2);
+}
+.spares-list {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    margin-right: var(--space-6);
+    padding: var(--space-3) var(--space-4);
+}
+.spares-row {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    padding: var(--space-2) 0;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--surface-3);
+}
+.spares-row__name {
+    flex-grow: 1;
+    flex-basis: 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+}
+.spares-row__copies {
+    flex-shrink: 0;
+    width: 120px;
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    -unity-text-align: middle-right;
+}
+.spares-row__payout {
+    flex-shrink: 0;
+    width: 96px;
+    color: var(--accent);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    -unity-text-align: middle-right;
+}
+.spares-side {
+    width: 38%;
+    flex-shrink: 0;
+    padding: var(--space-6);
+    justify-content: center;
+}
+.spares-side.chrome-panel--recessed {
+    background-color: transparent;
+    background-image: none;
+    border-radius: 0;
+}
+.spares-status {
+    flex-grow: 0;
+    margin-bottom: var(--space-4);
+}
+.spares-toggle {
+    flex-direction: row;
+    flex-shrink: 0;
+    min-height: 64px;
+    align-items: center;
+    margin-bottom: var(--space-4);
+}
+.spares-toggle > .unity-toggle__input,
+.spares-toggle .unity-base-field__label {
+    color: var(--ink-1);
+    font-size: var(--type-label);
+}
+.spares-toggle .unity-toggle__checkmark,
+.spares-toggle:hover .unity-toggle__checkmark,
+.spares-toggle:focus .unity-toggle__checkmark {
+    width: 40px;
+    height: 40px;
+    background-color: var(--surface-0);
+    border-width: 2px;
+    border-color: var(--ink-2);
+    border-radius: var(--space-1);
+}
+/* Driven by SparesPanel, not `:checked` — the same pattern as .ms-toggle--on. */
+.spares-toggle--on .unity-toggle__checkmark,
+.spares-toggle--on:hover .unity-toggle__checkmark,
+.spares-toggle--on:focus .unity-toggle__checkmark {
+    background-color: var(--rarity-legendary);
 }
 
 .craft-modal.chrome-panel--outer {

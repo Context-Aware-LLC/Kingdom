@@ -47,6 +47,9 @@ namespace Kingdom.Core.Collection
 
         /// <summary>The player holds no copy to break down.</summary>
         OwnsNone,
+
+        /// <summary>The player holds some, but fewer than the Reduce asks to break down at once.</summary>
+        NotEnoughCopies,
     }
 
     /// <summary>
@@ -85,18 +88,25 @@ namespace Kingdom.Core.Collection
     {
         public readonly ReduceRefusal Refusal;
 
-        /// <summary>Shards this Reduce would pay out — <see cref="ShardValues"/>, LOCKED, never re-priced here.</summary>
+        /// <summary>
+        /// Shards this Reduce would pay out for all <see cref="Count"/> copies —
+        /// <see cref="ShardValues"/>, LOCKED, never re-priced here.
+        /// </summary>
         public readonly int Payout;
+
+        /// <summary>Copies this Reduce breaks down in one go. Never below 1.</summary>
+        public readonly int Count;
 
         public readonly int CopiesOwned;
 
         /// <summary>Copies left afterwards. <see cref="CopiesOwned"/> when the Reduce is refused.</summary>
         public readonly int CopiesAfter;
 
-        public ReduceOffer(ReduceRefusal refusal, int payout, int copiesOwned, int copiesAfter)
+        public ReduceOffer(ReduceRefusal refusal, int payout, int count, int copiesOwned, int copiesAfter)
         {
             Refusal = refusal;
             Payout = payout;
+            Count = count;
             CopiesOwned = copiesOwned;
             CopiesAfter = copiesAfter;
         }
@@ -127,6 +137,28 @@ namespace Kingdom.Core.Collection
             Deck = deck;
             Copies = copies;
             BecomesUnbacked = becomesUnbacked;
+        }
+    }
+
+    /// <summary>
+    /// One card's copies past <see cref="DeckValidator.MaxCopies"/> — the copies no deck can play, and
+    /// so the ones a bulk Reduce offers to break down. A row of <see cref="Crafting.Spares"/>.
+    /// </summary>
+    public readonly struct SpareCopies
+    {
+        public readonly CardDefinition Card;
+
+        /// <summary>Copies past the deck cap. Always at least 1; a card with none has no row.</summary>
+        public readonly int Copies;
+
+        /// <summary>Shards breaking all <see cref="Copies"/> down would pay — <see cref="ShardValues"/>.</summary>
+        public readonly int Payout;
+
+        public SpareCopies(CardDefinition card, int copies, int payout)
+        {
+            Card = card;
+            Copies = copies;
+            Payout = payout;
         }
     }
 
@@ -177,17 +209,57 @@ namespace Kingdom.Core.Collection
             return new RenderOffer(RenderRefusal.None, cost, copiesOwned, cap);
         }
 
-        /// <summary>Can this card be Reduced given <paramref name="copiesOwned"/>, and for how much?</summary>
-        public static ReduceOffer OfferReduce(CardDefinition? def, int copiesOwned)
+        /// <summary>
+        /// Can <paramref name="count"/> copies of this card be Reduced at once given
+        /// <paramref name="copiesOwned"/>, and for how much? A count below 1 is read as 1.
+        /// </summary>
+        public static ReduceOffer OfferReduce(CardDefinition? def, int copiesOwned, int count = 1)
         {
-            if (def == null) return new ReduceOffer(ReduceRefusal.UnknownCard, 0, 0, 0);
+            if (count < 1) count = 1;
+            if (def == null) return new ReduceOffer(ReduceRefusal.UnknownCard, 0, count, 0, 0);
 
-            int payout = ShardValues.ForRarity(def.Rarity);
+            int payout = ShardValues.ForRarity(def.Rarity) * count;
             if (copiesOwned < 0) copiesOwned = 0;
 
-            if (!def.PoolEligible) return new ReduceOffer(ReduceRefusal.NotCollectible, payout, copiesOwned, copiesOwned);
-            if (copiesOwned <= 0) return new ReduceOffer(ReduceRefusal.OwnsNone, payout, 0, 0);
-            return new ReduceOffer(ReduceRefusal.None, payout, copiesOwned, copiesOwned - 1);
+            if (!def.PoolEligible)
+                return new ReduceOffer(ReduceRefusal.NotCollectible, payout, count, copiesOwned, copiesOwned);
+            if (copiesOwned <= 0) return new ReduceOffer(ReduceRefusal.OwnsNone, payout, count, 0, 0);
+            if (count > copiesOwned)
+                return new ReduceOffer(ReduceRefusal.NotEnoughCopies, payout, count, copiesOwned, copiesOwned);
+            return new ReduceOffer(ReduceRefusal.None, payout, count, copiesOwned, copiesOwned - count);
+        }
+
+        /// <summary>
+        /// Every card held past its deck cap, and what breaking those copies down would pay — the
+        /// whole of what a bulk Reduce does, in <paramref name="cards"/> order.
+        ///
+        /// <para><b>The cap is <see cref="DeckValidator.MaxCopies"/>, the same one Render stops at</b>,
+        /// so a spare is exactly a copy no deck can run and breaking every one of them down can never
+        /// unback a saved deck.</para>
+        ///
+        /// <para><b>Legendaries are left out unless asked for</b> (Sam, 2026-10-11): a second
+        /// Legendary is the copy a player is likeliest to regret, so the bulk action takes it only
+        /// on an explicit opt-in. A single-card Reduce is unaffected.</para>
+        ///
+        /// <para>A null <paramref name="owned"/> is "ownership unknown", not "owns everything", and
+        /// has no spares.</para>
+        /// </summary>
+        public static IReadOnlyList<SpareCopies> Spares(IEnumerable<CardDefinition>? cards, IOwnedCardCounts? owned,
+                                                        bool includeLegendary)
+        {
+            var rows = new List<SpareCopies>();
+            if (cards == null || owned == null) return rows;
+
+            foreach (CardDefinition def in cards)
+            {
+                if (def == null || !def.PoolEligible) continue;
+                if (def.Rarity == Rarity.LEGENDARY && !includeLegendary) continue;
+
+                int spare = owned.CopiesOwned(def.Id) - DeckValidator.MaxCopies(def.Rarity);
+                if (spare <= 0) continue;
+                rows.Add(new SpareCopies(def, spare, ShardValues.ForRarity(def.Rarity) * spare));
+            }
+            return rows;
         }
 
         /// <summary>Rarity lookup then the <c>CardDefinition</c> overload; unknown ids refuse.</summary>
@@ -195,8 +267,8 @@ namespace Kingdom.Core.Collection
             => OfferRender(Resolve(cardId, db), copiesOwned, shardBalance);
 
         /// <summary>Rarity lookup then the <c>CardDefinition</c> overload; unknown ids refuse.</summary>
-        public static ReduceOffer OfferReduce(int cardId, ICardDatabase db, int copiesOwned)
-            => OfferReduce(Resolve(cardId, db), copiesOwned);
+        public static ReduceOffer OfferReduce(int cardId, ICardDatabase db, int copiesOwned, int count = 1)
+            => OfferReduce(Resolve(cardId, db), copiesOwned, count);
 
         /// <summary>
         /// Which saved decks hold <paramref name="cardId"/>, and which of them stop being backed once

@@ -15,7 +15,10 @@ namespace Kingdom.Session
         public static Task<CraftingReply> RenderAsync(int cardId, string accessToken, CancellationToken ct = default)
             => Create().RenderAsync(cardId, accessToken, ct);
 
-        public static Task<CraftingReply> ReduceAsync(int cardId, string accessToken, CancellationToken ct = default)
-            => Create().ReduceAsync(cardId, accessToken, ct);
+        public static Task<CraftingReply> ReduceAsync(int cardId, int count, string accessToken, CancellationToken ct = default)
+            => Create().ReduceAsync(cardId, count, accessToken, ct);
+
+        public static Task<ReduceSparesReply> ReduceSparesAsync(bool includeLegendary, string accessToken, CancellationToken ct = default)
+            => Create().ReduceSparesAsync(includeLegendary, accessToken, ct);
     }
 }

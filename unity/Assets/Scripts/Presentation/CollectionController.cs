@@ -150,6 +150,10 @@ namespace Kingdom.Presentation
         /// <summary>The crafting modal. Declared on the same plate in both modes; see <see cref="BuildCraftModal"/>.</summary>
         private CraftModal _craftModal;
 
+        /// <summary>The bulk Reduce panel. See <see cref="BuildSparesPanel"/>.</summary>
+        private SparesPanel _sparesPanel;
+        private Button _sparesButton;
+
         /// <summary>True when the wall is scoped to what this account owns. Delegates to the scope
         /// control so the pool and the chips can never disagree about which pool is on screen.</summary>
         private bool OwnedOnly => _scope.OwnedOnly;
@@ -284,6 +288,7 @@ namespace Kingdom.Presentation
             BuildPool();
             InitFaceBaker();
             BuildCraftModal();   // before the wall: a tile click can open it, so it must exist first
+            BuildSparesPanel();
             ShowLoadingPlate();  // before the wall: SetPool can complete a warm bake pass inline
             BuildWall();
             WireQueryBar();
@@ -434,6 +439,7 @@ namespace Kingdom.Presentation
             _manageDecksButton   = _root.Q<Button>("manage-decks-button");
             _backToDecksButton   = _root.Q<Button>("choose-another-deck");
             _decksButton         = _root.Q<Button>("decks-button");
+            _sparesButton        = _root.Q<Button>("spares-button");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -739,6 +745,7 @@ namespace Kingdom.Presentation
             _drawerOpen = true;
             _drawer.AddToClassList("deck-drawer--open");
             if (_decksButton != null) _decksButton.style.display = DisplayStyle.None;
+            if (_sparesButton != null) _sparesButton.style.display = DisplayStyle.None;
             if (EditingDeck) ShowDrawerPane(editor: true);
             else
             {
@@ -758,6 +765,7 @@ namespace Kingdom.Presentation
             _drawer?.RemoveFromClassList("deck-drawer--open");
             _deckDrawerScrim?.RemoveFromClassList("deck-drawer-scrim--open");
             if (_decksButton != null) _decksButton.style.display = DisplayStyle.Flex;
+            if (_sparesButton != null) _sparesButton.style.display = DisplayStyle.Flex;
         }
 
         private void ShowDeckChooser()
@@ -1218,7 +1226,7 @@ namespace Kingdom.Presentation
             return true;
         }
 
-        private async void CommitCraft(CardDefinition def, bool render)
+        private async void CommitCraft(CardDefinition def, bool render, int count = 1)
         {
             if (_craftBusy || def == null) return;
             _craftBusy = true;
@@ -1230,7 +1238,7 @@ namespace Kingdom.Presentation
                 if (!CraftIsCurrent(def, version, ct)) return;
                 CraftingReply reply = render
                     ? await CraftingGateway.RenderAsync(def.Id, accessToken, ct)
-                    : await CraftingGateway.ReduceAsync(def.Id, accessToken, ct);
+                    : await CraftingGateway.ReduceAsync(def.Id, count, accessToken, ct);
                 if (!CraftIsCurrent(def, version, ct)) return;
                 bool synced = await RefreshCraftCollection(accessToken, ct);
                 if (!CraftIsCurrent(def, version, ct)) return;
@@ -1272,6 +1280,8 @@ namespace Kingdom.Presentation
                 case "insufficientshards": return "Not enough shards.";
                 case "atcopycap": return "Crafting limit reached for this card.";
                 case "ownsnone": return "No copies available to reduce.";
+                case "notenoughcopies": return "You no longer have that many copies.";
+                case "nospares": return "No spare copies to reduce.";
                 case "invalidcard":
                 case "notcraftable":
                 case "notreducible": return "This card cannot be crafted.";
@@ -1293,8 +1303,90 @@ namespace Kingdom.Presentation
             }
 
             _craftModal.RenderRequested += def => CommitCraft(def, render: true);
-            _craftModal.ReduceRequested += def => CommitCraft(def, render: false);
+            _craftModal.ReduceRequested += (def, count) => CommitCraft(def, render: false, count);
             _craftModal.RefreshRequested += OpenCraft;
+        }
+
+        // ---- Spares: Reduce every copy past a deck cap ----
+
+        private void BuildSparesPanel()
+        {
+            _sparesPanel = new SparesPanel(_root);
+
+            if (!_sparesPanel.IsBound)
+            {
+                Debug.LogError("[Collection] the spares panel is missing elements on the plate, so the " +
+                               "Spares button will do nothing. Check CollectionScreen.uxml for the " +
+                               "spares block.");
+                return;
+            }
+
+            _sparesButton?.RegisterCallback<ClickEvent>(_ => OpenSpares());
+            _sparesPanel.IncludeLegendaryChanged += () => ShowSpares();
+            _sparesPanel.ReduceRequested += CommitSpares;
+        }
+
+        private void OpenSpares()
+        {
+            if (_sparesPanel == null || !_sparesPanel.IsBound || _craftBusy || _craftModal?.IsOpen == true) return;
+            SetQueryDrawerOpen(false);
+            _sparesPanel.Open();
+            // No ownership record is "never synced", not "owns nothing spare" — say so rather than
+            // drawing an empty list that reads as a clean collection.
+            ShowSpares(_owned == null ? "Your collection has not synced, so spares are unknown." : "");
+        }
+
+        /// <summary>
+        /// Draw the panel from this device's synced collection. Dearest first, so a Legendary the
+        /// box just swept in is the first row rather than somewhere down a list of commons.
+        /// </summary>
+        private void ShowSpares(string message = "")
+        {
+            var spares = new List<SpareCopies>(
+                Crafting.Spares(_db.AllCollectible(), _owned, _sparesPanel.IncludeLegendary));
+            spares.Sort((a, b) => a.Card.Rarity != b.Card.Rarity
+                ? b.Card.Rarity.CompareTo(a.Card.Rarity)
+                : string.CompareOrdinal(a.Card.Name, b.Card.Name));
+            _sparesPanel.Show(spares, message);
+        }
+
+        private bool SparesIsCurrent(CancellationToken ct)
+            => this != null && isActiveAndEnabled && !ct.IsCancellationRequested &&
+               ReferenceEquals(_account, PlayerAccount.Local) && _sparesPanel.IsOpen;
+
+        private async void CommitSpares(bool includeLegendary)
+        {
+            if (_craftBusy) return;
+            _craftBusy = true;
+            int version = _craftVersion;
+            CancellationToken ct = _craftCancel.Token;
+            try
+            {
+                string accessToken = await AuthGateway.TokenForConnectAsync();
+                if (!SparesIsCurrent(ct)) return;
+                ReduceSparesReply reply = await CraftingGateway.ReduceSparesAsync(includeLegendary, accessToken, ct);
+                if (!SparesIsCurrent(ct)) return;
+                // Refreshed on a refusal too: "nothing spare" from the server means the list this
+                // panel drew was stale, and only a sync makes the redraw below tell the truth.
+                // A lost response is reconciled the same way; the write is never repeated.
+                bool synced = await RefreshCraftCollection(accessToken, ct);
+                if (!SparesIsCurrent(ct)) return;
+                if (reply.Applied && reply.CopiesReduced > 0)
+                    ShowSpares(synced
+                        ? $"Reduced {reply.CopiesReduced} {(reply.CopiesReduced == 1 ? "copy" : "copies")} for {reply.ShardsGained} shards."
+                        : "Spares reduced. Collection refresh failed.");
+                else
+                    ShowSpares(CraftError(reply.Status));
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Craft] spares request failed: {ex.GetType().Name}");
+                if (SparesIsCurrent(ct)) ShowSpares("Craft result is unconfirmed.");
+            }
+            finally
+            {
+                if (version == _craftVersion) _craftBusy = false;
+            }
         }
 
         // ---- Mutations ----
