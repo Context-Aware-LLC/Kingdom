@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Kingdom.Net.Client.Collection;
@@ -18,7 +19,7 @@ namespace Kingdom.Session
         public static Task<CraftingReply> ReduceAsync(int cardId, int count, string accessToken, CancellationToken ct = default)
             => Create().ReduceAsync(cardId, count, accessToken, ct);
 
-        public static Task<ReduceSparesReply> ReduceSparesAsync(bool includeLegendary, string accessToken, CancellationToken ct = default)
-            => Create().ReduceSparesAsync(includeLegendary, accessToken, ct);
+        public static Task<ReduceSparesReply> ReduceSparesAsync(IReadOnlyDictionary<int, int> cards, string accessToken, CancellationToken ct = default)
+            => Create().ReduceSparesAsync(cards, accessToken, ct);
     }
 }

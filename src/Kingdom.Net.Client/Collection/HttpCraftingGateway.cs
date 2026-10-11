@@ -26,7 +26,7 @@ namespace Kingdom.Net.Client.Collection
         }
     }
 
-    /// <summary>The receipt for a Reduce of every spare copy. <see cref="Applied"/> only on a server-confirmed one.</summary>
+    /// <summary>The receipt for a bulk Reduce of spare copies. <see cref="Applied"/> only on a server-confirmed one.</summary>
     public sealed class ReduceSparesReply
     {
         public string Status { get; }
@@ -69,14 +69,28 @@ namespace Kingdom.Net.Client.Collection
             => SendAsync(cardId, "reduce", count, accessToken, ct);
 
         /// <summary>
-        /// Break down every copy held past a deck cap. The request names no card: the server decides
-        /// what is spare, and the reply says what it actually destroyed and paid.
+        /// Break down spare copies of many cards in one server transaction: all of them or none.
+        /// <paramref name="cards"/> is card id to copies. The server holds every count to that
+        /// card's spares and refuses the whole request (<c>notspare</c>) if one is over.
         /// </summary>
-        public async Task<ReduceSparesReply> ReduceSparesAsync(bool includeLegendary, string accessToken,
+        public async Task<ReduceSparesReply> ReduceSparesAsync(IReadOnlyDictionary<int, int> cards, string accessToken,
                                                                CancellationToken ct = default)
         {
             if (_baseUrl.Length == 0) return new ReduceSparesReply("unavailable");
             if (string.IsNullOrWhiteSpace(accessToken)) return new ReduceSparesReply("unauthenticated");
+            if (cards == null || cards.Count == 0) return new ReduceSparesReply("invalidrequest");
+
+            var ids = new List<int>(cards.Keys);
+            ids.Sort();
+            var json = new System.Text.StringBuilder("{\"cards\":{");
+            for (int i = 0; i < ids.Count; i++)
+            {
+                if (ids[i] <= 0 || cards[ids[i]] < 1) return new ReduceSparesReply("invalidrequest");
+                if (i > 0) json.Append(',');
+                json.Append('"').Append(ids[i].ToString(CultureInfo.InvariantCulture)).Append("\":")
+                    .Append(cards[ids[i]].ToString(CultureInfo.InvariantCulture));
+            }
+            json.Append("}}");
             var headers = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("Authorization", "Bearer " + accessToken),
@@ -86,8 +100,7 @@ namespace Kingdom.Net.Client.Collection
             try
             {
                 response = await _http.PostJsonAsync(_baseUrl + "/crafting/spares/reduce",
-                    includeLegendary ? "{\"includeLegendary\":true}" : "{\"includeLegendary\":false}",
-                    headers, ct).ConfigureAwait(false);
+                    json.ToString(), headers, ct).ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -95,12 +108,13 @@ namespace Kingdom.Net.Client.Collection
             }
             if (response.StatusCode == 401) return new ReduceSparesReply("unauthenticated");
             if (response.StatusCode == 503 || response.StatusCode == 404) return new ReduceSparesReply("unavailable");
+            if (response.StatusCode == 400) return new ReduceSparesReply("invalidrequest");
             if (response.IsTransportFailure || (!response.IsSuccess && response.StatusCode != 409))
                 return new ReduceSparesReply("offline");
             if (!AuthJson.TryReadTopLevel(response.Body, out var fields) ||
                 !AuthJson.TryString(fields, "status", out string status)) return new ReduceSparesReply("malformed");
             bool expected = response.StatusCode == 409
-                ? status == "nospares"
+                ? status == "notspare"
                 : status == "reduced" || status == "replayed";
             if (!expected ||
                 !AuthJson.TryInt64(fields, "copiesReduced", out long copies) || copies < 0 || copies > int.MaxValue ||

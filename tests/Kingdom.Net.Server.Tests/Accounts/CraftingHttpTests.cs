@@ -236,7 +236,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
         }
 
         [Test, CancelAfter(30_000)]
-        public async Task Reduce_spares_takes_every_copy_past_the_deck_cap_and_legendaries_only_when_asked()
+        public async Task Reduce_spares_takes_the_copies_asked_for_and_never_one_a_deck_can_play()
         {
             var ledger = new InMemoryEntitlementLedger();
             var accounts = new InMemoryAccountStore(new Clock());
@@ -251,6 +251,13 @@ namespace Kingdom.Net.Server.Tests.Accounts
             await Grant(ledger, owner, epic.Id, 3);
             await Grant(ledger, owner, legendary.Id, 3);
             Task<long> Copies(int cardId) => ledger.BalanceAsync(owner.PlayerId, BoosterPackGrantService.CardItemPrefix + cardId);
+            async Task AssertUntouched(string why)
+            {
+                Assert.That(await Copies(common.Id), Is.EqualTo(5), why);
+                Assert.That(await Copies(atCap.Id), Is.EqualTo(2), why);
+                Assert.That(await Copies(epic.Id), Is.EqualTo(3), why);
+                Assert.That(await Copies(legendary.Id), Is.EqualTo(3), why);
+            }
             var app = ServerApp.Build(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",
@@ -264,50 +271,71 @@ namespace Kingdom.Net.Server.Tests.Accounts
             {
                 using var http = new HttpClient { BaseAddress = new Uri(app.Urls.First()) };
                 http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "valid");
+                const string route = "/crafting/spares/reduce";
                 long before = await ledger.BalanceAsync(owner.PlayerId, ShardValues.LedgerItem);
-                long commonsAndEpic = 3 * ShardValues.ForRarity(Rarity.COMMON) + ShardValues.ForRarity(Rarity.EPIC);
 
-                // No body at all: the default leaves Legendaries alone.
-                using var first = await http.PostAsync("/crafting/spares/reduce", null);
-                using JsonDocument firstBody = JsonDocument.Parse(await first.Content.ReadAsStringAsync());
+                // Each of these is a whole request refused, including the lines in it that were fine.
+                string[] notSpare =
+                {
+                    $"{{\"cards\":{{\"{common.Id}\":4}}}}",                          // one past the 3 that are spare
+                    $"{{\"cards\":{{\"{common.Id}\":3,\"{atCap.Id}\":1}}}}",         // a copy a deck can play
+                    $"{{\"cards\":{{\"{common.Id}\":3,\"{legendary.Id}\":3}}}}",     // the last Legendary
+                    "{\"cards\":{\"999999999\":1}}",                                 // no such card
+                };
+                foreach (string body in notSpare)
+                {
+                    using var refused = await http.PostAsync(route, Json(body));
+                    using JsonDocument refusedBody = JsonDocument.Parse(await refused.Content.ReadAsStringAsync());
+                    Assert.That(refused.StatusCode, Is.EqualTo(HttpStatusCode.Conflict), body);
+                    Assert.That(refusedBody.RootElement.GetProperty("status").GetString(), Is.EqualTo("notspare"), body);
+                    await AssertUntouched(body);
+                }
+
+                string[] invalid =
+                {
+                    "{}",
+                    "{\"cards\":{}}",
+                    "{\"cards\":[1,2]}",
+                    $"{{\"cards\":{{\"{common.Id}\":0}}}}",
+                    $"{{\"cards\":{{\"{common.Id}\":-1}}}}",
+                    $"{{\"cards\":{{\"{common.Id}\":1.5}}}}",
+                    $"{{\"cards\":{{\"{common.Id}\":\"2\"}}}}",
+                    $"{{\"cards\":{{\"{common.Id}\":1,\"{common.Id}\":1}}}}",        // one card, twice
+                    $"{{\"cards\":{{\"+{common.Id}\":1}}}}",
+                    "{\"cards\":{\"abc\":1}}",
+                    "not json",
+                };
+                foreach (string body in invalid)
+                {
+                    using var refused = await http.PostAsync(route, Json(body));
+                    Assert.That(refused.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest), body);
+                    await AssertUntouched(body);
+                }
+                using var bodiless = await http.PostAsync(route, null);
+                Assert.That(bodiless.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+                Assert.That(await ledger.BalanceAsync(owner.PlayerId, ShardValues.LedgerItem), Is.EqualTo(before));
+
+                // The player kept one spare common and both spare Legendaries back.
+                long paid = 2 * ShardValues.ForRarity(Rarity.COMMON) + ShardValues.ForRarity(Rarity.EPIC);
+                using var partial = await http.PostAsync(route, Json($"{{\"cards\":{{\"{epic.Id}\":1,\"{common.Id}\":2}}}}"));
+                using JsonDocument partialBody = JsonDocument.Parse(await partial.Content.ReadAsStringAsync());
                 Assert.Multiple(() =>
                 {
-                    Assert.That(first.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                    Assert.That(firstBody.RootElement.GetProperty("status").GetString(), Is.EqualTo("reduced"));
-                    Assert.That(firstBody.RootElement.GetProperty("copiesReduced").GetInt32(), Is.EqualTo(4));
-                    Assert.That(firstBody.RootElement.GetProperty("shardsGained").GetInt64(), Is.EqualTo(commonsAndEpic));
-                    Assert.That(firstBody.RootElement.GetProperty("shards").GetInt64(), Is.EqualTo(before + commonsAndEpic));
+                    Assert.That(partial.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                    Assert.That(partialBody.RootElement.GetProperty("status").GetString(), Is.EqualTo("reduced"));
+                    Assert.That(partialBody.RootElement.GetProperty("copiesReduced").GetInt32(), Is.EqualTo(3));
+                    Assert.That(partialBody.RootElement.GetProperty("shardsGained").GetInt64(), Is.EqualTo(paid));
+                    Assert.That(partialBody.RootElement.GetProperty("shards").GetInt64(), Is.EqualTo(before + paid));
                 });
-                Assert.Multiple(async () =>
-                {
-                    Assert.That(await Copies(common.Id), Is.EqualTo(2));
-                    Assert.That(await Copies(atCap.Id), Is.EqualTo(2));
-                    Assert.That(await Copies(epic.Id), Is.EqualTo(2));
-                    Assert.That(await Copies(legendary.Id), Is.EqualTo(3), "Legendaries stay unless the request opts in.");
-                });
-
-                using var again = await http.PostAsync("/crafting/spares/reduce", Json("{\"includeLegendary\":false}"));
-                using JsonDocument againBody = JsonDocument.Parse(await again.Content.ReadAsStringAsync());
-                Assert.That(again.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
-                Assert.That(againBody.RootElement.GetProperty("status").GetString(), Is.EqualTo("nospares"));
-
-                // Anything but a JSON true is not consent to destroy a Legendary.
-                using var truthy = await http.PostAsync("/crafting/spares/reduce", Json("{\"includeLegendary\":\"true\"}"));
-                Assert.That(truthy.StatusCode, Is.EqualTo(HttpStatusCode.Conflict));
+                Assert.That(await Copies(common.Id), Is.EqualTo(3));
+                Assert.That(await Copies(epic.Id), Is.EqualTo(2));
                 Assert.That(await Copies(legendary.Id), Is.EqualTo(3));
 
-                using var withLegendary = await http.PostAsync("/crafting/spares/reduce", Json("{\"includeLegendary\":true}"));
-                using JsonDocument legendaryBody = JsonDocument.Parse(await withLegendary.Content.ReadAsStringAsync());
-                Assert.Multiple(() =>
-                {
-                    Assert.That(withLegendary.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-                    Assert.That(legendaryBody.RootElement.GetProperty("copiesReduced").GetInt32(), Is.EqualTo(2));
-                    Assert.That(legendaryBody.RootElement.GetProperty("shardsGained").GetInt64(),
-                        Is.EqualTo(2 * ShardValues.ForRarity(Rarity.LEGENDARY)));
-                });
+                using var legendaries = await http.PostAsync(route, Json($"{{\"cards\":{{\"{legendary.Id}\":2}}}}"));
+                Assert.That(legendaries.StatusCode, Is.EqualTo(HttpStatusCode.OK));
                 Assert.That(await Copies(legendary.Id), Is.EqualTo(1));
                 Assert.That(await ledger.BalanceAsync(owner.PlayerId, ShardValues.LedgerItem),
-                    Is.EqualTo(before + commonsAndEpic + 2 * ShardValues.ForRarity(Rarity.LEGENDARY)));
+                    Is.EqualTo(before + paid + 2 * ShardValues.ForRarity(Rarity.LEGENDARY)));
             }
             finally
             {

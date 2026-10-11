@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Kingdom.Net.Client.Auth;
 using Kingdom.Net.Client.Collection;
@@ -93,32 +94,46 @@ namespace Kingdom.Net.Client.Tests.Collection
             Assert.That(reply.CopiesOwned, Is.EqualTo(2));
         }
 
-        [TestCase(false, "{\"includeLegendary\":false}")]
-        [TestCase(true, "{\"includeLegendary\":true}")]
-        public async Task Reduce_spares_names_no_card_and_reports_what_the_server_paid(bool legendary, string body)
+        [Test]
+        public async Task Reduce_spares_sends_the_selected_copies_and_reports_what_the_server_paid()
         {
-            var http = new FakeAuthHttp().Reply(200, "{\"status\":\"reduced\",\"copiesReduced\":7,\"shardsGained\":145,\"shards\":200}");
-            var reply = await new HttpCraftingGateway("https://example.test", http).ReduceSparesAsync(legendary, "token");
+            var http = new FakeAuthHttp().Reply(200, "{\"status\":\"reduced\",\"copiesReduced\":4,\"shardsGained\":145,\"shards\":200}");
+            var cards = new Dictionary<int, int> { [1020] = 1, [7] = 3 };
+            var reply = await new HttpCraftingGateway("https://example.test", http).ReduceSparesAsync(cards, "token");
             Assert.Multiple(() =>
             {
                 Assert.That(reply.Applied, Is.True);
-                Assert.That(reply.CopiesReduced, Is.EqualTo(7));
+                Assert.That(reply.CopiesReduced, Is.EqualTo(4));
                 Assert.That(reply.ShardsGained, Is.EqualTo(145));
                 Assert.That(reply.Shards, Is.EqualTo(200));
                 Assert.That(http.Requests[0].Url, Is.EqualTo("https://example.test/crafting/spares/reduce"));
-                Assert.That(http.Requests[0].Body, Is.EqualTo(body));
+                Assert.That(http.Requests[0].Body, Is.EqualTo("{\"cards\":{\"7\":3,\"1020\":1}}"));
             });
         }
 
-        [TestCase(409, "{\"status\":\"nospares\",\"copiesReduced\":0,\"shardsGained\":0,\"shards\":12}", "nospares")]
+        [Test]
+        public async Task Reduce_spares_with_nothing_selected_never_reaches_the_server()
+        {
+            var http = new FakeAuthHttp();
+            var gateway = new HttpCraftingGateway("https://example.test", http);
+            var empty = await gateway.ReduceSparesAsync(new Dictionary<int, int>(), "token");
+            var zero = await gateway.ReduceSparesAsync(new Dictionary<int, int> { [7] = 0 }, "token");
+            Assert.That(empty.Status, Is.EqualTo("invalidrequest"));
+            Assert.That(zero.Status, Is.EqualTo("invalidrequest"));
+            Assert.That(http.Requests, Is.Empty);
+        }
+
+        [TestCase(409, "{\"status\":\"notspare\",\"copiesReduced\":0,\"shardsGained\":0,\"shards\":12}", "notspare")]
         [TestCase(200, "{\"status\":\"reduced\",\"copiesReduced\":0,\"shardsGained\":0,\"shards\":12}", "malformed")]
         [TestCase(200, "{\"status\":\"reduced\",\"copiesReduced\":7,\"shards\":12}", "malformed")]
-        [TestCase(200, "{\"status\":\"nospares\",\"copiesReduced\":0,\"shardsGained\":0,\"shards\":12}", "malformed")]
+        [TestCase(200, "{\"status\":\"notspare\",\"copiesReduced\":0,\"shardsGained\":0,\"shards\":12}", "malformed")]
+        [TestCase(400, "{\"status\":\"invalidrequest\"}", "invalidrequest")]
         [TestCase(500, "", "offline")]
         public async Task Reduce_spares_never_claims_a_mutation_it_was_not_told_about(int http, string body, string status)
         {
             var fake = new FakeAuthHttp().Reply(http, body);
-            var reply = await new HttpCraftingGateway("https://example.test", fake).ReduceSparesAsync(false, "token");
+            var reply = await new HttpCraftingGateway("https://example.test", fake)
+                .ReduceSparesAsync(new Dictionary<int, int> { [7] = 3 }, "token");
             Assert.That(reply.Status, Is.EqualTo(status));
             Assert.That(reply.Applied, Is.False);
             Assert.That(fake.Requests.Count, Is.EqualTo(1));

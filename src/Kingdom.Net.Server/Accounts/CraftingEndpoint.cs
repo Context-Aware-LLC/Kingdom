@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Kingdom.Core.Cards;
@@ -52,9 +53,13 @@ namespace Kingdom.Net.Server.Accounts
             return new(reduced.Status.ToString().ToLowerInvariant(), success ? 200 : 409, reduced.Craft);
         }
 
-        /// <summary>The bulk Reduce: every copy past a deck cap, in one server-minted transaction.</summary>
+        /// <summary>
+        /// The bulk Reduce: the spare copies the player left selected, in one server-minted
+        /// transaction. <paramref name="cards"/> is card id to copies, and null when the body did
+        /// not parse into one.
+        /// </summary>
         public static async Task<ReduceSparesResult> ReduceSparesAsync(
-            string? bearerToken, bool includeLegendary,
+            string? bearerToken, IReadOnlyDictionary<int, int>? cards,
             IIdentityTokenVerifier? verifier, IAccountStore? accounts,
             CraftingService? crafting,
             CancellationToken ct = default)
@@ -63,15 +68,16 @@ namespace Kingdom.Net.Server.Accounts
             if (verifier is null || accounts is null || crafting is null) return new("unavailable", 503);
             var verified = await verifier.VerifyAsync(bearerToken, ct).ConfigureAwait(false);
             if (!verified.IsSuccess || verified.Identity is null) return new("unauthenticated", 401);
+            if (cards is null || cards.Count == 0) return new("invalidrequest", 400);
 
             Account account = await accounts.ResolveOrCreateAsync("supabase",
                 CredentialHash.Of(verified.Identity.Subject), verified.Identity.Email, ct).ConfigureAwait(false);
             if (!EconomyAccountPolicy.IsDurable(account)) return new("unauthenticated", 401);
 
             ReduceSparesOutcome outcome = await crafting.ReduceSparesAsync(
-                account, includeLegendary, Guid.NewGuid().ToString("N"), ct).ConfigureAwait(false);
+                account, cards, Guid.NewGuid().ToString("N"), ct).ConfigureAwait(false);
             return new(outcome.Status.ToString().ToLowerInvariant(),
-                outcome.Status == ReduceSparesStatus.NoSpares ? 409 : 200, outcome);
+                outcome.Status == ReduceSparesStatus.NotSpare ? 409 : 200, outcome);
         }
     }
 }

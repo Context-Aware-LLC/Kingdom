@@ -231,7 +231,7 @@ namespace Kingdom.Core.Collection
 
         /// <summary>
         /// Every card held past its deck cap, and what breaking those copies down would pay — the
-        /// whole of what a bulk Reduce does, in <paramref name="cards"/> order.
+        /// most a bulk Reduce can take, in <paramref name="cards"/> order.
         ///
         /// <para><b>The cap is <see cref="DeckValidator.MaxCopies"/>, the same one Render stops at</b>,
         /// so a spare is exactly a copy no deck can run and breaking every one of them down can never
@@ -240,6 +240,10 @@ namespace Kingdom.Core.Collection
         /// <para><b>Legendaries are left out unless asked for</b> (Sam, 2026-10-11): a second
         /// Legendary is the copy a player is likeliest to regret, so the bulk action takes it only
         /// on an explicit opt-in. A single-card Reduce is unaffected.</para>
+        ///
+        /// <para><b>This is the panel's opening offer, not what the server reduces.</b> The player
+        /// can take copies back out of it, so the request names its own cards and counts and the
+        /// server holds each one to <see cref="SpareCount"/>.</para>
         ///
         /// <para>A null <paramref name="owned"/> is "ownership unknown", not "owns everything", and
         /// has no spares.</para>
@@ -255,11 +259,24 @@ namespace Kingdom.Core.Collection
                 if (def == null || !def.PoolEligible) continue;
                 if (def.Rarity == Rarity.LEGENDARY && !includeLegendary) continue;
 
-                int spare = owned.CopiesOwned(def.Id) - DeckValidator.MaxCopies(def.Rarity);
+                int spare = SpareCount(def, owned.CopiesOwned(def.Id));
                 if (spare <= 0) continue;
                 rows.Add(new SpareCopies(def, spare, ShardValues.ForRarity(def.Rarity) * spare));
             }
             return rows;
+        }
+
+        /// <summary>
+        /// Copies of one card held past <see cref="DeckValidator.MaxCopies"/> — the most a bulk
+        /// Reduce may take of it. 0 for an unknown or non-collectible card. Rarity-blind: a
+        /// Legendary's spare is as spare as a common's; leaving it out is <see cref="Spares"/>'
+        /// default, not a limit.
+        /// </summary>
+        public static int SpareCount(CardDefinition? def, int copiesOwned)
+        {
+            if (def == null || !def.PoolEligible) return 0;
+            int spare = copiesOwned - DeckValidator.MaxCopies(def.Rarity);
+            return spare > 0 ? spare : 0;
         }
 
         /// <summary>Rarity lookup then the <c>CardDefinition</c> overload; unknown ids refuse.</summary>

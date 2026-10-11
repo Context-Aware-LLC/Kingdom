@@ -1564,13 +1564,23 @@
     margin-right: var(--space-6);
     padding: var(--space-3) var(--space-4);
 }
+/* A row is a button: each tap takes one copy back out of what will be broken down, the way a tap
+ * on a deck line takes a copy out of the deck. */
 .spares-row {
     flex-direction: row;
     align-items: center;
     flex-shrink: 0;
+    min-height: 64px;
     padding: var(--space-2) 0;
     border-bottom-width: 1px;
     border-bottom-color: var(--surface-3);
+}
+.spares-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+/* Every copy taken back out. Still listed, so the next tap can put them all back. */
+.spares-row--kept {
+    opacity: 0.45;
 }
 .spares-row__name {
     flex-grow: 1;

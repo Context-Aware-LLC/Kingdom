@@ -1281,7 +1281,7 @@ namespace Kingdom.Presentation
                 case "atcopycap": return "Crafting limit reached for this card.";
                 case "ownsnone": return "No copies available to reduce.";
                 case "notenoughcopies": return "You no longer have that many copies.";
-                case "nospares": return "No spare copies to reduce.";
+                case "notspare": return "Your collection changed. Check the list and try again.";
                 case "invalidcard":
                 case "notcraftable":
                 case "notreducible": return "This card cannot be crafted.";
@@ -1340,21 +1340,21 @@ namespace Kingdom.Presentation
         /// Draw the panel from this device's synced collection. Dearest first, so a Legendary the
         /// box just swept in is the first row rather than somewhere down a list of commons.
         /// </summary>
-        private void ShowSpares(string message = "")
+        private void ShowSpares(string message = "", bool reduced = false)
         {
             var spares = new List<SpareCopies>(
                 Crafting.Spares(_db.AllCollectible(), _owned, _sparesPanel.IncludeLegendary));
             spares.Sort((a, b) => a.Card.Rarity != b.Card.Rarity
                 ? b.Card.Rarity.CompareTo(a.Card.Rarity)
                 : string.CompareOrdinal(a.Card.Name, b.Card.Name));
-            _sparesPanel.Show(spares, message);
+            _sparesPanel.Show(spares, message, reduced);
         }
 
         private bool SparesIsCurrent(CancellationToken ct)
             => this != null && isActiveAndEnabled && !ct.IsCancellationRequested &&
                ReferenceEquals(_account, PlayerAccount.Local) && _sparesPanel.IsOpen;
 
-        private async void CommitSpares(bool includeLegendary)
+        private async void CommitSpares(IReadOnlyDictionary<int, int> cards)
         {
             if (_craftBusy) return;
             _craftBusy = true;
@@ -1364,9 +1364,9 @@ namespace Kingdom.Presentation
             {
                 string accessToken = await AuthGateway.TokenForConnectAsync();
                 if (!SparesIsCurrent(ct)) return;
-                ReduceSparesReply reply = await CraftingGateway.ReduceSparesAsync(includeLegendary, accessToken, ct);
+                ReduceSparesReply reply = await CraftingGateway.ReduceSparesAsync(cards, accessToken, ct);
                 if (!SparesIsCurrent(ct)) return;
-                // Refreshed on a refusal too: "nothing spare" from the server means the list this
+                // Refreshed on a refusal too: "not spare" from the server means the list this
                 // panel drew was stale, and only a sync makes the redraw below tell the truth.
                 // A lost response is reconciled the same way; the write is never repeated.
                 bool synced = await RefreshCraftCollection(accessToken, ct);
@@ -1374,7 +1374,7 @@ namespace Kingdom.Presentation
                 if (reply.Applied && reply.CopiesReduced > 0)
                     ShowSpares(synced
                         ? $"Reduced {reply.CopiesReduced} {(reply.CopiesReduced == 1 ? "copy" : "copies")} for {reply.ShardsGained} shards."
-                        : "Spares reduced. Collection refresh failed.");
+                        : "Spares reduced. Collection refresh failed.", reduced: true);
                 else
                     ShowSpares(CraftError(reply.Status));
             }

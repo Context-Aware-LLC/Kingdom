@@ -1254,12 +1254,35 @@ namespace Kingdom.Net.Server
                 string? header = context.Request.Headers["Authorization"];
                 string? bearer = header?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true
                     ? header.Substring("Bearer ".Length).Trim() : null;
-                bool includeLegendary;
+                // {"cards":{"<card id>":<copies>}}. One entry that is not a whole card id against a
+                // whole positive count voids the request: a Reduce that dropped the line it could
+                // not read would destroy a different set of cards from the one the player confirmed.
+                Dictionary<int, int>? cards = null;
                 using (System.Text.Json.JsonDocument body = await CraftBodyAsync(context).ConfigureAwait(false))
-                    includeLegendary = body.RootElement.TryGetProperty("includeLegendary", out var flag) &&
-                                       flag.ValueKind == System.Text.Json.JsonValueKind.True;
+                {
+                    if (body.RootElement.TryGetProperty("cards", out var entries) &&
+                        entries.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    {
+                        cards = new Dictionary<int, int>();
+                        foreach (System.Text.Json.JsonProperty entry in entries.EnumerateObject())
+                        {
+                            // More entries than there are cards is not a collection, and stopping
+                            // here bounds the work a hostile body can ask for.
+                            if (cards.Count >= db.AllCollectible().Count ||
+                                !int.TryParse(entry.Name, System.Globalization.NumberStyles.None,
+                                    System.Globalization.CultureInfo.InvariantCulture, out int cardId) ||
+                                entry.Value.ValueKind != System.Text.Json.JsonValueKind.Number ||
+                                !entry.Value.TryGetInt32(out int copies) || copies < 1 ||
+                                !cards.TryAdd(cardId, copies))
+                            {
+                                cards = null;
+                                break;
+                            }
+                        }
+                    }
+                }
                 ReduceSparesResult result = await CraftingEndpoint.ReduceSparesAsync(
-                    bearer, includeLegendary, cfg.TokenVerifier, cfg.AccountStore,
+                    bearer, cards, cfg.TokenVerifier, cfg.AccountStore,
                     crafting, context.RequestAborted);
                 context.Response.Headers["Cache-Control"] = "no-store";
                 return Results.Json(new

@@ -96,6 +96,19 @@ namespace Kingdom.Core.Tests.Collection
         }
 
         [Test]
+        public void A_Spare_Count_Is_The_Copies_Past_The_Cap_Whatever_The_Rarity()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(Crafting.SpareCount(First(Rarity.COMMON), 5), Is.EqualTo(3));
+                Assert.That(Crafting.SpareCount(First(Rarity.COMMON), 2), Is.Zero);
+                Assert.That(Crafting.SpareCount(First(Rarity.LEGENDARY), 3), Is.EqualTo(2),
+                    "Leaving Legendaries out is the offer's default, not a limit on what is spare.");
+                Assert.That(Crafting.SpareCount(null, 9), Is.Zero);
+            });
+        }
+
+        [Test]
         public void Unknown_Ownership_Has_No_Spares()
         {
             Assert.That(Crafting.Spares(LiveCardSet.Cards, null, includeLegendary: true), Is.Empty,
