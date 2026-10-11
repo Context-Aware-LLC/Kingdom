@@ -45,7 +45,8 @@
         <ui:VisualElement name="query-bar" picking-mode="Ignore" class="col-query chrome-panel chrome-panel--outer">
             <ui:ScrollView name="query-scroll" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="col-query-scroll">
                 <ui:VisualElement class="col-query-row">
-                    <ui:TextField name="query-search" placeholder-text="Search cards" hide-placeholder-on-focus="true" emoji-fallback-support="false" class="col-search chrome-input"/>                </ui:VisualElement>
+                    <ui:TextField name="query-search" placeholder-text="Search cards" hide-placeholder-on-focus="true" emoji-fallback-support="false" class="col-search chrome-input"/>
+                </ui:VisualElement>
                 <ui:VisualElement class="col-query-utility-row">
                     <ui:VisualElement name="scope-row" class="col-scope">
                         <ui:Button name="scope-owned" text="Owned" class="db-chip db-chip--on"/>
