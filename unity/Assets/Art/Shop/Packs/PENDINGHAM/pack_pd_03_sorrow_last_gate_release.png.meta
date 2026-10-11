@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: afc96c4541b40344593efc2bdbf0b135
+guid: f6808e283ec61584da02906136041650
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2655329079450717485
-    second: pack_ef_01_pyra_cinderbound_1_0
+      213: -7575006186088155987
+    second: pack_pd_03_sorrow_last_gate_release_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -141,7 +141,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pack_ef_01_pyra_cinderbound_1_0
+      name: pack_pd_03_sorrow_last_gate_release_0
       rect:
         serializedVersion: 2
         x: 0
@@ -156,8 +156,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d2dcc6eaabf99d420800000000000000
-      internalID: 2655329079450717485
+      spriteID: da434d2020c20e690800000000000000
+      internalID: -7575006186088155987
       vertices: []
       indices: 
       edges: []

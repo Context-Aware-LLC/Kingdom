@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: f6808e283ec61584da02906136041650
+guid: 647be93202f14e6486112a92979af9d2
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7575006186088155987
-    second: pack_ef_03_sorrow_last_gate_release_0
+      213: 3829638880070157827
+    second: pack_pd_crown_purple_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -48,12 +48,12 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 1
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spriteGenerateFallbackPhysicsShape: 1
+  spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationMethod: 0
@@ -77,7 +77,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -141,7 +141,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pack_ef_03_sorrow_last_gate_release_0
+      name: pack_pd_crown_purple_0
       rect:
         serializedVersion: 2
         x: 0
@@ -156,8 +156,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: da434d2020c20e690800000000000000
-      internalID: -7575006186088155987
+      spriteID: bc8bf43362ab40f48218adc4a7b647aa
+      internalID: 3829638880070157827
       vertices: []
       indices: 
       edges: []
@@ -166,7 +166,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 76905fbc441148709f88bf54e40f09fa
     internalID: 0
     vertices: []
     indices: 

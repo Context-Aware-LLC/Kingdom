@@ -16,17 +16,17 @@ MonoBehaviour:
   m_GUID: 166e9aa6348caf743a782d5b02f7125d
   m_SerializeEntries:
   - m_GUID: 647be93202f14e6486112a92979af9d2
-    m_Address: pack_art/pack_ef_crown_purple
+    m_Address: pack_art/pack_pd_crown_purple
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 254c9686329226f4ea2ce80e625bcacc
-    m_Address: pack_art/pack_ef_02_maren_threading_catastrophe
+    m_Address: pack_art/pack_pd_02_maren_threading_catastrophe
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4a7851a74a571b84c9a77bf60310a318
-    m_Address: pack_art/pack_ef_04_thalen_smallest_force
+    m_Address: pack_art/pack_pd_04_thalen_smallest_force
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -36,12 +36,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: afc96c4541b40344593efc2bdbf0b135
-    m_Address: pack_art/pack_ef_01_pyra_cinderbound_1
+    m_Address: pack_art/pack_pd_01_pyra_cinderbound_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6808e283ec61584da02906136041650
-    m_Address: pack_art/pack_ef_03_sorrow_last_gate_release
+    m_Address: pack_art/pack_pd_03_sorrow_last_gate_release
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

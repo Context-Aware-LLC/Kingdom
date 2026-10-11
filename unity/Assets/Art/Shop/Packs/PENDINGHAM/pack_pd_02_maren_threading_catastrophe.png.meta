@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: 6464191545345378662
-    second: pack_ef_02_maren_threading_catastrophe_0
+    second: pack_pd_02_maren_threading_catastrophe_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -141,7 +141,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pack_ef_02_maren_threading_catastrophe_0
+      name: pack_pd_02_maren_threading_catastrophe_0
       rect:
         serializedVersion: 2
         x: 0

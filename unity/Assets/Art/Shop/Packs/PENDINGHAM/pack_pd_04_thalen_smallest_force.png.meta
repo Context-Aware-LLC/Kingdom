@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 647be93202f14e6486112a92979af9d2
+guid: 4a7851a74a571b84c9a77bf60310a318
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 3829638880070157827
-    second: pack_ef_crown_purple_0
+      213: 3528275825809118512
+    second: pack_pd_04_thalen_smallest_force_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -48,12 +48,12 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 1
   spriteExtrude: 1
-  spriteMeshType: 0
+  spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spriteGenerateFallbackPhysicsShape: 0
+  spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationMethod: 0
@@ -77,7 +77,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -141,7 +141,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pack_ef_crown_purple_0
+      name: pack_pd_04_thalen_smallest_force_0
       rect:
         serializedVersion: 2
         x: 0
@@ -156,8 +156,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: bc8bf43362ab40f48218adc4a7b647aa
-      internalID: 3829638880070157827
+      spriteID: 03553f28b24f6f030800000000000000
+      internalID: 3528275825809118512
       vertices: []
       indices: 
       edges: []
@@ -166,7 +166,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 76905fbc441148709f88bf54e40f09fa
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 
