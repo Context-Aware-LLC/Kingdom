@@ -405,7 +405,8 @@ namespace Emberfall.Presentation
             Wire(root, "btn-account-close", CloseAccountModal);
             Wire(root, "btn-account-new", OnNewAccount);
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // Development players and the Editor only; a release build never wires the switcher.
+            if (!Debug.isDebugBuild) return;
             var entry = root.Q<Button>("btn-switch-account");
             if (_allowAccountSwitch)
             {
@@ -417,7 +418,6 @@ namespace Emberfall.Presentation
             {
                 entry.style.display = DisplayStyle.None;
             }
-#endif
         }
 
         private void OpenAccountModal()

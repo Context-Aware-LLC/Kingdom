@@ -70,9 +70,7 @@ namespace Emberfall.Presentation
         private NetworkedMatchSession _net;
         private readonly MatchQuestWatch _questWatch = new MatchQuestWatch();
         private MainThreadMatchSession _view;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        private DesyncFaultInjector _faultInjector; // [DesyncDbg] dev tool — editor/dev builds only
-#endif
+        private DesyncFaultInjector _faultInjector; // [DesyncDbg] dev tool — null outside the editor and dev builds
         private LoadingOverlay _overlay;
         private VersusOverlay _versus;
 
@@ -97,10 +95,9 @@ namespace Emberfall.Presentation
         private void Update()
         {
             _view?.Pump();
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
             // [DesyncDbg] dev tool — F9 arms a one-shot wire fault (see DesyncFaultInjector).
-            if (Keyboard.current?.f9Key.wasPressedThisFrame == true) _faultInjector?.ArmOneShot();
-#endif
+            if (_faultInjector != null && Keyboard.current?.f9Key.wasPressedThisFrame == true)
+                _faultInjector.ArmOneShot();
         }
 
         private IEnumerator Boot()
@@ -184,11 +181,12 @@ namespace Emberfall.Presentation
             };
 
             IWireTransport transport = new WebSocketTransport();
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            // [DesyncDbg] dev tool — see DesyncFaultInjector.
-            _faultInjector = new DesyncFaultInjector(transport);
-            transport = _faultInjector;
-#endif
+            if (Debug.isDebugBuild)
+            {
+                // [DesyncDbg] dev tool — see DesyncFaultInjector.
+                _faultInjector = new DesyncFaultInjector(transport);
+                transport = _faultInjector;
+            }
             _net = new NetworkedMatchSession(transport, clientOptions);
             _view = new MainThreadMatchSession(_net);
 

@@ -8,8 +8,8 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     // [DesyncDbg] dev tool — C-G1-4 positive-path proof + resync-ladder repro (2026-07-21).
-    // Kept (not stripped): compile-guarded editor/dev-build only via NetworkedGameBootstrap's
-    // #if wiring, and it is the live repro for the OPEN resync-no-answer bug (client requested a
+    // Kept (not stripped): constructed in the editor and dev builds only, by NetworkedGameBootstrap's
+    // Debug.isDebugBuild check, and it is the live repro for the OPEN resync-no-answer bug (client requested a
     // resync after the injected mismatch; the server never re-sent — both clients soft-locked).
     //
     // IWireTransport decorator: passes every frame through untouched until armed (F9 in

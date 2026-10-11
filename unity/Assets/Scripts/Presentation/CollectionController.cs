@@ -1343,14 +1343,14 @@ namespace Emberfall.Presentation
         // NavigationCancelEvent. The gesture closes the drawer first, then exits Collection on the
         // next invocation, regardless of wall scroll position.
         //
-        // The DEVELOPMENT_BUILD block logs the data the issue asks for: scroll offset, list content
+        // The development-build block logs the data the issue asks for: scroll offset, list content
         // height, and layout call count sampled every 500ms. On a loop-free build the layout count
         // should only tick up on resize or filter changes, not while idle or during a scroll gesture.
         private void WireCollectionScroll()
         {
             _root.RegisterCallback<NavigationCancelEvent>(_ => HandleBack());
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (!Debug.isDebugBuild) return;
             var scroll = _collectionList?.Q<ScrollView>();
             if (scroll != null && _wall != null)
             {
@@ -1361,7 +1361,6 @@ namespace Emberfall.Presentation
                               $"layouts={_wall.LayoutCount}");
                 }).Every(500);
             }
-#endif
         }
 
         // ---- Chrome (buttons) ----

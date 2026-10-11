@@ -55,7 +55,7 @@ namespace Emberfall.Editor
 
         /// <summary>
         /// A second seat for local testing: boots the main menu, and is a <b>development</b> player so
-        /// <c>DEVELOPMENT_BUILD</c> is defined and the account switcher exists at all
+        /// <c>Debug.isDebugBuild</c> is true and the account switcher exists at all
         /// (<see cref="Emberfall.Session.DeviceAccounts"/>).
         ///
         /// <para><b>Separate menu item and separate output directory, deliberately.</b> The shipping
