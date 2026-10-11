@@ -111,10 +111,10 @@ namespace Kingdom.Presentation
         // AttackDeclared is the one event shared by local, remote and AI combat. Driving the
         // motion from it keeps presentation out of input prediction and gives every attacker /
         // defender pairing the same lunge, contact recoil and return.
-        private const float CombatWindupSeconds = 0.075f;
-        private const float CombatStrikeSeconds = 0.125f;
-        private const float CombatImpactSeconds = 0.09f;
-        private const float CombatReturnSeconds = 0.20f;
+        private const float CombatWindupSeconds = 0.09f;
+        private const float CombatStrikeSeconds = 0.13f;
+        private const float CombatImpactSeconds = 0.07f;
+        private const float CombatReturnSeconds = 0.19f;
         private const float CombatContactOverlap = 0.08f;
         private const float CombatMaxWindup = 0.16f;
         private const float CombatMaxRecoil = 0.20f;
