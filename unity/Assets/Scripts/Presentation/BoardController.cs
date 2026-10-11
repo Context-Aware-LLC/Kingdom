@@ -256,10 +256,21 @@ namespace Kingdom.Presentation
                 ScreenEarthquake.Play(Camera.main);
             }
 
+            // A combat hit's number waits for the lunge to land; anything else shows at once.
+            float damagePopDelay = 0f;
+            _damagePopsThisBatch.Clear();
+
             foreach (GameEvent e in batch)
             {
                 if (e.Kind == GameEventKind.AttackDeclared && e.Source.HasValue && e.Target.HasValue)
+                {
                     StartCombatMotion(e.Source.Value, e.Target.Value);
+                    damagePopDelay = CombatWindupSeconds + CombatStrikeSeconds;
+                }
+
+                if ((e.Kind == GameEventKind.DamageApplied || e.Kind == GameEventKind.FatigueDamage) &&
+                    e.Target.HasValue && e.Amount.GetValueOrDefault() > 0)
+                    ShowDamagePop(e.Target.Value, e.Amount.Value, damagePopDelay);
 
                 if (e.Kind == GameEventKind.CardDestroyed)
                 {
@@ -267,6 +278,20 @@ namespace Kingdom.Presentation
                     if (e.Target.HasValue) _diedThisTick.Add(e.Target.Value);
                 }
             }
+        }
+
+        // Two hits on one character in the same batch would draw on top of each other.
+        private const float DamagePopStagger = 0.18f;
+        private readonly Dictionary<InstanceId, int> _damagePopsThisBatch = new();
+
+        private void ShowDamagePop(InstanceId targetId, int amount, float delaySeconds)
+        {
+            Transform target = ResolveCombatVisual(targetId);
+            if (target == null) return;
+
+            _damagePopsThisBatch.TryGetValue(targetId, out int earlier);
+            _damagePopsThisBatch[targetId] = earlier + 1;
+            DamageNumberPop.Spawn(target.position, amount, delaySeconds + earlier * DamagePopStagger);
         }
 
         private void StartCombatMotion(InstanceId attackerId, InstanceId defenderId)

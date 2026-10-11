@@ -33,16 +33,16 @@ namespace Kingdom.Presentation
     /// <summary>
     /// One health number on screen. When its value changes it does not just change: the old value
     /// swells and turns toward red (or green, for a gain), takes the new value at the peak, and
-    /// settles back to its resting size and colour (Sam, 2026-10-04 — this replaces a floating
-    /// damage number, which the game does not have).
+    /// settles back to its resting size and colour (Sam, 2026-10-04). The floating number it was
+    /// chosen over is on trial beside it: <see cref="DamageNumberPop"/>.
     ///
     /// <para>Shared by <see cref="CardPresenter"/> and <see cref="HeroPlateView"/> so a minion and
     /// a hero take a hit the same way. The host runs the coroutine; this only owns the state.</para>
     /// </summary>
     internal sealed class HealthNumber
     {
-        private const float SwellSeconds  = 0.10f;
-        private const float SettleSeconds = 0.18f;
+        private const float SwellSeconds  = 0.16f;
+        private const float SettleSeconds = 0.30f;
         private const float PeakScale     = 1.5f;
 
         private readonly MonoBehaviour _host;
