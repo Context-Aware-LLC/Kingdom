@@ -23,27 +23,6 @@ namespace Emberfall.Presentation
     /// </summary>
     public sealed class ShopPanelController
     {
-        /// <summary>
-        /// How many pack faces the tile shows: one per CHARACTER, four of them (Sam, 2026-08-31).
-        ///
-        /// <para>The rail is a fixed-ratio strip whose slots split its width evenly, so this is a
-        /// SIZE control: seven slots in a 326dp rail are 46dp each, which reads as a row of
-        /// thumbnails rather than as pack art. Four is the count REKINDLING already has, so both
-        /// packs render the same shape.</para>
-        ///
-        /// <para><b>Do not implement this as "take the first four" — it selects the wrong four.</b>
-        /// EMBERFALL declares seven pieces but only FOUR characters: <c>emberfall_pyra_1..4</c> are
-        /// alternate arts of ONE face, intended as holo/animated collectibles (Sam), and the
-        /// remaining three pieces are Maren, Sorrow and Thalen. Truncating the list would show
-        /// Cinderbound I–IV and drop three characters entirely. <see cref="FaceOf"/> collapses the
-        /// variants first, and the cap then applies to faces.</para>
-        ///
-        /// <para>Capped HERE and not in the manifest on purpose — the manifest is the record of
-        /// what art exists, and the variants are the point of it. Pieces are dropped from the
-        /// display, never from the set.</para>
-        /// </summary>
-        private const int ArtFacesShown = 4;
-
         /// <summary>How far into the shell's flight (as a fraction of its resolved transition
         /// duration) the buy buttons reveal -- 90%, not 100% (Sam, 2026-09-08): revealing exactly
         /// at the end raced the shell's own last layout settle and read as a bump. A fraction, not
@@ -327,8 +306,9 @@ namespace Emberfall.Presentation
                     if (pieces == null || pieces.Count == 0) return;
                     var artRail = new VisualElement();
                     artRail.AddToClassList("shop-pack__art-rail");
-                    foreach (PackArtPiece piece in FirstPerFace(pieces, ArtFacesShown))
-                        artRail.Add(BuildArtSlot(piece));
+                    // One sealed pack per expansion (Sam, 2026-10-10). The manifest selects the
+                    // active wrapper; the retired illustration variants remain preserved on disk.
+                    artRail.Add(BuildArtSlot(pieces[0]));
                     tile.Add(artRail);
                 });
 
@@ -337,7 +317,7 @@ namespace Emberfall.Presentation
                 // wallet. wallet is captured per-render, same as BuyButton below already did.
                 //
                 // The FLIP origin is the specific art slot under the pointer, not the tile
-                // (Sam, 2026-09-07 follow-up): the tile is the whole four-wide row, already
+                // (Sam, 2026-09-07 follow-up): the tile is the whole offer row, already
                 // nearly as wide as the detail shell it flies into, so animating FROM the tile
                 // produced a barely-visible flip. Walking up from the click target to the nearest
                 // .shop-pack__art-slot finds the one narrow pack image the player actually tapped;
@@ -353,39 +333,6 @@ namespace Emberfall.Presentation
 
                 _packList.Add(tile);
             }
-        }
-
-        /// <summary>
-        /// The face an art piece belongs to: its id with a trailing <c>_&lt;n&gt;</c> variant
-        /// suffix removed, so <c>emberfall_pyra_1</c>…<c>_4</c> all answer <c>emberfall_pyra</c>.
-        /// That suffix is the manifest's documented convention for several pieces of one
-        /// character (see <see cref="PackArtManifest"/>), which is why matching on it is safe.
-        /// An id with no suffix is its own face.
-        /// </summary>
-        private static string FaceOf(string pieceId)
-        {
-            if (string.IsNullOrEmpty(pieceId)) return "";
-            int split = pieceId.LastIndexOf('_');
-            if (split <= 0 || split == pieceId.Length - 1) return pieceId;
-            for (int i = split + 1; i < pieceId.Length; i++)
-                if (!char.IsDigit(pieceId[i])) return pieceId;
-            return pieceId.Substring(0, split);
-        }
-
-        /// <summary>
-        /// The first piece of each distinct face, in manifest order, up to <paramref name="max"/>.
-        /// Manifest order is meaningful, so "first" is the set's own choice of default art.
-        /// </summary>
-        private static List<PackArtPiece> FirstPerFace(IReadOnlyList<PackArtPiece> pieces, int max)
-        {
-            var shown = new List<PackArtPiece>(max);
-            var seen = new HashSet<string>();
-            for (int i = 0; i < pieces.Count && shown.Count < max; i++)
-            {
-                if (!seen.Add(FaceOf(pieces[i].Id))) continue;
-                shown.Add(pieces[i]);
-            }
-            return shown;
         }
 
         private static VisualElement BuildArtSlot(PackArtPiece piece)
@@ -497,10 +444,8 @@ namespace Emberfall.Presentation
             // the buttons already say everything a pack tile needs to.
             SetActionsVisible(Visibility.Hidden);
 
-            // The one piece actually tapped travels with the shell (Sam, 2026-09-07 follow-up).
-            // Copies the slot's already-baked background straight across instead of re-resolving
-            // a PackArtPiece/Sprite -- BuildArtSlot already did the (possibly expensive)
-            // PackWrapperBaker bake, and the slot's resolved style is that result.
+            // The wrapper actually tapped travels with the shell (Sam, 2026-09-07 follow-up).
+            // Copy its resolved background and scaling so the purchase view keeps the same art.
             if (_detailArt != null)
             {
                 if (originTile != null && originTile.ClassListContains("shop-pack__art-slot"))

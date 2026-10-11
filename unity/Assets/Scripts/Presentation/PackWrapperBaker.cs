@@ -5,34 +5,30 @@ using UnityEngine.UIElements;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// Turns arbitrary 2:3 pack artwork into a recognisable sealed booster wrapper and hands the
-    /// result to UI Toolkit.
+    /// Displays authored 2:3 sealed wrappers and cuts them into matching pieces for the opening beat.
     ///
-    /// <para><b>Why this bakes instead of assigning a material to the element.</b> UI Toolkit's
+    /// <para><b>Why the tear bakes instead of assigning a material to the element.</b> UI Toolkit's
     /// background image accepts a Sprite, Texture2D or RenderTexture, but not a caller-supplied
-    /// Material. The wrapper therefore renders once through <c>SG_PackWrapper</c>, caches that
-    /// RenderTexture by source sprite, and assigns the finished image. It is still one reusable
-    /// shader; it simply runs when art enters the UI rather than on every UI repaint.</para>
+    /// Material. The torn pieces render once through <c>SG_PackWrapper</c> and are cached by source
+    /// sprite. The intact wrapper uses the original sprite at its full imported resolution.</para>
     ///
-    /// <para><b>The source art is never altered.</b> Its full frame is compressed into the printed
-    /// body while the shader supplies the top and bottom heat seals, crimp ridges, serrated cut,
-    /// side folds and foil response. A missing shader or unsupported RenderTexture falls back to
-    /// the original Sprite, so packaging art never disappears because the treatment failed.</para>
+    /// <para>The artwork already includes foil, folds and heat seals. Neither display nor tear adds
+    /// another wrapper around it. A missing shader or unsupported RenderTexture leaves the intact
+    /// sprite available for PackTearAnimator's fade fallback.</para>
     ///
-    /// <para>The cache is intentionally process-wide. The store, vault, opening beat and main menu
-    /// are different scenes displaying the same small set of art; baking again at every scene seam
-    /// would pay the GPU allocation repeatedly. Subsystem registration clears stale references when
+    /// <para>The cache is intentionally process-wide. Repeated openings use the same small set of
+    /// art; baking again at every scene seam would pay the GPU allocation repeatedly.
+    /// Subsystem registration clears stale references when
     /// Enter Play Mode skips a domain reload.</para>
     /// </summary>
     public static class PackWrapperBaker
     {
-        // 256 x 384 matches the authored 2:3 art and is at least native size on every current pack
-        // surface, including the 260dp tear beat. The torn outputs retain that pixel density: their
-        // heights are the 41.7% / 66.7% pieces PackTearAnimator lays over one another.
-        private const int BakeWidth = 256;
-        private const int BakeHeight = 384;
-        private const int TornTopHeight = 160;
-        private const int TornBottomHeight = 256;
+        // A 512 x 768 source view preserves detail when the 336 x 480 stage pack starts tearing.
+        // Both pieces retain that pixel density: their heights are the 41.7% / 66.7% slices
+        // PackTearAnimator lays over one another.
+        private const int BakeWidth = 512;
+        private const int TornTopHeight = 320;
+        private const int TornBottomHeight = 512;
         private const string ShaderResource = "SG_PackWrapper";
 
         private static readonly int SourceRectId = Shader.PropertyToID("_SourceRect");
@@ -44,14 +40,12 @@ namespace Emberfall.Presentation
 
         private enum Piece
         {
-            Whole = 0,
             TornTop = 1,
             TornBottom = 2
         }
 
         private sealed class BakedPack
         {
-            public RenderTexture Whole { get; set; }
             public RenderTexture TornTop { get; set; }
             public RenderTexture TornBottom { get; set; }
 
@@ -60,8 +54,7 @@ namespace Emberfall.Presentation
                 return piece switch
                 {
                     Piece.TornTop => TornTop,
-                    Piece.TornBottom => TornBottom,
-                    _ => Whole
+                    _ => TornBottom
                 };
             }
 
@@ -71,28 +64,19 @@ namespace Emberfall.Presentation
                 {
                     case Piece.TornTop: TornTop = texture; break;
                     case Piece.TornBottom: TornBottom = texture; break;
-                    default: Whole = texture; break;
                 }
             }
         }
 
         /// <summary>
-        /// Paint <paramref name="target"/> with the wrapped form of <paramref name="source"/>.
-        /// Returns true when the shader treatment was applied; false means the original Sprite was
-        /// used as the safe fallback (or either argument was absent).
+        /// Paint <paramref name="target"/> with the complete authored wrapper, including its alpha.
+        /// Returns false only when the target or source is absent.
         /// </summary>
         public static bool ApplyTo(VisualElement target, Sprite source)
         {
             if (target == null || source == null) return false;
 
-            if (!TryBake(source, Piece.Whole, out RenderTexture wrapped))
-            {
-                target.style.backgroundImage = new StyleBackground(source);
-                return false;
-            }
-
-            target.style.backgroundImage =
-                new StyleBackground(Background.FromRenderTexture(wrapped));
+            target.style.backgroundImage = new StyleBackground(source);
             // Cropping the outer 10% would crop away the very crimps that make this read as a
             // wrapper. Make the whole silhouette visible regardless of a consumer's older USS.
             target.style.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
@@ -149,8 +133,7 @@ namespace Emberfall.Presentation
             int height = piece switch
             {
                 Piece.TornTop => TornTopHeight,
-                Piece.TornBottom => TornBottomHeight,
-                _ => BakeHeight
+                _ => TornBottomHeight
             };
             var texture = new RenderTexture(
                 BakeWidth,
@@ -240,7 +223,6 @@ namespace Emberfall.Presentation
         private static void Release(BakedPack pack)
         {
             if (pack == null) return;
-            Release(pack.Whole);
             Release(pack.TornTop);
             Release(pack.TornBottom);
         }

@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: PackArt_REKINDLING
   m_GUID: af130f27c6804284caf2660d92a34624
   m_SerializeEntries:
+  - m_GUID: 47c15c0f572a43ebb918f8ec288e60a9
+    m_Address: pack_art/pack_rk_crown_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1d471a1a27ad57547a2bfe185ebde8e7
     m_Address: pack_art/pack_rk_03_duras_ironmount
     m_ReadOnly: 0

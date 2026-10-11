@@ -111,8 +111,8 @@
 
 /* ---------- Navigation plate ----------
  * The vault is deliberately a different control category from the four-row menu: the plate owns
- * both regions, while the round socket and portrait art give the vault its own silhouette and hit
- * target. This is also why the socket reserves a column instead of becoming a fifth .mm-button. */
+ * both regions, while the standalone pack fan gives the vault its own silhouette and hit
+ * target. Keep it separate from the four standard .mm-button rows. */
 .mm-nav-plate {
     position: relative;
     width: 100%;
@@ -191,65 +191,76 @@
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 
-/* ---------- Card Vault socket ----------
- * TEMP ART: this is an existing pack illustration cropped into the socket, not the eventual pack
- * object/sigil. Keep the URL isolated here so replacing it is one line when that art lands. */
+/* ---------- Card Vault packs ----------
+ * The sealed-pack fan is the control's silhouette. Keep its transparent edges visible and the
+ * existing 160px height so the reserved navigation band does not move the menu rows. */
 .mm-vault-dock {
     position: absolute;
     left: var(--space-1);
     bottom: 24px;
-    width: 160px;
+    width: 208px;
     align-items: center;
 }
 .mm-vault-button {
-    width: 160px;
+    width: 208px;
     height: 160px;
-    min-width: 160px;
+    min-width: 208px;
     min-height: 160px;
     flex-shrink: 0;
     padding: 0;
+    margin: 0;
     align-items: center;
     justify-content: center;
-    background-color: var(--surface-0);
+    background-color: rgba(0, 0, 0, 0);
     background-image: none;
-    border-width: 6px;
-    border-color: rgb(86, 93, 104);
-    border-radius: 80px;
-    overflow: hidden;
-    transition-property: border-color, scale;
+    border-width: 0;
+    border-radius: 0;
+    overflow: visible;
+    transition-property: scale;
     transition-duration: 0.12s;
     transition-timing-function: ease-out;
 }
 .mm-vault-art {
-    width: 84px;
-    height: 128px;
+    width: 208px;
+    height: 160px;
     flex-shrink: 0;
-    background-image: url("/Assets/Art/Shop/Packs/EMBERFALL/pack_ef_01_pyra_cinderbound_1.png");
+    background-image: url("/Assets/Art/UI/Chrome/ui_card_vault_packs.png");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: rgb(222, 227, 234);
-    border-radius: var(--space-1);
+    border-radius: 0;
     transition-property: -unity-background-image-tint-color;
     transition-duration: 0.12s;
 }
-.mm-vault-button:hover {
-    border-color: var(--accent);
+.mm-vault-button:hover,
+.mm-vault-button:focus {
     scale: 1.05 1.05;
 }
-.mm-vault-button:hover .mm-vault-art {
+.mm-vault-button:hover .mm-vault-art,
+.mm-vault-button:focus .mm-vault-art {
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 .mm-vault-button:active {
-    border-color: rgb(194, 116, 37);
     scale: 0.98 0.98;
 }
 .mm-vault-button:active .mm-vault-art {
     -unity-background-image-tint-color: rgb(210, 210, 210);
 }
+/* Outrank Unity's built-in enabled/hover button fill in every interactive state. */
+.main-menu .mm-vault-button.unity-button,
+.main-menu .mm-vault-button.unity-button:hover:enabled,
+.main-menu .mm-vault-button.unity-button:active:enabled,
+.main-menu .mm-vault-button.unity-button:focus,
+.main-menu .mm-vault-button.unity-button:disabled {
+    background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+    border-width: 0;
+    border-radius: 0;
+}
 .mm-vault-count {
     display: none;
     position: absolute;
-    right: -6px;
-    top: -6px;
+    right: 8px;
+    top: 0;
     padding: var(--space-1) var(--space-2);
     color: var(--surface-0);
     background-color: var(--accent);

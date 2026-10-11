@@ -30,7 +30,7 @@ namespace Emberfall.Presentation
     /// element's own <c>schedule</c> dies with the panel.</para>
     ///
     /// <para><b>The torn halves are BAKED, never drawn</b> (2026-09-03). <see cref="PackWrapperBaker"/>
-    /// renders the intact face and both torn pieces from ONE source sprite across a shared procedural
+    /// renders both torn pieces from the intact wrapper sprite across a shared procedural
     /// tear line, so files 4 and 5 of spec §6.1 were never art anybody had to produce — that table is
     /// corrected. Handing the baker the same sprite the tile is already wearing is why
     /// <see cref="Play"/> takes one.</para>
@@ -81,8 +81,8 @@ namespace Emberfall.Presentation
 
             face.AddToClassList("vault-pack__face--tearing");
 
-            // THE BAKE GOES HERE, BEFORE ANYTHING SEPARATES. The crimp shader bakes three views of one
-            // wrapper — the intact face and the two torn pieces, sharing one procedural tear line — so
+            // THE BAKE GOES HERE, BEFORE ANYTHING SEPARATES. The shader cuts two views of the authored
+            // wrapper into torn pieces sharing one procedural tear line, so
             // the pieces must be painted while they are still stacked and covering. Painting them
             // after the split would swap the texture under a running transition.
             //

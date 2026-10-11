@@ -406,27 +406,26 @@
     flex-direction: row;
     flex-grow: 1;
     min-height: 0;
+    justify-content: center;
 }
 
-/* The slot has NO CHILDREN as of 2026-08-31 — the title plate that used to sit at its bottom edge
- * is gone (Sam), so the alignment and padding that positioned it went with it. Padding in
- * particular was working against the art: `scale-and-crop` fills the whole box, so the inset only
- * ever shaved the crop. */
+/* One complete sealed wrapper per expansion (Sam, 2026-10-10). Contain preserves the foil seals
+ * and transparent silhouette. The expansion name stays beside the art, with no caption plate. */
 .shop-pack__art-slot {
-    flex-grow: 1;
-    flex-basis: 0;
+    flex-grow: 0;
+    flex-shrink: 1;
+    height: 100%;
+    max-width: 100%;
+    aspect-ratio: 0.666667;
     /* background-color: var(--surface-2); */
     border-width: 1px;
     border-color: var(--surface-3);
     border-radius: var(--space-2);
-    margin-right: var(--space-1);
-    -unity-background-scale-mode: scale-and-crop;
+    -unity-background-scale-mode: scale-to-fit;
     overflow: hidden;
 }
 
-/* BORDERLESS (Sam, 2026-09-07): the outline around each face read as another panel edge once the
- * vault art was showing through everything around it. The art itself is scale-and-crop, so nothing
- * relied on the border for a boundary -- overflow: hidden above is what actually clips it. */
+/* BORDERLESS (Sam, 2026-09-07): let the authored wrapper silhouette provide its own boundary. */
 #shop-overlay .shop-pack__art-slot {
     border-width: 0;
 }

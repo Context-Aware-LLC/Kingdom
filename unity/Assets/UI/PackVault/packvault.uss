@@ -325,7 +325,7 @@
  * (PackArtProvider says so out loud), so an artless pack keeps the plain plate above rather than
  * reading as a picture that failed to load. */
 .vault-pack__face--art {
-    background-color: rgba(11, 14, 19, 0.35);
+    background-color: rgba(0, 0, 0, 0);
 }
 
 /* The pack on the stage — the only .vault-pack__face now. Explicit on both sides, overriding the
@@ -360,7 +360,7 @@
  * Read that class's remarks before changing a duration: the C# schedule and these transitions are
  * one clock, and moving only one half leaves the two baked edges visibly out of step.
  *
- * THE TORN PIECES ARE BAKED. PackWrapperBaker renders them, and the intact face, from one source
+ * THE TORN PIECES ARE BAKED. PackWrapperBaker renders them from the intact wrapper's source
  * sprite across a shared procedural tear line, so files 4 and 5 of spec §6.1 were never art anybody
  * had to produce — that table is corrected. There is no fallback colour on the pieces: a bake that
  * cannot run means there is no picture to tear, and the animator fades the tile instead.
@@ -368,7 +368,7 @@
  * THE FOIL STRIP IS GONE (Sam, 2026-09-03). It was a flat placeholder band laid across the pack art
  * and it read as exactly that — a block of yellow over the picture. A strip only makes sense as a
  * thing you pull, and there is no pull gesture any more. If pack_tear_strip.png is ever drawn, it
- * belongs baked INTO the wrapper by the crimp shader, not painted over it by a rule here. */
+ * belongs in the authored wrapper, not painted over it by a rule here. */
 
 /* The tile while it is coming apart. `overflow: hidden` is off so the pieces can travel past the
  * tile's own bounds — a tear clipped to the pack it came out of reads as a wipe. */
@@ -390,7 +390,7 @@
 /* NOT TWO HALVES, and the art is what says so. Spec §6.1 sizes pack_torn_top at 1024 × 640 and
  * pack_torn_bottom at 1024 × 1024 against a 1024 × 1536 front: 41.7% and 66.7%, overlapping by
  * ~8% at the tear line. That is how a pack actually opens — you tear the crimped end OFF, you do
- * not halve it — and it is also what lets the crimp shader live on the OUTER edge of each piece and
+ * not halve it — and it is also what leaves the authored crimp on the OUTER edge of each piece to
  * never cross the tear. Each height is set on the piece's own rule below; do not collapse them back
  * to 50% without changing the art brief with it.
  *

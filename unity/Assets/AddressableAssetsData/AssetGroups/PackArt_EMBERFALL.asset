@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: PackArt_EMBERFALL
   m_GUID: 166e9aa6348caf743a782d5b02f7125d
   m_SerializeEntries:
+  - m_GUID: 647be93202f14e6486112a92979af9d2
+    m_Address: pack_art/pack_ef_crown_purple
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 254c9686329226f4ea2ce80e625bcacc
     m_Address: pack_art/pack_ef_02_maren_threading_catastrophe
     m_ReadOnly: 0

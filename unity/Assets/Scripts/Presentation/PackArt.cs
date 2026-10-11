@@ -5,7 +5,8 @@ using UnityEngine;
 namespace Emberfall.Presentation
 {
     /// <summary>
-    /// One piece of booster packaging art, as the shop and any later gallery see it.
+    /// One complete sealed booster wrapper, including foil edges and transparency.
+    /// Retired illustration variants remain on disk; only active wrappers belong in the manifest.
     ///
     /// <para><b><see cref="Id"/> is the permanent name, <see cref="Sprite"/> is not.</b> The id is
     /// what anything durable stores — a gallery's "seen", a profile's chosen display — and it
