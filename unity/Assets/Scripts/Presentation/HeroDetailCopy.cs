@@ -42,13 +42,13 @@ namespace Emberfall.Presentation
         }
 
         [Serializable]
-        private class Payload
+        internal class Payload
         {
             public Entry[] entries;
         }
 
         [Serializable]
-        private class Entry
+        internal class Entry
         {
             public string heroClass;
             public string[] traits;

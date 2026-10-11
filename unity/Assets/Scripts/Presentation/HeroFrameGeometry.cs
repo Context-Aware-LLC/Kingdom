@@ -111,9 +111,9 @@ namespace Emberfall.Presentation
 
         // ── JSON shapes (field names must match split_hero_frames.py's output exactly) ──
 
-        [System.Serializable] private sealed class Root      { public FramesJson frames; }
-        [System.Serializable] private sealed class FramesJson { public FrameJson HeroPower; public FrameJson Weapon; }
-        [System.Serializable] private sealed class FrameJson  { public BossJson[] bosses; public float socketDiameter; public float ringDiameter; }
-        [System.Serializable] private sealed class BossJson   { public float[] xy; public float diameter; }
+        [System.Serializable] internal sealed class Root      { public FramesJson frames; }
+        [System.Serializable] internal sealed class FramesJson { public FrameJson HeroPower; public FrameJson Weapon; }
+        [System.Serializable] internal sealed class FrameJson  { public BossJson[] bosses; public float socketDiameter; public float ringDiameter; }
+        [System.Serializable] internal sealed class BossJson   { public float[] xy; public float diameter; }
     }
 }
