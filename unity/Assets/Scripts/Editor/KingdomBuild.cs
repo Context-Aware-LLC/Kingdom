@@ -208,7 +208,7 @@ namespace Kingdom.Editor
                 if (play != null)
                 {
                     // Play release: an AAB signed with the UPLOAD key, which lives outside the repo
-                    // (C:\Users\User\keystores\KingdomOfBadIdeas). Every signing field is put back
+                    // (C:\Users\User\.keystore\KingdomOfBadIdeas). Every signing field is put back
                     // in `finally` -- Unity writes keystoreName into ProjectSettings on save, and
                     // a committed path to one machine's keystore is a build that fails everywhere
                     // else. The passwords are never serialized by Unity at all.

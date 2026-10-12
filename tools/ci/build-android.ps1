@@ -25,7 +25,7 @@ param(
                            else            { "$HOME/Unity/Hub/Editor/6000.6.4f1/Editor/Unity" }),
     [switch]$PerfCapture,
     [switch]$PlayRelease,
-    [string]$Keystore = 'C:\Users\User\keystores\KingdomOfBadIdeas\kobi-upload.keystore',
+    [string]$Keystore = 'C:\Users\User\.keystore\KingdomOfBadIdeas\kobi-upload.keystore',
     [string]$KeyAlias = 'kobi-upload',
     [int]$VersionCode = 0
 )
