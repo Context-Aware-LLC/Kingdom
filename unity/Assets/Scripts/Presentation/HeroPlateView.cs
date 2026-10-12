@@ -54,6 +54,7 @@ namespace Kingdom.Presentation
         private bool _castBuilt;
         private Coroutine _castRoutine;
         private MaterialPropertyBlock _mpb;
+        private bool _tabletop;
 
         /// <summary>Attach to a new GameObject and call Init once before first OnStateUpdated.
         /// Identified by PlayerId, never by seat/visual index — a networked seat-1 local renders
@@ -65,13 +66,14 @@ namespace Kingdom.Presentation
             _playerId  = playerId;
             _heroClass = heroClass;
             _mpb       = new MaterialPropertyBlock();
+            _tabletop = heroAnchor.GetComponentInParent<RoyalCouncilBoard>() != null;
 
             transform.SetParent(heroAnchor, false);
             transform.localPosition = Vector3.zero;
             // The far Royal Council portrait mount is painted as a foreshortened oval tilted
             // down-left. Seat roots stay unrotated because the power/weapon satellites have their
             // own fixture alignment; only the portrait assembly follows that recess.
-            transform.localRotation = isLocalSeat ? Quaternion.identity : EnemyFixtureRotation;
+            transform.localRotation = isLocalSeat || _tabletop ? Quaternion.identity : EnemyFixtureRotation;
 
 #if UNITY_EDITOR
             uiSprites ??= new EditorUiSpriteProvider();
@@ -82,8 +84,9 @@ namespace Kingdom.Presentation
             // The clipped portrait fills the export's transparent opening. Its geometry sits a
             // hair nearer the camera, so stray near-transparent pixels cannot haze the artwork.
             _uiSprites = uiSprites;
-            _plate = MakeFrame(transform, uiSprites?.Get(FrameSpriteKey));
-            _portrait = MakePortrait(transform);
+            if (!_tabletop) _plate = MakeFrame(transform, uiSprites?.Get(FrameSpriteKey));
+            _portrait = MakePortrait(transform, _tabletop);
+            if (_tabletop) _plate = _portrait;
             _portrait.gameObject.SetActive(false);
             artProvider?.LoadArt($"hero_{heroClass.ToString().ToLowerInvariant()}", SetPortrait);
 
@@ -96,6 +99,15 @@ namespace Kingdom.Presentation
                 new Vector3(0.648f * FixtureScale, 0.162f * FixtureScale, -0.02f),
                 6.345f * FixtureScale,
                 HpFull);
+            if (_tabletop)
+            {
+                _hpLabel.transform.localPosition = new Vector3(0.68f, -0.76f, -0.45f);
+                _hpLabel.enableAutoSizing = false;
+                _hpLabel.overflowMode = TextOverflowModes.Overflow;
+                _hpLabel.fontSize = _hpLabel.fontSizeMax = 7.8f;
+                _hpLabel.fontSizeMin = 7.8f;
+                _hpLabel.rectTransform.sizeDelta = new Vector2(1.5f, 1.6f);
+            }
         }
 
         private void SetPortrait(Sprite sprite)
@@ -135,7 +147,8 @@ namespace Kingdom.Presentation
                 // Built on first use, and only tried once: a class with no art stays that way.
                 _castBuilt = true;
                 _cast = PortraitCastEffect.TryBuild(transform, _heroClass, _uiSprites, PortraitCentre,
-                                                    PortraitW, PortraitH, PortraitOrder);
+                                                    _tabletop ? RoyalCouncilBoard.PortraitDiameter : PortraitW,
+                                                    _tabletop ? RoyalCouncilBoard.PortraitDiameter : PortraitH, PortraitOrder);
             }
             if (_cast == null) return;
 
@@ -201,14 +214,14 @@ namespace Kingdom.Presentation
             return sr;
         }
 
-        private static Renderer MakePortrait(Transform parent)
+        private static Renderer MakePortrait(Transform parent, bool tabletop = false)
         {
             var go = new GameObject("Portrait");
             go.transform.SetParent(parent, false);
             go.transform.localPosition = PortraitCentre;
-            go.transform.localScale = new Vector3(PortraitW, PortraitH, 1f);
+            go.transform.localScale = tabletop ? new Vector3(RoyalCouncilBoard.PortraitDiameter, RoyalCouncilBoard.PortraitDiameter, 1f) : new Vector3(PortraitW, PortraitH, 1f);
 
-            go.AddComponent<MeshFilter>().sharedMesh = OvalMesh();
+            go.AddComponent<MeshFilter>().sharedMesh = tabletop ? RoundMesh() : OvalMesh();
             var mr = go.AddComponent<MeshRenderer>();
             mr.sortingOrder = PortraitOrder;
             MaterialCatalog.Assign(mr, MaterialCatalog.CardArt);
@@ -216,6 +229,17 @@ namespace Kingdom.Presentation
         }
 
         private static Mesh _oval;
+        private static Mesh _round;
+        private static Mesh RoundMesh()
+        {
+            if (_round != null) return _round;
+            _round = Instantiate(OvalMesh());
+            _round.name = "Tabletop Hero Portrait";
+            Vector2[] uv = _round.uv;
+            for (int i = 0; i < uv.Length; i++) uv[i].x = 0.5f + (uv[i].x - 0.5f) * PortraitH / PortraitW;
+            _round.uv = uv;
+            return _round;
+        }
 
         private static Mesh OvalMesh()
         {

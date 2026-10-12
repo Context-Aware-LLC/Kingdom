@@ -459,7 +459,14 @@ namespace Kingdom.Presentation
             }
 
             // ── Mana trays + deck piles — local at visual index 0 ─────────────────
-            if (boardAnchors != null)
+            RoyalCouncilBoard table = boardAnchors != null ? boardAnchors.Tabletop : null;
+            if (table != null)
+            {
+                table.Bind(localId, remoteId, inputRouter);
+                matchRunner.OnStateUpdated += table.OnStateUpdated;
+                _view.OnTurnTimer += table.OnTurnTimer;
+            }
+            if (boardAnchors != null && table == null)
             {
                 CreateManaTray(localId, boardAnchors);
                 CreateManaTray(remoteId, boardAnchors);
@@ -480,7 +487,7 @@ namespace Kingdom.Presentation
             }
 
             // ── End-turn button (was hot-seat-only; found missing at b3 §14 step 4) ──
-            if (inputRouter != null)
+            if (inputRouter != null && table == null)
             {
                 var endTurnGo = new GameObject("EndTurnButton");
                 endTurnGo.transform.position = EndTurnButtonView.BoardPosition;
@@ -496,13 +503,16 @@ namespace Kingdom.Presentation
             // Server-driven: the turn clock is a server timer, so it exists only on this path.
             // (It is why the deleted in-process hot-seat boot never had one.) The Royal Council
             // board gives the clock its own crown-fuse medallion on the left.
-            var clockGo = new GameObject("TurnClock");
-            clockGo.transform.position = TurnClockView.BoardPosition;
-            BoardBackdrop.RegisterArtworkAnchor(clockGo.transform, TurnClockView.ArtworkUv);
-            var turnClock = clockGo.AddComponent<TurnClockView>();
-            turnClock.Init();
-            _view.OnTurnTimer += turnClock.OnTurnTimer;
-            matchRunner.OnStateUpdated += turnClock.OnStateUpdated;
+            if (table == null)
+            {
+                var clockGo = new GameObject("TurnClock");
+                clockGo.transform.position = TurnClockView.BoardPosition;
+                BoardBackdrop.RegisterArtworkAnchor(clockGo.transform, TurnClockView.ArtworkUv);
+                var turnClock = clockGo.AddComponent<TurnClockView>();
+                turnClock.Init();
+                _view.OnTurnTimer += turnClock.OnTurnTimer;
+                matchRunner.OnStateUpdated += turnClock.OnStateUpdated;
+            }
             // Same signal, same marshaling: the rope LINE lands when the clock goes red.
             _view.OnTurnTimer += heroVoice.OnTurnTimer;
 

@@ -1169,7 +1169,7 @@ namespace Kingdom.Core.Cards
                 DamageAction a => $"Deal {a.Amount} damage{To(a.Target, sourcePronoun)}.",
                 HealAction a => $"Restore {a.Amount} Health{To(a.Target, sourcePronoun)}.",
                 PreventLethalDamageAction _ =>
-                    "The first time each turn another friendly minion would take lethal damage, it survives with 1 Health instead.",
+                    "The first other friendly minion dealt lethal damage each turn survives at 1 Health.",
                 RepeatNextMinionPlayAction _ =>
                     "The next minion you play this turn triggers its play effect twice.",
                 // Prints the stats rather than a marker word, unlike its sibling action markers below.

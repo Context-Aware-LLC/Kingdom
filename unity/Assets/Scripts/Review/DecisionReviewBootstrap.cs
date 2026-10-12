@@ -425,6 +425,11 @@ namespace Kingdom.Review
             _inputRouter = nativeActionMode ? _boardRoot.AddComponent<InputRouter>() : null;
             if (_inputRouter != null)
                 _inputRouter.Init(actor, _input, _cards, new CommandProcessor(_cards));
+            if (_anchors.Tabletop != null)
+            {
+                _anchors.Tabletop.Bind(actor, opponent, _inputRouter);
+                _stateSinks.Add(_anchors.Tabletop.OnStateUpdated);
+            }
 
             // A router in native mode exposes the real game gestures, but its queue is drained
             // here, never by a MatchRunner. localHumanId is the actor for near-side affordances.
@@ -439,11 +444,14 @@ namespace Kingdom.Review
             _inputRouter.SetHeroPlates(localPlate, remotePlate);
             _board.SetHeroPlates(actor, localPlate, opponent, remotePlate);
 
-            var endTurn = new GameObject("EndTurnButton").AddComponent<EndTurnButtonView>();
-            endTurn.transform.SetParent(_boardRoot.transform, false);
-            endTurn.transform.position = new Vector3(6.3f, 0f, 0f);
-            endTurn.Init(actor, _inputRouter);
-            _stateSinks.Add(endTurn.OnStateUpdated);
+            if (_anchors.Tabletop == null)
+            {
+                var endTurn = new GameObject("EndTurnButton").AddComponent<EndTurnButtonView>();
+                endTurn.transform.SetParent(_boardRoot.transform, false);
+                endTurn.transform.position = new Vector3(6.3f, 0f, 0f);
+                endTurn.Init(actor, _inputRouter);
+                _stateSinks.Add(endTurn.OnStateUpdated);
+            }
 
             var mulligan = new GameObject("MulliganConfirmButton").AddComponent<MulliganConfirmButtonView>();
             mulligan.transform.SetParent(_boardRoot.transform, false);
@@ -475,12 +483,13 @@ namespace Kingdom.Review
             if (power != null || weapon != null)
             {
                 var sockets = new GameObject($"HeroSockets_{playerId}").AddComponent<HeroSocketsView>();
+                sockets.transform.SetParent(_boardRoot.transform, false);
                 sockets.Init(playerId, power, weapon, _cards, _art);
                 _stateSinks.Add(sockets.OnStateUpdated);
             }
 
             Transform mana = _anchors.ManaTrayAnchor(playerId);
-            if (mana != null)
+            if (mana != null && _anchors.Tabletop == null)
             {
                 var tray = new GameObject($"ManaTray_{playerId}").AddComponent<ManaTrayView>();
                 tray.Init(playerId, mana, _anchors.IsLocalPlayer(playerId));
@@ -488,7 +497,7 @@ namespace Kingdom.Review
             }
 
             Transform deck = _anchors.AnchorFor(playerId, Zone.Deck, 0);
-            if (deck != null)
+            if (deck != null && _anchors.Tabletop == null)
             {
                 var pile = new GameObject($"DeckPile_{playerId}").AddComponent<DeckPileView>();
                 pile.Init(playerId, deck, _anchors.IsLocalPlayer(playerId));

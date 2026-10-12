@@ -157,6 +157,7 @@ namespace Kingdom.Presentation
         // or destroyed weapon takes its trigger (and through Unregister, any open reveal) with it.
         private CardRevealController _reveal;
         private CardRevealTrigger    _weaponTrigger;
+        private bool _tabletop;
         private CardLiveState        _weaponLive;
         private InstanceId           _weaponId;
 
@@ -171,6 +172,7 @@ namespace Kingdom.Presentation
             _db       = db;
             _art      = art;
             _mpb      = new MaterialPropertyBlock();
+            _tabletop = powerAnchor != null && powerAnchor.GetComponentInParent<RoyalCouncilBoard>() != null;
 
 #if UNITY_EDITOR
             uiSprites ??= new EditorUiSpriteProvider();
@@ -184,6 +186,12 @@ namespace Kingdom.Presentation
                 _powerArt = MakeSocketArt(powerAnchor, "PowerArt", SocketDiameter,
                                            PowerApertureOffset);
                 _powerCost = MakeStat(powerAnchor, "PowerCost", PowerCostAt, Color.white, DigitEmFrac);
+                if (_tabletop)
+                {
+                    _powerRing.enabled = false;
+                    FitTableArt(_powerArt);
+                    FitTableDigit(_powerCost, new Vector3(0.34f, -0.29f, -0.05f));
+                }
             }
 
             if (weaponAnchor != null)
@@ -199,6 +207,13 @@ namespace Kingdom.Presentation
 
                 _weaponAttack     = MakeStat(wt, "Attack",     WeaponAtkAt,  AttackText, WeaponDigitEmFrac);
                 _weaponDurability = MakeStat(wt, "Durability", WeaponDuraAt, DuraText,   WeaponDigitEmFrac);
+                if (_tabletop)
+                {
+                    _weaponRing.enabled = false;
+                    FitTableArt(_weaponArt);
+                    FitTableDigit(_weaponAttack, new Vector3(-0.32f, -0.3f, -0.05f));
+                    FitTableDigit(_weaponDurability, new Vector3(0.32f, -0.3f, -0.05f));
+                }
 
                 _weaponRoot.SetActive(false);
             }
@@ -256,6 +271,7 @@ namespace Kingdom.Presentation
                 var col = go.AddComponent<BoxCollider>();
                 col.size   = new Vector3(HitDiameter, HitDiameter, 0.1f);
                 col.center = new Vector3(WeaponApertureOffset.x, WeaponApertureOffset.y, 0.1f);
+                if (_tabletop) { col.size = new Vector3(1f, 1f, 0.1f); col.center = Vector3.zero; }
 
                 _weaponTrigger = go.AddComponent<CardRevealTrigger>();
                 _weaponTrigger.InitEquippedWeapon(w.Id, def, _weaponLive, _reveal);
@@ -319,6 +335,18 @@ namespace Kingdom.Presentation
         }
 
         // ── Build helpers ───────────────────────────────────────────────────────────────
+        private static void FitTableArt(Renderer art)
+        {
+            art.transform.localPosition = Vector3.back * 0.015f;
+            art.transform.localScale = new Vector3(RoyalCouncilBoard.SocketDiameter, RoyalCouncilBoard.SocketDiameter, 1f);
+        }
+
+        private static void FitTableDigit(TextMeshPro label, Vector3 position)
+        {
+            label.transform.localPosition = position;
+            label.fontSize = 4.2f;
+            label.rectTransform.sizeDelta = new Vector2(0.7f, 0.55f);
+        }
 
         private static SpriteRenderer MakeFrame(Transform parent, string goName,
                                                 IUiSpriteProvider uiSprites, string key)

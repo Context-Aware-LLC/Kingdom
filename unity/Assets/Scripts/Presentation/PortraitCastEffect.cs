@@ -11,8 +11,8 @@ namespace Kingdom.Presentation
     /// <para><b>The reveal and the oval are one mask.</b> The art is a full 2:3 sheet and has to be
     /// cut to the portrait's oval AND wiped along an advancing horizontal line. Both are the same
     /// shape — a portion of the oval — so a single <see cref="SpriteMask"/> carries it, and its sprite's
-    /// geometry is rebuilt each frame of the rise. No shader, and so nothing for the build
-    /// stripper to lose.</para>
+    /// geometry is rebuilt each frame of the rise. No custom shader is required. The native
+    /// SpriteMask dependency is retained by the package manifest and link.xml.</para>
     ///
     /// <para>A class with no art in <see cref="SpriteKeyFor"/> has no cast: <see cref="TryBuild"/>
     /// returns null and the plate does nothing.</para>

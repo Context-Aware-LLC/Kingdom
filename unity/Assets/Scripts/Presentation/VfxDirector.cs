@@ -125,6 +125,7 @@ namespace Kingdom.Presentation
         {
             _artProvider = artProvider;
             _board = board;
+            if (boardAnchors == null && board != null) boardAnchors = board.GetComponent<BoardAnchors>();
         }
 
         // Called by MatchRunner.OnStateUpdated — keeps _state current for anchor resolution.

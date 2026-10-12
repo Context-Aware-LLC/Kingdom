@@ -605,7 +605,7 @@ namespace Kingdom.Presentation
                     cam, screenPos, planeZ: 0f, out Vector3 world))
                 return DropPoint.Board(0f);
 
-            return world.y <= HandFanLayout.TopEdgeY
+            return world.y <= HandBoundaryY
                 ? DropPoint.OwnHand
                 : DropPoint.Board(world.x);
         }
@@ -618,6 +618,7 @@ namespace Kingdom.Presentation
         /// thumb's travel on every device.
         /// </summary>
         private static float TargetSnapPx => Mathf.Max(40f, Screen.height * 0.075f);
+        public float HandBoundaryY { get; set; } = HandFanLayout.TopEdgeY;
 
         /// <summary>
         /// Widens a legal target from its collider to its collider plus <see cref="TargetSnapPx"/>,

@@ -31,6 +31,7 @@ namespace Kingdom.Editor
                                + "FAIL lines above.");
 
             ok &= CheckPerspectiveRig();
+            ok &= CheckRoyalCouncilRig();
             ok &= CheckBackdropSize();
 
             // No MinAspect here any more: the live rig frames a narrow screen rather than clipping
@@ -109,6 +110,65 @@ namespace Kingdom.Editor
                       + $"({solution.CameraLocalOffset.x:F4}, "
                       + $"{solution.CameraLocalOffset.y:F4}, "
                       + $"{solution.CameraLocalOffset.z:F4})");
+            return ok;
+        }
+
+        private static bool CheckRoyalCouncilRig()
+        {
+            var root = new GameObject("RoyalCouncilLayoutVerify");
+            var camera = new GameObject("Camera fit check").AddComponent<Camera>();
+            camera.transform.SetParent(root.transform, false);
+            bool ok = true;
+            try
+            {
+                Bounds bounds = RoyalCouncilCamera.PlayBounds;
+                foreach (var sample in new[]
+                {
+                    (1920, 1080, new Rect(0, 0, 1920, 1080)),
+                    (1440, 1080, new Rect(0, 0, 1440, 1080)),
+                    (2400, 1080, new Rect(0, 0, 2400, 1080)),
+                    (2400, 1080, new Rect(96, 0, 2304, 1080)),
+                    (2400, 1080, new Rect(0, 132, 2400, 948))
+                })
+                {
+                    camera.aspect = sample.Item1 / (float)sample.Item2;
+                    Rect safe = sample.Item3;
+                    RoyalCouncilCamera.Fit(camera, safe, sample.Item1, sample.Item2);
+                    for (int x = -1; x <= 1; x += 2)
+                    for (int y = -1; y <= 1; y += 2)
+                    for (int z = -1; z <= 1; z += 2)
+                    {
+                        Vector3 v = camera.WorldToViewportPoint(bounds.center +
+                            Vector3.Scale(bounds.extents, new Vector3(x, y, z)));
+                        ok &= v.z > 0 && safe.Contains(new Vector2(v.x * sample.Item1, v.y * sample.Item2));
+                    }
+                }
+                // The fit bounds must contain the actual fan, including the rotated bottom
+                // corners. Checking only card centres misses a clipped ten-card hand.
+                var slots = new Transform[10];
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    slots[i] = new GameObject("Hand corner check").transform;
+                    slots[i].SetParent(root.transform, false);
+                }
+                for (int count = 1; count <= 10; count++)
+                foreach (bool mirrored in new[] { false, true })
+                {
+                    HandFanLayout.Apply(slots, count, mirrored,
+                        RoyalCouncilBoard.HandCenterY, RoyalCouncilBoard.HandDepth);
+                    for (int i = 0; i < count; i++)
+                    for (int x = -1; x <= 1; x += 2)
+                    for (int y = -1; y <= 1; y += 2)
+                    {
+                        Vector3 corner = slots[i].position + slots[i].rotation *
+                            new Vector3(x * HandFanLayout.HandCardW * 0.5f, y * HandFanLayout.HandCardH * 0.5f, 0);
+                        ok &= bounds.Contains(corner);
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(root); }
+            if (!ok) Debug.LogError("[DeviceLayoutVerify] Royal Council full-depth safe-area or hand-corner fit failed.");
+            else Debug.Log("[DeviceLayoutVerify]       ok    Royal Council 5 safe areas and hands 1..10, both seats");
             return ok;
         }
 

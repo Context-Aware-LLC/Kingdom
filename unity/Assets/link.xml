@@ -5,8 +5,10 @@
     dropped, and the call then returns null on a device while working in the Editor. The log line
     is: AddComponent asking for "SpriteMask" which is not a Unity engine type.
 
-    SpriteMask: PortraitCastEffect, the hero power cast. Stripped, its constructor threw inside
-    MatchRunner.PlaybackLoop and froze the board on the first hero power of a match (2026-10-05).
+    SpriteMask: PortraitCastEffect, the hero power cast. This keeps the managed wrapper.
+    Unity 6000.6 also needs com.unity.modules.tilemap enabled to retain the native class
+    (UUM-138419); scene references and link.xml alone do not prevent its removal.
+    Retire that module workaround after upgrading to a Unity version with the fix.
   -->
   <assembly fullname="UnityEngine.SpriteMaskModule">
     <type fullname="UnityEngine.SpriteMask" preserve="all"/>

@@ -129,6 +129,7 @@ namespace Kingdom.Presentation
         private void Awake()
         {
             var anchors = GetComponent<BoardAnchors>();
+            if (RoyalCouncilBoard.TryCreate(transform, anchors) != null) return;
             BuildSeat(anchors.p0, "P0", P0Sign, xSign: -1f,
                 out Transform p0HeroCluster, out Transform p0ResourceCluster);
             BuildSeat(anchors.p1, "P1", P1Sign, xSign: +1f,
@@ -242,6 +243,7 @@ namespace Kingdom.Presentation
             var anchors = GetComponent<BoardAnchors>();
             AttachSeatClickables(anchors.p0, p0Id);
             AttachSeatClickables(anchors.p1, p1Id);
+            anchors.Tabletop?.FitHitTargets(anchors, p0Id, p1Id);
         }
 
         private static void AttachSeatClickables(SeatAnchors seat, PlayerId ownerId)

@@ -165,7 +165,7 @@ namespace Kingdom.Presentation
         // Lays out every slot in the array for a hand of `count`. Slots beyond `count` park on
         // the last live position — nothing resolves them, but leaving them at a stale pitch
         // would strand a card mid-screen if one ever did.
-        public static void Apply(Transform[] slots, int count, bool mirrored)
+        public static void Apply(Transform[] slots, int count, bool mirrored, float centerY = CentreY, float depth = 0f)
         {
             if (slots == null || slots.Length == 0) return;
 
@@ -194,13 +194,13 @@ namespace Kingdom.Presentation
                 // topX = x - halfH*sin(rot)  =>  x = topX + halfH*sin(rot).
                 float topX = offset * pitch;
                 float x    = topX + halfH * Mathf.Sin(rot * Mathf.Deg2Rad);
-                float y    = -(CentreY + Sag * t * t);
+                float y    = -(centerY + Sag * t * t);
 
                 // Anchors are authored in world space (ProceduralBoardSetup.MakeAnchor), so
                 // stay in world space here rather than mixing conventions.
                 slots[i].position = mirrored
-                    ? new Vector3(-x, -y, -ZStep * index)
-                    : new Vector3( x,  y, -ZStep * index);
+                    ? new Vector3(-x, -y, depth - ZStep * index)
+                    : new Vector3( x,  y, depth - ZStep * index);
                 slots[i].rotation = Quaternion.Euler(0f, 0f, rot);
             }
         }

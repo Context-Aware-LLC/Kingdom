@@ -13,6 +13,8 @@ namespace Kingdom.Presentation
 
         // Seat 1's hand fan is seat 0's point-reflected through the origin (§1.1).
         public bool FanMirrored;
+        public float HandCenterY = 3.56f;
+        public float HandDepth;
 
         public Transform[] BoardSlots = new Transform[7];    // 0-6 minion slots
         public Transform HeroAnchor;

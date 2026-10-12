@@ -18,6 +18,7 @@ namespace Kingdom.Presentation
         private PlayerId _p0Id;
         private PlayerId _p1Id;
         private bool _playersSet;
+        public RoyalCouncilBoard Tabletop { get; internal set; }
 
         public void SetPlayers(PlayerId p0Id, PlayerId p1Id)
         {
@@ -61,7 +62,7 @@ namespace Kingdom.Presentation
             if (seat.HandSlots != null)
                 foreach (Transform slot in seat.HandSlots)
                     if (slot != null) slot.localScale = Vector3.one;
-            HandFanLayout.Apply(seat.HandSlots, count, seat.FanMirrored);
+            HandFanLayout.Apply(seat.HandSlots, count, seat.FanMirrored, seat.HandCenterY, seat.HandDepth);
         }
 
         private void LateUpdate()
