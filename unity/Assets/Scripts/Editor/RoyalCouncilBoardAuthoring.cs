@@ -75,15 +75,15 @@ namespace Kingdom.Editor
         private readonly struct ControlFit
         {
             public readonly Vector2 From, To;
-            public readonly float Radius, PlatformScale;
+            public readonly float Radius, PlatformScale, DepthOffset;
             public readonly string Mount;
             public readonly string[] Props;
 
             public ControlFit(Vector2 from, Vector2 to, float radius, float platformScale,
-                string mount, params string[] props)
+                float depthOffset, string mount, params string[] props)
             {
                 From = from; To = to; Radius = radius; PlatformScale = platformScale;
-                Mount = mount; Props = props;
+                DepthOffset = depthOffset; Mount = mount; Props = props;
             }
         }
 
@@ -94,14 +94,20 @@ namespace Kingdom.Editor
             // Work from the untouched v06 model on every rebuild, never from fitted vertices.
             var fits = new[]
             {
-                new ControlFit(new Vector2(9.12f, 0f), new Vector2(7.56f, 0f), 0.73f, 1f,
+                new ControlFit(new Vector2(9.12f, 0f), new Vector2(7.56f, 0f), 0.73f, 1f, 0f,
                     "RC.Mount.EndTurn.Stamper", "RC.Prop.Stamper"),
-                new ControlFit(new Vector2(7.56f, 0f), new Vector2(9.12f, 0f), 0.81f, 1f,
+                new ControlFit(new Vector2(7.56f, 0f), new Vector2(9.12f, 0f), 0.81f, 1f, 0f,
                     "RC.Mount.EndTurn.Seal", "RC.Prop.WaxSeal"),
                 // v06 kept the oversized v05 clock platform; retain its earlier .64 refit.
-                new ControlFit(new Vector2(-8.34f, 0f), new Vector2(-8.34f, 0f), 1.596f, 0.64f,
+                new ControlFit(new Vector2(-8.34f, 0f), new Vector2(-8.34f, 0f), 1.596f, 0.64f, 0f,
                     "RC.Mount.Timer", "RC.Prop.Hourglass", "RC.Prop.Hourglass.Glass",
-                    "RC.Prop.Hourglass.Sand.Lower", "RC.Prop.Hourglass.Sand.Stream", "RC.Prop.Hourglass.Sand.Upper")
+                    "RC.Prop.Hourglass.Sand.Lower", "RC.Prop.Hourglass.Sand.Stream", "RC.Prop.Hourglass.Sand.Upper"),
+                // Mirror the hero powers into the outside corners. Raise their platforms
+                // above the corner rails; the weapon mounts stay beside their portraits.
+                new ControlFit(new Vector2(-6.75f, -2.82f), new Vector2(-10.14f, -5.48f), 0.63f, 1f, -0.35f,
+                    "RC.Mount.P0.HeroPower"),
+                new ControlFit(new Vector2(6.75f, 2.82f), new Vector2(10.14f, 5.48f), 0.63f, 1f, -0.35f,
+                    "RC.Mount.P1.HeroPower")
             };
 
             // Platforms were material-batched in the export. Move their isolated geometry
@@ -130,7 +136,7 @@ namespace Kingdom.Editor
                         if (delta.sqrMagnitude >= fit.Radius * fit.Radius) continue;
                         regions[i] = f + 1;
                         Vector2 xy = fit.To + delta * fit.PlatformScale;
-                        vertices[i] = filter.transform.InverseTransformPoint(new Vector3(xy.x, xy.y, world.z));
+                        vertices[i] = filter.transform.InverseTransformPoint(new Vector3(xy.x, xy.y, world.z + fit.DepthOffset));
                         // Only the footprint changes: preserve platform height, UVs and hard edges.
                         Vector3 normal = filter.transform.TransformDirection(normals[i]);
                         normal = new Vector3(normal.x / fit.PlatformScale, normal.y / fit.PlatformScale, normal.z).normalized;
@@ -148,7 +154,14 @@ namespace Kingdom.Editor
                 mesh.name = "Royal Council fitted control platforms " + filter.name;
                 mesh.vertices = vertices; mesh.normals = normals; mesh.RecalculateBounds();
                 Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-                if (existing != null) { EditorUtility.CopySerialized(mesh, existing); UnityEngine.Object.DestroyImmediate(mesh); mesh = existing; }
+                if (existing != null)
+                {
+                    EditorUtility.CopySerialized(mesh, existing);
+                    // CopySerialized preserves the GUID but can leave an already loaded GPU
+                    // buffer unchanged. Set the channels to refresh live Editor rendering too.
+                    existing.vertices = vertices; existing.normals = normals; existing.RecalculateBounds();
+                    UnityEngine.Object.DestroyImmediate(mesh); mesh = existing;
+                }
                 else AssetDatabase.CreateAsset(mesh, path);
                 filter.sharedMesh = mesh;
             }
@@ -156,10 +169,10 @@ namespace Kingdom.Editor
             Transform[] parts = model.GetComponentsInChildren<Transform>(true);
             foreach (ControlFit fit in fits)
             {
-                if (fit.From == fit.To) continue;
+                if (fit.From == fit.To && fit.DepthOffset == 0f) continue;
                 Transform mount = Array.Find(parts, part => part.name == fit.Mount);
                 Vector3 before = mount.position;
-                Vector3 after = new Vector3(fit.To.x, fit.To.y, before.z);
+                Vector3 after = new Vector3(fit.To.x, fit.To.y, before.z + fit.DepthOffset);
                 foreach (string name in fit.Props)
                 {
                     Transform prop = Array.Find(parts, part => part.name == name);
