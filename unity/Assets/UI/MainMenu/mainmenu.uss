@@ -712,6 +712,34 @@
     background-color: rgba(11, 14, 19, 0.96);
 }
 
+/* ---------- Blocking modal: failed boot and forced update (ConnectionFailedScreen.uxml) ----------
+ * The whole screen is this panel and one decision, read on a phone, so it takes the top of the
+ * type scale and a button several times the touch floor. The base .mm-modal__* size is a dialog
+ * opened over a menu; scoped here so rename and accounts keep it. */
+.mm-modal--blocking .mm-modal__panel {
+    width: 960px;
+    padding: var(--space-12);
+}
+.mm-modal--blocking .mm-modal__title {
+    font-size: var(--type-display);
+    -unity-text-align: middle-center;
+}
+.mm-modal--blocking .mm-modal__help {
+    font-size: var(--type-body);
+    -unity-text-align: middle-center;
+    margin-top: var(--space-4);
+    margin-bottom: var(--space-12);
+}
+/* Equal shares of the row, so the forced update's single button spans the panel and the failed
+ * boot's two split it. */
+.mm-modal--blocking .mm-modal__button {
+    flex-grow: 1;
+    flex-basis: 0;
+    height: 128px;
+    margin: 0 var(--space-2);
+    font-size: var(--type-h2);
+}
+
 /* ---------- First-login sizing (NOR-283, extended NOR-284) ----------
  * Every rule below is scoped to .mm-modal--onboard on purpose. It marks a modal that IS the first
  * launch — the sign-in gate, and the name/password prompt that follows it — on a phone held at arm's

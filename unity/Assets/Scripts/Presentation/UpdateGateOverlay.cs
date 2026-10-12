@@ -82,6 +82,9 @@ namespace Kingdom.Presentation
 
             bool stale = verdict == UpdateGateVerdict.UpdateRequired;
 
+            // Nearly opaque: nothing behind this is reachable, so it must not look dismissible.
+            root.Q("modal")?.AddToClassList("mm-modal--gate");
+
             var title = root.Q<Label>("title");
             if (title != null) title.text = stale ? "Update required" : "Couldn't reach the server";
 

@@ -12,12 +12,18 @@
 
   UpdateGateOverlay builds from this same tree: it rewrites the title and the reason, removes
   Back, and turns Retry into its one button. Renaming an element here breaks both.
+
+  .emb-root IS LOAD-BEARING. This tree is its own UIDocument, so no screen root is above it, and
+  every token the .mm-modal__* rules read (the type scale, the spacing run, the touch floor) is
+  declared on .emb-root and nowhere else. Without it each var() is unresolved, USS drops the
+  declaration, and the panel renders at Unity's default 12px type with a button as tall as its
+  text. That shipped from #232 until 2026-10-12, when Sam met the Update button on a phone.
 -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <Style src="../../Common/theme.uss" />
     <Style src="../../MainMenu/mainmenu.uss" />
 
-    <ui:VisualElement name="modal" class="mm-modal">
+    <ui:VisualElement name="modal" class="emb-root mm-modal mm-modal--blocking emb-bleed">
         <ui:VisualElement name="panel" class="mm-modal__panel">
             <ui:Label name="title" text="Couldn't reach the match" class="mm-modal__title" />
             <ui:Label name="reason" text=" " class="mm-modal__help" />
