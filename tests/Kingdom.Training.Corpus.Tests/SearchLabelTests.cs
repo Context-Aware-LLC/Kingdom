@@ -149,7 +149,8 @@ namespace Kingdom.Training.Corpus.Tests
             EpisodeDecisionHash good = LabelWithRollouts();
             double?[] values = good.SearchRolloutValues!.ToArray();
             yield return Broken("rollouts without a label", new EpisodeDecisionHash(
-                0, "p0", new string('e', 64), new string('f', 64)) { SearchRootValue = 0.25 });
+                0, "p0", new string('e', 64), new string('f', 64))
+            { SearchRootValue = 0.25 });
             yield return Broken("missing seed", good with { SearchDecisionSeed = null });
             yield return Broken("missing one rollout array", good with { SearchRolloutPlies = null });
             yield return Broken("root value is not finite", good with { SearchRootValue = double.NaN });

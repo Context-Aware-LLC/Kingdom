@@ -52,7 +52,8 @@ namespace Kingdom.Presentation
         /// behind a hand card fails silently and reads as a dead button, which is how #138
         /// presented.</para>
         /// </summary>
-        public static readonly Vector3 BoardPosition = new Vector3(0f, 0f, 0f);
+        // Lift the chrome above the Royal Council table's raised centre trim.
+        public static readonly Vector3 BoardPosition = new Vector3(0f, 0f, -0.5f);
 
         // The "TAP CARDS TO REPLACE" prompt, above the button.
         private const float InstructionY = 0.85f;
