@@ -39,7 +39,7 @@ namespace Kingdom.Editor
             Debug.Log($"[DeviceLayoutVerify] {(ok ? "PASS" : "FAIL")} — design box "
                       + $"{DeviceLayout.DesignHalfWidth:F2} x {DeviceLayout.DesignHalfHeight:F2} on "
                       + $"backdrop covering |x| <= {DeviceLayout.MaxAspect * DeviceLayout.DesignHalfHeight:F4} "
-                      + $"(MaxAspect {DeviceLayout.MaxAspect:F5}), perspective board bounds remain "
+                      + $"(MaxAspect {DeviceLayout.MaxAspect:F5}), perspective playable content remains "
                       + "inside every tested safe area.");
         }
 
@@ -121,7 +121,13 @@ namespace Kingdom.Editor
             bool ok = true;
             try
             {
-                Bounds bounds = RoyalCouncilCamera.PlayBounds;
+                var anchors = root.AddComponent<BoardAnchors>();
+                RoyalCouncilBoard table = RoyalCouncilBoard.TryCreate(root.transform, anchors);
+                if (table == null)
+                {
+                    Debug.LogError("[DeviceLayoutVerify] Royal Council prefab is missing.");
+                    return false;
+                }
                 foreach (var sample in new[]
                 {
                     (1920, 1080, new Rect(0, 0, 1920, 1080)),
@@ -134,41 +140,51 @@ namespace Kingdom.Editor
                     camera.aspect = sample.Item1 / (float)sample.Item2;
                     Rect safe = sample.Item3;
                     RoyalCouncilCamera.Fit(camera, safe, sample.Item1, sample.Item2);
-                    for (int x = -1; x <= 1; x += 2)
-                    for (int y = -1; y <= 1; y += 2)
-                    for (int z = -1; z <= 1; z += 2)
+                    bool Inside(Vector3 point, string label)
                     {
-                        Vector3 v = camera.WorldToViewportPoint(bounds.center +
-                            Vector3.Scale(bounds.extents, new Vector3(x, y, z)));
-                        ok &= v.z > 0 && safe.Contains(new Vector2(v.x * sample.Item1, v.y * sample.Item2));
+                        Vector3 v = camera.WorldToViewportPoint(point);
+                        bool inside = v.z > 0 && safe.Contains(new Vector2(v.x * sample.Item1, v.y * sample.Item2));
+                        if (!inside) Debug.LogError($"[DeviceLayoutVerify] {label} outside {safe}: viewport {v}");
+                        return inside;
                     }
-                }
-                // The fit bounds must contain the actual fan, including the rotated bottom
-                // corners. Checking only card centres misses a clipped ten-card hand.
-                var slots = new Transform[10];
-                for (int i = 0; i < slots.Length; i++)
-                {
-                    slots[i] = new GameObject("Hand corner check").transform;
-                    slots[i].SetParent(root.transform, false);
-                }
-                for (int count = 1; count <= 10; count++)
-                foreach (bool mirrored in new[] { false, true })
-                {
-                    HandFanLayout.Apply(slots, count, mirrored,
-                        RoyalCouncilBoard.HandCenterY, RoyalCouncilBoard.HandDepth);
-                    for (int i = 0; i < count; i++)
-                    for (int x = -1; x <= 1; x += 2)
-                    for (int y = -1; y <= 1; y += 2)
+                    // The 5% framing zoom intentionally uses spare space in the original
+                    // conservative fit box. Protect actual playable content, including its
+                    // depth, rather than requiring every empty corner of that box on screen.
+                    foreach (SeatAnchors seat in new[] { anchors.p0, anchors.p1 })
                     {
-                        Vector3 corner = slots[i].position + slots[i].rotation *
-                            new Vector3(x * HandFanLayout.HandCardW * 0.5f, y * HandFanLayout.HandCardH * 0.5f, 0);
-                        ok &= bounds.Contains(corner);
+                        for (int count = 1; count <= 7; count++)
+                        {
+                            BoardRowLayout.Apply(seat.BoardSlots, count, anchors.BoardSlotSpacing);
+                            for (int i = 0; i < count; i++)
+                            for (int x = -1; x <= 1; x += 2)
+                            for (int y = -1; y <= 1; y += 2)
+                                ok &= Inside(seat.BoardSlots[i].TransformPoint(new Vector3(
+                                    x * BoardController.CardW * 0.5f, y * BoardController.CardH * 0.5f, 0)), "Board card corner");
+                        }
+                        for (int count = 1; count <= 10; count++)
+                        {
+                            RoyalCouncilBoard.ApplyHandLayout(seat, count);
+                            for (int i = 0; i < count; i++)
+                            for (int x = -1; x <= 1; x += 2)
+                            for (int y = -1; y <= 1; y += 2)
+                                ok &= Inside(seat.HandSlots[i].TransformPoint(new Vector3(
+                                    x * HandFanLayout.HandCardW * 0.5f, y * HandFanLayout.HandCardH * 0.5f, 0)), "Held card corner");
+                        }
+                        foreach (Transform socket in new[] { seat.HeroAnchor, seat.HeroPowerAnchor, seat.WeaponAnchor })
+                        {
+                            float radius = (socket == seat.HeroAnchor ? RoyalCouncilBoard.PortraitDiameter : RoyalCouncilBoard.SocketDiameter) * 0.5f;
+                            for (int step = 0; step < 16; step++)
+                            {
+                                float angle = step * Mathf.PI / 8f;
+                                ok &= Inside(socket.TransformPoint(new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0)), socket.name);
+                            }
+                        }
                     }
                 }
             }
             finally { Object.DestroyImmediate(root); }
-            if (!ok) Debug.LogError("[DeviceLayoutVerify] Royal Council full-depth safe-area or hand-corner fit failed.");
-            else Debug.Log("[DeviceLayoutVerify]       ok    Royal Council 5 safe areas and hands 1..10, both seats");
+            if (!ok) Debug.LogError("[DeviceLayoutVerify] Royal Council playable-content safe-area fit failed.");
+            else Debug.Log("[DeviceLayoutVerify]       ok    Royal Council 5 safe areas, rows 1..7, held hands 1..10 and hero sockets, both seats");
             return ok;
         }
 

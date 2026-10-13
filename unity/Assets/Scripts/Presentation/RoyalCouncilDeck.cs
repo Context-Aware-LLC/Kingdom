@@ -76,6 +76,11 @@ namespace Kingdom.Presentation
 
         void IPointerHoverTarget.OnPointerEnter() { if (_count > 0) _label.gameObject.SetActive(true); }
         void IPointerHoverTarget.OnPointerExit() => _label.gameObject.SetActive(false);
-        private void OnDestroy() { if (_stack != null) Destroy(_stack); }
+        private void OnDestroy()
+        {
+            if (_stack == null) return;
+            if (Application.isPlaying) Destroy(_stack);
+            else DestroyImmediate(_stack);
+        }
     }
 }
