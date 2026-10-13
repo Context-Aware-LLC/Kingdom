@@ -14,11 +14,21 @@ namespace Kingdom.Presentation
     {
         public const string ResourcePath = "Boards/RoyalCouncil";
         public const float ModelScale = 6f;
-        public const float HandCenterY = 4.5f;
+        public const float HandCenterY = 4.62f;
         public const float HandDepth = -0.55f;
-        public const float HandTopY = -HandCenterY + HandFanLayout.HandCardH * 0.5f;
-        public const float PortraitDiameter = 2.43f;
-        public const float SocketDiameter = 0.82f;
+        private const float LocalHandTiltDegrees = 4f;
+        public static readonly float HandTopY = -HandCenterY + HandFanLayout.HandCardH * 0.5f * Mathf.Cos(LocalHandTiltDegrees * Mathf.Deg2Rad);
+        // Fill the v06 recesses under their inner lips, not a disc floating above the rim.
+        public const float PortraitDiameter = 2.63f;
+        public const float SocketDiameter = 0.98f;
+        public const float WeaponScale = 1.6f;
+        public const float PropTilt = 28f;
+        public const float BoardCardScale = 1.25f;
+        public const float BoardSlotSpacing = BoardRowGeometry.SlotSpacing + BoardController.CardW * (BoardCardScale - 1f);
+        private const float OpponentHandLift = .24f;
+        private static readonly Quaternion LocalHandTilt = Quaternion.Euler(-LocalHandTiltDegrees, 0f, 0f);
+        private static readonly Vector3 OpponentHandCenter = new Vector3(0f, 6.4f, .5f);
+        private static readonly Quaternion OpponentHandTilt = Quaternion.Euler(-70f, 0f, 0f);
 
         [SerializeField] private Material glassMaterial;
         private readonly Dictionary<string, Transform> _parts = new Dictionary<string, Transform>();
@@ -61,6 +71,12 @@ namespace Kingdom.Presentation
                     _shells[seat][i].sharedMaterial = glassMaterial;
                     _shells[seat][i].shadowCastingMode = ShadowCastingMode.Off;
                     _cores[seat][i].shadowCastingMode = ShadowCastingMode.Off;
+                    _cores[seat][i].GetPropertyBlock(_properties);
+                    _properties.SetFloat("_CloudPhase",seat*17f+i*1.618f);
+                    _cores[seat][i].SetPropertyBlock(_properties);
+                    _shells[seat][i].GetPropertyBlock(_properties);
+                    _properties.SetFloat("_Rim",0.3f);
+                    _shells[seat][i].SetPropertyBlock(_properties);
                 }
                 var deck = new GameObject($"P{seat} Physical Deck").AddComponent<RoyalCouncilDeck>();
                 deck.transform.SetParent(transform, false);
@@ -97,18 +113,46 @@ namespace Kingdom.Presentation
             seat.HandCenterY = HandCenterY;
             seat.HandDepth = HandDepth;
             for (int i = 0; i < 7; i++)
+            {
                 seat.BoardSlots[i] = Anchor($"P{index}_Board{i}", Part(prefix + $"Board.{i:00}").position);
+                seat.BoardSlots[i].localScale = Vector3.one * BoardCardScale;
+            }
             for (int i = 0; i < 10; i++) seat.HandSlots[i] = Anchor($"P{index}_Hand{i}", Vector3.zero);
-            HandFanLayout.Apply(seat.HandSlots, 10, seat.FanMirrored, seat.HandCenterY, seat.HandDepth);
-            seat.HeroAnchor = Anchor($"P{index}_Hero", Part(prefix + "Hero").position + Vector3.back * 0.02f);
-            seat.HeroPowerAnchor = Anchor($"P{index}_Power", Part(prefix + "HeroPower").position + Vector3.back * 0.06f);
-            seat.WeaponAnchor = Anchor($"P{index}_Weapon", Part(prefix + "Weapon").position + Vector3.back * 0.06f);
-            Vector3 inset = Vector3.right * (index == 0 ? 0.12f : -0.12f);
-            seat.HeroAnchor.position += inset;
-            seat.HeroPowerAnchor.position += inset;
-            seat.WeaponAnchor.position += inset;
+            ApplyHandLayout(seat, 10);
+            // Exported mounts sit above the rings. The portrait's local -0.01 Z and socket
+            // art's -0.015 Z place each image just above its liner (-0.036 Z before lifts).
+            // Matching the recess depth removes perspective drift without per-seat XY nudges.
+            seat.HeroAnchor = Anchor($"P{index}_Hero", Part(prefix + "Hero").position + Vector3.forward * 0.324f);
+            seat.HeroPowerAnchor = Anchor($"P{index}_Power", Part(prefix + "HeroPower").position + Vector3.forward * 0.209f);
+            seat.WeaponAnchor = Anchor($"P{index}_Weapon", Part(prefix + "Weapon").position + Vector3.forward * (0.209f * WeaponScale));
+            seat.WeaponAnchor.localScale = Vector3.one * WeaponScale;
             seat.DeckAnchor = Anchor($"P{index}_Deck", Part(prefix + "Deck").position);
             seat.ManaTrayAnchor = Anchor($"P{index}_Mana", Part(prefix + "Mana").position);
+        }
+
+        internal static void ApplyHandLayout(SeatAnchors seat, int count)
+        {
+            if (!seat.FanMirrored)
+            {
+                HandFanLayout.Apply(seat.HandSlots, count, false, seat.HandCenterY, seat.HandDepth);
+                if (seat.HandSlots == null || count <= 0) return;
+                Vector3 pivot = new Vector3(0f, -seat.HandCenterY, seat.HandDepth);
+                foreach (Transform slot in seat.HandSlots)
+                    if (slot != null)
+                        slot.SetPositionAndRotation(pivot + LocalHandTilt * (slot.position - pivot),
+                            LocalHandTilt * slot.rotation);
+                return;
+            }
+            if (seat.HandSlots == null || count <= 0) return;
+
+            // Solve an upright fan in its own plane, then hold it beyond the far rail.
+            // The rail naturally hides the lower portion. Keeping real hand anchors
+            // here gives draws and plays the same destination as the resting card backs.
+            HandFanLayout.Apply(seat.HandSlots, count, false, 0f, 0f);
+            foreach (Transform slot in seat.HandSlots)
+                if (slot != null)
+                    slot.SetPositionAndRotation(OpponentHandCenter + OpponentHandTilt * (slot.position + Vector3.up * OpponentHandLift),
+                        OpponentHandTilt * slot.rotation);
         }
 
         private Transform Anchor(string label, Vector3 position)
@@ -123,7 +167,11 @@ namespace Kingdom.Presentation
         {
             _players[0] = local; _players[1] = opponent;
             _seal.Bind(local, input);
-            if (input != null) input.HandBoundaryY = HandTopY;
+            if (input != null)
+            {
+                input.HandBoundaryY = HandTopY;
+                input.BoardSlotSpacing = BoardSlotSpacing;
+            }
             _bound = true;
         }
 
@@ -141,9 +189,11 @@ namespace Kingdom.Presentation
                     bool temp = full && i >= permanent;
                     bool locked = i >= player.Mana.Available + player.Mana.Spent && i < player.Mana.Available + player.Mana.Spent + player.Mana.Locked;
                     bool earned = i < player.Mana.Available + player.Mana.Spent + player.Mana.Locked;
-                    Color shell = full ? (temp ? new Color(0.45f, 0.78f, 1f, 0.48f) : new Color(0.035f, 0.32f, 0.8f, 0.36f))
+                    Color shell = full ? (temp ? new Color(0.45f, 0.78f, 1f, 0.16f) : new Color(0.08f, 0.34f, 0.62f, 0.12f))
                         : locked ? new Color(0.62f, 0.26f, 0.11f, 0.28f) : new Color(0.66f, 0.82f, 0.92f, earned ? 0.10f : 0.035f);
                     Tint(_shells[s][i], shell, temp ? new Color(0.12f, 0.22f, 0.25f) : Color.black);
+                    Tint(_cores[s][i],temp ? new Color(0.28f,0.62f,0.82f,0.67f) : new Color(0.035f,0.28f,0.6f,0.64f),
+                        temp ? new Color(0.04f,0.14f,0.19f) : new Color(0.015f,0.075f,0.13f));
                     _cores[s][i].enabled = full;
                 }
                 _decks[s].SetCount(player.Deck.Count);

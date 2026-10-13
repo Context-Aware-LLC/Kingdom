@@ -35,7 +35,7 @@ namespace Kingdom.Presentation
         /// <summary>Where position <paramref name="index"/> sits when the row is centred about
         /// <paramref name="half"/>. Used both when the anchors are first built and every time the
         /// occupied count changes.</summary>
-        public static float XForSlot(int index, float half) => (index - half) * SlotSpacing;
+        public static float XForSlot(int index, float half, float spacing = SlotSpacing) => (index - half) * spacing;
 
         /// <summary>
         /// THE INVERSE: which insert position does a world x fall in, on a row of
@@ -55,14 +55,14 @@ namespace Kingdom.Presentation
         /// that range — so an empty board always answers 0 rather than offering seven
         /// indistinguishable choices that all produce the same board.</para>
         /// </summary>
-        public static int InsertIndexForX(float worldX, int count)
+        public static int InsertIndexForX(float worldX, int count, float spacing = SlotSpacing)
         {
             if (count <= 0) return 0;
 
             // Minion i sits at XForSlot(i, half), so it is left of the drop when
             // i < worldX / SlotSpacing + half. The insert position is how many satisfy that.
             float half = (count - 1) * 0.5f;
-            int index = (int)System.Math.Ceiling(worldX / SlotSpacing + half);
+            int index = (int)System.Math.Ceiling(worldX / spacing + half);
 
             if (index < 0) return 0;
             return index > count ? count : index;

@@ -185,12 +185,11 @@ namespace Kingdom.Presentation
                 _powerRing = MakeFrame(powerAnchor, "PowerFrame", uiSprites, PowerFrameKey);
                 _powerArt = MakeSocketArt(powerAnchor, "PowerArt", SocketDiameter,
                                            PowerApertureOffset);
-                _powerCost = MakeStat(powerAnchor, "PowerCost", PowerCostAt, Color.white, DigitEmFrac);
+                if (!_tabletop) _powerCost = MakeStat(powerAnchor, "PowerCost", PowerCostAt, Color.white, DigitEmFrac);
                 if (_tabletop)
                 {
                     _powerRing.enabled = false;
                     FitTableArt(_powerArt);
-                    FitTableDigit(_powerCost, new Vector3(0.34f, -0.29f, -0.05f));
                 }
             }
 
@@ -211,8 +210,8 @@ namespace Kingdom.Presentation
                 {
                     _weaponRing.enabled = false;
                     FitTableArt(_weaponArt);
-                    FitTableDigit(_weaponAttack, new Vector3(-0.32f, -0.3f, -0.05f));
-                    FitTableDigit(_weaponDurability, new Vector3(0.32f, -0.3f, -0.05f));
+                    FitTableDigit(_weaponAttack, new Vector3(-0.32f, -0.3f, -0.18f));
+                    FitTableDigit(_weaponDurability, new Vector3(0.32f, -0.3f, -0.18f));
                 }
 
                 _weaponRoot.SetActive(false);

@@ -64,6 +64,8 @@ namespace Kingdom.Editor
                 model.transform.localPosition = new Vector3(0f, 0f, 0.66f);
                 model.transform.localScale = Vector3.one * RoyalCouncilBoard.ModelScale;
                 RefitControls(model);
+                RoyalCouncilSideLayoutAuthoring.Apply(model);
+                RoyalCouncilFinishAuthoring.Apply(root);
                 foreach (Collider collider in model.GetComponentsInChildren<Collider>(true)) UnityEngine.Object.DestroyImmediate(collider);
                 PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
                 AssetDatabase.SaveAssets();

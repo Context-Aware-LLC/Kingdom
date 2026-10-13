@@ -498,7 +498,7 @@ namespace Kingdom.Presentation
                     // off the real card it is handing over to.
                     float half = reveal.DestBoardCount > 1 ? (reveal.DestBoardCount - 1) * 0.5f : 0f;
                     Vector3 p = slot.position;
-                    return new Vector3(BoardRowGeometry.XForSlot(reveal.DestSlot, half), p.y, p.z);
+                    return new Vector3(BoardRowGeometry.XForSlot(reveal.DestSlot, half, boardAnchors.BoardSlotSpacing), p.y, p.z);
                 }
 
                 default:

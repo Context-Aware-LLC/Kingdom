@@ -35,7 +35,7 @@ namespace Kingdom.Presentation
     // for them — touching them here would risk drifting from that construction over time.
     public static class BoardRowLayout
     {
-        public static void Apply(Transform[] slots, int count)
+        public static void Apply(Transform[] slots, int count, float spacing = BoardRowGeometry.SlotSpacing)
         {
             if (slots == null || slots.Length == 0) return;
 
@@ -50,7 +50,7 @@ namespace Kingdom.Presentation
                 float half = i < count ? occupiedHalf : fullHalf;
 
                 Vector3 p = slots[i].position;
-                slots[i].position = new Vector3(BoardRowGeometry.XForSlot(i, half), p.y, p.z);
+                slots[i].position = new Vector3(BoardRowGeometry.XForSlot(i, half, spacing), p.y, p.z);
             }
         }
     }

@@ -7,6 +7,7 @@ namespace Kingdom.Presentation
     public sealed class RoyalCouncilCamera : MonoBehaviour
     {
         public static readonly Bounds PlayBounds = new Bounds(new Vector3(0f, 0f, -0.65f), new Vector3(22.0f, 12.7f, 3.9f));
+        private const float BoardViewScale = 1.05f;
         private static readonly Quaternion ViewRotation = Quaternion.LookRotation(new Vector3(0f, 0.34f, 1f), Vector3.up);
         private Camera _camera;
         private int _width, _height;
@@ -55,6 +56,12 @@ namespace Kingdom.Presentation
                 distance = Mathf.Max(distance, Mathf.Abs(p.y - centerY * tanY * p.z) / (halfY * tanY) - p.z);
             }
             camera.transform.SetPositionAndRotation(center + ViewRotation * new Vector3(-centerX * distance * tanX, -centerY * distance * tanY, -distance), ViewRotation);
+            // Enlarge the complete view together: card geometry, spacing and hit targets
+            // stay in the same world positions while the board uses more of the screen.
+            camera.fieldOfView = 2f * Mathf.Atan(tanY / BoardViewScale) * Mathf.Rad2Deg;
+            // Use the spare space above the table so the enlarged lower rail keeps a margin
+            // on wide phones. This moves the framing up by 2.5% of the safe-area height.
+            camera.transform.position -= camera.transform.up * (distance * tanY / BoardViewScale * 0.05f * safe.height / height);
         }
     }
 }

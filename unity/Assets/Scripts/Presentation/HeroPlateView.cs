@@ -32,6 +32,7 @@ namespace Kingdom.Presentation
         private const float PortraitW = 1.566f * FixtureScale;
         private const float PortraitH = 2.133f * FixtureScale;
         private static readonly Vector3 PortraitCentre = new Vector3(0f, -0.02f, -0.01f);
+        private static readonly Vector3 TabletopPortraitCentre = new Vector3(0f, 0f, -0.01f);
         private const string FrameSpriteKey = "hero-frame";
         private const int FrameOrder = 8;
         private const int PortraitOrder = 9;
@@ -101,7 +102,18 @@ namespace Kingdom.Presentation
                 HpFull);
             if (_tabletop)
             {
-                _hpLabel.transform.localPosition = new Vector3(0.68f, -0.76f, -0.45f);
+                // Centre both totals below the portraits and face the fixed tabletop view,
+                // so the digits remain square instead of following the board's perspective.
+                _hpLabel.transform.localPosition = new Vector3(0f, -0.82f, -0.01f);
+                Camera camera = Camera.main;
+                if (camera != null)
+                {
+                    // Lift along the viewing ray to clear the rim without shifting the
+                    // number sideways relative to its point on the portrait.
+                    Vector3 screen = camera.WorldToScreenPoint(_hpLabel.transform.position);
+                    screen.z -= .5f;
+                    _hpLabel.transform.SetPositionAndRotation(camera.ScreenToWorldPoint(screen), camera.transform.rotation);
+                }
                 _hpLabel.enableAutoSizing = false;
                 _hpLabel.overflowMode = TextOverflowModes.Overflow;
                 _hpLabel.fontSize = _hpLabel.fontSizeMax = 7.8f;
@@ -146,7 +158,7 @@ namespace Kingdom.Presentation
             {
                 // Built on first use, and only tried once: a class with no art stays that way.
                 _castBuilt = true;
-                _cast = PortraitCastEffect.TryBuild(transform, _heroClass, _uiSprites, PortraitCentre,
+                _cast = PortraitCastEffect.TryBuild(transform, _heroClass, _uiSprites, _tabletop ? TabletopPortraitCentre : PortraitCentre,
                                                     _tabletop ? RoyalCouncilBoard.PortraitDiameter : PortraitW,
                                                     _tabletop ? RoyalCouncilBoard.PortraitDiameter : PortraitH, PortraitOrder);
             }
@@ -218,7 +230,7 @@ namespace Kingdom.Presentation
         {
             var go = new GameObject("Portrait");
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = PortraitCentre;
+            go.transform.localPosition = tabletop ? TabletopPortraitCentre : PortraitCentre;
             go.transform.localScale = tabletop ? new Vector3(RoyalCouncilBoard.PortraitDiameter, RoyalCouncilBoard.PortraitDiameter, 1f) : new Vector3(PortraitW, PortraitH, 1f);
 
             go.AddComponent<MeshFilter>().sharedMesh = tabletop ? RoundMesh() : OvalMesh();

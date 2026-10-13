@@ -19,6 +19,7 @@ namespace Kingdom.Presentation
         private PlayerId _p1Id;
         private bool _playersSet;
         public RoyalCouncilBoard Tabletop { get; internal set; }
+        public float BoardSlotSpacing => Tabletop != null ? RoyalCouncilBoard.BoardSlotSpacing : BoardRowGeometry.SlotSpacing;
 
         public void SetPlayers(PlayerId p0Id, PlayerId p1Id)
         {
@@ -56,13 +57,14 @@ namespace Kingdom.Presentation
         private SeatAnchors _rowSeat;
         private int _rowCount;
 
-        private static void ApplyFan(SeatAnchors seat, int count)
+        private void ApplyFan(SeatAnchors seat, int count)
         {
             // The row scales the slots; the fan never does, so it is the fan's job to undo it.
             if (seat.HandSlots != null)
                 foreach (Transform slot in seat.HandSlots)
                     if (slot != null) slot.localScale = Vector3.one;
-            HandFanLayout.Apply(seat.HandSlots, count, seat.FanMirrored, seat.HandCenterY, seat.HandDepth);
+            if (Tabletop != null) RoyalCouncilBoard.ApplyHandLayout(seat, count);
+            else HandFanLayout.Apply(seat.HandSlots, count, seat.FanMirrored, seat.HandCenterY, seat.HandDepth);
         }
 
         private void LateUpdate()
@@ -81,7 +83,7 @@ namespace Kingdom.Presentation
         public void SetBoardCount(PlayerId player, int count)
         {
             SeatAnchors seat = ResolveSeat(player);
-            BoardRowLayout.Apply(seat.BoardSlots, count);
+            BoardRowLayout.Apply(seat.BoardSlots, count, BoardSlotSpacing);
         }
 
         public Transform AnchorFor(PlayerId player, Zone zone, int slotIndex)

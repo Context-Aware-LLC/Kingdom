@@ -155,6 +155,7 @@ namespace Kingdom.Presentation
 
         /// <summary>The mirror this model judges against. Set from every snapshot.</summary>
         public GameState State { get; set; }
+        public float BoardSlotSpacing { get; set; } = BoardRowGeometry.SlotSpacing;
 
         /// <summary>Current targeting phase: Direct (normal) or collecting an effect's choice plan.</summary>
         public TargetingPhase Phase
@@ -497,7 +498,7 @@ namespace Kingdom.Presentation
             // A minion. Its position comes from the drop's x against the row as it currently
             // stands, and from nothing else — not from what was under the pointer, and not from
             // the drop's y, which is ignored the moment it clears the hand.
-            int slot = BoardRowGeometry.InsertIndexForX(drop.X, FriendlyBoardCount());
+            int slot = BoardRowGeometry.InsertIndexForX(drop.X, FriendlyBoardCount(), BoardSlotSpacing);
 
             if (source.NeedsTarget)
             {

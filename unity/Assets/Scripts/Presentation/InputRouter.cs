@@ -174,7 +174,7 @@ namespace Kingdom.Presentation
             _p0Id      = p0Id;
             _p0Input   = p0Input;
             _validator = validator;
-            _model     = new DragTargetingModel(p0Id, db);
+            _model     = new DragTargetingModel(p0Id, db) { BoardSlotSpacing = _boardSlotSpacing };
         }
 
         // Subscribed to the P0 session's OnSnapshot — the IMMEDIATE truth cadence, NOT the
@@ -619,6 +619,16 @@ namespace Kingdom.Presentation
         /// </summary>
         private static float TargetSnapPx => Mathf.Max(40f, Screen.height * 0.075f);
         public float HandBoundaryY { get; set; } = HandFanLayout.TopEdgeY;
+        private float _boardSlotSpacing = BoardRowGeometry.SlotSpacing;
+        public float BoardSlotSpacing
+        {
+            get => _boardSlotSpacing;
+            set
+            {
+                _boardSlotSpacing = value;
+                if (_model != null) _model.BoardSlotSpacing = value;
+            }
+        }
 
         /// <summary>
         /// Widens a legal target from its collider to its collider plus <see cref="TargetSnapPx"/>,

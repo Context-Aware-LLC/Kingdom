@@ -16,6 +16,7 @@ namespace Kingdom.Presentation
         private TextMeshPro _label;
         private BoxCollider _hit;
         private float _step;
+        private Vector3 _stackDirection;
         private int _count = -1;
         public int Count => _count;
 
@@ -25,6 +26,9 @@ namespace Kingdom.Presentation
             _sourceRenderer = card.GetComponent<Renderer>();
             _sourceRenderer.enabled = false;
             _top = top; _topRest = top.position; _step = 0.004f * modelScale;
+            // Imported card thickness is local Y. Follow the authored rack orientation so
+            // a recessed, upright deck grows within its slot as the visible count changes.
+            _stackDirection = card.up.normalized;
             _stack = new Mesh { name = "Live deck edges" };
             gameObject.AddComponent<MeshFilter>().sharedMesh = _stack;
             _stackRenderer = gameObject.AddComponent<MeshRenderer>();
@@ -53,13 +57,13 @@ namespace Kingdom.Presentation
             _label.text = count.ToString();
             if (count == 0) _label.gameObject.SetActive(false);
             int visible = Mathf.Min(40, count);
-            _top.position = _topRest + Vector3.back * (Mathf.Max(0, visible - 1) * _step);
+            _top.position = _topRest + _stackDirection * (Mathf.Max(0, visible - 1) * _step);
             _stack.Clear();
             if (visible > 0)
             {
                 var cards = new CombineInstance[visible];
                 for (int i = 0; i < visible; i++)
-                    cards[i] = new CombineInstance { mesh = _source.sharedMesh, transform = transform.worldToLocalMatrix * Matrix4x4.Translate(Vector3.back * (_step * i)) * _source.transform.localToWorldMatrix };
+                    cards[i] = new CombineInstance { mesh = _source.sharedMesh, transform = transform.worldToLocalMatrix * Matrix4x4.Translate(_stackDirection * (_step * i)) * _source.transform.localToWorldMatrix };
                 _stack.CombineMeshes(cards, true, true, false);
             }
             Bounds bounds = _sourceRenderer.bounds;

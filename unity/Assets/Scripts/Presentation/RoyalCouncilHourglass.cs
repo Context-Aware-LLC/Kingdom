@@ -7,6 +7,9 @@ namespace Kingdom.Presentation
     /// <summary>Physical sand follows the server's absolute deadline, including timer refreshes.</summary>
     public sealed class RoyalCouncilHourglass : MonoBehaviour
     {
+        // The authoring pass inclines the wooden support to this same plane so the foot
+        // stays seated without cutting through the platform. Rebuild the prefab if changed.
+        public static Quaternion RestRotation => Quaternion.Euler(RoyalCouncilBoard.PropTilt, -6f, 0f);
         private Transform _upper, _lower, _stream;
         private Vector3 _upperScale, _lowerScale;
         private Vector3 _upperBase, _lowerBase, _upperPosition, _lowerPosition;
@@ -39,12 +42,12 @@ namespace Kingdom.Presentation
             glassRenderer.sharedMaterial = glass;
             glassRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             glassRenderer.GetPropertyBlock(_properties);
-            _properties.SetColor("_BaseColor", new Color(0.70f, 0.84f, 0.92f, 0.16f));
-            _properties.SetFloat("_Rim", 0.48f);
+            _properties.SetColor("_BaseColor", new Color(0.70f, 0.84f, 0.92f, 0.085f));
+            _properties.SetFloat("_Rim", 0.36f);
             glassRenderer.SetPropertyBlock(_properties);
             // Tip the physical hourglass toward a readable silhouette in the tabletop camera.
             // Its foot stays seated on the platform; its pivot does not orbit the table.
-            _restRotation = Quaternion.Euler(32f, -6f, 0f);
+            _restRotation = RestRotation;
             transform.rotation = _restRotation;
             SetSand(1f, false);
         }
@@ -87,7 +90,7 @@ namespace Kingdom.Presentation
             _upperRenderer.enabled = Fraction > 0.001f;
             _lowerRenderer.enabled = Fraction < 0.999f;
             _stream.gameObject.SetActive(_deadline.HasValue && Fraction > 0.001f);
-            Color color = urgent ? new Color(1f, 0.23f, 0.06f) : new Color(0.92f, 0.64f, 0.24f);
+            Color color = urgent ? new Color(1f, 0.23f, 0.06f) : new Color(0.83f, 0.63f, 0.32f);
             TintSand(_upperRenderer, color);
             TintSand(_lowerRenderer, color);
         }
