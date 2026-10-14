@@ -276,7 +276,12 @@ namespace Kingdom.Presentation
 
                 if ((e.Kind == GameEventKind.DamageApplied || e.Kind == GameEventKind.FatigueDamage) &&
                     e.Target.HasValue && e.Amount.GetValueOrDefault() > 0)
+                {
                     ShowDamagePop(e.Target.Value, e.Amount.Value, damagePopDelay);
+                    if (e.Kind == GameEventKind.DamageApplied && e.Source.HasValue
+                        && IsVenomSource(e.Source.Value) && _minionsBefore.Contains(e.Target.Value))
+                        ShowVenomPoof(e.Target.Value, damagePopDelay);
+                }
 
                 if (e.Kind == GameEventKind.CardDestroyed)
                 {
@@ -284,6 +289,45 @@ namespace Kingdom.Presentation
                     if (e.Target.HasValue) _diedThisTick.Add(e.Target.Value);
                 }
             }
+        }
+
+        // Venom is read off the snapshot BEFORE this command as well as after it: a venomous
+        // attacker that dies trading is gone from the new one, and the hit it landed still counts.
+        // A hero counts while it holds a Venom weapon, since a weapon swing is sourced to the hero.
+        private HashSet<InstanceId> _venomBefore = new();
+        private HashSet<InstanceId> _venomNow = new();
+        private HashSet<InstanceId> _minionsBefore = new();
+        private HashSet<InstanceId> _minionsNow = new();
+
+        private bool IsVenomSource(InstanceId id) => _venomBefore.Contains(id) || _venomNow.Contains(id);
+
+        private void TrackVenom(GameState state)
+        {
+            (_venomBefore, _venomNow) = (_venomNow, _venomBefore);
+            (_minionsBefore, _minionsNow) = (_minionsNow, _minionsBefore);
+            _venomNow.Clear();
+            _minionsNow.Clear();
+            foreach (PlayerState ps in state.Players)
+            {
+                foreach (CardInstance m in ps.Board)
+                {
+                    _minionsNow.Add(m.Id);
+                    if (m.Keywords.Contains(Keyword.VENOM)) _venomNow.Add(m.Id);
+                }
+                if (ps.Hero != null && ps.Weapon != null && ps.Weapon.Keywords.Contains(Keyword.VENOM))
+                    _venomNow.Add(ps.Hero.Id);
+            }
+            // A minion summoned by this very command can be struck in it too.
+            _minionsBefore.UnionWith(_minionsNow);
+        }
+
+        private void ShowVenomPoof(InstanceId targetId, float delaySeconds)
+        {
+            if (!Application.isPlaying) return;
+            Transform target = ResolveCombatVisual(targetId);
+            Sprite sheet = _uiSprites?.Get(SpellSchoolEffects.VenomPoofKey);
+            if (target == null || sheet == null || Camera.main == null) return;
+            StartCoroutine(SpellSchoolEffects.VenomPoof(transform, sheet, Camera.main, target, delaySeconds));
         }
 
         // Two hits on one character in the same batch would draw on top of each other.
@@ -542,6 +586,7 @@ namespace Kingdom.Presentation
         public void OnStateUpdated(GameState state)
         {
             if (_db == null) return;
+            if (state != null) TrackVenom(state);
 
             // At zero playback delay another snapshot can arrive before the 0.39s motion finishes.
             // A newer authoritative pose wins; never let the old coroutine fight the redraw.

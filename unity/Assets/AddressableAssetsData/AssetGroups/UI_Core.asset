@@ -100,6 +100,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ae15b4344584b3ebdbdfe1433b29cad
+    m_Address: ui/effect_venom_hit_poof
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3d176bcbca0747acae1276e1bb7cd93e
     m_Address: ui/effect_venom_bubbles_2
     m_ReadOnly: 0

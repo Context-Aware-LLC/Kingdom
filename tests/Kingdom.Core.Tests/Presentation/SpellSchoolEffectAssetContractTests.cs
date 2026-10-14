@@ -13,7 +13,8 @@ namespace Kingdom.Core.Tests.Presentation
             ("effect_spell_earth_buildup", "be7678213fe64791b6fab1b09089d14d"),
             ("effect_spell_earth_rock", "cdc7af0a10db4efd9b3f427eb5d1060b"),
             ("effect_spell_earth_impact", "a9c138db28ba4273900034893703d7ff"),
-            ("effect_spell_heal_shimmer", "5ea1f25992c14858954a15d9ea61b045")
+            ("effect_spell_heal_shimmer", "5ea1f25992c14858954a15d9ea61b045"),
+            ("effect_venom_hit_poof", "3ae15b4344584b3ebdbdfe1433b29cad")
         };
 
         [Test]

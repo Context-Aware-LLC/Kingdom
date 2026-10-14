@@ -6,8 +6,9 @@ namespace Kingdom.Presentation
 {
     /// <summary>
     /// Spell-school effects for played spells: earth (a buildup on the caster, a rock falling on
-    /// each target, an impact where it lands) and the healing shimmer on everything a spell heals.
-    /// Each sheet is three frames side by side. Kept apart from the hero power effects on purpose:
+    /// each target, an impact where it lands), the healing shimmer on everything a spell heals,
+    /// and the green poof on a minion a Venom source damages. Each sheet is three frames side by
+    /// side. Kept apart from the hero power effects on purpose:
     /// similar, not the same (Sam, 2026-10-13).
     ///
     /// <para>Timing is all relative to the play reveal's start, the moment
@@ -21,6 +22,7 @@ namespace Kingdom.Presentation
         public const string EarthRockKey = "effect_spell_earth_rock";
         public const string EarthImpactKey = "effect_spell_earth_impact";
         public const string HealShimmerKey = "effect_spell_heal_shimmer";
+        public const string VenomPoofKey = "effect_venom_hit_poof";
 
         /// <summary>The first rock lands this long after the reveal card is gone, and each further
         /// target this long after the one before. VfxDirector hands both to the classifier, which
@@ -35,6 +37,7 @@ namespace Kingdom.Presentation
         private const float ImpactSeconds = 0.36f;
         private const float ShimmerSeconds = 0.55f;
         private const float ShimmerStagger = 0.05f;
+        private const float PoofSeconds = 0.5f;
 
         private static readonly Dictionary<Sprite, Sprite[]> Frames = new();
 
@@ -130,6 +133,33 @@ namespace Kingdom.Presentation
                 Place(sr, camera, target != null ? target.position : fallback,
                       BoardController.CardW * Mathf.Lerp(1.0f, 1.35f, t));
                 sr.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 8f) * (1f - Ramp(t, 0.65f)));
+                yield return null;
+            }
+            if (sr != null) Object.Destroy(sr.gameObject);
+        }
+
+        /// <summary>The poof bursts over a minion the moment a Venom source's hit lands on it,
+        /// which for a combat hit is when the lunge connects, the same delay as the damage
+        /// number.</summary>
+        public static IEnumerator VenomPoof(Transform parent, Sprite sheet, Camera camera,
+                                            Transform target, float startIn)
+        {
+            if (target == null) yield break;
+            Vector3 last = target.position;
+            if (startIn > 0f) yield return new WaitForSeconds(startIn);
+            if (parent == null || sheet == null || camera == null) yield break;
+
+            SpriteRenderer sr = MakeRenderer(parent, "VenomHitPoof");
+            Sprite[] frames = FramesOf(sheet);
+            float elapsed = 0f;
+            while (elapsed < PoofSeconds && sr != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / PoofSeconds);
+                if (target != null) last = target.position;
+                Show(sr, frames, t);
+                Place(sr, camera, last, BoardController.CardW * Mathf.Lerp(1.1f, 1.6f, t));
+                sr.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 10f) * (1f - Ramp(t, 0.6f)));
                 yield return null;
             }
             if (sr != null) Object.Destroy(sr.gameObject);
