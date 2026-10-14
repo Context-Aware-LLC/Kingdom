@@ -27,6 +27,8 @@ namespace Kingdom.Presentation
     ///                       the body shader still supplies the readable spectral fade
     ///   Frost crystals   → frostCrystals grows three edge pieces on board minions only;
     ///                       SG_Frost remains the full-card freeze/thaw treatment
+    ///   Venom bubbles    → venomBubbles loops three drawings of a bubble ring on the attack
+    ///                       socket of board minions only
     ///
     /// DEATH IS NOT HERE. The death burn is <see cref="CardDeathDissolve"/>, driven by
     /// BoardController, because dissolving one renderer out of ~13 dissolves nothing a player can
@@ -43,6 +45,7 @@ namespace Kingdom.Presentation
         private Renderer _bulwarkRenderer; // paired-shield sprite; board-only status treatment
         private ShroudSmokeView _shroudSmoke; // three-piece animated perimeter smoke; board-only
         private FrostCrystalView _frostCrystals; // three-piece crystalline silhouette; board-only
+        private VenomBubbleView _venomBubbles; // three-frame bubble ring on the attack socket; board-only
 
         private InstanceId _id;
         private ICardLiveState _live;
@@ -76,7 +79,8 @@ namespace Kingdom.Presentation
 
         public void SetupRenderers(Renderer body, Renderer glow, Renderer aegis, Renderer frost = null,
                                    Renderer bulwark = null, ShroudSmokeView shroudSmoke = null,
-                                   FrostCrystalView frostCrystals = null)
+                                   FrostCrystalView frostCrystals = null,
+                                   VenomBubbleView venomBubbles = null)
         {
             _bodyRenderer  = body;
             _glowRenderer  = glow;
@@ -85,6 +89,7 @@ namespace Kingdom.Presentation
             _bulwarkRenderer = bulwark;
             _shroudSmoke = shroudSmoke;
             _frostCrystals = frostCrystals;
+            _venomBubbles = venomBubbles;
             _mpb = new MaterialPropertyBlock();
         }
 
@@ -102,6 +107,7 @@ namespace Kingdom.Presentation
             ApplyBulwark(auras);
             ApplyShroudSmoke(auras);
             ApplyFrostCrystals(auras);
+            ApplyVenomBubbles(auras);
         }
 
         // ── Init (called by BoardController after ICardLiveState is created) ───────
@@ -229,6 +235,7 @@ namespace Kingdom.Presentation
             ApplyBulwark(auras);
             ApplyShroudSmoke(auras);
             ApplyFrostCrystals(auras);
+            ApplyVenomBubbles(auras);
         }
 
         private void ApplyAegis(AuraSet auras)
@@ -349,6 +356,12 @@ namespace Kingdom.Presentation
         {
             if (_frostCrystals != null)
                 _frostCrystals.SetVisible(_boardStatusEffectsVisible && (auras & AuraSet.Frosted) != 0);
+        }
+
+        private void ApplyVenomBubbles(AuraSet auras)
+        {
+            if (_venomBubbles != null)
+                _venomBubbles.SetVisible(_boardStatusEffectsVisible && (auras & AuraSet.Venom) != 0);
         }
 
         // ── MatchRunner.OnMatchEvent — one-shot damage/heal flash ─────────────────

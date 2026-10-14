@@ -47,28 +47,39 @@ namespace Kingdom.Editor
                 frostLower.transform.SetParent(card.transform);
                 var frostCrystals = card.AddComponent<FrostCrystalView>();
                 frostCrystals.Setup(frostLeft, frostRight, frostLower);
+                var venomFirst = new GameObject("VenomFirst").AddComponent<SpriteRenderer>();
+                var venomSecond = new GameObject("VenomSecond").AddComponent<SpriteRenderer>();
+                var venomThird = new GameObject("VenomThird").AddComponent<SpriteRenderer>();
+                venomFirst.transform.SetParent(card.transform);
+                venomSecond.transform.SetParent(card.transform);
+                venomThird.transform.SetParent(card.transform);
+                var venomBubbles = card.AddComponent<VenomBubbleView>();
+                venomBubbles.Setup(venomFirst, venomSecond, venomThird);
                 var binder = card.AddComponent<CardMaterialBinder>();
                 var live = new StubLiveState(new InstanceId(321),
-                    AuraSet.Bulwark | AuraSet.Shroud | AuraSet.Frosted);
+                    AuraSet.Bulwark | AuraSet.Shroud | AuraSet.Frosted | AuraSet.Venom);
 
-                binder.SetupRenderers(null, null, null, null, shields, smoke, frostCrystals);
+                binder.SetupRenderers(null, null, null, null, shields, smoke, frostCrystals, venomBubbles);
                 binder.Init(live, null);
                 if (shields.enabled || left.enabled || right.enabled || lower.enabled
-                    || frostLeft.enabled || frostRight.enabled || frostLower.enabled)
+                    || frostLeft.enabled || frostRight.enabled || frostLower.enabled
+                    || venomFirst.enabled || venomSecond.enabled || venomThird.enabled)
                     throw new InvalidOperationException("Board status effects appeared while the card was in hand.");
 
                 binder.SetBoardStatusEffectsVisible(true);
                 if (!shields.enabled || !left.enabled || !right.enabled || !lower.enabled
-                    || !frostLeft.enabled || !frostRight.enabled || !frostLower.enabled)
+                    || !frostLeft.enabled || !frostRight.enabled || !frostLower.enabled
+                    || !venomFirst.enabled || !venomSecond.enabled || !venomThird.enabled)
                     throw new InvalidOperationException(
-                        "Bulwark, Shroud, or Frost treatment did not appear on a board minion.");
+                        "Bulwark, Shroud, Frost, or Venom treatment did not appear on a board minion.");
 
                 binder.SetBoardStatusEffectsVisible(false);
                 if (shields.enabled || left.enabled || right.enabled || lower.enabled
-                    || frostLeft.enabled || frostRight.enabled || frostLower.enabled)
+                    || frostLeft.enabled || frostRight.enabled || frostLower.enabled
+                    || venomFirst.enabled || venomSecond.enabled || venomThird.enabled)
                     throw new InvalidOperationException("A board status effect remained visible after the card left the board.");
 
-                Debug.Log("[CardMaterialBinderVerify] checked board-only Bulwark, Shroud, and Frost gates");
+                Debug.Log("[CardMaterialBinderVerify] checked board-only Bulwark, Shroud, Frost, and Venom gates");
             }
             finally
             {

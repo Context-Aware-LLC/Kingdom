@@ -112,6 +112,7 @@ namespace Kingdom.Presentation
             if (ci.Keywords.Contains(Keyword.BULWARK))          a |= AuraSet.Bulwark;
             if (ci.Keywords.Contains(Keyword.SHROUD))        a |= AuraSet.Shroud;
             if (ci.Keywords.Contains(Keyword.ARCANE_SURGE))   a |= AuraSet.Glow;
+            if (ci.Keywords.Contains(Keyword.VENOM))          a |= AuraSet.Venom;
             return a;
         }
     }

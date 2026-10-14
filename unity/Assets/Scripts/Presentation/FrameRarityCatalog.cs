@@ -187,6 +187,7 @@ namespace Kingdom.Presentation
         public const int StatSocketOrder = TribePanelOrder + 1;
         public const int PowerSwordOrder = StatSocketOrder;
         public const int PowerCircleOrder = PowerSwordOrder + 1; // sword < circle < labels (10)
+        public const int VenomBubbleOrder = PowerCircleOrder + 1; // on the circle's rim, under the digit
         public const float TribeEm = 100f / MasterH;
         public const float TribeEmFloor = 84f / MasterH;
 

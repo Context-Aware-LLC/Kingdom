@@ -100,6 +100,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3d176bcbca0747acae1276e1bb7cd93e
+    m_Address: ui/effect_venom_bubbles_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 467ef0cab3a3404db7b6336508fe1b72
     m_Address: ui/socket_stat
     m_ReadOnly: 0
@@ -350,6 +355,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf2333b0c67b45d899551186059c26c6
+    m_Address: ui/effect_venom_bubbles_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d0fc776f8071429da08550ae133cbbeb
     m_Address: ui/socket_cost
     m_ReadOnly: 0
@@ -432,6 +442,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e79c64ac84684ad78a660f8f5b30b0d4
     m_Address: ui/socket_health
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef2e6d9a233f40109a825ff58f7d2bcf
+    m_Address: ui/effect_venom_bubbles_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

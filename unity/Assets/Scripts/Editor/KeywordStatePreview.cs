@@ -9,8 +9,8 @@ using UnityEngine;
 namespace Kingdom.Editor
 {
     /// <summary>
-    /// Renders one board minion per status keyword — Aegis, Bulwark, Shroud, Frost — with that
-    /// keyword's treatment SETTLED, as the pictures the public keyword glossary shows
+    /// Renders one board minion per status keyword — Aegis, Bulwark, Shroud, Frost, Venom — with
+    /// that keyword's treatment SETTLED, as the pictures the public keyword glossary shows
     /// (web/landing, Sam 2026-10-10). Each card is a real one built by BoardController's own
     /// CreatePresenter path, the same way <see cref="CardFrostPreview"/> builds its card.
     ///
@@ -53,8 +53,9 @@ namespace Kingdom.Editor
             Shot("shroud", 1014, 3, 3, ci => ci.Keywords.Add(Keyword.SHROUD), SettleShroud); // Veilstalker
             // Frost is something done TO a minion, so the card is one that does not print it.
             Shot("frost", 1003, 4, 4, null, SettleFrost);                                 // Cinder Drake
+            Shot("venom", 1098, 4, 5, ci => ci.Keywords.Add(Keyword.VENOM), SettleVenom);  // Venomscale Drake
 
-            Debug.Log($"[KeywordStatePreview] wrote 4 PNGs to {OutDir}");
+            Debug.Log($"[KeywordStatePreview] wrote 5 PNGs to {OutDir}");
         }
 
         private static void Shot(string name, int cardId, int attack, int health,
@@ -140,6 +141,14 @@ namespace Kingdom.Editor
             if (crystals == null) { Debug.LogError("[KeywordStatePreview] no frost crystal view."); return; }
             crystals.SetVisible(true);
             Call(crystals, "ApplyPose", 1f);
+        }
+
+        private static void SettleVenom(CardMaterialBinder binder)
+        {
+            var bubbles = Field<VenomBubbleView>(binder, "_venomBubbles");
+            if (bubbles == null) { Debug.LogError("[KeywordStatePreview] no venom bubble view."); return; }
+            bubbles.SetVisible(true);
+            Call(bubbles, "ApplyPose", 1f, 0f);
         }
 
         private static T Field<T>(object target, string name) where T : class

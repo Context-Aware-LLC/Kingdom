@@ -5,7 +5,7 @@ using Kingdom.Core.Contracts;
 namespace Kingdom.Presentation
 {
     [Flags]
-    public enum AuraSet { None = 0, Shield = 1, Shroud = 2, Glow = 4, Bulwark = 8, Frosted = 16 }
+    public enum AuraSet { None = 0, Shield = 1, Shroud = 2, Glow = 4, Bulwark = 8, Frosted = 16, Venom = 32 }
 
     [Flags]
     public enum CardChange

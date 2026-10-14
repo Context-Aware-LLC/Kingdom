@@ -73,6 +73,12 @@ namespace Kingdom.Presentation
         internal const string FrostCrystalsLeftSpriteKey = "effect_frost_crystals_left";
         internal const string FrostCrystalsRightSpriteKey = "effect_frost_crystals_right";
         internal const string FrostCrystalsLowerSpriteKey = "effect_frost_crystals_lower";
+        internal const string VenomBubblesFirstSpriteKey = "effect_venom_bubbles_1";
+        internal const string VenomBubblesSecondSpriteKey = "effect_venom_bubbles_2";
+        internal const string VenomBubblesThirdSpriteKey = "effect_venom_bubbles_3";
+        // The ring's hole is 0.49 of its canvas and the socket's well about 0.8 of its own, so
+        // at 1.4 the bubbles sit on the metal rim and leave the digit's well open.
+        internal const float VenomBubbleScale = 1.4f;
 
         // WHERE THE STAT ROW SITS, as a fraction of CardH below the card's centre. The lowest thing
         // a minion carries, so it is the line the hand fan must not cover — the fan draws in FRONT
@@ -1192,6 +1198,27 @@ namespace Kingdom.Presentation
             healthSocket.gameObject.SetActive(false);
             gemSocket.gameObject.SetActive(false);
 
+            // Venom status treatment — bubbles on the attack socket, because Venom changes what
+            // the attack does and nothing else (Sam, 2026-10-13). Parented to the socket so the
+            // ring follows wherever ApplySocketSprites places it and goes with it when a card
+            // draws no attack; the perimeter stays free for Shroud, Frost and Bulwark.
+            var venomRoot = new GameObject("VenomBubbles");
+            venomRoot.transform.SetParent(attackSocket.transform, false);
+            var venomSize = new Vector2(
+                FrameRarityCatalog.StatSocketPx / FrameRarityCatalog.MasterW * CardW,
+                FrameRarityCatalog.StatSocketPx / FrameRarityCatalog.MasterH * CardH) * VenomBubbleScale;
+            var venomFirst = MakeSprite(venomRoot.transform, "First", new Vector3(0f, 0f, -0.0004f), venomSize);
+            var venomSecond = MakeSprite(venomRoot.transform, "Second", new Vector3(0f, 0f, -0.0004f), venomSize);
+            var venomThird = MakeSprite(venomRoot.transform, "Third", new Vector3(0f, 0f, -0.0004f), venomSize);
+            SpriteMaterials.SetPreservingSize(venomFirst, _uiSprites?.Get(VenomBubblesFirstSpriteKey));
+            SpriteMaterials.SetPreservingSize(venomSecond, _uiSprites?.Get(VenomBubblesSecondSpriteKey));
+            SpriteMaterials.SetPreservingSize(venomThird, _uiSprites?.Get(VenomBubblesThirdSpriteKey));
+            venomFirst.sortingOrder = FrameRarityCatalog.VenomBubbleOrder;
+            venomSecond.sortingOrder = FrameRarityCatalog.VenomBubbleOrder;
+            venomThird.sortingOrder = FrameRarityCatalog.VenomBubbleOrder;
+            var venomBubbles = venomRoot.AddComponent<VenomBubbleView>();
+            venomBubbles.Setup(venomFirst, venomSecond, venomThird);
+
             // NO KEYWORD ICON STRIP (removed 2026-09-04, Sam: "we aren't doing keyword icons").
             // This built four SpriteRenderers per card below the art window, immediately
             // SetActive(false), for CardPresenter to fill from StatusMarkCatalog. It never filled
@@ -1346,7 +1373,7 @@ namespace Kingdom.Presentation
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
             var binder = root.AddComponent<CardMaterialBinder>();
             binder.SetupRenderers(bodyRenderer, glowRenderer, aegisRenderer, frostRenderer,
-                                  bulwarkRenderer, shroudSmoke, frostCrystals);
+                                  bulwarkRenderer, shroudSmoke, frostCrystals, venomBubbles);
 
             return presenter;
         }
