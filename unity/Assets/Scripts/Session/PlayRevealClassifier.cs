@@ -28,15 +28,27 @@ namespace Kingdom.Session
         public readonly float EarthLead;
         public readonly float EarthStagger;
 
+        /// <summary>A healing spell's sparkles fly from the caster to each target after the card
+        /// is gone, the same way: <see cref="HealLead"/> to the first, then
+        /// <see cref="HealStagger"/> apart, releasing as the last arrives.</summary>
+        public readonly float HealLead;
+        public readonly float HealStagger;
+
         public PlayRevealHolds(float minion, float spell, float weapon,
-                               float earthLead = 0f, float earthStagger = 0f)
+                               float earthLead = 0f, float earthStagger = 0f,
+                               float healLead = 0f, float healStagger = 0f)
         {
             Minion = minion;
             Spell  = spell;
             Weapon = weapon;
             EarthLead = earthLead;
             EarthStagger = earthStagger;
+            HealLead = healLead;
+            HealStagger = healStagger;
         }
+
+        public float HealTail(int targets) =>
+            targets <= 0 ? 0f : HealLead + (targets - 1) * HealStagger;
 
         /// <summary>What an earth spell striking <paramref name="targets"/> characters adds to
         /// the spell beat.</summary>
@@ -209,6 +221,8 @@ namespace Kingdom.Session
                                      && struck.Count > 0
                     ? SpellEffect.Earth : SpellEffect.None;
                 float tail = effect == SpellEffect.Earth ? holds.EarthTail(struck.Count) : 0f;
+                if (def.Type == CardType.SPELL)
+                    tail = System.Math.Max(tail, holds.HealTail(healed.Count));
 
                 return new PlayReveal(def, source, target, played.Controller, def.Type, hold + tail,
                                       dest, slot, boardCount, struck, healed, effect, hold);

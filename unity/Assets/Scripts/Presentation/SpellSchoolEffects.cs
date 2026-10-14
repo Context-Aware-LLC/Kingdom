@@ -23,6 +23,7 @@ namespace Kingdom.Presentation
         public const string EarthImpactKey = "effect_spell_earth_impact";
         public const string HealShimmerKey = "effect_spell_heal_shimmer";
         public const string VenomPoofKey = "effect_venom_hit_poof";
+        public const string HealTravelKey = "effect_spell_heal_travel";
 
         /// <summary>The first rock lands this long after the reveal card is gone, and each further
         /// target this long after the one before. VfxDirector hands both to the classifier, which
@@ -30,13 +31,21 @@ namespace Kingdom.Presentation
         public const float EarthLeadSeconds = 0.55f;
         public const float EarthStaggerSeconds = 0.09f;
 
+        /// <summary>The healing sparkles reach the first target this long after the reveal card is
+        /// gone, and each further target this long after the one before.</summary>
+        public const float HealLeadSeconds = 0.42f;
+        public const float HealStaggerSeconds = 0.05f;
+        private const float HealTravelSeconds = 0.36f;
+        // The lead star sits right of the frame's centre; this is its offset as a fraction of the
+        // drawn width, so the star, not the middle of the trail, is what arrives.
+        private const float HealHeadOffset = 0.27f;
+
         private const int SortOrder = 82;
         private const float DepthFraction = 0.06f;
         private const float BuildupSeconds = 0.62f;
         private const float FallSeconds = 0.34f;
         private const float ImpactSeconds = 0.36f;
         private const float ShimmerSeconds = 0.55f;
-        private const float ShimmerStagger = 0.05f;
         private const float PoofSeconds = 0.5f;
 
         private static readonly Dictionary<Sprite, Sprite[]> Frames = new();
@@ -170,8 +179,42 @@ namespace Kingdom.Presentation
         public static float RockLandsAt(float cardSeconds, int index) =>
             cardSeconds + EarthLeadSeconds + index * EarthStaggerSeconds;
 
-        public static float ShimmerStartsAt(float releaseSeconds, int index) =>
-            Mathf.Max(0f, releaseSeconds - 0.12f) + index * ShimmerStagger;
+        public static float HealArrivesAt(float cardSeconds, int index) =>
+            cardSeconds + HealLeadSeconds + index * HealStaggerSeconds;
+
+        /// <summary>A trail of sparkles from the caster to one healed target, its lead star
+        /// arriving <paramref name="arriveIn"/> seconds from now.</summary>
+        public static IEnumerator HealTravel(Transform parent, Sprite sheet, Camera camera,
+                                             Transform from, Transform target, Vector3 fallback,
+                                             float arriveIn)
+        {
+            float travel = Mathf.Min(HealTravelSeconds, Mathf.Max(0.01f, arriveIn));
+            float wait = arriveIn - travel;
+            if (wait > 0f) yield return new WaitForSeconds(wait);
+            if (parent == null || sheet == null || camera == null || from == null) yield break;
+
+            Vector3 start = from.position;
+            SpriteRenderer sr = MakeRenderer(parent, "HealTravel");
+            Sprite[] frames = FramesOf(sheet);
+            float width = BoardController.CardW * 1.8f;
+            float elapsed = 0f;
+            while (elapsed < travel && sr != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / travel);
+                Vector3 end = target != null ? target.position : fallback;
+                Vector3 delta = end - start;
+                Vector3 dir = delta.sqrMagnitude > 1e-6f ? delta.normalized : Vector3.right;
+                Vector3 head = Vector3.Lerp(start, end, Mathf.SmoothStep(0f, 1f, t));
+
+                SpriteMaterials.Set(sr, frames[Mathf.FloorToInt(elapsed / 0.08f) % frames.Length]);
+                Place(sr, camera, head - dir * (width * HealHeadOffset), width);
+                sr.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
+                sr.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 6f) * (1f - Ramp(t, 0.85f)));
+                yield return null;
+            }
+            if (sr != null) Object.Destroy(sr.gameObject);
+        }
 
         public static float BuildupStartsAt(float cardSeconds) =>
             Mathf.Max(0f, cardSeconds + EarthLeadSeconds - FallSeconds - BuildupSeconds * 0.85f);

@@ -103,7 +103,9 @@ namespace Kingdom.Presentation
                                 spellBeat.TotalHoldSeconds,
                                 weaponBeat.TotalHoldSeconds,
                                 SpellSchoolEffects.EarthLeadSeconds,
-                                SpellSchoolEffects.EarthStaggerSeconds);
+                                SpellSchoolEffects.EarthStaggerSeconds,
+                                SpellSchoolEffects.HealLeadSeconds,
+                                SpellSchoolEffects.HealStaggerSeconds);
 
         private RevealTiming TimingFor(CardType type) => type switch
         {
@@ -360,12 +362,13 @@ namespace Kingdom.Presentation
             _uiSprites ??= new AddressableUiSpriteProvider();
 #endif
 
+            Transform caster = null;
+            foreach (PlayerState ps in _state.Players)
+                if (ps.Id == reveal.Controller && ps.Hero != null)
+                    caster = _board.ResolveCombatVisual(ps.Hero.Id);
+
             if (reveal.Effect == SpellEffect.Earth)
             {
-                Transform caster = null;
-                foreach (PlayerState ps in _state.Players)
-                    if (ps.Id == reveal.Controller && ps.Hero != null)
-                        caster = _board.ResolveCombatVisual(ps.Hero.Id);
                 StartCoroutine(SpellSchoolEffects.EarthCaster(transform,
                     _uiSprites.Get(SpellSchoolEffects.EarthBuildupKey), cam, caster,
                     SpellSchoolEffects.BuildupStartsAt(reveal.CardSeconds)));
@@ -384,14 +387,21 @@ namespace Kingdom.Presentation
             }
 
             Sprite shimmer = reveal.Healed.Count > 0 ? _uiSprites.Get(SpellSchoolEffects.HealShimmerKey) : null;
+            Sprite sparkles = reveal.Healed.Count > 0 ? _uiSprites.Get(SpellSchoolEffects.HealTravelKey) : null;
             for (int i = 0; i < reveal.Healed.Count; i++)
             {
                 InstanceId id = reveal.Healed[i];
                 Vector3? at = ResolvePosition(id);
                 Transform visual = _board.ResolveCombatVisual(id);
                 if (visual == null && !at.HasValue) continue;
+                Vector3 fallback = at ?? visual.position;
+                float arrives = SpellSchoolEffects.HealArrivesAt(reveal.CardSeconds, i);
+                // A spell that heals its own caster has no distance to travel; it just shimmers.
+                if (caster != null && caster != visual)
+                    StartCoroutine(SpellSchoolEffects.HealTravel(transform, sparkles, cam, caster,
+                        visual, fallback, arrives));
                 StartCoroutine(SpellSchoolEffects.HealShimmer(transform, shimmer, cam, visual,
-                    at ?? visual.position, SpellSchoolEffects.ShimmerStartsAt(reveal.HoldSeconds, i)));
+                    fallback, Mathf.Max(0f, arrives - 0.05f)));
             }
         }
 
