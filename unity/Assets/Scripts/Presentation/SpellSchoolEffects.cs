@@ -6,7 +6,8 @@ namespace Kingdom.Presentation
 {
     /// <summary>
     /// Spell-school effects for played spells: earth (a buildup on the caster, a rock falling on
-    /// each target, an impact where it lands), the healing shimmer on everything a spell heals,
+    /// each target, an impact where it lands), lightning (an arc from the caster to each target,
+    /// then a bolt down onto it), the healing sparkles and shimmer on everything a spell heals,
     /// and the green poof on a minion a Venom source damages. Each sheet is three frames side by
     /// side. Kept apart from the hero power effects on purpose:
     /// similar, not the same (Sam, 2026-10-13).
@@ -24,6 +25,8 @@ namespace Kingdom.Presentation
         public const string HealShimmerKey = "effect_spell_heal_shimmer";
         public const string VenomPoofKey = "effect_venom_hit_poof";
         public const string HealTravelKey = "effect_spell_heal_travel";
+        public const string LightningArcKey = "effect_spell_lightning_arc";
+        public const string LightningStrikeKey = "effect_spell_lightning_strike";
 
         /// <summary>The first rock lands this long after the reveal card is gone, and each further
         /// target this long after the one before. VfxDirector hands both to the classifier, which
@@ -34,6 +37,16 @@ namespace Kingdom.Presentation
         /// <summary>The healing sparkles reach the first target this long after the reveal card is
         /// gone, and each further target this long after the one before.</summary>
         public const float HealLeadSeconds = 0.42f;
+
+        /// <summary>The bolt strikes the first target this long after the reveal card is gone,
+        /// and each further target this long after the one before.</summary>
+        public const float LightningLeadSeconds = 0.32f;
+        public const float LightningStaggerSeconds = 0.07f;
+        private const float ArcSeconds = 0.26f;      // ends just after the strike
+        private const float StrikeSeconds = 0.32f;   // starts just before it
+        // The strike's tip sits this far below the frame's centre, as a fraction of its height,
+        // so it is the tip that lands on the target.
+        private const float StrikeTipOffset = 0.43f;
         public const float HealStaggerSeconds = 0.05f;
         private const float HealTravelSeconds = 0.36f;
         // The lead star sits right of the frame's centre; this is its offset as a fraction of the
@@ -178,6 +191,79 @@ namespace Kingdom.Presentation
         /// start: after the card, then a stagger apart. The last lands on the release.</summary>
         public static float RockLandsAt(float cardSeconds, int index) =>
             cardSeconds + EarthLeadSeconds + index * EarthStaggerSeconds;
+
+        public static float LightningStrikesAt(float cardSeconds, int index) =>
+            cardSeconds + LightningLeadSeconds + index * LightningStaggerSeconds;
+
+        /// <summary>An arc from the caster to one target, then the bolt down onto it, striking
+        /// <paramref name="strikeIn"/> seconds from now.</summary>
+        public static IEnumerator LightningStrike(Transform parent, Sprite arcSheet, Sprite strikeSheet,
+                                                  Camera camera, Transform caster, Transform target,
+                                                  Vector3 fallback, float strikeIn)
+        {
+            float arcStart = strikeIn - ArcSeconds * 0.8f;
+            if (arcStart > 0f) yield return new WaitForSeconds(arcStart);
+            if (parent == null || camera == null) yield break;
+
+            Vector3 Target() => target != null ? target.position : fallback;
+            SpriteRenderer arc = caster != null && arcSheet != null && caster != target
+                ? MakeRenderer(parent, "LightningArc") : null;
+            SpriteRenderer bolt = null;
+            Sprite[] arcFrames = arcSheet != null ? FramesOf(arcSheet) : null;
+            Sprite[] boltFrames = strikeSheet != null ? FramesOf(strikeSheet) : null;
+            float boltAt = ArcSeconds * 0.8f - 0.06f;
+            float elapsed = 0f;
+            while (elapsed < boltAt + StrikeSeconds)
+            {
+                if (parent == null) yield break;
+                elapsed += Time.deltaTime;
+
+                if (arc != null)
+                {
+                    float t = Mathf.Clamp01(elapsed / ArcSeconds);
+                    if (t >= 1f) { Object.Destroy(arc.gameObject); arc = null; }
+                    else
+                    {
+                        // The bolt flickers between its three drawings rather than playing them once.
+                        SpriteMaterials.Set(arc, arcFrames[Mathf.FloorToInt(elapsed / 0.05f) % arcFrames.Length]);
+                        Stretch(arc, camera, caster != null ? caster.position : Target(), Target());
+                        arc.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 8f) * (1f - Ramp(t, 0.7f)));
+                    }
+                }
+
+                if (elapsed >= boltAt && boltFrames != null)
+                {
+                    bolt ??= MakeRenderer(parent, "LightningStrike");
+                    float t = Mathf.Clamp01((elapsed - boltAt) / StrikeSeconds);
+                    SpriteMaterials.Set(bolt, boltFrames[Mathf.FloorToInt((elapsed - boltAt) / 0.06f) % boltFrames.Length]);
+                    float height = BoardController.CardH * 2.1f;
+                    Place(bolt, camera, Target() + Vector3.up * (height * StrikeTipOffset), height);
+                    // It cracks down from above in the first few frames, then holds and fades.
+                    bolt.transform.localScale = new Vector3(bolt.transform.localScale.x,
+                        bolt.transform.localScale.y * Mathf.Lerp(0.55f, 1f, Mathf.Clamp01(t * 5f)), 1f);
+                    bolt.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 12f) * (1f - Ramp(t, 0.5f)));
+                }
+                yield return null;
+            }
+            if (arc != null) Object.Destroy(arc.gameObject);
+            if (bolt != null) Object.Destroy(bolt.gameObject);
+        }
+
+        // Lays a horizontal frame along from..to: its painted span (about 0.85 of the frame) covers
+        // the distance, and it keeps a fixed thickness however far apart the two ends are.
+        private static void Stretch(SpriteRenderer sr, Camera camera, Vector3 from, Vector3 to)
+        {
+            if (sr.sprite == null) return;
+            Vector3 a = Vector3.Lerp(from, camera.transform.position, DepthFraction);
+            Vector3 b = Vector3.Lerp(to, camera.transform.position, DepthFraction);
+            Vector3 delta = b - a;
+            Vector3 extent = sr.sprite.bounds.size;
+            sr.transform.position = (a + b) * 0.5f;
+            sr.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+            sr.transform.localScale = new Vector3(
+                delta.magnitude / 0.85f / Mathf.Max(extent.x, 0.001f),
+                BoardController.CardW * 0.9f / Mathf.Max(extent.y, 0.001f), 1f);
+        }
 
         public static float HealArrivesAt(float cardSeconds, int index) =>
             cardSeconds + HealLeadSeconds + index * HealStaggerSeconds;

@@ -102,10 +102,12 @@ namespace Kingdom.Presentation
             new PlayRevealHolds(minionBeat.TotalHoldSeconds,
                                 spellBeat.TotalHoldSeconds,
                                 weaponBeat.TotalHoldSeconds,
-                                SpellSchoolEffects.EarthLeadSeconds,
-                                SpellSchoolEffects.EarthStaggerSeconds,
-                                SpellSchoolEffects.HealLeadSeconds,
-                                SpellSchoolEffects.HealStaggerSeconds);
+                                new SchoolTiming(SpellSchoolEffects.EarthLeadSeconds,
+                                                 SpellSchoolEffects.EarthStaggerSeconds),
+                                new SchoolTiming(SpellSchoolEffects.LightningLeadSeconds,
+                                                 SpellSchoolEffects.LightningStaggerSeconds),
+                                new SchoolTiming(SpellSchoolEffects.HealLeadSeconds,
+                                                 SpellSchoolEffects.HealStaggerSeconds));
 
         private RevealTiming TimingFor(CardType type) => type switch
         {
@@ -383,6 +385,22 @@ namespace Kingdom.Presentation
                     if (visual == null && !at.HasValue) continue;
                     StartCoroutine(SpellSchoolEffects.EarthRock(transform, rock, impact, cam, visual,
                         at ?? visual.position, SpellSchoolEffects.RockLandsAt(reveal.CardSeconds, i)));
+                }
+            }
+
+            if (reveal.Effect == SpellEffect.Lightning)
+            {
+                Sprite arc = _uiSprites.Get(SpellSchoolEffects.LightningArcKey);
+                Sprite strike = _uiSprites.Get(SpellSchoolEffects.LightningStrikeKey);
+                for (int i = 0; i < reveal.Struck.Count; i++)
+                {
+                    InstanceId id = reveal.Struck[i];
+                    Vector3? at = ResolvePosition(id);
+                    Transform visual = _board.ResolveCombatVisual(id);
+                    if (visual == null && !at.HasValue) continue;
+                    StartCoroutine(SpellSchoolEffects.LightningStrike(transform, arc, strike, cam,
+                        caster, visual, at ?? visual.position,
+                        SpellSchoolEffects.LightningStrikesAt(reveal.CardSeconds, i)));
                 }
             }
 

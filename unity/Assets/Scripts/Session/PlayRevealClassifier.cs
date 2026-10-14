@@ -21,39 +21,31 @@ namespace Kingdom.Session
         public readonly float Spell;
         public readonly float Weapon;
 
-        /// <summary>An earth spell's rocks land after the reveal card has collapsed, so the beat
-        /// runs on past it: the first rock lands <see cref="EarthLead"/> seconds after the card is
-        /// gone and each further target <see cref="EarthStagger"/> after the one before. The entry
-        /// releases, and the damage shows, as the last one lands.</summary>
-        public readonly float EarthLead;
-        public readonly float EarthStagger;
-
-        /// <summary>A healing spell's sparkles fly from the caster to each target after the card
-        /// is gone, the same way: <see cref="HealLead"/> to the first, then
-        /// <see cref="HealStagger"/> apart, releasing as the last arrives.</summary>
-        public readonly float HealLead;
-        public readonly float HealStagger;
+        /// <summary>A spell-school effect lands after the reveal card has collapsed, so the beat
+        /// runs on past it, and the entry releases (the damage or healing shows) as the effect
+        /// reaches its last target. See <see cref="SchoolTiming"/>.</summary>
+        public readonly SchoolTiming Earth;
+        public readonly SchoolTiming Lightning;
+        public readonly SchoolTiming Heal;
 
         public PlayRevealHolds(float minion, float spell, float weapon,
-                               float earthLead = 0f, float earthStagger = 0f,
-                               float healLead = 0f, float healStagger = 0f)
+                               SchoolTiming earth = default, SchoolTiming lightning = default,
+                               SchoolTiming heal = default)
         {
             Minion = minion;
             Spell  = spell;
             Weapon = weapon;
-            EarthLead = earthLead;
-            EarthStagger = earthStagger;
-            HealLead = healLead;
-            HealStagger = healStagger;
+            Earth = earth;
+            Lightning = lightning;
+            Heal = heal;
         }
 
-        public float HealTail(int targets) =>
-            targets <= 0 ? 0f : HealLead + (targets - 1) * HealStagger;
-
-        /// <summary>What an earth spell striking <paramref name="targets"/> characters adds to
-        /// the spell beat.</summary>
-        public float EarthTail(int targets) =>
-            targets <= 0 ? 0f : EarthLead + (targets - 1) * EarthStagger;
+        public SchoolTiming For(SpellEffect effect) => effect switch
+        {
+            SpellEffect.Earth     => Earth,
+            SpellEffect.Lightning => Lightning,
+            _                     => default,
+        };
 
         /// <summary>Hold for a card type, or 0 for one with no reveal beat. HERO_POWER lands on
         /// the 0 arm and never reaches here anyway: a hero power is not a card played from hand
@@ -86,9 +78,26 @@ namespace Kingdom.Session
         WeaponSocket,
     }
 
+    /// <summary>One school's timing after the reveal card is gone: <see cref="Lead"/> seconds to
+    /// the first target, then <see cref="Stagger"/> between targets.</summary>
+    public readonly struct SchoolTiming
+    {
+        public readonly float Lead;
+        public readonly float Stagger;
+
+        public SchoolTiming(float lead, float stagger)
+        {
+            Lead = lead;
+            Stagger = stagger;
+        }
+
+        /// <summary>What reaching <paramref name="targets"/> characters adds to the beat.</summary>
+        public float Tail(int targets) => targets <= 0 ? 0f : Lead + (targets - 1) * Stagger;
+    }
+
     /// <summary>Which spell-school effect a played spell carries, beyond the reveal itself.
     /// There is no school field on a card; the class stands in for it (Sam, 2026-10-13:
-    /// Stonewarden is earth).</summary>
+    /// Stonewarden is earth; Tempest is lightning).</summary>
     public enum SpellEffect
     {
         None,
@@ -96,6 +105,10 @@ namespace Kingdom.Session
         /// <summary>A Stonewarden spell that deals damage: a buildup on the caster, then a rock
         /// falls on each character it hits.</summary>
         Earth,
+
+        /// <summary>A Tempest spell that deals damage: an arc from the caster to each character
+        /// it hits, then a bolt down onto it.</summary>
+        Lightning,
     }
 
     /// <summary>
@@ -217,12 +230,17 @@ namespace Kingdom.Session
                         healed.Add(f.Target.Value);
                 }
 
-                SpellEffect effect = def.Type == CardType.SPELL && def.Class == CardClass.STONEWARDEN
-                                     && struck.Count > 0
-                    ? SpellEffect.Earth : SpellEffect.None;
-                float tail = effect == SpellEffect.Earth ? holds.EarthTail(struck.Count) : 0f;
+                SpellEffect effect = SpellEffect.None;
+                if (def.Type == CardType.SPELL && struck.Count > 0)
+                    effect = def.Class switch
+                    {
+                        CardClass.STONEWARDEN => SpellEffect.Earth,
+                        CardClass.TEMPEST     => SpellEffect.Lightning,
+                        _                     => SpellEffect.None,
+                    };
+                float tail = holds.For(effect).Tail(struck.Count);
                 if (def.Type == CardType.SPELL)
-                    tail = System.Math.Max(tail, holds.HealTail(healed.Count));
+                    tail = System.Math.Max(tail, holds.Heal.Tail(healed.Count));
 
                 return new PlayReveal(def, source, target, played.Controller, def.Type, hold + tail,
                                       dest, slot, boardCount, struck, healed, effect, hold);
