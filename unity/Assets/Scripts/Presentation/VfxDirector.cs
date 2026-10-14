@@ -101,7 +101,9 @@ namespace Kingdom.Presentation
         public PlayRevealHolds RevealHolds =>
             new PlayRevealHolds(minionBeat.TotalHoldSeconds,
                                 spellBeat.TotalHoldSeconds,
-                                weaponBeat.TotalHoldSeconds);
+                                weaponBeat.TotalHoldSeconds,
+                                SpellSchoolEffects.EarthLeadSeconds,
+                                SpellSchoolEffects.EarthStaggerSeconds);
 
         private RevealTiming TimingFor(CardType type) => type switch
         {
@@ -341,6 +343,56 @@ namespace Kingdom.Presentation
 
             StartCoroutine(FlyReveal(anchorGo.transform, origin.HasValue,
                                      heldPos, heldRot, heldScale, landPos, landScale, timing));
+
+            if (reveal.Type == CardType.SPELL) PlaySpellSchool(reveal);
+        }
+
+        /// <summary>The earth sequence and the healing shimmer. Targets are resolved now, against
+        /// the pre-effect board, and followed while the effect runs; a minion the spell kills is
+        /// still standing until the entry releases.</summary>
+        private void PlaySpellSchool(PlayReveal reveal)
+        {
+            Camera cam = Camera.main;
+            if (cam == null || _state == null) return;
+#if UNITY_EDITOR
+            _uiSprites ??= new EditorUiSpriteProvider();
+#else
+            _uiSprites ??= new AddressableUiSpriteProvider();
+#endif
+
+            if (reveal.Effect == SpellEffect.Earth)
+            {
+                Transform caster = null;
+                foreach (PlayerState ps in _state.Players)
+                    if (ps.Id == reveal.Controller && ps.Hero != null)
+                        caster = _board.ResolveCombatVisual(ps.Hero.Id);
+                StartCoroutine(SpellSchoolEffects.EarthCaster(transform,
+                    _uiSprites.Get(SpellSchoolEffects.EarthBuildupKey), cam, caster,
+                    SpellSchoolEffects.BuildupStartsAt(reveal.CardSeconds)));
+
+                Sprite rock = _uiSprites.Get(SpellSchoolEffects.EarthRockKey);
+                Sprite impact = _uiSprites.Get(SpellSchoolEffects.EarthImpactKey);
+                for (int i = 0; i < reveal.Struck.Count; i++)
+                {
+                    InstanceId id = reveal.Struck[i];
+                    Vector3? at = ResolvePosition(id);
+                    Transform visual = _board.ResolveCombatVisual(id);
+                    if (visual == null && !at.HasValue) continue;
+                    StartCoroutine(SpellSchoolEffects.EarthRock(transform, rock, impact, cam, visual,
+                        at ?? visual.position, SpellSchoolEffects.RockLandsAt(reveal.CardSeconds, i)));
+                }
+            }
+
+            Sprite shimmer = reveal.Healed.Count > 0 ? _uiSprites.Get(SpellSchoolEffects.HealShimmerKey) : null;
+            for (int i = 0; i < reveal.Healed.Count; i++)
+            {
+                InstanceId id = reveal.Healed[i];
+                Vector3? at = ResolvePosition(id);
+                Transform visual = _board.ResolveCombatVisual(id);
+                if (visual == null && !at.HasValue) continue;
+                StartCoroutine(SpellSchoolEffects.HealShimmer(transform, shimmer, cam, visual,
+                    at ?? visual.position, SpellSchoolEffects.ShimmerStartsAt(reveal.HoldSeconds, i)));
+            }
         }
 
         /// <summary>

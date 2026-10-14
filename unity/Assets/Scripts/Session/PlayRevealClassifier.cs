@@ -21,12 +21,27 @@ namespace Kingdom.Session
         public readonly float Spell;
         public readonly float Weapon;
 
-        public PlayRevealHolds(float minion, float spell, float weapon)
+        /// <summary>An earth spell's rocks land after the reveal card has collapsed, so the beat
+        /// runs on past it: the first rock lands <see cref="EarthLead"/> seconds after the card is
+        /// gone and each further target <see cref="EarthStagger"/> after the one before. The entry
+        /// releases, and the damage shows, as the last one lands.</summary>
+        public readonly float EarthLead;
+        public readonly float EarthStagger;
+
+        public PlayRevealHolds(float minion, float spell, float weapon,
+                               float earthLead = 0f, float earthStagger = 0f)
         {
             Minion = minion;
             Spell  = spell;
             Weapon = weapon;
+            EarthLead = earthLead;
+            EarthStagger = earthStagger;
         }
+
+        /// <summary>What an earth spell striking <paramref name="targets"/> characters adds to
+        /// the spell beat.</summary>
+        public float EarthTail(int targets) =>
+            targets <= 0 ? 0f : EarthLead + (targets - 1) * EarthStagger;
 
         /// <summary>Hold for a card type, or 0 for one with no reveal beat. HERO_POWER lands on
         /// the 0 arm and never reaches here anyway: a hero power is not a card played from hand
@@ -59,6 +74,18 @@ namespace Kingdom.Session
         WeaponSocket,
     }
 
+    /// <summary>Which spell-school effect a played spell carries, beyond the reveal itself.
+    /// There is no school field on a card; the class stands in for it (Sam, 2026-10-13:
+    /// Stonewarden is earth).</summary>
+    public enum SpellEffect
+    {
+        None,
+
+        /// <summary>A Stonewarden spell that deals damage: a buildup on the caster, then a rock
+        /// falls on each character it hits.</summary>
+        Earth,
+    }
+
     /// <summary>
     /// What a play reveal needs to draw: the card, the instance it came from (which is how the
     /// reveal finds the hand slot it flew OUT of), who it hit (if anyone), who played it, its type,
@@ -88,10 +115,29 @@ namespace Kingdom.Session
         public readonly int DestSlot;
         public readonly int DestBoardCount;
 
+        /// <summary>Every character the played card damaged, and every one it healed, in the
+        /// order the engine resolved them — read off the entry's own events, so a multi-target
+        /// spell names all of its targets before any of them is hit. Never null.</summary>
+        public readonly IReadOnlyList<InstanceId> Struck;
+        public readonly IReadOnlyList<InstanceId> Healed;
+
+        public readonly SpellEffect Effect;
+
+        /// <summary>When the reveal card itself is gone. Equal to <see cref="HoldSeconds"/> unless
+        /// a spell effect runs on past the card.</summary>
+        public readonly float CardSeconds;
+
         public PlayReveal(CardDefinition def, InstanceId source, InstanceId? target,
                           PlayerId controller, CardType type, float holdSeconds,
-                          RevealDestination destination, int destSlot, int destBoardCount)
+                          RevealDestination destination, int destSlot, int destBoardCount,
+                          IReadOnlyList<InstanceId> struck = null,
+                          IReadOnlyList<InstanceId> healed = null,
+                          SpellEffect effect = SpellEffect.None, float cardSeconds = -1f)
         {
+            Struck = struck ?? System.Array.Empty<InstanceId>();
+            Healed = healed ?? System.Array.Empty<InstanceId>();
+            Effect = effect;
+            CardSeconds = cardSeconds < 0f ? holdSeconds : cardSeconds;
             Def = def;
             Source = source;
             Target = target;
@@ -147,8 +193,25 @@ namespace Kingdom.Session
                     if (events[j].Target.HasValue) { target = events[j].Target; break; }
                 }
 
-                return new PlayReveal(def, source, target, played.Controller, def.Type, hold,
-                                      dest, slot, boardCount);
+                var struck = new List<InstanceId>();
+                var healed = new List<InstanceId>();
+                for (int j = i + 1; j < events.Count; j++)
+                {
+                    GameEvent f = events[j];
+                    if (!f.Target.HasValue || f.Source != source) continue;
+                    if (f.Kind == GameEventKind.DamageApplied && !struck.Contains(f.Target.Value))
+                        struck.Add(f.Target.Value);
+                    else if (f.Kind == GameEventKind.HealthRestored && !healed.Contains(f.Target.Value))
+                        healed.Add(f.Target.Value);
+                }
+
+                SpellEffect effect = def.Type == CardType.SPELL && def.Class == CardClass.STONEWARDEN
+                                     && struck.Count > 0
+                    ? SpellEffect.Earth : SpellEffect.None;
+                float tail = effect == SpellEffect.Earth ? holds.EarthTail(struck.Count) : 0f;
+
+                return new PlayReveal(def, source, target, played.Controller, def.Type, hold + tail,
+                                      dest, slot, boardCount, struck, healed, effect, hold);
             }
 
             return null;
