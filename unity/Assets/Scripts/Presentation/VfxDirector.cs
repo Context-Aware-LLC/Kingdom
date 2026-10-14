@@ -390,8 +390,14 @@ namespace Kingdom.Presentation
 
             if (reveal.Effect == SpellEffect.Lightning)
             {
-                Sprite arc = _uiSprites.Get(SpellSchoolEffects.LightningArcKey);
-                Sprite strike = _uiSprites.Get(SpellSchoolEffects.LightningStrikeKey);
+                // Each spell is either a bolt from the sky or one thrown across the board, never
+                // both; a chain hops from each target to the next instead of from the caster.
+                LightningShape shape = SpellSchoolEffects.LightningShapeOf(reveal.Def.Id);
+                Sprite arc = shape != LightningShape.FromAbove
+                    ? _uiSprites.Get(SpellSchoolEffects.LightningArcKey) : null;
+                Sprite strike = shape == LightningShape.FromAbove
+                    ? _uiSprites.Get(SpellSchoolEffects.LightningStrikeKey) : null;
+                Transform from = caster;
                 for (int i = 0; i < reveal.Struck.Count; i++)
                 {
                     InstanceId id = reveal.Struck[i];
@@ -399,8 +405,9 @@ namespace Kingdom.Presentation
                     Transform visual = _board.ResolveCombatVisual(id);
                     if (visual == null && !at.HasValue) continue;
                     StartCoroutine(SpellSchoolEffects.LightningStrike(transform, arc, strike, cam,
-                        caster, visual, at ?? visual.position,
+                        from, visual, at ?? visual.position,
                         SpellSchoolEffects.LightningStrikesAt(reveal.CardSeconds, i)));
+                    if (shape == LightningShape.Chain && visual != null) from = visual;
                 }
             }
 

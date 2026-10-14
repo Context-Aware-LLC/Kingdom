@@ -17,6 +17,8 @@ namespace Kingdom.Presentation
     /// healing shows, at <c>PlayReveal.HoldSeconds</c>; the earth rocks are scheduled to land
     /// before that, the last one exactly on it.</para>
     /// </summary>
+    internal enum LightningShape { Across, FromAbove, Chain }
+
     internal static class SpellSchoolEffects
     {
         public const string EarthBuildupKey = "effect_spell_earth_buildup";
@@ -191,6 +193,17 @@ namespace Kingdom.Presentation
         /// start: after the card, then a stagger apart. The last lands on the release.</summary>
         public static float RockLandsAt(float cardSeconds, int index) =>
             cardSeconds + EarthLeadSeconds + index * EarthStaggerSeconds;
+
+        /// <summary>Which way each Tempest spell's lightning travels: down from the sky, across
+        /// the board from the caster, or (Chain Lightning) hopping target to target. Keyed by card
+        /// id because the card carries no such field; a Tempest spell not listed here crosses.
+        /// Lightning Bolt comes from above (Sam, 2026-10-14); the rest are his to sort.</summary>
+        public static LightningShape LightningShapeOf(int cardId) => cardId switch
+        {
+            185 => LightningShape.FromAbove, // Lightning Bolt
+            186 => LightningShape.Chain,     // Chain Lightning
+            _   => LightningShape.Across,
+        };
 
         public static float LightningStrikesAt(float cardSeconds, int index) =>
             cardSeconds + LightningLeadSeconds + index * LightningStaggerSeconds;
