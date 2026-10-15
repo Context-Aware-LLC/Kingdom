@@ -42,7 +42,7 @@ namespace Kingdom.Editor
 
         private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        [MenuItem("Kingdom/Preview (offscreen)/Keyword States")]
+        [MenuItem("Kingdom/Preview/Keyword States")]
         public static void Render()
         {
             Directory.CreateDirectory(OutDir);

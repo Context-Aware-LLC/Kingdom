@@ -33,7 +33,7 @@ namespace Kingdom.Editor
         // read-only check — and it is not: NewScene(EmptyScene, Single) followed by SaveScene over
         // ScenePath discards whatever is in that scene, with no undo. The submenu keeps it off the
         // path of a stray click; the dialog below is what actually stops it.
-        [MenuItem("Kingdom/Rebuild Scene — OVERWRITES/Collection")]
+        [MenuItem("Kingdom/Regenerate/Scene — OVERWRITES/Collection")]
         public static void Build()
         {
             // Interactive only. A -batchmode caller asked for this by name and has no one to

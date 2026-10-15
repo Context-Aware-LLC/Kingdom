@@ -11,7 +11,7 @@ namespace Kingdom.Editor
     {
         private const string ScenePath = "Assets/Scenes/CharacterRoster.unity";
 
-        [MenuItem("Kingdom/UI/Verify Character Roster Scene")]
+        [MenuItem("Kingdom/Verify/Character Roster Scene")]
         public static void Check()
         {
             bool sceneExists = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath) != null;

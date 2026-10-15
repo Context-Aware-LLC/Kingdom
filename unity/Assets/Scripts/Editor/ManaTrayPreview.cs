@@ -56,7 +56,7 @@ namespace Kingdom.Editor
             new Case("cap-full",         10, 10, 0, 0, 0),
         };
 
-        [MenuItem("Kingdom/Preview (offscreen)/Mana Tray")]
+        [MenuItem("Kingdom/Preview/Mana Tray")]
         public static void Render()
         {
             string outDir = Path.Combine(RepoRoot(), "artifacts", "mana-tray-preview");

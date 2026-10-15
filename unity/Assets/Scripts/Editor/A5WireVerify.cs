@@ -14,7 +14,7 @@ namespace Kingdom.Editor
     /// </summary>
     public static class A5WireVerify
     {
-        [MenuItem("Kingdom/Verify A5 Wire (hasher + round-trip)")]
+        [MenuItem("Kingdom/Verify/Wire Hasher + Round-trip")]
         public static void Run()
         {
             var p0Id = new PlayerId("p0");

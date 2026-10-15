@@ -9,7 +9,7 @@ namespace Kingdom.Editor
     /// session is back on this account's own decks.</summary>
     internal static class BotDeckEditingMenu
     {
-        private const string Path = "Kingdom/Dev/Edit Bot Decks";
+        private const string Path = "Kingdom/Cards/Edit Bot Decks";
         private const string CollectionScene = "Assets/Scenes/Collection.unity";
 
         [MenuItem(Path)]

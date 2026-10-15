@@ -52,7 +52,7 @@ CLEARING THE BOARD BETWEEN CHUNKS
 
 WHAT IT DELIBERATELY DOES NOT DO
     Delete anything, write a card-data file, or touch Addressables. Promotion puts a file on
-    disk; the Editor still has to run Kingdom/Addressables/Setup Groups + Migrate Card Data
+    disk; the Editor still has to run Kingdom/Regenerate/Addressables Groups
     before that file has an address, and until it does the clip resolves to nothing and fails
     SILENTLY -- the page says so on every promote, because nothing else will. (The .meta Unity
     writes by itself on the next Editor focus; it only needs committing, and git status shows it.)
@@ -708,7 +708,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 verb = "Replaced" if existed else "Promoted"
             self._json(200, {
                 "ok": True, "dest": rel(dest),
-                "message": "%s %s -> %s. Run Kingdom/Addressables/Setup Groups in the Editor "
+                "message": "%s %s -> %s. Run Kingdom/Regenerate/Addressables Groups in the Editor "
                            "-- until then it has no address and fails silently." % (
                                verb, src.name, rel(dest)),
             })

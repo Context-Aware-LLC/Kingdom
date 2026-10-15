@@ -44,10 +44,10 @@ namespace Kingdom.Editor
         private static readonly string[] CarrierKeywordNames =
             CarrierKeywordOptions.Select(keyword => keyword.ToString()).ToArray();
 
-        [MenuItem("Kingdom/Card Authoring Tool")]
+        [MenuItem("Kingdom/Cards/Card Authoring Tool")]
         public static void Open() => GetWindow<CardAuthoringWindow>("Card Authoring");
 
-        [MenuItem("Kingdom/Validate All Cards")]
+        [MenuItem("Kingdom/Cards/Validate All Cards")]
         public static void ValidateAllMenuItem() => CardSetValidator.RunAndLog();
 
         private readonly List<EditableCard> _cards = new List<EditableCard>();

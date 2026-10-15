@@ -35,7 +35,7 @@ the art changes, re-encode from those sources rather than editing the encodes.
 `python web/landing/scripts/build-gallery.py` writes `public/cards.html`, `public/docs/heroes/*.html`,
 `public/docs.html`, `public/docs/heroes.html`, the pages from `docs/pub-docs`, the card encodes, and the roster inside `public/index.html` (between the
 `roster:` markers; edit `heroes.json`, not that block). A hero page is about the character, not
-the class: `heroes.json` holds the name, and the page only lists that hero's keywords. The definitions live once, on `/docs/keywords`, which is `docs/pub-docs/gameplay/keywords.md`: each bold term in its table gets an anchor. Four of them show a board minion wearing the keyword, rendered by `Kingdom/Preview (offscreen)/Keyword States` in Unity.
+the class: `heroes.json` holds the name, and the page only lists that hero's keywords. The definitions live once, on `/docs/keywords`, which is `docs/pub-docs/gameplay/keywords.md`: each bold term in its table gets an anchor. Four of them show a board minion wearing the keyword, rendered by `Kingdom/Preview/Keyword States` in Unity.
 Docs pages share one side menu, built by `docs_nav`. The rules and economy pages are the hand-written
 Markdown files in `docs/pub-docs`, rendered through `page.template.html`; a new one is a file there plus
 a line in `MD_PAGES` (the build needs the `markdown` package). A link between those files is rewritten to

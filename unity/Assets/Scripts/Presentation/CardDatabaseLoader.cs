@@ -49,7 +49,7 @@ namespace Kingdom.Presentation
 #endif
                 throw new System.Exception(
                     $"Card data not found — '{address}' not in Addressables. " +
-                    "Run Kingdom/Addressables/Setup Groups + Migrate Card Data.");
+                    "Run Kingdom/Regenerate/Addressables Groups.");
             }
 
             return new JsonCardDatabase(payloads);

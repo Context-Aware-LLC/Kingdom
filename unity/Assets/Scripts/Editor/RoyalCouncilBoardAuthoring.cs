@@ -13,7 +13,7 @@ namespace Kingdom.Editor
         public const string PrefabPath = "Assets/Resources/Boards/RoyalCouncil.prefab";
         public const string PlaytestPath = "Assets/Scenes/Dev/RoyalCouncilPlaytest.unity";
 
-        [MenuItem("Kingdom/Board/Open Royal Council Playtest")]
+        [MenuItem("Kingdom/Dev/Royal Council Playtest")]
         public static void OpenPlaytest()
         {
             if (EditorApplication.isPlaying) throw new InvalidOperationException("Stop Play before opening the board test scene.");
@@ -34,7 +34,7 @@ namespace Kingdom.Editor
             AssetDatabase.Refresh();
         }
 
-        [MenuItem("Kingdom/Board/Rebuild Royal Council 3D Prefab")]
+        [MenuItem("Kingdom/Regenerate/Royal Council Prefab")]
         public static void BuildPrefab()
         {
             var source = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath);

@@ -45,7 +45,7 @@ namespace Kingdom.Editor
         // parchment and stat bosses rather than a flat quad.
         private const int CardId = 1003;   // ember_cinder_drake
 
-        [MenuItem("Kingdom/Preview (offscreen)/Card Frost")]
+        [MenuItem("Kingdom/Preview/Card Frost")]
         public static void Render()
         {
             Directory.CreateDirectory(OutDir);
@@ -54,7 +54,7 @@ namespace Kingdom.Editor
             if (mat == null)
             {
                 Debug.LogError("[CardFrostPreview] M_Frost.mat missing — run " +
-                               "Kingdom/Materials/Create Shared Materials.");
+                               "Kingdom/Regenerate/Shared Materials.");
                 return;
             }
             if (mat.shader == null || mat.shader.name == "Hidden/InternalErrorShader")

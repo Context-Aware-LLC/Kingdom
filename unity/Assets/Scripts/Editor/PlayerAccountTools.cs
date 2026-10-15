@@ -34,7 +34,7 @@ namespace Kingdom.Editor
         /// then run this while the sign-in screen is up in Play mode. The code is single-use and
         /// pairs with the most recent Google button press, so use the URL from that attempt.
         /// </summary>
-        [MenuItem("Kingdom/Player Account/Deliver Deep Link From Clipboard")]
+        [MenuItem("Kingdom/Dev/Account/Deliver Deep Link From Clipboard")]
         public static void DeliverDeepLinkFromClipboard()
         {
             string url = (GUIUtility.systemCopyBuffer ?? "").Trim().Trim('\'', '"');
@@ -54,7 +54,7 @@ namespace Kingdom.Editor
             Debug.Log("[SignIn] Delivered the deep link from the clipboard.");
         }
 
-        [MenuItem("Kingdom/Player Account/Show This Device's Account")]
+        [MenuItem("Kingdom/Dev/Account/Show This Device's Account")]
         public static void ShowAccount()
         {
             PlayerAccount account;
@@ -123,7 +123,7 @@ namespace Kingdom.Editor
         /// cascade now, and the assertion that replaced it is the opposite one: deleting the LAST
         /// deck succeeds, where the old roster refused it.</para>
         /// </summary>
-        [MenuItem("Kingdom/Player Account/Self-Check (scratch directory)")]
+        [MenuItem("Kingdom/Verify/Player Account Self-Check")]
         public static void SelfCheck()
         {
             string root = Path.Combine(Path.GetTempPath(), "kingdom-account-selfcheck");

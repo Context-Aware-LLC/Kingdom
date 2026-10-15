@@ -60,7 +60,7 @@ namespace Kingdom.Editor
             return files;
         }
 
-        [MenuItem("Kingdom/UI/Check UXML Integrity")]
+        [MenuItem("Kingdom/Verify/UXML Integrity")]
         public static void Check()
         {
             var report = new System.Text.StringBuilder();

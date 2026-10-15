@@ -94,7 +94,7 @@ namespace Kingdom.Editor
         /// listing <c>arm64-v8a</c> (an older or non-Google image), the emulator stops being a rig
         /// and this paragraph, plus the emulator note in project memory, change together.</para>
         /// </summary>
-        [MenuItem("Kingdom/Build/Android APK (content + player, IL2CPP ARM64)")]
+        [MenuItem("Kingdom/Build/Android APK")]
         public static void BuildAndroid()
         {
             SyncSceneList();
@@ -279,7 +279,7 @@ namespace Kingdom.Editor
             }
         }
 
-        [MenuItem("Kingdom/Build/Windows Standalone (content + player)")]
+        [MenuItem("Kingdom/Build/Windows Standalone")]
         public static void BuildWindows()
         {
             SyncSceneList();
@@ -324,7 +324,7 @@ namespace Kingdom.Editor
         /// <para>Set through <c>PlayerSettings</c> rather than by editing the asset, because Unity holds
         /// project settings in memory and would overwrite a file edited underneath it.</para>
         /// </summary>
-        [MenuItem("Kingdom/Build/Restore Product Name (undo scenario rename)")]
+        [MenuItem("Kingdom/Build/Restore Product Name")]
         public static void RestoreProductName()
         {
             string current = PlayerSettings.productName;
@@ -354,7 +354,7 @@ namespace Kingdom.Editor
         /// <para><b>This is what makes scene navigation work in the EDITOR.</b>
         /// <c>SceneManager.LoadScene(name)</c> resolves against the build list.</para>
         /// </summary>
-        [MenuItem("Kingdom/Build/Sync Scene List (fixes Editor scene nav)")]
+        [MenuItem("Kingdom/Build/Sync Scene List")]
         public static void SyncSceneList()
         {
             string[] paths = AllScenes;
@@ -425,7 +425,6 @@ namespace Kingdom.Editor
         /// Editor's active target changes between profile selection and build. Called by
         /// EF-060's <c>BuildAndroid()</c> after it switches the active build target.</para>
         /// </summary>
-        [MenuItem("Kingdom/Build/Android Addressables Content (requires Android active target)")]
         public static void BuildAndroidAddressables()
         {
             var settings = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;

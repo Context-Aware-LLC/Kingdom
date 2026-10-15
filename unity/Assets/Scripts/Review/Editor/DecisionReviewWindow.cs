@@ -22,7 +22,7 @@ namespace Kingdom.Review
         private DecisionReviewBootstrap _reviewer;
         private Vector2 _scroll;
 
-        [MenuItem("Kingdom/Review/Decision Reviewer Panel", priority = 102)]
+        [MenuItem("Kingdom/RL/Decision Reviewer Panel", priority = 102)]
         public static void Open()
         {
             DecisionReviewWindow window = GetWindow<DecisionReviewWindow>("Decision Review");

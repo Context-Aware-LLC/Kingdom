@@ -19,7 +19,7 @@ namespace Kingdom.Review
     {
         private const string BundleKey = "Kingdom.Review.BundleDirectory";
 
-        [MenuItem("Kingdom/Review/Open Decision Reviewer %#r", priority = 100)]
+        [MenuItem("Kingdom/RL/Open Decision Reviewer %#r", priority = 100)]
         public static void Open()
         {
             string directory = EditorPrefs.GetString(BundleKey, "");
@@ -32,7 +32,7 @@ namespace Kingdom.Review
             Launch(directory);
         }
 
-        [MenuItem("Kingdom/Review/Open Decision Reviewer (choose bundle)…", priority = 101)]
+        [MenuItem("Kingdom/RL/Open Decision Reviewer (choose bundle)…", priority = 101)]
         public static void OpenWithPrompt()
         {
             string directory = Prompt(EditorPrefs.GetString(BundleKey, ""));
@@ -41,7 +41,7 @@ namespace Kingdom.Review
             Launch(directory);
         }
 
-        [MenuItem("Kingdom/Review/Capture One Action (game view)", priority = 103)]
+        [MenuItem("Kingdom/RL/Capture One Action (game view)", priority = 103)]
         public static void OpenNativeCapture()
         {
             string directory = EditorPrefs.GetString(BundleKey, "");
@@ -54,7 +54,7 @@ namespace Kingdom.Review
             Launch(directory, captureOneAction: true);
         }
 
-        [MenuItem("Kingdom/Review/Capture One Action (choose bundle)…", priority = 104)]
+        [MenuItem("Kingdom/RL/Capture One Action (choose bundle)…", priority = 104)]
         public static void OpenNativeCaptureWithPrompt()
         {
             string directory = Prompt(EditorPrefs.GetString(BundleKey, ""));

@@ -27,7 +27,7 @@ namespace Kingdom.Editor
     /// </summary>
     public static class CardRevealVerify
     {
-        [MenuItem("Kingdom/Verify Card Reveal (EF-049 trigger + glossary)")]
+        [MenuItem("Kingdom/Verify/Card Reveal")]
         public static void Run()
         {
             Func<int>[] checks =

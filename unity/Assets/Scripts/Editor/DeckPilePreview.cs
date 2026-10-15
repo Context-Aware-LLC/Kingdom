@@ -30,7 +30,7 @@ namespace Kingdom.Editor
 
         private static readonly int[] Counts = { 30, 3, 1, 0 };
 
-        [MenuItem("Kingdom/Preview (offscreen)/Deck Pile")]
+        [MenuItem("Kingdom/Preview/Deck Pile")]
         public static void Render()
         {
             string outDir = Path.Combine(RepoRoot(), "artifacts", "deck-pile-preview");

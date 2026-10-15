@@ -25,7 +25,7 @@ namespace Kingdom.Editor
         // MOVED OUT OF "Kingdom/UI/" AND GATED 2026-09-04 — see the note on the sibling in
         // CreateCollectionScene. Same hazard: NewScene(EmptyScene, Single) then SaveScene over
         // ScenePath, no undo, one menu item away from read-only checks.
-        [MenuItem("Kingdom/Rebuild Scene — OVERWRITES/Character Roster")]
+        [MenuItem("Kingdom/Regenerate/Scene — OVERWRITES/Character Roster")]
         public static void Build()
         {
             // Interactive only — see the sibling in CreateCollectionScene for why batchmode skips it.

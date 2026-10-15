@@ -49,7 +49,7 @@ namespace Kingdom.Editor
 
         private const string SizeLabel = "Kingdom Device (2400x1080)";
 
-        [MenuItem("Kingdom/Debug/Device Layout Rig/Apply (Pixel 5a, 2400x1080)")]
+        [MenuItem("Kingdom/Dev/Game View → Pixel 5a")]
         public static void Apply()
         {
             Debug.Log($"[DeviceLayoutRig] {SetGameViewSize()}. The panel matches the device by "

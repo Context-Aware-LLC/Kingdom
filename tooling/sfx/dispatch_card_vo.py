@@ -146,7 +146,7 @@ def main():
         "\n%s/<handle>/ under the canonical stem"
         "\nwith NO _takeN suffix -- a take that reaches Assets claims its own Addressables"
         "\naddress and the rejects ship with the keeper."
-        "\n\nThen run Kingdom/Addressables/Setup Groups + Migrate Card Data in the Editor and"
+        "\n\nThen run Kingdom/Regenerate/Addressables Groups in the Editor and"
         "\ncommit the .meta Unity generates. Until both happen the clip has no address and"
         "\nfails silently at runtime." % args.final_root
     )

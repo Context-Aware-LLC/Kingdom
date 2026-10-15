@@ -20,7 +20,7 @@ namespace Kingdom.Editor
     /// in doc comments do not produce false positives.</para>
     ///
     /// <para>If this check fails, run
-    /// <b>Kingdom / Addressables / Setup Groups + Migrate Card Data</b> then
+    /// <b>Kingdom / Regenerate / Addressables Groups</b> then
     /// commit the updated <c>AddressableAssetsData/</c> files.</para>
     /// </summary>
     public static class AddressablesGuard
@@ -45,7 +45,7 @@ namespace Kingdom.Editor
         private static readonly Regex BlockComment = new Regex(@"/\*.*?\*/",
             RegexOptions.Compiled | RegexOptions.Singleline);
 
-        [MenuItem("Kingdom/Addressables/Guard — Verify All Script Addresses")]
+        [MenuItem("Kingdom/Verify/Addressables Guard")]
         public static void Check()
         {
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(false);

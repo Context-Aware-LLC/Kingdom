@@ -46,7 +46,7 @@ namespace Kingdom.Editor
         // frame, gem, keyword icons and six TMP labels rather than a bare body quad.
         private const int CardId = 1003;   // ember_cinder_drake
 
-        [MenuItem("Kingdom/Preview (offscreen)/Card Dissolve")]
+        [MenuItem("Kingdom/Preview/Card Dissolve")]
         public static void Render()
         {
             Directory.CreateDirectory(OutDir);
@@ -81,7 +81,7 @@ namespace Kingdom.Editor
                 {
                     Debug.LogError("[CardDissolvePreview] CardDeathDissolve.Prepare failed — " +
                                    "check the CardCapture layer exists and M_Dissolve is on disk " +
-                                   "(Kingdom/Materials/Create Shared Materials).");
+                                   "(Kingdom/Regenerate/Shared Materials).");
                     return;
                 }
 

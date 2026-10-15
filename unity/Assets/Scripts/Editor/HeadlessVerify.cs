@@ -17,7 +17,7 @@ namespace Kingdom.Editor
     /// </summary>
     public static class HeadlessVerify
     {
-        [MenuItem("Kingdom/Headless Verify (all local checks)")]
+        [MenuItem("Kingdom/Verify/All Local Checks")]
         public static void RunAll()
         {
             // unity-verify.ps1 refuses a locked project and advances every project-owned compilation

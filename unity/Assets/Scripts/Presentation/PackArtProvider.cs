@@ -16,11 +16,11 @@ namespace Kingdom.Presentation
     /// folder that exists on disk but was never registered as Addressable has no manifest AT
     /// RUNTIME, so a build quietly wears the expansion's art while the Editor wears the SKU's. That
     /// is the same divergence <c>AddressablesSetup</c> exists to close — re-run
-    /// <c>Kingdom/Addressables/Setup Groups + Migrate Card Data</c> after adding a folder — but
+    /// <c>Kingdom/Regenerate/Addressables Groups</c> after adding a folder — but
     /// with a fallback in front of it there is now no missing picture to notice.</para>
     ///
     /// <para><b>Adding an expansion's art is a content drop, not a code change.</b> Drop the folder,
-    /// write its manifest, re-run <c>Kingdom/Addressables/Setup Groups + Migrate Card Data</c>.
+    /// write its manifest, re-run <c>Kingdom/Regenerate/Addressables Groups</c>.
     /// Nothing here and nothing in the transport layer names a set.</para>
     ///
     /// <para><b>Two silences are deliberate, and they are not the same silence.</b> A set with no

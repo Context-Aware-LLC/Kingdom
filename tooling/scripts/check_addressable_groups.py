@@ -3,7 +3,7 @@
 
 WHY THIS IS A CHECK AND NOT A FIXER
 -----------------------------------
-The obvious version of this runs `Kingdom/Addressables/Setup Groups + Migrate Card Data` for you.
+The obvious version of this runs `Kingdom/Regenerate/Addressables Groups` for you.
 It takes about a second in an open Editor, so the cost is not the objection. Two things are:
 
 1. **A pre-commit hook must not write to the working tree in this repo.** `.githooks/pre-commit`
@@ -51,7 +51,7 @@ ROOTS = {
     "Art/Cards": "CardArt_",
 }
 
-MENU_ITEM = "Kingdom/Addressables/Setup Groups + Migrate Card Data"
+MENU_ITEM = "Kingdom/Regenerate/Addressables Groups"
 
 
 def staged_paths() -> list[str]:

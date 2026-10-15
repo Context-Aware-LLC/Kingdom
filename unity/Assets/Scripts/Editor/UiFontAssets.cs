@@ -44,7 +44,7 @@ namespace Kingdom.Editor
 
         /// <summary>Clear every font asset and refill it with <see cref="Charset"/>, so the
         /// committed atlas is the shipped one. Run after re-cutting a .ttf or changing the set.</summary>
-        [MenuItem("Kingdom/Fonts/Bake Font Atlases")]
+        [MenuItem("Kingdom/Regenerate/Fonts/Bake Atlases")]
         public static void BakeAtlases()
         {
             foreach (string name in TmpAssets)
@@ -81,14 +81,14 @@ namespace Kingdom.Editor
                       + (string.IsNullOrEmpty(missing) ? "" : $"; not in the font: {missing}"));
         }
 
-        [MenuItem("Kingdom/Fonts/Build Board Label Font Assets")]
+        [MenuItem("Kingdom/Regenerate/Fonts/Board Label Assets")]
         public static void Build()
         {
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
             AddressableAssetGroup group = settings.FindGroup("Fonts");
             if (group == null)
             {
-                Debug.LogError("[UiFontAssets] no Fonts group — run Kingdom/Addressables/Setup Groups first.");
+                Debug.LogError("[UiFontAssets] no Fonts group — run Kingdom/Regenerate/Addressables Groups first.");
                 return;
             }
 
@@ -114,7 +114,7 @@ namespace Kingdom.Editor
                     fa.material.name = $"{cut} SDF Material";
                     AssetDatabase.AddObjectToAsset(fa.material, fa);
 
-                    Debug.Log($"[UiFontAssets] created {assetPath}; run Kingdom/Fonts/Bake Font Atlases");
+                    Debug.Log($"[UiFontAssets] created {assetPath}; run Kingdom/Regenerate/Fonts/Bake Atlases");
                 }
 
                 settings.CreateOrMoveEntry(AssetDatabase.AssetPathToGUID(assetPath), group)
@@ -130,7 +130,7 @@ namespace Kingdom.Editor
         /// referenced from USS, so it needs no Addressables entry.</summary>
         public const string MenuButtonFontPath = "Assets/Art/Fonts/ModernAntiqua-Regular UITK.asset";
 
-        [MenuItem("Kingdom/Fonts/Build Menu Button Font Asset")]
+        [MenuItem("Kingdom/Regenerate/Fonts/Menu Button Asset")]
         public static void BuildMenuButtonFont()
         {
             const string ttfPath = "Assets/Art/Fonts/ModernAntiqua-Regular.ttf";

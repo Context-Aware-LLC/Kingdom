@@ -38,7 +38,7 @@ namespace Kingdom.Presentation
             mat = handle.WaitForCompletion();
 #endif
             if (mat == null)
-                Debug.LogWarning($"[MaterialCatalog] material '{name}' not found — run Kingdom/Addressables setup after Kingdom/Materials setup");
+                Debug.LogWarning($"[MaterialCatalog] material '{name}' not found — run Kingdom/Regenerate/Addressables Groups after Kingdom/Regenerate/Shared Materials");
 
             _cache[name] = mat;
             return mat;

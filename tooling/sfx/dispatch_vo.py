@@ -26,7 +26,7 @@ finalised into Assets is skipped entirely. --force regenerates.
     python tooling/sfx/dispatch_vo.py                      # everything outstanding
 
 AFTERWARDS, two steps this script cannot do:
-  1. Run Kingdom/Addressables/Setup Groups + Migrate Card Data in the Editor.
+  1. Run Kingdom/Regenerate/Addressables Groups in the Editor.
      Files under Assets/Sound/Voice have NO address until that runs, and an
      unaddressed clip fails silently -- no exception, no console error.
   2. Commit the .meta beside each clip. Unity writes these itself on the next Editor
@@ -244,7 +244,7 @@ def main():
         "\n%s/<Class>/ under the canonical stem"
         "\nwith NO _takeN suffix -- a take that reaches Assets claims its own Addressables"
         "\naddress and the rejects ship with the keeper."
-        "\n\nThen run Kingdom/Addressables/Setup Groups + Migrate Card Data in the Editor and"
+        "\n\nThen run Kingdom/Regenerate/Addressables Groups in the Editor and"
         "\ncommit the .meta Unity generates. Until both happen the clip has no address and"
         "\nfails silently at runtime." % args.final_root
     )

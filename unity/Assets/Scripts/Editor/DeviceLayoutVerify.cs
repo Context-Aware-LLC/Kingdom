@@ -21,7 +21,7 @@ namespace Kingdom.Editor
     {
         private const string BackdropTex = "Assets/Art/Backgrounds/BoardPlate_Master.png";
 
-        [MenuItem("Kingdom/Verify Device Layout (EF-062)")]
+        [MenuItem("Kingdom/Verify/Device Layout")]
         public static void Check()
         {
             bool ok = DeviceLayout.SelfCheck(out string report);

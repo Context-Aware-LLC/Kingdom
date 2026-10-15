@@ -287,7 +287,7 @@ namespace Kingdom.Core.Tests.Presentation
             string report =
                 "[card-sfx] " + missing.Count + " default clip(s) not yet promoted from "
                 + "art-pipeline/sfx — run tooling/sfx/soundweb.py, pick a take, then "
-                + "Kingdom/Addressables/Setup Groups: " + string.Join(", ", missing);
+                + "Kingdom/Regenerate/Addressables Groups: " + string.Join(", ", missing);
             // BOTH, on purpose. Assert.Warn alone lands as a bare "Skipped" line with the message
             // swallowed by the VSTest console reporter, which is a guard that reports nothing —
             // TestContext.Progress writes straight through to stdout so the list is actually read.

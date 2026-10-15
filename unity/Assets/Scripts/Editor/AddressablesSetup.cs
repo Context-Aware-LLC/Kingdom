@@ -50,13 +50,11 @@ namespace Kingdom.Editor
         /// closing log reports the run rather than a list someone has to remember to edit.</summary>
         private static readonly List<string> SyncedGroups = new List<string>();
 
-        [MenuItem("Kingdom/Addressables/Setup Groups + Migrate Card Data")]
+        [MenuItem("Kingdom/Regenerate/Addressables Groups")]
         public static void Run()
         {
             AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
             SyncedGroups.Clear();
-
-            MigrateCardDataOutOfResources();
 
             var uiCore = GetGroup(settings, "UI_Core");
             AddFolderSprites(settings, uiCore, "Assets/Art/UI", "ui");
@@ -201,23 +199,6 @@ namespace Kingdom.Editor
             settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryModified, null, true, true);
             AssetDatabase.SaveAssets();
             return true;
-        }
-
-        private static void MigrateCardDataOutOfResources()
-        {
-            const string oldFolder = "Assets/Resources/cards";
-            if (!AssetDatabase.IsValidFolder(oldFolder)) return;
-            if (!AssetDatabase.IsValidFolder(CardDataFolder))
-                AssetDatabase.CreateFolder("Assets", "CardData");
-
-            foreach (string guid in AssetDatabase.FindAssets("t:TextAsset", new[] { oldFolder }))
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                string dest = $"{CardDataFolder}/{Path.GetFileName(path)}";
-                string err = AssetDatabase.MoveAsset(path, dest);
-                if (!string.IsNullOrEmpty(err)) Debug.LogError($"[AddressablesSetup] move failed: {err}");
-                else Debug.Log($"[AddressablesSetup] migrated {path} → {dest}");
-            }
         }
 
         private static AddressableAssetGroup GetGroup(AddressableAssetSettings settings, string name)

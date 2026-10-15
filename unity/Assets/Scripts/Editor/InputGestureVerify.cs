@@ -37,7 +37,7 @@ namespace Kingdom.Editor
         private static int _passed;
         private static int _failed;
 
-        [MenuItem("Kingdom/Verify Input Gestures (EF-048 drag targeting)")]
+        [MenuItem("Kingdom/Verify/Input Gestures")]
         public static void Run()
         {
             _passed = 0;
