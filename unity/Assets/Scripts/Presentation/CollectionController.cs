@@ -332,7 +332,7 @@ namespace Kingdom.Presentation
             PendingDeckId = "";
             if (string.IsNullOrEmpty(pendingDeck)) return;
 
-            DeckList deck = FindDeck(_account.DeckRows(_db), pendingDeck);
+            DeckList deck = FindDeck(DeckRows(), pendingDeck);
             if (deck == null)
             {
                 Debug.LogWarning($"[Collection] no deck '{pendingDeck}' on this account; " +
@@ -343,6 +343,23 @@ namespace Kingdom.Presentation
 
             OpenDeckDrawer();
             OpenDeckEditor(deck);
+        }
+
+        /// <summary>Dev-only (Kingdom/Dev/Edit Bot Decks): the drawer edits the bot roster instead of
+        /// this account's decks. See <see cref="BotDeckEditing"/>. Always false in a player build.</summary>
+        private static bool BotDecks =>
+#if UNITY_EDITOR
+            BotDeckEditing.Enabled;
+#else
+            false;
+#endif
+
+        private IReadOnlyList<DeckSummary> DeckRows()
+        {
+#if UNITY_EDITOR
+            if (BotDecks) return BotDeckEditing.DeckRows(_db);
+#endif
+            return _account.DeckRows(_db);
         }
 
         private static DeckList FindDeck(IReadOnlyList<DeckSummary> decks, string deckId)
@@ -362,6 +379,8 @@ namespace Kingdom.Presentation
         /// </summary>
         private void LoadOwnership()
         {
+            // A bot owns nothing and needs nothing: its pool is the whole game.
+            if (BotDecks) { _owned = null; return; }
             try
             {
                 _owned = _account.OwnedCards();
@@ -785,14 +804,17 @@ namespace Kingdom.Presentation
             // against (pre-#349) the button plus its margin was 68 -- most of the height the deck
             // list itself was missing. The panel is 1080 now and that pressure is off; the button
             // still belongs to the chooser, which is the reason that did not depend on the unit.
+            // Bot decks are managed in the roster file, not on the character roster screen.
             if (_manageDecksButton != null)
-                _manageDecksButton.style.display = editor ? DisplayStyle.None : DisplayStyle.Flex;
+                _manageDecksButton.style.display = editor || BotDecks ? DisplayStyle.None : DisplayStyle.Flex;
             // Moved into the header next to Close (Sam, 2026-09-07) so both exits sit together
             // instead of one hiding at the top of the editor pane and one at the bottom of the
             // chooser. It has no home in the chooser pane -- there is no open deck to leave.
             if (_backToDecksButton != null)
                 _backToDecksButton.style.display = editor ? DisplayStyle.Flex : DisplayStyle.None;
-            if (_drawerTitle != null) _drawerTitle.text = editor ? "Editing Deck" : "Decks";
+            if (_drawerTitle != null)
+                _drawerTitle.text = BotDecks ? (editor ? $"Editing Bot: {_deck?.Name}" : "Bot Decks (dev)")
+                                  : editor ? "Editing Deck" : "Decks";
             if (_drawerSubtitle != null)
                 _drawerSubtitle.text = editor ? "Tap a card to add it" : "Choose a deck to edit";
         }
@@ -804,7 +826,7 @@ namespace Kingdom.Presentation
 
             // ONE FLAT LIST (ADR-0009). Each deck's ordered pair is now the button image itself;
             // names, counts and class labels deliberately stay out of the visible chooser row.
-            IReadOnlyList<DeckSummary> rows = _account.DeckRows(_db);
+            IReadOnlyList<DeckSummary> rows = DeckRows();
 
             foreach (DeckSummary summary in rows)
             {
@@ -1501,6 +1523,20 @@ namespace Kingdom.Presentation
         private void SaveDeck()
         {
             if (!EditingDeck) return;
+#if UNITY_EDITOR
+            // The one exception to "never legality-gated": the server refuses to boot on an illegal
+            // bot deck, so BotDeckEditing keeps one as a session draft instead of writing it.
+            if (BotDecks)
+            {
+                string refusal = BotDeckEditing.Save(_deck, _db);
+                if (refusal == null)
+                    Debug.Log($"[Collection] Saved bot '{_deck.Name}' to {BotDeckEditing.RosterPath}.");
+                else
+                    Debug.LogWarning($"[Collection] NOT saved: the server would refuse bot '{_deck.Name}' " +
+                                     $"({refusal}). Kept as a draft until the Editor reloads.");
+                return;
+            }
+#endif
             _account.Save(_deck);
             Debug.Log($"[Collection] Saved '{_deck.Name}' ({_deck.TotalCount} cards).");
         }
