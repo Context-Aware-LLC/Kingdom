@@ -5,9 +5,12 @@ using UnityEngine;
 namespace Kingdom.Presentation
 {
     /// <summary>
-    /// Spell-school effects for played spells: earth (a buildup on the caster, a rock falling on
-    /// each target, an impact where it lands), lightning (an arc from the caster to each target,
-    /// then a bolt down onto it), fire (a flare on the caster, a fireball to each target, a burst
+    /// Spell-school effects for played spells. Every spell of a school's class plays its caster
+    /// effect; a damaged target gets the school's missile and impact, any other target the spell
+    /// acts on gets the impact alone (<see cref="Burst"/>). Earth (a buildup on the caster, a
+    /// rock falling on each target, an impact where it lands), lightning (a charge under the
+    /// caster, an arc or a bolt to each target, a hit on it), clockwright (gears gathering on the
+    /// caster, parts flying to each target, a burst of them where they land), fire (a flare on the caster, a fireball to each target, a burst
     /// where it lands), shadow (a black wipe across the caster's portrait, a wisp to each target,
     /// a ring where it lands), the healing sparkles and shimmer on everything a spell heals,
     /// and the green poof on a minion a Venom source damages. Each sheet is three frames side by
@@ -36,6 +39,11 @@ namespace Kingdom.Presentation
         public const string HealTravelKey = "effect_spell_heal_travel";
         public const string LightningArcKey = "effect_spell_lightning_arc";
         public const string LightningStrikeKey = "effect_spell_lightning_strike";
+        public const string LightningChargeKey = "effect_spell_lightning_charge";
+        public const string LightningHitKey = "effect_spell_lightning_hit";
+        public const string ClockwrightCasterKey = "effect_spell_clockwright_caster";
+        public const string ClockwrightTravelKey = "effect_spell_clockwright_travel";
+        public const string ClockwrightTargetKey = "effect_spell_clockwright_target";
 
         /// <summary>The first rock lands this long after the reveal card is gone, and each further
         /// target this long after the one before. VfxDirector hands both to the classifier, which
@@ -78,6 +86,16 @@ namespace Kingdom.Presentation
         // left; this is its offset as a fraction of the drawn width, so the head, not the middle
         // of the trail, is what lands.
         private const float ProjectileHeadOffset = 0.28f;
+
+        /// <summary>The parts reach the first target this long after the reveal card is gone,
+        /// and each further target this long after the one before.</summary>
+        public const float ClockwrightLeadSeconds = 0.5f;
+        public const float ClockwrightStaggerSeconds = 0.08f;
+        private const float ClockwrightTravelSeconds = 0.32f;
+        private const float ClockwrightTargetSeconds = 0.45f;
+        // The caster effect, Clockwright's gathering gears or Tempest's charge, runs this long
+        // and peaks as the first missile leaves.
+        private const float GatherSeconds = 0.5f;
         public const float HealStaggerSeconds = 0.05f;
         private const float HealTravelSeconds = 0.36f;
         // The lead star sits right of the frame's centre; this is its offset as a fraction of the
@@ -453,6 +471,75 @@ namespace Kingdom.Presentation
             }
             if (burst != null) Object.Destroy(burst.gameObject);
         }
+
+        public static float ClockwrightLandsAt(float cardSeconds, int index) =>
+            cardSeconds + ClockwrightLeadSeconds + index * ClockwrightStaggerSeconds;
+
+        /// <summary>A spray of parts from the caster to one target it damages, then the burst.</summary>
+        public static IEnumerator ClockwrightBolt(Transform parent, Sprite partsSheet, Sprite burstSheet,
+                                                  Camera camera, Transform from, Transform target,
+                                                  Vector3 fallback, float landIn) =>
+            Projectile("Clockwright", ClockwrightTravelSeconds, ClockwrightTargetSeconds, 0.07f, parent,
+                       partsSheet, burstSheet, camera, from, target, fallback, landIn);
+
+        /// <summary>When a caster effect of <see cref="GatherSeconds"/> starts so it peaks as the
+        /// first missile of a school with this lead and travel leaves.</summary>
+        public static float GatherStartsAt(float cardSeconds, float lead) =>
+            Mathf.Max(0f, cardSeconds + lead - ClockwrightTravelSeconds - GatherSeconds * 0.8f);
+
+        /// <summary>Clockwright's gears, or Tempest's charge, on the caster: plays the three
+        /// frames once, growing a little, and fades out at the end. Tempest's sits at the hero's
+        /// feet, so it reads as gathering from the ground.</summary>
+        public static IEnumerator Gather(Transform parent, Sprite sheet, Camera camera, Transform caster,
+                                         float startIn, bool atFeet)
+        {
+            if (startIn > 0f) yield return new WaitForSeconds(startIn);
+            if (parent == null || sheet == null || camera == null || caster == null) yield break;
+
+            SpriteRenderer sr = MakeRenderer(parent, atFeet ? "LightningCharge" : "ClockwrightCaster");
+            Sprite[] frames = FramesOf(sheet);
+            float elapsed = 0f;
+            while (elapsed < GatherSeconds && caster != null && sr != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / GatherSeconds);
+                Show(sr, frames, t);
+                Vector3 at = atFeet ? caster.position + Vector3.down * BoardController.CardH * 0.35f
+                                    : caster.position;
+                Place(sr, camera, at, BoardController.CardW * Mathf.Lerp(1.4f, 1.75f, t));
+                sr.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 6f) * (1f - Ramp(t, 0.75f)));
+                yield return null;
+            }
+            if (sr != null) Object.Destroy(sr.gameObject);
+        }
+
+        /// <summary>A school's target effect on its own, for a character the spell acted on
+        /// without damaging: buffed, bounced, destroyed and the rest. Starts
+        /// <paramref name="startIn"/> seconds from now.</summary>
+        public static IEnumerator Burst(Transform parent, Sprite sheet, Camera camera, Transform target,
+                                        Vector3 fallback, float startIn)
+        {
+            if (startIn > 0f) yield return new WaitForSeconds(startIn);
+            if (parent == null || sheet == null || camera == null) yield break;
+
+            SpriteRenderer sr = MakeRenderer(parent, "SchoolBurst");
+            Sprite[] frames = FramesOf(sheet);
+            Vector3 last = target != null ? target.position : fallback;
+            float elapsed = 0f;
+            while (elapsed < BurstSeconds && sr != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / BurstSeconds);
+                if (target != null) last = target.position;
+                Show(sr, frames, t);
+                Place(sr, camera, last, BoardController.CardW * Mathf.Lerp(1.2f, 1.7f, t));
+                sr.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 10f) * (1f - Ramp(t, 0.55f)));
+                yield return null;
+            }
+            if (sr != null) Object.Destroy(sr.gameObject);
+        }
+
+        private const float BurstSeconds = 0.45f;
 
         public static float BuildupStartsAt(float cardSeconds) =>
             Mathf.Max(0f, cardSeconds + EarthLeadSeconds - FallSeconds - BuildupSeconds * 0.85f);

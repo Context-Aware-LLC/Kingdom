@@ -28,12 +28,13 @@ namespace Kingdom.Session
         public readonly SchoolTiming Lightning;
         public readonly SchoolTiming Fire;
         public readonly SchoolTiming Shadow;
+        public readonly SchoolTiming Clockwright;
         public readonly SchoolTiming Heal;
 
         public PlayRevealHolds(float minion, float spell, float weapon,
                                SchoolTiming earth = default, SchoolTiming lightning = default,
                                SchoolTiming fire = default, SchoolTiming shadow = default,
-                               SchoolTiming heal = default)
+                               SchoolTiming clockwright = default, SchoolTiming heal = default)
         {
             Minion = minion;
             Spell  = spell;
@@ -42,6 +43,7 @@ namespace Kingdom.Session
             Lightning = lightning;
             Fire = fire;
             Shadow = shadow;
+            Clockwright = clockwright;
             Heal = heal;
         }
 
@@ -51,6 +53,7 @@ namespace Kingdom.Session
             SpellEffect.Lightning => Lightning,
             SpellEffect.Fire      => Fire,
             SpellEffect.Shadow    => Shadow,
+            SpellEffect.Clockwright => Clockwright,
             _                     => default,
         };
 
@@ -104,26 +107,36 @@ namespace Kingdom.Session
 
     /// <summary>Which spell-school effect a played spell carries, beyond the reveal itself.
     /// There is no school field on a card; the class stands in for it (Sam, 2026-10-13:
-    /// Stonewarden is earth; Tempest is lightning; 2026-10-14: Emberward is fire, Nightveil is shadow).</summary>
+    /// Stonewarden is earth; Tempest is lightning; 2026-10-14: Emberward is fire, Nightveil is
+    /// shadow, Clockwright is constructs).
+    ///
+    /// <para>Every spell of a school's class carries it, whatever the spell does: the caster
+    /// effect always plays, the school's missile goes to each character the spell damages, and
+    /// its target effect lands on every other character the spell touches. Over-applied on
+    /// purpose, to be trimmed where it reads wrong (Sam, 2026-10-14).</para></summary>
     public enum SpellEffect
     {
         None,
 
-        /// <summary>A Stonewarden spell that deals damage: a buildup on the caster, then a rock
-        /// falls on each character it hits.</summary>
+        /// <summary>A Stonewarden spell: a buildup on the caster, then a rock falls on each
+        /// character it damages.</summary>
         Earth,
 
-        /// <summary>A Tempest spell that deals damage: an arc from the caster to each character
-        /// it hits, then a bolt down onto it.</summary>
+        /// <summary>A Tempest spell: a charge under the caster, then an arc or a bolt to each
+        /// character it damages.</summary>
         Lightning,
 
-        /// <summary>An Emberward spell that deals damage: a flare on the caster, then a fireball
-        /// flies to each character it hits and bursts there.</summary>
+        /// <summary>An Emberward spell: a flare on the caster, then a fireball flies to each
+        /// character it damages and bursts there.</summary>
         Fire,
 
-        /// <summary>A Nightveil spell that deals damage: a wisp of shadow drifts to each
-        /// character it hits and blooms into a ring there.</summary>
+        /// <summary>A Nightveil spell: a black wipe across the caster's portrait, then a wisp of
+        /// shadow drifts to each character it damages and blooms into a ring there.</summary>
         Shadow,
+
+        /// <summary>A Clockwright spell: gears gather on the caster, then a spray of parts flies
+        /// to each character it damages and bursts there.</summary>
+        Clockwright,
     }
 
     /// <summary>
@@ -161,6 +174,10 @@ namespace Kingdom.Session
         public readonly IReadOnlyList<InstanceId> Struck;
         public readonly IReadOnlyList<InstanceId> Healed;
 
+        /// <summary>Every other character the spell acted on: buffed, bounced, destroyed,
+        /// silenced, frozen, transformed, taken, or given a keyword or armour. Never null.</summary>
+        public readonly IReadOnlyList<InstanceId> Touched;
+
         public readonly SpellEffect Effect;
 
         /// <summary>When the reveal card itself is gone. Equal to <see cref="HoldSeconds"/> unless
@@ -172,8 +189,10 @@ namespace Kingdom.Session
                           RevealDestination destination, int destSlot, int destBoardCount,
                           IReadOnlyList<InstanceId> struck = null,
                           IReadOnlyList<InstanceId> healed = null,
-                          SpellEffect effect = SpellEffect.None, float cardSeconds = -1f)
+                          SpellEffect effect = SpellEffect.None, float cardSeconds = -1f,
+                          IReadOnlyList<InstanceId> touched = null)
         {
+            Touched = touched ?? System.Array.Empty<InstanceId>();
             Struck = struck ?? System.Array.Empty<InstanceId>();
             Healed = healed ?? System.Array.Empty<InstanceId>();
             Effect = effect;
@@ -235,6 +254,7 @@ namespace Kingdom.Session
 
                 var struck = new List<InstanceId>();
                 var healed = new List<InstanceId>();
+                var touched = new List<InstanceId>();
                 for (int j = i + 1; j < events.Count; j++)
                 {
                     GameEvent f = events[j];
@@ -243,28 +263,51 @@ namespace Kingdom.Session
                         struck.Add(f.Target.Value);
                     else if (f.Kind == GameEventKind.HealthRestored && !healed.Contains(f.Target.Value))
                         healed.Add(f.Target.Value);
+                    else if (Touches(f.Kind) && !touched.Contains(f.Target.Value))
+                        touched.Add(f.Target.Value);
                 }
+                // A character damaged or healed already has its effect.
+                touched.RemoveAll(t => struck.Contains(t) || healed.Contains(t));
 
                 SpellEffect effect = SpellEffect.None;
-                if (def.Type == CardType.SPELL && struck.Count > 0)
+                if (def.Type == CardType.SPELL)
                     effect = def.Class switch
                     {
                         CardClass.STONEWARDEN => SpellEffect.Earth,
                         CardClass.TEMPEST     => SpellEffect.Lightning,
                         CardClass.EMBERWARD   => SpellEffect.Fire,
                         CardClass.NIGHTVEIL   => SpellEffect.Shadow,
+                        CardClass.CLOCKWRIGHT => SpellEffect.Clockwright,
                         _                     => SpellEffect.None,
                     };
-                float tail = holds.For(effect).Tail(struck.Count);
+                float tail = holds.For(effect).Tail(struck.Count + touched.Count);
                 if (def.Type == CardType.SPELL)
                     tail = System.Math.Max(tail, holds.Heal.Tail(healed.Count));
 
                 return new PlayReveal(def, source, target, played.Controller, def.Type, hold + tail,
-                                      dest, slot, boardCount, struck, healed, effect, hold);
+                                      dest, slot, boardCount, struck, healed, effect, hold,
+                                      touched);
             }
 
             return null;
         }
+
+        // What a spell does to a character, other than damage or healing, that its school's
+        // target effect lands on. A summon is not here: the minion is not yet on the board the
+        // effect is drawn against.
+        private static bool Touches(GameEventKind kind) => kind switch
+        {
+            GameEventKind.StatsModified   => true,
+            GameEventKind.KeywordApplied  => true,
+            GameEventKind.CardDestroyed   => true,
+            GameEventKind.CardSilenced    => true,
+            GameEventKind.FrostApplied    => true,
+            GameEventKind.CardTransformed => true,
+            GameEventKind.CardBounced     => true,
+            GameEventKind.ControlChanged  => true,
+            GameEventKind.ArmorGained     => true,
+            _                             => false,
+        };
 
         // A spell has already moved to Graveyard by the time this runs and a minion to Board
         // (CommandProcessor sets Zone before emitting CardPlayed), but this checks every public

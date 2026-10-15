@@ -90,6 +90,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 173c00649b7f440ab3cc11c8dacb7a68
+    m_Address: ui/effect_spell_clockwright_travel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1c861f74e57c4f29a7e8f75e5cb77698
     m_Address: ui/effect_spell_fire_flame
     m_ReadOnly: 0
@@ -340,6 +345,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a15153f58f9b48ad89e699962394b80a
+    m_Address: ui/effect_spell_clockwright_caster
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a2f7fde1a48d4f458f59e740e6e32d43
     m_Address: ui/turn-hourglass-royal-council
     m_ReadOnly: 0
@@ -350,6 +360,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a8e8f77a774b4966ae965452dfd452ef
+    m_Address: ui/effect_spell_lightning_hit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a9c138db28ba4273900034893703d7ff
     m_Address: ui/effect_spell_earth_impact
     m_ReadOnly: 0
@@ -357,6 +372,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ab4e54501ebe4781ba0b3d37290aa542
     m_Address: materials/M_Frost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: acd3429bb87f4ab3827f5d9463840042
+    m_Address: ui/effect_spell_lightning_charge
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -542,6 +562,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fb699d89e47381d4dac712fce01c1560
     m_Address: materials/M_CardEdge
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fc693cba6f4d43bf960d38469702f21b
+    m_Address: ui/effect_spell_clockwright_target
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

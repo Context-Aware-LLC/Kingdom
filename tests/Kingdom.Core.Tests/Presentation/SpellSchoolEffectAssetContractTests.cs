@@ -22,7 +22,12 @@ namespace Kingdom.Core.Tests.Presentation
             ("effect_spell_fire_flame", "1c861f74e57c4f29a7e8f75e5cb77698"),
             ("effect_spell_fire_impact", "10ab97aff9744067823f56088bf17ef3"),
             ("effect_spell_shadow_travel", "99408be364b341c3b6febfea100f029e"),
-            ("effect_spell_shadow_impact", "039c922ced554f70aa17080a94295c06")
+            ("effect_spell_shadow_impact", "039c922ced554f70aa17080a94295c06"),
+            ("effect_spell_clockwright_caster", "a15153f58f9b48ad89e699962394b80a"),
+            ("effect_spell_clockwright_travel", "173c00649b7f440ab3cc11c8dacb7a68"),
+            ("effect_spell_clockwright_target", "fc693cba6f4d43bf960d38469702f21b"),
+            ("effect_spell_lightning_charge", "acd3429bb87f4ab3827f5d9463840042"),
+            ("effect_spell_lightning_hit", "a8e8f77a774b4966ae965452dfd452ef")
         };
 
         [Test]

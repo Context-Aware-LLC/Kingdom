@@ -110,6 +110,8 @@ namespace Kingdom.Presentation
                                                  SpellSchoolEffects.FireStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.ShadowLeadSeconds,
                                                  SpellSchoolEffects.ShadowStaggerSeconds),
+                                new SchoolTiming(SpellSchoolEffects.ClockwrightLeadSeconds,
+                                                 SpellSchoolEffects.ClockwrightStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.HealLeadSeconds,
                                                  SpellSchoolEffects.HealStaggerSeconds));
 
@@ -355,7 +357,7 @@ namespace Kingdom.Presentation
             if (reveal.Type == CardType.SPELL) PlaySpellSchool(reveal);
         }
 
-        /// <summary>The earth, lightning, fire and shadow sequences and the healing shimmer. Targets are resolved now, against
+        /// <summary>The spell-school sequences and the healing shimmer. Targets are resolved now, against
         /// the pre-effect board, and followed while the effect runs; a minion the spell kills is
         /// still standing until the entry releases.</summary>
         private void PlaySpellSchool(PlayReveal reveal)
@@ -454,6 +456,77 @@ namespace Kingdom.Presentation
                         visual, at ?? visual.position,
                         SpellSchoolEffects.ShadowLandsAt(reveal.CardSeconds, i)));
                 }
+            }
+
+            if (reveal.Effect == SpellEffect.Clockwright)
+            {
+                StartCoroutine(SpellSchoolEffects.Gather(transform,
+                    _uiSprites.Get(SpellSchoolEffects.ClockwrightCasterKey), cam, caster,
+                    SpellSchoolEffects.GatherStartsAt(reveal.CardSeconds, SpellSchoolEffects.ClockwrightLeadSeconds),
+                    atFeet: false));
+
+                Sprite parts = _uiSprites.Get(SpellSchoolEffects.ClockwrightTravelKey);
+                Sprite burst = _uiSprites.Get(SpellSchoolEffects.ClockwrightTargetKey);
+                for (int i = 0; i < reveal.Struck.Count; i++)
+                {
+                    InstanceId id = reveal.Struck[i];
+                    Vector3? at = ResolvePosition(id);
+                    Transform visual = _board.ResolveCombatVisual(id);
+                    if (visual == null && !at.HasValue) continue;
+                    StartCoroutine(SpellSchoolEffects.ClockwrightBolt(transform, parts, burst, cam, caster,
+                        visual, at ?? visual.position,
+                        SpellSchoolEffects.ClockwrightLandsAt(reveal.CardSeconds, i)));
+                }
+            }
+
+            if (reveal.Effect == SpellEffect.Lightning)
+            {
+                StartCoroutine(SpellSchoolEffects.Gather(transform,
+                    _uiSprites.Get(SpellSchoolEffects.LightningChargeKey), cam, caster,
+                    SpellSchoolEffects.GatherStartsAt(reveal.CardSeconds, SpellSchoolEffects.LightningLeadSeconds),
+                    atFeet: true));
+
+                // The hit crackles on each damaged character as the arc or bolt reaches it.
+                Sprite hit = _uiSprites.Get(SpellSchoolEffects.LightningHitKey);
+                for (int i = 0; i < reveal.Struck.Count; i++)
+                {
+                    InstanceId id = reveal.Struck[i];
+                    Vector3? at = ResolvePosition(id);
+                    Transform visual = _board.ResolveCombatVisual(id);
+                    if (visual == null && !at.HasValue) continue;
+                    StartCoroutine(SpellSchoolEffects.Burst(transform, hit, cam, visual, at ?? visual.position,
+                        SpellSchoolEffects.LightningStrikesAt(reveal.CardSeconds, i)));
+                }
+            }
+
+            // Everything else the spell acted on gets its school's target effect alone, after the
+            // damaged characters, on the same stagger.
+            Sprite touchedSheet = reveal.Effect switch
+            {
+                SpellEffect.Earth       => _uiSprites.Get(SpellSchoolEffects.EarthImpactKey),
+                SpellEffect.Lightning   => _uiSprites.Get(SpellSchoolEffects.LightningHitKey),
+                SpellEffect.Fire        => _uiSprites.Get(SpellSchoolEffects.FireImpactKey),
+                SpellEffect.Shadow      => _uiSprites.Get(SpellSchoolEffects.ShadowImpactKey),
+                SpellEffect.Clockwright => _uiSprites.Get(SpellSchoolEffects.ClockwrightTargetKey),
+                _                       => null,
+            };
+            for (int i = 0; touchedSheet != null && i < reveal.Touched.Count; i++)
+            {
+                InstanceId id = reveal.Touched[i];
+                Vector3? at = ResolvePosition(id);
+                Transform visual = _board.ResolveCombatVisual(id);
+                if (visual == null && !at.HasValue) continue;
+                int n = reveal.Struck.Count + i;
+                float landsAt = reveal.Effect switch
+                {
+                    SpellEffect.Earth       => SpellSchoolEffects.RockLandsAt(reveal.CardSeconds, n),
+                    SpellEffect.Lightning   => SpellSchoolEffects.LightningStrikesAt(reveal.CardSeconds, n),
+                    SpellEffect.Fire        => SpellSchoolEffects.FireballLandsAt(reveal.CardSeconds, n),
+                    SpellEffect.Shadow      => SpellSchoolEffects.ShadowLandsAt(reveal.CardSeconds, n),
+                    _                       => SpellSchoolEffects.ClockwrightLandsAt(reveal.CardSeconds, n),
+                };
+                StartCoroutine(SpellSchoolEffects.Burst(transform, touchedSheet, cam, visual,
+                    at ?? visual.position, landsAt));
             }
 
             Sprite shimmer = reveal.Healed.Count > 0 ? _uiSprites.Get(SpellSchoolEffects.HealShimmerKey) : null;
