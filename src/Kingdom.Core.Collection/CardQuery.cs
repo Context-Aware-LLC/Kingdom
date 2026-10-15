@@ -39,6 +39,9 @@ namespace Kingdom.Core.Collection
         public IReadOnlyCollection<Rarity>? Rarities { get; set; }
         public IReadOnlyCollection<CardType>? Types { get; set; }
 
+        /// <summary>Expansion membership, by <see cref="CardDefinition.SetId"/>.</summary>
+        public IReadOnlyCollection<SetId>? Sets { get; set; }
+
         /// <summary>Tribe membership. A card with no tribe is treated as <see cref="Tribe.NONE"/>.</summary>
         public IReadOnlyCollection<Tribe>? Tribes { get; set; }
 
@@ -101,6 +104,7 @@ namespace Kingdom.Core.Collection
             if (HasAny(filter.Classes) && !Contains(filter.Classes!, card.Class)) return false;
             if (HasAny(filter.Rarities) && !Contains(filter.Rarities!, card.Rarity)) return false;
             if (HasAny(filter.Types) && !Contains(filter.Types!, card.Type)) return false;
+            if (HasAny(filter.Sets) && !Contains(filter.Sets!, card.SetId)) return false;
             if (HasAny(filter.Tribes) && !Contains(filter.Tribes!, card.Tribe ?? Tribe.NONE)) return false;
             if (HasAny(filter.Keywords) && !CarriesAny(card, filter.Keywords!)) return false;
 

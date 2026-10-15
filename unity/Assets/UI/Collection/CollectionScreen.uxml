@@ -62,6 +62,9 @@
                 <ui:VisualElement class="col-chip-group">
                     <ui:VisualElement name="query-costs" class="col-chip-row"/>
                 </ui:VisualElement>
+                <ui:VisualElement class="col-chip-group">
+                    <ui:VisualElement name="query-sets" class="col-chip-row"/>
+                </ui:VisualElement>
             </ui:ScrollView>
             <ui:VisualElement picking-mode="Ignore" class="emb-scroll-fade col-query__fade"/>
         </ui:VisualElement>
@@ -98,6 +101,7 @@
                     <ui:Label name="craft-card-name" text="" class="craft-name"/>
                     <ui:VisualElement class="craft-metadata">
                         <ui:Label name="craft-card-rarity" text="" class="craft-rarity"/>
+                        <ui:Label name="craft-card-set" text="" class="craft-set"/>
                         <ui:Label name="craft-copies-owned" text="" class="craft-owned"/>
                     </ui:VisualElement>
                 </ui:VisualElement>

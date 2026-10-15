@@ -19,7 +19,7 @@ namespace Kingdom.Presentation
     /// <para><b>Binds what is present.</b> Every control is looked up by name and every absent one is
     /// simply a facet this host does not offer — so a screen wanting only a search box declares only
     /// the search box, and no second implementation appears. Expected names: <c>query-search</c>,
-    /// <c>query-rarities</c>, <c>query-types</c>, <c>query-costs</c>,
+    /// <c>query-rarities</c>, <c>query-types</c>, <c>query-costs</c>, <c>query-sets</c>,
     /// <c>query-sort</c>, <c>query-sort-dir</c>.</para>
     ///
     /// <para><b>Class is not one of them.</b> It is a facet of <see cref="CardFilter"/> like the rest,
@@ -49,6 +49,7 @@ namespace Kingdom.Presentation
 
         private readonly HashSet<Rarity> _rarities = new HashSet<Rarity>();
         private readonly HashSet<CardType> _types = new HashSet<CardType>();
+        private readonly HashSet<SetId> _sets = new HashSet<SetId>();
         private int _cost = -1;                 // -1 = any
         private bool _descending;
 
@@ -71,6 +72,7 @@ namespace Kingdom.Presentation
             BuildChips(root.Q<VisualElement>("query-rarities"), AllRarities(), Label, _rarities);
             BuildChips(root.Q<VisualElement>("query-types"), AllTypes(), Label, _types);
             BuildCostChips(root.Q<VisualElement>("query-costs"));
+            BuildChips(root.Q<VisualElement>("query-sets"), AllSets(), SetLabel, _sets);
             BuildSort();
         }
 
@@ -86,6 +88,7 @@ namespace Kingdom.Presentation
 
                 if (_rarities.Count > 0) f.Rarities = new List<Rarity>(_rarities);
                 if (_types.Count    > 0) f.Types    = new List<CardType>(_types);
+                if (_sets.Count     > 0) f.Sets     = new List<SetId>(_sets);
 
                 if (_cost >= 0)
                 {
@@ -115,6 +118,7 @@ namespace Kingdom.Presentation
         {
             _rarities.Clear();
             _types.Clear();
+            _sets.Clear();
             _cost = -1;
             _descending = false;
             if (_search != null) _search.SetValueWithoutNotify(string.Empty);
@@ -206,6 +210,7 @@ namespace Kingdom.Presentation
         {
             SyncGroup(_rarities);
             SyncGroup(_types);
+            SyncGroup(_sets);
         }
 
         private void SyncGroup<T>(HashSet<T> selected)
@@ -242,6 +247,18 @@ namespace Kingdom.Presentation
 
         private static IReadOnlyList<CardType> AllTypes() =>
             new List<CardType> { CardType.MINION, CardType.SPELL, CardType.WEAPON };
+
+        // CORE holds only uncollectible cards (tokens, the coin) and is never a set to a player.
+        private static IReadOnlyList<SetId> AllSets()
+        {
+            var list = new List<SetId>();
+            foreach (SetId s in Enum.GetValues(typeof(SetId)))
+                if (s != SetId.CORE) list.Add(s);
+            return list;
+        }
+
+        /// <summary>The expansion's player-facing name; matches the shop's pack names.</summary>
+        public static string SetLabel(SetId set) => Label(set);
 
         private static string Label<T>(T value)
         {

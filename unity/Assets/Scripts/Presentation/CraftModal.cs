@@ -42,6 +42,7 @@ namespace Kingdom.Presentation
         private readonly VisualElement _cardFace;
         private readonly Label _cardName;
         private readonly Label _cardRarity;
+        private readonly Label _cardSet;
         private readonly Label _shardBalance;
         private readonly Label _copiesOwned;
         private readonly Label _status;
@@ -106,6 +107,7 @@ namespace Kingdom.Presentation
             _cardFace = rootPlate.Q<VisualElement>("craft-card-face");
             _cardName = rootPlate.Q<Label>("craft-card-name");
             _cardRarity = rootPlate.Q<Label>("craft-card-rarity");
+            _cardSet = rootPlate.Q<Label>("craft-card-set");
             _shardBalance = rootPlate.Q<Label>("craft-shard-balance");
             _copiesOwned = rootPlate.Q<Label>("craft-copies-owned");
             _status = rootPlate.Q<Label>("craft-status");
@@ -166,7 +168,7 @@ namespace Kingdom.Presentation
         /// <summary>True when every element this modal binds was found — a false is a broken plate.</summary>
         public bool IsBound =>
             _modal != null && _scrim != null && _cardFace != null && _cardName != null &&
-            _cardRarity != null && _shardBalance != null && _copiesOwned != null &&
+            _cardRarity != null && _cardSet != null && _shardBalance != null && _copiesOwned != null &&
             _renderHalf != null && _renderButton != null && _renderCost != null && _renderNote != null &&
             _reduceHalf != null && _reduceButton != null && _reducePayout != null && _reduceNote != null &&
             _reduceLess != null && _reduceMore != null && _reduceCountLabel != null &&
@@ -194,6 +196,7 @@ namespace Kingdom.Presentation
 
             _cardName.text = def.Name;
             _cardRarity.text = RarityWord(def.Rarity);
+            _cardSet.text = CardQueryBar.SetLabel(def.SetId);
 
             // The rarity accent is the one colour on this panel that varies, and it is the fastest
             // read of what a card costs to make — the price and the colour say the same thing.

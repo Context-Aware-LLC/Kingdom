@@ -80,6 +80,16 @@ namespace Kingdom.Core.Tests.Collection
         }
 
         [Test]
+        public void Set_Facet_Returns_Exactly_That_Set()
+        {
+            var result = CardQuery.Search(Db, new CardFilter { Sets = new[] { SetId.REKINDLING } });
+
+            Assert.That(result, Is.Not.Empty);
+            Assert.That(result.All(c => c.SetId == SetId.REKINDLING), Is.True);
+            Assert.That(result.Count, Is.EqualTo(Pool().Count(c => c.SetId == SetId.REKINDLING)));
+        }
+
+        [Test]
         public void Type_Facet_Returns_Exactly_That_Type()
         {
             var type = Pool()[0].Type;
