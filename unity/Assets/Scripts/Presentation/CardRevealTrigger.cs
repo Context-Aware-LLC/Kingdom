@@ -14,7 +14,7 @@ namespace Kingdom.Presentation
     /// would strand the panel on screen.</para>
     ///
     /// <para>Attached to every card the local player can legitimately read: their own hand,
-    /// both boards, and both heroes' equipped weapons (HeroSocketsView). Hidden cards (the opponent's projected hand) never reach this component at all
+    /// both boards, and both heroes' equipped weapons and hero powers (HeroSocketsView). Hidden cards (the opponent's projected hand) never reach this component at all
     /// — BoardController's card-back path skips the definition bind, so there is nothing to
     /// describe and no way for the reveal to leak hidden information.</para>
     /// </summary>
@@ -25,7 +25,11 @@ namespace Kingdom.Presentation
         internal ICardLiveState LiveState => _live;
         internal bool IsInspectable => Clickable != null
             ? CanInspectZone(Clickable.Zone)
-            : _equippedWeapon;
+            : _equippedWeapon || IsHeroPower;
+
+        /// <summary>The hero power socket (HeroSocketsView). Its press is a tap that FIRES the power,
+        /// so a hold that becomes a read must cancel that tap — see CardRevealController.</summary>
+        internal bool IsHeroPower { get; private set; }
 
         // The weapon socket has no ClickableCard — it is not a card on the board and InputRouter
         // never treats it as a subject — so its readability cannot come from a zone. Set only by
@@ -64,6 +68,16 @@ namespace Kingdom.Presentation
         {
             _equippedWeapon = true;
             Init(cardId, def, live, null, controller);
+        }
+
+        /// <summary>The hero's power, on the socket's own collider (the one ClickableHeroPower
+        /// presses). Keyed by the HERO's instance id, the power having none of its own; heroes carry
+        /// no reveal trigger, so the key is free. Both heroes' powers are public.</summary>
+        internal void InitHeroPower(InstanceId heroId, CardDefinition def, ICardLiveState live,
+                                    CardRevealController controller)
+        {
+            IsHeroPower = true;
+            Init(heroId, def, live, null, controller);
         }
 
         /// <summary>Composed on demand rather than cached: stats and keywords change under a

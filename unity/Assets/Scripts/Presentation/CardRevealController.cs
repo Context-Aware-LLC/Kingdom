@@ -148,6 +148,8 @@ namespace Kingdom.Presentation
         {
             if (_router == null) return;
             if (!_triggers.TryGetValue(card, out CardRevealTrigger t) || t == null) return;
+            // A hero power's tap fires it, so reading it must not end in a cast.
+            if (t.IsHeroPower) { _router.CancelHeroPowerPress(); return; }
             _router.CancelSelection(t.Clickable);
         }
 

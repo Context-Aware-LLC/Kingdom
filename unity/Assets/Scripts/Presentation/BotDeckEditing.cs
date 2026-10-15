@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Kingdom.Presentation
 {
     /// <summary>
-    /// Editor-only dev mode (Kingdom/Dev/Edit Bot Decks): the Collection screen's deck drawer lists the
+    /// Editor-only dev mode (Kingdom/Cards/Edit Bot Decks): the Collection screen's deck drawer lists the
     /// bots from <c>tooling/data/bot-roster.json</c> instead of this account's decks, shows the full
     /// card pool, and saves back to that file instead of to the account and the server (2026-10-15).
     ///

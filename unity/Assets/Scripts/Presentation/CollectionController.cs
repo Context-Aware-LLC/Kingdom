@@ -348,7 +348,7 @@ namespace Kingdom.Presentation
             OpenDeckEditor(deck);
         }
 
-        /// <summary>Dev-only (Kingdom/Dev/Edit Bot Decks): the drawer edits the bot roster instead of
+        /// <summary>Dev-only (Kingdom/Cards/Edit Bot Decks): the drawer edits the bot roster instead of
         /// this account's decks. See <see cref="BotDeckEditing"/>. Always false in a player build.
         ///
         /// <para>Latched in <see cref="OnEnable"/>, never read live: flipping the menu mid-edit would

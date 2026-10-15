@@ -955,6 +955,14 @@ namespace Kingdom.Presentation
         /// long press should suppress the dispatch instead of undoing it — delete this method and
         /// <c>CardRevealController.CancelPressSelection</c> in that same change.</para>
         /// </summary>
+        /// <summary>A press on the hero power that matured into a read (CardRevealController): drop
+        /// it, so lifting the finger does not fire an untargeted power or start aiming a targeted one.</summary>
+        public void CancelHeroPowerPress()
+        {
+            if (_gesture == Gesture.Pressed && _source.Kind == DragSourceKind.HeroPower)
+                CancelGesture();
+        }
+
         public void CancelSelection(ClickableCard card)
         {
             if (card == null || _currentState == null) return;

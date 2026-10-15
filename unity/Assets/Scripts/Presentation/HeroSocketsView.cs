@@ -160,6 +160,9 @@ namespace Kingdom.Presentation
         private bool _tabletop;
         private CardLiveState        _weaponLive;
         private InstanceId           _weaponId;
+        private Transform            _powerAnchor;
+        private CardRevealTrigger    _powerTrigger;
+        private int                  _powerDefId;
 
         /// <summary>Attach to a new GameObject and call Init once before the first
         /// OnStateUpdated. Identified by PlayerId, never by seat index (HeroPlateView
@@ -169,6 +172,7 @@ namespace Kingdom.Presentation
                          IUiSpriteProvider uiSprites = null)
         {
             _playerId = playerId;
+            _powerAnchor = powerAnchor;
             _db       = db;
             _art      = art;
             _mpb      = new MaterialPropertyBlock();
@@ -233,6 +237,7 @@ namespace Kingdom.Presentation
                           && state.ActivePlayer == ps.Id
                           && state.Phase == TurnPhase.Main;
             SetPower(cost, usable, powerDef?.ArtId);
+            SyncPowerReveal(ps.Hero.Id, powerDef);
 
             CardInstance w = ps.Weapon;
             if (w == null) { SetWeapon(false, 0, 0, null, 0, 0); ClearWeaponReveal(); return; }
@@ -281,6 +286,25 @@ namespace Kingdom.Presentation
                 // this state and repaints from its Changed event.
                 _weaponLive.UpdateFrom(w);
             }
+        }
+
+        /// <summary>Hover or hold the hero power to read it as a card (Sam, 2026-10-15). The trigger
+        /// rides the socket anchor itself, beside ClickableHeroPower, because that collider is the
+        /// one a press lands on; a second collider behind it would never be hit. The live state is
+        /// empty on purpose: a hero power has no stats for the focus card to draw.</summary>
+        private void SyncPowerReveal(InstanceId heroId, CardDefinition def)
+        {
+            if (_reveal == null || _powerAnchor == null || def == null) return;
+            if (_powerTrigger != null && _powerDefId == def.Id) return;
+
+            if (_powerTrigger != null)
+            {
+                if (Application.isPlaying) Destroy(_powerTrigger);
+                else DestroyImmediate(_powerTrigger);
+            }
+            _powerDefId   = def.Id;
+            _powerTrigger = _powerAnchor.gameObject.AddComponent<CardRevealTrigger>();
+            _powerTrigger.InitHeroPower(heroId, def, new CardLiveState(heroId), _reveal);
         }
 
         // Destroying the trigger's object is what closes an open reveal: its OnDestroy unregisters
