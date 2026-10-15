@@ -221,7 +221,7 @@ if ($compileErrors) {
 
 # ── Build result detection ────────────────────────────────────────────────────
 $buildSucceeded = $logLines | Where-Object { $_ -match '\[KingdomBuild\] Player build Succeeded' }
-$buildFailed    = $logLines | Where-Object { $_ -match '\[KingdomBuild\] Player build.*FAILED\|BuildFailedException' }
+$buildFailed    = $logLines | Where-Object { $_ -match '\[KingdomBuild\] Player build.*FAILED|BuildFailedException' }
 $apkLine        = $logLines | Where-Object { $_ -match 'Builds[/\\]Android[/\\](Kingdom\.apk|KingdomOfBadIdeas\.aab)' } | Select-Object -Last 1
 
 Write-Host "build-android: =============================="
