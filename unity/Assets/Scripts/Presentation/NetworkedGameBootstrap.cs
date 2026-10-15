@@ -550,7 +550,7 @@ namespace Kingdom.Presentation
             if (inputRouter != null)
             {
                 var settings = MatchSettingsController.Mount(inputRouter.OnConcedeClicked,
-                                                              showConcede: true, allowAccountSwitch: false);
+                                                              showConcede: true, allowSceneReload: false);
                 inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
             }
 

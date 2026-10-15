@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Kingdom.Core.Collection;
 using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -13,9 +11,8 @@ namespace Kingdom.Presentation
     /// modal panel. In-match the top item is CONCEDE, behind a confirm ("leaving IS forfeiting");
     /// <see cref="Init"/> hides that row on a menu mount, where there is no match to concede.
     /// Sound landed 2026-09-05 — see <see cref="BindAudioSettings"/> and <see cref="AudioSettings"/>.
-    /// Video is still deferred. Switch account (dev/testing only) lives here too now — see <see cref="BindAccountModal"/>.
-    /// It is hidden in-match (Sam, 2026-08-09): switching accounts mid-match reloads the scene and
-    /// ejects the player, so the bootstraps pass <c>allowAccountSwitch: false</c> into <see cref="Init"/>.
+    /// Video is still deferred. Sign out is hidden in-match: it reloads the scene and would eject
+    /// the player, so the bootstraps pass <c>allowSceneReload: false</c> into <see cref="Init"/>.
     ///
     /// Attach to a GameObject with a <see cref="UIDocument"/> whose Source Asset is
     /// MatchSettingsScreen.uxml and whose Panel Settings does NOT clear color (so whatever is
@@ -49,12 +46,7 @@ namespace Kingdom.Presentation
         private Button _confirmButton;
         private Action _onConfirm;
 
-        private VisualElement _accountModal;
-        private VisualElement _accountList;
-        private Label _accountError;
-
         private bool _isOpen;
-        private bool _accountModalOpen;
         private bool _pointerOverGear;
 
         // One overlay per scene. Several of Mount's callers (CollectionController among them) can
@@ -63,12 +55,11 @@ namespace Kingdom.Presentation
         // on top of it.
         private static MatchSettingsController _current;
 
-        /// <summary>True while the overlay or the account modal is open, or the pointer is over the
-        /// corner button. InputRouter suppresses board input for the duration (UI Toolkit won't do
-        /// it for us).</summary>
-        public bool IsBlockingInput => _isOpen || _accountModalOpen || _pointerOverGear;
+        /// <summary>True while the overlay is open, or the pointer is over the corner button.
+        /// InputRouter suppresses board input for the duration (UI Toolkit won't do it for us).</summary>
+        public bool IsBlockingInput => _isOpen || _pointerOverGear;
 
-        private bool _allowAccountSwitch;
+        private bool _allowSceneReload;
 
         /// <summary>
         /// Build and bind the settings overlay the same way on every screen that wants one — the
@@ -77,7 +68,7 @@ namespace Kingdom.Presentation
         /// sub-flow entered from one of those is fine without it (Sam, 2026-09-05).
         /// </summary>
         public static MatchSettingsController Mount(Action onConcede = null, bool showConcede = false,
-                                                      bool allowAccountSwitch = true)
+                                                      bool allowSceneReload = true)
         {
             if (_current != null) return _current;
 
@@ -86,7 +77,7 @@ namespace Kingdom.Presentation
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchSettingsScreen");
             var settings = uiGo.AddComponent<MatchSettingsController>();
-            settings.Init(onConcede, showConcede, allowAccountSwitch);
+            settings.Init(onConcede, showConcede, allowSceneReload);
             _current = settings;
             return settings;
         }
@@ -95,15 +86,13 @@ namespace Kingdom.Presentation
         /// to concede, and <paramref name="showConcede"/> hides the row that would call it.</param>
         /// <param name="showConcede">False on a menu mount (Sam, 2026-08-09): a Concede button that
         /// does nothing when clicked is worse than no button at all.</param>
-        /// <param name="allowAccountSwitch">False in-match (Sam, 2026-08-09): switching accounts
-        /// mid-match reloads the scene and ejects the player, so the affordance is hidden entirely
-        /// rather than offered and then eating the match. <b>Sign out rides on this same flag</b>
-        /// (2026-09-02) — it reloads the scene for the identical reason, so the parameter now means
-        /// "this mount may reload the scene" rather than anything about accounts specifically.</param>
-        public void Init(Action onConcede, bool showConcede = true, bool allowAccountSwitch = true)
+        /// <param name="allowSceneReload">False in-match (Sam, 2026-08-09): anything here that
+        /// reloads the scene — today, Sign out — would eject the player and eat the match, so it is
+        /// hidden entirely rather than offered.</param>
+        public void Init(Action onConcede, bool showConcede = true, bool allowSceneReload = true)
         {
             _onConcede = onConcede;
-            _allowAccountSwitch = allowAccountSwitch;
+            _allowSceneReload = allowSceneReload;
 
             var root = GetComponent<UIDocument>().rootVisualElement;
             if (root == null)
@@ -154,8 +143,6 @@ namespace Kingdom.Presentation
             // Click-out closes the overlay. It never concedes — closing is always safe.
             var scrim = root.Q<VisualElement>("scrim");
             scrim?.RegisterCallback<ClickEvent>(_ => Close());
-
-            BindAccountModal(root);
 
             Close();
         }
@@ -268,26 +255,23 @@ namespace Kingdom.Presentation
         /// <summary>
         /// Show the sign-out row only when there is a session to leave.
         ///
-        /// <para><b>Not gated on a development build, unlike Switch account.</b> That one is a
-        /// testing affordance for a device-local concept players never see; this is the ordinary
-        /// player-facing way to leave an identity, and a game that can only be signed out of by
-        /// uninstalling is one where the only way to change accounts destroys the device's
-        /// data.</para>
+        /// <para>This is the player-facing way to leave an identity: a game that can only be signed
+        /// out of by uninstalling is one where the only way to change accounts destroys the
+        /// device's data.</para>
         ///
         /// <para>Read once at Init rather than watched: the panel is rebuilt on every scene load,
         /// and signing IN happens behind the gate before the menu exists.</para>
         ///
-        /// <para><b>Hidden in-match, on the same flag as Switch account</b> — that parameter is
-        /// really "this mount can reload the scene", and signing out reloads it exactly as switching
-        /// does. Offering it mid-match would eject the player and forfeit the match without ever
-        /// saying the word concede.</para>
+        /// <para><b>Hidden in-match</b> (<c>allowSceneReload: false</c>): signing out reloads the
+        /// scene, and offering it mid-match would eject the player and forfeit the match without
+        /// ever saying the word concede.</para>
         /// </summary>
         private void BindSignOut(VisualElement root)
         {
             var entry = root.Q<Button>("btn-sign-out");
             if (entry == null) return;
 
-            if (!_allowAccountSwitch) { entry.style.display = DisplayStyle.None; return; }
+            if (!_allowSceneReload) { entry.style.display = DisplayStyle.None; return; }
 
             bool signedIn;
             try { signedIn = AuthGateway.IsSignedIn; }
@@ -331,8 +315,7 @@ namespace Kingdom.Presentation
         /// identity's own account rather than handing over this one's. Deleting the roster here
         /// would destroy the only local copy of anything the server has not accepted yet.</para>
         ///
-        /// <para><b>Then <see cref="DeviceAccounts.Invalidate"/> and a scene reload</b> — the same
-        /// blunt approach as switching accounts, and for the identical reason: every cached piece
+        /// <para><b>Then <see cref="DeviceAccounts.Invalidate"/> and a scene reload</b> — because every cached piece
         /// of per-account state (the auth provider, PlayerAccount.Local, both gateways) has to be
         /// dropped, and re-resolving them one by one is a list that will be incomplete the first
         /// time somebody adds to it. The reload puts the sign-in gate back up, because
@@ -374,7 +357,6 @@ namespace Kingdom.Presentation
         private void OnDisable()
         {
             _isOpen = false;
-            _accountModalOpen = false;
             _pointerOverGear = false;
         }
 
@@ -383,153 +365,10 @@ namespace Kingdom.Presentation
             if (_current == this) _current = null;
         }
 
-        // ── Account switcher (testing) ──────────────────────────────────────────────────
-
-        /// <summary>
-        /// Wire the accounts modal and reveal its entry point — but only in the editor and in
-        /// development builds (Sam 2026-07-27: two accounts on one device, strictly for testing;
-        /// moved here from MainMenuController 2026-08-09 so it works wherever this panel is
-        /// mounted, not just on the main menu), and only when <see cref="_allowAccountSwitch"/>
-        /// (Sam, 2026-08-09: hidden in-match — see <see cref="Init"/>).
-        ///
-        /// <para><b>The gate is on the affordance, not the mechanism.</b> <see cref="DeviceAccounts"/>
-        /// compiles and runs in every configuration; a release build simply resolves the one
-        /// grandfathered account and never shows this button.</para>
-        /// </summary>
-        private void BindAccountModal(VisualElement root)
-        {
-            _accountModal = root.Q<VisualElement>("account-modal");
-            _accountList = root.Q<VisualElement>("account-list");
-            _accountError = root.Q<Label>("account-error");
-
-            Wire(root, "btn-account-close", CloseAccountModal);
-            Wire(root, "btn-account-new", OnNewAccount);
-
-            // Development players and the Editor only; a release build never wires the switcher.
-            if (!Debug.isDebugBuild) return;
-            var entry = root.Q<Button>("btn-switch-account");
-            if (_allowAccountSwitch)
-            {
-                Wire(root, "btn-switch-account", OpenAccountModal);
-                // The USS default is display:none so a release build stays hidden even if this is reached.
-                if (entry != null) entry.style.display = DisplayStyle.Flex;
-            }
-            else if (entry != null)
-            {
-                entry.style.display = DisplayStyle.None;
-            }
-        }
-
-        private void OpenAccountModal()
-        {
-            // Only one modal on screen at a time — the switcher replaces the menu, not layers over it.
-            Close();
-            SetError(_accountError, "");
-            RebuildAccountList();
-            if (_accountModal != null) _accountModal.RemoveFromClassList("mm-modal--hidden");
-            _accountModalOpen = true;
-        }
-
-        private void CloseAccountModal()
-        {
-            if (_accountModal != null) _accountModal.AddToClassList("mm-modal--hidden");
-            _accountModalOpen = false;
-        }
-
-        /// <summary>
-        /// Rebuild the rows from disk. Rows are built here rather than in UXML because the count is
-        /// whatever the registry holds — two today, and there is no reason for the screen to be the
-        /// thing that caps it.
-        /// </summary>
-        private void RebuildAccountList()
-        {
-            if (_accountList == null) return;
-            _accountList.Clear();
-
-            IReadOnlyList<LocalAccount> all;
-            string activeId;
-            try
-            {
-                all = DeviceAccounts.All();
-                activeId = DeviceAccounts.Active.Id;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[MatchSettings] could not read the account registry: {ex.Message}");
-                SetError(_accountError, "The account list could not be read — see the console.");
-                return;
-            }
-
-            for (int i = 0; i < all.Count; i++)
-            {
-                LocalAccount account = all[i];
-                bool isActive = account.Id == activeId;
-
-                var row = new VisualElement();
-                row.AddToClassList("mm-account-row");
-                if (isActive) row.AddToClassList("mm-account-row--active");
-
-                var label = new Label(DeviceAccounts.LabelOf(account, i));
-                label.AddToClassList("mm-account-row__label");
-                row.Add(label);
-
-                if (isActive)
-                {
-                    var here = new Label("signed in");
-                    here.AddToClassList("mm-account-row__sub");
-                    row.Add(here);
-                }
-                else
-                {
-                    string id = account.Id;   // captured per row, not the loop variable
-                    var switchTo = new Button(() => SwitchToAccount(id)) { text = "Switch" };
-                    switchTo.AddToClassList("mm-modal__button");
-                    switchTo.AddToClassList("mm-account-row__button");
-                    row.Add(switchTo);
-                }
-
-                _accountList.Add(row);
-            }
-        }
-
-        private void OnNewAccount()
-        {
-            try
-            {
-                LocalAccount created = DeviceAccounts.Create();
-                Debug.Log($"[MatchSettings] created local account {created.Id}. This seat did NOT move — " +
-                          "press Switch on it to sign in here, or pin another process to it with " +
-                          "-kingdomAccount.");
-                // Rebuild rather than reload: creating an account for the other seat must leave this
-                // one exactly where it was (DeviceAccounts.Create).
-                RebuildAccountList();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[MatchSettings] could not create a local account: {ex.Message}");
-                SetError(_accountError, ex.Message);
-            }
-        }
-
-        private void SwitchToAccount(string accountId)
-        {
-            try
-            {
-                DeviceAccounts.SwitchTo(accountId);
-                ReloadThisScene();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[MatchSettings] could not switch account: {ex.Message}");
-                SetError(_accountError, ex.Message);
-            }
-        }
-
-        /// <summary>Reload the current scene so everything rebuilds against the new account — the
-        /// same blunt approach MainMenuController used (see its ReloadThisScene): re-resolving each
-        /// piece of state individually is a list that will be incomplete the first time somebody
-        /// adds to it. This would eject the player mid-match, which is why <see cref="Init"/>'s
-        /// <c>allowAccountSwitch</c> hides the affordance entirely in-match (Sam, 2026-08-09) —
+        /// <summary>Reload the current scene so everything rebuilds against the new session:
+        /// re-resolving each piece of state individually is a list that will be incomplete the first
+        /// time somebody adds to it. This would eject the player mid-match, which is why
+        /// <see cref="Init"/>'s <c>allowSceneReload</c> hides Sign out in-match (Sam, 2026-08-09) —
         /// this path is unreachable there.</summary>
         private static void ReloadThisScene()
         {

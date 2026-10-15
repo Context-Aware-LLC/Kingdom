@@ -454,41 +454,6 @@
     -unity-text-align: middle-left;
 }
 
-/* ---------- Account switcher rows ---------- */
-.mm-accounts {
-    flex-direction: column;
-    margin-top: var(--space-2);
-    margin-bottom: var(--space-2);
-}
-.mm-account-row {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--space-1);
-    background-color: rgba(20, 25, 34, 0.45);
-    margin-bottom: var(--space-2);
-}
-.mm-account-row--active {
-    background-color: rgba(42, 51, 64, 0.75);
-    border-left-width: 3px;
-    border-left-color: var(--accent);
-}
-.mm-account-row__label {
-    font-size: var(--type-label);
-    color: var(--ink-1);
-    flex-grow: 1;
-}
-.mm-account-row__sub {
-    font-size: var(--type-caption);
-    color: var(--ink-2);
-}
-.mm-account-row__button {
-    font-size: var(--type-caption);
-    padding: 2px var(--space-3);
-    margin-left: var(--space-2);
-}
-
 /* ---------- Modals ----------
  * Full-screen backdrop + a centred panel. The backdrop is opaque enough to read as modal and
  * picks up clicks itself (UI Toolkit will not block the menu underneath otherwise).

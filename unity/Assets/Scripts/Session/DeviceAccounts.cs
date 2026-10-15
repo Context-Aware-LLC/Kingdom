@@ -6,14 +6,12 @@ using UnityEngine;
 namespace Kingdom.Session
 {
     /// <summary>
-    /// Which player is sitting at this machine, and which others exist on it
-    /// (Sam 2026-07-27: two accounts on one device, on a testing basis).
+    /// Which player is sitting at this machine, and which others have signed in on it.
     ///
-    /// <para><b>Why this exists.</b> Sam cannot test the deckbuilder as two people without two
-    /// collections and two wire identities on one machine. Everything underneath was already built for
-    /// it — <see cref="CollectionPaths.ScopeDirectory"/> takes the identity as a parameter and
-    /// <c>Two_identities_hold_two_profiles</c> has been green since the collection landed — so the only
-    /// missing piece is a device that knows more than one identity. That is all this class is.</para>
+    /// <para><b>Why there can be more than one.</b> Each signed-in identity gets its own local
+    /// account and scope folder (<see cref="BindToIdentity"/>), so a second person signing in on
+    /// this device never inherits the first one's roster. It began as a two-seat testing rig
+    /// (2026-07-27); the switcher UI and the per-process pin were removed 2026-10-15.</para>
     ///
     /// <para><b>The split with <see cref="DeviceIdentity"/> is load-bearing.</b> That token is minted
     /// once and persisted forever, and it must stay that way: C-G1-8 turns on every telemetry row
@@ -22,12 +20,6 @@ namespace Kingdom.Session
     /// byte what this machine did yesterday — and accounts minted afterwards get their own. A release
     /// build on a fresh machine ends up with exactly one account holding the device token, which is
     /// today's behaviour reached by the new path.</para>
-    ///
-    /// <para><b>One code path, deliberately.</b> The registry is compiled and run in every
-    /// configuration; only the create/switch <i>affordance</i> is gated to editor and development
-    /// builds. Gating the mechanism too would leave the release path untested, which is precisely the
-    /// defect that hid an unregistered background from four shipped assets: a branch that only runs in
-    /// the configuration nobody tests is not a fallback.</para>
     ///
     /// <para><b>Not the public account system.</b> That is a separate, undecided design (decision 6a,
     /// ADR-0001). Nothing here is thrown away when it lands — the storage key becomes a server-issued
@@ -45,23 +37,6 @@ namespace Kingdom.Session
         private const string ActivePrefsKey = "kingdom.account.active";
         private const string FormerActivePrefsKey = "emberfall.account.active";
 
-        /// <summary>
-        /// Launch argument that pins this process to one account: <c>-kingdomAccount 2</c> (a 1-based
-        /// position) or <c>-kingdomAccount &lt;id&gt;</c>.
-        ///
-        /// <para><b>This is what makes two seats on one machine actually work.</b> PlayerPrefs and
-        /// <see cref="Application.persistentDataPath"/> are both keyed on companyName/productName, so
-        /// two processes of the same product share them. Sharing the data path is the point — one
-        /// <c>accounts.json</c>, visible to both. Sharing the <i>active pointer</i> is not: without an
-        /// override, two instances resolve to the same account, and whichever one switches last wins
-        /// for both. That applies to two copies of a build and, as far as we have verified, to
-        /// Multiplayer Play Mode virtual players too, which share the same product identity.</para>
-        ///
-        /// <para><b>Read-only, and never written back.</b> Persisting it would clobber the other seat's
-        /// pointer through the very prefs store they share, which is the bug this exists to avoid.</para>
-        /// </summary>
-        private const string AccountArgument = "-kingdomAccount";
-
         private static LocalAccount _active;
 
         /// <summary>Where every account's scope folder sits — and where <c>accounts.json</c> sits, one level up.</summary>
@@ -71,8 +46,7 @@ namespace Kingdom.Session
 
         /// <summary>
         /// Every account on this device, first-created first, with the registry created on first touch.
-        /// Reads two small files; not cached, for the same reason the roster isn't — a switcher showing
-        /// a stale list is how a just-created account fails to appear.
+        /// Reads two small files; not cached, for the same reason the roster isn't.
         /// </summary>
         /// <exception cref="CollectionFormatException">The registry exists but cannot be read.</exception>
         public static IReadOnlyList<LocalAccount> All()
@@ -94,18 +68,6 @@ namespace Kingdom.Session
                 if (_active != null) return _active;
 
                 var all = All();
-
-                // A launch argument wins over the stored pointer — see AccountArgument for why the
-                // stored pointer cannot distinguish two processes of the same product.
-                var pinned = FromArgument(all);
-                if (pinned != null)
-                {
-                    _active = pinned;
-                    Debug.Log($"[DeviceAccounts] pinned to '{LabelOf(pinned, PositionOf(all, pinned))}' " +
-                              $"by {AccountArgument}; the stored pointer is ignored for this process.");
-                    return _active;
-                }
-
                 string wanted = RenamedPrefs.GetString(ActivePrefsKey, FormerActivePrefsKey);
                 var found = LocalAccountRoster.Find(all, wanted);
 
@@ -118,60 +80,13 @@ namespace Kingdom.Session
             }
         }
 
-        /// <summary>
-        /// The account named by <see cref="AccountArgument"/>, or null when it is absent. Accepts a
-        /// 1-based position (easier to type, and what you actually know at launch) or a full account id.
-        /// A value that matches nothing warns and falls through to the stored pointer rather than
-        /// failing the boot — a typo in a launch argument should not look like a broken build.
-        /// </summary>
-        private static LocalAccount FromArgument(IReadOnlyList<LocalAccount> all)
-        {
-            string[] args = Environment.GetCommandLineArgs();
-            for (int i = 0; i < args.Length - 1; i++)
-            {
-                if (!string.Equals(args[i], AccountArgument, StringComparison.OrdinalIgnoreCase)) continue;
-
-                string value = args[i + 1];
-                if (int.TryParse(value, out int position))
-                {
-                    if (position >= 1 && position <= all.Count) return all[position - 1];
-                    Debug.LogWarning($"[DeviceAccounts] {AccountArgument} {position} — this device has " +
-                                     $"{all.Count} account(s). Ignoring.");
-                    return null;
-                }
-
-                var byId = LocalAccountRoster.Find(all, value);
-                if (byId != null) return byId;
-                Debug.LogWarning($"[DeviceAccounts] {AccountArgument} '{value}' matches no account. Ignoring.");
-                return null;
-            }
-            return null;
-        }
-
-        /// <summary>0-based position in the roster, or 0 when absent — <c>IReadOnlyList</c> has no IndexOf.</summary>
-        private static int PositionOf(IReadOnlyList<LocalAccount> all, LocalAccount account)
-        {
-            for (int i = 0; i < all.Count; i++)
-                if (all[i].Id == account.Id) return i;
-            return 0;
-        }
-
-        /// <summary>True when a launch argument pinned this process; the switcher cannot override it.</summary>
-        public static bool IsPinnedByArgument => FromArgumentSafe() != null;
-
-        private static LocalAccount FromArgumentSafe()
-        {
-            try { return FromArgument(All()); }
-            catch { return null; }
-        }
-
         /// <summary>Drop the cached active account so the next read re-resolves it.</summary>
         public static void Invalidate()
         {
             _active = null;
             PlayerAccount.InvalidateLocal();
             // The Supabase session is stored per local account (EF-074e), so a switch that left the
-            // provider cached would hand seat two seat one's sign-in.
+            // provider cached would hand the new account the old one's sign-in.
             AuthGateway.Invalidate();
             // The sync writes into PlayerAccount.Local, which is scoped to the signed-in account — a
             // gateway that outlived a switch would write one player's collection into another's folder.
@@ -192,9 +107,7 @@ namespace Kingdom.Session
         ///
         /// <para>A corrupt registry must not be able to stop this machine joining a match, and the
         /// honest degradation is the identity it had before accounts existed — so the fallback is
-        /// <see cref="DeviceIdentity.Token"/>, which is also the first account's token. The failure
-        /// mode is therefore "both seats look like one account again", which is exactly the state this
-        /// feature was built to fix and is visible the moment it happens.</para>
+        /// <see cref="DeviceIdentity.Token"/>, which is also the first account's token.</para>
         /// </summary>
         public static string WireToken()
         {
@@ -211,7 +124,7 @@ namespace Kingdom.Session
         }
 
         /// <summary>
-        /// A label for the switcher: this account's chosen display name, or a positional fallback for
+        /// A label for listing accounts: this account's chosen display name, or a positional fallback for
         /// one that has never been named. Reads that account's profile off disk — never throws, since a
         /// list of accounts must still render when one of them is unreadable.
         /// </summary>
@@ -233,24 +146,16 @@ namespace Kingdom.Session
         }
 
         /// <summary>
-        /// Mint a new account. It starts with nothing — no profile, no roster — so whichever process
-        /// signs into it lands in the same first-run flow a fresh install gets.
-        ///
-        /// <para><b>It does NOT switch to it, and that is the whole point.</b> This originally did, on
-        /// the reasoning that someone creating an account wants to be in it. That is wrong for the case
-        /// this feature exists to serve: an account is usually created *for the other seat*, and
-        /// switching moved the creating process instead — then the second process, sharing the same
-        /// prefs store, came up on the new account too. Both seats landed on one account and wrote two
-        /// characters into it before anyone noticed (2026-07-27). Creating a seat must never move the
-        /// seat you are sitting in; use <see cref="SwitchTo"/> deliberately, or pin the other process
-        /// with <c>-kingdomAccount</c>.</para>
+        /// Mint a new account. It starts with nothing — no profile, no roster — so whoever signs into
+        /// it lands in the same first-run flow a fresh install gets. It does not switch to it; callers
+        /// do that with <see cref="SwitchTo"/>.
         ///
         /// <para>Two ids, minted separately. <see cref="LocalAccount.Id"/> names a directory and is
         /// logged; <see cref="LocalAccount.WireToken"/> is a bearer credential and is not. Only the
         /// grandfathered first account conflates them, and only because its folder was already named
         /// after the device token.</para>
         /// </summary>
-        public static LocalAccount Create()
+        private static LocalAccount Create()
         {
             var account = new LocalAccount(Guid.NewGuid().ToString("D"), Guid.NewGuid().ToString("D"));
             Store().Save(account);
@@ -264,20 +169,12 @@ namespace Kingdom.Session
         /// <para><b>Callers must reload the scene afterwards.</b> This clears the two caches it owns,
         /// but a live screen is holding presenters, nameplates and a bound deckbuilder built from the
         /// previous account. Chasing every one of those is how a switch half-happens; reloading is one
-        /// line and cannot be incomplete. <c>MainMenuController</c> does it.</para>
+        /// line and cannot be incomplete.</para>
         /// </summary>
-        public static void SwitchTo(string accountId)
+        private static void SwitchTo(string accountId)
         {
             if (string.IsNullOrEmpty(accountId))
                 throw new ArgumentException("Cannot switch to an empty account id.", nameof(accountId));
-
-            // Refuse rather than write. This process's account came from a launch argument, and the
-            // prefs store it would write to is SHARED with the other seat — so switching here would
-            // silently move the other process's account while leaving this one pinned where it was.
-            if (IsPinnedByArgument)
-                throw new InvalidOperationException(
-                    $"This process is pinned by {AccountArgument}; change the launch argument instead. " +
-                    "Writing the stored pointer here would move the other seat's account, not this one.");
 
             PlayerPrefs.SetString(ActivePrefsKey, accountId);
             PlayerPrefs.Save();
@@ -316,12 +213,6 @@ namespace Kingdom.Session
         {
             if (string.IsNullOrEmpty(authUserId)) return Active;
 
-            // A pinned process shares the prefs store with the other seat, so writing the active
-            // pointer here would move THEIR account, not this one — the same trap SwitchTo refuses
-            // for. Binding the row is still correct and still useful, so do that half and skip the
-            // switch rather than refusing outright: a two-seat test rig must not be unable to sign in.
-            bool canSwitch = !IsPinnedByArgument;
-
             var all = All();
             var plan = LocalAccountRoster.PlanBinding(all, Active.Id, authUserId, out var target);
 
@@ -330,8 +221,8 @@ namespace Kingdom.Session
                 case LocalAccountRoster.BindingPlan.SwitchToExisting:
                     if (target!.Id == Active.Id) return Active;
                     Debug.Log($"[DeviceAccounts] this identity owns account '{target.Id}'; switching to it.");
-                    if (canSwitch) SwitchTo(target.Id);
-                    return canSwitch ? Active : target;
+                    SwitchTo(target.Id);
+                    return Active;
 
                 case LocalAccountRoster.BindingPlan.AdoptCurrent:
                     Debug.Log($"[DeviceAccounts] binding account '{target!.Id}' to the signed-in identity.");
@@ -346,14 +237,13 @@ namespace Kingdom.Session
                     Store().Save(minted);
                     Debug.Log($"[DeviceAccounts] no account on this device belongs to the signed-in " +
                               $"identity; minted '{minted.Id}'.");
-                    if (canSwitch) SwitchTo(minted.Id);
-                    return canSwitch ? Active : minted;
+                    SwitchTo(minted.Id);
+                    return Active;
             }
         }
 
         /// <summary>
-        /// <see cref="BindToIdentity"/>, guaranteed not to throw. A corrupt registry, or a claim race
-        /// with the other seat, must not be able to turn a successful sign-in into a failed launch —
+        /// <see cref="BindToIdentity"/>, guaranteed not to throw. A corrupt registry must not be able to turn a successful sign-in into a failed launch —
         /// the honest degradation is the unbound account the device was already playing, which is
         /// precisely today's behaviour.
         /// </summary>
@@ -366,23 +256,6 @@ namespace Kingdom.Session
                                  $"identity ({ex.GetType().Name}: {ex.Message}); staying on the " +
                                  "current account.");
             }
-        }
-
-        /// <summary>
-        /// Forget an account, leaving its collection on disk (<see cref="ILocalAccountStore.Delete"/> —
-        /// a mis-click on a testing affordance must not destroy a real roster). Refuses to forget the
-        /// account currently signed in, and refuses to leave the device with none.
-        /// </summary>
-        public static void Forget(string accountId)
-        {
-            var all = All();
-            if (all.Count <= 1)
-                throw new InvalidOperationException("A device keeps at least one account.");
-            if (accountId == Active.Id)
-                throw new InvalidOperationException("Switch to another account before forgetting this one.");
-
-            Store().Delete(accountId);
-            Invalidate();
         }
     }
 }

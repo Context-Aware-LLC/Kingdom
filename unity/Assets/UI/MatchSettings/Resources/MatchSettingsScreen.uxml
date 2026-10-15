@@ -9,11 +9,9 @@
 
   Loaded at runtime by the bootstraps AND by MainMenuController (Sam, 2026-08-09 — the gear is
   reachable from the main menu now, not just in-match) via Resources and bound by
-  MatchSettingsController. On the menu mount, Concede is hidden (nothing to concede) and Switch
-  account is what's left.
+  MatchSettingsController. On the menu mount, Concede is hidden (nothing to concede).
   Styled by Common/settings.uss, which theme.uss imports (Sam, 2026-09-30). Every rule for the gear
-  and the panel lives there; add none here, inline, or in a screen sheet. mainmenu.uss is linked
-  only for the dev account switcher's shared .mm-modal shell, and none of its rules reach .ms-*.
+  and the panel lives there; add none here, inline, or in a screen sheet.
 
   The root is picking-mode Ignore so the world-space board keeps its clicks; only the gear
   (always) and the scrim (while open) are pickable. Board input is ALSO gated in InputRouter
@@ -21,8 +19,6 @@
 -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <Style src="../../Common/theme.uss" />
-    <!-- For the dev account switcher (below) only: it is the main menu's .mm-modal shell. -->
-    <Style src="../../MainMenu/mainmenu.uss" />
 
     <ui:VisualElement name="root" class="emb-root ms-root" picking-mode="Ignore">
 
@@ -47,11 +43,6 @@
                         <ui:Slider name="slider-sfx" label="SFX" low-value="0" high-value="1" class="ms-slider" />
                     </ui:VisualElement>
                     <ui:Button name="btn-concede" text="Concede" class="ms-item ms-item--danger" />
-                    <!-- Dev/testing only (Sam, moved off the main menu identity plate 2026-08-09) —
-                         hidden here in the UXML so a release build stays hidden even if the show
-                         call is ever reached; MatchSettingsController reveals it under
-                         UNITY_EDITOR || DEVELOPMENT_BUILD, same gate DeviceAccounts itself uses. -->
-                    <ui:Button name="btn-switch-account" text="Switch account" class="ms-item" style="display: none;" />
                     <!-- Sign out (Sam, 2026-09-02). The player-facing way to leave an identity, and
                          the reason it exists now: testing that a roster comes back required
                          uninstalling the app, which is a blunt instrument and needs a re-signed
@@ -84,22 +75,6 @@
                     <ui:Button name="btn-cancel" text="Cancel" class="ms-item" />
                 </ui:VisualElement>
 
-            </ui:VisualElement>
-        </ui:VisualElement>
-
-        <!-- Account switcher (testing only — moved here from the main menu identity plate, Sam
-             2026-08-09). Same mm-modal shell MainMenuController used to own; reachable from
-             wherever this panel is mounted, match or main menu. -->
-        <ui:VisualElement name="account-modal" class="mm-modal mm-modal--hidden">
-            <ui:VisualElement name="account-panel" class="mm-modal__panel">
-                <ui:Label name="account-title" text="Accounts on this device" class="mm-modal__title"/>
-                <ui:Label name="account-help" text="Local testing only — each account has its own name and decks, and joins matches as its own player. Switching reloads the scene." class="mm-modal__help"/>
-                <ui:VisualElement name="account-list" class="mm-accounts"/>
-                <ui:Label name="account-error" text=" " class="mm-modal__error"/>
-                <ui:VisualElement class="mm-modal__actions">
-                    <ui:Button name="btn-account-close" text="Close" class="mm-modal__button emb-back"/>
-                    <ui:Button name="btn-account-new" text="New account" class="mm-modal__button emb-primary"/>
-                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
 
