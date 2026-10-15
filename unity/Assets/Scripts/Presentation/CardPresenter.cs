@@ -41,9 +41,13 @@ namespace Kingdom.Presentation
         [SerializeField] private SpriteRenderer gemSocketRenderer;
         private IUiSpriteProvider _ui;
 
-        // Tooltip banner (top-of-card, on hover) — see BoardController.CreatePresenter for layout.
-        [SerializeField] private GameObject tooltipBanner;
-        [SerializeField] private TextMeshPro tooltipLabel;
+        // Tooltip banner (top-of-card, on hover) — built by BuildTooltipBanner on first use.
+        private GameObject tooltipBanner;
+        private TextMeshPro tooltipLabel;
+
+        // DISABLED 2026-09-08 (Sam): the banner sticks forever on touch and covers the mana cost
+        // (#362). RETIREMENT TRIGGER: when #362 closes, flip this and delete this comment.
+        private static readonly bool TooltipBannerEnabled = false;
 
         private static readonly Color NormalColor   = new Color(0.22f, 0.22f, 0.32f);
         private static readonly Color BuffColor     = HealthInk.Buffed;
@@ -105,12 +109,49 @@ namespace Kingdom.Presentation
             tribePanelRenderer = panel;
         }
 
-        // Wired by BoardController.CreatePresenter; banner starts inactive and is toggled by
-        // OnPointerEnter/OnPointerExit below, only when the bound card carries a non-empty Tooltip.
-        internal void SetupTooltip(GameObject banner, TextMeshPro label)
+        // The card's full/original title (CardDefinition.Tooltip), for a card whose printed Name
+        // was shortened to fit the face (Card Title Length Audit, 2026-08-09). Sits at the very
+        // top edge, in front of every other layer, so it reads as a solid strip laid over the
+        // name/cost bosses. Built only for a card that carries a Tooltip, so the rest pay nothing;
+        // parented under Visual so it lifts with the hover reveal.
+        private void BuildTooltipBanner()
         {
-            tooltipBanner = banner;
-            tooltipLabel  = label;
+            float w = BoardController.CardW, h = BoardController.CardH;
+            Transform parent = transform.Find("Visual");
+            if (parent == null) parent = transform;
+
+            // One parent, so a single SetActive shows and hides both pieces.
+            tooltipBanner = new GameObject("Tooltip");
+            tooltipBanner.transform.SetParent(parent, false);
+
+            var bgGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            bgGo.name = "TooltipBg";
+            bgGo.transform.SetParent(tooltipBanner.transform, false);
+            bgGo.transform.localScale    = new Vector3(w * 0.94f, h * 0.13f, 1f);
+            bgGo.transform.localPosition = new Vector3(0f, h * 0.435f, -0.02f);
+            Destroy(bgGo.GetComponent<MeshCollider>());
+            var bg = bgGo.GetComponent<Renderer>();
+            MaterialCatalog.Assign(bg, MaterialCatalog.Plate);
+            var mpb = new MaterialPropertyBlock();
+            bg.GetPropertyBlock(mpb);
+            mpb.SetColor("_BaseColor", new Color(0.04f, 0.04f, 0.06f, 0.92f));
+            bg.SetPropertyBlock(mpb);
+
+            var labelGo = new GameObject("TooltipText");
+            labelGo.transform.SetParent(tooltipBanner.transform, false);
+            labelGo.transform.localPosition = new Vector3(0f, h * 0.435f, -0.021f);
+            tooltipLabel = labelGo.AddComponent<TextMeshPro>();
+            labelGo.GetComponent<Renderer>().sortingOrder = 20; // over TooltipBg and every other layer
+            var font = BoardController.BodyFont();
+            if (font != null) tooltipLabel.font = font;
+            tooltipLabel.alignment        = TextAlignmentOptions.Center;
+            tooltipLabel.color            = Color.white;
+            tooltipLabel.rectTransform.sizeDelta = new Vector2(w * 0.88f, h * 0.12f);
+            tooltipLabel.textWrappingMode  = TextWrappingModes.NoWrap;
+            tooltipLabel.overflowMode      = TextOverflowModes.Ellipsis;
+            tooltipLabel.enableAutoSizing  = true;
+            tooltipLabel.fontSizeMax       = 1.4f;
+            tooltipLabel.fontSizeMin       = 0.8f;
         }
 
         // Called by BoardController once the IArtProvider resolves this card's illustration.
@@ -232,9 +273,10 @@ namespace Kingdom.Presentation
                 HideTooltip();
                 return;
             }
-            if (!string.IsNullOrEmpty(_def.Tooltip) && tooltipBanner != null)
+            if (TooltipBannerEnabled && !string.IsNullOrEmpty(_def.Tooltip))
             {
-                if (tooltipLabel != null) tooltipLabel.text = _def.Tooltip;
+                if (tooltipBanner == null) BuildTooltipBanner();
+                tooltipLabel.text = _def.Tooltip;
                 tooltipBanner.SetActive(true);
             }
         }

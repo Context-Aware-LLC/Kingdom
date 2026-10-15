@@ -1352,41 +1352,8 @@ namespace Kingdom.Presentation
             tribeLabel.fontSizeMin = FrameRarityCatalog.TribeEmFloor * CardH * 10f;
             tribeBanner.SetActive(false);
 
-            // Tooltip banner — the card's full/original title (CardDefinition.Tooltip), shown only
-            // on hover for a card whose printed Name was shortened to fit the face (Card Title
-            // Length Audit, 2026-08-09). Sits at the very top edge, in front of every other layer
-            // (z nearer the camera than the gem, the nearest thing before it) so it reads as a
-            // solid strip laid over the name/cost bosses rather than a fourth thing competing with
-            // them. Hidden by default; CardPresenter toggles it on pointer enter/exit.
-            var tooltipBgGo = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            tooltipBgGo.name = "TooltipBg";
-            tooltipBgGo.transform.SetParent(root.transform, false);
-            tooltipBgGo.transform.localScale    = new Vector3(CardW * 0.94f, CardH * 0.13f, 1f);
-            tooltipBgGo.transform.localPosition = new Vector3(0f, CardH * 0.435f, -0.02f);
-            DestroyObj(tooltipBgGo.GetComponent<MeshCollider>());
-            var tooltipBgRenderer = tooltipBgGo.GetComponent<Renderer>();
-            MaterialCatalog.Assign(tooltipBgRenderer, MaterialCatalog.Plate);
-            var tooltipMpb = new MaterialPropertyBlock();
-            tooltipBgRenderer.GetPropertyBlock(tooltipMpb);
-            tooltipMpb.SetColor("_BaseColor", new Color(0.04f, 0.04f, 0.06f, 0.92f));
-            tooltipBgRenderer.SetPropertyBlock(tooltipMpb);
-            tooltipBgGo.SetActive(false);
-
-            var tooltipLabelGo = new GameObject("TooltipText");
-            tooltipLabelGo.transform.SetParent(root.transform, false);
-            tooltipLabelGo.transform.localPosition = new Vector3(0f, CardH * 0.435f, -0.021f);
-            var tooltipLabel = tooltipLabelGo.AddComponent<TextMeshPro>();
-            tooltipLabelGo.GetComponent<Renderer>().sortingOrder = 20; // over TooltipBg and every other layer
-            var tooltipFont = BodyFont();
-            if (tooltipFont != null) tooltipLabel.font = tooltipFont;
-            tooltipLabel.alignment        = TextAlignmentOptions.Center;
-            tooltipLabel.color            = Color.white;
-            tooltipLabel.rectTransform.sizeDelta = new Vector2(CardW * 0.88f, CardH * 0.12f);
-            tooltipLabel.textWrappingMode  = TextWrappingModes.NoWrap;
-            tooltipLabel.overflowMode      = TextOverflowModes.Ellipsis;
-            tooltipLabel.enableAutoSizing  = true;
-            tooltipLabel.fontSizeMax       = 1.4f;
-            tooltipLabel.fontSizeMin       = 0.8f;
+            // No tooltip banner here: almost no card carries a Tooltip, so CardPresenter builds
+            // it on first use, only for a card that does (2026-10-15).
 
             // Wrap every visual under one child transform. Hover-reveal lifts and scales THIS,
             // never the root — the BoxCollider above stays on the root and therefore never moves,
@@ -1410,10 +1377,6 @@ namespace Kingdom.Presentation
             presenter.SetupFrameLayer(frameRenderer, gemRenderer, _uiSprites,
                                       costSocket, attackSocket, healthSocket, gemSocket, powerSword);
             presenter.SetupTribe(tribeBanner, tribeLabel, tribePanel);
-            // DISABLED 2026-09-08 (Sam): the on-card name-overflow banner sticks forever on touch
-            // and covers the mana cost (#362). Leaving tooltipBanner/tooltipLabel unwired on
-            // CardPresenter keeps its pointer-enter check false; it is already null-safe.
-            // presenter.SetupTooltip(tooltipBgGo, tooltipLabel);
 
             // CardMaterialBinder drives shader MPB floats; Init() called after ICardLiveState exists.
             var binder = root.AddComponent<CardMaterialBinder>();

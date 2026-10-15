@@ -161,13 +161,14 @@ def main() -> int:
     print(f"{'':>6}    of which drawing at build time   : {live}")
     print()
 
-    # The lazily-built mulligan mark lives on CardPresenter, not CreatePresenter.
+    # CardPresenter builds some pieces on first use (mulligan mark, tooltip banner), not in
+    # CreatePresenter, so a card that never needs them never has them.
     presenter = SRC.parent / "CardPresenter.cs"
     ptext = presenter.read_text(encoding="utf-8")
-    lazy = len(re.findall(r"AddComponent<TextMeshPro>\(\)", ptext))
+    lazy = sum(len(p.findall(ptext)) for p, _, _ in SITE_PATTERNS)
     if lazy:
         print(f"NOT COUNTED ABOVE: {lazy} lazily-built renderer(s) in "
-              f"{presenter.name} (mulligan mark; only exists during mulligan).")
+              f"{presenter.name} (mulligan mark, tooltip banner; only exist once needed).")
 
     print()
     print(f"BOARD SCALE: a full board is 2 heroes x 7 minions + 2 hands. At {total} "
