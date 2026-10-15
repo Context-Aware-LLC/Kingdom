@@ -112,6 +112,10 @@ namespace Kingdom.Presentation
                                                  SpellSchoolEffects.ShadowStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.ClockwrightLeadSeconds,
                                                  SpellSchoolEffects.ClockwrightStaggerSeconds),
+                                new SchoolTiming(SpellSchoolEffects.WaterLeadSeconds,
+                                                 SpellSchoolEffects.WaterStaggerSeconds),
+                                new SchoolTiming(SpellSchoolEffects.FrostLeadSeconds,
+                                                 SpellSchoolEffects.FrostStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.HealLeadSeconds,
                                                  SpellSchoolEffects.HealStaggerSeconds));
 
@@ -355,6 +359,30 @@ namespace Kingdom.Presentation
                                      heldPos, heldRot, heldScale, landPos, landScale, timing));
 
             if (reveal.Type == CardType.SPELL) PlaySpellSchool(reveal);
+            else if (reveal.Drowns) PlayDrownWash(reveal);
+        }
+
+        /// <summary>A minion that drowns as it is played: the wash on each character it damages, as
+        /// the damage lands. A drown from any other trigger (an attack, a death) shows nothing
+        /// yet; only a play reveal knows its targets.</summary>
+        private void PlayDrownWash(PlayReveal reveal)
+        {
+            Camera cam = Camera.main;
+            if (cam == null || reveal.Struck.Count == 0) return;
+#if UNITY_EDITOR
+            _uiSprites ??= new EditorUiSpriteProvider();
+#else
+            _uiSprites ??= new AddressableUiSpriteProvider();
+#endif
+            Sprite wash = _uiSprites.Get(SpellSchoolEffects.DrownWashKey);
+            foreach (InstanceId id in reveal.Struck)
+            {
+                Vector3? at = ResolvePosition(id);
+                Transform visual = _board.ResolveCombatVisual(id);
+                if (visual == null && !at.HasValue) continue;
+                StartCoroutine(SpellSchoolEffects.Burst(transform, wash, cam, visual, at ?? visual.position,
+                    Mathf.Max(0f, reveal.HoldSeconds - 0.15f)));
+            }
         }
 
         /// <summary>The spell-school sequences and the healing shimmer. Targets are resolved now, against
@@ -463,7 +491,7 @@ namespace Kingdom.Presentation
                 StartCoroutine(SpellSchoolEffects.Gather(transform,
                     _uiSprites.Get(SpellSchoolEffects.ClockwrightCasterKey), cam, caster,
                     SpellSchoolEffects.GatherStartsAt(reveal.CardSeconds, SpellSchoolEffects.ClockwrightLeadSeconds),
-                    atFeet: false));
+                    "ClockwrightCaster"));
 
                 Sprite parts = _uiSprites.Get(SpellSchoolEffects.ClockwrightTravelKey);
                 Sprite burst = _uiSprites.Get(SpellSchoolEffects.ClockwrightTargetKey);
@@ -484,7 +512,7 @@ namespace Kingdom.Presentation
                 StartCoroutine(SpellSchoolEffects.Gather(transform,
                     _uiSprites.Get(SpellSchoolEffects.LightningChargeKey), cam, caster,
                     SpellSchoolEffects.GatherStartsAt(reveal.CardSeconds, SpellSchoolEffects.LightningLeadSeconds),
-                    atFeet: true));
+                    "LightningCharge", atFeet: true));
 
                 // The hit crackles on each damaged character as the arc or bolt reaches it.
                 Sprite hit = _uiSprites.Get(SpellSchoolEffects.LightningHitKey);
@@ -499,6 +527,32 @@ namespace Kingdom.Presentation
                 }
             }
 
+            if (reveal.Effect == SpellEffect.Water || reveal.Effect == SpellEffect.Frost)
+            {
+                bool frost = reveal.Effect == SpellEffect.Frost;
+                float lead = frost ? SpellSchoolEffects.FrostLeadSeconds : SpellSchoolEffects.WaterLeadSeconds;
+                StartCoroutine(SpellSchoolEffects.Gather(transform,
+                    _uiSprites.Get(frost ? SpellSchoolEffects.FrostCasterKey : SpellSchoolEffects.WaterCasterKey),
+                    cam, caster, SpellSchoolEffects.GatherStartsAt(reveal.CardSeconds, lead),
+                    frost ? "FrostCaster" : "WaterCaster"));
+
+                Sprite missile = _uiSprites.Get(frost ? SpellSchoolEffects.FrostTravelKey : SpellSchoolEffects.WaterTravelKey);
+                Sprite land = frost ? null : _uiSprites.Get(reveal.Drowns ? SpellSchoolEffects.DrownWashKey
+                                                                           : SpellSchoolEffects.WaterSplashKey);
+                for (int i = 0; i < reveal.Struck.Count; i++)
+                {
+                    InstanceId id = reveal.Struck[i];
+                    Vector3? at = ResolvePosition(id);
+                    Transform visual = _board.ResolveCombatVisual(id);
+                    if (visual == null && !at.HasValue) continue;
+                    StartCoroutine(frost
+                        ? SpellSchoolEffects.FrostBolt(transform, missile, cam, caster, visual,
+                            at ?? visual.position, SpellSchoolEffects.FrostLandsAt(reveal.CardSeconds, i))
+                        : SpellSchoolEffects.WaterBolt(transform, missile, land, reveal.Drowns, cam, caster,
+                            visual, at ?? visual.position, SpellSchoolEffects.WaterLandsAt(reveal.CardSeconds, i)));
+                }
+            }
+
             // Everything else the spell acted on gets its school's target effect alone, after the
             // damaged characters, on the same stagger.
             Sprite touchedSheet = reveal.Effect switch
@@ -508,7 +562,8 @@ namespace Kingdom.Presentation
                 SpellEffect.Fire        => _uiSprites.Get(SpellSchoolEffects.FireImpactKey),
                 SpellEffect.Shadow      => _uiSprites.Get(SpellSchoolEffects.ShadowImpactKey),
                 SpellEffect.Clockwright => _uiSprites.Get(SpellSchoolEffects.ClockwrightTargetKey),
-                _                       => null,
+                SpellEffect.Water       => _uiSprites.Get(SpellSchoolEffects.WaterSplashKey),
+                _                       => null, // frost: the freeze's crystals are its target effect
             };
             for (int i = 0; touchedSheet != null && i < reveal.Touched.Count; i++)
             {
@@ -523,6 +578,7 @@ namespace Kingdom.Presentation
                     SpellEffect.Lightning   => SpellSchoolEffects.LightningStrikesAt(reveal.CardSeconds, n),
                     SpellEffect.Fire        => SpellSchoolEffects.FireballLandsAt(reveal.CardSeconds, n),
                     SpellEffect.Shadow      => SpellSchoolEffects.ShadowLandsAt(reveal.CardSeconds, n),
+                    SpellEffect.Water       => SpellSchoolEffects.WaterLandsAt(reveal.CardSeconds, n),
                     _                       => SpellSchoolEffects.ClockwrightLandsAt(reveal.CardSeconds, n),
                 };
                 StartCoroutine(SpellSchoolEffects.Burst(transform, touchedSheet, cam, visual,

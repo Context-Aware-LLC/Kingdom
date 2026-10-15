@@ -29,12 +29,15 @@ namespace Kingdom.Session
         public readonly SchoolTiming Fire;
         public readonly SchoolTiming Shadow;
         public readonly SchoolTiming Clockwright;
+        public readonly SchoolTiming Water;
+        public readonly SchoolTiming Frost;
         public readonly SchoolTiming Heal;
 
         public PlayRevealHolds(float minion, float spell, float weapon,
                                SchoolTiming earth = default, SchoolTiming lightning = default,
                                SchoolTiming fire = default, SchoolTiming shadow = default,
-                               SchoolTiming clockwright = default, SchoolTiming heal = default)
+                               SchoolTiming clockwright = default, SchoolTiming water = default,
+                               SchoolTiming frost = default, SchoolTiming heal = default)
         {
             Minion = minion;
             Spell  = spell;
@@ -44,6 +47,8 @@ namespace Kingdom.Session
             Fire = fire;
             Shadow = shadow;
             Clockwright = clockwright;
+            Water = water;
+            Frost = frost;
             Heal = heal;
         }
 
@@ -54,6 +59,8 @@ namespace Kingdom.Session
             SpellEffect.Fire      => Fire,
             SpellEffect.Shadow    => Shadow,
             SpellEffect.Clockwright => Clockwright,
+            SpellEffect.Water     => Water,
+            SpellEffect.Frost     => Frost,
             _                     => default,
         };
 
@@ -108,7 +115,7 @@ namespace Kingdom.Session
     /// <summary>Which spell-school effect a played spell carries, beyond the reveal itself.
     /// There is no school field on a card; the class stands in for it (Sam, 2026-10-13:
     /// Stonewarden is earth; Tempest is lightning; 2026-10-14: Emberward is fire, Nightveil is
-    /// shadow, Clockwright is constructs).
+    /// shadow, Clockwright is constructs, Tidecaller is water or frost).
     ///
     /// <para>Every spell of a school's class carries it, whatever the spell does: the caster
     /// effect always plays, the school's missile goes to each character the spell damages, and
@@ -137,6 +144,15 @@ namespace Kingdom.Session
         /// <summary>A Clockwright spell: gears gather on the caster, then a spray of parts flies
         /// to each character it damages and bursts there.</summary>
         Clockwright,
+
+        /// <summary>A Tidecaller spell that is not frost: water gathers on the caster, then a
+        /// wave goes to each character it damages and splashes there.</summary>
+        Water,
+
+        /// <summary>A Tidecaller spell that freezes, or is named for frost: frost gathers on the
+        /// caster, then an ice shard goes to each character it damages. No target effect: the
+        /// freeze's crystals are it.</summary>
+        Frost,
     }
 
     /// <summary>
@@ -178,6 +194,9 @@ namespace Kingdom.Session
         /// silenced, frozen, transformed, taken, or given a keyword or armour. Never null.</summary>
         public readonly IReadOnlyList<InstanceId> Touched;
 
+        /// <summary>The played card can drown, so its damaged characters get the drown wash.</summary>
+        public readonly bool Drowns;
+
         public readonly SpellEffect Effect;
 
         /// <summary>When the reveal card itself is gone. Equal to <see cref="HoldSeconds"/> unless
@@ -190,8 +209,9 @@ namespace Kingdom.Session
                           IReadOnlyList<InstanceId> struck = null,
                           IReadOnlyList<InstanceId> healed = null,
                           SpellEffect effect = SpellEffect.None, float cardSeconds = -1f,
-                          IReadOnlyList<InstanceId> touched = null)
+                          IReadOnlyList<InstanceId> touched = null, bool drowns = false)
         {
+            Drowns = drowns;
             Touched = touched ?? System.Array.Empty<InstanceId>();
             Struck = struck ?? System.Array.Empty<InstanceId>();
             Healed = healed ?? System.Array.Empty<InstanceId>();
@@ -278,6 +298,7 @@ namespace Kingdom.Session
                         CardClass.EMBERWARD   => SpellEffect.Fire,
                         CardClass.NIGHTVEIL   => SpellEffect.Shadow,
                         CardClass.CLOCKWRIGHT => SpellEffect.Clockwright,
+                        CardClass.TIDECALLER  => IsFrost(def) ? SpellEffect.Frost : SpellEffect.Water,
                         _                     => SpellEffect.None,
                     };
                 float tail = holds.For(effect).Tail(struck.Count + touched.Count);
@@ -286,10 +307,23 @@ namespace Kingdom.Session
 
                 return new PlayReveal(def, source, target, played.Controller, def.Type, hold + tail,
                                       dest, slot, boardCount, struck, healed, effect, hold,
-                                      touched);
+                                      touched, Has<DrownAction>(def));
             }
 
             return null;
+        }
+
+        /// <summary>Which Tidecaller spells are frost rather than water: any that freezes, plus
+        /// the two damage spells named for frost. Keyed by card id for those two because nothing
+        /// on the card says so.</summary>
+        private static bool IsFrost(CardDefinition def) =>
+            Has<FrostAction>(def) || def.Id == 152 /* Frost Ripple */ || def.Id == 169 /* Hoarfrost Lash */;
+
+        private static bool Has<T>(CardDefinition def) where T : RuleAction
+        {
+            foreach (RuleDefinition rule in def.Rules)
+                if (rule.Action is T) return true;
+            return false;
         }
 
         // What a spell does to a character, other than damage or healing, that its school's

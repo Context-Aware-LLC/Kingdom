@@ -27,7 +27,13 @@ namespace Kingdom.Core.Tests.Presentation
             ("effect_spell_clockwright_travel", "173c00649b7f440ab3cc11c8dacb7a68"),
             ("effect_spell_clockwright_target", "fc693cba6f4d43bf960d38469702f21b"),
             ("effect_spell_lightning_charge", "acd3429bb87f4ab3827f5d9463840042"),
-            ("effect_spell_lightning_hit", "a8e8f77a774b4966ae965452dfd452ef")
+            ("effect_spell_lightning_hit", "a8e8f77a774b4966ae965452dfd452ef"),
+            ("effect_spell_water_caster", "c6511868d056495a88aa14a1ff29dcd1"),
+            ("effect_spell_water_travel", "08ba4c3b0df94e0599944f84254460a1"),
+            ("effect_spell_water_splash", "5d26a9df71e54b8282927206604ebb01"),
+            ("effect_spell_frost_caster", "020c8c18a4a64529b0e69dfbde5b29b6"),
+            ("effect_spell_frost_travel", "5e44797afa2b4dc39e7489e620f8df6f"),
+            ("effect_drown_wash", "4e7117405bbf4629b056cb8afaa43d4d")
         };
 
         [Test]

@@ -10,7 +10,8 @@ namespace Kingdom.Presentation
     /// acts on gets the impact alone (<see cref="Burst"/>). Earth (a buildup on the caster, a
     /// rock falling on each target, an impact where it lands), lightning (a charge under the
     /// caster, an arc or a bolt to each target, a hit on it), clockwright (gears gathering on the
-    /// caster, parts flying to each target, a burst of them where they land), fire (a flare on the caster, a fireball to each target, a burst
+    /// caster, parts flying to each target, a burst of them where they land), water and frost
+    /// (Tidecaller: a wave and a splash, a drowned target washed; an ice shard and the freeze), fire (a flare on the caster, a fireball to each target, a burst
     /// where it lands), shadow (a black wipe across the caster's portrait, a wisp to each target,
     /// a ring where it lands), the healing sparkles and shimmer on everything a spell heals,
     /// and the green poof on a minion a Venom source damages. Each sheet is three frames side by
@@ -44,6 +45,12 @@ namespace Kingdom.Presentation
         public const string ClockwrightCasterKey = "effect_spell_clockwright_caster";
         public const string ClockwrightTravelKey = "effect_spell_clockwright_travel";
         public const string ClockwrightTargetKey = "effect_spell_clockwright_target";
+        public const string WaterCasterKey = "effect_spell_water_caster";
+        public const string WaterTravelKey = "effect_spell_water_travel";
+        public const string WaterSplashKey = "effect_spell_water_splash";
+        public const string FrostCasterKey = "effect_spell_frost_caster";
+        public const string FrostTravelKey = "effect_spell_frost_travel";
+        public const string DrownWashKey = "effect_drown_wash";
 
         /// <summary>The first rock lands this long after the reveal card is gone, and each further
         /// target this long after the one before. VfxDirector hands both to the classifier, which
@@ -96,6 +103,20 @@ namespace Kingdom.Presentation
         // The caster effect, Clockwright's gathering gears or Tempest's charge, runs this long
         // and peaks as the first missile leaves.
         private const float GatherSeconds = 0.5f;
+
+        /// <summary>Tidecaller's two schools. Water throws a wave and splashes; frost throws a
+        /// shard and lands no effect of its own, because the freeze's crystals are the target
+        /// effect (Sam, 2026-10-14). A drowned character gets the wash instead of the splash.</summary>
+        public const float WaterLeadSeconds = 0.5f;
+        public const float WaterStaggerSeconds = 0.08f;
+        private const float WaterTravelSeconds = 0.34f;
+        private const float WaterSplashSeconds = 0.45f;
+        private const float DrownWashSeconds = 0.6f;
+        public const float FrostLeadSeconds = 0.45f;
+        public const float FrostStaggerSeconds = 0.07f;
+        private const float FrostTravelSeconds = 0.26f;
+        // The frost shard's point is at the frame's right edge, further out than a ball's head.
+        private const float FrostHeadOffset = 0.4f;
         public const float HealStaggerSeconds = 0.05f;
         private const float HealTravelSeconds = 0.36f;
         // The lead star sits right of the frame's centre; this is its offset as a fraction of the
@@ -398,8 +419,31 @@ namespace Kingdom.Presentation
         public static IEnumerator Fireball(Transform parent, Sprite ballSheet, Sprite burstSheet,
                                            Camera camera, Transform from, Transform target,
                                            Vector3 fallback, float landIn) =>
-            Projectile("Fire", FireballSeconds, FireImpactSeconds, 0.06f, parent, ballSheet,
-                       burstSheet, camera, from, target, fallback, landIn);
+            Projectile("Fire", FireballSeconds, FireImpactSeconds, 0.06f, ProjectileHeadOffset, parent,
+                       ballSheet, burstSheet, camera, from, target, fallback, landIn);
+
+        public static float WaterLandsAt(float cardSeconds, int index) =>
+            cardSeconds + WaterLeadSeconds + index * WaterStaggerSeconds;
+
+        public static float FrostLandsAt(float cardSeconds, int index) =>
+            cardSeconds + FrostLeadSeconds + index * FrostStaggerSeconds;
+
+        /// <summary>A wave from the caster to one target, then the splash where it lands, or the
+        /// longer wash for a character the spell drowns.</summary>
+        public static IEnumerator WaterBolt(Transform parent, Sprite waveSheet, Sprite landSheet,
+                                            bool drowns, Camera camera, Transform from,
+                                            Transform target, Vector3 fallback, float landIn) =>
+            Projectile("Water", WaterTravelSeconds, drowns ? DrownWashSeconds : WaterSplashSeconds,
+                       0.08f, ProjectileHeadOffset, parent, waveSheet, landSheet, camera, from,
+                       target, fallback, landIn);
+
+        /// <summary>An ice shard from the caster to one target. No impact: the freeze's own
+        /// crystals, or the damage, are what it lands as.</summary>
+        public static IEnumerator FrostBolt(Transform parent, Sprite shardSheet, Camera camera,
+                                            Transform from, Transform target, Vector3 fallback,
+                                            float landIn) =>
+            Projectile("Frost", FrostTravelSeconds, 0f, 0.07f, FrostHeadOffset, parent, shardSheet,
+                       null, camera, from, target, fallback, landIn);
 
         public static float ShadowWipeStartsAt(float cardSeconds) =>
             Mathf.Max(0f, cardSeconds + ShadowLeadSeconds - ShadowTravelSeconds - ShadowWipeSeconds);
@@ -412,14 +456,15 @@ namespace Kingdom.Presentation
         public static IEnumerator ShadowBolt(Transform parent, Sprite wispSheet, Sprite burstSheet,
                                              Camera camera, Transform from, Transform target,
                                              Vector3 fallback, float landIn) =>
-            Projectile("Shadow", ShadowTravelSeconds, ShadowImpactSeconds, 0.09f, parent, wispSheet,
-                       burstSheet, camera, from, target, fallback, landIn);
+            Projectile("Shadow", ShadowTravelSeconds, ShadowImpactSeconds, 0.09f, ProjectileHeadOffset,
+                       parent, wispSheet, burstSheet, camera, from, target, fallback, landIn);
 
         // A missile from the caster to one target, landing landIn seconds from now, then the burst
-        // where it lands. With no caster on the board it bursts without the flight. Both sheets
-        // draw the head right of centre, its trail to the left.
+        // where it lands. With no caster on the board it bursts without the flight. Every sheet
+        // draws the head right of centre, its trail to the left; headOffset is how far right.
         private static IEnumerator Projectile(string school, float travelSeconds, float impactSeconds,
-                                              float frameSeconds, Transform parent, Sprite ballSheet,
+                                              float frameSeconds, float headOffset, Transform parent,
+                                              Sprite ballSheet,
                                               Sprite burstSheet, Camera camera, Transform from,
                                               Transform target, Vector3 fallback, float landIn)
         {
@@ -448,7 +493,7 @@ namespace Kingdom.Presentation
 
                     // The three drawings churn the trail; they loop rather than play once.
                     SpriteMaterials.Set(ball, frames[Mathf.FloorToInt(elapsed / frameSeconds) % frames.Length]);
-                    Place(ball, camera, head - dir * (width * ProjectileHeadOffset), width);
+                    Place(ball, camera, head - dir * (width * headOffset), width);
                     ball.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
                     ball.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 8f));
                     yield return null;
@@ -479,24 +524,25 @@ namespace Kingdom.Presentation
         public static IEnumerator ClockwrightBolt(Transform parent, Sprite partsSheet, Sprite burstSheet,
                                                   Camera camera, Transform from, Transform target,
                                                   Vector3 fallback, float landIn) =>
-            Projectile("Clockwright", ClockwrightTravelSeconds, ClockwrightTargetSeconds, 0.07f, parent,
-                       partsSheet, burstSheet, camera, from, target, fallback, landIn);
+            Projectile("Clockwright", ClockwrightTravelSeconds, ClockwrightTargetSeconds, 0.07f,
+                       ProjectileHeadOffset, parent, partsSheet, burstSheet, camera, from, target,
+                       fallback, landIn);
 
         /// <summary>When a caster effect of <see cref="GatherSeconds"/> starts so it peaks as the
-        /// first missile of a school with this lead and travel leaves.</summary>
+        /// first missile of a school with this lead leaves, about a third of a second later.</summary>
         public static float GatherStartsAt(float cardSeconds, float lead) =>
-            Mathf.Max(0f, cardSeconds + lead - ClockwrightTravelSeconds - GatherSeconds * 0.8f);
+            Mathf.Max(0f, cardSeconds + lead - 0.32f - GatherSeconds * 0.8f);
 
-        /// <summary>Clockwright's gears, or Tempest's charge, on the caster: plays the three
-        /// frames once, growing a little, and fades out at the end. Tempest's sits at the hero's
-        /// feet, so it reads as gathering from the ground.</summary>
+        /// <summary>A school's caster effect (Clockwright's gears, Tempest's charge, Tidecaller's
+        /// water or frost): plays the three frames once, growing a little, and fades out at the
+        /// end. Tempest's sits at the hero's feet, so it reads as gathering from the ground.</summary>
         public static IEnumerator Gather(Transform parent, Sprite sheet, Camera camera, Transform caster,
-                                         float startIn, bool atFeet)
+                                         float startIn, string name, bool atFeet = false)
         {
             if (startIn > 0f) yield return new WaitForSeconds(startIn);
             if (parent == null || sheet == null || camera == null || caster == null) yield break;
 
-            SpriteRenderer sr = MakeRenderer(parent, atFeet ? "LightningCharge" : "ClockwrightCaster");
+            SpriteRenderer sr = MakeRenderer(parent, name);
             Sprite[] frames = FramesOf(sheet);
             float elapsed = 0f;
             while (elapsed < GatherSeconds && caster != null && sr != null)

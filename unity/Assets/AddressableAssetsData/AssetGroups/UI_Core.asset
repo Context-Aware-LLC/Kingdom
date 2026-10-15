@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: UI_Core
   m_GUID: 3d766df806eca424e9276c2b8a291061
   m_SerializeEntries:
+  - m_GUID: 020c8c18a4a64529b0e69dfbde5b29b6
+    m_Address: ui/effect_spell_frost_caster
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 039c922ced554f70aa17080a94295c06
     m_Address: ui/effect_spell_shadow_impact
     m_ReadOnly: 0
@@ -32,6 +37,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0806a3c244fb5124498abf38fc803019
     m_Address: ui/effect_shroud_smoke_right
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 08ba4c3b0df94e0599944f84254460a1
+    m_Address: ui/effect_spell_water_travel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -160,6 +170,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4e7117405bbf4629b056cb8afaa43d4d
+    m_Address: ui/effect_drown_wash
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4fc84507c69d415994886bbe45c51623
     m_Address: ui/frame_card
     m_ReadOnly: 0
@@ -185,8 +200,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5d26a9df71e54b8282927206604ebb01
+    m_Address: ui/effect_spell_water_splash
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5d65802299d858f4db1a370b392332fb
     m_Address: ui/grave_hp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5e44797afa2b4dc39e7489e620f8df6f
+    m_Address: ui/effect_spell_frost_travel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -422,6 +447,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c5630a76852906f4c85f5e02f8814b9b
     m_Address: ui/card_back
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c6511868d056495a88aa14a1ff29dcd1
+    m_Address: ui/effect_spell_water_caster
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
