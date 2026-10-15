@@ -116,6 +116,8 @@ namespace Kingdom.Presentation
                                                  SpellSchoolEffects.WaterStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.FrostLeadSeconds,
                                                  SpellSchoolEffects.FrostStaggerSeconds),
+                                new SchoolTiming(SpellSchoolEffects.GravekeepLeadSeconds,
+                                                 SpellSchoolEffects.GravekeepStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.HealLeadSeconds,
                                                  SpellSchoolEffects.HealStaggerSeconds));
 
@@ -553,6 +555,27 @@ namespace Kingdom.Presentation
                 }
             }
 
+            if (reveal.Effect == SpellEffect.Gravekeep)
+            {
+                StartCoroutine(SpellSchoolEffects.Gather(transform,
+                    _uiSprites.Get(SpellSchoolEffects.GravekeepCasterKey), cam, caster,
+                    SpellSchoolEffects.GatherStartsAt(reveal.CardSeconds, SpellSchoolEffects.GravekeepLeadSeconds),
+                    "GravekeepCaster"));
+
+                Sprite skull = _uiSprites.Get(SpellSchoolEffects.GravekeepTravelKey);
+                Sprite soulfire = _uiSprites.Get(SpellSchoolEffects.GravekeepTargetKey);
+                for (int i = 0; i < reveal.Struck.Count; i++)
+                {
+                    InstanceId id = reveal.Struck[i];
+                    Vector3? at = ResolvePosition(id);
+                    Transform visual = _board.ResolveCombatVisual(id);
+                    if (visual == null && !at.HasValue) continue;
+                    StartCoroutine(SpellSchoolEffects.SkullBolt(transform, skull, soulfire, cam, caster,
+                        visual, at ?? visual.position,
+                        SpellSchoolEffects.GravekeepLandsAt(reveal.CardSeconds, i)));
+                }
+            }
+
             // Everything else the spell acted on gets its school's target effect alone, after the
             // damaged characters, on the same stagger.
             Sprite touchedSheet = reveal.Effect switch
@@ -563,6 +586,7 @@ namespace Kingdom.Presentation
                 SpellEffect.Shadow      => _uiSprites.Get(SpellSchoolEffects.ShadowImpactKey),
                 SpellEffect.Clockwright => _uiSprites.Get(SpellSchoolEffects.ClockwrightTargetKey),
                 SpellEffect.Water       => _uiSprites.Get(SpellSchoolEffects.WaterSplashKey),
+                SpellEffect.Gravekeep   => _uiSprites.Get(SpellSchoolEffects.GravekeepTargetKey),
                 _                       => null, // frost: the freeze's crystals are its target effect
             };
             for (int i = 0; touchedSheet != null && i < reveal.Touched.Count; i++)
@@ -579,6 +603,7 @@ namespace Kingdom.Presentation
                     SpellEffect.Fire        => SpellSchoolEffects.FireballLandsAt(reveal.CardSeconds, n),
                     SpellEffect.Shadow      => SpellSchoolEffects.ShadowLandsAt(reveal.CardSeconds, n),
                     SpellEffect.Water       => SpellSchoolEffects.WaterLandsAt(reveal.CardSeconds, n),
+                    SpellEffect.Gravekeep   => SpellSchoolEffects.GravekeepLandsAt(reveal.CardSeconds, n),
                     _                       => SpellSchoolEffects.ClockwrightLandsAt(reveal.CardSeconds, n),
                 };
                 StartCoroutine(SpellSchoolEffects.Burst(transform, touchedSheet, cam, visual,

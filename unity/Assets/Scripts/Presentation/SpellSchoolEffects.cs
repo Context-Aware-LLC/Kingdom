@@ -11,7 +11,8 @@ namespace Kingdom.Presentation
     /// rock falling on each target, an impact where it lands), lightning (a charge under the
     /// caster, an arc or a bolt to each target, a hit on it), clockwright (gears gathering on the
     /// caster, parts flying to each target, a burst of them where they land), water and frost
-    /// (Tidecaller: a wave and a splash, a drowned target washed; an ice shard and the freeze), fire (a flare on the caster, a fireball to each target, a burst
+    /// (Tidecaller: a wave and a splash, a drowned target washed; an ice shard and the freeze),
+    /// gravekeep (grave mist on the caster, a skull to each target, soulfire where it lands), fire (a flare on the caster, a fireball to each target, a burst
     /// where it lands), shadow (a black wipe across the caster's portrait, a wisp to each target,
     /// a ring where it lands), the healing sparkles and shimmer on everything a spell heals,
     /// and the green poof on a minion a Venom source damages. Each sheet is three frames side by
@@ -51,6 +52,9 @@ namespace Kingdom.Presentation
         public const string FrostCasterKey = "effect_spell_frost_caster";
         public const string FrostTravelKey = "effect_spell_frost_travel";
         public const string DrownWashKey = "effect_drown_wash";
+        public const string GravekeepCasterKey = "effect_spell_gravekeep_caster";
+        public const string GravekeepTravelKey = "effect_spell_gravekeep_travel";
+        public const string GravekeepTargetKey = "effect_spell_gravekeep_target";
 
         /// <summary>The first rock lands this long after the reveal card is gone, and each further
         /// target this long after the one before. VfxDirector hands both to the classifier, which
@@ -117,6 +121,15 @@ namespace Kingdom.Presentation
         private const float FrostTravelSeconds = 0.26f;
         // The frost shard's point is at the frame's right edge, further out than a ball's head.
         private const float FrostHeadOffset = 0.4f;
+
+        /// <summary>Gravekeep: grave mist and bone rise on the caster, a skull trailing green
+        /// smoke goes to each character it damages, and soulfire bursts with bone shards there.</summary>
+        public const float GravekeepLeadSeconds = 0.5f;
+        public const float GravekeepStaggerSeconds = 0.09f;
+        private const float GravekeepTravelSeconds = 0.36f;
+        private const float GravekeepTargetSeconds = 0.5f;
+        // The skull sits at the frame's right edge, the smoke trailing behind it.
+        private const float SkullHeadOffset = 0.38f;
         public const float HealStaggerSeconds = 0.05f;
         private const float HealTravelSeconds = 0.36f;
         // The lead star sits right of the frame's centre; this is its offset as a fraction of the
@@ -421,6 +434,16 @@ namespace Kingdom.Presentation
                                            Vector3 fallback, float landIn) =>
             Projectile("Fire", FireballSeconds, FireImpactSeconds, 0.06f, ProjectileHeadOffset, parent,
                        ballSheet, burstSheet, camera, from, target, fallback, landIn);
+
+        public static float GravekeepLandsAt(float cardSeconds, int index) =>
+            cardSeconds + GravekeepLeadSeconds + index * GravekeepStaggerSeconds;
+
+        /// <summary>A skull from the caster to one target, then the soulfire where it lands.</summary>
+        public static IEnumerator SkullBolt(Transform parent, Sprite skullSheet, Sprite burstSheet,
+                                            Camera camera, Transform from, Transform target,
+                                            Vector3 fallback, float landIn) =>
+            Projectile("Gravekeep", GravekeepTravelSeconds, GravekeepTargetSeconds, 0.09f, SkullHeadOffset,
+                       parent, skullSheet, burstSheet, camera, from, target, fallback, landIn);
 
         public static float WaterLandsAt(float cardSeconds, int index) =>
             cardSeconds + WaterLeadSeconds + index * WaterStaggerSeconds;

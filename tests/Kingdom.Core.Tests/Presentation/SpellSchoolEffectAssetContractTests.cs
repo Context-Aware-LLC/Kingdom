@@ -33,7 +33,10 @@ namespace Kingdom.Core.Tests.Presentation
             ("effect_spell_water_splash", "5d26a9df71e54b8282927206604ebb01"),
             ("effect_spell_frost_caster", "020c8c18a4a64529b0e69dfbde5b29b6"),
             ("effect_spell_frost_travel", "5e44797afa2b4dc39e7489e620f8df6f"),
-            ("effect_drown_wash", "4e7117405bbf4629b056cb8afaa43d4d")
+            ("effect_drown_wash", "4e7117405bbf4629b056cb8afaa43d4d"),
+            ("effect_spell_gravekeep_caster", "7313910b2d6c4c398124d424cce03aa5"),
+            ("effect_spell_gravekeep_travel", "0c874b888515440ebf68464e66442994"),
+            ("effect_spell_gravekeep_target", "bb0ebfd92f5747e8bc6675ec6a753efb")
         };
 
         [Test]

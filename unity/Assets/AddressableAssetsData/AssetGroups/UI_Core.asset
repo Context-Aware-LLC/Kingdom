@@ -60,6 +60,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c874b888515440ebf68464e66442994
+    m_Address: ui/effect_spell_gravekeep_travel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d3356f761934b2bb6e98390ca1a209f
     m_Address: ui/ui_stamp_tool
     m_ReadOnly: 0
@@ -275,6 +280,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7313910b2d6c4c398124d424cce03aa5
+    m_Address: ui/effect_spell_gravekeep_caster
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7563e120342457c45b5340dee9a0b6c0
     m_Address: ui/hero_portrait_sheet
     m_ReadOnly: 0
@@ -427,6 +437,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b9203d9b80634fa0b8163222b0225e12
     m_Address: ui/effect_hero_cast_tidecaller
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb0ebfd92f5747e8bc6675ec6a753efb
+    m_Address: ui/effect_spell_gravekeep_target
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
