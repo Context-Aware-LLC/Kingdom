@@ -7,7 +7,8 @@ namespace Kingdom.Presentation
     /// <summary>
     /// Spell-school effects for played spells: earth (a buildup on the caster, a rock falling on
     /// each target, an impact where it lands), lightning (an arc from the caster to each target,
-    /// then a bolt down onto it), the healing sparkles and shimmer on everything a spell heals,
+    /// then a bolt down onto it), fire (a flare on the caster, a fireball to each target, a burst
+    /// where it lands), the healing sparkles and shimmer on everything a spell heals,
     /// and the green poof on a minion a Venom source damages. Each sheet is three frames side by
     /// side. Kept apart from the hero power effects on purpose:
     /// similar, not the same (Sam, 2026-10-13).
@@ -21,6 +22,9 @@ namespace Kingdom.Presentation
 
     internal static class SpellSchoolEffects
     {
+        public const string FireFlameKey = "effect_spell_fire_flame";
+        public const string FireBuildupKey = "effect_spell_fire_buildup";
+        public const string FireImpactKey = "effect_spell_fire_impact";
         public const string EarthBuildupKey = "effect_spell_earth_buildup";
         public const string EarthRockKey = "effect_spell_earth_rock";
         public const string EarthImpactKey = "effect_spell_earth_impact";
@@ -49,6 +53,16 @@ namespace Kingdom.Presentation
         // The strike's tip sits this far below the frame's centre, as a fraction of its height,
         // so it is the tip that lands on the target.
         private const float StrikeTipOffset = 0.43f;
+        /// <summary>The fireball reaches the first target this long after the reveal card is
+        /// gone, and each further target this long after the one before.</summary>
+        public const float FireLeadSeconds = 0.5f;
+        public const float FireStaggerSeconds = 0.08f;
+        private const float FlareSeconds = 0.42f;
+        private const float FireballSeconds = 0.3f;
+        private const float FireImpactSeconds = 0.4f;
+        // The ball sits right of the frame's centre, its trail to the left; this is its offset as
+        // a fraction of the drawn width, so the ball, not the middle of the trail, is what lands.
+        private const float FireballHeadOffset = 0.28f;
         public const float HealStaggerSeconds = 0.05f;
         private const float HealTravelSeconds = 0.36f;
         // The lead star sits right of the frame's centre; this is its offset as a fraction of the
@@ -313,6 +327,93 @@ namespace Kingdom.Presentation
                 yield return null;
             }
             if (sr != null) Object.Destroy(sr.gameObject);
+        }
+
+        public static float FireballLandsAt(float cardSeconds, int index) =>
+            cardSeconds + FireLeadSeconds + index * FireStaggerSeconds;
+
+        /// <summary>The flare opens on the caster as the card collapses and peaks as the first
+        /// fireball leaves.</summary>
+        public static float FlareStartsAt(float cardSeconds) =>
+            Mathf.Max(0f, cardSeconds + FireLeadSeconds - FireballSeconds - FlareSeconds * 0.8f);
+
+        /// <summary>The flare on the caster: the swirl gathers, the flame rises, and it dies down
+        /// as the fireball leaves.</summary>
+        public static IEnumerator FireCaster(Transform parent, Sprite sheet, Camera camera,
+                                             Transform caster, float startIn)
+        {
+            if (startIn > 0f) yield return new WaitForSeconds(startIn);
+            if (parent == null || sheet == null || camera == null || caster == null) yield break;
+
+            SpriteRenderer sr = MakeRenderer(parent, "FireCasterFlare");
+            Sprite[] frames = FramesOf(sheet);
+            float elapsed = 0f;
+            while (elapsed < FlareSeconds && caster != null && sr != null)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / FlareSeconds);
+                Show(sr, frames, t);
+                Place(sr, camera, caster.position, BoardController.CardW * Mathf.Lerp(1.3f, 1.7f, t));
+                sr.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 6f) * (1f - Ramp(t, 0.75f)));
+                yield return null;
+            }
+            if (sr != null) Object.Destroy(sr.gameObject);
+        }
+
+        /// <summary>A fireball from the caster to one target, landing <paramref name="landIn"/>
+        /// seconds from now, then the burst where it lands. With no caster on the board it bursts
+        /// without the flight.</summary>
+        public static IEnumerator Fireball(Transform parent, Sprite ballSheet, Sprite burstSheet,
+                                           Camera camera, Transform from, Transform target,
+                                           Vector3 fallback, float landIn)
+        {
+            float travel = Mathf.Min(FireballSeconds, Mathf.Max(0.01f, landIn));
+            float wait = landIn - travel;
+            if (wait > 0f) yield return new WaitForSeconds(wait);
+            if (parent == null || camera == null) yield break;
+
+            Vector3 Target() => target != null ? target.position : fallback;
+
+            if (from != null && from != target && ballSheet != null)
+            {
+                Vector3 start = from.position;
+                SpriteRenderer ball = MakeRenderer(parent, "Fireball");
+                Sprite[] frames = FramesOf(ballSheet);
+                float width = BoardController.CardW * 1.7f;
+                float elapsed = 0f;
+                while (elapsed < travel && ball != null)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsed / travel);
+                    Vector3 end = Target();
+                    Vector3 delta = end - start;
+                    Vector3 dir = delta.sqrMagnitude > 1e-6f ? delta.normalized : Vector3.right;
+                    Vector3 head = Vector3.Lerp(start, end, t * t * (3f - 2f * t) * 0.4f + t * 0.6f);
+
+                    // The three drawings churn the flame; they loop rather than play once.
+                    SpriteMaterials.Set(ball, frames[Mathf.FloorToInt(elapsed / 0.06f) % frames.Length]);
+                    Place(ball, camera, head - dir * (width * FireballHeadOffset), width);
+                    ball.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
+                    ball.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 8f));
+                    yield return null;
+                }
+                if (ball != null) Object.Destroy(ball.gameObject);
+            }
+            if (parent == null || burstSheet == null) yield break;
+
+            SpriteRenderer burst = MakeRenderer(parent, "FireImpact");
+            Sprite[] blast = FramesOf(burstSheet);
+            float since = 0f;
+            while (since < FireImpactSeconds && burst != null)
+            {
+                since += Time.deltaTime;
+                float t = Mathf.Clamp01(since / FireImpactSeconds);
+                Show(burst, blast, t);
+                Place(burst, camera, Target(), BoardController.CardW * Mathf.Lerp(1.2f, 1.8f, t));
+                burst.color = new Color(1f, 1f, 1f, 1f - Ramp(t, 0.55f));
+                yield return null;
+            }
+            if (burst != null) Object.Destroy(burst.gameObject);
         }
 
         public static float BuildupStartsAt(float cardSeconds) =>

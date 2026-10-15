@@ -65,6 +65,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 10ab97aff9744067823f56088bf17ef3
+    m_Address: ui/effect_spell_fire_impact
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 10c1e2c0756a7f144bd18024d4a5e754
     m_Address: ui/gem_common
     m_ReadOnly: 0
@@ -77,6 +82,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 162cd4daedce445287cd8e1d8eabe60c
     m_Address: ui/tribe_plate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1c861f74e57c4f29a7e8f75e5cb77698
+    m_Address: ui/effect_spell_fire_flame
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -187,6 +197,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 67322842c6cbd7a42aa523b041480088
     m_Address: ui/rolled-complete
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 680a960beeb94e55be45b84b48d46e29
+    m_Address: ui/effect_spell_fire_buildup
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

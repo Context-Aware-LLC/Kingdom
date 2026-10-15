@@ -106,6 +106,8 @@ namespace Kingdom.Presentation
                                                  SpellSchoolEffects.EarthStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.LightningLeadSeconds,
                                                  SpellSchoolEffects.LightningStaggerSeconds),
+                                new SchoolTiming(SpellSchoolEffects.FireLeadSeconds,
+                                                 SpellSchoolEffects.FireStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.HealLeadSeconds,
                                                  SpellSchoolEffects.HealStaggerSeconds));
 
@@ -351,7 +353,7 @@ namespace Kingdom.Presentation
             if (reveal.Type == CardType.SPELL) PlaySpellSchool(reveal);
         }
 
-        /// <summary>The earth sequence and the healing shimmer. Targets are resolved now, against
+        /// <summary>The earth, lightning and fire sequences and the healing shimmer. Targets are resolved now, against
         /// the pre-effect board, and followed while the effect runs; a minion the spell kills is
         /// still standing until the entry releases.</summary>
         private void PlaySpellSchool(PlayReveal reveal)
@@ -408,6 +410,26 @@ namespace Kingdom.Presentation
                         from, visual, at ?? visual.position,
                         SpellSchoolEffects.LightningStrikesAt(reveal.CardSeconds, i)));
                     if (shape == LightningShape.Chain && visual != null) from = visual;
+                }
+            }
+
+            if (reveal.Effect == SpellEffect.Fire)
+            {
+                StartCoroutine(SpellSchoolEffects.FireCaster(transform,
+                    _uiSprites.Get(SpellSchoolEffects.FireBuildupKey), cam, caster,
+                    SpellSchoolEffects.FlareStartsAt(reveal.CardSeconds)));
+
+                Sprite ball = _uiSprites.Get(SpellSchoolEffects.FireFlameKey);
+                Sprite burst = _uiSprites.Get(SpellSchoolEffects.FireImpactKey);
+                for (int i = 0; i < reveal.Struck.Count; i++)
+                {
+                    InstanceId id = reveal.Struck[i];
+                    Vector3? at = ResolvePosition(id);
+                    Transform visual = _board.ResolveCombatVisual(id);
+                    if (visual == null && !at.HasValue) continue;
+                    StartCoroutine(SpellSchoolEffects.Fireball(transform, ball, burst, cam, caster,
+                        visual, at ?? visual.position,
+                        SpellSchoolEffects.FireballLandsAt(reveal.CardSeconds, i)));
                 }
             }
 

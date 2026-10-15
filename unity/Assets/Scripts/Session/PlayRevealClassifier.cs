@@ -26,17 +26,19 @@ namespace Kingdom.Session
         /// reaches its last target. See <see cref="SchoolTiming"/>.</summary>
         public readonly SchoolTiming Earth;
         public readonly SchoolTiming Lightning;
+        public readonly SchoolTiming Fire;
         public readonly SchoolTiming Heal;
 
         public PlayRevealHolds(float minion, float spell, float weapon,
                                SchoolTiming earth = default, SchoolTiming lightning = default,
-                               SchoolTiming heal = default)
+                               SchoolTiming fire = default, SchoolTiming heal = default)
         {
             Minion = minion;
             Spell  = spell;
             Weapon = weapon;
             Earth = earth;
             Lightning = lightning;
+            Fire = fire;
             Heal = heal;
         }
 
@@ -44,6 +46,7 @@ namespace Kingdom.Session
         {
             SpellEffect.Earth     => Earth,
             SpellEffect.Lightning => Lightning,
+            SpellEffect.Fire      => Fire,
             _                     => default,
         };
 
@@ -97,7 +100,7 @@ namespace Kingdom.Session
 
     /// <summary>Which spell-school effect a played spell carries, beyond the reveal itself.
     /// There is no school field on a card; the class stands in for it (Sam, 2026-10-13:
-    /// Stonewarden is earth; Tempest is lightning).</summary>
+    /// Stonewarden is earth; Tempest is lightning; 2026-10-14: Emberward is fire).</summary>
     public enum SpellEffect
     {
         None,
@@ -109,6 +112,10 @@ namespace Kingdom.Session
         /// <summary>A Tempest spell that deals damage: an arc from the caster to each character
         /// it hits, then a bolt down onto it.</summary>
         Lightning,
+
+        /// <summary>An Emberward spell that deals damage: a flare on the caster, then a fireball
+        /// flies to each character it hits and bursts there.</summary>
+        Fire,
     }
 
     /// <summary>
@@ -236,6 +243,7 @@ namespace Kingdom.Session
                     {
                         CardClass.STONEWARDEN => SpellEffect.Earth,
                         CardClass.TEMPEST     => SpellEffect.Lightning,
+                        CardClass.EMBERWARD   => SpellEffect.Fire,
                         _                     => SpellEffect.None,
                     };
                 float tail = holds.For(effect).Tail(struck.Count);

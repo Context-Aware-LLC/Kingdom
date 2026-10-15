@@ -17,7 +17,10 @@ namespace Kingdom.Core.Tests.Presentation
             ("effect_venom_hit_poof", "3ae15b4344584b3ebdbdfe1433b29cad"),
             ("effect_spell_heal_travel", "050b03c1a3e34c85b3ef2372fe134943"),
             ("effect_spell_lightning_arc", "69dd013b64c04c2f9549224e530e4b26"),
-            ("effect_spell_lightning_strike", "21c0730cc22149e79021c7aaab920e6d")
+            ("effect_spell_lightning_strike", "21c0730cc22149e79021c7aaab920e6d"),
+            ("effect_spell_fire_buildup", "680a960beeb94e55be45b84b48d46e29"),
+            ("effect_spell_fire_flame", "1c861f74e57c4f29a7e8f75e5cb77698"),
+            ("effect_spell_fire_impact", "10ab97aff9744067823f56088bf17ef3")
         };
 
         [Test]
