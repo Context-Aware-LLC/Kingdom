@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Kingdom.Core.Cards;
 using Kingdom.Core.Contracts;
@@ -73,7 +74,10 @@ namespace Kingdom.Editor
         public static string Serialize(CardDefinition def)
         {
             using var stream = new MemoryStream();
-            using (var w = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false }))
+            // The default encoder escapes HTML-sensitive characters, so "+1/+1" lands on disk as
+            // "+1/+1" and every apostrophe as '. This file is never embedded in HTML.
+            var options = new JsonWriterOptions { Indented = false, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+            using (var w = new Utf8JsonWriter(stream, options))
             {
                 w.WriteStartObject();
                 w.WriteNumber("id", def.Id);
