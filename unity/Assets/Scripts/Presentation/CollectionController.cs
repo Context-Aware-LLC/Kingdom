@@ -265,6 +265,9 @@ namespace Kingdom.Presentation
             // wider scope. Every fresh collection entry starts from the player's cards; Unowned
             // remains opt-in.
             _scope.SetSilently(owned: true, unowned: false);
+#if UNITY_EDITOR
+            BotDecks = BotDeckEditing.Enabled;
+#endif
             LoadOwnership();
             // Before the first BuildPool, which asks the scope — see SetOwnershipRecord.
             _scope.SetOwnershipRecord(_owned != null);
@@ -346,13 +349,11 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>Dev-only (Kingdom/Dev/Edit Bot Decks): the drawer edits the bot roster instead of
-        /// this account's decks. See <see cref="BotDeckEditing"/>. Always false in a player build.</summary>
-        private static bool BotDecks =>
-#if UNITY_EDITOR
-            BotDeckEditing.Enabled;
-#else
-            false;
-#endif
+        /// this account's decks. See <see cref="BotDeckEditing"/>. Always false in a player build.
+        ///
+        /// <para>Latched in <see cref="OnEnable"/>, never read live: flipping the menu mid-edit would
+        /// otherwise save an open bot deck into this account.</para></summary>
+        private bool BotDecks { get; set; }
 
         private IReadOnlyList<DeckSummary> DeckRows()
         {
@@ -591,6 +592,9 @@ namespace Kingdom.Presentation
 
         private void OnDisable()
         {
+            // Stopping Play is how bot editing ends (the menu does it on uncheck), so an open bot
+            // deck is saved here rather than lost.
+            if (BotDecks && EditingDeck) SaveDeck();
             // OnEnable can run again on this controller and builds a new overlay over the same
             // Got it button, so the old one must stop answering it.
             _tidbit?.Cancel();
