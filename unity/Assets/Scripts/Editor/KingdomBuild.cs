@@ -61,7 +61,7 @@ namespace Kingdom.Editor
         ///
         /// <para>IL2CPP and ARM64 are forced explicitly here so the build is deterministic
         /// regardless of whatever the Editor's per-user overrides happen to be. Local APKs use
-        /// Unity's default debug signing. With <c>EMBERFALL_PLAY_RELEASE=1</c> (set by
+        /// Unity's default debug signing. With <c>KINGDOM_PLAY_RELEASE=1</c> (set by
         /// <c>build-android.ps1 -PlayRelease</c>) the same path emits a Play AAB signed with the
         /// upload key instead -- see <see cref="PlaySigning"/>.</para>
         ///
@@ -100,17 +100,17 @@ namespace Kingdom.Editor
             SyncSceneList();
 
             bool perfCaptureBuild = Environment.GetEnvironmentVariable(
-                "EMBERFALL_PERF_CAPTURE_BUILD") == "1";
+                "KINGDOM_PERF_CAPTURE_BUILD") == "1";
 
-            // EMBERFALL_PROFILER_BUILD=1 makes the APK a development player that the Editor's
+            // KINGDOM_PROFILER_BUILD=1 makes the APK a development player that the Editor's
             // Profiler can attach to over adb. It exists because `dumpsys meminfo` can say a pool
             // grew — Unknown +411 MB and Graphics +127 MB in one second, measured on a Pixel 5a
             // 2026-08-26 — and cannot say WHAT allocated it, which is the only question worth
             // asking once you know something is eating the device. Off by default and never set in
             // CI: a development player carries profiler overhead and is not shippable.
             bool profilerBuild = Environment.GetEnvironmentVariable(
-                "EMBERFALL_PROFILER_BUILD") == "1";
-            string buildCommit = Environment.GetEnvironmentVariable("EMBERFALL_BUILD_COMMIT");
+                "KINGDOM_PROFILER_BUILD") == "1";
+            string buildCommit = Environment.GetEnvironmentVariable("KINGDOM_BUILD_COMMIT");
             PlaySigning play = PlaySigning.FromEnvironment();
             if (play != null && (perfCaptureBuild || profilerBuild))
                 throw new BuildFailedException(
@@ -260,21 +260,21 @@ namespace Kingdom.Editor
 
             public static PlaySigning FromEnvironment()
             {
-                if (Environment.GetEnvironmentVariable("EMBERFALL_PLAY_RELEASE") != "1") return null;
+                if (Environment.GetEnvironmentVariable("KINGDOM_PLAY_RELEASE") != "1") return null;
                 var s = new PlaySigning
                 {
-                    KeystorePath = Environment.GetEnvironmentVariable("EMBERFALL_UPLOAD_KEYSTORE"),
-                    Alias = Environment.GetEnvironmentVariable("EMBERFALL_UPLOAD_KEY_ALIAS"),
-                    Password = Environment.GetEnvironmentVariable("EMBERFALL_UPLOAD_KEYSTORE_PASS"),
+                    KeystorePath = Environment.GetEnvironmentVariable("KINGDOM_UPLOAD_KEYSTORE"),
+                    Alias = Environment.GetEnvironmentVariable("KINGDOM_UPLOAD_KEY_ALIAS"),
+                    Password = Environment.GetEnvironmentVariable("KINGDOM_UPLOAD_KEYSTORE_PASS"),
                 };
                 if (string.IsNullOrEmpty(s.KeystorePath) || !File.Exists(s.KeystorePath))
                     throw new BuildFailedException(
                         $"[KingdomBuild] Play release: upload keystore not found at '{s.KeystorePath}'.");
                 if (string.IsNullOrEmpty(s.Alias) || string.IsNullOrEmpty(s.Password))
                     throw new BuildFailedException(
-                        "[KingdomBuild] Play release: EMBERFALL_UPLOAD_KEY_ALIAS and " +
-                        "EMBERFALL_UPLOAD_KEYSTORE_PASS must both be set.");
-                int.TryParse(Environment.GetEnvironmentVariable("EMBERFALL_VERSION_CODE"), out s.VersionCode);
+                        "[KingdomBuild] Play release: KINGDOM_UPLOAD_KEY_ALIAS and " +
+                        "KINGDOM_UPLOAD_KEYSTORE_PASS must both be set.");
+                int.TryParse(Environment.GetEnvironmentVariable("KINGDOM_VERSION_CODE"), out s.VersionCode);
                 return s;
             }
         }

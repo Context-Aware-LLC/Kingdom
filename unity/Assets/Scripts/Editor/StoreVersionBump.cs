@@ -27,7 +27,7 @@ namespace Kingdom.Editor
     /// <para><b>A failed build still spends its numbers.</b> Stores accept gaps; they refuse
     /// repeats, so bumping before the build and never rolling back is the safe side.</para>
     ///
-    /// <para><c>EMBERFALL_VERSION_CODE</c> (set by <c>build-android.ps1 -PlayRelease -VersionCode
+    /// <para><c>KINGDOM_VERSION_CODE</c> (set by <c>build-android.ps1 -PlayRelease -VersionCode
     /// N</c>) takes over the Android code instead: that script sets the number itself.</para>
     ///
     /// <para>Runs before <see cref="BuildStampWriter"/> (order -10 vs 0) so the stamp a tester
@@ -45,7 +45,7 @@ namespace Kingdom.Editor
             if (target == BuildTarget.Android)
             {
                 if (!PlayerSettings.Android.useCustomKeystore) return;
-                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("EMBERFALL_VERSION_CODE")))
+                if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("KINGDOM_VERSION_CODE")))
                     PlayerSettings.Android.bundleVersionCode += 1;
                 PlayerSettings.bundleVersion = NextVersion(PlayerSettings.bundleVersion);
                 Debug.Log($"[StoreVersionBump] Android store build: version {PlayerSettings.bundleVersion}, " +

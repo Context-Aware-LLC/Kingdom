@@ -18,11 +18,11 @@ namespace Kingdom.Editor
     /// </summary>
     internal sealed class AndroidGradleDependencyAlignment : IPostGenerateGradleAndroidProject
     {
-        private const string Marker = "// EMBERFALL_KOTLIN_STDLIB_ALIGNMENT";
+        private const string Marker = "// KINGDOM_KOTLIN_STDLIB_ALIGNMENT";
 
         private const string AlignmentBlock = @"
 
-// EMBERFALL_KOTLIN_STDLIB_ALIGNMENT
+// KINGDOM_KOTLIN_STDLIB_ALIGNMENT
 // Kotlin 1.8 merged the JDK7/JDK8 classes into kotlin-stdlib. Keep the compatibility
 // artifacts aligned so old coroutine metadata cannot add class-bearing 1.6.x jars.
 allprojects {

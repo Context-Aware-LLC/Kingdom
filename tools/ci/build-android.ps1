@@ -12,7 +12,7 @@
 #
 # -PlayRelease builds a Google Play AAB signed with the UPLOAD key instead of a debug APK. The
 # keystore lives outside the repo (default below); its password comes from
-# $env:EMBERFALL_UPLOAD_KEYSTORE_PASS or is prompted for, and is never written to disk. The
+# $env:KINGDOM_UPLOAD_KEYSTORE_PASS or is prompted for, and is never written to disk. The
 # version and version code bump themselves (StoreVersionBump.cs); -VersionCode N overrides the
 # code when Play needs a specific one.
 #        pwsh tools/ci/build-android.ps1 -UnityPath "C:\path\to\Unity.exe"
@@ -58,7 +58,7 @@ if ($PlayRelease) {
         Write-Error "Upload keystore not found at '$Keystore'. Pass -Keystore."
         exit 1
     }
-    $uploadPass = $env:EMBERFALL_UPLOAD_KEYSTORE_PASS
+    $uploadPass = $env:KINGDOM_UPLOAD_KEYSTORE_PASS
     if (-not $uploadPass) {
         $secure = Read-Host -AsSecureString 'Upload keystore password (KeePass)'
         $uploadPass = [System.Net.NetworkCredential]::new('', $secure).Password
@@ -91,13 +91,13 @@ if ($PlayRelease) {
     $keytool = [System.IO.Path]::Combine((Split-Path -Parent $UnityPath), 'Data', 'PlaybackEngines',
         'AndroidPlayer', 'OpenJDK', 'bin', $(if ($IsWindows) { 'keytool.exe' } else { 'keytool' }))
     if (Test-Path -LiteralPath $keytool) {
-        $env:EMBERFALL_KEYTOOL_PASS = $uploadPass
+        $env:KINGDOM_KEYTOOL_PASS = $uploadPass
         try {
             $keytoolOut = & $keytool -list -keystore $Keystore -alias $KeyAlias `
-                -storepass:env EMBERFALL_KEYTOOL_PASS 2>&1
+                -storepass:env KINGDOM_KEYTOOL_PASS 2>&1
             $keytoolExit = $LASTEXITCODE
         } finally {
-            Remove-Item Env:EMBERFALL_KEYTOOL_PASS -ErrorAction SilentlyContinue
+            Remove-Item Env:KINGDOM_KEYTOOL_PASS -ErrorAction SilentlyContinue
         }
         if ($keytoolExit -ne 0) {
             Write-Error "Upload keystore rejected the password or alias '$KeyAlias': $keytoolOut"
@@ -165,17 +165,17 @@ $unityArgs = @(
     '-logFile', "`"$LOG`""
 )
 
-$previousCaptureBuild = $env:EMBERFALL_PERF_CAPTURE_BUILD
-$previousBuildCommit = $env:EMBERFALL_BUILD_COMMIT
+$previousCaptureBuild = $env:KINGDOM_PERF_CAPTURE_BUILD
+$previousBuildCommit = $env:KINGDOM_BUILD_COMMIT
 try {
-    $env:EMBERFALL_PERF_CAPTURE_BUILD = if ($PerfCapture) { '1' } else { '0' }
-    $env:EMBERFALL_BUILD_COMMIT = $BUILD_COMMIT
+    $env:KINGDOM_PERF_CAPTURE_BUILD = if ($PerfCapture) { '1' } else { '0' }
+    $env:KINGDOM_BUILD_COMMIT = $BUILD_COMMIT
     if ($PlayRelease) {
-        $env:EMBERFALL_PLAY_RELEASE = '1'
-        $env:EMBERFALL_UPLOAD_KEYSTORE = $Keystore
-        $env:EMBERFALL_UPLOAD_KEY_ALIAS = $KeyAlias
-        $env:EMBERFALL_UPLOAD_KEYSTORE_PASS = $uploadPass
-        $env:EMBERFALL_VERSION_CODE = if ($VersionCode -gt 0) { "$VersionCode" } else { '' }
+        $env:KINGDOM_PLAY_RELEASE = '1'
+        $env:KINGDOM_UPLOAD_KEYSTORE = $Keystore
+        $env:KINGDOM_UPLOAD_KEY_ALIAS = $KeyAlias
+        $env:KINGDOM_UPLOAD_KEYSTORE_PASS = $uploadPass
+        $env:KINGDOM_VERSION_CODE = if ($VersionCode -gt 0) { "$VersionCode" } else { '' }
     }
 
     $proc = Start-Process -FilePath $UnityPath -ArgumentList $unityArgs -PassThru -NoNewWindow
@@ -190,11 +190,11 @@ try {
         $unityExit = $proc.ExitCode
     }
 } finally {
-    $env:EMBERFALL_PERF_CAPTURE_BUILD = $previousCaptureBuild
-    $env:EMBERFALL_BUILD_COMMIT = $previousBuildCommit
+    $env:KINGDOM_PERF_CAPTURE_BUILD = $previousCaptureBuild
+    $env:KINGDOM_BUILD_COMMIT = $previousBuildCommit
     # The signing environment dies with the build; the password never outlives the Unity process.
-    Remove-Item Env:EMBERFALL_PLAY_RELEASE, Env:EMBERFALL_UPLOAD_KEYSTORE, Env:EMBERFALL_UPLOAD_KEY_ALIAS,
-                Env:EMBERFALL_UPLOAD_KEYSTORE_PASS, Env:EMBERFALL_VERSION_CODE -ErrorAction SilentlyContinue
+    Remove-Item Env:KINGDOM_PLAY_RELEASE, Env:KINGDOM_UPLOAD_KEYSTORE, Env:KINGDOM_UPLOAD_KEY_ALIAS,
+                Env:KINGDOM_UPLOAD_KEYSTORE_PASS, Env:KINGDOM_VERSION_CODE -ErrorAction SilentlyContinue
 }
 
 # ── Log read ─────────────────────────────────────────────────────────────────
