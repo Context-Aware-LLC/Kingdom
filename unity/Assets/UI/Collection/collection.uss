@@ -186,9 +186,11 @@
     border-left-color: var(--class-neutral);
 }
 .card-row--disabled { opacity: 0.4; }
+/* A fixed disc. It was 100% x 100% — a pill filling the whole row — before it was taken out. */
 .card-cost {
-    width: 100%;
-    height: 100%;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
     -unity-text-align: middle-center;
     -unity-font-style: bold;
     font-size: var(--type-body);
@@ -202,12 +204,12 @@
     font-size: var(--type-body);
     color: var(--ink-1);
 }
-.card-rarity-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 999px;
-    margin-right: var(--space-3);
-    background-color: var(--rarity-common);
+.card-count {
+    flex-shrink: 0;
+    margin-left: var(--space-2);
+    -unity-font-style: bold;
+    font-size: var(--type-body);
+    color: var(--ink-2);
 }
 /* ---------- Deck side ---------- */
 /* The deck switcher (EF-046), the name field, Set Default and Delete Deck lived here. They are

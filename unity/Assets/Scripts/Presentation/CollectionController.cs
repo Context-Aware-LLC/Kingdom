@@ -1028,7 +1028,7 @@ namespace Kingdom.Presentation
             if (!_db.TryGet(entry.CardId, out var def)) { row.userData = null; row.style.display = DisplayStyle.None; return; }
             row.style.display = DisplayStyle.Flex;
             row.userData = def;
-            SetCardRow(row, def);
+            SetCardRow(row, def, entry.Count);
             row.EnableInClassList("card-row--disabled", false);
         }
 
@@ -1066,18 +1066,22 @@ namespace Kingdom.Presentation
                 if (_previewDeckRow == row) HideDeckCardPreview();
                 if (_heldDeckRow == row) CancelDeckHold();
             });
-            // var cost = new Label { name = "cost" };   cost.AddToClassList("card-cost");
-            // var dot  = new VisualElement { name = "dot" }; dot.AddToClassList("card-rarity-dot");
+            // Class edge | cost | name | copies (Sam, 2026-10-15). The count is blank for one copy and
+            // "x2" for two, so the eye only stops on the rows that differ.
+            var cost = new Label { name = "cost" };   cost.AddToClassList("card-cost");
             var name = new Label { name = "name" };   name.AddToClassList("card-name");
-            //  row.Add(cost); row.add(dot); removed from the line below for offending someones sensibilities
-             row.Add(name);
+            var count = new Label { name = "count" }; count.AddToClassList("card-count");
+            row.Add(cost);
+            row.Add(name);
+            row.Add(count);
             return row;
         }
 
-        private static void SetCardRow(VisualElement row, CardDefinition def)
+        private static void SetCardRow(VisualElement row, CardDefinition def, int copies)
         {
-            // row.Q<Label>("cost").text = def.Cost.ToString();
+            row.Q<Label>("cost").text = def.Cost.ToString();
             row.Q<Label>("name").text = def.Name;
+            row.Q<Label>("count").text = copies > 1 ? $"x{copies}" : "";
 
             CardClassTokens.SwapPrefixed(row, CardClassTokens.AllEdge(), CardClassTokens.Edge(def.Class));
         }
