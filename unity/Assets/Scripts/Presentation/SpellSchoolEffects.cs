@@ -8,7 +8,8 @@ namespace Kingdom.Presentation
     /// Spell-school effects for played spells: earth (a buildup on the caster, a rock falling on
     /// each target, an impact where it lands), lightning (an arc from the caster to each target,
     /// then a bolt down onto it), fire (a flare on the caster, a fireball to each target, a burst
-    /// where it lands), shadow (a wisp to each target, a ring where it lands), the healing sparkles and shimmer on everything a spell heals,
+    /// where it lands), shadow (a black wipe across the caster's portrait, a wisp to each target,
+    /// a ring where it lands), the healing sparkles and shimmer on everything a spell heals,
     /// and the green poof on a minion a Venom source damages. Each sheet is three frames side by
     /// side. Kept apart from the hero power effects on purpose:
     /// similar, not the same (Sam, 2026-10-13).
@@ -69,6 +70,9 @@ namespace Kingdom.Presentation
         public const float ShadowStaggerSeconds = 0.1f;
         private const float ShadowTravelSeconds = 0.4f;
         private const float ShadowImpactSeconds = 0.5f;
+        /// <summary>The black wipe across the caster's portrait takes this long, and finishes as
+        /// the first wisp leaves.</summary>
+        public const float ShadowWipeSeconds = 0.4f;
 
         // The head of a fireball or shadow wisp sits right of the frame's centre, its trail to the
         // left; this is its offset as a fraction of the drawn width, so the head, not the middle
@@ -378,6 +382,9 @@ namespace Kingdom.Presentation
                                            Vector3 fallback, float landIn) =>
             Projectile("Fire", FireballSeconds, FireImpactSeconds, 0.06f, parent, ballSheet,
                        burstSheet, camera, from, target, fallback, landIn);
+
+        public static float ShadowWipeStartsAt(float cardSeconds) =>
+            Mathf.Max(0f, cardSeconds + ShadowLeadSeconds - ShadowTravelSeconds - ShadowWipeSeconds);
 
         public static float ShadowLandsAt(float cardSeconds, int index) =>
             cardSeconds + ShadowLeadSeconds + index * ShadowStaggerSeconds;

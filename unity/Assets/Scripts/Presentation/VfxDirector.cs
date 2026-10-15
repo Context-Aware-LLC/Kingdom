@@ -437,6 +437,11 @@ namespace Kingdom.Presentation
 
             if (reveal.Effect == SpellEffect.Shadow)
             {
+                HeroPlateView plate = caster != null ? caster.GetComponent<HeroPlateView>() : null;
+                if (plate != null)
+                    plate.PlayShadowWipe(SpellSchoolEffects.ShadowWipeStartsAt(reveal.CardSeconds),
+                                         SpellSchoolEffects.ShadowWipeSeconds);
+
                 Sprite wisp = _uiSprites.Get(SpellSchoolEffects.ShadowTravelKey);
                 Sprite ring = _uiSprites.Get(SpellSchoolEffects.ShadowImpactKey);
                 for (int i = 0; i < reveal.Struck.Count; i++)

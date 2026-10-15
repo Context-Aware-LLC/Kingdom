@@ -54,6 +54,8 @@ namespace Kingdom.Presentation
         private PortraitCastEffect _cast;
         private bool _castBuilt;
         private Coroutine _castRoutine;
+        private PortraitShadowWipe _shadowWipe;
+        private Coroutine _shadowWipeRoutine;
         private MaterialPropertyBlock _mpb;
         private bool _tabletop;
 
@@ -168,8 +170,26 @@ namespace Kingdom.Presentation
             _castRoutine = StartCoroutine(_cast.Play(delaySeconds, riseSeconds));
         }
 
+        /// <summary>Wipe black across the portrait, left to right, for a Nightveil spell this hero
+        /// cast: wait <paramref name="delaySeconds"/>, wipe over <paramref name="wipeSeconds"/>,
+        /// then fade. Called by VfxDirector.</summary>
+        public void PlayShadowWipe(float delaySeconds, float wipeSeconds)
+        {
+            if (!isActiveAndEnabled) return;
+            _shadowWipe ??= new PortraitShadowWipe(transform, _tabletop ? TabletopPortraitCentre : PortraitCentre,
+                                                   _tabletop ? RoyalCouncilBoard.PortraitDiameter : PortraitW,
+                                                   _tabletop ? RoyalCouncilBoard.PortraitDiameter : PortraitH,
+                                                   PortraitOrder);
+            if (_shadowWipeRoutine != null) StopCoroutine(_shadowWipeRoutine);
+            _shadowWipeRoutine = StartCoroutine(_shadowWipe.Play(delaySeconds, wipeSeconds));
+        }
+
         // A disabled plate's coroutine dies with it, which would leave the cast frozen on screen.
-        private void OnDisable() => _cast?.Hide();
+        private void OnDisable()
+        {
+            _cast?.Hide();
+            _shadowWipe?.Hide();
+        }
 
         /// <summary>Hero-as-attacker selection cue — driven by InputRouter, mirrors
         /// CardPresenter.SetSelectionHighlight. Selection outranks the frosted tint.</summary>
