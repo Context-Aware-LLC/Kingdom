@@ -19,8 +19,8 @@ WHAT COUNTS AS A RENDERER
 A `SortingGroup` is NOT a renderer (it re-layers existing ones) and a `BoxCollider` is not
 either; both are excluded deliberately.
 
-DRAW CALLS != RENDERER COUNT. Several renderers are built disabled (glow, aegis, frost) or
-on an inactive GameObject (art, keyword icons), so the *steady-state* draw cost is lower than
+DRAW CALLS != RENDERER COUNT. Several renderers are built disabled (glow, aegis, frost, the
+status-effect pieces) or on an inactive GameObject (art, sockets), so the *steady-state* draw cost is lower than
 the component count. The script reports both, because the component count drives
 CPU-side culling//batching walk while the enabled count drives GPU submission.
 
@@ -44,21 +44,30 @@ SITE_PATTERNS = [
     (re.compile(r"AddComponent<TextMeshPro>\(\)"), "Label", "MeshRenderer(TMP)"),
 ]
 
-# Renderers deliberately dormant at build time, keyed by the local variable / GO name they
-# are attached to. Each entry names HOW it is dormant, because the two mechanisms differ:
+# Renderers dormant at build time that the parser cannot see being disabled, keyed by the name
+# `name_for` recovers for the site. Each entry names HOW it is dormant:
 #   "renderer"  -> Renderer.enabled = false (GameObject stays active)
 #   "gameobject"-> GameObject.SetActive(false)
-# NOTE: keys are the LOCAL VARIABLE names the parser recovers from `var <name> =`, not the
-# GameObject name strings -- the quad sites are matched by variable because CreatePrimitive
-# takes no name argument. Keying this map on the GO names instead silently reports every quad
-# as live, which undercounts dormancy by four.
+#   "view"      -> handed to a status view whose Setup() disables it
+# A site whose own variable is disabled in the method body (`x.enabled = false`,
+# `x.gameObject.SetActive(false)`) is detected automatically and needs no entry here. These
+# entries are the ones that cannot be: a quad disabled through a second variable, and pieces a
+# view hides. Keys are the LOCAL VARIABLE for a quad (CreatePrimitive takes no name argument),
+# the GameObject name string for a sprite.
 DORMANT = {
     "glowGo": "renderer",     # glowRenderer.enabled  = false
     "aegisGo": "renderer",    # aegisRenderer.enabled = false
     "frostGo": "renderer",    # frostRenderer.enabled = false
     "artGo": "gameobject",    # artGo.SetActive(false)
-    "Kw": "gameobject",       # prefix match: Kw0..Kw3, each SetActive(false)
+    # FrostCrystalView / ShroudSmokeView / VenomBubbleView.Setup -> pieces disabled
+    "LeftGrowth": "view", "RightGrowth": "view", "LowerShelf": "view",
+    "LeftPlume": "view", "RightPlume": "view", "LowerBank": "view",
+    "First": "view", "Second": "view", "Third": "view",
 }
+
+# A local helper such as `SpriteRenderer MakeSocket(string goName, float z) => MakeSprite(...);`
+# builds one renderer per CALL, not one at its definition.
+HELPER_DEF = re.compile(r"^\s*\w+\s+(Make\w+)\([^)]*\)\s*=>")
 
 
 def extract_method(text: str, signature_fragment: str) -> tuple[str, int]:
@@ -88,10 +97,15 @@ def name_for(line: str) -> str:
     return m.group(1) if m else "?"
 
 
-def dormancy(go_name: str) -> str | None:
-    for key, how in DORMANT.items():
-        if go_name == key or (key == "Kw" and go_name.startswith("Kw")):
-            return how
+def dormancy(go_name: str, var: str | None, body: str) -> str | None:
+    if go_name in DORMANT:
+        return DORMANT[go_name]
+    if var:
+        v = re.escape(var)
+        if re.search(rf"\b{v}\.enabled\s*=\s*false", body):
+            return "renderer"
+        if re.search(rf"\b{v}(\.gameObject)?\.SetActive\(false\)", body):
+            return "gameobject"
     return None
 
 
@@ -100,25 +114,31 @@ def main() -> int:
     body, method_line = extract_method(text, "private CardPresenter CreatePresenter(")
     body_start_line = text[: text.find(body)].count("\n") + 1
 
+    lines = body.splitlines()
+    patterns = list(SITE_PATTERNS)
+    in_helper = False
     sites = []
-    for offset, line in enumerate(body.splitlines()):
+    for offset, line in enumerate(lines):
         stripped = line.strip()
         if stripped.startswith("//") or stripped.startswith("///"):
             continue
-        for pattern, kind, component in SITE_PATTERNS:
+        helper = HELPER_DEF.match(line)
+        if helper:
+            # Count the helper's calls (typed like what it wraps); skip its own body.
+            patterns.insert(0, (re.compile(rf"\b{helper.group(1)}\("), "Sprite", "SpriteRenderer"))
+            in_helper = not stripped.endswith(";")
+            continue
+        if in_helper:
+            in_helper = not stripped.endswith(";")
+            continue
+        for pattern, kind, component in patterns:
             if pattern.search(line):
                 lineno = body_start_line + offset
-                go = name_for(line)
-                # The keyword-icon MakeSprite sits inside a `for` loop of kIconSlots.
-                mult = 1
-                if "kIconSlots" in body and re.search(r'MakeSprite\(root\.transform,\s*\$"Kw', line):
-                    m = re.search(r"const int kIconSlots\s*=\s*(\d+)", body)
-                    mult = int(m.group(1)) if m else 1
-                    go = "Kw0..Kw%d" % (mult - 1)
-                sites.append((lineno, kind, component, go, mult))
+                m = re.search(r"var\s+(\w+)\s*=", line)
+                sites.append((lineno, kind, component, name_for(line), m.group(1) if m else None, 1))
                 break
 
-    total = sum(s[4] for s in sites)
+    total = sum(s[5] for s in sites)
     dormant_count = 0
     print("EF-064 - renderer census for one card")
     print(f"source : {SRC.relative_to(REPO).as_posix()}")
@@ -126,8 +146,8 @@ def main() -> int:
     print()
     print(f"{'line':>6}  {'kind':<7} {'component':<17} {'x':<3} {'gameobject':<14} state")
     print("-" * 74)
-    for lineno, kind, component, go, mult in sites:
-        how = dormancy(go.split("..")[0])
+    for lineno, kind, component, go, var, mult in sites:
+        how = dormancy(go, var, body)
         if how:
             dormant_count += mult
             state = "DORMANT (%s)" % how
