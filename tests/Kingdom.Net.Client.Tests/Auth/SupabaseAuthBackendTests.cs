@@ -251,6 +251,28 @@ namespace Kingdom.Net.Client.Tests.Auth
         }
 
         [Test]
+        public async Task A_google_identity_still_carries_the_name_through_its_provider_metadata()
+        {
+            // A Google sign-in stamps the provider's own claims into user_metadata beside ours: URLs,
+            // booleans, and a nested custom_claims object. The name must survive all of it.
+            string token = Jwt.WithPayload(
+                "{\"sub\":\"user-1\",\"email\":\"player@example.com\"," +
+                "\"app_metadata\":{\"provider\":\"google\",\"providers\":[\"email\",\"google\"]}," +
+                "\"user_metadata\":{\"avatar_url\":\"https://lh3.googleusercontent.com/a/x=s96-c\"," +
+                "\"custom_claims\":{\"hd\":\"example.com\"},\"display_name\":\"MrSoNord\"," +
+                "\"email\":\"player@example.com\",\"email_verified\":true,\"full_name\":\"Sam N\"," +
+                "\"iss\":\"https://accounts.google.com\",\"name\":\"Sam N\",\"phone_verified\":false," +
+                "\"picture\":\"https://lh3.googleusercontent.com/a/x=s96-c\",\"provider_id\":\"1234\",\"sub\":\"1234\"}," +
+                "\"aud\":\"authenticated\"}");
+            var http = new FakeAuthHttp().Reply(200, TokenReply.Body(token, "refresh-1", 3600));
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithPasswordAsync("player@example.com", "a-password");
+
+            Assert.That(result.Session.DisplayName, Is.EqualTo("MrSoNord"));
+        }
+
+        [Test]
         public async Task A_token_with_no_metadata_name_signs_in_with_an_empty_one()
         {
             // Every account made before names were written here. It must degrade to "ask", never to
