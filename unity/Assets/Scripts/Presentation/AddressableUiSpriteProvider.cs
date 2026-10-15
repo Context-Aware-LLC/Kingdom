@@ -144,7 +144,7 @@ namespace Kingdom.Presentation
                         // Keys carry GUIDs and labels alongside addresses; the prefix is the filter.
                         if (raw is not string address) continue;
                         if (!address.StartsWith(AddressPrefix, StringComparison.Ordinal)) continue;
-                        // UI_Core holds TextAssets beside the chrome (IUiTextProvider's payloads).
+                        // Skip any non-sprite asset that lands in UI_Core beside the chrome.
                         if (!locator.Locate(address, typeof(Sprite), out IList<IResourceLocation> at)
                             || at == null || at.Count == 0) continue;
 
