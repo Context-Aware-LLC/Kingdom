@@ -215,7 +215,7 @@ MonoBehaviour:
     - line: '|   ForceInternetPermission: 0'
     - line: '|   ForceSDCardPermission: 0'
     - line: '|   CreateWallpaper: 0'
-    - line: '|   androidSplitApplicationBinary: 0'
+    - line: '|   androidSplitApplicationBinary: 1'
     - line: '|   keepLoadedShadersAlive: 0'
     - line: '|   StripUnusedMeshComponents: 0'
     - line: '|   strictShaderVariantMatching: 0'
@@ -312,7 +312,7 @@ MonoBehaviour:
     - line: '|   AndroidEnableTango: 0'
     - line: '|   androidEnableBanner: 1'
     - line: '|   androidUseLowAccuracyLocation: 0'
-    - line: '|   androidUseCustomKeystore: 1'
+    - line: '|   androidUseCustomKeystore: 0'
     - line: '|   m_AndroidBanners:'
     - line: '|   - width: 320'
     - line: '|     height: 180'
@@ -851,12 +851,12 @@ MonoBehaviour:
     - rid: 5964381134678130968
       type: {class: AndroidPlatformBuildSettings, ns: UnityEditor.Android, asm: UnityEditor.Android.Extensions}
       data:
-        m_Development: 0
+        m_Development: 1
         m_ConnectProfiler: 0
         m_BuildWithDeepProfilingSupport: 0
         m_BuildWithCodeCoverage: 0
         m_AllowDebugging: 0
-        m_WaitForManagedDebugger: 0
+        m_WaitForManagedDebugger: 1
         m_ManagedDebuggerFixedPort: 0
         m_ExplicitNullChecks: 0
         m_ExplicitDivideByZeroChecks: 0
@@ -870,11 +870,11 @@ MonoBehaviour:
         m_BuildSystem: 1
         m_ExportAsGoogleAndroidProject: 0
         m_DebugSymbolLevel: 2
-        m_DebugSymbolFormat: 3
+        m_DebugSymbolFormat: 1
         m_CurrentDeploymentTargetId: 17121JECB02670
-        m_BuildType: 2
+        m_BuildType: 1
         m_LinkTimeOptimization: 1
-        m_BuildAppBundle: 1
+        m_BuildAppBundle: 0
         m_ProfileableShell: 0
         m_IPAddressToConnect: 
         m_SymlinkSources: 0
@@ -895,7 +895,7 @@ MonoBehaviour:
   m_XcodeVersion: default
   m_AndroidSdkVersion: android_sdk_36
   m_UnityArchitecture: 
-  m_MachineTypeId: win_micro_v1
+  m_MachineTypeId: win11_premium_v1
   m_CredentialsId: 383cf927-21c0-4d84-9496-e84383ae4e57
   m_BuildTarget: 13
 --- !u!114 &9000562881829387034
