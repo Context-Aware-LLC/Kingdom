@@ -362,6 +362,12 @@ namespace Kingdom.Core
                 int max = before + amount;
                 ps.Mana.Max = max > MatchEngine.MaxMana ? MatchEngine.MaxMana : max;
                 int gained = ps.Mana.Max - before;
+                // Every crystal the cap refuses draws a card instead (Sam, 2026-10-15). Unprinted ON
+                // PURPOSE — a player discovers it by playing Seedling Rite at ten — so the card text
+                // and CardTextGenerator say nothing about it. Not a bug to "fix" by adding text.
+                int seat = ctx.State.SeatOf(ctx.Source.Controller);
+                for (int i = gained; i < amount; i++)
+                    RulesEngine.DrawOne(ctx.State, seat, ctx.Events);
                 if (gained <= 0) return;
                 if (action.Kind != ManaGainKind.PERMANENT_EMPTY)
                 {

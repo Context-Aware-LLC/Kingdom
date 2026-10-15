@@ -137,6 +137,41 @@ namespace Kingdom.Core.Tests.Interpreter
         }
 
         [Test]
+        public void GainMana_Permanent_At_The_Cap_Draws_A_Card_Instead()
+        {
+            // Unprinted on purpose (Sam, 2026-10-15): found by playing Seedling Rite at ten.
+            var rite = Spell(FixtureCard.Id("rite"), cost: 0, TestRules.Rule("gain_mana", Trigger.ON_CAST,
+                new GainManaAction(1, ManaGainKind.PERMANENT_EMPTY)));
+            var db = new FakeCardDatabase().Register(rite);
+            var s = MainPhase(p0Mana: 10);
+            s.Players[0].Deck.Add(new CardInstance(s.NextInstanceId(), FixtureCard.Id("rite"), s.Players[0].Id)
+                { Zone = Zone.Deck });
+            var card = Hand(s, 0, FixtureCard.Id("rite"));
+
+            new CommandProcessor(db).Execute(s, Play(s, card));
+
+            Assert.That(s.Players[0].Deck.Count, Is.EqualTo(0), "The refused crystal became a draw.");
+            Assert.That(s.Players[0].Hand.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void GainMana_Permanent_Under_The_Cap_Draws_Nothing()
+        {
+            var rite = Spell(FixtureCard.Id("rite"), cost: 0, TestRules.Rule("gain_mana", Trigger.ON_CAST,
+                new GainManaAction(1, ManaGainKind.PERMANENT_EMPTY)));
+            var db = new FakeCardDatabase().Register(rite);
+            var s = MainPhase(p0Mana: 9);
+            s.Players[0].Deck.Add(new CardInstance(s.NextInstanceId(), FixtureCard.Id("rite"), s.Players[0].Id)
+                { Zone = Zone.Deck });
+            var card = Hand(s, 0, FixtureCard.Id("rite"));
+
+            new CommandProcessor(db).Execute(s, Play(s, card));
+
+            Assert.That(s.Players[0].Mana.Max, Is.EqualTo(10));
+            Assert.That(s.Players[0].Deck.Count, Is.EqualTo(1));
+        }
+
+        [Test]
         public void GainMana_Default_Is_Temporary_Spark_Pattern()
         {
             var coin = Spell(FixtureCard.Id("coin"), cost: 0, TestRules.Rule("gain_mana", Trigger.ON_CAST,
