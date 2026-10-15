@@ -273,6 +273,17 @@ namespace Kingdom.Net.Client.Tests.Auth
         }
 
         [Test]
+        public void A_session_read_back_from_its_token_alone_recovers_the_name()
+        {
+            // The device store keeps the token, not the name. Signing in rebuilds the provider from
+            // that store, so the name step only ever sees what can be recomputed from the token.
+            Assert.That(AuthSession.DisplayNameIn(Jwt.ForUserNamed("user-1", "player@example.com", "The Punisher")),
+                        Is.EqualTo("The Punisher"));
+            Assert.That(AuthSession.DisplayNameIn(Jwt.ForUser("user-1", "player@example.com")), Is.EqualTo(""));
+            Assert.That(AuthSession.DisplayNameIn(""), Is.EqualTo(""));
+        }
+
+        [Test]
         public async Task A_token_with_no_metadata_name_signs_in_with_an_empty_one()
         {
             // Every account made before names were written here. It must degrade to "ask", never to

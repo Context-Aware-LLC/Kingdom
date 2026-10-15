@@ -492,7 +492,6 @@ namespace Kingdom.Net.Client.Auth
 
             string userId = "";
             string email = "";
-            string displayName = "";
             if (AuthJson.TryReadJwtPayload(accessToken, out var claims))
             {
                 AuthJson.TryString(claims, "sub", out userId);
@@ -500,15 +499,9 @@ namespace Kingdom.Net.Client.Auth
             }
 
             // user_metadata rides in the access token, so a returning player's name costs no extra
-            // request. It is read from the RAW payload rather than `claims` because that reader skips
-            // nested objects by design — see AuthJson.TryReadNestedObject. Absent is the ordinary
-            // case for every account made before names were written here, and it degrades to the
-            // caller asking for one, exactly as before.
-            if (AuthJson.TryReadJwtPayloadRaw(accessToken, out string payloadJson) &&
-                AuthJson.TryReadNestedObject(payloadJson, "user_metadata", out var metadata))
-            {
-                AuthJson.TryString(metadata, DisplayNameKey, out displayName);
-            }
+            // request. Absent is the ordinary case for every account made before names were written
+            // here, and it degrades to the caller asking for one, exactly as before.
+            string displayName = AuthSession.DisplayNameIn(accessToken);
 
             // Expiry is dated against OUR clock, from the reply's expires_in — never from its
             // expires_at. The refresh decision is made by this same clock, so keying the deadline to

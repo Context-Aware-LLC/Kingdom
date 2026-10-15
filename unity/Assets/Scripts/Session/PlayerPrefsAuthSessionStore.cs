@@ -74,6 +74,10 @@ namespace Kingdom.Session
                 ExpiresAtMs = expiresAtMs,
                 UserId = parts[3],
                 Email = parts[4],
+                // Not stored: recomputed from the token, so it cannot drift from it or be dropped.
+                // Leaving it out of the session read back here asked every returning player for a
+                // new name; see AuthSession.DisplayNameIn.
+                DisplayName = AuthSession.DisplayNameIn(parts[0]),
             };
         }
 

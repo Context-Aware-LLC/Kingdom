@@ -108,6 +108,27 @@ namespace Kingdom.Net.Client.Auth
         /// </summary>
         public string DisplayName { get; init; } = "";
 
+        /// <summary>
+        /// The <see cref="DisplayName"/> an access token carries, or empty.
+        ///
+        /// <para><b>A session read back from disk has to recompute it, and that is what this is
+        /// for.</b> The session store keeps the token, not the fields read out of it. Signing in binds
+        /// the device to the identity, which rebuilds the provider from the store — so a name read at
+        /// sign-in was gone by the time the name step asked for it, and every returning player was
+        /// asked to choose one again (Sam, 2026-10-15). Reading it from the token on load means the
+        /// name can never be lost by a store that does not know it exists.</para>
+        /// </summary>
+        public static string DisplayNameIn(string accessToken)
+        {
+            // Read from the RAW payload: the flat claim reader skips nested objects by design, and
+            // user_metadata is one — see AuthJson.TryReadNestedObject.
+            if (AuthJson.TryReadJwtPayloadRaw(accessToken, out string payloadJson) &&
+                AuthJson.TryReadNestedObject(payloadJson, "user_metadata", out var metadata) &&
+                AuthJson.TryString(metadata, SupabaseAuthBackend.DisplayNameKey, out string name))
+                return name;
+            return "";
+        }
+
         /// <summary>True when this device believes it is signed in. Says nothing about whether the
         /// server will accept the token.</summary>
         public bool IsPresent => AccessToken.Length > 0;
