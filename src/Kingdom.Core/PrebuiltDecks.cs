@@ -25,6 +25,8 @@ namespace Kingdom.Core
         // That dial existed so a 20-CARD slice deck closed out on damage before both decks ran dry;
         // the lists are the format's 30 cards now and the format's 30 HP goes with them. HP is left
         // implicit — MatchSetup's own default is 30, so there is one number, not two that can drift.
+        // RETIREMENT TRIGGER: passing a heroMaxHealth here again falsifies the "hero HP needs no
+        // flag" claim in NetSoak's ParseHeroHp and tooling/scripts/bot_roster_to_corpus.py — fix both.
         public static MatchSetup EmberwardVsTidecaller() => new MatchSetup(
             CardClass.EMBERWARD, EmberwardDeck(),
             CardClass.TIDECALLER, TidecallerDeck());
