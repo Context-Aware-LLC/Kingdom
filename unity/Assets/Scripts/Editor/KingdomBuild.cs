@@ -34,7 +34,7 @@ namespace Kingdom.Editor
         /// EVERY shipped scene, in build order — index 0 is the boot scene.
         ///
         /// <para><b>This exists because the list used to be written out four times</b>: once per
-        /// BuildPlayerOptions (Windows DEV, Android, Windows Standalone) and once in
+        /// BuildPlayerOptions (Android, Windows Standalone, and a since-removed Windows DEV seat) and once in
         /// <see cref="SyncSceneList"/>. Adding CharacterCreate on 2026-08-23 updated
         /// <c>SyncSceneList</c> only, so the Editor's scene list knew about it and all three
         /// PLAYERS did not. The failure surfaced on device as a button that did nothing, because
@@ -51,46 +51,6 @@ namespace Kingdom.Editor
             CollectionScenePath, ShopScenePath, PackVaultScenePath,
         };
         private const string OutputPath = "Builds/Windows/Bad Ideas.exe";
-        private const string DevOutputPath = "Builds/WindowsDev/Bad Ideas.exe";
-
-        /// <summary>
-        /// A second seat for local testing: boots the main menu, and is a <b>development</b> player so
-        /// <c>Debug.isDebugBuild</c> is true and the account switcher exists at all
-        /// (<see cref="Kingdom.Session.DeviceAccounts"/>).
-        ///
-        /// <para><b>Separate menu item and separate output directory, deliberately.</b> The shipping
-        /// build above is what goes to testers, and turning it into a development player would hand
-        /// them the account switcher along with everything else the flag unlocks. Two products, two
-        /// folders, no flag to remember.</para>
-        ///
-        /// <para><b>Pair this with the Editor, not with a second copy of itself.</b> A player build and
-        /// the Editor keep PlayerPrefs in different registry keys
-        /// (<c>HKCU\Software\&lt;company&gt;\&lt;product&gt;</c> vs
-        /// <c>HKCU\Software\Unity\UnityEditor\&lt;company&gt;\&lt;product&gt;</c>) while sharing one
-        /// <c>Application.persistentDataPath</c> — so they hold independent active-account pointers over
-        /// one shared <c>accounts.json</c>, which is exactly two seats. Two instances of this exe would
-        /// share one pointer and fight over which account is signed in.</para>
-        /// </summary>
-        [MenuItem("Kingdom/Build/Windows DEV Second Seat (menu + development flag)")]
-        public static void BuildWindowsDevSeat()
-        {
-            SyncSceneList();
-            BuildAddressables();
-
-            Directory.CreateDirectory(Path.GetDirectoryName(DevOutputPath));
-            var options = new BuildPlayerOptions
-            {
-                // Menu first — it is the boot scene and the only screen that can switch accounts.
-                // The board rides along so Find Game actually goes somewhere, and roster +
-                // collection so Deck Builder isn't a dead end in this build too. Deck
-                // Builder lands on the roster, and the roster is the only door to Collection (#154).
-                scenes = AllScenes,
-                locationPathName = DevOutputPath,
-                target = BuildTarget.StandaloneWindows64,
-                options = BuildOptions.Development,
-            };
-            Report(BuildPipeline.BuildPlayer(options), DevOutputPath);
-        }
 
         private const string AndroidOutputPath = "Builds/Android/Kingdom.apk";
 
