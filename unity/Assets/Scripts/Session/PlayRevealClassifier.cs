@@ -32,6 +32,7 @@ namespace Kingdom.Session
         public readonly SchoolTiming Water;
         public readonly SchoolTiming Frost;
         public readonly SchoolTiming Gravekeep;
+        public readonly SchoolTiming Verdant;
         public readonly SchoolTiming Heal;
 
         public PlayRevealHolds(float minion, float spell, float weapon,
@@ -39,7 +40,7 @@ namespace Kingdom.Session
                                SchoolTiming fire = default, SchoolTiming shadow = default,
                                SchoolTiming clockwright = default, SchoolTiming water = default,
                                SchoolTiming frost = default, SchoolTiming gravekeep = default,
-                               SchoolTiming heal = default)
+                               SchoolTiming verdant = default, SchoolTiming heal = default)
         {
             Minion = minion;
             Spell  = spell;
@@ -52,6 +53,7 @@ namespace Kingdom.Session
             Water = water;
             Frost = frost;
             Gravekeep = gravekeep;
+            Verdant = verdant;
             Heal = heal;
         }
 
@@ -65,6 +67,7 @@ namespace Kingdom.Session
             SpellEffect.Water     => Water,
             SpellEffect.Frost     => Frost,
             SpellEffect.Gravekeep => Gravekeep,
+            SpellEffect.Verdant   => Verdant,
             _                     => default,
         };
 
@@ -119,7 +122,7 @@ namespace Kingdom.Session
     /// <summary>Which spell-school effect a played spell carries, beyond the reveal itself.
     /// There is no school field on a card; the class stands in for it (Sam, 2026-10-13:
     /// Stonewarden is earth; Tempest is lightning; 2026-10-14: Emberward is fire, Nightveil is
-    /// shadow, Clockwright is constructs, Tidecaller is water or frost, Gravekeep is the grave).
+    /// shadow, Clockwright is constructs, Tidecaller is water or frost, Gravekeep is the grave, Verdant is vines).
     ///
     /// <para>Every spell of a school's class carries it, whatever the spell does: the caster
     /// effect always plays, the school's missile goes to each character the spell damages, and
@@ -161,6 +164,10 @@ namespace Kingdom.Session
         /// <summary>A Gravekeep spell: grave mist and bone rise on the caster, then a skull goes
         /// to each character it damages and bursts into soulfire there.</summary>
         Gravekeep,
+
+        /// <summary>A Verdant spell: vines twirl on the caster, then a vine reaches each
+        /// character it damages and a wreath closes on it. Its heals keep the healing shimmer.</summary>
+        Verdant,
     }
 
     /// <summary>
@@ -308,6 +315,7 @@ namespace Kingdom.Session
                         CardClass.CLOCKWRIGHT => SpellEffect.Clockwright,
                         CardClass.TIDECALLER  => IsFrost(def) ? SpellEffect.Frost : SpellEffect.Water,
                         CardClass.GRAVEKEEP   => SpellEffect.Gravekeep,
+                        CardClass.VERDANT     => SpellEffect.Verdant,
                         _                     => SpellEffect.None,
                     };
                 float tail = holds.For(effect).Tail(struck.Count + touched.Count);

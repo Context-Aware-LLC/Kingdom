@@ -445,6 +445,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bda1e9f17b484d41b5f417c1d6cbcb01
+    m_Address: ui/effect_spell_verdant_caster
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: be7678213fe64791b6fab1b09089d14d
     m_Address: ui/effect_spell_earth_buildup
     m_ReadOnly: 0
@@ -457,6 +462,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c0314eac917450b1c9274333c1336f23
     m_Address: ui/effect_summon_stonewarden
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5545c89b77e467c8db0eb5fb3de5adb
+    m_Address: ui/effect_spell_verdant_target
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -527,6 +537,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d998701999a244e58a9abf817306d392
     m_Address: ui/effect_hero_power_emberward
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dabb672139e64cb28cfb02ffc6bcaea9
+    m_Address: ui/effect_spell_verdant_travel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
