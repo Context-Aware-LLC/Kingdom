@@ -27,11 +27,13 @@ namespace Kingdom.Session
         public readonly SchoolTiming Earth;
         public readonly SchoolTiming Lightning;
         public readonly SchoolTiming Fire;
+        public readonly SchoolTiming Shadow;
         public readonly SchoolTiming Heal;
 
         public PlayRevealHolds(float minion, float spell, float weapon,
                                SchoolTiming earth = default, SchoolTiming lightning = default,
-                               SchoolTiming fire = default, SchoolTiming heal = default)
+                               SchoolTiming fire = default, SchoolTiming shadow = default,
+                               SchoolTiming heal = default)
         {
             Minion = minion;
             Spell  = spell;
@@ -39,6 +41,7 @@ namespace Kingdom.Session
             Earth = earth;
             Lightning = lightning;
             Fire = fire;
+            Shadow = shadow;
             Heal = heal;
         }
 
@@ -47,6 +50,7 @@ namespace Kingdom.Session
             SpellEffect.Earth     => Earth,
             SpellEffect.Lightning => Lightning,
             SpellEffect.Fire      => Fire,
+            SpellEffect.Shadow    => Shadow,
             _                     => default,
         };
 
@@ -100,7 +104,7 @@ namespace Kingdom.Session
 
     /// <summary>Which spell-school effect a played spell carries, beyond the reveal itself.
     /// There is no school field on a card; the class stands in for it (Sam, 2026-10-13:
-    /// Stonewarden is earth; Tempest is lightning; 2026-10-14: Emberward is fire).</summary>
+    /// Stonewarden is earth; Tempest is lightning; 2026-10-14: Emberward is fire, Nightveil is shadow).</summary>
     public enum SpellEffect
     {
         None,
@@ -116,6 +120,10 @@ namespace Kingdom.Session
         /// <summary>An Emberward spell that deals damage: a flare on the caster, then a fireball
         /// flies to each character it hits and bursts there.</summary>
         Fire,
+
+        /// <summary>A Nightveil spell that deals damage: a wisp of shadow drifts to each
+        /// character it hits and blooms into a ring there.</summary>
+        Shadow,
     }
 
     /// <summary>
@@ -244,6 +252,7 @@ namespace Kingdom.Session
                         CardClass.STONEWARDEN => SpellEffect.Earth,
                         CardClass.TEMPEST     => SpellEffect.Lightning,
                         CardClass.EMBERWARD   => SpellEffect.Fire,
+                        CardClass.NIGHTVEIL   => SpellEffect.Shadow,
                         _                     => SpellEffect.None,
                     };
                 float tail = holds.For(effect).Tail(struck.Count);

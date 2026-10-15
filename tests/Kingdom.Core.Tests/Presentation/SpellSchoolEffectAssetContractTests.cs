@@ -20,7 +20,9 @@ namespace Kingdom.Core.Tests.Presentation
             ("effect_spell_lightning_strike", "21c0730cc22149e79021c7aaab920e6d"),
             ("effect_spell_fire_buildup", "680a960beeb94e55be45b84b48d46e29"),
             ("effect_spell_fire_flame", "1c861f74e57c4f29a7e8f75e5cb77698"),
-            ("effect_spell_fire_impact", "10ab97aff9744067823f56088bf17ef3")
+            ("effect_spell_fire_impact", "10ab97aff9744067823f56088bf17ef3"),
+            ("effect_spell_shadow_travel", "99408be364b341c3b6febfea100f029e"),
+            ("effect_spell_shadow_impact", "039c922ced554f70aa17080a94295c06")
         };
 
         [Test]

@@ -108,6 +108,8 @@ namespace Kingdom.Presentation
                                                  SpellSchoolEffects.LightningStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.FireLeadSeconds,
                                                  SpellSchoolEffects.FireStaggerSeconds),
+                                new SchoolTiming(SpellSchoolEffects.ShadowLeadSeconds,
+                                                 SpellSchoolEffects.ShadowStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.HealLeadSeconds,
                                                  SpellSchoolEffects.HealStaggerSeconds));
 
@@ -353,7 +355,7 @@ namespace Kingdom.Presentation
             if (reveal.Type == CardType.SPELL) PlaySpellSchool(reveal);
         }
 
-        /// <summary>The earth, lightning and fire sequences and the healing shimmer. Targets are resolved now, against
+        /// <summary>The earth, lightning, fire and shadow sequences and the healing shimmer. Targets are resolved now, against
         /// the pre-effect board, and followed while the effect runs; a minion the spell kills is
         /// still standing until the entry releases.</summary>
         private void PlaySpellSchool(PlayReveal reveal)
@@ -430,6 +432,22 @@ namespace Kingdom.Presentation
                     StartCoroutine(SpellSchoolEffects.Fireball(transform, ball, burst, cam, caster,
                         visual, at ?? visual.position,
                         SpellSchoolEffects.FireballLandsAt(reveal.CardSeconds, i)));
+                }
+            }
+
+            if (reveal.Effect == SpellEffect.Shadow)
+            {
+                Sprite wisp = _uiSprites.Get(SpellSchoolEffects.ShadowTravelKey);
+                Sprite ring = _uiSprites.Get(SpellSchoolEffects.ShadowImpactKey);
+                for (int i = 0; i < reveal.Struck.Count; i++)
+                {
+                    InstanceId id = reveal.Struck[i];
+                    Vector3? at = ResolvePosition(id);
+                    Transform visual = _board.ResolveCombatVisual(id);
+                    if (visual == null && !at.HasValue) continue;
+                    StartCoroutine(SpellSchoolEffects.ShadowBolt(transform, wisp, ring, cam, caster,
+                        visual, at ?? visual.position,
+                        SpellSchoolEffects.ShadowLandsAt(reveal.CardSeconds, i)));
                 }
             }
 

@@ -8,7 +8,7 @@ namespace Kingdom.Presentation
     /// Spell-school effects for played spells: earth (a buildup on the caster, a rock falling on
     /// each target, an impact where it lands), lightning (an arc from the caster to each target,
     /// then a bolt down onto it), fire (a flare on the caster, a fireball to each target, a burst
-    /// where it lands), the healing sparkles and shimmer on everything a spell heals,
+    /// where it lands), shadow (a wisp to each target, a ring where it lands), the healing sparkles and shimmer on everything a spell heals,
     /// and the green poof on a minion a Venom source damages. Each sheet is three frames side by
     /// side. Kept apart from the hero power effects on purpose:
     /// similar, not the same (Sam, 2026-10-13).
@@ -25,6 +25,8 @@ namespace Kingdom.Presentation
         public const string FireFlameKey = "effect_spell_fire_flame";
         public const string FireBuildupKey = "effect_spell_fire_buildup";
         public const string FireImpactKey = "effect_spell_fire_impact";
+        public const string ShadowTravelKey = "effect_spell_shadow_travel";
+        public const string ShadowImpactKey = "effect_spell_shadow_impact";
         public const string EarthBuildupKey = "effect_spell_earth_buildup";
         public const string EarthRockKey = "effect_spell_earth_rock";
         public const string EarthImpactKey = "effect_spell_earth_impact";
@@ -60,9 +62,18 @@ namespace Kingdom.Presentation
         private const float FlareSeconds = 0.42f;
         private const float FireballSeconds = 0.3f;
         private const float FireImpactSeconds = 0.4f;
-        // The ball sits right of the frame's centre, its trail to the left; this is its offset as
-        // a fraction of the drawn width, so the ball, not the middle of the trail, is what lands.
-        private const float FireballHeadOffset = 0.28f;
+
+        /// <summary>The shadow reaches the first target this long after the reveal card is gone,
+        /// and each further target this long after the one before.</summary>
+        public const float ShadowLeadSeconds = 0.5f;
+        public const float ShadowStaggerSeconds = 0.1f;
+        private const float ShadowTravelSeconds = 0.4f;
+        private const float ShadowImpactSeconds = 0.5f;
+
+        // The head of a fireball or shadow wisp sits right of the frame's centre, its trail to the
+        // left; this is its offset as a fraction of the drawn width, so the head, not the middle
+        // of the trail, is what lands.
+        private const float ProjectileHeadOffset = 0.28f;
         public const float HealStaggerSeconds = 0.05f;
         private const float HealTravelSeconds = 0.36f;
         // The lead star sits right of the frame's centre; this is its offset as a fraction of the
@@ -361,13 +372,33 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>A fireball from the caster to one target, landing <paramref name="landIn"/>
-        /// seconds from now, then the burst where it lands. With no caster on the board it bursts
-        /// without the flight.</summary>
+        /// seconds from now, then the burst where it lands.</summary>
         public static IEnumerator Fireball(Transform parent, Sprite ballSheet, Sprite burstSheet,
                                            Camera camera, Transform from, Transform target,
-                                           Vector3 fallback, float landIn)
+                                           Vector3 fallback, float landIn) =>
+            Projectile("Fire", FireballSeconds, FireImpactSeconds, 0.06f, parent, ballSheet,
+                       burstSheet, camera, from, target, fallback, landIn);
+
+        public static float ShadowLandsAt(float cardSeconds, int index) =>
+            cardSeconds + ShadowLeadSeconds + index * ShadowStaggerSeconds;
+
+        /// <summary>A wisp of shadow from the caster to one target, then the ring that blooms
+        /// where it lands. Slower than the fireball: it drifts rather than flies.</summary>
+        public static IEnumerator ShadowBolt(Transform parent, Sprite wispSheet, Sprite burstSheet,
+                                             Camera camera, Transform from, Transform target,
+                                             Vector3 fallback, float landIn) =>
+            Projectile("Shadow", ShadowTravelSeconds, ShadowImpactSeconds, 0.09f, parent, wispSheet,
+                       burstSheet, camera, from, target, fallback, landIn);
+
+        // A missile from the caster to one target, landing landIn seconds from now, then the burst
+        // where it lands. With no caster on the board it bursts without the flight. Both sheets
+        // draw the head right of centre, its trail to the left.
+        private static IEnumerator Projectile(string school, float travelSeconds, float impactSeconds,
+                                              float frameSeconds, Transform parent, Sprite ballSheet,
+                                              Sprite burstSheet, Camera camera, Transform from,
+                                              Transform target, Vector3 fallback, float landIn)
         {
-            float travel = Mathf.Min(FireballSeconds, Mathf.Max(0.01f, landIn));
+            float travel = Mathf.Min(travelSeconds, Mathf.Max(0.01f, landIn));
             float wait = landIn - travel;
             if (wait > 0f) yield return new WaitForSeconds(wait);
             if (parent == null || camera == null) yield break;
@@ -377,7 +408,7 @@ namespace Kingdom.Presentation
             if (from != null && from != target && ballSheet != null)
             {
                 Vector3 start = from.position;
-                SpriteRenderer ball = MakeRenderer(parent, "Fireball");
+                SpriteRenderer ball = MakeRenderer(parent, school + "Projectile");
                 Sprite[] frames = FramesOf(ballSheet);
                 float width = BoardController.CardW * 1.7f;
                 float elapsed = 0f;
@@ -390,9 +421,9 @@ namespace Kingdom.Presentation
                     Vector3 dir = delta.sqrMagnitude > 1e-6f ? delta.normalized : Vector3.right;
                     Vector3 head = Vector3.Lerp(start, end, t * t * (3f - 2f * t) * 0.4f + t * 0.6f);
 
-                    // The three drawings churn the flame; they loop rather than play once.
-                    SpriteMaterials.Set(ball, frames[Mathf.FloorToInt(elapsed / 0.06f) % frames.Length]);
-                    Place(ball, camera, head - dir * (width * FireballHeadOffset), width);
+                    // The three drawings churn the trail; they loop rather than play once.
+                    SpriteMaterials.Set(ball, frames[Mathf.FloorToInt(elapsed / frameSeconds) % frames.Length]);
+                    Place(ball, camera, head - dir * (width * ProjectileHeadOffset), width);
                     ball.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
                     ball.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 8f));
                     yield return null;
@@ -401,13 +432,13 @@ namespace Kingdom.Presentation
             }
             if (parent == null || burstSheet == null) yield break;
 
-            SpriteRenderer burst = MakeRenderer(parent, "FireImpact");
+            SpriteRenderer burst = MakeRenderer(parent, school + "Impact");
             Sprite[] blast = FramesOf(burstSheet);
             float since = 0f;
-            while (since < FireImpactSeconds && burst != null)
+            while (since < impactSeconds && burst != null)
             {
                 since += Time.deltaTime;
-                float t = Mathf.Clamp01(since / FireImpactSeconds);
+                float t = Mathf.Clamp01(since / impactSeconds);
                 Show(burst, blast, t);
                 Place(burst, camera, Target(), BoardController.CardW * Mathf.Lerp(1.2f, 1.8f, t));
                 burst.color = new Color(1f, 1f, 1f, 1f - Ramp(t, 0.55f));

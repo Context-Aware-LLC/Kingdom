@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: UI_Core
   m_GUID: 3d766df806eca424e9276c2b8a291061
   m_SerializeEntries:
+  - m_GUID: 039c922ced554f70aa17080a94295c06
+    m_Address: ui/effect_spell_shadow_impact
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 050b03c1a3e34c85b3ef2372fe134943
     m_Address: ui/effect_spell_heal_travel
     m_ReadOnly: 0
@@ -312,6 +317,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 96639c2fa6d74b4e95d61ef2653ab769
     m_Address: ui/hero-power
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99408be364b341c3b6febfea100f029e
+    m_Address: ui/effect_spell_shadow_travel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
