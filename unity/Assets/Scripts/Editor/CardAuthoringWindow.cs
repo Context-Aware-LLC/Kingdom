@@ -313,6 +313,29 @@ namespace Kingdom.Editor
             return "● clean";
         }
 
+        // Searches the HANDLE, the name, the ID, and the rarity, type, tribe and keywords by enum
+        // name. The id is in because it is the only field that is unique — when two rows print
+        // the same name, typing the number is the only way to reach a specific one. Substring
+        // rather than exact so a partial number narrows as you type. Each space-separated word
+        // must match something, so "epic aegis" finds the epics carrying Aegis (2026-10-15).
+        internal static bool MatchesSearch(EditableCard card, string search)
+        {
+            if (string.IsNullOrWhiteSpace(search)) return true;
+            string[] fields =
+            {
+                card.Handle, card.Name, card.Id.ToString(CultureInfo.InvariantCulture),
+                card.Rarity.ToString(), card.Type.ToString(),
+                card.HasTribe ? card.Tribe.ToString() : "",
+            };
+            foreach (string term in search.Split((char[])null, StringSplitOptions.RemoveEmptyEntries))
+            {
+                bool hit = fields.Any(f => f != null && f.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)
+                        || card.Keywords.Any(k => k.ToString().IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (!hit) return false;
+            }
+            return true;
+        }
+
         private void DrawLibraryList()
         {
             EditorGUILayout.BeginVertical(GUILayout.Width(240));
@@ -324,16 +347,7 @@ namespace Kingdom.Editor
             {
                 var card = _cards[i];
                 if (_classFilter > 0 && card.Class != ClassFilterValues[_classFilter - 1]) continue;
-                // Searches the HANDLE, the name, and the ID. The id is in because it is the only
-                // field that is unique — when two rows print the same name, typing the number is
-                // the only way to reach a specific one, and until 2026-09-04 there was no way at
-                // all. Substring rather than exact so a partial number narrows as you type.
-                if (!string.IsNullOrEmpty(_search)
-                    && card.Handle.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0
-                    && card.Name.IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0
-                    && card.Id.ToString(CultureInfo.InvariantCulture)
-                        .IndexOf(_search, StringComparison.OrdinalIgnoreCase) < 0)
-                    continue;
+                if (!MatchesSearch(card, _search)) continue;
 
                 var (core, lint) = Validate(card);
                 string badge = BadgeFor(core, lint);
