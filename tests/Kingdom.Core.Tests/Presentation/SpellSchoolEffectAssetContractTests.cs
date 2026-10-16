@@ -53,7 +53,7 @@ namespace Kingdom.Core.Tests.Presentation
 
             foreach (var sheet in Sheets)
             {
-                string assetPath = Path.Combine(assets, "Art", "UI", "Board", sheet.File + ".png");
+                string assetPath = Path.Combine(assets, "Art", "UI", "SpellEffects", sheet.File + ".png");
                 string metadata = File.ReadAllText(assetPath + ".meta");
                 Assert.Multiple(() =>
                 {

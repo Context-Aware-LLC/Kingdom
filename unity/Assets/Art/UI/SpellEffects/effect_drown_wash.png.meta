@@ -1,15 +1,15 @@
 fileFormatVersion: 2
-guid: 3ae15b4344584b3ebdbdfe1433b29cad
+guid: 4e7117405bbf4629b056cb8afaa43d4d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1473689709160494540
-    second: effect_venom_hit_poof_0
+      213: 6693793738170618448
+    second: effect_spell_heal_travel_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -100,7 +100,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: Android
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 1
@@ -126,7 +126,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: iOS
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 1
@@ -141,7 +141,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: effect_venom_hit_poof_0
+      name: effect_spell_heal_travel_0
       rect:
         serializedVersion: 2
         x: 0
@@ -156,8 +156,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 57c9f32486dc46a80800000000000000
-      internalID: 1473689709160494540
+      spriteID: d1881388a84c46f3853aa986771c5a3c
+      internalID: 6693793738170618448
       vertices: []
       indices: 
       edges: []
@@ -166,7 +166,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: d1881388a84c46f3853aa986771c5a3c
     internalID: 0
     vertices: []
     indices: 

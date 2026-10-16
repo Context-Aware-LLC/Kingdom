@@ -1,9 +1,10 @@
 """Ship a generated three-frame effect sheet from art-pipeline/ into the Unity project.
 
     python tooling/scripts/ship_spell_effect.py art-pipeline/spell-effects/fire-target-hit-3frame.png effect_spell_fire_impact
-    python tooling/scripts/ship_spell_effect.py --defringe-only unity/Assets/Art/UI/Board/effect_spell_fire_impact.png
+    python tooling/scripts/ship_spell_effect.py --defringe-only unity/Assets/Art/UI/SpellEffects/effect_spell_fire_impact.png
 
-For a new sheet this writes, under unity/Assets/Art/UI/Board/:
+For a new sheet this writes, under unity/Assets/Art/UI/SpellEffects/ (the folder name is the import
+lane, see CardArtPostprocessor: anywhere else a sheet imports uncompressed):
   - <name>.png: resized to 1536x512 (three 512 frames side by side), defringed, bled.
   - <name>.png.meta: a fresh guid, every other setting copied from TEMPLATE_META.
 and adds a `ui/<name>` entry to the UI_Core Addressables group. A sheet missing from that group
@@ -36,9 +37,9 @@ from PIL import Image
 from scipy import ndimage
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-BOARD_ART = REPO_ROOT / "unity/Assets/Art/UI/Board"
+SHEET_ART = REPO_ROOT / "unity/Assets/Art/UI/SpellEffects"
 UI_CORE = REPO_ROOT / "unity/Assets/AddressableAssetsData/AssetGroups/UI_Core.asset"
-TEMPLATE_META = BOARD_ART / "effect_spell_heal_travel.png.meta"
+TEMPLATE_META = SHEET_ART / "effect_spell_heal_travel.png.meta"
 SIZE = (1536, 512)
 TRUST_ALPHA = 48
 CUT_ALPHA = 6
@@ -86,7 +87,7 @@ def add_group_entry(group_text: str, guid: str, address: str) -> str:
 
 
 def ship(source: Path, name: str) -> str:
-    png = BOARD_ART / f"{name}.png"
+    png = SHEET_ART / f"{name}.png"
     meta = Path(str(png) + ".meta")
     sheet = np.array(Image.open(source).convert("RGBA").resize(SIZE, Image.LANCZOS))
     Image.fromarray(defringe(sheet)).save(png)

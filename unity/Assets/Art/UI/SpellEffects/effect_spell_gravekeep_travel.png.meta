@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 7313910b2d6c4c398124d424cce03aa5
+guid: 0c874b888515440ebf68464e66442994
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -9,7 +9,7 @@ TextureImporter:
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -100,7 +100,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: Android
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 1
@@ -126,7 +126,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: iOS
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 1
@@ -156,7 +156,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: aa46d2cade694dd89a58d14d6a439efc
+      spriteID: aed222ca5d86426f8f2d6021b75d087f
       internalID: 6693793738170618448
       vertices: []
       indices: 
@@ -166,7 +166,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: aa46d2cade694dd89a58d14d6a439efc
+    spriteID: aed222ca5d86426f8f2d6021b75d087f
     internalID: 0
     vertices: []
     indices: 

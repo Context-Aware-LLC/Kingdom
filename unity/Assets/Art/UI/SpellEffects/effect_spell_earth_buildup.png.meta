@@ -1,15 +1,15 @@
 fileFormatVersion: 2
-guid: fc693cba6f4d43bf960d38469702f21b
+guid: be7678213fe64791b6fab1b09089d14d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6693793738170618448
-    second: effect_spell_heal_travel_0
+      213: 4224204382707185395
+    second: effect_spell_earth_buildup_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -100,7 +100,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: Android
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 1
@@ -126,7 +126,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: iOS
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 1
@@ -141,7 +141,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: effect_spell_heal_travel_0
+      name: effect_spell_earth_buildup_0
       rect:
         serializedVersion: 2
         x: 0
@@ -156,8 +156,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 9d32ba28839842e8bf2e5e99798b53e3
-      internalID: 6693793738170618448
+      spriteID: ec35cad71be742df0800000000000000
+      internalID: 4224204382707185395
       vertices: []
       indices: 
       edges: []
@@ -166,7 +166,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 9d32ba28839842e8bf2e5e99798b53e3
+    spriteID: 5e97eb03825dee720800000000000000
     internalID: 0
     vertices: []
     indices: 

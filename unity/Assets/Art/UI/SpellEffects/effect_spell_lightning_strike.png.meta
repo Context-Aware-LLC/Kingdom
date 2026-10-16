@@ -1,15 +1,15 @@
 fileFormatVersion: 2
-guid: a9c138db28ba4273900034893703d7ff
+guid: 21c0730cc22149e79021c7aaab920e6d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4288287913447975835
-    second: effect_spell_earth_impact_0
+      213: 4826292253172629496
+    second: effect_spell_lightning_strike_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     sRGBTexture: 1
     linearTexture: 0
     fadeOut: 0
@@ -100,7 +100,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: Android
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 1
@@ -126,7 +126,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: iOS
-    maxTextureSize: 2048
+    maxTextureSize: 1024
     resizeAlgorithm: 0
     textureFormat: 50
     textureCompression: 1
@@ -141,7 +141,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: effect_spell_earth_impact_0
+      name: effect_spell_lightning_strike_0
       rect:
         serializedVersion: 2
         x: 0
@@ -156,8 +156,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: ac3bb331d39141360800000000000000
-      internalID: 4288287913447975835
+      spriteID: b4f3abb9a469415c0800000000000000
+      internalID: 4826292253172629496
       vertices: []
       indices: 
       edges: []

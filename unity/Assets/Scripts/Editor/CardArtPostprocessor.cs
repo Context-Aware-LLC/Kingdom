@@ -19,6 +19,7 @@ namespace Kingdom.Editor
     ///                                              and Backgrounds/Versus/ inherit it for free.
     ///   Assets/Art/Orbs/...                      — elemental spheres composited into plate centres
     ///   Assets/Art/UI/...                        — frames/gems/icons/plates (atlas, no mips)
+    ///   Assets/Art/UI/SpellEffects/...           — three-frame spell effect sheets (no mips, 1024 mobile)
     ///   Assets/Art/VFX/Textures/...              — FX masks/flipbooks (linear data)
     /// </summary>
     internal sealed class CardArtPostprocessor : AssetPostprocessor
@@ -51,6 +52,7 @@ namespace Kingdom.Editor
                 ["hptabs"] = ApplyMinifiedIcon,
                 ["Frames"] = ApplyUiFrame,
                 ["Board"] = ApplyUiFrame,
+                ["SpellEffects"] = ApplySpellEffectSheet,
                 ["HpFrames"] = ApplyUiFrame,
                 ["currency"] = ApplyCurrencyIcon,
             };
@@ -163,6 +165,18 @@ namespace Kingdom.Editor
         // only compresses once it is a packable of Assets/Art/UI/BoardSprites.spriteatlasv2, so
         // adding one here means adding it there.
         static void ApplyUiFrame(TextureImporter importer) => ApplyUiAtlas(importer, mips: true);
+
+        // Three-frame spell effect sheets (1536x512, SpellSchoolEffects). Mips OFF, because they
+        // are 1536-wide non-power-of-two sprites in no atlas, and mips would ship them RGBA32 (see
+        // ApplyUiFrame): 30 sheets under Board/ were 4 MB each on a device until 2026-10-15. Mips
+        // are not missed: a 512px frame draws at about 1.7-2.1 card widths. Mobile is capped at
+        // 1024, which leaves 341px frames, still above that on a phone.
+        static void ApplySpellEffectSheet(TextureImporter importer)
+        {
+            ApplyUiAtlas(importer, mips: false);
+            SetPlatform(importer, "Android", 1024, TextureImporterFormat.ASTC_6x6);
+            SetPlatform(importer, "iPhone", 1024, TextureImporterFormat.ASTC_6x6);
+        }
 
         static void ApplyUiAtlas(TextureImporter importer, bool mips)
         {
