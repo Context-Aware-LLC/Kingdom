@@ -566,14 +566,32 @@ namespace Kingdom.Presentation
             // the other one and 401'd on every launch an hour after sign-in; see
             // MainMenuController.ResumeThenFinishBootstrap.
             string accessToken = await AuthGateway.TokenForConnectAsync();
-            SetBusy(true, "Restoring your collection…");
+            SetBusy(true, null);
+            ShowRestoring("Restoring your collection…");
             await CollectionGateway.SyncAsync(accessToken);
-            SetBusy(true, "Restoring your characters…");
+            ShowRestoring("Restoring your characters…");
             await RosterGateway.SyncAsync(accessToken);
             SetBusy(false, null);
 
             _modal?.AddToClassList("mm-modal--hidden");
+            ShowRestoring(null);
             done?.Invoke();
+        }
+
+        /// <summary>
+        /// The restore is a wait, not a form, so it shows only its status line where the title
+        /// was (Sam, 2026-10-15): the dimmed fields and buttons it used to leave on screen read as
+        /// a form that had frozen. Null puts the form's lines back; the step methods reset the
+        /// title text themselves.
+        /// </summary>
+        private void ShowRestoring(string label)
+        {
+            if (_modal == null) return;
+            VisualElement header = _title?.parent;
+            foreach (VisualElement line in _modal.Children())
+                Display(line, label == null || line == header);
+            Display(_help, label == null);
+            if (label != null && _title != null) _title.text = label;
         }
 
         // ── Calls ───────────────────────────────────────────────────────────────────────
