@@ -1,0 +1,9 @@
+Use case: precise-object-edit
+Asset type: One individual Google Play Games achievement icon for Kingdom of Bad Ideas.
+Input image: The supplied Second Thoughts achievement is the EDIT TARGET and exact series template.
+Achievement: "Working as Intended" — Use your Hero Power. The Council has inspected the button and found it to be working.
+Edit: Replace both cards and the exchange arrows with one large luminous cyan-blue domed Hero Power button seated in a chunky antique-brass bezel. A single armored index finger enters from the lower right and firmly presses the button. The button has one broad embossed golden lightning-bolt pictogram and a restrained short cyan activation glow. A small crimson wax seal with a gold check is attached at the bezel base, suggesting a very official inspection. The central button is the dominant shape. No other cards or arrows.
+Keep unchanged: The round battered antique-gold rim, rich royal-purple inset disk, centered circular silhouette, transparent exterior, dimensional hand-painted finish, dark plum outlines and warm upper-left lighting of the template. Match its brass color, relief depth, visual weight and crisp edge treatment. Preserve the square canvas and make the new objects fit comfortably inside the medallion. No object may extend past the rim.
+Small-size design: Broad shapes with distinct silhouettes, strong color separation, clear at 48 pixels; simplify fine detail. Premium painted fantasy materials and solemn medieval bureaucracy.
+Output: One square PNG, fully transparent outside the circular medallion, fully opaque inside.
+Constraints: Only the new achievement's subjects, no surviving exchange arrows or original X/check cards unless specifically requested above. No title, no lettering, no words, no numerals, no UI labels, no watermark, no multi-icon sheet. Checkmarks and X pictograms specifically requested above are allowed.

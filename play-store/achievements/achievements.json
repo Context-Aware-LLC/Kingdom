@@ -1,0 +1,92 @@
+[
+    {
+        "order": 1,
+        "id": "second_thoughts",
+        "name": "Second Thoughts",
+        "description": "Replace a card in your mulligan. The Council has also reconsidered.",
+        "incremental": false,
+        "revealed": true,
+        "points": 5
+    },
+    {
+        "order": 2,
+        "id": "working_as_intended",
+        "name": "Working as Intended",
+        "description": "Use your Hero Power. The Council has inspected the button and found it to be working.",
+        "incremental": false,
+        "revealed": true,
+        "points": 5
+    },
+    {
+        "order": 3,
+        "id": "early_retirement",
+        "name": "Early Retirement",
+        "description": "Destroy an enemy minion. Its pension has been approved.",
+        "incremental": false,
+        "revealed": true,
+        "points": 5
+    },
+    {
+        "order": 4,
+        "id": "against_advice",
+        "name": "Against Advice",
+        "description": "Win a match. The Council has amended its advice.",
+        "incremental": false,
+        "revealed": true,
+        "points": 10
+    },
+    {
+        "order": 5,
+        "id": "proceed_unwisely",
+        "name": "Proceed, Unwisely",
+        "description": "Win a match with 1 Health. The Council had already drafted the other announcement.",
+        "incremental": false,
+        "revealed": true,
+        "points": 25
+    },
+    {
+        "order": 6,
+        "id": "out_of_ideas",
+        "name": "Out of Ideas",
+        "description": "Draw from an empty deck. The Council knows the feeling.",
+        "incremental": false,
+        "revealed": true,
+        "points": 15
+    },
+    {
+        "order": 7,
+        "id": "too_many_ideas",
+        "name": "Too Many Ideas",
+        "description": "Draw a card into a full hand. The card has been filed with the others.",
+        "incremental": false,
+        "revealed": true,
+        "points": 10
+    },
+    {
+        "order": 8,
+        "id": "approved_by_default",
+        "name": "Approved by Default",
+        "description": "Let the hourglass run out. The stamp went ahead without you.",
+        "incremental": false,
+        "revealed": true,
+        "points": 5
+    },
+    {
+        "order": 9,
+        "id": "waste_not",
+        "name": "Waste Not",
+        "description": "End a turn with 10 mana unspent. The Council admires the restraint and has asked what it was for.",
+        "incremental": false,
+        "revealed": true,
+        "points": 15
+    },
+    {
+        "order": 10,
+        "id": "mutual_respect",
+        "name": "Mutual Respect",
+        "description": "Draw a match. The Council is still deliberating.",
+        "incremental": false,
+        "revealed": true,
+        "points": 25
+    }
+]

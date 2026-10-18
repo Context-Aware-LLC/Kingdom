@@ -1,0 +1,9 @@
+Use case: precise-object-edit
+Asset type: One individual Google Play Games achievement icon for Kingdom of Bad Ideas.
+Input image: The supplied Second Thoughts achievement is the EDIT TARGET and exact series template.
+Achievement: "Proceed, Unwisely" — Win a match with 1 Health. The Council had already drafted the other announcement.
+Edit: Replace the cards and exchange arrows with one large vivid crimson heart, badly cracked and chipped but still glowing warmly from its narrow surviving center. A single chunky brass staple holds its two sides together. A short simple golden victory laurel curves around the heart's lower sides. The heart looks barely held together yet victorious, with a warm spark of life and a resolute upright silhouette. Keep it an abstract painted health emblem, no organic anatomy or gore. No number, no cards, no trophy, no arrows.
+Keep unchanged: The round battered antique-gold rim, rich royal-purple inset disk, centered circular silhouette, transparent exterior, dimensional hand-painted finish, dark plum outlines and warm upper-left lighting of the template. Match its brass color, relief depth, visual weight and crisp edge treatment. Preserve the square canvas and make the new objects fit comfortably inside the medallion. No object may extend past the rim.
+Small-size design: Broad shapes with distinct silhouettes, strong color separation, clear at 48 pixels; simplify fine detail. Premium painted fantasy materials and solemn medieval bureaucracy.
+Output: One square PNG, fully transparent outside the circular medallion, fully opaque inside.
+Constraints: Only the new achievement's subjects, no surviving exchange arrows or original X/check cards unless specifically requested above. No title, no lettering, no words, no numerals, no UI labels, no watermark, no multi-icon sheet. Checkmarks and X pictograms specifically requested above are allowed.

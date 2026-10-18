@@ -1,0 +1,9 @@
+Use case: stylized-concept
+Asset type: Google Play Games achievement icon for Kingdom of Bad Ideas, one individual square image.
+Achievement: "Second Thoughts" — Replace a card in your mulligan. The Council has also reconsidered.
+Subject: Two clearly separated chunky fantasy playing cards swapping places, encircled by two bold curved golden exchange arrows. One card has a red wax X seal; the replacement has a bright teal check seal. Cards have cream parchment centers, aged brass corners and dark plum outlines. The marks are simple pictograms.
+Style: Premium hand-painted fantasy game icon, tangible materials, broad readable shapes, slightly battered brass, soft faceted brushwork, crisp silhouette, polished but deadpan medieval bureaucracy. Match the established Kingdom palette of royal purple, warm gold, parchment, crimson wax and a vivid teal accent.
+Composition: A single centered round achievement medallion with a simple narrow antique-gold rim and deep royal-purple inset disk. The entire disk is inside the square with 6 percent clear margin on all sides. Cards and arrows fill the central disk and remain inside its edge, with generous visual separation. Readable at 48 pixels. Balanced close-up three-quarter objects, no room or landscape.
+Lighting: Warm top-left highlights, dark plum shadows, restrained dimensional depth.
+Output: Square 1024x1024 PNG, truly transparent outside the circular medallion. Solid opaque purple inside the disk.
+Constraints: One icon only, no sheet, no words, no letters, no numbers, no title, no UI labels, no watermark. No ornamental clutter, no tiny filigree, no extra cards, no full characters. X and check pictograms are allowed.
