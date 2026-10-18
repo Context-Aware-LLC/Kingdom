@@ -71,7 +71,7 @@ namespace Kingdom.Net.Server.Tests.Achievements
             => Task.FromResult<IAchievementStore>(new InMemoryAchievementStore());
     }
 
-    /// <summary>The identical suite against Postgres. Gated on <c>EMBERFALL_LEDGER_DB</c> (see
+    /// <summary>The identical suite against Postgres. Gated on <c>KINGDOM_LEDGER_DB</c> (see
     /// <see cref="PostgresProbe"/>); empties the table before each test.</summary>
     [TestFixture]
     [Category("Contract")]

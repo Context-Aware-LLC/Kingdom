@@ -262,7 +262,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
     }
 
     /// <summary>
-    /// The identical suite against Postgres. Gated on a dedicated, throwaway <c>EMBERFALL_LEDGER_DB</c>:
+    /// The identical suite against Postgres. Gated on a dedicated, throwaway <c>KINGDOM_LEDGER_DB</c>:
     /// with none set the fixture is Ignored (see <see cref="PostgresProbe"/>); with one set it applies
     /// the schema once and truncates before each test so every case gets an empty ledger.
     /// </summary>

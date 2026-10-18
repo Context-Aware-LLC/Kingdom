@@ -20,8 +20,8 @@ namespace Kingdom.Net.Server.Identity
     /// 5 minutes). An unknown kid triggers a single refresh before returning <see cref="TokenVerificationFailure.UnknownKid"/>,
     /// so a key rotation does not cause a hard failure for the duration of a cache window.</para>
     ///
-    /// <para><b>Configuration.</b> Read from <c>EMBERFALL_SUPABASE_URL</c>, mirroring how
-    /// <c>EMBERFALL_TELEMETRY_DB</c> is read in <see cref="Telemetry.TelemetryDrain"/>.</para>
+    /// <para><b>Configuration.</b> Read from <c>KINGDOM_SUPABASE_URL</c>, mirroring how
+    /// <c>KINGDOM_TELEMETRY_DB</c> is read in <see cref="Telemetry.TelemetryDrain"/>.</para>
     /// </summary>
     public sealed class SupabaseTokenVerifier : IIdentityTokenVerifier, IDisposable
     {
@@ -63,13 +63,13 @@ namespace Kingdom.Net.Server.Identity
             _cacheMaxAge = cacheMaxAge ?? TimeSpan.FromMinutes(5);
         }
 
-        /// <summary>Reads <c>EMBERFALL_SUPABASE_URL</c> from the environment, mirroring the
-        /// <c>EMBERFALL_TELEMETRY_DB</c> pattern in <see cref="Telemetry.TelemetryDrain"/>.</summary>
+        /// <summary>Reads <c>KINGDOM_SUPABASE_URL</c> from the environment, mirroring the
+        /// <c>KINGDOM_TELEMETRY_DB</c> pattern in <see cref="Telemetry.TelemetryDrain"/>.</summary>
         public static SupabaseTokenVerifier FromEnvironment()
         {
-            string url = Environment.GetEnvironmentVariable("EMBERFALL_SUPABASE_URL")
+            string url = KingdomEnv.Get("KINGDOM_SUPABASE_URL")
                 ?? throw new InvalidOperationException(
-                    "EMBERFALL_SUPABASE_URL is not set. " +
+                    "KINGDOM_SUPABASE_URL is not set. " +
                     "Set it to the Supabase project URL (e.g. https://<ref>.supabase.co).");
             return new SupabaseTokenVerifier(url);
         }

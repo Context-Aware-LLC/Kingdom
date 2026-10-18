@@ -16,7 +16,7 @@ namespace Kingdom.Tools.TelemetryVerify
     /// second drain of the same lines adds nothing (ON CONFLICT idempotency, end-to-end).
     ///
     /// <code>
-    ///   # EMBERFALL_TELEMETRY_DB must be exported (the session-pooler URI from .env / Supabase).
+    ///   # KINGDOM_TELEMETRY_DB must be exported (the session-pooler URI from .env / Supabase).
     ///   dotnet run --project src/Kingdom.Tools.TelemetryVerify [-- path/to/telemetry.jsonl]
     /// </code>
     /// Exit 0 = PASS, 1 = a check failed, 2 = misconfiguration (no connstring / sample not found).
@@ -27,10 +27,10 @@ namespace Kingdom.Tools.TelemetryVerify
 
         private static async Task<int> Main(string[] args)
         {
-            string? connRaw = Environment.GetEnvironmentVariable("EMBERFALL_TELEMETRY_DB");
+            string? connRaw = Kingdom.Net.Server.KingdomEnv.Get("KINGDOM_TELEMETRY_DB");
             if (string.IsNullOrWhiteSpace(connRaw))
             {
-                Console.Error.WriteLine("EMBERFALL_TELEMETRY_DB is not set. Export the Supabase session-pooler URI first.");
+                Console.Error.WriteLine("KINGDOM_TELEMETRY_DB is not set. Export the Supabase session-pooler URI first.");
                 return 2;
             }
 

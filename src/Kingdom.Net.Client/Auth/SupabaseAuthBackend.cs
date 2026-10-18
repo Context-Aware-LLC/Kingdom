@@ -23,7 +23,7 @@ namespace Kingdom.Net.Client.Auth
     public sealed record SupabaseAuthConfig
     {
         /// <summary>The project URL, e.g. <c>https://&lt;ref&gt;.supabase.co</c>. The server reads the
-        /// same value from <c>EMBERFALL_SUPABASE_URL</c> and derives its JWKS endpoint from it, so the
+        /// same value from <c>KINGDOM_SUPABASE_URL</c> and derives its JWKS endpoint from it, so the
         /// two ends must name the same project or every token is rejected as the wrong issuer.</summary>
         public string ProjectUrl { get; init; } = "";
 

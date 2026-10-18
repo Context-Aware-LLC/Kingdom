@@ -23,7 +23,7 @@ namespace Kingdom.Session
     public sealed class SupabaseAuthSettings : ScriptableObject
     {
         [Tooltip("https://<ref>.supabase.co — the SAME project the server reads from " +
-                 "EMBERFALL_SUPABASE_URL. A mismatch makes every token fail as the wrong issuer.")]
+                 "KINGDOM_SUPABASE_URL. A mismatch makes every token fail as the wrong issuer.")]
         [SerializeField] private string projectUrl = "";
 
         [Tooltip("The project's anon/publishable key. Public by design. Never the service key.")]

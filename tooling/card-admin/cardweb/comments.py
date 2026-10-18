@@ -38,11 +38,11 @@ import secrets
 HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 
-# Overridable for the same reason EMBERFALL_STAGING_DIR is: on Fly this points into the mounted
+# Overridable for the same reason KINGDOM_STAGING_DIR is: on Fly this points into the mounted
 # volume. A comment is author work exactly like a staged edit, and a machine that suspends with
 # it on the ephemeral rootfs loses it with nothing to point at.
 COMMENTS_DIR = pathlib.Path(
-    os.environ.get("EMBERFALL_COMMENTS_DIR", HERE / "comments"))
+    os.environ.get("KINGDOM_COMMENTS_DIR") or os.environ.get("EMBERFALL_COMMENTS_DIR", HERE / "comments"))
 
 COMMENTS_FILENAME = "comments.json"
 

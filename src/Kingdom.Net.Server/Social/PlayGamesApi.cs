@@ -48,8 +48,8 @@ namespace Kingdom.Net.Server.Social
     public sealed class GooglePlayGamesApi : IPlayGamesApi
     {
         /// <summary>The environment variables that hold the Game server credential.</summary>
-        public const string ClientIdEnvVar = "EMBERFALL_PLAY_GAMES_CLIENT_ID";
-        public const string ClientSecretEnvVar = "EMBERFALL_PLAY_GAMES_CLIENT_SECRET";
+        public const string ClientIdEnvVar = "KINGDOM_PLAY_GAMES_CLIENT_ID";
+        public const string ClientSecretEnvVar = "KINGDOM_PLAY_GAMES_CLIENT_SECRET";
 
         /// <summary>Pages of 50; four of them is more Play Games friends than the friends cap.</summary>
         private const int FriendPageSize = 50;
@@ -69,8 +69,8 @@ namespace Kingdom.Net.Server.Social
         /// <summary>Null when the credential is not configured, which turns the routes off.</summary>
         public static GooglePlayGamesApi? FromEnvironment()
         {
-            string? id = Environment.GetEnvironmentVariable(ClientIdEnvVar);
-            string? secret = Environment.GetEnvironmentVariable(ClientSecretEnvVar);
+            string? id = KingdomEnv.Get(ClientIdEnvVar);
+            string? secret = KingdomEnv.Get(ClientSecretEnvVar);
             if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(secret)) return null;
             return new GooglePlayGamesApi(new HttpClient { Timeout = TimeSpan.FromSeconds(10) }, id!, secret!);
         }

@@ -15,7 +15,7 @@ services:
       - "8080"
     environment:
       - ASPNETCORE_URLS=http://+:8080
-      - EMBERFALL_REPLAYS=/data/replays
+      - KINGDOM_REPLAYS=/data/replays
     volumes:
       - replay_data:/data/replays
     restart: unless-stopped

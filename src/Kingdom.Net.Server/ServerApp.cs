@@ -76,7 +76,7 @@ namespace Kingdom.Net.Server
 
         /// <summary>
         /// Supabase JWT verifier (EF-074a/c). Null → auth tokens in HelloMsg are rejected with
-        /// 1008 "authentication not configured". Populated from <c>EMBERFALL_SUPABASE_URL</c> in
+        /// 1008 "authentication not configured". Populated from <c>KINGDOM_SUPABASE_URL</c> in
         /// production; injected directly in tests. Absent tokens always take the guest path.
         /// </summary>
         public IIdentityTokenVerifier? TokenVerifier { get; init; }
@@ -84,7 +84,7 @@ namespace Kingdom.Net.Server
         /// <summary>
         /// Account persistence seam (EF-072/c). Null → authenticated identity is derived directly
         /// from the subject hash without a store lookup; email is not persisted. Populated from
-        /// <c>EMBERFALL_ACCOUNTS_DB</c> in production; injected directly in tests.
+        /// <c>KINGDOM_ACCOUNTS_DB</c> in production; injected directly in tests.
         /// </summary>
         public IAccountStore? AccountStore { get; init; }
 
@@ -92,7 +92,7 @@ namespace Kingdom.Net.Server
         /// The characters-and-decks store (Task 2) that <c>GET /roster</c> reads. Null → the route
         /// answers <see cref="Accounts.RosterResultStatus.Unavailable"/> rather than an empty roster,
         /// same absence-is-visible posture as <see cref="AccountStore"/>. Populated from
-        /// <c>EMBERFALL_ACCOUNTS_DB</c> in production — the same connection string as
+        /// <c>KINGDOM_ACCOUNTS_DB</c> in production — the same connection string as
         /// <see cref="AccountStore"/>, since <c>character</c> and <c>deck</c> are rows in that same
         /// database; injected directly in tests.
         /// </summary>
@@ -121,14 +121,14 @@ namespace Kingdom.Net.Server
 
         /// <summary>Supabase's admin API, which mints the sign-in token a Play Games restore
         /// answers (#425). Null (default) turns <c>/play-games/restore</c> off. Built from
-        /// <c>EMBERFALL_SUPABASE_URL</c> and <see cref="SupabaseAdmin.SecretKeyEnvVar"/>.</summary>
+        /// <c>KINGDOM_SUPABASE_URL</c> and <see cref="SupabaseAdmin.SecretKeyEnvVar"/>.</summary>
         public ISupabaseAdmin? SupabaseAdmin { get; init; }
 
         /// <summary>
         /// The append-only entitlement ledger (EF-072) — where card, pack and currency ownership
         /// actually lives. <b>Null → ownership stays UNKNOWN</b> and <see cref="AccountOwnedCounts"/>
         /// keeps handing L6 the "do not constrain" null for standard accounts, which is a normal and
-        /// supported dev-box configuration. Populated from <c>EMBERFALL_ENTITLEMENTS_DB</c> in
+        /// supported dev-box configuration. Populated from <c>KINGDOM_ENTITLEMENTS_DB</c> in
         /// production; injected directly in tests.
         ///
         /// <para><b>It shares the accounts database by default, and should.</b> <c>account</c> and
@@ -182,7 +182,7 @@ namespace Kingdom.Net.Server
 
         /// <summary>
         /// The off-box drain that ships the JSONL buffer into durable Postgres (C-G1-8; step 5). Null
-        /// unless <c>EMBERFALL_TELEMETRY_DB</c> is set — the JSONL buffer is written either way, so a box
+        /// unless <c>KINGDOM_TELEMETRY_DB</c> is set — the JSONL buffer is written either way, so a box
         /// with no DB is a visible "buffered, not shipped", never a silent drop. <see cref="ServerApp"/>
         /// registers a non-null drain as a hosted service so it lives on the host's lifecycle.
         /// </summary>
@@ -201,14 +201,14 @@ namespace Kingdom.Net.Server
         /// A bot-model directory for bot seats to play: <c>model.onnx</c> and <c>bot-model.json</c>,
         /// written by <c>python -m tooling.scripts.training_trainer export-onnx</c> and run
         /// in-process by <see cref="OnnxCheckpointScorer"/>, so the server needs no Python. Unset
-        /// means bot seats play <see cref="GreedyAi"/>. From <c>EMBERFALL_BOT_MODEL</c>.
+        /// means bot seats play <see cref="GreedyAi"/>. From <c>KINGDOM_BOT_MODEL</c>.
         /// </summary>
         public string? BotModelPath { get; init; }
 
         /// <summary>
         /// The oldest store build <c>GET /update-gate</c> lets play, per platform: Android
         /// versionCode and iOS build number. 0 (default) holds nobody back. From
-        /// <c>EMBERFALL_MIN_BUILD_ANDROID</c> / <c>EMBERFALL_MIN_BUILD_IOS</c>.
+        /// <c>KINGDOM_MIN_BUILD_ANDROID</c> / <c>KINGDOM_MIN_BUILD_IOS</c>.
         ///
         /// <para><b>Never raise one above the build the store is actually serving</b> — every
         /// player on that platform is then sent to the store for an update that is not there, and
@@ -219,26 +219,26 @@ namespace Kingdom.Net.Server
 
         public static ServerConfig FromEnvironment()
         {
-            string telemetryDir = Environment.GetEnvironmentVariable("EMBERFALL_TELEMETRY") ?? "telemetry";
+            string telemetryDir = KingdomEnv.Get("KINGDOM_TELEMETRY") ?? "telemetry";
             var sink = new JsonlTelemetrySink(telemetryDir, ResolveEnvLabel());
 
             // The durability boundary is the DB, not the volume; with no connection string the drain is
             // simply absent and the buffer accumulates locally (decision 2026-07-22).
-            string? dbConn = Environment.GetEnvironmentVariable("EMBERFALL_TELEMETRY_DB");
+            string? dbConn = KingdomEnv.Get("KINGDOM_TELEMETRY_DB");
             TelemetryDrain? drain = string.IsNullOrWhiteSpace(dbConn)
                 ? null
                 : new TelemetryDrain(sink.Path, dbConn!);
 
             // EF-074c: Supabase JWT verifier (optional — absent means auth tokens are rejected;
             // guest connects are always accepted). Mirrors the telemetry-drain pattern.
-            string? supabaseUrl = Environment.GetEnvironmentVariable("EMBERFALL_SUPABASE_URL");
+            string? supabaseUrl = KingdomEnv.Get("KINGDOM_SUPABASE_URL");
             IIdentityTokenVerifier? tokenVerifier = string.IsNullOrWhiteSpace(supabaseUrl)
                 ? null
                 : new SupabaseTokenVerifier(supabaseUrl);
 
             // EF-072/074c: durable account store (optional — absent means email is not persisted
             // and authenticated identity is derived from the subject hash alone).
-            string? accountsDb = Environment.GetEnvironmentVariable("EMBERFALL_ACCOUNTS_DB");
+            string? accountsDb = KingdomEnv.Get("KINGDOM_ACCOUNTS_DB");
             IAccountStore? accountStore = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresAccountStore(accountsDb!, new SystemTimeSource());
@@ -263,7 +263,7 @@ namespace Kingdom.Net.Server
             // would otherwise run authenticated players with their ownership permanently unknown,
             // which looks exactly like owning everything. The separate variable stays accepted so a
             // deployment CAN split them deliberately.
-            string? entitlementsDb = Environment.GetEnvironmentVariable("EMBERFALL_ENTITLEMENTS_DB");
+            string? entitlementsDb = KingdomEnv.Get("KINGDOM_ENTITLEMENTS_DB");
             if (string.IsNullOrWhiteSpace(entitlementsDb)) entitlementsDb = accountsDb;
             IEntitlementLedger? entitlementLedger = string.IsNullOrWhiteSpace(entitlementsDb)
                 ? null
@@ -286,9 +286,9 @@ namespace Kingdom.Net.Server
             return new ServerConfig
             {
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
-                CardsDir = Environment.GetEnvironmentVariable("EMBERFALL_CARDS"),
-                ReplaysDir = Environment.GetEnvironmentVariable("EMBERFALL_REPLAYS") ?? "replays",
-                TrainingInboxDir = Environment.GetEnvironmentVariable("EMBERFALL_TRAINING_INBOX"),
+                CardsDir = KingdomEnv.Get("KINGDOM_CARDS"),
+                ReplaysDir = KingdomEnv.Get("KINGDOM_REPLAYS") ?? "replays",
+                TrainingInboxDir = KingdomEnv.Get("KINGDOM_TRAINING_INBOX"),
                 Telemetry = sink,
                 TelemetryDrain = drain,
                 TokenVerifier = tokenVerifier,
@@ -305,10 +305,10 @@ namespace Kingdom.Net.Server
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking
                 // behavior unchanged, same as every other optional seam above.
-                BotRosterPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_ROSTER"),
-                BotModelPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_MODEL"),
-                MinClientBuildAndroid = MinBuildFromEnvironment("EMBERFALL_MIN_BUILD_ANDROID"),
-                MinClientBuildIos = MinBuildFromEnvironment("EMBERFALL_MIN_BUILD_IOS"),
+                BotRosterPath = KingdomEnv.Get("KINGDOM_BOT_ROSTER"),
+                BotModelPath = KingdomEnv.Get("KINGDOM_BOT_MODEL"),
+                MinClientBuildAndroid = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_ANDROID"),
+                MinClientBuildIos = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_IOS"),
             };
         }
 
@@ -317,7 +317,7 @@ namespace Kingdom.Net.Server
         /// number could lock every player out.</summary>
         private static int MinBuildFromEnvironment(string name)
         {
-            string? raw = Environment.GetEnvironmentVariable(name);
+            string? raw = KingdomEnv.Get(name);
             if (string.IsNullOrWhiteSpace(raw)) return 0;
             if (int.TryParse(raw, System.Globalization.NumberStyles.None,
                     System.Globalization.CultureInfo.InvariantCulture, out int min))
@@ -335,11 +335,11 @@ namespace Kingdom.Net.Server
         /// (decision 2026-07-22), so a merged file holds rows from two machines and `source` — which
         /// only separates ai_soak from ladder — cannot tell them apart. `FLY_APP_NAME` is injected
         /// by Fly into every machine, so the deployed case self-labels without a deploy-time step
-        /// anyone has to remember. `EMBERFALL_ENV` still wins when set, for the odd third host.</para>
+        /// anyone has to remember. `KINGDOM_ENV` still wins when set, for the odd third host.</para>
         /// </summary>
         private static string ResolveEnvLabel()
         {
-            string? explicitLabel = Environment.GetEnvironmentVariable("EMBERFALL_ENV");
+            string? explicitLabel = KingdomEnv.Get("KINGDOM_ENV");
             if (!string.IsNullOrWhiteSpace(explicitLabel)) return explicitLabel;
 
             return string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("FLY_APP_NAME"))
@@ -391,7 +391,7 @@ namespace Kingdom.Net.Server
             catch (Exception ex)
             {
                 throw new InvalidOperationException(
-                    $"EMBERFALL_BOT_MODEL is set to '{cfg.BotModelPath}' but the model could not "
+                    $"KINGDOM_BOT_MODEL is set to '{cfg.BotModelPath}' but the model could not "
                     + $"load: {ex.GetType().Name}: {ex.Message}. Refusing to start with bot seats "
                     + "silently falling back to Greedy.", ex);
             }
@@ -432,12 +432,12 @@ namespace Kingdom.Net.Server
             builder.WebHost.UseUrls(cfg.Urls);
 
             // The drain rides the host lifecycle: it starts after the app is up and gets a graceful
-            // StopAsync on shutdown. Absent unless EMBERFALL_TELEMETRY_DB is configured.
+            // StopAsync on shutdown. Absent unless KINGDOM_TELEMETRY_DB is configured.
             if (cfg.TelemetryDrain is not null)
                 builder.Services.AddSingleton<IHostedService>(cfg.TelemetryDrain);
 
             // NOR-254: the account store's schema is never applied on its own — mirror the drain's
-            // startup-schema pattern so EMBERFALL_ACCOUNTS_DB is safe to set without a manual DDL step.
+            // startup-schema pattern so KINGDOM_ACCOUNTS_DB is safe to set without a manual DDL step.
             //
             // ONE initializer, not one per store: both durable adapters run the identical
             // AccountsSchema.Ddl, because `account` and `entitlement_grant` are a single canonical
@@ -483,8 +483,8 @@ namespace Kingdom.Net.Server
                 && (string.IsNullOrWhiteSpace(cfg.BotRosterPath) || cfg.AccountStore is null))
             {
                 throw new InvalidOperationException(
-                    "EMBERFALL_BOT_MODEL is set but bot-fill is not enabled: it needs "
-                    + "EMBERFALL_BOT_ROSTER and a configured AccountStore. Refusing to start as a "
+                    "KINGDOM_BOT_MODEL is set but bot-fill is not enabled: it needs "
+                    + "KINGDOM_BOT_ROSTER and a configured AccountStore. Refusing to start as a "
                     + "Greedy server while configured for a learned one.");
             }
             LearnedBot? learnedBot = null;
@@ -603,7 +603,7 @@ namespace Kingdom.Net.Server
             //
             //   a ledger        — there is nothing to debit a pack from;
             //   a seed secret   — HmacPackSeedSource.FromEnvironment() returns null when
-            //                     EMBERFALL_PACK_SEED_SECRET is unset, ON PURPOSE. A default secret
+            //                     KINGDOM_PACK_SEED_SECRET is unset, ON PURPOSE. A default secret
             //                     is a published secret, and a predictable seed lets a client
             //                     compute its own pack contents before opening them.
             //
@@ -1668,7 +1668,7 @@ namespace Kingdom.Net.Server
 
         private static string ResolveBuildRevision()
         {
-            string? configured = Environment.GetEnvironmentVariable("EMBERFALL_BUILD_REVISION");
+            string? configured = KingdomEnv.Get("KINGDOM_BUILD_REVISION");
             if (!string.IsNullOrWhiteSpace(configured)) return configured.Trim();
 
             string? image = Environment.GetEnvironmentVariable("FLY_IMAGE_REF");
@@ -1678,7 +1678,7 @@ namespace Kingdom.Net.Server
         }
 
         /// <summary>Dev convenience: locate unity/Assets/CardData by walking up from the
-        /// binary (same convention as the test harnesses). Containers set EMBERFALL_CARDS instead.</summary>
+        /// binary (same convention as the test harnesses). Containers set KINGDOM_CARDS instead.</summary>
         private static string FindRepoCardData()
         {
             string? path = AppContext.BaseDirectory;
@@ -1688,7 +1688,7 @@ namespace Kingdom.Net.Server
                 if (Directory.Exists(candidate)) return candidate;
             }
             throw new DirectoryNotFoundException(
-                "Card data not found. Set EMBERFALL_CARDS to a directory containing *.cards.json.");
+                "Card data not found. Set KINGDOM_CARDS to a directory containing *.cards.json.");
         }
     }
 }

@@ -12,20 +12,21 @@ namespace Kingdom.Review
     /// <summary>
     /// Optional real-bundle smoke check for the append/resume/legal-match lane. Runs against a
     /// private temporary copy, never Sam's original bundle or annotation sidecars.
-    /// Set EMBERFALL_REVIEW_BUNDLE and invoke -executeMethod Kingdom.Review.NativeActionCaptureVerify.Run.
+    /// Set KINGDOM_REVIEW_BUNDLE and invoke -executeMethod Kingdom.Review.NativeActionCaptureVerify.Run.
     /// </summary>
     public static class NativeActionCaptureVerify
     {
         public static void Run()
         {
-            string source = Environment.GetEnvironmentVariable("EMBERFALL_REVIEW_BUNDLE");
+            string source = Environment.GetEnvironmentVariable("KINGDOM_REVIEW_BUNDLE")
+                ?? Environment.GetEnvironmentVariable("EMBERFALL_REVIEW_BUNDLE");   // old name, see KingdomEnv.cs
             string scratch = Path.Combine(Path.GetTempPath(),
                 "emberfall-native-review-" + Guid.NewGuid().ToString("N"));
             int exitCode = 0;
             try
             {
                 if (string.IsNullOrWhiteSpace(source) || !Directory.Exists(source))
-                    throw new InvalidOperationException("Set EMBERFALL_REVIEW_BUNDLE to a review bundle.");
+                    throw new InvalidOperationException("Set KINGDOM_REVIEW_BUNDLE to a review bundle.");
 
                 string copied = Path.Combine(scratch, "bundle");
                 Directory.CreateDirectory(copied);

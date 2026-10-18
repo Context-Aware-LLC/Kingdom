@@ -186,7 +186,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
         public void SetUp() => _store = new InMemoryPlayerDataStore();
     }
 
-    /// <summary>The identical suite against Postgres. Gated on <c>EMBERFALL_LEDGER_DB</c> (see
+    /// <summary>The identical suite against Postgres. Gated on <c>KINGDOM_LEDGER_DB</c> (see
     /// <see cref="PostgresProbe"/>); truncates before each test for a clean store.</summary>
     [TestFixture]
     [Category("Contract")]

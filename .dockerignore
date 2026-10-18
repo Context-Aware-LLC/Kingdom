@@ -47,7 +47,7 @@ tooling/data/*
 !tooling/cardweb/
 # ...but never someone's staged edits or editor comments. Both are in-flight author work, not
 # corpus, and baking either into an image would resurrect it on every deploy. In production both
-# live on the volume (EMBERFALL_STAGING_DIR / EMBERFALL_COMMENTS_DIR), so the image needs neither.
+# live on the volume (KINGDOM_STAGING_DIR / KINGDOM_COMMENTS_DIR), so the image needs neither.
 tooling/cardweb/staging/
 tooling/cardweb/comments/
 # The corpus analytics panel, served as the "Corpus" tab (deploy/cardweb/Dockerfile).

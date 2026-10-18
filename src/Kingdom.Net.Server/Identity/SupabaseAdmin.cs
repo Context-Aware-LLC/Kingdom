@@ -48,7 +48,7 @@ namespace Kingdom.Net.Server.Identity
     /// </summary>
     public sealed class SupabaseAdmin : ISupabaseAdmin
     {
-        public const string SecretKeyEnvVar = "EMBERFALL_SUPABASE_SECRET_KEY";
+        public const string SecretKeyEnvVar = "KINGDOM_SUPABASE_SECRET_KEY";
 
         private const string LinkType = "recovery";
 
@@ -67,7 +67,7 @@ namespace Kingdom.Net.Server.Identity
         /// restore off.</summary>
         public static SupabaseAdmin? FromEnvironment(string? projectUrl)
         {
-            string? key = Environment.GetEnvironmentVariable(SecretKeyEnvVar);
+            string? key = KingdomEnv.Get(SecretKeyEnvVar);
             if (string.IsNullOrWhiteSpace(projectUrl) || string.IsNullOrWhiteSpace(key)) return null;
             return new SupabaseAdmin(new HttpClient { Timeout = TimeSpan.FromSeconds(10) }, projectUrl!, key!.Trim());
         }

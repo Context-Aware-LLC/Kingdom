@@ -16,15 +16,6 @@ namespace Kingdom.Net.Protocol
     /// went red at once, all reporting "Socket closed while waiting for MatchStartMsg" — a message
     /// that names neither the version nor the handshake. Master carried it because the PR that
     /// introduced it failed Stage 1 on formatting, so Stage 3 never ran.</para>
-    /// <para><b>THIS IS NOT THE ONLY <c>interfaces.vN</c> COUNTER, AND THE OTHER ONE IS NOT THIS
-    /// ONE.</b> The golden replay fixtures under <c>tests/Kingdom.Core.Tests/GoldenReplay/</c>
-    /// record an <c>engineContractVersion</c>, currently <c>interfaces.v4</c>. That is the
-    /// <i>Core engine</i> contract — provenance stamped into a committed replay so that a fixture
-    /// which stops reproducing tells you which contract generation captured it. It is deliberately
-    /// a different counter from this one and is deliberately behind it: EF-074b changed the wire
-    /// only. <b>Do not reconcile them.</b> Bumping this label on a wire-only change is correct;
-    /// dragging the fixtures along with it would make the replay label stop tracking engine
-    /// changes, which is the one question it exists to answer (NOR-240).</para>
     /// <para><b>Bumping it.</b> Change the literal here and nowhere else. A test that needs a
     /// deliberately incompatible version must express that as "not <see cref="Version"/>" rather
     /// than as a literal of its own, or it silently stops testing a mismatch the day this moves.</para>

@@ -50,7 +50,7 @@ namespace Kingdom.Net.Server.Accounts
     public sealed class HmacPackSeedSource : IPackSeedSource
     {
         /// <summary>Environment variable the server reads the secret from. Fly secret in production.</summary>
-        public const string SecretEnvVar = "EMBERFALL_PACK_SEED_SECRET";
+        public const string SecretEnvVar = "KINGDOM_PACK_SEED_SECRET";
 
         private readonly byte[] _secret;
 
@@ -75,7 +75,7 @@ namespace Kingdom.Net.Server.Accounts
         /// </summary>
         public static HmacPackSeedSource? FromEnvironment()
         {
-            string? secret = Environment.GetEnvironmentVariable(SecretEnvVar);
+            string? secret = KingdomEnv.Get(SecretEnvVar);
             return string.IsNullOrEmpty(secret) ? null : new HmacPackSeedSource(secret!);
         }
 

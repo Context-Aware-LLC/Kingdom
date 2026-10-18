@@ -26,8 +26,6 @@ unit layers.
 - **Canonical, float-free `GameState` serialization** — fixed field order, little-endian via
   `BinaryPrimitives`, UTF-8 length-prefixed strings, the one `HashSet<Keyword>` imposed into a total
   order → SHA-256. Platform-independent by construction; CI bakes on Windows and asserts on Linux.
-- **Golden-replay (R1 gate)** — `(seed, intent-log)` → identical final-state hash **and** ordered event
-  stream, with first-divergence failure reports. `tests/.../GoldenReplay/`.
 - **Assembly firewall + banned-API** — reflection scan for zero `UnityEngine` refs + no float-in-state.
 
 ## Build & test
@@ -35,8 +33,6 @@ unit layers.
 ```bash
 dotnet build Kingdom.slnx -c Release
 dotnet test  Kingdom.slnx -c Release           # all layers
-dotnet test  Kingdom.slnx --filter Category=GoldenReplay   # just the R1 gate
-EMBERFALL_REBASELINE=<name> dotnet test --filter Category=GoldenReplay   # deliberate re-bake
 ```
 
 ## What's intentionally NOT here yet (M1 Phase B)

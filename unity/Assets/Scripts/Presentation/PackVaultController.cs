@@ -136,7 +136,7 @@ namespace Kingdom.Presentation
         /// exists to stop a player skipping a pack they have; where there is no pack to open there is
         /// nothing to gate, and a screen with no packs on it and no way off it is a trap. The two
         /// reachable dead ends are a server that refuses the open — <c>Unavailable</c>, which is what
-        /// an unset <c>EMBERFALL_PACK_SEED_SECRET</c> produces on every request — and a session the
+        /// an unset <c>KINGDOM_PACK_SEED_SECRET</c> produces on every request — and a session the
         /// server no longer accepts. <see cref="Fail"/> and a zero-total render both release it.</para>
         /// </summary>
         private bool _giftLocked;
@@ -910,7 +910,7 @@ namespace Kingdom.Presentation
             // A dead end is not something to hold the player on. Every one of these leaves a screen
             // with no openable pack on it, and the gift's lock exists only to stop a pack being
             // skipped — so without this, a server that will not open packs is a screen with nothing
-            // to press. Reachable today: an unset EMBERFALL_PACK_SEED_SECRET makes the route 503 for
+            // to press. Reachable today: an unset KINGDOM_PACK_SEED_SECRET makes the route 503 for
             // everyone, which arrives here as Unavailable on the very first pack of first run.
             ReleaseGiftLock();
             ShowBanner(false);

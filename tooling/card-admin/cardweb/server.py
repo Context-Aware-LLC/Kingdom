@@ -58,7 +58,7 @@ STATIC_DIR = HERE / "static"
 # The corpus analytics panel, served as a tab rather than reimplemented. Overridable for the
 # same reason the card directory is: the container carries this directory and nothing around it.
 ADMIN_DIR = pathlib.Path(
-    os.environ.get("EMBERFALL_ADMIN_DIR", REPO / "tooling" / "card-admin"))
+    os.environ.get("KINGDOM_ADMIN_DIR") or os.environ.get("EMBERFALL_ADMIN_DIR", REPO / "tooling" / "card-admin"))
 sys.path.insert(0, str(ADMIN_DIR))
 
 # The aggregation is IMPORTED, never reimplemented. Two rollups over one corpus would disagree
@@ -69,7 +69,7 @@ from build_data import CARD_TYPES, normalize, rollup  # noqa: E402
 # Staged edits must outlive a restart. On Fly this points at a mounted volume; a machine that
 # suspends and resumes with staging on its ephemeral disk would silently drop an author's work.
 STAGING_DIR = pathlib.Path(
-    os.environ.get("EMBERFALL_STAGING_DIR", REPO / "tooling" / "cardweb" / "staging"))
+    os.environ.get("KINGDOM_STAGING_DIR") or os.environ.get("EMBERFALL_STAGING_DIR", REPO / "tooling" / "cardweb" / "staging"))
 
 # HTTP Basic auth. With NO credential configured the server runs open, which is correct for the
 # 127.0.0.1 default and wrong for anything else; main() refuses to bind a non-loopback interface

@@ -8,7 +8,7 @@ namespace Kingdom.Net.Server.Accounts
     /// <summary>
     /// Applies the accounts + entitlement DDL once at startup, retrying forever until the DB is
     /// reachable (mirrors <see cref="Kingdom.Net.Server.Telemetry.TelemetryDrain"/>'s own
-    /// schema-readiness loop). Registered only when <c>EMBERFALL_ACCOUNTS_DB</c> is configured — the
+    /// schema-readiness loop). Registered only when <c>KINGDOM_ACCOUNTS_DB</c> is configured — the
     /// in-memory store needs no schema, and nothing durable is lost by retrying: a socket that
     /// resolves an account before the schema lands simply fails that one connect (NOR-254).
     ///

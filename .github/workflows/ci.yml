@@ -257,7 +257,7 @@ jobs:
 
       - name: "Stage 6d · Training trainer tests"
         env:
-          EMBERFALL_REQUIRE_TORCH: "1"
+          KINGDOM_REQUIRE_TORCH: "1"
         run: |
           python3 tests/python/test_training_trainer.py -v
           python3 tests/python/test_training_exporters.py -v -k checkpoint_scorer

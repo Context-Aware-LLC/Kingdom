@@ -45,7 +45,7 @@ primary_region = "sjc"
   memory = "512mb"
 
 # Durable storage for replays + telemetry (C-G1-8, 2026-07-22). Dockerfile.server already
-# sets EMBERFALL_REPLAYS=/data/replays, so /data is the mount point and nothing in the image
+# sets KINGDOM_REPLAYS=/data/replays, so /data is the mount point and nothing in the image
 # changes. Volume vol_rkgwj19p5yykeyo4, 1 GB, sjc — created 2026-07-22.
 #
 # WHAT THIS FIXES AND WHAT IT DOES NOT. The volume survives machine stop/suspend/restart and

@@ -12,7 +12,7 @@ intent's before/after projected-state hashes, and both players' terminal project
 
 ## Live human-game capture
 
-The deployed server enables `EMBERFALL_TRAINING_INBOX=/data/training-inbox`. Every clean terminal
+The deployed server enables `KINGDOM_TRAINING_INBOX=/data/training-inbox`. Every clean terminal
 match publishes a self-contained replay under `replays/` and appends its manifest row last; voided,
 abandoned, or capture-failed matches never receive a row. The ordinary operational journal remains
 under `/data/replays`.
@@ -25,7 +25,7 @@ python tooling/scripts/capture_my_games.py
 
 It polls Fly, verifies each finalized replay checksum, and appends new rows idempotently to
 `F:\EmberfallData\human-inbox`. Stop it with Ctrl+C. Use `--once` to synchronize pending games and
-exit, `--out <directory>` to select another inbox, or `EMBERFALL_HUMAN_INBOX` to change the default.
+exit, `--out <directory>` to select another inbox, or `KINGDOM_HUMAN_INBOX` to change the default.
 The directory is still raw input: materialize a new immutable corpus version with the normal
 `Kingdom.Tools.TrainingCorpus build` command before exporting it for training.
 
@@ -191,7 +191,7 @@ The committed games are always a prefix of the schedule. A game that finished on
 that prefix was never written, so it is played again, and its replay file is deleted first along
 with any a kill cut off mid-game. A capture whose manifest has rows and no
 `rollout-progress.jsonl` predates this and cannot be resumed. `buildRevision` is compared, so a
-resume must run the build that started the capture; `EMBERFALL_BUILD_REVISION` pins it for a
+resume must run the build that started the capture; `KINGDOM_BUILD_REVISION` pins it for a
 rebuild that is known not to change play.
 
 The seat never enumerates concede, so the builder replays a searched decision WITHOUT it: concede

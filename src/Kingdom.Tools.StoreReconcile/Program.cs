@@ -13,7 +13,7 @@ namespace Kingdom.Tools.StoreReconcile
     /// EF-080c reconciliation report — store transactions vs the entitlement ledger.
     ///
     /// <code>
-    ///   # EMBERFALL_ACCOUNTS_DB must be exported (the session-pooler URI from .env / Supabase).
+    ///   # KINGDOM_ACCOUNTS_DB must be exported (the session-pooler URI from .env / Supabase).
     ///   dotnet run --project src/Kingdom.Tools.StoreReconcile [-- path/to/store_transactions.jsonl]
     /// </code>
     ///
@@ -30,11 +30,11 @@ namespace Kingdom.Tools.StoreReconcile
     /// </summary>
     internal static class Program
     {
-        private const string EnvVar = "EMBERFALL_ACCOUNTS_DB";
+        private const string EnvVar = "KINGDOM_ACCOUNTS_DB";
 
         private static async Task<int> Main(string[] args)
         {
-            string? connRaw = Environment.GetEnvironmentVariable(EnvVar);
+            string? connRaw = Kingdom.Net.Server.KingdomEnv.Get(EnvVar);
             if (string.IsNullOrWhiteSpace(connRaw))
             {
                 Console.Error.WriteLine(

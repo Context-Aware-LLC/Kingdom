@@ -37,12 +37,12 @@ COPY tooling/card-admin/ /app/tooling/card-admin/
 # resolves art through the thumbnail cache and never reads a source PNG.
 COPY unity/Assets/CardData/*.cards.json /app/carddata/
 
-ENV EMBERFALL_CARD_DIR=/app/carddata \
-    EMBERFALL_ART_DIR=/app/carddata \
-    EMBERFALL_THUMB_DIR=/app/tooling/cardweb/.thumbs \
-    EMBERFALL_STAGING_DIR=/data/staging \
-    EMBERFALL_COMMENTS_DIR=/data/comments \
-    EMBERFALL_ADMIN_DIR=/app/tooling/card-admin \
+ENV KINGDOM_CARD_DIR=/app/carddata \
+    KINGDOM_ART_DIR=/app/carddata \
+    KINGDOM_THUMB_DIR=/app/tooling/cardweb/.thumbs \
+    KINGDOM_STAGING_DIR=/data/staging \
+    KINGDOM_COMMENTS_DIR=/data/comments \
+    KINGDOM_ADMIN_DIR=/app/tooling/card-admin \
     PYTHONUNBUFFERED=1
 
 # /data is a Fly volume. Staged edits and editor comments are an author's unsaved work and must

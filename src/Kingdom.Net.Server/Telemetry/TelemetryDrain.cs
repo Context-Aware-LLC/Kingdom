@@ -30,7 +30,7 @@ namespace Kingdom.Net.Server.Telemetry
     /// <see cref="LastError"/>, and does NOT advance the offset. The JSONL buffer just grows until the DB
     /// is back — which is the entire reason the buffer exists. No telemetry is dropped for an outage.</para>
     ///
-    /// <para><b>Disabled unless a connection string is configured.</b> With no <c>EMBERFALL_TELEMETRY_DB</c>
+    /// <para><b>Disabled unless a connection string is configured.</b> With no <c>KINGDOM_TELEMETRY_DB</c>
     /// this type is never constructed (see <c>ServerConfig</c>); the sink still writes the local buffer.
     /// So a box with no DB configured is an honest, visible "buffered but not shipped", not a silent drop.</para>
     ///

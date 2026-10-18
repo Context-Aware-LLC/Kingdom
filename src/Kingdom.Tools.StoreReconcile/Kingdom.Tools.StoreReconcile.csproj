@@ -4,11 +4,11 @@
     Kingdom.Tools.StoreReconcile — EF-080c reconciliation report (store transactions vs ledger).
     Read-only: queries entitlement_grant in Postgres, compares against a store-transaction JSONL
     stub, and prints three finding categories: owed-goods, investigate, owed-clawback.
-    Credential-gated (EMBERFALL_ACCOUNTS_DB), so it lives here rather than in CI.
+    Credential-gated (KINGDOM_ACCOUNTS_DB), so it lives here rather than in CI.
     Modelled on Kingdom.Tools.TelemetryVerify.
 
     Usage:
-      EMBERFALL_ACCOUNTS_DB=... dotnet run -p src/Kingdom.Tools.StoreReconcile path/to/store_transactions.jsonl
+      KINGDOM_ACCOUNTS_DB=... dotnet run -p src/Kingdom.Tools.StoreReconcile path/to/store_transactions.jsonl
 
     Exit 0 = no issues; 1 = issues found; 2 = misconfiguration.
   -->

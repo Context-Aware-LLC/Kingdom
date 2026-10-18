@@ -217,6 +217,6 @@ fly deploy -c deploy/cardweb/fly.toml .
   fresh clone, or every card renders art-less.
 - **`/api/validate` shells to `dotnet`**, which is not in the container. Local-only; in
   production it returns an honest error rather than failing.
-- **Both writable files must be on the volume.** `EMBERFALL_STAGING_DIR` and
-  `EMBERFALL_COMMENTS_DIR` point into `/data`; scale-to-zero makes machine suspension routine, so
+- **Both writable files must be on the volume.** `KINGDOM_STAGING_DIR` and
+  `KINGDOM_COMMENTS_DIR` point into `/data`; scale-to-zero makes machine suspension routine, so
   anything on the rootfs is one idle period away from gone.
