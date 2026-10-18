@@ -338,7 +338,7 @@ namespace Kingdom.Net.Server
             if (!raw.Accepted) return raw;
 
             // Runs BEFORE the EndMatch branch below so the last command's draws are still in the sample.
-            _telemetry.AfterAccepted(_host.State, observed);
+            _telemetry.AfterAccepted(_host.State, observed, raw.Events, byClock: cause == SubmitCause.Clock);
 
             _replay.Append(_id, intent);
             TryRecordTrainingDecision(intent.Player, captureBefore);

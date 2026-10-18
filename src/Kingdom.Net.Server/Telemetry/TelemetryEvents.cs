@@ -110,6 +110,13 @@ namespace Kingdom.Net.Server.Telemetry
     /// first. A timed-out mulligan replaced nothing.
     /// </param>
     /// <param name="HeroPowersUsed">How many times the seat's Hero Power was accepted.</param>
+    /// <param name="FinalHealth">The seat's hero Health when the match ended; 0 or below for a
+    /// hero that died.</param>
+    /// <param name="FatigueDraws">How many times the seat drew from an empty deck.</param>
+    /// <param name="CardsBurned">How many cards the seat drew into a full hand.</param>
+    /// <param name="TurnsTimedOut">How many of the seat's turns the turn clock ended.</param>
+    /// <param name="TurnsEndedWithTenUnspent">How many turns the seat ended, by hand or by the
+    /// clock, with 10 mana available.</param>
     public sealed record SeatOutcome(
         AccountId Account,
         CardClass Class,
@@ -119,7 +126,12 @@ namespace Kingdom.Net.Server.Telemetry
         IReadOnlyList<int> MulliganKept,
         int EnemyMinionsDestroyed = 0,
         int MulliganReplaced = 0,
-        int HeroPowersUsed = 0);
+        int HeroPowersUsed = 0,
+        int FinalHealth = 0,
+        int FatigueDraws = 0,
+        int CardsBurned = 0,
+        int TurnsTimedOut = 0,
+        int TurnsEndedWithTenUnspent = 0);
 
     /// <summary>
     /// `match_complete` — emitted once per finished match. THIS EVENT IS THE ≥200-MATCH SAMPLE the

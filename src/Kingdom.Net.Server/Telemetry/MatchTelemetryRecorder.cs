@@ -24,17 +24,21 @@ namespace Kingdom.Net.Server.Telemetry
         public readonly struct Pending
         {
             internal Pending((int seat, List<int> kept, int replaced)? keeps,
-                             (int seat, int defId, int turn)? play, int? heroPowerSeat, BoardWatch watch)
+                             (int seat, int defId, int turn)? play, int? heroPowerSeat,
+                             (int seat, int unspent)? endTurn, BoardWatch watch)
             {
                 Keeps = keeps;
                 Play = play;
                 HeroPowerSeat = heroPowerSeat;
+                EndTurn = endTurn;
                 Watch = watch;
             }
 
             internal (int seat, List<int> kept, int replaced)? Keeps { get; }
             internal (int seat, int defId, int turn)? Play { get; }
             internal int? HeroPowerSeat { get; }
+            /// <summary>The seat an <see cref="EndTurnIntent"/> ends, and the mana it left unspent.</summary>
+            internal (int seat, int unspent)? EndTurn { get; }
             internal BoardWatch Watch { get; }
         }
 
@@ -82,6 +86,15 @@ namespace Kingdom.Net.Server.Telemetry
         /// <summary>Accepted Hero Power uses per seat (<see cref="SeatOutcome.HeroPowersUsed"/>).</summary>
         private readonly int[] _heroPowersUsed = new int[2];
 
+        /// <summary>Cards each seat drew into a full hand (<see cref="SeatOutcome.CardsBurned"/>).</summary>
+        private readonly int[] _cardsBurned = new int[2];
+
+        /// <summary>Turns the clock ended for each seat (<see cref="SeatOutcome.TurnsTimedOut"/>).</summary>
+        private readonly int[] _turnsTimedOut = new int[2];
+
+        /// <summary>Turns each seat ended with 10 mana unspent (<see cref="SeatOutcome.TurnsEndedWithTenUnspent"/>).</summary>
+        private readonly int[] _turnsEndedWithTenUnspent = new int[2];
+
         public MatchTelemetryRecorder(
             MatchId id, MatchSetup setup, ITelemetrySink? telemetry, MatchAttribution? attribution)
         {
@@ -105,13 +118,18 @@ namespace Kingdom.Net.Server.Telemetry
         /// <summary>Read the mulligan keeps and the played card's def id while the hand still holds them.</summary>
         public Pending BeforeSubmit(GameState state, PlayerIntent intent)
             => new Pending(CaptureMulliganKeeps(state, intent), CapturePlay(state, intent),
-                           CaptureHeroPower(state, intent), Watch(state, intent));
+                           CaptureHeroPower(state, intent), CaptureEndTurn(state, intent), Watch(state, intent));
 
         /// <summary>
         /// Every accepted command is a draw observation point. Run it BEFORE ending the match, so
         /// the last command's draws are still in the sample.
         /// </summary>
-        public void AfterAccepted(GameState state, Pending pending)
+        /// <param name="events">The command's events, which are the only place a card burned from a
+        /// full hand shows: it reaches the graveyard by the same path a milled card does. Null counts
+        /// no burns.</param>
+        /// <param name="byClock">The turn clock submitted this command, not the player.</param>
+        public void AfterAccepted(GameState state, Pending pending,
+                                  IReadOnlyList<GameEvent>? events = null, bool byClock = false)
         {
             if (pending.Keeps is { } k)
             {
@@ -120,8 +138,26 @@ namespace Kingdom.Net.Server.Telemetry
             }
             if (pending.Play is { } p) _cardsSeen[p.seat].NotePlayed(p.defId, p.turn);
             if (pending.HeroPowerSeat is int heroPowerSeat) _heroPowersUsed[heroPowerSeat]++;
+            if (pending.EndTurn is { } end)
+            {
+                if (byClock) _turnsTimedOut[end.seat]++;
+                if (end.unspent >= 10) _turnsEndedWithTenUnspent[end.seat]++;
+            }
             ObserveHands(state);
             for (int seat = 0; seat < 2; seat++) _minionsLost[seat] += MinionDeaths(state, pending.Watch, seat);
+            if (events != null) CountBurns(state, events);
+        }
+
+        /// <summary>A burned card goes to its owner's graveyard, so that is where its seat is read.</summary>
+        private void CountBurns(GameState state, IReadOnlyList<GameEvent> events)
+        {
+            foreach (GameEvent e in events)
+            {
+                if (e.Kind != GameEventKind.CardDrawn || (e.Flags & EventFlags.Overdraw) == 0) continue;
+                if (e.Source is not InstanceId burned) continue;
+                for (int seat = 0; seat < 2; seat++)
+                    if (state.Players[seat].Graveyard.Exists(c => c.Id == burned)) { _cardsBurned[seat]++; break; }
+            }
         }
 
         internal static BoardWatch Watch(GameState state, PlayerIntent intent)
@@ -221,6 +257,16 @@ namespace Kingdom.Net.Server.Telemetry
             return state.SeatOf(intent.Player);
         }
 
+        /// <summary>The seat an <see cref="EndTurnIntent"/> belongs to and its unspent mana, or null
+        /// for any other intent.</summary>
+        private static (int seat, int unspent)? CaptureEndTurn(GameState state, PlayerIntent intent)
+        {
+            if (intent is not EndTurnIntent) return null;
+            if (state.Outcome != MatchOutcome.InProgress) return null;
+            int seat = state.SeatOf(intent.Player);
+            return (seat, state.Players[seat].Mana.Available);
+        }
+
         /// <summary>
         /// The def id behind a <see cref="PlayCardIntent"/>, resolved from the seat's hand while the
         /// card is still in it. Null for anything else, and for an instance id that is not in that
@@ -284,7 +330,12 @@ namespace Kingdom.Net.Server.Telemetry
                 _mulliganKept[seat],
                 _minionsLost[1 - seat],
                 _mulliganReplaced[seat],
-                _heroPowersUsed[seat]);
+                _heroPowersUsed[seat],
+                state.Players[seat].Hero.CurrentHealth,
+                seat == 0 ? state.FatigueCounter0 : state.FatigueCounter1,
+                _cardsBurned[seat],
+                _turnsTimedOut[seat],
+                _turnsEndedWithTenUnspent[seat]);
         }
 
         /// <summary>

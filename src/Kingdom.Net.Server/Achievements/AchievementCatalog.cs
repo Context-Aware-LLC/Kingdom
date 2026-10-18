@@ -22,7 +22,12 @@ namespace Kingdom.Net.Server.Achievements
         int TurnCount,
         int EnemyMinionsDestroyed,
         int MulliganReplaced,
-        int HeroPowersUsed)
+        int HeroPowersUsed,
+        int FinalHealth = 0,
+        int FatigueDraws = 0,
+        int CardsBurned = 0,
+        int TurnsTimedOut = 0,
+        int TurnsEndedWithTenUnspent = 0)
     {
         /// <summary>Both attributed seats of one finished match.</summary>
         public static IReadOnlyList<AchievementMatchFacts> From(MatchCompleteEvent complete)
@@ -47,7 +52,12 @@ namespace Kingdom.Net.Server.Achievements
                 complete.TurnCount,
                 seat.EnemyMinionsDestroyed,
                 seat.MulliganReplaced,
-                seat.HeroPowersUsed));
+                seat.HeroPowersUsed,
+                seat.FinalHealth,
+                seat.FatigueDraws,
+                seat.CardsBurned,
+                seat.TurnsTimedOut,
+                seat.TurnsEndedWithTenUnspent));
         }
     }
 
@@ -76,6 +86,9 @@ namespace Kingdom.Net.Server.Achievements
     ///
     /// <para><b>The first four are the gentle ones</b> Play's quality checklist asks for: reliably
     /// earned in a player's first hour (dev-docs/design/whimsy-pass-2026-10-17.md, #2).</para>
+    ///
+    /// <para><b>The rest are the Council's Findings</b> from the same list, the ones a match-end
+    /// counter can answer. Play wants at least 10 visible, so publish these visible.</para>
     /// </summary>
     public static class AchievementCatalog
     {
@@ -97,6 +110,30 @@ namespace Kingdom.Net.Server.Achievements
                 "against_advice", "Against Advice",
                 "Win a match. The Council has amended its advice.",
                 "", f => f.Result == SeatResult.Win),
+            new AchievementDefinition(
+                "proceed_unwisely", "Proceed, Unwisely",
+                "Win a match with 1 Health. The Council had already drafted the other announcement.",
+                "", f => f.Result == SeatResult.Win && f.FinalHealth == 1),
+            new AchievementDefinition(
+                "out_of_ideas", "Out of Ideas",
+                "Draw from an empty deck. The Council knows the feeling.",
+                "", f => f.FatigueDraws > 0),
+            new AchievementDefinition(
+                "too_many_ideas", "Too Many Ideas",
+                "Draw a card into a full hand. The card has been filed with the others.",
+                "", f => f.CardsBurned > 0),
+            new AchievementDefinition(
+                "approved_by_default", "Approved by Default",
+                "Let the hourglass run out. The stamp went ahead without you.",
+                "", f => f.TurnsTimedOut > 0),
+            new AchievementDefinition(
+                "waste_not", "Waste Not",
+                "End a turn with 10 mana unspent. The Council admires the restraint and has asked what it was for.",
+                "", f => f.TurnsEndedWithTenUnspent > 0),
+            new AchievementDefinition(
+                "mutual_respect", "Mutual Respect",
+                "Draw a match. The Council is still deliberating.",
+                "", f => f.Result == SeatResult.Draw),
         });
 
         /// <summary>The definition with this id, or null for one the catalog does not hold.</summary>

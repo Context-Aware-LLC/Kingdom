@@ -25,8 +25,9 @@ namespace Kingdom.Net.Server.Tests.Achievements
     {
         private static readonly DateTimeOffset Now = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
 
-        private static readonly string[] AllFour =
-            { "second_thoughts", "working_as_intended", "early_retirement", "against_advice" };
+        /// <summary>Everything but Mutual Respect, which a won match cannot earn.</summary>
+        private static readonly string[] AllWinnable = AchievementCatalog.All
+            .Select(a => a.Id).Where(id => id != "mutual_respect").ToArray();
 
         private sealed class Harness
         {
@@ -52,12 +53,13 @@ namespace Kingdom.Net.Server.Tests.Achievements
             return new Harness(accounts, new InMemoryAchievementStore(), player.PlayerId);
         }
 
-        /// <summary>A match that earns every achievement in the catalog.</summary>
+        /// <summary>A match that earns every achievement in <see cref="AllWinnable"/>.</summary>
         private static AchievementMatchFacts Everything(
             string playerId, string matchId = "match-1", TelemetrySource source = TelemetrySource.Ladder)
             => new AchievementMatchFacts(
                 matchId, playerId, Now, source, SeatResult.Win, MatchEndReason.Win, TurnCount: 9,
-                EnemyMinionsDestroyed: 3, MulliganReplaced: 1, HeroPowersUsed: 2);
+                EnemyMinionsDestroyed: 3, MulliganReplaced: 1, HeroPowersUsed: 2, FinalHealth: 1,
+                FatigueDraws: 1, CardsBurned: 1, TurnsTimedOut: 1, TurnsEndedWithTenUnspent: 1);
 
         // ── The catalog ───────────────────────────────────────────────────────────────────
 
@@ -81,11 +83,23 @@ namespace Kingdom.Net.Server.Tests.Achievements
             Assert.That(AchievementCatalog.All.Where(a => a.EarnedBy(quiet)), Is.Empty);
         }
 
+        [Test]
+        public void Play_Gets_At_Least_Ten()
+        {
+            // Play's quality checklist: at least 10 visible achievements.
+            Assert.That(AchievementCatalog.All, Has.Count.GreaterThanOrEqualTo(10));
+        }
+
         [TestCase("second_thoughts")]
         [TestCase("working_as_intended")]
         [TestCase("early_retirement")]
         [TestCase("against_advice")]
-        public void Each_Gentle_Achievement_Fires_On_Its_Own_Fact(string id)
+        [TestCase("out_of_ideas")]
+        [TestCase("too_many_ideas")]
+        [TestCase("approved_by_default")]
+        [TestCase("waste_not")]
+        [TestCase("mutual_respect")]
+        public void Each_Achievement_Fires_On_Its_Own_Fact(string id)
         {
             var quiet = new AchievementMatchFacts(
                 "match-1", "player", Now, TelemetrySource.Ladder, SeatResult.Loss, MatchEndReason.Concede,
@@ -95,11 +109,29 @@ namespace Kingdom.Net.Server.Tests.Achievements
                 "second_thoughts" => quiet with { MulliganReplaced = 1 },
                 "working_as_intended" => quiet with { HeroPowersUsed = 1 },
                 "early_retirement" => quiet with { EnemyMinionsDestroyed = 1 },
-                _ => quiet with { Result = SeatResult.Win, EndReason = MatchEndReason.Win },
+                "out_of_ideas" => quiet with { FatigueDraws = 1 },
+                "too_many_ideas" => quiet with { CardsBurned = 1 },
+                "approved_by_default" => quiet with { TurnsTimedOut = 1 },
+                "waste_not" => quiet with { TurnsEndedWithTenUnspent = 1 },
+                "mutual_respect" => quiet with { Result = SeatResult.Draw },
+                _ => quiet with { Result = SeatResult.Win, EndReason = MatchEndReason.Win, FinalHealth = 30 },
             };
 
             Assert.That(AchievementCatalog.All.Where(a => a.EarnedBy(facts)).Select(a => a.Id),
                 Is.EqualTo(new[] { id }));
+        }
+
+        [TestCase(1, true)]
+        [TestCase(2, false)]
+        public void Proceed_Unwisely_Is_A_Win_At_Exactly_One_Health(int health, bool earned)
+        {
+            var win = new AchievementMatchFacts(
+                "match-1", "player", Now, TelemetrySource.Ladder, SeatResult.Win, MatchEndReason.Win,
+                TurnCount: 9, EnemyMinionsDestroyed: 0, MulliganReplaced: 0, HeroPowersUsed: 0, FinalHealth: health);
+
+            Assert.That(AchievementCatalog.Find("proceed_unwisely")!.EarnedBy(win), Is.EqualTo(earned));
+            Assert.That(AchievementCatalog.Find("proceed_unwisely")!.EarnedBy(win with { Result = SeatResult.Loss }),
+                Is.False, "1 Health in a loss is not proceeding");
         }
 
         // ── Who earns ─────────────────────────────────────────────────────────────────────
@@ -111,7 +143,7 @@ namespace Kingdom.Net.Server.Tests.Achievements
 
             IReadOnlyList<string> earned = await h.Service().ApplyAsync(Everything(h.PlayerId));
 
-            Assert.That(earned, Is.EquivalentTo(AllFour));
+            Assert.That(earned, Is.EquivalentTo(AllWinnable));
         }
 
         [Test]
@@ -128,7 +160,7 @@ namespace Kingdom.Net.Server.Tests.Achievements
             Assert.Multiple(() =>
             {
                 Assert.That(again, Is.Empty, "a second earning is not news");
-                Assert.That(ledger, Has.Count.EqualTo(AllFour.Length));
+                Assert.That(ledger, Has.Count.EqualTo(AllWinnable.Length));
                 Assert.That(ledger.All(a => a.MatchId == "match-1" && a.EarnedAt == Now), Is.True,
                     "a later match must not move the date an achievement was earned");
             });
@@ -164,7 +196,7 @@ namespace Kingdom.Net.Server.Tests.Achievements
 
             Assert.Multiple(() =>
             {
-                Assert.That(human, Is.EquivalentTo(AllFour));
+                Assert.That(human, Is.EquivalentTo(AllWinnable));
                 Assert.That(roster, Is.Empty);
             });
         }
@@ -260,7 +292,7 @@ namespace Kingdom.Net.Server.Tests.Achievements
             {
                 Assert.That(result.Status, Is.EqualTo(AchievementReadStatus.Known));
                 Assert.That(result.HttpStatus, Is.EqualTo(200));
-                Assert.That(result.Achievements.Select(a => a.Id), Is.EquivalentTo(AllFour));
+                Assert.That(result.Achievements.Select(a => a.Id), Is.EquivalentTo(AllWinnable));
                 foreach (AchievementView view in result.Achievements)
                     Assert.That(view.PlayGamesId, Is.EqualTo(AchievementCatalog.Find(view.Id)!.PlayGamesId));
             });

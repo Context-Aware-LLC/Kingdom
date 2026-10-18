@@ -94,6 +94,63 @@ namespace Kingdom.Net.Server.Tests
             Assert.That(h.Session.Ended, Is.True, "the idle rule must have forced a concession");
             var e = h.Telemetry.Completes.Single();
             Assert.That(e.EndReason, Is.EqualTo(MatchEndReason.Timeout));
+            // Approved by Default reads this: the forfeiting seat let its clock run out twice.
+            SeatOutcome loser = e.P0.Result == SeatResult.Loss ? e.P0 : e.P1;
+            Assert.That(loser.TurnsTimedOut, Is.EqualTo(h.Options.IdleForfeitAutoTurns));
+        }
+
+        [Test]
+        public void A_Turn_Ended_By_Hand_Is_Not_Timed_Out()
+        {
+            var h = new SessionHarness(attributed: true);
+            h.ConfirmMulligans();
+            int seat = h.Session.Host.State.SeatOf(h.Session.Host.State.ActivePlayer);
+
+            h.Post(seat, h.Client(seat).Intent(new EndTurnIntent(seat == 0 ? h.P0 : h.P1), h.Id));
+            Concede(h, 1);
+
+            var e = h.Telemetry.Completes.Single();
+            Assert.That(e.P0.TurnsTimedOut + e.P1.TurnsTimedOut, Is.Zero);
+        }
+
+        [Test]
+        public void End_Of_Match_Counters_Are_Read_Per_Seat()
+        {
+            // The Findings achievements read these: Waste Not, Too Many Ideas, Out of Ideas and
+            // Proceed, Unwisely.
+            var h = new SessionHarness(attributed: true);
+            h.ConfirmMulligans();
+            GameState state = h.Session.Host.State;
+            int active = state.SeatOf(state.ActivePlayer);
+            var sink = new InMemoryTelemetrySink();
+            var recorder = new MatchTelemetryRecorder(
+                new MatchId("m-counters"), Kingdom.Core.PrebuiltDecks.EmberwardVsTidecaller(), sink,
+                new MatchAttribution(SessionHarness.AccountFor(0), SessionHarness.AccountFor(1), TelemetrySource.Ladder));
+
+            state.Players[active].Mana.Available = 10;
+            var endTurn = new EndTurnIntent(state.ActivePlayer);
+            CardInstance burned = state.Players[1 - active].Hand[0];
+            state.Players[1 - active].Hand.RemoveAt(0);
+            state.Players[1 - active].Graveyard.Add(burned);
+            var events = new[] { new GameEvent(GameEventKind.CardDrawn, 1, burned.Id, null, null, EventFlags.Overdraw) };
+            recorder.AfterAccepted(state, recorder.BeforeSubmit(state, endTurn), events);
+
+            if (active == 0) state.FatigueCounter0 = 2; else state.FatigueCounter1 = 2;
+            state.Players[active].Hero.CurrentHealth = 1;
+            recorder.Complete(state, DateTimeOffset.UnixEpoch, MatchEndReason.Concede);
+
+            var e = sink.Completes.Single();
+            SeatOutcome mine = active == 0 ? e.P0 : e.P1, theirs = active == 0 ? e.P1 : e.P0;
+            Assert.Multiple(() =>
+            {
+                Assert.That(mine.TurnsEndedWithTenUnspent, Is.EqualTo(1));
+                Assert.That(theirs.TurnsEndedWithTenUnspent, Is.Zero);
+                Assert.That(theirs.CardsBurned, Is.EqualTo(1), "a burn belongs to the seat whose graveyard holds it");
+                Assert.That(mine.CardsBurned, Is.Zero);
+                Assert.That(mine.FatigueDraws, Is.EqualTo(2));
+                Assert.That(theirs.FatigueDraws, Is.Zero);
+                Assert.That(mine.FinalHealth, Is.EqualTo(1));
+            });
         }
 
         // ── Voids are separated, not silenced ────────────────────────────────────

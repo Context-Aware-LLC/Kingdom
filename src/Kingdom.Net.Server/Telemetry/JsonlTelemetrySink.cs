@@ -196,6 +196,11 @@ namespace Kingdom.Net.Server.Telemetry
             w.Name("enemyMinionsDestroyed"); w.I32(s.EnemyMinionsDestroyed);
             w.Name("mulliganReplaced"); w.I32(s.MulliganReplaced);
             w.Name("heroPowersUsed"); w.I32(s.HeroPowersUsed);
+            w.Name("finalHealth"); w.I32(s.FinalHealth);
+            w.Name("fatigueDraws"); w.I32(s.FatigueDraws);
+            w.Name("cardsBurned"); w.I32(s.CardsBurned);
+            w.Name("turnsTimedOut"); w.I32(s.TurnsTimedOut);
+            w.Name("turnsEndedWithTenUnspent"); w.I32(s.TurnsEndedWithTenUnspent);
             w.EndObject();
         }
 

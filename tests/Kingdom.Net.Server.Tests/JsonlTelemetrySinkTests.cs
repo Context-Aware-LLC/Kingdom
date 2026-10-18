@@ -125,6 +125,27 @@ namespace Kingdom.Net.Server.Tests
         }
 
         [Test]
+        public void A_Seat_Carries_Its_Findings_Counters()
+        {
+            MatchCompleteEvent e = Complete("m1");
+            e = e with { P0 = e.P0 with
+            {
+                FinalHealth = 1, FatigueDraws = 2, CardsBurned = 3, TurnsTimedOut = 4, TurnsEndedWithTenUnspent = 5,
+            } };
+            new JsonlTelemetrySink(_dir, "local").MatchComplete(e);
+
+            var p0 = Rows().Single().GetProperty("players")[0];
+            Assert.Multiple(() =>
+            {
+                Assert.That(p0.GetProperty("finalHealth").GetInt32(), Is.EqualTo(1));
+                Assert.That(p0.GetProperty("fatigueDraws").GetInt32(), Is.EqualTo(2));
+                Assert.That(p0.GetProperty("cardsBurned").GetInt32(), Is.EqualTo(3));
+                Assert.That(p0.GetProperty("turnsTimedOut").GetInt32(), Is.EqualTo(4));
+                Assert.That(p0.GetProperty("turnsEndedWithTenUnspent").GetInt32(), Is.EqualTo(5));
+            });
+        }
+
+        [Test]
         public void Enum_Spellings_Are_Canonical_Lowercase_Not_CSharp_Member_Names()
         {
             // §5 fixes field names and type strings as additive-only. If these came from
