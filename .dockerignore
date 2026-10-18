@@ -1,9 +1,10 @@
 # Build context for deploy/walking-skeleton/Dockerfile.server.
 #
 # The context is the REPO ROOT (RC F4: the server references five sibling src/ projects and bakes
-# in the canonical card data), but the image COPYs exactly three paths. Without this file fly
+# in the canonical card data), but the image COPYs exactly four paths. Without this file fly
 # uploads the whole working tree on every deploy — measured 2026-08-15 at 16 GB / 86,570 files,
-# of which unity/ was 15 GB, .git/ 843 MB and art-pipeline/ 568 MB. The three paths total ~2.9 MB.
+# of which unity/ was 15 GB, .git/ 843 MB and art-pipeline/ 568 MB. The first three paths totalled
+# ~2.9 MB then; the bot model (2026-10-18) adds 3.3 MB.
 #
 # This is an ALLOWLIST: deny everything, then re-admit only what the Dockerfile reads. Each parent
 # directory has to be re-admitted and then re-emptied (`!unity/` then `unity/*`) or the exception
@@ -37,6 +38,8 @@ tooling/*
 !tooling/data/
 tooling/data/*
 !tooling/data/bot-roster.json
+# --- the bot's network (Dockerfile.server, COPY tooling/data/bot-model/) ---
+!tooling/data/bot-model/
 
 # The web card authoring tool (deploy/cardweb/Dockerfile). This file is an ALLOWLIST -- it opens
 # with `*`, so anything not re-included here is simply absent from the build context and the

@@ -6,7 +6,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /repo
 COPY src/ src/
-RUN dotnet publish src/Kingdom.Net.Server/Kingdom.Net.Server.csproj -c Release -o /app
+# -r linux-x64: ONNX Runtime ships a native library per platform, and a publish without a runtime
+# copies all of them (the package is 160 MB). With it, only the 29 MB Linux one comes along.
+RUN dotnet publish src/Kingdom.Net.Server/Kingdom.Net.Server.csproj -c Release -r linux-x64 \
+    --self-contained false -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
@@ -16,11 +19,16 @@ COPY unity/Assets/CardData/ /app/cards/
 # AI-opponent bot roster (2026-08-09 matchmaking fallback) — a null/unset EMBERFALL_BOT_ROSTER
 # leaves bot-fill off, so both lines below must land together or the feature silently stays dark.
 COPY tooling/data/bot-roster.json /app/bot-roster.json
+# The network every bot seat plays (export-onnx), run in-process by ONNX Runtime. Unset
+# EMBERFALL_BOT_MODEL and bots play Greedy; set it to a directory that will not load and the
+# server refuses to start rather than quietly serve Greedy.
+COPY tooling/data/bot-model/ /app/bot-model/
 # /data is the Fly volume (fly.toml [mounts], vol_rkgwj19p5yykeyo4). All durable outputs MUST point
 # inside it: the container filesystem is replaced on every deploy, so a relative default would
 # collect telemetry that looks healthy right up until the next machine swap eats it (C-G1-8).
 ENV EMBERFALL_CARDS=/app/cards \
     EMBERFALL_BOT_ROSTER=/app/bot-roster.json \
+    EMBERFALL_BOT_MODEL=/app/bot-model \
     EMBERFALL_REPLAYS=/data/replays \
     EMBERFALL_TRAINING_INBOX=/data/training-inbox \
     EMBERFALL_TELEMETRY=/data \

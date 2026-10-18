@@ -42,4 +42,10 @@
     <ProjectReference Include="..\Kingdom.Training.Corpus\Kingdom.Training.Corpus.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The server runs the bot's network in-process (OnnxCheckpointScorer): it has no Python.
+         The package carries a native library per platform; a publish with -r keeps only that one. -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.0" />
+  </ItemGroup>
+
 </Project>

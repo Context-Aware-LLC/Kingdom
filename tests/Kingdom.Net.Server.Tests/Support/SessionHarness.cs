@@ -122,6 +122,18 @@ namespace Kingdom.Net.Server.Tests.Support
             throw new DirectoryNotFoundException("Could not locate unity/Assets/CardData from test directory.");
         }
 
+        /// <summary>A file or directory under the repo root, found by walking up from the tests.</summary>
+        public static string RepoFile(params string[] segments)
+        {
+            string? path = TestContext.CurrentContext.TestDirectory;
+            for (int i = 0; i < 10 && path is not null; i++, path = Path.GetDirectoryName(path))
+            {
+                string candidate = Path.Combine(path, Path.Combine(segments));
+                if (File.Exists(candidate) || Directory.Exists(candidate)) return candidate;
+            }
+            throw new FileNotFoundException($"Could not locate {Path.Combine(segments)} from test directory.");
+        }
+
         /// <param name="attributed">
         /// Give the two seats real account ids, so the telemetry emitter actually writes rows.
         /// Default false: the pre-existing session tests are about rules and policy, have no

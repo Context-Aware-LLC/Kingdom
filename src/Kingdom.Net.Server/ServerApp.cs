@@ -198,13 +198,12 @@ namespace Kingdom.Net.Server
         public string? BotRosterPath { get; init; }
 
         /// <summary>
-        /// A trained checkpoint for bot seats to play, and the RL export whose feature spec it was
-        /// trained against. BOTH or NEITHER: a checkpoint without its export cannot be encoded for,
-        /// and an export without a checkpoint has nothing to run. Unset means bot seats play
-        /// <see cref="GreedyAi"/>, which is what every existing deploy does today.
+        /// A bot-model directory for bot seats to play: <c>model.onnx</c> and <c>bot-model.json</c>,
+        /// written by <c>python -m tooling.scripts.training_trainer export-onnx</c> and run
+        /// in-process by <see cref="OnnxCheckpointScorer"/>, so the server needs no Python. Unset
+        /// means bot seats play <see cref="GreedyAi"/>. From <c>EMBERFALL_BOT_MODEL</c>.
         /// </summary>
-        public string? BotCheckpointPath { get; init; }
-        public string? BotRlExportPath { get; init; }
+        public string? BotModelPath { get; init; }
 
         /// <summary>
         /// The oldest store build <c>GET /update-gate</c> lets play, per platform: Android
@@ -307,8 +306,7 @@ namespace Kingdom.Net.Server
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking
                 // behavior unchanged, same as every other optional seam above.
                 BotRosterPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_ROSTER"),
-                BotCheckpointPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_CHECKPOINT"),
-                BotRlExportPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_RL_EXPORT"),
+                BotModelPath = Environment.GetEnvironmentVariable("EMBERFALL_BOT_MODEL"),
                 MinClientBuildAndroid = MinBuildFromEnvironment("EMBERFALL_MIN_BUILD_ANDROID"),
                 MinClientBuildIos = MinBuildFromEnvironment("EMBERFALL_MIN_BUILD_IOS"),
             };
@@ -360,9 +358,9 @@ namespace Kingdom.Net.Server
     public static class ServerApp
     {
         /// <summary>
-        /// The seat-policy factory for bot-filled matches: the configured checkpoint, or Greedy.
+        /// The seat-policy factory for bot-filled matches: the configured bot model, or Greedy.
         ///
-        /// A CONFIGURED-BUT-UNUSABLE CHECKPOINT IS FATAL, on purpose. Starting anyway with a silent
+        /// A CONFIGURED-BUT-UNUSABLE MODEL IS FATAL, on purpose. Starting anyway with a silent
         /// Greedy fallback would mean an operator who deliberately asked for the learned bot never
         /// finds out they did not get it -- the failure would surface weeks later as "the bot feels
         /// the same", with nothing in the logs. This is the same shape as the collection-sync
@@ -370,45 +368,57 @@ namespace Kingdom.Net.Server
         /// distinguish NEVER CONFIGURED (run Greedy, say nothing) from CONFIGURED AND BROKEN (refuse
         /// to start).
         ///
-        /// The scorer process is shared across every bot seat. It is a single Python subprocess and
-        /// starting one per seat would multiply model loads for no benefit; the protocol is
-        /// request/response over stdio and the policy serialises its own calls.
+        /// One model is shared by every bot seat: ONNX Runtime runs concurrent requests on one
+        /// session, and each seat would otherwise hold its own copy of the weights. One inference
+        /// thread per request, because the machine is one shared CPU and the seats are the
+        /// parallelism.
+        ///
+        /// Cards the model's vocabulary does not know are logged, not refused. Every card added
+        /// after the model's training freeze is one; the model sees it as an unknown card and plays
+        /// on, and only a card whose effects its encoder cannot express costs a Greedy move, which
+        /// <see cref="LearnedBotCounters"/> counts.
         /// </summary>
-        private static Func<SeatDeck, ISeatPolicy>? BuildBotPolicyFactory(ServerConfig cfg, ICardDatabase db)
+        private static (Func<SeatDeck, ISeatPolicy> Factory, LearnedBot Bot)? BuildBotPolicyFactory(
+            ServerConfig cfg, ICardDatabase db)
         {
-            bool hasCheckpoint = !string.IsNullOrWhiteSpace(cfg.BotCheckpointPath);
-            bool hasExport = !string.IsNullOrWhiteSpace(cfg.BotRlExportPath);
-            if (!hasCheckpoint && !hasExport) return null;
-            if (hasCheckpoint != hasExport)
-                throw new InvalidOperationException(
-                    "EMBERFALL_BOT_CHECKPOINT and EMBERFALL_BOT_RL_EXPORT must be set together: a "
-                    + "checkpoint cannot be encoded for without the export's feature spec.");
+            if (string.IsNullOrWhiteSpace(cfg.BotModelPath)) return null;
 
-            CheckpointScorerProcess scorer;
+            OnnxCheckpointScorer scorer;
             try
             {
-                scorer = CheckpointScorerProcess.Start(
-                    cfg.BotRlExportPath!, cfg.BotCheckpointPath!, "auto", null);
+                scorer = OnnxCheckpointScorer.Open(cfg.BotModelPath!, intraOpThreads: 1);
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException(
-                    $"EMBERFALL_BOT_CHECKPOINT is set to '{cfg.BotCheckpointPath}' but the scorer "
-                    + $"could not start: {ex.GetType().Name}: {ex.Message}. Refusing to start with "
-                    + "bot seats silently falling back to Greedy.", ex);
+                    $"EMBERFALL_BOT_MODEL is set to '{cfg.BotModelPath}' but the model could not "
+                    + $"load: {ex.GetType().Name}: {ex.Message}. Refusing to start with bot seats "
+                    + "silently falling back to Greedy.", ex);
             }
 
+            var bot = new LearnedBot(scorer.CheckpointSha256, scorer.ModelSha256, new LearnedBotCounters());
+            var collectible = new List<int>();
+            foreach (var card in db.AllCollectible()) collectible.Add(card.Id);
+            IReadOnlyList<int> unknown = scorer.UnknownCards(collectible);
             Console.Error.WriteLine(
-                $"[bots] learned bot seats enabled: checkpoint sha256={scorer.CheckpointSha256}");
-            return deck =>
+                $"[bots] learned bot seats enabled: checkpoint sha256={bot.CheckpointSha256} "
+                + $"model sha256={bot.ModelSha256}");
+            if (unknown.Count > 0)
+                Console.Error.WriteLine(
+                    $"[bots] the bot model does not know {unknown.Count} collectible card(s): "
+                    + string.Join(", ", unknown));
+            return (deck =>
             {
                 var validator = new CommandProcessor(db);
                 var learned = new CheckpointSeatPolicy(
                     scorer, db, validator, deck.Deck, CheckpointSelection.Argmax);
                 return new LearnedBotSeatPolicy(
-                    learned, new GreedySeatPolicy(validator, db));
-            };
+                    learned, new GreedySeatPolicy(validator, db), counters: bot.Counters);
+            }, bot);
         }
+
+        /// <summary>The learned bot this server serves, as <c>/healthz</c> reports it.</summary>
+        private sealed record LearnedBot(string CheckpointSha256, string ModelSha256, LearnedBotCounters Counters);
 
         public static WebApplication Build(ServerConfig cfg) => BuildWithGate(cfg).App;
 
@@ -463,20 +473,21 @@ namespace Kingdom.Net.Server
             // Bot-fill (design doc §Bot roster & provisioning): a roster path with no account store
             // is a normal dev-box configuration, not a startup failure — logged and skipped.
             IBotPool? botPool = botPoolOverride;
-            // A CHECKPOINT NOBODY WILL EVER ASK FOR IS ALSO A MISCONFIGURATION. The factory below
-            // only runs when bot-fill is fully enabled, so an operator who sets a checkpoint and
-            // forgets the roster (or has no account store) would get a silent Greedy server and no
-            // error at all -- the exact failure the fatal-startup rule exists to prevent, arriving
-            // through the one door it did not cover. There are THREE cases, not two: never
-            // configured, configured and broken, and configured but unreachable.
-            if (botPool is null && !string.IsNullOrWhiteSpace(cfg.BotCheckpointPath)
+            // A MODEL NOBODY WILL EVER ASK FOR IS ALSO A MISCONFIGURATION. The factory below only
+            // runs when bot-fill is fully enabled, so an operator who sets a model and forgets the
+            // roster (or has no account store) would get a silent Greedy server and no error at
+            // all -- the exact failure the fatal-startup rule exists to prevent, arriving through
+            // the one door it did not cover. There are THREE cases, not two: never configured,
+            // configured and broken, and configured but unreachable.
+            if (botPool is null && !string.IsNullOrWhiteSpace(cfg.BotModelPath)
                 && (string.IsNullOrWhiteSpace(cfg.BotRosterPath) || cfg.AccountStore is null))
             {
                 throw new InvalidOperationException(
-                    "EMBERFALL_BOT_CHECKPOINT is set but bot-fill is not enabled: it needs "
+                    "EMBERFALL_BOT_MODEL is set but bot-fill is not enabled: it needs "
                     + "EMBERFALL_BOT_ROSTER and a configured AccountStore. Refusing to start as a "
                     + "Greedy server while configured for a learned one.");
             }
+            LearnedBot? learnedBot = null;
 
             if (botPool is null && !string.IsNullOrWhiteSpace(cfg.BotRosterPath))
             {
@@ -487,7 +498,9 @@ namespace Kingdom.Net.Server
                 else
                 {
                     var roster = BotRoster.LoadFromFile(cfg.BotRosterPath!, db);
-                    var pool = new BotPool(db, BuildBotPolicyFactory(cfg, db));
+                    var learned = BuildBotPolicyFactory(cfg, db);
+                    learnedBot = learned?.Bot;
+                    var pool = new BotPool(db, learned?.Factory);
                     builder.Services.AddSingleton<IHostedService>(
                         new BotAccountProvisioner(cfg.AccountStore, roster, pool));
                     botPool = pool;
@@ -696,6 +709,15 @@ namespace Kingdom.Net.Server
                 corpus = corpusDigest,
                 cards = db.Count,
                 trainingCapture = trainingEpisodes is not null,
+                // Null when bot seats play Greedy. Fallbacks above zero mean the bot is partly
+                // Greedy; see LearnedBotSeatPolicy.
+                bot = learnedBot is null ? null : new
+                {
+                    checkpoint = learnedBot.CheckpointSha256,
+                    model = learnedBot.ModelSha256,
+                    decisions = learnedBot.Counters.Decisions,
+                    fallbacks = learnedBot.Counters.Fallbacks,
+                },
             }));
             // GET /update-gate — what the client asks before it shows a menu: may this build play.
             // Unauthenticated and takes no input, because it is asked before sign-in. The contract

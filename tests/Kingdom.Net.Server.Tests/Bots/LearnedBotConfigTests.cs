@@ -19,14 +19,13 @@ namespace Kingdom.Net.Server.Tests.Bots
     public sealed class LearnedBotConfigTests
     {
         [Test]
-        public void A_Checkpoint_Without_Bot_Fill_Refuses_To_Start()
+        public void A_Model_Without_Bot_Fill_Refuses_To_Start()
         {
             // The case the first implementation missed. No roster means the factory is never
             // reached, so without this the server boots as Greedy and says nothing.
             var cfg = NewConfig() with
             {
-                BotCheckpointPath = "F:/nonexistent/best-model.pt",
-                BotRlExportPath = "F:/nonexistent/export",
+                BotModelPath = "F:/nonexistent/bot-model",
                 BotRosterPath = null,
             };
 
@@ -35,23 +34,22 @@ namespace Kingdom.Net.Server.Tests.Bots
         }
 
         [Test]
-        public void A_Checkpoint_Without_Its_Export_Refuses_To_Start()
+        public void A_Model_That_Will_Not_Load_Refuses_To_Start()
         {
-            // A checkpoint cannot be encoded for without the export's feature spec, so half a
-            // configuration is a configuration error rather than a partial enablement.
+            // Configured and broken: bot-fill is reachable, the model is not there.
             var cfg = NewConfig() with
             {
-                BotCheckpointPath = "F:/nonexistent/best-model.pt",
-                BotRlExportPath = null,
-                BotRosterPath = null,
+                BotModelPath = "F:/nonexistent/bot-model",
+                BotRosterPath = Support.SessionHarness.RepoFile("tooling", "data", "bot-roster.json"),
+                AccountStore = new Kingdom.Net.Server.Accounts.InMemoryAccountStore(new SystemTimeSource()),
             };
 
-            // Reachability is checked first, so this asserts only that it does not start silently.
-            Assert.Throws<InvalidOperationException>(() => ServerApp.Build(cfg));
+            var ex = Assert.Throws<InvalidOperationException>(() => ServerApp.Build(cfg));
+            Assert.That(ex!.Message, Does.Contain("could not load"));
         }
 
         [Test]
-        public void No_Checkpoint_Starts_Quietly_As_Greedy()
+        public void No_Model_Starts_Quietly_As_Greedy()
         {
             // The common case and the one that must stay boring: every existing deploy sets none of
             // these and must be unaffected.

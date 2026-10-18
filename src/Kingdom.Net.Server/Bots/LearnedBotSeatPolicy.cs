@@ -9,10 +9,12 @@ namespace Kingdom.Net.Server.Bots
     /// <summary>
     /// A learned seat policy that degrades to Greedy LOUDLY when its scorer stops answering.
     ///
-    /// WHY A WRAPPER AND NOT JUST THE CHECKPOINT POLICY. The scorer is a Python subprocess. It can
-    /// die mid-match — OOM, a bad restart, a machine under pressure — and a bot seat that throws
-    /// takes the match with it, which is a far worse outcome for the player than a weaker opponent.
-    /// So the fallback exists. The DANGER is that a fallback which merely works is invisible: every
+    /// WHY A WRAPPER AND NOT JUST THE CHECKPOINT POLICY. The model cannot answer every position:
+    /// its encoder refuses a keyword it was never trained on, an ongoing effect from a card its
+    /// vocabulary lacks, or a move wider than the export's target cap
+    /// (<see cref="Kingdom.Policy.PolicyEncodingException"/>), and the runtime can fail outright. A
+    /// bot seat that throws takes the match with it, which is a far worse outcome for the player
+    /// than one weaker move. So the fallback exists. The DANGER is that a fallback which merely works is invisible: every
     /// bot-fill match silently becomes a Greedy match, the win rates look normal, and nobody learns
     /// that the model has not served a decision in a week.
     ///
@@ -32,15 +34,20 @@ namespace Kingdom.Net.Server.Bots
         private readonly IObservedSeatPolicy _learned;
         private readonly ISeatPolicy _fallback;
         private readonly Action<string> _warn;
+        private readonly LearnedBotCounters? _counters;
         private int _fallbackDecisions;
         private bool _warned;
 
         public LearnedBotSeatPolicy(
-            IObservedSeatPolicy learned, ISeatPolicy fallback, Action<string>? warn = null)
+            IObservedSeatPolicy learned,
+            ISeatPolicy fallback,
+            Action<string>? warn = null,
+            LearnedBotCounters? counters = null)
         {
             _learned = learned ?? throw new ArgumentNullException(nameof(learned));
             _fallback = fallback ?? throw new ArgumentNullException(nameof(fallback));
             _warn = warn ?? Console.Error.WriteLine;
+            _counters = counters;
         }
 
         /// <summary>
@@ -60,8 +67,11 @@ namespace Kingdom.Net.Server.Bots
         {
             try
             {
-                return await _learned.ChooseAsync(state, player, cancellationToken)
+                PlayerIntent? chosen = await _learned.ChooseAsync(state, player, cancellationToken)
                     .ConfigureAwait(false);
+                // Null is "not this seat's move", which the runner polls for constantly.
+                if (chosen is not null) _counters?.Served();
+                return chosen;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -72,6 +82,7 @@ namespace Kingdom.Net.Server.Bots
             catch (Exception ex)
             {
                 int count = Interlocked.Increment(ref _fallbackDecisions);
+                _counters?.FellBack();
                 if (!_warned)
                 {
                     _warned = true;

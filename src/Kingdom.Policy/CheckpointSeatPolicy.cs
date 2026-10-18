@@ -116,6 +116,16 @@ namespace Kingdom.Policy
         {
         }
 
+        public CheckpointSeatPolicy(
+            OnnxCheckpointScorer scorer,
+            ICardDatabase db,
+            ICommandValidator validator,
+            IReadOnlyList<int> startingDeck,
+            CheckpointSelection selection)
+            : this(scorer, db, validator, startingDeck, selection, scorer.CheckpointSha256)
+        {
+        }
+
         internal CheckpointSeatPolicy(
             ICheckpointScorer scorer,
             ICardDatabase db,
