@@ -157,10 +157,10 @@
     margin-bottom: var(--space-3);
 }
 .fr-root .fr-own-code {
-    flex-grow: 1;
-    flex-shrink: 1;
+    flex-shrink: 0;
     font-size: var(--type-body);
     color: var(--ink-2);
+    margin-bottom: var(--space-2);
 }
 
 /* The recessed input chrome Collection's search uses (.chrome-input, collection.uss). */
@@ -208,6 +208,10 @@
 .fr-root .fr-row__play-games {
     border-bottom-width: 2px;
     border-bottom-color: rgb(1, 135, 95);
+}
+/* The first button of a row that starts at the drawer's edge rather than after a field. */
+.fr-root .fr-small-button--lead {
+    margin-left: 0;
 }
 
 .fr-root .fr-status {

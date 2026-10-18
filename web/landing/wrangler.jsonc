@@ -7,8 +7,9 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    // Only /api/* reaches the script; every other request is served from assets directly.
-    "run_worker_first": ["/api/*"]
+    // Only these reach the script; every other request is served from assets directly. /f/* is
+    // the shared friend link (#424), and /friend is its template, which the script hides.
+    "run_worker_first": ["/api/*", "/f/*", "/friend", "/friend.html"]
   },
   "d1_databases": [
     { "binding": "DB", "database_name": "kobi-site", "database_id": "d9d0ed21-5218-448c-9b8c-2722f7fbe7ae", "migrations_dir": "migrations" }

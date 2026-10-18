@@ -60,9 +60,11 @@
         <ui:VisualElement name="drawer" class="fr-drawer">
             <ui:Label text="Friends" class="fr-title" />
 
+            <!-- The code on its own line: beside two buttons it wraps. Share sends it as a link (#424). -->
+            <ui:Label name="own-code" text=" " class="fr-own-code" />
             <ui:VisualElement class="fr-code-row">
-                <ui:Label name="own-code" text=" " class="fr-own-code" />
-                <ui:Button name="btn-copy-code" text="Copy" class="fr-small-button" />
+                <ui:Button name="btn-copy-code" text="Copy code" class="fr-small-button fr-small-button--lead" />
+                <ui:Button name="btn-share-code" text="Share link" class="fr-small-button" />
             </ui:VisualElement>
 
             <ui:VisualElement class="fr-add-row">

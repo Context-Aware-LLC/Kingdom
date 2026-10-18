@@ -907,8 +907,7 @@ namespace Kingdom.Presentation
         {
             code = "";
             if (string.IsNullOrEmpty(url)) return false;
-            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri)) return false;
-            if (!string.Equals(uri.Scheme, "emberfall", StringComparison.OrdinalIgnoreCase)) return false;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri) || !IsAuthLink(uri)) return false;
 
             string email = "";
             string query = uri.Query.TrimStart('?');
@@ -938,7 +937,7 @@ namespace Kingdom.Presentation
             email = "";
             code = "";
             if (string.IsNullOrEmpty(url)) return false;
-            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri)) return false;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri uri) || !IsAuthLink(uri)) return false;
 
             string query = uri.Query.TrimStart('?');
             if (query.Length == 0) return false;
@@ -954,6 +953,16 @@ namespace Kingdom.Presentation
             }
             return code.Length > 0 && email.Length > 0;
         }
+
+        /// <summary>
+        /// <c>emberfall://auth</c>, the one address both sign-in links return to. The scheme has
+        /// other hosts now (<c>emberfall://friend</c>, #424), and neither extractor may claim one of
+        /// those: a <c>code</c> parameter on any other link would otherwise be redeemed as a
+        /// sign-in.
+        /// </summary>
+        private static bool IsAuthLink(Uri uri)
+            => string.Equals(uri.Scheme, "emberfall", StringComparison.OrdinalIgnoreCase) &&
+               string.Equals(uri.Host, "auth", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>
         /// Turn a failure into a sentence a player can act on.

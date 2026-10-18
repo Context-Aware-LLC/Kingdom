@@ -10,7 +10,8 @@ using UnityEngine.UIElements;
 namespace Kingdom.Presentation
 {
     /// <summary>
-    /// The friends button and its right-side drawer (#409): the player's own code, add by code,
+    /// The friends button and its right-side drawer (#409): the player's own code (copied, or shared
+    /// as a link, #424), add by code,
     /// requests to answer, friends, and requests still out — and the chat window a friend's Chat
     /// button opens, which floats over the screen, drags by its header and stays open with the
     /// drawer shut and across the screens this is mounted on. Built at runtime via Resources the way
@@ -139,6 +140,7 @@ namespace Kingdom.Presentation
             _root.Q<Button>("btn-close")?.RegisterCallback<ClickEvent>(_ => Close());
             _root.Q<VisualElement>("scrim")?.RegisterCallback<ClickEvent>(_ => Close());
             _root.Q<Button>("btn-copy-code")?.RegisterCallback<ClickEvent>(_ => CopyOwnCode());
+            _root.Q<Button>("btn-share-code")?.RegisterCallback<ClickEvent>(_ => ShareOwnCode());
             _addButton?.RegisterCallback<ClickEvent>(_ => AddFriend());
             _playGamesButton = _root.Q<Button>("btn-play-games-friends");
             if (_playGamesButton != null && PlayGamesServices.IsSupported)
@@ -190,10 +192,12 @@ namespace Kingdom.Presentation
             SocialGateway.StateChanged += OnSocialState;
             ChallengeFlow.Changed += OnChallengeChanged;
             ChatLog.Changed += OnChatChanged;
+            FriendLinkInbox.Arrived += TakeFriendLink;
 
             Close();
             RenderChallenge();
             RenderBadge();
+            TakeFriendLink();   // one that arrived before any drawer was mounted to take it
 
             // The conversation left open on the last screen, where it was left. The place is
             // re-clamped once this panel has a size: it was measured against the previous one.
@@ -368,6 +372,7 @@ namespace Kingdom.Presentation
             SocialGateway.StateChanged -= OnSocialState;
             ChallengeFlow.Changed -= OnChallengeChanged;
             ChatLog.Changed -= OnChatChanged;
+            FriendLinkInbox.Arrived -= TakeFriendLink;
             if (_current == this) _current = null;
         }
 
@@ -457,11 +462,26 @@ namespace Kingdom.Presentation
             if (_shown != null) Render(_shown);
         }
 
-        private void Open()
+        private void Open() => Open(okStatus: "");
+
+        private void Open(string okStatus, Action onOk = null)
         {
             _root.AddToClassList(OpenClass);
             SetStatus("Loading…", error: false);
-            Run(token => FriendsGateway.FetchAsync(token), okStatus: "");
+            Run(token => FriendsGateway.FetchAsync(token), okStatus, onOk);
+        }
+
+        /// <summary>
+        /// A friend link opened the game (#424): open the drawer with the code in the add field.
+        /// Nothing is sent: the player taps Add, as for a code they typed.
+        /// </summary>
+        private void TakeFriendLink()
+        {
+            if (_root == null || !FriendLinkInbox.TryTake(out string code)) return;
+            _addCode?.SetValueWithoutNotify(FriendCode.Display(code));
+            Open(okStatus: "", onOk: () => SetStatus(
+                code == _shown?.Code ? "That link is your own code." : "Tap Add to send a friend request.",
+                error: false));
         }
 
         private void Close()
@@ -476,6 +496,24 @@ namespace Kingdom.Presentation
             if (_ownCodeDisplay.Length == 0) return;
             GUIUtility.systemCopyBuffer = _ownCodeDisplay;
             SetStatus("Code copied.", error: false);
+        }
+
+        /// <summary>
+        /// The code as a link, through the phone's share sheet (#424). Where there is no sheet — a
+        /// desktop build, the Editor — the link goes to the clipboard instead.
+        /// </summary>
+        private void ShareOwnCode()
+        {
+            if (_shown == null || _shown.Code.Length == 0) return;
+            string link = FriendLink.For(_shown.Code);
+
+            if (SystemShareSheet.TryShare($"Add me as a friend in Kingdom of Bad Ideas: {link}", "Share your friend link"))
+            {
+                SetStatus("", error: false);
+                return;
+            }
+            GUIUtility.systemCopyBuffer = link;
+            SetStatus("Link copied.", error: false);
         }
 
         private void AddFriend()

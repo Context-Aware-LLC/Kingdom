@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>A Friend Request · Kingdom of Bad Ideas</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+<link rel="stylesheet" href="/assets/site.css?v=0fa01a4f78">
+<!-- The template for /f/<code> (#424, the shared friend link). The Worker fills #friend-code and
+     #open-game per request, and answers this page's own address with the 404 page. -->
+<style>
+  .friend-code { font: 700 clamp(1.8rem, 8vw, 2.6rem) var(--sans); letter-spacing: 0.08em; color: var(--parchment); }
+  .open-game { display: inline-block; margin-bottom: var(--s-3); padding: 14px 24px; border-radius: var(--r-pill); background: var(--ember); color: #1a0d03; font: 700 1rem var(--sans); text-decoration: none; }
+</style>
+</head>
+<body class="status">
+<a class="home-seal" href="/" aria-label="Kingdom of Bad Ideas home"><img src="/assets/seal.png" alt="" width="240" height="240"></a>
+<main>
+  <h1>A friend request.</h1>
+  <p>Someone in the Kingdom would like you on their friends list. Their code:</p>
+  <p id="friend-code" class="friend-code"></p>
+  <a id="open-game" class="open-game" href="/">Open in the game</a>
+  <p>Or open Friends in the game and add the code yourself. New here? <a href="/">See what you would be getting into.</a></p>
+</main>
+</body>
+</html>

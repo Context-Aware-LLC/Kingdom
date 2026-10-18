@@ -21,8 +21,9 @@
      reads as if it worked. Diff this file against that generated one after any Android build.
 
      There are exactly THREE deliberate deviations from that base. Anything else is drift:
-       1. The second intent-filter below, for the emberfall://auth deep link (NOR-246). ADDITIVE,
-          and confirmed present in the built manifest.
+       1. The second and third intent-filters below: the emberfall://auth deep link (NOR-246),
+          ADDITIVE and confirmed present in the built manifest, and emberfall://friend (#424, the
+          shared friend link), the same kind and UNVERIFIED against a built manifest.
        2. android:screenOrientation="sensorLandscape" on the activity, which the base had as
           "fullUser" (NOR-283). INERT — see the table above; the build takes reverseLandscape from
           PlayerSettings.defaultInterfaceOrientation. Landscape boot works because BOTH values are
@@ -82,6 +83,15 @@
         <category android:name="android.intent.category.DEFAULT" />
         <category android:name="android.intent.category.BROWSABLE" />
         <data android:scheme="emberfall" android:host="auth" />
+      </intent-filter>
+      <!-- #424: a friend link. kingdomofbadideas.com/f/<code> answers with a button that opens
+           emberfall://friend/<code>; FriendLinkInbox reads it off the same deepLinkActivated /
+           absoluteURL the sign-in gate uses, and each ignores the other's host. -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="emberfall" android:host="friend" />
       </intent-filter>
       <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
       <meta-data android:name="android.app.lib_name" android:value="game" />

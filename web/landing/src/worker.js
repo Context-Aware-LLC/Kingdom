@@ -1,5 +1,5 @@
 // kingdomofbadideas.com Worker. Static assets are served by the ASSETS binding; this script
-// only owns /api/*. Early Access pre-registration is double opt-in: the form stores the
+// owns /api/* and the friend link, /f/*. Early Access pre-registration is double opt-in: the form stores the
 // address unconfirmed and mails a confirm link; only a confirmed row counts as a sign-up.
 
 const CONSENT_VERSION = "2026-09-30";
@@ -147,9 +147,80 @@ async function unsubscribe(url, env) {
   return redirect(res?.meta.changes ? "/unsubscribed" : "/link-expired");
 }
 
+// A shared friend link, /f/XXXXX-XXXXX (#424). The code is checked exactly as the game checks it
+// (FriendCode.TryNormalize in src/Kingdom.Net.Protocol/FriendCode.cs): case, hyphens and spaces
+// forgiven, then the CRC-5 check symbol. The page never names the player behind the code: a route
+// that did would let anyone test codes for owners.
+const FRIEND_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const ANDROID_PACKAGE = "com.contextaware.kobi";
+
+function friendCrcStep(crc, symbol) {
+  for (let bit = 4; bit >= 0; bit--) {
+    const feedback = ((crc >> 4) ^ (symbol >> bit)) & 1;
+    crc = (crc << 1) & 31;
+    if (feedback) crc ^= 0x05;
+  }
+  return crc;
+}
+
+function normalizeFriendCode(raw) {
+  let code = "";
+  let crc = 0;
+  for (const typed of raw) {
+    if (typed === "-" || typed === " ") continue;
+    const c = typed >= "a" && typed <= "z" ? typed.toUpperCase() : typed;
+    const symbol = FRIEND_ALPHABET.indexOf(c);
+    if (symbol < 0 || code.length === 10) return null;
+    if (code.length < 9) crc = friendCrcStep(crc, symbol);
+    else if (symbol !== crc) return null;
+    code += c;
+  }
+  return code.length === 10 ? code : null;
+}
+
+async function notFound(url, env) {
+  const page = await env.ASSETS.fetch(new Request(new URL("/404", url)));
+  return new Response(page.body, { status: 404, headers: page.headers });
+}
+
+// friend.html is the template; its own address answers 404 so it is only ever seen filled in.
+// "Open in the game" is an Android intent (it falls through to the Play Store when the game is not
+// installed), the emberfall:// scheme on iOS, and absent on a desktop, which has no game to open.
+async function friendInvite(request, url, env) {
+  let raw = "";
+  try {
+    raw = decodeURIComponent(url.pathname.slice("/f/".length)).replace(/\/+$/, "");
+  } catch {
+    return notFound(url, env);
+  }
+  const code = normalizeFriendCode(raw);
+  if (!code) return notFound(url, env);
+
+  const ua = request.headers.get("user-agent") ?? "";
+  const open = /Android/i.test(ua)
+    ? `intent://friend/${code}#Intent;scheme=emberfall;package=${ANDROID_PACKAGE};end`
+    : /iPhone|iPad|iPod/i.test(ua)
+      ? `emberfall://friend/${code}`
+      : null;
+
+  const template = await env.ASSETS.fetch(new Request(new URL("/friend", url)));
+  const page = new HTMLRewriter()
+    .on("#friend-code", { element: (el) => el.setInnerContent(`${code.slice(0, 5)}-${code.slice(5)}`) })
+    .on("#open-game", { element: (el) => (open ? el.setAttribute("href", open) : el.remove()) })
+    .transform(template);
+  const response = new Response(page.body, page);
+  // Per code and per platform: nothing may cache it, and the template's validator does not describe it.
+  response.headers.set("cache-control", "no-store");
+  response.headers.set("vary", "User-Agent");
+  response.headers.delete("etag");
+  return response;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/f/") && request.method === "GET") return friendInvite(request, url, env);
+    if (url.pathname === "/friend" || url.pathname === "/friend.html") return notFound(url, env);
     if (url.pathname === "/api/preregister" && request.method === "POST") return preregister(request, env);
     if (url.pathname === "/api/confirm" && request.method === "GET") return confirm(url, env);
     if (url.pathname === "/api/unsubscribe" && request.method === "GET") return unsubscribe(url, env);
