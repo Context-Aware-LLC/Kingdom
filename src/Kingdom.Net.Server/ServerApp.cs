@@ -15,6 +15,7 @@ using Kingdom.Core.Collection;
 using Kingdom.Core;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Server.Accounts;
+using Kingdom.Net.Server.Achievements;
 using Kingdom.Net.Server.Bots;
 using Kingdom.Policy;
 using Kingdom.Net.Server.Data;
@@ -130,6 +131,13 @@ namespace Kingdom.Net.Server
         /// <c>player_id</c> the ledger is, and completing a quest writes a row into that ledger.
         /// </summary>
         public IQuestProgressStore? QuestProgress { get; init; }
+
+        /// <summary>
+        /// Where earned achievements are recorded. Null (default) uses
+        /// <see cref="InMemoryAchievementStore"/>, so a box with no Postgres forgets them on restart.
+        /// Shares the accounts database in production, keyed on the same <c>player_id</c>.
+        /// </summary>
+        public IAchievementStore? Achievements { get; init; }
 
         /// <summary>
         /// What a finished match and a completed quest pay. Null (default) uses the shipping
@@ -250,6 +258,12 @@ namespace Kingdom.Net.Server
                 ? null
                 : new PostgresQuestProgressStore(entitlementsDb!);
 
+            // Achievements are keyed on the account, not paid from the ledger, so they ride the
+            // accounts connection.
+            IAchievementStore? achievements = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new PostgresAchievementStore(accountsDb!);
+
             return new ServerConfig
             {
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
@@ -264,6 +278,7 @@ namespace Kingdom.Net.Server
                 FriendStore = friendStore,
                 EntitlementLedger = entitlementLedger,
                 QuestProgress = questProgress,
+                Achievements = achievements,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking
@@ -529,6 +544,23 @@ namespace Kingdom.Net.Server
                 telemetry = questSink;
             }
 
+            // Achievements, decorated onto the same sink for the same reason. They need only the
+            // account store, to tell a durable account from a guest; without one GET /achievements
+            // answers 503 and nothing is recorded.
+            AchievementService? achievementService = null;
+            if (cfg.AccountStore is not null)
+            {
+                achievementService = new AchievementService(
+                    cfg.Achievements ?? new InMemoryAchievementStore(),
+                    cfg.AccountStore,
+                    isBotAccount);
+
+                var achievementSink = new AchievementSink(
+                    telemetry ?? NullTelemetrySink.Instance, achievementService);
+                builder.Services.AddSingleton<IHostedService>(achievementSink);
+                telemetry = achievementSink;
+            }
+
             // The pack line. Two things have to be present for a pack to be openable at all, and
             // BOTH absences are configuration rather than failure — the route answers 503 and the
             // rest of the server is unaffected:
@@ -729,6 +761,43 @@ namespace Kingdom.Net.Server
                     status = result.Status.ToString().ToLowerInvariant(),
                     playerId = result.PlayerId,
                     quests,
+                }, statusCode: result.HttpStatus);
+            });
+
+            // GET /achievements — what the player has earned, each with the id the client unlocks
+            // in Play Games. Read-only, like /quests: only a finished match earns one.
+            app.MapGet("/achievements", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                AchievementReadResult result = await AchievementsEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, achievementService,
+                    context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                // Flat scalar rows, for the reason given at /quests.
+                var rows = new List<object>(result.Achievements.Count);
+                foreach (AchievementView achievement in result.Achievements)
+                {
+                    rows.Add(new
+                    {
+                        id = achievement.Id,
+                        playGamesId = achievement.PlayGamesId,
+                        earnedAt = achievement.EarnedAt.UtcDateTime.ToString(
+                            "yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture),
+                    });
+                }
+
+                return Results.Json(new
+                {
+                    // "known" | "unauthenticated" | "unavailable"; the client branches on this.
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    achievements = rows,
                 }, statusCode: result.HttpStatus);
             });
 

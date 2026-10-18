@@ -8,7 +8,8 @@
     "Kingdom.Core.Collection",
     "Kingdom.Data",
     "Kingdom.Net.Client",
-    "Kingdom.Net.Protocol"
+    "Kingdom.Net.Protocol",
+    "Google.Play.Games"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

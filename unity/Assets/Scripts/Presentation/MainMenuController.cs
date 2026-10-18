@@ -200,8 +200,10 @@ namespace Kingdom.Presentation
                     await RosterGateway.SyncAsync(accessToken);
                     RenderQuests(await questRequest);
 
-                    // Not awaited: nothing on this screen waits on Game Center, and it never throws.
+                    // Not awaited: nothing on this screen waits on Game Center or Play Games, and
+                    // neither throws. Play Games also syncs at each match's end.
                     _ = GameCenterLadder.SyncAsync(accessToken);
+                    _ = PlayGamesServices.SyncAchievementsAsync(accessToken);
 
                     // The bind may have switched accounts underneath the field captured in OnEnable.
                     _account = PlayerAccount.Local;

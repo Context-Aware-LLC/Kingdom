@@ -194,6 +194,8 @@ namespace Kingdom.Net.Server.Telemetry
             for (int i = 0; i < kept.Count; i++) w.I32(kept[i]);
             w.EndArray();
             w.Name("enemyMinionsDestroyed"); w.I32(s.EnemyMinionsDestroyed);
+            w.Name("mulliganReplaced"); w.I32(s.MulliganReplaced);
+            w.Name("heroPowersUsed"); w.I32(s.HeroPowersUsed);
             w.EndObject();
         }
 

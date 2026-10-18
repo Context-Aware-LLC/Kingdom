@@ -104,6 +104,12 @@ namespace Kingdom.Net.Server.Telemetry
     /// board, not an attribution of who dealt the blow, which the engine does not record. Defaults
     /// to 0 so a row written before the field existed reads as none.
     /// </param>
+    /// <param name="MulliganReplaced">
+    /// How many cards the seat threw back at mulligan. <see cref="MulliganKept"/> cannot answer
+    /// this on its own: it lists what was kept, and the opening hand's size depends on who went
+    /// first. A timed-out mulligan replaced nothing.
+    /// </param>
+    /// <param name="HeroPowersUsed">How many times the seat's Hero Power was accepted.</param>
     public sealed record SeatOutcome(
         AccountId Account,
         CardClass Class,
@@ -111,7 +117,9 @@ namespace Kingdom.Net.Server.Telemetry
         string DeckHash,
         SeatResult Result,
         IReadOnlyList<int> MulliganKept,
-        int EnemyMinionsDestroyed = 0);
+        int EnemyMinionsDestroyed = 0,
+        int MulliganReplaced = 0,
+        int HeroPowersUsed = 0);
 
     /// <summary>
     /// `match_complete` — emitted once per finished match. THIS EVENT IS THE ≥200-MATCH SAMPLE the

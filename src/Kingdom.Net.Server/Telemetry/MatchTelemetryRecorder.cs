@@ -23,16 +23,18 @@ namespace Kingdom.Net.Server.Telemetry
         /// Held aside rather than stored, so a REJECTED intent records nothing.</summary>
         public readonly struct Pending
         {
-            internal Pending((int seat, List<int> kept)? keeps, (int seat, int defId, int turn)? play,
-                             BoardWatch watch)
+            internal Pending((int seat, List<int> kept, int replaced)? keeps,
+                             (int seat, int defId, int turn)? play, int? heroPowerSeat, BoardWatch watch)
             {
                 Keeps = keeps;
                 Play = play;
+                HeroPowerSeat = heroPowerSeat;
                 Watch = watch;
             }
 
-            internal (int seat, List<int> kept)? Keeps { get; }
+            internal (int seat, List<int> kept, int replaced)? Keeps { get; }
             internal (int seat, int defId, int turn)? Play { get; }
+            internal int? HeroPowerSeat { get; }
             internal BoardWatch Watch { get; }
         }
 
@@ -74,6 +76,12 @@ namespace Kingdom.Net.Server.Telemetry
         /// is the other seat's entry here.</summary>
         private readonly int[] _minionsLost = new int[2];
 
+        /// <summary>Cards each seat threw back at mulligan (<see cref="SeatOutcome.MulliganReplaced"/>).</summary>
+        private readonly int[] _mulliganReplaced = new int[2];
+
+        /// <summary>Accepted Hero Power uses per seat (<see cref="SeatOutcome.HeroPowersUsed"/>).</summary>
+        private readonly int[] _heroPowersUsed = new int[2];
+
         public MatchTelemetryRecorder(
             MatchId id, MatchSetup setup, ITelemetrySink? telemetry, MatchAttribution? attribution)
         {
@@ -96,7 +104,8 @@ namespace Kingdom.Net.Server.Telemetry
 
         /// <summary>Read the mulligan keeps and the played card's def id while the hand still holds them.</summary>
         public Pending BeforeSubmit(GameState state, PlayerIntent intent)
-            => new Pending(CaptureMulliganKeeps(state, intent), CapturePlay(state, intent), Watch(state, intent));
+            => new Pending(CaptureMulliganKeeps(state, intent), CapturePlay(state, intent),
+                           CaptureHeroPower(state, intent), Watch(state, intent));
 
         /// <summary>
         /// Every accepted command is a draw observation point. Run it BEFORE ending the match, so
@@ -104,8 +113,13 @@ namespace Kingdom.Net.Server.Telemetry
         /// </summary>
         public void AfterAccepted(GameState state, Pending pending)
         {
-            if (pending.Keeps is { } k) _mulliganKept[k.seat] = k.kept;
+            if (pending.Keeps is { } k)
+            {
+                _mulliganKept[k.seat] = k.kept;
+                _mulliganReplaced[k.seat] = k.replaced;
+            }
             if (pending.Play is { } p) _cardsSeen[p.seat].NotePlayed(p.defId, p.turn);
+            if (pending.HeroPowerSeat is int heroPowerSeat) _heroPowersUsed[heroPowerSeat]++;
             ObserveHands(state);
             for (int seat = 0; seat < 2; seat++) _minionsLost[seat] += MinionDeaths(state, pending.Watch, seat);
         }
@@ -178,15 +192,16 @@ namespace Kingdom.Net.Server.Telemetry
         /// <c>AutoConfirmIntent</c> keeps the whole hand — that is what auto-confirm means, and a
         /// timed-out mulligan is still a real data point about what the opening hand was.
         /// </summary>
-        private static (int seat, List<int> kept)? CaptureMulliganKeeps(GameState state, PlayerIntent intent)
+        private static (int seat, List<int> kept, int replaced)? CaptureMulliganKeeps(GameState state, PlayerIntent intent)
         {
             if (state.Phase != TurnPhase.Mulligan) return null;
             if (intent is not MulliganIntent && intent is not AutoConfirmIntent) return null;
 
             int seat = state.SeatOf(intent.Player);
             var replaced = intent as MulliganIntent;
+            var hand = state.Players[seat].Hand;
             var kept = new List<int>();
-            foreach (var card in state.Players[seat].Hand)
+            foreach (var card in hand)
             {
                 bool thrown = false;
                 if (replaced is not null)
@@ -194,7 +209,16 @@ namespace Kingdom.Net.Server.Telemetry
                         if (id == card.Id) { thrown = true; break; }
                 if (!thrown) kept.Add(card.DefinitionId);
             }
-            return (seat, kept);
+            // Counted from the hand, not from ToReplace: an id that is not in the hand replaces nothing.
+            return (seat, kept, hand.Count - kept.Count);
+        }
+
+        /// <summary>The seat a <see cref="HeroPowerIntent"/> belongs to, or null for any other intent.</summary>
+        private static int? CaptureHeroPower(GameState state, PlayerIntent intent)
+        {
+            if (intent is not HeroPowerIntent) return null;
+            if (state.Outcome != MatchOutcome.InProgress) return null;
+            return state.SeatOf(intent.Player);
         }
 
         /// <summary>
@@ -258,7 +282,9 @@ namespace Kingdom.Net.Server.Telemetry
                 DeckIdentity.HashOf(deck),
                 ResultFor(seat, outcome),
                 _mulliganKept[seat],
-                _minionsLost[1 - seat]);
+                _minionsLost[1 - seat],
+                _mulliganReplaced[seat],
+                _heroPowersUsed[seat]);
         }
 
         /// <summary>

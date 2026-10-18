@@ -214,6 +214,20 @@ create index if not exists quest_progress_player_day_idx
 -- Server-private, like the ladder tables above: Supabase's Data API gets no policies and no rows.
 alter table quest_progress enable row level security;
 
+-- Achievements, the Ledger of Bad Ideas (AchievementCatalog). ONE ROW PER ACHIEVEMENT A PLAYER HAS
+-- EARNED, written once: the primary key keeps the first match and date, and a later earning
+-- writes nothing. Nothing ever deletes a row, because the stores behind it cannot delete an
+-- achievement either. The primary key also serves GET /achievements' per-player read.
+create table if not exists achievement_earned (
+  player_id       text        not null,
+  achievement_id  text        not null,
+  match_id        text        not null,
+  earned_at       timestamptz not null,
+  primary key (player_id, achievement_id)
+);
+
+alter table achievement_earned enable row level security;
+
 -- ── Friends (#409) ─────────────────────────────────────────────────────────────────────────────
 -- Keyed on player_id like everything else here, and on NOTHING from `account.email`: some accounts
 -- authenticate without one (Sam, 2026-10-01), and a friends graph that needed it would exclude them.

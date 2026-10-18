@@ -179,6 +179,47 @@ namespace Kingdom.Net.Server.Tests
 
             var e = h.Telemetry.Completes.Single();
             Assert.That(e.P0.MulliganKept, Is.EqualTo(hand0));
+            Assert.That(e.P0.MulliganReplaced, Is.Zero, "a timed-out mulligan replaced nothing");
+        }
+
+        [Test]
+        public void Mulligan_Replacements_Are_Counted_Per_Seat()
+        {
+            // The Second Thoughts achievement reads this. MulliganKept cannot answer it alone: the
+            // opening hand's size depends on who went first.
+            var h = new SessionHarness(attributed: true);
+            var hand0 = h.Session.Host.State.Players[0].Hand.ToList();
+
+            h.Post(0, h.Client0.Intent(new MulliganIntent(h.P0, new[] { hand0[0].Id, hand0[1].Id }), h.Id));
+            h.Post(1, h.Client1.Intent(new MulliganIntent(h.P1, Array.Empty<InstanceId>()), h.Id));
+            Concede(h, 1);
+
+            var e = h.Telemetry.Completes.Single();
+            Assert.That(e.P0.MulliganReplaced, Is.EqualTo(2));
+            Assert.That(e.P1.MulliganReplaced, Is.Zero, "keeping the whole hand replaces nothing");
+        }
+
+        [Test]
+        public void Only_An_Accepted_Hero_Power_Is_Counted()
+        {
+            // The session calls AfterAccepted only for an intent the core accepted, so a refused
+            // Hero Power is a BeforeSubmit with nothing after it.
+            var h = new SessionHarness(attributed: true);
+            h.ConfirmMulligans();
+            GameState state = h.Session.Host.State;
+            var sink = new InMemoryTelemetrySink();
+            var recorder = new MatchTelemetryRecorder(
+                new MatchId("m-hero-power"), Kingdom.Core.PrebuiltDecks.EmberwardVsTidecaller(), sink,
+                new MatchAttribution(SessionHarness.AccountFor(0), SessionHarness.AccountFor(1), TelemetrySource.Ladder));
+
+            var heroPower = new HeroPowerIntent(h.P0, Array.Empty<TargetRef>());
+            recorder.AfterAccepted(state, recorder.BeforeSubmit(state, heroPower));
+            recorder.BeforeSubmit(state, heroPower);
+            recorder.Complete(state, DateTimeOffset.UnixEpoch, MatchEndReason.Concede);
+
+            var e = sink.Completes.Single();
+            Assert.That(e.P0.HeroPowersUsed, Is.EqualTo(1));
+            Assert.That(e.P1.HeroPowersUsed, Is.Zero);
         }
 
         // ── card_seen (telemetry-spec §2) ────────────────────────────────────────

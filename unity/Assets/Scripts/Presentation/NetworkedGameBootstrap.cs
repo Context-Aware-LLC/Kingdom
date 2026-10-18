@@ -608,6 +608,7 @@ namespace Kingdom.Presentation
                     playVoiceLine: heroVoice.PlayMatchEndLine);
                 MusicDirector.FadeOutUntilSceneChange();            // the battle loop would clash with the stinger
                 cardSounds.OnMatchEnded(outcome, _net.Seat);
+                _ = PlayGamesServices.SyncAchievementsAfterMatchAsync();   // never throws; nothing waits on it
             };
 
             // ── §14 step 4 diagnostic (v9 frost retest): playback-side twin of the [Net] snap
