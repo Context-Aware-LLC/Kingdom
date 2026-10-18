@@ -99,6 +99,7 @@ namespace Kingdom.Presentation
             Wire("btn-leaderboards", OnLeaderboards);
             Wire("btn-card-vault", OnCardVault);
             Wire("btn-leaderboard-close", CloseLeaderboard);
+            BindAchievements();
             BindLeaderboard();
 
             BindBuildStamp();
@@ -204,6 +205,7 @@ namespace Kingdom.Presentation
                     // neither throws. Play Games also syncs at each match's end.
                     _ = GameCenterLadder.SyncAsync(accessToken);
                     _ = PlayGamesServices.SyncAchievementsAsync(accessToken);
+                    _ = PlayGamesServices.LinkAsync(accessToken);
 
                     // The bind may have switched accounts underneath the field captured in OnEnable.
                     _account = PlayerAccount.Local;
@@ -347,6 +349,23 @@ namespace Kingdom.Presentation
             // has already sent elsewhere, and a lesson shown under a pending scene change is one
             // the player glimpses and never reads.
             if (!_leavingForFirstRun) new FirstRunTidbit(_root).Show(TidbitTrigger.MainMenuArrival);
+        }
+
+        /// <summary>
+        /// The Play Games achievements chip (#418), Android only. It is also the way back into
+        /// Play Games when the automatic sign-in failed, which Play's quality checklist requires.
+        /// </summary>
+        private void BindAchievements()
+        {
+            var button = _root.Q<Button>("btn-achievements");
+            if (button == null || !PlayGamesServices.IsSupported) return;
+            button.style.display = DisplayStyle.Flex;
+            button.RegisterCallback<ClickEvent>(async _ =>
+            {
+                button.SetEnabled(false);
+                try { await PlayGamesServices.ShowAchievementsAsync(); }
+                finally { button.SetEnabled(true); }
+            });
         }
 
         private void Wire(string name, System.Action onClick)

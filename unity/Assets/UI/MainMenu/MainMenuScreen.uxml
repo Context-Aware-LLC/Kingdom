@@ -10,6 +10,7 @@
                 <ui:VisualElement name="quest-list" class="mm-quest-list"/>
             </ui:VisualElement>
             <ui:VisualElement name="wallet-strip" class="mm-wallet-strip">
+                <ui:Button name="btn-achievements" text="Achievements" tooltip="Play Games achievements" class="mm-achievements" style="display: none;"/>
                 <ui:VisualElement name="gold-wallet" tooltip="Gold" class="mm-wallet-chip mm-wallet-chip--gold">
                     <ui:VisualElement picking-mode="Ignore" class="mm-wallet-icon mm-wallet-icon--gold"/>
                     <ui:Label name="gold-balance" text="0" picking-mode="Ignore" class="mm-wallet-amount"/>

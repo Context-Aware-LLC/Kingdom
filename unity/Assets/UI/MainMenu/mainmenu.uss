@@ -422,6 +422,29 @@
     border-bottom-color: var(--surface-3);
     border-radius: var(--space-2);
 }
+/* Play Games achievements (#418). Android only: MainMenuController shows it. It sits in the
+ * top rail because the menu column has no room for a fifth row. A wallet chip's shape, with its
+ * own clear fill so the theme's button chrome does not draw behind it. */
+.mm-achievements {
+    height: 64px;
+    margin: 0 0 0 var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background-image: none;
+    background-color: rgba(8, 11, 16, 0.34);
+    border-width: 0;
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(1, 135, 95);
+    border-radius: var(--space-2);
+    color: var(--ink-1);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+}
+.mm-achievements:hover {
+    background-color: rgba(8, 11, 16, 0.5);
+}
+.mm-achievements:active {
+    background-color: rgba(8, 11, 16, 0.64);
+}
 .mm-wallet-chip--gold {
     border-bottom-color: var(--accent);
 }
