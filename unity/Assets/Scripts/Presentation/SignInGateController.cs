@@ -569,7 +569,7 @@ namespace Kingdom.Presentation
             SetBusy(true, null);
             ShowRestoring("Restoring your collection…");
             await CollectionGateway.SyncAsync(accessToken);
-            ShowRestoring("Restoring your characters…");
+            ShowRestoring("Restoring your decks…");
             await RosterGateway.SyncAsync(accessToken);
             SetBusy(false, null);
 

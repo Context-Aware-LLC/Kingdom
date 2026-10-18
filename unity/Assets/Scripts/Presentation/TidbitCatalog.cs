@@ -98,7 +98,7 @@ namespace Kingdom.Presentation
                 "\n" +
                 "Go questing, stare at your collection, or engage in glorious battle\n" +
                 "\n" +
-                "These are the quintissential joys of life in the Kingdom.",
+                "These are the quintessential joys of life in the Kingdom.",
                 "tidbit_menu"),
             new Tidbit(
                 "decks",
@@ -106,7 +106,7 @@ namespace Kingdom.Presentation
                 "Your Decks",
                 "Tap the \'+\' to create a deck. Tap a deck once to see options, twice to edit it.\n" +
                 "\n" +
-                "The Council has determinned that you shall have not more than nine.\n" +
+                "The Council has determined that you shall have not more than nine.\n" +
                 "\n" +
                 "Nine is the limit. Not 8 and not 10. Because the council said so, that is why.",
                 "tidbit_decks"),
@@ -172,7 +172,7 @@ namespace Kingdom.Presentation
                 "\n" +
                 "You are something special. I can tell.\n" +
                 "\n" +
-                "Your going to go out there and make the kingdom a better place, I'm sure.",
+                "You're going to go out there and make the kingdom a better place, I'm sure.",
                 "tidbit_shards"),
             new Tidbit(
                 "store",
