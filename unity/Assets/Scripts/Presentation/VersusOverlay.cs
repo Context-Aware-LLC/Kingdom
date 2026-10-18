@@ -391,15 +391,18 @@ namespace Kingdom.Presentation
                 Destroy(gameObject);
         }
 
-        // Class display name — title-case, not the ALL-CAPS enum (spec §6:
-        // "Emberward / Tidecaller / Gravekeep / Verdant").
+        // Class display name — title-case, not the ALL-CAPS enum.
         private static string ClassName(CardClass c) => c switch
         {
-            CardClass.EMBERWARD  => "Emberward",
-            CardClass.TIDECALLER => "Tidecaller",
-            CardClass.GRAVEKEEP  => "Gravekeep",
-            CardClass.VERDANT    => "Verdant",
-            _                    => "Neutral",
+            CardClass.EMBERWARD   => "Emberward",
+            CardClass.TIDECALLER  => "Tidecaller",
+            CardClass.GRAVEKEEP   => "Gravekeep",
+            CardClass.VERDANT     => "Verdant",
+            CardClass.CLOCKWRIGHT => "Clockwright",
+            CardClass.NIGHTVEIL   => "Nightveil",
+            CardClass.STONEWARDEN => "Stonewarden",
+            CardClass.TEMPEST     => "Tempest",
+            _                     => "Neutral",
         };
 
         private static float EaseOutCubic(float x) => 1f - (1f - x) * (1f - x) * (1f - x);
