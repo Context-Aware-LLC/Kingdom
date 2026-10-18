@@ -283,3 +283,16 @@ create index if not exists friend_block_blocked_idx on friend_block (blocked);
 alter table friend_code enable row level security;
 alter table friendship enable row level security;
 alter table friend_block enable row level security;
+
+-- ── Play Games (#423) ──────────────────────────────────────────────────────────────────────────
+-- The player's own Play Games id, read from Google server-side with the Game server credential
+-- (PlayGamesLink), never taken from the phone. One Google account maps to one account here: a
+-- second account linking the same id takes it over. Friends lists are NEVER stored: Google's terms
+-- allow keeping them 30 days at most, so they are fetched per request and dropped.
+create table if not exists play_games_link (
+  player_id      text        primary key,
+  play_games_id  text        not null unique,
+  linked_at      timestamptz not null
+);
+
+alter table play_games_link enable row level security;

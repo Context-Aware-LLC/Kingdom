@@ -125,6 +125,104 @@ namespace Kingdom.Net.Client.Tests.Social
         }
     }
 
+    /// <summary>Find Friends From Play Games (#423) across the real wire.</summary>
+    [TestFixture]
+    [Category("Contract")]
+    [NonParallelizable]
+    public sealed class HttpPlayGamesFriendsGatewayAgainstTheServerTests
+    {
+        private sealed class Clock : ITimeSource { public long NowMs => 1_700_000_000_000; }
+
+        private sealed class Verifier : IIdentityTokenVerifier
+        {
+            public Task<TokenVerificationResult> VerifyAsync(string token, CancellationToken ct = default)
+            {
+                string[] parts = token.Split('|');
+                return Task.FromResult(TokenVerificationResult.Ok(
+                    new VerifiedIdentity(parts[0], "", false, parts.Length > 1 ? parts[1] : "")));
+            }
+        }
+
+        /// <summary>"code-for:x" opens x's session; everyone's Play Games friends are everyone.</summary>
+        private sealed class Google : Kingdom.Net.Server.Social.IPlayGamesApi
+        {
+            public Task<Kingdom.Net.Server.Social.PlayGamesSession> OpenAsync(
+                string authCode, bool withFriends, CancellationToken ct = default)
+            {
+                string id = "g-" + authCode.Substring("code-for:".Length);
+                return Task.FromResult(new Kingdom.Net.Server.Social.PlayGamesSession(
+                    Kingdom.Net.Server.Social.PlayGamesCallStatus.Ok, id,
+                    withFriends ? new[] { "g-ann", "g-ben" } : null));
+            }
+        }
+
+        [Test, CancelAfter(30_000)]
+        public async Task A_Linked_Friend_Comes_Back_With_Name_Code_And_Play_Games_Id()
+        {
+            var app = ServerApp.Build(new ServerConfig
+            {
+                Urls = "http://127.0.0.1:0",
+                CardsDir = LoopbackServerPeer.CardDataDir(),
+                TokenVerifier = new Verifier(),
+                AccountStore = new InMemoryAccountStore(new Clock()),
+                PlayGames = new Google(),
+            });
+            await app.StartAsync();
+            try
+            {
+                var http = new HttpFriendsGatewayAgainstTheServerTests_Http();
+                var playGames = new HttpPlayGamesFriendsGateway(app.Urls.First(), http);
+                var friends = new HttpFriendsGateway(app.Urls.First(), http);
+
+                Assert.That(await playGames.LinkAsync("ann|Ann Bell", "code-for:ann"), Is.EqualTo(PlayGamesFriendsStatus.Ok));
+                PlayGamesFriendsResult found = await playGames.FindAsync("ben|Ben", "code-for:ben");
+
+                Assert.That(found.Status, Is.EqualTo(PlayGamesFriendsStatus.Ok));
+                PlayGamesSuggestion ann = found.Suggestions.Single();
+                Assert.That(ann.DisplayName, Is.EqualTo("Ann Bell"));
+                Assert.That(ann.PlayGamesId, Is.EqualTo("g-ann"));
+                Assert.That(ann.Requested || ann.AskedYou, Is.False);
+                Assert.That(ann.Code, Is.EqualTo((await friends.FetchAsync("ann")).Code),
+                    "Add sends this code as an ordinary friend request");
+            }
+            finally
+            {
+                await app.StopAsync();
+                await app.DisposeAsync();
+            }
+        }
+    }
+
+    /// <summary>The same real-HTTP adapter the friends contract test uses.</summary>
+    internal sealed class HttpFriendsGatewayAgainstTheServerTests_Http : IAuthHttp
+    {
+        private readonly HttpClient _http = new HttpClient();
+
+        public Task<AuthHttpResponse> GetAsync(string url, IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Get, url, null, headers);
+
+        public Task<AuthHttpResponse> PostJsonAsync(string url, string jsonBody,
+            IReadOnlyList<KeyValuePair<string, string>> headers, CancellationToken cancellationToken = default)
+            => SendAsync(HttpMethod.Post, url, jsonBody, headers);
+
+        public Task<AuthHttpResponse> PutJsonAsync(string url, string jsonBody,
+            IReadOnlyList<KeyValuePair<string, string>> headers, CancellationToken cancellationToken = default)
+            => SendAsync(HttpMethod.Put, url, jsonBody, headers);
+
+        public Task<AuthHttpResponse> DeleteAsync(string url, IReadOnlyList<KeyValuePair<string, string>> headers,
+            CancellationToken cancellationToken = default) => SendAsync(HttpMethod.Delete, url, null, headers);
+
+        private async Task<AuthHttpResponse> SendAsync(HttpMethod method, string url, string? body,
+            IReadOnlyList<KeyValuePair<string, string>> headers)
+        {
+            using var request = new HttpRequestMessage(method, url);
+            foreach (var header in headers) request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            if (body != null) request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+            using HttpResponseMessage response = await _http.SendAsync(request);
+            return AuthHttpResponse.Completed((int)response.StatusCode, await response.Content.ReadAsStringAsync());
+        }
+    }
+
     /// <summary>What the gateway does when the server is not the happy path.</summary>
     [TestFixture]
     [Category("Unit")]

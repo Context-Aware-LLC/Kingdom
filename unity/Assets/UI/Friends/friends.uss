@@ -200,6 +200,15 @@
     font-size: var(--type-label);
     -unity-font-style: bold;
 }
+/* Find Friends From Play Games (#423): a full-width row of its own, under the add field. */
+.fr-root .fr-play-games {
+    margin: 0 0 var(--space-3) 0;
+}
+/* The Play Games profile button beside a Play Games friend (#418): Play Games green. */
+.fr-root .fr-row__play-games {
+    border-bottom-width: 2px;
+    border-bottom-color: rgb(1, 135, 95);
+}
 
 .fr-root .fr-status {
     flex-shrink: 0;

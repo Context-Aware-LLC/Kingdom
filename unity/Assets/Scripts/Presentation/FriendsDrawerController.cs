@@ -74,6 +74,13 @@ namespace Kingdom.Presentation
         private bool _busy;
         private FriendsSnapshot _shown;
 
+        private Button _playGamesButton;
+
+        /// <summary>The last Play Games friends the server found (#423); null until the player asks.
+        /// Held only while this drawer lives: Google's terms cap how long friends data may be kept,
+        /// and the button fetches it again.</summary>
+        private IReadOnlyList<PlayGamesSuggestion> _playGamesFound;
+
         /// <summary>Is there a drawer on this screen to show a challenge prompt in?</summary>
         public static bool IsMounted => _current != null;
 
@@ -133,6 +140,12 @@ namespace Kingdom.Presentation
             _root.Q<VisualElement>("scrim")?.RegisterCallback<ClickEvent>(_ => Close());
             _root.Q<Button>("btn-copy-code")?.RegisterCallback<ClickEvent>(_ => CopyOwnCode());
             _addButton?.RegisterCallback<ClickEvent>(_ => AddFriend());
+            _playGamesButton = _root.Q<Button>("btn-play-games-friends");
+            if (_playGamesButton != null && PlayGamesServices.IsSupported)
+            {
+                _playGamesButton.style.display = DisplayStyle.Flex;
+                _playGamesButton.RegisterCallback<ClickEvent>(_ => FindPlayGamesFriends());
+            }
 
             _challenge     = _root.Q<VisualElement>("challenge");
             _challengeText = _root.Q<Label>("challenge-text");
@@ -481,6 +494,109 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>
+        /// Find Friends From Play Games (#423). Play Games may show its own sign-in and its own
+        /// friends consent first; the server then reads the friends from Google and answers the ones
+        /// who play, which <see cref="Render"/> lists with an Add each.
+        /// </summary>
+        private async void FindPlayGamesFriends()
+        {
+            if (_busy) return;
+            _busy = true;
+            _playGamesButton?.SetEnabled(false);
+            SetStatus("Asking Play Games…", error: false);
+
+            PlayGamesFriendsResult result;
+            try
+            {
+                string token = await AuthGateway.TokenForConnectAsync();
+                result = await PlayGamesServices.FindFriendsAsync(token);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Friends] Play Games friends failed ({ex.GetType().Name}: {ex.Message}).");
+                result = new PlayGamesFriendsResult(PlayGamesFriendsStatus.Offline);
+            }
+
+            if (this == null) return;
+            _busy = false;
+            _playGamesButton?.SetEnabled(true);
+
+            if (result.Status != PlayGamesFriendsStatus.Ok)
+            {
+                SetStatus(Describe(result.Status), error: true);
+                return;
+            }
+
+            _playGamesFound = result.Suggestions;
+            SetStatus(result.Suggestions.Count == 0 ? "None of your Play Games friends play yet." : "", error: false);
+            if (_shown != null) Render(_shown);
+        }
+
+        private static string Describe(PlayGamesFriendsStatus status) => status switch
+        {
+            PlayGamesFriendsStatus.Unauthenticated => "Sign in to Play Games to find your friends there.",
+            PlayGamesFriendsStatus.FriendsHidden   => "Play Games friends are not shared with this game.",
+            PlayGamesFriendsStatus.InvalidCode     => "Play Games did not answer. Try again.",
+            PlayGamesFriendsStatus.Upstream        => "Play Games did not answer. Try again.",
+            PlayGamesFriendsStatus.Unavailable     => "Play Games friends are not available yet.",
+            PlayGamesFriendsStatus.RateLimited     => "Too many requests. Try again in a minute.",
+            PlayGamesFriendsStatus.Malformed       => "This build cannot read the server's answer. Update the game.",
+            _                                      => "Could not reach the server.",
+        };
+
+        /// <summary>
+        /// The Play Games section. Each friend's state is read off the CURRENT graph rather than off
+        /// the server's answer, so an Add redraws as Requested without asking Google again.
+        /// </summary>
+        private void RenderPlayGames(FriendsSnapshot snapshot)
+        {
+            if (_playGamesFound == null) return;
+
+            static bool Has(IReadOnlyList<FriendEntry> list, string code)
+            {
+                foreach (FriendEntry e in list) if (e.Code == code) return true;
+                return false;
+            }
+
+            var rows = new List<VisualElement>();
+            foreach (PlayGamesSuggestion found in _playGamesFound)
+            {
+                string code = found.Code;
+                if (Has(snapshot.Friends, code) || Has(snapshot.Blocked, code)) continue;
+
+                (string, bool, Action) action;
+                if (Has(snapshot.Incoming, code))
+                    action = ("Accept", true, () => Run(t => FriendsGateway.AcceptAsync(t, code), "Friend added."));
+                else if (Has(snapshot.Outgoing, code))
+                    action = ("Requested", false, null);
+                else
+                    action = ("Add", true, () => Run(t => FriendsGateway.RequestAsync(t, code), "Request sent."));
+
+                VisualElement row = Row(new FriendEntry(code, found.DisplayName), action);
+                row.Insert(1, PlayGamesProfileButton(found, snapshot.DisplayName));
+                rows.Add(row);
+            }
+
+            _lists.Add(Section($"FROM PLAY GAMES ({rows.Count})"));
+            foreach (VisualElement row in rows) _lists.Add(row);
+        }
+
+        /// <summary>Opens the friend's Play Games profile. Only ever beside a player the server
+        /// found through Play Games, never an opponent: a bot has no profile.</summary>
+        private static Button PlayGamesProfileButton(PlayGamesSuggestion found, string myName)
+        {
+            string id = found.PlayGamesId, name = found.DisplayName;
+            var button = new Button(() => PlayGamesServices.ShowProfile(id, name, myName))
+            {
+                text = "Play Games",
+                tooltip = "Play Games profile",
+            };
+            button.AddToClassList("fr-row__button");
+            button.AddToClassList("fr-row__play-games");
+            return button;
+        }
+
+        /// <summary>
         /// One call at a time: take a fresh token, make the call, redraw from the answer.
         ///
         /// <para><b>async void</b> because it is started from a click and nothing can await it; the
@@ -594,6 +710,8 @@ namespace Kingdom.Presentation
                 _lists.Add(row);
             }
 
+            RenderPlayGames(snapshot);
+
             if (snapshot.Outgoing.Count > 0)
             {
                 _lists.Add(Section($"SENT ({snapshot.Outgoing.Count})"));
@@ -684,6 +802,7 @@ namespace Kingdom.Presentation
                 var button = new Button(onClick) { text = text };
                 button.AddToClassList("fr-row__button");
                 if (primary) button.AddToClassList("emb-primary");
+                if (onClick == null) button.SetEnabled(false);   // a state, not an action
                 row.Add(button);
             }
             return row;

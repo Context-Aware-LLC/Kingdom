@@ -25,7 +25,13 @@ namespace Kingdom.Session
                                                 new UnityWebRequestAuthHttp(TimeoutSeconds));
 
         /// <summary>Drop the cached gateway. Called from <see cref="DeviceAccounts.Invalidate"/>.</summary>
-        public static void Invalidate() => _gateway = null;
+        public static void Invalidate()
+        {
+            _gateway = null;
+            _playGames = null;
+            // Another account on this device has to claim the Play Games id for itself.
+            PlayGamesServices.ForgetLink();
+        }
 
         public static Task<FriendsSnapshot> FetchAsync(string accessToken, CancellationToken ct = default)
             => Guard(g => g.FetchAsync(accessToken, ct));
@@ -49,6 +55,35 @@ namespace Kingdom.Session
 
         public static Task<FriendsSnapshot> UnblockAsync(string accessToken, string code, CancellationToken ct = default)
             => Guard(g => g.UnblockAsync(accessToken, code, ct));
+
+        private static HttpPlayGamesFriendsGateway _playGames;
+
+        private static HttpPlayGamesFriendsGateway PlayGames =>
+            _playGames ??= new HttpPlayGamesFriendsGateway(CollectionGateway.BaseUrl,
+                                                           new UnityWebRequestAuthHttp(TimeoutSeconds));
+
+        /// <summary>Make this player findable by their Play Games friends (#423). Takes a server
+        /// auth code from <see cref="PlayGamesServices"/>, never an id.</summary>
+        public static async Task<PlayGamesFriendsStatus> LinkPlayGamesAsync(string accessToken, string authCode)
+        {
+            try { return await PlayGames.LinkAsync(accessToken, authCode); }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Friends] Play Games link threw ({ex.GetType().Name}: {ex.Message}).");
+                return PlayGamesFriendsStatus.Offline;
+            }
+        }
+
+        /// <summary>This player's Play Games friends who play Bad Ideas (#423).</summary>
+        public static async Task<PlayGamesFriendsResult> FindPlayGamesFriendsAsync(string accessToken, string authCode)
+        {
+            try { return await PlayGames.FindAsync(accessToken, authCode); }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Friends] Play Games friends threw ({ex.GetType().Name}: {ex.Message}).");
+                return new PlayGamesFriendsResult(PlayGamesFriendsStatus.Offline);
+            }
+        }
 
         /// <summary>The gateway is written not to throw, and a screen must not be the place that
         /// finds out it was wrong about that.</summary>

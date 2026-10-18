@@ -108,6 +108,18 @@ namespace Kingdom.Net.Server
         public IFriendStore? FriendStore { get; init; }
 
         /// <summary>
+        /// Google's side of Play Games (#423). Null (default) turns the <c>/play-games</c> routes
+        /// off. Built from <see cref="GooglePlayGamesApi.ClientIdEnvVar"/> and
+        /// <see cref="GooglePlayGamesApi.ClientSecretEnvVar"/>: the Play Console's Game server
+        /// credential.
+        /// </summary>
+        public IPlayGamesApi? PlayGames { get; init; }
+
+        /// <summary>Which account holds which Play Games id. Null (default) uses
+        /// <see cref="InMemoryPlayGamesLinkStore"/>; shares the accounts database in production.</summary>
+        public IPlayGamesLinkStore? PlayGamesLinks { get; init; }
+
+        /// <summary>
         /// The append-only entitlement ledger (EF-072) — where card, pack and currency ownership
         /// actually lives. <b>Null → ownership stays UNKNOWN</b> and <see cref="AccountOwnedCounts"/>
         /// keeps handing L6 the "do not constrain" null for standard accounts, which is a normal and
@@ -237,6 +249,9 @@ namespace Kingdom.Net.Server
             IFriendStore? friendStore = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresFriendStore(accountsDb!, new SystemTimeSource());
+            IPlayGamesLinkStore? playGamesLinks = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new PostgresPlayGamesLinkStore(accountsDb!, new SystemTimeSource());
 
             // The entitlement ledger — the write path that makes an unowned card a real thing. It
             // falls back to the accounts connection because the ledger is keyed on Account.PlayerId
@@ -276,6 +291,8 @@ namespace Kingdom.Net.Server
                 AccountStore = accountStore,
                 PlayerDataStore = playerDataStore,
                 FriendStore = friendStore,
+                PlayGames = GooglePlayGamesApi.FromEnvironment(),
+                PlayGamesLinks = playGamesLinks,
                 EntitlementLedger = entitlementLedger,
                 QuestProgress = questProgress,
                 Achievements = achievements,
@@ -647,7 +664,10 @@ namespace Kingdom.Net.Server
                 friendStore,
                 new FriendLimits(),
                 new FriendRequestLimiter(time),
-                socialHub);
+                socialHub,
+                cfg.PlayGames,
+                cfg.PlayGamesLinks ?? new InMemoryPlayGamesLinkStore(),
+                new FriendRequestLimiter(time, max: 6, windowMs: 60_000));
 
             var app = builder.Build();
             app.UseWebSockets();
@@ -994,6 +1014,19 @@ namespace Kingdom.Net.Server
 
             // There is no route that sets the name a friend sees: it is the sign-up name, read
             // out of the token (FriendsEndpoint.SyncNameAsync).
+
+            // Play Games (#423): the body carries a single-use server auth code from the phone's
+            // Play Games SDK, never an id. Google answers the ids.
+            app.MapPost("/play-games/link", async (HttpContext context) =>
+            {
+                return PlayGamesJson(context, await friends.LinkPlayGamesAsync(BearerFrom(context),
+                    await SmallJsonStringAsync(context, "authCode"), context.RequestAborted));
+            });
+            app.MapPost("/friends/play-games", async (HttpContext context) =>
+            {
+                return PlayGamesJson(context, await friends.FindPlayGamesFriendsAsync(BearerFrom(context),
+                    await SmallJsonStringAsync(context, "authCode"), context.RequestAborted));
+            });
 
             // GET /collection — what the signed-in player owns, read down from the entitlement
             // ledger. This is the wire that makes a reinstall recoverable: the ledger has been the
@@ -1506,6 +1539,25 @@ namespace Kingdom.Net.Server
         ///
         /// <para>Cache-Control: no-store, for the reason <c>/roster</c> sets it.</para>
         /// </summary>
+        /// <summary>
+        /// The <c>/play-games</c> routes' JSON. <c>suggestions</c> is present only on a 200 from
+        /// <c>/friends/play-games</c>, an array of flat objects like every <c>/friends</c> list.
+        /// <c>displayName</c> is peer-authored and goes to <c>FriendsDrawerController.NameLabel</c>
+        /// like every other name in the drawer (security.md, "Friends routes").
+        /// </summary>
+        private static IResult PlayGamesJson(HttpContext context, PlayGamesFriendsResult result)
+        {
+            context.Response.Headers["Cache-Control"] = "no-store";
+            string status = result.Status.ToString().ToLowerInvariant();
+            if (result.Suggestions is not { } suggestions)
+                return Results.Json(new { status }, statusCode: result.HttpStatus);
+
+            var rows = new List<object>(suggestions.Count);
+            foreach (PlayGamesSuggestion s in suggestions)
+                rows.Add(new { code = s.Code, displayName = s.DisplayName, playGamesId = s.PlayGamesId, relation = s.Relation });
+            return Results.Json(new { status, suggestions = rows }, statusCode: result.HttpStatus);
+        }
+
         private static IResult FriendsJson(HttpContext context, FriendsResult result)
         {
             context.Response.Headers["Cache-Control"] = "no-store";

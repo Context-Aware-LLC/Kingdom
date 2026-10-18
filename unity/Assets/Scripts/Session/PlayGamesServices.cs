@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Kingdom.Net.Client.Achievements;
+using Kingdom.Net.Client.Social;
 using UnityEngine;
 #if UNITY_ANDROID
 using GooglePlayGames;
@@ -20,8 +21,9 @@ namespace Kingdom.Session
     /// back from Play Games.</para>
     ///
     /// <para><b>Play Games is not the player's account.</b> Signing in here gives the player their
-    /// achievements; their Bad Ideas account is still the Supabase sign-in, and nothing links the two
-    /// yet.</para>
+    /// achievements; their Bad Ideas account is still the Supabase sign-in. The server records the
+    /// player's Play Games id against that account (<see cref="LinkAsync"/>) only so their Play
+    /// Games friends can find them (#423).</para>
     ///
     /// <para><b>The plugin's own calls, never Unity's Social API.</b> Unity 6000.6 marks
     /// <c>Social</c>, <c>ISocialPlatform</c>, <c>IAchievement</c> and <c>IAchievementDescription</c>
@@ -39,8 +41,11 @@ namespace Kingdom.Session
         private static readonly HashSet<string> Unlocked = new HashSet<string>(StringComparer.Ordinal);
         private static Task<bool> _signIn;
         private static HttpAchievementGateway _gateway;
+        private static bool _linked;
 
-        private static bool IsSupported =>
+        /// <summary>Play Games exists on this build: an Android device. Screens hide their Play
+        /// Games buttons everywhere else.</summary>
+        public static bool IsSupported =>
 #if UNITY_ANDROID && !UNITY_EDITOR
             true;
 #else
@@ -132,7 +137,133 @@ namespace Kingdom.Session
             }
         }
 
+        /// <summary>
+        /// The achievements button: sign in by hand when the automatic sign-in failed (Play's
+        /// quality checklist asks for a way back in), copy the server's achievements, then open
+        /// Play Games' own achievements screen. False when the player is still not signed in.
+        /// </summary>
+        public static async Task<bool> ShowAchievementsAsync()
+        {
+            if (!IsSupported) return false;
+            if (!await SignInAsync())
+            {
+                if (!await ManualSignIn()) return false;
+                _signIn = Task.FromResult(true);
+            }
+
+            try
+            {
+                if (AuthGateway.IsSignedIn)
+                {
+                    string token = await AuthGateway.TokenForConnectAsync();
+                    await SyncAchievementsAsync(token);
+                    _ = LinkAsync(token);
+                }
+            }
+            catch (Exception ex)
+            {
+                // The Play Games screen still opens, showing what is already unlocked.
+                Debug.LogWarning($"[PlayGames] achievements not synced before showing ({ex.GetType().Name}: {ex.Message}).");
+            }
+            ShowAchievementsUi();
+            return true;
+        }
+
+        /// <summary>
+        /// Tell the server this player's Play Games id, so their Play Games friends can find them
+        /// (#423). Once per launch, after Play Games signs in. Never throws; nothing waits on it.
+        /// </summary>
+        public static async Task LinkAsync(string accessToken)
+        {
+            if (!IsSupported || _linked) return;
+            try
+            {
+                if (!await SignInAsync()) return;
+                string code = await ServerAuthCode();
+                if (string.IsNullOrEmpty(code)) return;
+                PlayGamesFriendsStatus status = await FriendsGateway.LinkPlayGamesAsync(accessToken, code);
+                _linked = status == PlayGamesFriendsStatus.Ok;
+                if (!_linked) Debug.Log($"[PlayGames] not linked ({status}).");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[PlayGames] link failed ({ex.GetType().Name}: {ex.Message}).");
+            }
+        }
+
+        /// <summary>Link again on the next <see cref="LinkAsync"/>: the account changed.</summary>
+        public static void ForgetLink() => _linked = false;
+
+        /// <summary>
+        /// "Find Friends From Play Games": sign in by hand if need be, ask the player to share their
+        /// Play Games friends if they have not, then have the server list the ones who play. The
+        /// consent is Google's own sheet, shown once; a refusal answers FriendsHidden.
+        /// </summary>
+        public static async Task<PlayGamesFriendsResult> FindFriendsAsync(string accessToken)
+        {
+            if (!IsSupported) return new PlayGamesFriendsResult(PlayGamesFriendsStatus.Unavailable);
+            try
+            {
+                if (!await SignInAsync())
+                {
+                    if (!await ManualSignIn()) return new PlayGamesFriendsResult(PlayGamesFriendsStatus.Unauthenticated);
+                    _signIn = Task.FromResult(true);
+                }
+                if (!await FriendsShared()) return new PlayGamesFriendsResult(PlayGamesFriendsStatus.FriendsHidden);
+
+                string code = await ServerAuthCode();
+                if (string.IsNullOrEmpty(code)) return new PlayGamesFriendsResult(PlayGamesFriendsStatus.InvalidCode);
+                PlayGamesFriendsResult result = await FriendsGateway.FindPlayGamesFriendsAsync(accessToken, code);
+                if (result.Status == PlayGamesFriendsStatus.Ok) _linked = true;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[PlayGames] find friends failed ({ex.GetType().Name}: {ex.Message}).");
+                return new PlayGamesFriendsResult(PlayGamesFriendsStatus.Offline);
+            }
+        }
+
+        /// <summary>Open a Play Games player's profile, the icon beside a Play Games friend.</summary>
+        public static void ShowProfile(string playGamesId, string theirName, string myName)
+        {
+            if (!IsSupported || string.IsNullOrEmpty(playGamesId)) return;
+            ShowProfileUi(playGamesId, theirName ?? "", myName ?? "");
+        }
+
 #if UNITY_ANDROID
+        private static Task<bool> ManualSignIn()
+        {
+            var done = new TaskCompletionSource<bool>();
+            PlayGamesPlatform.Instance.ManuallyAuthenticate(status => done.TrySetResult(status == SignInStatus.Success));
+            return done.Task;
+        }
+
+        private static void ShowAchievementsUi() => PlayGamesPlatform.Instance.ShowAchievementsUI(null);
+
+        private static Task<string> ServerAuthCode()
+        {
+            var done = new TaskCompletionSource<string>();
+            PlayGamesPlatform.Instance.RequestServerSideAccess(false, code => done.TrySetResult(code));
+            return done.Task;
+        }
+
+        private static Task<bool> FriendsShared()
+        {
+            var done = new TaskCompletionSource<bool>();
+            PlayGamesPlatform.Instance.GetFriendsListVisibility(true, visibility =>
+            {
+                if (visibility == FriendsListVisibilityStatus.Visible) { done.TrySetResult(true); return; }
+                if (visibility != FriendsListVisibilityStatus.ResolutionRequired) { done.TrySetResult(false); return; }
+                PlayGamesPlatform.Instance.AskForLoadFriendsResolution(ui => done.TrySetResult(ui == UIStatus.Valid));
+            });
+            return done.Task;
+        }
+
+        private static void ShowProfileUi(string playGamesId, string theirName, string myName)
+            => PlayGamesPlatform.Instance.ShowCompareProfileWithAlternativeNameHintsUI(
+                playGamesId, theirName, myName, null);
+
         private static Task<bool> Authenticate()
         {
             var signedIn = new TaskCompletionSource<bool>();
@@ -148,6 +279,12 @@ namespace Kingdom.Session
         private static void Unlock(string playGamesId, Action<bool> done)
             => PlayGamesPlatform.Instance.UnlockAchievement(playGamesId, done);
 #else
+        private static Task<bool> ManualSignIn() => Task.FromResult(false);
+        private static void ShowAchievementsUi() { }
+        private static Task<string> ServerAuthCode() => Task.FromResult<string>(null);
+        private static Task<bool> FriendsShared() => Task.FromResult(false);
+        private static void ShowProfileUi(string playGamesId, string theirName, string myName) { }
+
         private static Task<bool> Authenticate() => Task.FromResult(false);
 
         private static void Unlock(string playGamesId, Action<bool> done) => done(false);

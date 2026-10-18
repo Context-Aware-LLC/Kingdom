@@ -74,6 +74,63 @@ namespace Kingdom.Net.Server.Social
         };
     }
 
+    /// <summary>What a <c>/play-games</c> route answers with. The lower-cased name is the wire
+    /// <c>status</c> string.</summary>
+    public enum PlayGamesFriendsStatus
+    {
+        /// <summary><c>POST /friends/play-games</c> listed the suggestions. Empty is still Known.</summary>
+        Known,
+
+        /// <summary><c>POST /play-games/link</c> stored the caller's Play Games id.</summary>
+        Linked,
+
+        Unauthenticated,
+
+        /// <summary>No Game server credential or no account store on this box. 503.</summary>
+        Unavailable,
+
+        /// <summary>No auth code, or Google refused it. 400.</summary>
+        InvalidCode,
+
+        /// <summary>The player has not shared their Play Games friends with this game. 403.</summary>
+        FriendsHidden,
+
+        /// <summary>Google did not answer. 502.</summary>
+        Upstream,
+
+        RateLimited,
+    }
+
+    /// <summary>A Play Games friend who also plays, as the client is shown them.</summary>
+    /// <param name="Relation"><c>none</c>, <c>outgoing</c> (the caller has asked them) or
+    /// <c>incoming</c> (they have asked the caller).</param>
+    public sealed record PlayGamesSuggestion(string Code, string DisplayName, string PlayGamesId, string Relation);
+
+    public sealed class PlayGamesFriendsResult
+    {
+        public PlayGamesFriendsStatus Status { get; }
+
+        /// <summary>Non-null only on Known.</summary>
+        public IReadOnlyList<PlayGamesSuggestion>? Suggestions { get; }
+
+        public PlayGamesFriendsResult(PlayGamesFriendsStatus status, IReadOnlyList<PlayGamesSuggestion>? suggestions = null)
+        {
+            Status = status;
+            Suggestions = suggestions;
+        }
+
+        public int HttpStatus => Status switch
+        {
+            PlayGamesFriendsStatus.Unauthenticated => 401,
+            PlayGamesFriendsStatus.Unavailable => 503,
+            PlayGamesFriendsStatus.InvalidCode => 400,
+            PlayGamesFriendsStatus.FriendsHidden => 403,
+            PlayGamesFriendsStatus.Upstream => 502,
+            PlayGamesFriendsStatus.RateLimited => 429,
+            _ => 200,
+        };
+    }
+
     /// <summary>
     /// A fixed-window cap on how many code-taking writes one account may make. In memory and per
     /// process: with more than one machine the real ceiling is this times the machine count, which
@@ -145,17 +202,27 @@ namespace Kingdom.Net.Server.Social
         private readonly FriendLimits _limits;
         private readonly FriendRequestLimiter _limiter;
         private readonly SocialHub? _hub;
+        private readonly IPlayGamesApi? _playGames;
+        private readonly IPlayGamesLinkStore? _playGamesLinks;
+        private readonly FriendRequestLimiter? _playGamesLimiter;
 
         /// <param name="hub">Told whenever a write changes somebody ELSE's view of the graph, so
         /// a connected player hears about a request or a removal without polling. Null on a box
         /// with no social socket; the routes are complete without it.</param>
+        /// <param name="playGames">Google's side of Play Games (#423). Null turns the
+        /// <c>/play-games</c> routes off: they answer Unavailable.</param>
+        /// <param name="playGamesLimiter">Caps the Play Games routes per account: each one costs
+        /// several calls to Google.</param>
         public FriendsEndpoint(
             IIdentityTokenVerifier? verifier,
             IAccountStore? accounts,
             IFriendStore friends,
             FriendLimits limits,
             FriendRequestLimiter limiter,
-            SocialHub? hub = null)
+            SocialHub? hub = null,
+            IPlayGamesApi? playGames = null,
+            IPlayGamesLinkStore? playGamesLinks = null,
+            FriendRequestLimiter? playGamesLimiter = null)
         {
             _verifier = verifier;
             _accounts = accounts;
@@ -163,6 +230,95 @@ namespace Kingdom.Net.Server.Social
             _limits = limits;
             _limiter = limiter;
             _hub = hub;
+            _playGames = playGames;
+            _playGamesLinks = playGamesLinks;
+            _playGamesLimiter = playGamesLimiter;
+        }
+
+        /// <summary>
+        /// <c>POST /play-games/link {authCode}</c>: store the caller's Play Games id, so their Play
+        /// Games friends can find them. The client calls it once a launch, after Play Games signs in.
+        /// The id is read from Google with the server's own credential; the client sends only a
+        /// single-use auth code, so nobody can link an id they do not hold.
+        /// </summary>
+        public async Task<PlayGamesFriendsResult> LinkPlayGamesAsync(
+            string? bearerToken, string? authCode, CancellationToken ct = default)
+        {
+            var (refusal, _, _) = await OpenPlayGamesAsync(bearerToken, authCode, withFriends: false, ct)
+                .ConfigureAwait(false);
+            return refusal ?? new PlayGamesFriendsResult(PlayGamesFriendsStatus.Linked);
+        }
+
+        /// <summary>
+        /// <c>POST /friends/play-games {authCode}</c>: the caller's Play Games friends who play Bad
+        /// Ideas, each to be added with an ordinary friend request (#423).
+        ///
+        /// <para><b>The friends list is never stored.</b> Google's terms keep friends data, derived
+        /// data included, 30 days at most, so it is fetched on every call and dropped with the
+        /// response. Only the caller's own id is kept.</para>
+        ///
+        /// <para>Left out: the caller, existing friends, and anyone blocked by either side, so a
+        /// block stays invisible to the blocked player as it is everywhere else.</para>
+        /// </summary>
+        public async Task<PlayGamesFriendsResult> FindPlayGamesFriendsAsync(
+            string? bearerToken, string? authCode, CancellationToken ct = default)
+        {
+            var (refusal, playerId, session) = await OpenPlayGamesAsync(bearerToken, authCode, withFriends: true, ct)
+                .ConfigureAwait(false);
+            if (refusal != null) return refusal;
+
+            IReadOnlyDictionary<string, string> found = await _playGamesLinks!
+                .FindAsync(session!.FriendIds!, ct).ConfigureAwait(false);
+            FriendList mine = await _friends.ReadAsync(playerId, ct).ConfigureAwait(false);
+            static bool Has(IReadOnlyList<FriendIdentity> list, string id) => list.Any(e => e.PlayerId == id);
+
+            var suggestions = new List<PlayGamesSuggestion>();
+            foreach (var (playGamesId, target) in found)
+            {
+                if (target == playerId || Has(mine.Friends, target) || Has(mine.Blocked, target)) continue;
+                FriendList theirs = await _friends.ReadAsync(target, ct).ConfigureAwait(false);
+                if (Has(theirs.Blocked, playerId)) continue;
+
+                string relation = Has(mine.Outgoing, target) ? "outgoing"
+                    : Has(mine.Incoming, target) ? "incoming" : "none";
+                suggestions.Add(new PlayGamesSuggestion(
+                    theirs.Self.Code, theirs.Self.DisplayName ?? "", playGamesId, relation));
+            }
+
+            suggestions.Sort((a, b) => string.Compare(a.DisplayName, b.DisplayName, StringComparison.OrdinalIgnoreCase));
+            return new PlayGamesFriendsResult(PlayGamesFriendsStatus.Known, suggestions);
+        }
+
+        /// <summary>Authenticate, rate-limit, open the auth code with Google and link the id it
+        /// names. A refusal, or the caller and their Google session.</summary>
+        private async Task<(PlayGamesFriendsResult? Refusal, string PlayerId, PlayGamesSession? Session)> OpenPlayGamesAsync(
+            string? bearerToken, string? authCode, bool withFriends, CancellationToken ct)
+        {
+            var (refusal, playerId) = await ResolveAsync(bearerToken, ct).ConfigureAwait(false);
+            if (refusal != null)
+                return (new PlayGamesFriendsResult(refusal.Status == FriendsStatus.Unauthenticated
+                    ? PlayGamesFriendsStatus.Unauthenticated : PlayGamesFriendsStatus.Unavailable), "", null);
+            if (_playGames is null || _playGamesLinks is null)
+                return (new PlayGamesFriendsResult(PlayGamesFriendsStatus.Unavailable), "", null);
+            if (_playGamesLimiter != null && !_playGamesLimiter.TryTake(playerId))
+                return (new PlayGamesFriendsResult(PlayGamesFriendsStatus.RateLimited), "", null);
+            if (string.IsNullOrWhiteSpace(authCode))
+                return (new PlayGamesFriendsResult(PlayGamesFriendsStatus.InvalidCode), "", null);
+
+            PlayGamesSession session = await _playGames.OpenAsync(authCode!, withFriends, ct).ConfigureAwait(false);
+            if (session.PlayerId is string playGamesId)
+                await _playGamesLinks.LinkAsync(playerId, playGamesId, ct).ConfigureAwait(false);
+
+            PlayGamesFriendsStatus? failed = session.Status switch
+            {
+                PlayGamesCallStatus.Ok => null,
+                PlayGamesCallStatus.CodeRefused => PlayGamesFriendsStatus.InvalidCode,
+                PlayGamesCallStatus.FriendsHidden => PlayGamesFriendsStatus.FriendsHidden,
+                _ => PlayGamesFriendsStatus.Upstream,
+            };
+            return failed is { } status
+                ? (new PlayGamesFriendsResult(status), "", null)
+                : (null, playerId, session);
         }
 
         public FriendLimits Limits => _limits;

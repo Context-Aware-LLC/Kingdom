@@ -70,6 +70,9 @@
                 <ui:Button name="btn-add" text="Add" class="fr-small-button emb-primary" />
             </ui:VisualElement>
 
+            <!-- Find Friends From Play Games (#423). Android only: the controller shows it. -->
+            <ui:Button name="btn-play-games-friends" text="Find Friends From Play Games" class="fr-small-button fr-play-games" style="display: none;" />
+
             <ui:Label name="status" text=" " class="fr-status" />
 
             <ui:ScrollView name="lists" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="fr-lists" />
