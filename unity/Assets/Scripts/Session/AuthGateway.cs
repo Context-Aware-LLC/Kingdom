@@ -34,6 +34,7 @@ namespace Kingdom.Session
         private const string SettingsResourcePath = "SupabaseAuthSettings";
 
         private static AuthTokenProvider _provider;
+        private static SupabaseAuthConfig _config = SupabaseAuthConfig.Unconfigured;
 
         /// <summary>The provider, built on first touch. Never null.</summary>
         public static AuthTokenProvider Provider
@@ -54,6 +55,17 @@ namespace Kingdom.Session
         /// <summary>The signed-in address, or empty. Display only — read out of the JWT without
         /// verifying it, which only the server can do.</summary>
         public static string SignedInEmail => Provider.Current.Email;
+
+        /// <summary>The Google client Android's native sign-in requests its token for; empty when
+        /// this build signs in to Google through the browser only.</summary>
+        public static string GoogleNativeClientId
+        {
+            get
+            {
+                _ = Provider;   // loads the settings asset on first touch
+                return _config.GoogleNativeClientId;
+            }
+        }
 
         /// <summary>Drop the cached provider so the next read rebuilds it against the current local
         /// account. Called by <see cref="DeviceAccounts.Invalidate"/>.</summary>
@@ -83,6 +95,7 @@ namespace Kingdom.Session
         private static AuthTokenProvider Build()
         {
             SupabaseAuthConfig config = LoadConfig();
+            _config = config;
             var backend = new SupabaseAuthBackend(config, new UnityWebRequestAuthHttp());
 
             return new AuthTokenProvider(

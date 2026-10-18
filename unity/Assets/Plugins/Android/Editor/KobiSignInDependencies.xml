@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dependencies><!--  Android's native Google sign-in (KobiGoogleSignIn.java). The External Dependency
+     Manager writes these into mainTemplate.gradle. The versions are the ones Google's own Unity
+     sample (android/games-samples, trivialkart-unity) ships; they need compileSdk 35+ and AGP 8.6+.  -->
+
+  <androidPackages>
+    <androidPackage spec='androidx.annotation:annotation:1.9.1'>
+      <repositories>
+        <repository>https://maven.google.com/</repository>
+      </repositories>
+    </androidPackage>
+    <androidPackage spec='androidx.credentials:credentials:1.6.0'>
+      <repositories>
+        <repository>https://maven.google.com/</repository>
+      </repositories>
+    </androidPackage>
+    <androidPackage spec='androidx.credentials:credentials-play-services-auth:1.6.0'>
+      <repositories>
+        <repository>https://maven.google.com/</repository>
+      </repositories>
+    </androidPackage>
+    <androidPackage spec='com.google.android.libraries.identity.googleid:googleid:1.2.0'>
+      <repositories>
+        <repository>https://maven.google.com/</repository>
+      </repositories>
+    </androidPackage>
+  </androidPackages>
+</dependencies>

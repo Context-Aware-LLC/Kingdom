@@ -1,7 +1,11 @@
 <dependencies>
   <packages>
+    <package>androidx.annotation:annotation:1.9.1</package>
+    <package>androidx.credentials:credentials-play-services-auth:1.6.0</package>
+    <package>androidx.credentials:credentials:1.6.0</package>
     <package>com.google.android.gms:play-services-games-v2:22.1.0</package>
     <package>com.google.android.gms:play-services-nearby:18.5.0</package>
+    <package>com.google.android.libraries.identity.googleid:googleid:1.2.0</package>
   </packages>
   <files />
   <settings>

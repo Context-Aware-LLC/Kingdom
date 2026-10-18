@@ -33,11 +33,18 @@ namespace Kingdom.Session
                  "listed in the project's allowed redirect URLs or the redirect is dropped.")]
         [SerializeField] private string redirectUrl = "emberfall://auth";
 
+        [Tooltip("Google OAuth WEB client id that Android's native Google sign-in requests its token " +
+                 "for. It must sit in the same Google Cloud project as the app's Android OAuth client " +
+                 "(package + signing SHA-1), and in the Supabase Google provider's Client IDs. Empty " +
+                 "turns native sign-in off; Google sign-in then uses the browser.")]
+        [SerializeField] private string googleNativeClientId = "";
+
         public SupabaseAuthConfig ToConfig() => new SupabaseAuthConfig
         {
             ProjectUrl = projectUrl == null ? "" : projectUrl.Trim(),
             AnonKey = anonKey == null ? "" : anonKey.Trim(),
             RedirectUrl = redirectUrl == null ? "" : redirectUrl.Trim(),
+            GoogleNativeClientId = googleNativeClientId == null ? "" : googleNativeClientId.Trim(),
         };
     }
 }

@@ -6,8 +6,12 @@ apply from: '../shared/common.gradle'
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 // Android Resolver Dependencies Start
+    implementation 'androidx.annotation:annotation:1.9.1' // Assets/Plugins/Android/Editor/KobiSignInDependencies.xml:7
+    implementation 'androidx.credentials:credentials-play-services-auth:1.6.0' // Assets/Plugins/Android/Editor/KobiSignInDependencies.xml:17
+    implementation 'androidx.credentials:credentials:1.6.0' // Assets/Plugins/Android/Editor/KobiSignInDependencies.xml:12
     implementation 'com.google.android.gms:play-services-games-v2:22.1.0' // Assets/GooglePlayGames/com.google.play.games/Editor/GooglePlayGamesPluginDependencies.xml:9
     implementation 'com.google.android.gms:play-services-nearby:18.5.0' // Assets/GooglePlayGames/com.google.play.games/Editor/GooglePlayGamesPluginDependencies.xml:14
+    implementation 'com.google.android.libraries.identity.googleid:googleid:1.2.0' // Assets/Plugins/Android/Editor/KobiSignInDependencies.xml:22
 // Android Resolver Dependencies End
 **DEPS**}
 

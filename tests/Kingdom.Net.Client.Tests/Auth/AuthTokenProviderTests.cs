@@ -152,6 +152,31 @@ namespace Kingdom.Net.Client.Tests.Auth
         }
 
         [Test]
+        public async Task A_native_Google_token_signs_in_and_a_refused_one_keeps_the_session_it_had()
+        {
+            var clock = new FakeClock(1_000_000);
+            var store = new InMemoryAuthSessionStore();
+            var backend = new FakeAuthBackend
+            {
+                IdTokenResult = AuthResult.Succeeded(Signed(clock.NowMs + 3_600_000)),
+            };
+            var provider = new AuthTokenProvider(backend, store, clock);
+
+            AuthResult signedIn = await provider.SignInWithIdTokenAsync("google", "google-id-token", "raw-nonce");
+
+            Assert.That(signedIn.Ok, Is.True);
+            Assert.That(backend.LastIdToken, Is.EqualTo("google-id-token"));
+            Assert.That(await provider.TokenForConnectAsync(), Is.EqualTo("access-1"));
+
+            backend.IdTokenResult = AuthResult.Failed(AuthFailure.Rejected, "Unacceptable audience");
+            AuthResult refused = await provider.SignInWithIdTokenAsync("google", "other-token", "raw-nonce");
+
+            Assert.That(refused.Ok, Is.False);
+            Assert.That(store.Load().AccessToken, Is.EqualTo("access-1"),
+                "a refused sign-in must not sign the player out of the account they are in");
+        }
+
+        [Test]
         public async Task A_failed_completion_also_drops_the_pending_verifier()
         {
             var store = new InMemoryAuthSessionStore();

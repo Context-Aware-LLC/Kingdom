@@ -146,6 +146,16 @@ namespace Kingdom.Net.Client.Tests.Auth
                 ? CompleteResult
                 : AuthResult.Failed(AuthFailure.Rejected, "not started here"));
 
+        public AuthResult IdTokenResult { get; set; } = AuthResult.Failed(AuthFailure.Rejected, "Unacceptable audience");
+        public string? LastIdToken { get; private set; }
+
+        public Task<AuthResult> SignInWithIdTokenAsync(
+            string provider, string idToken, string? rawNonce, CancellationToken cancellationToken = default)
+        {
+            LastIdToken = idToken;
+            return Task.FromResult(IdTokenResult);
+        }
+
         public Task<AuthResult> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default)
         {
             RefreshCalls++;

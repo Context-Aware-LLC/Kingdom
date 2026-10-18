@@ -35,6 +35,12 @@ namespace Kingdom.Net.Client.Auth
         /// drops the redirect and the player lands nowhere.</summary>
         public string RedirectUrl { get; init; } = "";
 
+        /// <summary>The Google OAuth web client that Android's native Google sign-in asks for a token
+        /// on behalf of; the token's audience. It must be listed in the project's Google provider
+        /// "Client IDs", or Supabase refuses the token. Empty means native sign-in is off and Google
+        /// sign-in uses the browser.</summary>
+        public string GoogleNativeClientId { get; init; } = "";
+
         public bool IsConfigured => ProjectUrl.Length > 0 && AnonKey.Length > 0;
 
         public static readonly SupabaseAuthConfig Unconfigured = new SupabaseAuthConfig();
@@ -114,6 +120,12 @@ namespace Kingdom.Net.Client.Auth
 
         /// <summary>Redeem the code that came back on the redirect for a session.</summary>
         Task<AuthResult> CompleteAsync(PendingSignIn pending, string authCode, CancellationToken cancellationToken = default);
+
+        /// <summary>Trade an ID token from a provider's own sign-in on the device (Google's native
+        /// sheet on Android) for a session. <paramref name="rawNonce"/> is the value whose hash went
+        /// into the token, or null when none did.</summary>
+        Task<AuthResult> SignInWithIdTokenAsync(
+            string provider, string idToken, string? rawNonce, CancellationToken cancellationToken = default);
 
         /// <summary>Trade a refresh token for a fresh session.</summary>
         Task<AuthResult> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default);
@@ -333,6 +345,34 @@ namespace Kingdom.Net.Client.Auth
 
             var response = await _http.PostJsonAsync(
                 Url("token", ("grant_type", "pkce")), body, Headers(), cancellationToken)
+                .ConfigureAwait(false);
+
+            return ReadSession(response);
+        }
+
+        /// <summary>
+        /// Trade a provider's ID token for a session at <c>token?grant_type=id_token</c> — the native
+        /// Google sign-in's half of what <see cref="CompleteAsync"/> is for the browser. Supabase
+        /// checks the token's audience against the provider's configured client ids, and that the
+        /// SHA-256 of <paramref name="rawNonce"/> is the nonce inside the token.
+        ///
+        /// <para>It reaches the same Supabase user as the browser sign-in: Google gives one account
+        /// the same <c>sub</c> whichever client asked for the token.</para>
+        /// </summary>
+        public async Task<AuthResult> SignInWithIdTokenAsync(
+            string provider, string idToken, string? rawNonce, CancellationToken cancellationToken = default)
+        {
+            if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
+            if (string.IsNullOrEmpty(provider) || string.IsNullOrEmpty(idToken))
+                return AuthResult.Failed(AuthFailure.Rejected, "The sign-in returned no token.");
+
+            string body = AuthJson.Object(
+                AuthJson.Field("provider", provider),
+                AuthJson.Field("id_token", idToken),
+                AuthJson.Field("nonce", string.IsNullOrEmpty(rawNonce) ? null : rawNonce));
+
+            var response = await _http.PostJsonAsync(
+                Url("token", ("grant_type", "id_token")), body, Headers(), cancellationToken)
                 .ConfigureAwait(false);
 
             return ReadSession(response);

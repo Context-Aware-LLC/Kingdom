@@ -220,6 +220,51 @@ namespace Kingdom.Net.Client.Tests.Auth
             Assert.That(http.Requests, Is.Empty);
         }
 
+        // ---- native Google sign-in --------------------------------------------------------
+
+        [Test]
+        public async Task A_native_Google_token_is_traded_at_the_id_token_grant_with_its_nonce()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                TokenReply.Body(Jwt.ForUser("user-1", "player@example.com"), "refresh-1", 3600));
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithIdTokenAsync("google", "google-id-token", "raw-nonce");
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(result.Session.UserId, Is.EqualTo("user-1"));
+            Assert.That(http.Requests[0].Url, Is.EqualTo("https://project.supabase.co/auth/v1/token?grant_type=id_token"));
+            Assert.That(http.Requests[0].Body, Does.Contain("\"provider\":\"google\""));
+            Assert.That(http.Requests[0].Body, Does.Contain("\"id_token\":\"google-id-token\""));
+            // The RAW nonce: Supabase hashes it and compares with the hash inside the token.
+            Assert.That(http.Requests[0].Body, Does.Contain("\"nonce\":\"raw-nonce\""));
+        }
+
+        [Test]
+        public async Task A_token_with_no_nonce_sends_none_rather_than_an_empty_one()
+        {
+            // Supabase: the request's nonce and the token's must both exist or both be absent.
+            var http = new FakeAuthHttp().Reply(200,
+                TokenReply.Body(Jwt.ForUser("user-1", "player@example.com"), "refresh-1", 3600));
+            var backend = Backend(http, new FakeClock());
+
+            await backend.SignInWithIdTokenAsync("google", "google-id-token", rawNonce: null);
+
+            Assert.That(http.Requests[0].Body, Does.Not.Contain("nonce"));
+        }
+
+        [Test]
+        public async Task An_empty_token_makes_no_request()
+        {
+            var http = new FakeAuthHttp();
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithIdTokenAsync("google", "", "raw-nonce");
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
+            Assert.That(http.Requests, Is.Empty);
+        }
+
         // ---- the display name, on the identity rather than the install -----------------
 
         [Test]

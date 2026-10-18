@@ -233,6 +233,21 @@ namespace Kingdom.Net.Client.Auth
         }
 
         /// <summary>
+        /// Sign in with an ID token the device's own sign-in produced (Google's native sheet on
+        /// Android). On success the session is stored and <see cref="SessionChanged"/> fires, exactly
+        /// as for the browser. A refusal leaves any stored session alone.
+        /// </summary>
+        public async Task<AuthResult> SignInWithIdTokenAsync(
+            string provider, string idToken, string? rawNonce, CancellationToken cancellationToken = default)
+        {
+            // No ConfigureAwait(false): Adopt writes PlayerPrefs and needs this continuation on the
+            // calling thread — see the note on Adopt.
+            AuthResult result = await _backend.SignInWithIdTokenAsync(provider, idToken, rawNonce, cancellationToken);
+            if (result.Ok) Adopt(result.Session);
+            return result;
+        }
+
+        /// <summary>
         /// Set a password on the signed-in user (NOR-246), so a later sign-in on this or another
         /// device can trade it for a session instead of going through email again.
         ///

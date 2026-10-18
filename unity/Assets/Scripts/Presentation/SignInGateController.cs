@@ -773,10 +773,8 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>
-        /// Open the Google consent page in the platform browser and store the PKCE verifier. The
-        /// redirect lands back via the <c>emberfall://auth</c> scheme, which <see cref="OnDeepLinkActivated"/>
-        /// and <see cref="Open"/> both watch for, so no further action is needed here beyond kicking off
-        /// the browser.
+        /// Google sign-in. On Android it is the system's own Google sheet (<see cref="NativeGoogleSignIn"/>);
+        /// everywhere else, and on Android whenever the sheet cannot finish, it is the browser.
         /// </summary>
         private void OnGoogleSignIn()
         {
@@ -784,6 +782,67 @@ namespace Kingdom.Presentation
             SetBusy(true, null);
             SetError("");
 
+            if (NativeGoogleSignIn.IsSupported && AuthGateway.GoogleNativeClientId.Length > 0)
+            {
+                SignInWithNativeGoogle();
+                return;
+            }
+            StartBrowserGoogleSignIn();
+        }
+
+        /// <summary>
+        /// The sheet, then Supabase. <b>Anything but the player closing the sheet falls back to the
+        /// browser</b>, so a phone without Google Play services, or a Google Cloud or Supabase set-up
+        /// that does not yet accept this build's token, still signs in the way it always has.
+        /// </summary>
+        private async void SignInWithNativeGoogle()
+        {
+            try
+            {
+                NativeGoogleSignIn.Result native =
+                    await NativeGoogleSignIn.SignInAsync(AuthGateway.GoogleNativeClientId);
+
+                if (native.Outcome == NativeGoogleSignIn.Outcome.Cancelled)
+                {
+                    SetBusy(false, null);
+                    return;
+                }
+
+                if (native.Outcome == NativeGoogleSignIn.Outcome.SignedIn)
+                {
+                    SetBusy(true, "Signing in with Google…");
+                    AuthResult result = await _auth.SignInWithIdTokenAsync("google", native.IdToken, native.RawNonce);
+                    if (result.Ok)
+                    {
+                        SetBusy(false, null);
+                        Succeed();
+                        return;
+                    }
+                    Debug.LogWarning($"[SignIn] Supabase refused the native Google token " +
+                                     $"({result.Failure}: {result.Detail}); trying the browser.");
+                }
+                else
+                {
+                    Debug.LogWarning($"[SignIn] native Google sign-in unavailable ({native.Detail}); trying the browser.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[SignIn] native Google sign-in threw ({ex.GetType().Name}: {ex.Message}); " +
+                                 "trying the browser.");
+            }
+
+            StartBrowserGoogleSignIn();
+        }
+
+        /// <summary>
+        /// Open the Google consent page in the platform browser and store the PKCE verifier. The
+        /// redirect lands back via the <c>emberfall://auth</c> scheme, which <see cref="OnDeepLinkActivated"/>
+        /// and <see cref="Open"/> both watch for, so no further action is needed here beyond kicking off
+        /// the browser. Expects the busy state already set.
+        /// </summary>
+        private void StartBrowserGoogleSignIn()
+        {
             PendingSignIn pending = _auth.BeginOAuth("google");
             if (!pending.IsStarted)
             {
