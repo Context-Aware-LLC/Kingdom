@@ -14,15 +14,18 @@ namespace Kingdom.Net.Server.Accounts
 
     public static class GemBundleCatalog
     {
+        // The shop shows the client's copy of this table (ShopCatalog.GemBundles in
+        // Kingdom.Net.Client/Shop/ShopFlow.cs) and grants from this one: change both together.
+        // A product key names its tier, not its amount.
         private static readonly IReadOnlyList<GemBundleDefinition> Bundles =
             Array.AsReadOnly(new[]
             {
                 new GemBundleDefinition("gems.tier.200", 200, 199),
                 new GemBundleDefinition("gems.tier.550", 550, 499),
-                new GemBundleDefinition("gems.tier.1200", 1200, 999),
-                new GemBundleDefinition("gems.tier.2600", 2600, 1999),
-                new GemBundleDefinition("gems.tier.7000", 7000, 4999),
-                new GemBundleDefinition("gems.tier.15000", 15000, 9999),
+                new GemBundleDefinition("gems.tier.1200", 1100, 999),
+                new GemBundleDefinition("gems.tier.2600", 2300, 1999),
+                new GemBundleDefinition("gems.tier.7000", 6000, 4999),
+                new GemBundleDefinition("gems.tier.15000", 13000, 9999),
             });
 
         public static IReadOnlyList<GemBundleDefinition> All => Bundles;

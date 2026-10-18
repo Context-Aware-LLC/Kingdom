@@ -208,6 +208,8 @@ namespace Kingdom.Net.Client.Shop
             new PackOffer("pack.rekindling", "Rekindling Pack", 200, 200),
         });
 
+        // The server grants from its own copy of this table (GemBundleCatalog in
+        // Kingdom.Net.Server/Accounts/GemGrantService.cs): change both together.
         public static IReadOnlyList<GemBundleOffer> GemBundles { get; } = Array.AsReadOnly(new[]
         {
             new GemBundleOffer("gems.tier.200", 200, 199),
