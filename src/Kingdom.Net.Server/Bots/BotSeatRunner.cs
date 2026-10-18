@@ -156,6 +156,12 @@ namespace Kingdom.Net.Server.Bots
             IObservedSeatPolicy? observedPolicy = _policy as IObservedSeatPolicy;
             GameState observedState = client.Current;
             GameState transitionBefore = observedState;
+            // The newest state whose events the policy has seen. The server sends a move's
+            // snapshot and THEN its events, as two messages, and the client installs the snapshot
+            // as Current before the events arrive -- so the loop below can read a state whose draw
+            // its memory has not counted yet. Deciding then fails the policy's deck check and the
+            // seat plays that move with Greedy (seen 2026-10-18: 1 move in 26).
+            ulong eventsSeen = observedState.StateVersion;
             void OnSnap(GameState current)
             {
                 transitionBefore = observedState;
@@ -167,6 +173,7 @@ namespace Kingdom.Net.Server.Bots
                 if (observedPolicy is null) return;
                 observedPolicy.ObserveTransition(
                     transitionBefore, events, observedState, client.Player);
+                Volatile.Write(ref eventsSeen, observedState.StateVersion);
                 // For memory-bearing policies the event batch, not the preceding snapshot, makes
                 // the new decision ready. This prevents scoring from racing stale player memory.
                 wake.Release();
@@ -184,6 +191,18 @@ namespace Kingdom.Net.Server.Bots
                     {
                         await wake.WaitAsync(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
                         continue;
+                    }
+                    // Give this state's events a moment to land. Bounded, because a move with no
+                    // events sends no events message at all; the bot's own pacing delay below
+                    // dwarfs the wait.
+                    if (observedPolicy is not null && Volatile.Read(ref eventsSeen) < state.StateVersion)
+                    {
+                        long deadline = Environment.TickCount64 + 250;
+                        while (Volatile.Read(ref eventsSeen) < state.StateVersion
+                               && Environment.TickCount64 < deadline)
+                            await wake.WaitAsync(TimeSpan.FromMilliseconds(25)).ConfigureAwait(false);
+                        // A newer state arrived meanwhile: decide on that one instead.
+                        if (client.Current.StateVersion != state.StateVersion) continue;
                     }
 
                     PlayerIntent? intent = await _policy.ChooseAsync(state, client.Player, _cts.Token)
