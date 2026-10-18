@@ -156,6 +156,12 @@ namespace Kingdom.Net.Client.Tests.Auth
             return Task.FromResult(IdTokenResult);
         }
 
+        public AuthResult TokenHashResult { get; set; } = AuthResult.Failed(AuthFailure.Rejected, "Token has expired or is invalid");
+
+        public Task<AuthResult> SignInWithTokenHashAsync(
+            string tokenHash, string type, CancellationToken cancellationToken = default)
+            => Task.FromResult(TokenHashResult);
+
         public Task<AuthResult> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default)
         {
             RefreshCalls++;

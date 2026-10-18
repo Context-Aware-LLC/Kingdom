@@ -265,6 +265,48 @@ namespace Kingdom.Net.Client.Tests.Auth
             Assert.That(http.Requests, Is.Empty);
         }
 
+        // ---- the Play Games restore (#425): a token hash the game server minted --------
+
+        [Test]
+        public async Task A_token_hash_is_redeemed_at_verify_for_a_session()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                TokenReply.Body(Jwt.ForUser("user-1", "player@example.com"), "refresh-1", 3600));
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithTokenHashAsync("hashed-token", "recovery");
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(result.Session.UserId, Is.EqualTo("user-1"));
+            Assert.That(http.Requests[0].Url, Is.EqualTo("https://project.supabase.co/auth/v1/verify"));
+            Assert.That(http.Requests[0].Body, Is.EqualTo("{\"type\":\"recovery\",\"token_hash\":\"hashed-token\"}"));
+        }
+
+        [Test]
+        public async Task A_refused_token_hash_is_a_rejection_not_a_session()
+        {
+            var http = new FakeAuthHttp().Reply(403,
+                "{\"code\":403,\"error_code\":\"otp_expired\",\"msg\":\"Email link is invalid or has expired\"}");
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithTokenHashAsync("spent-token", "recovery");
+
+            Assert.That(result.Ok, Is.False);
+            Assert.That(result.Session.IsPresent, Is.False);
+        }
+
+        [Test]
+        public async Task An_empty_token_hash_makes_no_request()
+        {
+            var http = new FakeAuthHttp();
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithTokenHashAsync("", "recovery");
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
+            Assert.That(http.Requests, Is.Empty);
+        }
+
         // ---- the display name, on the identity rather than the install -----------------
 
         [Test]

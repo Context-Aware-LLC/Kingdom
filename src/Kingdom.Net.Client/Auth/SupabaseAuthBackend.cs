@@ -127,6 +127,11 @@ namespace Kingdom.Net.Client.Auth
         Task<AuthResult> SignInWithIdTokenAsync(
             string provider, string idToken, string? rawNonce, CancellationToken cancellationToken = default);
 
+        /// <summary>Trade a single-use token hash the game server minted (the Play Games restore,
+        /// #425) for a session. <paramref name="type"/> is the kind of link it was minted as.</summary>
+        Task<AuthResult> SignInWithTokenHashAsync(
+            string tokenHash, string type, CancellationToken cancellationToken = default);
+
         /// <summary>Trade a refresh token for a fresh session.</summary>
         Task<AuthResult> RefreshAsync(string refreshToken, CancellationToken cancellationToken = default);
 
@@ -373,6 +378,29 @@ namespace Kingdom.Net.Client.Auth
 
             var response = await _http.PostJsonAsync(
                 Url("token", ("grant_type", "id_token")), body, Headers(), cancellationToken)
+                .ConfigureAwait(false);
+
+            return ReadSession(response);
+        }
+
+        /// <summary>
+        /// Redeem a token hash at <c>verify</c> — the same endpoint as the mailed code, with the
+        /// hash in place of the address and code. The game server mints it with Supabase's admin
+        /// API for the account a Play Games profile is linked to (#425), so Supabase, not the game
+        /// server, issues the session.
+        /// </summary>
+        public async Task<AuthResult> SignInWithTokenHashAsync(
+            string tokenHash, string type, CancellationToken cancellationToken = default)
+        {
+            if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
+            if (string.IsNullOrEmpty(tokenHash) || string.IsNullOrEmpty(type))
+                return AuthResult.Failed(AuthFailure.Rejected, "The restore returned no token.");
+
+            string body = AuthJson.Object(
+                AuthJson.Field("type", type),
+                AuthJson.Field("token_hash", tokenHash));
+
+            var response = await _http.PostJsonAsync(Url("verify"), body, Headers(), cancellationToken)
                 .ConfigureAwait(false);
 
             return ReadSession(response);

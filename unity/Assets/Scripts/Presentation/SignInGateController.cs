@@ -426,6 +426,33 @@ namespace Kingdom.Presentation
 
             ToChoiceStep("");
             _modal.RemoveFromClassList("mm-modal--hidden");
+            if (PlayGamesServices.IsSupported && !DeviceAccounts.HasClaimedAccount) RestoreFromPlayGames();
+        }
+
+        /// <summary>
+        /// Seamless restore (#425): a new phone signed in to Play Games finds the account that
+        /// profile is linked to, and the form never shows — only a status line, as the restore
+        /// after any sign-in does. Anything short of a session gives the form back as it was.
+        /// </summary>
+        private async void RestoreFromPlayGames()
+        {
+            SetBusy(true, null);
+            ShowRestoring("Looking for your account…");
+
+            bool restored = false;
+            try { restored = await PlayGamesServices.TryRestoreAsync(_auth); }
+            catch (Exception ex) { Debug.LogWarning($"[SignIn] Play Games restore threw: {ex}"); }
+
+            if (restored)
+            {
+                // A restored account has been here before, whatever the form would have asked.
+                _returning = true;
+                Succeed();
+                return;
+            }
+            SetBusy(false, null);
+            ShowRestoring(null);
+            ToChoiceStep("");
         }
 
         // ── Steps ───────────────────────────────────────────────────────────────────────

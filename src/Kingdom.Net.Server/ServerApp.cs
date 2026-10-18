@@ -119,6 +119,11 @@ namespace Kingdom.Net.Server
         /// <see cref="InMemoryPlayGamesLinkStore"/>; shares the accounts database in production.</summary>
         public IPlayGamesLinkStore? PlayGamesLinks { get; init; }
 
+        /// <summary>Supabase's admin API, which mints the sign-in token a Play Games restore
+        /// answers (#425). Null (default) turns <c>/play-games/restore</c> off. Built from
+        /// <c>EMBERFALL_SUPABASE_URL</c> and <see cref="SupabaseAdmin.SecretKeyEnvVar"/>.</summary>
+        public ISupabaseAdmin? SupabaseAdmin { get; init; }
+
         /// <summary>
         /// The append-only entitlement ledger (EF-072) — where card, pack and currency ownership
         /// actually lives. <b>Null → ownership stays UNKNOWN</b> and <see cref="AccountOwnedCounts"/>
@@ -293,6 +298,7 @@ namespace Kingdom.Net.Server
                 FriendStore = friendStore,
                 PlayGames = GooglePlayGamesApi.FromEnvironment(),
                 PlayGamesLinks = playGamesLinks,
+                SupabaseAdmin = Identity.SupabaseAdmin.FromEnvironment(supabaseUrl),
                 EntitlementLedger = entitlementLedger,
                 QuestProgress = questProgress,
                 Achievements = achievements,
@@ -658,6 +664,8 @@ namespace Kingdom.Net.Server
             builder.Services.AddSingleton<IHostedService>(new ChallengeSweeper(socialHub));
             var socialSocket = new SocialSocket(socialHub, cfg.TokenVerifier, cfg.AccountStore, cfg.Options);
 
+            // One link store for #423's routes and the restore that reads it.
+            IPlayGamesLinkStore playGamesLinks = cfg.PlayGamesLinks ?? new InMemoryPlayGamesLinkStore();
             var friends = new FriendsEndpoint(
                 cfg.TokenVerifier,
                 cfg.AccountStore,
@@ -666,8 +674,14 @@ namespace Kingdom.Net.Server
                 new FriendRequestLimiter(time),
                 socialHub,
                 cfg.PlayGames,
-                cfg.PlayGamesLinks ?? new InMemoryPlayGamesLinkStore(),
+                playGamesLinks,
                 new FriendRequestLimiter(time, max: 6, windowMs: 60_000));
+
+            // Keyed on the caller's address, since it is asked before there is an account: ten a
+            // quarter hour covers a household of phones behind one router.
+            var restore = new PlayGamesRestoreEndpoint(
+                cfg.PlayGames, playGamesLinks, cfg.AccountStore, cfg.SupabaseAdmin,
+                new FriendRequestLimiter(time, max: 10, windowMs: 15 * 60_000));
 
             var app = builder.Build();
             app.UseWebSockets();
@@ -1026,6 +1040,20 @@ namespace Kingdom.Net.Server
             {
                 return PlayGamesJson(context, await friends.FindPlayGamesFriendsAsync(BearerFrom(context),
                     await SmallJsonStringAsync(context, "authCode"), context.RequestAborted));
+            });
+
+            // POST /play-games/restore (#425) — no bearer: a device with no session trades a Play
+            // Games auth code for a sign-in token to the account that profile is linked to. See
+            // PlayGamesRestoreEndpoint. The token is a credential, hence no-store.
+            app.MapPost("/play-games/restore", async (HttpContext context) =>
+            {
+                PlayGamesRestoreResult result = await restore.RestoreAsync(
+                    await SmallJsonStringAsync(context, "authCode"), CallerAddress(context), context.RequestAborted);
+                context.Response.Headers["Cache-Control"] = "no-store";
+                return result.Status == PlayGamesRestoreStatus.Restored
+                    ? Results.Json(new { status = "restored", tokenHash = result.TokenHash, tokenType = result.TokenType })
+                    : Results.Json(new { status = result.Status.ToString().ToLowerInvariant() },
+                        statusCode: result.HttpStatus);
             });
 
             // GET /collection — what the signed-in player owns, read down from the entitlement
@@ -1600,6 +1628,20 @@ namespace Kingdom.Net.Server
                    header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
                 ? header.Substring("Bearer ".Length).Trim()
                 : null;
+        }
+
+        /// <summary>
+        /// The client's address, for a rate limit on a route that has no account to key one on.
+        /// Behind Fly's proxy every connection comes from the proxy, which writes the real address
+        /// into <c>Fly-Client-IP</c> and overwrites any the client sent; off Fly it is the socket's.
+        /// </summary>
+        private static string CallerAddress(HttpContext context)
+        {
+            string? fly = context.Request.Headers["Fly-Client-IP"];
+            if (!string.IsNullOrWhiteSpace(fly) &&
+                !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("FLY_APP_NAME")))
+                return fly!.Trim();
+            return context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         }
 
         private static string ResolveBuildRevision()

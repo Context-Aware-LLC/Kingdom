@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Kingdom.Net.Client.Achievements;
+using Kingdom.Net.Client.Auth;
 using Kingdom.Net.Client.Social;
 using UnityEngine;
 #if UNITY_ANDROID
@@ -22,8 +23,9 @@ namespace Kingdom.Session
     ///
     /// <para><b>Play Games is not the player's account.</b> Signing in here gives the player their
     /// achievements; their Bad Ideas account is still the Supabase sign-in. The server records the
-    /// player's Play Games id against that account (<see cref="LinkAsync"/>) only so their Play
-    /// Games friends can find them (#423).</para>
+    /// player's Play Games id against that account (<see cref="LinkAsync"/>) so their Play Games
+    /// friends can find them (#423), and so a new device signed in to Play Games can restore the
+    /// account without the sign-in screen (<see cref="TryRestoreAsync"/>, #425).</para>
     ///
     /// <para><b>The plugin's own calls, never Unity's Social API.</b> Unity 6000.6 marks
     /// <c>Social</c>, <c>ISocialPlatform</c>, <c>IAchievement</c> and <c>IAchievementDescription</c>
@@ -193,6 +195,55 @@ namespace Kingdom.Session
 
         /// <summary>Link again on the next <see cref="LinkAsync"/>: the account changed.</summary>
         public static void ForgetLink() => _linked = false;
+
+        /// <summary>How long each step of a restore may take before the sign-in screen shows
+        /// instead: Play Games' own sign-in, then its auth code. The server call has its own.</summary>
+        private const int RestoreStepMs = 8000;
+
+        private static PlayGamesRestoreGateway _restoreGateway;
+
+        /// <summary>
+        /// Seamless restore (#425): sign in to the account this phone's Play Games profile is linked
+        /// to, with no sign-in screen. True once a session is stored; false, with nothing changed, on
+        /// every other outcome, and then the screen shows as before. Never throws.
+        ///
+        /// <para><b>Only on a device where no account has ever signed in.</b> A sign-out leaves the
+        /// account on the device claimed (<see cref="DeviceAccounts.HasClaimedAccount"/>), so the
+        /// player who signed out to change accounts is not signed straight back in; a new phone or a
+        /// reinstall has none.</para>
+        /// </summary>
+        public static async Task<bool> TryRestoreAsync(AuthTokenProvider auth)
+        {
+            if (!IsSupported || auth == null || !auth.IsConfigured || auth.IsSignedIn) return false;
+            if (DeviceAccounts.HasClaimedAccount) return false;
+
+            try
+            {
+                if (!await Within(SignInAsync(), false)) return false;
+                string code = await Within(ServerAuthCode(), null);
+                if (string.IsNullOrEmpty(code)) return false;
+
+                _restoreGateway ??= new PlayGamesRestoreGateway(CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(10));
+                PlayGamesRestore restore = await _restoreGateway.RestoreAsync(code);
+                if (restore.Status != PlayGamesRestoreStatus.Restored)
+                {
+                    Debug.Log($"[PlayGames] no account restored ({restore.Status}).");
+                    return false;
+                }
+
+                AuthResult result = await auth.SignInWithTokenHashAsync(restore.TokenHash, restore.TokenType);
+                if (!result.Ok) Debug.LogWarning($"[PlayGames] Supabase refused the restore ({result.Failure}: {result.Detail}).");
+                return result.Ok;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[PlayGames] restore failed ({ex.GetType().Name}: {ex.Message}).");
+                return false;
+            }
+        }
+
+        private static async Task<T> Within<T>(Task<T> step, T onTimeout)
+            => await Task.WhenAny(step, Task.Delay(RestoreStepMs)) == step ? await step : onTimeout;
 
         /// <summary>
         /// "Find Friends From Play Games": sign in by hand if need be, ask the player to share their

@@ -248,6 +248,20 @@ namespace Kingdom.Net.Client.Auth
         }
 
         /// <summary>
+        /// Sign in with a token hash the game server minted for the account a Play Games profile is
+        /// linked to (#425). Stored and announced like every other sign-in; a refusal leaves any
+        /// stored session alone.
+        /// </summary>
+        public async Task<AuthResult> SignInWithTokenHashAsync(
+            string tokenHash, string type, CancellationToken cancellationToken = default)
+        {
+            // No ConfigureAwait(false): see the note on Adopt.
+            AuthResult result = await _backend.SignInWithTokenHashAsync(tokenHash, type, cancellationToken);
+            if (result.Ok) Adopt(result.Session);
+            return result;
+        }
+
+        /// <summary>
         /// Set a password on the signed-in user (NOR-246), so a later sign-in on this or another
         /// device can trade it for a session instead of going through email again.
         ///

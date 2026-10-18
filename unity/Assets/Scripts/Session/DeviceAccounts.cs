@@ -80,6 +80,31 @@ namespace Kingdom.Session
             }
         }
 
+        /// <summary>
+        /// Has any identity ever signed in on this device? A sign-out leaves its account claimed, so
+        /// this stays true after one; only a new device or a reinstall answers false. The Play Games
+        /// restore (#425) runs only then. Never throws: an unreadable registry answers true, which
+        /// declines the restore and shows the sign-in screen.
+        /// </summary>
+        public static bool HasClaimedAccount
+        {
+            get
+            {
+                try
+                {
+                    foreach (LocalAccount account in All())
+                        if (account.IsClaimed) return true;
+                    return false;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[DeviceAccounts] account registry unreadable ({ex.GetType().Name}); " +
+                                     "treating this device as one that has signed in before.");
+                    return true;
+                }
+            }
+        }
+
         /// <summary>Drop the cached active account so the next read re-resolves it.</summary>
         public static void Invalidate()
         {
