@@ -1,0 +1,9 @@
+Use case: precise-object-edit
+Asset type: One individual Google Play Games achievement icon for Kingdom of Bad Ideas.
+Input image: The supplied Second Thoughts achievement is the EDIT TARGET and exact series template.
+Achievement: "Hubris" — Have a minion of yours costing 8 or more returned to your hand. It had only just unpacked.
+Edit: Replace the cards and exchange arrows with one grand gold-trimmed royal travel trunk, sprung open with a small crown and a few garments half unpacked and spilling over its lip, being lifted back up and away by a strong teal swirl of wind. The swirl's curve clearly sweeps the whole trunk back where it came from, mid-unpacking. No figure, no face, no arrows, no cards, no lettering.
+Keep unchanged: The round battered antique-gold rim, rich royal-purple inset disk, centered circular silhouette, transparent exterior, dimensional hand-painted finish, dark plum outlines and warm upper-left lighting of the template. Match its brass color, relief depth, visual weight and crisp edge treatment. Preserve the square canvas and make the new objects fit comfortably inside the medallion. No object may extend past the rim.
+Small-size design: Broad shapes with distinct silhouettes, strong color separation, clear at 48 pixels; simplify fine detail. Premium painted fantasy materials and solemn medieval bureaucracy.
+Output: One square PNG, fully transparent outside the circular medallion, fully opaque inside.
+Constraints: Only the new achievement's subjects, no surviving exchange arrows or original X/check cards unless specifically requested above. No title, no lettering, no words, no numerals, no UI labels, no watermark, no multi-icon sheet. Checkmarks and X pictograms specifically requested above are allowed.

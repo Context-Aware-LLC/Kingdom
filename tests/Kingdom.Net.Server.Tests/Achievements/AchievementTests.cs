@@ -25,9 +25,12 @@ namespace Kingdom.Net.Server.Tests.Achievements
     {
         private static readonly DateTimeOffset Now = new DateTimeOffset(2026, 10, 18, 12, 0, 0, TimeSpan.Zero);
 
-        /// <summary>Everything but Mutual Respect, which a won match cannot earn.</summary>
+        /// <summary>Everything a won match at 1 Health can earn: not the draw, the two losses, or
+        /// Technically, which needs the hero at 0.</summary>
         private static readonly string[] AllWinnable = AchievementCatalog.All
-            .Select(a => a.Id).Where(id => id != "mutual_respect").ToArray();
+            .Select(a => a.Id)
+            .Except(new[] { "mutual_respect", "the_last_idea", "own_goal", "technically" })
+            .ToArray();
 
         private sealed class Harness
         {
@@ -59,7 +62,9 @@ namespace Kingdom.Net.Server.Tests.Achievements
             => new AchievementMatchFacts(
                 matchId, playerId, Now, source, SeatResult.Win, MatchEndReason.Win, TurnCount: 9,
                 EnemyMinionsDestroyed: 3, MulliganReplaced: 1, HeroPowersUsed: 2, FinalHealth: 1,
-                FatigueDraws: 1, CardsBurned: 1, TurnsTimedOut: 1, TurnsEndedWithTenUnspent: 1);
+                FatigueDraws: 1, CardsBurned: 1, TurnsTimedOut: 1, TurnsEndedWithTenUnspent: 1,
+                SelfDamage: 15, Overkills: 1, BigMinionsBounced: 1, LegendariesLost: 1, MostBulwarks: 7,
+                EnemyFellTo: FinalBlow.Toll | FinalBlow.StolenMinion | FinalBlow.HeroPower);
 
         // ── The catalog ───────────────────────────────────────────────────────────────────
 
@@ -99,6 +104,13 @@ namespace Kingdom.Net.Server.Tests.Achievements
         [TestCase("approved_by_default")]
         [TestCase("waste_not")]
         [TestCase("mutual_respect")]
+        [TestCase("self_starter")]
+        [TestCase("overkill")]
+        [TestCase("hubris")]
+        [TestCase("gift_horse")]
+        [TestCase("seven_walls")]
+        [TestCase("the_last_idea")]
+        [TestCase("own_goal")]
         public void Each_Achievement_Fires_On_Its_Own_Fact(string id)
         {
             var quiet = new AchievementMatchFacts(
@@ -114,11 +126,50 @@ namespace Kingdom.Net.Server.Tests.Achievements
                 "approved_by_default" => quiet with { TurnsTimedOut = 1 },
                 "waste_not" => quiet with { TurnsEndedWithTenUnspent = 1 },
                 "mutual_respect" => quiet with { Result = SeatResult.Draw },
+                "self_starter" => quiet with { SelfDamage = 15 },
+                "overkill" => quiet with { Overkills = 1 },
+                "hubris" => quiet with { BigMinionsBounced = 1 },
+                "gift_horse" => quiet with { LegendariesLost = 1 },
+                "seven_walls" => quiet with { MostBulwarks = 7 },
+                "the_last_idea" => quiet with { FellTo = FinalBlow.Fatigue },
+                "own_goal" => quiet with { FellTo = FinalBlow.Spell | FinalBlow.OwnSide },
                 _ => quiet with { Result = SeatResult.Win, EndReason = MatchEndReason.Win, FinalHealth = 30 },
             };
 
             Assert.That(AchievementCatalog.All.Where(a => a.EarnedBy(facts)).Select(a => a.Id),
                 Is.EqualTo(new[] { id }));
+        }
+
+        [TestCase("technically")]
+        [TestCase("posthumous")]
+        [TestCase("return_to_sender")]
+        [TestCase("signature_move")]
+        public void Each_Winning_Finding_Fires_On_Its_Own_Fact_Beside_The_Win(string id)
+        {
+            var win = new AchievementMatchFacts(
+                "match-1", "player", Now, TelemetrySource.Ladder, SeatResult.Win, MatchEndReason.Win,
+                TurnCount: 9, EnemyMinionsDestroyed: 0, MulliganReplaced: 0, HeroPowersUsed: 0, FinalHealth: 30);
+            AchievementMatchFacts facts = id switch
+            {
+                "technically" => win with { FinalHealth = -1, FellTo = FinalBlow.Other },
+                "posthumous" => win with { EnemyFellTo = FinalBlow.Toll },
+                "return_to_sender" => win with { EnemyFellTo = FinalBlow.StolenMinion },
+                _ => win with { EnemyFellTo = FinalBlow.HeroPower },
+            };
+
+            Assert.That(AchievementCatalog.All.Where(a => a.EarnedBy(facts)).Select(a => a.Id),
+                Is.EquivalentTo(new[] { "against_advice", id }));
+        }
+
+        [Test]
+        public void Own_Goal_Needs_The_Spell_To_Be_Your_Own()
+        {
+            var loss = new AchievementMatchFacts(
+                "match-1", "player", Now, TelemetrySource.Ladder, SeatResult.Loss, MatchEndReason.Win,
+                TurnCount: 9, EnemyMinionsDestroyed: 0, MulliganReplaced: 0, HeroPowersUsed: 0,
+                FellTo: FinalBlow.Spell);
+
+            Assert.That(AchievementCatalog.Find("own_goal")!.EarnedBy(loss), Is.False);
         }
 
         [TestCase(1, true)]

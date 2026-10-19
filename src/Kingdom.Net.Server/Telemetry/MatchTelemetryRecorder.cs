@@ -25,13 +25,15 @@ namespace Kingdom.Net.Server.Telemetry
         {
             internal Pending((int seat, List<int> kept, int replaced)? keeps,
                              (int seat, int defId, int turn)? play, int? heroPowerSeat,
-                             (int seat, int unspent)? endTurn, BoardWatch watch)
+                             (int seat, int unspent)? endTurn, BoardWatch watch,
+                             FindingsObserver.Before findings)
             {
                 Keeps = keeps;
                 Play = play;
                 HeroPowerSeat = heroPowerSeat;
                 EndTurn = endTurn;
                 Watch = watch;
+                Findings = findings;
             }
 
             internal (int seat, List<int> kept, int replaced)? Keeps { get; }
@@ -40,6 +42,7 @@ namespace Kingdom.Net.Server.Telemetry
             /// <summary>The seat an <see cref="EndTurnIntent"/> ends, and the mana it left unspent.</summary>
             internal (int seat, int unspent)? EndTurn { get; }
             internal BoardWatch Watch { get; }
+            internal FindingsObserver.Before Findings { get; }
         }
 
         /// <summary>
@@ -95,9 +98,16 @@ namespace Kingdom.Net.Server.Telemetry
         /// <summary>Turns each seat ended with 10 mana unspent (<see cref="SeatOutcome.TurnsEndedWithTenUnspent"/>).</summary>
         private readonly int[] _turnsEndedWithTenUnspent = new int[2];
 
+        /// <summary>The Council's Findings read off each command's events.</summary>
+        private readonly FindingsObserver _findings;
+
+        /// <param name="db">The card data the findings read a card's cost, rarity and type from.
+        /// Null leaves those findings at none, which only a test that does not reach them should pass.</param>
         public MatchTelemetryRecorder(
-            MatchId id, MatchSetup setup, ITelemetrySink? telemetry, MatchAttribution? attribution)
+            MatchId id, MatchSetup setup, ITelemetrySink? telemetry, MatchAttribution? attribution,
+            ICardDatabase? db = null)
         {
+            _findings = new FindingsObserver(db);
             _id = id;
             _setup = setup;
             _telemetry = telemetry ?? NullTelemetrySink.Instance;
@@ -113,12 +123,14 @@ namespace Kingdom.Net.Server.Telemetry
             _cardsSeen[0].NoteDeck(_setup.P0Deck);
             _cardsSeen[1].NoteDeck(_setup.P1Deck);
             ObserveHands(state);
+            _findings.Observe(state);
         }
 
         /// <summary>Read the mulligan keeps and the played card's def id while the hand still holds them.</summary>
         public Pending BeforeSubmit(GameState state, PlayerIntent intent)
             => new Pending(CaptureMulliganKeeps(state, intent), CapturePlay(state, intent),
-                           CaptureHeroPower(state, intent), CaptureEndTurn(state, intent), Watch(state, intent));
+                           CaptureHeroPower(state, intent), CaptureEndTurn(state, intent), Watch(state, intent),
+                           FindingsObserver.Snapshot(state, intent));
 
         /// <summary>
         /// Every accepted command is a draw observation point. Run it BEFORE ending the match, so
@@ -146,6 +158,7 @@ namespace Kingdom.Net.Server.Telemetry
             ObserveHands(state);
             for (int seat = 0; seat < 2; seat++) _minionsLost[seat] += MinionDeaths(state, pending.Watch, seat);
             if (events != null) CountBurns(state, events);
+            _findings.After(state, pending.Findings, events);
         }
 
         /// <summary>A burned card goes to its owner's graveyard, so that is where its seat is read.</summary>
@@ -335,7 +348,13 @@ namespace Kingdom.Net.Server.Telemetry
                 seat == 0 ? state.FatigueCounter0 : state.FatigueCounter1,
                 _cardsBurned[seat],
                 _turnsTimedOut[seat],
-                _turnsEndedWithTenUnspent[seat]);
+                _turnsEndedWithTenUnspent[seat],
+                _findings.SelfDamage[seat],
+                _findings.Overkills[seat],
+                _findings.BigMinionsBounced[seat],
+                _findings.LegendariesLost[seat],
+                _findings.MostBulwarks[seat],
+                state.Players[seat].Hero.CurrentHealth <= 0 ? _findings.FellTo[seat] : FinalBlow.None);
         }
 
         /// <summary>

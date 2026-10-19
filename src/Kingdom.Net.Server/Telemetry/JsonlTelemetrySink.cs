@@ -201,6 +201,12 @@ namespace Kingdom.Net.Server.Telemetry
             w.Name("cardsBurned"); w.I32(s.CardsBurned);
             w.Name("turnsTimedOut"); w.I32(s.TurnsTimedOut);
             w.Name("turnsEndedWithTenUnspent"); w.I32(s.TurnsEndedWithTenUnspent);
+            w.Name("selfDamage"); w.I32(s.SelfDamage);
+            w.Name("overkills"); w.I32(s.Overkills);
+            w.Name("bigMinionsBounced"); w.I32(s.BigMinionsBounced);
+            w.Name("legendariesLost"); w.I32(s.LegendariesLost);
+            w.Name("mostBulwarks"); w.I32(s.MostBulwarks);
+            w.Name("fellTo"); w.I32((int)s.FellTo);
             w.EndObject();
         }
 

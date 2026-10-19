@@ -1,0 +1,9 @@
+Use case: precise-object-edit
+Asset type: One individual Google Play Games achievement icon for Kingdom of Bad Ideas.
+Input image: The supplied Second Thoughts achievement is the EDIT TARGET and exact series template.
+Achievement: "Overkill" — Deal 10 damage to a minion with 1 Health. It has been thoroughly informed.
+Edit: Replace the cards and exchange arrows with an enormous iron war hammer coming down on one tiny wooden practice dummy no taller than the hammer's head. The dummy is flattened under a huge, chunky golden impact starburst far larger than needed, with a few wood splinters and one small red heart-shaped health chip flying off. The scale mismatch reads instantly: giant hammer, tiny target. No gore, no face, no cards, no arrows.
+Keep unchanged: The round battered antique-gold rim, rich royal-purple inset disk, centered circular silhouette, transparent exterior, dimensional hand-painted finish, dark plum outlines and warm upper-left lighting of the template. Match its brass color, relief depth, visual weight and crisp edge treatment. Preserve the square canvas and make the new objects fit comfortably inside the medallion. No object may extend past the rim.
+Small-size design: Broad shapes with distinct silhouettes, strong color separation, clear at 48 pixels; simplify fine detail. Premium painted fantasy materials and solemn medieval bureaucracy.
+Output: One square PNG, fully transparent outside the circular medallion, fully opaque inside.
+Constraints: Only the new achievement's subjects, no surviving exchange arrows or original X/check cards unless specifically requested above. No title, no lettering, no words, no numerals, no UI labels, no watermark, no multi-icon sheet. Checkmarks and X pictograms specifically requested above are allowed.

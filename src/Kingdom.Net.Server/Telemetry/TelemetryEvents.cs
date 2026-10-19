@@ -117,6 +117,14 @@ namespace Kingdom.Net.Server.Telemetry
     /// <param name="TurnsTimedOut">How many of the seat's turns the turn clock ended.</param>
     /// <param name="TurnsEndedWithTenUnspent">How many turns the seat ended, by hand or by the
     /// clock, with 10 mana available.</param>
+    /// <param name="SelfDamage">Damage the seat's own cards, hero and Hero Power dealt its own hero.</param>
+    /// <param name="Overkills">Hits of 10 or more the seat's cards landed on a minion at 1 Health.</param>
+    /// <param name="BigMinionsBounced">The seat's minions costing 8 or more returned from the board
+    /// to hand, by anyone.</param>
+    /// <param name="LegendariesLost">The seat's Legendary cards the other side took control of.</param>
+    /// <param name="MostBulwarks">The most Bulwark minions the seat had on the board at once.</param>
+    /// <param name="FellTo">What dealt the blow that took this seat's hero to 0 Health; None when it
+    /// was never taken there, so a row written before the field existed reads as standing.</param>
     public sealed record SeatOutcome(
         AccountId Account,
         CardClass Class,
@@ -131,7 +139,38 @@ namespace Kingdom.Net.Server.Telemetry
         int FatigueDraws = 0,
         int CardsBurned = 0,
         int TurnsTimedOut = 0,
-        int TurnsEndedWithTenUnspent = 0);
+        int TurnsEndedWithTenUnspent = 0,
+        int SelfDamage = 0,
+        int Overkills = 0,
+        int BigMinionsBounced = 0,
+        int LegendariesLost = 0,
+        int MostBulwarks = 0,
+        FinalBlow FellTo = FinalBlow.None);
+
+    /// <summary>
+    /// What landed the hit that took a hero from above 0 Health to 0 or below, as seen from the hero
+    /// that fell. Flags, because one blow can be several things: a Toll on a minion taken from you
+    /// is <see cref="Toll"/> and <see cref="StolenMinion"/> at once.
+    /// </summary>
+    [Flags]
+    public enum FinalBlow
+    {
+        None = 0,
+        /// <summary>Drawing from an empty deck.</summary>
+        Fatigue = 1,
+        /// <summary>A spell card.</summary>
+        Spell = 2,
+        /// <summary>Something the fallen hero's own side controlled.</summary>
+        OwnSide = 4,
+        /// <summary>The other side's Hero Power.</summary>
+        HeroPower = 8,
+        /// <summary>A minion's Toll, rung by its death.</summary>
+        Toll = 16,
+        /// <summary>A minion the fallen hero's side started the match with, under the other side's control.</summary>
+        StolenMinion = 32,
+        /// <summary>A blow none of the others name, so a hero that fell is never <see cref="None"/>.</summary>
+        Other = 64,
+    }
 
     /// <summary>
     /// `match_complete` — emitted once per finished match. THIS EVENT IS THE ≥200-MATCH SAMPLE the

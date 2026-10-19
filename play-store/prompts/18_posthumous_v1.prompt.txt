@@ -1,0 +1,9 @@
+Use case: precise-object-edit
+Asset type: One individual Google Play Games achievement icon for Kingdom of Bad Ideas.
+Input image: The supplied Second Thoughts achievement is the EDIT TARGET and exact series template.
+Achievement: "Posthumous" — Win with damage from a minion's Toll. The deceased has been informed.
+Edit: Replace the cards and exchange arrows with a small bronze funeral bell swinging mid-toll, ringing out three bold golden sound arcs that end in a crackling strike to the right. The bell hangs from a short weathered wooden beam tied with a black mourning ribbon, and a single white lily lies beneath it. Dignified and slightly smug. No figure, no skull, no gore, no arrows, no cards.
+Keep unchanged: The round battered antique-gold rim, rich royal-purple inset disk, centered circular silhouette, transparent exterior, dimensional hand-painted finish, dark plum outlines and warm upper-left lighting of the template. Match its brass color, relief depth, visual weight and crisp edge treatment. Preserve the square canvas and make the new objects fit comfortably inside the medallion. No object may extend past the rim.
+Small-size design: Broad shapes with distinct silhouettes, strong color separation, clear at 48 pixels; simplify fine detail. Premium painted fantasy materials and solemn medieval bureaucracy.
+Output: One square PNG, fully transparent outside the circular medallion, fully opaque inside.
+Constraints: Only the new achievement's subjects, no surviving exchange arrows or original X/check cards unless specifically requested above. No title, no lettering, no words, no numerals, no UI labels, no watermark, no multi-icon sheet. Checkmarks and X pictograms specifically requested above are allowed.

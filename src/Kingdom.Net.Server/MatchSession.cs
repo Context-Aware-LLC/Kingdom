@@ -111,7 +111,7 @@ namespace Kingdom.Net.Server
             _time = time;
             _replay = replay;
             _setup = setup;
-            _telemetry = new MatchTelemetryRecorder(id, setup, telemetry, attribution);
+            _telemetry = new MatchTelemetryRecorder(id, setup, telemetry, attribution, db);
             _attribution = attribution ?? MatchAttribution.None;
             _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
             _trainingEpisodes = trainingEpisodes;

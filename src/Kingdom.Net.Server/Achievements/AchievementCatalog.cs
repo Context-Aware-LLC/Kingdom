@@ -27,19 +27,27 @@ namespace Kingdom.Net.Server.Achievements
         int FatigueDraws = 0,
         int CardsBurned = 0,
         int TurnsTimedOut = 0,
-        int TurnsEndedWithTenUnspent = 0)
+        int TurnsEndedWithTenUnspent = 0,
+        int SelfDamage = 0,
+        int Overkills = 0,
+        int BigMinionsBounced = 0,
+        int LegendariesLost = 0,
+        int MostBulwarks = 0,
+        FinalBlow FellTo = FinalBlow.None,
+        FinalBlow EnemyFellTo = FinalBlow.None)
     {
         /// <summary>Both attributed seats of one finished match.</summary>
         public static IReadOnlyList<AchievementMatchFacts> From(MatchCompleteEvent complete)
         {
             if (complete is null) throw new ArgumentNullException(nameof(complete));
             var facts = new List<AchievementMatchFacts>(2);
-            AddSeat(facts, complete, complete.P0);
-            AddSeat(facts, complete, complete.P1);
+            AddSeat(facts, complete, complete.P0, complete.P1);
+            AddSeat(facts, complete, complete.P1, complete.P0);
             return facts;
         }
 
-        private static void AddSeat(List<AchievementMatchFacts> into, MatchCompleteEvent complete, SeatOutcome seat)
+        private static void AddSeat(List<AchievementMatchFacts> into, MatchCompleteEvent complete,
+            SeatOutcome seat, SeatOutcome enemy)
         {
             if (!seat.Account.IsAttributed) return;
             into.Add(new AchievementMatchFacts(
@@ -57,7 +65,14 @@ namespace Kingdom.Net.Server.Achievements
                 seat.FatigueDraws,
                 seat.CardsBurned,
                 seat.TurnsTimedOut,
-                seat.TurnsEndedWithTenUnspent));
+                seat.TurnsEndedWithTenUnspent,
+                seat.SelfDamage,
+                seat.Overkills,
+                seat.BigMinionsBounced,
+                seat.LegendariesLost,
+                seat.MostBulwarks,
+                seat.FellTo,
+                enemy.FellTo));
         }
     }
 
@@ -87,8 +102,9 @@ namespace Kingdom.Net.Server.Achievements
     /// <para><b>The first four are the gentle ones</b> Play's quality checklist asks for: reliably
     /// earned in a player's first hour (dev-docs/design/whimsy-pass-2026-10-17.md, #2).</para>
     ///
-    /// <para><b>The rest are the Council's Findings</b> from the same list, the ones a match-end
-    /// counter can answer. Play wants at least 10 visible, so publish these visible.</para>
+    /// <para><b>The rest are the Council's Findings</b> from the same list. Play wants at least 10
+    /// visible, so publish these visible. The ones about who dealt a blow read
+    /// <see cref="FinalBlow"/>, which <c>FindingsObserver</c> fills from the event stream.</para>
     /// </summary>
     public static class AchievementCatalog
     {
@@ -134,6 +150,51 @@ namespace Kingdom.Net.Server.Achievements
                 "mutual_respect", "Mutual Respect",
                 "Draw a match. The Council is still deliberating.",
                 "CgkIkJ2NnuUeEAIQCg", f => f.Result == SeatResult.Draw),
+            new AchievementDefinition(
+                "self_starter", "Self-Starter",
+                "Deal 15 damage to your own hero in one match. Pyra has asked for your name.",
+                "", f => f.SelfDamage >= 15),
+            new AchievementDefinition(
+                "overkill", "Overkill",
+                "Deal 10 damage to a minion with 1 Health. It has been thoroughly informed.",
+                "", f => f.Overkills > 0),
+            new AchievementDefinition(
+                "hubris", "Hubris",
+                "Have a minion of yours costing 8 or more returned to your hand. It had only just unpacked.",
+                "", f => f.BigMinionsBounced > 0),
+            new AchievementDefinition(
+                "gift_horse", "Gift Horse",
+                "Lose control of your Legendary to the other side. It writes, occasionally.",
+                "", f => f.LegendariesLost > 0),
+            new AchievementDefinition(
+                "seven_walls", "Seven Walls",
+                "Have seven Bulwark minions at once. Hodge would like to see the plans.",
+                "", f => f.MostBulwarks >= 7),
+            new AchievementDefinition(
+                "the_last_idea", "The Last Idea",
+                "Lose to an empty deck. It was a good plan. It was in there somewhere.",
+                "", f => f.Result == SeatResult.Loss && (f.FellTo & FinalBlow.Fatigue) != 0),
+            new AchievementDefinition(
+                "technically", "Technically",
+                "Win a match with your hero at 0 Health or below. The Council has ruled that it counts.",
+                "", f => f.Result == SeatResult.Win && f.FellTo != FinalBlow.None),
+            new AchievementDefinition(
+                "posthumous", "Posthumous",
+                "Win with damage from a minion's Toll. The deceased has been informed.",
+                "", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.Toll) != 0),
+            new AchievementDefinition(
+                "return_to_sender", "Return to Sender",
+                "Win with a minion you took from your opponent. They would like it back.",
+                "", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.StolenMinion) != 0),
+            new AchievementDefinition(
+                "signature_move", "Signature Move",
+                "Finish the enemy hero with your Hero Power. The Council had assumed it was decorative.",
+                "", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.HeroPower) != 0),
+            new AchievementDefinition(
+                "own_goal", "Own Goal",
+                "Lose to your own spell. Pyra was very impressed.",
+                "", f => f.Result == SeatResult.Loss
+                    && (f.FellTo & (FinalBlow.Spell | FinalBlow.OwnSide)) == (FinalBlow.Spell | FinalBlow.OwnSide)),
         });
 
         /// <summary>The definition with this id, or null for one the catalog does not hold.</summary>
