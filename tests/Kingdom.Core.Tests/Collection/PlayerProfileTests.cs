@@ -112,6 +112,18 @@ namespace Kingdom.Core.Tests.Collection
             Assert.That(check.Normalized, Is.Empty);
         }
 
+        [TestCase("King", "Tuesday")]
+        [TestCase("herald", "mispronounce")]
+        [TestCase("JESTER", "not amused")]
+        [TestCase("Queen", "Pick another name")]
+        [TestCase("Council", "Pick another name")]
+        public void A_court_name_is_reserved_and_says_why(string raw, string because)
+        {
+            var check = PlayerName.Check(raw);
+            Assert.That(check.IsValid, Is.False);
+            Assert.That(check.Reason, Does.Contain("reserved").And.Contain(because));
+        }
+
         [Test]
         public void A_reserved_word_INSIDE_a_name_is_still_allowed()
         {

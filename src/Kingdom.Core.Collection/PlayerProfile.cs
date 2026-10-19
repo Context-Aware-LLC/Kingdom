@@ -159,21 +159,39 @@ namespace Kingdom.Core.Collection
         private static readonly string[] ReservedNames =
         {
             "You", "Opponent", "AI Opponent", "Unnamed player", "Kingdom", "SYSTEM",
+            // The court. Not chrome, but the game's own cast: a nameplate reading "Herald" is the
+            // game talking as surely as one reading SYSTEM. The refusal says why, in their voice.
+            "King", "Queen", "Herald", "Jester", "Council",
         };
+
+        /// <summary>The second line of a court name's refusal. A name with none here refuses plainly.</summary>
+        private static string? CourtReason(string reserved)
+        {
+            switch (reserved)
+            {
+                case "King": return "The position is filled until Tuesday.";
+                case "Herald": return "He would only mispronounce it.";
+                case "Jester": return "It is taken, and he is not amused.";
+                default: return null;
+            }
+        }
 
         /// <summary>
         /// True if <paramref name="candidate"/> collides with a string our own chrome writes.
         /// Compared case-insensitively on the NORMALIZED value — <c>sYsTeM</c> and
         /// <c>"  SYSTEM  "</c> impersonate exactly as well as the original.
         /// </summary>
-        public static bool IsReserved(string candidate)
+        public static bool IsReserved(string candidate) => MatchReserved(candidate) != null;
+
+        /// <summary>The reserved entry <paramref name="candidate"/> collides with, or null.</summary>
+        private static string? MatchReserved(string candidate)
         {
-            if (string.IsNullOrEmpty(candidate)) return false;
+            if (string.IsNullOrEmpty(candidate)) return null;
             string normalized = Normalize(candidate);
             foreach (string reserved in ReservedNames)
                 if (string.Equals(normalized, reserved, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            return false;
+                    return reserved;
+            return null;
         }
 
         /// <summary>
@@ -193,7 +211,7 @@ namespace Kingdom.Core.Collection
             if (normalized.Length < MinLength)
                 return NameCheck.Bad($"Names are at least {MinLength} characters long.");
             if (normalized.Length > MaxLength)
-                return NameCheck.Bad($"Names are at most {MaxLength} characters long.");
+                return NameCheck.Bad($"Names are at most {MaxLength} characters long.\nThe Herald has to read it aloud.");
 
             bool hasSubstance = false;
             foreach (char c in normalized)
@@ -245,8 +263,14 @@ namespace Kingdom.Core.Collection
 
             // Last, because it is the only rule about MEANING rather than characters — and the only
             // one whose refusal is not about the name being unusable (VULN-002 §4.3).
-            if (IsReserved(normalized))
-                return NameCheck.Bad($"'{normalized}' is reserved. Pick another name.");
+            string? reservedAs = MatchReserved(normalized);
+            if (reservedAs != null)
+            {
+                string? why = CourtReason(reservedAs);
+                return NameCheck.Bad(why == null
+                    ? $"'{normalized}' is reserved. Pick another name."
+                    : $"'{normalized}' is reserved.\n{why}");
+            }
 
             return NameCheck.Ok(normalized);
         }
