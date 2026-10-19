@@ -273,7 +273,7 @@ namespace Kingdom.Presentation
             part.transform.localScale = size;
             var collider = part.GetComponent<Collider>();
             collider.enabled = false;
-            Destroy(collider);
+            DestroyObj(collider);
             part.GetComponent<Renderer>().sharedMaterial = material;
         }
 
@@ -284,9 +284,18 @@ namespace Kingdom.Presentation
 
         private void OnDestroy()
         {
-            if (_paperMaterial != null) Destroy(_paperMaterial);
-            if (_brassMaterial != null) Destroy(_brassMaterial);
-            if (_rattleClip != null) Destroy(_rattleClip);
+            DestroyObj(_paperMaterial);
+            DestroyObj(_brassMaterial);
+            DestroyObj(_rattleClip);
+        }
+
+        // DeviceLayoutVerify builds this table in edit mode, where Destroy is refused with an
+        // error per call and the check fails on the errors.
+        private static void DestroyObj(Object o)
+        {
+            if (o == null) return;
+            if (Application.isPlaying) Destroy(o);
+            else DestroyImmediate(o);
         }
     }
 }
