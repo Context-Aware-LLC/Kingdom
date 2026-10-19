@@ -105,7 +105,7 @@ namespace Kingdom.Presentation
 
         private IEnumerator LoadOptional(string address, Action<AudioClip> ready)
         {
-            // Both recordings are explicitly deferred. Probe once, silently, and never queue a
+            // The Herald recording awaits casting. Probe once, silently, and never queue a
             // tap to surprise the player after an asynchronous load or after leaving the table.
             var probe = Addressables.LoadResourceLocationsAsync(address, typeof(AudioClip));
             _loads.Add(probe);

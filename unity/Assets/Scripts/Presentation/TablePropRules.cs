@@ -22,8 +22,8 @@ namespace Kingdom.Presentation
 
         public static bool ReturnsSuggestionReceipt(int drawFromTwenty) => drawFromTwenty == 0;
 
-        // Twenty physical orbs, twenty notes. A single glass strike is supplied at concert C;
-        // independent sources retain their pitches when several orbs ring together.
+        // Twenty physical orbs, twenty notes spaced by a semitone from the supplied strike.
+        // Independent sources retain their pitches when several orbs ring together.
         public static float OrbPitch(int index)
             => (float)Math.Pow(2d, (Math.Clamp(index, 0, 19) - 9d) / 12d);
     }
