@@ -62,6 +62,8 @@
          be proved without taking the machine-wide Unity Editor seat. -->
     <Compile Include="..\..\unity\Assets\Scripts\Presentation\UnearthChoiceModel.cs"
              Link="Presentation\UnearthChoiceModel.cs" />
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\TurnSealRecord.cs"
+             Link="Presentation\TurnSealRecord.cs" />
     <!-- Unity-free authoring model/writer: compile and round-trip them without launching Unity. -->
     <Compile Include="..\..\unity\Assets\Scripts\Editor\EditableCard.cs"
              Link="Editor\EditableCard.cs" />

@@ -23,9 +23,12 @@ namespace Kingdom.Core.Contracts
         public readonly EventFlags Flags;
         /// <summary>Optional presentation override; null selects <see cref="PresentationCueDefaults"/>.</summary>
         public readonly PresentationCue? CueOverride;
+        /// <summary>Session-only presentation metadata: the server clock ended this turn.
+        /// False for core/replay events; never changes rules or the canonical state hash.</summary>
+        public readonly bool TimedOut;
 
         public GameEvent(GameEventKind kind, ulong sequence, InstanceId? source, InstanceId? target,
-                         int? amount, EventFlags flags, PresentationCue? cueOverride = null)
+                         int? amount, EventFlags flags, PresentationCue? cueOverride = null, bool timedOut = false)
         {
             Kind = kind;
             Sequence = sequence;
@@ -34,6 +37,7 @@ namespace Kingdom.Core.Contracts
             Amount = amount;
             Flags = flags;
             CueOverride = cueOverride;
+            TimedOut = timedOut;
         }
 
         public override string ToString()

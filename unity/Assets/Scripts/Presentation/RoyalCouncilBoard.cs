@@ -204,6 +204,10 @@ namespace Kingdom.Presentation
 
         public void OnTurnTimer(TurnTimer timer) => _clock.OnTurnTimer(timer);
 
+        public void OnMatchEvent(IReadOnlyList<GameEvent> events) => _seal.OnMatchEvent(events);
+
+        public void OnAuthorityStateUpdated(GameState state) => _seal.OnAuthorityStateUpdated(state);
+
         public void FitHitTargets(BoardAnchors anchors, PlayerId p0, PlayerId p1)
         {
             foreach (PlayerId player in new[] { p0, p1 })

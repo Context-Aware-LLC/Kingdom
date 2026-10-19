@@ -206,6 +206,7 @@ namespace Kingdom.Net.Protocol
             if (e.Target.HasValue) { w.Name("tgt"); w.Str(WirePrimitives.InstanceToWire(e.Target.Value)); }
             if (e.Amount.HasValue) { w.Name("amt"); w.I32(e.Amount.Value); }
             if (e.Flags != EventFlags.None) { w.Name("flags"); w.Str(e.Flags.ToString()); }
+            if (e.TimedOut) { w.Name("timedOut"); w.Bool(true); }
             w.EndObject();
         }
 
@@ -437,6 +438,12 @@ namespace Kingdom.Net.Protocol
             int? amt = null;
             EventFlags flags = EventFlags.None;
             PresentationCue? cue = null;
+            bool timedOut = false;
+
+            // Optional presentation metadata. Older peers ignore it; older servers omit it.
+            if (obj.TryGet("timedOut", out var timeoutVal)
+                && (!timeoutVal.TryBool(out timedOut) || (timedOut && kind != GameEventKind.TurnEnded)))
+            { detail = "bad event 'timedOut'"; return false; }
 
             if (obj.TryGet("cue", out var cueVal))
             {
@@ -479,7 +486,7 @@ namespace Kingdom.Net.Protocol
                 return false;
             }
 
-            e = new GameEvent(kind, evSeq, src, tgt, amt, flags, cue);
+            e = new GameEvent(kind, evSeq, src, tgt, amt, flags, cue, timedOut);
             return true;
         }
 

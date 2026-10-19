@@ -202,7 +202,38 @@ namespace Kingdom.Net.Protocol.Tests
                 Assert.That(m.Events[i].Amount, Is.EqualTo(events[i].Amount));
                 Assert.That(m.Events[i].Flags, Is.EqualTo(events[i].Flags));
                 Assert.That(m.Events[i].CueOverride, Is.EqualTo(events[i].CueOverride));
+                Assert.That(m.Events[i].TimedOut, Is.False, "legacy events omit the timeout hint");
             }
+        }
+
+        [Test]
+        public void Timeout_Hint_RoundTrips_And_Can_Be_Omitted_By_Older_Peers()
+        {
+            var e = new GameEvent(GameEventKind.TurnEnded, 9, new InstanceId(1), null, null,
+                EventFlags.None, timedOut: true);
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(new EventsMsg(21, new[] { e }), M, Seq));
+            var decoded = (EventsMsg)ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json)).Message!;
+            Assert.That(decoded.Events[0].TimedOut, Is.True);
+            // The existing reader ignores unknown event fields. Renaming simulates that
+            // behavior without making a new semantic enum value old clients would reject.
+            var ignored = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json.Replace("timedOut", "futurePresentationHint")));
+            Assert.That(ignored.Ok, Is.True);
+            Assert.That(((EventsMsg)ignored.Message!).Events[0].TimedOut, Is.False);
+            var omitted = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json.Replace(",\"timedOut\":true", "")));
+            Assert.That(omitted.Ok, Is.True);
+            Assert.That(((EventsMsg)omitted.Message!).Events[0].TimedOut, Is.False);
+        }
+
+        [TestCase("\"yes\"", "TurnEnded")]
+        [TestCase("true", "TurnStarted")]
+        public void Invalid_Timeout_Hint_Is_Rejected(string value, string kind)
+        {
+            var e = new GameEvent(GameEventKind.TurnEnded, 9, null, null, null, EventFlags.None, timedOut: true);
+            string json = Encoding.UTF8.GetString(ProtocolCodec.Encode(new EventsMsg(21, new[] { e }), M, Seq))
+                .Replace("\"timedOut\":true", "\"timedOut\":" + value).Replace("TurnEnded", kind);
+            var result = ProtocolCodec.Decode(Encoding.UTF8.GetBytes(json));
+            Assert.That(result.Ok, Is.False);
+            Assert.That(result.Error, Is.EqualTo(ProtocolError.BadField));
         }
 
         [Test]

@@ -93,6 +93,9 @@ namespace Kingdom.Presentation
             runner.OnStateUpdated += board.OnStateUpdated;
             Anchors.Tabletop.Bind(_local, remote, Input);
             runner.OnStateUpdated += Anchors.Tabletop.OnStateUpdated;
+            runner.OnMatchEvent += Anchors.Tabletop.OnMatchEvent;
+            near.OnSnapshot += Anchors.Tabletop.OnAuthorityStateUpdated;
+            Anchors.Tabletop.OnAuthorityStateUpdated(near.Current);
             var plate0 = Hero(_local, near.Current.PlayerOf(_local).Hero.Class, true, db, art, runner, board);
             var plate1 = Hero(remote, near.Current.PlayerOf(remote).Hero.Class, false, db, art, runner, board);
             Input.SetHeroPlates(plate0, plate1);

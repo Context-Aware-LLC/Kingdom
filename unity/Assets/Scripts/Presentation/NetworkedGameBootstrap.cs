@@ -466,6 +466,9 @@ namespace Kingdom.Presentation
             {
                 table.Bind(localId, remoteId, inputRouter);
                 matchRunner.OnStateUpdated += table.OnStateUpdated;
+                matchRunner.OnMatchEvent += table.OnMatchEvent;
+                _view.OnSnapshot += table.OnAuthorityStateUpdated;
+                table.OnAuthorityStateUpdated(_view.Current);
                 _view.OnTurnTimer += table.OnTurnTimer;
             }
             if (boardAnchors != null && table == null)

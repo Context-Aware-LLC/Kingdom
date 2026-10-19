@@ -173,6 +173,32 @@ namespace Kingdom.Net.Server.Tests
             h.AdvanceAndTick(h.Options.RopeMs + 1);                      // past the deadline
             Assert.That(h.Session.Host.State.ActivePlayer, Is.Not.EqualTo(firstActive),
                 "expiry auto-ends the turn via synthetic EndTurnIntent");
+            foreach (var connection in new[] { h.Conn0, h.Conn1 })
+            {
+                int timeouts = 0;
+                foreach (var e in connection.Last<EventsMsg>().Events)
+                    if (e.TimedOut)
+                    {
+                        Assert.That(e.Kind, Is.EqualTo(GameEventKind.TurnEnded));
+                        Assert.That(e.Source, Is.EqualTo(h.Session.Host.State.Players[h.Session.Host.State.SeatOf(firstActive)].Hero.Id));
+                        timeouts++;
+                    }
+                Assert.That(timeouts, Is.EqualTo(1), "both viewers get exactly one timeout receipt");
+            }
+        }
+
+        [Test]
+        public void Manual_End_At_The_Deadline_Has_No_Timeout_Receipt()
+        {
+            var h = new SessionHarness();
+            h.ConfirmMulligans();
+            PlayerId active = h.Session.Host.State.ActivePlayer;
+            int seat = h.Session.Host.State.SeatOf(active);
+            h.Time.Advance(h.Options.TurnMs); // client command wins before the next server tick
+            h.Post(seat, h.Client(seat).Intent(new EndTurnIntent(active), h.Id));
+            h.Tick();
+            foreach (var e in h.Conn0.Last<EventsMsg>().Events)
+                Assert.That(e.TimedOut, Is.False, "clock proximity alone cannot label a manual end");
         }
 
         [Test]
@@ -204,6 +230,8 @@ namespace Kingdom.Net.Server.Tests
                 "Unearth auto-confirm deterministically takes Options[0]");
             Assert.That(state.ActivePlayer, Is.EqualTo(active),
                 "resolving the choice is the deadline's continuation; the next clock tick may end the turn");
+            foreach (var e in h.Conn0.Last<EventsMsg>().Events)
+                Assert.That(e.TimedOut, Is.False, "a pending-choice auto-confirm is not a turn-end stamp");
 
             var intents = h.Replay.Matches[h.Id.Value].Intents;
             Assert.That(intents[intents.Count - 1], Is.EqualTo(new AutoConfirmIntent(chooser)),

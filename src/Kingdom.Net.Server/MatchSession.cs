@@ -364,6 +364,20 @@ namespace Kingdom.Net.Server
                 if (raw.Events.Count > 0)
                 {
                     var projected = GameStateProjector.ProjectEvents(raw.Events, vis, seat);
+                    // Decorate only the outbound copy. Core events/replays stay deterministic;
+                    // a late manual press and a clock-fired end must look different to the seal.
+                    if (cause == SubmitCause.Clock && intent is EndTurnIntent)
+                    {
+                        var timed = new List<GameEvent>(projected);
+                        for (int i = 0; i < timed.Count; i++)
+                        {
+                            var e = timed[i];
+                            if (e.Kind == GameEventKind.TurnEnded)
+                                timed[i] = new GameEvent(e.Kind, e.Sequence, e.Source, e.Target,
+                                    e.Amount, e.Flags, e.CueOverride, timedOut: true);
+                        }
+                        projected = timed;
+                    }
                     Send(seat, new EventsMsg(raw.StateVersion, projected));
                 }
             }
