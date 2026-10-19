@@ -31,12 +31,8 @@ namespace Kingdom.Presentation
     /// <para><b>It does not know what a pack or a class is.</b> Its entire input is a list of
     /// <see cref="Tidbit"/>.</para>
     ///
-    /// <para><b>The scroll is built here, not in the markup.</b> Every host carries the same
-    /// <c>tidbit-card</c> block; the constructor wraps it in a clip and adds two rollers, so the
-    /// hosts did not change. The card is always laid out at full width and only the clip over it
-    /// opens — animating the card's own width would re-wrap the copy on every frame. It unrolls
-    /// sideways from the middle; switching it to vertical means swapping width for height in
-    /// <see cref="Apply"/> and turning the roller art.</para>
+    /// <para><b>The scroll is <see cref="ProclamationScroll"/></b>, wrapped around the
+    /// <c>tidbit-card</c> block every host carries, so the hosts' markup did not change.</para>
     ///
     /// <para><b><c>onDone</c> runs after the scroll has rolled shut</b>, not on the tap.
     /// <see cref="IsShowing"/> stays true until then.</para>
@@ -44,30 +40,11 @@ namespace Kingdom.Presentation
     public sealed class FirstRunTidbit
     {
         private const string HiddenClass = "tidbit-overlay--hidden";
-        private const string ScrollClass = "tidbit-scroll";
-        private const string ClipClass = "tidbit-scroll__clip";
-        private const string RollerClass = "tidbit-scroll__roller";
-
-        // The beat schedule, in ms.
-        private const int HoldMs = 160;    // the rolled scroll sits shut before it opens
-        private const int UnfurlMs = 520;
-        private const int FurlMs = 260;
         private const int StampDelayMs = 120;
-
-        // A roller is this much taller than the sheet, so its caps clear the top and bottom edges.
-        private const float RollerOverhang = 1.3f;
-        // rolled-complete.png is 621 x 1242.
-        private const float RollerAspect = 0.5f;
-
-        private enum Motion { None, Opening, Closing }
 
         private readonly VisualElement _overlay;
         private readonly VisualElement _card;
-        private readonly VisualElement _scroll;
-        private readonly VisualElement _clip;
-        private readonly VisualElement _rollerLeft;
-        private readonly VisualElement _rollerRight;
-        private readonly IVisualElementScheduledItem _ticker;
+        private readonly ProclamationScroll _scroll;
         private readonly VisualElement _art;
         private readonly Label _title;
         private readonly Label _body;
@@ -75,13 +52,6 @@ namespace Kingdom.Presentation
 
         private readonly List<Tidbit> _queue = new List<Tidbit>();
         private Action _onDone;
-
-        private Motion _motion;
-        private float _motionStartedAt;
-        // 0 is rolled shut, 1 is fully open.
-        private float _open;
-        // The unfurl sound starts with the first frame that is drawn, not with Begin.
-        private bool _unfurlSounded;
 
         /// <param name="root">Any element the <c>tidbit-*</c> tree sits under.</param>
         /// <param name="sprites">Illustration source. Defaults to the same editor/addressable pair
@@ -106,39 +76,7 @@ namespace Kingdom.Presentation
             Button done = root.Q<Button>("btn-tidbit-done");
             if (done != null) done.clicked += Advance;
 
-            if (_card != null && _card.parent != null)
-            {
-                // A root bound twice already has its scroll; building a second would nest them.
-                if (_card.parent.ClassListContains(ClipClass))
-                {
-                    _clip = _card.parent;
-                    _scroll = _clip.parent;
-                    List<VisualElement> rollers = _scroll.Query<VisualElement>(className: RollerClass).ToList();
-                    _rollerLeft = rollers[0];
-                    _rollerRight = rollers[1];
-                }
-                else
-                {
-                    VisualElement host = _card.parent;
-                    int at = host.IndexOf(_card);
-                    _scroll = new VisualElement { name = "tidbit-scroll" };
-                    _scroll.AddToClassList(ScrollClass);
-                    _clip = new VisualElement();
-                    _clip.AddToClassList(ClipClass);
-                    host.Insert(at, _scroll);
-                    _scroll.Add(_clip);
-                    _clip.Add(_card);
-                    _rollerLeft = Roller(mirrored: false);
-                    _rollerRight = Roller(mirrored: true);
-                }
-
-                _ticker = _scroll.schedule.Execute(Tick).Every(16);
-                _ticker.Pause();
-                // At rest the scroll still has to follow its host: a resize changes the width the
-                // clip and the rollers were placed against.
-                _scroll.RegisterCallback<GeometryChangedEvent>(_ => { if (_motion == Motion.None && IsShowing) Apply(); });
-                _card.RegisterCallback<GeometryChangedEvent>(_ => { if (_motion == Motion.None && IsShowing) Apply(); });
-            }
+            if (_card != null && _card.parent != null) _scroll = new ProclamationScroll(_card);
 
             // Hidden regardless of what the markup said — a host that forgets the hidden class would
             // otherwise open its screen behind a dimmed backdrop with no way past it.
@@ -184,7 +122,8 @@ namespace Kingdom.Presentation
             Render(_queue[0], stamp: false);
             _overlay.RemoveFromClassList(HiddenClass);
             IsShowing = true;
-            Begin(Motion.Opening);
+            if (_scroll != null) _scroll.Open(Stamp);
+            else Stamp();
             return true;
         }
 
@@ -204,7 +143,7 @@ namespace Kingdom.Presentation
         {
             // A tap while the scroll is still moving is a tap on a button that is half behind a
             // roller; it is not the player saying they have read it.
-            if (!IsShowing || _queue.Count == 0 || _motion != Motion.None) return;
+            if (!IsShowing || _queue.Count == 0 || _scroll?.IsMoving == true) return;
 
             // Recorded here rather than in Render: a beat is seen when the player says so.
             FirstRunMarkers.Mark(FirstRunMarkers.Tidbit(_queue[0].Id));
@@ -216,8 +155,9 @@ namespace Kingdom.Presentation
                 return;
             }
 
-            SealStamp.Clear(_scroll);
-            Begin(Motion.Closing);
+            SealStamp.Clear(_scroll?.Root);
+            if (_scroll != null) _scroll.Close(Finish);
+            else Finish();
         }
 
         private void Finish()
@@ -228,119 +168,11 @@ namespace Kingdom.Presentation
             done?.Invoke();
         }
 
-        private VisualElement Roller(bool mirrored)
-        {
-            var roller = new VisualElement { pickingMode = PickingMode.Ignore };
-            roller.AddToClassList(RollerClass);
-            if (mirrored) roller.style.scale = new Scale(new Vector2(-1f, 1f));
-            _scroll.Add(roller);
-            return roller;
-        }
-
-        private void Begin(Motion motion)
-        {
-            _motion = motion;
-            _motionStartedAt = Time.realtimeSinceStartup;
-            if (motion == Motion.Opening)
-            {
-                _open = 0f;
-                // Nothing is drawn until the sheet has been measured at its real width: the first
-                // layout wraps the copy against a clip of zero, and rollers sized off that height
-                // would flash the full screen tall.
-                _scroll.style.opacity = 0f;
-                _clip.style.width = 0f;
-                _unfurlSounded = false;
-                UiSfx.Preload(UiSfx.ScrollUnfurls);
-            }
-            _ticker.Resume();
-        }
-
-        private void Tick()
-        {
-            if (_motion == Motion.None) { _ticker.Pause(); return; }
-
-            // Hold the clock until there is a layout to animate against.
-            if (!Measure(out _, out _)) { _motionStartedAt = Time.realtimeSinceStartup; return; }
-
-            float elapsed = (Time.realtimeSinceStartup - _motionStartedAt) * 1000f;
-            float p;
-            if (_motion == Motion.Opening)
-            {
-                if (!_unfurlSounded)
-                {
-                    _unfurlSounded = true;
-                    UiSfx.Play(UiSfx.ScrollUnfurls);
-                }
-                p = Mathf.Clamp01((elapsed - HoldMs) / UnfurlMs);
-                float left = 1f - p;
-                _open = 1f - left * left * left;      // ease out: fast off the roll, slow to the stop
-            }
-            else
-            {
-                p = Mathf.Clamp01(elapsed / FurlMs);
-                _open = 1f - p * p * p;               // ease in: it gathers speed as it rolls up
-            }
-
-            Apply();
-            if (p < 1f) return;
-
-            Motion finished = _motion;
-            _motion = Motion.None;
-            _ticker.Pause();
-            if (finished == Motion.Opening) Stamp();
-            else Finish();
-        }
-
-        /// <summary>The sheet's full width and its height at that width. False until both are laid
-        /// out — an unresolved layout is NaN, which is why the tests are written as <c>!(x > 0)</c>.</summary>
-        private bool Measure(out float width, out float height)
-        {
-            height = 0f;
-            width = _scroll.resolvedStyle.width;
-            if (!(width > 0f)) return false;
-
-            _card.style.width = width;
-            if (!(Mathf.Abs(_card.resolvedStyle.width - width) < 1f)) return false;
-
-            height = _card.resolvedStyle.height;
-            return height > 0f;
-        }
-
-        /// <summary>Place the clip and both rollers for the current <see cref="_open"/>.</summary>
-        private void Apply()
-        {
-            if (!Measure(out float width, out float height)) return;
-
-            float shown = width * _open;
-            float edge = (width - shown) / 2f;        // from the wrapper's left to the clip's
-            _clip.style.width = shown;
-            // The clip is centred and the sheet is wider than it, so the sheet is pulled left by
-            // the half that is still rolled up. That keeps it still while the window opens.
-            _card.style.marginLeft = -edge;
-
-            float rollerHeight = height * RollerOverhang;
-            float rollerWidth = rollerHeight * RollerAspect;
-            float top = (height - rollerHeight) / 2f;
-            Place(_rollerLeft, edge - rollerWidth / 2f, top, rollerWidth, rollerHeight);
-            Place(_rollerRight, edge + shown - rollerWidth / 2f, top, rollerWidth, rollerHeight);
-
-            _scroll.style.opacity = 1f;
-        }
-
-        private static void Place(VisualElement roller, float left, float top, float width, float height)
-        {
-            IStyle s = roller.style;
-            s.left = left;
-            s.top = top;
-            s.width = width;
-            s.height = height;
-        }
-
         private void Render(Tidbit tidbit, bool stamp)
         {
             _title.text = tidbit.Title;
             _body.text = tidbit.Body;
-            SealStamp.Clear(_scroll);
+            SealStamp.Clear(_scroll?.Root);
             if (stamp) Stamp();
 
             if (_art == null) return;
@@ -365,24 +197,24 @@ namespace Kingdom.Presentation
         /// the part of the seal that hangs over the edge.</summary>
         private void Stamp()
         {
-            SealStamp.Clear(_scroll);
+            VisualElement wrapper = _scroll?.Root;
+            SealStamp.Clear(wrapper);
             Sprite seal = _sprites?.Get(SealStamp.SpriteKey);
-            if (seal == null) return;
+            if (seal == null || wrapper == null) return;
             Sprite tool = _sprites.Get(SealStamp.ToolSpriteKey);
-            _scroll.schedule.Execute(() =>
+            wrapper.schedule.Execute(() =>
             {
                 // The player may have dismissed it, or the host torn it down, inside the delay.
-                if (!IsShowing || _motion != Motion.None) return;
-                SealStamp.Play(_scroll, seal, tool, size: 170f, left: 130f, bottom: -30f);
+                if (!IsShowing || _scroll.IsMoving) return;
+                SealStamp.Play(wrapper, seal, tool, size: 170f, left: 130f, bottom: -30f);
             }).StartingIn(StampDelayMs);
         }
 
         private void Hide()
         {
             IsShowing = false;
-            _motion = Motion.None;
-            _ticker?.Pause();
-            SealStamp.Clear(_scroll);
+            _scroll?.Stop();
+            SealStamp.Clear(_scroll?.Root);
             _overlay?.AddToClassList(HiddenClass);
         }
     }

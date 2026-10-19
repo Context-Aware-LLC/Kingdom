@@ -69,6 +69,7 @@ namespace Kingdom.Presentation
 
         private NetworkedMatchSession _net;
         private readonly MatchQuestWatch _questWatch = new MatchQuestWatch();
+        private readonly MatchGoldWatch _goldWatch = new MatchGoldWatch();
         private MainThreadMatchSession _view;
         private DesyncFaultInjector _faultInjector; // [DesyncDbg] dev tool — null outside the editor and dev builds
         private LoadingOverlay _overlay;
@@ -468,6 +469,7 @@ namespace Kingdom.Presentation
             // The quest baseline, read before anything in this match can move it; the result
             // screen reads again at the end and shows the difference.
             _questWatch.Begin();
+            _goldWatch.Begin();
 
             // ── Input router: TRUTH cadence, main-thread-marshaled via the decorator. ────────────
             if (inputRouter != null)
@@ -633,12 +635,15 @@ namespace Kingdom.Presentation
             {
                 Debug.Log($"[NetworkedMatch] OVER — {outcome}");
                 heroVoice.OnMatchEnded(outcome);                    // picks the line; Draw is silent, by authoring
-                // The banner's sequence owns the timing from here: stinger, quest cards, the
-                // voice line, then the linger. The quest read starts now so it runs under the music.
+                // The banner's sequence owns the timing from here: stinger, spoils, the voice
+                // line, then the linger. The Gold and quest reads start now so they run under the music.
                 MatchEndBanner.Show(outcome, localSeat: _net.Seat,  // seat-aware — the server deals the seat
                     quests: _questWatch.AdvancedAsync(),
                     playVoiceLine: heroVoice.PlayMatchEndLine,
-                    reason: _net.EndReason);   // the MatchEndMsg follows the final snapshot, so it beats the drain
+                    // The MatchEndMsg follows the final snapshot, so its reason and findings beat the drain.
+                    reason: _net.EndReason,
+                    findings: _net.EndFindings,
+                    gold: _goldWatch.EarnedAsync());
                 MusicDirector.FadeOutUntilSceneChange();            // the battle loop would clash with the stinger
                 cardSounds.OnMatchEnded(outcome, _net.Seat);
                 _ = PlayGamesServices.SyncAchievementsAfterMatchAsync();   // never throws; nothing waits on it
@@ -784,6 +789,7 @@ namespace Kingdom.Presentation
         {
             ReleaseOpening();
             _questWatch.Cancel();
+            _goldWatch.Cancel();
             _net?.Dispose();
         }
 

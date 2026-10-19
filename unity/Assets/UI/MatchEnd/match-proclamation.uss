@@ -1,0 +1,119 @@
+/* ============================================================================
+   THE MATCH PROCLAMATION — the result screen on the herald's scroll
+   Whimsy pass 2026-10-17, #2. Built by MatchProclamation over the board.
+
+   The scroll, the sheet and the dim come from tidbit.uss; this sheet only lays
+   out what is written on it. Sized in the 2400 x 1080 authored panel (#349).
+   ============================================================================ */
+
+/* Wider than a tidbit: two columns, the spoils and the findings, side by side. */
+.proc-overlay .tidbit-scroll {
+    width: 66%;
+}
+
+.proc-sheet {
+    align-items: center;
+}
+
+.proc-verdict {
+    font-size: var(--type-display);
+    -unity-text-align: middle-center;
+}
+
+.proc-verdict--victory { color: rgb(150, 98, 18); }
+.proc-verdict--defeat  { color: rgb(138, 32, 22); }
+.proc-verdict--draw    { color: rgb(58, 36, 18); }
+
+/* The reason under the verdict. Not .tidbit-copy: that one grows to share a row,
+   and this line has a whole column to itself. */
+.proc-reason {
+    font-size: var(--type-body);
+    color: rgb(84, 58, 34);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.proc-columns {
+    flex-direction: row;
+    align-self: stretch;
+    justify-content: center;
+}
+
+/* flex-basis 0 with grow, so the two columns split the sheet evenly whatever
+   their copy says. No overflow: hidden — a shrinkable flex child with it deletes
+   its children outright in UI Toolkit. */
+.proc-column {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin-left: var(--space-6);
+    margin-right: var(--space-6);
+}
+
+.proc-column--hidden {
+    display: none;
+}
+
+.proc-heading {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: rgb(58, 36, 18);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(84, 58, 34, 0.45);
+    padding-bottom: var(--space-1);
+    margin-bottom: var(--space-3);
+}
+
+.proc-gold {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: rgb(150, 98, 18);
+    margin-bottom: var(--space-3);
+}
+
+.proc-row {
+    margin-bottom: var(--space-3);
+}
+
+.proc-row__title {
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    color: rgb(58, 36, 18);
+    white-space: normal;
+}
+
+.proc-row__detail {
+    font-size: var(--type-label);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+}
+
+/* A quest this match completed, lit like the old result screen lit it. */
+.proc-row__detail--done {
+    color: rgb(150, 98, 18);
+    -unity-font-style: bold;
+}
+
+/* A finding's citation is the Council speaking, so it reads as a quotation.
+   Right padding keeps the copy clear of the wax the row is stamped with. */
+.proc-finding {
+    padding-right: 72px;
+}
+
+.proc-finding .proc-row__detail {
+    -unity-font-style: italic;
+}
+
+.proc-more {
+    font-size: var(--type-label);
+    -unity-font-style: italic;
+    color: rgb(84, 58, 34);
+}
+
+.proc-footer {
+    font-size: var(--type-label);
+    color: rgb(84, 58, 34);
+    margin-top: var(--space-4);
+    -unity-text-align: middle-center;
+}

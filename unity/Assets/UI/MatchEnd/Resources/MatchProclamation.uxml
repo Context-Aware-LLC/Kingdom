@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MatchProclamation.uxml — the result screen, read off the herald's scroll (whimsy pass
+  2026-10-17, #2): the verdict and why, the spoils (Gold, quests), and the Council's Findings,
+  each stamped. Built at runtime by MatchEndBanner.Show through Resources, the same pattern
+  ConnectionFailedScreen uses; MatchProclamation fills it and ProclamationScroll wraps the sheet.
+
+  .emb-root IS LOAD-BEARING, as it is on ConnectionFailedScreen: this tree is its own UIDocument,
+  so no screen root above it declares the type and spacing tokens every rule here reads.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../../Common/theme.uss" />
+    <Style src="../../Common/tidbit.uss" />
+    <Style src="../match-proclamation.uss" />
+
+    <ui:VisualElement name="proclamation" class="emb-root tidbit-overlay proc-overlay">
+        <ui:VisualElement name="proc-sheet" class="tidbit-card proc-sheet">
+            <ui:Label name="proc-verdict" text=" " class="tidbit-title proc-verdict" />
+            <ui:Label name="proc-reason" text=" " class="proc-reason" />
+            <ui:VisualElement class="proc-columns">
+                <ui:VisualElement name="proc-spoils" class="proc-column proc-column--hidden">
+                    <ui:Label text="Spoils" class="proc-heading" />
+                    <ui:Label name="proc-gold" text=" " class="proc-gold" />
+                    <ui:VisualElement name="proc-quests" />
+                </ui:VisualElement>
+                <ui:VisualElement name="proc-findings-column" class="proc-column proc-column--hidden">
+                    <ui:Label text="The Council's Findings" class="proc-heading" />
+                    <ui:VisualElement name="proc-findings" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:Label name="proc-footer" text=" " class="proc-footer" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
