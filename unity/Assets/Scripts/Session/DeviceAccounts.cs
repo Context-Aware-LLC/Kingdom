@@ -149,26 +149,11 @@ namespace Kingdom.Session
         }
 
         /// <summary>
-        /// A label for listing accounts: this account's chosen display name, or a positional fallback for
-        /// one that has never been named. Reads that account's profile off disk — never throws, since a
-        /// list of accounts must still render when one of them is unreadable.
+        /// A label for listing accounts. Positional: the display name lives against each account's
+        /// identity (2026-10-18), and only the signed-in one's session is on hand to read it from.
         /// </summary>
         public static string LabelOf(LocalAccount account, int index)
-        {
-            if (account == null) return "—";
-            try
-            {
-                var profile = JsonProfileStore.InDirectory(Root, account.Id).Load();
-                if (profile.HasDisplayName) return profile.DisplayName;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[DeviceAccounts] profile for account {index + 1} unreadable " +
-                                 $"({ex.GetType().Name}); labelling it positionally.");
-                return $"Account {index + 1} (unreadable)";
-            }
-            return $"Account {index + 1} (unnamed)";
-        }
+            => account == null ? "—" : $"Account {index + 1}";
 
         /// <summary>
         /// Mint a new account. It starts with nothing — no profile, no roster — so whoever signs into

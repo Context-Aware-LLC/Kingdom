@@ -230,7 +230,8 @@ namespace Kingdom.Net.Server
                 : new TelemetryDrain(sink.Path, dbConn!);
 
             // EF-074c: Supabase JWT verifier (optional — absent means auth tokens are rejected;
-            // guest connects are always accepted). Mirrors the telemetry-drain pattern.
+            // guest connects are accepted; present means they are refused unless
+            // KINGDOM_ALLOW_GUEST_MATCHES=1, see Options below). Mirrors the telemetry-drain pattern.
             string? supabaseUrl = KingdomEnv.Get("KINGDOM_SUPABASE_URL");
             IIdentityTokenVerifier? tokenVerifier = string.IsNullOrWhiteSpace(supabaseUrl)
                 ? null
@@ -309,6 +310,12 @@ namespace Kingdom.Net.Server
                 BotModelPath = KingdomEnv.Get("KINGDOM_BOT_MODEL"),
                 MinClientBuildAndroid = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_ANDROID"),
                 MinClientBuildIos = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_IOS"),
+                // A box with sign-in turns guests away; one without it has nothing else to offer.
+                Options = new ServerOptions
+                {
+                    AllowGuestMatches = tokenVerifier is null
+                        || KingdomEnv.Get("KINGDOM_ALLOW_GUEST_MATCHES") == "1",
+                },
             };
         }
 

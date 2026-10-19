@@ -11,8 +11,9 @@ using UnityEngine;
 namespace Kingdom.Session
 {
     /// <summary>
-    /// The player, on this device: their name and their decks
-    /// (dev-docs/data/player-data-and-telemetry.md:11).
+    /// The player, on this device: their decks and preferences
+    /// (dev-docs/data/player-data-and-telemetry.md:11). Their display name is not here: it lives
+    /// against the signed-in identity, see <see cref="AuthGateway.DisplayName"/>.
     ///
     /// <para><b>There is no roster any more (ADR-0009, Sam 2026-09-04).</b> <c>Character</c> held a
     /// class pairing and nothing else the game needed, so it was deleted and the pairing moved onto
@@ -93,67 +94,13 @@ namespace Kingdom.Session
         ///
         /// <para><b>The one cached thing here</b>, against the stores' explicit no-cache rule. That
         /// rule exists because two store instances with private copies silently overwrite each other;
-        /// a display name has exactly one writer in this process (<see cref="SetDisplayName"/>) and is
-        /// read by every screen that draws a nameplate, so the trade runs the other way. If a second
-        /// writer ever appears — an editor tool, a settings screen on another account — call
-        /// <see cref="ReloadProfile"/> rather than adding a second cache.</para>
+        /// the profile has one writer in this process (<see cref="RecordLastPlayed"/>). If a second
+        /// writer ever appears, call <see cref="ReloadProfile"/> rather than adding a second cache.</para>
         /// </summary>
         public PlayerProfile Profile => _profile ??= _profiles.Load();
 
         /// <summary>Drop the cached profile so the next read comes off disk.</summary>
         public void ReloadProfile() => _profile = null;
-
-        /// <summary>
-        /// True when this device has never been asked for a name — the signal for the first-run
-        /// prompt. Not an error state: a boot straight into a board scene has nowhere to ask.
-        /// </summary>
-        public bool NeedsDisplayName => !Profile.HasDisplayName;
-
-        /// <summary>
-        /// The name to render, or <paramref name="fallback"/> when there isn't one yet. Callers use
-        /// this instead of inventing and saving a default — a saved "Player" is indistinguishable from
-        /// a chosen one, and the prompt would then never fire again.
-        /// </summary>
-        public string DisplayNameOr(string fallback) => Profile.HasDisplayName ? Profile.DisplayName : fallback;
-
-        /// <summary>
-        /// This device's name for a nameplate, guaranteed not to throw.
-        ///
-        /// <para>A store refuses to read a corrupt collection (so the next write cannot overwrite
-        /// something recoverable), which means <see cref="Local"/> can throw — and a boot path that
-        /// only wanted a label for a nameplate must not die of it. The screen that can actually do
-        /// something about a broken collection is the main menu, which reports it; every other caller
-        /// draws the fallback and logs.</para>
-        /// </summary>
-        public static string LocalDisplayNameOr(string fallback)
-        {
-            try
-            {
-                return Local.DisplayNameOr(fallback);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[PlayerAccount] display name unavailable ({ex.GetType().Name}: {ex.Message}); " +
-                                 $"using '{fallback}'.");
-                return fallback;
-            }
-        }
-
-        /// <summary>
-        /// Validate and persist a display name. Returns the verdict so a text field can render the
-        /// refusal reason; nothing is written unless it is valid, and the stored value is the
-        /// normalized one (see <see cref="PlayerName"/>).
-        /// </summary>
-        public NameCheck SetDisplayName(string raw)
-        {
-            NameCheck check = PlayerName.Check(raw);
-            if (!check.IsValid) return check;
-
-            var profile = Profile;
-            profile.DisplayName = check.Normalized;
-            _profiles.Save(profile);          // re-validates and normalizes the object in place
-            return check;
-        }
 
         /// <summary>The last deck actually submitted into a match, or empty if none yet.</summary>
         public string LastPlayedDeckId => Profile.LastPlayedDeckId;

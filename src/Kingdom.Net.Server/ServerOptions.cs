@@ -88,5 +88,14 @@ namespace Kingdom.Net.Server
         /// hanging — the opponent's ticket died with the challenge, so nobody is coming.
         /// </summary>
         public long ChallengeArrivalTimeoutMs { get; init; } = 30_000;
+
+        /// <summary>
+        /// Whether a hello with a device token and no sign-in token may play. A guest seat has no
+        /// collection to check a deck against and earns no quests or achievements, so a deployment
+        /// with sign-in refuses it (Sam, 2026-10-18): <c>ServerApp.FromEnvironment</c> turns this off
+        /// whenever <c>KINGDOM_SUPABASE_URL</c> is set, unless <c>KINGDOM_ALLOW_GUEST_MATCHES=1</c>.
+        /// True here so an in-process test box and NetSoak's loopback keep working.
+        /// </summary>
+        public bool AllowGuestMatches { get; init; } = true;
     }
 }

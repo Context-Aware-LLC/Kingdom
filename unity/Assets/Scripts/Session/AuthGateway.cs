@@ -56,6 +56,22 @@ namespace Kingdom.Session
         /// verifying it, which only the server can do.</summary>
         public static string SignedInEmail => Provider.Current.Email;
 
+        /// <summary>
+        /// The player's display name: the one held against their identity, read from the session's
+        /// token. The only copy the client has (Sam, 2026-10-18) — the device used to keep its own in
+        /// <c>profile.json</c>, a leftover from before accounts. The match server reads the same value
+        /// off the verified token, so what this shows and what the opponent sees cannot differ.
+        /// </summary>
+        public static string DisplayName => Provider.Current.DisplayName ?? "";
+
+        /// <summary>The name, or <paramref name="fallback"/> when the identity holds none.</summary>
+        public static string DisplayNameOr(string fallback)
+            => string.IsNullOrEmpty(DisplayName) ? fallback : DisplayName;
+
+        /// <summary>A signed-in player whose identity has no name yet: the first-run name step is owed.
+        /// False on an unconfigured build, which has no identity to hold one.</summary>
+        public static bool NeedsDisplayName => IsConfigured && IsSignedIn && string.IsNullOrEmpty(DisplayName);
+
         /// <summary>The Google client Android's native sign-in requests its token for; empty when
         /// this build signs in to Google through the browser only.</summary>
         public static string GoogleNativeClientId

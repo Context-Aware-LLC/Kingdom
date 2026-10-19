@@ -264,7 +264,8 @@ namespace Kingdom.Net.Server.Transport
             //    IIdentityTokenVerifier; on success the subject hash is resolved through IAccountStore
             //    to a stable player_id. An invalid token CLOSES the socket — no silent fallback to
             //    guest, because a downgrade is how a rejected credential still gets in.
-            //    AuthToken absent → guest path (AccountId.FromDeviceToken), unchanged.
+            //    AuthToken absent → guest path (AccountId.FromDeviceToken), only where
+            //    ServerOptions.AllowGuestMatches opts in.
             //
             //    VULN-003 latent item 2 in security.md remains standing: its trigger is value
             //    attaching to an account, and this ticket attaches none. See security.md §Latent.
@@ -274,6 +275,9 @@ namespace Kingdom.Net.Server.Transport
             // submitted deck (NOR-313); null on every path that never touches the store (guest, or
             // authenticated with no store), which is the "ownership unknown, do not constrain" case.
             Account? deckOwnerAccount = null;
+            // The name this seat is shown under. For a signed-in player it is the one held against
+            // their identity, read off the token this method has just verified; see below.
+            string candidateName;
             if (!string.IsNullOrEmpty(hello.AuthToken))
             {
                 if (_tokenVerifier is null)
@@ -290,6 +294,7 @@ namespace Kingdom.Net.Server.Transport
                     return;
                 }
                 var identity = verifyResult.Identity!;
+                candidateName = identity.DisplayName;
                 string subHash = HashCredential(identity.Subject);
                 if (_accountStore is not null)
                 {
@@ -330,15 +335,27 @@ namespace Kingdom.Net.Server.Transport
             }
             else
             {
+                // A device token alone is a guest: no collection to check a deck against, no quests,
+                // no achievements. Players never get here (Sam, 2026-10-18) — the client refuses to
+                // connect without a sign-in token — so a deployment with sign-in turns guests away,
+                // and only a dev or tooling box (NetSoak) opts in. See ServerOptions.AllowGuestMatches.
+                if (!_opts.AllowGuestMatches)
+                {
+                    conn.Close(1008, "sign-in required");
+                    await conn.PumpTask;
+                    return;
+                }
                 account = AccountId.FromDeviceToken(hello.DeviceToken);   // codec guarantees non-empty
+                candidateName = hello.DisplayName;
             }
 
-            // ── VULN-002 §4 (EF-073). THIS IS THE HALF THAT COUNTS. hello.DisplayName is a string
-            //    the PEER chose and our client renders; their client's copy of PlayerName.Check is
-            //    advice they can decline by patching the client or editing profile.json. So it is
-            //    re-checked here, on arrival, with the IDENTICAL predicate — Kingdom.Core.Collection
-            //    is UnityEngine-free for exactly this reason, and a re-implementation here would be a
-            //    second definition free to drift on a length or a category.
+            // ── VULN-002 §4 (EF-073). THIS IS THE HALF THAT COUNTS. The name is peer-authored either
+            //    way: a signed-in player writes their own user_metadata, and a guest types theirs into
+            //    the hello. So it is re-checked here, on arrival, with the IDENTICAL predicate —
+            //    Kingdom.Core.Collection is UnityEngine-free for exactly this reason, and a
+            //    re-implementation here would be a second definition free to drift on a length or a
+            //    category. A signed-in player's hello.DisplayName is ignored: the identity's copy is
+            //    the one their friends see too, so the two cannot disagree.
             //
             //    A refusal is a FALLBACK, not a closed socket: an empty name is the honest first-run
             //    state, and dropping a player's connect over a name they may not know is bad would be
@@ -348,7 +365,7 @@ namespace Kingdom.Net.Server.Transport
             //    Note what is NOT done: the name is not stored, forwarded, or logged before it passes.
             //    An unvalidated name echoed anywhere is the server laundering peer input into
             //    trusted-looking state (§4.2).
-            string checkedName = PlayerName.Check(hello.DisplayName).Normalized;   // "" when refused
+            string checkedName = PlayerName.Check(candidateName).Normalized;   // "" when refused
 
             // EF-071: a /ws?deck=1 client submits its deck as the SECOND handshake frame, revalidated
             // server-side HERE — an illegal deck is refused at the handshake and never becomes a match

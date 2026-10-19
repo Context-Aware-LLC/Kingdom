@@ -73,7 +73,7 @@ namespace Kingdom.Editor
             AppendAccountRegistry(report);
             report.AppendLine($"  scope      : {account.ScopeDirectory}");
             report.AppendLine($"  exists     : {Directory.Exists(account.ScopeDirectory)}");
-            report.AppendLine($"  name       : {(account.NeedsDisplayName ? "(never set)" : account.Profile.DisplayName)}");
+            report.AppendLine($"  name       : {AuthGateway.DisplayNameOr("(none on the identity)")}");
 
             var decks = account.Decks();
             report.AppendLine($"  decks      : {decks.Count} / {DeckCreation.MaxPerAccount}");
@@ -143,24 +143,6 @@ namespace Kingdom.Editor
             try
             {
                 var account = new PlayerAccount(root, ProbeKey);
-
-                if (!Check(log, account.NeedsDisplayName, "a fresh account needs a name")) return;
-                if (!Check(log, account.DisplayNameOr("Unnamed player") == "Unnamed player",
-                           "an unnamed account renders the fallback")) return;
-
-                NameCheck refused = account.SetDisplayName("ab");
-                log.AppendLine($"  refusal for 'ab' → \"{refused.Reason}\"");
-                if (!Check(log, !refused.IsValid, "a two-character name is refused")) return;
-                if (!Check(log, !File.Exists(CollectionPaths.Profile(root, ProbeKey)),
-                           "a refused name writes no file")) return;
-
-                NameCheck accepted = account.SetDisplayName("  Sam   Ember ");
-                log.AppendLine($"  stored name = \"{accepted.Normalized}\"");
-                if (!Check(log, accepted.IsValid && accepted.Normalized == "Sam Ember",
-                           "whitespace is collapsed rather than refused")) return;
-
-                account.ReloadProfile();
-                if (!Check(log, account.Profile.DisplayName == "Sam Ember", "the name survives a reload")) return;
 
                 ICardDatabase db = CardDatabaseLoader.Load();
 

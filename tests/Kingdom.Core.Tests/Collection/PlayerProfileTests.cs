@@ -149,62 +149,18 @@ namespace Kingdom.Core.Tests.Collection
         // ---- store ---------------------------------------------------------------------
 
         [Test]
-        public void Load_on_first_run_is_an_unnamed_profile_not_an_error()
-        {
-            var profile = Store().Load();
-            Assert.That(profile, Is.Not.Null);
-            Assert.That(profile.HasDisplayName, Is.False);
-            Assert.That(profile.DisplayName, Is.Empty);
-        }
-
-        [Test]
-        public void Save_then_load_round_trips_the_name()
-        {
-            Store().Save(new PlayerProfile("Sam"));
-            Assert.That(Store().Load().DisplayName, Is.EqualTo("Sam"));
-        }
-
-        [Test]
-        public void Save_stores_the_normalized_name_and_updates_the_callers_object()
-        {
-            var profile = new PlayerProfile("  Sam   Ember ");
-            Store().Save(profile);
-
-            Assert.That(Store().Load().DisplayName, Is.EqualTo("Sam Ember"), "disk holds the normalized form");
-            Assert.That(profile.DisplayName, Is.EqualTo("Sam Ember"),
-                "the UI is still holding this object — it must not disagree with disk");
-        }
-
-        [Test]
-        public void Save_refuses_an_invalid_name()
-        {
-            var ex = Assert.Throws<ArgumentException>(() => Store().Save(new PlayerProfile("ab")));
-            Assert.That(ex!.Message, Does.Contain("at least"), "the refusal carries the player-facing reason");
-            Assert.That(File.Exists(Store().FilePath), Is.False, "a refused save writes nothing");
-        }
-
-        [Test]
-        public void Save_accepts_clearing_the_name()
-        {
-            var store = Store();
-            store.Save(new PlayerProfile("Sam"));
-            Assert.DoesNotThrow(() => store.Save(new PlayerProfile("")), "empty means 'ask me again'");
-            Assert.That(store.Load().HasDisplayName, Is.False);
-        }
-
-        [Test]
         public void Save_overwrites_rather_than_accumulating()
         {
             var store = Store();
-            store.Save(new PlayerProfile("First"));
-            store.Save(new PlayerProfile("Second"));
-            Assert.That(store.Load().DisplayName, Is.EqualTo("Second"));
+            store.Save(new PlayerProfile("deck-1"));
+            store.Save(new PlayerProfile("deck-2"));
+            Assert.That(store.Load().LastPlayedDeckId, Is.EqualTo("deck-2"));
         }
 
         [Test]
         public void Load_on_a_corrupt_file_throws_rather_than_reporting_unnamed()
         {
-            // Reporting "unnamed" would prompt for a name and overwrite a recoverable profile.
+            // Reporting an empty profile would let the next write overwrite a recoverable one.
             var store = Store();
             Directory.CreateDirectory(Path.GetDirectoryName(store.FilePath)!);
             File.WriteAllText(store.FilePath, "{ this is not json");
@@ -222,20 +178,13 @@ namespace Kingdom.Core.Tests.Collection
         }
 
         [Test]
-        public void ReadProfile_reports_a_stored_name_that_no_longer_validates()
-        {
-            // Rules can tighten after a name is stored. Refuse on the way in, report on the way out.
-            var profile = CollectionJson.ReadProfile(
-                $"{{ \"schemaVersion\": {CollectionJson.SchemaVersion}, \"profile\": {{ \"displayName\": \"ab\" }} }}");
-            Assert.That(profile.DisplayName, Is.EqualTo("ab"));
-        }
-
-        [Test]
-        public void ReadProfile_treats_a_missing_name_as_never_set()
+        public void ReadProfile_ignores_a_display_name_written_before_it_moved_to_the_identity()
         {
             var profile = CollectionJson.ReadProfile(
-                $"{{ \"schemaVersion\": {CollectionJson.SchemaVersion}, \"profile\": {{ }} }}");
-            Assert.That(profile.HasDisplayName, Is.False);
+                $"{{ \"schemaVersion\": {CollectionJson.SchemaVersion}, \"profile\": {{ \"displayName\": \"Sam\", \"lastPlayedDeckId\": \"deck-1\" }} }}");
+            Assert.That(profile.LastPlayedDeckId, Is.EqualTo("deck-1"));
+            Assert.That(CollectionJson.WriteProfile(profile), Does.Not.Contain("displayName"),
+                "the next write drops it");
         }
 
         [Test]
@@ -259,11 +208,11 @@ namespace Kingdom.Core.Tests.Collection
         [Test]
         public void Two_identities_hold_two_profiles()
         {
-            JsonProfileStore.InDirectory(_root, "device-a").Save(new PlayerProfile("Alice"));
-            JsonProfileStore.InDirectory(_root, "device-b").Save(new PlayerProfile("Bob"));
+            JsonProfileStore.InDirectory(_root, "device-a").Save(new PlayerProfile("deck-a"));
+            JsonProfileStore.InDirectory(_root, "device-b").Save(new PlayerProfile("deck-b"));
 
-            Assert.That(JsonProfileStore.InDirectory(_root, "device-a").Load().DisplayName, Is.EqualTo("Alice"));
-            Assert.That(JsonProfileStore.InDirectory(_root, "device-b").Load().DisplayName, Is.EqualTo("Bob"));
+            Assert.That(JsonProfileStore.InDirectory(_root, "device-a").Load().LastPlayedDeckId, Is.EqualTo("deck-a"));
+            Assert.That(JsonProfileStore.InDirectory(_root, "device-b").Load().LastPlayedDeckId, Is.EqualTo("deck-b"));
         }
 
         // ---- last-played pointer (Sam, 2026-08-09: Find Game pre-arms its pick from this) ----
@@ -282,21 +231,9 @@ namespace Kingdom.Core.Tests.Collection
         [Test]
         public void Save_then_load_round_trips_the_last_played_pointer()
         {
-            Store().Save(new PlayerProfile("Sam", "deck-1"));
+            Store().Save(new PlayerProfile("deck-1"));
 
             var loaded = Store().Load();
-            Assert.That(loaded.LastPlayedDeckId, Is.EqualTo("deck-1"));
-        }
-
-        [Test]
-        public void Saving_a_display_name_does_not_wipe_the_last_played_pointer()
-        {
-            var store = Store();
-            store.Save(new PlayerProfile("Sam", "deck-1"));
-            store.Save(new PlayerProfile("Sam Renamed", "deck-1"));
-
-            var loaded = store.Load();
-            Assert.That(loaded.DisplayName, Is.EqualTo("Sam Renamed"));
             Assert.That(loaded.LastPlayedDeckId, Is.EqualTo("deck-1"));
         }
 
@@ -320,7 +257,6 @@ namespace Kingdom.Core.Tests.Collection
                 "{ \"displayName\": \"Sam\", \"lastPlayedCharacterId\": \"chr-1\", " +
                 "\"lastPlayedDeckId\": \"deck-1\" } }");
 
-            Assert.That(profile.DisplayName, Is.EqualTo("Sam"));
             Assert.That(profile.LastPlayedDeckId, Is.EqualTo("deck-1"));
         }
     }

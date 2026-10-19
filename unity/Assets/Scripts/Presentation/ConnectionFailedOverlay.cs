@@ -91,6 +91,12 @@ namespace Kingdom.Presentation
             "Lost the connection to the server.",
             "The courier balloon has drifted off course again.");
 
+        /// <summary>The client could not get a sign-in token for the connect, or the server
+        /// refused a hello that came without one ("sign-in required").</summary>
+        public static readonly ConnectionFailureCopy SignInUnconfirmed = new ConnectionFailureCopy(
+            "We couldn't confirm your sign-in. Check your connection and try again.",
+            "The guards no longer recognise you.");
+
         /// <summary>
         /// <paramref name="reachedServer"/> is whether the server got as far as seating this
         /// player. A drop with no reason before that is "can't reach"; after it, "lost".
@@ -115,6 +121,8 @@ namespace Kingdom.Presentation
                         return new ConnectionFailureCopy(
                             "You've been signed out. Sign in again from the menu.",
                             "The guards no longer recognise you.");
+                    case "sign-in required":
+                        return SignInUnconfirmed;
                     case "contract mismatch":
                         return new ConnectionFailureCopy(
                             "This version of the game doesn't match the server's.",

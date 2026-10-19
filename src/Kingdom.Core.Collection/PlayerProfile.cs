@@ -5,8 +5,13 @@ using System.Text;
 namespace Kingdom.Core.Collection
 {
     /// <summary>
-    /// The player behind the roster — one per identity scope (accounts posture decision 6a: guest
-    /// identity is "device token + display name", and this is the display-name half).
+    /// This device's per-account preferences — one per identity scope.
+    ///
+    /// <para><b>The display name is not here (Sam, 2026-10-18).</b> It was, from 2026-07-26, when the
+    /// device token was the whole identity and there was nowhere else to keep it. It lives against
+    /// the signed-in identity now (Supabase <c>user_metadata</c>), and the match server reads it off
+    /// the verified token; a device copy could only disagree with that one. <see cref="PlayerName"/>
+    /// stays in this file because the server and the name step both check with it.</para>
     ///
     /// <para><b>Deliberately thin, and deliberately not the identity itself.</b> The identity is the
     /// device token, which lives in <c>PlayerPrefs</c> on the Unity side and is the storage key this
@@ -28,21 +33,6 @@ namespace Kingdom.Core.Collection
     public sealed class PlayerProfile
     {
         /// <summary>
-        /// What other players will see. Mutable — a name is a preference, not an identity, and
-        /// renaming must never invalidate a match history keyed on the token.
-        ///
-        /// <para>Empty means <b>never set</b>, which is the first-run state and not an error: a boot
-        /// that goes straight to a board scene has no opportunity to ask. Callers render a
-        /// placeholder; they do not invent a name and save it, because a saved "Player" is
-        /// indistinguishable from a chosen one and the prompt would never fire again.</para>
-        ///
-        /// <para>Validated on the way IN (<see cref="JsonProfileStore.Save"/> refuses an invalid
-        /// name) and reported as stored on the way OUT — the same split as an invalid class pairing.
-        /// See <see cref="PlayerName"/> for the rules.</para>
-        /// </summary>
-        public string DisplayName { get; set; }
-
-        /// <summary>
         /// The deck actually submitted into the most recent match (Sam, 2026-08-09) —
         /// what Find Game pre-arms so a player is not forced to re-pick a queue-ready deck every
         /// time. Empty until the first match ships a deck. Deliberately not re-validated here: a
@@ -57,14 +47,10 @@ namespace Kingdom.Core.Collection
         /// would be two keys for one fact and the second one would go stale quietly.</para>
         public string LastPlayedDeckId { get; set; }
 
-        public PlayerProfile(string displayName = "", string lastPlayedDeckId = "")
+        public PlayerProfile(string lastPlayedDeckId = "")
         {
-            DisplayName = displayName ?? "";
             LastPlayedDeckId = lastPlayedDeckId ?? "";
         }
-
-        /// <summary>False on first run and after a name is cleared — the signal to ask for one.</summary>
-        public bool HasDisplayName => !string.IsNullOrEmpty(DisplayName);
     }
 
     /// <summary>The verdict on a candidate display name: the cleaned-up value, or why it was refused.</summary>

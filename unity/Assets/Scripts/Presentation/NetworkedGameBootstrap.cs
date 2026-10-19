@@ -134,12 +134,20 @@ namespace Kingdom.Presentation
             // the boot must not present a token that expires during the handshake — the server closes
             // the socket on a bad one and never downgrades silently.
             //
-            // EVERY failure path here yields "", which is the guest the server has always accepted.
-            // Not signed in, no project configured, refresh refused, network down: all of them still
-            // reach a match. Nothing about this asks the player to sign in, and nothing shows.
+            // A build with sign-in never connects without a token (Sam, 2026-10-18). It used to fall
+            // back to a guest connect on every failure — refresh refused, network down — which seated
+            // a signed-in player with no collection check, no quests and no achievements, and said
+            // nothing. A deployment with sign-in now refuses that hello anyway ("sign-in required"),
+            // so failing here, with Retry, is the legible version of the same outcome. Only a build
+            // with no project configured still connects as a guest, to a dev box that accepts one.
             Task<string> authTokenTask = AuthGateway.TokenForConnectAsync();
             while (!authTokenTask.IsCompleted) yield return null;
             string authToken = authTokenTask.Status == TaskStatus.RanToCompletion ? authTokenTask.Result : "";
+            if (AuthGateway.IsConfigured && string.IsNullOrEmpty(authToken))
+            {
+                BootFailed(ConnectionFailureCopy.SignInUnconfirmed);
+                yield break;
+            }
 
             // ── C-G1-4 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-G1-REVIEW.md §3) — the gate cannot be signed on recollection ──────
             // This client was previously constructed with default ClientOptions, so OnDesyncCapture
@@ -167,10 +175,10 @@ namespace Kingdom.Presentation
                 DeviceToken = DeviceAccounts.WireToken(),
                 Platform = DeviceIdentity.Platform,
                 BuildId = DeviceIdentity.BuildId,
-                // EF-073: our name for the OPPONENT's nameplate. Empty fallback on purpose — "" is
-                // "never set", whereas the "You" this screen renders locally is a string the server
-                // RESERVES (VULN-002 §4.3) and would refuse. The server re-checks whatever we send.
-                DisplayName = PlayerAccount.LocalDisplayNameOr(""),
+                // EF-073: no name. A signed-in seat is named by its identity, which the server
+                // reads off the verified token and ignores this field for (2026-10-18); only a guest
+                // on a dev box is named from here, and an unconfigured build has none to send.
+                DisplayName = "",
                 // EF-074e: empty unless this device holds a live Supabase session. The server keys
                 // the seat on this when it is present and falls back to the device token when it is
                 // not, so a guest connects exactly as before.
@@ -384,7 +392,7 @@ namespace Kingdom.Presentation
             // "Opponent" below is still ours to draw when the server sent nothing usable; it is not
             // a name the peer can claim, because the server reserves it.
             _versus = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
-                localClass,  PlayerAccount.LocalDisplayNameOr("You"),
+                localClass,  AuthGateway.DisplayNameOr("You"),
                 remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? "Opponent" : _net.OpponentName,
                 s0.Id.Value), artProvider);
             // The two heroes trade a line over the versus screen and on into the mulligan.

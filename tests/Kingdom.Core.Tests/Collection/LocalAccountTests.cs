@@ -141,14 +141,14 @@ namespace Kingdom.Core.Tests.Collection
             store.Save(new LocalAccount("doomed", "token-b"));
 
             var profiles = JsonProfileStore.InDirectory(_root, "doomed");
-            profiles.Save(new PlayerProfile("Perdition"));
+            profiles.Save(new PlayerProfile("deck-perdition"));
 
             store.Delete("doomed");
 
             Assert.That(store.LoadAll(), Has.Count.EqualTo(1));
             Assert.That(File.Exists(profiles.FilePath), Is.True,
                         "a mis-clicked testing affordance must not destroy a real collection");
-            Assert.That(profiles.Load().DisplayName, Is.EqualTo("Perdition"));
+            Assert.That(profiles.Load().LastPlayedDeckId, Is.EqualTo("deck-perdition"));
         }
 
         [Test]
@@ -186,11 +186,11 @@ namespace Kingdom.Core.Tests.Collection
 
             var one = JsonProfileStore.InDirectory(_root, DeviceToken);
             var two = JsonProfileStore.InDirectory(_root, "account-2");
-            one.Save(new PlayerProfile("MrSoNord"));
-            two.Save(new PlayerProfile("Seat Two"));
+            one.Save(new PlayerProfile("deck-one"));
+            two.Save(new PlayerProfile("deck-two"));
 
-            Assert.That(one.Load().DisplayName, Is.EqualTo("MrSoNord"));
-            Assert.That(two.Load().DisplayName, Is.EqualTo("Seat Two"));
+            Assert.That(one.Load().LastPlayedDeckId, Is.EqualTo("deck-one"));
+            Assert.That(two.Load().LastPlayedDeckId, Is.EqualTo("deck-two"));
             Assert.That(one.FilePath, Is.Not.EqualTo(two.FilePath));
         }
 

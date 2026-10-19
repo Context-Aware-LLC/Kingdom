@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Kingdom.Net.Server.Identity;
 using Kingdom.Net.Protocol;
 using Kingdom.Net.Server;
 using Kingdom.Net.Server.Tests.Support;
@@ -179,6 +180,67 @@ namespace Kingdom.Net.Server.Tests
             });
         }
 
+        // ── A signed-in seat (Sam, 2026-10-18) ───────────────────────────────────
+
+        [Test]
+        [CancelAfter(60_000)]
+        public async Task A_Signed_In_Seat_Is_Named_By_Its_Identity_Not_Its_Hello()
+        {
+            // The name lives against the identity; the hello's copy is a device's say-so and is
+            // ignored for a signed-in player, so a patched client cannot rename itself per match.
+            await WithServerAsync(async wsUri =>
+            {
+                using var c0 = new ClientWebSocket();
+                using var c1 = new ClientWebSocket();
+                await c0.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(c0, TokenA, "Impostor", authToken: "named");
+                await c1.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(c1, TokenB, "Impostor", authToken: "unnamed");
+
+                var start0 = await ExpectAsync<MatchStartMsg>(c0);
+                var start1 = await ExpectAsync<MatchStartMsg>(c1);
+
+                Assert.That(start1.Opponent.DisplayName, Is.EqualTo("Sam Ember"),
+                    "the identity's name, normalized, reaches the opponent");
+                Assert.That(start0.Opponent.DisplayName, Does.StartWith(SeatIdPrefix),
+                    "an identity with no name falls back to the seat id, never to the hello's");
+            }, signIn: true);
+        }
+
+        [Test]
+        [CancelAfter(60_000)]
+        public async Task A_Box_With_Sign_In_Turns_A_Guest_Away()
+        {
+            await WithServerAsync(async wsUri =>
+            {
+                using var c0 = new ClientWebSocket();
+                await c0.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(c0, TokenA, "Sam Ember");
+
+                var buffer = new byte[4096];
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                WebSocketReceiveResult result;
+                do result = await c0.ReceiveAsync(new ArraySegment<byte>(buffer), cts.Token);
+                while (result.MessageType != WebSocketMessageType.Close);
+
+                Assert.That(c0.CloseStatusDescription, Is.EqualTo("sign-in required"));
+            }, signIn: true);
+        }
+
+        /// <summary>Two tokens: one whose identity carries a padded name, one with none.</summary>
+        private sealed class NamedVerifier : IIdentityTokenVerifier
+        {
+            public Task<TokenVerificationResult> VerifyAsync(string rawToken, CancellationToken ct = default)
+                => Task.FromResult(rawToken switch
+                {
+                    "named" => TokenVerificationResult.Ok(
+                        new VerifiedIdentity("sub-named", "named@example.com", true, "  Sam   Ember ")),
+                    "unnamed" => TokenVerificationResult.Ok(
+                        new VerifiedIdentity("sub-unnamed", "unnamed@example.com", true)),
+                    _ => TokenVerificationResult.Fail(TokenVerificationFailure.SignatureInvalid),
+                });
+        }
+
         // ── Harness ──────────────────────────────────────────────────────────────
 
         /// <summary>
@@ -218,7 +280,9 @@ namespace Kingdom.Net.Server.Tests
                 assert(start0, start1);
             });
 
-        private static async Task WithServerAsync(Func<Uri, Task> body)
+        /// <param name="signIn">A box with sign-in, as a deployment is: it verifies tokens with
+        /// <see cref="NamedVerifier"/> and turns guests away.</param>
+        private static async Task WithServerAsync(Func<Uri, Task> body, bool signIn = false)
         {
             string replays = Path.Combine(Path.GetTempPath(), "kingdom-displayname-" + Guid.NewGuid().ToString("N"));
             var built = ServerApp.BuildWithGate(new ServerConfig
@@ -226,9 +290,10 @@ namespace Kingdom.Net.Server.Tests
                 Urls = "http://127.0.0.1:0",
                 CardsDir = SessionHarness.CardDataDir(),
                 ReplaysDir = replays,
+                TokenVerifier = signIn ? new NamedVerifier() : null,
                 // Generous for the same reason GuestIdentityTests is: a short deadline made the
                 // PAIRING tests flaky under load, and every test here needs a pair to exist.
-                Options = new ServerOptions { HelloTimeoutMs = 30_000 },
+                Options = new ServerOptions { HelloTimeoutMs = 30_000, AllowGuestMatches = !signIn },
             });
             await built.App.StartAsync();
             try
@@ -243,10 +308,11 @@ namespace Kingdom.Net.Server.Tests
             }
         }
 
-        private static Task SendHelloAsync(ClientWebSocket ws, string deviceToken, string displayName)
+        private static Task SendHelloAsync(
+            ClientWebSocket ws, string deviceToken, string displayName, string authToken = "")
         {
             var frame = ProtocolCodec.Encode(
-                new HelloMsg(deviceToken, ProtocolContract.Version, "test", "displayname-tests", displayName),
+                new HelloMsg(deviceToken, ProtocolContract.Version, "test", "displayname-tests", displayName, authToken),
                 ProtocolCodec.PreMatch, 0);
             return ws.SendAsync(frame, WebSocketMessageType.Text, true, CancellationToken.None);
         }

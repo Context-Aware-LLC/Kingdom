@@ -275,7 +275,7 @@ namespace Kingdom.Presentation
             // no path that continues into the menu with the gate outstanding. AccountCreate hands
             // the player on itself — to CharacterRoster on an empty roster, back here otherwise.
             bool needsAccount = _signIn != null && _signIn.IsRequired;
-            bool needsName = _account != null && _account.NeedsDisplayName;
+            bool needsName = AuthGateway.NeedsDisplayName;
             if (needsAccount || needsName)
             {
                 _leavingForFirstRun = true;

@@ -171,7 +171,6 @@ namespace Kingdom.Core.Collection
                 w.WriteStartObject();
                 w.WriteNumber("schemaVersion", SchemaVersion);
                 w.WriteStartObject(ProfileProperty);
-                w.WriteString("displayName", profile.DisplayName);
                 w.WriteString("lastPlayedDeckId", profile.LastPlayedDeckId);
                 w.WriteEndObject();
                 w.WriteEndObject();
@@ -180,10 +179,8 @@ namespace Kingdom.Core.Collection
         }
 
         /// <summary>
-        /// Read a profile back. A name that no longer passes <see cref="PlayerName"/> — because the
-        /// rules tightened after it was stored, or because the file was hand-edited — loads intact and
-        /// is reported as stored. Same split as an invalid class pairing: refuse on the way in, where
-        /// the caller can still fix it; never on the way out, where the only options are lie or crash.
+        /// Read a profile back. A <c>displayName</c> written before 2026-10-18 is not read: the name
+        /// lives against the identity now, and the next profile write drops it.
         /// </summary>
         public static PlayerProfile ReadProfile(string json)
         {
@@ -191,16 +188,12 @@ namespace Kingdom.Core.Collection
             if (!root.TryGetProperty(ProfileProperty, out var el) || el.ValueKind != JsonValueKind.Object)
                 throw new CollectionFormatException($"Collection file has no '{ProfileProperty}' object.");
 
-            // Absent is the same as never-named, which is a legitimate state (IProfileStore) — so a
-            // missing displayName is empty rather than fatal, unlike a deck's required pairing. Same
-            // treatment for the last-played pointer: absent means "never shipped a deck yet", not corrupt.
+            // Absent means "never shipped a deck yet", not corrupt.
             //
             // A `lastPlayedCharacterId` written before 2026-09-04 is simply not read (ADR-0009). It is
             // the one legacy field with nothing to migrate — the deck id beside it already names what
             // was played — so it is dropped on the next profile write rather than converted.
-            return new PlayerProfile(
-                Str(el, "displayName") ?? "",
-                Str(el, "lastPlayedDeckId") ?? "");
+            return new PlayerProfile(Str(el, "lastPlayedDeckId") ?? "");
         }
 
         // ---- accounts ------------------------------------------------------------------
