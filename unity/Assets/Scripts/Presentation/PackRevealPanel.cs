@@ -54,8 +54,9 @@ namespace Kingdom.Presentation
 
         private ICardDatabase _cards;
         private IArtProvider _art;
+        private PackRevealAudio _audio;
 
-        /// <summary>Bumped by every <see cref="Show"/>. An art callback carrying a stale generation
+        /// <summary>Bumped when a reveal is hidden or replaced. An art callback carrying a stale generation
         /// is painting onto a card that has already been cleared off the row — the same version
         /// guard <see cref="CardWall"/> keeps, and for the same reason: <see cref="IArtProvider"/>
         /// may answer synchronously or frames later, and a second pack opened during the wait would
@@ -82,6 +83,7 @@ namespace Kingdom.Presentation
             // sits behind the cards, so a card swallows its own tap and only the gaps reach this.
             VisualElement dismiss = root.Q<VisualElement>("reveal-dismiss");
             dismiss?.RegisterCallback<ClickEvent>(_ => Done());
+            _overlay?.RegisterCallback<DetachFromPanelEvent>(_ => Hide());
 
             // Start hidden regardless of what the markup said. A host that forgets the hidden class
             // would otherwise open on an empty stage, which reads as a bug in the pack, not the UXML.
@@ -95,12 +97,12 @@ namespace Kingdom.Presentation
         public void Show(PackOpenReceipt receipt)
         {
             if (receipt == null || !IsBound) return;
+            Hide();
             _cardRow.Clear();
             _cardRow.RemoveFromClassList(BatchClass);
             _cardRow.RemoveFromClassList(CrowdedClass);
             _list?.Clear();
             _list?.AddToClassList(ListHiddenClass);
-            _generation++;
             if (_title != null) _title.text = TokenText.PackName(receipt.PackId) + " opened";
             if (_summary != null)
                 _summary.text = receipt.Awards.Count == 1
@@ -138,10 +140,10 @@ namespace Kingdom.Presentation
             if (receipts == null || receipts.Count == 0 || !IsBound) return;
             if (receipts.Count == 1 && string.IsNullOrEmpty(note)) { Show(receipts[0]); return; }
 
+            Hide();
             _cardRow.Clear();
             _cardRow.AddToClassList(BatchClass);
             _cardRow.RemoveFromClassList(CrowdedClass);
-            _generation++;
 
             var awards = new List<PackCardAward>();
             foreach (PackOpenReceipt receipt in receipts)
@@ -301,7 +303,15 @@ namespace Kingdom.Presentation
             _ => "Common",
         };
 
-        public void Hide() => _overlay?.AddToClassList(HiddenClass);
+        public void Hide()
+        {
+            _generation++;
+            _overlay?.AddToClassList(HiddenClass);
+            if (_audio == null) return;
+            _audio.Stop();
+            UnityEngine.Object.Destroy(_audio.gameObject);
+            _audio = null;
+        }
 
         private void Done()
         {
@@ -342,7 +352,9 @@ namespace Kingdom.Presentation
             name.AddToClassList("reveal-card__name");
             fallback.Add(name);
 
-            PaintFace(card, fallback, definition, revealDelayMs);
+            if (award.Rarity == Rarity.LEGENDARY && _audio == null)
+                _audio = PackRevealAudio.Create();
+            PaintFace(card, fallback, definition, revealDelayMs, award.Rarity);
 
             // No award line. It read "NEW CARD" or "DUPE -> n SHARDS", and since the no-auto-sharding
             // ruling (Sam, 2026-08-12) every slot is a card — leaving "NEW CARD" would assert newness the
@@ -358,11 +370,11 @@ namespace Kingdom.Presentation
         /// back to the illustration tile only when capture fails. The generation check prevents a
         /// late face from a dismissed reveal painting onto a later pack's card element.</summary>
         private void PaintFace(VisualElement target, VisualElement fallback,
-                               CardDefinition definition, int revealDelayMs)
+                               CardDefinition definition, int revealDelayMs, Rarity rarity)
         {
             if (_faceBaker == null || definition == null)
             {
-                RevealAfter(target, revealDelayMs);
+                RevealAfter(target, revealDelayMs, rarity);
                 return;
             }
 
@@ -379,13 +391,20 @@ namespace Kingdom.Presentation
                         new StyleBackground(Background.FromTexture2D(face));
                 else
                     fallback.style.display = DisplayStyle.Flex;
-                RevealAfter(target, revealDelayMs);
+                RevealAfter(target, revealDelayMs, rarity);
             });
         }
 
-        private static void RevealAfter(VisualElement target, int delayMs)
-            => target.schedule.Execute(() => target.AddToClassList("reveal-card--shown"))
-                .StartingIn(delayMs);
+        private void RevealAfter(VisualElement target, int delayMs, Rarity rarity)
+        {
+            int generation = _generation;
+            target.schedule.Execute(() =>
+            {
+                if (generation != _generation || target.panel == null) return;
+                target.AddToClassList("reveal-card--shown");
+                if (rarity == Rarity.LEGENDARY) _audio?.LegendaryRevealed();
+            }).StartingIn(delayMs);
+        }
 
         /// <summary>The printed card behind an award, or null when the database will not open. Both
         /// the name and the illustration come off it, so one lookup answers both — and a card that

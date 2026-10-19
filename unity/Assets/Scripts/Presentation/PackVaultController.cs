@@ -264,6 +264,7 @@ namespace Kingdom.Presentation
 
         private void OnDisable()
         {
+            _reveal?.Hide();
             _loadingTick?.Pause();
             _tidbit?.Cancel();
             _tidbit = null;
