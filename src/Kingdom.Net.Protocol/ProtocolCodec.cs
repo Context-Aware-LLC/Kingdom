@@ -178,6 +178,13 @@ namespace Kingdom.Net.Protocol
                     w.BeginObject();
                     w.Name("outcome"); w.Str(m.Outcome.ToString());
                     w.Name("reason"); w.Str(ReasonToWire(m.Reason));
+                    if (m.FindingIds.Count > 0)
+                    {
+                        w.Name("findings");
+                        w.BeginArray();
+                        foreach (string id in m.FindingIds) w.Str(id);
+                        w.EndArray();
+                    }
                     w.EndObject();
                     break;
                 default:
@@ -552,7 +559,20 @@ namespace Kingdom.Net.Protocol
                 case "disconnect": reason = MatchEndReason.Disconnect; break;
                 default: return DecodeResult.Fail(ProtocolError.BadField, $"unknown end reason '{rs}'", matchId, seq);
             }
-            return DecodeResult.Success(new MatchEndMsg(outcome, reason), matchId, seq);
+            // Optional (see MatchEndMsg.Findings): absent is none, never a failure.
+            var findings = new List<string>();
+            if (body.TryGet("findings", out var fVal))
+            {
+                if (fVal.Kind != JKind.Array)
+                    return DecodeResult.Fail(ProtocolError.BadField, "bad 'findings'", matchId, seq);
+                foreach (var item in fVal.Items!)
+                {
+                    if (!item.TryStr(out string id))
+                        return DecodeResult.Fail(ProtocolError.BadField, "bad 'findings' entry", matchId, seq);
+                    findings.Add(id);
+                }
+            }
+            return DecodeResult.Success(new MatchEndMsg(outcome, reason, findings), matchId, seq);
         }
     }
 }

@@ -30,6 +30,7 @@ namespace Kingdom.Net.Client
         private ConnectionState _state = ConnectionState.Idle;
         private DeadReason _deadReason = DeadReason.None;
         private MatchEndReason? _endReason;
+        private IReadOnlyList<string> _endFindings = Array.Empty<string>();
         // #232: the server's WS close-frame reason text, when the peer supplied one (MatchGate's
         // "deck timeout" / "deck rejected: ..." / "server full" — see WebSocketTransport). DeadReason
         // stays the coarse bucket UI code branches on; this is what a player actually reads.
@@ -140,6 +141,9 @@ namespace Kingdom.Net.Client
         /// <summary><c>MatchEndMsg.Reason</c> — why the match ended, for the result line. Null
         /// until the server says, and for good when the socket died before it could.</summary>
         public MatchEndReason? EndReason { get { lock (_lock) return _endReason; } }
+        /// <summary><c>MatchEndMsg.Findings</c> — the Council's Findings this seat committed, as
+        /// <c>AchievementTexts</c> ids, for the result screen. Empty until the server says.</summary>
+        public IReadOnlyList<string> EndFindings { get { lock (_lock) return _endFindings; } }
         /// <summary>The server's close-frame reason text, when it sent one (#232) — null for a local
         /// close, a transport fault, or a peer close that carried no text. Prefer this over
         /// <see cref="DeadReason"/> when presenting a refusal to the player; it is the difference
@@ -428,6 +432,7 @@ namespace Kingdom.Net.Client
             {
                 resolve = _pending;
                 _endReason = end.Reason;
+                _endFindings = end.FindingIds;
                 ClearPendingUnlocked();
                 SetStateUnlocked(ConnectionState.Ended);
             }

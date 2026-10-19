@@ -95,6 +95,28 @@ namespace Kingdom.Net.Server.Tests.Achievements
             Assert.That(AchievementCatalog.All, Has.Count.GreaterThanOrEqualTo(10));
         }
 
+        [Test]
+        public void Every_Text_The_Client_Renders_Has_A_Rule()
+        {
+            // The client prints AchievementTexts and the server earns AchievementCatalog. A text
+            // with no rule is a Ledger page nobody can ever fill.
+            Assert.That(AchievementCatalog.All.Select(a => a.Id),
+                Is.EqualTo(AchievementTexts.All.Select(t => t.Id)));
+        }
+
+        [Test]
+        public void The_Result_Screen_Stamps_Findings_Only_In_Find_Game()
+        {
+            IReadOnlyList<string> ladder = AchievementCatalog.FindingsIn(Everything("player"));
+            Assert.That(ladder, Does.Contain("proceed_unwisely").And.Contain("signature_move"));
+            Assert.That(ladder, Does.Not.Contain("against_advice"), "a plain win is not a bad idea");
+
+            Assert.That(AchievementCatalog.FindingsIn(Everything("player", source: TelemetrySource.BotFill)),
+                Is.EqualTo(ladder), "a bot-filled match must stamp exactly what a ladder one does");
+            Assert.That(AchievementCatalog.FindingsIn(Everything("player", source: TelemetrySource.Friendly)),
+                Is.Empty);
+        }
+
         [TestCase("second_thoughts")]
         [TestCase("working_as_intended")]
         [TestCase("early_retirement")]

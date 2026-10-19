@@ -575,6 +575,33 @@ namespace Kingdom.Net.Server.Tests
             public void CardsSeen(CardSeenEvent e) { WasCalled = true; throw new InvalidOperationException("sink is down"); }
         }
 
+        [TestCase(TelemetrySource.Ladder, true)]
+        [TestCase(TelemetrySource.Friendly, false)]
+        public void Each_Seat_Is_Sent_Its_Own_Findings(TelemetrySource source, bool stamped)
+        {
+            // The result screen stamps what the match-end message says. A seat that let its clock
+            // run out committed Approved by Default; the other did not, and is not told it did.
+            var h = new SessionHarness(new ServerOptions(), attributed: true, source: source);
+            h.ConfirmMulligans();
+            int idle = h.Session.Host.State.SeatOf(h.Session.Host.State.ActivePlayer);
+
+            for (long t = 0; t <= h.Options.TurnMs && h.Session.Host.State.SeatOf(h.Session.Host.State.ActivePlayer) == idle; t += 1_000)
+            {
+                h.Time.Advance(1_000);
+                h.Post(0, h.Client0.Frame(new HeartbeatMsg(), h.Id));
+                h.Post(1, h.Client1.Frame(new HeartbeatMsg(), h.Id));
+                h.Tick();
+            }
+            Assert.That(h.Session.Host.State.SeatOf(h.Session.Host.State.ActivePlayer), Is.Not.EqualTo(idle),
+                "the clock must have ended the idle seat's turn");
+            Concede(h, 1 - idle);
+
+            FakeConnection idleConn = idle == 0 ? h.Conn0 : h.Conn1;
+            FakeConnection otherConn = idle == 0 ? h.Conn1 : h.Conn0;
+            Assert.That(idleConn.Last<MatchEndMsg>().FindingIds.Contains("approved_by_default"), Is.EqualTo(stamped));
+            Assert.That(otherConn.Last<MatchEndMsg>().FindingIds, Does.Not.Contain("approved_by_default"));
+        }
+
         private static void Concede(SessionHarness h, int seat)
             => h.Post(seat, h.Client(seat).Intent(new ConcedeIntent(seat == 0 ? h.P0 : h.P1), h.Id));
     }

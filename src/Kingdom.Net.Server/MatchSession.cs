@@ -6,6 +6,7 @@ using Kingdom.Core.Contracts;
 using Kingdom.Core.Projection;
 using Kingdom.Core.Serialization;
 using Kingdom.Net.Protocol;
+using Kingdom.Net.Server.Achievements;
 using Kingdom.Net.Server.Replay;
 using Kingdom.Net.Server.Ranking;
 using Kingdom.Net.Server.Telemetry;
@@ -577,7 +578,18 @@ namespace Kingdom.Net.Server
                 SubmitCause.IdleForfeit => MatchEndReason.Timeout,
                 _ => MatchEndReason.Win,
             };
-            Broadcast(new MatchEndMsg(_host.State.Outcome, reason));
+            // The summary is built BEFORE the wire message, because each seat's message carries
+            // the Council's Findings read off it. A summary that throws costs the findings, never
+            // the match-end screen.
+            DateTimeOffset endedAt = NowUtc();
+            MatchCompleteEvent? summary = null;
+            try { summary = _telemetry.Summarize(_host.State, endedAt, reason); }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("[telemetry] match {0} could not be summarised: {1}", _id.Value, ex.Message);
+            }
+            for (int seat = 0; seat < 2; seat++)
+                Send(seat, new MatchEndMsg(_host.State.Outcome, reason, FindingsFor(summary, seat)));
             _replay.Complete(_id, _host.State.Outcome);
             CompleteTrainingCapture();
 
@@ -585,7 +597,7 @@ namespace Kingdom.Net.Server
             // class out of live state — and after the wire messages, because a telemetry problem
             // must never cost a player their match-end screen.
             var outcome = _host.State.Outcome;
-            _telemetry.Complete(_host.State, NowUtc(), reason);
+            if (summary is not null) _telemetry.Complete(_host.State, summary);
 
             // Ratings are a projection of the authoritative result, never client input. The sink
             // rejects bot-fill, AI soak, self-play and unattributed matches before they can move it.
@@ -616,6 +628,13 @@ namespace Kingdom.Net.Server
         }
 
         // ── Telemetry (C-G1-8 step 2) ────────────────────────────────────────────
+
+        private static IReadOnlyList<string> FindingsFor(MatchCompleteEvent? summary, int seat)
+        {
+            if (summary is null) return Array.Empty<string>();
+            try { return AchievementCatalog.FindingsIn(AchievementMatchFacts.ForSeat(summary, seat)); }
+            catch (Exception) { return Array.Empty<string>(); }   // decoration; never the match-end
+        }
 
         private DateTimeOffset NowUtc() => DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs);
 

@@ -46,11 +46,23 @@ namespace Kingdom.Net.Server.Achievements
             return facts;
         }
 
+        /// <summary>One seat (0 or 1) of a finished match, attributed or not — the result screen
+        /// stamps a guest's findings too, though only a durable account keeps them.</summary>
+        public static AchievementMatchFacts ForSeat(MatchCompleteEvent complete, int seat)
+        {
+            if (complete is null) throw new ArgumentNullException(nameof(complete));
+            return seat == 0 ? Of(complete, complete.P0, complete.P1) : Of(complete, complete.P1, complete.P0);
+        }
+
         private static void AddSeat(List<AchievementMatchFacts> into, MatchCompleteEvent complete,
             SeatOutcome seat, SeatOutcome enemy)
         {
             if (!seat.Account.IsAttributed) return;
-            into.Add(new AchievementMatchFacts(
+            into.Add(Of(complete, seat, enemy));
+        }
+
+        private static AchievementMatchFacts Of(MatchCompleteEvent complete, SeatOutcome seat, SeatOutcome enemy)
+            => new AchievementMatchFacts(
                 complete.Match.Value,
                 seat.Account.Value,
                 complete.EndedAtUtc,
@@ -72,30 +84,26 @@ namespace Kingdom.Net.Server.Achievements
                 seat.LegendariesLost,
                 seat.MostBulwarks,
                 seat.FellTo,
-                enemy.FellTo));
-        }
+                enemy.FellTo);
     }
 
-    /// <summary>One achievement: the Ledger entry and its store counterparts.</summary>
-    /// <param name="Id">
-    /// Permanent. It keys the earned row, and neither Play Games nor Game Center lets a published
-    /// achievement be deleted, so an id is retired, never reused.
-    /// </param>
-    /// <param name="Name">What Play Console shows, and later the Ledger page.</param>
-    /// <param name="Description">The plain line first, then the Council's citation.</param>
+    /// <summary>One achievement: its text, its store counterpart and the rule that earns it.</summary>
     /// <param name="PlayGamesId">
     /// The id Play Console minted for this achievement. Empty until the console entry exists: the
     /// server still records the achievement, and the client unlocks it once the id lands here.
     /// </param>
     public sealed record AchievementDefinition(
-        string Id,
-        string Name,
-        string Description,
+        AchievementText Text,
         string PlayGamesId,
-        Func<AchievementMatchFacts, bool> EarnedBy);
+        Func<AchievementMatchFacts, bool> EarnedBy)
+    {
+        /// <summary>Permanent; see <see cref="AchievementText.Id"/>.</summary>
+        public string Id => Text.Id;
+    }
 
     /// <summary>
-    /// Every achievement, in the order the Ledger lists them. Each is earned once and kept for good
+    /// Every achievement, in the order the Ledger lists them, which is the order of
+    /// <see cref="AchievementTexts.All"/>. Each is earned once and kept for good
     /// (Sam, 2026-10-17), and only in matches found through Find Game; <see cref="AchievementService"/>
     /// holds that rule so no entry here has to repeat it.
     ///
@@ -110,92 +118,49 @@ namespace Kingdom.Net.Server.Achievements
     {
         public static IReadOnlyList<AchievementDefinition> All { get; } = Array.AsReadOnly(new[]
         {
-            new AchievementDefinition(
-                "second_thoughts", "Second Thoughts",
-                "Replace a card in your mulligan. The Council has also reconsidered.",
-                "CgkIkJ2NnuUeEAIQAQ", f => f.MulliganReplaced > 0),
-            new AchievementDefinition(
-                "working_as_intended", "Working as Intended",
-                "Use your Hero Power. The Council has inspected the button and found it to be working.",
-                "CgkIkJ2NnuUeEAIQBw", f => f.HeroPowersUsed > 0),
-            new AchievementDefinition(
-                "early_retirement", "Early Retirement",
-                "Destroy an enemy minion. Its pension has been approved.",
-                "CgkIkJ2NnuUeEAIQBA", f => f.EnemyMinionsDestroyed > 0),
-            new AchievementDefinition(
-                "against_advice", "Against Advice",
-                "Win a match. The Council has amended its advice.",
-                "CgkIkJ2NnuUeEAIQAw", f => f.Result == SeatResult.Win),
-            new AchievementDefinition(
-                "proceed_unwisely", "Proceed, Unwisely",
-                "Win a match with 1 Health. The Council had already drafted the other announcement.",
-                "CgkIkJ2NnuUeEAIQAg", f => f.Result == SeatResult.Win && f.FinalHealth == 1),
-            new AchievementDefinition(
-                "out_of_ideas", "Out of Ideas",
-                "Draw from an empty deck. The Council knows the feeling.",
-                "CgkIkJ2NnuUeEAIQBQ", f => f.FatigueDraws > 0),
-            new AchievementDefinition(
-                "too_many_ideas", "Too Many Ideas",
-                "Draw a card into a full hand. The card has been filed with the others.",
-                "CgkIkJ2NnuUeEAIQCA", f => f.CardsBurned > 0),
-            new AchievementDefinition(
-                "approved_by_default", "Approved by Default",
-                "Let the hourglass run out. The stamp went ahead without you.",
-                "CgkIkJ2NnuUeEAIQCQ", f => f.TurnsTimedOut > 0),
-            new AchievementDefinition(
-                "waste_not", "Waste Not",
-                "End a turn with 10 mana unspent. The Council admires the restraint and has asked what it was for.",
-                "CgkIkJ2NnuUeEAIQBg", f => f.TurnsEndedWithTenUnspent > 0),
-            new AchievementDefinition(
-                "mutual_respect", "Mutual Respect",
-                "Draw a match. The Council is still deliberating.",
-                "CgkIkJ2NnuUeEAIQCg", f => f.Result == SeatResult.Draw),
-            new AchievementDefinition(
-                "self_starter", "Self-Starter",
-                "Deal 15 damage to your own hero in one match. Pyra has asked for your name.",
-                "", f => f.SelfDamage >= 15),
-            new AchievementDefinition(
-                "overkill", "Overkill",
-                "Deal 10 damage to a minion with 1 Health. It has been thoroughly informed.",
-                "", f => f.Overkills > 0),
-            new AchievementDefinition(
-                "hubris", "Hubris",
-                "Have a minion of yours costing 8 or more returned to your hand. It had only just unpacked.",
-                "", f => f.BigMinionsBounced > 0),
-            new AchievementDefinition(
-                "gift_horse", "Gift Horse",
-                "Lose control of your Legendary to the other side. It writes, occasionally.",
-                "", f => f.LegendariesLost > 0),
-            new AchievementDefinition(
-                "seven_walls", "Seven Walls",
-                "Have seven Bulwark minions at once. Hodge would like to see the plans.",
-                "", f => f.MostBulwarks >= 7),
-            new AchievementDefinition(
-                "the_last_idea", "The Last Idea",
-                "Lose to an empty deck. It was a good plan. It was in there somewhere.",
-                "", f => f.Result == SeatResult.Loss && (f.FellTo & FinalBlow.Fatigue) != 0),
-            new AchievementDefinition(
-                "technically", "Technically",
-                "Win a match with your hero at 0 Health or below. The Council has ruled that it counts.",
-                "", f => f.Result == SeatResult.Win && f.FellTo != FinalBlow.None),
-            new AchievementDefinition(
-                "posthumous", "Posthumous",
-                "Win with damage from a minion's Toll. The deceased has been informed.",
-                "", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.Toll) != 0),
-            new AchievementDefinition(
-                "return_to_sender", "Return to Sender",
-                "Win with a minion you took from your opponent. They would like it back.",
-                "", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.StolenMinion) != 0),
-            new AchievementDefinition(
-                "signature_move", "Signature Move",
-                "Finish the enemy hero with your Hero Power. The Council had assumed it was decorative.",
-                "", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.HeroPower) != 0),
-            new AchievementDefinition(
-                "own_goal", "Own Goal",
-                "Lose to your own spell. Pyra was very impressed.",
-                "", f => f.Result == SeatResult.Loss
-                    && (f.FellTo & (FinalBlow.Spell | FinalBlow.OwnSide)) == (FinalBlow.Spell | FinalBlow.OwnSide)),
+            Rule("second_thoughts", "CgkIkJ2NnuUeEAIQAQ", f => f.MulliganReplaced > 0),
+            Rule("working_as_intended", "CgkIkJ2NnuUeEAIQBw", f => f.HeroPowersUsed > 0),
+            Rule("early_retirement", "CgkIkJ2NnuUeEAIQBA", f => f.EnemyMinionsDestroyed > 0),
+            Rule("against_advice", "CgkIkJ2NnuUeEAIQAw", f => f.Result == SeatResult.Win),
+            Rule("proceed_unwisely", "CgkIkJ2NnuUeEAIQAg", f => f.Result == SeatResult.Win && f.FinalHealth == 1),
+            Rule("out_of_ideas", "CgkIkJ2NnuUeEAIQBQ", f => f.FatigueDraws > 0),
+            Rule("too_many_ideas", "CgkIkJ2NnuUeEAIQCA", f => f.CardsBurned > 0),
+            Rule("approved_by_default", "CgkIkJ2NnuUeEAIQCQ", f => f.TurnsTimedOut > 0),
+            Rule("waste_not", "CgkIkJ2NnuUeEAIQBg", f => f.TurnsEndedWithTenUnspent > 0),
+            Rule("mutual_respect", "CgkIkJ2NnuUeEAIQCg", f => f.Result == SeatResult.Draw),
+            Rule("self_starter", "", f => f.SelfDamage >= 15),
+            Rule("overkill", "", f => f.Overkills > 0),
+            Rule("hubris", "", f => f.BigMinionsBounced > 0),
+            Rule("gift_horse", "", f => f.LegendariesLost > 0),
+            Rule("seven_walls", "", f => f.MostBulwarks >= 7),
+            Rule("the_last_idea", "", f => f.Result == SeatResult.Loss && (f.FellTo & FinalBlow.Fatigue) != 0),
+            Rule("technically", "", f => f.Result == SeatResult.Win && f.FellTo != FinalBlow.None),
+            Rule("posthumous", "", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.Toll) != 0),
+            Rule("return_to_sender", "", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.StolenMinion) != 0),
+            Rule("signature_move", "", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.HeroPower) != 0),
+            Rule("own_goal", "", f => f.Result == SeatResult.Loss && (f.FellTo & (FinalBlow.Spell | FinalBlow.OwnSide)) == (FinalBlow.Spell | FinalBlow.OwnSide)),
         });
+
+        /// <summary>
+        /// The Council's Findings this seat committed in one match, in Ledger order — what the
+        /// result screen stamps, every match, whether or not the Ledger already holds them. The
+        /// same rules the Ledger is earned by, and the same Find Game rule
+        /// <see cref="AchievementService"/> keeps, so a friend match stamps nothing.
+        /// </summary>
+        public static IReadOnlyList<string> FindingsIn(AchievementMatchFacts facts)
+        {
+            if (facts is null) throw new ArgumentNullException(nameof(facts));
+            var found = new List<string>();
+            if (facts.Source != TelemetrySource.Ladder && facts.Source != TelemetrySource.BotFill) return found;
+            foreach (AchievementDefinition definition in All)
+                if (definition.Text.IsFinding && definition.EarnedBy(facts)) found.Add(definition.Id);
+            return found;
+        }
+
+        private static AchievementDefinition Rule(string id, string playGamesId, Func<AchievementMatchFacts, bool> earnedBy)
+            => new AchievementDefinition(
+                AchievementTexts.Find(id) ?? throw new InvalidOperationException($"No AchievementText for '{id}'."),
+                playGamesId, earnedBy);
 
         /// <summary>The definition with this id, or null for one the catalog does not hold.</summary>
         public static AchievementDefinition? Find(string id)

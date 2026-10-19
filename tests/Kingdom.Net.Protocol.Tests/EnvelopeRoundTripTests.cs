@@ -298,6 +298,11 @@ namespace Kingdom.Net.Protocol.Tests
 
             var me = RoundTrip<MatchEndMsg>(new MatchEndMsg(MatchOutcome.Player1Win, MatchEndReason.Concede));
             Assert.That((me.Outcome, me.Reason), Is.EqualTo((MatchOutcome.Player1Win, MatchEndReason.Concede)));
+            Assert.That(me.FindingIds, Is.Empty, "no findings is the absent field, and decodes as none");
+
+            var found = RoundTrip<MatchEndMsg>(new MatchEndMsg(MatchOutcome.Player0Win, MatchEndReason.Win,
+                new[] { "proceed_unwisely", "waste_not" }));
+            Assert.That(found.FindingIds, Is.EqualTo(new[] { "proceed_unwisely", "waste_not" }));
         }
 
         [Test]

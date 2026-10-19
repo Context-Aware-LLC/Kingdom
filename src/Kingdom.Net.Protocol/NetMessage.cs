@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Kingdom.Core.Contracts;
 using Kingdom.Core.Serialization;
@@ -191,7 +192,15 @@ namespace Kingdom.Net.Protocol
     }
 
     /// <summary>Terminal result + why the match ended.</summary>
-    public sealed record MatchEndMsg(MatchOutcome Outcome, MatchEndReason Reason) : NetMessage;
+    /// <param name="Findings">The Council's Findings the RECEIVING seat committed this match, as
+    /// <see cref="AchievementTexts"/> ids, so each seat is sent its own message. Empty outside a
+    /// Find Game match. Additive and optional on the wire: an older peer omits it and decodes as
+    /// none, which is why it did not move <see cref="ProtocolContract.Version"/>.</param>
+    public sealed record MatchEndMsg(
+        MatchOutcome Outcome, MatchEndReason Reason, IReadOnlyList<string>? Findings = null) : NetMessage
+    {
+        public IReadOnlyList<string> FindingIds => Findings ?? Array.Empty<string>();
+    }
 
     public enum MatchEndReason { Win, Concede, Timeout, Disconnect }
 

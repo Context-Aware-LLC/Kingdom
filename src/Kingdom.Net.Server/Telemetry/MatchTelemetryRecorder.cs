@@ -221,13 +221,27 @@ namespace Kingdom.Net.Server.Telemetry
         /// of live state, so call it before anything tears the match down.
         /// </summary>
         public void Complete(GameState state, DateTimeOffset endedAtUtc, MatchEndReason reason)
+            => Complete(state, Summarize(state, endedAtUtc, reason));
+
+        /// <summary>
+        /// The <c>match_complete</c> row, built but not emitted — <c>MatchSession</c> reads the
+        /// Council's Findings off it for the match-end message before the row is written. Built
+        /// whether or not the match is attributed; only <see cref="Emit"/> drops unattributed rows.
+        /// </summary>
+        public MatchCompleteEvent Summarize(GameState state, DateTimeOffset endedAtUtc, MatchEndReason reason)
         {
             var outcome = state.Outcome;
-            Emit(() => _telemetry.MatchComplete(new MatchCompleteEvent(
+            return new MatchCompleteEvent(
                 _id, endedAtUtc, reason, outcome, state.TurnNumber, _attribution.Source,
-                SeatBlock(state, 0, outcome), SeatBlock(state, 1, outcome))));
+                SeatBlock(state, 0, outcome), SeatBlock(state, 1, outcome));
+        }
+
+        /// <summary>Emit a row <see cref="Summarize"/> built, then the per-card sample.</summary>
+        public void Complete(GameState state, MatchCompleteEvent complete)
+        {
+            Emit(() => _telemetry.MatchComplete(complete));
             Emit(() => _telemetry.CardsSeen(new CardSeenEvent(
-                _id, endedAtUtc, _attribution.Source, CardRows(state, outcome))));
+                _id, complete.EndedAtUtc, _attribution.Source, CardRows(state, complete.Outcome))));
         }
 
         /// <summary>Decision 24: the match ended with no result.</summary>
