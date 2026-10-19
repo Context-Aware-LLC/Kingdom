@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  LedgerScreen.uxml — the Ledger of Bad Ideas (whimsy pass 2026-10-17, #2): every achievement,
+  each a dated entry once earned and UNDER REVIEW until then. Built at runtime by LedgerOverlay
+  through Resources, the pattern ConnectionFailedScreen uses, so the Collection's own tree did not
+  have to carry it.
+
+  .emb-root IS LOAD-BEARING: this tree is its own UIDocument, so nothing above it declares the
+  type and spacing tokens the rules here read.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../../Common/theme.uss" />
+    <Style src="../../Common/tidbit.uss" />
+    <Style src="../ledger.uss" />
+
+    <ui:VisualElement name="ledger" class="emb-root tidbit-overlay">
+        <ui:VisualElement name="ledger-sheet" class="tidbit-card ledger-sheet">
+            <ui:VisualElement class="ledger-header">
+                <ui:Label text="The Ledger of Bad Ideas" class="tidbit-title ledger-title" />
+                <ui:Label name="ledger-count" text=" " class="ledger-count" />
+            </ui:VisualElement>
+            <ui:Label name="ledger-status" text="The clerk is fetching the Ledger." class="ledger-status" />
+            <ui:VisualElement name="ledger-page" class="ledger-page" />
+            <ui:VisualElement class="ledger-footer">
+                <ui:VisualElement name="ledger-pager" class="ledger-pager">
+                    <ui:Button name="ledger-prev" text="Previous" class="ledger-button" />
+                    <ui:Label name="ledger-page-label" text=" " class="ledger-page-label" />
+                    <ui:Button name="ledger-next" text="Next" class="ledger-button" />
+                </ui:VisualElement>
+                <ui:Button name="ledger-close" text="Close" class="ledger-button emb-primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

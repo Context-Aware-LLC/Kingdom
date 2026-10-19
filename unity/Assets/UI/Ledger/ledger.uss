@@ -1,0 +1,115 @@
+/* ============================================================================
+   THE LEDGER OF BAD IDEAS — every achievement, one entry each
+   Whimsy pass 2026-10-17, #2. Opened from the Collection by LedgerOverlay.
+
+   The dim and the paper come from tidbit.uss (.tidbit-overlay, .tidbit-card).
+   Sized in the 2400 x 1080 authored panel (#349). It turns PAGES rather than
+   scrolling: a journal reads that way, and a ScrollView still loses its touch
+   drag to its content container on a device.
+   ============================================================================ */
+
+.ledger-sheet {
+    width: 72%;
+    max-width: 92%;
+    flex-shrink: 0;
+}
+
+.ledger-header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(84, 58, 34, 0.45);
+    padding-bottom: var(--space-2);
+}
+
+.ledger-title {
+    font-size: var(--type-display);
+}
+
+.ledger-count {
+    font-size: var(--type-label);
+    -unity-font-style: italic;
+    color: rgb(84, 58, 34);
+}
+
+.ledger-status {
+    font-size: var(--type-body);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin: var(--space-12) 0;
+}
+
+/* Two entries to a row, three rows to a page. Fixed height, so turning to a page
+   with fewer entries does not shrink the sheet under the player's thumb. */
+.ledger-page {
+    flex-direction: row;
+    flex-wrap: wrap;
+    height: 528px;
+    align-content: flex-start;
+}
+
+.ledger-entry {
+    width: 50%;
+    height: 176px;
+    padding: var(--space-2) 96px var(--space-2) var(--space-2);
+}
+
+.ledger-entry__name {
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    color: rgb(58, 36, 18);
+}
+
+.ledger-entry__plain {
+    font-size: var(--type-label);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+}
+
+.ledger-entry__citation {
+    font-size: var(--type-label);
+    -unity-font-style: italic;
+    color: rgb(84, 58, 34);
+    white-space: normal;
+}
+
+.ledger-entry__date {
+    font-size: var(--type-caption);
+    color: rgb(120, 92, 62);
+    margin-top: var(--space-1);
+}
+
+/* A page nobody has earned yet: one line, faded, and nothing that gives it away. */
+.ledger-entry--unearned .ledger-entry__name {
+    color: rgba(84, 58, 34, 0.5);
+    letter-spacing: 4px;
+}
+
+.ledger-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--space-4);
+}
+
+.ledger-pager {
+    flex-direction: row;
+    align-items: center;
+}
+
+.ledger-page-label {
+    font-size: var(--type-label);
+    color: rgb(84, 58, 34);
+    margin: 0 var(--space-4);
+}
+
+.ledger-button {
+    min-width: 148px;
+    height: 68px;
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+    font-size: var(--type-body);
+}

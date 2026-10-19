@@ -25,10 +25,15 @@ namespace Kingdom.Net.Client.Achievements
         /// entry; such an entry is earned and simply has nothing to unlock yet.</summary>
         public string PlayGamesId { get; }
 
-        public EarnedAchievementEntry(string id, string playGamesId)
+        /// <summary>When it was first earned, for the Ledger's date. Null when the row carried no
+        /// readable date, which leaves the page earned and simply undated.</summary>
+        public DateTimeOffset? EarnedAt { get; }
+
+        public EarnedAchievementEntry(string id, string playGamesId, DateTimeOffset? earnedAt = null)
         {
             Id = id;
             PlayGamesId = playGamesId;
+            EarnedAt = earnedAt;
         }
     }
 
@@ -151,7 +156,12 @@ namespace Kingdom.Net.Client.Achievements
                 if (!AuthJson.TryString(row, "id", out string id) ||
                     !row.TryGetValue("playGamesId", out string? playGamesId) || playGamesId is null)
                     return AchievementSnapshot.Failed(AchievementFetchStatus.Malformed, "Unreadable achievement row.");
-                achievements.Add(new EarnedAchievementEntry(id, playGamesId));
+                DateTimeOffset? earnedAt = null;
+                if (row.TryGetValue("earnedAt", out string? stamp) &&
+                    DateTimeOffset.TryParse(stamp, CultureInfo.InvariantCulture,
+                        DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out DateTimeOffset parsed))
+                    earnedAt = parsed;
+                achievements.Add(new EarnedAchievementEntry(id, playGamesId, earnedAt));
             }
             return AchievementSnapshot.Known(achievements);
         }

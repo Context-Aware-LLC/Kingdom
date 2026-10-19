@@ -37,6 +37,7 @@
                 </ui:VisualElement>
             </ui:Button>
             <ui:VisualElement picking-mode="Ignore" class="col-query-actions">
+                <ui:Button name="ledger-button" text="Ledger" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
                 <ui:Button name="decks-button" text="Decks" class="col-button col-button--decks chrome-button chrome-button--secondary"/>
             </ui:VisualElement>
         </ui:VisualElement>
