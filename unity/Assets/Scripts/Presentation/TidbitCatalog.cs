@@ -118,7 +118,7 @@ namespace Kingdom.Presentation
                 "\n" +
                 "Yes. It is complicated. You will get used to it.\n" +
                 "\n" +
-                "If you are lucky your opponent will not figure this part out and you will be the champion.",
+                "If you're lucky the opponent will not figure this part out and you will be champion.",
                 "tidbit_match_pick"),
             new Tidbit(
                 "characters",
