@@ -2,6 +2,7 @@
 
     python tooling/sfx/soundweb.py                  # http://127.0.0.1:8795
     python tooling/sfx/soundweb.py --port 8799
+    python tooling/sfx/soundweb.py --match _vs_     # one batch only: the versus banter
 
 WHY THIS IS A SERVER AND NOT A STATIC PAGE
     A file:// page can play audio but cannot copy or move a file, and promotion is the whole
@@ -147,11 +148,19 @@ def load_lines():
     except Exception:
         return {}, {}
     text_by_stem, voice_by_class = {}, {}
-    for cls, entry in data.get("voices", {}).items():
+    voices = data.get("voices", {})
+    for cls, entry in voices.items():
         voice_by_class[cls] = entry.get("voice_name", "")
         for moment, lines in entry.get("lines", {}).items():
             for i, text in enumerate(lines, 1):
                 text_by_stem["vo_%s_%s_%d" % (cls.lower(), moment, i)] = (cls, moment, text)
+    # A versus reply is judged against the line it answers, so show the opener above it.
+    for opener, replier in data.get("_versus_openers", []):
+        cue = voices.get(opener, {}).get("lines", {}).get("vs_" + replier.lower(), [""])[0]
+        stem = "vo_%s_vs_%s_1" % (replier.lower(), opener.lower())
+        if stem in text_by_stem and cue:
+            cls, moment, text = text_by_stem[stem]
+            text_by_stem[stem] = (cls, moment, "%s: “%s” → %s" % (opener, cue, text))
     return text_by_stem, voice_by_class
 
 
@@ -198,10 +207,18 @@ def save_queue(queue: dict) -> None:
         encoding="utf-8")
 
 
+# Set by --match: only canonical stems this regex finds are listed, so one batch can be reviewed
+# on its own page without moving anyone else's takes off the board.
+STEM_FILTER = None
+
+
 def scan():
     """Every candidate clip, grouped for display. Rebuilt per request so the page is never stale."""
     text_by_stem, voice_by_class = load_lines()
     card_text_by_stem, voice_by_handle = load_card_lines()
+    if STEM_FILTER is not None:
+        text_by_stem = {s: v for s, v in text_by_stem.items() if STEM_FILTER.search(s)}
+        card_text_by_stem = {s: v for s, v in card_text_by_stem.items() if STEM_FILTER.search(s)}
     voice_by_group = dict(voice_by_class)
     voice_by_group.update({"card:" + h: v for h, v in voice_by_handle.items()})
     groups = {}
@@ -250,6 +267,8 @@ def scan():
             if p.suffix.lower() not in AUDIO_EXT or any(d in p.parts for d in SKIP_DIRS):
                 continue
             canon = canonical_stem(p.stem)
+            if STEM_FILTER is not None and not STEM_FILTER.search(canon):
+                continue
             # Card stems (vo_card_<handle>_...) are checked first and routed to their own
             # per-card group/folder; everything else falls through to the class lookup exactly
             # as before.
@@ -263,6 +282,8 @@ def scan():
     if SFX_TAKES.is_dir():
         for p in sorted(SFX_TAKES.glob("*")):
             if p.suffix.lower() not in AUDIO_EXT:
+                continue
+            if STEM_FILTER is not None and not STEM_FILTER.search(canonical_stem(p.stem)):
                 continue
             add("SFX", "candidates", p, canonical_stem(p.stem), SFX_FINAL, "")
 
@@ -789,7 +810,13 @@ def main() -> int:
                     help="move already-promoted takes into _archive/ and exit")
     ap.add_argument("--dry-run", action="store_true",
                     help="with --archive-decided, print the moves without making them")
+    ap.add_argument("--match", metavar="REGEX",
+                    help="list only clips whose canonical stem matches, e.g. '_vs_' for the "
+                         "versus banter")
     args = ap.parse_args()
+    if args.match:
+        global STEM_FILTER
+        STEM_FILTER = re.compile(args.match)
 
     if args.archive_decided:
         return archive_decided(dry_run=args.dry_run)

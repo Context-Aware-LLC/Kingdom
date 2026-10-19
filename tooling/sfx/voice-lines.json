@@ -577,5 +577,6 @@
       "STONEWARDEN",
       "TEMPEST"
     ]
-  ]
+  ],
+  "_models": "MEASURED 2026-10-18 with a real one-word call per voice: all eight voices accept BOTH eleven_v3 and eleven_v4 (eleven_v4 and eleven_v4_turbo are now on the account's model list). high_quality_base_model_ids still lists neither for any voice, so it remains no evidence either way. The versus batch was generated on eleven_v3, the dispatcher's model, like every clip before it."
 }
