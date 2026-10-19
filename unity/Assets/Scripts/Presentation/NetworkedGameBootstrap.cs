@@ -199,8 +199,12 @@ namespace Kingdom.Presentation
             // The same handler feeds the loading overlay's status line (ConnectionState already
             // narrates the boot: Connecting → Pairing → Live); raises come from the background
             // receive pump, so everything goes through _view.Post.
+            // Read on the main thread only, after the connect task completes; it decides between
+            // "can't reach the server" and "lost the connection" when the close carries no reason.
+            bool reachedServer = false;
             _net.OnConnectionStateChanged += st => _view.Post(() =>
             {
+                if (st == ConnectionState.Pairing || st == ConnectionState.Live) reachedServer = true;
                 switch (st)
                 {
                     case ConnectionState.Connecting: SetStatus("Connecting…"); break;
@@ -222,7 +226,7 @@ namespace Kingdom.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] connect threw: {ex.Message}");
-                BootFailed($"Couldn't connect — {ex.Message}");
+                BootFailed(ConnectionFailureCopy.Unreachable);
                 yield break;
             }
 
@@ -244,7 +248,7 @@ namespace Kingdom.Presentation
                     Debug.LogError($"[NetworkedGameBootstrap] no answer from {serverUrl} after " +
                                    $"{connectTimeoutSeconds:0}s — still Connecting, so the socket opened " +
                                    $"but the server never completed the handshake.");
-                    BootFailed("Couldn't reach the server — it isn't responding.");
+                    BootFailed(ConnectionFailureCopy.NotResponding);
                     yield break;
                 }
                 yield return null;
@@ -255,11 +259,10 @@ namespace Kingdom.Presentation
                                $"(state={_net.State}, dead={_net.DeadReason}, detail={_net.DeadReasonDetail}, " +
                                $"fault={connect.Exception?.GetBaseException().Message}).");
                 // #232: DeadReasonDetail is the server's actual WS close-frame reason ("deck
-                // rejected: ...", "no seat available", ...) when it sent one — falling every
-                // refusal back to the bare DeadReason bucket is exactly the bug this replaces.
-                string reason = string.IsNullOrEmpty(_net.DeadReasonDetail)
-                    ? _net.DeadReason.ToString()
-                    : _net.DeadReasonDetail;
+                // rejected: ...", "server full", ...) when it sent one — falling every refusal
+                // back to the bare DeadReason bucket is exactly the bug that issue fixed.
+                ConnectionFailureCopy copy =
+                    ConnectionFailureCopy.For(_net.DeadReason, _net.DeadReasonDetail, reachedServer);
 
                 // A contract refusal is usually this build being out of date — a release landed
                 // while the app was open, after the menu's update gate had already passed. Ask the
@@ -277,7 +280,7 @@ namespace Kingdom.Presentation
                     }
                 }
 
-                BootFailed($"Couldn't reach the server — {reason}");
+                BootFailed(copy);
                 yield break;
             }
 
@@ -705,21 +708,23 @@ namespace Kingdom.Presentation
             else if (_overlay != null) _overlay.SetStatus(text);
         }
 
-        /// <summary>Terminal boot failure. Whichever screen is up stays up and shows the reason —
-        /// neither ever fades on a failure, so the player is never dropped onto an empty board.
-        /// #232: that used to be a dead end — no retry, no way back, kill-the-app was the only
-        /// exit. The recovery panel is the fix; it renders over whichever overlay is showing the
-        /// reason text, so the two combine into one screen rather than replacing each other.</summary>
-        private void BootFailed(string reason)
+        /// <summary>Terminal boot failure. Whichever screen is up stays up — neither ever fades on
+        /// a failure, so the player is never dropped onto an empty board — and the recovery panel
+        /// (#232: Retry and Back, where kill-the-app used to be the only exit) renders over it.
+        /// Only the panel states the reason; the overlay's status line is cleared, because saying
+        /// it on both read as the same error twice.</summary>
+        private void BootFailed(string plain) => BootFailed(new ConnectionFailureCopy(plain, ""));
+
+        private void BootFailed(ConnectionFailureCopy copy)
         {
-            if (_versus != null) _versus.NotifyBootFailed(reason);
-            else if (_overlay != null) _overlay.NotifyBootFailed(reason);
+            if (_versus != null) _versus.NotifyBootFailed("");
+            else if (_overlay != null) _overlay.NotifyBootFailed("");
 
             var uiGo = new GameObject("ConnectionFailedUI");
             var doc = uiGo.AddComponent<UIDocument>();
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("ConnectionFailedScreen");
-            uiGo.AddComponent<ConnectionFailedOverlay>().Init(reason);
+            uiGo.AddComponent<ConnectionFailedOverlay>().Init(copy);
         }
 
         private void OnDestroy()

@@ -91,8 +91,10 @@ namespace Kingdom.Presentation
             var reason = root.Q<Label>("reason");
             if (reason != null)
                 reason.text = stale
-                    ? "A new version of Kingdom of Bad Ideas is out. Update to keep playing."
-                    : "Kingdom of Bad Ideas needs a connection to play. Check your network and try again.";
+                    ? "A new version of Kingdom of Bad Ideas is out. Update to keep playing.\n" +
+                      ConnectionFailureCopy.UpdateJoke
+                    : "Kingdom of Bad Ideas needs a connection to play. Check your network and try again.\n" +
+                      ConnectionFailureCopy.Unreachable.Joke;
 
             root.Q<Button>("btn-back")?.RemoveFromHierarchy();
 
