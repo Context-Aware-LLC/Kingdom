@@ -73,6 +73,9 @@ namespace Kingdom.Presentation
         private DesyncFaultInjector _faultInjector; // [DesyncDbg] dev tool — null outside the editor and dev builds
         private LoadingOverlay _overlay;
         private VersusOverlay _versus;
+        private SparkCoinOpening _coinOpening;
+        private bool _openingActive;
+        private MulliganConfirmButtonView _mulligan;
 
         private void Awake()
         {
@@ -414,6 +417,18 @@ namespace Kingdom.Presentation
                 boardController.Initialize(db, boardAnchors, localId, remoteId, inputRouter, matchRunner,
                                            localHumanId: localId);
                 matchRunner.OnStateUpdated += boardController.OnStateUpdated;
+                MatchOpeningDeal opening = MatchOpeningDeal.From(s0, localId);
+                if (opening != null && inputRouter != null && Camera.main != null)
+                {
+                    _coinOpening = SparkCoinOpening.Create(transform, boardController, boardAnchors,
+                        db, artProvider, opening, localId);
+                    if (_coinOpening != null)
+                    {
+                        _openingActive = true;
+                        inputRouter.OpeningBlocksInput = true;
+                        boardController.BeginOpening(opening);
+                    }
+                }
             }
 
             var ongoingEffects = OngoingEffectsView.Create(localId, db);
@@ -533,6 +548,7 @@ namespace Kingdom.Presentation
                 var mulliganGo = new GameObject("MulliganConfirmButton");
                 mulliganGo.transform.position = MulliganConfirmButtonView.BoardPosition;
                 var mulligan = mulliganGo.AddComponent<MulliganConfirmButtonView>();
+                _mulligan = mulligan;
                 mulligan.Init(localId, inputRouter);
                 _view.OnSnapshot += mulligan.OnStateUpdated;
                 mulligan.OnStateUpdated(_view.Current);
@@ -641,6 +657,35 @@ namespace Kingdom.Presentation
                 _view, s1Source,
                 PresentationViewer.FixedSeat0,
                 SeatOwnership.Single(_net.Seat));
+            if (_coinOpening != null) StartCoroutine(ShowOpeningCoin(localId));
+        }
+
+        private IEnumerator ShowOpeningCoin(PlayerId local)
+        {
+            bool Pending() => _net.State == ConnectionState.Live && MatchOpeningDeal.IsPending(_view.Current, local);
+            try
+            {
+                // Let the existing versus beat finish first. Gameplay snapshots keep flowing;
+                // a timeout, concession or resumed game cancels the cosmetic opening immediately.
+                while (_versus != null && Pending()) yield return null;
+                if (Pending() && _coinOpening != null) yield return _coinOpening.Play(Pending);
+            }
+            finally { ReleaseOpening(); }
+        }
+
+        private void ReleaseOpening()
+        {
+            if (!_openingActive) return;
+            _openingActive = false;
+            if (inputRouter != null) inputRouter.OpeningBlocksInput = false;
+            if (boardController != null) boardController.EndOpening(isActiveAndEnabled && boardController.isActiveAndEnabled);
+            if (_mulligan != null && _view != null) _mulligan.OnStateUpdated(_view.Current);
+            if (_coinOpening != null)
+            {
+                _coinOpening.gameObject.SetActive(false);
+                Destroy(_coinOpening.gameObject);
+            }
+            _coinOpening = null;
         }
 
         private HeroPlateView CreateHeroPlate(PlayerId playerId, CardClass heroClass,
@@ -729,6 +774,7 @@ namespace Kingdom.Presentation
 
         private void OnDestroy()
         {
+            ReleaseOpening();
             _questWatch.Cancel();
             _net?.Dispose();
         }

@@ -107,6 +107,15 @@ namespace Kingdom.Presentation
         /// weapon inspectable through the same pipeline. Null until <see cref="Initialize"/>.</summary>
         internal CardRevealController RevealController => _revealController;
         private GameState _currentState;
+        private MatchOpeningDeal _openingDeal;
+
+        internal void BeginOpening(MatchOpeningDeal deal) => _openingDeal = deal;
+
+        internal void EndOpening(bool redraw = true)
+        {
+            _openingDeal = null;
+            if (redraw && _currentState != null) OnStateUpdated(_currentState);
+        }
 
         // Hero portraits are separate from their anchors so combat motion can move the character
         // without dragging its collider, hero-power socket or weapon socket along with it. The
@@ -592,6 +601,7 @@ namespace Kingdom.Presentation
             // A newer authoritative pose wins; never let the old coroutine fight the redraw.
             if (_combatMotion != null) StopCombatMotion(restore: true);
             _currentState = state;
+            if (state.Phase != TurnPhase.Mulligan) _openingDeal = null;
 
             // Defensive: if the end-of-frame flush could not run (component disabled mid-tick,
             // coroutine stopped), resolve last tick's parked ids now — while _diedThisTick still
@@ -660,7 +670,7 @@ namespace Kingdom.Presentation
         // without one nobody can tap or confirm, so there is nothing to lay out for.
         private bool LocalMulliganPending(GameState state)
         {
-            if (_inputRouter == null || state == null || state.Phase != TurnPhase.Mulligan) return false;
+            if (_openingDeal != null || _inputRouter == null || state == null || state.Phase != TurnPhase.Mulligan) return false;
             int seat = state.SeatOf(_localHumanId);
             return !(seat == 0 ? state.Mulligan0Done : state.Mulligan1Done);
         }
@@ -734,10 +744,15 @@ namespace Kingdom.Presentation
                 if (binder != null) DestroyObj(binder);
                 presenter.SetHidden();
                 SetCardSorting(presenter, Zone.Hand, slot);
-                LaunchDrawFlight(presenter.transform, owner);
+                if (!OpeningSpark(owner, slot)) LaunchDrawFlight(presenter.transform, owner);
                 backs.Add(presenter);
             }
+            for (int i = 0; i < backs.Count; i++)
+                backs[i].gameObject.SetActive(!OpeningSpark(owner, i));
         }
+
+        private bool OpeningSpark(PlayerId owner, int slot)
+            => _openingDeal != null && _openingDeal.SecondPlayer == owner && _openingDeal.HandSlot == slot;
 
         // Sends a just-spawned hand card flying in from its owner's deck pile. Silent no-op when
         // there is no DeckAnchor (a stripped test scene), because a missing decoration must never
@@ -831,7 +846,9 @@ namespace Kingdom.Presentation
             // generated straight to hand, which deals the same way). Must run AFTER the
             // re-parent block above — the flight resolves its origin in the anchor's local
             // space and zeroes the card into it.
-            if (spawned && zone == Zone.Hand) LaunchDrawFlight(presenter.transform, owner);
+            bool openingSpark = zone == Zone.Hand && OpeningSpark(owner, slotIndex);
+            if (spawned && zone == Zone.Hand && !openingSpark) LaunchDrawFlight(presenter.transform, owner);
+            if (openingSpark) presenter.gameObject.SetActive(false);
 
             // Front-row bulwark (decision 2026-07-17): bulwarked board minions step toward
             // the centerline so blockers read spatially, not by glow color. Re-applied

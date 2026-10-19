@@ -125,7 +125,8 @@ namespace Kingdom.Presentation
         public void OnStateUpdated(GameState state)
         {
             if (_face == null || state == null) return;
-            SetVisible(state.Phase == TurnPhase.Mulligan && !SeatDone(state));
+            SetVisible(state.Phase == TurnPhase.Mulligan && !SeatDone(state)
+                && (_router == null || !_router.OpeningBlocksInput));
         }
 
         private bool SeatDone(GameState state)

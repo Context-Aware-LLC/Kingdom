@@ -104,8 +104,9 @@ namespace Kingdom.Presentation
         // block Unity physics, so while a UI surface owns input we suppress board gestures here —
         // otherwise a press passes through the scrim to the cards behind it.
         public System.Func<bool> UiBlocksInput;
+        public bool OpeningBlocksInput { get; internal set; }
         private bool ChoiceBlocksInput => _currentState?.PendingChoice != null;
-        public bool BlocksInput => ChoiceBlocksInput || (UiBlocksInput != null && UiBlocksInput());
+        public bool BlocksInput => OpeningBlocksInput || ChoiceBlocksInput || (UiBlocksInput != null && UiBlocksInput());
 
         // True from the moment a card is pressed through to release (Pressed, Dragging and both
         // Awaiting* states). CardRevealController reads this to keep the hover/hold inspect panel
@@ -908,7 +909,7 @@ namespace Kingdom.Presentation
         // local validator passes it, so it reaches the server in networked mode).
         public void OnMulliganConfirmClicked()
         {
-            if (!IsMulliganActive()) return;
+            if (BlocksInput || !IsMulliganActive()) return;
             var toss = new List<InstanceId>(_mulliganToss);
             ResetMulliganSelection(clearMarks: true);
             Submit(new MulliganIntent(_p0Id, toss));

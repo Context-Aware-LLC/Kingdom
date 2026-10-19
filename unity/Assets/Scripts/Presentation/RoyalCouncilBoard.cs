@@ -39,6 +39,7 @@ namespace Kingdom.Presentation
         private MaterialPropertyBlock _properties;
         private RoyalCouncilSeal _seal;
         private RoyalCouncilHourglass _clock;
+        private RoyalCouncilTableToys _toys;
         private bool _bound;
 
         public RoyalCouncilHourglass Clock => _clock;
@@ -90,6 +91,9 @@ namespace Kingdom.Presentation
             _clock = new GameObject("Turn Hourglass").AddComponent<RoyalCouncilHourglass>();
             _clock.transform.SetParent(transform, false);
             _clock.Initialize(this, glassMaterial);
+            _toys = new GameObject("Local table toys").AddComponent<RoyalCouncilTableToys>();
+            _toys.transform.SetParent(transform, false);
+            _toys.Initialize(this);
             // The empty cups must stay dark when they face the key light; a mirror-like
             // imported finish made the opponent's spent mana look permanently full.
             var cups = Part("RC.Static.Mana.Socket.Obsidian").GetComponent<Renderer>();
@@ -167,6 +171,7 @@ namespace Kingdom.Presentation
         {
             _players[0] = local; _players[1] = opponent;
             _seal.Bind(local, input);
+            _toys.Bind(input);
             if (input != null)
             {
                 input.HandBoundaryY = HandTopY;

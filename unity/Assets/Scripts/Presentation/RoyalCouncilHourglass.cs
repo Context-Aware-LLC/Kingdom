@@ -20,6 +20,8 @@ namespace Kingdom.Presentation
         private long _duration;
         private Quaternion _restRotation;
         private float _flipAt = -10f;
+        private float _tapAt = -10f;
+        public void Wobble() => _tapAt = Time.unscaledTime;
         public float Fraction { get; private set; } = 1f;
         public bool Urgent { get; private set; }
 
@@ -70,11 +72,15 @@ namespace Kingdom.Presentation
         }
         private void Update()
         {
-            if (!_deadline.HasValue) return;
-            long remaining = Math.Max(0, _deadline.Value - _now());
-            SetSand(remaining / (float)_duration, remaining <= 15000);
+            if (_deadline.HasValue)
+            {
+                long remaining = Math.Max(0, _deadline.Value - _now());
+                SetSand(remaining / (float)_duration, remaining <= 15000);
+            }
             float beat = Mathf.Clamp01((Time.unscaledTime - _flipAt) / 0.5f);
             float rock = Mathf.Sin(beat * Mathf.PI) * 8f + (Urgent ? Mathf.Sin(Time.unscaledTime * 10f) * 2f : 0f);
+            float tap = Mathf.Clamp01((Time.unscaledTime - _tapAt) / 0.45f);
+            rock += Mathf.Sin(tap * Mathf.PI * 4f) * (1f - tap) * 4f;
             transform.rotation = Quaternion.Euler(0f, 0f, rock) * _restRotation;
         }
 

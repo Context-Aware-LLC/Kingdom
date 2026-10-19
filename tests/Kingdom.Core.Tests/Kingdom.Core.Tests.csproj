@@ -64,6 +64,10 @@
              Link="Presentation\UnearthChoiceModel.cs" />
     <Compile Include="..\..\unity\Assets\Scripts\Presentation\TurnSealRecord.cs"
              Link="Presentation\TurnSealRecord.cs" />
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\MatchOpeningDeal.cs"
+             Link="Presentation\MatchOpeningDeal.cs" />
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\TablePropRules.cs"
+             Link="Presentation\TablePropRules.cs" />
     <!-- Unity-free authoring model/writer: compile and round-trip them without launching Unity. -->
     <Compile Include="..\..\unity\Assets\Scripts\Editor\EditableCard.cs"
              Link="Editor\EditableCard.cs" />
