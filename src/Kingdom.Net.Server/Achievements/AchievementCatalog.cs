@@ -97,43 +97,43 @@ namespace Kingdom.Net.Server.Achievements
             new AchievementDefinition(
                 "second_thoughts", "Second Thoughts",
                 "Replace a card in your mulligan. The Council has also reconsidered.",
-                "", f => f.MulliganReplaced > 0),
+                "CgkIkJ2NnuUeEAIQAQ", f => f.MulliganReplaced > 0),
             new AchievementDefinition(
                 "working_as_intended", "Working as Intended",
                 "Use your Hero Power. The Council has inspected the button and found it to be working.",
-                "", f => f.HeroPowersUsed > 0),
+                "CgkIkJ2NnuUeEAIQBw", f => f.HeroPowersUsed > 0),
             new AchievementDefinition(
                 "early_retirement", "Early Retirement",
                 "Destroy an enemy minion. Its pension has been approved.",
-                "", f => f.EnemyMinionsDestroyed > 0),
+                "CgkIkJ2NnuUeEAIQBA", f => f.EnemyMinionsDestroyed > 0),
             new AchievementDefinition(
                 "against_advice", "Against Advice",
                 "Win a match. The Council has amended its advice.",
-                "", f => f.Result == SeatResult.Win),
+                "CgkIkJ2NnuUeEAIQAw", f => f.Result == SeatResult.Win),
             new AchievementDefinition(
                 "proceed_unwisely", "Proceed, Unwisely",
                 "Win a match with 1 Health. The Council had already drafted the other announcement.",
-                "", f => f.Result == SeatResult.Win && f.FinalHealth == 1),
+                "CgkIkJ2NnuUeEAIQAg", f => f.Result == SeatResult.Win && f.FinalHealth == 1),
             new AchievementDefinition(
                 "out_of_ideas", "Out of Ideas",
                 "Draw from an empty deck. The Council knows the feeling.",
-                "", f => f.FatigueDraws > 0),
+                "CgkIkJ2NnuUeEAIQBQ", f => f.FatigueDraws > 0),
             new AchievementDefinition(
                 "too_many_ideas", "Too Many Ideas",
                 "Draw a card into a full hand. The card has been filed with the others.",
-                "", f => f.CardsBurned > 0),
+                "CgkIkJ2NnuUeEAIQCA", f => f.CardsBurned > 0),
             new AchievementDefinition(
                 "approved_by_default", "Approved by Default",
                 "Let the hourglass run out. The stamp went ahead without you.",
-                "", f => f.TurnsTimedOut > 0),
+                "CgkIkJ2NnuUeEAIQCQ", f => f.TurnsTimedOut > 0),
             new AchievementDefinition(
                 "waste_not", "Waste Not",
                 "End a turn with 10 mana unspent. The Council admires the restraint and has asked what it was for.",
-                "", f => f.TurnsEndedWithTenUnspent > 0),
+                "CgkIkJ2NnuUeEAIQBg", f => f.TurnsEndedWithTenUnspent > 0),
             new AchievementDefinition(
                 "mutual_respect", "Mutual Respect",
                 "Draw a match. The Council is still deliberating.",
-                "", f => f.Result == SeatResult.Draw),
+                "CgkIkJ2NnuUeEAIQCg", f => f.Result == SeatResult.Draw),
         });
 
         /// <summary>The definition with this id, or null for one the catalog does not hold.</summary>
