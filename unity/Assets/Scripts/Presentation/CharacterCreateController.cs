@@ -486,7 +486,7 @@ namespace Kingdom.Presentation
                 if (_pendingDeck == null || _pendingKind != kind ||
                     _pendingDeck.PrimaryClass != primary || _pendingDeck.SecondaryClass != secondary)
                 {
-                    _pendingDeck = account.PrepareDeck(_db, UnusedDeckName(), primary, secondary, kind);
+                    _pendingDeck = account.PrepareDeck(_db, UnusedDeckName(primary, secondary), primary, secondary, kind);
                     _pendingKind = kind;
                 }
                 // Keep this candidate's id on retry: a lost response may still mean the PUT landed.
@@ -554,22 +554,14 @@ namespace Kingdom.Presentation
         }
 
 
-        /// <summary>"New Deck", then "New Deck 2" — a duplicate name is legal but indistinguishable
-        /// in a grid of otherwise identical card backs. Account-wide since ADR-0009; it used to be
-        /// scoped to one character's decks.</summary>
-        private string UnusedDeckName()
+        /// <summary>The pairing's name, then "Compost II" — a duplicate name is legal but
+        /// indistinguishable in a grid of otherwise identical card backs. Account-wide.</summary>
+        private string UnusedDeckName(CardClass primary, CardClass secondary)
         {
-            const string root = "New Deck";
-            var taken = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var taken = new List<string>();
             foreach (DeckList deck in _account.Decks())
                 taken.Add(deck.Name);
-
-            if (!taken.Contains(root)) return root;
-            for (int n = 2; ; n++)
-            {
-                string candidate = root + " " + n;
-                if (!taken.Contains(candidate)) return candidate;
-            }
+            return DeckNames.Unused(primary, secondary, taken);
         }
 
         // Both doors lead to one controller (#152) in one scene (#154): handing it a deck is what

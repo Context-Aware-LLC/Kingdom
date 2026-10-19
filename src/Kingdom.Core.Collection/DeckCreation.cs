@@ -135,9 +135,8 @@ namespace Kingdom.Core.Collection
         }
 
         /// <summary>
-        /// "New Deck" when the caller supplies nothing — the same name every empty deck gets on
-        /// creation (§2.11), because the player is about to name it and a pairing-derived placeholder
-        /// would only look like it meant something.
+        /// "New Deck" when the caller supplies nothing. The create screen always supplies the
+        /// pairing's name from <see cref="DeckNames"/>, so this is only a fallback.
         /// </summary>
         private static string NameOrDefault(string name) =>
             string.IsNullOrWhiteSpace(name) ? "New Deck" : name;
