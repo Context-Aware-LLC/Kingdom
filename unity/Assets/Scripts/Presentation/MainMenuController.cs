@@ -529,6 +529,13 @@ namespace Kingdom.Presentation
             heading.Add(age);
             row.Add(heading);
 
+            if (!string.IsNullOrEmpty(quest.Quip))
+            {
+                var quip = new Label(quest.Quip);
+                quip.AddToClassList("mm-quest-quip");
+                row.Add(quip);
+            }
+
             var detail = new Label(quest.Complete
                 ? "COMPLETE"
                 : $"{quest.Progress} / {quest.Goal}");

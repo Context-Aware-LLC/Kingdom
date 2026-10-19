@@ -20,6 +20,8 @@ namespace Kingdom.Net.Client.Quests
     {
         public string Id { get; }
         public string Title { get; }
+        /// <summary>The dry line under the title; empty when the server sent none.</summary>
+        public string Quip { get; }
         public int Goal { get; }
         public int Progress { get; }
         public long RewardGold { get; }
@@ -33,10 +35,12 @@ namespace Kingdom.Net.Client.Quests
             int progress,
             long rewardGold,
             string day,
-            bool complete)
+            bool complete,
+            string quip = "")
         {
             Id = id;
             Title = title;
+            Quip = quip ?? "";
             Goal = goal;
             Progress = progress;
             RewardGold = rewardGold;
@@ -185,7 +189,9 @@ namespace Kingdom.Net.Client.Quests
                 (int)progressRaw,
                 rewardGold,
                 day,
-                complete);
+                complete,
+                // Optional: flavour only, so a server that sends none still yields a quest.
+                AuthJson.TryString(row, "quip", out string quip) ? quip : "");
             return true;
         }
     }

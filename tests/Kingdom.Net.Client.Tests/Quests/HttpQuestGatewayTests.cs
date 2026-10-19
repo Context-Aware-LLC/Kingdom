@@ -17,7 +17,7 @@ namespace Kingdom.Net.Client.Tests.Quests
         {
             var http = new FakeAuthHttp().Reply(200,
                 "{\"status\":\"known\",\"playerId\":\"p1\",\"quests\":[" +
-                "{\"id\":\"play-three\",\"title\":\"Play 3 matches\",\"goal\":3," +
+                "{\"id\":\"play-three\",\"title\":\"Play 3 matches\",\"quip\":\"Attendance will be taken.\",\"goal\":3," +
                 "\"progress\":1,\"rewardGold\":60,\"day\":\"2026-09-19\",\"state\":\"active\"}," +
                 "{\"id\":\"win-two\",\"title\":\"Win 2 matches\",\"goal\":2," +
                 "\"progress\":2,\"rewardGold\":60,\"day\":\"2026-09-18\",\"state\":\"complete\"}]}");
@@ -29,6 +29,8 @@ namespace Kingdom.Net.Client.Tests.Quests
                 Assert.That(snapshot.Status, Is.EqualTo(QuestFetchStatus.Known));
                 Assert.That(snapshot.Quests, Has.Count.EqualTo(2));
                 Assert.That(snapshot.Quests[0].Title, Is.EqualTo("Play 3 matches"));
+                Assert.That(snapshot.Quests[0].Quip, Is.EqualTo("Attendance will be taken."));
+                Assert.That(snapshot.Quests[1].Quip, Is.Empty, "a row without a quip is still a quest");
                 Assert.That(snapshot.Quests[0].Progress, Is.EqualTo(1));
                 Assert.That(snapshot.Quests[0].Goal, Is.EqualTo(3));
                 Assert.That(snapshot.Quests[0].RewardGold, Is.EqualTo(60));

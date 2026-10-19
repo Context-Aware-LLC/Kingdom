@@ -350,6 +350,12 @@
     -unity-font-style: bold;
     white-space: normal;
 }
+.mm-quest-quip {
+    margin-top: var(--space-1);
+    color: var(--ink-2);
+    font-size: var(--type-caption);
+    white-space: normal;
+}
 .mm-quest-age {
     flex-shrink: 0;
     margin-left: var(--space-2);

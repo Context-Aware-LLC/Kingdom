@@ -801,6 +801,7 @@ namespace Kingdom.Net.Server
                     {
                         id = quest.Id,
                         title = quest.Title,
+                        quip = quest.Quip,
                         goal = quest.Goal,
                         progress = quest.Progress,
                         rewardGold = goldRewards.DailyQuestGold(quest.Id),

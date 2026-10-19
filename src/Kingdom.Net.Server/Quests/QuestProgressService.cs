@@ -122,6 +122,7 @@ namespace Kingdom.Net.Server.Quests
                 views.Add(new QuestView(
                     quest.Id,
                     quest.Title,
+                    quest.Quip,
                     quest.Goal,
                     // Clamped: a card quest can overshoot its goal in the match that completes it,
                     // and a progress bar reading 19/15 looks like a bug to the person holding it.
@@ -137,6 +138,7 @@ namespace Kingdom.Net.Server.Quests
     public readonly record struct QuestView(
         string Id,
         string Title,
+        string Quip,
         int Goal,
         int Progress,
         DateOnly Day,

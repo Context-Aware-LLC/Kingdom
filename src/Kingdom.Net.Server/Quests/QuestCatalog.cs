@@ -26,9 +26,14 @@ namespace Kingdom.Net.Server.Quests
 
         public int Goal { get; }
 
+        /// <summary>The dry line under the title (whimsy pass, 2026-10-17). The title says plainly
+        /// what to do; this one is only flavour, so a quest may go without it.</summary>
+        public string Quip { get; }
+
         private readonly Func<QuestMatchFacts, int> _credit;
 
-        public QuestDefinition(string id, string title, int goal, Func<QuestMatchFacts, int> credit)
+        public QuestDefinition(string id, string title, int goal, Func<QuestMatchFacts, int> credit,
+                               string quip = "")
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("A quest id is required.", nameof(id));
             if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("A quest title is required.", nameof(title));
@@ -36,6 +41,7 @@ namespace Kingdom.Net.Server.Quests
             Id = id;
             Title = title;
             Goal = goal;
+            Quip = quip ?? "";
             _credit = credit ?? throw new ArgumentNullException(nameof(credit));
         }
 
@@ -84,40 +90,49 @@ namespace Kingdom.Net.Server.Quests
         /// </summary>
         private static readonly Func<CardClass, QuestDefinition>[] Templates =
         {
-            _ => new QuestDefinition("win-two", "Win 2 matches", 2, f => f.Won ? 1 : 0),
+            _ => new QuestDefinition("win-two", "Win 2 matches", 2, f => f.Won ? 1 : 0,
+                "Once could be luck. The Council suspects it was."),
 
-            _ => new QuestDefinition("play-three", "Play 3 matches", 3, _ => 1),
+            _ => new QuestDefinition("play-three", "Play 3 matches", 3, _ => 1,
+                "Attendance will be taken."),
 
             c => new QuestDefinition(
                 "win-as-" + Slug(c), "Win a match as " + Name(c), 1,
-                f => f.Won && f.Class == c ? 1 : 0),
+                f => f.Won && f.Class == c ? 1 : 0,
+                "The Council has drafted a statement of support, in pencil."),
 
             c => new QuestDefinition(
                 "play-as-" + Slug(c), "Play 3 matches as " + Name(c), 3,
-                f => f.Class == c ? 1 : 0),
+                f => f.Class == c ? 1 : 0,
+                "Walk a mile in their boots. Return the boots."),
 
             // Counted per match and summed across matches, so a card played on two different days'
             // matches counts twice. "Different" is true of any one match, which is the only scope
             // CardSeenRow can speak about — it is one row per CARD, not per copy.
             _ => new QuestDefinition(
-                "cards-fifteen", "Play 15 cards", 15, f => f.DistinctCardsPlayed),
+                "cards-fifteen", "Play 15 cards", 15, f => f.DistinctCardsPlayed,
+                "The Council requires evidence of ideas."),
 
             c => new QuestDefinition(
                 "cards-of-" + Slug(c), "Play 8 " + Name(c) + " cards", 8,
-                f => f.DistinctCardsPlayedOf(c)),
+                f => f.DistinctCardsPlayedOf(c),
+                "The Council has asked for the full catalogue."),
 
             _ => new QuestDefinition(
                 "quick-win", "Win a match by turn 10", 1,
-                f => f.Won && f.TurnCount <= 10 ? 1 : 0),
+                f => f.Won && f.TurnCount <= 10 ? 1 : 0,
+                "The Council has another meeting at noon."),
 
             _ => new QuestDefinition(
                 "long-game", "Win a match that runs past turn 15", 1,
-                f => f.Won && f.TurnCount > 15 ? 1 : 0),
+                f => f.Won && f.TurnCount > 15 ? 1 : 0,
+                "The Council has cleared its afternoon."),
 
             // Summed across matches, like the card quests: every enemy minion that dies counts,
             // whatever killed it — the match-end event records deaths, not who dealt the blow.
             _ => new QuestDefinition(
-                "minion-hunter", "Destroy 50 minions", 50, f => f.EnemyMinionsDestroyed),
+                "minion-hunter", "Destroy 50 minions", 50, f => f.EnemyMinionsDestroyed,
+                "The Gravekeeps are expecting company."),
         };
 
         /// <summary>The one quest this player holds for this UTC day.</summary>
