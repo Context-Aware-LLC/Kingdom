@@ -24,6 +24,9 @@
 # absolute package paths under C:\Users\...\.nuget\packages, which do not exist in the container.
 src/**/bin/
 src/**/obj/
+# Local run output, gitignored but still on disk. NetSoak's artifacts/ reached 225 MB on
+# 2026-10-19 and turned a deploy into a 40-minute context upload.
+src/**/artifacts/
 
 # --- card definitions: source of truth is the Unity tree (Dockerfile.server line 15) ---
 !unity/
