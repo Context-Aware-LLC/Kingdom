@@ -139,7 +139,7 @@ namespace Kingdom.Presentation
                 float angle = i * Mathf.PI * 2f / sides;
                 Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
                 vertices[i + 1] = direction * 0.66f;
-                uv[i + 1] = center + direction * 0.185f;
+                uv[i + 1] = center + direction * 0.17f;
                 triangles[i * 3] = 0;
                 triangles[i * 3 + 1] = (i + 1) % sides + 1;
                 triangles[i * 3 + 2] = i + 1;
