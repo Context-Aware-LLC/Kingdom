@@ -1,9 +1,11 @@
-Working as Intended,Use your Hero Power. The Council has inspected the button and found it to be working.,False,,Revealed,5,2
-Early Retirement,Destroy an enemy minion. Its pension has been approved.,False,,Revealed,5,3
-Against Advice,Win a match. The Council has amended its advice.,False,,Revealed,10,4
-"Proceed, Unwisely",Win a match with 1 Health. The Council had already drafted the other announcement.,False,,Revealed,25,5
-Out of Ideas,Draw from an empty deck. The Council knows the feeling.,False,,Revealed,15,6
-Too Many Ideas,Draw a card into a full hand. The card has been filed with the others.,False,,Revealed,10,7
-Approved by Default,Let the hourglass run out. The stamp went ahead without you.,False,,Revealed,5,8
-Waste Not,End a turn with 10 mana unspent. The Council admires the restraint and has asked what it was for.,False,,Revealed,15,9
-Mutual Respect,Draw a match. The Council is still deliberating.,False,,Revealed,25,10
+Self-Starter,Deal 15 damage to your own hero in one match. Pyra has asked for your name.,False,,Revealed,15,11
+Overkill,Deal 10 damage to a minion with 1 Health. It has been thoroughly informed.,False,,Revealed,10,12
+Hubris,Have a minion of yours costing 8 or more returned to your hand. It had only just unpacked.,False,,Revealed,15,13
+Gift Horse,"Lose control of your Legendary to the other side. It writes, occasionally.",False,,Revealed,15,14
+Seven Walls,Have seven Bulwark minions at once. Hodge would like to see the plans.,False,,Revealed,25,15
+The Last Idea,Lose to an empty deck. It was a good plan. It was in there somewhere.,False,,Revealed,10,16
+Technically,Win a match with your hero at 0 Health or below. The Council has ruled that it counts.,False,,Revealed,50,17
+Posthumous,Win with damage from a minion's Toll. The deceased has been informed.,False,,Revealed,25,18
+Return to Sender,Win with a minion you took from your opponent. They would like it back.,False,,Revealed,25,19
+Signature Move,Finish the enemy hero with your Hero Power. The Council had assumed it was decorative.,False,,Revealed,25,20
+Own Goal,Lose to your own spell. Pyra was very impressed.,False,,Revealed,15,21
