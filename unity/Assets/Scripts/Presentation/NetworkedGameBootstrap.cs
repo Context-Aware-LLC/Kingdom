@@ -610,7 +610,8 @@ namespace Kingdom.Presentation
                 // voice line, then the linger. The quest read starts now so it runs under the music.
                 MatchEndBanner.Show(outcome, localSeat: _net.Seat,  // seat-aware — the server deals the seat
                     quests: _questWatch.AdvancedAsync(),
-                    playVoiceLine: heroVoice.PlayMatchEndLine);
+                    playVoiceLine: heroVoice.PlayMatchEndLine,
+                    reason: _net.EndReason);   // the MatchEndMsg follows the final snapshot, so it beats the drain
                 MusicDirector.FadeOutUntilSceneChange();            // the battle loop would clash with the stinger
                 cardSounds.OnMatchEnded(outcome, _net.Seat);
                 _ = PlayGamesServices.SyncAchievementsAfterMatchAsync();   // never throws; nothing waits on it

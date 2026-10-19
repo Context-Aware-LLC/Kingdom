@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Client.Quests;
+using Kingdom.Net.Protocol;
 using TMPro;
 using UnityEngine;
 
@@ -38,9 +39,11 @@ namespace Kingdom.Presentation
         /// <param name="quests">The quests this match advanced, still being read when the banner
         /// goes up; null shows none.</param>
         /// <param name="playVoiceLine">Plays the hero's win/lose line when the sequence reaches it.</param>
+        /// <param name="reason">The server's end reason; null when it never arrived.</param>
         public static GameObject Show(MatchOutcome outcome, int localSeat,
                                       Task<IReadOnlyList<QuestAdvance>> quests = null,
-                                      Action playVoiceLine = null)
+                                      Action playVoiceLine = null,
+                                      MatchEndReason? reason = null)
         {
             (string verdict, Color color) = Judge(outcome, localSeat);
 
@@ -68,7 +71,7 @@ namespace Kingdom.Presentation
             // Say what the result means to this player. Engine seat numbers are useful in logs,
             // but they turn the emotional payoff into implementation language on screen.
             var subtitle = MakeLabel(root.transform, "Outcome", new Vector3(0f, -1.1f, -0.01f), 2.5f, Color.white);
-            subtitle.text = ResultDetail(outcome, localSeat);
+            subtitle.text = ResultDetail(outcome, localSeat, reason);
 
             // Empty until the sequence lets the player leave, and below the quest row so the two
             // never share a line.
@@ -156,13 +159,24 @@ namespace Kingdom.Presentation
             _                                           => ("DEFEAT", DefeatColor),
         };
 
-        private static string ResultDetail(MatchOutcome outcome, int localSeat)
+        /// <summary>The line under the verdict: why it ended, in the Council's voice (whimsy pass
+        /// 2026-10-17). <paramref name="reason"/> is null when the socket died before the server's
+        /// <c>MatchEndMsg</c> arrived, and that falls back to the plain win or loss line.</summary>
+        private static string ResultDetail(MatchOutcome outcome, int localSeat, MatchEndReason? reason)
         {
-            if (outcome == MatchOutcome.Draw) return "Both heroes fell";
+            if (outcome == MatchOutcome.Draw) return "The Council is still deliberating.";
 
             bool localWon = outcome == MatchOutcome.Player0Win && localSeat == 0
                             || outcome == MatchOutcome.Player1Win && localSeat == 1;
-            return localWon ? "You won the match" : "Your opponent won the match";
+            if (!localWon) return "The Council advised against it, in writing.";
+
+            return reason switch
+            {
+                MatchEndReason.Concede => "They conceded. A rare good idea.",
+                // Two is ServerOptions.IdleForfeitAutoTurns, which the wire does not carry.
+                MatchEndReason.Timeout => "They missed two turns. The Council has ruled them absent.",
+                _ => "The Council has already claimed it was their idea.",
+            };
         }
 
         private static void MakeRule(Transform parent, Vector3 localPos, Color color)

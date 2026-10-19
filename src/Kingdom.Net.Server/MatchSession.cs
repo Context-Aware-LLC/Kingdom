@@ -570,7 +570,10 @@ namespace Kingdom.Net.Server
             var reason = cause switch
             {
                 SubmitCause.Client => finalIntent is ConcedeIntent ? MatchEndReason.Concede : MatchEndReason.Win,
-                SubmitCause.Clock => MatchEndReason.Timeout,
+                // A clock-fired end of turn that ends the match did so through the rules (an
+                // end-of-turn trigger, a fatigue draw), so it is a win, and possibly the timed
+                // seat's. Timeout means a seat was ruled absent, and the client says so.
+                SubmitCause.Clock => MatchEndReason.Win,
                 SubmitCause.IdleForfeit => MatchEndReason.Timeout,
                 _ => MatchEndReason.Win,
             };
