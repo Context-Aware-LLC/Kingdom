@@ -65,6 +65,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0c83a53bd406ac54da85af168395c6fa
+    m_Address: vo/vo_gravekeep_vs_emberward_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d802ffabc8194c45a71c68d07d1328c
     m_Address: vo/vo_verdant_lose_2
     m_ReadOnly: 0
@@ -85,6 +90,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1175ca08d337c944786929c088d67a7a
+    m_Address: vo/vo_clockwright_vs_emberward_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 127ab738b4889664883a2a330e0d8eba
+    m_Address: vo/vo_tempest_vs_nightveil_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 12b6efdd913516b4cbd3edf97664d5e4
+    m_Address: vo/vo_tempest_vs_gravekeep_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 138b13c81759d4b42a17340ce5833d46
     m_Address: vo/vo_clockwright_match_start_1
     m_ReadOnly: 0
@@ -92,6 +112,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1416ebd1f0a7790489f837f1e1913b57
     m_Address: vo/vo_tidecaller_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 19be2a549e2db1a4fa5e96a8d502dcf0
+    m_Address: vo/vo_clockwright_vs_stonewarden_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -130,13 +155,38 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2953d06f0bbd8434ba2746efd6da3d2a
+    m_Address: vo/vo_tempest_vs_emberward_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2953dc002a27bd845b75469768aa559a
+    m_Address: vo/vo_gravekeep_vs_clockwright_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 29769790f1f4ecc4ab159e9bacf0b492
     m_Address: vo/vo_tidecaller_rope_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2b76324da2c284d42ad4af473fbc28ce
+    m_Address: vo/vo_nightveil_vs_nightveil_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c3070ac064a1ea45ba8938a7f8599ff
+    m_Address: vo/vo_tidecaller_vs_tidecaller_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2dad8f6b0cc7f5b41a48ffb8b71c7088
     m_Address: vo/vo_tidecaller_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2e06fe5e6da1d69448f99d1f8fb5253b
+    m_Address: vo/vo_emberward_vs_nightveil_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -160,6 +210,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39fd48056f6ef9a48963a59d874f9ce1
+    m_Address: vo/vo_tidecaller_vs_stonewarden_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3af2946fc2221c44f9d27ff9b3e1159b
     m_Address: vo/vo_card_warden_aldric_death_1
     m_ReadOnly: 0
@@ -167,6 +222,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3b365926ae7b0244d8b19d1a787c897f
     m_Address: vo/vo_clockwright_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3bd6cf145b36ba641b3058af596115e2
+    m_Address: vo/vo_tempest_vs_tempest_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -185,6 +245,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 49842deafd7559142b756a78e8ce9cbb
+    m_Address: vo/vo_tidecaller_vs_clockwright_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a8bbbaf80da9734aacdffd4f9194fce
+    m_Address: vo/vo_tempest_vs_verdant_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4baddb263a3a8df4d8867de43b24a312
     m_Address: vo/vo_verdant_win_1
     m_ReadOnly: 0
@@ -195,8 +265,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4df7a90f1039d814c86f5b5c1464824b
+    m_Address: vo/vo_gravekeep_vs_gravekeep_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4f0f85f80c51f484aa63023af0bd2ee5
     m_Address: vo/vo_verdant_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f938d67bc3923c45a537bd919e31f7b
+    m_Address: vo/vo_tidecaller_vs_nightveil_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 52c495f3515891a4aaa761f083407a80
+    m_Address: vo/vo_clockwright_vs_gravekeep_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -205,8 +290,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5640d1801c8131d48a726355aa3c9ee3
+    m_Address: vo/vo_verdant_vs_verdant_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59ac9c1a73467f847bcaa66fc3c4ac58
+    m_Address: vo/vo_verdant_vs_gravekeep_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 59b2897b2d76410489faf16910452b1e
     m_Address: vo/vo_stonewarden_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a619bb3a3091704fa28f3e914dfbc75
+    m_Address: vo/vo_verdant_vs_emberward_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -250,8 +350,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 655aa19465db7604a99b7102c7ca2e85
+    m_Address: vo/vo_emberward_vs_verdant_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 65cbc860c9302a04c8fb29ff10ef5854
     m_Address: vo/vo_clockwright_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 664356333f2b88d4eaab1da0993beb9f
+    m_Address: vo/vo_emberward_vs_gravekeep_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -290,13 +400,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ec3d383c180fb74595fae01c2e993b7
+    m_Address: vo/vo_verdant_vs_nightveil_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6f64e21c952cf33429e747f2c8c12fdf
     m_Address: vo/vo_verdant_rope_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6fe9446419967674298cf98e493616b4
+    m_Address: vo/vo_emberward_vs_tidecaller_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 700ac1a32f36b8a43a30b61555f4a946
     m_Address: vo/vo_nightveil_lose_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71ae1968cf715e046869160410c819b6
+    m_Address: vo/vo_tempest_vs_clockwright_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -312,6 +437,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 74f5ca703a2dc2d41b70762187737343
     m_Address: vo/vo_gravekeep_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74fd3427d42cadd499d1d89a6c7daa79
+    m_Address: vo/vo_clockwright_vs_nightveil_1_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -335,6 +465,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7a06daff0f64f774da1fcfa18827432e
+    m_Address: vo/vo_verdant_vs_stonewarden_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7a33d4bd1565d5d4397d26cf1aa66af0
     m_Address: vo/vo_emberward_turn_start_3
     m_ReadOnly: 0
@@ -347,6 +482,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7bdd641225d3d1748b9f403a65c0dff6
     m_Address: vo/vo_tempest_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7c1ac2593e2710c479114e0693dfc680
+    m_Address: vo/vo_gravekeep_vs_nightveil_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -375,6 +515,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8689c34d01d6b6d4d97595346fe5f4a6
+    m_Address: vo/vo_clockwright_vs_clockwright_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 86cd307a116d21741905a7b8589e9f19
     m_Address: vo/vo_verdant_match_start_1
     m_ReadOnly: 0
@@ -390,6 +535,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87dc42526b41cac4b8fdcdf16fcdc35c
+    m_Address: vo/vo_clockwright_vs_nightveil_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 883abfca8c7d40647b15b4ee64ddf4d5
     m_Address: vo/vo_gravekeep_lose_3
     m_ReadOnly: 0
@@ -397,6 +547,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 894cd371b6b309241aa480db69bfe04b
     m_Address: vo/vo_verdant_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ace29306fb09124a8a41f9bcd71f492
+    m_Address: vo/vo_stonewarden_vs_clockwright_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -415,6 +570,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 91a98615347ef71429701b4de4aba3ff
+    m_Address: vo/vo_gravekeep_vs_tidecaller_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 94df6e3457fe24c44886fce9a7e79967
     m_Address: vo/vo_tempest_rope_2
     m_ReadOnly: 0
@@ -422,6 +582,21 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 98010998e2f518c408d481ab8dfa7c77
     m_Address: vo/vo_gravekeep_win_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 98996e82e18c94946a90adf1dc4e28d0
+    m_Address: vo/vo_tidecaller_vs_gravekeep_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 992c2be909a625b4fa3722f60bf49d28
+    m_Address: vo/vo_tempest_vs_tidecaller_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a8bac91d3de5834d90b98c8add7fc30
+    m_Address: vo/vo_stonewarden_vs_verdant_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -465,8 +640,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1da0d6c2f4999741bbc430f03deb795
+    m_Address: vo/vo_emberward_vs_emberward_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a23a4226a1e866e46ac508690acb7727
+    m_Address: vo/vo_clockwright_vs_tempest_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a291720e89aa9dc418817500f3b5068f
     m_Address: vo/vo_clockwright_rope_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5c242f75d22b2c4493ad2a350662317
+    m_Address: vo/vo_nightveil_vs_tidecaller_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a6d1d405bd91fbe4391e42bf873dfb8a
+    m_Address: vo/vo_stonewarden_vs_tidecaller_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -482,6 +677,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ac5a23e2050fdb5408b4ee960a6edf53
     m_Address: vo/vo_tempest_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac87f45de393718459459364ef5e42a3
+    m_Address: vo/vo_verdant_vs_tempest_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -520,8 +720,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b2c592982d209de438ce4c3899946956
+    m_Address: vo/vo_tidecaller_vs_tempest_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b412e76934f2c0d4c83b59e086fdee2e
     m_Address: vo/vo_stonewarden_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b56c7a733ecfb4f4d93da84b0b03881e
+    m_Address: vo/vo_emberward_vs_tempest_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -532,6 +742,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b86e4de331c4f314eb90dd6b96c4ed7b
     m_Address: vo/vo_tidecaller_match_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b931cfcc47b38bf46a82333d7f82630b
+    m_Address: vo/vo_stonewarden_vs_tempest_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -555,6 +770,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf47136a2d34f3f43b82fb3ca1733219
+    m_Address: vo/vo_verdant_vs_tidecaller_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c01ce880c7dac994591c48eed6d6e9e9
     m_Address: vo/vo_clockwright_match_start_3
     m_ReadOnly: 0
@@ -570,8 +790,33 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c2a8faaa63d6bc34f8fedd6f67557502
+    m_Address: vo/vo_verdant_vs_clockwright_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c2f30189c78d8c845bda76d631423a71
+    m_Address: vo/vo_nightveil_vs_verdant_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3308e9f19188064ebedb9f4e053ad34
+    m_Address: vo/vo_gravekeep_vs_stonewarden_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c53affe01b37c4247abf9a9a72ee1399
     m_Address: vo/vo_gravekeep_rope_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5e213b360980b049a138269597234c7
+    m_Address: vo/vo_stonewarden_vs_emberward_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c747d77cfb90ca344b550aaf92929a1d
+    m_Address: vo/vo_emberward_vs_stonewarden_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -582,6 +827,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ca1f2aa2a9b37ee48999323d367e688f
     m_Address: vo/vo_clockwright_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cac296314c4b78449bc75bf0fbac1996
+    m_Address: vo/vo_stonewarden_vs_stonewarden_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -610,6 +860,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d36eb1f6af5a569429e503276497fbc4
+    m_Address: vo/vo_clockwright_vs_verdant_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d39a7fcf86976f840b286e436e0f1a70
     m_Address: vo/vo_nightveil_match_start_1
     m_ReadOnly: 0
@@ -620,8 +875,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d54112cd5e5bbeb48bda0963618322b8
+    m_Address: vo/vo_nightveil_vs_tempest_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d61ee7fa812dbc748881ff4a086ca41d
     m_Address: vo/vo_card_grave_caretaker_solen_play_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6bdaa838e7f1434ea254d37b7b3a0ae
+    m_Address: vo/vo_gravekeep_vs_tempest_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -635,6 +900,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dac8dc91b1bae4f42af5be50e666e5e0
+    m_Address: vo/vo_clockwright_vs_tidecaller_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: db2afa28f6fc6cd48b17fa617fc46cbf
     m_Address: vo/vo_emberward_win_1
     m_ReadOnly: 0
@@ -645,13 +915,33 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: def6dd876f97ce6479606160568e0860
+    m_Address: vo/vo_tidecaller_vs_tempest_1_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dfa02c635aaff664fbf19209e0a1b50c
+    m_Address: vo/vo_emberward_vs_clockwright_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e1cf1812f1e21d844992fa5588e4a211
     m_Address: vo/vo_verdant_match_start_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e2bd79a3153a15a4291c727d9631d6fe
+    m_Address: vo/vo_nightveil_vs_clockwright_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e2cdbd9b4f0e0f34682468a12401a785
     m_Address: vo/vo_tempest_match_start_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3c70e2b33a6d954dab62e3cceb971fe
+    m_Address: vo/vo_tempest_vs_stonewarden_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -665,6 +955,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7205f5ee05e5aa48adb5e46a5e5fb5b
+    m_Address: vo/vo_tidecaller_vs_emberward_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eae615dc9e14fd446b84eeba841d4dd6
     m_Address: vo/vo_card_grave_caretaker_solen_play_1
     m_ReadOnly: 0
@@ -675,13 +970,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eddda24f41f59224cb75cd2fd3c552c0
+    m_Address: vo/vo_nightveil_vs_emberward_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ee439a014b3352243b251910a022262c
     m_Address: vo/vo_card_night_seraphine_attack_3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef903fbcf3df6c140915b0d7f27467f7
+    m_Address: vo/vo_stonewarden_vs_gravekeep_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f029ed60274a4154f9245040f6331bab
     m_Address: vo/vo_stonewarden_win_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f1166eb571e0f484e9f3a180810e0b0c
+    m_Address: vo/vo_tidecaller_vs_verdant_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -700,8 +1010,28 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7ca5fc74b943934f8e74f60f459747c
+    m_Address: vo/vo_nightveil_vs_gravekeep_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f85778fa852e2c844a6f49f581495a06
+    m_Address: vo/vo_stonewarden_vs_nightveil_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9763f2dfb5942944bede437e96b42d4
+    m_Address: vo/vo_gravekeep_vs_verdant_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f9e772d646f154a48bc5b8e754243fe3
     m_Address: vo/vo_tidecaller_turn_start_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fa82766fe44fa364bab923f9d2e8a6f1
+    m_Address: vo/vo_nightveil_vs_stonewarden_1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

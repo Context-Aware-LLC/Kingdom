@@ -381,6 +381,8 @@ namespace Kingdom.Presentation
                 localClass,  PlayerAccount.LocalDisplayNameOr("You"),
                 remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? "Opponent" : _net.OpponentName,
                 s0.Id.Value), artProvider);
+            // The two heroes trade a line over the versus screen and on into the mulligan.
+            VersusBanter.Create(Camera.main, localClass, remoteClass);
             // Carry the narration across the handover rather than letting the line blink empty —
             // "Opponent found" was posted to the plate a frame ago and is still the true state.
             SetStatus("Opponent found");

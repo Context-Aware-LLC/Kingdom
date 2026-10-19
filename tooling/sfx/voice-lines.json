@@ -10,6 +10,7 @@
   },
   "voices": {
     "EMBERWARD": {
+      "hero": "Pyra",
       "voice_id": "CKfuQaJKfvUG2Wtrda3Y",
       "voice_name": "Lison - Seductive and soft French accent",
       "why": "Sam, 2026-08-28 (as 'Pyra'). NOTE: labelled calm -- the drafted EMBERWARD lines are shouted and need a rewrite to suit.",
@@ -66,6 +67,7 @@
       }
     },
     "TIDECALLER": {
+      "hero": "Maren",
       "voice_id": "pFZP5JQG7iQjIQuC4Bku",
       "voice_name": "Lily - Velvety Actress",
       "why": "Sam, 2026-08-28, CHOSEN after auditioning against James and Priyanka on the same lines. Mid/british/confident. Note she is an ElevenLabs stock voice rather than one added from the library, which is why she was not recognised by name -- she works on eleven_v3 like every other voice on the account.",
@@ -122,6 +124,7 @@
       }
     },
     "GRAVEKEEP": {
+      "hero": "Sorrow",
       "voice_id": "1BfrkuYXmEwp8AWqSLWk",
       "voice_name": "Declan - Horror, Narrator",
       "why": "Sam, 2026-08-28. Old irish rasp; horror narrator for the bell-and-gate class.",
@@ -178,6 +181,7 @@
       }
     },
     "VERDANT": {
+      "hero": "Thalen",
       "voice_id": "NOpBlnGInO9m6vDvFkFC",
       "voice_name": "Spuds Oxley - Grandpa",
       "why": "Sam, 2026-08-28. Replaces Matthew Schmitz, who collided with Declan -- both were male/old/raspy and blurred into one character across a match. Spuds is the same age register with the opposite texture (gentle, warm, southern), so GRAVEKEEP and VERDANT stay separable by ear alone.",
@@ -234,6 +238,7 @@
       }
     },
     "CLOCKWRIGHT": {
+      "hero": "Fenwick",
       "voice_id": "yjJ45q8TVCrtMhEKurxY",
       "voice_name": "Dr. Von - Quirky, Mad Scientist",
       "why": "Sam, 2026-08-28. Replaces Nolan. Lines stay AS WRITTEN -- Sam liked the cold-precision register, and a mad scientist delivering 'The machine does not err' deadpan is funnier than one hamming it.",
@@ -294,6 +299,7 @@
       }
     },
     "NIGHTVEIL": {
+      "hero": "Liss",
       "voice_id": "Df0A8fHl2LOO7kDNIlpg",
       "voice_name": "Raven Ashcroft - Mysterious and strong",
       "why": "Sam, 2026-08-28.",
@@ -350,6 +356,7 @@
       }
     },
     "STONEWARDEN": {
+      "hero": "Hodge",
       "voice_id": "G3zrXA9moYrFCgwBAvxJ",
       "voice_name": "W. Darth Oxley",
       "why": "Sam, 2026-08-28. Middle-aged american, deep; speaks clearly and ominously rather than loudly -- which suits the class, since STONEWARDEN never has to raise its voice.",
@@ -406,6 +413,7 @@
       }
     },
     "TEMPEST": {
+      "hero": "Cassian",
       "voice_id": "GLSWsaquVBsIPLPPRi2s",
       "voice_name": "George - War-torn Seargant",
       "why": "Sam, 2026-08-28 ('George'). TWO Georges exist; picked War-torn Seargant (american/confident) over Warm Storyteller (JBFqnCBsd6RMkjVDRZzb, british/mature) because bolt riders and gale heralds want energy. Say so if the storyteller was meant.",
