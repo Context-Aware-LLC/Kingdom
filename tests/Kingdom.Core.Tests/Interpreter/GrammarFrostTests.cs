@@ -145,7 +145,7 @@ namespace Kingdom.Core.Tests.Interpreter
             var db = new FakeCardDatabase().Register(rite);
             var s = MainPhase(p0Mana: 10);
             s.Players[0].Deck.Add(new CardInstance(s.NextInstanceId(), FixtureCard.Id("rite"), s.Players[0].Id)
-                { Zone = Zone.Deck });
+            { Zone = Zone.Deck });
             var card = Hand(s, 0, FixtureCard.Id("rite"));
 
             new CommandProcessor(db).Execute(s, Play(s, card));
@@ -162,7 +162,7 @@ namespace Kingdom.Core.Tests.Interpreter
             var db = new FakeCardDatabase().Register(rite);
             var s = MainPhase(p0Mana: 9);
             s.Players[0].Deck.Add(new CardInstance(s.NextInstanceId(), FixtureCard.Id("rite"), s.Players[0].Id)
-                { Zone = Zone.Deck });
+            { Zone = Zone.Deck });
             var card = Hand(s, 0, FixtureCard.Id("rite"));
 
             new CommandProcessor(db).Execute(s, Play(s, card));

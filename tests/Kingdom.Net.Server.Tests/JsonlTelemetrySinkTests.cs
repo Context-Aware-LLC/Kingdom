@@ -128,10 +128,17 @@ namespace Kingdom.Net.Server.Tests
         public void A_Seat_Carries_Its_Findings_Counters()
         {
             MatchCompleteEvent e = Complete("m1");
-            e = e with { P0 = e.P0 with
+            e = e with
             {
-                FinalHealth = 1, FatigueDraws = 2, CardsBurned = 3, TurnsTimedOut = 4, TurnsEndedWithTenUnspent = 5,
-            } };
+                P0 = e.P0 with
+                {
+                    FinalHealth = 1,
+                    FatigueDraws = 2,
+                    CardsBurned = 3,
+                    TurnsTimedOut = 4,
+                    TurnsEndedWithTenUnspent = 5,
+                }
+            };
             new JsonlTelemetrySink(_dir, "local").MatchComplete(e);
 
             var p0 = Rows().Single().GetProperty("players")[0];
