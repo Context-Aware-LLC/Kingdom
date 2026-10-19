@@ -77,6 +77,27 @@
       "text": "Whisper the word. I'll bring the blade.",
       "note": "Was that a whispered whimper?",
       "status": "needs_rewrite"
+    },
+    "vo_emberward_vs_clockwright_1": {
+      "class": "",
+      "moment": "",
+      "text": "Used to.",
+      "note": "",
+      "status": "rewritten"
+    },
+    "vo_emberward_vs_tempest_1": {
+      "class": "EMBERWARD",
+      "moment": "vs_tempest",
+      "text": "Everything.",
+      "note": "Everything.",
+      "status": "rewritten"
+    },
+    "vo_tempest_vs_clockwright_1": {
+      "class": "TEMPEST",
+      "moment": "vs_clockwright",
+      "text": "Not, going to happen.",
+      "note": "Not going to happen.",
+      "status": "rewritten"
     }
   }
 }
