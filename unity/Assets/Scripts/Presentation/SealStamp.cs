@@ -184,6 +184,38 @@ namespace Kingdom.Presentation
             return stamp;
         }
 
+        /// <summary>
+        /// The seal already at rest on <paramref name="target"/>, with no drop, sound or tool: the
+        /// wax a past stamp left. Placement as for <see cref="Play"/>.
+        /// </summary>
+        public static VisualElement Place(
+            VisualElement target,
+            Sprite seal,
+            float size,
+            float? left = null,
+            float? top = null,
+            float? right = null,
+            float? bottom = null,
+            float tiltDegrees = 0f)
+        {
+            if (target == null || seal == null) return null;
+            var stamp = new VisualElement { pickingMode = PickingMode.Ignore };
+            stamp.AddToClassList(SealClass);
+            IStyle s = stamp.style;
+            s.position = Position.Absolute;
+            if (left.HasValue) s.left = left.Value;
+            if (right.HasValue) s.right = right.Value;
+            if (top.HasValue) s.top = top.Value;
+            if (bottom.HasValue) s.bottom = bottom.Value;
+            s.width = size;
+            s.height = size;
+            s.rotate = new Rotate(new Angle(tiltDegrees, AngleUnit.Degree));
+            s.backgroundImage = new StyleBackground(seal);
+            s.backgroundSize = new BackgroundSize(BackgroundSizeType.Contain);
+            target.Add(stamp);
+            return stamp;
+        }
+
         /// <summary>Remove every seal this class stamped on <paramref name="target"/>.</summary>
         public static void Clear(VisualElement target)
         {

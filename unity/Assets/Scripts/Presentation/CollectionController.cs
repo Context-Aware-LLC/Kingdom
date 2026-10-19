@@ -877,6 +877,7 @@ namespace Kingdom.Presentation
             _scope.SetSilently(owned: true, unowned: false);
 
             _deck = deck;
+            _deckWasReady = null;
             // Parks the browse class selection — see CollectionClassAxis.BeginEditing for why
             // parking rather than dropping.
             _classAxis.BeginEditing();
@@ -898,7 +899,9 @@ namespace Kingdom.Presentation
             if (!EditingDeck) return;
 
             _deck = null;
-            _classAxis.EndEditing();          // restores the browse selection parked on entry
+            _deckWasReady = null;
+            SealStamp.Clear(_deckCountLabel?.parent);
+            _classAxis.EndEditing();         // restores the browse selection parked on entry
             _scope.SetSilently(_scopeBeforeEditing.owned, _scopeBeforeEditing.unowned);
             StampEditing();
 
@@ -1612,7 +1615,39 @@ namespace Kingdom.Presentation
 
             if (_deckCountLabel != null)
                 _deckCountLabel.text = $"{_deck.TotalCount} / {DeckValidator.DeckSize}";
+            UpdateApprovalSeal();
         }
+
+        /// <summary>Whether the open deck was queue-ready at the last Refresh. Null until its first,
+        /// so opening a deck that is already ready shows the wax without stamping it again.</summary>
+        private bool? _deckWasReady;
+
+        /// <summary>
+        /// The crown seal beside the count (whimsy pass, Sam 2026-10-17). It is stamped down the
+        /// moment the deck becomes queue-ready, stays while it is, and goes when it is not. The
+        /// roster plate carries a small copy of the same seal.
+        /// </summary>
+        private void UpdateApprovalSeal()
+        {
+            VisualElement row = _deckCountLabel?.parent;
+            if (row == null) return;
+            bool ready = QueueEligibility.Check(_deck, _db, _owned).IsEligible;
+            if (ready == _deckWasReady) return;
+            bool landing = _deckWasReady == false;
+            _deckWasReady = ready;
+
+            SealStamp.Clear(row);
+            if (!ready) return;
+            Sprite seal = _uiSprites?.Get(SealStamp.SpriteKey);
+            if (landing)
+                SealStamp.Play(row, seal, _uiSprites?.Get(SealStamp.ToolSpriteKey),
+                    size: ApprovalSealSize, left: 0f, top: ApprovalSealTop);
+            else
+                SealStamp.Place(row, seal, ApprovalSealSize, left: 0f, top: ApprovalSealTop, tiltDegrees: -8f);
+        }
+
+        private const float ApprovalSealSize = 72f;
+        private const float ApprovalSealTop = -14f;
 
 #if UNITY_EDITOR
         /// <summary>

@@ -163,8 +163,8 @@
 
 /* GOLD READY RING, WHITE HOVER RING: both cut 2026-09-08 (Sam) — the blue match-pick ring below is
  * the only one left. `deck-plate-art--ready` is still toggled by CharacterRosterController off
- * `summary.Queue.IsEligible` (the tooltip still reads the same eligibility), it just paints
- * nothing now; ready vs not is no longer shown on the plate itself.
+ * `summary.Queue.IsEligible` but paints nothing; a ready deck shows as the small crown seal
+ * CharacterRosterController places in the art's corner (2026-10-18).
  *
  * The default deck is NOT a border. It is the star on the plate's Functions button, because a
  * second ring colour on the same element would be read as one state, not two. */

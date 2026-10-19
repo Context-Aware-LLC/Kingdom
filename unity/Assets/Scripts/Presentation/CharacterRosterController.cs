@@ -664,10 +664,13 @@ namespace Kingdom.Presentation
                 "deck-class-portrait--plate");
             plate.Add(art);
 
-            // Queue standing is the GOLD BORDER and nothing else (Sam, 2026-08-07). It replaced a
-            // "17 / 30" caption, which replaced a Ready/Draft chip — each pass trading words for
-            // something the eye reads without stopping. A deck with a gold edge is ready to play.
+            // Queue standing is a small crown seal in the corner: the wax the deck builder stamped
+            // when the deck became queue-ready (whimsy pass, Sam 2026-10-17). It replaced the gold
+            // border, cut 2026-09-08, which left readiness only in the tooltip.
             art.EnableInClassList("deck-plate-art--ready", summary.Queue.IsEligible);
+            if (summary.Queue.IsEligible)
+                SealStamp.Place(art, _uiSprites?.Get(SealStamp.SpriteKey),
+                    size: 40f, right: 3f, top: 3f, tiltDegrees: -10f);
 
             BindDeckTaps(plate, deck, summary);
             return plate;
