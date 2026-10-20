@@ -161,8 +161,7 @@ leave a `RETIREMENT TRIGGER` comment **on the line that change is forced to touc
 to update. Conversely — **if you are editing a line that carries one, discharging it is part of
 your change, not follow-up work.** The commit that falsifies the claim is the commit that fixes it.
 
-**Do not list placed markers here**
- — a list of them is itself a record that drifts.** 
+**Do not list placed markers here — a list of them is itself a record that drifts.**
 Ask the repo instead, and note that they are spread across the engine, the Unity presentation layer
 and `tooling/`, not just `src/`:
 
@@ -331,6 +330,10 @@ so in the file when you do.
 `Library/`, this section dies with it — and so do the `AGENTS.md` mirror, the pointer block inside
 `EDITOR-LOCK.md`, and those two brain pointers.
 ## Ask the graph before you grep
+
+**Paused 2026-10-19:** Sam turned the graph's `PreToolUse` and `SessionStart` hooks off to measure
+the difference, so nothing below is injected right now; run `code-review-graph` by hand. Restoring
+them means reverting the commit that removed them from `.claude/settings.json` and this paragraph.
 
 A persistent `code-review-graph` of this repo answers *where is this defined, what calls it, which
 flow is it in*; grep answers *which files contain this string*. A `PreToolUse` hook injects the
