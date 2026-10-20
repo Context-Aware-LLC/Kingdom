@@ -7,8 +7,9 @@ A digital, turn-based **1v1 collectible trading card game**
 
 **THE GAME REQUIRES A CONNECTION. THERE IS NO OFFLINE MODE, and no code will tell you so.**
 Every bot lives in `src/Kingdom.Net.Server/Bots/` and runs server-side; the one client-side AI
-(`PlayingAi`) is constructed at a single site inside `NetworkedGameBootstrap`, in a networked match.
-So there is no local match path and **nothing a player can do without a server** — the screens that
+(`PlayingAi`) is constructed at one shipping site inside `NetworkedGameBootstrap`, in a networked match.
+The other, `RoyalCouncilPlaytest`, is a dev-scene local match compiled out of release builds
+(`UNITY_EDITOR || DEVELOPMENT_BUILD`). So there is no player-reachable local match path and **nothing a player can do without a server** — the screens that
 still render offline (roster, collection, deck builder) exist only to prepare a match they cannot
 start. Read this before choosing between server-authoritative and a local mirror for ANY player
 data: the usual argument for a mirror is offline usability, and here that argument does not exist.
@@ -51,8 +52,8 @@ See `src/README.md` for the engine map.
 
 **The core is `netstandard2.1`, NOT .NET 10.**
 Every `Kingdom.Core.*` project, plus `Kingdom.Net.Client` and `Kingdom.Net.Protocol`, targets `netstandard2.1` because:
-**Unity consumes them as local packages** and cannot load a `net10.0` assembly. Only `Kingdom.Net.Server`
-and the `Kingdom.Tools.*` projects are `net10.0`. Reaching for a .NET 10 API or a newer C#
+**Unity consumes them as local packages** and cannot load a `net10.0` assembly. Only `Kingdom.Net.Server`,
+`Kingdom.Policy`, `Kingdom.Training.Corpus` and the `Kingdom.Tools.*` projects are `net10.0`. Reaching for a .NET 10 API or a newer C#
 language feature inside the core compiles nowhere and breaks Unity's consumption of it — so check
 the `.csproj` before using anything modern. Confirm with:
 `git grep -h '<TargetFramework>' -- 'src/**/*.csproj' | sort | uniq -c`
