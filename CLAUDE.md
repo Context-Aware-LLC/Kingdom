@@ -31,7 +31,7 @@ answering now: every screen below the menu can still lose the network underneath
 the player builds from cards they do not own, and `MatchGate` closes the socket when they queue. A
 legible failure becomes an illegible one, later, in a different screen. Distinguish *never synced*
 from *synced, then lost*; only the second is a transient worth absorbing silently.
-(Sam, 2026-09-01, correcting a spec written the same day.)
+(Sam, 2026-09-01.)
 
 ## What this file is
 
@@ -63,17 +63,15 @@ the `.csproj` before using anything modern. Confirm with:
 and never opens the `.csproj` at all. An `.asmdef` has no friend mechanism, so
 `<InternalsVisibleTo>` items are silently dropped — **`dotnet build` and CI stay green while
 Unity cannot compile the consumer.** Declare friends as `[assembly: InternalsVisibleTo(...)]` in
-a `.cs` file, which both toolchains compile. This cost a session on 2026-08-06: an `internal`
-field read across two assemblies took down every Unity assembly downstream of it, surfacing as a
-Burst *"Failed to resolve assembly: 'Kingdom.AI'"* and a vanished `Kingdom/` menu — neither of
-which points at an access modifier. The live declarations are in
+a `.cs` file, which both toolchains compile. **Symptom:** every Unity assembly downstream fails,
+surfacing as a Burst *"Failed to resolve assembly: 'Kingdom.AI'"* and a vanished `Kingdom/` menu —
+neither of which points at an access modifier. The live declarations are in
 `src/Kingdom.Core.Contracts/AssemblyInfo.cs`; that file carries the retirement trigger.
 
 **`<Nullable>enable</Nullable>` is the same trap, and its fix has two of its own.** Unity takes
 compiler switches from a file named exactly `csc.rsp` beside the `.asmdef`; each Unity-consumed
 `src/` project carries one holding `-nullable:enable`. Any other filename is ignored without a
-word — `<AssemblyName>.rsp` sat inert from 2026-08-23 to 2026-10-10 while 296 CS8632 warnings
-filled the console. And the file takes **arguments only**: a `#` comment line is split into words
+word; the **symptom** is a console full of CS8632 warnings. And the file takes **arguments only**: a `#` comment line is split into words
 and every word becomes a source file, which fails the compile with CS2001 naming a word, not the
 file. Confirm a switch arrived with
 `grep -c -- -nullable unity/Library/Bee/artifacts/*.dag/Kingdom.Core.Cards.rsp`. A project that
@@ -140,18 +138,13 @@ sense the ruling forbids — see the class docs, which say why.
 `Latent vulnerabilities` sections of the security index**
 (`docs\dev-docs\quality\security.md`). Both are a few lines, so the scan takes
 seconds and a match is obvious. Match one, read that `VULN-nnn` in full, and follow its binding rules.
-This index is a specification, not a tracker. (It was a numbered `§4` table before the 2026-07-31 docs
-reorganisation; the sections are named now.)
+This index is a specification, not a tracker.
 
 **Reciprocal:** a `LATENT` entry must also leave a pointer comment on the line an implementer is
 forced to edit to arm it. The entry records the vulnerability; only the comment delivers it —
 because the person who arms a latent vulnerability is never the person looking for it.
 
 ## Every claim here that can expire carries a RETIREMENT TRIGGER in the code
-
-Generalised from the reciprocal rule above, after a rule in this file outlived its reason and cost
-a session (`art-pipeline/` was the only copy of the art until the finals were placed; nothing
-prompted anyone to retire the rule once they were).
 
 **A statement about the current state of the world is not documentation — it is a claim with an
 expiry date, and the expiry has to be attached to the work that causes it.** Writing "retire this
@@ -196,10 +189,9 @@ The naming convention itself, and everything that checks it, lives in that scrip
 
 **Before committing `unity/ProjectSettings/ProjectSettings.asset`, `git diff` it and confirm `productName` is still exactly `Bad Ideas`.**
 
-It was `Emberfall` until 2026-09-28. Sam renamed it before any store upload, because it is the
-label under the app icon. The codename and the folder names are `Kingdom` (renamed from
-`Emberfall` 2026-10-10); the first set's setId is `PENDINGHAM` (renamed from `EMBERFALL`
-2026-10-11, with its folders, card file and pack ids).
+It is the label under the app icon. Older docs and memory say `Emberfall`: that was the product
+name, the codename (now `Kingdom`, with the folders) and the first setId (now `PENDINGHAM`, with
+its folders, card file and pack ids).
 
 On Windows, `Application.persistentDataPath` is `AppData/LocalLow/<companyName>/<productName>`
 and PlayerPrefs are keyed the same way, so that one string keys the desktop player's **entire
@@ -209,8 +201,7 @@ On Android and iOS the save root is keyed on the package id (`com.contextaware.k
 `productName` is only the icon label there. Once a build ships, the package id can never change.
 
 **This is not a typo risk — a tool does it to you.** Running a Unity **multiplayer scenario**
-rewrites `productName` to its role name. The project's only scenario asset was deleted
-2026-08-26, so nothing triggers this today — but Multiplayer Play Mode is a built-in editor
+rewrites `productName` to its role name. No scenario asset exists today — but Multiplayer Play Mode is a built-in editor
 module, not a package, so authoring a new scenario under `Assets/Settings/PlayMode/` arms it
 again. **`Kingdom/Build/Restore Product Name` puts it back** (set through `PlayerSettings`,
 since Unity holds project settings in memory and overwrites a file edited underneath it). The
@@ -256,16 +247,12 @@ in the report which checks you ran and which you left out, so a narrow run never
 be live in this repo at once, so a broad add sweeps another session's in-progress hunks into your
 commit. Run `git branch --show-current` first, `git add <explicit paths>` second, and read
 `git status` afterwards to confirm what you deliberately left alone. In a project spanning two
-repos, always `git -C <absolute path>` — a shell's working directory persists between commands, and
-assuming otherwise has already caused one push to the wrong repo.
+repos, always `git -C <absolute path>` — a shell's working directory persists between commands.
 
 **Staging by explicit path is NOT sufficient — commit by explicit path too: `git commit --only
 <paths>`.** A bare `git commit` commits *the whole index*, and in this working copy the index is
 not yours alone: another session stages its own work there, and anything it left staged rides into
-your commit no matter how carefully you added. Cost 2026-08-12 — a bot-roster commit that touched
-eight server files shipped with another session's staged deletion of
-`unity/.../Presentation/ClickableBoardSlot.cs` inside it, mid-rework, with nothing in the `git add`
-output hinting at it. `git status` before committing shows the difference: `D ` in the **left**
+your commit no matter how carefully you added, and nothing in the `git add` output hints at it. `git status` before committing shows the difference: `D ` in the **left**
 column is someone else's staged change, ` D` in the right column is an unstaged one. **This is a
 different trap from the hook one** documented in `.githooks/pre-commit` (a hook's `git add` defeats
 even `--only`, via the temp index) — that one is about writes *during* the commit, this one is
@@ -284,10 +271,9 @@ yourself.
 command takes `--json`. `unity pipeline list` is what diagnoses a connection failure; the
 `unity-cli` skill carries the rest, including the Safe Mode recovery loop.
 
-**With two Editors open the CLI drives the WRONG one and labels it convincingly.** Measured
-2026-08-21: `unity pipeline list --json` reported exactly one instance, labelled with the
-WORKTREE's path, while evaluated code returned the MAIN COPY's `Application.dataPath`, and
-`--project-path` did not change it. **A path label is not evidence of which Editor you are
+**With two Editors open the CLI drives the WRONG one and labels it convincingly.** **Symptom:**
+`unity pipeline list --json` shows one instance labelled with YOUR path while evaluated code
+returns the other copy's `Application.dataPath`, and `--project-path` does not change it. **A path label is not evidence of which Editor you are
 driving** — return `Application.dataPath` and read it before any eval that writes, or a mutating
 eval aimed at your worktree lands silently in somebody else's project. `-batchmode -executeMethod`
 is exempt: there `-projectPath` is the target, not a hint.
@@ -298,8 +284,7 @@ is exempt: there `-projectPath` is the target, not a hint.
 by someone else → do not `cd` into it, do not `git -C` it, do not launch Unity on it, do not "just
 check something quickly". Editing that file's status block IS claiming and releasing it. Nothing
 else is authoritative — the brain pages `handoff/unity-editor` and `handoff/unity-editor-status`
-are pointers that say so themselves, because a lock read from two gbrain lanes returned two
-different statuses at the same moment.
+are pointers that say so themselves, because two gbrain lanes can return different statuses.
 
 It is a permanent git worktree of this repo carrying its own warm Unity `Library/` (gitignored), so
 a session can run the compile gate, `HeadlessVerify`, a build or the Device Simulator **without
