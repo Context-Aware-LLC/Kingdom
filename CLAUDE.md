@@ -331,6 +331,10 @@ so in the file when you do.
 `EDITOR-LOCK.md`, and those two brain pointers.
 ## Ask the graph before you grep
 
+**Paused 2026-10-19:** Sam turned the graph's `PreToolUse` and `SessionStart` hooks off to measure
+the difference, so nothing below is injected right now; run `code-review-graph` by hand. Restoring
+them means reverting the commit that removed them from `.claude/settings.json` and this paragraph.
+
 A persistent `code-review-graph` of this repo answers *where is this defined, what calls it, which
 flow is it in*; grep answers *which files contain this string*. A `PreToolUse` hook injects the
 graph's answer ahead of every Grep, Glob, Read and Bash result, so you should not have to do
