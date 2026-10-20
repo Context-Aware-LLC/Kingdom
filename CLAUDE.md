@@ -161,8 +161,7 @@ leave a `RETIREMENT TRIGGER` comment **on the line that change is forced to touc
 to update. Conversely — **if you are editing a line that carries one, discharging it is part of
 your change, not follow-up work.** The commit that falsifies the claim is the commit that fixes it.
 
-**Do not list placed markers here**
- — a list of them is itself a record that drifts.** 
+**Do not list placed markers here — a list of them is itself a record that drifts.**
 Ask the repo instead, and note that they are spread across the engine, the Unity presentation layer
 and `tooling/`, not just `src/`:
 
@@ -343,7 +342,3 @@ searches and never seen a `[code-review-graph]` block, run `code-review-graph st
 by **node count, not exit code**: a broken install reports a handful of nodes and exits 0. Install
 with `uv tool install "code-review-graph[communities,embeddings]"`, never `pip --user`. It refreshes
 from `.githooks/pre-commit`, so `built_at_commit` trailing HEAD by one commit is correct.
-
-## Skill routing
-
-When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
