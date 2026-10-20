@@ -11,7 +11,7 @@ CARDS="$1"; OUT="$2"; LABEL="$3"
 EXE="C:/Users/User/Documents/tcg-hearthlike/.dotnet-build/bin/Emberfall.Tools.NetSoak/Release/net10.0/Emberfall.Tools.NetSoak.exe"
 mkdir -p "$OUT"
 run() {  # name, extra flag
-  EMBERFALL_CARDS="$CARDS" "$EXE" matrix 40 "$OUT/$LABEL-$1" $2 > "$OUT/$LABEL-$1.log" 2>&1
+  KINGDOM_CARDS="$CARDS" "$EXE" matrix 40 "$OUT/$LABEL-$1" $2 > "$OUT/$LABEL-$1.log" 2>&1
   echo "$LABEL-$1 exit $? $(tail -n 1 "$OUT/$LABEL-$1.log")"
 }
 run primary-only --primary-only &
