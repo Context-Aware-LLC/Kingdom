@@ -1,0 +1,870 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kingdom of Bad Ideas: source strings (en). Scope: UI chrome and tidbits; card text not included.
+     %1$s / %1$d are positional placeholders; keep them, reorder freely. Tone: lighthearted,
+     dry, mock-bureaucratic (a kingdom run by a Royal Council of bad ideas). -->
+<resources>
+
+    <!-- ===== Common ===== -->
+    <!-- Used in: CharacterRosterController.cs:324, MainMenuController.cs:541 -->
+    <string name="common_1_d_2_d">%1$d / %2$d</string>
+    <!-- Used in: ShopPanelController.cs:364, ShopPanelController.cs:758 -->
+    <string name="common_1_s_gems">%1$s Gems</string>
+    <!-- Used in: CharacterRosterController.cs:264, FriendsDrawer.uxml:35 -->
+    <string name="common_accept">Accept</string>
+    <!-- Used in: FriendsDrawer.uxml:72, FriendsDrawerController.cs:611 -->
+    <string name="common_add">Add</string>
+    <!-- Used in: CharacterCreateScreen.uxml:59, CharacterRosterController.cs:399, CharacterRosterScreen.uxml:43, CollectionScreen.uxml:44, MatchSettingsScreen.uxml:63, PackVaultScreen.uxml:42 … -->
+    <string name="common_back">Back</string>
+    <!-- Used in: MainMenuController.cs:777, MainMenuScreen.uxml:60 -->
+    <string name="common_calling_the_keepers">Calling the keepers…</string>
+    <!-- Used in: FriendsDrawerController.cs:416, MatchSettingsScreen.uxml:75 -->
+    <string name="common_cancel">Cancel</string>
+    <!-- Used in: CharacterRosterController.cs:399, CharacterRosterScreen.uxml:106, CollectionScreen.uxml:114, FriendsDrawer.uxml:48, LedgerScreen.uxml:30, MainMenuScreen.uxml:52 -->
+    <string name="common_close">Close</string>
+    <!-- Used in: CraftModal.cs:414, PackRevealPanel.cs:303 -->
+    <string name="common_common">Common</string>
+    <!-- Used in: MatchSettingsController.cs:209, MatchSettingsScreen.uxml:45 -->
+    <string name="common_concede">Concede</string>
+    <!-- Used in: MatchSettingsController.cs:209, MatchSettingsScreen.uxml:72 -->
+    <string name="common_concede_this_match">Concede this match?</string>
+    <!-- Used in: CollectionController.cs:825, CollectionScreen.uxml:41 -->
+    <string name="common_decks">Decks</string>
+    <!-- Used in: FriendsDrawer.uxml:36, FriendsDrawerController.cs:414 -->
+    <string name="common_decline">Decline</string>
+    <!-- Used in: CharacterRosterController.cs:403, CharacterRosterScreen.uxml:80 -->
+    <string name="common_delete_deck">Delete deck</string>
+    <!-- Used in: CraftModal.cs:412, PackRevealPanel.cs:301 -->
+    <string name="common_epic">Epic</string>
+    <!-- Used in: MainMenuScreen.uxml:18, ShopScreen.uxml:32 -->
+    <string name="common_gems">Gems</string>
+    <!-- Used in: MainMenuScreen.uxml:14, ShopScreen.uxml:28 -->
+    <string name="common_gold">Gold</string>
+    <!-- Used in: CharacterCreateScreen.uxml:120, CharacterRosterScreen.uxml:133, CollectionScreen.uxml:197, MainMenuScreen.uxml:80, PackVaultScreen.uxml:74, ShopScreen.uxml:86 -->
+    <string name="common_got_it">Got it</string>
+    <!-- Used in: CardRevealContent.cs:142, CharacterCreateScreen.uxml:54 -->
+    <string name="common_hero_power">Hero Power</string>
+    <!-- Used in: CraftModal.cs:413, PackRevealPanel.cs:302 -->
+    <string name="common_legendary">Legendary</string>
+    <!-- Used in: MainMenuController.cs:450, MainMenuScreen.uxml:9 -->
+    <string name="common_loading_quests">Loading quests…</string>
+    <!-- Used in: NetworkedGameBootstrap.cs:397, OngoingEffectStatusModel.cs:49 -->
+    <string name="common_opponent">Opponent</string>
+    <!-- Used in: CraftModal.cs:411, PackRevealPanel.cs:300 -->
+    <string name="common_rare">Rare</string>
+    <!-- Used in: CollectionScreen.uxml:136, CraftModal.cs:295 -->
+    <string name="common_reduce">Reduce</string>
+    <!-- Used in: CollectionScreen.uxml:113 -->
+    <string name="common_reduce_spares">Reduce Spares</string>
+    <!-- Used in: CharacterRosterController.cs:391, CharacterRosterScreen.uxml:75 -->
+    <string name="common_rename_deck">Rename deck</string>
+    <!-- Used in: CollectionScreen.uxml:126 -->
+    <string name="common_render">Render</string>
+    <!-- Used in: ConnectionFailedScreen.uxml:32, UpdateGateOverlay.cs:103 -->
+    <string name="common_retry">Retry</string>
+    <!-- Used in: CharacterRosterController.cs:403, CharacterRosterScreen.uxml:107 -->
+    <string name="common_save">Save</string>
+    <!-- Used in: CharacterCreateController.cs:368, CharacterCreateScreen.uxml:60 -->
+    <string name="common_select">Select</string>
+    <!-- Used in: CharacterRosterController.cs:1018, CharacterRosterScreen.uxml:74 -->
+    <string name="common_select_this_deck">Select this deck</string>
+    <!-- Used in: CollectionScreen.uxml:111, MainMenuScreen.uxml:22 -->
+    <string name="common_shards">Shards</string>
+    <!-- Used in: MatchSettingsController.cs:304, MatchSettingsScreen.uxml:51 -->
+    <string name="common_sign_out">Sign out</string>
+    <!-- Used in: NetworkedGameBootstrap.cs:396, OngoingEffectStatusModel.cs:49 -->
+    <string name="common_you">You</string>
+
+    <!-- ===== UXML screens ===== -->
+    <string name="account_create_signin_title">Welcome to the Kingdom</string>
+    <string name="account_create_signin_help">The Crown requires your name on file before you may play. Enter your email and we will send you a six-digit code.</string>
+    <string name="account_create_signin_email_hint">Email address</string>
+    <string name="account_create_signin_password_hint">Password</string>
+    <string name="account_create_signin_code_hint">6-digit code</string>
+    <string name="account_create_btn_signin_back">Use another email</string>
+    <string name="account_create_btn_signin_primary">Email me a code</string>
+    <string name="account_create_signin_or">Skip the paperwork and</string>
+    <string name="account_create_btn_signin_google">Continue with Google</string>
+    <string name="account_create_or">or</string>
+    <string name="account_create_btn_signin_returning">I have an account</string>
+    <string name="account_create_i_jest">I Jest!</string>
+    <string name="account_create_btn_signin_new">I am new here</string>
+    <string name="account_create_btn_signin_resend">Send another code</string>
+    <string name="account_create_btn_signin_code_instead">Email me a code instead</string>
+    <string name="account_create_name_title">What should we call you?</string>
+    <string name="account_create_name_help">This is the name other players see. Choose carefully — it is permanent. To change it later you would have to contact support.</string>
+    <string name="account_create_name_field_hint">Display name (up to 16 letters)</string>
+    <string name="account_create_btn_name_confirm">Continue</string>
+    <string name="account_create_name_password_help">Optional: set a password so you can sign back in without checking your email.</string>
+    <string name="account_create_name_password_hint">Password (optional)</string>
+    <string name="account_create_name_password_confirm_hint">Confirm password</string>
+    <string name="character_create_ready_to_build">Ready to build</string>
+    <string name="character_create_create_change">Wait!</string>
+    <string name="character_create_create_blank">Start blank</string>
+    <string name="character_create_create_generated">Generate a queue-ready deck</string>
+    <string name="character_roster_empty_state">No decks yet — tap + to build your first.</string>
+    <string name="character_roster_match_continue">Play</string>
+    <string name="character_roster_deck_edit">Edit deck</string>
+    <string name="character_roster_deck_change_back">Change card back</string>
+    <string name="character_roster_double_tap_the_deck">Double tap the deck to edit it.</string>
+    <string name="character_roster_deck_rename_help">Choose a name for this deck (up to 24 characters).</string>
+    <string name="collection_collection_empty">Nothing matches those filters.</string>
+    <string name="collection_filters">FILTERS</string>
+    <string name="collection_ledger_button">Ledger</string>
+    <string name="collection_query_search_hint">Search cards</string>
+    <string name="collection_scope_owned">Owned</string>
+    <string name="collection_scope_unowned">Unowned</string>
+    <string name="collection_choose_another_deck">← All decks</string>
+    <string name="collection_deck_chooser_empty">No decks yet.</string>
+    <string name="collection_manage_decks_button">Manage Decks</string>
+    <string name="collection_craft_retry">Refresh</string>
+    <string name="collection_spend_shards_to_make">Spend shards to make this card.</string>
+    <string name="collection_break_copies_down_for">Break copies down for shards.</string>
+    <string name="collection_break_every_spare_down">Break every spare down for</string>
+    <string name="collection_spares_legendary_include_legendaries">Include Legendaries</string>
+    <string name="collection_spares_reduce">Reduce All</string>
+    <string name="connection_failed_title">Couldn\'t reach the match</string>
+    <string name="connection_failed_btn_back">Back to menu</string>
+    <string name="friends_chat_input_hint">Message</string>
+    <string name="friends_chat_send">Send</string>
+    <string name="friends_friends">Friends</string>
+    <string name="friends_btn_copy_code">Copy code</string>
+    <string name="friends_btn_share_code">Share link</string>
+    <string name="friends_add_code_hint">Friend code</string>
+    <string name="friends_btn_play_games_friends">Find Friends From Play Games</string>
+    <string name="ledger_the_ledger_of_bad">The Ledger of Bad Ideas</string>
+    <string name="ledger_ledger_status">The clerk is fetching the Ledger.</string>
+    <string name="ledger_ledger_prev">Previous</string>
+    <string name="ledger_ledger_next">Next</string>
+    <string name="main_menu_btn_achievements">Achievements</string>
+    <string name="main_menu_btn_achievements_tooltip">Play Games achievements</string>
+    <string name="main_menu_wordmark_tooltip">Kingdom of Bad Ideas</string>
+    <string name="main_menu_btn_find_game">Find Game</string>
+    <string name="main_menu_btn_collection">Collection</string>
+    <string name="main_menu_btn_store">Store</string>
+    <string name="main_menu_btn_leaderboards">Leaderboards</string>
+    <string name="main_menu_btn_card_vault_tooltip">Open Card Vault</string>
+    <string name="main_menu_the_official_register_of">The Official Register of Winners</string>
+    <string name="main_menu_rank">RANK</string>
+    <string name="main_menu_player">PLAYER</string>
+    <string name="main_menu_rating">RATING</string>
+    <string name="main_menu_leaderboard_updated">Ratings update after every eligible match.</string>
+    <string name="match_proclamation_spoils">Spoils</string>
+    <string name="match_proclamation_the_council_s_findings">The Council\'s Findings</string>
+    <string name="match_settings_toggle_mute_mute">Mute</string>
+    <string name="match_settings_slider_music_music">Music</string>
+    <string name="match_settings_slider_sfx_sfx">SFX</string>
+    <string name="match_settings_btn_account">Account</string>
+    <string name="match_settings_btn_quit">Quit</string>
+    <string name="match_settings_btn_privacy">Privacy Policy</string>
+    <string name="match_settings_btn_terms">Terms of Service</string>
+    <string name="match_settings_btn_delete_account">Delete account</string>
+    <string name="match_settings_confirm_subtitle">This counts as a loss.</string>
+    <string name="pack_vault_vault_banner_title">A gift to start you off</string>
+    <string name="pack_vault_vault_banner_body">Open them and keep everything inside.</string>
+    <string name="shop_shop_tab_packs">Booster Packs</string>
+    <string name="shop_shop_tab_gems">Gem Bundles</string>
+    <string name="shop_shop_card_vault">Card Vault</string>
+    <string name="shop_gem_purchases_are_coming">Gem purchases are coming soon.</string>
+
+    <!-- ===== Screens and dialogs (C#) ===== -->
+    <!-- Error line on deck-creation and deck-roster screens when this device's collection cannot be opened. Dev-voiced ('console'); shown in shipping builds. -->
+    <string name="deck_create_error_collection_unavailable">Collection unavailable — see the console.</string>
+    <!-- Tooltip on a class plate in the class picker. %1$s = class name. -->
+    <string name="deck_create_class_tooltip">View %1$s</string>
+    <!-- Class detail view, first pick (primary class). -->
+    <string name="deck_create_detail_primary_hint">Selecting this class locks in its Hero Power.</string>
+    <!-- Class detail view, second pick. %1$s = primary class name (possessive in English; rephrase freely). -->
+    <string name="deck_create_detail_secondary_hint">Selecting this class adds its cards to your pool. Your Hero Power stays %1$s\'s.</string>
+    <!-- Button on class detail view when the class is already picked. -->
+    <string name="deck_create_detail_deselect_button">Deselect</string>
+    <!-- Confirm view summary. %1$s = primary class name, %2$s = secondary class name. -->
+    <string name="deck_create_confirm_summary">%1$s + %2$s — %1$s\'s Hero Power, cards from both. This pairing is permanent.</string>
+    <!-- Same button for a player with no decks yet. -->
+    <string name="deck_create_first_deck_button">Build my first deck</string>
+    <!-- Confirm view note. %1$s = primary class, %2$s = secondary class. -->
+    <string name="deck_create_note_pool_too_thin">%1$s + %2$s doesn\'t have enough cards for a full deck yet, so only a blank draft is available.</string>
+    <!-- Confirm view note explaining the two starter choices. -->
+    <string name="deck_create_note_generated_vs_blank">A generated deck is legal and playable straight away. A blank one is yours to build.</string>
+    <!-- Status line while the server confirms the new deck. -->
+    <string name="deck_create_status_creating">Creating deck…</string>
+    <!-- Error: session expired. -->
+    <string name="deck_create_error_signed_out">Sign in again to create a deck.</string>
+    <!-- Error: server conflict. %1$d = maximum decks per account (currently 9). -->
+    <string name="deck_create_error_limit">The server could not add this deck. You may have reached the %1$d-deck limit. Return to your decks and try again.</string>
+    <!-- Error: server rejected the deck. -->
+    <string name="deck_create_error_rejected">The server could not accept this deck. Choose your classes again.</string>
+    <!-- Error: network failure. -->
+    <string name="deck_create_error_unconfirmed">Could not confirm your deck with the server. Check your connection and try again.</string>
+    <!-- Error: generator could not build a deck. -->
+    <string name="deck_create_error_cannot_generate">That pairing can\'t fill a deck right now. Start blank instead.</string>
+    <!-- Error: unexpected failure. -->
+    <string name="deck_create_error_generic">Could not finish creating your deck. Try again, or sign in again to refresh your decks.</string>
+    <!-- Roster intro line when picking a deck to challenge a friend. %1$s = friend's display name. -->
+    <string name="deck_roster_intro_challenge_send">Choose a deck to challenge %1$s with.</string>
+    <!-- Roster intro when accepting a friend's challenge. %1$s = friend's display name. -->
+    <string name="deck_roster_intro_challenge_accept">Choose a deck to accept %1$s\'s challenge.</string>
+    <!-- Roster intro when picking a deck for matchmaking. 'Play' is the button label. -->
+    <string name="deck_roster_intro_match_pick">Choose one of your queue-ready decks, then Play.</string>
+    <!-- Continue button when challenging a friend. -->
+    <string name="deck_roster_send_challenge_button">Send Challenge</string>
+    <!-- Deck dialog title, card-back picker pane. -->
+    <string name="deck_menu_title_card_back">Card back</string>
+    <!-- Deck dialog title, delete confirmation pane. -->
+    <string name="deck_menu_title_delete">Delete deck?</string>
+    <!-- Delete confirmation body. %1$s = deck name, %2$d = card count in the deck. -->
+    <plurals name="deck_menu_delete_message">
+        <item quantity="one">\'%1$s\' and its %2$d card are gone for good. The cards themselves stay in your collection.</item>
+        <item quantity="other">\'%1$s\' and its %2$d cards are gone for good. The cards themselves stay in your collection.</item>
+    </plurals>
+    <!-- Card-back pane error. -->
+    <string name="deck_menu_error_card_backs_load">Could not load your card backs. Go back and try again.</string>
+    <!-- Card-back pane error. -->
+    <string name="deck_menu_error_no_card_backs">You do not own any available card backs.</string>
+    <!-- Rename pane validation. -->
+    <string name="deck_menu_error_name_required">A deck needs a name.</string>
+    <!-- Save error. -->
+    <string name="deck_menu_error_card_back_unavailable">This card back is no longer available to your account. Choose another back.</string>
+    <!-- Save error (server). -->
+    <string name="deck_menu_error_save_connection">The deck could not be saved. Check your connection and try again.</string>
+    <!-- Save error (unexpected). -->
+    <string name="deck_menu_error_save_generic">The deck could not be saved. Please try again.</string>
+    <!-- Delete error. Dev-voiced ('console'); shown in shipping builds. -->
+    <string name="deck_menu_error_delete">The deck could not be deleted — see the console.</string>
+    <!-- Tooltip on a deck plate. %1$s = deck name, %2$s = primary class, %3$s = secondary class, %4$d = cards in deck, %5$d = deck size. -->
+    <string name="deck_plate_tooltip_ready">%1$s · %2$s → %3$s — %4$d / %5$d</string>
+    <!-- Tooltip on a deck plate that cannot queue. %1$s = deck name, %2$s/%3$s = primary/secondary class, %4$s = reason text (from QueueEligibility). -->
+    <string name="deck_plate_tooltip_not_ready">%1$s · %2$s → %3$s — %4$s</string>
+    <!-- Tooltip on the '+' plate. -->
+    <string name="deck_roster_new_deck_tooltip">Start a new deck</string>
+    <!-- Tooltip/status when at the deck limit. %1$d = max decks per account (currently 9). -->
+    <string name="deck_roster_limit_reached">%1$d decks is the limit. Delete one to make room.</string>
+    <!-- Roster status error. -->
+    <string name="deck_roster_error_load">Your saved decks could not be loaded.</string>
+    <!-- Deck dialog error when selecting an ineligible deck for a match. -->
+    <string name="deck_menu_error_not_queue_ready">This deck is not queue ready yet.</string>
+    <!-- Select button state when this deck is the picked one. -->
+    <string name="deck_menu_selected_button">Selected</string>
+    <!-- Roster status error. -->
+    <string name="deck_roster_error_deck_gone">That deck is no longer there. Pick another.</string>
+    <!-- Roster status error. %1$s = deck name, %2$s = reason text (from QueueEligibility). -->
+    <string name="deck_roster_error_not_queue_ready">%1$s is not queue ready: %2$s</string>
+    <!-- Deck drawer title while editing a deck. -->
+    <string name="collection_drawer_title_editing">Editing Deck</string>
+    <!-- Deck drawer subtitle while editing. -->
+    <string name="collection_drawer_subtitle_editing">Tap a card to add it</string>
+    <!-- Deck drawer subtitle in chooser. -->
+    <string name="collection_drawer_subtitle_choose">Choose a deck to edit</string>
+    <!-- Tooltip on a deck in the drawer chooser. %1$s = deck name, %2$s/%3$s = primary/secondary class, %4$d = card count, %5$d = deck size. Note no spaces around '/' here. -->
+    <string name="collection_deck_choice_tooltip">%1$s · %2$s → %3$s · %4$d/%5$d</string>
+    <!-- Deck chooser empty state. -->
+    <string name="collection_deck_chooser_empty_2">No decks yet — manage your decks to create one.</string>
+    <!-- Craft modal loading status (three ASCII dots). -->
+    <string name="craft_status_loading">Loading...</string>
+    <!-- Craft modal error. -->
+    <string name="craft_error_balances">Could not load crafting balances.</string>
+    <!-- Craft modal: craft applied but sync failed. -->
+    <string name="craft_error_refresh_failed">Craft complete. Collection refresh failed.</string>
+    <!-- Craft modal / spares panel: request failed mid-flight. -->
+    <string name="craft_error_unconfirmed">Craft result is unconfirmed.</string>
+    <!-- Craft error. -->
+    <string name="craft_error_unauthenticated">Sign in to craft cards.</string>
+    <!-- Craft error. -->
+    <string name="craft_error_unavailable">Crafting is unavailable on this server.</string>
+    <!-- Craft error and Render-half note in craft modal. -->
+    <string name="craft_not_enough_shards">Not enough shards.</string>
+    <!-- Craft error. -->
+    <string name="craft_error_copy_cap">Crafting limit reached for this card.</string>
+    <!-- Craft error. -->
+    <string name="craft_error_owns_none">No copies available to reduce.</string>
+    <!-- Craft error. -->
+    <string name="craft_error_not_enough_copies">You no longer have that many copies.</string>
+    <!-- Craft/spares error. -->
+    <string name="craft_error_not_spare">Your collection changed. Check the list and try again.</string>
+    <!-- Craft error. -->
+    <string name="craft_error_not_craftable">This card cannot be crafted.</string>
+    <!-- Craft error fallback. -->
+    <string name="craft_error_generic">Could not confirm the crafting result.</string>
+    <!-- Reduce Spares panel message. -->
+    <string name="spares_not_synced">Your collection has not synced, so spares are unknown.</string>
+    <!-- Reduce Spares panel success. %1$d = copies reduced, %2$d = shards gained. Plural on %1$d; %2$d is always &gt;1 in practice but translators may need its own form. -->
+    <plurals name="spares_reduced_result">
+        <item quantity="one">Reduced %1$d copy for %2$d shards.</item>
+        <item quantity="other">Reduced %1$d copies for %2$d shards.</item>
+    </plurals>
+    <!-- Reduce Spares panel: applied but sync failed. -->
+    <string name="spares_reduced_refresh_failed">Spares reduced. Collection refresh failed.</string>
+    <!-- Collection empty state; 'Unowned' is the scope toggle label. -->
+    <string name="collection_empty_owns_nothing">You don\'t own any cards yet — turn on Unowned to see the game.</string>
+    <!-- Collection empty state with Unowned-only filter. -->
+    <string name="collection_empty_owns_everything">You own every card here.</string>
+    <!-- Joke line under a version-mismatch error. Lighthearted, faux-medieval bureaucracy tone. -->
+    <string name="connection_joke_update">The Crown has issued a new decree, and yours is out of date.</string>
+    <!-- Connection overlay plain line. -->
+    <string name="connection_error_unreachable">Can\'t reach the server. Check your connection and try again.</string>
+    <!-- Joke line under unreachable / not responding / lost-connection errors. -->
+    <string name="connection_joke_courier">The courier balloon has drifted off course again.</string>
+    <!-- Connection overlay plain line. -->
+    <string name="connection_error_not_responding">The server isn\'t answering. Try again in a moment.</string>
+    <!-- Connection overlay plain line. -->
+    <string name="connection_error_lost">Lost the connection to the server.</string>
+    <!-- Connection overlay plain line. -->
+    <string name="connection_error_sign_in_unconfirmed">We couldn\'t confirm your sign-in. Check your connection and try again.</string>
+    <!-- Joke line under sign-in failures (British spelling 'recognise'). -->
+    <string name="connection_joke_guards">The guards no longer recognise you.</string>
+    <!-- Connection overlay when the server rejects the deck. %1$s = server-supplied reason (English, from the server). -->
+    <string name="connection_error_deck_rejected">Your deck was turned away. %1$s</string>
+    <!-- Joke line under deck rejection. -->
+    <string name="connection_joke_deck_rejected">The Council has returned it with notes.</string>
+    <!-- Connection overlay plain line. -->
+    <string name="connection_error_server_full">The server is full. Try again in a moment.</string>
+    <!-- Joke line under server full. -->
+    <string name="connection_joke_server_full">The Council has asked everyone to form a queue.</string>
+    <!-- Connection overlay plain line. -->
+    <string name="connection_error_signed_out">You\'ve been signed out. Sign in again from the menu.</string>
+    <!-- Connection overlay plain line. -->
+    <string name="connection_error_version_mismatch">This version of the game doesn\'t match the server\'s.</string>
+    <!-- Friend challenge expired. -->
+    <string name="connection_error_challenge_expired">The challenge expired before both of you arrived.</string>
+    <!-- Joke line under challenge expired. -->
+    <string name="connection_joke_challenge_expired">The invitation has gone stale on the mantelpiece.</string>
+    <!-- Same account connected from another device. -->
+    <string name="connection_error_superseded">This account joined from somewhere else.</string>
+    <!-- Joke line under superseded connection. -->
+    <string name="connection_joke_superseded">The Court does not seat the same petitioner twice.</string>
+    <!-- Unknown server refusal. -->
+    <string name="connection_error_turned_away">The server turned this match away.</string>
+    <!-- Joke line under unknown refusal. -->
+    <string name="connection_joke_turned_away">No reason was given, as is the Council\'s custom.</string>
+    <!-- Match desync. -->
+    <string name="connection_error_desync">The match fell out of step with the server.</string>
+    <!-- Joke line under desync. -->
+    <string name="connection_joke_desync">The scribes\' copies no longer agree.</string>
+    <!-- Craft modal: copies of this card owned. %1$d = count. -->
+    <plurals name="craft_copies_owned">
+        <item quantity="one">%1$d owned</item>
+        <item quantity="other">%1$d owned</item>
+    </plurals>
+    <!-- Craft modal error. -->
+    <string name="craft_error_artwork">Could not load card artwork.</string>
+    <!-- Reduce button when reducing more than one copy. %1$d = copies (&gt;=2). -->
+    <string name="craft_reduce_count_button">Reduce %1$d</string>
+    <!-- Render-half note when the player already owns copies. -->
+    <string name="craft_render_note_another">Make another copy.</string>
+    <!-- Render-half note when the player owns none. -->
+    <string name="craft_render_note_first">Make this card.</string>
+    <!-- Render refused: legendary cap. -->
+    <string name="craft_render_note_have_legendary">You already have this Legendary.</string>
+    <!-- Render refused: copy cap. -->
+    <string name="craft_render_note_at_cap">You already have every copy you can play.</string>
+    <!-- Render refused. -->
+    <string name="craft_render_note_not_collectible">This card cannot be made.</string>
+    <!-- Render/Reduce refused: unknown card. -->
+    <string name="craft_unknown_card">Unknown card.</string>
+    <!-- Render refused (fallback). -->
+    <string name="craft_render_note_unavailable">Cannot be made right now.</string>
+    <!-- Reduce-half note. %1$d = copies left after reducing. -->
+    <plurals name="craft_reduce_note_keep">
+        <item quantity="one">You would keep %1$d.</item>
+        <item quantity="other">You would keep %1$d.</item>
+    </plurals>
+    <!-- Reduce-half note when reducing all copies (several). -->
+    <string name="craft_reduce_note_every_copy">This is every copy you have.</string>
+    <!-- Reduce-half note when reducing the only copy. -->
+    <string name="craft_reduce_note_last_copy">This is your last copy.</string>
+    <!-- Reduce refused. -->
+    <string name="craft_reduce_note_owns_none">You don\'t have this card.</string>
+    <!-- Reduce refused. -->
+    <string name="craft_reduce_note_not_enough">You don\'t have that many copies.</string>
+    <!-- Reduce refused. -->
+    <string name="craft_reduce_note_not_collectible">This card cannot be broken down.</string>
+    <!-- Reduce refused (fallback). -->
+    <string name="craft_reduce_note_unavailable">Cannot be broken down right now.</string>
+    <!-- Chat panel empty state. -->
+    <string name="friends_chat_empty_hint">Messages are not saved, and only reach a friend who is online.</string>
+    <!-- Tooltip on a failed chat line. -->
+    <string name="friends_chat_not_delivered_tooltip">Not delivered</string>
+    <!-- Chat status. %1$d = max message length. -->
+    <string name="friends_chat_too_long">Messages are at most %1$d characters.</string>
+    <!-- Countdown suffix appended to challenge strip text (leading space). %1$d = seconds left; 's' = seconds. -->
+    <string name="friends_challenge_clock"> (%1$ds)</string>
+    <!-- Challenge strip, incoming. %1$s = friend name, %2$s = countdown suffix (friends_challenge_clock) or empty. -->
+    <string name="friends_challenge_incoming">%1$s challenges you to a match%2$s</string>
+    <!-- Challenge strip. %1$s = friend name. -->
+    <string name="friends_challenge_sending">Sending a challenge to %1$s…</string>
+    <!-- Challenge strip. %1$s = friend name, %2$s = countdown suffix (friends_challenge_clock) or empty. -->
+    <string name="friends_challenge_waiting">Waiting for %1$s to answer%2$s</string>
+    <!-- Challenge strip. -->
+    <string name="friends_challenge_starting">Starting the match…</string>
+    <!-- Dismiss button for a challenge notice. (Missed by heuristic.) -->
+    <string name="friends_challenge_ok_button">OK</string>
+    <!-- Chat status. -->
+    <string name="friends_chat_refused">Not delivered. They may be offline, or you are sending too fast.</string>
+    <!-- Friends drawer status while fetching. -->
+    <string name="friends_loading">Loading…</string>
+    <!-- Status after opening your own friend link. -->
+    <string name="friends_link_own_code">That link is your own code.</string>
+    <!-- Status after opening a friend link. 'Add' = button label. -->
+    <string name="friends_link_tap_add">Tap Add to send a friend request.</string>
+    <!-- Toast/status. -->
+    <string name="friends_code_copied">Code copied.</string>
+    <!-- Text placed in the OS share sheet. %1$s = friend link URL. 'Kingdom of Bad Ideas' is the game title; check whether to localise it. -->
+    <string name="friends_share_message">Add me as a friend in Kingdom of Bad Ideas: %1$s</string>
+    <!-- OS share sheet title. -->
+    <string name="friends_share_sheet_title">Share your friend link</string>
+    <!-- Toast/status. -->
+    <string name="friends_link_copied">Link copied.</string>
+    <!-- Add-friend validation. Keep the XXXXX-XXXXX pattern. -->
+    <string name="friends_error_bad_code_format">That is not a friend code. It looks like XXXXX-XXXXX.</string>
+    <!-- Status after sending a friend request. -->
+    <string name="friends_request_sent">Request sent.</string>
+    <!-- Status while querying Google Play Games friends. 'Play Games' = Google product name. -->
+    <string name="friends_play_games_asking">Asking Play Games…</string>
+    <!-- Status. -->
+    <string name="friends_play_games_none">None of your Play Games friends play yet.</string>
+    <!-- Play Games error. -->
+    <string name="friends_play_games_signed_out">Sign in to Play Games to find your friends there.</string>
+    <!-- Play Games error. -->
+    <string name="friends_play_games_hidden">Play Games friends are not shared with this game.</string>
+    <!-- Play Games error. -->
+    <string name="friends_play_games_no_answer">Play Games did not answer. Try again.</string>
+    <!-- Play Games error. -->
+    <string name="friends_play_games_unavailable">Play Games friends are not available yet.</string>
+    <!-- Friends / Play Games error. -->
+    <string name="friends_error_rate_limited">Too many requests. Try again in a minute.</string>
+    <!-- Friends / Play Games error. -->
+    <string name="friends_error_malformed">This build cannot read the server\'s answer. Update the game.</string>
+    <!-- Friends / Play Games error fallback. -->
+    <string name="friends_error_unreachable">Could not reach the server.</string>
+    <!-- Status after accepting a request. -->
+    <string name="friends_friend_added">Friend added.</string>
+    <!-- Disabled row button: request already sent. -->
+    <string name="friends_requested_requested">Requested</string>
+    <!-- Section header, all caps. %1$d = number of suggestions. -->
+    <string name="friends_section_play_games">FROM PLAY GAMES (%1$d)</string>
+    <!-- Row button opening a friend's Play Games profile (product name). -->
+    <string name="friends_play_games_profile_button">Play Games</string>
+    <!-- Tooltip on that button. -->
+    <string name="friends_play_games_profile_tooltip">Play Games profile</string>
+    <!-- Friends error. -->
+    <string name="friends_error_signed_out">Sign in to use friends.</string>
+    <!-- Friends error (server). -->
+    <string name="friends_error_invalid_code">That is not a friend code.</string>
+    <!-- Friends error. -->
+    <string name="friends_error_request_gone">That request is no longer waiting.</string>
+    <!-- Friends error. -->
+    <string name="friends_error_list_full">Your list is full.</string>
+    <!-- Header line showing the player's friend code. %1$s = code like ABCDE-12345. -->
+    <string name="friends_own_code">Your code: %1$s</string>
+    <!-- Section header, all caps. %1$d = incoming requests. -->
+    <string name="friends_section_requests">REQUESTS (%1$d)</string>
+    <!-- Status. -->
+    <string name="friends_request_declined">Request declined.</string>
+    <!-- Row button (two-tap confirm). -->
+    <string name="friends_block_button">Block</string>
+    <!-- Status after blocking. -->
+    <string name="friends_blocked">Blocked.</string>
+    <!-- Section header, all caps. %1$d = friend count. -->
+    <string name="friends_section_friends">FRIENDS (%1$d)</string>
+    <!-- Friends list empty state. -->
+    <string name="friends_empty">No friends yet. Share your code, or add someone by theirs.</string>
+    <!-- Row button (two-tap confirm). -->
+    <string name="friends_remove_button">Remove</string>
+    <!-- Status. -->
+    <string name="friends_removed">Friend removed.</string>
+    <!-- Row button to challenge an online friend. -->
+    <string name="friends_challenge_button">Challenge</string>
+    <!-- Chat row button with unread count. %1$d = unread messages. -->
+    <string name="friends_chat_unread_button">Chat (%1$d)</string>
+    <!-- Chat row button, no unread. -->
+    <string name="friends_chat_button">Chat</string>
+    <!-- Section header, all caps. %1$d = outgoing requests. -->
+    <string name="friends_section_sent">SENT (%1$d)</string>
+    <!-- Status. -->
+    <string name="friends_request_withdrawn">Request withdrawn.</string>
+    <!-- Section header, all caps. %1$d = blocked players. -->
+    <string name="friends_section_blocked">BLOCKED (%1$d)</string>
+    <!-- Row button. -->
+    <string name="friends_unblock_button">Unblock</string>
+    <!-- Status. -->
+    <string name="friends_unblocked">Unblocked.</string>
+    <!-- Second-tap confirm label replacing Remove/Block. Keep very short. -->
+    <string name="friends_confirm_button">Sure?</string>
+    <!-- Presence dot tooltip. -->
+    <string name="friends_presence_unknown">Status unknown</string>
+    <!-- Presence dot tooltip. -->
+    <string name="friends_presence_online">Online</string>
+    <!-- Presence dot tooltip. -->
+    <string name="friends_presence_in_match">In a match</string>
+    <!-- Presence dot tooltip. -->
+    <string name="friends_presence_offline">Offline</string>
+    <!-- Quest panel status. -->
+    <string name="menu_quests_unavailable">Quests unavailable</string>
+    <!-- Quest panel status. -->
+    <string name="menu_quests_signed_out">Sign in to view quests</string>
+    <!-- Quest panel status. -->
+    <string name="menu_quests_none">No current quests</string>
+    <!-- Quest row age tag, all caps. (Missed by heuristic.) -->
+    <string name="menu_quest_age_today">TODAY</string>
+    <!-- Quest row age tag, all caps. (Missed by heuristic.) -->
+    <string name="menu_quest_age_yesterday">YESTERDAY</string>
+    <!-- Quest row age tag, all caps. Always exactly 2 (third slot of a three-day window). -->
+    <string name="menu_quest_age_two_days">2 DAYS AGO</string>
+    <!-- Quest row detail when done, all caps. (Missed by heuristic.) -->
+    <string name="menu_quest_complete">COMPLETE</string>
+    <!-- Quest Gold reward beside a coin icon. %1$d = gold. (Missed by heuristic.) -->
+    <string name="menu_quest_reward">+%1$d</string>
+    <!-- Card Vault badge when 100+ packs. (Missed by heuristic.) -->
+    <string name="menu_vault_pack_count_max">× 99+</string>
+    <!-- Card Vault badge. %1$d = unopened packs (1-99). -->
+    <string name="menu_vault_pack_count">× %1$d</string>
+    <!-- Leaderboard error. -->
+    <string name="leaderboard_error">The ranked ledger is unavailable right now. Your matches are still safe.</string>
+    <!-- Leaderboard empty state. -->
+    <string name="leaderboard_empty">No ranked duels have been recorded yet. The first crown is waiting.</string>
+    <!-- Leaderboard footer. %1$s = local time (currently formatted 'h:mm tt', e.g. 3:05 PM; use locale time format), %2$d = number of entries shown. 'Elo' is the rating system name. -->
+    <string name="leaderboard_footer_updated">Updated %1$s · Elo · top %2$d</string>
+    <!-- Leaderboard rank cell. %1$d = rank. (Missed by heuristic.) -->
+    <string name="leaderboard_rank">#%1$d</string>
+    <!-- Fallback display name. -->
+    <string name="leaderboard_unnamed_player">Unnamed Player</string>
+    <!-- Win/loss/draw record cell. %1$d = wins, %2$d = losses, %3$d = draws. -->
+    <string name="leaderboard_record">%1$d — %2$d — %3$d</string>
+    <!-- Vault error. -->
+    <string name="vault_signed_out">Sign in to see your packs.</string>
+    <!-- Vault error. -->
+    <string name="vault_offline">Could not reach the server. Your packs are safe — try again in a moment.</string>
+    <!-- Vault error. -->
+    <string name="vault_session_expired">Sign in again to see your packs.</string>
+    <!-- Vault error. -->
+    <string name="vault_no_economy">This server has no pack economy.</string>
+    <!-- Vault error. -->
+    <string name="vault_unreadable">The server sent something this build could not read.</string>
+    <!-- Vault error. -->
+    <string name="vault_read_failed">Could not read your packs.</string>
+    <!-- Vault status when the shelf is empty. -->
+    <string name="vault_no_packs">No packs waiting.</string>
+    <!-- Vault error. -->
+    <string name="vault_open_signed_out">Sign in again to open this pack.</string>
+    <!-- Note on the multi-pack reveal when a batch stopped early. %1$d = packs opened, %2$d = packs requested. Lowercase in source. -->
+    <string name="vault_opened_partial">opened %1$d of %2$d</string>
+    <!-- Vault error. -->
+    <string name="vault_open_failed">Could not open that pack.</string>
+    <!-- Vault status. -->
+    <string name="vault_already_open">That pack is already open.</string>
+    <!-- Vault error. -->
+    <string name="vault_open_unavailable">Packs cannot be opened on this server.</string>
+    <!-- Vault error. -->
+    <string name="vault_unknown_pack">This build does not know that pack.</string>
+    <!-- Sign-in error. -->
+    <string name="signin_google_cancelled">Google sign-in was cancelled.</string>
+    <!-- Restoring overlay (Play Games restore). -->
+    <string name="signin_restoring_account">Looking for your account…</string>
+    <!-- Sign-in first step help line. -->
+    <string name="signin_choose_help">Have you played before?</string>
+    <!-- Email step title, returning player. -->
+    <string name="signin_returning_title">Welcome back</string>
+    <!-- Email step title, new player. -->
+    <string name="signin_new_title">Create your account</string>
+    <!-- Email step help, returning player. -->
+    <string name="signin_returning_help">Sign in with the email and password you used before. No password? We can email you a code instead.</string>
+    <!-- Code step title. -->
+    <string name="signin_code_title">Check your email</string>
+    <!-- Code step help. %1$s = email address. -->
+    <string name="signin_code_help">We sent a six-digit code to %1$s. Enter it below.</string>
+    <!-- Restoring overlay. -->
+    <string name="signin_restoring_collection">Restoring your collection…</string>
+    <!-- Restoring overlay. -->
+    <string name="signin_restoring_decks">Restoring your decks…</string>
+    <!-- Validation. -->
+    <string name="signin_error_email_required">Enter your email address.</string>
+    <!-- Validation. -->
+    <string name="signin_error_email_invalid">That does not look like an email address.</string>
+    <!-- Primary button label while sending the code. -->
+    <string name="signin_busy_sending">Sending…</string>
+    <!-- Sign-in error fallback. -->
+    <string name="signin_error_send_code">We could not send the code.</string>
+    <!-- Sign-in error. -->
+    <string name="signin_error_send_code_generic">Something went wrong sending the code. Try again.</string>
+    <!-- Validation. The quoted text is a button label (UXML, not in this file) — keep it matching that button's translation. -->
+    <string name="signin_error_password_required">Enter your password, or use \"Email me a code instead\".</string>
+    <!-- Primary button label while signing in. -->
+    <string name="signin_busy_signing_in">Signing in…</string>
+    <!-- Sign-in error. -->
+    <string name="signin_error_password_rejected">We could not sign you in with that password.</string>
+    <!-- Sign-in error. -->
+    <string name="signin_error_generic">Something went wrong signing in. Try again.</string>
+    <!-- Validation. -->
+    <string name="signin_error_code_required">Enter the six-digit code from the email.</string>
+    <!-- Sign-in error. -->
+    <string name="signin_error_code_rejected">That code was not accepted.</string>
+    <!-- Sign-in error (magic link). -->
+    <string name="signin_error_link_code_rejected">That link\'s code was not accepted.</string>
+    <!-- Primary button label during Google sign-in. -->
+    <string name="signin_busy_google">Signing in with Google…</string>
+    <!-- Sign-in error. -->
+    <string name="signin_error_google_start">Could not start Google sign-in. Try again.</string>
+    <!-- Sign-in error. -->
+    <string name="signin_error_google_incomplete">Google sign-in did not complete. Try again.</string>
+    <!-- Sign-in error. -->
+    <string name="signin_error_google_generic">Something went wrong signing in with Google. Try again.</string>
+    <!-- Sign-in error. -->
+    <string name="signin_error_offline">No connection. The Kingdom needs the internet to sign you in.</string>
+    <!-- Sign-in error. -->
+    <string name="signin_error_not_configured">This build has no sign-in service configured.</string>
+    <!-- Sign-in error. The quoted text is a button label (UXML) — keep it matching that button's translation. -->
+    <string name="signin_error_no_account">We have no account for that email. Check the spelling, or go back and choose \"I am new here\".</string>
+    <!-- Primary button on password/code steps. -->
+    <string name="signin_sign_in_button">Sign in</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Main menu arrival. Title has a trailing newline and the body a leading one in source; the odd comma in the title is in the source. -->
+    <string name="tidbit_menu_title">The Kingdom, is yours to explore.\n</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Main menu arrival. Title has a trailing newline and the body a leading one in source; the odd comma in the title is in the source. -->
+    <string name="tidbit_menu_body">\nGo questing, stare at your collection, or engage in glorious battle\n\nThese are the quintessential joys of life in the Kingdom.</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Deck roster arrival. 'nine' = the deck limit. -->
+    <string name="tidbit_decks_title">Your Decks</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Deck roster arrival. 'nine' = the deck limit. -->
+    <string name="tidbit_decks_body">Tap the \'+\' to create a deck. Tap a deck once to see options, twice to edit it.\n\nThe Council has determined that you shall have not more than nine.\n\nNine is the limit. Not 8 and not 10. Because the council said so, that is why.</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Match deck-pick arrival. 'Play' = button label. -->
+    <string name="tidbit_match_pick_title">Choose A Deck</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Match deck-pick arrival. 'Play' = button label. -->
+    <string name="tidbit_match_pick_body">Tap a deck to select it, then press Play.\n\nYes. It is complicated. You will get used to it.\n\nIf you\'re lucky the opponent will not figure this part out and you will be champion.</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Class picker arrival. -->
+    <string name="tidbit_characters_title">Two Classes, One Character</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Class picker arrival. -->
+    <string name="tidbit_characters_body">These days, everyone needs a side hustle.\n\nYour first choice determines your hero power.\nThe second adds to the card pool you build from.\n\nTwo personalities is not usually enough to become King but you never know...</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Collection arrival. Render/Reduce/Decks are UI verbs; rarity names should match rarity_* keys. -->
+    <string name="tidbit_collection_title">The Collection</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Collection arrival. Render/Reduce/Decks are UI verbs; rarity names should match rarity_* keys. -->
+    <string name="tidbit_collection_body">Every card you own is here. The cards you wish you owned are here also.\n\nTap one to Render a copy, or to Reduce a spare into shards.\n\nCards come in 4 different rarity levels: \nCommon - Pink, Rare - Blue, Epic - Purple, Legendary - Red.\n\nThe Decks button shows you the thing it says. Don\'t over think it.</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Deck builder arrival. The last line is a sing-song pun; adapt freely. -->
+    <string name="tidbit_deck_editor_title">Build a Deck</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Deck builder arrival. The last line is a sing-song pun; adapt freely. -->
+    <string name="tidbit_deck_editor_body">Tap a card to add. Tap a row to subtract.\n\nA deck is 30 cards, two copies max, only one of any Legendary.\n\nSing a little song to help you remember. Tap Add, Tap Subtract. Tap foot tap tap.</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Pack vault arrival. -->
+    <string name="tidbit_vault_title">The Card Vault</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Pack vault arrival. -->
+    <string name="tidbit_vault_body">Drag packs to the center to open.\n\nPick one up and hold it over the rail to open multiple\n\nEverything inside is yours. The paperwork has already been filed in triplicate.</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. After the first-run gift packs are opened (shown first of two). 'bad idea' nods to the game title. -->
+    <string name="tidbit_shards_title">Entering The Kingdom.</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. After the first-run gift packs are opened (shown first of two). 'bad idea' nods to the game title. -->
+    <string name="tidbit_shards_body">For most this would be a bad idea.\n\nYou are something special. I can tell.\n\nYou\'re going to go out there and make the kingdom a better place, I\'m sure.</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. After the first-run gift (second of two). -->
+    <string name="tidbit_store_title">Earn Gold</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. After the first-run gift (second of two). -->
+    <string name="tidbit_store_body">You don\'t have to be rich to live like a king.\n\nIf you toil every day completing quests you might grow up to be one.\n\nOr so I was told as a child.</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Store arrival. 'Card Vault' = screen name. -->
+    <string name="tidbit_shop_title">The Store</string>
+    <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Store arrival. 'Card Vault' = screen name. -->
+    <string name="tidbit_shop_body">If you get into trouble in the kingdom you can usually tap your way out of it\n\nJust as easily you can tap your way into some new cards\n\nPacks you buy end up in the Card Vault awaiting your tap.\n\nPay with your hard-earned Gold like every other peasant or purchase gems to skip the toil.</string>
+
+    <!-- ===== Board, shop, overlays (C#) ===== -->
+    <!-- Helper text under the returning-player name title. Apologetic, plain. -->
+    <string name="account_name_help_returning">We could not recover the name on this account, so please choose one again. It travels with your account from now on.</string>
+    <!-- Inline form error on the optional password field. -->
+    <string name="account_password_too_short">Password must be at least 6 characters.</string>
+    <!-- Inline form error when password and confirmation differ. -->
+    <string name="account_password_mismatch">Passwords do not match.</string>
+    <!-- Inline form error when the display name did not reach the server. -->
+    <string name="account_name_save_failed">We couldn\'t save your name. Check your connection and try again.</string>
+    <!-- Inline form error when setting the optional password failed with no server detail. -->
+    <string name="account_password_set_failed">Could not set a password. Try again, or clear both fields to skip it.</string>
+    <!-- Inline form error for an unexpected failure on the name step. -->
+    <string name="account_generic_error">Something went wrong. Try again.</string>
+    <!-- Notice in the friends drawer when a challenge could not be sent or accepted. -->
+    <string name="challenge_error_not_connected">Not connected to friends right now. Try again in a moment.</string>
+    <!-- Notice in the friends drawer. %1$s = friend's display name (or friend code). -->
+    <string name="challenge_error_cannot_take">%1$s can\'t take a challenge right now.</string>
+    <!-- Notice in the friends drawer when the social connection drops mid-challenge. -->
+    <string name="challenge_error_connection_lost">Lost the connection to friends. The challenge was cancelled.</string>
+    <!-- Notice: the friend declined your challenge. %1$s = friend's display name (or friend code). -->
+    <string name="challenge_closed_declined">%1$s declined.</string>
+    <!-- Notice: the friend cancelled a challenge they sent. %1$s = friend's display name (or friend code). -->
+    <string name="challenge_closed_withdrawn">%1$s withdrew the challenge.</string>
+    <!-- Notice: an unanswered challenge expired. -->
+    <string name="challenge_closed_expired">The challenge timed out.</string>
+    <!-- Notice: the friend disconnected. %1$s = friend's display name (or friend code). -->
+    <string name="challenge_closed_offline">%1$s went offline.</string>
+    <!-- Notice: the challenge closed for any other reason. -->
+    <string name="challenge_closed_other">That challenge is no longer open.</string>
+    <!-- Status line when the player is not signed in. Dry humour; 'the Council' is the game's royal council. -->
+    <string name="ledger_status_signed_out">Only a signed-in player keeps a Ledger. The Council does not take notes on strangers.</string>
+    <!-- Status line when loading the Ledger failed. -->
+    <string name="ledger_status_fetch_failed">The Ledger could not be fetched. The clerk has been sent to look again; close this and try in a moment.</string>
+    <!-- Ledger header count. %1$d = achievements earned, %2$d = total achievements. 'Entered' = recorded in the Ledger. -->
+    <string name="ledger_count_entered">%1$d of %2$d entered</string>
+    <!-- Ledger pager. %1$d = current page, %2$d = page count. -->
+    <string name="ledger_page_page_1_d_of">Page %1$d of %2$d</string>
+    <!-- Placeholder title on a not-yet-earned Ledger entry (its name is hidden). All caps, stamp-like. -->
+    <string name="ledger_entry_under_review">UNDER REVIEW</string>
+    <!-- Date line on an earned Ledger entry. %1$s = date the achievement was earned (currently formatted 'd MMMM yyyy' with invariant culture, so the month name is always English). -->
+    <string name="ledger_entry_date">Entered %1$s</string>
+    <!-- Large verdict on the match-end proclamation scroll. -->
+    <string name="match_result_verdict_victory">VICTORY</string>
+    <!-- Large verdict on the match-end proclamation scroll. -->
+    <string name="match_result_verdict_draw">DRAW</string>
+    <!-- Large verdict on the match-end proclamation scroll. -->
+    <string name="match_result_verdict_defeat">DEFEAT</string>
+    <!-- Line under the DRAW verdict. Royal-council whimsy. -->
+    <string name="match_result_reason_draw">The Council is still deliberating.</string>
+    <!-- Line under the DEFEAT verdict. Dry joke: the council warned you. -->
+    <string name="match_result_reason_defeat">The Council advised against it, in writing.</string>
+    <!-- Line under VICTORY when the opponent conceded. Plays on the game title 'Kingdom of Bad Ideas'. -->
+    <string name="match_result_reason_opponent_conceded">They conceded. A rare good idea.</string>
+    <!-- Line under VICTORY when the opponent forfeited by idling two turns. -->
+    <string name="match_result_reason_opponent_timeout">They missed two turns. The Council has ruled them absent.</string>
+    <!-- Line under VICTORY for a normal win. The council takes credit. -->
+    <string name="match_result_reason_victory">The Council has already claimed it was their idea.</string>
+    <!-- Spoils column: Gold paid by this match. %1$d = amount. -->
+    <string name="match_result_gold_earned">+%1$d Gold</string>
+    <!-- Quest row detail when the quest completed this match. %1$d = Gold reward. Three spaces are deliberate spacing. -->
+    <string name="match_result_quest_complete">Complete   +%1$d Gold</string>
+    <!-- Quest row detail. %1$d = progress, %2$d = goal, %3$d = progress gained this match. -->
+    <string name="match_result_quest_progress">%1$d / %2$d   (+%3$d)</string>
+    <!-- Shown under the achievement list when more were earned than fit. 'Findings' = achievements, 'Ledger' = the achievements book. %1$d = number not listed. -->
+    <plurals name="match_result_findings_more">
+        <item quantity="one">One further finding has been entered in the Ledger.</item>
+        <item quantity="other">%1$d further findings have been entered in the Ledger.</item>
+    </plurals>
+    <!-- Footer on the match-end scroll once it can be dismissed. -->
+    <string name="match_result_tap_to_continue">Tap to continue</string>
+    <!-- Confirm dialog title. %1$s = the signed-in email address. -->
+    <string name="settings_sign_out_title_email">Sign out of %1$s?</string>
+    <!-- Confirm dialog title when no email is known. -->
+    <string name="settings_sign_out_title">Sign out?</string>
+    <!-- Confirm dialog subtitle reassuring the player nothing is lost. -->
+    <string name="settings_sign_out_subtitle">Your cards and decks stay on your account. You will need to sign in again to play.</string>
+    <!-- Instruction above the mulligan button on the board. All caps. -->
+    <string name="mulligan_instruction">TAP CARDS TO REPLACE</string>
+    <!-- Mulligan confirm button when no cards are selected. All caps, short. -->
+    <string name="mulligan_keep_all_button">KEEP ALL</string>
+    <!-- Mulligan confirm button. %1$d = number of cards selected to replace (1 or more). All caps, short. -->
+    <string name="mulligan_replace_button">MULLIGAN (%1$d)</string>
+    <!-- Status line on the loading/versus screen while connecting. Ends with a single ellipsis character. -->
+    <string name="matchmaking_status_connecting">Connecting…</string>
+    <!-- Status line while paired into a friend challenge. -->
+    <string name="matchmaking_status_waiting_friend">Waiting for your friend…</string>
+    <!-- Status line while queued for a random opponent. -->
+    <string name="matchmaking_status_waiting_opponent">Waiting for an opponent…</string>
+    <!-- Status line once the match is live. -->
+    <string name="matchmaking_status_opponent_found">Opponent found</string>
+    <!-- Reason on the connection-failed panel (with Retry and Back). -->
+    <string name="match_boot_error_card_database">Card database failed to load</string>
+    <!-- Reason on the connection-failed panel (with Retry and Back). -->
+    <string name="match_boot_error_deck_unavailable">Selected deck is unavailable — choose it again</string>
+    <!-- Header of the on-board list of ongoing effects. -->
+    <string name="effects_panel_title">ACTIVE EFFECTS</string>
+    <!-- One row of the active-effects list. %1$s = source card name, %2$s = owner (effects_owner_*), %3$s = remaining lifetime (effects_remaining_*). -->
+    <string name="effects_row_format">%1$s · %2$s · %3$s</string>
+    <!-- Fallback source name when the card definition is missing. %1$d = card id. Lowercase on purpose. -->
+    <string name="effects_source_fallback">card %1$d</string>
+    <!-- Lifetime column: effect never expires. -->
+    <string name="effects_remaining_permanent">Permanent</string>
+    <!-- Lifetime column: uses left before the effect expires. %1$d = uses. -->
+    <plurals name="effects_remaining_triggers">
+        <item quantity="one">1 trigger remaining</item>
+        <item quantity="other">%1$d triggers remaining</item>
+    </plurals>
+    <!-- Lifetime column fallback. -->
+    <string name="effects_remaining_unknown">Unknown lifetime</string>
+    <!-- Pack reveal title for one pack. %1$s = pack name (e.g. 'Pendingham'). -->
+    <string name="pack_reveal_title_single">%1$s opened</string>
+    <!-- Pack reveal title when several packs were opened at once. %1$d = pack count (always 2+ in practice; single packs use pack_reveal_title_single). -->
+    <plurals name="pack_reveal_title_many">
+        <item quantity="one">%1$d pack opened</item>
+        <item quantity="other">%1$d packs opened</item>
+    </plurals>
+    <!-- Card count: pack reveal summary line and the Common panel of the multi-pack list. %1$d = cards. -->
+    <plurals name="pack_reveal_card_count">
+        <item quantity="one">1 card</item>
+        <item quantity="other">%1$d cards</item>
+    </plurals>
+    <!-- Summary when a multi-pack run stopped short. %1$s = card count (pack_reveal_card_count), %2$s = note explaining why it stopped. -->
+    <string name="pack_reveal_summary_with_note">%1$s · %2$s</string>
+    <!-- Fallback card name when the definition is missing. %1$d = card id. -->
+    <string name="pack_reveal_card_fallback_name">Card %1$d</string>
+    <!-- Copy count next to a rarity heading or a card name. %1$d = copies. Uses the multiplication sign. -->
+    <string name="pack_reveal_copies">×%1$d</string>
+    <!-- Fallback pack name when the pack id is unreadable. -->
+    <string name="pack_name_fallback">Pack</string>
+    <!-- Card type: card tooltip subtitle and collection filter chip. -->
+    <string name="card_type_minion">Minion</string>
+    <!-- Card type: card tooltip subtitle and collection filter chip. -->
+    <string name="card_type_spell">Spell</string>
+    <!-- Card type: card tooltip subtitle and collection filter chip. -->
+    <string name="card_type_weapon">Weapon</string>
+    <!-- Card tooltip subtitle start. %1$d = mana cost, %2$s = card type (card_type_*). Double spaces around the dot are deliberate. -->
+    <string name="card_reveal_subtitle_cost_type">%1$d mana  ·  %2$s</string>
+    <!-- Appended to the tooltip subtitle for minions/weapons. %1$d = attack, %2$d = health (minion) or durability (weapon). Leading spaces are deliberate. -->
+    <string name="card_reveal_subtitle_stats">  ·  %1$d / %2$d</string>
+    <!-- Appended when current stats differ from the printed card. %1$d = printed attack, %2$d = printed health/durability. Leading spaces are deliberate. -->
+    <string name="card_reveal_subtitle_printed">   (printed %1$d/%2$d)</string>
+    <!-- Sort-direction toggle button, short for descending. Keep very short. -->
+    <string name="collection_sort_descending">Desc</string>
+    <!-- Sort-direction toggle button, short for ascending. Keep very short. -->
+    <string name="collection_sort_ascending">Asc</string>
+    <!-- Sort dropdown option (rendered from the CardSortKey enum name in code). -->
+    <string name="collection_sort_key_cost">Cost</string>
+    <!-- Sort dropdown option (rendered from the CardSortKey enum name in code). -->
+    <string name="collection_sort_key_name">Name</string>
+    <!-- Sort dropdown option (rendered from the CardSortKey enum name in code). -->
+    <string name="collection_sort_key_rarity">Rarity</string>
+    <!-- Sort dropdown option (rendered from the CardSortKey enum name in code). -->
+    <string name="collection_sort_key_class">Class</string>
+    <!-- Sort dropdown option (rendered from the CardSortKey enum name in code). -->
+    <string name="collection_sort_key_type">Type</string>
+    <!-- Sort dropdown option (rendered from the CardSortKey enum name in code). -->
+    <string name="collection_sort_key_attack">Attack</string>
+    <!-- Sort dropdown option (rendered from the CardSortKey enum name in code). -->
+    <string name="collection_sort_key_health">Health</string>
+    <!-- Last mana-cost filter chip, meaning that cost or more. %1$d = max chip cost. -->
+    <string name="collection_cost_chip_max">%1$d+</string>
+    <!-- Card set filter chip (set name; rendered from the SetId enum). Proper noun. -->
+    <string name="collection_set_pendingham">Pendingham</string>
+    <!-- Card set filter chip (set name; rendered from the SetId enum). -->
+    <string name="collection_set_rekindling">Rekindling</string>
+    <!-- Error in the pack detail panel when the purchase response was lost. 'Card Vault' is the screen holding unopened packs. -->
+    <string name="shop_purchase_uncertain">Purchase status uncertain. Check Card Vault before buying again.</string>
+    <!-- Buy button priced in Gold. %1$s = price, already number-formatted. Code composes it as '{price} {label}' with label 'Gold'. -->
+    <string name="shop_buy_button_gold">%1$s Gold</string>
+    <!-- USD price of a gem bundle. %1$d = dollars, %2$02d = cents. Hand-formatted in code; should become a locale currency format. -->
+    <string name="shop_gem_bundle_price_usd">$%1$d.%%2$02d</string>
+    <!-- Spares panel summary when the player owns no surplus copies. -->
+    <string name="spares_summary_empty">No spare copies</string>
+    <!-- Spares panel note when there are no surplus copies. -->
+    <string name="spares_note_empty">Nothing here is past what a deck can play.</string>
+    <!-- Spares panel summary. %1$s = spares_summary_copies, %2$s = spares_summary_cards. -->
+    <string name="spares_summary_selected">%1$s across %2$s</string>
+    <!-- Part of spares_summary_selected. %1$d = selected surplus copies. -->
+    <plurals name="spares_summary_copies">
+        <item quantity="one">%1$d spare copy</item>
+        <item quantity="other">%1$d spare copies</item>
+    </plurals>
+    <!-- Part of spares_summary_selected. %1$d = distinct cards those copies belong to. -->
+    <plurals name="spares_summary_cards">
+        <item quantity="one">%1$d card</item>
+        <item quantity="other">%1$d cards</item>
+    </plurals>
+    <!-- Spares panel summary when nothing is selected. -->
+    <string name="spares_summary_none_selected">Nothing selected</string>
+    <!-- Spares panel instruction note. -->
+    <string name="spares_note_instructions">Tap a card to keep one more copy. Reducing cannot be undone.</string>
+    <!-- Spares row. %1$d = copies selected to reduce, %2$d = surplus copies of that card. -->
+    <string name="spares_row_copies">%1$d of %2$d</string>
+    <!-- Title while the opponent picks a card to Unearth (return from the graveyard). All caps; single ellipsis character. -->
+    <string name="unearth_title_opponent">OPPONENT IS UNEARTHING…</string>
+    <!-- Title of the player's Unearth pick. All caps. -->
+    <string name="unearth_title_choose">CHOOSE A CARD TO UNEARTH</string>
+    <!-- Blocking gate title when the installed build is too old. -->
+    <string name="update_gate_title_required">Update required</string>
+    <!-- Blocking gate title when the server did not answer at launch. -->
+    <string name="update_gate_title_unreachable">Couldn\'t reach the server</string>
+    <!-- Gate body. %1$s = a joke line (ConnectionFailureCopy.UpdateJoke, localized separately). 'Kingdom of Bad Ideas' is the game title. -->
+    <string name="update_gate_reason_required">A new version of Kingdom of Bad Ideas is out. Update to keep playing.\n%1$s</string>
+    <!-- Gate body. %1$s = a joke line (ConnectionFailureCopy.Unreachable.Joke, localized separately). 'Kingdom of Bad Ideas' is the game title. -->
+    <string name="update_gate_reason_unreachable">Kingdom of Bad Ideas needs a connection to play. Check your network and try again.\n%1$s</string>
+    <!-- Gate button that opens the app store. -->
+    <string name="update_gate_button_update">Update</string>
+    <!-- Printed on a paper tag by the end-turn stamper on the 3D table. Two lines, small tag; joke: the turn ended without the player stamping it. -->
+    <string name="board_seal_approved_by_default">APPROVED\nBY DEFAULT</string>
+    <!-- Receipt slip popping out of the suggestion-box table toy when tapped. Two lines; bureaucratic deadpan. -->
+    <string name="board_suggestion_box_receipt">Your suggestion has been\nreceived and filed.</string>
+</resources>
