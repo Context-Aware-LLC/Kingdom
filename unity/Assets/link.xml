@@ -13,4 +13,16 @@
   <assembly fullname="UnityEngine.SpriteMaskModule">
     <type fullname="UnityEngine.SpriteMask" preserve="all"/>
   </assembly>
+  <!--
+    The colliders GameObject.CreatePrimitive adds. Nothing in a scene carries a CapsuleCollider,
+    so a device build stripped it and CreatePrimitive(Cylinder) logged "Can't add component
+    because class 'CapsuleCollider' doesn't exist!", which took The Spark coin, and with it the
+    whole match wiring, down on 0.0.10 (2026-10-19). Kept for every shape the code creates.
+  -->
+  <assembly fullname="UnityEngine.PhysicsModule">
+    <type fullname="UnityEngine.CapsuleCollider" preserve="all"/>
+    <type fullname="UnityEngine.BoxCollider" preserve="all"/>
+    <type fullname="UnityEngine.MeshCollider" preserve="all"/>
+    <type fullname="UnityEngine.SphereCollider" preserve="all"/>
+  </assembly>
 </linker>

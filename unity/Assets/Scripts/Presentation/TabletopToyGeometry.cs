@@ -22,9 +22,14 @@ namespace Kingdom.Presentation
             part.transform.SetParent(parent, false);
             part.transform.localPosition = position;
             part.transform.localScale = size;
+            // Null when a device build stripped this shape's collider class; there is then
+            // nothing to remove, and the part still renders.
             Collider collider = part.GetComponent<Collider>();
-            collider.enabled = false;
-            Destroy(collider);
+            if (collider != null)
+            {
+                collider.enabled = false;
+                Destroy(collider);
+            }
             part.GetComponent<Renderer>().sharedMaterial = material;
             return part;
         }

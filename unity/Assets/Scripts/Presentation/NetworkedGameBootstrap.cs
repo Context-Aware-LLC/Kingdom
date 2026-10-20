@@ -429,8 +429,19 @@ namespace Kingdom.Presentation
                 MatchOpeningDeal opening = MatchOpeningDeal.From(s0, localId);
                 if (opening != null && inputRouter != null && Camera.main != null)
                 {
-                    _coinOpening = SparkCoinOpening.Create(transform, boardController, boardAnchors,
-                        db, artProvider, opening, localId);
+                    // Cosmetic, so it may never cost the match: a throw here used to abort the rest
+                    // of this wiring, and the player sat on the versus screen forever (0.0.10).
+                    try
+                    {
+                        _coinOpening = SparkCoinOpening.Create(transform, boardController, boardAnchors,
+                            db, artProvider, opening, localId);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogError($"[NetworkedGameBootstrap] The Spark opening failed; skipping it. {ex}");
+                        if (_coinOpening != null) Destroy(_coinOpening.gameObject);
+                        _coinOpening = null;
+                    }
                     if (_coinOpening != null)
                     {
                         _openingActive = true;
