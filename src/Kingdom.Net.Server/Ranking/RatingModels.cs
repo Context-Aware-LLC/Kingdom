@@ -27,8 +27,13 @@ namespace Kingdom.Net.Server.Ranking
         AccountId P1,
         string P1DisplayName,
         MatchOutcome Outcome,
-        TelemetrySource Source)
+        TelemetrySource Source,
+        MatchEndReason Reason = MatchEndReason.Win)
     {
+        /// <summary>The match ended because the losing seat conceded, or was conceded for after
+        /// sitting out its turns. That seat is paid nothing (Sam, 2026-10-20).</summary>
+        public bool LoserForfeited => Reason is MatchEndReason.Concede or MatchEndReason.Timeout;
+
         public bool IsEligible =>
             Source == TelemetrySource.Ladder
             && P0.IsAttributed

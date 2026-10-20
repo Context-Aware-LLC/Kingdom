@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Kingdom.Core.Contracts;
+using Kingdom.Net.Protocol;
 using Kingdom.Net.Server.Accounts;
 using Kingdom.Net.Server.Identity;
 using Kingdom.Net.Server.Ranking;
@@ -68,20 +69,42 @@ namespace Kingdom.Net.Server.Tests.Accounts
             string p0PlayerId,
             string p1PlayerId,
             MatchOutcome outcome,
-            TelemetrySource source = TelemetrySource.Ladder)
+            TelemetrySource source = TelemetrySource.Ladder,
+            MatchEndReason reason = MatchEndReason.Win)
             => Result(match, AccountId.FromAuthenticatedAccount(p0PlayerId),
-                      AccountId.FromAuthenticatedAccount(p1PlayerId), outcome, source);
+                      AccountId.FromAuthenticatedAccount(p1PlayerId), outcome, source, reason);
 
         private static RankedMatchResult Result(
             string match,
             AccountId p0,
             AccountId p1,
             MatchOutcome outcome,
-            TelemetrySource source = TelemetrySource.Ladder)
+            TelemetrySource source = TelemetrySource.Ladder,
+            MatchEndReason reason = MatchEndReason.Win)
             => new RankedMatchResult(
                 new MatchId(match),
                 DateTimeOffset.FromUnixTimeSeconds(1_700_000_000),
-                p0, "p0", p1, "p1", outcome, source);
+                p0, "p0", p1, "p1", outcome, source, reason);
+
+        [TestCase(MatchEndReason.Concede)]
+        [TestCase(MatchEndReason.Timeout)]
+        public async Task A_Forfeiting_Seat_Is_Paid_Nothing_And_The_Winner_Is_Still_Paid(MatchEndReason reason)
+        {
+            var (accounts, p0, p1) = await TwoPlayersAsync();
+
+            InMemoryEntitlementLedger ledger = await PayAsync(accounts,
+                Result("match-1", p0, p1, MatchOutcome.Player1Win, reason: reason));
+
+            long conceder = await ledger.BalanceAsync(p0, EconomyItems.Gold);
+            long winner = await ledger.BalanceAsync(p1, EconomyItems.Gold);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(conceder, Is.EqualTo(0));
+                // The winner's match reward and first win of the day, as in any win.
+                Assert.That(winner, Is.EqualTo(30));
+            });
+        }
 
         [Test]
         public async Task A_Finished_Ladder_Match_Pays_Both_Seats_And_The_Winner_Twice()

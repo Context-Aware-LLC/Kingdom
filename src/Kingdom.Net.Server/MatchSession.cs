@@ -611,7 +611,8 @@ namespace Kingdom.Net.Server
                     _attribution.P1,
                     _seats[1].DisplayName,
                     outcome,
-                    _attribution.Source));
+                    _attribution.Source,
+                    reason));
             }
             catch (Exception ex)
             {

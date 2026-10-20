@@ -160,6 +160,9 @@ namespace Kingdom.Net.Server.Accounts
         private async Task PaySeatAsync(RankedMatchResult result, AccountId seat, bool won)
         {
             if (_isBotAccount?.Invoke(seat) == true) return;
+            // Conceding, or being conceded for after sitting out, pays nothing, or a concede on
+            // turn one is Gold for a few seconds' work. The winner is still paid.
+            if (!won && result.LoserForfeited) return;
             string playerId = seat.Value;
             try
             {
