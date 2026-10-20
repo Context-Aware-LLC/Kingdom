@@ -295,13 +295,7 @@ namespace Kingdom.Presentation
             return row;
         }
 
-        private static string RarityWord(Rarity r) => r switch
-        {
-            Rarity.RARE => "Rare",
-            Rarity.EPIC => "Epic",
-            Rarity.LEGENDARY => "Legendary",
-            _ => "Common",
-        };
+        private static string RarityWord(Rarity r) => GameTerms.Rarity(r);
 
         public void Hide()
         {

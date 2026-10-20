@@ -95,6 +95,7 @@ namespace Kingdom.Presentation
                 Debug.LogError("[DeckCreate] No rootVisualElement — is the UXML assigned?");
                 return;
             }
+            UiLocalizer.Attach(_root);
 
             CacheElements();
             Wire();

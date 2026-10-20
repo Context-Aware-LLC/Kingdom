@@ -79,6 +79,7 @@ namespace Kingdom.Presentation
                 Debug.LogError("[UpdateGate] No rootVisualElement — is the UXML/PanelSettings assigned before Init?");
                 return;
             }
+            UiLocalizer.Attach(root);
 
             bool stale = verdict == UpdateGateVerdict.UpdateRequired;
 

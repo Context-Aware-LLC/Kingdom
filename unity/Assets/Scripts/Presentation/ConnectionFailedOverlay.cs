@@ -29,6 +29,7 @@ namespace Kingdom.Presentation
                 Debug.LogError("[ConnectionFailed] No rootVisualElement — is the UXML/PanelSettings assigned before Init?");
                 return;
             }
+            UiLocalizer.Attach(root);
 
             var title = root.Q<Label>("title");
             if (title != null) title.text = copy.Plain;

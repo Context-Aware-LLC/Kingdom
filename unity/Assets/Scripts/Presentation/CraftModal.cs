@@ -404,15 +404,6 @@ namespace Kingdom.Presentation
             "craft-rarity--common", "craft-rarity--rare", "craft-rarity--epic", "craft-rarity--legendary",
         };
 
-        private static string RarityWord(Rarity r)
-        {
-            switch (r)
-            {
-                case Rarity.RARE: return "Rare";
-                case Rarity.EPIC: return "Epic";
-                case Rarity.LEGENDARY: return "Legendary";
-                default: return "Common";
-            }
-        }
+        private static string RarityWord(Rarity r) => GameTerms.Rarity(r);
     }
 }

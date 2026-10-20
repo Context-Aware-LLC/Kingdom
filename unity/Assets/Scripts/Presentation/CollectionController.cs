@@ -245,6 +245,7 @@ namespace Kingdom.Presentation
             _craftBusy = false;
             _root = GetComponent<UIDocument>().rootVisualElement;
             if (_root == null) { Debug.LogError("[Collection] No rootVisualElement — is the UXML assigned?"); return; }
+            UiLocalizer.Attach(_root);
 
             // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).
             MatchSettingsController.Mount();

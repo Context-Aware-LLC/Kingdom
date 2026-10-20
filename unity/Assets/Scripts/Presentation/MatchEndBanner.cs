@@ -43,6 +43,7 @@ namespace Kingdom.Presentation
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("MatchProclamation");
             doc.sortingOrder    = SortingOrder;
 
+            UiLocalizer.Attach(doc.rootVisualElement);
             MatchProclamation proclamation = null;
             if (doc.rootVisualElement != null)
                 proclamation = new MatchProclamation(doc.rootVisualElement, outcome, localSeat, reason, findings);

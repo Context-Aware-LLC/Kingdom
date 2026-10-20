@@ -24,14 +24,8 @@ namespace Kingdom.Presentation
     /// </summary>
     public static class CardClassTokens
     {
-        /// <summary>Player-facing name: <c>NIGHTVEIL</c> → <c>"Nightveil"</c>, underscores to spaces.
-        /// Matches how <see cref="CardQueryBar"/> labels its own class chips.</summary>
-        public static string Label(CardClass c)
-        {
-            string s = c.ToString();
-            if (s.Length <= 1) return s;
-            return char.ToUpperInvariant(s[0]) + s.Substring(1).ToLowerInvariant().Replace('_', ' ');
-        }
+        /// <summary>Player-facing class name, in the player's language (<see cref="GameTerms.Class"/>).</summary>
+        public static string Label(CardClass c) => GameTerms.Class(c);
 
         /// <summary>Lowercase identifier, for building a UXML element name or a USS token.</summary>
         public static string Slug(CardClass c) => c.ToString().ToLowerInvariant();

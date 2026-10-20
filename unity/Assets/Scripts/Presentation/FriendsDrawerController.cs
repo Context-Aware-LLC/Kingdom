@@ -129,6 +129,7 @@ namespace Kingdom.Presentation
                 Debug.LogError("[Friends] No root element — is FriendsDrawer.uxml in Resources?");
                 return;
             }
+            UiLocalizer.Attach(_root);
 
             _ownCode   = _root.Q<Label>("own-code");
             _status    = _root.Q<Label>("status");

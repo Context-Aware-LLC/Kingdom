@@ -384,8 +384,7 @@ namespace Kingdom.Presentation
                 return;
             }
 
-            string name = _def.Tribe.Value.ToString().ToLowerInvariant();
-            tribeLabel.text = char.ToUpperInvariant(name[0]) + name.Substring(1);
+            tribeLabel.text = GameTerms.Tribe(_def.Tribe.Value);
             Sprite panel = _ui?.Get(FrameRarityCatalog.TribePanelSprite);
             if (tribePanelRenderer != null)
             {
@@ -756,7 +755,7 @@ namespace Kingdom.Presentation
             foreach (Keyword kw in _kwScratch)
             {
                 if (sb.Length > 0) sb.Append(' ');
-                sb.Append(kw.ToString());
+                sb.Append(GameTerms.Keyword(kw));
             }
             keywordLabel.text = sb.ToString();
         }

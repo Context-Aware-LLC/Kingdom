@@ -188,6 +188,7 @@ namespace Kingdom.Presentation
                 Debug.LogError("[PackVault] No rootVisualElement — is the UXML assigned?");
                 return;
             }
+            UiLocalizer.Attach(root);
             _root = root;
 
             // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).

@@ -69,8 +69,8 @@ namespace Kingdom.Presentation
             if (_search != null)
                 _search.RegisterValueChangedCallback(_ => Changed?.Invoke());
 
-            BuildChips(root.Q<VisualElement>("query-rarities"), AllRarities(), Label, _rarities);
-            BuildChips(root.Q<VisualElement>("query-types"), AllTypes(), Label, _types);
+            BuildChips(root.Q<VisualElement>("query-rarities"), AllRarities(), GameTerms.Rarity, _rarities);
+            BuildChips(root.Q<VisualElement>("query-types"), AllTypes(), GameTerms.Type, _types);
             BuildCostChips(root.Q<VisualElement>("query-costs"));
             BuildChips(root.Q<VisualElement>("query-sets"), AllSets(), SetLabel, _sets);
             BuildSort();
@@ -258,13 +258,6 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>The expansion's player-facing name; matches the shop's pack names.</summary>
-        public static string SetLabel(SetId set) => Label(set);
-
-        private static string Label<T>(T value)
-        {
-            string s = value.ToString();
-            if (s.Length <= 1) return s;
-            return char.ToUpperInvariant(s[0]) + s.Substring(1).ToLowerInvariant().Replace('_', ' ');
-        }
+        public static string SetLabel(SetId set) => GameTerms.Set(set);
     }
 }

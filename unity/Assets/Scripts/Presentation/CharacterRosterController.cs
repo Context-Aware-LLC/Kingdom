@@ -159,6 +159,7 @@ namespace Kingdom.Presentation
                 Debug.LogError("[DeckRoster] No rootVisualElement — is the UXML assigned?");
                 return;
             }
+            UiLocalizer.Attach(_root);
 
             // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).
             MatchSettingsController.Mount();

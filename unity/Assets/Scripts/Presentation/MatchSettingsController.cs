@@ -100,6 +100,7 @@ namespace Kingdom.Presentation
                 Debug.LogError("[MatchSettings] No rootVisualElement — is the UXML/PanelSettings assigned before Init?");
                 return;
             }
+            UiLocalizer.Attach(root);
 
             _overlay     = root.Q<VisualElement>("overlay");
             _viewMenu    = root.Q<VisualElement>("view-menu");

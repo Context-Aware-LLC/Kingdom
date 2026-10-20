@@ -62,6 +62,7 @@ namespace Kingdom.Presentation
                 Destroy(gameObject);
                 return;
             }
+            UiLocalizer.Attach(root);
 #if UNITY_EDITOR
             _sprites = new EditorUiSpriteProvider();
 #else

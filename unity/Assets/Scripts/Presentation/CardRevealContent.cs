@@ -134,13 +134,6 @@ namespace Kingdom.Presentation
             return sb.ToString();
         }
 
-        private static string TypeWord(CardType type) => type switch
-        {
-            CardType.MINION     => "Minion",
-            CardType.SPELL      => "Spell",
-            CardType.WEAPON     => "Weapon",
-            CardType.HERO_POWER => "Hero Power",
-            _                   => type.ToString(),
-        };
+        private static string TypeWord(CardType type) => GameTerms.Type(type);
     }
 }

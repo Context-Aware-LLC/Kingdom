@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kingdom of Bad Ideas: game vocabulary (en). Translate this file FIRST and fix each term before
+     card text is translated: card text, the keyword band, filters and tooltips all reuse these words,
+     so a term rendered two ways reads as two different mechanics.
+     Keys are read by GameTerms.cs from the engine's enum ids; do not rename a key. -->
+<resources>
+
+    <!-- ===== Keywords: name shown on the card's keyword band and in bold inside card text ===== -->
+    <!-- Must stay ONE word or a short phrase: it is printed in bold mid-sentence. -->
+    <string name="keyword_bulwark">Bulwark</string>
+    <string name="keyword_bulwark_desc">Enemy attacks have to go through this minion first.</string>
+    <string name="keyword_fervor">Fervor</string>
+    <string name="keyword_fervor_desc">Can attack the turn it is played, hero included.</string>
+    <string name="keyword_skirmish">Skirmish</string>
+    <string name="keyword_skirmish_desc">Can attack the turn it is played, but not the enemy hero.</string>
+    <string name="keyword_aegis">Aegis</string>
+    <string name="keyword_aegis_desc">Absorbs the next hit completely, then breaks.</string>
+    <string name="keyword_lifedrain">Lifedrain</string>
+    <string name="keyword_lifedrain_desc">Damage this deals also heals your hero by the same amount.</string>
+    <string name="keyword_doublestrike">Doublestrike</string>
+    <string name="keyword_doublestrike_desc">Can attack twice each turn.</string>
+    <string name="keyword_shroud">Shroud</string>
+    <string name="keyword_shroud_desc">Can\'t be attacked or targeted until it attacks.</string>
+    <string name="keyword_venom">Venom</string>
+    <string name="keyword_venom_desc">Any minion this damages is destroyed.</string>
+    <string name="keyword_arcane_surge">Arcane Surge</string>
+    <string name="keyword_arcane_surge_desc">Your spells deal 1 more damage. Copies add up.</string>
+    <string name="keyword_silence">Silence</string>
+    <string name="keyword_silence_desc">Strips a minion\'s text, keywords and buffs.</string>
+    <!-- Frost is the keyword; "Freeze" (label_freeze) is the verb a spell uses to apply it. -->
+    <string name="keyword_frost">Frost</string>
+    <string name="keyword_frost_desc">Whatever this damages misses its next attack — heroes too.</string>
+    <string name="keyword_backdraft">Backdraft</string>
+    <string name="keyword_backdraft_desc">Locks that much of your mana on your next turn.</string>
+    <string name="keyword_drown">Drown</string>
+    <string name="keyword_drown_desc">Deals half this minion\'s Health, rounded up — 2 to a hero. Ignores Aegis.</string>
+    <string name="keyword_rekindle">Rekindle</string>
+    <string name="keyword_rekindle_desc">The first time it dies it returns in place with 1 Health.</string>
+    <string name="keyword_overwhelm">Overwhelm</string>
+    <string name="keyword_overwhelm_desc">Excess damage from its attack spills onto the enemy hero.</string>
+    <string name="keyword_vanguard">Vanguard</string>
+    <string name="keyword_vanguard_desc">Takes no damage back when its attack kills the defender.</string>
+    <!-- Never shown to a player (a reserved engine slot). Do not translate. -->
+    <string name="keyword_reinforce" translatable="false">Reinforce</string>
+    <string name="keyword_reinforce_desc" translatable="false">Gives a friendly minion +1/+1.</string>
+
+    <!-- ===== Timing labels and game verbs: printed in bold at the start of card text ===== -->
+    <!-- "Toll: Draw a card." means "when this dies, draw a card". -->
+    <string name="label_toll">Toll</string>
+    <!-- "Attack: ..." means "whenever this attacks, ...". -->
+    <string name="label_attack">Attack</string>
+    <!-- "Damaged: ..." means "whenever this takes damage, ...". -->
+    <string name="label_damaged">Damaged</string>
+    <!-- "Healed: ..." means "whenever this minion is healed, ...". -->
+    <string name="label_healed">Healed</string>
+    <!-- "Turn End: ..." means "at the end of each turn, ...". -->
+    <string name="label_turn_end">Turn End</string>
+    <!-- "Spell Cast: ..." means "whenever you cast a spell, ...". -->
+    <string name="label_spell_cast">Spell Cast</string>
+    <!-- "Aura: ..." is an effect that lasts while this card is on the board. -->
+    <string name="label_aura">Aura</string>
+    <!-- Bring back a minion from the graveyard. -->
+    <string name="label_unearth">Unearth</string>
+    <!-- Verb: apply Frost to a target. -->
+    <string name="label_freeze">Freeze</string>
+    <!-- Verb: remove Frost from a target. -->
+    <string name="label_unfreeze">Unfreeze</string>
+
+    <!-- ===== Tribes: banner on minion cards, filter chips; plural is used in card text ===== -->
+    <!-- "Give all other friendly Undead +1/+1." uses the plural form. -->
+    <string name="tribe_beast">Beast</string>
+    <string name="tribe_beast_plural">Beasts</string>
+    <string name="tribe_construct">Construct</string>
+    <string name="tribe_construct_plural">Constructs</string>
+    <string name="tribe_undead">Undead</string>
+    <string name="tribe_undead_plural">Undead</string>
+    <string name="tribe_elemental">Elemental</string>
+    <string name="tribe_elemental_plural">Elementals</string>
+    <string name="tribe_dragon">Dragon</string>
+    <string name="tribe_dragon_plural">Dragons</string>
+    <string name="tribe_spirit">Spirit</string>
+    <string name="tribe_spirit_plural">Spirits</string>
+    <string name="tribe_human">Human</string>
+    <string name="tribe_human_plural">Humans</string>
+    <string name="tribe_fey">Fey</string>
+    <string name="tribe_fey_plural">Fey</string>
+    <string name="tribe_merfolk">Merfolk</string>
+    <string name="tribe_merfolk_plural">Merfolk</string>
+    <!-- Cat people. -->
+    <string name="tribe_catfolk">Catfolk</string>
+    <string name="tribe_catfolk_plural">Catfolk</string>
+
+    <!-- ===== Classes and their heroes ===== -->
+    <!-- Class names are invented fantasy words built from English roots. Translate the meaning if the
+         result still sounds like a name; otherwise keep or transliterate. -->
+    <!-- Fire class. -->
+    <string name="class_emberward">Emberward</string>
+    <!-- Water and frost class. -->
+    <string name="class_tidecaller">Tidecaller</string>
+    <!-- Undead class. -->
+    <string name="class_gravekeep">Gravekeep</string>
+    <!-- Nature class. -->
+    <string name="class_verdant">Verdant</string>
+    <!-- Clockwork and machine class. -->
+    <string name="class_clockwright">Clockwright</string>
+    <!-- Shadow and stealth class. -->
+    <string name="class_nightveil">Nightveil</string>
+    <!-- Stone and defence class. -->
+    <string name="class_stonewarden">Stonewarden</string>
+    <!-- Storm class. -->
+    <string name="class_tempest">Tempest</string>
+    <!-- Cards that belong to no class. -->
+    <string name="class_neutral">Neutral</string>
+    <!-- Hero names are personal names: keep them, transliterate for non-Latin scripts. -->
+    <string name="hero_emberward">Pyra</string>
+    <string name="hero_tidecaller">Maren</string>
+    <string name="hero_gravekeep">Sorrow</string>
+    <string name="hero_verdant">Thalen</string>
+    <string name="hero_clockwright">Fenwick</string>
+    <string name="hero_nightveil">Liss</string>
+    <string name="hero_stonewarden">Hodge</string>
+    <string name="hero_tempest">Cassian</string>
+
+    <!-- ===== Card types, rarities, sets ===== -->
+    <string name="type_minion">Minion</string>
+    <string name="type_spell">Spell</string>
+    <string name="type_weapon">Weapon</string>
+    <string name="type_hero_power">Hero Power</string>
+    <string name="rarity_common">Common</string>
+    <string name="rarity_rare">Rare</string>
+    <string name="rarity_epic">Epic</string>
+    <string name="rarity_legendary">Legendary</string>
+    <!-- Set names: a fictional town, and a set about things coming back. Keep or transliterate. -->
+    <string name="set_pendingham">Pendingham</string>
+    <string name="set_rekindling">Rekindling</string>
+
+    <!-- ===== Term base: words card text is built from ===== -->
+    <!-- These rarely appear alone. Fix one rendering of each and use it in every card. -->
+    <!-- A creature card on the board. -->
+    <string name="term_minion">minion</string>
+    <string name="term_hero">hero</string>
+    <!-- A minion OR a hero: anything that can be attacked. -->
+    <string name="term_character">character</string>
+    <!-- On your side. -->
+    <string name="term_friendly">friendly</string>
+    <!-- On the opponent's side. -->
+    <string name="term_enemy">enemy</string>
+    <string name="term_damage">damage</string>
+    <!-- The stat: the first number on a minion. -->
+    <string name="term_attack">Attack</string>
+    <!-- The stat: the second number on a minion. -->
+    <string name="term_health">Health</string>
+    <string name="term_mana">Mana</string>
+    <string name="term_mana_crystal">Mana Crystal</string>
+    <!-- Durability: how many times a weapon can attack. -->
+    <string name="term_durability">Durability</string>
+    <!-- Extra damage your spells deal. -->
+    <string name="term_spell_damage">Spell Damage</string>
+    <string name="term_card">card</string>
+    <string name="term_hand">hand</string>
+    <string name="term_deck">deck</string>
+    <!-- Where dead minions go. -->
+    <string name="term_graveyard">graveyard</string>
+    <!-- Put a minion onto the board. -->
+    <string name="term_summon">Summon</string>
+    <string name="term_draw">Draw</string>
+    <!-- Heal: "Restore 3 Health". -->
+    <string name="term_restore">Restore</string>
+    <string name="term_destroy">Destroy</string>
+    <!-- Destroy your own minion as a cost. -->
+    <string name="term_sacrifice">Sacrifice</string>
+    <!-- Bring a dead minion back to life. -->
+    <string name="term_reanimate">Reanimate</string>
+</resources>

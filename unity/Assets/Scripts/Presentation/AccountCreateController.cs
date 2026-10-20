@@ -65,6 +65,7 @@ namespace Kingdom.Presentation
                 Debug.LogError("[AccountCreate] No rootVisualElement — is the UXML assigned?");
                 return;
             }
+            UiLocalizer.Attach(_root);
 
             _account = PlayerAccount.Local;
             _signInView = _root.Q<VisualElement>("signin-view");

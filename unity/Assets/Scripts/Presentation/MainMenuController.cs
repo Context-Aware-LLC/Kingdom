@@ -92,6 +92,7 @@ namespace Kingdom.Presentation
                 _loading?.NotifyBootFailed("UI not assigned — see console");
                 return;
             }
+            UiLocalizer.Attach(_root);
 
             Wire("btn-find-game", OnFindGame);
             Wire("btn-collection", OnCollection);

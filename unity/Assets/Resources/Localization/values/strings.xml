@@ -21,8 +21,6 @@
     <string name="common_cancel">Cancel</string>
     <!-- Used in: CharacterRosterController.cs:399, CharacterRosterScreen.uxml:106, CollectionScreen.uxml:114, FriendsDrawer.uxml:48, LedgerScreen.uxml:30, MainMenuScreen.uxml:52 -->
     <string name="common_close">Close</string>
-    <!-- Used in: CraftModal.cs:414, PackRevealPanel.cs:303 -->
-    <string name="common_common">Common</string>
     <!-- Used in: MatchSettingsController.cs:209, MatchSettingsScreen.uxml:45 -->
     <string name="common_concede">Concede</string>
     <!-- Used in: MatchSettingsController.cs:209, MatchSettingsScreen.uxml:72 -->
@@ -33,24 +31,16 @@
     <string name="common_decline">Decline</string>
     <!-- Used in: CharacterRosterController.cs:403, CharacterRosterScreen.uxml:80 -->
     <string name="common_delete_deck">Delete deck</string>
-    <!-- Used in: CraftModal.cs:412, PackRevealPanel.cs:301 -->
-    <string name="common_epic">Epic</string>
     <!-- Used in: MainMenuScreen.uxml:18, ShopScreen.uxml:32 -->
     <string name="common_gems">Gems</string>
     <!-- Used in: MainMenuScreen.uxml:14, ShopScreen.uxml:28 -->
     <string name="common_gold">Gold</string>
     <!-- Used in: CharacterCreateScreen.uxml:120, CharacterRosterScreen.uxml:133, CollectionScreen.uxml:197, MainMenuScreen.uxml:80, PackVaultScreen.uxml:74, ShopScreen.uxml:86 -->
     <string name="common_got_it">Got it</string>
-    <!-- Used in: CardRevealContent.cs:142, CharacterCreateScreen.uxml:54 -->
-    <string name="common_hero_power">Hero Power</string>
-    <!-- Used in: CraftModal.cs:413, PackRevealPanel.cs:302 -->
-    <string name="common_legendary">Legendary</string>
     <!-- Used in: MainMenuController.cs:450, MainMenuScreen.uxml:9 -->
     <string name="common_loading_quests">Loading quests…</string>
     <!-- Used in: NetworkedGameBootstrap.cs:397, OngoingEffectStatusModel.cs:49 -->
     <string name="common_opponent">Opponent</string>
-    <!-- Used in: CraftModal.cs:411, PackRevealPanel.cs:300 -->
-    <string name="common_rare">Rare</string>
     <!-- Used in: CollectionScreen.uxml:136, CraftModal.cs:295 -->
     <string name="common_reduce">Reduce</string>
     <!-- Used in: CollectionScreen.uxml:113 -->
