@@ -8,6 +8,12 @@ description: Report RL bot training/capture progress — what is running, how fa
 Read-only. Answer in **14 lines or fewer**, phone-readable, in this order: running, latest
 verdict, deployed bot, next up (decided), next up (possible). Quote numbers off the commands; never estimate one.
 
+## 0. The self-driving loop
+
+Read `work/training-loop/STATUS.md` first (the driver rewrites it every tick): step, progress,
+last gate, last verdict, STOPPED and why. Its iterations live in `work/training-loop/iter<k>/`
+(step logs, `preregistration.md`, `result.md`, `verdict.md`) and `ledger.jsonl`.
+
 ## 1. What is running
 
 ```powershell
