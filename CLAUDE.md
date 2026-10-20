@@ -343,7 +343,3 @@ searches and never seen a `[code-review-graph]` block, run `code-review-graph st
 by **node count, not exit code**: a broken install reports a handful of nodes and exits 0. Install
 with `uv tool install "code-review-graph[communities,embeddings]"`, never `pip --user`. It refreshes
 from `.githooks/pre-commit`, so `built_at_commit` trailing HEAD by one commit is correct.
-
-## Skill routing
-
-When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
