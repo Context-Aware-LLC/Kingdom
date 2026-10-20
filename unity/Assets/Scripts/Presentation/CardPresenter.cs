@@ -357,9 +357,9 @@ namespace Kingdom.Presentation
             ApplyAuras();
         }
 
-        // Rules text band. The face is READ, never re-derived: card text is authored and the rules
-        // come off it, so rendering CardTextGenerator here at display time would run the pipeline
-        // backwards. CardCi's divergence check is what keeps the authored text honest.
+        // Rules text band. The authored text is shown as-is, EXCEPT on a spell while Spell Damage is
+        // above 0: GenerateEffective then re-renders the sentence from the rules so the boosted
+        // number shows. CardCi's divergence check is what keeps the authored text honest.
         private void ApplyBodyText()
         {
             if (bodyLabel == null) return;
