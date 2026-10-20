@@ -42,10 +42,12 @@ namespace Kingdom.Presentation
             _renderer = wax.GetComponent<Renderer>();
             _stampRenderer = stamper.GetComponent<Renderer>();
             _properties = new MaterialPropertyBlock();
-            Bounds b = _stampRenderer.bounds;
-            transform.position = b.center;
+            // Fit the touch box to the tilted handle, not to its world bounds: those are mostly
+            // air, and covered most of the suggestion box sitting behind the stamper on screen.
+            Bounds local = stamper.GetComponent<MeshFilter>().sharedMesh.bounds;
+            transform.SetPositionAndRotation(stamper.TransformPoint(local.center), stamper.rotation);
             var hit = gameObject.AddComponent<BoxCollider>();
-            hit.size = new Vector3(Mathf.Max(1.1f, b.size.x * 1.2f), Mathf.Max(1.0f, b.size.y * 1.2f), b.size.z + 0.12f);
+            hit.size = Vector3.Scale(local.size, stamper.lossyScale) * 1.2f;
             UiSfx.Preload(UiSfx.WaxStamp);
             BuildReceiptAndLatch();
             Show(false);

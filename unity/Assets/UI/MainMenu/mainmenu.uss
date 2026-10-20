@@ -345,6 +345,10 @@
 .mm-quest-title {
     flex-grow: 1;
     flex-shrink: 1;
+    /* Measure the wrap at the shrunk width: a basis of auto sizes the height for one line, and
+       a long title's second line then paints over the quip below. */
+    flex-basis: 0;
+    min-width: 0;
     color: var(--ink-1);
     font-size: var(--type-label);
     -unity-font-style: bold;
