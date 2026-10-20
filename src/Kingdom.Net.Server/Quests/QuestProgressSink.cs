@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Kingdom.Core.Contracts;
+using Kingdom.Net.Protocol;
 using Kingdom.Net.Server.Telemetry;
 using Microsoft.Extensions.Hosting;
 
@@ -141,6 +142,10 @@ namespace Kingdom.Net.Server.Quests
         /// </summary>
         public async Task EvaluateAsync(MatchCompleteEvent complete, CardSeenEvent cards)
         {
+            // A match that ended in a concession, or in one ruled for a seat that sat out its
+            // turns, advances nobody's quests, the winner's included: a concede is a finished
+            // match in seconds (Sam, 2026-10-20).
+            if (complete.EndReason is MatchEndReason.Concede or MatchEndReason.Timeout) return;
             foreach (QuestMatchFacts facts in QuestMatchFacts.From(complete, cards, _cards))
             {
                 try

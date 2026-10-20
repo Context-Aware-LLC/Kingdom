@@ -86,6 +86,25 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 DateTimeOffset.FromUnixTimeSeconds(1_700_000_000),
                 p0, "p0", p1, "p1", outcome, source, reason);
 
+        [Test]
+        public async Task A_Friend_Challenge_Win_Pays_The_Match_Reward_But_Never_The_First_Win()
+        {
+            var (accounts, p0, p1) = await TwoPlayersAsync();
+
+            InMemoryEntitlementLedger ledger = await PayAsync(accounts,
+                Result("match-1", p0, p1, MatchOutcome.Player0Win, TelemetrySource.Friendly));
+
+            long winner = await ledger.BalanceAsync(p0, EconomyItems.Gold);
+            long loser = await ledger.BalanceAsync(p1, EconomyItems.Gold);
+
+            Assert.Multiple(() =>
+            {
+                // The match reward alone, the same as the loser's: no first win from a friendly.
+                Assert.That(winner, Is.EqualTo(10));
+                Assert.That(loser, Is.EqualTo(10));
+            });
+        }
+
         [TestCase(MatchEndReason.Concede)]
         [TestCase(MatchEndReason.Timeout)]
         public async Task A_Forfeiting_Seat_Is_Paid_Nothing_And_The_Winner_Is_Still_Paid(MatchEndReason reason)

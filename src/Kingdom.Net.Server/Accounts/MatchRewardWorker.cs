@@ -138,8 +138,9 @@ namespace Kingdom.Net.Server.Accounts
         {
             if (result.IsEligible) return true;
 
-            // A friend challenge pays like a ladder match and moves no rating (Sam, 2026-10-01).
-            // Two accounts one person owns can farm this; that was accepted knowingly.
+            // A friend challenge pays the match reward and moves no rating (Sam, 2026-10-01); its
+            // first win pays nothing (see PaySeatAsync). Two accounts one person owns can still
+            // farm the match reward; that was accepted knowingly.
             if (result.Source == TelemetrySource.Friendly)
                 return result.P0.IsAttributed && result.P1.IsAttributed && result.P0 != result.P1
                     && result.Outcome != MatchOutcome.InProgress;
@@ -170,8 +171,12 @@ namespace Kingdom.Net.Server.Accounts
                     .FindByPlayerIdAsync(playerId, CancellationToken.None)
                     .ConfigureAwait(false);
                 if (account is null || !EconomyAccountPolicy.IsDurable(account)) return;
+                // The first win of the day comes only from a random match — the queue, bot fill
+                // included — never a friend challenge, which pays the match reward alone: two
+                // accounts could otherwise trade it daily (Sam, 2026-10-20).
+                bool firstWinEligible = won && result.Source != TelemetrySource.Friendly;
                 await _faucet
-                    .GrantMatchAsync(account, result.Match.Value, won, CancellationToken.None)
+                    .GrantMatchAsync(account, result.Match.Value, firstWinEligible, CancellationToken.None)
                     .ConfigureAwait(false);
             }
             catch (Exception ex)

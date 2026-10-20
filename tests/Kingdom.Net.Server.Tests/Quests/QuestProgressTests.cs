@@ -341,6 +341,40 @@ namespace Kingdom.Net.Server.Tests.Quests
             });
         }
 
+        [TestCase(MatchEndReason.Concede)]
+        [TestCase(MatchEndReason.Timeout)]
+        public async Task A_Forfeited_Match_Advances_Neither_Seat(MatchEndReason reason)
+        {
+            var accounts = new InMemoryAccountStore(new FakeTime());
+            Account winner = await PlayerHoldingAsync(accounts, "play-three", 0);
+            Account loser = await PlayerHoldingAsync(accounts, "play-three", 1);
+            var service = new QuestProgressService(
+                new InMemoryQuestProgressStore(), accounts,
+                new GoldFaucet(new InMemoryEntitlementLedger(), new FakeTime(), new StubGoldRewardPolicy()));
+            var sink = new QuestProgressSink(
+                NullTelemetrySink.Instance, service, new ClassCardDatabase((1, CardClass.EMBERWARD)));
+
+            AccountId p0 = AccountId.FromAuthenticatedAccount(winner.PlayerId);
+            AccountId p1 = AccountId.FromAuthenticatedAccount(loser.PlayerId);
+
+            await sink.EvaluateAsync(
+                Complete(p0, p1, CardClass.EMBERWARD, MatchOutcome.Player0Win, 8, reason: reason),
+                new CardSeenEvent(new MatchId("match-1"), Now, TelemetrySource.Ladder, new[]
+                {
+                    Row(p0, CardClass.EMBERWARD, true, 1, 2),
+                    Row(p1, CardClass.EMBERWARD, false, 1, 3),
+                }));
+
+            QuestView first = (await service.ViewAsync(winner.PlayerId, Day)).Single(v => v.Day == Day);
+            QuestView second = (await service.ViewAsync(loser.PlayerId, Day)).Single(v => v.Day == Day);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(first.Progress, Is.EqualTo(0), "the winner's quest advanced on a forfeit");
+                Assert.That(second.Progress, Is.EqualTo(0), "the forfeiting seat's quest advanced");
+            });
+        }
+
         [Test]
         public async Task Bot_fill_credits_the_human_and_never_the_roster_bot()
         {
@@ -491,9 +525,10 @@ namespace Kingdom.Net.Server.Tests.Quests
             CardClass @class,
             MatchOutcome outcome,
             int turns,
-            TelemetrySource source = TelemetrySource.Ladder)
+            TelemetrySource source = TelemetrySource.Ladder,
+            MatchEndReason reason = MatchEndReason.Win)
             => new MatchCompleteEvent(
-                new MatchId("match-1"), Now, MatchEndReason.Win, outcome, turns, source,
+                new MatchId("match-1"), Now, reason, outcome, turns, source,
                 new SeatOutcome(p0, @class, "deck-0", "hash-0",
                     outcome == MatchOutcome.Player0Win ? SeatResult.Win : SeatResult.Loss,
                     Array.Empty<int>(), EnemyMinionsDestroyed: 4),
