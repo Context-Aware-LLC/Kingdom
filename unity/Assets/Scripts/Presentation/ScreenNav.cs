@@ -40,6 +40,13 @@ namespace Kingdom.Presentation
         public const string Shop = "Shop";
         public const string BoardNetworked = "BoardNetworked";
 
+        /// <summary>The artwork selected by the route entering MainMenu. A fresh boot (including
+        /// the opening video) starts with Verdant; Collection and Store exits use Gravekeep.</summary>
+        public static string MainMenuLoadingPlate { get; private set; } = LoadingOverlay.IntroPlate;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetLoadingRoute() => MainMenuLoadingPlate = LoadingOverlay.IntroPlate;
+
         /// <summary>
         /// Load <paramref name="sceneName"/>, refusing loudly if it is not in the build list.
         ///
@@ -50,7 +57,7 @@ namespace Kingdom.Presentation
         public static void Go(string sceneName)
         {
             if (!CanLoad(sceneName)) return;
-            LogTransition(sceneName);
+            PrepareTransition(sceneName);
             SceneManager.LoadScene(sceneName);
         }
 
@@ -61,7 +68,7 @@ namespace Kingdom.Presentation
         public static AsyncOperation GoAsync(string sceneName)
         {
             if (!CanLoad(sceneName)) return null;
-            LogTransition(sceneName);
+            PrepareTransition(sceneName);
             return SceneManager.LoadSceneAsync(sceneName);
         }
 
@@ -75,9 +82,13 @@ namespace Kingdom.Presentation
             return false;
         }
 
-        private static void LogTransition(string sceneName)
+        private static void PrepareTransition(string sceneName)
         {
-            Debug.Log($"[Nav] {SceneManager.GetActiveScene().name} → {sceneName}");
+            string source = SceneManager.GetActiveScene().name;
+            if (sceneName == MainMenu)
+                MainMenuLoadingPlate = source == Collection || source == Shop
+                    ? LoadingOverlay.ReturnPlate : LoadingOverlay.IntroPlate;
+            Debug.Log($"[Nav] {source} → {sceneName}");
         }
     }
 }

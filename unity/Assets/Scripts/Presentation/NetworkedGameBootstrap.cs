@@ -82,7 +82,7 @@ namespace Kingdom.Presentation
         {
             // Frame-0 coverage (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §5): the overlay is up before the
             // async Boot() coroutine does any work behind it.
-            _overlay = LoadingOverlay.Create(Camera.main);
+            _overlay = LoadingOverlay.Create(Camera.main, LoadingOverlay.MatchPlate);
         }
 
         private void Start()

@@ -166,46 +166,18 @@ namespace Kingdom.Presentation
         private LoadingOverlay _loading;
         private float _loadingSince = -1f;
 
-        /// <summary>
-        /// The collection's loading art, rotated one step per visit: entering the screen twice in
-        /// a row shows two different plates (Sam, 2026-09-01). Each row is a plate and the orb
-        /// authored to sit on it, so the two always travel together.
-        ///
-        /// <para><b>Not keyed to the character, deliberately.</b> An earlier pass picked by class
-        /// pairing, which reads well and is wrong for what this art is: a player who mains one
-        /// character would then see one plate forever, and the art would be least visible for the
-        /// people who use the screen most.</para>
-        ///
-        /// <para>Adding a plate is a row here plus two .png files under
-        /// <c>Assets/Art/Backgrounds/Loading/</c> and <c>Assets/Art/Orbs/</c> — no code path
-        /// changes, and the folder decides the import settings. An empty roster falls back to the
-        /// brand plate rather than showing nothing.</para>
-        /// </summary>
-        private static readonly (string Plate, string Orb)[] PlateRotation =
-        {
-            ("LoadingPlate_Master",             "Orb_StormGlass"),
-            ("LoadingPlate_TempestStonewarden", "Orb_Stormstone"),
-            ("LoadingPlate_VerdantGravekeep",   "Orb_Lifeblight"),
-            ("LoadingPlate_NightveilClockwright", "Orb_Shadowgear"),
-        };
-
-        /// <summary>Where the rotation is up to. STATIC, so it survives the screen being closed and
-        /// reopened — a per-instance field would reset on every visit and pin the rotation to its
-        /// first entry forever, which is the exact opposite of the intent. Resets on app restart,
-        /// which is fine: the point is that consecutive visits differ, not that the sequence is
-        /// remembered across launches.</summary>
-        private static int _plateRotation;
+        // Sam's 2026-10-21 selection replaces the rotating class-pair plates: every Collection
+        // arrival shows Clockwright's collection coat, including the preloaded menu transition.
         private static LoadingOverlay _pendingLoadingTransition;
 
         /// <summary>
-        /// Warm the exact plate the next Collection visit will use without advancing the rotation.
+        /// Warm the exact plate the next Collection visit will use.
         /// MainMenu calls this while its own boot plate still covers the screen, moving synchronous
         /// Addressables work away from the later button press.
         /// </summary>
         public static void PrewarmNextLoadingPlate()
         {
-            (string plate, string orb) = PeekPlate();
-            LoadingOverlay.Prewarm(plate, orb);
+            LoadingOverlay.Prewarm(LoadingOverlay.CollectionPlate, "Orb_Shadowgear");
         }
 
         /// <summary>
@@ -216,8 +188,8 @@ namespace Kingdom.Presentation
         public static LoadingOverlay BeginLoadingTransition(Camera camera)
         {
             if (_pendingLoadingTransition != null) return _pendingLoadingTransition;
-            (string plate, string orb) = NextPlate();
-            LoadingOverlay loading = LoadingOverlay.Create(camera, plate, orb);
+            LoadingOverlay loading = LoadingOverlay.Create(camera,
+                LoadingOverlay.CollectionPlate, "Orb_Shadowgear");
             if (loading == null) return null;
             loading.PreserveAcrossSceneLoad();
             _pendingLoadingTransition = loading;
@@ -510,8 +482,8 @@ namespace Kingdom.Presentation
             _loading = TakePendingLoadingTransition(Camera.main);
             if (_loading == null)
             {
-                (string plate, string orb) = NextPlate();
-                _loading = LoadingOverlay.Create(Camera.main, plate, orb);
+                _loading = LoadingOverlay.Create(Camera.main,
+                    LoadingOverlay.CollectionPlate, "Orb_Shadowgear");
             }
             if (_loading == null) return;   // no camera: the wall just paints in as it bakes
             _loading.OnFadedOut += RevealScreen;
@@ -546,26 +518,6 @@ namespace Kingdom.Presentation
             if (_root == null) return;
             _root.style.opacity = 1f;
             _root.SetEnabled(true);
-        }
-
-        /// <summary>
-        /// The next plate in the rotation, advanced as a side effect — one step per call, and this
-        /// is called exactly once per visit from <see cref="ShowLoadingPlate"/>. Keep it that way:
-        /// a second caller would double-step and turn "different every time" into "every other one
-        /// every time".
-        /// </summary>
-        private static (string Plate, string Orb) NextPlate()
-        {
-            if (PlateRotation.Length == 0) return (LoadingOverlay.DefaultPlate, null);
-            var row = PlateRotation[_plateRotation % PlateRotation.Length];
-            _plateRotation = (_plateRotation + 1) % PlateRotation.Length;
-            return row;
-        }
-
-        private static (string Plate, string Orb) PeekPlate()
-        {
-            if (PlateRotation.Length == 0) return (LoadingOverlay.DefaultPlate, null);
-            return PlateRotation[_plateRotation % PlateRotation.Length];
         }
 
         private void OnFirstBakeCompleted()

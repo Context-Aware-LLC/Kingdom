@@ -15,6 +15,26 @@ MonoBehaviour:
   m_GroupName: Backgrounds
   m_GUID: 59d3fa19fe00332478e72f70d653c62f
   m_SerializeEntries:
+  - m_GUID: 6609efbbacf74ec8adbb821ff00db4fa
+    m_Address: backgrounds/LoadingPlate_ClockwrightCollection
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59df114afb9444e48a5eb75f3db8a94c
+    m_Address: backgrounds/LoadingPlate_GravekeepDog
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4b854b10c6924568999d302358daad21
+    m_Address: backgrounds/LoadingPlate_VerdantWatering
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 921209fefe614c05adc7b0a779e9bc82
+    m_Address: backgrounds/LoadingPlate_ClockwrightBreakfast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 219109eb46af05442ac9af088774fa78
     m_Address: backgrounds/LoadingPlate_Master
     m_ReadOnly: 0

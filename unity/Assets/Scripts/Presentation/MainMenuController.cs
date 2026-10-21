@@ -75,7 +75,7 @@ namespace Kingdom.Presentation
         /// the unbound menu shows through before <see cref="RevealMenu"/> runs.</summary>
         private void Awake()
         {
-            _loading = LoadingOverlay.Create(Camera.main);
+            _loading = LoadingOverlay.Create(Camera.main, ScreenNav.MainMenuLoadingPlate);
         }
 
         private void OnEnable()
