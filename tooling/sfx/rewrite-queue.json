@@ -74,9 +74,9 @@
     "vo_emberward_vs_clockwright_1": {
       "class": "",
       "moment": "",
-      "text": "Used to.",
+      "text": "",
       "note": "",
-      "status": "rewritten"
+      "status": "needs_rewrite"
     },
     "vo_emberward_vs_tempest_1": {
       "class": "EMBERWARD",
@@ -90,6 +90,20 @@
       "moment": "vs_clockwright",
       "text": "Not, going to happen.",
       "note": "Not going to happen.",
+      "status": "rewritten"
+    },
+    "vo_tidecaller_draw_1": {
+      "class": "TIDECALLER",
+      "moment": "draw",
+      "text": "The tide came in, and went out.",
+      "note": "The tide came in, and went out.",
+      "status": "rewritten"
+    },
+    "vo_verdant_burn_2": {
+      "class": "VERDANT",
+      "moment": "burn",
+      "text": "Into the compost.",
+      "note": "Into the compost.",
       "status": "rewritten"
     }
   }
