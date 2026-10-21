@@ -49,6 +49,9 @@ namespace Kingdom.Presentation
         private readonly Label _title;
         private readonly Label _body;
         private readonly IUiSpriteProvider _sprites;
+        private readonly VisualElement _presentation;
+        private readonly VisualElement _narratorSlot;
+        private NarratorPortrait _narrator;
 
         private readonly List<Tidbit> _queue = new List<Tidbit>();
         private Action _onDone;
@@ -78,6 +81,23 @@ namespace Kingdom.Presentation
 
             if (_card != null && _card.parent != null) _scroll = new ProclamationScroll(_card);
 
+            if (_scroll != null && _overlay != null)
+            {
+                _presentation = _overlay.Q<VisualElement>("tidbit-presentation");
+                if (_presentation == null)
+                {
+                    _presentation = new VisualElement { name = "tidbit-presentation" };
+                    _presentation.AddToClassList("tidbit-presentation");
+                    _narratorSlot = new VisualElement { name = "tidbit-narrator", pickingMode = PickingMode.Ignore };
+                    _narratorSlot.AddToClassList("tidbit-narrator");
+                    _overlay.Insert(_overlay.IndexOf(_scroll.Root), _presentation);
+                    _presentation.Add(_narratorSlot);
+                    _presentation.Add(_scroll.Root);
+                }
+                else _narratorSlot = _presentation.Q<VisualElement>("tidbit-narrator");
+                _overlay.RegisterCallback<DetachFromPanelEvent>(_ => Cancel());
+            }
+
             // Hidden regardless of what the markup said — a host that forgets the hidden class would
             // otherwise open its screen behind a dimmed backdrop with no way past it.
             Hide();
@@ -105,7 +125,7 @@ namespace Kingdom.Presentation
         /// <inheritdoc cref="Show(TidbitTrigger, Action)"/>
         public bool Show(IReadOnlyList<Tidbit> tidbits, Action onDone = null)
         {
-            _queue.Clear();
+            Cancel();
             if (IsBound && tidbits != null)
                 foreach (Tidbit tidbit in tidbits)
                     if (tidbit != null && !FirstRunMarkers.Has(FirstRunMarkers.Tidbit(tidbit.Id)))
@@ -122,6 +142,11 @@ namespace Kingdom.Presentation
             Render(_queue[0], stamp: false);
             _overlay.RemoveFromClassList(HiddenClass);
             IsShowing = true;
+            if (_narratorSlot != null && _narrator == null)
+                _narrator = NarratorPortrait.Show(_narratorSlot, NarratorPortrait.HeraldAddress, visible =>
+                {
+                    _presentation.EnableInClassList("tidbit-presentation--narrated", IsShowing && visible);
+                });
             if (_scroll != null) _scroll.Open(Stamp);
             else Stamp();
             return true;
@@ -213,6 +238,9 @@ namespace Kingdom.Presentation
         private void Hide()
         {
             IsShowing = false;
+            if (_narrator != null) _narrator.Close();
+            _narrator = null;
+            _presentation?.RemoveFromClassList("tidbit-presentation--narrated");
             _scroll?.Stop();
             SealStamp.Clear(_scroll?.Root);
             _overlay?.AddToClassList(HiddenClass);

@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: UI_Core
   m_GUID: 3d766df806eca424e9276c2b8a291061
   m_SerializeEntries:
+  - m_GUID: 7d2bdda4a7e9fa649999f62f86e9d5bb
+    m_Address: characters/RoyalHeraldAnnouncer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 020c8c18a4a64529b0e69dfbde5b29b6
     m_Address: ui/effect_spell_frost_caster
     m_ReadOnly: 0

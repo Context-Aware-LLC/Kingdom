@@ -60,6 +60,9 @@ namespace Kingdom.Editor
             AddFolderSprites(settings, uiCore, "Assets/Art/UI", "ui");
             AddFolderSprites(settings, uiCore, CardBackCatalog.ArtFolder, "ui");
             AddFolderAssets(settings, uiCore, "Assets/Materials", "materials", "t:Material");
+            string heraldGuid = AssetDatabase.AssetPathToGUID(NarratorPortrait.HeraldPrefabPath);
+            if (!string.IsNullOrEmpty(heraldGuid))
+                settings.CreateOrMoveEntry(heraldGuid, uiCore).SetAddress(NarratorPortrait.HeraldAddress);
             // One CardArt_<setId> group per SET FOLDER FOUND ON DISK, not a hardcoded list.
             // REKINDLING shipped card rows and art with no group because the previous three lines
             // named CORE and PENDINGHAM literally: EditorArtProvider resolves by AssetDatabase and
