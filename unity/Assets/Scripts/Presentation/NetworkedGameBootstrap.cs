@@ -645,7 +645,7 @@ namespace Kingdom.Presentation
             matchRunner.OnMatchEnded += outcome =>
             {
                 Debug.Log($"[NetworkedMatch] OVER — {outcome}");
-                heroVoice.OnMatchEnded(outcome);                    // picks the line; Draw is silent, by authoring
+                heroVoice.OnMatchEnded(outcome);                    // picks the win, lose or draw line
                 // The banner's sequence owns the timing from here: stinger, spoils, the voice
                 // line, then the linger. The Gold and quest reads start now so they run under the music.
                 MatchEndBanner.Show(outcome, localSeat: _net.Seat,  // seat-aware — the server deals the seat

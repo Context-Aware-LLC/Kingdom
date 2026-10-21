@@ -6,6 +6,10 @@
     "rope": "Server fires at ServerOptions.RopeMs = 15_000, i.e. 15s before the deadline. TurnClockView already reacts to it by tinting the number red.",
     "win": "MatchOutcome.Player0Win / Player1Win, resolved against the local seat.",
     "lose": "Same event, opposite seat. MatchOutcome.Draw has no line and falls through silent.",
+    "draw": "MatchOutcome.Draw. Played by PlayMatchEndLine on the same beat as win/lose (Sam, 2026-10-20: was silent). Lines reviewed 2026-10-20; a class may have one or two.",
+    "fatigue": "FatigueDamage on the LOCAL hero (drawing from an empty deck). Can fire several turns running, hence two lines where Sam kept two.",
+    "burn": "CardDrawn with the Overdraw flag on a LOCAL card: drawn into a full hand and burned. The owner is resolved from the local graveyard, since the event names only the card.",
+    "spark": "CardPlayed of the LOCAL player's Spark (MatchOpeningDeal.SparkCardId). At most once per match.",
     "vs_<class>": "Versus-screen banter, one line per opposing class (Sam picked whimsy-pass #3, 2026-10-17). Each pair of heroes plays as a fixed exchange: the hero in _versus_openers speaks first and the other answers, whichever seat is local, because the reply only lands after its opener. A mirror is one line, spoken by both. Only the primary class speaks, so the hidden secondary stays hidden."
   },
   "voices": {
@@ -39,6 +43,22 @@
           "Even embers go cold.",
           "The fire goes out.",
           "Snuffed. So be it."
+        ],
+        "draw": [
+          "A tie. How unbearably polite.",
+          "Nobody burned. What a waste of a fire."
+        ],
+        "fatigue": [
+          "I've run out of things to set alight.",
+          "Nothing left to burn. Except me."
+        ],
+        "burn": [
+          "Oh, I burned that one on purpose.",
+          "Too many cards. I fixed it."
+        ],
+        "spark": [
+          "A little spark. It's all I ever need.",
+          "Give it here. I know what to do with it."
         ],
         "vs_tidecaller": [
           "I'll try not to boil you."
@@ -97,6 +117,20 @@
           "I misread the current.",
           "Pulled under. How strange."
         ],
+        "draw": [
+          "The tide came in, and went out. Nothing moved."
+        ],
+        "fatigue": [
+          "The well is dry. I did not see that coming."
+        ],
+        "burn": [
+          "That one has gone overboard.",
+          "Lost at sea. It happens."
+        ],
+        "spark": [
+          "A small current. It will do.",
+          "The tide gives a little first."
+        ],
         "vs_emberward": [
           "I've brought towels."
         ],
@@ -154,6 +188,22 @@
           "So the gate opens for me.",
           "I go to my own ground."
         ],
+        "draw": [
+          "Two graves dug, and nobody in them.",
+          "Nobody died. I'll put the shovel back."
+        ],
+        "fatigue": [
+          "Nothing left to dig up.",
+          "The book is empty. Write me in."
+        ],
+        "burn": [
+          "Another one for the pile.",
+          "I'll bury that one with the rest."
+        ],
+        "spark": [
+          "A candle for the gate. How thoughtful.",
+          "Someone left a light on for me."
+        ],
         "vs_emberward": [
           "I've measured you for the plot."
         ],
@@ -210,6 +260,22 @@
           "Every tree falls eventually.",
           "Back to the soil, then.",
           "Cut down. But seeds remain."
+        ],
+        "draw": [
+          "Neither of us grew. Typical.",
+          "A draw. The weeds win again."
+        ],
+        "fatigue": [
+          "I've run out of seeds.",
+          "Nothing left in the shed."
+        ],
+        "burn": [
+          "Compost.",
+          "No room in the bed. Into the compost."
+        ],
+        "spark": [
+          "A seed. Plant it somewhere sensible.",
+          "Well. It's a start."
         ],
         "vs_emberward": [
           "Please don't."
@@ -272,6 +338,21 @@
           "Mechanism failure. Noted.",
           "I miscalculated."
         ],
+        "draw": [
+          "Inconclusive. Repeat the experiment."
+        ],
+        "fatigue": [
+          "The parts bin is empty. Most irregular.",
+          "Well... I'm all out of ideas."
+        ],
+        "burn": [
+          "Surplus to requirements.",
+          "That part was decorative."
+        ],
+        "spark": [
+          "I shall be needing this. For science.",
+          "A little extra juice goes a long ways!"
+        ],
         "vs_emberward": [
           "My machine has a fire suppression system."
         ],
@@ -328,6 +409,22 @@
           "Found me at last.",
           "The dark gives me up.",
           "Cut clean. Fine."
+        ],
+        "draw": [
+          "Neither of us was here. Agreed?",
+          "A draw. Nobody saw anything."
+        ],
+        "fatigue": [
+          "I've run out of secrets.",
+          "Nothing up my sleeve. Truly nothing."
+        ],
+        "burn": [
+          "That one knew too much.",
+          "Gone. You never saw it."
+        ],
+        "spark": [
+          "Something small. Something sharp.",
+          "Pocketed."
         ],
         "vs_emberward": [
           "That's rather the problem."
@@ -386,6 +483,22 @@
           "Even mountains fall.",
           "Down to rubble, then."
         ],
+        "draw": [
+          "Nobody moved. Good.",
+          "Stalemate. I can wait."
+        ],
+        "fatigue": [
+          "Out of stones.",
+          "Nothing left to stack."
+        ],
+        "burn": [
+          "No room on the wall.",
+          "Spare brick."
+        ],
+        "spark": [
+          "One more brick.",
+          "Small. Solid. Fine."
+        ],
         "vs_emberward": [
           "Stone doesn't burn."
         ],
@@ -442,6 +555,22 @@
           "The storm breaks up.",
           "Grounded out.",
           "All that noise for nothing."
+        ],
+        "draw": [
+          "A draw? I didn't even get loud.",
+          "Nobody wins. That's just weather."
+        ],
+        "fatigue": [
+          "Out of thunder. That's new.",
+          "Sky's empty. Who took my clouds?"
+        ],
+        "burn": [
+          "Blew right out of my hand.",
+          "Lost that one in the wind."
+        ],
+        "spark": [
+          "A spark? I'll make it a storm.",
+          "Static. Love it."
         ],
         "vs_emberward": [
           "Fire and lightning! What could go wrong?"

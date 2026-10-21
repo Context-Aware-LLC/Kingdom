@@ -6,8 +6,9 @@
 
 voice-lines.json is the script and the cast; Unity never reads it. The captions and the
 order of each exchange have to reach the client, so this writes them into
-unity/Assets/Scripts/Presentation/VersusBanterLines.cs. Rerun it after any change to a
-vs_<class> line or to _versus_openers, or the captions say one thing and the clip another.
+unity/Assets/Scripts/Presentation/VersusBanterLines.cs, with the take count of every
+moment the voice director picks from. Rerun it after any change to a line or to
+_versus_openers, or the captions say one thing and the clip another, and a new take never plays.
 """
 
 import argparse
@@ -74,7 +75,20 @@ def render(data):
     ]
     for a, b in data["_versus_openers"]:
         out.append("            (CardClass.%s, CardClass.%s)," % (a, b))
-    out += ["        };", "    }", "}", ""]
+    out += [
+        "        };",
+        "",
+        "        /// <summary>(class, moment) -> how many takes exist, vo_&lt;class&gt;_&lt;moment&gt;_1 … _n.",
+        "        /// Every moment except the versus lines, which are one line each.</summary>",
+        "        public static readonly IReadOnlyDictionary<(CardClass, string), int> Variants =",
+        "            new Dictionary<(CardClass, string), int>",
+        "            {",
+    ]
+    for a in classes:
+        for moment, lines in voices[a]["lines"].items():
+            if not moment.startswith("vs_"):
+                out.append("                [(CardClass.%s, %s)] = %d," % (a, cs_string(moment), len(lines)))
+    out += ["            };", "    }", "}", ""]
     return "\n".join(out)
 
 

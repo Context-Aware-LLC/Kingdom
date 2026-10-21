@@ -29,8 +29,9 @@ namespace Kingdom.Presentation
     /// </remarks>
     public sealed class HeroVoiceDirector : MonoBehaviour
     {
-        /// <summary>Takes authored per moment in voice-lines.json (vo_..._1 … vo_..._3).</summary>
-        public const int VariantsPerMoment = 3;
+        /// <summary>Takes for a moment the generated table does not list. Every moment is listed
+        /// (<see cref="VersusBanterLines.Variants"/>, from voice-lines.json); this is the floor.</summary>
+        private const int FallbackVariants = 1;
 
         /// <summary>
         /// Sam's ruling (2026-08-28): the turn_start line is a flourish, not a turn marker — the
@@ -55,9 +56,14 @@ namespace Kingdom.Presentation
         private const string MomentRope = "rope";
         private const string MomentWin = "win";
         private const string MomentLose = "lose";
+        private const string MomentDraw = "draw";
+        private const string MomentFatigue = "fatigue";
+        private const string MomentBurn = "burn";
+        private const string MomentSpark = "spark";
 
         private AddressableSoundEffectPlayer _player;
         private string _classToken;
+        private CardClass _heroClass;
         private PlayerId _localPlayer;
         private int _localSeat;
         private Func<long> _nowMs;
@@ -66,7 +72,10 @@ namespace Kingdom.Presentation
         private long? _ropeDeadlineMs;   // null unless a LOCAL turn's deadline is still pending
         private bool _matchStartFired;
         private bool _ended;
-        private string _matchEndSoundId; // null unless a win/lose line is picked and not yet played
+        private string _matchEndSoundId; // null unless a win/lose/draw line is picked and not yet played
+        private InstanceId? _sparkId;    // the local Spark while it sits in hand
+        private GameState _state;        // latest snapshot, to tell whose card an overdraw burned
+        private readonly List<InstanceId> _unresolvedBurns = new List<InstanceId>();
 
         /// <param name="heroClass">The local hero's class — <c>NEUTRAL</c> disables the director,
         /// since NEUTRAL is not pairable and no hero can be one.</param>
@@ -77,6 +86,7 @@ namespace Kingdom.Presentation
             _localPlayer = localPlayer;
             _localSeat = localSeat;
             _nowMs = nowMs ?? (() => DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            _heroClass = heroClass;
             _classToken = heroClass == CardClass.NEUTRAL
                 ? null
                 : heroClass.ToString().ToLowerInvariant();
@@ -109,6 +119,22 @@ namespace Kingdom.Presentation
 
             if (state.Phase == TurnPhase.Mulligan || state.Outcome != MatchOutcome.InProgress)
                 _ropeDeadlineMs = null;
+
+            _state = state;
+            PlayerState local = Local(state);
+            if (local == null) return;
+            if (_sparkId == null && local.Hand != null)
+                foreach (CardInstance c in local.Hand)
+                    if (c.DefinitionId == MatchOpeningDeal.SparkCardId) _sparkId = c.Id;
+
+            // A burn whose batch arrived before the snapshot that put the card in a graveyard.
+            for (int i = _unresolvedBurns.Count - 1; i >= 0; i--)
+            {
+                bool? mine = InLocalGraveyard(_unresolvedBurns[i]);
+                if (mine == null) continue;
+                _unresolvedBurns.RemoveAt(i);
+                if (mine.Value && !_ended) Play(MomentBurn);
+            }
         }
 
         public void OnMatchEvent(IReadOnlyList<GameEvent> batch)
@@ -116,7 +142,27 @@ namespace Kingdom.Presentation
             if (_player == null || batch == null || _ended) return;
             foreach (GameEvent matchEvent in batch)
             {
-                if (matchEvent.Kind != GameEventKind.TurnStarted) continue;
+                switch (matchEvent.Kind)
+                {
+                    case GameEventKind.FatigueDamage:
+                        if (_localHeroId.HasValue && matchEvent.Target == _localHeroId) Play(MomentFatigue);
+                        continue;
+                    case GameEventKind.CardDrawn:
+                        if ((matchEvent.Flags & EventFlags.Overdraw) != 0 && matchEvent.Source.HasValue)
+                            OnBurned(matchEvent.Source.Value);
+                        continue;
+                    case GameEventKind.CardPlayed:
+                        if (_sparkId.HasValue && matchEvent.Source == _sparkId)
+                        {
+                            _sparkId = null;
+                            Play(MomentSpark);
+                        }
+                        continue;
+                    case GameEventKind.TurnStarted:
+                        break;
+                    default:
+                        continue;
+                }
                 if (!_matchStartFired)
                 {
                     _matchStartFired = true;
@@ -150,15 +196,15 @@ namespace Kingdom.Presentation
             if (_player == null || _ended) return;
             _ended = true;
             _ropeDeadlineMs = null;
-            // Draw is deliberately silent — no line is authored for it (voice-lines.json _moments).
-            if (outcome == MatchOutcome.Draw || outcome == MatchOutcome.InProgress) return;
+            _unresolvedBurns.Clear();
+            if (outcome == MatchOutcome.InProgress) return;
             bool won = outcome == (_localSeat == 0 ? MatchOutcome.Player0Win : MatchOutcome.Player1Win);
-            _matchEndSoundId = SoundId(won ? MomentWin : MomentLose);
+            _matchEndSoundId = SoundId(outcome == MatchOutcome.Draw ? MomentDraw : won ? MomentWin : MomentLose);
             _player.Preload(_matchEndSoundId);   // so the line lands on the beat, not a load after it
         }
 
         /// <summary>
-        /// Plays the win/lose line <see cref="OnMatchEnded"/> picked. The timing is not this
+        /// Plays the win/lose/draw line <see cref="OnMatchEnded"/> picked. The timing is not this
         /// class's to decide: <see cref="MatchEndSequence"/> calls it once the stinger's music is
         /// over and the quest cards have had their beat (Sam, 2026-10-03 — the line and the
         /// stinger played on top of each other when both fired on the match-end event).
@@ -182,8 +228,40 @@ namespace Kingdom.Presentation
 
         private string SoundId(string moment)
         {
-            int variant = UnityEngine.Random.Range(1, VariantsPerMoment + 1);
+            if (!VersusBanterLines.Variants.TryGetValue((_heroClass, moment), out int takes)) takes = FallbackVariants;
+            int variant = UnityEngine.Random.Range(1, takes + 1);
             return $"vo_{_classToken}_{moment}_{variant}";
+        }
+
+        // The overdraw event names the card, not its owner, and the burned card has gone to its
+        // owner's graveyard — which the snapshot for this beat may not show yet.
+        private void OnBurned(InstanceId card)
+        {
+            bool? mine = InLocalGraveyard(card);
+            if (mine == null) _unresolvedBurns.Add(card);
+            else if (mine.Value) Play(MomentBurn);
+        }
+
+        /// <summary>True when the card is in the local graveyard, false when it is in the other one,
+        /// null when neither snapshot shows it yet.</summary>
+        private bool? InLocalGraveyard(InstanceId card)
+        {
+            if (_state?.Players == null) return null;
+            foreach (PlayerState p in _state.Players)
+            {
+                if (p?.Graveyard == null) continue;
+                foreach (CardInstance c in p.Graveyard)
+                    if (c.Id == card) return p.Id == _localPlayer;
+            }
+            return null;
+        }
+
+        private PlayerState Local(GameState state)
+        {
+            if (state.Players == null) return null;
+            foreach (PlayerState p in state.Players)
+                if (p != null && p.Id == _localPlayer) return p;
+            return null;
         }
 
         private void OnDestroy() => _player?.ReleaseAll();
