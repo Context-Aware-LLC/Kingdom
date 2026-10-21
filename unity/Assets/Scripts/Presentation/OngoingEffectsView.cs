@@ -46,7 +46,7 @@ namespace Kingdom.Presentation
         public void OnStateUpdated(GameState state)
         {
             if (_database == null || _label == null || state == null) return;
-            var rows = OngoingEffectStatusModel.Build(state, _database, _viewer);
+            var rows = OngoingEffectStatusModel.Build(state, _database, _viewer, LocWords.Instance);
             if (rows.Count == 0)
             {
                 _label.text = "";
@@ -61,5 +61,17 @@ namespace Kingdom.Presentation
             _label.text = text.ToString();
             _label.enabled = true;
         }
+    }
+
+    /// <summary>The status-row words in the player's language.</summary>
+    internal sealed class LocWords : IOngoingEffectWords
+    {
+        public static readonly LocWords Instance = new LocWords();
+        public string You => Loc.Get("common_you");
+        public string Opponent => Loc.Get("common_opponent");
+        public string Permanent => Loc.Get("effects_remaining_permanent");
+        public string UnknownLifetime => Loc.Get("effects_remaining_unknown");
+        public string SourceFallback(int cardId) => Loc.Format("effects_source_fallback", cardId);
+        public string TriggersRemaining(int uses) => Loc.Plural("effects_remaining_triggers", uses, uses);
     }
 }

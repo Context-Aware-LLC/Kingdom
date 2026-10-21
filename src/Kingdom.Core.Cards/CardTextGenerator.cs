@@ -170,6 +170,94 @@ namespace Kingdom.Core.Cards
             return changed ? Generate(card, effectiveRules, pool) : card.Text;
         }
 
+        /// <summary>
+        /// The card's text with every value a translation must supply marked as a slot —
+        /// <c>Deal {dmg:3} damage to a {tribe:beast}.</c> See <see cref="CardTextTemplate"/>.
+        /// </summary>
+        /// <remarks>
+        /// <b>The same renderer in a second voice, never a second grammar.</b> Every word is chosen
+        /// exactly as <see cref="Generate(CardDefinition, ICardDatabase)"/> chooses it — an article
+        /// against the real name, a plural by its real spelling — and only the value itself is
+        /// printed as its slot, so <see cref="CardTextTemplate.FillEnglish"/> gives back the
+        /// generated text byte for byte. The English words left around the slots are the source a
+        /// translator works from; the slots are the part their translation must keep.
+        /// </remarks>
+        public static string Template(CardDefinition card, ICardDatabase pool)
+        {
+            if (card == null) throw new ArgumentNullException(nameof(card));
+
+            Dictionary<string, string>? outer = _slots;
+            _slots = new Dictionary<string, string>(StringComparer.Ordinal);
+            try
+            {
+                return Generate(card, card.Rules, pool);
+            }
+            finally
+            {
+                _slots = outer;
+            }
+        }
+
+        /// <summary>Each slot printed so far and the English it stands for, while a
+        /// <see cref="Template"/> is being written; null otherwise. Per thread, because the
+        /// renderer is static and the parser calls into it from tests running in parallel.</summary>
+        [ThreadStatic] private static Dictionary<string, string>? _slots;
+
+        /// <summary>Prints <paramref name="english"/>, or its slot while writing a template.</summary>
+        private static string Slot(CardTextSlotKind kind, string id, string english, bool plural = false)
+        {
+            if (_slots == null) return english;
+            string marker = new CardTextSlot(kind, id, plural).ToString();
+            _slots[marker] = english;
+            return marker;
+        }
+
+        /// <summary>
+        /// The English a phrase reads as, slots and all. Every spelling decision — an article, a
+        /// plural, an "-s" agreement — is made on this and never on the slot, so a template takes
+        /// exactly the words the text does.
+        /// </summary>
+        private static string English(string phrase)
+        {
+            Dictionary<string, string>? slots = _slots;
+            return slots == null || phrase.IndexOf('{') < 0
+                ? phrase
+                : CardTextTemplate.Fill(phrase, slot => slots[slot.ToString()]);
+        }
+
+        private static string Damage(int amount)
+            => Slot(CardTextSlotKind.Damage, amount.ToString(CultureInfo.InvariantCulture),
+                amount.ToString(CultureInfo.InvariantCulture));
+
+        private static string KeywordWord(Keyword keyword) => KeywordWord(keyword, Name(keyword));
+
+        private static string KeywordWord(Keyword keyword, string english)
+            => Slot(CardTextSlotKind.Keyword, Id(keyword.ToString()), english);
+
+        private static string LabelWord(string label, bool plural = false)
+            => Slot(CardTextSlotKind.Label, Id(label), plural ? label + "s" : label, plural);
+
+        private static string TribeWord(Tribe tribe)
+            => Slot(CardTextSlotKind.Tribe, Id(tribe.ToString()), DescribeTribe(tribe));
+
+        /// <summary>A label's or enum's slot id: lowercased, spaces as underscores — "Turn End" is
+        /// <c>turn_end</c>, matching the glossary's <c>label_turn_end</c>.</summary>
+        private static string Id(string name) => name.ToLowerInvariant().Replace(' ', '_');
+
+        /// <summary>The English label a <see cref="CardTextSlotKind.Label"/> slot id stands for.</summary>
+        internal static string LabelFor(string id)
+        {
+            foreach (string word in EmphasisVocabulary())
+                if (Id(word) == id) return word;
+            throw Unsupported("label", id);
+        }
+
+        /// <summary>How a tribe is spoken.</summary>
+        internal static string DescribeTribe(Tribe tribe) => Name(tribe.ToString());
+
+        /// <summary>The plural of a name, by the rules a card face uses.</summary>
+        internal static string DescribePlural(string name) => Plural(name);
+
         private static string Generate(CardDefinition card, IReadOnlyList<RuleDefinition> rules,
             ICardDatabase pool)
         {
@@ -219,7 +307,7 @@ namespace Kingdom.Core.Cards
                 // An action marker is rendered from its typed action instead. Printing it here as
                 // well would print it twice on any row that still carries the legacy keyword.
                 if (KeywordSemantics.IsActionMarker(keyword)) continue;
-                carriers.Add(Name(keyword));
+                carriers.Add(KeywordWord(keyword));
             }
             // Comma-separated and closed with a stop. Two separate jobs: the commas stop "Bulwark
             // Lifedrain" reading as one two-word keyword, and the stop separates the band from the
@@ -270,7 +358,8 @@ namespace Kingdom.Core.Cards
             if (pool == null || !pool.TryGet(cardId, out CardDefinition named))
                 throw Unsupported("naming the card",
                     cardId + " — no such row in the pool given to the renderer");
-            return DescribeCardName(named);
+            return Slot(CardTextSlotKind.Card, cardId.ToString(CultureInfo.InvariantCulture),
+                DescribeCardName(named));
         }
 
         /// <summary>Renders the rule half of a card face on its own, without any carrier keywords.</summary>
@@ -430,7 +519,7 @@ namespace Kingdom.Core.Cards
         /// </summary>
         private static string ChooserClause(RuleAction action, ICardDatabase pool, string sourcePronoun)
             => action is DamageAction damage && NarrowsNothing(damage.Target)
-                ? $"Deal {damage.Amount} damage to {Target(damage.Target, sourcePronoun)}"
+                ? $"Deal {Damage(damage.Amount)} damage to {Target(damage.Target, sourcePronoun)}"
                 : Undot(RenderAction(action, pool, sourcePronoun));
 
         /// <summary>
@@ -458,7 +547,7 @@ namespace Kingdom.Core.Cards
                 case ModifyStatsAction stats:
                     return $"a friendly minion gains {Delta(stats.AttackDelta)}/{Delta(stats.HealthDelta)}";
                 case GrantKeywordAction grant:
-                    return $"a friendly minion gains {Name(grant.Keyword)}";
+                    return $"a friendly minion gains {KeywordWord(grant.Keyword)}";
                 default:
                     throw Unsupported("action", rule.Action.GetType().Name + " under TARGET_IS_FRIENDLY MINION");
             }
@@ -470,7 +559,7 @@ namespace Kingdom.Core.Cards
         private static string InsteadSentence(DamageAction damage)
         {
             string condition = ConditionPrefix(damage.InsteadCondition!).TrimEnd(' ', ',');
-            return $"Deals {damage.InsteadAmount!.Value} instead {Decapitalize(condition)}.";
+            return $"Deals {Damage(damage.InsteadAmount!.Value)} instead {Decapitalize(condition)}.";
         }
 
         /// <summary>How a rider is spoken, for a parser that must match what was printed.</summary>
@@ -645,6 +734,7 @@ namespace Kingdom.Core.Cards
         /// <summary>Whether a clause's opening word is one the game capitalises.</summary>
         private static bool OpensWithVocabulary(string clause)
         {
+            clause = English(clause);
             int end = clause.IndexOf(' ');
             string first = Undot(end < 0 ? clause : clause.Substring(0, end));
             foreach (string word in EmphasisVocabulary())
@@ -690,7 +780,7 @@ namespace Kingdom.Core.Cards
                         // "Deal 1 damage twice to random enemy characters." The same hit repeated is
                         // a count, not a list — spelling it out as "1 and 1" made a hero power read
                         // twice as long as the thing it does (Sam, 2026-08-11).
-                        spread.Append(amounts[0].ToString(CultureInfo.InvariantCulture))
+                        spread.Append(Damage(amounts[0]))
                             .Append(" damage ").Append(Times(amounts.Count))
                             .Append(" to ").Append(RandomPluralTarget(spec, sourcePronoun)).Append('.');
                     }
@@ -699,7 +789,7 @@ namespace Kingdom.Core.Cards
                         for (int j = 0; j < amounts.Count; j++)
                         {
                             if (j > 0) spread.Append(j == amounts.Count - 1 ? " and " : ", ");
-                            spread.Append(amounts[j].ToString(CultureInfo.InvariantCulture));
+                            spread.Append(Damage(amounts[j]));
                         }
                         spread.Append(" damage each to ").Append(Target(spec, sourcePronoun)).Append('.');
                     }
@@ -1040,7 +1130,7 @@ namespace Kingdom.Core.Cards
         /// </remarks>
         private static string TriggerMarker(RuleActivation activation)
         {
-            if (activation is AuraActivation) return AuraLabel + ": ";
+            if (activation is AuraActivation) return LabelWord(AuraLabel) + ": ";
             if (activation is TriggeredActivation triggered) return TriggerMarker(triggered.Trigger);
             throw UnsupportedNode("activation", activation);
         }
@@ -1049,7 +1139,7 @@ namespace Kingdom.Core.Cards
         private static string TriggerMarker(Trigger trigger)
         {
             string label = TriggerLabel(trigger);
-            return label.Length == 0 ? TriggerPrefix(trigger) : label + ": ";
+            return label.Length == 0 ? TriggerPrefix(trigger) : LabelWord(label) + ": ";
         }
 
         /// <summary>The exact head a trigger prints, label form or prose form — the one place that
@@ -1090,7 +1180,7 @@ namespace Kingdom.Core.Cards
         private static string ControlsPrefix(ControlsCondition controls)
         {
             if (controls.Tribe == Tribe.NONE) throw Unsupported("tribe", controls.Tribe);
-            string tribe = Name(controls.Tribe.ToString());
+            string tribe = TribeWord(controls.Tribe);
             string determiner = controls.ExcludesSource ? "another" : Article(tribe);
             return "If you control " + determiner + " " + tribe + ", ";
         }
@@ -1166,7 +1256,7 @@ namespace Kingdom.Core.Cards
         private static string RenderAction(RuleAction action, ICardDatabase pool,
             string sourcePronoun) => action switch
             {
-                DamageAction a => $"Deal {a.Amount} damage{To(a.Target, sourcePronoun)}.",
+                DamageAction a => $"Deal {Damage(a.Amount)} damage{To(a.Target, sourcePronoun)}.",
                 HealAction a => $"Restore {a.Amount} Health{To(a.Target, sourcePronoun)}.",
                 PreventLethalDamageAction _ =>
                     "The first other friendly minion dealt lethal damage each turn survives at 1 Health.",
@@ -1189,18 +1279,18 @@ namespace Kingdom.Core.Cards
                 ModifyStatsAction a when IsSelf(a.Target)
                     => $"Gain {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
                 ModifyStatsAction a => $"Give {Target(a.Target, sourcePronoun)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
-                GrantKeywordAction a => $"Give {Target(a.Target, sourcePronoun)} {Name(a.Keyword)}.",
+                GrantKeywordAction a => $"Give {Target(a.Target, sourcePronoun)} {KeywordWord(a.Keyword)}.",
                 DestroyAction a => $"{DestroyVerb(a.Target)} {Target(a.Target, sourcePronoun)}.",
                 // "to hand" is jargon — a rules-text shorthand that assumes the reader already knows
                 // whose hand. Naming the owner works for one minion and for a board of them alike.
                 ReturnToHandAction a => $"Return {Target(a.Target, sourcePronoun)} to {BounceDestination(a.Target)}.",
                 ReanimateAction a => $"Reanimate {Target(a.Target, sourcePronoun)}.",
-                SilenceAction a => $"{Name(Keyword.SILENCE)} {Target(a.Target, sourcePronoun)}.",
+                SilenceAction a => $"{KeywordWord(Keyword.SILENCE)} {Target(a.Target, sourcePronoun)}.",
                 TransformAction a => $"Transform {Target(a.Target, sourcePronoun)} into {NamedCard(a.CardId, pool)}.",
                 // NOT named through the keyword — see FrostVerb. This was `Name(Keyword.FROST)` until
                 // 2026-08-25, which is what made the action and the carrier print the same word.
-                FrostAction a => $"{(a.Negate ? ThawVerb : FrostVerb)} {Target(a.Target, sourcePronoun)}.",
-                DrownAction a => $"{Name(Keyword.DROWN)} {Target(a.Target, sourcePronoun)}.",
+                FrostAction a => $"{LabelWord(a.Negate ? ThawVerb : FrostVerb)} {Target(a.Target, sourcePronoun)}.",
+                DrownAction a => $"{KeywordWord(Keyword.DROWN)} {Target(a.Target, sourcePronoun)}.",
                 CopyAction a => $"Summon an exact copy of {Target(a.Target, sourcePronoun)}.",
                 TakeControlAction a => $"Take control of {Target(a.Target, sourcePronoun)}.",
                 // The trigger's own label is the noun — "Toll" comes from TriggerLabel, not from a
@@ -1215,11 +1305,11 @@ namespace Kingdom.Core.Cards
                 EquipAction a => $"Equip {NamedCard(a.CardId, pool)}.",
                 GainManaAction a => Mana(a),
                 // No parentheses — trialling the bare number to see how it reads (Sam, 2026-08-11).
-                BackdraftAction a => $"{Name(Keyword.BACKDRAFT)} {a.Amount}.",
+                BackdraftAction a => $"{KeywordWord(Keyword.BACKDRAFT)} {a.Amount}.",
                 GainArmorAction a => $"Gain {a.Amount} Armor.",
                 // No number: the offer size is fixed by UnearthAction.Options, so printing it would
                 // be restating a constant as though the card chose it.
-                UnearthAction _ => $"{UnearthClause}.",
+                UnearthAction _ => $"{LabelWord(UnearthLabel)}{UnearthClause.Substring(UnearthLabel.Length)}.",
                 _ => throw UnsupportedNode("action", action),
             };
 
@@ -1518,9 +1608,9 @@ namespace Kingdom.Core.Cards
         private static string TollOf(TargetSpec target, string sourcePronoun)
         {
             string phrase = Target(target, sourcePronoun);
-            string label = TriggerLabel(Trigger.ON_DEATH);
-            string possessive = phrase.EndsWith("s", StringComparison.Ordinal) ? "'" : "'s";
-            return phrase + possessive + " " + label + (IsPlural(target) ? "s" : "");
+            string label = LabelWord(TriggerLabel(Trigger.ON_DEATH), IsPlural(target));
+            string possessive = English(phrase).EndsWith("s", StringComparison.Ordinal) ? "'" : "'s";
+            return phrase + possessive + " " + label;
         }
 
         /// <summary>Whether a target's noun phrase is spoken in the plural — the same question
@@ -1564,7 +1654,7 @@ namespace Kingdom.Core.Cards
             // negation-aware branch of its own (Sam, 2026-09-05).
             if (filter.Keyword.HasValue)
             {
-                string keywordWord = Name(filter.Keyword.Value.ToString());
+                string keywordWord = KeywordWord(filter.Keyword.Value, Name(filter.Keyword.Value.ToString()));
                 if (filter.NegateKeyword) keywordWord = "non-" + keywordWord;
                 description = InsertBeforeHeadNoun(description, keywordWord);
             }
@@ -1583,9 +1673,9 @@ namespace Kingdom.Core.Cards
             if (filter.Tribe.HasValue)
             {
                 if (filter.NegateTribe)
-                    description += " other than " + Plural(Name(filter.Tribe.Value.ToString()));
+                    description += " other than " + Plural(TribeWord(filter.Tribe.Value));
                 else
-                    description = ReplaceHeadNoun(description, Name(filter.Tribe.Value.ToString()));
+                    description = ReplaceHeadNoun(description, TribeWord(filter.Tribe.Value));
             }
 
             // "damaged" is an ordinary adjective and keeps its place after the determiner.
@@ -1613,7 +1703,7 @@ namespace Kingdom.Core.Cards
         /// minions" -- so it is read off the description, which is the only thing that knows.
         /// </remarks>
         private static string CostVerb(string description)
-            => description.EndsWith("s", StringComparison.Ordinal) ? "cost" : "costs";
+            => English(description).EndsWith("s", StringComparison.Ordinal) ? "cost" : "costs";
 
         /// <summary>Sets a qualifier against a minion phrase's head noun, keeping its number.</summary>
         /// <remarks>
@@ -1758,7 +1848,7 @@ namespace Kingdom.Core.Cards
             // A token's name carries its stats ("1/1 Wisp"), so a numeral count runs straight into
             // them: "Summon 2 1/1 Wisps." Spelled out only when the collision is real, which keeps
             // "Draw 2 cards." reading the way the genre writes it. Sam, 2026-08-11.
-            string quantity = char.IsDigit(cardName[0]) ? NumberWord(count) : count.ToString(CultureInfo.InvariantCulture);
+            string quantity = char.IsDigit(English(cardName)[0]) ? NumberWord(count) : count.ToString(CultureInfo.InvariantCulture);
             return quantity + " " + Plural(cardName);
         }
 
@@ -1787,6 +1877,13 @@ namespace Kingdom.Core.Cards
         /// </remarks>
         private static string Plural(string cardName)
         {
+            // A whole slot pluralises as its plural slot, spelled from the English it stands for.
+            if (_slots != null && _slots.TryGetValue(cardName, out string? english))
+            {
+                CardTextSlot one = CardTextTemplate.Slots(cardName)[0];
+                return Slot(one.Kind, one.Id, Plural(english), plural: true);
+            }
+
             int start = cardName.LastIndexOf(' ') + 1;   // 0 when the name is a single word
             string head = cardName.Substring(0, start);
             string noun = cardName.Substring(start);
@@ -1819,6 +1916,7 @@ namespace Kingdom.Core.Cards
         /// </remarks>
         private static string Article(string phrase)
         {
+            phrase = English(phrase);
             if (string.IsNullOrEmpty(phrase)) throw Requires("a non-empty phrase to article");
             if (char.IsDigit(phrase[0])) return LeadingNumberTakesAn(phrase) ? "an" : "a";
             if (StartsWithAny(phrase, "hour", "honest", "honor", "honour", "heir")) return "an";

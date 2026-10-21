@@ -212,7 +212,10 @@ rename is harmless while it stays in the working tree; only the commit is damagi
 **After an edit, run only what depends on the files you changed.** (Sam, 2026-10-06.) A full gate
 after every change spends minutes proving things the change could not have reached, and he waits
 through all of it. Reach follows the project references and runs one way: Unity consumes the core,
-`tests/` consumes `src/`, and nothing under `tests/` references a `unity/Assets/Scripts` assembly.
+`tests/` consumes `src/`, and nothing under `tests/` references a `unity/Assets/Scripts` assembly —
+**but `Kingdom.Core.Tests.csproj` compiles a few `unity/Assets/Scripts` FILES by `<Compile Include>`.**
+Edit one of those and `dotnet build` that project too: a `Loc` call there broke the .NET tests while
+Unity stayed green (2026-10-20).
 
 | You changed | Run | Do not run |
 |---|---|---|
