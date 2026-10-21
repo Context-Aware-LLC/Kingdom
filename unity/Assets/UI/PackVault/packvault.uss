@@ -375,6 +375,16 @@
 .vault-pack__face--tearing {
     overflow: visible;
     background-color: rgba(0, 0, 0, 0);
+    scale: 1 1;
+    rotate: 0deg;
+    transition-property: scale, rotate;
+    transition-duration: 140ms;
+    transition-timing-function: ease-out;
+}
+
+.vault-pack__face--tension {
+    scale: 1.045 0.97;
+    rotate: -2deg;
 }
 
 /* The artless degrade: nothing to tear, so the pack goes. See PackTearAnimator's remarks on why
@@ -438,11 +448,11 @@
 }
 
 .tear-half--top.tear-half--parted {
-    translate: 0 -60%;
-    rotate: -5deg;
+    translate: -12% -68%;
+    rotate: -14deg;
 }
 
 .tear-half--bottom.tear-half--parted {
-    translate: 0 60%;
-    rotate: 6deg;
+    translate: 8% 64%;
+    rotate: 10deg;
 }

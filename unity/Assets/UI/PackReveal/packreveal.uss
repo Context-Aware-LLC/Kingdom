@@ -7,7 +7,7 @@
 /* No panel of its own (Sam, 2026-09-27): the cards sit on the vault's own backdrop. It is painted
  * again here, rather than left transparent, because the shelf is still laid out underneath and a
  * transparent overlay would show the cards over the packs. Same image, same scale mode, same box
- * as `.pack-vault-screen`, so the two are indistinguishable.
+ * as `.pack-vault-screen`. The dismiss layer dims that backdrop to keep the cards readable.
  * No padding: this element carries .emb-bleed, and a class rule here ties theme.uss on specificity
  * and wins on sheet order, so the clearance would never apply. */
 .reveal-overlay {
@@ -35,7 +35,12 @@
     left: 0;
     right: 0;
     bottom: 0;
+    background-color: rgba(5, 9, 17, 0.34);
+    transition-property: background-color;
+    transition-duration: 240ms;
 }
+
+.reveal-overlay--spotlight .reveal-dismiss { background-color: rgba(5, 9, 17, 0.64); }
 
 .reveal-cards {
     width: 80%;
@@ -59,17 +64,85 @@
     padding: 0;
     margin: 1%;
     opacity: 0;
-    scale: 0 1;
-    transition-property: opacity, scale;
-    transition-duration: 0.22s;
+    scale: 0.78 0.78;
+    translate: 0 85px;
+    rotate: -6deg;
+    transition-property: opacity, scale, translate, rotate;
+    transition-duration: 180ms, 140ms, 320ms, 320ms;
     transition-timing-function: ease-out;
-    overflow: hidden;
+    overflow: visible;
     -unity-background-scale-mode: scale-to-fit;
 }
 
 .reveal-card--shown {
     opacity: 1;
     scale: 1 1;
+    translate: 0 0;
+    rotate: 0deg;
+}
+
+.reveal-card__face,
+.reveal-card__back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.reveal-card__face { visibility: hidden; }
+
+.reveal-card__back {
+    background-image: url("/Assets/Art/Cards/Backs/card_back.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.reveal-card__light {
+    position: absolute;
+    top: -28%;
+    bottom: -28%;
+    left: -48%;
+    right: -48%;
+}
+
+.reveal-card--shown:hover,
+.reveal-card--shown:focus,
+.reveal-card--queued {
+    translate: 0 -12px;
+    scale: 1.035 1.035;
+}
+
+.reveal-card--charging {
+    translate: 0 -18px;
+    scale: 1.06 1.06;
+}
+
+.reveal-card--shown.reveal-card--turning { scale: 0.015 1.06; }
+
+.reveal-overlay--spotlight .reveal-card { opacity: 0.72; }
+
+.reveal-overlay--spotlight .reveal-card--celebrating {
+    opacity: 1;
+    translate: 0 -24px;
+    scale: 1.09 1.09;
+}
+
+.reveal-overlay--spotlight .reveal-card--celebrating.reveal-card--turning {
+    scale: 0.015 1.09;
+}
+
+.reveal-hint {
+    position: absolute;
+    bottom: 5%;
+    max-width: 80%;
+    padding: 8px 20px;
+    border-radius: 999px;
+    background-color: rgba(7, 11, 17, 0.82);
+    color: var(--ink-1);
+    font-size: var(--type-caption);
+    white-space: normal;
+    -unity-text-align: middle-center;
 }
 
 .reveal-card--rare {
@@ -150,6 +223,12 @@
  * The list ignores picking throughout, so a tap on it falls through to .reveal-dismiss. */
 .reveal-cards--batch {
     flex-grow: 0;
+}
+
+/* The batch row sits above its receipt; its celebration must keep that top edge in bounds. */
+.reveal-cards--batch .reveal-card--celebrating {
+    translate: 0 -6px;
+    scale: 1.04 1.04;
 }
 
 .reveal-cards--batch .reveal-card {

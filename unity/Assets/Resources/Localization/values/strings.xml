@@ -770,6 +770,9 @@
     <string name="pack_reveal_card_fallback_name">Card %1$d</string>
     <!-- Copy count next to a rarity heading or a card name. %1$d = copies. Uses the multiplication sign. -->
     <string name="pack_reveal_copies">×%1$d</string>
+    <string name="pack_reveal_tap_hint">Tap a card to reveal it · Tap the background to reveal all</string>
+    <string name="pack_reveal_opening_hint">Opening your cards…</string>
+    <string name="pack_reveal_return_hint">Tap the background to return</string>
     <!-- Fallback pack name when the pack id is unreadable. -->
     <string name="pack_name_fallback">Pack</string>
     <!-- Card tooltip subtitle start. %1$d = mana cost, %2$s = card type (glossary type_*). Double spaces around the dot are deliberate. -->

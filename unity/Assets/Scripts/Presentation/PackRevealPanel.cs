@@ -9,8 +9,8 @@ using UnityEngine.UIElements;
 namespace Kingdom.Presentation
 {
     /// <summary>
-    /// The pack-opening moment: a <see cref="PackOpenReceipt"/> dealt out as a row of cards that
-    /// arrive one after another. Split out of <see cref="ShopPanelController"/> on 2026-08-20,
+    /// The pack-opening moment: a <see cref="PackOpenReceipt"/> dealt face down for the player
+    /// to reveal. Batches reveal automatically. Split out of <see cref="ShopPanelController"/> on 2026-08-20,
     /// where it had been a second responsibility joined to the store by exactly two calls.
     ///
     /// <para><b>Host-agnostic, and that is the whole point of the split.</b> It queries its
@@ -55,6 +55,21 @@ namespace Kingdom.Presentation
         private ICardDatabase _cards;
         private IArtProvider _art;
         private PackRevealAudio _audio;
+        private readonly List<RevealCard> _revealCards = new();
+        private readonly List<IVisualElementScheduledItem> _beats = new();
+        private readonly Label _hint;
+        private RevealCard _flipping;
+        private bool _automatic;
+        private int _requestOrder;
+
+        private sealed class RevealCard
+        {
+            public VisualElement Root, Face, Back;
+            public PackRevealEffect Effect;
+            public Rarity Rarity;
+            public bool Arrived, Ready, Requested, Revealed;
+            public int RequestOrder;
+        }
 
         /// <summary>Bumped when a reveal is hidden or replaced. An art callback carrying a stale generation
         /// is painting onto a card that has already been cleared off the row — the same version
@@ -82,8 +97,14 @@ namespace Kingdom.Presentation
             // A tap anywhere off a card (Sam, 2026-09-27): there is no Done button. The dismiss layer
             // sits behind the cards, so a card swallows its own tap and only the gaps reach this.
             VisualElement dismiss = root.Q<VisualElement>("reveal-dismiss");
-            dismiss?.RegisterCallback<ClickEvent>(_ => Done());
+            dismiss?.RegisterCallback<ClickEvent>(_ => AdvanceOrDone());
             _overlay?.RegisterCallback<DetachFromPanelEvent>(_ => Hide());
+            if (_overlay != null)
+            {
+                _hint = new Label { name = "reveal-hint", pickingMode = PickingMode.Ignore };
+                _hint.AddToClassList("reveal-hint");
+                _overlay.Add(_hint);
+            }
 
             // Start hidden regardless of what the markup said. A host that forgets the hidden class
             // would otherwise open on an empty stage, which reads as a bug in the pack, not the UXML.
@@ -98,6 +119,7 @@ namespace Kingdom.Presentation
         {
             if (receipt == null || !IsBound) return;
             Hide();
+            _automatic = false;
             _cardRow.Clear();
             _cardRow.RemoveFromClassList(BatchClass);
             _cardRow.RemoveFromClassList(CrowdedClass);
@@ -108,11 +130,12 @@ namespace Kingdom.Presentation
 
             for (int i = 0; i < receipt.Awards.Count; i++)
             {
-                int delay = 140 + (i * 170);
+                int delay = 100 + (i * 105);
                 _cardRow.Add(BuildRevealCard(receipt.Awards[i], delay));
             }
 
             _overlay.RemoveFromClassList(HiddenClass);
+            UpdateHint();
         }
 
         /// <summary>
@@ -138,6 +161,7 @@ namespace Kingdom.Presentation
             if (receipts.Count == 1 && string.IsNullOrEmpty(note)) { Show(receipts[0]); return; }
 
             Hide();
+            _automatic = true;
             _cardRow.Clear();
             _cardRow.AddToClassList(BatchClass);
             _cardRow.RemoveFromClassList(CrowdedClass);
@@ -186,6 +210,7 @@ namespace Kingdom.Presentation
 
             BuildList(awards, note);
             _overlay.RemoveFromClassList(HiddenClass);
+            UpdateHint();
         }
 
         /// <summary>Everything in the list ignores picking, so a tap on it reaches the dismiss layer
@@ -302,6 +327,13 @@ namespace Kingdom.Presentation
         public void Hide()
         {
             _generation++;
+            foreach (IVisualElementScheduledItem beat in _beats) beat.Pause();
+            _beats.Clear();
+            foreach (RevealCard card in _revealCards) card.Effect.Stop();
+            _revealCards.Clear();
+            _flipping = null;
+            _requestOrder = 0;
+            _overlay?.RemoveFromClassList("reveal-overlay--spotlight");
             _overlay?.AddToClassList(HiddenClass);
             if (_audio == null) return;
             _audio.Stop();
@@ -315,22 +347,83 @@ namespace Kingdom.Presentation
             _onDone?.Invoke();
         }
 
+        // A background tap finishes the reveal before it can dismiss it. This also gives the
+        // existing Android back target a safe fast path without adding another chrome button.
+        private void AdvanceOrDone()
+        {
+            bool pending = false;
+            var remaining = new List<RevealCard>(_revealCards);
+            remaining.Sort((a, b) =>
+            {
+                int rarity = a.Rarity.CompareTo(b.Rarity);
+                return rarity != 0 ? rarity : _revealCards.IndexOf(a).CompareTo(_revealCards.IndexOf(b));
+            });
+            foreach (RevealCard card in remaining)
+            {
+                if (card.Revealed) continue;
+                if (!card.Requested) card.RequestOrder = _requestOrder++;
+                card.Requested = true;
+                pending = true;
+            }
+            if (pending || _flipping != null) { PumpReveals(); return; }
+            Done();
+        }
+
+        private void UpdateHint()
+        {
+            if (_hint == null) return;
+            bool finished = _flipping == null && _revealCards.TrueForAll(c => c.Revealed);
+            _hint.text = Loc.Get(finished ? "pack_reveal_return_hint" :
+                _automatic ? "pack_reveal_opening_hint" : "pack_reveal_tap_hint");
+        }
+
         private VisualElement BuildRevealCard(PackCardAward award, int revealDelayMs)
         {
             CardDefinition definition = Definition(award.CardId);
 
-            var card = new VisualElement();
+            var card = new VisualElement { focusable = true, tabIndex = 0 };
             card.AddToClassList("reveal-card");
             card.AddToClassList(CardClassTokens.RarityToken(award.Rarity, "reveal-card--"));
+            var effect = new PackRevealEffect(award.Rarity);
+            card.Add(effect);
+            var face = new VisualElement { pickingMode = PickingMode.Ignore };
+            face.AddToClassList("reveal-card__face");
+            card.Add(face);
+            var back = new VisualElement { pickingMode = PickingMode.Ignore };
+            back.AddToClassList("reveal-card__back");
+            card.Add(back);
+            var state = new RevealCard
+            {
+                Root = card, Face = face, Back = back, Effect = effect, Rarity = award.Rarity,
+                Requested = _automatic,
+                RequestOrder = ((int)award.Rarity * 1000) + _revealCards.Count,
+            };
+            _revealCards.Add(state);
+            card.RegisterCallback<ClickEvent>(evt =>
+            {
+                evt.StopPropagation();
+                RequestReveal(state);
+            });
+            card.RegisterCallback<KeyDownEvent>(evt =>
+            {
+                if (evt.keyCode != KeyCode.Return && evt.keyCode != KeyCode.Space) return;
+                evt.StopPropagation();
+                evt.PreventDefault();
+                RequestReveal(state);
+            });
+            card.RegisterCallback<PointerEnterEvent>(_ => effect.SetHovered(true));
+            card.RegisterCallback<PointerLeaveEvent>(_ => effect.SetHovered(false));
+            card.RegisterCallback<FocusInEvent>(_ => effect.SetHovered(true));
+            card.RegisterCallback<FocusOutEvent>(_ => effect.SetHovered(false));
 
             // This fallback is held out of view while CardFaceBaker's serial queue builds the
             // canonical printed card. It appears only if capture fails, keeping the award readable
             // without ever layering a second name or rarity treatment over a real face.
-            var fallback = new VisualElement();
+            var fallback = new VisualElement { pickingMode = PickingMode.Ignore };
             fallback.AddToClassList("reveal-card__fallback");
-            card.Add(fallback);
+            face.Add(fallback);
 
-            var flourish = new VisualElement();
+            var flourish = new VisualElement { pickingMode = PickingMode.Ignore };
             flourish.AddToClassList("reveal-card__flourish");
             fallback.Add(flourish);
 
@@ -339,18 +432,26 @@ namespace Kingdom.Presentation
             // The illustration-and-name treatment is only the resilient fallback. The vault injects
             // a CardFaceBaker below, which replaces it with the canonical printed card as soon as
             // that off-camera capture completes; hosts without a rig can still use the panel.
-            var art = new VisualElement();
+            var art = new VisualElement { pickingMode = PickingMode.Ignore };
             art.AddToClassList("reveal-card__art");
             fallback.Add(art);
             PaintArt(art, definition);
 
             var name = new Label(definition != null ? CardLoc.Name(definition, _cards) : Loc.Format("pack_reveal_card_fallback_name", award.CardId));
+            name.pickingMode = PickingMode.Ignore;
             name.AddToClassList("reveal-card__name");
             fallback.Add(name);
 
-            if (award.Rarity == Rarity.LEGENDARY && _audio == null)
+            if (_audio == null)
                 _audio = PackRevealAudio.Create();
-            PaintFace(card, fallback, definition, revealDelayMs, award.Rarity);
+            PaintFace(state, fallback, definition);
+            Schedule(() =>
+            {
+                state.Arrived = true;
+                card.AddToClassList("reveal-card--shown");
+                _audio?.CardArrived(_revealCards.IndexOf(state));
+                PumpReveals();
+            }, revealDelayMs);
 
             // No award line. It read "NEW CARD" or "DUPE -> n SHARDS", and since the no-auto-sharding
             // ruling (Sam, 2026-08-12) every slot is a card — leaving "NEW CARD" would assert newness the
@@ -365,41 +466,110 @@ namespace Kingdom.Presentation
         /// <summary>Reveal the same complete printed card face used by the collection wall, falling
         /// back to the illustration tile only when capture fails. The generation check prevents a
         /// late face from a dismissed reveal painting onto a later pack's card element.</summary>
-        private void PaintFace(VisualElement target, VisualElement fallback,
-                               CardDefinition definition, int revealDelayMs, Rarity rarity)
+        private void PaintFace(RevealCard card, VisualElement fallback, CardDefinition definition)
         {
             if (_faceBaker == null || definition == null)
             {
-                RevealAfter(target, revealDelayMs, rarity);
+                card.Ready = true;
                 return;
             }
 
             // Reserve the card's layout slot but do not show the old mini-card while the canonical
             // face is in flight. A successful reveal is full-card-first; the fallback appears only
-            // when the baker explicitly reports that it could not capture one.
+            // when capture fails or its callback exceeds the watchdog below.
             fallback.style.display = DisplayStyle.None;
             int generation = _generation;
             _faceBaker.Bake(definition, texture =>
             {
                 if (generation != _generation) return;
                 if (texture is Texture2D face)
-                    target.style.backgroundImage =
+                {
+                    card.Face.style.backgroundImage =
                         new StyleBackground(Background.FromTexture2D(face));
+                    fallback.style.display = DisplayStyle.None;
+                }
                 else
                     fallback.style.display = DisplayStyle.Flex;
-                RevealAfter(target, revealDelayMs, rarity);
+                card.Ready = true;
+                PumpReveals();
             });
+            // A missing art callback must not trap a confirmed award behind its back forever.
+            // Normally the canonical face is ready well before a player touches the card.
+            Schedule(() =>
+            {
+                if (card.Ready) return;
+                fallback.style.display = DisplayStyle.Flex;
+                card.Ready = true;
+                Debug.LogWarning("[PackReveal] face capture timed out; showing the award fallback.");
+                PumpReveals();
+            }, 2500);
         }
 
-        private void RevealAfter(VisualElement target, int delayMs, Rarity rarity)
+        private void RequestReveal(RevealCard card)
+        {
+            if (card.Revealed || !_revealCards.Contains(card)) return;
+            if (!card.Requested) card.RequestOrder = _requestOrder++;
+            card.Requested = true;
+            card.Root.AddToClassList("reveal-card--queued");
+            PumpReveals();
+        }
+
+        // One reveal owns the spotlight. Fast taps queue safely, and loading completion cannot
+        // reorder an automatic run: common cards go first, with the strongest pull saved for last.
+        private void PumpReveals()
+        {
+            if (_flipping != null) return;
+            RevealCard next = null;
+            foreach (RevealCard card in _revealCards)
+            {
+                if (!card.Requested || card.Revealed) continue;
+                if (next == null || card.RequestOrder < next.RequestOrder) next = card;
+            }
+            if (next == null) { UpdateHint(); return; }
+            if (!next.Arrived || !next.Ready) return;
+
+            _flipping = next;
+            bool legendary = next.Rarity == Rarity.LEGENDARY;
+            int chargeMs = legendary ? 320 : next.Rarity == Rarity.EPIC ? 180 : 60;
+            next.Root.RemoveFromClassList("reveal-card--queued");
+            next.Root.AddToClassList("reveal-card--charging");
+            next.Effect.SetHovered(true);
+            if (legendary)
+            {
+                next.Root.AddToClassList("reveal-card--celebrating");
+                _overlay.AddToClassList("reveal-overlay--spotlight");
+            }
+            Schedule(() => next.Root.AddToClassList("reveal-card--turning"), chargeMs);
+            Schedule(() =>
+            {
+                next.Back.style.display = DisplayStyle.None;
+                next.Face.style.visibility = Visibility.Visible;
+                next.Root.AddToClassList("reveal-card--revealed");
+                next.Root.RemoveFromClassList("reveal-card--turning");
+                next.Root.RemoveFromClassList("reveal-card--charging");
+                next.Revealed = true;
+                next.Effect.Reveal();
+                if (legendary) _audio?.LegendaryRevealed();
+                else _audio?.CardRevealed(next.Rarity);
+            }, chargeMs + 140);
+            Schedule(() =>
+            {
+                next.Root.RemoveFromClassList("reveal-card--celebrating");
+                _overlay.RemoveFromClassList("reveal-overlay--spotlight");
+                _flipping = null;
+                UpdateHint();
+                PumpReveals();
+            }, chargeMs + (legendary ? 1000 : next.Rarity == Rarity.EPIC ? 600 : 360));
+        }
+
+        private void Schedule(Action action, int delayMs)
         {
             int generation = _generation;
-            target.schedule.Execute(() =>
+            _beats.Add(_overlay.schedule.Execute(() =>
             {
-                if (generation != _generation || target.panel == null) return;
-                target.AddToClassList("reveal-card--shown");
-                if (rarity == Rarity.LEGENDARY) _audio?.LegendaryRevealed();
-            }).StartingIn(delayMs);
+                if (generation != _generation || _overlay.panel == null) return;
+                action();
+            }).StartingIn(delayMs));
         }
 
         /// <summary>The printed card behind an award, or null when the database will not open. Both

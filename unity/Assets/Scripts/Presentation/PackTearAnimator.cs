@@ -110,6 +110,7 @@ namespace Kingdom.Presentation
 
             face.Add(top);
             face.Add(bottom);
+            Schedule(face, () => face.AddToClassList("vault-pack__face--tension"), 20);
 
             // The pieces now carry the picture, so the tile's own copy of it has to go in the same
             // frame — two intact wrappers, one behind the other, would show through the gap the
@@ -118,6 +119,7 @@ namespace Kingdom.Presentation
 
             Schedule(face, () =>
             {
+                face.RemoveFromClassList("vault-pack__face--tension");
                 top.AddToClassList("tear-half--parted");
                 bottom.AddToClassList("tear-half--parted");
             }, SplitMs);

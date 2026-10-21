@@ -480,4 +480,7 @@
     <string name="board_seal_approved_by_default">STILLSCHWEIGEND\nGENEHMIGT</string>
     <string name="board_suggestion_box_label">VORSCHLÄGE</string>
     <string name="board_suggestion_box_receipt">Dein Vorschlag wurde\nerhalten und abgelegt.</string>
+    <string name="pack_reveal_tap_hint">Tippe auf eine Karte, um sie aufzudecken · Tippe auf den Hintergrund, um alle aufzudecken</string>
+    <string name="pack_reveal_opening_hint">Deine Karten werden aufgedeckt…</string>
+    <string name="pack_reveal_return_hint">Tippe auf den Hintergrund, um zurückzukehren</string>
 </resources>
