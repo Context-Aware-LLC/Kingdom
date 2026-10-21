@@ -130,6 +130,8 @@
 .ms-root .ms-toggle,
 .ms-root .ms-slider {
     flex-direction: row;
+    align-items: center;
+    min-height: 68px;
 }
 /* USS has no :first-child. The mute toggle is always the group's first row, so only the sliders
  * under it take the gap. */
@@ -138,8 +140,26 @@
 .ms-root .ms-toggle .unity-base-field__label,
 .ms-root .ms-slider .unity-base-field__label {
     color: var(--ink-1);
-    font-size: var(--type-label);
-    min-width: 90px;
+    font-size: var(--type-h2);
+    min-width: 120px;
+}
+/* Sized for a finger, not the Editor defaults (Sam, 2026-10-20): the box and the dragger match
+ * the 68px menu rows, and the track is centred on the dragger by hand because both are absolute. */
+.ms-root .ms-toggle .unity-toggle__checkmark {
+    width: 52px;
+    height: 52px;
+}
+.ms-root .ms-slider .unity-base-slider__input { height: 52px; }
+.ms-root .ms-slider .unity-base-slider__tracker {
+    top: 50%;
+    height: 12px;
+    margin-top: -6px;
+}
+.ms-root .ms-slider .unity-base-slider__dragger {
+    top: 50%;
+    width: 52px;
+    height: 52px;
+    margin-top: -26px;
 }
 .ms-root .ms-toggle .unity-toggle__checkmark,
 .ms-root .ms-toggle:hover .unity-toggle__checkmark,
