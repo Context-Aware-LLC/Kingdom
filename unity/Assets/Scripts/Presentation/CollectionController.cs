@@ -1088,7 +1088,10 @@ namespace Kingdom.Presentation
 
         private static void SetCardRow(VisualElement row, CardDefinition def, int copies)
         {
-            row.Q<Label>("cost").text = def.Cost.ToString();
+            var cost = row.Q<Label>("cost");
+            cost.text = def.Cost.ToString();
+            CardClassTokens.SwapPrefixed(cost, CardClassTokens.AllRarity("card-cost--"),
+                CardClassTokens.RarityToken(def.Rarity, "card-cost--"));
             row.Q<Label>("name").text = def.Name;
             row.Q<Label>("count").text = copies > 1 ? Loc.Format("collection_deck_row_copies", copies) : "";
 

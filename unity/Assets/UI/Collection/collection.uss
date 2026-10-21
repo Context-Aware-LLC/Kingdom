@@ -186,7 +186,9 @@
     border-left-color: var(--class-neutral);
 }
 .card-row--disabled { opacity: 0.4; }
-/* A fixed disc. It was 100% x 100% — a pill filling the whole row — before it was taken out. */
+/* A fixed disc. It was 100% x 100% — a pill filling the whole row — before it was taken out.
+ * The number takes the card's rarity colour (Sam, 2026-10-20), so the disc is dark with a mana
+ * ring: rare blue on a mana-blue fill is unreadable. SetCardRow swaps exactly one modifier on. */
 .card-cost {
     width: 36px;
     height: 36px;
@@ -194,13 +196,25 @@
     -unity-text-align: middle-center;
     -unity-font-style: bold;
     font-size: var(--type-body);
-    color: var(--surface-0);
-    background-color: var(--mana);
+    color: var(--rarity-common);
+    background-color: var(--surface-0);
+    border-width: 2px;
+    border-color: var(--mana);
     border-radius: 999px;
     margin-right: var(--space-3);
 }
+.card-cost--common    { color: var(--rarity-common); }
+.card-cost--rare      { color: var(--rarity-rare); }
+.card-cost--epic      { color: var(--rarity-epic); }
+.card-cost--legendary { color: var(--rarity-legendary); }
+/* A Label resolves flex-shrink: 0, so without the shrink and min-width a long name grew past the
+ * row and pushed the copy count off its right edge, where nothing showed it. */
 .card-name {
     flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-size: var(--type-body);
     color: var(--ink-1);
 }
