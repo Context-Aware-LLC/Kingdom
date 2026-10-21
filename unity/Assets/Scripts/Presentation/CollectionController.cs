@@ -1086,7 +1086,7 @@ namespace Kingdom.Presentation
             return row;
         }
 
-        private static void SetCardRow(VisualElement row, CardDefinition def, int copies)
+        private void SetCardRow(VisualElement row, CardDefinition def, int copies)
         {
             var cost = row.Q<Label>("cost");
             cost.text = def.Cost.ToString();
