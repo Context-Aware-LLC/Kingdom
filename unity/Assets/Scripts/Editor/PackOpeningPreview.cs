@@ -174,6 +174,8 @@ namespace Kingdom.Editor
                     case 4:
                         Check(cards.All(Revealed) && _dismissed == 0,
                             "background tap reveals remaining awards without dismissing");
+                        Check(cards.All(c => !c.ClassListContains("reveal-card--queued")),
+                            "repeat taps leave no queued visual state behind");
                         Capture("04-all-revealed");
                         Click(_root.Q("reveal-dismiss"));
                         Check(_dismissed == 1, "completed reveal dismisses on background tap");

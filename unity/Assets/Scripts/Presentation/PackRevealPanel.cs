@@ -507,8 +507,8 @@ namespace Kingdom.Presentation
 
         private void RequestReveal(RevealCard card)
         {
-            if (card.Revealed || !_revealCards.Contains(card)) return;
-            if (!card.Requested) card.RequestOrder = _requestOrder++;
+            if (card.Requested || card.Revealed || !_revealCards.Contains(card)) return;
+            card.RequestOrder = _requestOrder++;
             card.Requested = true;
             card.Root.AddToClassList("reveal-card--queued");
             PumpReveals();
