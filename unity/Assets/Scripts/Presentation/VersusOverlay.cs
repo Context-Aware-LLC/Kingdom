@@ -51,21 +51,19 @@ namespace Kingdom.Presentation
         /// the slot is a fixed-width box under a medallion, not a scroller.</summary>
         private const int MaxNameChars = 20;
 
-        // ── Slot geometry as fractions of screen height, from the 5040×2160 canvas (spec §4/§5).
+        // ── Slot geometry as fractions of screen height (spec §4/§5).
         //    The plate is centred and height-scaled, so these land on the painted frames at any aspect.
-        private const float PlateAspect      = 5040f / 2160f;
-        // MEASURED per-frame from the generated plate (Causeway), NOT the spec's nominal geometry:
-        // the frames were painted by the image model, so each aperture centre is read off the plate
-        // and the two are wired INDEPENDENTLY — the plate is asymmetric and the symmetric ±X
-        // assumption misplaced them (Sam measured each in GIMP, 2026-07-24). Canvas centres:
-        // Pyra/left (1480,730), Maren/right (3544,732). Ø1200 overfills the irregular aperture so
-        // the portrait tucks under the frame's inner lip with no gap ring.
-        private const float MedallionDiaFrac  = 1200f / 2160f;           // Ø1200 ≈ 55.6% of height
-        private const float LeftMedallionXFrac  = (1480f - 2520f) / 2160f;  // -1040 (canvas 1480)
-        private const float RightMedallionXFrac = (3544f - 2520f) / 2160f;  // +1024 (canvas 3544)
-        private const float LeftMedallionYFrac  = (1080f - 730f) / 2160f;   // 350 above centre
-        private const float RightMedallionYFrac = (1080f - 732f) / 2160f;   // 348 above centre
-        private const float OrbYFrac            = (1080f - 731f) / 2160f;    // 349, level with the medallions
+        private const float PlateAspect      = 1915f / 821f;
+        // Measured from the approved sunlit Kingdom plate (2026-10-21), retaining the Causeway
+        // asset address. The painted apertures are slightly irregular and independently centred:
+        // left (559,262), right (1345,263) on the 1915×821 source. Ø440 covers the parchment
+        // openings through the mask's feather while leaving the decorative gold rims visible.
+        private const float MedallionDiaFrac  = 440f / 821f;
+        private const float LeftMedallionXFrac  = (559f - 957.5f) / 821f;
+        private const float RightMedallionXFrac = (1345f - 957.5f) / 821f;
+        private const float LeftMedallionYFrac  = (410.5f - 262f) / 821f;
+        private const float RightMedallionYFrac = (410.5f - 263f) / 821f;
+        private const float OrbYFrac            = (410.5f - 262.5f) / 821f;
         private const float OrbDiaFrac       = 400f / 2160f;    // Ø400 ≈ 18.5%
         private const float NameplateYFrac   = -390f / 2160f;   // canvas 1470 — clears the frame's bottom lip
         private const float ClassYFrac       = -520f / 2160f;   // canvas 1600
@@ -100,10 +98,10 @@ namespace Kingdom.Presentation
         private const float MinHold         = 2.0f;
         private const float FadeOutDuration = 0.5f;
 
-        private static readonly Color NameTint   = new Color(0.96f, 0.93f, 0.86f);
-        private static readonly Color ClassTint  = new Color(0.78f, 0.82f, 0.90f);
-        private static readonly Color StatusTint = new Color(0.92f, 0.88f, 0.82f);
-        private static readonly Color ErrorTint  = new Color(1.00f, 0.55f, 0.45f);
+        private static readonly Color NameTint   = new Color(0.16f, 0.12f, 0.08f);
+        private static readonly Color ClassTint  = new Color(0.15f, 0.20f, 0.28f);
+        private static readonly Color StatusTint = new Color(0.20f, 0.16f, 0.11f);
+        private static readonly Color ErrorTint  = new Color(0.65f, 0.10f, 0.07f);
 
         private static readonly string[] OrbNames = { "StormGlass", "Confluence", "HollowCore" };
 
@@ -338,19 +336,18 @@ namespace Kingdom.Presentation
             tmp.color = new Color(tint.r, tint.g, tint.b, 0f);   // fades in with the rig
             tmp.sortingOrder = SortBase + 20;
             tmp.text = text;
-            // Dark outline so text reads over the busy ruins band (the plate leaves these bands
-            // unlit per §8, but the ground is textured). Per-instance material via fontMaterial.
+            // Dark ink with a warm light edge reads across the sunlit stone and garden shadows.
+            // Per-instance material via fontMaterial keeps the treatment local to this screen.
             var mat = tmp.fontMaterial;
             if (underlay)
             {
-                // TMP's SDF outline grows INWARD as well as outward, so on a light 30px face it eats
-                // the stroke — the class band rendered thinner and paler than the design mock, the
-                // outline costing the very weight it was added to protect. An underlay sits wholly
-                // BEHIND the glyph: same separation from the textured ruins, no stroke lost.
+                // TMP's SDF outline grows INWARD as well as outward, so on a small 30px face it eats
+                // the stroke. An underlay sits wholly BEHIND the glyph, separating the class label
+                // from the textured gardens without losing its weight.
                 mat.DisableKeyword("OUTLINE_ON");
                 mat.SetFloat(ShaderUtilOutlineWidth, 0f);
                 mat.EnableKeyword("UNDERLAY_ON");
-                mat.SetColor(UnderlayColor, new Color(0f, 0f, 0f, 0.75f));
+                mat.SetColor(UnderlayColor, new Color(1f, 0.97f, 0.88f, 0.9f));
                 mat.SetFloat(UnderlayOffsetX, 0f);
                 mat.SetFloat(UnderlayOffsetY, -0.25f);
                 mat.SetFloat(UnderlayDilate, 0.15f);
@@ -359,7 +356,7 @@ namespace Kingdom.Presentation
             else
             {
                 mat.EnableKeyword("OUTLINE_ON");
-                mat.SetColor(ShaderUtilOutlineColor, new Color(0f, 0f, 0f, 0.9f));
+                mat.SetColor(ShaderUtilOutlineColor, new Color(1f, 0.97f, 0.88f, 0.9f));
                 mat.SetFloat(ShaderUtilOutlineWidth, 0.18f);
             }
             _texts.Add(tmp);
