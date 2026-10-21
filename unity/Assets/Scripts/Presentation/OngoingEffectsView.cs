@@ -54,10 +54,10 @@ namespace Kingdom.Presentation
                 return;
             }
 
-            var text = new StringBuilder("ACTIVE EFFECTS");
+            var text = new StringBuilder(Loc.Get("effects_panel_title"));
             foreach (OngoingEffectStatus row in rows)
-                text.Append('\n').Append(row.SourceName).Append(" · ")
-                    .Append(row.Owner).Append(" · ").Append(row.Remaining);
+                text.Append('\n').Append(Loc.Format("effects_row_format",
+                    row.SourceName, row.Owner, row.Remaining));
             _label.text = text.ToString();
             _label.enabled = true;
         }

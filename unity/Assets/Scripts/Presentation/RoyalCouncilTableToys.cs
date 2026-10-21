@@ -135,7 +135,7 @@ namespace Kingdom.Presentation
             Box(_box, "Walnut case", Vector3.zero, new Vector3(1.3f, 1.15f, 0.55f), _wood);
             Box(_box, "Brass lid", new Vector3(0f, 0f, -0.29f), new Vector3(1.38f, 1.22f, 0.06f), _brass);
             Box(_box, "Dark letter slot", new Vector3(0f, 0.20f, -0.327f), new Vector3(0.90f, 0.10f, 0.025f), _ink);
-            TabletopToyGeometry.Label(_box, "SUGGESTIONS", new Vector3(0f, -0.24f, -0.335f), new Vector2(1.2f, 0.3f), 1.1f);
+            TabletopToyGeometry.Label(_box, Loc.Get("board_suggestion_box_label"), new Vector3(0f, -0.24f, -0.335f), new Vector2(1.2f, 0.3f), 1.1f);
             _box.gameObject.AddComponent<BoxCollider>().size = new Vector3(1.4f, 1.25f, 0.7f);
             _box.gameObject.AddComponent<LocalPropPress>().Pressed = () =>
             {
@@ -149,7 +149,7 @@ namespace Kingdom.Presentation
             _receipt = new GameObject("Filed receipt").transform;
             _receipt.SetParent(_box, false);
             Box(_receipt, "Receipt slip", Vector3.zero, new Vector3(3.0f, 1.05f, 0.035f), _paper);
-            TabletopToyGeometry.Label(_receipt, "Your suggestion has been\nreceived and filed.",
+            TabletopToyGeometry.Label(_receipt, Loc.Get("board_suggestion_box_receipt"),
                 new Vector3(0f, 0f, -0.026f), new Vector2(2.8f, 0.9f), 1.65f);
             _receipt.gameObject.SetActive(false);
         }

@@ -231,7 +231,7 @@ namespace Kingdom.Presentation
             label.transform.SetParent(_tag.transform, false);
             label.transform.localPosition = new Vector3(0f, 0f, -0.018f);
             BoardController.ApplyUiFont(label);
-            label.text = "APPROVED\nBY DEFAULT";
+            label.text = Loc.Get("board_seal_approved_by_default");
             label.fontSize = 2.4f;
             label.fontStyle = FontStyles.Bold;
             label.color = new Color(0.29f, 0.10f, 0.08f);

@@ -214,7 +214,7 @@ namespace Kingdom.Presentation
             }
             catch (Exception ex)
             {
-                RenderQuestFailure("Quests unavailable");
+                RenderQuestFailure(Loc.Get("menu_quests_unavailable"));
                 Debug.LogWarning($"[MainMenu] could not restore this session's player data " +
                                  $"({ex.GetType().Name}: {ex.Message}); continuing with whatever " +
                                  "this device already had.");
@@ -448,7 +448,7 @@ namespace Kingdom.Presentation
             if (_questList != null) _questList.Clear();
             if (_questStatus != null)
             {
-                _questStatus.text = "Loading quests…";
+                _questStatus.text = Loc.Get("common_loading_quests");
                 _questStatus.RemoveFromClassList("mm-quest-status--hidden");
             }
         }
@@ -482,15 +482,15 @@ namespace Kingdom.Presentation
             if (snapshot == null || snapshot.Status != QuestFetchStatus.Known)
             {
                 string message = snapshot?.Status == QuestFetchStatus.Unauthenticated
-                    ? "Sign in to view quests"
-                    : "Quests unavailable";
+                    ? Loc.Get("menu_quests_signed_out")
+                    : Loc.Get("menu_quests_unavailable");
                 RenderQuestFailure(message);
                 return;
             }
 
             if (snapshot.Quests.Count == 0)
             {
-                RenderQuestFailure("No current quests");
+                RenderQuestFailure(Loc.Get("menu_quests_none"));
                 return;
             }
 
@@ -522,9 +522,9 @@ namespace Kingdom.Presentation
 
             var age = new Label(index switch
             {
-                0 => "TODAY",
-                1 => "YESTERDAY",
-                _ => "2 DAYS AGO",
+                0 => Loc.Get("menu_quest_age_today"),
+                1 => Loc.Get("menu_quest_age_yesterday"),
+                _ => Loc.Get("menu_quest_age_two_days"),
             });
             age.AddToClassList("mm-quest-age");
             heading.Add(age);
@@ -538,8 +538,8 @@ namespace Kingdom.Presentation
             }
 
             var detail = new Label(quest.Complete
-                ? "COMPLETE"
-                : $"{quest.Progress} / {quest.Goal}");
+                ? Loc.Get("menu_quest_complete")
+                : Loc.Format("common_1_d_2_d", quest.Progress, quest.Goal));
             detail.AddToClassList("mm-quest-detail");
 
             var reward = new VisualElement();
@@ -547,7 +547,7 @@ namespace Kingdom.Presentation
             var rewardIcon = new VisualElement();
             rewardIcon.AddToClassList("mm-quest-reward__icon");
             reward.Add(rewardIcon);
-            var rewardAmount = new Label($"+{quest.RewardGold}");
+            var rewardAmount = new Label(Loc.Format("menu_quest_reward", quest.RewardGold));
             rewardAmount.AddToClassList("mm-quest-reward__amount");
             reward.Add(rewardAmount);
 
@@ -734,7 +734,9 @@ namespace Kingdom.Presentation
             }
 
             _vaultPackCount.style.display = total > 0 ? DisplayStyle.Flex : DisplayStyle.None;
-            _vaultPackCount.text = total > 99 ? "× 99+" : total > 0 ? $"× {total}" : "";
+            _vaultPackCount.text = total > 99
+                ? Loc.Get("menu_vault_pack_count_max")
+                : total > 0 ? Loc.Format("menu_vault_pack_count", total) : "";
         }
 
         private void BindLeaderboard()
@@ -775,9 +777,9 @@ namespace Kingdom.Presentation
             CancellationToken token = _leaderboardRequest.Token;
 
             _leaderboardList?.Clear();
-            SetLeaderboardStatus("Calling the keepers…", error: false, visible: true);
+            SetLeaderboardStatus(Loc.Get("common_calling_the_keepers"), error: false, visible: true);
             if (_leaderboardUpdated != null)
-                _leaderboardUpdated.text = "Ratings update after every eligible match.";
+                _leaderboardUpdated.text = Loc.Get("main_menu_leaderboard_updated");
 
             LeaderboardFetchResult result = await LeaderboardApi.FetchAsync(leaderboardUrl, token);
             if (token.IsCancellationRequested) return;
@@ -785,7 +787,7 @@ namespace Kingdom.Presentation
             if (!result.Ok)
             {
                 SetLeaderboardStatus(
-                    "The ranked ledger is unavailable right now. Your matches are still safe.",
+                    Loc.Get("leaderboard_error"),
                     error: true,
                     visible: true);
                 return;
@@ -795,7 +797,7 @@ namespace Kingdom.Presentation
             if (entries.Length == 0)
             {
                 SetLeaderboardStatus(
-                    "No ranked duels have been recorded yet. The first crown is waiting.",
+                    Loc.Get("leaderboard_empty"),
                     error: false,
                     visible: true);
                 return;
@@ -807,7 +809,8 @@ namespace Kingdom.Presentation
 
             if (_leaderboardUpdated != null
                 && DateTimeOffset.TryParse(result.Response.generatedAtUtc, out DateTimeOffset generated))
-                _leaderboardUpdated.text = $"Updated {generated.ToLocalTime():h:mm tt} · Elo · top {entries.Length}";
+                _leaderboardUpdated.text = Loc.Format("leaderboard_footer_updated",
+                    $"{generated.ToLocalTime():h:mm tt}", entries.Length);
         }
 
         private static VisualElement BuildLeaderboardRow(LeaderboardRow entry)
@@ -817,10 +820,11 @@ namespace Kingdom.Presentation
             if (entry.rank % 2 == 0) row.AddToClassList("mm-leaderboard__row--even");
             if (entry.rank <= 3) row.AddToClassList("mm-leaderboard__row--podium");
 
-            row.Add(LabelFor($"#{entry.rank}", "mm-leaderboard__rank"));
-            row.Add(LabelFor(entry.displayName ?? "Unnamed Player", "mm-leaderboard__name"));
+            row.Add(LabelFor(Loc.Format("leaderboard_rank", entry.rank), "mm-leaderboard__rank"));
+            row.Add(LabelFor(entry.displayName ?? Loc.Get("leaderboard_unnamed_player"), "mm-leaderboard__name"));
             row.Add(LabelFor(entry.rating.ToString(), "mm-leaderboard__rating"));
-            row.Add(LabelFor($"{entry.wins} — {entry.losses} — {entry.draws}", "mm-leaderboard__record"));
+            row.Add(LabelFor(Loc.Format("leaderboard_record", entry.wins, entry.losses, entry.draws),
+                "mm-leaderboard__record"));
             return row;
         }
 

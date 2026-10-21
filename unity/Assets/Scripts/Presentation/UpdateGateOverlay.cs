@@ -87,21 +87,19 @@ namespace Kingdom.Presentation
             root.Q("modal")?.AddToClassList("mm-modal--gate");
 
             var title = root.Q<Label>("title");
-            if (title != null) title.text = stale ? "Update required" : "Couldn't reach the server";
+            if (title != null) title.text = Loc.Get(stale ? "update_gate_title_required" : "update_gate_title_unreachable");
 
             var reason = root.Q<Label>("reason");
             if (reason != null)
                 reason.text = stale
-                    ? "A new version of Kingdom of Bad Ideas is out. Update to keep playing.\n" +
-                      ConnectionFailureCopy.UpdateJoke
-                    : "Kingdom of Bad Ideas needs a connection to play. Check your network and try again.\n" +
-                      ConnectionFailureCopy.Unreachable.Joke;
+                    ? Loc.Format("update_gate_reason_required", ConnectionFailureCopy.UpdateJoke)
+                    : Loc.Format("update_gate_reason_unreachable", ConnectionFailureCopy.Unreachable.Joke);
 
             root.Q<Button>("btn-back")?.RemoveFromHierarchy();
 
             var action = root.Q<Button>("btn-retry");
             if (action == null) return;
-            action.text = stale ? "Update" : "Retry";
+            action.text = Loc.Get(stale ? "update_gate_button_update" : "common_retry");
             if (stale) action.RegisterCallback<ClickEvent>(_ => Application.OpenURL(StoreUrl));
             else action.RegisterCallback<ClickEvent>(_ => ReloadThisScene());
         }

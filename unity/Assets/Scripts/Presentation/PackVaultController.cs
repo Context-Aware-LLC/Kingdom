@@ -335,7 +335,7 @@ namespace Kingdom.Presentation
                 {
                     // TokenForConnectAsync answers the empty string for every failure, including a
                     // refresh that was refused. Both read the same from here: no identity, no rack.
-                    Fail("Sign in to see your packs.");
+                    Fail(Loc.Get("vault_signed_out"));
                     return;
                 }
 
@@ -354,19 +354,19 @@ namespace Kingdom.Presentation
                         break;
 
                     case CollectionSyncStatus.Offline:
-                        Fail("Could not reach the server. Your packs are safe — try again in a moment.");
+                        Fail(Loc.Get("vault_offline"));
                         break;
 
                     case CollectionSyncStatus.Unauthenticated:
-                        Fail("Sign in again to see your packs.");
+                        Fail(Loc.Get("vault_session_expired"));
                         break;
 
                     case CollectionSyncStatus.Unavailable:
-                        Fail("This server has no pack economy.");
+                        Fail(Loc.Get("vault_no_economy"));
                         break;
 
                     default:
-                        Fail("The server sent something this build could not read.");
+                        Fail(Loc.Get("vault_unreadable"));
                         Debug.LogWarning($"[PackVault] shelf unreadable: {snapshot.Detail}");
                         break;
                 }
@@ -379,7 +379,7 @@ namespace Kingdom.Presentation
             {
                 Debug.LogWarning($"[PackVault] could not read the shelf " +
                                  $"({ex.GetType().Name}: {ex.Message}).");
-                if (Alive(token)) Fail("Could not read your packs.");
+                if (Alive(token)) Fail(Loc.Get("vault_read_failed"));
             }
             finally
             {
@@ -425,7 +425,7 @@ namespace Kingdom.Presentation
                 ReleaseGiftLock();
                 ShowBanner(false);
                 SetStageHint(false);
-                SetStatus("No packs waiting.");
+                SetStatus(Loc.Get("vault_no_packs"));
                 // The tail of the gift (spec §4, slice 4): what to do with the cards, then where
                 // more come from. Both verbs have routes now, which is what held these back.
                 if (_openedAPack) _tidbit?.Show(TidbitTrigger.PackVaultGiftComplete);
@@ -624,7 +624,7 @@ namespace Kingdom.Presentation
 
                 if (string.IsNullOrEmpty(accessToken))
                 {
-                    Fail("Sign in again to open this pack.");
+                    Fail(Loc.Get("vault_open_signed_out"));
                     return;
                 }
 
@@ -710,7 +710,7 @@ namespace Kingdom.Presentation
                 retained = true;
                 SetStatus("");
 
-                string note = receipts.Count == count ? null : $"opened {receipts.Count} of {count}";
+                string note = receipts.Count == count ? null : Loc.Format("vault_opened_partial", receipts.Count, count);
                 if (stopped != null)
                     Debug.LogWarning($"[PackVault] batch stopped at {receipts.Count}/{count}: " +
                                      $"{stopped.Status} {stopped.Detail}");
@@ -730,7 +730,7 @@ namespace Kingdom.Presentation
             catch (Exception ex)
             {
                 Debug.LogWarning($"[PackVault] open threw ({ex.GetType().Name}: {ex.Message}).");
-                if (Alive(token)) Fail("Could not open that pack.");
+                if (Alive(token)) Fail(Loc.Get("vault_open_failed"));
             }
             finally
             {
@@ -747,7 +747,7 @@ namespace Kingdom.Presentation
                 case PackOpenStatus.NoneOwned:
                     // Honest and reachable: another device opened the last one, or this rack was
                     // drawn before it was. Re-read rather than argue with it.
-                    SetStatus("That pack is already open.");
+                    SetStatus(Loc.Get("vault_already_open"));
                     Refresh();
                     return true;
 
@@ -759,18 +759,18 @@ namespace Kingdom.Presentation
                     return true;
 
                 case PackOpenStatus.Unauthenticated:
-                    Fail("Sign in again to open this pack.");
+                    Fail(Loc.Get("vault_open_signed_out"));
                     return false;
 
                 case PackOpenStatus.Unavailable:
-                    Fail("Packs cannot be opened on this server.");
+                    Fail(Loc.Get("vault_open_unavailable"));
                     Debug.LogWarning($"[PackVault] open unavailable: {result.Detail}");
                     return false;
 
                 case PackOpenStatus.UnknownPack:
                     // A client bug — this rack was drawn from the server's own balance, so a pack
                     // line it will not accept means the two disagree about what a pack is.
-                    Fail("This build does not know that pack.");
+                    Fail(Loc.Get("vault_unknown_pack"));
                     Debug.LogError($"[PackVault] server refused pack id '{packId}': {result.Detail}");
                     return false;
 

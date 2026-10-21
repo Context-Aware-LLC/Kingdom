@@ -185,7 +185,7 @@ namespace Kingdom.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[DeckRoster] could not open this device's collection: {ex.Message}");
-                SetStatus("Collection unavailable — see the console.", isError: true);
+                SetStatus(Loc.Get("deck_create_error_collection_unavailable"), isError: true);
                 return;
             }
 
@@ -257,12 +257,14 @@ namespace Kingdom.Presentation
                 if (_rosterIntro != null)
                     _rosterIntro.text = ChallengeFlow.Phase switch
                     {
-                        ChallengePhase.PickingToSend   => $"Choose a deck to challenge {ChallengeFlow.NameOf(ChallengeFlow.Code)} with.",
-                        ChallengePhase.PickingToAccept => $"Choose a deck to accept {ChallengeFlow.NameOf(ChallengeFlow.Code)}'s challenge.",
-                        _                              => "Choose one of your queue-ready decks, then Play.",
+                        ChallengePhase.PickingToSend   => Loc.Format("deck_roster_intro_challenge_send", ChallengeFlow.NameOf(ChallengeFlow.Code)),
+                        ChallengePhase.PickingToAccept => Loc.Format("deck_roster_intro_challenge_accept", ChallengeFlow.NameOf(ChallengeFlow.Code)),
+                        _                              => Loc.Get("deck_roster_intro_match_pick"),
                     };
                 if (_matchContinue != null && ChallengeFlow.IsPicking)
-                    _matchContinue.text = ChallengeFlow.Phase == ChallengePhase.PickingToSend ? "Send Challenge" : "Accept";
+                    _matchContinue.text = ChallengeFlow.Phase == ChallengePhase.PickingToSend
+                        ? Loc.Get("deck_roster_send_challenge_button")
+                        : Loc.Get("common_accept");
                 _root.AddToClassList("character-roster--match-pick");
             }
             _matchContinue?.RegisterCallback<ClickEvent>(_ => ContinueToMatch());
@@ -322,7 +324,7 @@ namespace Kingdom.Presentation
             BuildClassBadges(deck);
 
             if (_deckModalSub != null)
-                _deckModalSub.text = $"{deck.TotalCount} / {DeckValidator.DeckSize}";
+                _deckModalSub.text = Loc.Format("common_1_d_2_d", deck.TotalCount, DeckValidator.DeckSize);
 
             // Delete has no floor any more (ADR-0009). The guard it used to carry — "{name} needs at
             // least one deck" — protected a character from being left with nothing to play, and an
@@ -389,19 +391,19 @@ namespace Kingdom.Presentation
             if (_deckModalTitle != null)
                 _deckModalTitle.text = pane switch
                 {
-                    DeckPane.Rename => "Rename deck",
-                    DeckPane.CardBack => "Card back",
-                    DeckPane.Delete => "Delete deck?",
+                    DeckPane.Rename => Loc.Get("common_rename_deck"),
+                    DeckPane.CardBack => Loc.Get("deck_menu_title_card_back"),
+                    DeckPane.Delete => Loc.Get("deck_menu_title_delete"),
                     _ => _menuDeck.Name,
                 };
             Show(_deckModalSub, pane == DeckPane.Menu);
 
             bool selfCommitting = pane == DeckPane.Menu;
-            if (_deckModalCancel != null) _deckModalCancel.text = selfCommitting ? "Close" : "Back";
+            if (_deckModalCancel != null) _deckModalCancel.text = selfCommitting ? Loc.Get("common_close") : Loc.Get("common_back");
             Show(_deckModalConfirm, !selfCommitting);
             if (_deckModalConfirm != null)
             {
-                _deckModalConfirm.text = pane == DeckPane.Delete ? "Delete deck" : "Save";
+                _deckModalConfirm.text = pane == DeckPane.Delete ? Loc.Get("common_delete_deck") : Loc.Get("common_save");
                 _deckModalConfirm.EnableInClassList("roster-button--danger", pane == DeckPane.Delete);
                 _deckModalConfirm.EnableInClassList("emb-primary", pane != DeckPane.Delete);
             }
@@ -411,9 +413,8 @@ namespace Kingdom.Presentation
             if (pane == DeckPane.CardBack)
                 LoadCardBacksAsync();
             if (pane == DeckPane.Delete && _deckDeleteMessage != null)
-                _deckDeleteMessage.text =
-                    $"'{_menuDeck.Name}' and its {_menuDeck.TotalCount} cards are gone for good. " +
-                    "The cards themselves stay in your collection.";
+                _deckDeleteMessage.text = Loc.Plural("deck_menu_delete_message", _menuDeck.TotalCount,
+                    _menuDeck.Name, _menuDeck.TotalCount);
         }
 
         private async void LoadCardBacksAsync()
@@ -431,7 +432,7 @@ namespace Kingdom.Presentation
                 _cardBackOwnership = snapshot;
                 if (snapshot.CardBacks == null)
                 {
-                    SetDeckError("Could not load your card backs. Go back and try again.");
+                    SetDeckError(Loc.Get("deck_menu_error_card_backs_load"));
                     return;
                 }
                 if (!snapshot.OwnsCardBack(_pendingCardBackId))
@@ -441,13 +442,13 @@ namespace Kingdom.Presentation
                         if (snapshot.OwnsCardBack(back.Id)) { _pendingCardBackId = back.Id; break; }
                 }
                 BuildCardBackGrid();
-                if (_pendingCardBackId == 0) SetDeckError("You do not own any available card backs.");
+                if (_pendingCardBackId == 0) SetDeckError(Loc.Get("deck_menu_error_no_card_backs"));
             }
             catch (Exception ex)
             {
                 if (request != _deckRequestVersion || !isActiveAndEnabled) return;
                 Debug.LogWarning($"[DeckRoster] card backs could not be loaded: {ex.Message}");
-                SetDeckError("Could not load your card backs. Go back and try again.");
+                SetDeckError(Loc.Get("deck_menu_error_card_backs_load"));
             }
         }
 
@@ -497,7 +498,7 @@ namespace Kingdom.Presentation
             if (_deckPane == DeckPane.Rename)
             {
                 string name = (_deckRenameField?.value ?? "").Trim();
-                if (name.Length == 0) { SetDeckError("A deck needs a name."); return; }
+                if (name.Length == 0) { SetDeckError(Loc.Get("deck_menu_error_name_required")); return; }
                 candidate.Name = name;
             }
             else if (_deckPane == DeckPane.CardBack) candidate.CardBackId = _pendingCardBackId;
@@ -515,8 +516,8 @@ namespace Kingdom.Presentation
                 if (status != RosterWriteStatus.Ok)
                 {
                     SetDeckError(status == RosterWriteStatus.Rejected
-                        ? "This card back is no longer available to your account. Choose another back."
-                        : "The deck could not be saved. Check your connection and try again.");
+                        ? Loc.Get("deck_menu_error_card_back_unavailable")
+                        : Loc.Get("deck_menu_error_save_connection"));
                     return;
                 }
                 CloseDeckDialog();
@@ -526,7 +527,7 @@ namespace Kingdom.Presentation
             {
                 Debug.LogWarning($"[DeckRoster] could not save deck: {ex.Message}");
                 if (request == _deckRequestVersion && isActiveAndEnabled)
-                    SetDeckError("The deck could not be saved. Please try again.");
+                    SetDeckError(Loc.Get("deck_menu_error_save_generic"));
             }
             finally
             {
@@ -552,7 +553,7 @@ namespace Kingdom.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[DeckRoster] could not delete '{goneName}': {ex.Message}");
-                SetDeckError("The deck could not be deleted — see the console.");
+                SetDeckError(Loc.Get("deck_menu_error_delete"));
                 return;
             }
 
@@ -655,10 +656,11 @@ namespace Kingdom.Presentation
             art.AddToClassList("deck-plate-art");
             // The two heroes fill the rectangular control. Showcase art remains underneath as a
             // fallback if the portrait sheet is unavailable, with no extra card image above them.
-            string pairing = $"{CardClassTokens.Label(deck.PrimaryClass)} → {CardClassTokens.Label(deck.SecondaryClass)}";
+            string primary = CardClassTokens.Label(deck.PrimaryClass);
+            string secondary = CardClassTokens.Label(deck.SecondaryClass);
             art.tooltip = summary.Queue.IsEligible
-                ? $"{deck.Name} · {pairing} — {deck.TotalCount} / {DeckValidator.DeckSize}"
-                : $"{deck.Name} · {pairing} — {summary.Queue.Reason}";
+                ? Loc.Format("deck_plate_tooltip_ready", deck.Name, primary, secondary, deck.TotalCount, DeckValidator.DeckSize)
+                : Loc.Format("deck_plate_tooltip_not_ready", deck.Name, primary, secondary, summary.Queue.Reason);
             ShowcaseArt(deck, art);
             DeckClassPortrait.Mount(art, _uiSprites,
                 deck.PrimaryClass, deck.SecondaryClass,
@@ -918,8 +920,8 @@ namespace Kingdom.Presentation
             plate.AddToClassList("deck-plate--new");
             plate.SetEnabled(room);
             plate.tooltip = room
-                ? "Start a new deck"
-                : $"{DeckCreation.MaxPerAccount} decks is the limit. Delete one to make room.";
+                ? Loc.Get("deck_roster_new_deck_tooltip")
+                : Loc.Format("deck_roster_limit_reached", DeckCreation.MaxPerAccount);
             plate.clicked += NewDeck;
 
             var art = new VisualElement();
@@ -944,7 +946,7 @@ namespace Kingdom.Presentation
                 if (_account == null) return;
                 if (!_account.CanCreateDeck())
                 {
-                    SetStatus($"{DeckCreation.MaxPerAccount} decks is the limit. Delete one to make room.",
+                    SetStatus(Loc.Format("deck_roster_limit_reached", DeckCreation.MaxPerAccount),
                               isError: true);
                     return;
                 }
@@ -964,7 +966,7 @@ namespace Kingdom.Presentation
             Debug.LogError($"[DeckRoster] deck read failed: {ex.Message}");
             _rosterList?.Clear();
             if (_emptyState != null) _emptyState.style.display = DisplayStyle.None;
-            SetStatus("Your saved decks could not be loaded.", isError: true);
+            SetStatus(Loc.Get("deck_roster_error_load"), isError: true);
         }
 
         // Both doors lead to one controller (#152) in one scene (#154): handing it a deck is what
@@ -1002,7 +1004,7 @@ namespace Kingdom.Presentation
                 ClearPick();
             else if (!_menuQueueReady)
             {
-                SetDeckError("This deck is not queue ready yet.");
+                SetDeckError(Loc.Get("deck_menu_error_not_queue_ready"));
                 return;
             }
             else
@@ -1016,7 +1018,7 @@ namespace Kingdom.Presentation
         {
             if (_deckSelectButton == null || _menuDeck == null) return;
             bool selected = _pickedDeckId == _menuDeck.Id;
-            _deckSelectButton.text = selected ? "Selected" : "Select this deck";
+            _deckSelectButton.text = selected ? Loc.Get("deck_menu_selected_button") : Loc.Get("common_select_this_deck");
             _deckSelectButton.EnableInClassList("deck-action--selected", selected);
             _deckSelectButton.SetEnabled(selected || _menuQueueReady);
         }
@@ -1042,7 +1044,7 @@ namespace Kingdom.Presentation
             {
                 ClearPick();
                 RebuildRoster();
-                SetStatus("That deck is no longer there. Pick another.", isError: true);
+                SetStatus(Loc.Get("deck_roster_error_deck_gone"), isError: true);
                 return;
             }
 
@@ -1051,7 +1053,7 @@ namespace Kingdom.Presentation
             {
                 ClearPick();
                 RebuildRoster();
-                SetStatus($"{deck.Name} is not queue ready: {queue.Reason}", isError: true);
+                SetStatus(Loc.Format("deck_roster_error_not_queue_ready", deck.Name, queue.Reason), isError: true);
                 return;
             }
 

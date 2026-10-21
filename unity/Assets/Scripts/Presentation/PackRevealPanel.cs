@@ -103,11 +103,8 @@ namespace Kingdom.Presentation
             _cardRow.RemoveFromClassList(CrowdedClass);
             _list?.Clear();
             _list?.AddToClassList(ListHiddenClass);
-            if (_title != null) _title.text = TokenText.PackName(receipt.PackId) + " opened";
-            if (_summary != null)
-                _summary.text = receipt.Awards.Count == 1
-                    ? "1 card"
-                    : $"{receipt.Awards.Count} cards";
+            if (_title != null) _title.text = Loc.Format("pack_reveal_title_single", TokenText.PackName(receipt.PackId));
+            if (_summary != null) _summary.text = CardCount(receipt.Awards.Count);
 
             for (int i = 0; i < receipt.Awards.Count; i++)
             {
@@ -150,12 +147,15 @@ namespace Kingdom.Presentation
                 if (receipt != null) awards.AddRange(receipt.Awards);
 
             if (_title != null)
-                _title.text = receipts.Count == 1 ? TokenText.PackName(receipts[0].PackId) + " opened"
-                                                  : $"{receipts.Count} packs opened";
+                _title.text = receipts.Count == 1
+                    ? Loc.Format("pack_reveal_title_single", TokenText.PackName(receipts[0].PackId))
+                    : Loc.Plural("pack_reveal_title_many", receipts.Count, receipts.Count);
             if (_summary != null)
             {
-                string cards = awards.Count == 1 ? "1 card" : $"{awards.Count} cards";
-                _summary.text = string.IsNullOrEmpty(note) ? cards : cards + " · " + note;
+                string cards = CardCount(awards.Count);
+                _summary.text = string.IsNullOrEmpty(note)
+                    ? cards
+                    : Loc.Format("pack_reveal_summary_with_note", cards, note);
             }
 
             // Stable: equal rarities keep pack order, so the reveal does not reshuffle on a re-render.
@@ -210,7 +210,7 @@ namespace Kingdom.Presentation
             foreach (PackCardAward award in awards)
             {
                 CardDefinition definition = Definition(award.CardId);
-                string name = definition != null ? definition.Name : $"Card {award.CardId}";
+                string name = definition != null ? definition.Name : Loc.Format("pack_reveal_card_fallback_name", award.CardId);
 
                 if (!byRarity.TryGetValue(award.Rarity, out List<KeyValuePair<string, int>> names))
                     byRarity[award.Rarity] = names = new List<KeyValuePair<string, int>>();
@@ -245,7 +245,7 @@ namespace Kingdom.Presentation
 
                 if (rarity != Rarity.COMMON)
                 {
-                    var total = new Label($"×{copies}") { pickingMode = PickingMode.Ignore };
+                    var total = new Label(Loc.Format("pack_reveal_copies", copies)) { pickingMode = PickingMode.Ignore };
                     total.AddToClassList("reveal-list__total");
                     header.Add(total);
                 }
@@ -256,7 +256,7 @@ namespace Kingdom.Presentation
 
                 if (rarity == Rarity.COMMON)
                 {
-                    var commonCount = new Label(copies == 1 ? "1 card" : $"{copies} cards")
+                    var commonCount = new Label(CardCount(copies))
                         { pickingMode = PickingMode.Ignore };
                     commonCount.AddToClassList("reveal-list__common-count");
                     body.Add(commonCount);
@@ -287,7 +287,7 @@ namespace Kingdom.Presentation
 
             if (award.Value > 1)
             {
-                var copies = new Label($"×{award.Value}") { pickingMode = PickingMode.Ignore };
+                var copies = new Label(Loc.Format("pack_reveal_copies", award.Value)) { pickingMode = PickingMode.Ignore };
                 copies.AddToClassList("reveal-list__copies");
                 row.Add(copies);
             }
@@ -296,6 +296,8 @@ namespace Kingdom.Presentation
         }
 
         private static string RarityWord(Rarity r) => GameTerms.Rarity(r);
+
+        private static string CardCount(int count) => Loc.Plural("pack_reveal_card_count", count, count);
 
         public void Hide()
         {
@@ -342,7 +344,7 @@ namespace Kingdom.Presentation
             fallback.Add(art);
             PaintArt(art, definition);
 
-            var name = new Label(definition != null ? definition.Name : $"Card {award.CardId}");
+            var name = new Label(definition != null ? definition.Name : Loc.Format("pack_reveal_card_fallback_name", award.CardId));
             name.AddToClassList("reveal-card__name");
             fallback.Add(name);
 

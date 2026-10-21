@@ -114,7 +114,7 @@ namespace Kingdom.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[DeckCreate] could not open this device's collection: {ex.Message}");
-                SetCreateError("Collection unavailable — see the console.");
+                SetCreateError(Loc.Get("deck_create_error_collection_unavailable"));
                 return;
             }
 
@@ -230,7 +230,7 @@ namespace Kingdom.Presentation
             var plate = new Button(() => OpenHeroDetail(heroClass))
             {
                 text = string.Empty,
-                tooltip = $"View {prettyName}"
+                tooltip = Loc.Format("deck_create_class_tooltip", prettyName)
             };
             plate.AddToClassList("roster-button");
             plate.AddToClassList("hero-choice");
@@ -359,14 +359,14 @@ namespace Kingdom.Presentation
             if (_detailName != null) _detailName.text = CardClassTokens.Label(heroClass);
             if (_detailPass != null)
                 _detailPass.text = ChoosingPrimary
-                    ? "Selecting this class locks in its Hero Power."
-                    : $"Selecting this class adds its cards to your pool. Your Hero Power stays {CardClassTokens.Label(_picks[0])}'s.";
+                    ? Loc.Get("deck_create_detail_primary_hint")
+                    : Loc.Format("deck_create_detail_secondary_hint", CardClassTokens.Label(_picks[0]));
 
             FillTraitBullets(heroClass);
             FillHeroPower(heroClass);
 
             bool selected = _picks.Contains(heroClass);
-            if (_detailSelect != null) _detailSelect.text = selected ? "Deselect" : "Select";
+            if (_detailSelect != null) _detailSelect.text = selected ? Loc.Get("deck_create_detail_deselect_button") : Loc.Get("common_select");
 
             ShowView(CreateView.Detail);
         }
@@ -426,9 +426,8 @@ namespace Kingdom.Presentation
             SetCreateError("");
 
             if (_confirmSummary != null)
-                _confirmSummary.text =
-                    $"{CardClassTokens.Label(primary)} + {CardClassTokens.Label(secondary)} — {CardClassTokens.Label(primary)}'s Hero Power, cards " +
-                    "from both. This pairing is permanent.";
+                _confirmSummary.text = Loc.Format("deck_create_confirm_summary",
+                    CardClassTokens.Label(primary), CardClassTokens.Label(secondary));
 
             bool offersChoice = _account != null && _account.OffersStarterChoice();
             bool canGenerate = _account != null
@@ -437,14 +436,16 @@ namespace Kingdom.Presentation
             Show(_createBlank, offersChoice);
             _createGenerated?.SetEnabled(canGenerate);
             if (_createGenerated != null)
-                _createGenerated.text = offersChoice ? "Generate a queue-ready deck" : "Build my first deck";
+                _createGenerated.text = offersChoice
+                    ? Loc.Get("character_create_create_generated")
+                    : Loc.Get("deck_create_first_deck_button");
 
             if (_starterNote != null)
                 _starterNote.text = !canGenerate
-                    ? $"{CardClassTokens.Label(primary)} + {CardClassTokens.Label(secondary)} doesn't have enough cards for a full deck " +
-                      "yet, so only a blank draft is available."
+                    ? Loc.Format("deck_create_note_pool_too_thin",
+                        CardClassTokens.Label(primary), CardClassTokens.Label(secondary))
                     : offersChoice
-                        ? "A generated deck is legal and playable straight away. A blank one is yours to build."
+                        ? Loc.Get("deck_create_note_generated_vs_blank")
                         : "";
 
             // A first deck on a pairing too thin to generate would leave this view with no live
@@ -480,7 +481,7 @@ namespace Kingdom.Presentation
             PlayerAccount account = _account;
             _creating = true;
             _root.SetEnabled(false);
-            SetCreateError("Creating deck…");
+            SetCreateError(Loc.Get("deck_create_status_creating"));
 
             try
             {
@@ -502,10 +503,10 @@ namespace Kingdom.Presentation
                     Debug.LogWarning($"[DeckCreate] server did not confirm the new deck ({status}).");
                     SetCreateError(status switch
                     {
-                        RosterWriteStatus.Unauthenticated => "Sign in again to create a deck.",
-                        RosterWriteStatus.Conflict => $"The server could not add this deck. You may have reached the {DeckCreation.MaxPerAccount}-deck limit. Return to your decks and try again.",
-                        RosterWriteStatus.Rejected => "The server could not accept this deck. Choose your classes again.",
-                        _ => "Could not confirm your deck with the server. Check your connection and try again."
+                        RosterWriteStatus.Unauthenticated => Loc.Get("deck_create_error_signed_out"),
+                        RosterWriteStatus.Conflict => Loc.Format("deck_create_error_limit", DeckCreation.MaxPerAccount),
+                        RosterWriteStatus.Rejected => Loc.Get("deck_create_error_rejected"),
+                        _ => Loc.Get("deck_create_error_unconfirmed")
                     });
                     return;
                 }
@@ -520,7 +521,7 @@ namespace Kingdom.Presentation
                 // Reachable despite CanCreate: ownership can change under a screen the player left
                 // open, and the generator is the only thing that knows for certain.
                 Debug.LogError($"[DeckCreate] could not generate a deck: {ex.Message}");
-                SetCreateError("That pairing can't fill a deck right now. Start blank instead.");
+                SetCreateError(Loc.Get("deck_create_error_cannot_generate"));
                 Show(_createBlank, true);
             }
             catch (ArgumentException ex)
@@ -532,7 +533,7 @@ namespace Kingdom.Presentation
             {
                 Debug.LogError($"[DeckCreate] deck creation could not be saved: {ex.Message}");
                 if (this != null && visit == _visit)
-                    SetCreateError("Could not finish creating your deck. Try again, or sign in again to refresh your decks.");
+                    SetCreateError(Loc.Get("deck_create_error_generic"));
             }
             finally
             {

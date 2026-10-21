@@ -114,7 +114,7 @@ namespace Kingdom.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] card database load failed: {ex.Message}");
-                BootFailed("Card database failed to load");
+                BootFailed(Loc.Get("match_boot_error_card_database"));
                 yield break;
             }
 
@@ -126,7 +126,7 @@ namespace Kingdom.Presentation
             catch (Exception ex)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] selected deck unavailable: {ex.Message}");
-                BootFailed("Selected deck is unavailable — choose it again");
+                BootFailed(Loc.Get("match_boot_error_deck_unavailable"));
                 yield break;
             }
 
@@ -219,9 +219,9 @@ namespace Kingdom.Presentation
                 if (st == ConnectionState.Pairing || st == ConnectionState.Live) reachedServer = true;
                 switch (st)
                 {
-                    case ConnectionState.Connecting: SetStatus("Connecting…"); break;
-                    case ConnectionState.Pairing:    SetStatus(challenge ? "Waiting for your friend…" : "Waiting for an opponent…"); break;
-                    case ConnectionState.Live:       SetStatus("Opponent found"); break;
+                    case ConnectionState.Connecting: SetStatus(Loc.Get("matchmaking_status_connecting")); break;
+                    case ConnectionState.Pairing:    SetStatus(Loc.Get(challenge ? "matchmaking_status_waiting_friend" : "matchmaking_status_waiting_opponent")); break;
+                    case ConnectionState.Live:       SetStatus(Loc.Get("matchmaking_status_opponent_found")); break;
                 }
                 if (st == ConnectionState.Dead || st == ConnectionState.Ended)
                     matchRunner.StopMatch(_net.State == ConnectionState.Ended ? _view.Current.Outcome : MatchOutcome.InProgress);
@@ -232,7 +232,7 @@ namespace Kingdom.Presentation
                 : serverUrl + (serverUrl.Contains("?") ? "&" : "?") + "challenge=" + Uri.EscapeDataString(challengeTicket);
 
             Debug.Log($"[NetworkedGameBootstrap] connecting to {serverUrl}{(challenge ? " (friend challenge)" : "")} …");
-            SetStatus("Connecting…");
+            SetStatus(Loc.Get("matchmaking_status_connecting"));
             Task connect;
             try { connect = _net.ConnectAsync(new Uri(connectUrl)); }
             catch (Exception ex)
@@ -393,14 +393,14 @@ namespace Kingdom.Presentation
             // "Opponent" below is still ours to draw when the server sent nothing usable; it is not
             // a name the peer can claim, because the server reserves it.
             _versus = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
-                localClass,  AuthGateway.DisplayNameOr("You"),
-                remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? "Opponent" : _net.OpponentName,
+                localClass,  AuthGateway.DisplayNameOr(Loc.Get("common_you")),
+                remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? Loc.Get("common_opponent") : _net.OpponentName,
                 s0.Id.Value), artProvider);
             // The two heroes trade a line over the versus screen and on into the mulligan.
             VersusBanter.Create(Camera.main, localClass, remoteClass);
             // Carry the narration across the handover rather than letting the line blink empty —
             // "Opponent found" was posted to the plate a frame ago and is still the true state.
-            SetStatus("Opponent found");
+            SetStatus(Loc.Get("matchmaking_status_opponent_found"));
             if (_overlay != null) _overlay.NotifyMatchReady();
 
             // ── Intent source for OUR seat; the opponent seat is inert (NullIntentSource). ────────

@@ -81,7 +81,7 @@ namespace Kingdom.Presentation
             Button close = root.Q<Button>("ledger-close");
             if (close != null) close.clicked += () => Destroy(gameObject);
 
-            ShowStatus("The clerk is fetching the Ledger.");
+            ShowStatus(Loc.Get("ledger_ledger_status"));
             _ = LoadAsync();
         }
 
@@ -115,11 +115,11 @@ namespace Kingdom.Presentation
                     ShowPage();
                     break;
                 case AchievementFetchStatus.Unauthenticated:
-                    ShowStatus("Only a signed-in player keeps a Ledger. The Council does not take notes on strangers.");
+                    ShowStatus(Loc.Get("ledger_status_signed_out"));
                     break;
                 default:
                     Debug.LogWarning($"[Ledger] not read ({snapshot.Status}: {snapshot.Detail}).");
-                    ShowStatus("The Ledger could not be fetched. The clerk has been sent to look again; close this and try in a moment.");
+                    ShowStatus(Loc.Get("ledger_status_fetch_failed"));
                     break;
             }
         }
@@ -155,11 +155,11 @@ namespace Kingdom.Presentation
 
             int earned = 0;
             foreach (LedgerEntry entry in _entries) if (entry.Earned) earned++;
-            if (_count != null) _count.text = $"{earned} of {_entries.Count} entered";
+            if (_count != null) _count.text = Loc.Format("ledger_count_entered", earned, _entries.Count);
 
             int pages = PageCount;
             if (_pager != null) _pager.style.visibility = pages > 1 ? Visibility.Visible : Visibility.Hidden;
-            if (_pageLabel != null) _pageLabel.text = $"Page {_pageIndex + 1} of {Mathf.Max(pages, 1)}";
+            if (_pageLabel != null) _pageLabel.text = Loc.Format("ledger_page_page_1_d_of", _pageIndex + 1, Mathf.Max(pages, 1));
             _prev?.SetEnabled(_pageIndex > 0);
             _next?.SetEnabled(_pageIndex < pages - 1);
 
@@ -176,7 +176,7 @@ namespace Kingdom.Presentation
             if (!entry.Earned)
             {
                 box.AddToClassList("ledger-entry--unearned");
-                box.Add(Line("UNDER REVIEW", "ledger-entry__name"));
+                box.Add(Line(Loc.Get("ledger_entry_under_review"), "ledger-entry__name"));
                 return box;
             }
 
@@ -184,7 +184,7 @@ namespace Kingdom.Presentation
             box.Add(Line(entry.Text.Plain, "ledger-entry__plain"));
             box.Add(Line(entry.Text.Citation, "ledger-entry__citation"));
             if (entry.EarnedAt is DateTimeOffset at)
-                box.Add(Line("Entered " + at.ToLocalTime().ToString("d MMMM yyyy", CultureInfo.InvariantCulture),
+                box.Add(Line(Loc.Format("ledger_entry_date", at.ToLocalTime().ToString("d MMMM yyyy", CultureInfo.InvariantCulture)),
                     "ledger-entry__date"));
             // The wax a past stamp left: a fixed tilt per entry, so turning back to a page does not
             // reshuffle every seal on it.

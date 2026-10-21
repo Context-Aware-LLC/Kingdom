@@ -171,10 +171,9 @@ namespace Kingdom.Presentation
             var title = _root.Q<Label>("name-title");
             var help = _root.Q<Label>("name-help");
 
-            if (title != null) title.text = "What should we call you?";
+            if (title != null) title.text = Loc.Get("account_create_name_title");
             if (help != null)
-                help.text = "We could not recover the name on this account, so please choose one " +
-                            "again. It travels with your account from now on.";
+                help.text = Loc.Get("account_name_help_returning");
         }
 
         /// <summary>
@@ -213,8 +212,8 @@ namespace Kingdom.Presentation
             bool setPassword = password.Length > 0 || passwordConfirm.Length > 0;
             if (setPassword)
             {
-                if (password.Length < 6) { SetError("Password must be at least 6 characters."); return; }
-                if (password != passwordConfirm) { SetError("Passwords do not match."); return; }
+                if (password.Length < 6) { SetError(Loc.Get("account_password_too_short")); return; }
+                if (password != passwordConfirm) { SetError(Loc.Get("account_password_mismatch")); return; }
             }
 
             SetBusy(true);
@@ -226,7 +225,7 @@ namespace Kingdom.Presentation
                     SetBusy(false);
                     Debug.LogWarning($"[AccountCreate] the display name did not reach the identity " +
                                      $"({named.Failure}: {named.Detail}).");
-                    SetError("We couldn't save your name. Check your connection and try again.");
+                    SetError(Loc.Get("account_name_save_failed"));
                     return;
                 }
 
@@ -237,7 +236,7 @@ namespace Kingdom.Presentation
                     {
                         SetBusy(false);
                         SetError(string.IsNullOrEmpty(result.Detail)
-                            ? "Could not set a password. Try again, or clear both fields to skip it."
+                            ? Loc.Get("account_password_set_failed")
                             : result.Detail);
                         return;
                     }
@@ -248,7 +247,7 @@ namespace Kingdom.Presentation
             {
                 SetBusy(false);
                 Debug.LogError($"[AccountCreate] confirming the name threw: {ex}");
-                SetError("Something went wrong. Try again.");
+                SetError(Loc.Get("account_generic_error"));
                 return;
             }
 

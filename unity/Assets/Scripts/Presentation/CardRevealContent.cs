@@ -64,7 +64,7 @@ namespace Kingdom.Presentation
         private static string BuildSubtitle(CardDefinition def, ICardLiveState live)
         {
             var sb = new StringBuilder();
-            sb.Append(def.Cost).Append(" mana  ·  ").Append(TypeWord(def.Type));
+            sb.Append(Loc.Format("card_reveal_subtitle_cost_type", def.Cost, TypeWord(def.Type)));
 
             // Attack/Health/Durability are nullable on the definition — a spell carries none of
             // them — so every read is defaulted rather than assumed present.
@@ -76,11 +76,11 @@ namespace Kingdom.Presentation
                     int printedHp  = def.Health ?? 0;
                     int atk = live != null ? live.Attack : printedAtk;
                     int hp  = live != null ? live.Health : printedHp;
-                    sb.Append("  ·  ").Append(atk).Append(" / ").Append(hp);
+                    sb.Append(Loc.Format("card_reveal_subtitle_stats", atk, hp));
                     // Only worth the words when they actually disagree — on an untouched minion the
                     // annotation is noise, and noise in a panel this small costs a glossary line.
                     if (live != null && (atk != printedAtk || hp != printedHp))
-                        sb.Append("   (printed ").Append(printedAtk).Append('/').Append(printedHp).Append(')');
+                        sb.Append(Loc.Format("card_reveal_subtitle_printed", printedAtk, printedHp));
                     break;
                 }
 
@@ -93,9 +93,9 @@ namespace Kingdom.Presentation
                     bool equipped = live != null && live.Durability.HasValue;
                     int atk  = equipped ? live.Attack : printedAtk;
                     int dura = equipped ? live.Durability.Value : printedDura;
-                    sb.Append("  ·  ").Append(atk).Append(" / ").Append(dura);
+                    sb.Append(Loc.Format("card_reveal_subtitle_stats", atk, dura));
                     if (equipped && (atk != printedAtk || dura != printedDura))
-                        sb.Append("   (printed ").Append(printedAtk).Append('/').Append(printedDura).Append(')');
+                        sb.Append(Loc.Format("card_reveal_subtitle_printed", printedAtk, printedDura));
                     break;
                 }
             }

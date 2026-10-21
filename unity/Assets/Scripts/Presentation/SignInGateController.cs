@@ -325,7 +325,7 @@ namespace Kingdom.Presentation
 
                 _awaitingOAuth = false;
                 SetBusy(false, null);
-                SetError("Google sign-in was cancelled.");
+                SetError(Loc.Get("signin_google_cancelled"));
             }).ExecuteLater(OAuthReturnGraceMs);
         }
 
@@ -437,7 +437,7 @@ namespace Kingdom.Presentation
         private async void RestoreFromPlayGames()
         {
             SetBusy(true, null);
-            ShowRestoring("Looking for your account…");
+            ShowRestoring(Loc.Get("signin_restoring_account"));
 
             bool restored = false;
             try { restored = await PlayGamesServices.TryRestoreAsync(_auth); }
@@ -473,8 +473,8 @@ namespace Kingdom.Presentation
             _returning = false;
             _sentTo = "";
 
-            if (_title != null) _title.text = "Welcome to the Kingdom";
-            if (_help != null) _help.text = "Have you played before?";
+            if (_title != null) _title.text = Loc.Get("account_create_signin_title");
+            if (_help != null) _help.text = Loc.Get("signin_choose_help");
 
             Display(_choice, true);
             Display(_emailField, false);
@@ -498,13 +498,9 @@ namespace Kingdom.Presentation
             _returning = returning;
             _sentTo = "";
 
-            if (_title != null) _title.text = returning ? "Welcome back" : "Create your account";
+            if (_title != null) _title.text = Loc.Get(returning ? "signin_returning_title" : "signin_new_title");
             if (_help != null)
-                _help.text = returning
-                    ? "Sign in with the email and password you used before. No password? We can email " +
-                      "you a code instead."
-                    : "The Crown requires your name on file before you may play. Enter your email " +
-                      "and we will send you a six-digit code.";
+                _help.text = Loc.Get(returning ? "signin_returning_help" : "account_create_signin_help");
 
             Display(_choice, false);
             Display(_emailField, true);
@@ -529,8 +525,8 @@ namespace Kingdom.Presentation
             _step = Step.Code;
             _sentTo = email;
 
-            if (_title != null) _title.text = "Check your email";
-            if (_help != null) _help.text = $"We sent a six-digit code to {email}. Enter it below.";
+            if (_title != null) _title.text = Loc.Get("signin_code_title");
+            if (_help != null) _help.text = Loc.Format("signin_code_help", email);
 
             Display(_choice, false);
             Display(_emailField, false);
@@ -594,9 +590,9 @@ namespace Kingdom.Presentation
             // MainMenuController.ResumeThenFinishBootstrap.
             string accessToken = await AuthGateway.TokenForConnectAsync();
             SetBusy(true, null);
-            ShowRestoring("Restoring your collection…");
+            ShowRestoring(Loc.Get("signin_restoring_collection"));
             await CollectionGateway.SyncAsync(accessToken);
-            ShowRestoring("Restoring your decks…");
+            ShowRestoring(Loc.Get("signin_restoring_decks"));
             await RosterGateway.SyncAsync(accessToken);
             SetBusy(false, null);
 
@@ -630,10 +626,10 @@ namespace Kingdom.Presentation
         private async void SendCode(string typedEmail)
         {
             string email = (typedEmail ?? "").Trim();
-            if (email.Length == 0) { SetError("Enter your email address."); return; }
-            if (!LooksLikeAnEmail(email)) { SetError("That does not look like an email address."); return; }
+            if (email.Length == 0) { SetError(Loc.Get("signin_error_email_required")); return; }
+            if (!LooksLikeAnEmail(email)) { SetError(Loc.Get("signin_error_email_invalid")); return; }
 
-            SetBusy(true, "Sending…");
+            SetBusy(true, Loc.Get("signin_busy_sending"));
             try
             {
                 // createUser: false on the returning branch is the whole guard. With it true, a
@@ -650,13 +646,13 @@ namespace Kingdom.Presentation
                 // working code from the first mail, and dropping them back to the email field would
                 // read as having lost it.
                 Debug.LogWarning($"[SignIn] BeginEmailCodeAsync failed: {result.Failure} — {result.Detail}");
-                SetError(Explain(result, "We could not send the code."));
+                SetError(Explain(result, Loc.Get("signin_error_send_code")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] sending a code threw: {ex}");
-                SetError("Something went wrong sending the code. Try again.");
+                SetError(Loc.Get("signin_error_send_code_generic"));
             }
         }
 
@@ -674,15 +670,15 @@ namespace Kingdom.Presentation
             string email = (_emailField?.value ?? "").Trim();
             string password = _passwordField?.value ?? "";
 
-            if (email.Length == 0) { SetError("Enter your email address."); return; }
-            if (!LooksLikeAnEmail(email)) { SetError("That does not look like an email address."); return; }
+            if (email.Length == 0) { SetError(Loc.Get("signin_error_email_required")); return; }
+            if (!LooksLikeAnEmail(email)) { SetError(Loc.Get("signin_error_email_invalid")); return; }
             if (password.Length == 0)
             {
-                SetError("Enter your password, or use \"Email me a code instead\".");
+                SetError(Loc.Get("signin_error_password_required"));
                 return;
             }
 
-            SetBusy(true, "Signing in…");
+            SetBusy(true, Loc.Get("signin_busy_signing_in"));
             try
             {
                 AuthResult result = await _auth.SignInWithPasswordAsync(email, password);
@@ -696,22 +692,22 @@ namespace Kingdom.Presentation
                 RefreshPrimary();
                 _passwordField?.Focus();
                 Debug.LogWarning($"[SignIn] SignInWithPasswordAsync failed: {result.Failure} — {result.Detail}");
-                SetError(Explain(result, "We could not sign you in with that password."));
+                SetError(Explain(result, Loc.Get("signin_error_password_rejected")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] signing in with a password threw: {ex}");
-                SetError("Something went wrong signing in. Try again.");
+                SetError(Loc.Get("signin_error_generic"));
             }
         }
 
         private async void Verify()
         {
             string code = EmailCode.Normalize(_codeField?.value ?? "");
-            if (code.Length != EmailCode.Length) { SetError("Enter the six-digit code from the email."); return; }
+            if (code.Length != EmailCode.Length) { SetError(Loc.Get("signin_error_code_required")); return; }
 
-            SetBusy(true, "Signing in…");
+            SetBusy(true, Loc.Get("signin_busy_signing_in"));
             try
             {
                 AuthResult result = await _auth.VerifyEmailCodeAsync(_sentTo, code);
@@ -730,13 +726,13 @@ namespace Kingdom.Presentation
                 RefreshPrimary();
                 _codeField?.Focus();
                 Debug.LogWarning($"[SignIn] VerifyEmailCodeAsync failed: {result.Failure} — {result.Detail}");
-                SetError(Explain(result, "That code was not accepted."));
+                SetError(Explain(result, Loc.Get("signin_error_code_rejected")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] verifying a code threw: {ex}");
-                SetError("Something went wrong signing in. Try again.");
+                SetError(Loc.Get("signin_error_generic"));
             }
         }
 
@@ -773,7 +769,7 @@ namespace Kingdom.Presentation
             _codeField?.SetValueWithoutNotify(code);
             RefreshPrimary();
 
-            SetBusy(true, "Signing in…");
+            SetBusy(true, Loc.Get("signin_busy_signing_in"));
             try
             {
                 AuthResult result = await _auth.VerifyEmailCodeAsync(email, code);
@@ -789,13 +785,13 @@ namespace Kingdom.Presentation
                 // — a stale or already-used link should not force a fresh Send.
                 RefreshPrimary();
                 Debug.LogWarning($"[SignIn] VerifyEmailCodeAsync (deep link) failed: {result.Failure} — {result.Detail}");
-                SetError(Explain(result, "That link's code was not accepted."));
+                SetError(Explain(result, Loc.Get("signin_error_link_code_rejected")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] completing from a link threw: {ex}");
-                SetError("Something went wrong signing in. Try again.");
+                SetError(Loc.Get("signin_error_generic"));
             }
         }
 
@@ -837,7 +833,7 @@ namespace Kingdom.Presentation
 
                 if (native.Outcome == NativeGoogleSignIn.Outcome.SignedIn)
                 {
-                    SetBusy(true, "Signing in with Google…");
+                    SetBusy(true, Loc.Get("signin_busy_google"));
                     AuthResult result = await _auth.SignInWithIdTokenAsync("google", native.IdToken, native.RawNonce);
                     if (result.Ok)
                     {
@@ -874,7 +870,7 @@ namespace Kingdom.Presentation
             if (!pending.IsStarted)
             {
                 SetBusy(false, null);
-                SetError("Could not start Google sign-in. Try again.");
+                SetError(Loc.Get("signin_error_google_start"));
                 return;
             }
 
@@ -895,7 +891,7 @@ namespace Kingdom.Presentation
         {
             // The redirect arrived, so the return-from-browser recovery must not fire behind it.
             _awaitingOAuth = false;
-            SetBusy(true, "Signing in with Google…");
+            SetBusy(true, Loc.Get("signin_busy_google"));
             // Show the email step as the backing UI (email field is hidden while busy). Google is
             // offered on both branches and answers "new or returning" by itself — the identity either
             // exists already or it does not — so the flag it is given here is arbitrary and only
@@ -915,13 +911,13 @@ namespace Kingdom.Presentation
                 }
 
                 Debug.LogWarning($"[SignIn] CompleteSignInAsync (Google OAuth) failed: {result.Failure} — {result.Detail}");
-                SetError(Explain(result, "Google sign-in did not complete. Try again."));
+                SetError(Explain(result, Loc.Get("signin_error_google_incomplete")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] Google OAuth completion threw: {ex}");
-                SetError("Something went wrong signing in with Google. Try again.");
+                SetError(Loc.Get("signin_error_google_generic"));
             }
         }
 
@@ -1003,14 +999,13 @@ namespace Kingdom.Presentation
             switch (result.Failure)
             {
                 case AuthFailure.Network:
-                    return "No connection. The Kingdom needs the internet to sign you in.";
+                    return Loc.Get("signin_error_offline");
                 case AuthFailure.NotConfigured:
-                    return "This build has no sign-in service configured.";
+                    return Loc.Get("signin_error_not_configured");
                 case AuthFailure.NoSuchAccount:
                     // Supabase's own wording here is "Signups not allowed for otp", which is true and
                     // useless — it describes the request we made, not the thing the player got wrong.
-                    return "We have no account for that email. Check the spelling, or go back and " +
-                           "choose \"I am new here\".";
+                    return Loc.Get("signin_error_no_account");
                 default:
                     return string.IsNullOrEmpty(result.Detail) ? fallback : result.Detail;
             }
@@ -1064,7 +1059,7 @@ namespace Kingdom.Presentation
         private void RefreshPrimaryText()
         {
             if (_primary == null) return;
-            _primary.text = _step == Step.Email ? "Email me a code" : "Sign in";
+            _primary.text = Loc.Get(_step == Step.Email ? "account_create_btn_signin_primary" : "signin_sign_in_button");
             // Ember chrome only on the code step (Sam, 2026-09-28). While Google is on screen it is
             // the one ember button and everything else is slate; the code step hides Google, so
             // "Sign in" becomes the call to action there.

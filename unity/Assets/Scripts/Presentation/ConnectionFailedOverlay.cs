@@ -78,25 +78,26 @@ namespace Kingdom.Presentation
             Joke = joke;
         }
 
-        public const string UpdateJoke = "The Crown has issued a new decree, and yours is out of date.";
+        // Properties, not cached fields: each read resolves in the current language.
+        public static string UpdateJoke => Loc.Get("connection_joke_update");
 
-        public static readonly ConnectionFailureCopy Unreachable = new ConnectionFailureCopy(
-            "Can't reach the server. Check your connection and try again.",
-            "The courier balloon has drifted off course again.");
+        public static ConnectionFailureCopy Unreachable => new ConnectionFailureCopy(
+            Loc.Get("connection_error_unreachable"),
+            Loc.Get("connection_joke_courier"));
 
-        public static readonly ConnectionFailureCopy NotResponding = new ConnectionFailureCopy(
-            "The server isn't answering. Try again in a moment.",
-            "The courier balloon has drifted off course again.");
+        public static ConnectionFailureCopy NotResponding => new ConnectionFailureCopy(
+            Loc.Get("connection_error_not_responding"),
+            Loc.Get("connection_joke_courier"));
 
-        public static readonly ConnectionFailureCopy Lost = new ConnectionFailureCopy(
-            "Lost the connection to the server.",
-            "The courier balloon has drifted off course again.");
+        public static ConnectionFailureCopy Lost => new ConnectionFailureCopy(
+            Loc.Get("connection_error_lost"),
+            Loc.Get("connection_joke_courier"));
 
         /// <summary>The client could not get a sign-in token for the connect, or the server
         /// refused a hello that came without one ("sign-in required").</summary>
-        public static readonly ConnectionFailureCopy SignInUnconfirmed = new ConnectionFailureCopy(
-            "We couldn't confirm your sign-in. Check your connection and try again.",
-            "The guards no longer recognise you.");
+        public static ConnectionFailureCopy SignInUnconfirmed => new ConnectionFailureCopy(
+            Loc.Get("connection_error_sign_in_unconfirmed"),
+            Loc.Get("connection_joke_guards"));
 
         /// <summary>
         /// <paramref name="reachedServer"/> is whether the server got as far as seating this
@@ -109,54 +110,54 @@ namespace Kingdom.Presentation
                 const string deckRejected = "deck rejected: ";
                 if (detail.StartsWith(deckRejected))
                     return new ConnectionFailureCopy(
-                        "Your deck was turned away. " + detail.Substring(deckRejected.Length),
-                        "The Council has returned it with notes.");
+                        Loc.Format("connection_error_deck_rejected", detail.Substring(deckRejected.Length)),
+                        Loc.Get("connection_joke_deck_rejected"));
 
                 switch (detail)
                 {
                     case "server full":
                         return new ConnectionFailureCopy(
-                            "The server is full. Try again in a moment.",
-                            "The Council has asked everyone to form a queue.");
+                            Loc.Get("connection_error_server_full"),
+                            Loc.Get("connection_joke_server_full"));
                     case "token rejected":
                         return new ConnectionFailureCopy(
-                            "You've been signed out. Sign in again from the menu.",
-                            "The guards no longer recognise you.");
+                            Loc.Get("connection_error_signed_out"),
+                            Loc.Get("connection_joke_guards"));
                     case "sign-in required":
                         return SignInUnconfirmed;
                     case "contract mismatch":
                         return new ConnectionFailureCopy(
-                            "This version of the game doesn't match the server's.",
+                            Loc.Get("connection_error_version_mismatch"),
                             UpdateJoke);
                     case "challenge expired":
                         return new ConnectionFailureCopy(
-                            "The challenge expired before both of you arrived.",
-                            "The invitation has gone stale on the mantelpiece.");
+                            Loc.Get("connection_error_challenge_expired"),
+                            Loc.Get("connection_joke_challenge_expired"));
                     case "superseded":
                     case "replaced by a newer connection":
                         return new ConnectionFailureCopy(
-                            "This account joined from somewhere else.",
-                            "The Court does not seat the same petitioner twice.");
+                            Loc.Get("connection_error_superseded"),
+                            Loc.Get("connection_joke_superseded"));
                     case "deck timeout":
                     case "hello timeout":
                     case "liveness timeout":
                         return Lost;
                 }
                 return new ConnectionFailureCopy(
-                    "The server turned this match away.",
-                    "No reason was given, as is the Council's custom.");
+                    Loc.Get("connection_error_turned_away"),
+                    Loc.Get("connection_joke_turned_away"));
             }
 
             switch (reason)
             {
                 case DeadReason.ContractMismatch:
                     return new ConnectionFailureCopy(
-                        "This version of the game doesn't match the server's.",
+                        Loc.Get("connection_error_version_mismatch"),
                         UpdateJoke);
                 case DeadReason.Desync:
                     return new ConnectionFailureCopy(
-                        "The match fell out of step with the server.",
-                        "The scribes' copies no longer agree.");
+                        Loc.Get("connection_error_desync"),
+                        Loc.Get("connection_joke_desync"));
                 case DeadReason.ServerFull:
                     return For(reason, "server full", reachedServer);
                 default:

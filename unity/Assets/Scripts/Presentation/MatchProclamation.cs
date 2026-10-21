@@ -110,7 +110,7 @@ namespace Kingdom.Presentation
             bool any = false;
             if (_gold != null && gold > 0)
             {
-                _gold.text = $"+{gold} Gold";
+                _gold.text = Loc.Format("match_result_gold_earned", gold);
                 _gold.style.display = DisplayStyle.Flex;
                 any = true;
             }
@@ -120,8 +120,9 @@ namespace Kingdom.Presentation
                 {
                     QuestEntry quest = advance.Quest;
                     string detail = advance.CompletedNow
-                        ? $"Complete   +{quest.RewardGold} Gold"
-                        : $"{quest.Progress} / {quest.Goal}   (+{quest.Progress - advance.PreviousProgress})";
+                        ? Loc.Format("match_result_quest_complete", quest.RewardGold)
+                        : Loc.Format("match_result_quest_progress", quest.Progress, quest.Goal,
+                                     quest.Progress - advance.PreviousProgress);
                     VisualElement row = Row(quest.Title, detail);
                     if (advance.CompletedNow) row.ElementAt(1).AddToClassList("proc-row__detail--done");
                     _quests.Add(row);
@@ -154,9 +155,7 @@ namespace Kingdom.Presentation
             if (known > MaxFindingsShown)
             {
                 int more = known - MaxFindingsShown;
-                var label = new Label(more == 1
-                    ? "One further finding has been entered in the Ledger."
-                    : $"{more} further findings have been entered in the Ledger.");
+                var label = new Label(Loc.Plural("match_result_findings_more", more, more));
                 label.AddToClassList("proc-more");
                 _findings.Add(label);
             }
@@ -195,10 +194,10 @@ namespace Kingdom.Presentation
 
         private static (string, string) Judge(MatchOutcome outcome, int localSeat) => outcome switch
         {
-            MatchOutcome.Player0Win when localSeat == 0 => ("VICTORY", "proc-verdict--victory"),
-            MatchOutcome.Player1Win when localSeat == 1 => ("VICTORY", "proc-verdict--victory"),
-            MatchOutcome.Draw                           => ("DRAW", "proc-verdict--draw"),
-            _                                           => ("DEFEAT", "proc-verdict--defeat"),
+            MatchOutcome.Player0Win when localSeat == 0 => (Loc.Get("match_result_verdict_victory"), "proc-verdict--victory"),
+            MatchOutcome.Player1Win when localSeat == 1 => (Loc.Get("match_result_verdict_victory"), "proc-verdict--victory"),
+            MatchOutcome.Draw                           => (Loc.Get("match_result_verdict_draw"), "proc-verdict--draw"),
+            _                                           => (Loc.Get("match_result_verdict_defeat"), "proc-verdict--defeat"),
         };
 
         /// <summary>The line under the verdict: why it ended, in the Council's voice (whimsy pass
@@ -206,18 +205,18 @@ namespace Kingdom.Presentation
         /// <c>MatchEndMsg</c> arrived, and that falls back to the plain win or loss line.</summary>
         private static string ResultDetail(MatchOutcome outcome, int localSeat, MatchEndReason? reason)
         {
-            if (outcome == MatchOutcome.Draw) return "The Council is still deliberating.";
+            if (outcome == MatchOutcome.Draw) return Loc.Get("match_result_reason_draw");
 
             bool localWon = outcome == MatchOutcome.Player0Win && localSeat == 0
                             || outcome == MatchOutcome.Player1Win && localSeat == 1;
-            if (!localWon) return "The Council advised against it, in writing.";
+            if (!localWon) return Loc.Get("match_result_reason_defeat");
 
             return reason switch
             {
-                MatchEndReason.Concede => "They conceded. A rare good idea.",
+                MatchEndReason.Concede => Loc.Get("match_result_reason_opponent_conceded"),
                 // Two is ServerOptions.IdleForfeitAutoTurns, which the wire does not carry.
-                MatchEndReason.Timeout => "They missed two turns. The Council has ruled them absent.",
-                _ => "The Council has already claimed it was their idea.",
+                MatchEndReason.Timeout => Loc.Get("match_result_reason_opponent_timeout"),
+                _ => Loc.Get("match_result_reason_victory"),
             };
         }
     }

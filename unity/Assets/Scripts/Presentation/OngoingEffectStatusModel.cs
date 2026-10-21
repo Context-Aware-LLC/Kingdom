@@ -45,8 +45,8 @@ namespace Kingdom.Presentation
                 string sourceName = database.TryGet(effect.SourceDefinitionId,
                     out CardDefinition definition)
                     ? definition.Name
-                    : $"card {effect.SourceDefinitionId}";
-                string owner = effect.Controller == viewer ? "You" : "Opponent";
+                    : Loc.Format("effects_source_fallback", effect.SourceDefinitionId);
+                string owner = effect.Controller == viewer ? Loc.Get("common_you") : Loc.Get("common_opponent");
                 rows.Add(new OngoingEffectStatus(effect.Id, sourceName, owner,
                     RemainingText(effect)));
             }
@@ -58,14 +58,14 @@ namespace Kingdom.Presentation
             switch (effect.Lifetime)
             {
                 case OngoingEffectLifetime.PERMANENT:
-                    return "Permanent";
+                    return Loc.Get("effects_remaining_permanent");
                 case OngoingEffectLifetime.ONE_SHOT:
-                    return "1 trigger remaining";
+                    return Loc.Plural("effects_remaining_triggers", 1, 1);
                 case OngoingEffectLifetime.FINITE:
                     int uses = effect.RemainingUses.GetValueOrDefault();
-                    return uses == 1 ? "1 trigger remaining" : $"{uses} triggers remaining";
+                    return Loc.Plural("effects_remaining_triggers", uses, uses);
                 default:
-                    return "Unknown lifetime";
+                    return Loc.Get("effects_remaining_unknown");
             }
         }
     }

@@ -83,14 +83,14 @@ namespace Kingdom.Presentation
                 if (_audience != UnearthChoiceAudience.Opponent)
                 {
                     ClearOffer();
-                    _title.text = "OPPONENT IS UNEARTHING…";
+                    _title.text = Loc.Get("unearth_title_opponent");
                     BuildOpponentBacks();
                 }
                 _audience = UnearthChoiceAudience.Opponent;
                 return;
             }
 
-            _title.text = "CHOOSE A CARD TO UNEARTH";
+            _title.text = Loc.Get("unearth_title_choose");
             bool sameOffer = _audience == UnearthChoiceAudience.Chooser
                 && _choiceSequence == presentation.ChoiceSequence;
             _audience = UnearthChoiceAudience.Chooser;

@@ -823,9 +823,10 @@ namespace Kingdom.Presentation
                 _backToDecksButton.style.display = editor ? DisplayStyle.Flex : DisplayStyle.None;
             if (_drawerTitle != null)
                 _drawerTitle.text = BotDecks ? (editor ? $"Editing Bot: {_deck?.Name}" : "Bot Decks (dev)")
-                                  : editor ? "Editing Deck" : "Decks";
+                                  : editor ? Loc.Get("collection_drawer_title_editing") : Loc.Get("common_decks");
             if (_drawerSubtitle != null)
-                _drawerSubtitle.text = editor ? "Tap a card to add it" : "Choose a deck to edit";
+                _drawerSubtitle.text = editor ? Loc.Get("collection_drawer_subtitle_editing")
+                                              : Loc.Get("collection_drawer_subtitle_choose");
         }
 
         private void RebuildDeckChooser()
@@ -850,11 +851,11 @@ namespace Kingdom.Presentation
                 DeckClassPortrait.Mount(button, _uiSprites,
                     capturedDeck.PrimaryClass, capturedDeck.SecondaryClass,
                     "deck-class-portrait--drawer");
-                button.tooltip =
-                    $"{capturedDeck.Name} · " +
-                    $"{CardClassTokens.Label(capturedDeck.PrimaryClass)} → " +
-                    $"{CardClassTokens.Label(capturedDeck.SecondaryClass)} · " +
-                    $"{summary.TotalCount}/{DeckValidator.DeckSize}";
+                button.tooltip = Loc.Format("collection_deck_choice_tooltip",
+                    capturedDeck.Name,
+                    CardClassTokens.Label(capturedDeck.PrimaryClass),
+                    CardClassTokens.Label(capturedDeck.SecondaryClass),
+                    summary.TotalCount, DeckValidator.DeckSize);
                 group.Add(button);
 
                 _deckChooserList.Add(group);
@@ -863,7 +864,7 @@ namespace Kingdom.Presentation
             if (_deckChooserEmpty != null)
             {
                 _deckChooserEmpty.text = rows.Count == 0
-                    ? "No decks yet — manage your decks to create one."
+                    ? Loc.Get("collection_deck_chooser_empty_2")
                     : "";
                 _deckChooserEmpty.EnableInClassList("deck-chooser__empty--on", rows.Count == 0);
             }
@@ -1089,7 +1090,7 @@ namespace Kingdom.Presentation
         {
             row.Q<Label>("cost").text = def.Cost.ToString();
             row.Q<Label>("name").text = def.Name;
-            row.Q<Label>("count").text = copies > 1 ? $"x{copies}" : "";
+            row.Q<Label>("count").text = copies > 1 ? Loc.Format("collection_deck_row_copies", copies) : "";
 
             CardClassTokens.SwapPrefixed(row, CardClassTokens.AllEdge(), CardClassTokens.Edge(def.Class));
         }
@@ -1214,7 +1215,7 @@ namespace Kingdom.Presentation
             int version = ++_craftVersion;
             CancellationToken ct = _craftCancel.Token;
             _craftModal.Open(def, Crafting.OfferRender(def, 0, 0), Crafting.OfferReduce(def, 0), 0);
-            _craftModal.SetWorking("Loading...", unknown: true);
+            _craftModal.SetWorking(Loc.Get("craft_status_loading"), unknown: true);
             try
             {
                 string accessToken = await AuthGateway.TokenForConnectAsync();
@@ -1231,7 +1232,7 @@ namespace Kingdom.Presentation
             catch (Exception ex)
             {
                 Debug.LogWarning($"[Craft] read failed: {ex.GetType().Name}");
-                if (CraftIsCurrent(def, version, ct)) _craftModal.ShowError("Could not load crafting balances.");
+                if (CraftIsCurrent(def, version, ct)) _craftModal.ShowError(Loc.Get("craft_error_balances"));
             }
         }
 
@@ -1292,12 +1293,12 @@ namespace Kingdom.Presentation
                     if (!CraftIsCurrent(def, version, ct)) return;
                     if (fresh.HasSnapshot) ShowCraft(def, fresh);
                 }
-                _craftModal.ShowError(reply.Applied ? "Craft complete. Collection refresh failed." : CraftError(reply.Status));
+                _craftModal.ShowError(reply.Applied ? Loc.Get("craft_error_refresh_failed") : CraftError(reply.Status));
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[Craft] request failed: {ex.GetType().Name}");
-                if (CraftIsCurrent(def, version, ct)) _craftModal.ShowError("Craft result is unconfirmed.");
+                if (CraftIsCurrent(def, version, ct)) _craftModal.ShowError(Loc.Get("craft_error_unconfirmed"));
             }
             finally
             {
@@ -1309,17 +1310,17 @@ namespace Kingdom.Presentation
         {
             switch (status)
             {
-                case "unauthenticated": return "Sign in to craft cards.";
-                case "unavailable": return "Crafting is unavailable on this server.";
-                case "insufficientshards": return "Not enough shards.";
-                case "atcopycap": return "Crafting limit reached for this card.";
-                case "ownsnone": return "No copies available to reduce.";
-                case "notenoughcopies": return "You no longer have that many copies.";
-                case "notspare": return "Your collection changed. Check the list and try again.";
+                case "unauthenticated": return Loc.Get("craft_error_unauthenticated");
+                case "unavailable": return Loc.Get("craft_error_unavailable");
+                case "insufficientshards": return Loc.Get("craft_not_enough_shards");
+                case "atcopycap": return Loc.Get("craft_error_copy_cap");
+                case "ownsnone": return Loc.Get("craft_error_owns_none");
+                case "notenoughcopies": return Loc.Get("craft_error_not_enough_copies");
+                case "notspare": return Loc.Get("craft_error_not_spare");
                 case "invalidcard":
                 case "notcraftable":
-                case "notreducible": return "This card cannot be crafted.";
-                default: return "Could not confirm the crafting result.";
+                case "notreducible": return Loc.Get("craft_error_not_craftable");
+                default: return Loc.Get("craft_error_generic");
             }
         }
 
@@ -1373,7 +1374,7 @@ namespace Kingdom.Presentation
             _sparesPanel.Open();
             // No ownership record is "never synced", not "owns nothing spare" — say so rather than
             // drawing an empty list that reads as a clean collection.
-            ShowSpares(_owned == null ? "Your collection has not synced, so spares are unknown." : "");
+            ShowSpares(_owned == null ? Loc.Get("spares_not_synced") : "");
         }
 
         /// <summary>
@@ -1413,15 +1414,16 @@ namespace Kingdom.Presentation
                 if (!SparesIsCurrent(ct)) return;
                 if (reply.Applied && reply.CopiesReduced > 0)
                     ShowSpares(synced
-                        ? $"Reduced {reply.CopiesReduced} {(reply.CopiesReduced == 1 ? "copy" : "copies")} for {reply.ShardsGained} shards."
-                        : "Spares reduced. Collection refresh failed.", reduced: true);
+                        ? Loc.Plural("spares_reduced_result", reply.CopiesReduced,
+                            reply.CopiesReduced, reply.ShardsGained)
+                        : Loc.Get("spares_reduced_refresh_failed"), reduced: true);
                 else
                     ShowSpares(CraftError(reply.Status));
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[Craft] spares request failed: {ex.GetType().Name}");
-                if (SparesIsCurrent(ct)) ShowSpares("Craft result is unconfirmed.");
+                if (SparesIsCurrent(ct)) ShowSpares(Loc.Get("craft_error_unconfirmed"));
             }
             finally
             {
@@ -1604,10 +1606,10 @@ namespace Kingdom.Presentation
             // player can reach, so it keeps the filter text.
             if (_emptyLabel != null)
             {
-                _emptyLabel.text = _pool.Count != 0 ? "Nothing matches those filters."
-                    : OwnedOnly ? "You don't own any cards yet — turn on Unowned to see the game."
-                    : _scope.UnownedOnly ? "You own every card here."
-                    : "Nothing matches those filters.";
+                _emptyLabel.text = _pool.Count != 0 ? Loc.Get("collection_collection_empty")
+                    : OwnedOnly ? Loc.Get("collection_empty_owns_nothing")
+                    : _scope.UnownedOnly ? Loc.Get("collection_empty_owns_everything")
+                    : Loc.Get("collection_collection_empty");
                 _emptyLabel.EnableInClassList("col-empty--on", shown == 0);
             }
         }
@@ -1622,7 +1624,7 @@ namespace Kingdom.Presentation
             ManaCurveView.Rebuild(_curve, _deck, _db);
 
             if (_deckCountLabel != null)
-                _deckCountLabel.text = $"{_deck.TotalCount} / {DeckValidator.DeckSize}";
+                _deckCountLabel.text = Loc.Format("common_1_d_2_d", _deck.TotalCount, DeckValidator.DeckSize);
             UpdateApprovalSeal();
         }
 

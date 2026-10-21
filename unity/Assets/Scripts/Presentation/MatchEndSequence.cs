@@ -86,7 +86,7 @@ namespace Kingdom.Presentation
             // Only now: a tap still in flight from the last play of the match must not skip the
             // screen it has not seen yet.
             _canLeave = true;
-            _proclamation?.SetFooter("Tap to continue");
+            _proclamation?.SetFooter(Loc.Get("match_result_tap_to_continue"));
 
             yield return new WaitForSecondsRealtime(LingerSeconds);
             Leave();

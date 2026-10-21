@@ -160,7 +160,7 @@ namespace Kingdom.Presentation
             for (int c = 0; c <= CostChipMax; c++)
             {
                 int captured = c;
-                var chip = new Button { text = c < CostChipMax ? c.ToString() : $"{CostChipMax}+" };
+                var chip = new Button { text = c < CostChipMax ? c.ToString() : Loc.Format("collection_cost_chip_max", CostChipMax) };
                 chip.AddToClassList(ChipClass);
                 chip.userData = captured;
                 chip.clicked += () =>
@@ -182,7 +182,7 @@ namespace Kingdom.Presentation
                 foreach (CardSortKey key in Enum.GetValues(typeof(CardSortKey)))
                 {
                     _sortKeys.Add(key);
-                    choices.Add(key.ToString());
+                    choices.Add(Loc.Get("collection_sort_key_" + key.ToString().ToLowerInvariant()));
                 }
                 _sort.choices = choices;
                 _sort.index = Math.Max(0, _sortKeys.IndexOf(CardSort.Default.Key));
@@ -203,7 +203,7 @@ namespace Kingdom.Presentation
 
         private void UpdateSortDirLabel()
         {
-            if (_sortDir != null) _sortDir.text = _descending ? "Desc" : "Asc";
+            if (_sortDir != null) _sortDir.text = _descending ? Loc.Get("collection_sort_descending") : Loc.Get("collection_sort_ascending");
         }
 
         private void SyncChipStates()

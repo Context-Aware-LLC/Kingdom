@@ -151,7 +151,7 @@ namespace Kingdom.Presentation
             try { sent = await SocialGateway.SendAsync(half); }
             catch (Exception) { sent = false; }
 
-            if (!sent) Abort("Not connected to friends right now. Try again in a moment.");
+            if (!sent) Abort(Loc.Get("challenge_error_not_connected"));
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Kingdom.Presentation
 
                 case ChallengeRefusedMsg refused when Phase == ChallengePhase.Sending && refused.Code == Code:
                     // The server gives one answer for every cause on purpose; so does this.
-                    Abort($"{NameOf(Code)} can't take a challenge right now.");
+                    Abort(Loc.Format("challenge_error_cannot_take", NameOf(Code)));
                     break;
 
                 case ChallengeReadyMsg ready when ready.ChallengeId == ChallengeId &&
@@ -220,7 +220,7 @@ namespace Kingdom.Presentation
         {
             if (state == SocialState.Live || Phase == ChallengePhase.None || Phase == ChallengePhase.PickingToSend) return;
             // The server drops an offer whose player's socket went away; say so rather than wait.
-            Abort("Lost the connection to friends. The challenge was cancelled.");
+            Abort(Loc.Get("challenge_error_connection_lost"));
         }
 
         private static string Describe(ChallengeCloseReason reason)
@@ -228,11 +228,11 @@ namespace Kingdom.Presentation
             string name = NameOf(Code);
             return reason switch
             {
-                ChallengeCloseReason.Declined  => $"{name} declined.",
-                ChallengeCloseReason.Cancelled => $"{name} withdrew the challenge.",
-                ChallengeCloseReason.Expired   => "The challenge timed out.",
-                ChallengeCloseReason.Left      => $"{name} went offline.",
-                _                              => "That challenge is no longer open.",
+                ChallengeCloseReason.Declined  => Loc.Format("challenge_closed_declined", name),
+                ChallengeCloseReason.Cancelled => Loc.Format("challenge_closed_withdrawn", name),
+                ChallengeCloseReason.Expired   => Loc.Get("challenge_closed_expired"),
+                ChallengeCloseReason.Left      => Loc.Format("challenge_closed_offline", name),
+                _                              => Loc.Get("challenge_closed_other"),
             };
         }
 

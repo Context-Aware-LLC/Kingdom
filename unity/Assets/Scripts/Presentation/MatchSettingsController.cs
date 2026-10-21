@@ -207,7 +207,8 @@ namespace Kingdom.Presentation
         }
 
         private void ConfirmConcede()
-            => ShowConfirm("Concede this match?", "This counts as a loss.", "Concede", danger: true,
+            => ShowConfirm(Loc.Get("common_concede_this_match"), Loc.Get("match_settings_confirm_subtitle"),
+                           Loc.Get("common_concede"), danger: true,
                            onConfirm: () => { _onConcede?.Invoke(); Close(); });
 
         // ── Audio (Sam, 2026-09-05) ─────────────────────────────────────────────────────
@@ -297,12 +298,11 @@ namespace Kingdom.Presentation
             try { email = AuthGateway.SignedInEmail ?? ""; } catch { /* named below, or not */ }
 
             ShowConfirm(
-                email.Length > 0 ? $"Sign out of {email}?" : "Sign out?",
+                email.Length > 0 ? Loc.Format("settings_sign_out_title_email", email) : Loc.Get("settings_sign_out_title"),
                 // Says what survives, because the whole point of the roster work is that the answer
                 // changed: signing out is no longer anything like losing the account.
-                "Your cards and decks stay on your account. You will need to sign in " +
-                "again to play.",
-                "Sign out",
+                Loc.Get("settings_sign_out_subtitle"),
+                Loc.Get("common_sign_out"),
                 danger: false,
                 onConfirm: SignOut);
         }

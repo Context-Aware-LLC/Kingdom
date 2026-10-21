@@ -22,9 +22,9 @@ namespace Kingdom.Presentation
         internal static string PackName(string packId)
         {
             string[] parts = packId?.Split('.');
-            if (parts == null || parts.Length < 2) return "Pack";
+            if (parts == null || parts.Length < 2) return Loc.Get("pack_name_fallback");
             string name = Pretty(parts[1]);
-            if (name.Length == 0) return "Pack";
+            if (name.Length == 0) return Loc.Get("pack_name_fallback");
             return parts.Length > 2 ? name + " " + Pretty(parts[2]) : name;
         }
 

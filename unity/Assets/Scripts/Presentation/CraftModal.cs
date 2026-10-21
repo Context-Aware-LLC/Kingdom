@@ -204,7 +204,7 @@ namespace Kingdom.Presentation
             _cardRarity.AddToClassList(CardClassTokens.RarityToken(def.Rarity, "craft-rarity--"));
 
             _shardBalance.text = shardBalance.ToString();
-            _copiesOwned.text = $"{render.CopiesOwned} owned";
+            _copiesOwned.text = Loc.Plural("craft_copies_owned", render.CopiesOwned, render.CopiesOwned);
 
             _renderCost.text = render.Cost.ToString();
             _renderNote.text = RenderNote(render);
@@ -224,7 +224,7 @@ namespace Kingdom.Presentation
                 if (_cardFace == null || _card != def) return;
                 if (tex == null)
                 {
-                    if (!_balancesUnknown) ShowError("Could not load card artwork.");
+                    if (!_balancesUnknown) ShowError(Loc.Get("craft_error_artwork"));
                     return;
                 }
                 _cardTexture = (Texture2D)tex;
@@ -292,7 +292,9 @@ namespace Kingdom.Presentation
             _reducePayout.text = reduce.Payout.ToString();
             _reduceNote.text = ReduceNote(reduce);
             _reduceCountLabel.text = reduce.Count.ToString();
-            _reduceButton.text = reduce.Count > 1 ? $"Reduce {reduce.Count}" : "Reduce";
+            _reduceButton.text = reduce.Count > 1
+                ? Loc.Format("craft_reduce_count_button", reduce.Count)
+                : Loc.Get("common_reduce");
             SetHalfEnabled(_reduceHalf, _reduceButton, reduce.Offerable);
             _reduceLess.SetEnabled(reduce.Offerable && reduce.Count > 1);
             _reduceMore.SetEnabled(reduce.Offerable && reduce.Count < reduce.CopiesOwned);
@@ -360,19 +362,19 @@ namespace Kingdom.Presentation
             switch (offer.Refusal)
             {
                 case RenderRefusal.None:
-                    return offer.CopiesOwned > 0 ? "Make another copy." : "Make this card.";
+                    return offer.CopiesOwned > 0 ? Loc.Get("craft_render_note_another") : Loc.Get("craft_render_note_first");
                 case RenderRefusal.InsufficientShards:
-                    return "Not enough shards.";
+                    return Loc.Get("craft_not_enough_shards");
                 case RenderRefusal.AtCopyCap:
                     return offer.CopyCap == 1
-                        ? "You already have this Legendary."
-                        : "You already have every copy you can play.";
+                        ? Loc.Get("craft_render_note_have_legendary")
+                        : Loc.Get("craft_render_note_at_cap");
                 case RenderRefusal.NotCollectible:
-                    return "This card cannot be made.";
+                    return Loc.Get("craft_render_note_not_collectible");
                 case RenderRefusal.UnknownCard:
-                    return "Unknown card.";
+                    return Loc.Get("craft_unknown_card");
                 default:
-                    return "Cannot be made right now.";
+                    return Loc.Get("craft_render_note_unavailable");
             }
         }
 
@@ -384,18 +386,19 @@ namespace Kingdom.Presentation
                 case ReduceRefusal.None:
                     // "Down to your last one" is the sentence that stops a regretted click, and it is
                     // the only thing this half knows that the payout number does not say.
-                    if (offer.CopiesAfter > 0) return $"You would keep {offer.CopiesAfter}.";
-                    return offer.Count > 1 ? "This is every copy you have." : "This is your last copy.";
+                    if (offer.CopiesAfter > 0)
+                        return Loc.Plural("craft_reduce_note_keep", offer.CopiesAfter, offer.CopiesAfter);
+                    return offer.Count > 1 ? Loc.Get("craft_reduce_note_every_copy") : Loc.Get("craft_reduce_note_last_copy");
                 case ReduceRefusal.OwnsNone:
-                    return "You don't have this card.";
+                    return Loc.Get("craft_reduce_note_owns_none");
                 case ReduceRefusal.NotEnoughCopies:
-                    return "You don't have that many copies.";
+                    return Loc.Get("craft_reduce_note_not_enough");
                 case ReduceRefusal.NotCollectible:
-                    return "This card cannot be broken down.";
+                    return Loc.Get("craft_reduce_note_not_collectible");
                 case ReduceRefusal.UnknownCard:
-                    return "Unknown card.";
+                    return Loc.Get("craft_unknown_card");
                 default:
-                    return "Cannot be broken down right now.";
+                    return Loc.Get("craft_reduce_note_unavailable");
             }
         }
 

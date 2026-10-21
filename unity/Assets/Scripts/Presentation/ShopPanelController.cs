@@ -207,7 +207,7 @@ namespace Kingdom.Presentation
             {
                 _purchaseUncertain = ex.OutcomeUnknown;
                 SetDetailError(ex.OutcomeUnknown
-                    ? "Purchase status uncertain. Check Card Vault before buying again."
+                    ? Loc.Get("shop_purchase_uncertain")
                     : ex.Message);
                 UnityEngine.Debug.LogWarning($"[Shop] purchase declined: {ex.Message}");
             }
@@ -216,7 +216,7 @@ namespace Kingdom.Presentation
                 // A dropped response can follow a committed ledger transaction. Do not let a
                 // second tap create a new purchase until the player checks the Vault.
                 _purchaseUncertain = true;
-                SetDetailError("Purchase status uncertain. Check Card Vault before buying again.");
+                SetDetailError(Loc.Get("shop_purchase_uncertain"));
                 UnityEngine.Debug.LogWarning($"[Shop] purchase failed: {ex.GetType().Name}: {ex.Message}");
             }
             finally
@@ -358,10 +358,12 @@ namespace Kingdom.Presentation
             int quantity = 1)
         {
             int price = (currency == ShopCurrency.Gold ? offer.GoldPrice : offer.GemPrice) * quantity;
-            string label = currency == ShopCurrency.Gold ? "Gold" : "Gems";
+            string amount = price.ToString("N0");
             var button = new Button(() => Buy(offer.PackId, currency, quantity))
             {
-                text = $"{price:N0} {label}",
+                text = currency == ShopCurrency.Gold
+                    ? Loc.Format("shop_buy_button_gold", amount)
+                    : Loc.Format("common_1_s_gems", amount),
             };
             button.AddToClassList("shop-pack__buy");
             button.AddToClassList(currency == ShopCurrency.Gold
@@ -755,7 +757,7 @@ namespace Kingdom.Presentation
 
                 // A standard button: chrome comes from theme.uss. Purchases are not wired yet
                 // (the section says so), so it has no handler.
-                var amount = new Button { text = $"{bundle.Gems:N0} Gems" };
+                var amount = new Button { text = Loc.Format("common_1_s_gems", bundle.Gems.ToString("N0")) };
                 amount.AddToClassList("shop-gem__amount");
                 row.Add(amount);
 

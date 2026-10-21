@@ -15,7 +15,8 @@ namespace Kingdom.Editor
     /// Gates the string tables under <c>Resources/Localization/</c> (2026-10-20). What it catches is
     /// the failure nobody sees in English: an enum member with no glossary row (it prints its key), a
     /// keyword whose English name drifted from the word the card body bolds, and a translation whose
-    /// <c>%n$</c> slots do not match the English row (it prints the wrong value, or throws).
+    /// <c>%n$</c> slots do not match the English row (it prints the wrong value, or throws), and a
+    /// literal key the code asks for that English does not have (it prints the key).
     ///
     /// <para>Registered in <see cref="HeadlessVerify"/>.</para>
     /// </summary>
@@ -34,6 +35,7 @@ namespace Kingdom.Editor
                 AndroidFormatConverts,
                 PluralCategories,
                 TranslationsKeepTheirSlots,
+                EveryKeyTheCodeAsksForExists,
             };
             int failed = 0;
             foreach (Func<int> check in checks) failed += check();
@@ -164,6 +166,23 @@ namespace Kingdom.Editor
                 }
             }
             return wrong.Count == 0 ? 0 : Fail("TranslationsKeepTheirSlots", string.Join("; ", wrong));
+        }
+
+        // A key missing from English prints as the key itself, which nobody reads until a player
+        // reports it. Literal keys only; a key built at runtime (GameTerms) is covered above.
+        private static int EveryKeyTheCodeAsksForExists()
+        {
+            Dictionary<string, string> source = ReadFolder(Path.Combine(TableRoot, "values"));
+            var wrong = new SortedSet<string>();
+            var call = new Regex(@"\bLoc\.(Get|Format|Plural)\(\s*""([^""]+)""\s*[,)]");
+            foreach (string file in Directory.GetFiles("Assets/Scripts", "*.cs", SearchOption.AllDirectories))
+                foreach (Match m in call.Matches(File.ReadAllText(file)))
+                {
+                    string key = m.Groups[2].Value;
+                    bool found = m.Groups[1].Value == "Plural" ? source.ContainsKey(key + "#other") : source.ContainsKey(key);
+                    if (!found) wrong.Add($"{Path.GetFileName(file)}: {m.Groups[1].Value} \"{key}\"");
+                }
+            return wrong.Count == 0 ? 0 : Fail("EveryKeyTheCodeAsksForExists", string.Join("; ", wrong));
         }
 
         private static Dictionary<string, string> ReadFolder(string dir)

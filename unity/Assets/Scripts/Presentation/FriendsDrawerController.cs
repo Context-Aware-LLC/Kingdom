@@ -297,7 +297,7 @@ namespace Kingdom.Presentation
             IReadOnlyList<ChatLog.Line> lines = ChatLog.For(_chatCode);
             if (lines.Count == 0)
             {
-                var hint = new Label("Messages are not saved, and only reach a friend who is online.");
+                var hint = new Label(Loc.Get("friends_chat_empty_hint"));
                 hint.AddToClassList("fr-empty");
                 _chatLines.Add(hint);
             }
@@ -326,7 +326,7 @@ namespace Kingdom.Presentation
             if (line.State == ChatLog.LineState.Failed)
             {
                 label.AddToClassList("fr-chat-line--failed");
-                label.tooltip = "Not delivered";
+                label.tooltip = Loc.Get("friends_chat_not_delivered_tooltip");
             }
             return label;
         }
@@ -339,7 +339,7 @@ namespace Kingdom.Presentation
             string text = ChatText.Clean(_chatInput.value);
             if (text == null)
             {
-                SetChatStatus(string.IsNullOrWhiteSpace(_chatInput.value) ? "" : $"Messages are at most {ChatText.MaxLength} characters.");
+                SetChatStatus(string.IsNullOrWhiteSpace(_chatInput.value) ? "" : Loc.Format("friends_chat_too_long", ChatText.MaxLength));
                 return;
             }
 
@@ -406,21 +406,21 @@ namespace Kingdom.Presentation
             string name = ChallengeFlow.NameOf(ChallengeFlow.Code);
             int seconds = SecondsLeft();
             _challengeSecondsShown = seconds;
-            string clock = seconds >= 0 ? $" ({seconds}s)" : "";
+            string clock = seconds >= 0 ? Loc.Format("friends_challenge_clock", seconds) : "";
 
             string text = "", yes = "", no = "";
             switch (ChallengeFlow.Phase)
             {
                 case ChallengePhase.Incoming:
-                    text = $"{name} challenges you to a match{clock}"; yes = "Accept"; no = "Decline"; break;
+                    text = Loc.Format("friends_challenge_incoming", name, clock); yes = Loc.Get("common_accept"); no = Loc.Get("common_decline"); break;
                 case ChallengePhase.Sending:
-                    text = $"Sending a challenge to {name}…"; no = "Cancel"; break;
+                    text = Loc.Format("friends_challenge_sending", name); no = Loc.Get("common_cancel"); break;
                 case ChallengePhase.WaitingForAnswer:
-                    text = $"Waiting for {name} to answer{clock}"; no = "Cancel"; break;
+                    text = Loc.Format("friends_challenge_waiting", name, clock); no = Loc.Get("common_cancel"); break;
                 case ChallengePhase.Starting:
-                    text = "Starting the match…"; break;
+                    text = Loc.Get("friends_challenge_starting"); break;
                 case ChallengePhase.None when ChallengeFlow.Notice.Length > 0:
-                    text = ChallengeFlow.Notice; no = "OK"; break;
+                    text = ChallengeFlow.Notice; no = Loc.Get("friends_challenge_ok_button"); break;
                 // Picking: the roster's own intro line says what is going on.
             }
 
@@ -452,7 +452,7 @@ namespace Kingdom.Presentation
                     break;
                 // One answer for every cause, server-side by design; it is the same here.
                 case ChatRefusedMsg refused when refused.Code == _chatCode:
-                    SetChatStatus("Not delivered. They may be offline, or you are sending too fast.");
+                    SetChatStatus(Loc.Get("friends_chat_refused"));
                     break;
             }
         }
@@ -468,7 +468,7 @@ namespace Kingdom.Presentation
         private void Open(string okStatus, Action onOk = null)
         {
             _root.AddToClassList(OpenClass);
-            SetStatus("Loading…", error: false);
+            SetStatus(Loc.Get("friends_loading"), error: false);
             Run(token => FriendsGateway.FetchAsync(token), okStatus, onOk);
         }
 
@@ -481,7 +481,7 @@ namespace Kingdom.Presentation
             if (_root == null || !FriendLinkInbox.TryTake(out string code)) return;
             _addCode?.SetValueWithoutNotify(FriendCode.Display(code));
             Open(okStatus: "", onOk: () => SetStatus(
-                code == _shown?.Code ? "That link is your own code." : "Tap Add to send a friend request.",
+                code == _shown?.Code ? Loc.Get("friends_link_own_code") : Loc.Get("friends_link_tap_add"),
                 error: false));
         }
 
@@ -496,7 +496,7 @@ namespace Kingdom.Presentation
         {
             if (_ownCodeDisplay.Length == 0) return;
             GUIUtility.systemCopyBuffer = _ownCodeDisplay;
-            SetStatus("Code copied.", error: false);
+            SetStatus(Loc.Get("friends_code_copied"), error: false);
         }
 
         /// <summary>
@@ -508,13 +508,13 @@ namespace Kingdom.Presentation
             if (_shown == null || _shown.Code.Length == 0) return;
             string link = FriendLink.For(_shown.Code);
 
-            if (SystemShareSheet.TryShare($"Add me as a friend in Kingdom of Bad Ideas: {link}", "Share your friend link"))
+            if (SystemShareSheet.TryShare(Loc.Format("friends_share_message", link), Loc.Get("friends_share_sheet_title")))
             {
                 SetStatus("", error: false);
                 return;
             }
             GUIUtility.systemCopyBuffer = link;
-            SetStatus("Link copied.", error: false);
+            SetStatus(Loc.Get("friends_link_copied"), error: false);
         }
 
         private void AddFriend()
@@ -522,13 +522,13 @@ namespace Kingdom.Presentation
             // Checked here so a typo is answered without a round trip. The server checks again.
             if (!FriendCode.TryNormalize(_addCode?.value, out string code))
             {
-                SetStatus("That is not a friend code. It looks like XXXXX-XXXXX.", error: true);
+                SetStatus(Loc.Get("friends_error_bad_code_format"), error: true);
                 return;
             }
 
             // "Request sent" is all the server ever says, by design: it answers the same whether or
             // not the code belongs to anyone, so a code cannot be tested for existence.
-            Run(token => FriendsGateway.RequestAsync(token, code), okStatus: "Request sent.",
+            Run(token => FriendsGateway.RequestAsync(token, code), okStatus: Loc.Get("friends_request_sent"),
                 onOk: () => _addCode?.SetValueWithoutNotify(""));
         }
 
@@ -542,7 +542,7 @@ namespace Kingdom.Presentation
             if (_busy) return;
             _busy = true;
             _playGamesButton?.SetEnabled(false);
-            SetStatus("Asking Play Games…", error: false);
+            SetStatus(Loc.Get("friends_play_games_asking"), error: false);
 
             PlayGamesFriendsResult result;
             try
@@ -567,20 +567,20 @@ namespace Kingdom.Presentation
             }
 
             _playGamesFound = result.Suggestions;
-            SetStatus(result.Suggestions.Count == 0 ? "None of your Play Games friends play yet." : "", error: false);
+            SetStatus(result.Suggestions.Count == 0 ? Loc.Get("friends_play_games_none") : "", error: false);
             if (_shown != null) Render(_shown);
         }
 
         private static string Describe(PlayGamesFriendsStatus status) => status switch
         {
-            PlayGamesFriendsStatus.Unauthenticated => "Sign in to Play Games to find your friends there.",
-            PlayGamesFriendsStatus.FriendsHidden   => "Play Games friends are not shared with this game.",
-            PlayGamesFriendsStatus.InvalidCode     => "Play Games did not answer. Try again.",
-            PlayGamesFriendsStatus.Upstream        => "Play Games did not answer. Try again.",
-            PlayGamesFriendsStatus.Unavailable     => "Play Games friends are not available yet.",
-            PlayGamesFriendsStatus.RateLimited     => "Too many requests. Try again in a minute.",
-            PlayGamesFriendsStatus.Malformed       => "This build cannot read the server's answer. Update the game.",
-            _                                      => "Could not reach the server.",
+            PlayGamesFriendsStatus.Unauthenticated => Loc.Get("friends_play_games_signed_out"),
+            PlayGamesFriendsStatus.FriendsHidden   => Loc.Get("friends_play_games_hidden"),
+            PlayGamesFriendsStatus.InvalidCode     => Loc.Get("friends_play_games_no_answer"),
+            PlayGamesFriendsStatus.Upstream        => Loc.Get("friends_play_games_no_answer"),
+            PlayGamesFriendsStatus.Unavailable     => Loc.Get("friends_play_games_unavailable"),
+            PlayGamesFriendsStatus.RateLimited     => Loc.Get("friends_error_rate_limited"),
+            PlayGamesFriendsStatus.Malformed       => Loc.Get("friends_error_malformed"),
+            _                                      => Loc.Get("friends_error_unreachable"),
         };
 
         /// <summary>
@@ -605,18 +605,18 @@ namespace Kingdom.Presentation
 
                 (string, bool, Action) action;
                 if (Has(snapshot.Incoming, code))
-                    action = ("Accept", true, () => Run(t => FriendsGateway.AcceptAsync(t, code), "Friend added."));
+                    action = (Loc.Get("common_accept"), true, () => Run(t => FriendsGateway.AcceptAsync(t, code), Loc.Get("friends_friend_added")));
                 else if (Has(snapshot.Outgoing, code))
-                    action = ("Requested", false, null);
+                    action = (Loc.Get("friends_requested_requested"), false, null);
                 else
-                    action = ("Add", true, () => Run(t => FriendsGateway.RequestAsync(t, code), "Request sent."));
+                    action = (Loc.Get("common_add"), true, () => Run(t => FriendsGateway.RequestAsync(t, code), Loc.Get("friends_request_sent")));
 
                 VisualElement row = Row(new FriendEntry(code, found.DisplayName), action);
                 row.Insert(1, PlayGamesProfileButton(found, snapshot.DisplayName));
                 rows.Add(row);
             }
 
-            _lists.Add(Section($"FROM PLAY GAMES ({rows.Count})"));
+            _lists.Add(Section(Loc.Format("friends_section_play_games", rows.Count)));
             foreach (VisualElement row in rows) _lists.Add(row);
         }
 
@@ -627,8 +627,8 @@ namespace Kingdom.Presentation
             string id = found.PlayGamesId, name = found.DisplayName;
             var button = new Button(() => PlayGamesServices.ShowProfile(id, name, myName))
             {
-                text = "Play Games",
-                tooltip = "Play Games profile",
+                text = Loc.Get("friends_play_games_profile_button"),
+                tooltip = Loc.Get("friends_play_games_profile_tooltip"),
             };
             button.AddToClassList("fr-row__button");
             button.AddToClassList("fr-row__play-games");
@@ -681,42 +681,42 @@ namespace Kingdom.Presentation
 
         private static string Describe(FriendsCallStatus status) => status switch
         {
-            FriendsCallStatus.Unauthenticated => "Sign in to use friends.",
-            FriendsCallStatus.InvalidCode     => "That is not a friend code.",
-            FriendsCallStatus.NotFound        => "That request is no longer waiting.",
-            FriendsCallStatus.AtCapacity      => "Your list is full.",
-            FriendsCallStatus.RateLimited     => "Too many requests. Try again in a minute.",
-            FriendsCallStatus.Malformed       => "This build cannot read the server's answer. Update the game.",
-            _                                 => "Could not reach the server.",
+            FriendsCallStatus.Unauthenticated => Loc.Get("friends_error_signed_out"),
+            FriendsCallStatus.InvalidCode     => Loc.Get("friends_error_invalid_code"),
+            FriendsCallStatus.NotFound        => Loc.Get("friends_error_request_gone"),
+            FriendsCallStatus.AtCapacity      => Loc.Get("friends_error_list_full"),
+            FriendsCallStatus.RateLimited     => Loc.Get("friends_error_rate_limited"),
+            FriendsCallStatus.Malformed       => Loc.Get("friends_error_malformed"),
+            _                                 => Loc.Get("friends_error_unreachable"),
         };
 
         private void Render(FriendsSnapshot snapshot)
         {
             _shown = snapshot;
             _ownCodeDisplay = FriendCode.Display(snapshot.Code);
-            if (_ownCode != null) _ownCode.text = $"Your code: {_ownCodeDisplay}";
+            if (_ownCode != null) _ownCode.text = Loc.Format("friends_own_code", _ownCodeDisplay);
 
             if (_lists == null) return;
             _lists.Clear();
 
             if (snapshot.Incoming.Count > 0)
             {
-                _lists.Add(Section($"REQUESTS ({snapshot.Incoming.Count})"));
+                _lists.Add(Section(Loc.Format("friends_section_requests", snapshot.Incoming.Count)));
                 foreach (FriendEntry entry in snapshot.Incoming)
                 {
                     string code = entry.Code;   // captured per row, not the loop variable
                     _lists.Add(Row(entry,
-                        ("Accept",  true,  () => Run(t => FriendsGateway.AcceptAsync(t, code),  "Friend added.")),
-                        ("Decline", false, () => Run(t => FriendsGateway.DeclineAsync(t, code), "Request declined.")),
-                        Confirmed("Block", "block:" + code,
-                            () => Run(t => FriendsGateway.BlockAsync(t, code), "Blocked."))));
+                        (Loc.Get("common_accept"),  true,  () => Run(t => FriendsGateway.AcceptAsync(t, code),  Loc.Get("friends_friend_added"))),
+                        (Loc.Get("common_decline"), false, () => Run(t => FriendsGateway.DeclineAsync(t, code), Loc.Get("friends_request_declined"))),
+                        Confirmed(Loc.Get("friends_block_button"), "block:" + code,
+                            () => Run(t => FriendsGateway.BlockAsync(t, code), Loc.Get("friends_blocked")))));
                 }
             }
 
-            _lists.Add(Section($"FRIENDS ({snapshot.Friends.Count})"));
+            _lists.Add(Section(Loc.Format("friends_section_friends", snapshot.Friends.Count)));
             if (snapshot.Friends.Count == 0)
             {
-                var empty = new Label("No friends yet. Share your code, or add someone by theirs.");
+                var empty = new Label(Loc.Get("friends_empty"));
                 empty.AddToClassList("fr-empty");
                 _lists.Add(empty);
             }
@@ -730,18 +730,18 @@ namespace Kingdom.Presentation
                 if (_expanded == code)
                 {
                     // The row's second face: what ends the friendship. Each asks once more.
-                    actions.Add(Confirmed("Remove", "remove:" + code,
-                        () => Run(t => FriendsGateway.RemoveAsync(t, code), "Friend removed.")));
-                    actions.Add(Confirmed("Block", "block:" + code,
-                        () => Run(t => FriendsGateway.BlockAsync(t, code), "Blocked.")));
-                    actions.Add(("Back", false, () => Expand("")));
+                    actions.Add(Confirmed(Loc.Get("friends_remove_button"), "remove:" + code,
+                        () => Run(t => FriendsGateway.RemoveAsync(t, code), Loc.Get("friends_removed"))));
+                    actions.Add(Confirmed(Loc.Get("friends_block_button"), "block:" + code,
+                        () => Run(t => FriendsGateway.BlockAsync(t, code), Loc.Get("friends_blocked"))));
+                    actions.Add((Loc.Get("common_back"), false, () => Expand("")));
                 }
                 else
                 {
                     if (canChallenge && SocialGateway.PresenceOf(code) == PresenceState.Online)
-                        actions.Add(("Challenge", true, () => { Close(); ChallengeFlow.Challenge(code); }));
+                        actions.Add((Loc.Get("friends_challenge_button"), true, () => { Close(); ChallengeFlow.Challenge(code); }));
                     int unread = ChatLog.Unread(code);
-                    actions.Add((unread > 0 ? $"Chat ({unread})" : "Chat", unread > 0, () => { Close(); ShowChat(code); }));
+                    actions.Add((unread > 0 ? Loc.Format("friends_chat_unread_button", unread) : Loc.Get("friends_chat_button"), unread > 0, () => { Close(); ShowChat(code); }));
                     actions.Add(("…", false, () => Expand(code)));
                 }
                 VisualElement row = Row(entry, actions.ToArray());
@@ -753,23 +753,23 @@ namespace Kingdom.Presentation
 
             if (snapshot.Outgoing.Count > 0)
             {
-                _lists.Add(Section($"SENT ({snapshot.Outgoing.Count})"));
+                _lists.Add(Section(Loc.Format("friends_section_sent", snapshot.Outgoing.Count)));
                 foreach (FriendEntry entry in snapshot.Outgoing)
                 {
                     string code = entry.Code;
                     _lists.Add(Row(entry,
-                        ("Cancel", false, () => Run(t => FriendsGateway.DeclineAsync(t, code), "Request withdrawn."))));
+                        (Loc.Get("common_cancel"), false, () => Run(t => FriendsGateway.DeclineAsync(t, code), Loc.Get("friends_request_withdrawn")))));
                 }
             }
 
             if (snapshot.Blocked.Count > 0)
             {
-                _lists.Add(Section($"BLOCKED ({snapshot.Blocked.Count})"));
+                _lists.Add(Section(Loc.Format("friends_section_blocked", snapshot.Blocked.Count)));
                 foreach (FriendEntry entry in snapshot.Blocked)
                 {
                     string code = entry.Code;
                     _lists.Add(Row(entry,
-                        ("Unblock", false, () => Run(t => FriendsGateway.UnblockAsync(t, code), "Unblocked."))));
+                        (Loc.Get("friends_unblock_button"), false, () => Run(t => FriendsGateway.UnblockAsync(t, code), Loc.Get("friends_unblocked")))));
                 }
             }
         }
@@ -795,7 +795,7 @@ namespace Kingdom.Presentation
         private (string, bool, Action) Confirmed(string text, string key, Action act)
         {
             if (_confirming == key)
-                return ("Sure?", true, () => { _confirming = ""; _expanded = ""; act(); });
+                return (Loc.Get("friends_confirm_button"), true, () => { _confirming = ""; _expanded = ""; act(); });
             return (text, false, () =>
             {
                 _confirming = key;
@@ -815,10 +815,10 @@ namespace Kingdom.Presentation
                 : state == PresenceState.Online ? "fr-presence--online"
                 : state == PresenceState.InMatch ? "fr-presence--in-match"
                 : "fr-presence--offline");
-            dot.tooltip = !live ? "Status unknown"
-                : state == PresenceState.Online ? "Online"
-                : state == PresenceState.InMatch ? "In a match"
-                : "Offline";
+            dot.tooltip = !live ? Loc.Get("friends_presence_unknown")
+                : state == PresenceState.Online ? Loc.Get("friends_presence_online")
+                : state == PresenceState.InMatch ? Loc.Get("friends_presence_in_match")
+                : Loc.Get("friends_presence_offline");
             return dot;
         }
 

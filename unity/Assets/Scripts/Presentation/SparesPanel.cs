@@ -207,7 +207,7 @@ namespace Kingdom.Presentation
         private void DrawRow(VisualElement row, Label copies, Label payout, SpareCopies spare)
         {
             int selected = _selected[spare.Card.Id];
-            copies.text = $"{selected} of {spare.Copies}";
+            copies.text = Loc.Format("spares_row_copies", selected, spare.Copies);
             // The row's own payout is for all its copies, so the part left in is that share of it.
             payout.text = (spare.Payout / spare.Copies * selected).ToString();
             row.EnableInClassList("spares-row--kept", selected == 0);
@@ -231,14 +231,16 @@ namespace Kingdom.Presentation
             _reduce.SetEnabled(copies > 0);
             if (_spares.Count == 0)
             {
-                _summary.text = "No spare copies";
-                _note.text = "Nothing here is past what a deck can play.";
+                _summary.text = Loc.Get("spares_summary_empty");
+                _note.text = Loc.Get("spares_note_empty");
                 return;
             }
             _summary.text = copies > 0
-                ? $"{copies} spare {(copies == 1 ? "copy" : "copies")} across {cards} {(cards == 1 ? "card" : "cards")}"
-                : "Nothing selected";
-            _note.text = "Tap a card to keep one more copy. Reducing cannot be undone.";
+                ? Loc.Format("spares_summary_selected",
+                    Loc.Plural("spares_summary_copies", copies, copies),
+                    Loc.Plural("spares_summary_cards", cards, cards))
+                : Loc.Get("spares_summary_none_selected");
+            _note.text = Loc.Get("spares_note_instructions");
         }
     }
 }

@@ -246,6 +246,8 @@
     <string name="collection_drawer_subtitle_choose">Choose a deck to edit</string>
     <!-- Tooltip on a deck in the drawer chooser. %1$s = deck name, %2$s/%3$s = primary/secondary class, %4$d = card count, %5$d = deck size. Note no spaces around '/' here. -->
     <string name="collection_deck_choice_tooltip">%1$s · %2$s → %3$s · %4$d/%5$d</string>
+    <!-- Copy count on a deck-list row, shown only for 2 or more. %1$d = copies. Plain lowercase x, not the multiplication sign. -->
+    <string name="collection_deck_row_copies">x%1$d</string>
     <!-- Deck chooser empty state. -->
     <string name="collection_deck_chooser_empty_2">No decks yet — manage your decks to create one.</string>
     <!-- Craft modal loading status (three ASCII dots). -->
@@ -742,7 +744,7 @@
     <string name="match_boot_error_deck_unavailable">Selected deck is unavailable — choose it again</string>
     <!-- Header of the on-board list of ongoing effects. -->
     <string name="effects_panel_title">ACTIVE EFFECTS</string>
-    <!-- One row of the active-effects list. %1$s = source card name, %2$s = owner (effects_owner_*), %3$s = remaining lifetime (effects_remaining_*). -->
+    <!-- One row of the active-effects list. %1$s = source card name, %2$s = owner (common_you / common_opponent), %3$s = remaining lifetime (effects_remaining_*). -->
     <string name="effects_row_format">%1$s · %2$s · %3$s</string>
     <!-- Fallback source name when the card definition is missing. %1$d = card id. Lowercase on purpose. -->
     <string name="effects_source_fallback">card %1$d</string>
@@ -775,13 +777,7 @@
     <string name="pack_reveal_copies">×%1$d</string>
     <!-- Fallback pack name when the pack id is unreadable. -->
     <string name="pack_name_fallback">Pack</string>
-    <!-- Card type: card tooltip subtitle and collection filter chip. -->
-    <string name="card_type_minion">Minion</string>
-    <!-- Card type: card tooltip subtitle and collection filter chip. -->
-    <string name="card_type_spell">Spell</string>
-    <!-- Card type: card tooltip subtitle and collection filter chip. -->
-    <string name="card_type_weapon">Weapon</string>
-    <!-- Card tooltip subtitle start. %1$d = mana cost, %2$s = card type (card_type_*). Double spaces around the dot are deliberate. -->
+    <!-- Card tooltip subtitle start. %1$d = mana cost, %2$s = card type (glossary type_*). Double spaces around the dot are deliberate. -->
     <string name="card_reveal_subtitle_cost_type">%1$d mana  ·  %2$s</string>
     <!-- Appended to the tooltip subtitle for minions/weapons. %1$d = attack, %2$d = health (minion) or durability (weapon). Leading spaces are deliberate. -->
     <string name="card_reveal_subtitle_stats">  ·  %1$d / %2$d</string>
@@ -807,16 +803,12 @@
     <string name="collection_sort_key_health">Health</string>
     <!-- Last mana-cost filter chip, meaning that cost or more. %1$d = max chip cost. -->
     <string name="collection_cost_chip_max">%1$d+</string>
-    <!-- Card set filter chip (set name; rendered from the SetId enum). Proper noun. -->
-    <string name="collection_set_pendingham">Pendingham</string>
-    <!-- Card set filter chip (set name; rendered from the SetId enum). -->
-    <string name="collection_set_rekindling">Rekindling</string>
     <!-- Error in the pack detail panel when the purchase response was lost. 'Card Vault' is the screen holding unopened packs. -->
     <string name="shop_purchase_uncertain">Purchase status uncertain. Check Card Vault before buying again.</string>
     <!-- Buy button priced in Gold. %1$s = price, already number-formatted. Code composes it as '{price} {label}' with label 'Gold'. -->
     <string name="shop_buy_button_gold">%1$s Gold</string>
-    <!-- USD price of a gem bundle. %1$d = dollars, %2$02d = cents. Hand-formatted in code; should become a locale currency format. -->
-    <string name="shop_gem_bundle_price_usd">$%1$d.%%2$02d</string>
+    <!-- USD price of a gem bundle. %1$d = dollars, %2$s = cents, already two digits. Not yet read by code, which builds the price by hand; should become a locale currency format. -->
+    <string name="shop_gem_bundle_price_usd">$%1$d.%2$s</string>
     <!-- Spares panel summary when the player owns no surplus copies. -->
     <string name="spares_summary_empty">No spare copies</string>
     <!-- Spares panel note when there are no surplus copies. -->
@@ -855,6 +847,8 @@
     <string name="update_gate_button_update">Update</string>
     <!-- Printed on a paper tag by the end-turn stamper on the 3D table. Two lines, small tag; joke: the turn ended without the player stamping it. -->
     <string name="board_seal_approved_by_default">APPROVED\nBY DEFAULT</string>
+    <!-- Label painted on the suggestion-box table toy on the 3D board. All caps, small plate. -->
+    <string name="board_suggestion_box_label">SUGGESTIONS</string>
     <!-- Receipt slip popping out of the suggestion-box table toy when tapped. Two lines; bureaucratic deadpan. -->
     <string name="board_suggestion_box_receipt">Your suggestion has been\nreceived and filed.</string>
 </resources>

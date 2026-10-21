@@ -104,7 +104,7 @@ namespace Kingdom.Presentation
             _instruction.fontStyle = FontStyles.Bold;
             _instruction.rectTransform.sizeDelta = new Vector2(5.2f, InstructionH);
             _instruction.textWrappingMode = TextWrappingModes.NoWrap;
-            _instruction.text = "TAP CARDS TO REPLACE";
+            _instruction.text = Loc.Get("mulligan_instruction");
             BoardController.ApplyUiFont(_instruction);
 
             _collider = gameObject.AddComponent<BoxCollider>();
@@ -138,7 +138,8 @@ namespace Kingdom.Presentation
         private void OnTossCountChanged(int count)
         {
             if (_label != null)
-                _label.text = count == 0 ? "KEEP ALL" : $"MULLIGAN ({count})";
+                _label.text = count == 0 ? Loc.Get("mulligan_keep_all_button")
+                                          : Loc.Format("mulligan_replace_button", count);
         }
 
         void IPointerPressTarget.OnPointerDown() => _router?.OnMulliganConfirmClicked();
