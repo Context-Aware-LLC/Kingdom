@@ -519,19 +519,6 @@ namespace Kingdom.Presentation
             var title = new Label(quest.Title);
             title.AddToClassList("mm-quest-title");
             heading.Add(title);
-            row.Add(heading);
-
-            if (!string.IsNullOrEmpty(quest.Quip))
-            {
-                var quip = new Label(quest.Quip);
-                quip.AddToClassList("mm-quest-quip");
-                row.Add(quip);
-            }
-
-            var detail = new Label(quest.Complete
-                ? Loc.Get("menu_quest_complete")
-                : Loc.Format("common_1_d_2_d", quest.Progress, quest.Goal));
-            detail.AddToClassList("mm-quest-detail");
 
             var reward = new VisualElement();
             reward.AddToClassList("mm-quest-reward");
@@ -541,12 +528,16 @@ namespace Kingdom.Presentation
             var rewardAmount = new Label(Loc.Format("menu_quest_reward", quest.RewardGold));
             rewardAmount.AddToClassList("mm-quest-reward__amount");
             reward.Add(rewardAmount);
+            heading.Add(reward);
+            row.Add(heading);
 
-            var summary = new VisualElement();
-            summary.AddToClassList("mm-quest-summary");
-            summary.Add(detail);
-            summary.Add(reward);
-            row.Add(summary);
+            if (!string.IsNullOrEmpty(quest.Quip))
+            {
+                // USS has no line-height, so the quip's two lines are tightened with the rich-text tag.
+                var quip = new Label("<line-height=85%>" + quest.Quip);
+                quip.AddToClassList("mm-quest-quip");
+                row.Add(quip);
+            }
 
             var track = new VisualElement();
             track.AddToClassList("mm-quest-progress");
@@ -555,7 +546,17 @@ namespace Kingdom.Presentation
             fill.style.width = Length.Percent(
                 Mathf.Clamp01((float)quest.Progress / quest.Goal) * 100f);
             track.Add(fill);
-            row.Add(track);
+
+            var detail = new Label(quest.Complete
+                ? Loc.Get("menu_quest_complete")
+                : Loc.Format("common_1_d_2_d", quest.Progress, quest.Goal));
+            detail.AddToClassList("mm-quest-detail");
+
+            var summary = new VisualElement();
+            summary.AddToClassList("mm-quest-summary");
+            summary.Add(track);
+            summary.Add(detail);
+            row.Add(summary);
             return row;
         }
 

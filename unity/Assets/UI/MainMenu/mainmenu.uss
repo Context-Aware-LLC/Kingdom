@@ -370,13 +370,15 @@
     font-size: var(--type-caption);
     white-space: normal;
 }
+/* Bar on the left, its count on the right; the reward sits in the heading's right corner. */
 .mm-quest-summary {
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
     margin-top: var(--space-2);
 }
 .mm-quest-detail {
+    flex-shrink: 0;
+    margin-left: var(--space-3);
     color: var(--ink-2);
     font-size: var(--type-caption);
     -unity-font-style: bold;
@@ -403,8 +405,10 @@
     -unity-font-style: bold;
 }
 .mm-quest-progress {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
     height: 6px;
-    margin-top: var(--space-2);
     background-color: rgba(47, 54, 68, 0.58);
     overflow: hidden;
 }
