@@ -178,6 +178,12 @@ ROOT_EXCEPTIONS = {
 }
 
 ELEMENT_INTERNAL = {
+    'reveal-card__light':
+        'non-interactive light mesh parented to a reveal-card by PackRevealPanel; '
+        'negative offsets extend behind that card, not against the screen edge',
+    'reveal-hint':
+        'instruction label parented to reveal-overlay by PackRevealPanel; that overlay '
+        'carries emb-bleed in the host UXML, so its percentage bottom inset is inside cleared bounds',
     'tear-half':
         'non-interactive torn wrapper pieces parented to the tapped pack face by '
         'PackTearAnimator.Play; left/top are pack-local coordinates',
