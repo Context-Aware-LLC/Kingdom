@@ -496,12 +496,6 @@
     <string name="menu_quests_signed_out">Sign in to view quests</string>
     <!-- Quest panel status. -->
     <string name="menu_quests_none">No current quests</string>
-    <!-- Quest row age tag, all caps. (Missed by heuristic.) -->
-    <string name="menu_quest_age_today">TODAY</string>
-    <!-- Quest row age tag, all caps. (Missed by heuristic.) -->
-    <string name="menu_quest_age_yesterday">YESTERDAY</string>
-    <!-- Quest row age tag, all caps. Always exactly 2 (third slot of a three-day window). -->
-    <string name="menu_quest_age_two_days">2 DAYS AGO</string>
     <!-- Quest row detail when done, all caps. (Missed by heuristic.) -->
     <string name="menu_quest_complete">COMPLETE</string>
     <!-- Quest Gold reward beside a coin icon. %1$d = gold. (Missed by heuristic.) -->

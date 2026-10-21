@@ -496,7 +496,7 @@ namespace Kingdom.Presentation
 
             _questStatus.AddToClassList("mm-quest-status--hidden");
             for (int index = 0; index < snapshot.Quests.Count; index++)
-                _questList.Add(BuildQuestRow(snapshot.Quests[index], index));
+                _questList.Add(BuildQuestRow(snapshot.Quests[index]));
         }
 
         private void RenderQuestFailure(string message)
@@ -507,7 +507,7 @@ namespace Kingdom.Presentation
             _questStatus.RemoveFromClassList("mm-quest-status--hidden");
         }
 
-        private static VisualElement BuildQuestRow(QuestEntry quest, int index)
+        private static VisualElement BuildQuestRow(QuestEntry quest)
         {
             var row = new VisualElement();
             row.AddToClassList("mm-quest-row");
@@ -519,15 +519,6 @@ namespace Kingdom.Presentation
             var title = new Label(quest.Title);
             title.AddToClassList("mm-quest-title");
             heading.Add(title);
-
-            var age = new Label(index switch
-            {
-                0 => Loc.Get("menu_quest_age_today"),
-                1 => Loc.Get("menu_quest_age_yesterday"),
-                _ => Loc.Get("menu_quest_age_two_days"),
-            });
-            age.AddToClassList("mm-quest-age");
-            heading.Add(age);
             row.Add(heading);
 
             if (!string.IsNullOrEmpty(quest.Quip))

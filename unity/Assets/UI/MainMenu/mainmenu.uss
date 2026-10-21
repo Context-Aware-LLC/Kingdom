@@ -342,30 +342,27 @@
     flex-direction: row;
     align-items: center;
 }
+/* One line, never wrapped (Sam, 2026-10-20): a title that ran long ("Win a match that runs past
+   turn 15") wrapped to a second line. The day tag that shared this row is gone, so the title has
+   the whole width; an ellipsis is the guard for a title longer than that. */
 .mm-quest-title {
     flex-grow: 1;
     flex-shrink: 1;
-    /* Measure the wrap at the shrunk width: a basis of auto sizes the height for one line, and
-       a long title's second line then paints over the quip below. */
-    flex-basis: 0;
     min-width: 0;
     color: var(--ink-1);
     font-size: var(--type-label);
     -unity-font-style: bold;
-    white-space: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+/* Further from the title and lighter than --ink-2, which read as too dim to scan
+   (Sam, 2026-10-20). */
 .mm-quest-quip {
-    margin-top: var(--space-1);
-    color: var(--ink-2);
+    margin-top: var(--space-2);
+    color: rgb(206, 214, 224);
     font-size: var(--type-caption);
     white-space: normal;
-}
-.mm-quest-age {
-    flex-shrink: 0;
-    margin-left: var(--space-2);
-    color: var(--ink-2);
-    font-size: var(--type-caption);
-    letter-spacing: 1px;
 }
 .mm-quest-summary {
     flex-direction: row;

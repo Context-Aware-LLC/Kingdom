@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -128,14 +129,20 @@ namespace Kingdom.Presentation
             _ink = TabletopToyGeometry.Material("Suggestion slot", new Color(0.025f, 0.017f, 0.013f));
             _box = new GameObject("Suggestion box").transform;
             _box.SetParent(transform, false);
-            // On the near rail below our deck, the lid's right edge flush with the deck slot's
-            // (x 9.95), resting on the rail strip (z -0.163). Beside the stamper it sat behind it
-            // on screen, and the stamper's touch box took nearly every tap (Sam, 2026-10-20).
-            _box.position = new Vector3(9.26f, -5.21f, -0.42f);
+            // On the near rail below our deck, resting on the rail strip (z -0.163). Beside the
+            // stamper it sat behind it on screen, and the stamper's touch box took nearly every tap
+            // (Sam, 2026-10-20). Nudged 0.15 left of flush with the deck slot (x 9.95) the same day.
+            _box.position = new Vector3(9.11f, -5.21f, -0.42f);
             Box(_box, "Walnut case", Vector3.zero, new Vector3(1.3f, 1.15f, 0.55f), _wood);
             Box(_box, "Brass lid", new Vector3(0f, 0f, -0.29f), new Vector3(1.38f, 1.22f, 0.06f), _brass);
             Box(_box, "Dark letter slot", new Vector3(0f, 0.20f, -0.327f), new Vector3(0.90f, 0.10f, 0.025f), _ink);
-            TabletopToyGeometry.Label(_box, Loc.Get("board_suggestion_box_label"), new Vector3(0f, -0.24f, -0.335f), new Vector2(1.2f, 0.3f), 1.1f);
+            // Larger than it first shipped (1.1, Sam 2026-10-20); auto-size keeps a longer word in
+            // another language on the lid instead of wrapping it.
+            TextMeshPro plate = TabletopToyGeometry.Label(_box, Loc.Get("board_suggestion_box_label"),
+                new Vector3(0f, -0.24f, -0.335f), new Vector2(1.26f, 0.4f), 1.45f);
+            plate.enableAutoSizing = true;
+            plate.fontSizeMin = 1.0f;
+            plate.fontSizeMax = 1.45f;
             _box.gameObject.AddComponent<BoxCollider>().size = new Vector3(1.4f, 1.25f, 0.7f);
             _box.gameObject.AddComponent<LocalPropPress>().Pressed = () =>
             {

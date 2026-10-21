@@ -297,9 +297,6 @@
     <string name="menu_quests_unavailable">Quests nicht verfügbar</string>
     <string name="menu_quests_signed_out">Melde dich an, um Quests zu sehen</string>
     <string name="menu_quests_none">Keine aktuellen Quests</string>
-    <string name="menu_quest_age_today">HEUTE</string>
-    <string name="menu_quest_age_yesterday">GESTERN</string>
-    <string name="menu_quest_age_two_days">VOR 2 TAGEN</string>
     <string name="menu_quest_complete">ERLEDIGT</string>
     <string name="menu_quest_reward">+%1$d</string>
     <string name="menu_vault_pack_count_max">× 99+</string>
