@@ -290,7 +290,7 @@
     top: var(--space-6);
     left: var(--space-6);
     right: var(--space-6);
-    height: 124px;
+    min-height: 124px;
     flex-direction: row;
     align-items: stretch;
     background-color: rgba(0, 0, 0, 0);
@@ -337,6 +337,12 @@
 }
 .mm-quest-row--complete {
     opacity: 0.78;
+}
+/* The rail grows to fit the card rather than the card's lines shrinking to fit the rail: a
+   two-line quip under a fixed 124px rail squeezed the heading, and the title's overflow clip
+   cut it in half (Sam, 2026-10-21). */
+.mm-quest-row > * {
+    flex-shrink: 0;
 }
 .mm-quest-row__heading {
     flex-direction: row;
