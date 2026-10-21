@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kingdom of Bad Ideas: game vocabulary (de). First pass 2026-10-20, written in-house; review before
+     shipping. Every German screen and card reuses these words, so change a term here, not per string.
+     Informal "du" throughout. -->
+<resources>
+    <!-- ===== Keywords ===== -->
+    <string name="keyword_bulwark">Bollwerk</string>
+    <string name="keyword_bulwark_desc">Feindliche Angriffe müssen zuerst an diesem Diener vorbei.</string>
+    <string name="keyword_fervor">Eifer</string>
+    <string name="keyword_fervor_desc">Kann im Zug des Ausspielens angreifen, auch den Helden.</string>
+    <string name="keyword_skirmish">Scharmützel</string>
+    <string name="keyword_skirmish_desc">Kann im Zug des Ausspielens angreifen, aber nicht den feindlichen Helden.</string>
+    <string name="keyword_aegis">Ägis</string>
+    <string name="keyword_aegis_desc">Fängt den nächsten Treffer vollständig ab und zerbricht dann.</string>
+    <string name="keyword_lifedrain">Lebensraub</string>
+    <string name="keyword_lifedrain_desc">Verursachter Schaden heilt deinen Helden um denselben Wert.</string>
+    <string name="keyword_doublestrike">Doppelschlag</string>
+    <string name="keyword_doublestrike_desc">Kann jeden Zug zweimal angreifen.</string>
+    <string name="keyword_shroud">Schleier</string>
+    <string name="keyword_shroud_desc">Kann nicht angegriffen oder anvisiert werden, bis er angreift.</string>
+    <string name="keyword_venom">Gift</string>
+    <string name="keyword_venom_desc">Jeder Diener, dem dies Schaden zufügt, wird vernichtet.</string>
+    <string name="keyword_arcane_surge">Arkanflut</string>
+    <string name="keyword_arcane_surge_desc">Deine Zauber verursachen 1 Schaden mehr. Mehrere Kopien addieren sich.</string>
+    <string name="keyword_silence">Stille</string>
+    <string name="keyword_silence_desc">Entfernt Kartentext, Schlüsselwörter und Verstärkungen eines Dieners.</string>
+    <string name="keyword_frost">Frost</string>
+    <string name="keyword_frost_desc">Was hiervon Schaden erleidet, verpasst seinen nächsten Angriff – auch Helden.</string>
+    <string name="keyword_backdraft">Rückstau</string>
+    <string name="keyword_backdraft_desc">Sperrt so viel deines Manas in deinem nächsten Zug.</string>
+    <string name="keyword_drown">Ertränken</string>
+    <string name="keyword_drown_desc">Verursacht die Hälfte des Lebens dieses Dieners, aufgerundet – 2 bei einem Helden. Ignoriert Ägis.</string>
+    <string name="keyword_rekindle">Neuentfachen</string>
+    <string name="keyword_rekindle_desc">Kehrt beim ersten Tod an seinen Platz zurück, mit 1 Leben.</string>
+    <string name="keyword_overwhelm">Überwältigen</string>
+    <string name="keyword_overwhelm_desc">Überschüssiger Angriffsschaden trifft den feindlichen Helden.</string>
+    <string name="keyword_vanguard">Vorhut</string>
+    <string name="keyword_vanguard_desc">Erleidet keinen Gegenschaden, wenn sein Angriff den Verteidiger tötet.</string>
+    <!-- ===== Timing labels and game verbs ===== -->
+    <string name="label_toll">Totenglocke</string>
+    <string name="label_attack">Angriff</string>
+    <string name="label_damaged">Verletzt</string>
+    <string name="label_healed">Geheilt</string>
+    <string name="label_turn_end">Zugende</string>
+    <string name="label_spell_cast">Zauberwirken</string>
+    <string name="label_aura">Aura</string>
+    <string name="label_unearth">Ausgraben</string>
+    <string name="label_freeze">Einfrieren</string>
+    <string name="label_unfreeze">Auftauen</string>
+    <!-- ===== Tribes ===== -->
+    <string name="tribe_beast">Bestie</string>
+    <string name="tribe_beast_plural">Bestien</string>
+    <string name="tribe_construct">Konstrukt</string>
+    <string name="tribe_construct_plural">Konstrukte</string>
+    <string name="tribe_undead">Untoter</string>
+    <string name="tribe_undead_plural">Untote</string>
+    <string name="tribe_elemental">Elementar</string>
+    <string name="tribe_elemental_plural">Elementare</string>
+    <string name="tribe_dragon">Drache</string>
+    <string name="tribe_dragon_plural">Drachen</string>
+    <string name="tribe_spirit">Geist</string>
+    <string name="tribe_spirit_plural">Geister</string>
+    <string name="tribe_human">Mensch</string>
+    <string name="tribe_human_plural">Menschen</string>
+    <string name="tribe_fey">Fee</string>
+    <string name="tribe_fey_plural">Feen</string>
+    <string name="tribe_merfolk">Meervolk</string>
+    <string name="tribe_merfolk_plural">Meervolk</string>
+    <string name="tribe_catfolk">Katzenvolk</string>
+    <string name="tribe_catfolk_plural">Katzenvolk</string>
+    <!-- ===== Classes and their heroes ===== -->
+    <string name="class_emberward">Glutwacht</string>
+    <string name="class_tidecaller">Gezeitenrufer</string>
+    <string name="class_gravekeep">Grabhüter</string>
+    <string name="class_verdant">Immergrün</string>
+    <string name="class_clockwright">Uhrwerker</string>
+    <string name="class_nightveil">Nachtschleier</string>
+    <string name="class_stonewarden">Steinwart</string>
+    <string name="class_tempest">Orkan</string>
+    <string name="class_neutral">Neutral</string>
+    <string name="hero_emberward">Pyra</string>
+    <string name="hero_tidecaller">Maren</string>
+    <string name="hero_gravekeep">Sorrow</string>
+    <string name="hero_verdant">Thalen</string>
+    <string name="hero_clockwright">Fenwick</string>
+    <string name="hero_nightveil">Liss</string>
+    <string name="hero_stonewarden">Hodge</string>
+    <string name="hero_tempest">Cassian</string>
+    <!-- ===== Card types, rarities, sets ===== -->
+    <string name="type_minion">Diener</string>
+    <string name="type_spell">Zauber</string>
+    <string name="type_weapon">Waffe</string>
+    <string name="type_hero_power">Heldenkraft</string>
+    <string name="rarity_common">Gewöhnlich</string>
+    <string name="rarity_rare">Selten</string>
+    <string name="rarity_epic">Episch</string>
+    <string name="rarity_legendary">Legendär</string>
+    <string name="set_pendingham">Pendingham</string>
+    <string name="set_rekindling">Neuentfachung</string>
+    <!-- ===== Term base ===== -->
+    <string name="term_minion">Diener</string>
+    <string name="term_hero">Held</string>
+    <string name="term_character">Charakter</string>
+    <string name="term_friendly">befreundet</string>
+    <string name="term_enemy">feindlich</string>
+    <string name="term_damage">Schaden</string>
+    <string name="term_attack">Angriff</string>
+    <string name="term_health">Leben</string>
+    <string name="term_mana">Mana</string>
+    <string name="term_mana_crystal">Manakristall</string>
+    <string name="term_durability">Haltbarkeit</string>
+    <string name="term_spell_damage">Zauberschaden</string>
+    <string name="term_card">Karte</string>
+    <string name="term_hand">Hand</string>
+    <string name="term_deck">Deck</string>
+    <string name="term_graveyard">Friedhof</string>
+    <string name="term_summon">Beschwören</string>
+    <string name="term_draw">Ziehen</string>
+    <string name="term_restore">Wiederherstellen</string>
+    <string name="term_destroy">Vernichten</string>
+    <string name="term_sacrifice">Opfern</string>
+    <string name="term_reanimate">Wiederbeleben</string>
+</resources>

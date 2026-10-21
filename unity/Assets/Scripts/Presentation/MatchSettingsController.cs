@@ -31,6 +31,7 @@ namespace Kingdom.Presentation
         private VisualElement _viewMenu;
         private VisualElement _viewConfirm;
         private VisualElement _viewAccount;
+        private VisualElement _viewLanguage;
 
         // The public site. Deletion is a web request (support mailbox), not an endpoint: the server
         // has no delete-account path, and Play policy only needs the in-app entry to reach it.
@@ -106,6 +107,7 @@ namespace Kingdom.Presentation
             _viewMenu    = root.Q<VisualElement>("view-menu");
             _viewConfirm = root.Q<VisualElement>("view-confirm");
             _viewAccount = root.Q<VisualElement>("view-account");
+            _viewLanguage = root.Q<VisualElement>("view-language");
 
             _confirmTitle    = root.Q<Label>("confirm-title");
             _confirmSubtitle = root.Q<Label>("confirm-subtitle");
@@ -134,6 +136,8 @@ namespace Kingdom.Presentation
             Wire(root, "btn-quit", OnQuit);
             Wire(root, "btn-account", ShowAccount);
             Wire(root, "btn-account-back", ShowMenu);
+            Wire(root, "btn-language", ShowLanguage);
+            Wire(root, "btn-language-back", ShowMenu);
             Wire(root, "btn-privacy", () => Application.OpenURL(PrivacyUrl));
             Wire(root, "btn-terms", () => Application.OpenURL(TermsUrl));
             Wire(root, "btn-delete-account", () => Application.OpenURL(DeleteUrl));
@@ -170,6 +174,7 @@ namespace Kingdom.Presentation
 
         private void ShowMenu()
         {
+            if (_viewLanguage != null) _viewLanguage.style.display = DisplayStyle.None;
             if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.Flex;
             if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.None;
             if (_viewAccount != null) _viewAccount.style.display = DisplayStyle.None;
@@ -177,6 +182,7 @@ namespace Kingdom.Presentation
 
         private void ShowAccount()
         {
+            if (_viewLanguage != null) _viewLanguage.style.display = DisplayStyle.None;
             if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.None;
             if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.None;
             if (_viewAccount != null) _viewAccount.style.display = DisplayStyle.Flex;
@@ -203,6 +209,7 @@ namespace Kingdom.Presentation
 
             if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.None;
             if (_viewAccount != null) _viewAccount.style.display = DisplayStyle.None;
+            if (_viewLanguage != null) _viewLanguage.style.display = DisplayStyle.None;
             if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.Flex;
         }
 
@@ -210,6 +217,51 @@ namespace Kingdom.Presentation
             => ShowConfirm(Loc.Get("common_concede_this_match"), Loc.Get("match_settings_confirm_subtitle"),
                            Loc.Get("common_concede"), danger: true,
                            onConfirm: () => { _onConcede?.Invoke(); Close(); });
+
+        // ── Language (2026-10-20) ───────────────────────────────────────────────────────
+
+        /// <summary>
+        /// One row per language whose table ships, each written in its own language so a player who
+        /// cannot read the current one can still find theirs. The current language is the disabled row.
+        ///
+        /// <para>Off the match, picking one reloads the scene, so every screen redraws in it — the
+        /// same reasoning as <see cref="ReloadThisScene"/> for sign-out. In a match a reload would
+        /// eat the match, so the panel's own text switches live (UiLocalizer) and the rest follows
+        /// on the next screen.</para>
+        /// </summary>
+        private void ShowLanguage()
+        {
+            var list = _viewLanguage?.Q<VisualElement>("language-list");
+            if (list == null) return;
+            list.Clear();
+            foreach (string code in Loc.Available())
+            {
+                string picked = code;
+                var row = new Button(() => PickLanguage(picked)) { text = Loc.NativeName(code) };
+                row.AddToClassList("ms-item");
+                row.SetEnabled(code != Loc.Language);
+                list.Add(row);
+            }
+
+            if (_viewMenu != null)     _viewMenu.style.display     = DisplayStyle.None;
+            if (_viewConfirm != null)  _viewConfirm.style.display  = DisplayStyle.None;
+            if (_viewAccount != null)  _viewAccount.style.display  = DisplayStyle.None;
+            _viewLanguage.style.display = DisplayStyle.Flex;
+        }
+
+        private void PickLanguage(string code)
+        {
+            Loc.SetLanguage(code);
+            if (_allowSceneReload)
+            {
+                Close();
+                ReloadThisScene();
+            }
+            else
+            {
+                ShowMenu();
+            }
+        }
 
         // ── Audio (Sam, 2026-09-05) ─────────────────────────────────────────────────────
 

@@ -94,6 +94,34 @@ namespace Kingdom.Presentation
             LanguageChanged?.Invoke();
         }
 
+        /// <summary>Every language this game targets, in priority order, with its name in itself.
+        /// <see cref="Available"/> keeps the ones whose table ships.</summary>
+        private static readonly (string Code, string Name)[] Targets =
+        {
+            ("en", "English"), ("de", "Deutsch"), ("fr", "Français"), ("es-419", "Español (Latinoamérica)"),
+            ("pt-BR", "Português (Brasil)"), ("ja", "日本語"), ("ko", "한국어"), ("it", "Italiano"),
+            ("pl", "Polski"), ("tr", "Türkçe"), ("ru", "Русский"), ("zh-TW", "繁體中文"),
+            ("id", "Bahasa Indonesia"), ("th", "ไทย"), ("nl", "Nederlands"), ("uk", "Українська"),
+            ("cs", "Čeština"), ("ar", "العربية"),
+        };
+
+        /// <summary>The languages a player can pick: English, and each target whose table ships.</summary>
+        public static IReadOnlyList<string> Available()
+        {
+            var codes = new List<string>();
+            foreach ((string code, string _) in Targets)
+                if (Supported(code)) codes.Add(code);
+            return codes;
+        }
+
+        /// <summary>A language's name written in that language — "Deutsch", never "German".</summary>
+        public static string NativeName(string code)
+        {
+            foreach ((string c, string name) in Targets)
+                if (c == code) return name;
+            return code;
+        }
+
         private static Dictionary<string, string> ReverseSource;
 
         private static void EnsureLoaded()

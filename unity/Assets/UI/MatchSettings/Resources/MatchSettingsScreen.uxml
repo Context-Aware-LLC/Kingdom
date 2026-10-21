@@ -42,6 +42,9 @@
                         <ui:Slider name="slider-music" label="Music" low-value="0" high-value="1" class="ms-slider" />
                         <ui:Slider name="slider-sfx" label="SFX" low-value="0" high-value="1" class="ms-slider" />
                     </ui:VisualElement>
+                    <!-- Language (2026-10-20). Lists only the languages whose tables ship, each in its own
+                         name; the controller builds the rows. -->
+                    <ui:Button name="btn-language" text="Language" class="ms-item" />
                     <ui:Button name="btn-concede" text="Concede" class="ms-item ms-item--danger" />
                     <!-- Sign out (Sam, 2026-09-02). The player-facing way to leave an identity, and
                          the reason it exists now: testing that a roster comes back required
@@ -61,6 +64,12 @@
                     <ui:Button name="btn-terms" text="Terms of Service" class="ms-item" />
                     <ui:Button name="btn-delete-account" text="Delete account" class="ms-item ms-item--danger" />
                     <ui:Button name="btn-account-back" text="Back" class="ms-item emb-back" />
+                </ui:VisualElement>
+
+                <!-- Language view: one row per shipped language, filled by the controller. -->
+                <ui:VisualElement name="view-language" class="ms-view ms-hidden">
+                    <ui:VisualElement name="language-list" />
+                    <ui:Button name="btn-language-back" text="Back" class="ms-item emb-back" />
                 </ui:VisualElement>
 
                 <!-- Confirm view — SHARED, not concede's own (2026-09-02). Two things now need a
