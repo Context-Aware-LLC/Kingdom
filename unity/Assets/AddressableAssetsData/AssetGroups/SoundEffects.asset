@@ -15,6 +15,11 @@ MonoBehaviour:
   m_GroupName: SoundEffects
   m_GUID: f640b8728ebcb854fa823215a3537929
   m_SerializeEntries:
+  - m_GUID: 035b7ae79069494d89e5091cab597364
+    m_Address: sfx/pack_legendary_trumpet
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 063f0c52f165c2d40b0f59e0f541da73
     m_Address: sfx/clockwright_hero_power_2
     m_ReadOnly: 0
@@ -57,6 +62,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4b4f213dd66274f4e96dba0caa67f73c
     m_Address: sfx/beast_summon_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5fc78f2dbd534ca9acd82b3533a5e2c3
+    m_Address: sfx/mana_orb_tap
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -185,6 +195,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cec7a7f2c16b4318badd8f59b00b5922
+    m_Address: sfx/pack_legendary_trumpet_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d56e9fc2391290645b8f3227037ba37c
+    m_Address: sfx/paper_mulligan_toss
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d67ecd053cecacb41a60f5e24431841c
     m_Address: sfx/imp_summon
     m_ReadOnly: 0
@@ -225,6 +245,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7bd74dfbaf6ee643a2c5660ba30815a
+    m_Address: sfx/paper_fatigue_sheet
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef9816f6518ba7544aa39c88fd575e5c
     m_Address: sfx/storm_summon
     m_ReadOnly: 0
@@ -250,6 +275,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f74867c1926b3e44e8ccd246654af742
+    m_Address: sfx/paper_burn_fall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f7a1df1f0bd07c24ea6f0a992f8f24d8
     m_Address: sfx/rogue_summon
     m_ReadOnly: 0
@@ -257,21 +287,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fe26c37fab006984285425d5b7de69da
     m_Address: sfx/clockwork_summon
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 035b7ae79069494d89e5091cab597364
-    m_Address: sfx/pack_legendary_trumpet
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: cec7a7f2c16b4318badd8f59b00b5922
-    m_Address: sfx/pack_legendary_trumpet_2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5fc78f2dbd534ca9acd82b3533a5e2c3
-    m_Address: sfx/mana_orb_tap
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
