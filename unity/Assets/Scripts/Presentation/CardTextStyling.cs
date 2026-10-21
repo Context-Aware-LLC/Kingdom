@@ -34,5 +34,9 @@ namespace Kingdom.Presentation
             string.IsNullOrEmpty(generatedText)
                 ? generatedText
                 : Vocabulary.Replace(generatedText, "<b><size=120%>$0</size></b>");
+
+        // A translated card marks its vocabulary as slots, so CardLoc bolds by slot through this
+        // instead of matching English words that a translation does not contain.
+        internal static string Emphasise(string word) => "<b><size=120%>" + word + "</size></b>";
     }
 }

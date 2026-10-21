@@ -314,7 +314,8 @@ namespace Kingdom.Presentation
         {
             int powerId = HeroPowers.ForClass(heroClass);
             if (_db == null || powerId <= 0 || !_db.TryGet(powerId, out CardDefinition power)) return "";
-            return string.IsNullOrEmpty(power.Text) ? power.Name : $"{power.Name} · {power.Text}";
+            string name = CardLoc.Name(power, _db), text = CardLoc.PlainText(power, _db);
+            return string.IsNullOrEmpty(text) ? name : $"{name} · {text}";
         }
 
         /// <summary>
@@ -399,8 +400,8 @@ namespace Kingdom.Presentation
 
             if (_powerBlock != null)
                 _powerBlock.style.display = found ? DisplayStyle.Flex : DisplayStyle.None;
-            if (_powerName != null) _powerName.text = found ? power.Name : "";
-            if (_powerDesc != null) _powerDesc.text = found ? CardTextStyling.Style(power.Text) : "";
+            if (_powerName != null) _powerName.text = found ? CardLoc.Name(power, _db) : "";
+            if (_powerDesc != null) _powerDesc.text = found ? CardLoc.RulesText(power, _db) : "";
         }
 
         /// <summary>

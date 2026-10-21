@@ -161,7 +161,7 @@ Invoke-Stage 'Stage 5b · Networked AI soak' {
     dotnet run --project src/Kingdom.Tools.NetSoak -c Release --no-build -- liveai 5
 }
 Invoke-Stage 'Stage 6 · Content C-series card gate' {
-    dotnet run --project src/Kingdom.Tools.CardCi -c Release --no-build -- unity/Assets/CardData unity/Assets/Art
+    dotnet run --project src/Kingdom.Tools.CardCi -c Release --no-build -- unity/Assets/CardData unity/Assets/Art --translations unity/Assets/Resources/Localization
 }
 Invoke-Stage 'Stage 6c · UI edge-clearance audit' {
     python tooling/scripts/audit_edge_safety.py

@@ -52,7 +52,9 @@ namespace Kingdom.Presentation
                     "Run Kingdom/Regenerate/Addressables Groups.");
             }
 
-            return new JsonCardDatabase(payloads);
+            var db = new JsonCardDatabase(payloads);
+            CardLoc.DefaultPool = db;
+            return db;
         }
     }
 }

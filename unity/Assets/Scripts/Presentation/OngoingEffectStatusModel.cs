@@ -37,6 +37,7 @@ namespace Kingdom.Presentation
         string UnknownLifetime { get; }
         string SourceFallback(int cardId);
         string TriggersRemaining(int uses);
+        string CardName(CardDefinition card);
     }
 
     /// <summary>
@@ -56,6 +57,7 @@ namespace Kingdom.Presentation
             public string UnknownLifetime => "Unknown lifetime";
             public string SourceFallback(int cardId) => $"card {cardId}";
             public string TriggersRemaining(int uses) => uses == 1 ? "1 trigger remaining" : $"{uses} triggers remaining";
+            public string CardName(CardDefinition card) => card.Name;
         }
 
         public static IReadOnlyList<OngoingEffectStatus> Build(GameState state,
@@ -73,7 +75,7 @@ namespace Kingdom.Presentation
                 // is spelled out rather than passed off as one.
                 string sourceName = database.TryGet(effect.SourceDefinitionId,
                     out CardDefinition definition)
-                    ? definition.Name
+                    ? words.CardName(definition)
                     : words.SourceFallback(effect.SourceDefinitionId);
                 string owner = effect.Controller == viewer ? words.You : words.Opponent;
                 rows.Add(new OngoingEffectStatus(effect.Id, sourceName, owner,

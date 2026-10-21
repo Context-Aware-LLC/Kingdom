@@ -103,6 +103,43 @@ namespace Kingdom.Core.Tests.Localization
         }
 
         [Test]
+        public void A_form_parses_and_is_not_part_of_the_slot()
+        {
+            IReadOnlyList<CardTextSlot> slots = CardTextTemplate.Slots(
+                "Gib allen {tribe:construct:plural:dat} und einer {tribe:beast:dat} {dmg:2}. {tribe:beast:Dat}");
+
+            Assert.That(slots.Select(s => s.ToString()),
+                Is.EqualTo(new[] { "{tribe:construct:plural:dat}", "{tribe:beast:dat}", "{dmg:2}" }));
+            Assert.That(slots[0].Plural, Is.True);
+            Assert.That(slots[1].Plural, Is.False);
+            Assert.That(slots[1].Form, Is.EqualTo("dat"));
+            Assert.That(CardTranslations.SameSlots("Give all {tribe:construct:plural} {dmg:2} and a {tribe:beast}.",
+                "Gib {dmg:2} allen {tribe:construct:plural:dat} und einer {tribe:beast:dat}."), Is.True);
+            Assert.That(CardTranslations.SameSlots("Deal {dmg:2} damage.", "Verursache {dmg:3} Schaden."), Is.False);
+        }
+
+        [Test]
+        public void The_source_file_parses_back_current_and_an_edit_makes_it_stale()
+        {
+            List<CardDefinition> cards = CorpusBehaviourSweep.ShippedCards();
+            var db = new JsonCardDatabase(cards);
+
+            CardTranslations source = CardTranslations.Parse(CardTranslations.WriteSource(cards, db));
+
+            Assert.That(source.Rows.Count, Is.EqualTo(cards.Count));
+            var notCurrent = cards.Where(c => source.Current(c, db) == null).Select(c => c.Id).ToList();
+            Assert.That(notCurrent, Is.Empty);
+            foreach (int named in CardTranslations.NamedInPlural(cards.Select(c => CardTextGenerator.Template(c, db))))
+                Assert.That(source.Rows[named].Plural, Is.Not.Empty, $"card {named} is named in the plural");
+
+            CardDefinition card = cards.First(c => c.Rules.Count > 0);
+            CardTranslation row = source.Rows[card.Id];
+            var edited = new CardTranslation(row.Name, row.Plural, row.Text, row.Flavor, row.Tooltip, "0000000000000000");
+            Assert.That(CardTranslations.IsStale(card, CardTextGenerator.Template(card, db), edited), Is.True);
+            Assert.That(CardTranslations.Problems(card, CardTextGenerator.Template(card, db), row), Is.Empty);
+        }
+
+        [Test]
         public void English_fills_each_slot_kind()
         {
             var db = new JsonCardDatabase(Array.Empty<CardDefinition>());

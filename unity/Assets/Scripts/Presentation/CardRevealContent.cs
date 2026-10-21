@@ -55,10 +55,10 @@ namespace Kingdom.Presentation
                 live != null ? live.Keywords : def.Keywords;
 
             return new CardRevealContent(
-                def.Name,
+                CardLoc.Name(def),
                 BuildSubtitle(def, live),
                 BuildBody(def, keywords),
-                def.FlavorText);
+                CardLoc.Flavor(def));
         }
 
         private static string BuildSubtitle(CardDefinition def, ICardLiveState live)
@@ -111,9 +111,9 @@ namespace Kingdom.Presentation
             // from the typed rule model, and that direction was reversed on 2026-08-16 — the text is
             // authored again, and CardValidator's C26 is what holds it against the rules. CardQuery
             // reads the same field for its search index.
-            string rulesText = def.Text;
+            string rulesText = CardLoc.RulesText(def);
             if (!string.IsNullOrEmpty(rulesText))
-                sb.Append(CardTextStyling.Style(rulesText));
+                sb.Append(rulesText);
 
             if (keywords != null)
             {

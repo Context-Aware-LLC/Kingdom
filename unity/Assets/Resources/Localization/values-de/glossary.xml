@@ -29,6 +29,7 @@
     <string name="keyword_backdraft">Rückstau</string>
     <string name="keyword_backdraft_desc">Sperrt so viel deines Manas in deinem nächsten Zug.</string>
     <string name="keyword_drown">Ertränken</string>
+    <string name="keyword_drown_imp">Ertränke</string>
     <string name="keyword_drown_desc">Verursacht die Hälfte des Lebens dieses Dieners, aufgerundet – 2 bei einem Helden. Ignoriert Ägis.</string>
     <string name="keyword_rekindle">Neuentfachen</string>
     <string name="keyword_rekindle_desc">Kehrt beim ersten Tod an seinen Platz zurück, mit 1 Leben.</string>
@@ -36,7 +37,11 @@
     <string name="keyword_overwhelm_desc">Überschüssiger Angriffsschaden trifft den feindlichen Helden.</string>
     <string name="keyword_vanguard">Vorhut</string>
     <string name="keyword_vanguard_desc">Erleidet keinen Gegenschaden, wenn sein Angriff den Verteidiger tötet.</string>
-    <!-- ===== Timing labels and game verbs ===== -->
+    <!-- ===== Timing labels and game verbs =====
+         A row with a suffix is a form a card template asks for by slot: {kw:drown:imp} reads
+         keyword_drown_imp, {tribe:undead:plural:dat} reads tribe_undead_plural_dat. Verbs are
+         non-separable on purpose (Vereise, Exhumiere): a slot is one word, and "Friere … ein"
+         would need two. -->
     <string name="label_toll">Totenglocke</string>
     <string name="label_attack">Angriff</string>
     <string name="label_damaged">Verletzt</string>
@@ -44,23 +49,36 @@
     <string name="label_turn_end">Zugende</string>
     <string name="label_spell_cast">Zauberwirken</string>
     <string name="label_aura">Aura</string>
-    <string name="label_unearth">Ausgraben</string>
-    <string name="label_freeze">Einfrieren</string>
-    <string name="label_unfreeze">Auftauen</string>
+    <string name="label_unearth">Exhumieren</string>
+    <string name="label_unearth_imp">Exhumiere</string>
+    <string name="label_freeze">Vereisen</string>
+    <string name="label_freeze_imp">Vereise</string>
+    <string name="label_unfreeze">Enteisen</string>
+    <string name="label_unfreeze_imp">Enteise</string>
     <!-- ===== Tribes ===== -->
     <string name="tribe_beast">Bestie</string>
     <string name="tribe_beast_plural">Bestien</string>
     <string name="tribe_construct">Konstrukt</string>
     <string name="tribe_construct_plural">Konstrukte</string>
+    <string name="tribe_construct_plural_dat">Konstrukten</string>
     <string name="tribe_undead">Untoter</string>
+    <string name="tribe_undead_acc">Untoten</string>
+    <string name="tribe_undead_dat">Untoten</string>
     <string name="tribe_undead_plural">Untote</string>
+    <string name="tribe_undead_plural_dat">Untoten</string>
     <string name="tribe_elemental">Elementar</string>
     <string name="tribe_elemental_plural">Elementare</string>
+    <string name="tribe_elemental_plural_dat">Elementaren</string>
     <string name="tribe_dragon">Drache</string>
+    <string name="tribe_dragon_acc">Drachen</string>
+    <string name="tribe_dragon_dat">Drachen</string>
     <string name="tribe_dragon_plural">Drachen</string>
     <string name="tribe_spirit">Geist</string>
     <string name="tribe_spirit_plural">Geister</string>
+    <string name="tribe_spirit_plural_dat">Geistern</string>
     <string name="tribe_human">Mensch</string>
+    <string name="tribe_human_acc">Menschen</string>
+    <string name="tribe_human_dat">Menschen</string>
     <string name="tribe_human_plural">Menschen</string>
     <string name="tribe_fey">Fee</string>
     <string name="tribe_fey_plural">Feen</string>

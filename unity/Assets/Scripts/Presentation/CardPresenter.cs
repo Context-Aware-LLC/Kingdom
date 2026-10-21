@@ -273,10 +273,11 @@ namespace Kingdom.Presentation
                 HideTooltip();
                 return;
             }
-            if (TooltipBannerEnabled && !string.IsNullOrEmpty(_def.Tooltip))
+            string tooltip = CardLoc.Tooltip(_def, _cardDatabase);
+            if (TooltipBannerEnabled && !string.IsNullOrEmpty(tooltip))
             {
                 if (tooltipBanner == null) BuildTooltipBanner();
-                tooltipLabel.text = _def.Tooltip;
+                tooltipLabel.text = tooltip;
                 tooltipBanner.SetActive(true);
             }
         }
@@ -347,7 +348,7 @@ namespace Kingdom.Presentation
         private void ApplyAll()
         {
             if (_def == null) return;
-            if (nameLabel != null) nameLabel.text = _def.Name;
+            if (nameLabel != null) nameLabel.text = CardLoc.Name(_def, _cardDatabase);
             if (costLabel != null) costLabel.text = _def.Cost.ToString();
             ApplyFrame();
             ApplyTribe();
@@ -357,18 +358,18 @@ namespace Kingdom.Presentation
             ApplyAuras();
         }
 
-        // Rules text band. The authored text is shown as-is, EXCEPT on a spell while Spell Damage is
-        // above 0: GenerateEffective then re-renders the sentence from the rules so the boosted
-        // number shows. CardCi's divergence check is what keeps the authored text honest.
+        // Rules text band, in the player's language (CardLoc). English is the authored text as-is,
+        // EXCEPT on a spell while Spell Damage is above 0: GenerateEffective then re-renders the
+        // sentence from the rules so the boosted number shows. A translation fills its damage slots
+        // with the same bonus. CardCi's divergence check is what keeps the authored text honest.
         private void ApplyBodyText()
         {
             if (bodyLabel == null) return;
             if (_def == null) { bodyLabel.gameObject.SetActive(false); return; }
 
             int spellDamageBonus = _live != null ? _live.SpellDamageBonus : 0;
-            string rulesText = CardTextGenerator.GenerateEffective(_def,
-                _cardDatabase ?? CardTextGenerator.NoPool.Instance, spellDamageBonus);
-            bodyLabel.text = CardTextStyling.Style(rulesText);
+            string rulesText = CardLoc.RulesText(_def, _cardDatabase, spellDamageBonus);
+            bodyLabel.text = rulesText;
             bodyLabel.gameObject.SetActive(rulesText.Length > 0);
         }
 

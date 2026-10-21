@@ -203,7 +203,7 @@ namespace Kingdom.Presentation
             focus.localScale = Vector3.one * _focusScale;
             var group = focus.GetComponent<UnityEngine.Rendering.SortingGroup>();
             if (group != null) group.sortingOrder = SortBase + 1;
-            if (_flavor != null) _flavor.Show(trigger.Definition.FlavorText);
+            if (_flavor != null) _flavor.Show(CardLoc.Flavor(trigger.Definition));
         }
 
         private void ReleaseFocusCard()

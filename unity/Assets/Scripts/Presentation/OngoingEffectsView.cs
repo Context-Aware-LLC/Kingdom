@@ -73,5 +73,6 @@ namespace Kingdom.Presentation
         public string UnknownLifetime => Loc.Get("effects_remaining_unknown");
         public string SourceFallback(int cardId) => Loc.Format("effects_source_fallback", cardId);
         public string TriggersRemaining(int uses) => Loc.Plural("effects_remaining_triggers", uses, uses);
+        public string CardName(Kingdom.Core.Cards.CardDefinition card) => CardLoc.Name(card);
     }
 }

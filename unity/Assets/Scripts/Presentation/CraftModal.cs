@@ -194,7 +194,7 @@ namespace Kingdom.Presentation
             _retry.style.display = DisplayStyle.None;
             SetLoading(_cardTexture == null && _baker != null);
 
-            _cardName.text = def.Name;
+            _cardName.text = CardLoc.Name(def);
             _cardRarity.text = RarityWord(def.Rarity);
             _cardSet.text = CardQueryBar.SetLabel(def.SetId);
 

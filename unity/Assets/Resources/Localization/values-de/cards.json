@@ -1,0 +1,1512 @@
+{
+  "1": {
+    "name": "Sengender Bolzen",
+    "text": "Verursache {dmg:1} Schaden. Stattdessen {dmg:2}, wenn dein Held in diesem Zug Schaden erlitten hat.",
+    "src": "79043496c6d4713e"
+  },
+  "2": {
+    "name": "Gezeitenschutz",
+    "text": "Beschwöre ein {card:1024}.",
+    "src": "2bba30583f7903c5"
+  },
+  "3": {
+    "name": "Schwächen",
+    "text": "Gib einem Diener -1/+0.",
+    "src": "296318758dcb7e23"
+  },
+  "4": {
+    "name": "Beleben",
+    "text": "Stelle 3 Leben deines Helden wieder her.",
+    "src": "e04b204d288f9ad3"
+  },
+  "5": {
+    "name": "Bauplan",
+    "text": "Ziehe eine Karte.",
+    "src": "2d534eacf98ea9e6"
+  },
+  "6": {
+    "name": "Hinterhalt",
+    "text": "Verursache {dmg:2} Schaden am feindlichen Helden und gib allen befreundeten Dienern mit {kw:shroud} +1/+0.",
+    "src": "f007b59bcc91eafe"
+  },
+  "7": {
+    "name": "Erdwall",
+    "text": "Beschwöre einen {card:1060}.",
+    "src": "db64c2b61838a569"
+  },
+  "8": {
+    "name": "Kettenfunke",
+    "text": "Verursache zweimal {dmg:1} Schaden an zufälligen Feinden.",
+    "src": "e2d355ea4f913adc"
+  },
+  "51": {
+    "name": "Aschelanze",
+    "text": "{kw:arcane_surge}.",
+    "src": "5554ee106fdc70d9"
+  },
+  "52": {
+    "name": "Grabhammer",
+    "text": "Löse die {label:toll} eines befreundeten Dieners aus. {label:toll}: Belebe einen zufälligen Diener aus deinem Friedhof wieder.",
+    "src": "ee86de015e71bfa9"
+  },
+  "53": {
+    "name": "Greifende Dornenranke",
+    "text": "{label:attack}: Stelle 2 Leben deines Helden wieder her.",
+    "src": "8ffa60d4697b6b4a"
+  },
+  "54": {
+    "name": "Tiefenfrostspeer",
+    "text": "{kw:frost}.",
+    "src": "aed60f5e382666a3"
+  },
+  "55": {
+    "name": "Triebfederhellebarde",
+    "text": "{label:attack}: Beschwöre ein {card:1059}.",
+    "src": "dec6c18f8c27f5a7"
+  },
+  "56": {
+    "name": "Schattenklinge",
+    "text": "Ziehe eine Karte.",
+    "src": "4c7867646fbed023"
+  },
+  "57": {
+    "name": "Erdwächters Hammer",
+    "text": "Gib einem befreundeten Diener {kw:aegis}.",
+    "src": "32e90e58e412d352"
+  },
+  "58": {
+    "name": "Sturmspalter",
+    "text": "{label:attack}: {kw:backdraft} 2.",
+    "src": "2b5e5b49b750ab45"
+  },
+  "59": {
+    "name": "Sengende Feder",
+    "text": "",
+    "flavor": "Mächtiger als das Schwert?",
+    "src": "f3c864deedda4593"
+  },
+  "60": {
+    "name": "Sengklinge",
+    "text": "{label:attack}: Verursache {dmg:1} Schaden am feindlichen Helden.",
+    "src": "8a62f05c6bcae908"
+  },
+  "61": {
+    "name": "Kälteeinbruchmesser",
+    "text": "{kw:frost}.",
+    "src": "ba8cc90cbdf64173"
+  },
+  "62": {
+    "name": "Schmiedehammer",
+    "text": "{label:attack}: Erhalte 2 Rüstung.",
+    "src": "9dea96e26d9ec74c"
+  },
+  "63": {
+    "name": "Orkanhammer",
+    "text": "{label:attack}: {kw:backdraft} 1.",
+    "src": "e7fabedae931a552"
+  },
+  "64": {
+    "name": "Giftklinge",
+    "text": "{kw:venom}.",
+    "src": "1e13fbedd064ea33"
+  },
+  "151": {
+    "name": "Flammenbolzen",
+    "text": "Verursache {dmg:3} Schaden an einem Diener.",
+    "src": "7d54fe000b5344e2"
+  },
+  "152": {
+    "name": "Frostwelle",
+    "text": "Verursache {dmg:2} Schaden an allen feindlichen Dienern.",
+    "src": "83a10ef83f15be04"
+  },
+  "153": {
+    "name": "Versengen",
+    "text": "Verursache {dmg:3} Schaden.",
+    "src": "1d1825a5aea89ad0"
+  },
+  "154": {
+    "name": "Zwillingsflammenschlag",
+    "text": "Verursache {dmg:4} Schaden an allen Feinden.",
+    "src": "23473e4497412dd8"
+  },
+  "155": {
+    "name": "Frostfessel",
+    "text": "{label:freeze:imp} einen Feind und ziehe eine Karte.",
+    "src": "758f56844ac82bcb"
+  },
+  "156": {
+    "name": "Sog der Tiefe",
+    "text": "Vernichte einen Diener.",
+    "src": "768260aa46171aa5"
+  },
+  "157": {
+    "name": "Marens Tiefseehandel",
+    "text": "Ziehe 2 Karten.",
+    "src": "916f62849946c998"
+  },
+  "158": {
+    "name": "Der Funke",
+    "text": "Erhalte 1 Manakristall nur in diesem Zug.",
+    "src": "a8a435003484f73a"
+  },
+  "159": {
+    "name": "Letzte Ölung",
+    "text": "Opfere einen befreundeten Diener: Ziehe 2 Karten.",
+    "src": "e909e32a8899aa96"
+  },
+  "160": {
+    "name": "Sorrows Segen",
+    "text": "Gib einem befreundeten Diener {kw:rekindle}.",
+    "src": "8911c16438f473a6"
+  },
+  "161": {
+    "name": "Klagechor",
+    "text": "Verursache {dmg:4} Schaden an allen Dienern außer {tribe:undead:plural:dat} und stelle 4 Leben deines Helden wieder her.",
+    "src": "0b1d4652ecc526f0"
+  },
+  "162": {
+    "name": "Setzlingsritus",
+    "text": "Erhalte 1 leeren Manakristall.",
+    "src": "b315b6dedc6f1ce9"
+  },
+  "163": {
+    "name": "Heilerblüte",
+    "text": "Gib einem befreundeten Diener +2/+2 und {kw:venom}.",
+    "src": "9fe53f1919d036ee"
+  },
+  "164": {
+    "name": "Saftschub",
+    "text": "Stelle 4 Leben wieder her.",
+    "src": "33fce5016b9b5380"
+  },
+  "165": {
+    "name": "Wilde Blüte",
+    "text": "Gib einem befreundeten Diener +2/+2 und {kw:bulwark}.",
+    "src": "c7cc69743e63a124"
+  },
+  "166": {
+    "name": "Versteinern",
+    "text": "Vernichte einen Diener.",
+    "src": "b7b335bb45d85f82"
+  },
+  "167": {
+    "name": "Glut schüren",
+    "text": "Verursache {dmg:2} Schaden an deinem Helden und ziehe 2 Karten.",
+    "src": "df4732f12f3de472"
+  },
+  "168": {
+    "name": "Tiefendruck",
+    "text": "Verursache {dmg:5} Schaden an einem Diener.",
+    "src": "ac263ad7d442f79c"
+  },
+  "169": {
+    "name": "Raureifpeitsche",
+    "text": "Verursache {dmg:2} Schaden an einem Diener.",
+    "src": "1a548c2e4970b395"
+  },
+  "170": {
+    "name": "Schnappbolzen",
+    "text": "Verursache {dmg:2} Schaden an einem Diener.",
+    "src": "59213be8f3009ef6"
+  },
+  "171": {
+    "name": "Generalüberholung",
+    "text": "Gib allen befreundeten {tribe:construct:plural:dat} +2/+2.",
+    "src": "3b6f3c7dc74e5ed0"
+  },
+  "172": {
+    "name": "Zeitrückspuler",
+    "text": "Schicke einen Diener auf die Hand seines Besitzers zurück und ziehe eine Karte.",
+    "src": "fa6467efa12b7288"
+  },
+  "173": {
+    "name": "Massenrückruf",
+    "text": "Schicke alle Diener auf die Hand zurück.",
+    "src": "42821c8d52377379"
+  },
+  "174": {
+    "name": "Schattenpfeil",
+    "text": "Verursache {dmg:2} Schaden an einem Diener.",
+    "src": "b54245090c286838"
+  },
+  "175": {
+    "name": "Saubere Arbeit",
+    "text": "Vernichte einen verletzten Diener.",
+    "src": "b8f157acc59f1f1d"
+  },
+  "176": {
+    "name": "Verschwindibus",
+    "text": "Gib allen befreundeten Dienern {kw:shroud} und +0/+1.",
+    "src": "77f81fd9e3612ba5"
+  },
+  "177": {
+    "name": "Abgang",
+    "text": "Schicke einen befreundeten Diener auf deine Hand zurück: Ziehe eine Karte.",
+    "src": "fcab5ae88b4e884a"
+  },
+  "178": {
+    "name": "Todesmal",
+    "text": "Vernichte einen Diener.",
+    "src": "9b1d17366b53c0a6"
+  },
+  "179": {
+    "name": "Schattengang",
+    "text": "Schicke alle feindlichen Diener auf die Hand zurück.",
+    "src": "dd03526941150849"
+  },
+  "180": {
+    "name": "Steinwurf",
+    "text": "Verursache {dmg:3} Schaden an einem Feind.",
+    "src": "75053766812e1031"
+  },
+  "181": {
+    "name": "Erdbarriere",
+    "text": "Gib einem befreundeten Diener +0/+3 und verursache {dmg:3} Schaden am feindlichen Helden.",
+    "src": "a7a5219ad2eeab21"
+  },
+  "182": {
+    "name": "Steinregen",
+    "text": "Verursache {dmg:3} Schaden an allen Feinden.",
+    "src": "b7c67e64dc7b6a6b"
+  },
+  "183": {
+    "name": "Segen der Erde",
+    "text": "Gib allen befreundeten Dienern +2/+0.",
+    "src": "19852052312445c3"
+  },
+  "184": {
+    "name": "Stampfen",
+    "text": "Verursache {dmg:2} Schaden an allen feindlichen Dienern und gib einem zufälligen befreundeten Diener +1/+2.",
+    "src": "48dbd83a97d0ddc2"
+  },
+  "185": {
+    "name": "Blitzschlag",
+    "text": "Verursache {dmg:3} Schaden an einem Feind.",
+    "src": "e84a946e9457815f"
+  },
+  "186": {
+    "name": "Kettenblitz",
+    "text": "{kw:rekindle}. Verursache je {dmg:3}, {dmg:2} und {dmg:1} Schaden an einem zufälligen Feind.",
+    "src": "99285a8d77fc9fb9"
+  },
+  "187": {
+    "name": "Knistern",
+    "text": "{kw:backdraft} 1 und verursache {dmg:4} Schaden an einem zufälligen Feind.",
+    "src": "7493479a7fb4dea3"
+  },
+  "188": {
+    "name": "Statischer Schlag",
+    "text": "Verursache {dmg:3} Schaden an einem zufälligen Feind.",
+    "src": "c1d56cd40b51ba23"
+  },
+  "189": {
+    "name": "Statische Entladung",
+    "text": "{kw:backdraft} 1 und verursache {dmg:2} Schaden an allen feindlichen Dienern.",
+    "src": "d9d2602dae45afd2"
+  },
+  "190": {
+    "name": "Hurrikan",
+    "text": "Gib allen befreundeten Dienern {kw:doublestrike}.",
+    "src": "301f58863e463962"
+  },
+  "191": {
+    "name": "Gewittersturm",
+    "text": "{kw:backdraft} 2 und verursache {dmg:3} Schaden an allen Feinden.",
+    "src": "fc0e27b328169c64"
+  },
+  "192": {
+    "name": "Salve",
+    "text": "Verursache {dmg:5} Schaden an einem Diener und {dmg:2} Schaden an deinem Helden.",
+    "src": "7a8b29e6cd3281b3"
+  },
+  "193": {
+    "name": "Hitzewelle",
+    "text": "Verursache {dmg:2} Schaden an allen feindlichen Dienern, {dmg:2} Schaden an deinem Helden und ziehe eine Karte.",
+    "src": "330569773f0326ed"
+  },
+  "194": {
+    "name": "Gletscherecho",
+    "text": "{label:freeze:imp} deinen Helden und beschwöre eine exakte Kopie eines Dieners, der 5 oder weniger kostet.",
+    "src": "cdc67fe8221d2add"
+  },
+  "195": {
+    "name": "Tiefer Kanal",
+    "text": "Schicke alle feindlichen Diener auf die Hand zurück.",
+    "src": "8f29fd5ddd41cde7"
+  },
+  "196": {
+    "name": "Knochenhorde",
+    "text": "Beschwöre drei {card:1191:plural}.",
+    "src": "940dcd0cd7db60c9"
+  },
+  "197": {
+    "name": "Hallende Totenglocke",
+    "text": "Gib allen befreundeten Dienern +2/+2.",
+    "src": "c9e3c8eceb356e12"
+  },
+  "198": {
+    "name": "Urheilung",
+    "text": "Gib einem befreundeten Diener +4/+4 und {kw:overwhelm}.",
+    "src": "b9a6bf5c733e3d41"
+  },
+  "199": {
+    "name": "Dornenschwarm",
+    "text": "Verursache {dmg:3} Schaden an allen Feinden und stelle 4 Leben deines Helden wieder her.",
+    "src": "d60628a968a3e05a"
+  },
+  "200": {
+    "name": "Doppelspiel",
+    "text": "Gib allen feindlichen Dienern -2/-2.",
+    "src": "658409d7175e8ecd"
+  },
+  "201": {
+    "name": "Zurückeroberte Festung",
+    "text": "Gib allen befreundeten Dienern {kw:aegis}.",
+    "src": "4f28d5e65446794f"
+  },
+  "202": {
+    "name": "Neuentfachte Flamme",
+    "text": "Verursache {dmg:3} Schaden an einem Charakter; ein befreundeter Diener erhält +3/+0.",
+    "src": "9ec52641c241bae9"
+  },
+  "203": {
+    "name": "Gebündelter Pyroklasmus",
+    "text": "Verursache {dmg:6} Schaden an 2 Feinden.",
+    "src": "d54b8fe2f80c418c"
+  },
+  "204": {
+    "name": "Kanalflicker",
+    "text": "Stelle 4 Leben eines befreundeten Charakters wieder her und gib einem befreundeten Diener +1/+1.",
+    "src": "dec7dac1c5111967"
+  },
+  "205": {
+    "name": "Uferpakt",
+    "text": "Schicke einen Diener auf die Hand seines Besitzers zurück und gib einem befreundeten Diener +1/+1.",
+    "src": "5a874d8ab21ecb9c"
+  },
+  "206": {
+    "name": "Tiefseebündnis",
+    "text": "{kw:drown:imp} alle Feinde und stelle 2 Leben aller befreundeten Charaktere wieder her.",
+    "src": "3dfbd9463b34db5f"
+  },
+  "207": {
+    "name": "Letzte Ehre",
+    "text": "Opfere einen befreundeten Diener: Übernimm die Kontrolle über einen feindlichen Diener, der 5 oder weniger kostet.",
+    "src": "a5986e1e0179b719"
+  },
+  "208": {
+    "name": "Trauerpakt",
+    "text": "Gib einem befreundeten Diener {kw:rekindle} und +1/+1.",
+    "src": "0a5c23d896f09879"
+  },
+  "209": {
+    "name": "Massenwiedergeburt",
+    "text": "Belebe 7 Diener aus dem Friedhof wieder, die keine {tribe:undead:plural} sind.",
+    "src": "47dabbd57cf33d33"
+  },
+  "210": {
+    "name": "Neublührebe",
+    "text": "Gib einer befreundeten {tribe:beast} +3/+3.",
+    "src": "fa4d3e7cdee133f5"
+  },
+  "211": {
+    "name": "Blütenpakt",
+    "text": "Beschwöre zwei {card:1050:plural}.",
+    "src": "84ef8c26a2fba02a"
+  },
+  "212": {
+    "name": "Wildblütenwoge",
+    "text": "Gib allen befreundeten Dienern +1/+1 und {kw:overwhelm}.",
+    "src": "cced7bad109cb804"
+  },
+  "213": {
+    "name": "Bastlers Gambit",
+    "text": "Schicke einen befreundeten Diener auf deine Hand zurück: Ziehe eine Karte.",
+    "src": "8e0b9feefe33f0cb"
+  },
+  "214": {
+    "name": "Fließband",
+    "text": "Beschwöre drei {card:1059:plural} und gib allen befreundeten {tribe:construct:plural:dat} +1/+1.",
+    "src": "498ff46d67621b8a"
+  },
+  "215": {
+    "name": "Upgrade-Protokoll",
+    "text": "Gib einem befreundeten Diener +5/+5.",
+    "src": "d1914362ee0073ce"
+  },
+  "216": {
+    "name": "Todgeweiht",
+    "text": "Verursache {dmg:3} Schaden an einem Feind.",
+    "src": "120ad6f8a1c8f857"
+  },
+  "217": {
+    "name": "Auftragsmord",
+    "text": "Vernichte einen Diener und ziehe eine Karte.",
+    "src": "9a990b7a61b18b21"
+  },
+  "218": {
+    "name": "Erdwall",
+    "text": "Gib einem befreundeten Diener +2/+1 und {kw:bulwark}.",
+    "src": "a33f6efcb58e9c98"
+  },
+  "219": {
+    "name": "Eisernes Fundament",
+    "text": "Gib allen befreundeten Dienern +1/+1 und {kw:aegis}.",
+    "src": "114c893e76828056"
+  },
+  "220": {
+    "name": "Blitzpeitsche",
+    "text": "Verursache {dmg:2} Schaden an allen feindlichen Dienern.",
+    "src": "29729b0c35b5540e"
+  },
+  "221": {
+    "name": "Donnerschlag",
+    "text": "Verursache {dmg:3} Schaden an einem Diener und {dmg:1} Schaden an allen feindlichen Dienern.",
+    "src": "9c0de9bb7215a09c"
+  },
+  "222": {
+    "name": "Pakt des Sturmrufers",
+    "text": "Verursache {dmg:3} Schaden an allen Feinden und gib allen befreundeten Dienern +1/+1.",
+    "src": "94cb878da86dca3c"
+  },
+  "223": {
+    "name": "Überladung",
+    "text": "{kw:backdraft} 1, erhalte nur in diesem Zug 3 Manakristalle und ziehe eine Karte.",
+    "src": "1662d50b0fdde070"
+  },
+  "224": {
+    "name": "Lichtbogen",
+    "text": "Verursache {dmg:1} Schaden an allen feindlichen Dienern.",
+    "src": "59ec3627a185c5c5"
+  },
+  "225": {
+    "name": "Zorn des Orkans",
+    "text": "{kw:backdraft} 2 und verursache {dmg:4} Schaden an allen Feinden.",
+    "src": "e0aa13a4be64cc5a"
+  },
+  "226": {
+    "name": "Schattenschlupf",
+    "text": "Schicke einen feindlichen Diener auf die Hand zurück.",
+    "src": "2d54a4ab2dfe2b77"
+  },
+  "227": {
+    "name": "Giftpeitsche",
+    "text": "Vernichte einen beschädigten feindlichen Diener und verursache {dmg:2} Schaden am feindlichen Helden.",
+    "src": "032fe8502f4d9373"
+  },
+  "228": {
+    "name": "Schuttwurf",
+    "text": "Verursache {dmg:1} Schaden an allen feindlichen Dienern.",
+    "src": "1bcb03d37720fc1e"
+  },
+  "229": {
+    "name": "Schwur des Warts",
+    "text": "Gib allen befreundeten Dienern +0/+2 und {kw:bulwark}.",
+    "src": "aa396cdc53ff312b"
+  },
+  "230": {
+    "name": "Zahnradversteck",
+    "text": "{label:unearth:imp} eine Karte und ziehe eine Karte.",
+    "src": "ac0a30a9f01943c3"
+  },
+  "231": {
+    "name": "Brechungsmodul",
+    "text": "Gib einem befreundeten Diener +1/+0 und beschwöre eine exakte Kopie eines befreundeten Dieners.",
+    "src": "730ac33a95787ef2"
+  },
+  "232": {
+    "name": "Ausschlachten",
+    "text": "Vernichte einen beschädigten Diener.",
+    "src": "5a4d374ad824a4ec"
+  },
+  "233": {
+    "name": "Anfachen",
+    "text": "Verursache {dmg:2} Schaden an einem Charakter; ein befreundeter Diener erhält +2/+1.",
+    "src": "8c25b6f3696a71fa"
+  },
+  "1001": {
+    "name": "Glutrekrut",
+    "text": "{kw:skirmish}.",
+    "src": "1cf889865c426885"
+  },
+  "1002": {
+    "name": "Glutzelot",
+    "text": "{kw:fervor}. Verursache {dmg:1} Schaden an einem Charakter; ein befreundeter Diener erhält +2/+0.",
+    "src": "c132b26c8b6feee1"
+  },
+  "1003": {
+    "name": "Schlackendrache",
+    "text": "",
+    "src": "222d9256abea55a8"
+  },
+  "1004": {
+    "name": "Gezeitennovize",
+    "text": "{kw:arcane_surge}.",
+    "src": "34e3317999317914"
+  },
+  "1005": {
+    "name": "Gezeitenorakel",
+    "text": "{kw:bulwark}.",
+    "src": "2be330ed1b4c6ad6"
+  },
+  "1006": {
+    "name": "Wellenrufer",
+    "text": "Gib einem feindlichen Diener -1/-2.",
+    "src": "39aeb1c9fec7ce76"
+  },
+  "1007": {
+    "name": "Steinposten",
+    "text": "{kw:bulwark}.",
+    "src": "f07f011477ed7dde"
+  },
+  "1008": {
+    "name": "Wandernder Späher",
+    "text": "Ziehe eine Karte.",
+    "src": "35360c5625b6a2c8"
+  },
+  "1009": {
+    "name": "Glutwelpe",
+    "text": "{kw:fervor}.",
+    "src": "4805fe3424400e18"
+  },
+  "1010": {
+    "name": "Steinpanzerwache",
+    "text": "{kw:bulwark}.",
+    "flavor": "Schildkröten, bis ganz nach unten.",
+    "src": "8e80404f5752f407"
+  },
+  "1011": {
+    "name": "Hohler Akolyth",
+    "text": "Ziehe eine Karte.",
+    "src": "75ff790eb4e1e493"
+  },
+  "1012": {
+    "name": "Grablaternenträger",
+    "text": "{label:toll}: Beschwöre ein {card:1023}.",
+    "src": "1ef217dc04139f40"
+  },
+  "1013": {
+    "name": "Ägistempler",
+    "text": "{kw:aegis}.",
+    "src": "946677ab867acc7d"
+  },
+  "1014": {
+    "name": "Schleierpirscher",
+    "text": "{kw:shroud}.",
+    "src": "1357cd78f6ce04bf"
+  },
+  "1015": {
+    "name": "Hainheiler",
+    "text": "Beschwöre ein {card:1050} und gib allen befreundeten {tribe:beast:plural} +1/+1.",
+    "src": "91d1ed08d55ae752"
+  },
+  "1016": {
+    "name": "Lichtbogenadept",
+    "text": "{kw:arcane_surge}.",
+    "src": "bc7a507735fa19bb"
+  },
+  "1017": {
+    "name": "Gieriger Knochenhund",
+    "text": "{kw:skirmish}.",
+    "src": "19d38fc8b026c689"
+  },
+  "1018": {
+    "name": "Thronloser König",
+    "text": "{kw:rekindle}. {label:aura}: Gib allen anderen befreundeten {tribe:undead:plural:dat} +1/+1.",
+    "src": "7c982d4d3e7d77d4"
+  },
+  "1019": {
+    "name": "Überhitzter Golem",
+    "text": "{kw:backdraft} 1.",
+    "src": "364d3545ed7cfe25"
+  },
+  "1020": {
+    "name": "Pyras Zorn",
+    "text": "{kw:fervor}. Verursache {dmg:2} Schaden an allen Feinden.",
+    "src": "68670f6a06585621"
+  },
+  "1021": {
+    "name": "Hohlflut-Sirene",
+    "text": "{kw:drown:imp} alle Feinde.",
+    "src": "e1f459e1cb2ac1af"
+  },
+  "1022": {
+    "name": "Riffwacht-Irrlicht",
+    "text": "{kw:bulwark}.",
+    "src": "1c053fe8a64b38ac"
+  },
+  "1023": {
+    "name": "Irrlicht",
+    "text": "",
+    "src": "42824f147d965941"
+  },
+  "1024": {
+    "name": "Gezeitenlicht",
+    "text": "{kw:bulwark}.",
+    "src": "ba8edbe89ec91f97"
+  },
+  "1025": {
+    "name": "Torwachtwelpe",
+    "text": "{kw:rekindle}.",
+    "src": "dd62456564946ace"
+  },
+  "1026": {
+    "name": "Zobelwächter",
+    "text": "{label:toll}: Beschwöre einen {card:1191}.",
+    "src": "c94b51d1263a1a90"
+  },
+  "1027": {
+    "name": "Beinhauspriester",
+    "text": "Opfere einen befreundeten Diener: Beschwöre zwei {card:1191:plural}.",
+    "src": "e806887f3505138a"
+  },
+  "1028": {
+    "name": "Aschearchivar",
+    "text": "{label:toll}: Ziehe eine Karte.",
+    "src": "d66e4fac76dcad54"
+  },
+  "1029": {
+    "name": "Grabhüter-Kustos",
+    "text": "{label:toll}: Beschwöre zwei {card:1191:plural}.",
+    "src": "b42fd600a1af32ac"
+  },
+  "1030": {
+    "name": "Wärter des letzten Tors",
+    "text": "{kw:lifedrain}, {kw:bulwark}, {kw:rekindle}.",
+    "src": "5a8094472c93b0c4"
+  },
+  "1031": {
+    "name": "Aschenverheerer",
+    "text": "Opfere einen befreundeten Diener: Beschwöre zwei {card:1191:plural} und ziehe eine Karte.",
+    "src": "f354ff6c1b4fd6c1"
+  },
+  "1032": {
+    "name": "Glockennovize",
+    "text": "{label:toll}: Stelle 4 Leben deines Helden wieder her.",
+    "src": "a7c5698e5b740c22"
+  },
+  "1033": {
+    "name": "Zöllnermotte",
+    "text": "{label:toll}: Stelle 2 Leben deines Helden wieder her.",
+    "src": "4400a257553014ee"
+  },
+  "1034": {
+    "name": "Gefesselter Wiedergänger",
+    "text": "Verursache {dmg:2} Schaden am feindlichen Helden.",
+    "src": "132be7f31ae86c92"
+  },
+  "1035": {
+    "name": "Siegeltorwächter",
+    "text": "{label:toll}: Beschwöre einen {card:1049}.",
+    "src": "089198976ae3c2da"
+  },
+  "1036": {
+    "name": "Dornrückenjunges",
+    "text": "{kw:bulwark}.",
+    "src": "1fc8824edbe0ad5c"
+  },
+  "1037": {
+    "name": "Dornhautwächter",
+    "text": "{kw:lifedrain}.",
+    "src": "45a09115de3a3b34"
+  },
+  "1038": {
+    "name": "Altwurzelkoloss",
+    "text": "",
+    "src": "5ff0eaa0cb25db23"
+  },
+  "1039": {
+    "name": "Kronendachseherin",
+    "text": "Ziehe eine Karte.",
+    "src": "98efb9002a44e422"
+  },
+  "1040": {
+    "name": "Eisenborkenältester",
+    "text": "{kw:vanguard}.",
+    "src": "97434b46a6f98212"
+  },
+  "1041": {
+    "name": "Weltwurzel-Behemoth",
+    "text": "{kw:overwhelm}.",
+    "src": "a651eb4af5aa8178"
+  },
+  "1042": {
+    "name": "Thalens Urahn",
+    "text": "{kw:bulwark}, {kw:overwhelm}.",
+    "src": "064a85043eef2e81"
+  },
+  "1043": {
+    "name": "Wurzelweber",
+    "text": "Erhalte 1 leeren Manakristall.",
+    "src": "f043177262deb7d8"
+  },
+  "1044": {
+    "name": "Moosfellhirsch",
+    "text": "Verursache {dmg:2} Schaden an einem Diener.",
+    "src": "30f3d8d9cc383a1c"
+  },
+  "1045": {
+    "name": "Dornzahnmatrone",
+    "text": "Beschwöre zwei {card:1050:plural}.",
+    "src": "e74e7fcb41c6e463"
+  },
+  "1046": {
+    "name": "Distelwacht-Spross",
+    "text": "{kw:aegis}.",
+    "src": "c0a7971cc9c0df3a"
+  },
+  "1047": {
+    "name": "Gebundener Wiedergänger",
+    "text": "{kw:bulwark}, {kw:rekindle}.",
+    "src": "1ebe9108b7e13e9d"
+  },
+  "1048": {
+    "name": "Leichenkarren",
+    "text": "Beschwöre ein {card:1023}.",
+    "src": "f6c9ac895e5db8b2"
+  },
+  "1049": {
+    "name": "Wiedergänger",
+    "text": "{kw:bulwark}.",
+    "src": "ff4c3a387bd1ec1d"
+  },
+  "1050": {
+    "name": "Dornenjungtier",
+    "plural": "Dornenjungtiere",
+    "text": "{kw:doublestrike}.",
+    "src": "87f6ce5acb6e9c04"
+  },
+  "1051": {
+    "name": "Schlackenpanzer",
+    "text": "{kw:bulwark}.",
+    "src": "ca933699e5302b17"
+  },
+  "1052": {
+    "name": "Schmiedeherz-Koloss",
+    "text": "{kw:overwhelm}. {kw:backdraft} 2.",
+    "src": "2f83aa227114dcfb"
+  },
+  "1053": {
+    "name": "Gletscherleviathan",
+    "text": "Verursache {dmg:3} Schaden an allen feindlichen Dienern.",
+    "src": "b10c936976b9c4e0"
+  },
+  "1054": {
+    "name": "Aschenfall-Lindwurm",
+    "text": "{kw:vanguard}, {kw:skirmish}.",
+    "src": "a7207af3e6ff55da"
+  },
+  "1055": {
+    "name": "Brennofenwärter",
+    "text": "{kw:bulwark}, {kw:aegis}.",
+    "src": "9efe6e8e3041d4ac"
+  },
+  "1056": {
+    "name": "Glutschlucker",
+    "text": "{kw:lifedrain}.",
+    "src": "1c89c3bddaa75996"
+  },
+  "1057": {
+    "name": "Ertrunkener Titan",
+    "text": "Schicke einen Diener auf die Hand seines Besitzers zurück.",
+    "src": "5695bcba5222d891"
+  },
+  "1058": {
+    "name": "Hohlschalenwärter",
+    "text": "{kw:bulwark}, {kw:rekindle}. {label:toll}: {kw:drown:imp} einen zufälligen Feind.",
+    "src": "fa18ffe6f297284f"
+  },
+  "1059": {
+    "name": "Zahnradlicht",
+    "plural": "Zahnradlichter",
+    "text": "{kw:bulwark}.",
+    "src": "e83b59edd8c9ee2e"
+  },
+  "1060": {
+    "name": "Steinsplitter",
+    "text": "{kw:bulwark}.",
+    "src": "ca66ff6a6ccbcf25"
+  },
+  "1061": {
+    "name": "Zahnradwichtel",
+    "text": "{label:unearth:imp} eine Karte.",
+    "src": "e93cdcb045bbddbb"
+  },
+  "1062": {
+    "name": "Bronzegestell",
+    "text": "Ziehe eine Karte.",
+    "src": "18f0cf63e24ab89e"
+  },
+  "1063": {
+    "name": "Sprungfeder",
+    "text": "{kw:skirmish}, {kw:frost}.",
+    "src": "e4ad77b0dc668f20"
+  },
+  "1064": {
+    "name": "Montagedrohne",
+    "text": "Beschwöre ein {card:1059}.",
+    "src": "a7f6478a40517ce9"
+  },
+  "1065": {
+    "name": "Übertakter",
+    "text": "Gib allen befreundeten {tribe:construct:plural:dat} +1/+1.",
+    "src": "4d119632b78dd4ec"
+  },
+  "1066": {
+    "name": "Uhrwerk-Scharfschütze",
+    "text": "Verursache {dmg:3} Schaden.",
+    "src": "ae2f22e6802346aa"
+  },
+  "1067": {
+    "name": "Modularer Pirscher",
+    "text": "Beschwöre ein {card:1059}.",
+    "src": "b559ec94c628fa93"
+  },
+  "1068": {
+    "name": "Chrono-Konstrukt",
+    "text": "{kw:vanguard}, {kw:aegis}.",
+    "src": "1531044d4dc850df"
+  },
+  "1069": {
+    "name": "Der Große Mechanismus",
+    "text": "{kw:aegis}, {kw:vanguard}, {kw:overwhelm}.",
+    "tooltip": "Der Große Mechanismus",
+    "src": "759d3f0015062a86"
+  },
+  "1070": {
+    "name": "Lauerlicht",
+    "text": "{kw:shroud}.",
+    "flavor": "Hast du das gesehen?!",
+    "src": "6838ea9449449e84"
+  },
+  "1071": {
+    "name": "Vipernzahn",
+    "text": "{kw:venom}, {kw:skirmish}.",
+    "src": "1d1112360b04c1e9"
+  },
+  "1072": {
+    "name": "Schattenpirscher",
+    "text": "{kw:shroud}.",
+    "src": "d3c2920016856d09"
+  },
+  "1073": {
+    "name": "Giftnatter",
+    "text": "{kw:venom}, {kw:vanguard}.",
+    "src": "c41d5ee346699f98"
+  },
+  "1074": {
+    "name": "Leerenkreischer",
+    "text": "Verursache {dmg:2} Schaden an allen feindlichen Dienern.",
+    "src": "fbdb9e76935b622a"
+  },
+  "1075": {
+    "name": "Kira, Schattenklinge",
+    "text": "{kw:shroud}, {kw:skirmish}, {kw:vanguard}. {label:toll}: Verursache {dmg:4} Schaden am feindlichen Helden.",
+    "src": "9c5a07e87ae3894a"
+  },
+  "1076": {
+    "name": "Kieselwächter",
+    "text": "{kw:bulwark}.",
+    "src": "9fbb119d781cac18"
+  },
+  "1077": {
+    "name": "Felsenhaut",
+    "text": "{kw:bulwark}.",
+    "src": "80301289cc358145"
+  },
+  "1078": {
+    "name": "Felsgolem",
+    "text": "{kw:bulwark}.",
+    "src": "25738e366b96cd4b"
+  },
+  "1079": {
+    "name": "Granitwächter",
+    "text": "{kw:aegis}.",
+    "src": "756a434a4eefa49c"
+  },
+  "1080": {
+    "name": "Lebender Monolith",
+    "text": "{kw:overwhelm}.",
+    "src": "822904f4fcd85bd8"
+  },
+  "1081": {
+    "name": "Belagerungsgolem",
+    "text": "{kw:vanguard}. Gib allen befreundeten Dienern +0/+2.",
+    "src": "50571a58d297a384"
+  },
+  "1082": {
+    "name": "Steinkoloss",
+    "text": "{kw:overwhelm}.",
+    "src": "33ec7f59814ac333"
+  },
+  "1083": {
+    "name": "Duras, der Eisenberg",
+    "text": "{kw:overwhelm}, {kw:skirmish}.",
+    "src": "c480dd6e3f1990c6"
+  },
+  "1084": {
+    "name": "Funkenwichtel",
+    "text": "{kw:fervor}.",
+    "src": "aea8fd6bd58b7503"
+  },
+  "1085": {
+    "name": "Böengeist",
+    "text": "{kw:doublestrike}.",
+    "src": "ac86a6023a0a1139"
+  },
+  "1086": {
+    "name": "Windreiter",
+    "text": "{kw:skirmish}.",
+    "src": "41cde1e5af3aa02a"
+  },
+  "1087": {
+    "name": "Sturmschläger",
+    "text": "{kw:skirmish}.",
+    "src": "61f3b96ebf889df0"
+  },
+  "1088": {
+    "name": "Donnerhuf",
+    "text": "{kw:overwhelm}.",
+    "src": "19a1bca58634a8a7"
+  },
+  "1089": {
+    "name": "Zael vom Blitzhimmel",
+    "text": "{kw:doublestrike}. Verursache {dmg:3} Schaden am feindlichen Helden.",
+    "flavor": "Der Himmel brach entzwei und fiel uns gleichzeitig auf den Kopf.",
+    "src": "0556468640a57641"
+  },
+  "1090": {
+    "name": "Sturmwindläufer",
+    "text": "{kw:skirmish}.",
+    "src": "4c5989284dd3cead"
+  },
+  "1091": {
+    "name": "Klingennatter",
+    "text": "{kw:venom}.",
+    "src": "be93da557605283a"
+  },
+  "1092": {
+    "name": "Phantomduellant",
+    "text": "{kw:shroud}.",
+    "src": "d785aaa831bcd2a6"
+  },
+  "1093": {
+    "name": "Doppelschlagfalke",
+    "text": "{kw:doublestrike}.",
+    "src": "e6cb53eb7a55fd89"
+  },
+  "1094": {
+    "name": "Lebenskrallen-Fledermaus",
+    "text": "{kw:skirmish}, {kw:lifedrain}.",
+    "src": "33100d0487a9a45a"
+  },
+  "1095": {
+    "name": "Zauberwächter",
+    "text": "{kw:arcane_surge}.",
+    "src": "9821911b8485d2f0"
+  },
+  "1096": {
+    "name": "Eisenpanzer-Bollwerk",
+    "text": "{kw:aegis}, {kw:bulwark}.",
+    "src": "a21a9748136ea66d"
+  },
+  "1097": {
+    "name": "Seelenwiedergänger",
+    "text": "Ziehe eine Karte. {label:toll}: Beschwöre ein {card:1023}.",
+    "src": "519adc2607a4916c"
+  },
+  "1098": {
+    "name": "Giftschuppendrache",
+    "text": "{kw:venom}.",
+    "src": "05dd275876f89ecf"
+  },
+  "1099": {
+    "name": "Dünengeborenes Konstrukt",
+    "text": "Gib allen befreundeten Dienern +1/+1.",
+    "src": "6032885929d0dabb"
+  },
+  "1100": {
+    "name": "Sumpfkriecher",
+    "text": "{kw:skirmish}.",
+    "src": "1e4a4ac54cfc28c6"
+  },
+  "1101": {
+    "name": "Flammenschwinge",
+    "text": "{kw:fervor}.",
+    "src": "a861254b1f077567"
+  },
+  "1102": {
+    "name": "Verbrühter Schläger",
+    "text": "{kw:skirmish}. Verursache {dmg:1} Schaden an einem Diener.",
+    "src": "4caf8584e7e09010"
+  },
+  "1103": {
+    "name": "Schlackenplattengolem",
+    "text": "{kw:overwhelm}.",
+    "src": "b8b57cddea48f37c"
+  },
+  "1104": {
+    "name": "Vorhutdrache",
+    "text": "{kw:vanguard}. {label:attack}: Verursache {dmg:2} Schaden am feindlichen Helden.",
+    "src": "22b6cf71223c6760"
+  },
+  "1105": {
+    "name": "Magmakernwärter",
+    "text": "{kw:bulwark}.",
+    "src": "d46cd07fa86f7b31"
+  },
+  "1106": {
+    "name": "Giftflosse",
+    "text": "{kw:venom}.",
+    "src": "8fa5f6d09ec039ed"
+  },
+  "1107": {
+    "name": "Frostflüstern",
+    "text": "{kw:frost}.",
+    "src": "1824220b4fb8653c"
+  },
+  "1108": {
+    "name": "Eisschuppenwelpe",
+    "text": "{kw:frost}.",
+    "src": "619bb16596a27661"
+  },
+  "1109": {
+    "name": "Eiskronenherold",
+    "text": "{kw:bulwark}. {label:freeze:imp} einen Feind.",
+    "src": "a344ebbb289a8bfe"
+  },
+  "1110": {
+    "name": "Abgrundverschlinger",
+    "text": "{kw:skirmish}. Schicke einen Diener auf die Hand seines Besitzers zurück.",
+    "src": "59a7c6f577cf9d3b"
+  },
+  "1111": {
+    "name": "Marens Avatar",
+    "text": "{kw:aegis}, {kw:vanguard}. {label:attack}: {kw:drown:imp} 2 zufällige Feinde.",
+    "src": "0120c13b944b931e"
+  },
+  "1112": {
+    "name": "Todesweber",
+    "text": "{label:toll}: Ziehe eine Karte.",
+    "src": "14aeb1bef33023a4"
+  },
+  "1113": {
+    "name": "Geisterwolf",
+    "text": "{kw:skirmish}. {label:toll}: Stelle 2 Leben deines Helden wieder her. Verursache {dmg:2} Schaden am feindlichen Helden.",
+    "src": "d6001fa46e7ca516"
+  },
+  "1114": {
+    "name": "Knochenschildwache",
+    "text": "{kw:bulwark}.",
+    "src": "c3e285a42637a769"
+  },
+  "1115": {
+    "name": "Seuchenbringer",
+    "text": "{kw:venom}.",
+    "src": "4be41fe5d7b1c106"
+  },
+  "1116": {
+    "name": "Wächter der Dämmerung",
+    "text": "{kw:frost}. Opfere einen befreundeten Diener: Stelle 10 Leben deines Helden wieder her.",
+    "src": "ad8ed46410d01edd"
+  },
+  "1117": {
+    "name": "Giftdorn",
+    "text": "{kw:bulwark}, {kw:venom}.",
+    "src": "b1b2d914a895ff41"
+  },
+  "1118": {
+    "name": "Windwurzelsprinter",
+    "text": "{kw:skirmish}. Gib einem befreundeten Diener +1/+1.",
+    "src": "da59cfd86e56b63b"
+  },
+  "1119": {
+    "name": "Großwurzelsprecher",
+    "text": "{kw:arcane_surge}.",
+    "src": "97b611a3e905f641"
+  },
+  "1120": {
+    "name": "Welttitan",
+    "text": "{kw:bulwark}, {kw:overwhelm}.",
+    "src": "db2df5ddc1435a80"
+  },
+  "1121": {
+    "name": "Heimgekehrter Späher",
+    "text": "Stelle 1 Leben deines Helden wieder her.",
+    "src": "f6b04901a41e3ebd"
+  },
+  "1122": {
+    "name": "Bündnisbote",
+    "text": "Ziehe eine Karte.",
+    "src": "7a2b4d34f2c400fb"
+  },
+  "1123": {
+    "name": "Restauriertes Bollwerk",
+    "text": "{kw:bulwark}.",
+    "src": "a692e21006a859dc"
+  },
+  "1124": {
+    "name": "Geborgener Golem",
+    "text": "{kw:bulwark}.",
+    "src": "cc34afaf05ab4061"
+  },
+  "1125": {
+    "name": "Morgenrot-Bannerträger",
+    "text": "Gib allen befreundeten Dienern +1/+1.",
+    "src": "a635e2f9adb7a839"
+  },
+  "1126": {
+    "name": "Brückenwärter",
+    "text": "{kw:bulwark}, {kw:lifedrain}.",
+    "src": "d97a357829e0798e"
+  },
+  "1127": {
+    "name": "Aric, Erster unter Vielen",
+    "text": "Gib allen befreundeten Dienern +2/+2 und stelle 5 Leben deines Helden wieder her.",
+    "flavor": "Erster unter Gleichen",
+    "src": "578ac6450f7aa8a0"
+  },
+  "1128": {
+    "name": "Rekrut der Vorhut",
+    "text": "{kw:skirmish}.",
+    "src": "86527bee09526167"
+  },
+  "1129": {
+    "name": "Glutbeckenwart",
+    "text": "{kw:arcane_surge}. Verursache {dmg:1} Schaden an einem Charakter; war es dein Held, ziehe eine Karte.",
+    "src": "18e38c9022af8a1b"
+  },
+  "1130": {
+    "name": "Schmiedewärter",
+    "text": "Verursache {dmg:2} Schaden an einem Charakter; ein befreundeter Diener erhält +2/+2.",
+    "src": "93fe7a70f7a92446"
+  },
+  "1131": {
+    "name": "Mechanische Essenz",
+    "text": "Erhalte zu Beginn deines Zuges +1/+1.",
+    "src": "7de2039b664491c0"
+  },
+  "1132": {
+    "name": "Namenlose Glocke",
+    "text": "{label:aura}: Gib allen befreundeten {tribe:construct:plural:dat} +1/+1.",
+    "src": "25be05b29832d9fd"
+  },
+  "1133": {
+    "name": "Herzsteinherold",
+    "text": "Stelle zu Beginn deines Zuges 2 Leben aller befreundeten Charaktere wieder her.",
+    "src": "21b015e6900521d7"
+  },
+  "1134": {
+    "name": "Koalitionszünder",
+    "text": "{kw:fervor}.",
+    "src": "1fe9484855a035ca"
+  },
+  "1135": {
+    "name": "Schmiedeschläger",
+    "text": "Rüste einen {card:62} aus.",
+    "src": "47f83a00a6723147"
+  },
+  "1136": {
+    "name": "Setzlingswache",
+    "text": "{kw:aegis}. {label:toll}: Gib einem zufälligen befreundeten Diener +2/+2.",
+    "src": "b2203f52dc97761b"
+  },
+  "1137": {
+    "name": "Feuerhauptmann",
+    "text": "Verursache {dmg:1} Schaden an allen feindlichen Dienern und gib allen befreundeten Dienern +1/+1.",
+    "src": "2c96eb2f20796e87"
+  },
+  "1138": {
+    "name": "General Kira",
+    "text": "{kw:vanguard}. Verursache {dmg:3} Schaden am feindlichen Helden und gib allen befreundeten Dienern +1/+1.",
+    "src": "240fb7199c2dfb4b"
+  },
+  "1139": {
+    "name": "Prophet der Flut",
+    "text": "{kw:vanguard}.",
+    "src": "3934789f21722032"
+  },
+  "1140": {
+    "name": "Salzküstenspäher",
+    "text": "{kw:drown:imp} einen Feind.",
+    "src": "515cf3f6d2a0bb62"
+  },
+  "1141": {
+    "name": "Riffbefreier",
+    "text": "{kw:bulwark}.",
+    "src": "4b88d1c738851804"
+  },
+  "1142": {
+    "name": "Gezeitengesandter",
+    "text": "{kw:drown:imp} 3 zufällige feindliche Diener.",
+    "src": "300f9114ac24acbc"
+  },
+  "1143": {
+    "name": "Marens Friedensstifter",
+    "text": "{kw:bulwark}. {kw:drown:imp} alle feindlichen Diener und gib allen befreundeten Dienern +1/+1.",
+    "src": "12981927adb3e148"
+  },
+  "1144": {
+    "name": "Gedenklicht",
+    "text": "{label:toll}: Gib einem zufälligen befreundeten Diener +2/+2.",
+    "src": "6d6e681403895921"
+  },
+  "1145": {
+    "name": "Grabwärter",
+    "text": "{kw:bulwark}.",
+    "src": "49eb9ddb00b4c4a3"
+  },
+  "1146": {
+    "name": "Gruftbaumeister",
+    "text": "Beschwöre einen {card:1191}.",
+    "src": "4b5887d546978acc"
+  },
+  "1147": {
+    "name": "Auferstandener Recke",
+    "text": "{kw:rekindle}. Gib einem befreundeten Diener +1/+1.",
+    "src": "73563121f6c144ce"
+  },
+  "1148": {
+    "name": "Gruftwächter",
+    "plural": "Gruftwächter",
+    "text": "",
+    "src": "6e56e2587c01209c"
+  },
+  "1149": {
+    "name": "Friedhofswärter Solen",
+    "text": "{kw:shroud}, {kw:lifedrain}. {label:toll}: Beschwöre zwei {card:1148:plural}.",
+    "src": "42cd696ea7808c54"
+  },
+  "1150": {
+    "name": "Schösslingspfleger",
+    "text": "Gib einem befreundeten Diener +1/+1.",
+    "src": "5048b8eb27185428"
+  },
+  "1151": {
+    "name": "Dornsprossjunges",
+    "text": "",
+    "src": "c84af599772e3b30"
+  },
+  "1152": {
+    "name": "Wildwuchsdryade",
+    "text": "Stelle 3 Leben deines Helden wieder her.",
+    "src": "e179221063ec7b62"
+  },
+  "1153": {
+    "name": "Wurzelquell-Recke",
+    "text": "{kw:rekindle}. {label:toll}: Gib allen befreundeten Dienern +1/+1.",
+    "src": "ba07d0bec407fede"
+  },
+  "1154": {
+    "name": "Praxis, Saat neuer Zeiten",
+    "text": "{kw:overwhelm}. Stelle 8 Leben deines Helden wieder her.",
+    "src": "ddc749300c2653cc"
+  },
+  "1155": {
+    "name": "Reparaturdrohne",
+    "text": "Gib einem befreundeten Diener +1/+1.",
+    "src": "ac612976d00f0e45"
+  },
+  "1156": {
+    "name": "Bauplanarchiv",
+    "text": "Beschwöre ein {card:1059}.",
+    "src": "6fc492b45ddea778"
+  },
+  "1157": {
+    "name": "Runderneuerter Automat",
+    "text": "{kw:bulwark}.",
+    "src": "b3b7bac18ae41971"
+  },
+  "1158": {
+    "name": "Meisterkonstrukteur",
+    "text": "Kontrollierst du ein weiteres {tribe:construct}, beschwöre einen {card:1158} und gib allen befreundeten {tribe:construct:plural:dat} +2/+2.",
+    "src": "815ee62f4041fb35"
+  },
+  "1159": {
+    "name": "Cogsworth der Erneuerer",
+    "text": "Immer wenn du einen Diener beschwörst, gib allen befreundeten Dienern +1/+1.",
+    "src": "8552a1b7681152ed"
+  },
+  "1160": {
+    "name": "Schattenspäher",
+    "text": "{kw:shroud}, {kw:arcane_surge}.",
+    "src": "82bc76d4f2aa5d50"
+  },
+  "1161": {
+    "name": "Tintenviper",
+    "text": "{kw:venom}, {kw:shroud}.",
+    "src": "4feac43ae8dc9bd8"
+  },
+  "1162": {
+    "name": "Schleierspion",
+    "text": "{kw:shroud}. Verursache {dmg:2} Schaden an einem Diener.",
+    "src": "3905f3987cab333f"
+  },
+  "1163": {
+    "name": "Netzwerkagent",
+    "text": "{kw:shroud}. Gib allen anderen befreundeten Dienern mit {kw:shroud} +1/+1.",
+    "src": "8edd6eea40e67fb4"
+  },
+  "1164": {
+    "name": "Doppelagent",
+    "text": "{kw:shroud}. Übernimm die Kontrolle über einen feindlichen Diener, der 4 oder weniger kostet.",
+    "src": "cd987a57a8d3b838"
+  },
+  "1165": {
+    "name": "Seraphine, Flüsterkönigin",
+    "text": "{kw:shroud}. Gib allen befreundeten Dienern mit {kw:shroud} {kw:venom} und allen befreundeten Dienern +1/+1.",
+    "src": "427efbce0ab4117a"
+  },
+  "1166": {
+    "name": "Steinsetzer",
+    "text": "{kw:bulwark}.",
+    "src": "01e858df57daa770"
+  },
+  "1167": {
+    "name": "Steinbrucharbeiter",
+    "text": "{kw:rekindle}.",
+    "src": "c2114b38138e9be3"
+  },
+  "1168": {
+    "name": "Felsenwächter",
+    "text": "{kw:bulwark}. Stelle 2 Leben deines Helden wieder her.",
+    "src": "f467d60a56df6c77"
+  },
+  "1169": {
+    "name": "Befestigter Koloss",
+    "text": "{kw:overwhelm}.",
+    "src": "cac9ac49118342f8"
+  },
+  "1170": {
+    "name": "Unzerbrechliche Mauer",
+    "text": "{kw:bulwark}.",
+    "src": "c0716715cbcaaa6c"
+  },
+  "1171": {
+    "name": "Aldric der Befestiger",
+    "text": "{kw:aegis}. {label:aura}: Gib allen befreundeten Dienern +1/+2.",
+    "src": "89355f5badbbdc3e"
+  },
+  "1172": {
+    "name": "Knisterlicht",
+    "text": "Ziehe eine Karte.",
+    "src": "ad83b6af6aacf41c"
+  },
+  "1173": {
+    "name": "Kettenrufer",
+    "text": "Verursache {dmg:1} Schaden an einem Feind.",
+    "src": "7f574003ffac390a"
+  },
+  "1174": {
+    "name": "Sturmkanalisierer",
+    "text": "{kw:arcane_surge}.",
+    "src": "7426d91a5eebdb1e"
+  },
+  "1175": {
+    "name": "Voltawächter",
+    "text": "{kw:bulwark}. {label:toll}: Verursache {dmg:2} Schaden an allen Feinden.",
+    "src": "9e17a446471826a2"
+  },
+  "1176": {
+    "name": "Vael, Herold des Sturms",
+    "text": "{kw:doublestrike}. Verursache {dmg:2} Schaden an allen Feinden.",
+    "src": "51d930112dad5329"
+  },
+  "1177": {
+    "name": "Knisterwichtel",
+    "text": "{kw:doublestrike}.",
+    "src": "0e52ca9a29d80c22"
+  },
+  "1178": {
+    "name": "Sturmgebundener Wicht",
+    "text": "Verursache {dmg:1} Schaden an einem zufälligen Feind.",
+    "src": "f130998bc0ea02ae"
+  },
+  "1179": {
+    "name": "Blitzreiter",
+    "text": "{kw:doublestrike}, {kw:fervor}. {label:toll}: {kw:backdraft} 1.",
+    "src": "7400f248e77e8265"
+  },
+  "1180": {
+    "name": "Böenherold",
+    "text": "{kw:vanguard}. Verursache {dmg:2} Schaden am feindlichen Helden.",
+    "src": "51c5e81104428d20"
+  },
+  "1181": {
+    "name": "Dämmerwicht",
+    "text": "{kw:shroud}.",
+    "src": "6edbdea3feb2c998"
+  },
+  "1182": {
+    "name": "Giftlicht",
+    "text": "{kw:venom}.",
+    "src": "6419011f8e4e0ea2"
+  },
+  "1183": {
+    "name": "Schattenaufklärer",
+    "text": "{kw:shroud}. Schicke einen feindlichen Diener auf die Hand zurück.",
+    "src": "c887274b263f14df"
+  },
+  "1184": {
+    "name": "Nachtschurke",
+    "text": "{kw:shroud}. {label:toll}: Ziehe 2 Karten.",
+    "src": "1dd2699ec5f64c1c"
+  },
+  "1185": {
+    "name": "Panzerrüpel",
+    "text": "{kw:overwhelm}.",
+    "src": "3453ef4763c12a93"
+  },
+  "1186": {
+    "name": "Festungswart",
+    "text": "{kw:bulwark}. {label:toll}: Stelle 3 Leben deines Helden wieder her.",
+    "src": "7b80f89bba6994c4"
+  },
+  "1187": {
+    "name": "Granitbehemoth",
+    "text": "{kw:overwhelm}. Stelle 3 Leben deines Helden wieder her.",
+    "src": "e6c62884e1b85ba2"
+  },
+  "1188": {
+    "name": "Tickender Automat",
+    "text": "{kw:skirmish}.",
+    "src": "bc2c3c7f7611648d"
+  },
+  "1189": {
+    "name": "Uhrwerkritter",
+    "text": "",
+    "src": "7f3f7c292fc83074"
+  },
+  "1190": {
+    "name": "Meistertüftler",
+    "text": "Beschwöre zwei {card:1059:plural} und ziehe eine Karte.",
+    "src": "6bdd1cda104446d5"
+  },
+  "1191": {
+    "name": "Schemen",
+    "plural": "Schemen",
+    "text": "",
+    "src": "aa985ab664a3177d"
+  },
+  "1192": {
+    "name": "Schweigegeist",
+    "text": "Belege einen Diener mit {kw:silence}.",
+    "src": "6813a1f258f2bc5f"
+  },
+  "1193": {
+    "name": "Stiller Schnitter",
+    "text": "{label:toll}: Belege 2 zufällige feindliche Diener mit {kw:silence}.",
+    "src": "805e17a0f7a08e82"
+  },
+  "1194": {
+    "name": "Königlicher Herold",
+    "text": "Der nächste Diener, den du in diesem Zug ausspielst, löst seinen Ausspieleffekt zweimal aus.",
+    "src": "a9b78ac3e9e42cf5"
+  },
+  "1195": {
+    "name": "Königin Belle Idee",
+    "text": "{label:aura}: Der erste andere befreundete Diener, der pro Zug tödlichen Schaden erleidet, überlebt mit 1 Leben.",
+    "src": "1cfcddc42f077436"
+  }
+}

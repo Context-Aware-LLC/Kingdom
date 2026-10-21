@@ -1092,7 +1092,7 @@ namespace Kingdom.Presentation
             cost.text = def.Cost.ToString();
             CardClassTokens.SwapPrefixed(cost, CardClassTokens.AllRarity("card-cost--"),
                 CardClassTokens.RarityToken(def.Rarity, "card-cost--"));
-            row.Q<Label>("name").text = def.Name;
+            row.Q<Label>("name").text = CardLoc.Name(def, _db);
             row.Q<Label>("count").text = copies > 1 ? Loc.Format("collection_deck_row_copies", copies) : "";
 
             CardClassTokens.SwapPrefixed(row, CardClassTokens.AllEdge(), CardClassTokens.Edge(def.Class));
@@ -1119,7 +1119,7 @@ namespace Kingdom.Presentation
             _deckCardPreview.style.display = DisplayStyle.Flex;
             if (_deckCardPreviewFallback != null)
             {
-                _deckCardPreviewFallback.text = card.Name;
+                _deckCardPreviewFallback.text = CardLoc.Name(card, _db);
                 _deckCardPreviewFallback.style.display = DisplayStyle.Flex;
             }
 

@@ -29,9 +29,12 @@ namespace Kingdom.Tools.CardCi
     {
         private static int Main(string[] args)
         {
+            string? exportPath = Option(ref args, "--export-card-text");
+            string? translationsDir = Option(ref args, "--translations");
             if (args.Length < 1)
             {
-                Console.Error.WriteLine("usage: Kingdom.Tools.CardCi <cardDataDir> [artDir]");
+                Console.Error.WriteLine("usage: Kingdom.Tools.CardCi <cardDataDir> [artDir] " +
+                    "[--translations <localizationDir>] [--export-card-text <out.json>]");
                 return 2;
             }
 
@@ -88,6 +91,14 @@ namespace Kingdom.Tools.CardCi
             }
 
             var db = new InMemoryCardDatabase(allCards);
+
+            if (exportPath != null)
+            {
+                File.WriteAllText(exportPath, CardTranslations.WriteSource(allCards, db));
+                Console.WriteLine($"CardCi: wrote the English card text of {allCards.Count} cards to {exportPath}");
+                return 0;
+            }
+
             var validator = new CardValidator();
 
             // Collected during the C-series pass and printed as rows at the end. See the
@@ -194,9 +205,87 @@ namespace Kingdom.Tools.CardCi
                     Console.WriteLine($"  {group.Key.ToString().ToUpperInvariant(),-13} {group.Count()}");
             }
 
+            if (translationsDir != null)
+                CheckTranslations(translationsDir, allCards, db, ref errors, ref warnings);
+
             Console.WriteLine();
             Console.WriteLine($"CardCi: {allCards.Count} cards across {files.Length} set file(s) — {errors} error(s), {warnings} warning(s).");
             return errors > 0 ? 1 : 0;
+        }
+
+        /// <summary>
+        /// Every <c>values-&lt;lang&gt;/cards.json</c> under <paramref name="dir"/>: a translation for a
+        /// card that does not exist, or one whose slots, name or flavor do not match its English, is an
+        /// ERROR. A stale one (the English moved since) is a WARNING — the client shows that card in
+        /// English, which is correct, just not finished. Each language's coverage is printed.
+        /// </summary>
+        private static void CheckTranslations(string dir, List<CardDefinition> cards, ICardDatabase db,
+            ref int errors, ref int warnings)
+        {
+            if (!Directory.Exists(dir))
+            {
+                Console.Error.WriteLine($"ERROR translations directory not found: {dir}");
+                errors++;
+                return;
+            }
+            var byId = cards.GroupBy(c => c.Id).ToDictionary(g => g.Key, g => g.First());
+            foreach (string file in Directory.GetFiles(dir, "cards.json", SearchOption.AllDirectories)
+                         .OrderBy(f => f, StringComparer.Ordinal))
+            {
+                string lang = Path.GetFileName(Path.GetDirectoryName(file)!);
+                CardTranslations translations;
+                try { translations = CardTranslations.Parse(File.ReadAllText(file)); }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"ERROR {lang}/cards.json: failed to parse — {ex.Message}");
+                    errors++;
+                    continue;
+                }
+
+                int current = 0, stale = 0;
+                foreach (int named in CardTranslations.NamedInPlural(cards.Select(c => CardTextGenerator.Template(c, db))))
+                {
+                    if (translations.Rows.TryGetValue(named, out CardTranslation? t) && t.Plural.Trim().Length == 0)
+                    {
+                        Console.Error.WriteLine($"ERROR {lang}/cards.json:{named}: no plural, and another card names it in the plural.");
+                        errors++;
+                    }
+                }
+                foreach (KeyValuePair<int, CardTranslation> row in translations.Rows.OrderBy(r => r.Key))
+                {
+                    if (!byId.TryGetValue(row.Key, out CardDefinition? card))
+                    {
+                        Console.Error.WriteLine($"ERROR {lang}/cards.json:{row.Key}: no such card.");
+                        errors++;
+                        continue;
+                    }
+                    string template = CardTextGenerator.Template(card, db);
+                    IReadOnlyList<string> problems = CardTranslations.Problems(card, template, row.Value);
+                    foreach (string problem in problems)
+                    {
+                        Console.Error.WriteLine($"ERROR {lang}/cards.json:{card.Id} {card.Handle}: {problem}.");
+                        errors++;
+                    }
+                    if (CardTranslations.IsStale(card, template, row.Value))
+                    {
+                        Console.WriteLine($"warn  {lang}/cards.json:{card.Id} {card.Handle}: STALE — the English changed; shows in English until retranslated.");
+                        warnings++;
+                        stale++;
+                    }
+                    else if (problems.Count == 0) current++;
+                }
+                Console.WriteLine($"translations {lang}: {current} current, {stale} stale, {cards.Count - translations.Rows.Count} untranslated of {cards.Count} cards.");
+            }
+        }
+
+        /// <summary>Removes <c>--name value</c> from <paramref name="args"/> and returns the value.</summary>
+        private static string? Option(ref string[] args, string name)
+        {
+            int at = Array.IndexOf(args, name);
+            if (at < 0 || at + 1 >= args.Length) return null;
+            string value = args[at + 1];
+            args = args.Take(at).Concat(args.Skip(at + 2)).ToArray();
+            return value;
         }
 
         /// <summary>Quotes an authored sentence for a divergence row, distinguishing empty from absent.</summary>

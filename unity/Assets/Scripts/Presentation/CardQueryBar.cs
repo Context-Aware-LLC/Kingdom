@@ -84,7 +84,7 @@ namespace Kingdom.Presentation
                 var f = new CardFilter();
 
                 string text = _search?.value;
-                if (!string.IsNullOrWhiteSpace(text)) f.Text = text;
+                if (!string.IsNullOrWhiteSpace(text)) { f.Text = text; f.LocalText = CardLoc.SearchText; }
 
                 if (_rarities.Count > 0) f.Rarities = new List<Rarity>(_rarities);
                 if (_types.Count    > 0) f.Types    = new List<CardType>(_types);

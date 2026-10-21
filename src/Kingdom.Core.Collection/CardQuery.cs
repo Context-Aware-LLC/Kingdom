@@ -35,6 +35,13 @@ namespace Kingdom.Core.Collection
         /// <summary>Free-text query. Whitespace-tokenised; see <see cref="CardQuery"/> for the field union.</summary>
         public string? Text { get; set; }
 
+        /// <summary>
+        /// The card's words in the player's language, searched beside the English fields so either
+        /// finds it (2026-10-20). The client supplies it; null searches English only. Each line it
+        /// returns is a field of its own, so join fields with '\n'.
+        /// </summary>
+        public Func<CardDefinition, string>? LocalText { get; set; }
+
         public IReadOnlyCollection<CardClass>? Classes { get; set; }
         public IReadOnlyCollection<Rarity>? Rarities { get; set; }
         public IReadOnlyCollection<CardType>? Types { get; set; }
@@ -108,16 +115,17 @@ namespace Kingdom.Core.Collection
             if (HasAny(filter.Tribes) && !Contains(filter.Tribes!, card.Tribe ?? Tribe.NONE)) return false;
             if (HasAny(filter.Keywords) && !CarriesAny(card, filter.Keywords!)) return false;
 
-            if (!string.IsNullOrWhiteSpace(filter.Text) && !MatchesText(card, filter.Text!)) return false;
+            if (!string.IsNullOrWhiteSpace(filter.Text) && !MatchesText(card, filter.Text!, filter.LocalText)) return false;
 
             return true;
         }
 
         // ── free text ──────────────────────────────────────────────────────────────
 
-        private static bool MatchesText(CardDefinition card, string query)
+        private static bool MatchesText(CardDefinition card, string query, Func<CardDefinition, string>? local)
         {
             string haystack = Haystack(card);
+            if (local != null) haystack += "\n" + local(card);
             foreach (var token in query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
                 if (haystack.IndexOf(token, StringComparison.OrdinalIgnoreCase) < 0)
                     return false;   // AND of tokens: one miss disqualifies the card.

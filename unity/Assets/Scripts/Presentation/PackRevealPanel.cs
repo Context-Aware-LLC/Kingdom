@@ -210,7 +210,7 @@ namespace Kingdom.Presentation
             foreach (PackCardAward award in awards)
             {
                 CardDefinition definition = Definition(award.CardId);
-                string name = definition != null ? definition.Name : Loc.Format("pack_reveal_card_fallback_name", award.CardId);
+                string name = definition != null ? CardLoc.Name(definition, _cards) : Loc.Format("pack_reveal_card_fallback_name", award.CardId);
 
                 if (!byRarity.TryGetValue(award.Rarity, out List<KeyValuePair<string, int>> names))
                     byRarity[award.Rarity] = names = new List<KeyValuePair<string, int>>();
@@ -344,7 +344,7 @@ namespace Kingdom.Presentation
             fallback.Add(art);
             PaintArt(art, definition);
 
-            var name = new Label(definition != null ? definition.Name : Loc.Format("pack_reveal_card_fallback_name", award.CardId));
+            var name = new Label(definition != null ? CardLoc.Name(definition, _cards) : Loc.Format("pack_reveal_card_fallback_name", award.CardId));
             name.AddToClassList("reveal-card__name");
             fallback.Add(name);
 

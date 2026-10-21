@@ -158,6 +158,10 @@ namespace Kingdom.Editor
                 {
                     if (!source.TryGetValue(row.Key, out string english))
                     {
+                        // A case form a card template asks for ({tribe:undead:plural:dat} reads
+                        // tribe_undead_plural_dat): English has no cases, only the row it inflects.
+                        int cut = row.Key.LastIndexOf('_');
+                        if (cut > 0 && IsTermKey(row.Key) && source.ContainsKey(row.Key.Substring(0, cut))) continue;
                         wrong.Add($"{lang}/{row.Key}: no English row");
                         continue;
                     }
@@ -184,6 +188,9 @@ namespace Kingdom.Editor
                 }
             return wrong.Count == 0 ? 0 : Fail("EveryKeyTheCodeAsksForExists", string.Join("; ", wrong));
         }
+
+        private static bool IsTermKey(string key)
+            => key.StartsWith("tribe_") || key.StartsWith("label_") || key.StartsWith("keyword_");
 
         private static Dictionary<string, string> ReadFolder(string dir)
         {

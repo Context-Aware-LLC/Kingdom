@@ -26,25 +26,39 @@ namespace Kingdom.Core.Cards
         Card,
     }
 
-    /// <summary>One slot of a template: its kind, its id, and whether the plural form is wanted.</summary>
+    /// <summary>One slot of a template: its kind, its id, whether the plural form is wanted, and the
+    /// grammatical form a translation asks for.</summary>
     public readonly struct CardTextSlot
     {
         public readonly CardTextSlotKind Kind;
         public readonly string Id;
         public readonly bool Plural;
 
-        public CardTextSlot(CardTextSlotKind kind, string id, bool plural)
+        /// <summary>
+        /// A case or other inflection a TRANSLATION names after the slot — <c>dat</c> in German
+        /// <c>{tribe:construct:plural:dat}</c>, for "allen befreundeten Konstrukten". English never
+        /// writes one. The client reads the glossary row with the form appended and falls back to the
+        /// plain row, and a form is not part of the slot's identity: <see cref="Bare"/> is what a
+        /// translation must match.
+        /// </summary>
+        public readonly string Form;
+
+        public CardTextSlot(CardTextSlotKind kind, string id, bool plural, string form = "")
         {
             Kind = kind;
             Id = id;
             Plural = plural;
+            Form = form ?? "";
         }
 
         /// <summary>The damage amount a <see cref="CardTextSlotKind.Damage"/> slot was printed with.</summary>
         public int Amount => int.Parse(Id, NumberStyles.Integer, CultureInfo.InvariantCulture);
 
+        /// <summary>This slot without its <see cref="Form"/>.</summary>
+        public CardTextSlot Bare => new CardTextSlot(Kind, Id, Plural);
+
         public override string ToString()
-            => "{" + Prefix(Kind) + ":" + Id + (Plural ? ":plural" : "") + "}";
+            => "{" + Prefix(Kind) + ":" + Id + (Plural ? ":plural" : "") + (Form.Length > 0 ? ":" + Form : "") + "}";
 
         internal static string Prefix(CardTextSlotKind kind) => kind switch
         {
@@ -147,6 +161,26 @@ namespace Kingdom.Core.Cards
             }
         }
 
+        /// <summary>
+        /// The fingerprint of a card's English that a translation records as its <c>src</c>:
+        /// name, template, flavor and tooltip together, so a change to any of them marks the whole
+        /// translation stale and the card falls back to English rather than mixing the two.
+        /// FNV-1a 64 over UTF-8, 16 hex digits — the same on the client, CardCi and any script.
+        /// </summary>
+        public static string SourceHash(CardDefinition card, string template)
+        {
+            if (card == null) throw new ArgumentNullException(nameof(card));
+            byte[] bytes = Encoding.UTF8.GetBytes(card.Name + "\u001f" + (template ?? "") + "\u001f" +
+                card.FlavorText + "\u001f" + card.Tooltip);
+            ulong hash = 14695981039346656037UL;
+            foreach (byte b in bytes)
+            {
+                hash ^= b;
+                hash *= 1099511628211UL;
+            }
+            return hash.ToString("x16", CultureInfo.InvariantCulture);
+        }
+
         private static T Enum<T>(string id) where T : struct
             => (T)System.Enum.Parse(typeof(T), id.ToUpperInvariant());
 
@@ -157,15 +191,27 @@ namespace Kingdom.Core.Cards
             if (end < 0) return false;
             string[] parts = template.Substring(start + 1, end - start - 1).Split(':');
             end++;
-            if (parts.Length < 2 || parts.Length > 3 || parts[1].Length == 0) return false;
-            if (parts.Length == 3 && parts[2] != "plural") return false;
+            if (parts.Length < 2 || parts.Length > 4 || parts[1].Length == 0) return false;
+            bool plural = parts.Length > 2 && parts[2] == "plural";
+            int formAt = plural ? 3 : 2;
+            if (parts.Length > formAt + 1) return false;
+            string form = parts.Length > formAt ? parts[formAt] : "";
+            if (parts.Length > formAt && !IsForm(form)) return false;
 
             CardTextSlotKind? kind = null;
             foreach (CardTextSlotKind k in (CardTextSlotKind[])System.Enum.GetValues(typeof(CardTextSlotKind)))
                 if (CardTextSlot.Prefix(k) == parts[0]) kind = k;
             if (kind == null) return false;
 
-            slot = new CardTextSlot(kind.Value, parts[1], parts.Length == 3);
+            slot = new CardTextSlot(kind.Value, parts[1], plural, form);
+            return true;
+        }
+
+        private static bool IsForm(string form)
+        {
+            if (form.Length == 0 || form == "plural") return false;
+            foreach (char c in form)
+                if (c < 'a' || c > 'z') return false;
             return true;
         }
     }
