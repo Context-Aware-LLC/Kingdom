@@ -7,19 +7,29 @@ namespace Kingdom.Editor
 {
     /// <summary>Review the shipping tutorial and narrator without resetting onboarding markers,
     /// replacing the open scene, or connecting a preview account to the server.</summary>
-    public sealed class HeraldNarratorPreview : MonoBehaviour
+    [InitializeOnLoad]
+    public static class HeraldNarratorPreview
     {
-        private static HeraldNarratorPreview _instance;
-        private FirstRunTidbit _tidbit;
+        private static GameObject _host;
+        private static FirstRunTidbit _tidbit;
+
+        static HeraldNarratorPreview()
+        {
+            EditorApplication.playModeStateChanged += state =>
+            {
+                if (state == PlayModeStateChange.ExitingPlayMode) Close();
+            };
+            AssemblyReloadEvents.beforeAssemblyReload += Close;
+        }
 
         [MenuItem("Kingdom/Preview/Herald Tutorial")]
         public static void Show()
         {
             if (!Application.isPlaying) return;
-            if (_instance != null) _instance.Close();
+            Close();
 
             var host = new GameObject("~HeraldTutorialPreview");
-            _instance = host.AddComponent<HeraldNarratorPreview>();
+            _host = host;
             var document = host.AddComponent<UIDocument>();
             document.panelSettings = AssetDatabase.LoadAssetAtPath<PanelSettings>(
                 "Assets/UI/Common/KingdomPanelSettings.asset");
@@ -34,27 +44,31 @@ namespace Kingdom.Editor
             foreach (VisualElement child in root.Children())
                 if (child.name != "tidbit-overlay") child.style.display = DisplayStyle.None;
 
-            _instance._tidbit = new FirstRunTidbit(root);
+            _tidbit = new FirstRunTidbit(root);
             Tidbit sample = TidbitCatalog.For(TidbitTrigger.MainMenuArrival)[0];
             // Null IDs are intentionally never read/written as FirstRunMarkers.
             var preview = new Tidbit(null, sample.Trigger, sample.TitleKey, sample.BodyKey, sample.ArtKey);
-            _instance._tidbit.Show(new[] { preview }, _instance.Close);
+            _tidbit.Show(new[] { preview }, Close);
+            root.RegisterCallback<DetachFromPanelEvent>(_ =>
+            {
+                if (_host == host) Close();
+            });
         }
 
         [MenuItem("Kingdom/Preview/Herald Tutorial", true)]
         private static bool CanShow() => Application.isPlaying;
 
-        private void Close()
+        private static void Close()
         {
-            _tidbit?.Cancel();
-            gameObject.SetActive(false);
-            Destroy(gameObject);
-        }
-
-        private void OnDestroy()
-        {
-            _tidbit?.Cancel();
-            if (_instance == this) _instance = null;
+            FirstRunTidbit tidbit = _tidbit;
+            GameObject host = _host;
+            _tidbit = null;
+            _host = null;
+            tidbit?.Cancel();
+            if (host == null) return;
+            host.SetActive(false);
+            if (Application.isPlaying) Object.Destroy(host);
+            else Object.DestroyImmediate(host);
         }
     }
 }

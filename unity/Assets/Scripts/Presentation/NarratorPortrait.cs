@@ -157,8 +157,9 @@ namespace Kingdom.Presentation
                 foreach (SkinnedMeshRenderer skin in actor.GetComponentsInChildren<SkinnedMeshRenderer>())
                 {
                     skin.updateWhenOffscreen = true;
-                    // Scale belongs to TransformPoint. Baking it too applies FBX's scale twice.
-                    skin.BakeMesh(baked, false);
+                    // The scale-aware bake compensates for FBX import transforms and produces
+                    // renderer-local vertices that TransformPoint maps to the visible mesh.
+                    skin.BakeMesh(baked, true);
                     foreach (Vector3 vertex in baked.vertices)
                     {
                         Vector3 point = skin.transform.TransformPoint(vertex);
