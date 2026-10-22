@@ -20,8 +20,8 @@ namespace Kingdom.Net.Server.Tests.Social
 {
     /// <summary>
     /// #409's acceptance, on the real app over real sockets: two accounts, one with no email, add
-    /// each other by code, see each other's presence, and play a private match that pays Gold and
-    /// leaves both ratings where they were — with a ticket nobody else can use.
+    /// each other by code, see each other's presence, and play a private match that pays its winner
+    /// Gold and leaves both ratings where they were — with a ticket nobody else can use.
     /// </summary>
     [TestFixture]
     [Category("Contract")]
@@ -111,10 +111,12 @@ namespace Kingdom.Net.Server.Tests.Social
                 await ExpectAsync<MatchEndMsg>(annMatch);
 
                 // ── Sam's ruling, 2026-10-01: quests and Gold pay, ranking does not ──────
+                // Ben conceded, and a conceder is paid nothing (MatchRewardWorker, 2026-10-20).
                 await UntilAsync(async () =>
-                    (await ledger.HistoryAsync(annId)).Any(g => g.Source == "match_reward") &&
-                    (await ledger.HistoryAsync(benId)).Any(g => g.Source == "match_reward"),
-                    "both seats of a friend match must be paid");
+                    (await ledger.HistoryAsync(annId)).Any(g => g.Source == "match_reward"),
+                    "the winner of a friend match must be paid");
+                Assert.That((await ledger.HistoryAsync(benId)).Any(g => g.Source == "match_reward"),
+                    Is.False, "a seat that conceded is paid nothing");
                 Assert.That(await ratings.GetLeaderboardAsync(20), Is.Empty,
                     "a friend match must not move a rating");
                 Assert.That(await ratings.GetRatingAsync(AccountId.FromAuthenticatedAccount(annId)),

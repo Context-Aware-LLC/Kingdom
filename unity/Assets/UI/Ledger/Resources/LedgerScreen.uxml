@@ -13,7 +13,7 @@
     <Style src="../../Common/tidbit.uss" />
     <Style src="../ledger.uss" />
 
-    <ui:VisualElement name="ledger" class="emb-root tidbit-overlay">
+    <ui:VisualElement name="ledger" class="emb-root emb-bleed tidbit-overlay">
         <ui:VisualElement name="ledger-sheet" class="tidbit-card ledger-sheet">
             <ui:VisualElement class="ledger-header">
                 <ui:Label text="The Ledger of Bad Ideas" class="tidbit-title ledger-title" />

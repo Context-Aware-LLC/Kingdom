@@ -13,7 +13,7 @@
     <Style src="../../Common/tidbit.uss" />
     <Style src="../match-proclamation.uss" />
 
-    <ui:VisualElement name="proclamation" class="emb-root tidbit-overlay proc-overlay">
+    <ui:VisualElement name="proclamation" class="emb-root emb-bleed tidbit-overlay proc-overlay">
         <ui:VisualElement name="proc-sheet" class="tidbit-card proc-sheet">
             <ui:Label name="proc-verdict" text=" " class="tidbit-title proc-verdict" />
             <ui:Label name="proc-reason" text=" " class="proc-reason" />
