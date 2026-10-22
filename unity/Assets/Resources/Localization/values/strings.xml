@@ -609,7 +609,7 @@
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Deck roster arrival. 'nine' = the deck limit. -->
     <string name="tidbit_decks_title">Your Decks</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Deck roster arrival. 'nine' = the deck limit. -->
-    <string name="tidbit_decks_body">Tap the \'+\' to create a deck. Tap a deck once to see options, twice to edit it.\n\nThe Council has determined that you shall have not more than nine.\n\nNine is the limit. Not 8 and not 10. Because the council said so, that is why.</string>
+    <string name="tidbit_decks_body">Tap the \'+\' to create a deck. Tap a deck once to see options, twice to edit it.\n\nThe Counc...the group of sage advisors, has determined that you are to have not more than nine.\n\nNine is the wimit. Not 8 and not 10.\n\nBecause the old buzzards said so, that is why.</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Match deck-pick arrival. 'Play' = button label. -->
     <string name="tidbit_match_pick_title">Choose A Deck</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Match deck-pick arrival. 'Play' = button label. -->
