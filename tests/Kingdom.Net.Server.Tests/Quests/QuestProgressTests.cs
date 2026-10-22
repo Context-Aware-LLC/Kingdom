@@ -228,20 +228,21 @@ namespace Kingdom.Net.Server.Tests.Quests
         }
 
         [Test]
-        public async Task A_Guest_Holds_No_Quests_And_Is_Paid_Nothing()
+        public async Task A_Seat_With_No_Account_Row_Is_Paid_Nothing()
         {
+            // A tooling guest seat: its player id is a device-token hash no account row carries.
             var accounts = new InMemoryAccountStore(new FakeTime());
-            Account guest = await accounts.ResolveOrCreateAsync("device_token", "token-hash");
+            const string guestSeat = "device-token-hash";
             var ledger = new InMemoryEntitlementLedger();
             var progress = new InMemoryQuestProgressStore();
             var service = new QuestProgressService(
                 progress, accounts, new GoldFaucet(ledger, new FakeTime(), new StubGoldRewardPolicy()));
 
-            QuestDefinition quest = QuestCatalog.ForDay(guest.PlayerId, Day);
+            QuestDefinition quest = QuestCatalog.ForDay(guestSeat, Day);
             for (int i = 0; i < quest.Goal; i++)
-                await service.ApplyAsync(FactsFor(guest.PlayerId, quest, "match-" + i));
+                await service.ApplyAsync(FactsFor(guestSeat, quest, "match-" + i));
 
-            Assert.That(await ledger.BalanceAsync(guest.PlayerId, EconomyItems.Gold), Is.Zero);
+            Assert.That(await ledger.BalanceAsync(guestSeat, EconomyItems.Gold), Is.Zero);
         }
 
         [Test]

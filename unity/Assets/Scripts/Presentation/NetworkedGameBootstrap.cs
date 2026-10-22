@@ -135,12 +135,12 @@ namespace Kingdom.Presentation
             // the boot must not present a token that expires during the handshake — the server closes
             // the socket on a bad one and never downgrades silently.
             //
-            // A build with sign-in never connects without a token (Sam, 2026-10-18). It used to fall
-            // back to a guest connect on every failure — refresh refused, network down — which seated
-            // a signed-in player with no collection check, no quests and no achievements, and said
-            // nothing. A deployment with sign-in now refuses that hello anyway ("sign-in required"),
-            // so failing here, with Retry, is the legible version of the same outcome. Only a build
-            // with no project configured still connects as a guest, to a dev box that accepts one.
+            // A build with sign-in never connects without a token (Sam, 2026-10-18), and every release
+            // build has sign-in — so a player is never a guest. A failed token (refresh refused,
+            // network down) stops the boot here with Retry; a deployment with sign-in would refuse the
+            // tokenless hello anyway ("sign-in required"), and this is the legible version of that.
+            // Only an unconfigured dev build connects without a token, and only a tooling server that
+            // sets ServerOptions.AllowGuestMatches seats it.
             Task<string> authTokenTask = AuthGateway.TokenForConnectAsync();
             while (!authTokenTask.IsCompleted) yield return null;
             string authToken = authTokenTask.Status == TaskStatus.RanToCompletion ? authTokenTask.Result : "";
@@ -177,12 +177,12 @@ namespace Kingdom.Presentation
                 Platform = DeviceIdentity.Platform,
                 BuildId = DeviceIdentity.BuildId,
                 // EF-073: no name. A signed-in seat is named by its identity, which the server
-                // reads off the verified token and ignores this field for (2026-10-18); only a guest
-                // on a dev box is named from here, and an unconfigured build has none to send.
+                // reads off the verified token and ignores this field for (2026-10-18); an
+                // unconfigured dev build has no name to send.
                 DisplayName = "",
-                // EF-074e: empty unless this device holds a live Supabase session. The server keys
-                // the seat on this when it is present and falls back to the device token when it is
-                // not, so a guest connects exactly as before.
+                // EF-074e: the Supabase JWT; never empty on a configured build (checked above). The
+                // server keys the seat on it. Empty only from an unconfigured dev build, which a
+                // server seats on the device token only when ServerOptions.AllowGuestMatches is set.
                 AuthToken = authToken,
                 DeckSubmission = selectedDeck,
                 DevCapture = Debug.isDebugBuild,

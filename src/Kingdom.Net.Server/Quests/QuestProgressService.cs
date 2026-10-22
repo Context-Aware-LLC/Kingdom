@@ -56,11 +56,12 @@ namespace Kingdom.Net.Server.Quests
             Account? account = await _accounts
                 .FindByPlayerIdAsync(facts.PlayerId, ct)
                 .ConfigureAwait(false);
-            // A guest has no durable account row and may not be paid. Roster bots are filtered
-            // above even though they do have durable rows: only the human half of bot fill owns
-            // progression. Both decisions live here because "who can hold a quest" is this
-            // service's question and the sink should not have to know the answer.
-            if (account is null || !EconomyAccountPolicy.IsDurable(account)) return;
+            // A tooling guest seat (ServerOptions.AllowGuestMatches, never a player) has no account
+            // row and is not paid. Roster bots are filtered above even though they do have rows:
+            // only the human half of bot fill owns progression. Both decisions live here because
+            // "who can hold a quest" is this service's question and the sink should not have to
+            // know the answer.
+            if (account is null) return;
 
             DateOnly day = DateOnly.FromDateTime(facts.EndedAtUtc.UtcDateTime);
 

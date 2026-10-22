@@ -109,7 +109,7 @@ namespace Kingdom.Core.Collection
     ///
     /// <para><b>What this deliberately does NOT solve: impersonation.</b> Unicode letters are allowed,
     /// so Cyrillic "Ѕаm" passes and looks like "Sam". Fixing that needs a uniqueness namespace to
-    /// impersonate <i>within</i>, and guest identity has none — two devices may hold the same name
+    /// impersonate <i>within</i>, and display names have none — two players may hold the same name
     /// today and neither is wrong. Confusable folding belongs with the account registry that first
     /// makes names unique, not here, where it would only give false assurance.</para>
     /// </summary>

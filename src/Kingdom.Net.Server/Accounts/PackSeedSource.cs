@@ -41,11 +41,8 @@ namespace Kingdom.Net.Server.Accounts
     /// packs, so rotate deliberately.</para>
     ///
     /// <para><b>VULN pointer (security.md §Review triggers: "purchasable inventory").</b> Entitlements
-    /// are keyed on <c>player_id</c>, which today resolves from the unauthenticated guest device token
-    /// (VULN-003). Packs make that identity <i>valuable</i>: whoever copies a device token inherits the
-    /// collection it bought. This class does not fix that and cannot — arming the fix is EF-074's
-    /// authenticator. If you are the one landing real accounts, the pack line is one of the things that
-    /// must move behind it.</para>
+    /// are keyed on <c>player_id</c>, which resolves from the verified Supabase identity (EF-074c), so
+    /// a copied device token inherits nothing. Keep any new pack path behind that resolution.</para>
     /// </summary>
     public sealed class HmacPackSeedSource : IPackSeedSource
     {

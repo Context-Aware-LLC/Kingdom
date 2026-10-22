@@ -281,29 +281,6 @@ namespace Kingdom.Net.Server.Tests.Accounts
         }
 
         [Test]
-        public async Task A_Guest_Account_On_The_Store_Is_Refused_Rather_Than_Paid()
-        {
-            var accounts = new InMemoryAccountStore(new FakeTime());
-            Account guest = await accounts.ResolveOrCreateAsync("device_token", "token-hash");
-            Account durable = await accounts.ResolveOrCreateAsync("supabase", "subject-1");
-
-            InMemoryEntitlementLedger ledger = await PayAsync(
-                accounts,
-                Result("match-1", guest.PlayerId, durable.PlayerId, MatchOutcome.Player0Win));
-
-            long guestGold = await ledger.BalanceAsync(guest.PlayerId, EconomyItems.Gold);
-            long durableGold = await ledger.BalanceAsync(durable.PlayerId, EconomyItems.Gold);
-
-            // Currency may not move for an unlinked account (EconomyAccountPolicy). The worker asks
-            // before granting so the faucet's throw never becomes a logged error per guest match.
-            Assert.Multiple(() =>
-            {
-                Assert.That(guestGold, Is.Zero);
-                Assert.That(durableGold, Is.EqualTo(10));
-            });
-        }
-
-        [Test]
         public async Task An_Unattributed_Match_Pays_Nobody()
         {
             var accounts = new InMemoryAccountStore(new FakeTime());

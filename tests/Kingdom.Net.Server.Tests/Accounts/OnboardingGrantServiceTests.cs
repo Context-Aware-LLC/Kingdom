@@ -83,10 +83,6 @@ namespace Kingdom.Net.Server.Tests.Accounts
             => new Account(playerId, "google", "subject-hash",
                            DateTimeOffset.FromUnixTimeMilliseconds(new FixedTime().NowMs));
 
-        private static Account Guest(string playerId = "guest-0001")
-            => new Account(playerId, "device_token", "device-hash",
-                           DateTimeOffset.FromUnixTimeMilliseconds(new FixedTime().NowMs));
-
         private static string CardItem(int cardId) => BoosterPackGrantService.CardItemPrefix + cardId;
 
         // ── the grant lands ──────────────────────────────────────────────────────────────────
@@ -226,26 +222,6 @@ namespace Kingdom.Net.Server.Tests.Accounts
                         "the transaction id is keyed on the player, not global");
             int cardId = OnboardingGrant.CardGrant(cards)[0];
             Assert.That(await ledger.BalanceAsync("account-b", CardItem(cardId)), Is.EqualTo(1));
-        }
-
-        // ── guests ───────────────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// <c>EconomyAccountPolicy.RequireDurable</c> THROWS for a device-token credential — inventory
-        /// may not move before account linking. An unauthenticated player joining a match is ordinary,
-        /// not an error, so the service skips them: their ownership stays unknown, which is the
-        /// "do not constrain" state they already had.
-        /// </summary>
-        [Test]
-        public async Task A_Guest_Is_Skipped_Rather_Than_Thrown_On()
-        {
-            var ledger = new InMemoryEntitlementLedger();
-            Account guest = Guest();
-
-            Assert.That(await Service(ledger, Cards()).EnsureGrantedAsync(guest),
-                        Is.EqualTo(OnboardingOutcome.SkippedGuest));
-            Assert.That(await ledger.HistoryAsync(guest.PlayerId), Is.Empty,
-                        "a skipped guest must leave no trace in the ledger");
         }
     }
 }

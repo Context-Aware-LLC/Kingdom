@@ -16,6 +16,9 @@ services:
     environment:
       - ASPNETCORE_URLS=http://+:8080
       - KINGDOM_REPLAYS=/data/replays
+      # No Supabase here, so the server refuses to boot without the dev opt-in
+      # (docs/dev-docs/operations/deployment.md, Required configuration).
+      - KINGDOM_ALLOW_GUEST_MATCHES=1
     volumes:
       - replay_data:/data/replays
     restart: unless-stopped

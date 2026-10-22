@@ -367,8 +367,9 @@ namespace Kingdom.Presentation
             if (_modal == null)
             {
                 // The view is missing from the UXML. Refusing to continue would brick the boot over
-                // a broken screen, which is a worse outcome than an unsigned session the server treats
-                // as a guest — and the error in the constructor already says what happened.
+                // a broken screen, which is a worse outcome than an unsigned session — one that still
+                // cannot queue, because the connect refuses to start without a sign-in token — and the
+                // error in the constructor already says what happened.
                 //
                 // CONTINUING IS NOT ENOUGH ON ITS OWN, and that is what made this a boot loop rather
                 // than a degraded launch (#329). MainMenu sends anyone whose gate is outstanding to

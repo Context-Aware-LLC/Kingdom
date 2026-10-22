@@ -4,20 +4,23 @@ using UnityEngine;
 namespace Kingdom.Session
 {
     /// <summary>
-    /// The guest device token (C-G1-8; telemetry-spec §0, accounts posture decision 6a).
+    /// The device token (C-G1-8; telemetry-spec §0).
+    ///
+    /// <para><b>Not an identity.</b> A player's identity is their Supabase sign-in, and the client
+    /// never connects without one. The device token still goes on every hello as
+    /// <c>HelloMsg.DeviceToken</c>, but it is a local folder key and a telemetry id: when a sign-in
+    /// token is present the server keys the seat on that and never on this. Only tooling (NetSoak,
+    /// in-process test servers) connects on the device token alone, behind
+    /// <c>ServerOptions.AllowGuestMatches</c>.</para>
     ///
     /// <para>Generated ONCE on this device and persisted forever after. That persistence is the
-    /// entire point: a token regenerated per launch is the <c>guest-&lt;counter&gt;</c> it replaces,
-    /// wearing a UUID. Every telemetry row emitted against a non-persistent token is
-    /// unattributable, and unlike the account registry — which can be rebuilt later from tokens
-    /// already emitted — that loss cannot be recovered.</para>
+    /// entire point: every telemetry row emitted against a non-persistent token is unattributable,
+    /// and that loss cannot be recovered.</para>
     ///
-    /// <para><b>A UUID by convention</b>, because Supabase (the ADR-0001 destination) keys users on
-    /// UUIDs, so a guest converts one-to-one when real identity lands.</para>
+    /// <para><b>A UUID by convention.</b></para>
     ///
-    /// <para><b>Not a secret, but not public either.</b> It is a bearer identity: whoever holds it
-    /// can claim these matches. The server hashes it into an account id on arrival and never sends
-    /// it to the opponent — see <c>AccountId</c>.</para>
+    /// <para><b>Not a secret, but not public either.</b> The server never sends it to the
+    /// opponent.</para>
     /// </summary>
     public static class DeviceIdentity
     {

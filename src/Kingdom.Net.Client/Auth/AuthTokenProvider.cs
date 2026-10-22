@@ -8,12 +8,13 @@ namespace Kingdom.Net.Client.Auth
     /// Owns the signed-in session for the life of the app: loads it, keeps it fresh, hands the connect
     /// path a token, and gives it up when Supabase says the credential is dead.
     ///
-    /// <para><b>The connect path can never fail here.</b> <see cref="TokenForConnectAsync"/> returns
+    /// <para><b>This never throws on the connect path.</b> <see cref="TokenForConnectAsync"/> returns
     /// the empty string for every unhappy case — no project configured, not signed in, refresh
-    /// refused, network down. Empty is the guest that has worked since before EF-074b, so the worst
-    /// outcome of any auth problem is that the player plays unattributed, never that they cannot
-    /// play. The server has no silent downgrade — it closes the socket on a bad token — so sending a
-    /// token we already know is dead would turn a sign-in problem into a failed match.</para>
+    /// refused, network down. Empty is not a way into a match: a configured client refuses to connect
+    /// without a token and shows Retry, so a player is never a guest. Only tooling connects tokenless,
+    /// to a server that sets <c>ServerOptions.AllowGuestMatches</c>. The server has no silent
+    /// downgrade — it closes the socket on a bad token — so sending a token we already know is dead
+    /// would turn a sign-in problem into a failed match.</para>
     ///
     /// <para><b>Capability, not policy.</b> Constructing this signs nobody in and shows nothing. It
     /// starts a sign-in only when something calls <see cref="BeginMagicLinkAsync"/> or
@@ -95,8 +96,8 @@ namespace Kingdom.Net.Client.Auth
 
             // The refresh failed. If the token has not actually expired yet — we were only inside the
             // safety margin — it is still a token the server will accept, and sending it beats
-            // dropping a signed-in player to guest over one bad request. If it HAS expired, the server
-            // would close the socket, so guest is the only outcome that still gets them into a match.
+            // failing a signed-in player's connect over one bad request. If it HAS expired, the server
+            // would close the socket, so empty is returned and the caller fails the connect legibly.
             AuthSession after = Current;
             if (after.IsPresent && after.ExpiresAtMs > _clock.NowMs)
             {
@@ -104,7 +105,7 @@ namespace Kingdom.Net.Client.Auth
                 return after.AccessToken;
             }
 
-            _log?.Invoke("[Auth] no usable token for this connect; joining as a guest.");
+            _log?.Invoke("[Auth] no usable token for this connect.");
             return "";
         }
 
@@ -113,7 +114,7 @@ namespace Kingdom.Net.Client.Auth
         ///
         /// <para><b>A 4xx clears the session and a network failure does not.</b> Supabase answering
         /// "no" means the refresh token is revoked or spent and will never work again, so keeping it
-        /// would show the player as signed in forever while every connect silently fell back to guest.
+        /// would show the player as signed in forever while every connect failed for want of a token.
         /// A request that never arrived says nothing about the credential, so it survives.</para>
         /// </summary>
         public Task<AuthResult> RefreshAsync(CancellationToken cancellationToken = default)
@@ -268,7 +269,7 @@ namespace Kingdom.Net.Client.Auth
         /// <para>Requires a live session — there is no local fallback, unlike
         /// <see cref="TokenForConnectAsync"/>: setting a password is something the player asked for
         /// right now, not a background refresh, so a failure has to reach them rather than be
-        /// swallowed into guest.</para>
+        /// swallowed into an empty result.</para>
         /// </summary>
         public async Task<AuthResult> SetPasswordAsync(string password, CancellationToken cancellationToken = default)
         {

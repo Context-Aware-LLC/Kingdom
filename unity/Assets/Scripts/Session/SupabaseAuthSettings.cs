@@ -10,10 +10,11 @@ namespace Kingdom.Session
     /// ▸ Supabase Auth Settings) once the project exists. The name and folder are load-bearing:
     /// <see cref="AuthGateway"/> finds it with <c>Resources.Load</c> and nothing else looks for it.</para>
     ///
-    /// <para><b>Its absence is the current, correct state.</b> No asset means no project, which means
-    /// the whole game runs the guest path it ran before EF-074 — not an error, and nothing on screen.
-    /// That is why this is <c>Resources.Load</c> returning null rather than a required reference: a
-    /// missing config must not be able to fail a boot.</para>
+    /// <para><b>Every release build carries it.</b> Its absence is a dev-only state: no project, so
+    /// connects carry no sign-in token and only a tooling server that sets
+    /// <c>ServerOptions.AllowGuestMatches</c> will seat them. A player never reaches that path. It is
+    /// still <c>Resources.Load</c> returning null rather than a required reference, because a missing
+    /// config must not be able to fail a boot.</para>
     ///
     /// <para><b>The anon key belongs in the build.</b> It identifies the project and grants nothing on
     /// its own; every Supabase site ships it to browsers. The service key is the one that can mint

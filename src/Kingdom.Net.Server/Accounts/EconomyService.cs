@@ -44,12 +44,9 @@ namespace Kingdom.Net.Server.Accounts
 
     internal static class EconomyAccountPolicy
     {
-        /// <summary>The credential kind that identifies a guest — the one account shape that may not
-        /// move inventory before account linking. Named here, once, because more than one caller has
-        /// to agree with this check and a second spelling of the string would silently let a guest
-        /// through one door and not another.</summary>
-        public const string GuestCredentialKind = "device_token";
-
+        /// <summary>Every inventory write is keyed on a durable player id. Accounts come only from
+        /// <see cref="IAccountStore"/> — a signed-in player or a bot — so this guards a malformed row,
+        /// not a kind of player: the tooling-only guest seat never resolves an <see cref="Account"/>.</summary>
         public static void RequireDurable(Account account)
         {
             if (account == null) throw new ArgumentNullException(nameof(account));
@@ -57,25 +54,7 @@ namespace Kingdom.Net.Server.Accounts
                 throw new ArgumentException("A durable player id is required.", nameof(account));
             if (string.IsNullOrWhiteSpace(account.CredentialKind))
                 throw new ArgumentException("A credential kind is required.", nameof(account));
-            if (string.Equals(account.CredentialKind, GuestCredentialKind, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException(
-                    "Account linking is required before currency or purchased inventory can change.");
         }
-
-        /// <summary>
-        /// The same question <see cref="RequireDurable"/> answers, asked without a throw — for a
-        /// request path where a guest is an ordinary, supported caller rather than a programming
-        /// error. <c>POST /packs/open</c> uses it so a guest gets a 401 instead of a 500.
-        ///
-        /// <para><b>The two must stay in agreement</b>, which is why this is expressed as the
-        /// negation of the same three conditions rather than as its own idea of what durable means.</para>
-        /// </summary>
-        public static bool IsDurable(Account? account)
-            => account is not null
-               && !string.IsNullOrWhiteSpace(account.PlayerId)
-               && !string.IsNullOrWhiteSpace(account.CredentialKind)
-               && !string.Equals(account.CredentialKind, GuestCredentialKind,
-                                 StringComparison.OrdinalIgnoreCase);
     }
 
     public enum PackPurchaseStatus

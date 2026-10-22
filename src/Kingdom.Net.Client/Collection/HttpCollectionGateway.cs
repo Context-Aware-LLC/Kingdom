@@ -194,8 +194,8 @@ namespace Kingdom.Net.Client.Collection
         /// Fetch this identity's collection.
         ///
         /// <para><b>An empty <paramref name="accessToken"/> is Unauthenticated, not a request.</b>
-        /// Sending the call anyway would ask the server to decide something the client already knows,
-        /// and a guest has no collection to read by construction.</para>
+        /// Sending the call anyway would ask the server to decide something the client already knows:
+        /// with no session there is no account to read a collection for.</para>
         /// </summary>
         public async Task<CollectionSnapshot> FetchAsync(
             string accessToken, CancellationToken cancellationToken = default)

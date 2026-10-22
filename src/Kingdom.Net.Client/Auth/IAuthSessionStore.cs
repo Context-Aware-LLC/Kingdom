@@ -6,7 +6,7 @@ namespace Kingdom.Net.Client.Auth
     /// Where the signed-in session survives a restart. The host app supplies this — the core has no
     /// filesystem and no <c>PlayerPrefs</c>.
     ///
-    /// <para><b>Never throw.</b> Unreadable storage must degrade to guest, not fail a boot. A player
+    /// <para><b>Never throw.</b> Unreadable storage must degrade to signed out, not fail a boot. A player
     /// whose token file is corrupt should be able to start the game and sign in again; an exception
     /// here would instead take down the launch path for a value nothing requires.</para>
     ///

@@ -218,22 +218,5 @@ namespace Kingdom.Net.Server.Tests.Accounts
             Assert.That(result.Status, Is.EqualTo(GemGrantStatus.Rejected));
             Assert.That(await ledger.HistoryAsync("player-2"), Is.Empty);
         }
-
-        [Test]
-        public async Task A_Device_Token_Account_Is_Rejected_Before_Receipt_Validation()
-        {
-            var ledger = new InMemoryEntitlementLedger();
-            var validator = new StubValidator(StoreReceiptValidation.Valid(
-                new ValidatedStorePurchase("play", "store-txn-1", "gems.tier.200", "player-1")));
-            var service = new GemGrantService(ledger, validator, new FixedTime());
-            var account = new Account("player-1", "device_token", "subject-hash", At);
-
-            Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await service.GrantAsync(
-                    account, new StoreReceipt("play", "opaque-signed-payload")));
-
-            Assert.That(validator.Calls, Is.EqualTo(0));
-            Assert.That(await ledger.HistoryAsync("player-1"), Is.Empty);
-        }
     }
 }

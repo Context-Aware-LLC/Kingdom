@@ -29,8 +29,7 @@ namespace Kingdom.Net.Server.Accounts
         /// <summary>The player holds no unopened pack on this line. 409.</summary>
         NoneOwned,
 
-        /// <summary>No bearer token, one Supabase refused, or an account that may not move inventory
-        /// (a guest — see <see cref="EconomyAccountPolicy.RequireDurable"/>). 401.</summary>
+        /// <summary>No bearer token, or one Supabase refused. 401.</summary>
         Unauthenticated,
 
         /// <summary>The box has no account store, no ledger, or no pack line configured — a supported
@@ -226,12 +225,6 @@ namespace Kingdom.Net.Server.Accounts
                 }
             }
 
-            // A guest may not move inventory (EconomyAccountPolicy.RequireDurable throws for one).
-            // Checked rather than caught: a foreseeable state must not reach the client as a 500.
-            if (!EconomyAccountPolicy.IsDurable(account))
-                return new PackOpenEndpointResult(PackOpenEndpointStatus.Unauthenticated,
-                    pack.Id, detail: "guest account");
-
             long owned = await ledger.BalanceAsync(account.PlayerId, pack.Id, ct).ConfigureAwait(false);
             if (owned <= 0)
                 return new PackOpenEndpointResult(PackOpenEndpointStatus.NoneOwned, pack.Id);
@@ -316,10 +309,6 @@ namespace Kingdom.Net.Server.Accounts
                         account.PlayerId, ex.Message);
                 }
             }
-
-            if (!EconomyAccountPolicy.IsDurable(account))
-                return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.Unauthenticated,
-                    pack.Id, detail: "guest account");
 
             try
             {

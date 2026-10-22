@@ -55,10 +55,10 @@ namespace Kingdom.Net.Server.Achievements
                 if (definition.EarnedBy(facts)) earned.Add(definition.Id);
             if (earned.Count == 0) return None;
 
-            // A guest has no durable account and nothing to keep a Ledger on; GET /achievements
-            // could not show it one either.
+            // A tooling guest seat (ServerOptions.AllowGuestMatches, never a player) has no account
+            // to keep a Ledger on; GET /achievements could not show it one either.
             Account? account = await _accounts.FindByPlayerIdAsync(facts.PlayerId, ct).ConfigureAwait(false);
-            if (account is null || !EconomyAccountPolicy.IsDurable(account)) return None;
+            if (account is null) return None;
 
             return await _store
                 .EarnAsync(facts.PlayerId, earned, facts.MatchId, facts.EndedAtUtc, ct)

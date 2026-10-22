@@ -77,7 +77,9 @@ namespace Kingdom.Net.Server
         /// <summary>
         /// Supabase JWT verifier (EF-074a/c). Null → auth tokens in HelloMsg are rejected with
         /// 1008 "authentication not configured". Populated from <c>KINGDOM_SUPABASE_URL</c> in
-        /// production; injected directly in tests. Absent tokens always take the guest path.
+        /// production, where <see cref="ServerConfig.FromEnvironment"/> refuses to boot without it;
+        /// injected directly in tests. An absent token takes the tooling-only guest path, and only
+        /// where <see cref="ServerOptions.AllowGuestMatches"/> opts in.
         /// </summary>
         public IIdentityTokenVerifier? TokenVerifier { get; init; }
 
@@ -229,10 +231,18 @@ namespace Kingdom.Net.Server
                 ? null
                 : new TelemetryDrain(sink.Path, dbConn!);
 
-            // EF-074c: Supabase JWT verifier (optional — absent means auth tokens are rejected;
-            // guest connects are accepted; present means they are refused unless
-            // KINGDOM_ALLOW_GUEST_MATCHES=1, see Options below). Mirrors the telemetry-drain pattern.
+            // EF-074c: Supabase JWT verifier. REQUIRED: players can only sign in (the client refuses
+            // to connect without a token), so a box without it could seat nobody but tooling guests
+            // and would look healthy doing it. Booting without it takes the explicit dev opt-in
+            // KINGDOM_ALLOW_GUEST_MATCHES=1, which is also the switch that lets those guests play.
+            bool allowGuests = KingdomEnv.Get("KINGDOM_ALLOW_GUEST_MATCHES") == "1";
             string? supabaseUrl = KingdomEnv.Get("KINGDOM_SUPABASE_URL");
+            if (string.IsNullOrWhiteSpace(supabaseUrl) && !allowGuests)
+                throw new InvalidOperationException(
+                    "KINGDOM_SUPABASE_URL is not set. The server cannot verify a sign-in without it, " +
+                    "and every player signs in. Set it to the Supabase project URL, or set " +
+                    "KINGDOM_ALLOW_GUEST_MATCHES=1 to boot a dev box that seats unauthenticated " +
+                    "tooling clients only.");
             IIdentityTokenVerifier? tokenVerifier = string.IsNullOrWhiteSpace(supabaseUrl)
                 ? null
                 : new SupabaseTokenVerifier(supabaseUrl);
@@ -310,12 +320,8 @@ namespace Kingdom.Net.Server
                 BotModelPath = KingdomEnv.Get("KINGDOM_BOT_MODEL"),
                 MinClientBuildAndroid = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_ANDROID"),
                 MinClientBuildIos = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_IOS"),
-                // A box with sign-in turns guests away; one without it has nothing else to offer.
-                Options = new ServerOptions
-                {
-                    AllowGuestMatches = tokenVerifier is null
-                        || KingdomEnv.Get("KINGDOM_ALLOW_GUEST_MATCHES") == "1",
-                },
+                // Guests are tooling only, so a booted server turns them away unless it opted in.
+                Options = new ServerOptions { AllowGuestMatches = allowGuests },
             };
         }
 
@@ -588,7 +594,7 @@ namespace Kingdom.Net.Server
             }
 
             // Achievements, decorated onto the same sink for the same reason. They need only the
-            // account store, to tell a durable account from a guest; without one GET /achievements
+            // account store, to tell an account from a tooling guest seat; without one GET /achievements
             // answers 503 and nothing is recorded.
             AchievementService? achievementService = null;
             if (cfg.AccountStore is not null)

@@ -103,7 +103,7 @@ namespace Kingdom.Net.Server.Accounts
 
             Account? account = await ResolveAsync(bearerToken, verifier, accounts, onboarding, ct)
                 .ConfigureAwait(false);
-            if (account == null || !EconomyAccountPolicy.IsDurable(account))
+            if (account == null)
                 return new ShopEndpointResult(ShopEndpointStatus.Unauthenticated);
 
             // The client names an intent, never a ledger transaction or pack instance. The server

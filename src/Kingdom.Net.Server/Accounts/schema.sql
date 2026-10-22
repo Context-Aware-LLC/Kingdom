@@ -30,7 +30,7 @@
 -- idempotent: the same credential always resolves to the same player_id.
 create table if not exists account (
   player_id        text        primary key,
-  credential_kind  text        not null,   -- device_token | google | apple | email | ...
+  credential_kind  text        not null,   -- supabase (a player) | bot (a roster bot)
   credential_hash  text        not null,   -- sha256 hex of the bearer credential
   created_at       timestamptz not null,
   unique (credential_kind, credential_hash)

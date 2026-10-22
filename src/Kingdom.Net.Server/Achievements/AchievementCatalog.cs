@@ -47,7 +47,7 @@ namespace Kingdom.Net.Server.Achievements
         }
 
         /// <summary>One seat (0 or 1) of a finished match, attributed or not — the result screen
-        /// stamps a guest's findings too, though only a durable account keeps them.</summary>
+        /// stamps every seat's findings, though only a seat with an account row keeps them.</summary>
         public static AchievementMatchFacts ForSeat(MatchCompleteEvent complete, int seat)
         {
             if (complete is null) throw new ArgumentNullException(nameof(complete));

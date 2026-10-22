@@ -9,7 +9,7 @@ namespace Kingdom.Net.Client.Auth
         None = 0,
 
         /// <summary>No Supabase project is configured on this build, so there is nothing to talk to.
-        /// The honest guest state, not an error to surface.</summary>
+        /// A dev or tooling state (every release build is configured), not an error to surface.</summary>
         NotConfigured,
 
         /// <summary>The request never reached Supabase, or the reply never came back. Transient —
@@ -50,10 +50,11 @@ namespace Kingdom.Net.Client.Auth
     /// One Supabase session as this device holds it: the JWT we put on the wire, the refresh token
     /// that renews it, and when it stops being accepted.
     ///
-    /// <para><b>The empty session is the guest, and it is a first-class state.</b>
+    /// <para><b>The empty session is signed out, and it is a first-class state.</b>
     /// <see cref="None"/> is what a player who has never signed in has, what a signed-out player has,
-    /// and what a player whose refresh was rejected falls back to. Every one of those must reach a
-    /// match — <c>AuthToken = ""</c> is the pre-EF-074b behaviour the server still supports.</para>
+    /// and what a player whose refresh was rejected falls back to. None of those reaches a match: a
+    /// configured client refuses to connect without a token and sends the player to sign in. A
+    /// player is never a guest.</para>
     ///
     /// <para><b>Nothing here is verified locally.</b> <see cref="UserId"/> and <see cref="Email"/> are
     /// read out of the JWT payload without checking its signature, because the client has no business

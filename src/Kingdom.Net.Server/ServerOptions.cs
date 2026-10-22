@@ -90,11 +90,12 @@ namespace Kingdom.Net.Server
         public long ChallengeArrivalTimeoutMs { get; init; } = 30_000;
 
         /// <summary>
-        /// Whether a hello with a device token and no sign-in token may play. A guest seat has no
-        /// collection to check a deck against and earns no quests or achievements, so a deployment
-        /// with sign-in refuses it (Sam, 2026-10-18): <c>ServerApp.FromEnvironment</c> turns this off
-        /// whenever <c>KINGDOM_SUPABASE_URL</c> is set, unless <c>KINGDOM_ALLOW_GUEST_MATCHES=1</c>.
-        /// True here so an in-process test box and NetSoak's loopback keep working.
+        /// Whether a hello with a device token and no sign-in token may play. Players never send one
+        /// (the client refuses to connect unsigned); it is a tooling seat with no collection to check a
+        /// deck against and no quests or achievements (Sam, 2026-10-18). <c>ServerConfig.FromEnvironment</c>
+        /// sets this from <c>KINGDOM_ALLOW_GUEST_MATCHES=1</c> alone, and refuses to boot without
+        /// <c>KINGDOM_SUPABASE_URL</c> unless it is set. True here so an in-process test box and
+        /// NetSoak's loopback, which build their config directly, keep working.
         /// </summary>
         public bool AllowGuestMatches { get; init; } = true;
     }

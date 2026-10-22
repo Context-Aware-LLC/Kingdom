@@ -15,9 +15,6 @@ namespace Kingdom.Net.Server.Accounts
 
         /// <summary>The account already carried it. Nothing was written.</summary>
         AlreadyGranted,
-
-        /// <summary>A guest (device-token) account — see the service's remarks. Nothing was written.</summary>
-        SkippedGuest,
     }
 
     /// <summary>
@@ -43,14 +40,8 @@ namespace Kingdom.Net.Server.Accounts
     /// mistaken for never having received it, and no convention about empty-versus-absent files has
     /// to be maintained by every future writer.</para>
     ///
-    /// <para><b>Guests are skipped, not rejected.</b>
-    /// <see cref="EconomyAccountPolicy.RequireDurable"/> throws for a <c>device_token</c> credential:
-    /// inventory may not move before account linking. An unauthenticated player connecting is an
-    /// ordinary, supported case rather than an error, so this returns
-    /// <see cref="OnboardingOutcome.SkippedGuest"/> and leaves their ownership unknown — which is
-    /// exactly the "do not constrain" state they already have. RETIREMENT TRIGGER: if account linking
-    /// ever lets a guest's collection be carried forward, this skip becomes a grant-then-link and
-    /// this paragraph is the thing to revisit.</para>
+    /// <para>Every account that reaches this is a signed-in player or a bot: the tooling-only guest
+    /// seat (<c>ServerOptions.AllowGuestMatches</c>) never resolves an <see cref="Account"/> at all.</para>
     ///
     /// <para>The starter shard credit has its own permanent transaction key so existing accounts
     /// receive it once without changing the historical signup batch.</para>
@@ -75,14 +66,6 @@ namespace Kingdom.Net.Server.Accounts
         /// <summary>Ledger <c>source</c> for every row this service writes.</summary>
         public const string GrantSource = "signup";
 
-        /// <summary>
-        /// The credential kind that identifies a guest. <b>The same constant</b>
-        /// <see cref="EconomyAccountPolicy.RequireDurable"/> throws on, rather than a second copy of
-        /// the string — the two have to agree, or this service would hand an account to a policy that
-        /// rejects it, and two spellings is how that stops being true.
-        /// </summary>
-        private const string GuestCredentialKind = EconomyAccountPolicy.GuestCredentialKind;
-
         private readonly IEntitlementLedger _ledger;
         private readonly ICardDatabase _cards;
         private readonly ITimeSource _time;
@@ -102,7 +85,6 @@ namespace Kingdom.Net.Server.Accounts
                                                                 CancellationToken ct = default)
         {
             if (account == null) throw new ArgumentNullException(nameof(account));
-            if (IsGuest(account)) return OnboardingOutcome.SkippedGuest;
             EconomyAccountPolicy.RequireDurable(account);
 
             // This is an additive, one-time credit, not a minimum balance. Spending it never
@@ -161,8 +143,5 @@ namespace Kingdom.Net.Server.Accounts
                 "after this account was onboarded; it must not be re-granted under the same " +
                 "transaction id. Granting the difference is a migration, not a signup.");
         }
-
-        private static bool IsGuest(Account account)
-            => string.Equals(account.CredentialKind, GuestCredentialKind, StringComparison.OrdinalIgnoreCase);
     }
 }

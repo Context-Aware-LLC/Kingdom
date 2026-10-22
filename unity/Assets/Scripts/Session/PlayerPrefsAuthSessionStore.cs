@@ -15,7 +15,8 @@ namespace Kingdom.Session
     /// into one account.</para>
     ///
     /// <para><b>Never throws.</b> Every path degrades to <see cref="AuthSession.None"/>, i.e. to
-    /// guest. A player whose stored token is unreadable must still reach the main menu.</para>
+    /// signed out. A player whose stored token is unreadable must still reach the main menu, where the
+    /// sign-in gate asks them to sign in again; signed out is never a way into a match.</para>
     ///
     /// <para><b>This is a bearer credential in plaintext prefs.</b> Anything with read access to the
     /// prefs store can play as that account until the token expires. That is the same exposure the

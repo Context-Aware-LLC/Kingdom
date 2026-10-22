@@ -16,9 +16,10 @@ namespace Kingdom.Net.Client.Auth
     /// must never appear here is the service key, which can mint tokens; the server refuses symmetric
     /// algorithms partly so that a leaked one still cannot forge a seat.</para>
     ///
-    /// <para><b>Unconfigured is a legal state, not a failure.</b> A build with no project set plays as
-    /// a guest exactly as it did before EF-074, which is the state every build is in until the
-    /// project exists.</para>
+    /// <para><b>Unconfigured is a legal state, not a failure — but only for dev and tooling.</b> Every
+    /// release build is configured. A build with no project set connects without a sign-in token,
+    /// which only a server that sets <c>ServerOptions.AllowGuestMatches</c> will seat; a player never
+    /// reaches that path.</para>
     /// </summary>
     public sealed record SupabaseAuthConfig
     {
@@ -93,7 +94,7 @@ namespace Kingdom.Net.Client.Auth
 
     /// <summary>
     /// The Supabase Auth calls, as a seam. <see cref="AuthTokenProvider"/> is written against this so
-    /// its refresh and guest-fallback behaviour can be tested without a network.
+    /// its refresh and empty-token behaviour can be tested without a network.
     /// </summary>
     public interface IAuthBackend
     {
@@ -542,7 +543,7 @@ namespace Kingdom.Net.Client.Auth
         /// Turn a 2xx token reply into a session. Anything missing an access token, a refresh token or
         /// a lifetime is <see cref="AuthFailure.Malformed"/> rather than a half-session — a client
         /// that stores a session with no refresh token has signed the player in for exactly one hour
-        /// and then silently drops them back to guest.
+        /// and then silently signs them out.
         /// </summary>
         private AuthResult ReadSession(AuthHttpResponse response)
         {

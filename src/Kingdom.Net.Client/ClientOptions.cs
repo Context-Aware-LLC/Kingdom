@@ -49,11 +49,13 @@ namespace Kingdom.Net.Client
         public bool DevCapture { get; init; }
 
         /// <summary>
-        /// The guest device token sent in the connect <c>HelloMsg</c> (C-G1-8; telemetry-spec §0,
-        /// accounts posture decision 6a). Generated ONCE per device and persisted by the host app —
-        /// a token regenerated per launch is the counter it replaced, wearing a UUID.
-        /// <para>A UUID by convention, because Supabase (the ADR-0001 destination) keys users on
-        /// UUIDs, so guests convert one-to-one when identity lands.</para>
+        /// The device token sent in the connect <c>HelloMsg</c> (C-G1-8; telemetry-spec §0).
+        /// Generated ONCE per device and persisted by the host app — a token regenerated per launch
+        /// makes every telemetry row unattributable.
+        /// <para><b>Not an identity.</b> A player is identified by <see cref="AuthToken"/>, which the
+        /// client always sends; the server never keys a seat on this when that is present. Only
+        /// tooling connects on this alone, behind <c>ServerOptions.AllowGuestMatches</c>. A UUID by
+        /// convention.</para>
         /// <para>Empty means the server refuses the connect. That is deliberate: an unattributable
         /// match is worse than a failed one, because it silently pollutes the balance sample.</para>
         /// </summary>
@@ -88,7 +90,8 @@ namespace Kingdom.Net.Client
 
         /// <summary>
         /// The Supabase JWT from whichever sign-in method the player used (magic link, OAuth).
-        /// Empty means guest — the server must behave exactly as it did before EF-074b (NOR-228).
+        /// A player always sends one. Empty is the tooling-only path (NetSoak, in-process test
+        /// servers), refused unless the server sets <c>ServerOptions.AllowGuestMatches</c>.
         /// Do not validate or inspect this here; pass it through to the server unchanged.
         /// </summary>
         public string AuthToken { get; init; } = "";

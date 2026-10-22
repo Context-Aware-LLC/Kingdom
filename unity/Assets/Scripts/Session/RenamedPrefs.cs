@@ -7,7 +7,7 @@ namespace Kingdom.Session
     ///
     /// <para>A device that already holds a value under the former key keeps it: the value is moved to
     /// the new key on first read. Without this, the rename would mint every existing install a new
-    /// guest token — and <see cref="DeviceIdentity"/> says why that loss cannot be recovered.</para>
+    /// device token — and <see cref="DeviceIdentity"/> says why that loss cannot be recovered.</para>
     /// </summary>
     internal static class RenamedPrefs
     {

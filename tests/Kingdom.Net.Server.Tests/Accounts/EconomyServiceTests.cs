@@ -149,23 +149,6 @@ namespace Kingdom.Net.Server.Tests.Accounts
         }
 
         [Test]
-        public async Task Pack_Purchase_Rejects_A_Device_Token_Account_Before_Any_Ledger_Write()
-        {
-            var ledger = new InMemoryEntitlementLedger();
-            var account = new Account("player-1", "device_token", "subject-hash", At);
-            await ledger.GrantAsync(new EntitlementGrant(
-                account.PlayerId, EconomyItems.Gold, 200, "quest", "quest-1", At));
-            var economy = new EconomyService(ledger, new FixedTime());
-
-            Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await economy.PurchasePackAsync(
-                    account, new BoosterPack(SetId.PENDINGHAM), EconomyCurrency.Gold, "purchase-1"));
-
-            Assert.That(await ledger.HistoryAsync(account.PlayerId), Has.Count.EqualTo(1));
-            Assert.That(await ledger.BalanceAsync(account.PlayerId, EconomyItems.Gold), Is.EqualTo(200));
-        }
-
-        [Test]
         public async Task Retrying_A_Pack_Purchase_Replays_Without_Spending_Twice()
         {
             var ledger = new InMemoryEntitlementLedger();

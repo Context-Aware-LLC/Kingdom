@@ -16,11 +16,13 @@ namespace Kingdom.Session
     /// sign-in. What happens to a device's existing collection at sign-in is still open: that is
     /// EF-074d and it is unbuilt.</para>
     ///
-    /// <para><b>Unconfigured is the current state and it is silent.</b> With no
-    /// <see cref="SupabaseAuthSettings"/> asset the whole game plays the guest path it played before
-    /// EF-074 — <c>HelloMsg.AuthToken</c> stays empty and the server behaves exactly as it did. It is
-    /// also what holds the first-launch gate open: a gate in front of a sign-in that cannot succeed
-    /// would simply stop the game booting. See <c>SignInGateController.IsRequired</c>.</para>
+    /// <para><b>A release build is always configured.</b> Every shipped build carries the
+    /// <see cref="SupabaseAuthSettings"/> asset, and <c>NetworkedGameBootstrap</c> refuses to connect
+    /// a configured build without a token — so a player always presents one, and a player is never a
+    /// guest. An unconfigured build is a dev-only state: <c>HelloMsg.AuthToken</c> stays empty, and
+    /// only a tooling server that sets <c>ServerOptions.AllowGuestMatches</c> will seat it. Unconfigured
+    /// also holds the first-launch gate open, because a gate in front of a sign-in that cannot
+    /// succeed would simply stop the game booting. See <c>SignInGateController.IsRequired</c>.</para>
     ///
     /// <para><b>Rebuilt on an account switch.</b> The store is scoped to the signed-in local account,
     /// so <see cref="DeviceAccounts.SwitchTo"/>'s scene reload has to see a fresh provider or seat two
@@ -89,8 +91,9 @@ namespace Kingdom.Session
 
         /// <summary>
         /// The value for <c>ClientOptions.AuthToken</c> on this connect, refreshing first if needed.
-        /// Returns the empty string — today's guest — for every failure, so no sign-in problem can
-        /// stop a player reaching a match.
+        /// Returns the empty string for every failure rather than throwing. Empty is not a way into a
+        /// match: on a configured build the caller treats it as a failed sign-in and stops the connect
+        /// (<c>NetworkedGameBootstrap</c>).
         /// </summary>
         public static async Task<string> TokenForConnectAsync()
         {
@@ -103,7 +106,7 @@ namespace Kingdom.Session
                 // The provider is written not to throw, and the connect path must not be the place
                 // that finds out it was wrong about that.
                 Debug.LogWarning($"[Auth] could not produce a token ({ex.GetType().Name}: {ex.Message}); " +
-                                 "joining as a guest.");
+                                 "connecting without one.");
                 return "";
             }
         }

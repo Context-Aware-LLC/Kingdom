@@ -13,10 +13,8 @@ namespace Kingdom.Net.Server.Accounts
     /// interface <b>before</b> the platform (Supabase / UGS / …) decision is made, and that decision
     /// then binds an implementation rather than forcing a rewrite.
     ///
-    /// <para>Identity today is only a per-match <c>guest-N</c> handle for gameplay plus a telemetry-only
-    /// <c>AccountId</c> derived from the device token; this seam is the home for the real account once it
-    /// holds value. It does not harden the device token — that is an authenticator's job (EF-074, gated
-    /// on the platform decision) — it gives the token a durable identity to map to.</para>
+    /// <para>A player's account is keyed on their verified Supabase identity (credential kind
+    /// <c>supabase</c>); roster bots use <c>bot</c>. A tooling guest seat resolves no account.</para>
     ///
     /// <para>Two implementations share this contract and one test suite: an in-memory one for tests and
     /// dev, and a Postgres one modelled on <c>TelemetryDrain</c> for production.</para>
@@ -31,7 +29,7 @@ namespace Kingdom.Net.Server.Accounts
         /// </summary>
         /// <param name="email">Verified email at link time (EF-074c, VULN-003 §4.2). The player's
         /// recovery path; stored on first sight, never updated — Supabase holds the authoritative
-        /// email. Null for guest accounts that have never signed in.</param>
+        /// email. Null for bot accounts.</param>
         Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash,
             string? email = null, CancellationToken ct = default);
 

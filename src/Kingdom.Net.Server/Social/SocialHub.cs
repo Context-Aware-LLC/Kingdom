@@ -129,7 +129,7 @@ namespace Kingdom.Net.Server.Social
         ///
         /// <para>Only a CONNECTED seat is announced, and the check is not an optimisation: this is
         /// raised for every match on the server, and reading the friend list of a seat that has
-        /// never opened the social surface — a guest, a bot — would mint that seat a friend code.</para>
+        /// never opened the social surface — a bot, a tooling guest seat — would mint that seat a friend code.</para>
         /// </summary>
         public async Task MatchRosterChangedAsync(string p0, string p1, CancellationToken ct = default)
         {

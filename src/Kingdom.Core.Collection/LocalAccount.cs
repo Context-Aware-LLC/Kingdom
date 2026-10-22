@@ -90,9 +90,9 @@ namespace Kingdom.Core.Collection
         /// it would look like the collection had simply been lost. Mint a second account instead.
         /// </exception>
         /// <remarks>
-        /// <b>VULN-003 §4.3 — this method IS the guest→account conversion, and the guard below is what
-        /// makes it one-way and one-time.</b> An unclaimed scope is a guest collection; claiming it is
-        /// the moment it becomes an authenticated player's. The rule that entry binds is that a device
+        /// <b>VULN-003 §4.3 — this method IS the conversion that section names "guest→account", and the
+        /// guard below is what makes it one-way and one-time.</b> An unclaimed scope is a device-local
+        /// folder bound to no identity; claiming it is the moment it becomes a signed-in player's. The rule that entry binds is that a device
         /// token must never again be sufficient to reach a linked account — so **if you are relaxing
         /// the check below, adding an "unclaim", or letting a claim be moved between identities, read
         /// VULN-003 §4.3 and §4.4 first.** The property holds today for a reason that is easy to break

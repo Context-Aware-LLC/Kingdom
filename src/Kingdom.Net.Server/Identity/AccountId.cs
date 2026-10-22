@@ -5,8 +5,8 @@ using System.Text;
 namespace Kingdom.Net.Server.Identity
 {
     /// <summary>
-    /// A guest player's stable identity (telemetry-spec §0, accounts posture decision 6a: "identity
-    /// = guest device token"; migrates to an account id when Supabase lands — ADR-0001).
+    /// A tooling guest seat's stable telemetry identity, derived from its device token. Players never
+    /// take this path: they are identified by their Supabase account (see MatchGate).
     ///
     /// <para><b>Derived, never minted.</b> It is a pure function of the client's device token, so it
     /// survives server restarts. Its predecessor — <c>guest-&lt;Interlocked.Increment&gt;</c> — was

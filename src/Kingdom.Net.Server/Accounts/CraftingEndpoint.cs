@@ -33,7 +33,6 @@ namespace Kingdom.Net.Server.Accounts
 
             Account account = await accounts.ResolveOrCreateAsync("supabase",
                 CredentialHash.Of(verified.Identity.Subject), verified.Identity.Email, ct).ConfigureAwait(false);
-            if (!EconomyAccountPolicy.IsDurable(account)) return new("unauthenticated", 401);
 
             if (action is null)
                 return new("ready", 200, await crafting.ReadAsync(account, cardId, ct).ConfigureAwait(false));
@@ -72,7 +71,6 @@ namespace Kingdom.Net.Server.Accounts
 
             Account account = await accounts.ResolveOrCreateAsync("supabase",
                 CredentialHash.Of(verified.Identity.Subject), verified.Identity.Email, ct).ConfigureAwait(false);
-            if (!EconomyAccountPolicy.IsDurable(account)) return new("unauthenticated", 401);
 
             ReduceSparesOutcome outcome = await crafting.ReduceSparesAsync(
                 account, cards, Guid.NewGuid().ToString("N"), ct).ConfigureAwait(false);

@@ -27,7 +27,8 @@ namespace Kingdom.Net.Server.Tests
     /// Three DONE-WHEN cases:
     ///   1. Valid token → authenticated account (not the device-token hash).
     ///   2. Invalid token → socket closed; no downgrade to guest.
-    ///   3. Absent token → today's guest identity, unchanged.
+    ///   3. Absent token → the tooling-only guest identity, on a box that allows guests (players
+    ///      always send a token; see ServerOptions.AllowGuestMatches).
     /// </summary>
     [TestFixture]
     [Category("Contract")]
@@ -179,9 +180,8 @@ namespace Kingdom.Net.Server.Tests
         }
 
         /// <summary>
-        /// A guest writes nothing. <c>EconomyAccountPolicy.RequireDurable</c> refuses inventory
-        /// movement before account linking, so the grant skips them rather than throwing — and a
-        /// throw here would have closed a socket that has every right to be open.
+        /// A tooling guest seat writes nothing: it never resolves an account, so the onboarding
+        /// grant is never asked about it.
         /// </summary>
         [Test]
         [CancelAfter(60_000)]

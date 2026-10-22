@@ -152,11 +152,10 @@ namespace Kingdom.Net.Server.Accounts
         }
 
         /// <summary>
-        /// One seat's payment. A seat with no durable account behind it is paid nothing and is not
-        /// an error: <see cref="AccountId"/> is derived from the device token for a guest, so the
-        /// lookup misses, and a guest may not move currency anyway
-        /// (<c>EconomyAccountPolicy.RequireDurable</c>). Refusing loudly here would log on every
-        /// guest match.
+        /// One seat's payment. A seat with no account behind it is paid nothing and is not an error:
+        /// a tooling guest seat (<c>ServerOptions.AllowGuestMatches</c>, never a player) carries an
+        /// <see cref="AccountId"/> derived from its device token, so the lookup misses. Refusing
+        /// loudly here would log on every such match.
         /// </summary>
         private async Task PaySeatAsync(RankedMatchResult result, AccountId seat, bool won)
         {
@@ -170,7 +169,7 @@ namespace Kingdom.Net.Server.Accounts
                 Account? account = await _accounts
                     .FindByPlayerIdAsync(playerId, CancellationToken.None)
                     .ConfigureAwait(false);
-                if (account is null || !EconomyAccountPolicy.IsDurable(account)) return;
+                if (account is null) return;
                 // The first win of the day comes only from a random match — the queue, bot fill
                 // included — never a friend challenge, which pays the match reward alone: two
                 // accounts could otherwise trade it daily (Sam, 2026-10-20).

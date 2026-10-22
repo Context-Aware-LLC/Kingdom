@@ -43,7 +43,7 @@ namespace Kingdom.Net.Server.Bots
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
         /// <param name="botUsername">The roster's account username — the bot's stable identity, and
-        /// what the synthetic device token is keyed on. Never rendered.</param>
+        /// what the (unread) synthetic device token is keyed on. Never rendered.</param>
         /// <param name="botDisplayName">What a human opponent sees on the nameplate. Free to change
         /// without disturbing the token above, which is the whole reason these are two parameters
         /// and not one (see <see cref="BotRosterEntry"/>).</param>
@@ -56,16 +56,10 @@ namespace Kingdom.Net.Server.Bots
         /// player memory and seeded sampling state, so it must not be shared between seats.</param>
         public BotSeatRunner(string botUsername, string botDisplayName, ISeatPolicy policy)
         {
-            // RETIREMENT TRIGGER — THIS LINE IS THE ONLY THING KEEPING GUEST IDENTITY ALIVE.
-            // No AuthToken, so every bot seat connects on the guest path (MatchGate's absent-token
-            // branch). Guest is walking-skeleton scaffolding that was never intended to ship and is
-            // retired by ruling (Sam, 2026-09-01) — but deleting the branch before this line changes
-            // takes down every opponent in the game, because bots are the only opponents there are.
-            //
-            // The order is: give bots real accounts here first (BotAccountProvisioner exists, and
-            // AccountKind.Superuser was added for exactly these identities), THEN make an absent
-            // auth token refuse the connect. Discharge this trigger in the commit that does the
-            // first half, and update AccountOwnedCounts.ForAsync's "No account" branch with it.
+            // A bot never goes through MatchGate's hello: MatchGate's bot fill seats it straight into StartMatch
+            // under its provisioned bot account (BotAccountProvisioner), and DrainOutboundLoopAsync
+            // drops the HelloMsg the client opens with. The device token exists only because
+            // NetworkedMatchSession.ConnectAsync refuses to start without one; nothing reads it.
             _clientOptions = new ClientOptions
             {
                 DeviceToken = "bot-internal-" + botUsername,

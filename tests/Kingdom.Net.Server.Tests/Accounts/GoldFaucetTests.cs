@@ -136,16 +136,5 @@ namespace Kingdom.Net.Server.Tests.Accounts
             Assert.That(results.Count(r => r.FirstWinRewardApplied), Is.EqualTo(1));
             Assert.That(await ledger.BalanceAsync("player-1", EconomyItems.Gold), Is.EqualTo(40));
         }
-
-        [Test]
-        public async Task A_Device_Token_Account_Cannot_Receive_Gold()
-        {
-            var ledger = new InMemoryEntitlementLedger();
-            var faucet = CreateFaucet(ledger, new FakeTime());
-
-            Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await faucet.GrantDailyQuestAsync(AuthenticatedAccount("device_token"), "quest-1"));
-            Assert.That(await ledger.HistoryAsync("player-1"), Is.Empty);
-        }
     }
 }

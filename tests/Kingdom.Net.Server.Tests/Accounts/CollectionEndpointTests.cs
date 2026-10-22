@@ -275,12 +275,10 @@ namespace Kingdom.Net.Server.Tests.Accounts
         }
 
         [Test]
-        public void Card_back_grants_reject_guest_accounts_unknown_ids_and_empty_event_ids()
+        public void Card_back_grants_reject_unknown_ids_and_empty_event_ids()
         {
             var ledger = new InMemoryEntitlementLedger();
             var account = new Account("p1", "supabase", "hash", Now);
-            Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await CardBackOwnership.EnsureDefaultAsync(ledger, account with { CredentialKind = "device_token" }));
             Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
                 await CardBackOwnership.GrantAsync(ledger, account, 999, "test", "event"));
             Assert.ThrowsAsync<ArgumentException>(async () =>

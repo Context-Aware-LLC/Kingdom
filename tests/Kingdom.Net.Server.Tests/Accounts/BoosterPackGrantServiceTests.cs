@@ -507,25 +507,6 @@ namespace Kingdom.Net.Server.Tests.Accounts
         }
 
         [Test]
-        public async Task A_Device_Token_Account_Cannot_Open_Valuable_Inventory()
-        {
-            var ledger = new InMemoryEntitlementLedger();
-            await GrantPackAsync(ledger, Player, Pack, "inst-1");
-            var service = Service(ledger, new InMemoryPackPityStore(), Cards());
-            var deviceAccount = new Account(
-                Player,
-                "device_token",
-                "subject-hash",
-                DateTimeOffset.FromUnixTimeMilliseconds(new FixedTime().NowMs));
-
-            Assert.ThrowsAsync<InvalidOperationException>(async () =>
-                await service.OpenAsync(deviceAccount, Pack, "inst-1"));
-
-            Assert.That(await ledger.HistoryAsync(Player), Has.Count.EqualTo(1));
-            Assert.That(await ledger.BalanceAsync(Player, Pack.Id), Is.EqualTo(1));
-        }
-
-        [Test]
         public async Task Two_Players_Do_Not_Share_A_Pity_Clock()
         {
             var ledger = new InMemoryEntitlementLedger();

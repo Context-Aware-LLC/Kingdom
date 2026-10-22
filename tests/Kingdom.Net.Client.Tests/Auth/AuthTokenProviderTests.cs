@@ -7,10 +7,10 @@ namespace Kingdom.Net.Client.Tests.Auth
     /// <summary>
     /// The session lifecycle behind <c>ClientOptions.AuthToken</c> (EF-074e / NOR-231).
     ///
-    /// <para>Every test here is about the same promise: a player who has not signed in, or whose
-    /// sign-in has gone wrong in any way, still reaches a match. The server closes the socket on a bad
-    /// token and never downgrades silently, so the client is the only place that decision can be made
-    /// safely.</para>
+    /// <para>Every test here is about the same promise: the provider hands out a token the server
+    /// will accept, or none at all. The server closes the socket on a bad token, so a session that
+    /// cannot produce a good one answers empty — and an empty token is not a guest: the client refuses
+    /// to connect without one (<c>NetworkedGameBootstrap</c>) and sends the player to sign in.</para>
     /// </summary>
     [TestFixture]
     [Category("Unit")]
@@ -36,7 +36,7 @@ namespace Kingdom.Net.Client.Tests.Auth
         }
 
         [Test]
-        public async Task An_unconfigured_build_connects_as_a_guest_without_touching_the_backend()
+        public async Task An_unconfigured_build_hands_out_no_token_without_touching_the_backend()
         {
             var backend = new FakeAuthBackend { IsConfigured = false };
             var store = new InMemoryAuthSessionStore(Signed(expiresAtMs: 0));
@@ -99,15 +99,15 @@ namespace Kingdom.Net.Client.Tests.Auth
         }
 
         [Test]
-        public async Task A_network_failure_on_an_already_expired_token_falls_back_to_guest_but_stays_signed_in()
+        public async Task A_network_failure_on_an_already_expired_token_hands_out_no_token_but_stays_signed_in()
         {
             var clock = new FakeClock(1_000_000);
             var store = new InMemoryAuthSessionStore(Signed(clock.NowMs - 1));
             var backend = new FakeAuthBackend().OnRefresh(AuthResult.Failed(AuthFailure.Network, "no route"));
             var provider = new AuthTokenProvider(backend, store, clock);
 
-            // Sending it would get the socket closed; the player still gets into a match as a guest,
-            // and their session survives to be refreshed when the network comes back.
+            // Sending it would get the socket closed, so nothing is sent and the client does not
+            // connect; the session survives to be refreshed when the network comes back.
             Assert.That(await provider.TokenForConnectAsync(), Is.EqualTo(""));
             Assert.That(provider.IsSignedIn, Is.True);
         }
@@ -192,7 +192,7 @@ namespace Kingdom.Net.Client.Tests.Auth
         }
 
         [Test]
-        public async Task Signing_out_returns_the_device_to_the_guest_path()
+        public async Task Signing_out_leaves_no_token_to_connect_with()
         {
             var clock = new FakeClock(1_000_000);
             var store = new InMemoryAuthSessionStore(Signed(clock.NowMs + 3_600_000));
