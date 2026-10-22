@@ -131,19 +131,21 @@ namespace Kingdom.Presentation
             _box.SetParent(transform, false);
             // On the near rail below our deck, resting on the rail strip (z -0.163). Beside the
             // stamper it sat behind it on screen, and the stamper's touch box took nearly every tap
-            // (Sam, 2026-10-20). Nudged 0.15 left of flush with the deck slot (x 9.95) the same day.
-            _box.position = new Vector3(9.11f, -5.21f, -0.42f);
-            Box(_box, "Walnut case", Vector3.zero, new Vector3(1.3f, 1.15f, 0.55f), _wood);
-            Box(_box, "Brass lid", new Vector3(0f, 0f, -0.29f), new Vector3(1.38f, 1.22f, 0.06f), _brass);
-            Box(_box, "Dark letter slot", new Vector3(0f, 0.20f, -0.327f), new Vector3(0.90f, 0.10f, 0.025f), _ink);
-            // Larger than it first shipped (1.1, Sam 2026-10-20); auto-size keeps a longer word in
-            // another language on the lid instead of wrapping it.
+            // (Sam, 2026-10-20). Left of the deck slot (x 9.95) on Sam's word twice; the rail is
+            // clear from here to the last hand mount (x 4.05).
+            _box.position = new Vector3(8.3f, -5.21f, -0.42f);
+            // Wider than it first shipped (1.3) so the label can grow: the word was already
+            // filling the lid's width, so a bigger font alone would only have auto-sized back down
+            // (Sam, 2026-10-22). Auto-size keeps a longer word in another language on one line.
+            Box(_box, "Walnut case", Vector3.zero, new Vector3(1.7f, 1.15f, 0.55f), _wood);
+            Box(_box, "Brass lid", new Vector3(0f, 0f, -0.29f), new Vector3(1.78f, 1.22f, 0.06f), _brass);
+            Box(_box, "Dark letter slot", new Vector3(0f, 0.20f, -0.327f), new Vector3(1.10f, 0.10f, 0.025f), _ink);
             TextMeshPro plate = TabletopToyGeometry.Label(_box, Loc.Get("board_suggestion_box_label"),
-                new Vector3(0f, -0.24f, -0.335f), new Vector2(1.26f, 0.4f), 1.45f);
+                new Vector3(0f, -0.26f, -0.335f), new Vector2(1.66f, 0.46f), 2.1f);
             plate.enableAutoSizing = true;
-            plate.fontSizeMin = 1.0f;
-            plate.fontSizeMax = 1.45f;
-            _box.gameObject.AddComponent<BoxCollider>().size = new Vector3(1.4f, 1.25f, 0.7f);
+            plate.fontSizeMin = 1.4f;
+            plate.fontSizeMax = 2.1f;
+            _box.gameObject.AddComponent<BoxCollider>().size = new Vector3(1.8f, 1.25f, 0.7f);
             _box.gameObject.AddComponent<LocalPropPress>().Pressed = () =>
             {
                 if (CanTouch && !_filing) StartCoroutine(FileSuggestion());
