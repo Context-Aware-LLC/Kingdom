@@ -66,7 +66,7 @@
     flex-shrink: 0;
     align-items: stretch;
     justify-content: center;
-    /* The bottom padding reserves the band the vault dock occupies (bottom 24 + 160 tall), so
+    /* The bottom padding reserves the band the dock row occupies (bottom 24 + 160 tall), so
        the centred brand and menu cannot slide under it. Padding does not move the
        dock itself, because it is absolute. Before this, the three-line KINGDOM / of / BAD IDEAS
        wordmark pushed the Leaderboards row about 49px under the vault. */
@@ -191,17 +191,22 @@
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 
-/* ---------- Card Vault packs ----------
- * The sealed-pack fan is the control's silhouette. Keep its transparent edges visible and the
- * existing 160px height so the reserved navigation band does not move the menu rows. */
-.mm-vault-dock {
+/* ---------- Dock: Card Vault packs and the Ledger book ----------
+ * Each control's art is its silhouette. Keep the transparent edges visible and the 160px height
+ * so the reserved navigation band does not move the menu rows. The book sits to the vault's
+ * right (Sam, 2026-10-21). */
+.mm-dock-row {
     position: absolute;
     left: var(--space-1);
     bottom: 24px;
+    flex-direction: row;
+    align-items: flex-end;
+}
+.mm-vault-dock {
     width: 208px;
     align-items: center;
 }
-.mm-vault-button {
+.mm-dock-button {
     width: 208px;
     height: 160px;
     min-width: 208px;
@@ -220,37 +225,50 @@
     transition-duration: 0.12s;
     transition-timing-function: ease-out;
 }
-.mm-vault-art {
+.mm-dock-art {
     width: 208px;
     height: 160px;
     flex-shrink: 0;
-    background-image: url("/Assets/Art/UI/Chrome/ui_card_vault_packs.png");
     -unity-background-scale-mode: scale-to-fit;
     -unity-background-image-tint-color: rgb(222, 227, 234);
     border-radius: 0;
     transition-property: -unity-background-image-tint-color;
     transition-duration: 0.12s;
 }
-.mm-vault-button:hover,
-.mm-vault-button:focus {
+.mm-vault-art {
+    background-image: url("/Assets/Art/UI/Chrome/ui_card_vault_packs.png");
+}
+.mm-ledger-button,
+.mm-ledger-art {
+    width: 160px;
+    min-width: 160px;
+}
+.mm-ledger-button {
+    margin-left: var(--space-4);
+}
+.mm-ledger-art {
+    background-image: url("/Assets/Art/UI/Chrome/ui_ledger_book.png");
+}
+.mm-dock-button:hover,
+.mm-dock-button:focus {
     scale: 1.05 1.05;
 }
-.mm-vault-button:hover .mm-vault-art,
-.mm-vault-button:focus .mm-vault-art {
+.mm-dock-button:hover .mm-dock-art,
+.mm-dock-button:focus .mm-dock-art {
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
-.mm-vault-button:active {
+.mm-dock-button:active {
     scale: 0.98 0.98;
 }
-.mm-vault-button:active .mm-vault-art {
+.mm-dock-button:active .mm-dock-art {
     -unity-background-image-tint-color: rgb(210, 210, 210);
 }
 /* Outrank Unity's built-in enabled/hover button fill in every interactive state. */
-.main-menu .mm-vault-button.unity-button,
-.main-menu .mm-vault-button.unity-button:hover:enabled,
-.main-menu .mm-vault-button.unity-button:active:enabled,
-.main-menu .mm-vault-button.unity-button:focus,
-.main-menu .mm-vault-button.unity-button:disabled {
+.main-menu .mm-dock-button.unity-button,
+.main-menu .mm-dock-button.unity-button:hover:enabled,
+.main-menu .mm-dock-button.unity-button:active:enabled,
+.main-menu .mm-dock-button.unity-button:focus,
+.main-menu .mm-dock-button.unity-button:disabled {
     background-color: rgba(0, 0, 0, 0);
     background-image: none;
     border-width: 0;
@@ -270,14 +288,6 @@
     font-size: var(--type-caption);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
-}
-.mm-vault-label {
-    margin-top: var(--space-2);
-    color: var(--ink-1);
-    font-size: var(--type-caption);
-    -unity-font-style: bold;
-    -unity-text-align: middle-center;
-    letter-spacing: 1px;
 }
 
 /* ---------- Top status rail ----------

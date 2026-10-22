@@ -141,7 +141,6 @@ namespace Kingdom.Presentation
         private Button _manageDecksButton;
         private Button _backToDecksButton;
         private Button _decksButton;
-        private Button _ledgerButton;
         private bool _queryDrawerOpen;
         private bool _drawerOpen;
         private (bool owned, bool unowned) _scopeBeforeEditing;
@@ -432,7 +431,6 @@ namespace Kingdom.Presentation
             _manageDecksButton   = _root.Q<Button>("manage-decks-button");
             _backToDecksButton   = _root.Q<Button>("choose-another-deck");
             _decksButton         = _root.Q<Button>("decks-button");
-            _ledgerButton        = _root.Q<Button>("ledger-button");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -721,7 +719,6 @@ namespace Kingdom.Presentation
             _drawerOpen = true;
             _drawer.AddToClassList("deck-drawer--open");
             if (_decksButton != null) _decksButton.style.display = DisplayStyle.None;
-            if (_ledgerButton != null) _ledgerButton.style.display = DisplayStyle.None;
             if (EditingDeck) ShowDrawerPane(editor: true);
             else
             {
@@ -741,7 +738,6 @@ namespace Kingdom.Presentation
             _drawer?.RemoveFromClassList("deck-drawer--open");
             _deckDrawerScrim?.RemoveFromClassList("deck-drawer-scrim--open");
             if (_decksButton != null) _decksButton.style.display = DisplayStyle.Flex;
-            if (_ledgerButton != null) _ledgerButton.style.display = DisplayStyle.Flex;
         }
 
         private void ShowDeckChooser()
@@ -1441,9 +1437,6 @@ namespace Kingdom.Presentation
                 SetQueryDrawerOpen(!_queryDrawerOpen));
             _queryScrim?.RegisterCallback<ClickEvent>(_ => SetQueryDrawerOpen(false));
             _root.Q<Button>("decks-button")?.RegisterCallback<ClickEvent>(_ => OpenDeckDrawer());
-            // The Ledger of Bad Ideas sits beside the Collection (whimsy pass #2): the one
-            // collection a player cannot buy.
-            _root.Q<Button>("ledger-button")?.RegisterCallback<ClickEvent>(_ => LedgerOverlay.Open());
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ => HandleBack());
             // No more "Close" button in the drawer header (Sam, 2026-09-07) -- an outside tap does it.
             _deckDrawerScrim?.RegisterCallback<ClickEvent>(_ => CloseDeckDrawer());

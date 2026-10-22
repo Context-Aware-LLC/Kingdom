@@ -11,8 +11,8 @@ namespace Kingdom.Presentation
 {
     /// <summary>
     /// The Ledger of Bad Ideas (whimsy pass 2026-10-17, #2): every achievement, earned ones dated and
-    /// sealed, the rest UNDER REVIEW until someone stumbles into them. Opened from the Collection,
-    /// beside which it sits; the game's one collection that cannot be bought.
+    /// sealed, the rest UNDER REVIEW until someone stumbles into them. Opened from the book beside
+    /// the Card Vault on the main menu (Sam, 2026-10-21); the game's one collection that cannot be bought.
     ///
     /// <para><b>The server's list is the record</b> (<c>GET /achievements</c>), read each time the
     /// Ledger opens, so an entry earned in the match just played is there without a sync. A failed

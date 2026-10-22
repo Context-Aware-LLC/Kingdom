@@ -65,7 +65,6 @@
     <string name="character_roster_deck_rename_help">Wähle einen Namen für dieses Deck (bis zu 24 Zeichen).</string>
     <string name="collection_collection_empty">Nichts passt zu diesen Filtern.</string>
     <string name="collection_filters">FILTER</string>
-    <string name="collection_ledger_button">Hauptbuch</string>
     <string name="collection_query_search_hint">Karten suchen</string>
     <string name="collection_scope_owned">Im Besitz</string>
     <string name="collection_scope_unowned">Fehlend</string>
@@ -99,6 +98,7 @@
     <string name="main_menu_btn_store">Laden</string>
     <string name="main_menu_btn_leaderboards">Ranglisten</string>
     <string name="main_menu_btn_card_vault_tooltip">Kartentresor öffnen</string>
+    <string name="main_menu_btn_ledger_tooltip">Hauptbuch öffnen</string>
     <string name="main_menu_the_official_register_of">Das amtliche Siegerverzeichnis</string>
     <string name="main_menu_rank">RANG</string>
     <string name="main_menu_player">SPIELER</string>

@@ -99,7 +99,6 @@
     <string name="character_roster_deck_rename_help">Choose a name for this deck (up to 24 characters).</string>
     <string name="collection_collection_empty">Nothing matches those filters.</string>
     <string name="collection_filters">FILTERS</string>
-    <string name="collection_ledger_button">Ledger</string>
     <string name="collection_query_search_hint">Search cards</string>
     <string name="collection_scope_owned">Owned</string>
     <string name="collection_scope_unowned">Unowned</string>
@@ -133,6 +132,7 @@
     <string name="main_menu_btn_store">Store</string>
     <string name="main_menu_btn_leaderboards">Leaderboards</string>
     <string name="main_menu_btn_card_vault_tooltip">Open Card Vault</string>
+    <string name="main_menu_btn_ledger_tooltip">Open the Ledger</string>
     <string name="main_menu_the_official_register_of">The Official Register of Winners</string>
     <string name="main_menu_rank">RANK</string>
     <string name="main_menu_player">PLAYER</string>

@@ -229,10 +229,10 @@ ELEMENT_INTERNAL = {
 # declared chain is checked in the XML; moving a control or untagging its carrier
 # must invalidate the declaration rather than silently suppress an edge finding.
 PARENT_CLEARANCE = {
-    ('mm-vault-dock', 'MainMenu/MainMenuScreen.uxml'):
+    ('mm-dock-row', 'MainMenu/MainMenuScreen.uxml'):
         (('mm-command',), EDGE_CLASS),
     ('mm-vault-count', 'MainMenu/MainMenuScreen.uxml'):
-        (('mm-vault-dock', 'mm-command'), EDGE_CLASS),
+        (('mm-vault-dock', 'mm-dock-row', 'mm-command'), EDGE_CLASS),
 }
 
 

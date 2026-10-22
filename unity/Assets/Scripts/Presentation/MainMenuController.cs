@@ -99,6 +99,7 @@ namespace Kingdom.Presentation
             Wire("btn-store", OnStore);
             Wire("btn-leaderboards", OnLeaderboards);
             Wire("btn-card-vault", OnCardVault);
+            Wire("btn-ledger", () => LedgerOverlay.Open());
             Wire("btn-leaderboard-close", CloseLeaderboard);
             BindAchievements();
             BindLeaderboard();

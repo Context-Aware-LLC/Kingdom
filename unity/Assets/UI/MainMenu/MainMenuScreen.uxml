@@ -35,11 +35,16 @@
                 <ui:Button name="btn-store" text="Store" class="mm-button mm-button--secondary"/>
                 <ui:Button name="btn-leaderboards" text="Leaderboards" class="mm-button mm-button--secondary"/>
             </ui:VisualElement>
-            <ui:VisualElement name="vault-dock" class="mm-vault-dock">
-                <ui:Button name="btn-card-vault" text="" tooltip="Open Card Vault" class="mm-vault-button">
-                    <ui:VisualElement picking-mode="Ignore" class="mm-vault-art"/>
+            <ui:VisualElement name="dock-row" class="mm-dock-row">
+                <ui:VisualElement name="vault-dock" class="mm-vault-dock">
+                    <ui:Button name="btn-card-vault" text="" tooltip="Open Card Vault" class="mm-dock-button">
+                        <ui:VisualElement picking-mode="Ignore" class="mm-dock-art mm-vault-art"/>
+                    </ui:Button>
+                    <ui:Label name="vault-pack-count" text="" picking-mode="Ignore" class="mm-vault-count"/>
+                </ui:VisualElement>
+                <ui:Button name="btn-ledger" text="" tooltip="Open the Ledger" class="mm-dock-button mm-ledger-button">
+                    <ui:VisualElement picking-mode="Ignore" class="mm-dock-art mm-ledger-art"/>
                 </ui:Button>
-                <ui:Label name="vault-pack-count" text="" picking-mode="Ignore" class="mm-vault-count"/>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="footer" class="mm-footer emb-edge">

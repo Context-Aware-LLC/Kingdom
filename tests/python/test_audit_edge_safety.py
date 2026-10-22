@@ -34,7 +34,7 @@ class EdgeSafetyTests(unittest.TestCase):
                 self.assertTrue(audit._has_parent_clearance(str(Path(audit.UI) / relative), cls))
         # A declaration is per SCREEN: a declared class on a screen it was not declared for is not cleared.
         self.assertFalse(audit._has_parent_clearance(
-            str(Path(audit.UI) / 'Collection/CollectionScreen.uxml'), 'mm-vault-dock'))
+            str(Path(audit.UI) / 'Collection/CollectionScreen.uxml'), 'mm-dock-row'))
 
     def _check_mutated_chain(self, mutation):
         for (cls, relative), (chain, _) in audit.PARENT_CLEARANCE.items():

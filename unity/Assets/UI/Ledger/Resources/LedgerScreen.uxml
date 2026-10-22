@@ -2,7 +2,7 @@
 <!--
   LedgerScreen.uxml — the Ledger of Bad Ideas (whimsy pass 2026-10-17, #2): every achievement,
   each a dated entry once earned and UNDER REVIEW until then. Built at runtime by LedgerOverlay
-  through Resources, the pattern ConnectionFailedScreen uses, so the Collection's own tree did not
+  through Resources, the pattern ConnectionFailedScreen uses, so the main menu's own tree does not
   have to carry it.
 
   .emb-root IS LOAD-BEARING: this tree is its own UIDocument, so nothing above it declares the
