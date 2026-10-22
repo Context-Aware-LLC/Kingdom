@@ -16,7 +16,7 @@ namespace Kingdom.Net.Protocol
 
     /// <summary>
     /// The connect handshake — FIRST frame on a fresh socket, before pairing (C-G1-8).
-    /// <para><see cref="DeviceToken"/> is the guest identity from telemetry-spec §0 / accounts
+    /// <para><see cref="DeviceToken"/> is the device identity from telemetry-spec §0 / accounts
     /// posture decision 6a: client-generated once, persisted on device, stable across restarts.
     /// It is the reason an emitted telemetry row can be attributed at all.</para>
     /// <para><b>The token never leaves the server.</b> It is hashed into an account id on arrival
@@ -59,7 +59,8 @@ namespace Kingdom.Net.Protocol
         //    for itself — a length bound is not a clip. Add it to VULN-002 §4 when you write it.
         string DisplayName = "",
         // ── EF-074b — carries the Supabase JWT the player received at sign-in.
-        //    Empty means guest; the server must accept both paths without behaviour change (NOR-228).
+        //    Empty is the tooling-only guest path, refused unless ServerOptions.AllowGuestMatches;
+        //    the client never connects without one (Sam, 2026-10-18).
         //    The server verifies this token in EF-074c; this layer is transport only.
         string AuthToken = "") : NetMessage;
 

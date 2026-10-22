@@ -316,7 +316,8 @@ namespace Kingdom.Net.Protocol
                 || deviceToken.Length == 0)
                 return DecodeResult.Fail(ProtocolError.BadField, "missing/bad 'deviceToken'", matchId, seq);
 
-            // authToken is optional — absent means guest; the server accepts both (EF-074b/NOR-228).
+            // authToken is optional on the wire — absent is the tooling-only guest path, refused unless
+            // ServerOptions.AllowGuestMatches (EF-074b). Players always send one.
             return DecodeResult.Success(
                 new HelloMsg(deviceToken, OptStr(body, "clientContractVersion"),
                              OptStr(body, "platform"), OptStr(body, "buildId"),

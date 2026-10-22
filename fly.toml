@@ -22,7 +22,8 @@ primary_region = "sjc"
   # volume is mounted, a stopped machine takes any in-flight match with it.
   #
   # KNOWN TRADE: if BOTH players blip simultaneously, connections hit zero and the machine
-  # may suspend inside our 30s reconnect grace. Under "suspend" the match should resume;
+  # may suspend while they reconnect (there is no grace timer: a seat that misses two
+  # consecutive turn timeouts concedes, MatchSession IdleForfeitAutoTurns). Under "suspend" the match should resume;
   # if we ever fall back to "stop", that blip becomes an unrecoverable loss. Do not switch
   # to "stop" without persisting match state first.
   auto_stop_machines = "suspend"

@@ -5,16 +5,14 @@ namespace Kingdom.Core.Collection
 {
     /// <summary>
     /// Where a player's collection lives on disk (dev-docs/data/player-data-and-telemetry.md:11:
-    /// keyed by the guest device token until identity lands).
+    /// one folder per local account).
     ///
     /// <para>The <b>convention</b> lives here — in the UnityEngine-free assembly — while the
     /// <b>root directory</b> is supplied by the caller. Unity passes
-    /// <c>Application.persistentDataPath</c> and <c>DeviceIdentity.Token</c>; a headless test or a
+    /// <c>Application.persistentDataPath</c> and <c>PlayerAccount.StorageKey</c>; a headless test or a
     /// future server-side importer passes a temp directory and an account id. Neither side hardcodes
     /// the layout, so both agree on it.</para>
-    ///
-    /// <para>Scoping by token is what makes the M3 account migration a copy: today's folder is one
-    /// guest, and a converted account keeps its own folder rather than merging into a shared file.</para>
+
     /// </summary>
     public static class CollectionPaths
     {
