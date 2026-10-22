@@ -16,8 +16,9 @@ namespace Kingdom.Presentation
     ///   on demand      — status line appears when the tracked work begins (SetStatus;
     ///                    placeholder text until the progress/tip design pass)
     ///   fade out       — NotifyMatchReady() (first MatchRunner.OnStateUpdated) AND the
-    ///                    wordmark entrance has finished: the choreography IS the minimum
-    ///                    hold, no arbitrary timer
+    ///                    wordmark entrance has finished AND MinHold has passed. Most loads
+    ///                    finish in a blink, and a plate gone that fast does not earn its
+    ///                    place (Sam, 2026-10-21: two seconds, every plate)
     ///   boot failure   — NotifyBootFailed(): never fades; the status line is the error
     ///                    surface. Reconnecting mid-match is HUD scope, not this.
     ///
@@ -35,9 +36,12 @@ namespace Kingdom.Presentation
         private const float WordmarkHFrac = 330f / 2160f;
         private const float StatusYFrac   = -(1850f - 1080f) / 2160f;
 
-        // Reveal/fade pacing.
+        // Reveal/fade pacing. MinHold is measured from BUILD, as VersusOverlay's is, so a
+        // transition plate built in the source scene counts the scene load toward it.
+        // Total on-screen ≥ MinHold + FadeOutDuration.
         private const float WordmarkDelay      = 0.6f;
         private const float WordmarkInDuration = 0.9f;
+        private const float MinHold            = 2.0f;
         private const float FadeOutDuration    = 0.6f;
 
         private static readonly Color ErrorTint = new Color(1.00f, 0.55f, 0.45f);
@@ -181,12 +185,12 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>The match has real state on the board (first released snapshot). Idempotent;
-        /// fade-out still waits for the wordmark entrance to finish.</summary>
+        /// fade-out still waits for the wordmark entrance and the minimum hold.</summary>
         public void NotifyMatchReady() => NotifyReady();
 
         /// <summary>Non-match spelling of <see cref="NotifyMatchReady"/> — same gate, for callers
         /// with no match (MainMenu's app-boot moment: identity/account bootstrap finished).
-        /// Idempotent; fade-out still waits for the wordmark entrance to finish.</summary>
+        /// Idempotent; fade-out still waits for the wordmark entrance and the minimum hold.</summary>
         public void NotifyReady()
         {
             if (_destroyed) return;
@@ -386,8 +390,8 @@ namespace Kingdom.Presentation
             bool statusActive = _status != null && _status.text.Length > 0;
             _statusShown = Mathf.MoveTowards(_statusShown, statusActive ? 1f : 0f, Time.deltaTime * 3f);
 
-            // Fade-out gate: choreography done AND match ready AND not failed.
-            if (_fadeOutT < 0f && revealDone && _matchReady && !_failed)
+            // Fade-out gate: choreography done AND held long enough AND ready AND not failed.
+            if (_fadeOutT < 0f && revealDone && t >= MinHold && _matchReady && !_failed)
                 _fadeOutT = t;
             float fade = _fadeOutT < 0f ? 1f : 1f - Mathf.Clamp01((t - _fadeOutT) / FadeOutDuration);
 
