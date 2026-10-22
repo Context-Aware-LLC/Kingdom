@@ -619,14 +619,14 @@ namespace Kingdom.Presentation
 
         /// <summary>
         /// Every deck on the account, one card-shaped plate each, with a trailing "+" that opens the
-        /// class picker.
+        /// class picker while the account has room for another.
         ///
         /// <para><b>It WRAPS, and the strip it replaced deliberately did not</b> (Sam, 2026-08-07:
         /// "one line, always"). That ruling was about a single character's decks: a third deck must
         /// not drop below the other two and make one character taller than its share of the roster.
         /// There are no characters to be fair between now — this is the whole account, up to
-        /// <see cref="DeckCreation.MaxPerAccount"/> plates plus the "+", and forcing ten of them
-        /// onto one line would shrink every picture past the point of being one.</para>
+        /// <see cref="DeckCreation.MaxPerAccount"/> plates, and forcing nine of them onto one line
+        /// would shrink every picture past the point of being one.</para>
         /// </summary>
         private VisualElement BuildDeckGrid(IReadOnlyList<DeckSummary> rows)
         {
@@ -637,7 +637,10 @@ namespace Kingdom.Presentation
             foreach (DeckSummary summary in rows)
                 grid.Add(BuildDeckPlate(summary));
 
-            grid.Add(BuildNewDeckPlate(rows.Count));
+            // Gone at the cap, not disabled (Sam, 2026-10-21): a dead "+" cost a full roster a
+            // whole row, and that row is worth more as bigger pictures of the nine decks.
+            if (rows.Count < DeckCreation.MaxPerAccount)
+                grid.Add(BuildNewDeckPlate());
 
             return grid;
         }
@@ -728,10 +731,11 @@ namespace Kingdom.Presentation
         /// now. Measure before treating it as a considered number.</para></summary>
         private const float MinPlate = 64f;
 
-        /// <summary>An absolute guard, not the working ceiling — <see cref="RowsPerScreen"/> and
-        /// <see cref="TargetPlate"/> are what actually stop a plate growing. This only catches a
-        /// viewport tall enough to make a single deck absurd.</summary>
-        private const float MaxPlate = 560f;
+        /// <summary>The widest plate whose three rows still end above the bottom controls (Back,
+        /// Play and the gear reach 92 up the 1080 panel): three rows of 740 end at about 974 of 988.
+        /// Raised from 560 when a full roster went to three columns (Sam, 2026-10-21); 560 would
+        /// have capped those plates at the size four columns already gave them.</summary>
+        private const float MaxPlate = 740f;
 
         /// <summary>
         /// The size a plate WANTS to be, and the only input to how many fit across. The grid takes
@@ -744,20 +748,19 @@ namespace Kingdom.Presentation
         /// </summary>
         private const float TargetPlate = 180f;
 
-        /// <summary>The most columns the grid will use however wide the window gets. Ten plates in
-        /// one line is the shape the wrap exists to avoid; four keeps the full roster to three rows
-        /// on any panel, which is a grid the eye takes in at once.</summary>
+        /// <summary>The most columns the grid will use however wide the window gets. Nine plates in
+        /// one line is the shape the wrap exists to avoid; four keeps any roster to three rows on any
+        /// panel, which is a grid the eye takes in at once.</summary>
         private const int MaxColumns = 4;
 
         /// <summary>
         /// How many plate rows a screenful should show. The real ceiling on plate size: a plate is
         /// as large as it can be while this many rows still fit.
         ///
-        /// <para><b>3, not 2</b> (2026-09-08, Sam) — matching <see cref="MaxColumns"/>'s own doc
-        /// comment, which already says four columns keeps a FULL roster (<see
-        /// cref="DeckCreation.MaxPerAccount"/> plus the "+", 10 tiles) to three rows. At 2 the height
-        /// solve sized plates as if only two rows needed to fit, so the third row of a full roster
-        /// ran off the bottom of the viewport into a scroll no plate count actually needed.</para>
+        /// <para><b>3, not 2</b> (2026-09-08, Sam) — the most tiles there can be is ten (eight decks
+        /// and the "+") and four columns hold that in three rows. At 2 the height solve sized plates
+        /// as if only two rows needed to fit, so the third row ran off the bottom of the viewport
+        /// into a scroll no plate count actually needed.</para>
         /// </summary>
         private const float RowsPerScreen = 3f;
 
@@ -767,7 +770,8 @@ namespace Kingdom.Presentation
         ///
         /// <para>Smaller than the 70f the character rows needed, and the difference is exactly what
         /// the container cost: a name header (~27) and its padding (8) are gone. What is left is
-        /// plate padding 8 + border 4 + row margin 8 + grid padding 4/8 = 32.</para>
+        /// plate padding 8 + border 4 + grid padding 4/8 = 24, and 8 to spare: the plate's bottom
+        /// margin this once also charged is gone from the sheet.</para>
         ///
         /// <para>NONE OF THAT IS AN INPUT. <c>viewport</c> is read off the ScrollView's
         /// resolvedStyle, so this arithmetic is here to be checked against, not to be kept true by
@@ -807,7 +811,10 @@ namespace Kingdom.Presentation
 
         private void LayoutDeckGrid(VisualElement grid)
         {
-            float available = grid.resolvedStyle.width - RowSafetyMargin;
+            // contentRect, not resolvedStyle.width: the plates wrap inside the grid's 8+8 padding.
+            // Solving against the padded width sized one plate too many per row, so every row
+            // wrapped a column early and a full roster's "+" sat alone on a fourth row.
+            float available = grid.contentRect.width - RowSafetyMargin;
             // `!(x > 0f)`, not `x <= 0f`: an unresolved resolvedStyle is NaN and every comparison
             // against NaN is false, so `<= 0f` passes it through to the solve. That distinction cost
             // a 1.3 GB OOM kill on the create screen's since-deleted portrait solver; this guard is
@@ -819,10 +826,15 @@ namespace Kingdom.Presentation
                 if (child.ClassListContains("deck-plate")) plates++;
             if (plates == 0) return;
 
-            // Never more columns than there are plates: two decks on a wide panel should be two
-            // large plates, not two small ones with a four-column grid's worth of empty beside them.
-            int columns = Mathf.Clamp(Mathf.FloorToInt(available / (TargetPlate + PlateGutter)),
-                                      1, Mathf.Min(MaxColumns, plates));
+            // As few rows as the column cap allows, then the plates spread evenly over them: nine
+            // decks are three rows of three rather than 4-4-1, and the freed column goes into the
+            // size of every plate (Sam, 2026-10-21). This also never gives more columns than
+            // plates: two decks on a wide panel are two large plates, not two small ones beside
+            // a four-column grid's worth of empty.
+            int maxColumns = Mathf.Clamp(Mathf.FloorToInt(available / (TargetPlate + PlateGutter)),
+                                         1, MaxColumns);
+            int rowCount = Mathf.CeilToInt(plates / (float)maxColumns);
+            int columns = Mathf.CeilToInt(plates / (float)rowCount);
             float fromWidth = (available - columns * PlateGutter) / columns;
 
             // Height still has the final say when there is width to spare. Without it a wide window
@@ -906,22 +918,13 @@ namespace Kingdom.Presentation
             return best;
         }
 
-        /// <summary>
-        /// The trailing "+". Disabled rather than hidden at the cap: a plate that vanishes at eight
-        /// decks reads as a bug, and the tooltip is the only place the limit can be stated at the
-        /// moment it applies.
-        /// </summary>
-        private VisualElement BuildNewDeckPlate(int deckCount)
+        /// <summary>The trailing "+". <see cref="BuildDeckGrid"/> leaves it out at the cap.</summary>
+        private VisualElement BuildNewDeckPlate()
         {
-            bool room = deckCount < DeckCreation.MaxPerAccount;
-
             var plate = new Button();
             plate.AddToClassList("deck-plate");
             plate.AddToClassList("deck-plate--new");
-            plate.SetEnabled(room);
-            plate.tooltip = room
-                ? Loc.Get("deck_roster_new_deck_tooltip")
-                : Loc.Format("deck_roster_limit_reached", DeckCreation.MaxPerAccount);
+            plate.tooltip = Loc.Get("deck_roster_new_deck_tooltip");
             plate.clicked += NewDeck;
 
             var art = new VisualElement();

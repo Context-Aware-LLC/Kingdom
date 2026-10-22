@@ -197,7 +197,7 @@ namespace Kingdom.Session
 
         /// <summary>
         /// Has this account room for another deck (<see cref="DeckCreation.MaxPerAccount"/>)? What the
-        /// "+" plate is disabled by. Delegates rather than re-deriving: the cap the client draws and
+        /// "+" plate checks. Delegates rather than re-deriving: the cap the client draws and
         /// the cap the deck write route refuses on have to be the same number.
         /// </summary>
         public bool CanCreateDeck() => DeckCreation.CanCreate(Decks());

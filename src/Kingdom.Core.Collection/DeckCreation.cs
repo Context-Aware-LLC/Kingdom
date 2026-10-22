@@ -54,9 +54,9 @@ namespace Kingdom.Core.Collection
         /// points, both reading this constant through <see cref="CanCreate"/>:</para>
         ///
         /// <list type="bullet">
-        /// <item>the client, disabling the roster's "+" plate and its header twin
-        /// (<c>PlayerAccount.CanCreateDeck</c>) — a courtesy, so the player is told before they
-        /// spend a screen choosing a pairing;</item>
+        /// <item>the client, which drops the roster's "+" plate at the cap and checks
+        /// <c>PlayerAccount.CanCreateDeck</c> before opening the class picker — a courtesy, so the
+        /// player is told before they spend a screen choosing a pairing;</item>
         /// <item><c>PUT /decks/{id}</c>, answering <c>AtCapacity</c> (409) to a NEW deck on a full
         /// account — the one that actually holds. A re-save of a deck the account already has is
         /// never refused, at any count, or a player at the limit could not edit what they own.</item>
@@ -65,8 +65,8 @@ namespace Kingdom.Core.Collection
         public const int MaxPerAccount = 9;
 
         /// <summary>
-        /// Has this account room for another deck? The predicate the <c>+</c> plate is disabled by and
-        /// the deck write route refuses on, so the two cannot drift.
+        /// Has this account room for another deck? The predicate the <c>+</c> plate checks and the
+        /// deck write route refuses on, so the two cannot drift.
         /// </summary>
         public static bool CanCreate(IReadOnlyList<DeckList> decks) =>
             decks == null || decks.Count < MaxPerAccount;
