@@ -129,6 +129,9 @@
         },
         {
             "m_Id": "c4b5372bf2f3b9870b02627bb019ba7d"
+        },
+        {
+            "m_Id": "a9c5b14b83504778a631f773fb416441"
         }
     ],
     "m_GroupDatas": [],
@@ -389,20 +392,6 @@
         {
             "m_OutputSlot": {
                 "m_Node": {
-                    "m_Id": "7092398084c54cbb32a03fd1cdf434fe"
-                },
-                "m_SlotId": 2
-            },
-            "m_InputSlot": {
-                "m_Node": {
-                    "m_Id": "c4b5372bf2f3b9870b02627bb019ba7d"
-                },
-                "m_SlotId": 0
-            }
-        },
-        {
-            "m_OutputSlot": {
-                "m_Node": {
                     "m_Id": "6f761a7c7236759f599b30eff5e9c50b"
                 },
                 "m_SlotId": 4
@@ -606,6 +595,34 @@
             "m_InputSlot": {
                 "m_Node": {
                     "m_Id": "b28991e23f2833fed501e6b5dc438cc4"
+                },
+                "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "7092398084c54cbb32a03fd1cdf434fe"
+                },
+                "m_SlotId": 2
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "a9c5b14b83504778a631f773fb416441"
+                },
+                "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "a9c5b14b83504778a631f773fb416441"
+                },
+                "m_SlotId": 1
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "c4b5372bf2f3b9870b02627bb019ba7d"
                 },
                 "m_SlotId": 0
             }
@@ -4533,4 +4550,83 @@
     "m_SupportsLODCrossFade": false,
     "m_CustomEditorGUI": "",
     "m_SupportVFX": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "eacad3e4baf2443f9510bdb538a231c1",
+    "m_Id": 0,
+    "m_DisplayName": "A",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_HideConnector": false,
+    "m_ShaderOutputName": "A",
+    "m_StageCapability": 3,
+    "m_CustomBinding": "",
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": [],
+    "m_LiteralMode": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "e59ffa870439456bad22746ba88e83fb",
+    "m_Id": 1,
+    "m_DisplayName": "Out",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_HideConnector": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_CustomBinding": "",
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": [],
+    "m_LiteralMode": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.CustomFunctionNode",
+    "m_ObjectId": "a9c5b14b83504778a631f773fb416441",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "TunedVeilAlpha (Custom Function)",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": 300.0,
+            "y": 420.0,
+            "width": 240.0,
+            "height": 300.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "eacad3e4baf2443f9510bdb538a231c1"
+        },
+        {
+            "m_Id": "e59ffa870439456bad22746ba88e83fb"
+        }
+    ],
+    "synonyms": [
+        "code",
+        "HLSL"
+    ],
+    "m_Precision": 0,
+    "m_PreviewExpanded": false,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_SourceType": 1,
+    "m_FunctionName": "TunedVeilAlpha",
+    "m_FunctionSource": "",
+    "m_FunctionBody": "// Tuned by eye in Gamma; see Assets/Shaders/Functions/GammaTuned.hlsl. The veil darkens\n// the card, and a dark film over anything blends in linear as if it were thinner.\n#if defined(UNITY_COLORSPACE_GAMMA)\nOut = A;\n#else\nOut = 1.0 - pow(1.0 - saturate(A), 2.2);\n#endif"
 }

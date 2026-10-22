@@ -5,7 +5,8 @@ Shader "Kingdom/AegisDome"
     Properties
     {
         _BaseMap ("Golden Dome", 2D) = "black" {}
-        [HDR] _AegisColor ("Aegis Tint", Color) = (1, 1, 1, 0.9)
+        // Not [HDR]: GammaTuned.hlsl says why.
+        _AegisColor ("Aegis Tint", Color) = (1, 1, 1, 0.9)
         _AegisIntensity ("Aegis Intensity", Float) = 1.1
         _PulseAmount ("Pulse Amount", Range(0, 1)) = 0.12
         _PulseSpeed ("Pulse Speed", Float) = 0.8
@@ -32,6 +33,7 @@ Shader "Kingdom/AegisDome"
             #pragma vertex vert
             #pragma fragment frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/Shaders/Functions/GammaTuned.hlsl"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
@@ -59,8 +61,10 @@ Shader "Kingdom/AegisDome"
             {
                 half4 dome = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
                 float pulse = 1.0 + _PulseAmount * sin(_Time.y * _PulseSpeed * 6.2831853);
-                return half4(dome.rgb * _AegisColor.rgb * _AegisIntensity * pulse,
-                             dome.a * _AegisColor.a);
+                // Intensity and pulse were tuned by eye in Gamma (GammaTuned.hlsl).
+                half3 lit = TunedIn(dome.rgb) * TunedIn(_AegisColor.rgb) * _AegisIntensity * pulse;
+                // The painted shell is a glow over the card, so its alpha takes the glow curve.
+                return half4(TunedOut(lit), TunedGlowAlpha(dome.a) * _AegisColor.a);
             }
             ENDHLSL
         }

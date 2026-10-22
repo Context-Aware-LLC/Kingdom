@@ -4,10 +4,8 @@
 // on 2026-07-25 because the graph did not compile then: its SGF_DissolveCore subgraph
 // named the noise node's type `SimpleNoiseNode`, a class Shader Graph does not have (it
 // is `NoiseNode`), so no code was generated for the node and its output was undeclared
-// wherever it was read. The type name was corrected on 2026-10-08. The orphaned
-// Assets/Shaders/Functions/SGF_DissolveCore.hlsl documents itself as a Custom Function
-// node the subgraph does not contain — its clip/edge-band logic is reimplemented below,
-// which is the only copy that now runs.
+// wherever it was read. The type name was corrected on 2026-10-08. The clip/edge-band logic
+// below is the only copy that runs.
 //
 // Property names and semantics are unchanged from the graph's contract, so the C# binding
 // layer (MaterialCatalog.Dissolve, ShaderIds, CardDeathDissolve) needed no edits.
@@ -42,7 +40,8 @@ Shader "Kingdom/SG_Dissolve"
         // is 137x194 px on screen (ortho 4.6, ~117 px/world unit), so 20 leaves ~7 px per
         // cell and the burn reads as fizz rather than as fire.
         _NoiseScale     ("Noise Scale", Float) = 12
-        [HDR] _EdgeColor ("Ember Edge", Color) = (4.0, 1.2, 0.15, 1)
+        // Over 1 on purpose, but not [HDR]: GammaTuned.hlsl says why.
+        _EdgeColor ("Ember Edge", Color) = (4.0, 1.2, 0.15, 1)
         // Per-card slide through the noise field, set by CardDeathDissolve from the card's world
         // position. Without it every card burns through holes in exactly the same places, which a
         // single death hides completely and a board wipe makes obvious and cheap-looking.
@@ -67,6 +66,7 @@ Shader "Kingdom/SG_Dissolve"
             #pragma vertex vert
             #pragma fragment frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/Shaders/Functions/GammaTuned.hlsl"
 
             struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
             struct Varyings
@@ -155,7 +155,9 @@ Shader "Kingdom/SG_Dissolve"
                 // permanent ember rash.
                 edge *= saturate(_DissolveAmount / 0.05);
 
-                half3 col = src.rgb + edge * _EdgeColor.rgb;
+                // The ember was tuned by eye in Gamma (GammaTuned.hlsl). At amount 0 this is the
+                // snapshot unchanged, which is what keeps the first frame matching the live card.
+                half3 col = TunedOut(TunedIn(src.rgb) + edge * TunedIn(_EdgeColor.rgb));
                 return half4(col, src.a * alive);
             }
             ENDHLSL

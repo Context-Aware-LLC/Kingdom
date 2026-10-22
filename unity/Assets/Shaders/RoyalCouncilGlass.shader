@@ -24,6 +24,7 @@ Shader "Kingdom/Royal Council Glass"
             #pragma fragment frag
             #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/Shaders/Functions/GammaTuned.hlsl"
             struct Attributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
             struct Varyings { float4 positionCS:SV_POSITION; float3 normalWS:TEXCOORD0; float3 viewWS:TEXCOORD1; float3 positionOS:TEXCOORD2; UNITY_VERTEX_INPUT_INSTANCE_ID UNITY_VERTEX_OUTPUT_STEREO };
             CBUFFER_START(UnityPerMaterial)
@@ -73,7 +74,9 @@ Shader "Kingdom/Royal Council Glass"
                 half3 light=normalize(half3(-0.4,0.65,-0.8));
                 half spec=pow(saturate(dot(n,normalize(v+light))),52);
                 half sheen=pow(saturate(dot(reflect(-v,n),light)),10)*0.22;
-                half3 color=_BaseColor.rgb+_EmissionColor.rgb+half3(0.7,0.85,1)*fresnel*_Rim+spec+sheen;
+                // Tuned by eye in Gamma (GammaTuned.hlsl).
+                half3 glow=TunedIn(_EmissionColor.rgb);
+                half3 color=TunedIn(_BaseColor.rgb)+glow+half3(0.7,0.85,1)*fresnel*_Rim+spec+sheen;
                 half alpha=_BaseColor.a+fresnel*_Rim+spec*0.6;
                 if (_Cloudiness>0.001)
                 {
@@ -87,10 +90,11 @@ Shader "Kingdom/Royal Council Glass"
                     float broad=CloudNoise(q+float3(0,drift*0.3,_CloudPhase));
                     float cloud=CloudNoise(q*1.8+broad*1.4);
                     half mist=smoothstep(0.32,0.76,broad*0.6+cloud*0.4)*_Cloudiness;
-                    color=lerp(color,_CloudColor.rgb+_EmissionColor.rgb,mist*0.8);
+                    color=lerp(color,TunedIn(_CloudColor.rgb)+glow,mist*0.8);
                     alpha+=mist*0.32;
                 }
-                return half4(color,saturate(alpha));
+                // A light film over the board, so its alpha takes the glow curve.
+                return half4(TunedOut(color),TunedGlowAlpha(saturate(alpha)));
             }
             ENDHLSL
         }

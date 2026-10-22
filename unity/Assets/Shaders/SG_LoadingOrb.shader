@@ -49,6 +49,7 @@ Shader "Kingdom/SG_LoadingOrb"
             #pragma vertex vert
             #pragma fragment frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/Shaders/Functions/GammaTuned.hlsl"
 
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
@@ -144,13 +145,15 @@ Shader "Kingdom/SG_LoadingOrb"
                 // Heartbeat emission + rim answer-glow.
                 float brightness = _Intensity * (1.0 - 0.5 * _PulseAmp + _PulseAmp * pulse);
                 float rimMask = smoothstep(0.78, 0.96, r) * step(r, 1.02);
-                half3 col = tex.rgb * brightness;
-                col += tex.rgb * rimMask * _RimBoost * pulse;
+                // The pulse and dim amounts were tuned by eye in Gamma (GammaTuned.hlsl).
+                half3 art = TunedIn(tex.rgb);
+                half3 col = art * brightness;
+                col += art * rimMask * _RimBoost * pulse;
 
                 // Dimmer while loading starts, full presence as progress completes.
                 col *= lerp(0.55, 1.0, saturate(_Progress));
 
-                return half4(col, tex.a * _Fade);
+                return half4(TunedOut(col), tex.a * _Fade);
             }
             ENDHLSL
         }

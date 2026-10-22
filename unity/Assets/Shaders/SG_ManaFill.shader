@@ -26,11 +26,12 @@ Shader "Kingdom/SG_ManaFill"
 {
     Properties
     {
-        [HDR] _FilledColor ("Filled (Available)", Color) = (0.056, 0.248, 0.792, 1)
+        // No [HDR]: GammaTuned.hlsl says why.
+        _FilledColor ("Filled (Available)", Color) = (0.056, 0.248, 0.792, 1)
         _EmptyColor  ("Empty Socket", Color)   = (0.12, 0.12, 0.14, 1)
         _SpentColor  ("Spent", Color)          = (0.25, 0.25, 0.35, 1)
-        [HDR] _LockedColor ("Locked (Backdraft)", Color) = (0.55, 0.18, 0.20, 1)
-        [HDR] _TempColor   ("Temporary", Color)         = (0.30, 0.85, 0.45, 1)
+        _LockedColor ("Locked (Backdraft)", Color) = (0.55, 0.18, 0.20, 1)
+        _TempColor   ("Temporary", Color)         = (0.30, 0.85, 0.45, 1)
         _SocketColor ("Socket Stone", Color)   = (0.165, 0.152, 0.138, 1)
 
         _FillLevel   ("Fill Level", Range(0,1))   = 0
@@ -61,6 +62,7 @@ Shader "Kingdom/SG_ManaFill"
             #pragma vertex vert
             #pragma fragment frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/Shaders/Functions/GammaTuned.hlsl"
 
             struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
             struct Varyings
@@ -139,13 +141,15 @@ Shader "Kingdom/SG_ManaFill"
                 // than as a differently-shaped thing. `hasGem` is the harder distinction:
                 // above the mana cap there is no crystal at all, only the bare socket, so
                 // "spent this turn" and "never had it" cannot be confused.
-                float3 c      = _EmptyColor.rgb;
+                // Every constant below was tuned by eye in Gamma (GammaTuned.hlsl).
+                float3 c      = TunedIn(_EmptyColor.rgb);
                 float  live   = 0.0;
                 float  hasGem = 0.0;
-                if (idx < t4) { c = _TempColor.rgb;   live = 0.85; hasGem = 1.0; }
-                if (idx < t3) { c = _LockedColor.rgb; live = 0.55; hasGem = 1.0; }
-                if (idx < t2) { c = _SpentColor.rgb;  live = 0.16; hasGem = 1.0; }
-                if (idx < t1) { c = _FilledColor.rgb; live = 1.00; hasGem = 1.0; }
+                if (idx < t4) { c = TunedIn(_TempColor.rgb);   live = 0.85; hasGem = 1.0; }
+                if (idx < t3) { c = TunedIn(_LockedColor.rgb); live = 0.55; hasGem = 1.0; }
+                if (idx < t2) { c = TunedIn(_SpentColor.rgb);  live = 0.16; hasGem = 1.0; }
+                if (idx < t1) { c = TunedIn(_FilledColor.rgb); live = 1.00; hasGem = 1.0; }
+                float3 socketStone = TunedIn(_SocketColor.rgb);
 
                 float aa = max(fwidth(r), 1e-5);
                 float topness = q.y / max(r, 1e-4);   // +1 at the top of the orb, -1 at the bottom
@@ -167,7 +171,7 @@ Shader "Kingdom/SG_ManaFill"
                 // Empty socket: no crystal, just the floor of the well, shadowed under
                 // the near wall. Replaces the gem body wholesale rather than dimming it —
                 // a dimmed gem still reads as a shiny black sphere.
-                float3 well = _SocketColor.rgb * (0.26 - 0.12 * topness);
+                float3 well = socketStone * (0.26 - 0.12 * topness);
                 gem = lerp(well, gem, hasGem);
 
                 // ── Socket ───────────────────────────────────────────────────────────
@@ -177,7 +181,7 @@ Shader "Kingdom/SG_ManaFill"
                 float  ringT    = saturate((_SocketRadius - r) / max(_SocketRadius - _GemRadius, 1e-4));
                 float  wall     = smoothstep(0.30, 0.70, ringT);
                 float  lightFac = lerp(1.05 + 0.80 * topness, 0.80 - 0.50 * topness, wall);
-                float3 socket   = _SocketColor.rgb * saturate(lightFac);
+                float3 socket   = socketStone * saturate(lightFac);
                 socket += c * live * 0.20;                 // a lit gem spills onto its own rim
 
                 // ── Composite ────────────────────────────────────────────────────────
@@ -189,12 +193,12 @@ Shader "Kingdom/SG_ManaFill"
                 // Halo just outside the socket, live orbs only. Clipped by the quad edge
                 // top and bottom by design — it reads as bleed off the rail, not a ring.
                 float halo = live * exp2(-max(r - _SocketRadius, 0.0) * 26.0) * (1.0 - orbMask);
-                halo = saturate(halo) * 0.55;
+                halo = TunedGlowAlpha(saturate(halo) * 0.55);
 
                 col = lerp(c * 1.2, col, orbMask);
                 float alpha = saturate(orbMask + halo);
 
-                return half4(col, alpha);
+                return half4(TunedOut(col), alpha);
             }
             ENDHLSL
         }
