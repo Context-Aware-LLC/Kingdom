@@ -155,6 +155,7 @@
     <string name="deck_menu_error_save_connection">Das Deck konnte nicht gespeichert werden. Prüfe deine Verbindung und versuch es erneut.</string>
     <string name="deck_menu_error_save_generic">Das Deck konnte nicht gespeichert werden. Bitte versuch es erneut.</string>
     <string name="deck_menu_error_delete">Das Deck konnte nicht gelöscht werden – siehe Konsole.</string>
+    <string name="deck_menu_error_delete_connection">Das Deck konnte nicht gelöscht werden. Prüfe deine Verbindung und versuch es erneut.</string>
     <string name="deck_plate_tooltip_ready">%1$s · %2$s → %3$s – %4$d / %5$d</string>
     <string name="deck_plate_tooltip_not_ready">%1$s · %2$s → %3$s – %4$s</string>
     <string name="deck_roster_new_deck_tooltip">Neues Deck beginnen</string>
@@ -170,6 +171,9 @@
     <string name="collection_deck_choice_tooltip">%1$s · %2$s → %3$s · %4$d/%5$d</string>
     <string name="collection_deck_row_copies">x%1$d</string>
     <string name="collection_deck_chooser_empty_2">Noch keine Decks – erstelle eins in der Deckverwaltung.</string>
+    <string name="collection_deck_save_failed">Deine Änderungen konnten nicht gespeichert werden. Prüfe deine Verbindung und versuch es erneut.</string>
+    <string name="collection_deck_save_signed_out">Melde dich erneut an, um deine Änderungen zu speichern.</string>
+    <string name="collection_deck_discard">Änderungen verwerfen</string>
     <string name="craft_status_loading">Lädt...</string>
     <string name="craft_error_balances">Herstellungsguthaben konnten nicht geladen werden.</string>
     <string name="craft_error_refresh_failed">Hergestellt. Sammlung konnte nicht aktualisiert werden.</string>

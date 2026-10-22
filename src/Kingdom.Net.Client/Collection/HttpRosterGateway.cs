@@ -43,20 +43,20 @@ namespace Kingdom.Net.Client.Collection
         Malformed,
     }
 
-    /// <summary>What one roster WRITE came back with — a character create or delete, a deck upsert or
-    /// delete. Deliberately one enum for all four, because every call site treats them the same way:
-    /// the local write already happened, and this says whether the server agrees.</summary>
+    /// <summary>What one roster WRITE came back with — a deck upsert or delete. One enum for both,
+    /// because every call site treats them the same way: only an accepted write reaches the device
+    /// cache, and anything else leaves the cache as it was.</summary>
     public enum RosterWriteStatus
     {
         /// <summary>The server stored (or removed) it. 2xx.</summary>
         Ok,
 
-        /// <summary>404 on a delete — the server had no such row. Not an error at a call site that
-        /// just deleted the local copy: the two records now agree, which is the goal.</summary>
+        /// <summary>404 on a delete — the server had no such row. Not an error: the delete wanted the
+        /// deck gone, and it is.</summary>
         NotFound,
 
-        /// <summary>The request never completed. The local write stands and the server does not know
-        /// about it yet.</summary>
+        /// <summary>The request never completed. The server may or may not have the write, so a
+        /// retry reuses the same deck id.</summary>
         Offline,
 
         /// <summary>401 — no token, or one the server refused.</summary>
@@ -115,12 +115,14 @@ namespace Kingdom.Net.Client.Collection
     /// <see cref="HttpCollectionGateway"/> reads it down. The roster did not — decks
     /// lived only in <c>decks.json</c> under the local scope, which the OS
     /// deletes with the app. This is the wire that fixes that, in both directions: <see cref="FetchAsync"/>
-    /// reads the server's copy down, and the four write calls keep it current.</para>
+    /// reads the server's copy down, and the write calls keep it current.</para>
     ///
     /// <para><b>The server is the record; the local files are a cache.</b> There is no offline mode,
-    /// so there is no merge, no tombstone and no last-write-wins — the client writes locally and
-    /// pushes, and a fetch replaces. That only holds because a fetch that failed is never mistaken
-    /// for a fetch that found nothing, which is what <see cref="RosterSyncStatus"/> is for.</para>
+    /// so there is no merge, no tombstone and no last-write-wins — a write reaches the cache only
+    /// after the server accepts it (<see cref="SaveDeckAndCacheAsync"/>,
+    /// <see cref="DeleteDeckAndUncacheAsync"/>), and a fetch replaces. That only holds because a
+    /// fetch that failed is never mistaken for a fetch that found nothing, which is what
+    /// <see cref="RosterSyncStatus"/> is for.</para>
     ///
     /// <para><b>It never throws and it never partially succeeds</b>, the same contract as
     /// <see cref="HttpCollectionGateway"/> and for the same reason: these calls sit on the sign-in
@@ -266,8 +268,9 @@ namespace Kingdom.Net.Client.Collection
 
         // ── Shared ──────────────────────────────────────────────────────────────────────
 
-        /// <summary>Commit a new deck to the server before exposing it in the device cache.
-        /// Retry with the same deck id when a response is lost; PUT is an upsert.</summary>
+        /// <summary>Commit a deck to the server before exposing it in the device cache, which only
+        /// ever holds what the server accepted. Retry with the same deck id when a response is lost;
+        /// PUT is an upsert.</summary>
         public async Task<RosterWriteStatus> SaveDeckAndCacheAsync(
             string accessToken, DeckList deck, IDeckStore cache,
             CancellationToken cancellationToken = default)
@@ -276,6 +279,19 @@ namespace Kingdom.Net.Client.Collection
             RosterWriteStatus status = await SaveDeckAsync(accessToken, deck, cancellationToken)
                 .ConfigureAwait(false);
             if (status == RosterWriteStatus.Ok) cache.Save(deck);
+            return status;
+        }
+
+        /// <summary>Delete a deck on the server before dropping it from the device cache. NotFound
+        /// drops it too: the server already has no such deck, so the cache is the one out of date.</summary>
+        public async Task<RosterWriteStatus> DeleteDeckAndUncacheAsync(
+            string accessToken, string deckId, IDeckStore cache,
+            CancellationToken cancellationToken = default)
+        {
+            if (cache == null) throw new ArgumentNullException(nameof(cache));
+            RosterWriteStatus status = await DeleteDeckAsync(accessToken, deckId, cancellationToken)
+                .ConfigureAwait(false);
+            if (status == RosterWriteStatus.Ok || status == RosterWriteStatus.NotFound) cache.Delete(deckId);
             return status;
         }
 

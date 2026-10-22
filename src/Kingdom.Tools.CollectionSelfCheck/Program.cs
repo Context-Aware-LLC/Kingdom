@@ -152,8 +152,8 @@ namespace Kingdom.Tools.CollectionSelfCheck
                 return Fail("the edited deck does not validate — the swap produced an illegal deck.");
             Console.WriteLine($"edited deck       : LEGAL at {generated.TotalCount} cards");
 
-            // Then the deckbuilder's save path: rename, then persist as-is. This is literally what
-            // CollectionController.SaveDeck does (_account.Save(_deck) -> _decks.Save).
+            // Then the deckbuilder's save path: rename, then persist as-is. This is the cache write
+            // CollectionController.SaveDeckThen makes once the server accepts the deck.
             generated.Name = RenamedTo;
             deckStore.Save(generated);
             Console.WriteLine($"renamed + saved   : '{generated.Name}'");

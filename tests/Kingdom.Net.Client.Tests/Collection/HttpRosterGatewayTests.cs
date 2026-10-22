@@ -99,6 +99,40 @@ namespace Kingdom.Net.Client.Tests.Collection
             finally { if (File.Exists(path)) File.Delete(path); }
         }
 
+        [TestCase(200, 0)]
+        [TestCase(404, 0)]
+        [TestCase(401, 1)]
+        [TestCase(503, 1)]
+        public async Task A_delete_leaves_the_cache_only_once_the_server_has_no_such_deck(int code, int left)
+        {
+            string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+            try
+            {
+                var cache = new JsonDeckStore(path);
+                cache.Save(NewDeck());
+                await Gateway(new FakeAuthHttp().Reply(code, "{}"))
+                    .DeleteDeckAndUncacheAsync("jwt-token", "d1", cache);
+                Assert.That(cache.LoadAll().Count, Is.EqualTo(left));
+            }
+            finally { if (File.Exists(path)) File.Delete(path); }
+        }
+
+        [Test]
+        public async Task A_delete_that_did_not_reach_the_server_keeps_the_cached_deck()
+        {
+            string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+            try
+            {
+                var cache = new JsonDeckStore(path);
+                cache.Save(NewDeck());
+                RosterWriteStatus status = await Gateway(new FakeAuthHttp().ReplyTransportFailure())
+                    .DeleteDeckAndUncacheAsync("jwt-token", "d1", cache);
+                Assert.That(status, Is.EqualTo(RosterWriteStatus.Offline));
+                Assert.That(cache.LoadAll().Single().Id, Is.EqualTo("d1"));
+            }
+            finally { if (File.Exists(path)) File.Delete(path); }
+        }
+
         private const string Base = "https://emberfall.fly.dev";
 
         private static HttpRosterGateway Gateway(FakeAuthHttp http)
@@ -357,7 +391,7 @@ namespace Kingdom.Net.Client.Tests.Collection
             RosterWriteStatus status = await Gateway(http).DeleteDeckAsync("jwt-token", "d1");
 
             Assert.That(status, Is.EqualTo(RosterWriteStatus.NotFound),
-                "the caller already deleted the local copy — the two records now agree");
+                "the delete wanted the deck gone, and it is");
         }
 
         [TestCase(400, RosterWriteStatus.Rejected)]
@@ -383,7 +417,7 @@ namespace Kingdom.Net.Client.Tests.Collection
             RosterWriteStatus status = await Gateway(http).SaveDeckAsync("jwt-token", NewDeck());
 
             Assert.That(status, Is.EqualTo(RosterWriteStatus.Offline),
-                "the local write stands; the server does not know about it yet");
+                "the server may or may not have it, so a retry reuses the same id");
         }
 
         [Test]

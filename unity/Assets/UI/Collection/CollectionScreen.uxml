@@ -86,6 +86,10 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="curve-strip" class="db-curve"/>
                 <ui:ListView name="deck-list" class="db-list"/>
+                <ui:VisualElement name="deck-save-failed" class="deck-save-failed">
+                    <ui:Label name="deck-save-error" class="deck-save-failed__text"/>
+                    <ui:Button name="deck-save-discard" text="Discard changes" class="deck-save-failed__discard chrome-button chrome-button--secondary"/>
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:Button name="manage-decks-button" text="Manage Decks" class="deck-drawer__manage chrome-button chrome-button--primary"/>
         </ui:VisualElement>

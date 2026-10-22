@@ -17,7 +17,7 @@ namespace Kingdom.Editor
     /// <para><b>Why these exist.</b> A collection is a few files in a folder no player ever opens,
     /// written by code that runs once on first launch and then never again. "Show" is the only way to
     /// answer "did that actually save?" without hunting through <c>%userprofile%/AppData/LocalLow</c>;
-    /// "Self-Check" is the only way to exercise creation and the delete cascade without spending this
+    /// "Self-Check" is the only way to exercise creation and deletion without spending this
     /// machine's real first run, which happens exactly once.</para>
     ///
     /// <para>Self-Check runs entirely in a temp directory and never touches the real account — the
@@ -114,14 +114,16 @@ namespace Kingdom.Editor
         }
 
         /// <summary>
-        /// Exercise the whole account path in a scratch directory: name refusal, name normalization,
-        /// deck creation with a generated starter, queue eligibility, and deletion.
-        /// Logs an error and stops at the first thing that is not what the code claims.
+        /// Exercise the whole account path in a scratch directory: deck creation with a generated
+        /// starter, queue eligibility, and deletion. Logs an error and stops at the first thing that
+        /// is not what the code claims.
         ///
-        /// <para>It exercised a DELETE CASCADE until ADR-0009 — deleting a character took its decks
-        /// with it, and getting that count wrong was the failure worth a self-check. There is no
-        /// cascade now, and the assertion that replaced it is the opposite one: deleting the LAST
-        /// deck succeeds, where the old roster refused it.</para>
+        /// <para><b>It never reaches the server.</b> A real write waits for the server before it
+        /// touches the cache; this writes the scratch cache directly, standing in for an accepted
+        /// write, so it can run signed out and cannot touch anybody's real roster.</para>
+        ///
+        /// <para>Deleting the LAST deck succeeds and leaves an empty account (ADR-0009); the old
+        /// roster refused it.</para>
         /// </summary>
         [MenuItem("Kingdom/Verify/Player Account Self-Check")]
         public static void SelfCheck()
@@ -143,6 +145,7 @@ namespace Kingdom.Editor
             try
             {
                 var account = new PlayerAccount(root, ProbeKey);
+                IDeckStore cache = JsonDeckStore.InDirectory(root, ProbeKey);   // the file the account reads
 
                 ICardDatabase db = CardDatabaseLoader.Load();
 
@@ -157,8 +160,11 @@ namespace Kingdom.Editor
                 if (!Check(log, !PlayerAccount.CanCreate(primary, primary, db),
                            "a class cannot be paired with itself")) return;
 
-                DeckList created = account.CreateDeck(db, "Ashen Vow", primary, secondary,
-                                                      StarterDeck.Generated);
+                DeckList created = account.PrepareDeck(db, "Ashen Vow", primary, secondary,
+                                                       StarterDeck.Generated);
+                if (!Check(log, account.Decks().Count == 0,
+                           "a prepared deck is in no cache until the server accepts it")) return;
+                cache.Save(created);
                 log.AppendLine($"  created '{created.Name}' ({created.PrimaryClass}/{created.SecondaryClass})");
                 log.AppendLine($"    deck id = {created.Id}");
                 if (!Check(log, !string.IsNullOrEmpty(created.Id), "creation minted an id")) return;
@@ -177,7 +183,7 @@ namespace Kingdom.Editor
                 foreach (string f in Directory.GetFiles(account.ScopeDirectory))
                     log.AppendLine($"  wrote {Path.GetFileName(f)} ({new FileInfo(f).Length} bytes)");
 
-                account.DeleteDeck(created.Id);
+                cache.Delete(created.Id);
                 if (!Check(log, account.Decks().Count == 0,
                            "deleting the last deck leaves an empty account, not a refusal")) return;
 

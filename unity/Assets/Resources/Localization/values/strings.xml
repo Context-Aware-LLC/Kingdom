@@ -221,6 +221,8 @@
     <string name="deck_menu_error_save_generic">The deck could not be saved. Please try again.</string>
     <!-- Delete error. Dev-voiced ('console'); shown in shipping builds. -->
     <string name="deck_menu_error_delete">The deck could not be deleted — see the console.</string>
+    <!-- Delete error (server). The deck is still there. -->
+    <string name="deck_menu_error_delete_connection">The deck could not be deleted. Check your connection and try again.</string>
     <!-- Tooltip on a deck plate. %1$s = deck name, %2$s = primary class, %3$s = secondary class, %4$d = cards in deck, %5$d = deck size. -->
     <string name="deck_plate_tooltip_ready">%1$s · %2$s → %3$s — %4$d / %5$d</string>
     <!-- Tooltip on a deck plate that cannot queue. %1$s = deck name, %2$s/%3$s = primary/secondary class, %4$s = reason text (from QueueEligibility). -->
@@ -251,6 +253,12 @@
     <string name="collection_deck_row_copies">x%1$d</string>
     <!-- Deck chooser empty state. -->
     <string name="collection_deck_chooser_empty_2">No decks yet — manage your decks to create one.</string>
+    <!-- Deck editor: the server did not take the player's edits, so the editor stays open. Leaving again retries. -->
+    <string name="collection_deck_save_failed">Your changes could not be saved. Check your connection and try again.</string>
+    <!-- Deck editor: the save was refused because the player is signed out. -->
+    <string name="collection_deck_save_signed_out">Sign in again to save your changes.</string>
+    <!-- Deck editor button shown after a failed save: leave without the unsaved edits. -->
+    <string name="collection_deck_discard">Discard changes</string>
     <!-- Craft modal loading status (three ASCII dots). -->
     <string name="craft_status_loading">Loading...</string>
     <!-- Craft modal error. -->

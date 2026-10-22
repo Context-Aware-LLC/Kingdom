@@ -871,6 +871,28 @@
     justify-content: flex-end;
     margin-bottom: var(--space-3);
 }
+/* A save the server did not take. Out of the layout until there is one, because every px it
+ * holds comes off `.db-list`. CollectionController.ShowDeckSaveFailed owns the modifier. */
+.deck-save-failed {
+    display: none;
+    flex-shrink: 0;
+    margin-top: var(--space-3);
+}
+.deck-save-failed--on {
+    display: flex;
+}
+.deck-save-failed__text {
+    font-size: var(--type-label);
+    color: var(--negative);
+    white-space: normal;
+    margin-bottom: var(--space-2);
+}
+.deck-save-failed__discard.chrome-button {
+    min-height: var(--touch-min);
+    height: var(--touch-min);
+    font-size: var(--type-body);
+    color: var(--ink-1);
+}
 /* SITS ALONGSIDE `.ms-gear` (settings.uss), not stacked above it (Sam, 2026-09-07). That
  * button is the persistent corner settings gear CollectionController mounts on this same screen
  * (Sam, 2026-09-05: "same corner settings gear as the main menu"), anchored 24px from the right

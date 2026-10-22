@@ -538,32 +538,53 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>
-        /// Delete the deck this dialog is about. Nothing is protected from this any more: the last
-        /// deck goes exactly like the first, leaving the empty state and the "+" that clears it.
+        /// Delete the deck this dialog is about, once the server has. Nothing is protected from this
+        /// any more: the last deck goes exactly like the first, leaving the empty state and the "+"
+        /// that clears it. A delete the server did not confirm leaves the deck on the device too.
         /// </summary>
-        private void DeleteOpenDeck()
+        private async void DeleteOpenDeck()
         {
-            if (_menuDeck == null) return;
+            if (_menuDeck == null || _savingDeck) return;
 
+            var account = _account;
+            int request = _deckRequestVersion;
+            string goneId = _menuDeck.Id;
             string goneName = _menuDeck.Name;
+            _savingDeck = true;
+            _deckModalConfirm?.SetEnabled(false);
+            _deckModalCancel?.SetEnabled(false);
             try
             {
-                _account.DeleteDeck(_menuDeck.Id);
+                var status = await account.ConfirmDeckDeleteAsync(RosterGateway.AccessToken, goneId);
+                if (!isActiveAndEnabled || request != _deckRequestVersion ||
+                    !ReferenceEquals(account, PlayerAccount.Local)) return;
+                if (status != RosterWriteStatus.Ok && status != RosterWriteStatus.NotFound)
+                {
+                    Debug.LogWarning($"[DeckRoster] server did not delete '{goneName}' ({status}).");
+                    SetDeckError(Loc.Get("deck_menu_error_delete_connection"));
+                    return;
+                }
+
+                // The pick the player was holding may be the deck they just deleted. Clearing it here
+                // rather than letting ContinueToMatch discover it keeps the Continue bar honest.
+                if (_pickedDeckId == goneId) ClearPick();
+
+                Debug.Log($"[DeckRoster] deleted '{goneName}'.");
+                CloseDeckDialog();
+                RebuildRoster();
             }
             catch (Exception ex)
             {
                 Debug.LogError($"[DeckRoster] could not delete '{goneName}': {ex.Message}");
-                SetDeckError(Loc.Get("deck_menu_error_delete"));
-                return;
+                if (request == _deckRequestVersion && isActiveAndEnabled)
+                    SetDeckError(Loc.Get("deck_menu_error_delete"));
             }
-
-            // The pick the player was holding may be the deck they just deleted. Clearing it here
-            // rather than letting ContinueToMatch discover it keeps the Continue bar honest.
-            if (_pickedDeckId == _menuDeck.Id) ClearPick();
-
-            Debug.Log($"[DeckRoster] deleted '{goneName}'.");
-            CloseDeckDialog();
-            RebuildRoster();
+            finally
+            {
+                _savingDeck = false;
+                _deckModalCancel?.SetEnabled(true);
+                _deckModalConfirm?.SetEnabled(true);
+            }
         }
 
         private void CloseDeckDialog()

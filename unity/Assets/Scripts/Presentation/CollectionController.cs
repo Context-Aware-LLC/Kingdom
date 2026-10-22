@@ -141,9 +141,19 @@ namespace Kingdom.Presentation
         private Button _manageDecksButton;
         private Button _backToDecksButton;
         private Button _decksButton;
+        private VisualElement _deckSaveFailed;
+        private Label _deckSaveError;
         private bool _queryDrawerOpen;
         private bool _drawerOpen;
         private (bool owned, bool unowned) _scopeBeforeEditing;
+
+        /// <summary>The open deck as the server last accepted it, so leaving an unchanged deck costs
+        /// no round trip.</summary>
+        private string _deckSavedJson;
+        private bool _savingDeck;
+
+        /// <summary>Where a save the server refused was going. Discard goes there without the edits.</summary>
+        private Action _afterDeckSave;
 
         private bool EditingDeck => _deck != null;
 
@@ -431,6 +441,8 @@ namespace Kingdom.Presentation
             _manageDecksButton   = _root.Q<Button>("manage-decks-button");
             _backToDecksButton   = _root.Q<Button>("choose-another-deck");
             _decksButton         = _root.Q<Button>("decks-button");
+            _deckSaveFailed      = _root.Q<VisualElement>("deck-save-failed");
+            _deckSaveError       = _root.Q<Label>("deck-save-error");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -545,9 +557,11 @@ namespace Kingdom.Presentation
 
         private void OnDisable()
         {
+#if UNITY_EDITOR
             // Stopping Play is how bot editing ends (the menu does it on uncheck), so an open bot
             // deck is saved here rather than lost.
-            if (BotDecks && EditingDeck) SaveDeck();
+            if (BotDecks && EditingDeck) SaveBotDeck();
+#endif
             // OnEnable can run again on this controller and builds a new overlay over the same
             // Got it button, so the old one must stop answering it.
             _tidbit?.Cancel();
@@ -732,21 +746,22 @@ namespace Kingdom.Presentation
             if (!_drawerOpen) return;
             CancelDeckHold();
             HideDeckCardPreview();
-            if (EditingDeck) SaveDeck();
-            EndDeckEditing();
-            _drawerOpen = false;
-            _drawer?.RemoveFromClassList("deck-drawer--open");
-            _deckDrawerScrim?.RemoveFromClassList("deck-drawer-scrim--open");
-            if (_decksButton != null) _decksButton.style.display = DisplayStyle.Flex;
+            SaveDeckThen(() =>
+            {
+                EndDeckEditing();
+                _drawerOpen = false;
+                _drawer?.RemoveFromClassList("deck-drawer--open");
+                _deckDrawerScrim?.RemoveFromClassList("deck-drawer-scrim--open");
+                if (_decksButton != null) _decksButton.style.display = DisplayStyle.Flex;
+            });
         }
 
-        private void ShowDeckChooser()
+        private void ShowDeckChooser() => SaveDeckThen(() =>
         {
-            if (EditingDeck) SaveDeck();
             EndDeckEditing();
             RebuildDeckChooser();
             ShowDrawerPane(editor: false);
-        }
+        });
 
         private void ShowDrawerPane(bool editor)
         {
@@ -822,7 +837,11 @@ namespace Kingdom.Presentation
         {
             if (deck == null) return;
             _deckDrag?.Cancel();
-            if (EditingDeck) SaveDeck();
+            if (EditingDeck)
+            {
+                SaveDeckThen(() => { EndDeckEditing(); OpenDeckEditor(deck); });
+                return;
+            }
 
             _scopeBeforeEditing = _scope.RawScope;
             // #353: the editor defaults to Owned, same as browse — Unowned stays a manual widen, not
@@ -831,6 +850,8 @@ namespace Kingdom.Presentation
             _scope.SetSilently(owned: true, unowned: false);
 
             _deck = deck;
+            _deckSavedJson = DeckJson(deck);
+            ShowDeckSaveFailed(null, null);
             _deckWasReady = null;
             // Parks the browse class selection — see CollectionClassAxis.BeginEditing for why
             // parking rather than dropping.
@@ -853,6 +874,8 @@ namespace Kingdom.Presentation
             if (!EditingDeck) return;
 
             _deck = null;
+            _deckSavedJson = null;
+            ShowDeckSaveFailed(null, null);
             _deckWasReady = null;
             SealStamp.Clear(_deckCountLabel?.parent);
             _classAxis.EndEditing();         // restores the browse selection parked on entry
@@ -876,12 +899,11 @@ namespace Kingdom.Presentation
             _plate?.EnableInClassList("collection--editing", EditingDeck);
         }
 
-        private void ManageDecks()
+        private void ManageDecks() => SaveDeckThen(() =>
         {
-            if (EditingDeck) SaveDeck();
             CharacterRosterController.ReturnScene = ScreenNav.Collection;
             ScreenNav.Go(ScreenNav.CharacterRoster);
-        }
+        });
 
         // ---- Deck ListView ----
         private void WireDeckDrag()
@@ -1442,6 +1464,7 @@ namespace Kingdom.Presentation
             _deckDrawerScrim?.RegisterCallback<ClickEvent>(_ => CloseDeckDrawer());
             _backToDecksButton?.RegisterCallback<ClickEvent>(_ => ShowDeckChooser());
             _root.Q<Button>("manage-decks-button")?.RegisterCallback<ClickEvent>(_ => ManageDecks());
+            _root.Q<Button>("deck-save-discard")?.RegisterCallback<ClickEvent>(_ => DiscardDeckChanges());
         }
 
         private void HandleBack()
@@ -1480,35 +1503,100 @@ namespace Kingdom.Presentation
             _queryToggleButton?.EnableInClassList("col-button--filters-on", open);
         }
 
-        private void Exit()
-        {
-            if (EditingDeck) SaveDeck();
-            ScreenNav.Go(ReturnScene);
-        }
+        private void Exit() => SaveDeckThen(() => ScreenNav.Go(ReturnScene));
 
-        /// <summary>Persist the deck as-is. Never legality-gated (collection-deckbuilder-spec §1,
-        /// Sam 2026-07-26): an illegal deck is a savable draft, not a blocked action — only queue
-        /// eligibility (computed fresh on load, never stored) refuses it a match.</summary>
-        private void SaveDeck()
+        /// <summary>
+        /// Save the open deck, then do <paramref name="next"/>. The server takes the deck first and
+        /// only an accepted save reaches this device's cache, so the cache never holds an edit the
+        /// server lacks. A save the server did not take keeps the editor open with the reason and a
+        /// Discard button; leaving again retries.
+        ///
+        /// <para>Never legality-gated (collection-deckbuilder-spec §1, Sam 2026-07-26): an illegal
+        /// deck is a savable draft, not a blocked action — only queue eligibility (computed fresh on
+        /// load, never stored) refuses it a match. An unchanged deck skips the server.</para>
+        /// </summary>
+        private async void SaveDeckThen(Action next)
         {
-            if (!EditingDeck) return;
+            if (_savingDeck) return;
+            if (!EditingDeck) { next(); return; }
 #if UNITY_EDITOR
-            // The one exception to "never legality-gated": the server refuses to boot on an illegal
-            // bot deck, so BotDeckEditing keeps one as a session draft instead of writing it.
-            if (BotDecks)
+            if (BotDecks) { SaveBotDeck(); next(); return; }
+#endif
+            string json = DeckJson(_deck);
+            if (json == _deckSavedJson) { next(); return; }
+
+            // A detached copy, so the cache gets exactly what the server accepted.
+            DeckList candidate = CollectionJson.ReadDecks(json)[0];
+            PlayerAccount account = _account;
+            _savingDeck = true;
+            _root.SetEnabled(false);
+            try
             {
-                string refusal = BotDeckEditing.Save(_deck, _db);
-                if (refusal == null)
-                    Debug.Log($"[Collection] Saved bot '{_deck.Name}' to {BotDeckEditing.RosterPath}.");
-                else
-                    Debug.LogWarning($"[Collection] NOT saved: the server would refuse bot '{_deck.Name}' " +
-                                     $"({refusal}). Kept as a draft until the Editor reloads.");
+                RosterWriteStatus status =
+                    await account.ConfirmDeckEditAsync(RosterGateway.AccessToken, candidate);
+                if (this == null || !ReferenceEquals(account, PlayerAccount.Local)) return;
+                if (status != RosterWriteStatus.Ok)
+                {
+                    Debug.LogWarning($"[Collection] server did not save '{candidate.Name}' ({status}); " +
+                                     "keeping the editor open.");
+                    ShowDeckSaveFailed(next, status == RosterWriteStatus.Unauthenticated
+                        ? Loc.Get("collection_deck_save_signed_out")
+                        : Loc.Get("collection_deck_save_failed"));
+                    return;
+                }
+                _deckSavedJson = json;
+                ShowDeckSaveFailed(null, null);
+                Debug.Log($"[Collection] Saved '{candidate.Name}' ({candidate.TotalCount} cards).");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[Collection] could not save '{candidate.Name}': {ex.Message}");
+                if (this != null) ShowDeckSaveFailed(next, Loc.Get("collection_deck_save_failed"));
                 return;
             }
-#endif
-            _account.Save(_deck);
-            Debug.Log($"[Collection] Saved '{_deck.Name}' ({_deck.TotalCount} cards).");
+            finally
+            {
+                _savingDeck = false;
+                if (this != null) _root.SetEnabled(true);
+            }
+            next();
         }
+
+        /// <summary>Go where the refused save was going, without the edits. The cache still holds
+        /// the deck as the server last accepted it, so there is nothing to undo.</summary>
+        private void DiscardDeckChanges()
+        {
+            if (_savingDeck || _afterDeckSave == null) return;
+            Action next = _afterDeckSave;
+            ShowDeckSaveFailed(null, null);
+            Debug.Log($"[Collection] discarded unsaved changes to '{_deck?.Name}'.");
+            _deckSavedJson = EditingDeck ? DeckJson(_deck) : null;   // nothing left to save on the way out
+            next();
+        }
+
+        /// <summary>Show why the open deck did not save, or hide the notice with a null message.</summary>
+        private void ShowDeckSaveFailed(Action next, string message)
+        {
+            _afterDeckSave = next;
+            if (_deckSaveError != null) _deckSaveError.text = message ?? "";
+            _deckSaveFailed?.EnableInClassList("deck-save-failed--on", !string.IsNullOrEmpty(message));
+        }
+
+        private static string DeckJson(DeckList deck) => CollectionJson.WriteDecks(new[] { deck });
+
+#if UNITY_EDITOR
+        /// <summary>The one exception to "never legality-gated": the server refuses to boot on an
+        /// illegal bot deck, so BotDeckEditing keeps one as a session draft instead of writing it.</summary>
+        private void SaveBotDeck()
+        {
+            string refusal = BotDeckEditing.Save(_deck, _db);
+            if (refusal == null)
+                Debug.Log($"[Collection] Saved bot '{_deck.Name}' to {BotDeckEditing.RosterPath}.");
+            else
+                Debug.LogWarning($"[Collection] NOT saved: the server would refuse bot '{_deck.Name}' " +
+                                 $"({refusal}). Kept as a draft until the Editor reloads.");
+        }
+#endif
 
         /// <summary>
         /// The one site that writes the wall query. Composes the two filter surfaces — the query bar

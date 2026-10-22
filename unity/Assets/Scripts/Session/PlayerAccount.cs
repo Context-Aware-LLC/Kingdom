@@ -210,42 +210,23 @@ namespace Kingdom.Session
         public bool OffersStarterChoice() => DeckCreation.OffersStarterChoice(Decks());
 
         /// <summary>
-        /// Create a deck for a pairing and persist it, generated or blank.
-        ///
-        /// <para>The one create path there is (ADR-0009). <c>CreateCharacter</c>,
-        /// <c>CreateCharacterWithoutDeck</c> and the roster's per-character <c>CreateDeck</c> all
-        /// collapsed into this: a deck is the top-level thing now, so there is nothing to create it
-        /// against and nothing to bind it to afterwards.</para>
+        /// A new deck for a pairing, generated or blank, NOT yet saved anywhere. It reaches the cache
+        /// only through <see cref="ConfirmNewDeckAsync"/>, once the server accepts it.
         ///
         /// <para>Here rather than in the core assembly for the reason every other mint is: that
         /// assembly holds no clock and mints no identity, so somebody has to know that an id is a
         /// GUID and that the seed comes from it. Seeding from the deck's own id rather than a clock
-        /// keeps a generated deck a function of its identity — re-running a crashed create cannot
-        /// produce a different 30.</para>
+        /// keeps a generated deck a function of its identity — a retried create cannot produce a
+        /// different 30.</para>
         ///
         /// <para><b>The cap is NOT enforced here.</b> <see cref="CanCreateDeck"/> is what the "+"
-        /// plate consults, and <c>PUT /decks/{id}</c> is what actually refuses the ninth. A throw
-        /// from this method would turn a full roster into an error dialog on a screen that should
-        /// simply not have offered the plate.</para>
+        /// plate consults, and <c>PUT /decks/{id}</c> is what actually refuses the ninth.</para>
         ///
         /// <para>Check <see cref="CanCreate"/> before asking for <see cref="StarterDeck.Generated"/>;
         /// a pool too thin for a legal 30 throws rather than returning something illegal.</para>
         /// </summary>
         /// <exception cref="ArgumentException">The pairing is invalid (see <see cref="DeckList.IsValidPairing"/>).</exception>
         /// <exception cref="DeckGenerationException">Generated was asked for and the pool cannot supply a legal 30.</exception>
-        public DeckList CreateDeck(ICardDatabase db, string name, CardClass primary, CardClass secondary,
-                                   StarterDeck kind = StarterDeck.Blank)
-        {
-            string deckId = NewId();
-            DeckList deck = DeckCreation.Create(
-                _decks, db, new DeterministicRandom(SeedFrom(deckId)),
-                deckId, name, primary, secondary, kind, OwnedCards());
-
-            Push(t => RosterGateway.PushDeckSavedAsync(t, deck));
-            return deck;
-        }
-
-        /// <summary>Prepare an unsaved candidate for server-confirmed creation.</summary>
         public DeckList PrepareDeck(ICardDatabase db, string name, CardClass primary, CardClass secondary,
                                     StarterDeck kind)
         {
@@ -254,63 +235,22 @@ namespace Kingdom.Session
                 deckId, name, primary, secondary, kind, OwnedCards());
         }
 
+        // ── Writes: the server first, then the cache ────────────────────────────────────
+        //
+        // decks.json is a cache of the server's roster, so every write waits for the server and
+        // only an accepted one touches it. A failed write leaves the cache exactly as it was; the
+        // screen that asked says so and the player retries.
+
         /// <summary>Only an accepted server write may put a newly created deck in the cache.</summary>
         public Task<RosterWriteStatus> ConfirmNewDeckAsync(string accessToken, DeckList deck) =>
             RosterGateway.ConfirmNewDeckAsync(accessToken, deck, _decks);
 
+        /// <summary>Save an edit. Never legality-gated — a draft is a savable deck (§1).</summary>
         public Task<RosterWriteStatus> ConfirmDeckEditAsync(string accessToken, DeckList deck) =>
             RosterGateway.ConfirmDeckEditAsync(accessToken, deck, _decks);
 
-        /// <summary>Persist an edit. Never legality-gated — a draft is a savable deck (§1).</summary>
-        public void Save(DeckList deck)
-        {
-            _decks.Save(deck);
-            Push(t => RosterGateway.PushDeckSavedAsync(t, deck));
-        }
-
-        public void DeleteDeck(string deckId)
-        {
-            _decks.Delete(deckId);
-            Push(t => RosterGateway.PushDeckDeletedAsync(t, deckId));
-        }
-
-        // ── Mirroring to the server ─────────────────────────────────────────────────────
-
-        /// <summary>
-        /// True for the one account the player is actually playing — <see cref="Local"/>.
-        ///
-        /// <para><b>This is what keeps an editor tool off the wire.</b> The constructor stays public
-        /// so a tool or a test scene can point at a scratch directory, and every one of those would
-        /// otherwise mirror its throwaway decks into the signed-in player's real server roster —
-        /// a self-check that quietly adds "Ashen Vow" to somebody's account and then deletes it
-        /// again. Reference equality against the static rather than a flag, so it cannot be set
-        /// wrongly.</para>
-        /// </summary>
-        private bool IsLocal => ReferenceEquals(this, _local);
-
-        /// <summary>
-        /// Mirror a local write to the server, if this is the real account and somebody is signed in.
-        ///
-        /// <para><b>Fire and forget, deliberately.</b> The local write has already happened and is
-        /// what the player sees; the push is a best-effort mirror whose every failure is a log line
-        /// inside <see cref="RosterGateway"/>. Awaiting it would make a save wait on the network, and
-        /// returning its status would invite a caller to undo a save the player already watched
-        /// succeed.</para>
-        ///
-        /// <para><b>The push lives here rather than at the call sites</b> for the reason
-        /// <c>SignInGateController.Succeed</c> is one method: there are seven screens that save a
-        /// deck or a character, and a screen that forgot to push would silently stop backing up the
-        /// player's work with nothing to catch it.</para>
-        /// </summary>
-        private void Push(Func<string, Task<RosterWriteStatus>> call)
-        {
-            if (!IsLocal) return;
-
-            string token = RosterGateway.AccessToken;
-            if (string.IsNullOrEmpty(token)) return;
-
-            _ = call(token);
-        }
+        public Task<RosterWriteStatus> ConfirmDeckDeleteAsync(string accessToken, string deckId) =>
+            RosterGateway.ConfirmDeckDeleteAsync(accessToken, deckId, _decks);
 
         /// <summary>
         /// Replace this account's whole roster with what the server just said it is.

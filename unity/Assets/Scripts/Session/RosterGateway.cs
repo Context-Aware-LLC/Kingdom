@@ -18,9 +18,9 @@ namespace Kingdom.Session
     /// into the right identity therefore restored a player's cards and left them with nothing to
     /// play them with. This is the other half of that wire.</para>
     ///
-    /// <para>Sync replaces the cache with the server's answer, including an empty deck list.
-    /// Deck creation and roster-dialog edits await confirmation before caching or navigating.
-    /// Other edits and deletes use the Push methods and report failures to the log.</para>
+    /// <para>Sync replaces the cache with the server's answer, including an empty deck list. Every
+    /// write — create, edit, delete — waits for the server, and only an accepted one reaches the
+    /// cache, so the device never holds a deck the server does not.</para>
     ///
     /// <para><b>Composed on first touch, like <see cref="AuthGateway"/> and
     /// <see cref="CollectionGateway"/>, and invalidated with them</b> — the write lands in
@@ -113,59 +113,25 @@ namespace Kingdom.Session
             string accessToken, DeckList deck, IDeckStore cache) =>
             Gateway.SaveDeckAndCacheAsync(accessToken, deck, cache);
 
-        /// <summary>Wait for the server before caching an edit, including cosmetic ownership checks.</summary>
+        /// <summary>Wait for the server before caching an edit, including cosmetic ownership checks.
+        /// Never legality-gated: a draft is a savable deck.</summary>
         public static Task<RosterWriteStatus> ConfirmDeckEditAsync(
             string accessToken, DeckList deck, IDeckStore cache) =>
             Gateway.SaveDeckAndCacheAsync(accessToken, deck, cache);
 
-        // ── Push up ─────────────────────────────────────────────────────────────────────
-
-        /// <summary>Tell the server about a deck this device just saved — an upsert, and never
-        /// legality-gated: a draft is a savable deck, so it is a pushable one.</summary>
-        public static Task<RosterWriteStatus> PushDeckSavedAsync(
-            string accessToken, DeckList deck, CancellationToken cancellationToken = default)
-            => PushAsync("save deck " + deck?.Id,
-                         () => Gateway.SaveDeckAsync(accessToken, deck, cancellationToken));
-
-        /// <summary>Tell the server about a deck this device just deleted.</summary>
-        public static Task<RosterWriteStatus> PushDeckDeletedAsync(
-            string accessToken, string deckId, CancellationToken cancellationToken = default)
-            => PushAsync("delete deck " + deckId,
-                         () => Gateway.DeleteDeckAsync(accessToken, deckId, cancellationToken));
+        /// <summary>Wait for the server before dropping a deck from the cache.</summary>
+        public static Task<RosterWriteStatus> ConfirmDeckDeleteAsync(
+            string accessToken, string deckId, IDeckStore cache) =>
+            Gateway.DeleteDeckAndUncacheAsync(accessToken, deckId, cache);
 
         /// <summary>
-        /// One push, with its failure turned into a log line rather than an exception.
-        ///
-        /// <para><b>NotFound is not a failure on a delete</b> — the row was already gone, so the two
-        /// records agree, which is the outcome the call wanted. Everything else that is not Ok means
-        /// the device is ahead of the server and the next sync will overwrite the difference.</para>
-        /// </summary>
-        private static async Task<RosterWriteStatus> PushAsync(
-            string what, Func<Task<RosterWriteStatus>> call)
-        {
-            try
-            {
-                RosterWriteStatus status = await call();
-                if (status != RosterWriteStatus.Ok && status != RosterWriteStatus.NotFound)
-                    Debug.LogWarning($"[Roster] could not {what} on the server ({status}). " +
-                                     "This device is ahead of the server until the next sync.");
-                return status;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[Roster] {what} threw ({ex.GetType().Name}: {ex.Message}).");
-                return RosterWriteStatus.Offline;
-            }
-        }
-
-        /// <summary>
-        /// The signed-in access token, or the empty string. Every push needs it and no caller should
+        /// The signed-in access token, or the empty string. Every write needs it and no caller should
         /// have to know where it lives — an empty one makes the gateway answer Unauthenticated
         /// without reaching the network, which is the right answer for a device that is not signed in.
         ///
         /// <para>Guarded because it is read from ordinary UI handlers: composing the provider touches
-        /// the settings asset and player prefs, and a throw there must not take down a deck creation
-        /// that has already been saved locally.</para>
+        /// the settings asset and player prefs, and a throw there must reach the screen as an
+        /// Unauthenticated write, not as an exception.</para>
         /// </summary>
         public static string AccessToken
         {
@@ -175,7 +141,7 @@ namespace Kingdom.Session
                 catch (Exception ex)
                 {
                     Debug.LogWarning($"[Roster] no access token available ({ex.GetType().Name}); " +
-                                     "the local write stands and the server will not hear about it.");
+                                     "the write will be refused as signed out.");
                     return "";
                 }
             }
