@@ -47,7 +47,8 @@ namespace Kingdom.Editor
             _tidbit = new FirstRunTidbit(root);
             Tidbit sample = TidbitCatalog.For(TidbitTrigger.MainMenuArrival)[0];
             // Null IDs are intentionally never read/written as FirstRunMarkers.
-            var preview = new Tidbit(null, sample.Trigger, sample.TitleKey, sample.BodyKey, sample.ArtKey);
+            var preview = new Tidbit(null, sample.Trigger, sample.TitleKey, sample.BodyKey, sample.ArtKey,
+                sample.VoiceAddress);
             _tidbit.Show(new[] { preview }, Close);
             root.RegisterCallback<DetachFromPanelEvent>(_ =>
             {

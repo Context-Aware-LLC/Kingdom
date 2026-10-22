@@ -50,13 +50,15 @@ namespace Kingdom.Presentation
     /// illustration.</summary>
     public sealed class Tidbit
     {
-        public Tidbit(string id, TidbitTrigger trigger, string titleKey, string bodyKey, string artKey)
+        public Tidbit(string id, TidbitTrigger trigger, string titleKey, string bodyKey, string artKey,
+            string voiceAddress = null)
         {
             Id = id;
             Trigger = trigger;
             TitleKey = titleKey;
             BodyKey = bodyKey;
             ArtKey = artKey;
+            VoiceAddress = voiceAddress;
         }
 
         /// <summary>Stable across releases — it is half of the <see cref="Session.FirstRunMarkers"/>
@@ -77,6 +79,9 @@ namespace Kingdom.Presentation
         /// <c>Assets/Art/UI/</c> with no extension. A key that resolves to nothing hides the
         /// illustration; it never blocks the card.</summary>
         public string ArtKey { get; }
+
+        /// <summary>The recorded narration, independent of localized display copy.</summary>
+        public string VoiceAddress { get; }
     }
 
     /// <summary>
@@ -99,16 +104,16 @@ namespace Kingdom.Presentation
         // resolved when read, so a language switch reaches the next card shown.
         private static readonly Tidbit[] Registered =
         {
-            new Tidbit("menu", TidbitTrigger.MainMenuArrival, "tidbit_menu_title", "tidbit_menu_body", "tidbit_menu"),
-            new Tidbit("decks", TidbitTrigger.RosterArrival, "tidbit_decks_title", "tidbit_decks_body", "tidbit_decks"),
-            new Tidbit("match-pick", TidbitTrigger.MatchPickArrival, "tidbit_match_pick_title", "tidbit_match_pick_body", "tidbit_match_pick"),
-            new Tidbit("characters", TidbitTrigger.CharacterCreateArrival, "tidbit_characters_title", "tidbit_characters_body", "tidbit_characters"),
-            new Tidbit("collection", TidbitTrigger.CollectionArrival, "tidbit_collection_title", "tidbit_collection_body", "tidbit_collection"),
-            new Tidbit("deck-editor", TidbitTrigger.DeckEditorArrival, "tidbit_deck_editor_title", "tidbit_deck_editor_body", "tidbit_deck_editor"),
-            new Tidbit("vault", TidbitTrigger.PackVaultArrival, "tidbit_vault_title", "tidbit_vault_body", "tidbit_vault"),
-            new Tidbit("shards", TidbitTrigger.PackVaultGiftComplete, "tidbit_shards_title", "tidbit_shards_body", "tidbit_shards"),
-            new Tidbit("store", TidbitTrigger.PackVaultGiftComplete, "tidbit_store_title", "tidbit_store_body", "tidbit_store"),
-            new Tidbit("shop", TidbitTrigger.ShopArrival, "tidbit_shop_title", "tidbit_shop_body", "tidbit_shop"),
+            new Tidbit("menu", TidbitTrigger.MainMenuArrival, "tidbit_menu_title", "tidbit_menu_body", "tidbit_menu", "vo/vo_herald_tidbit_menu"),
+            new Tidbit("decks", TidbitTrigger.RosterArrival, "tidbit_decks_title", "tidbit_decks_body", "tidbit_decks", "vo/vo_herald_tidbit_decks"),
+            new Tidbit("match-pick", TidbitTrigger.MatchPickArrival, "tidbit_match_pick_title", "tidbit_match_pick_body", "tidbit_match_pick", "vo/vo_herald_tidbit_match_pick"),
+            new Tidbit("characters", TidbitTrigger.CharacterCreateArrival, "tidbit_characters_title", "tidbit_characters_body", "tidbit_characters", "vo/vo_herald_tidbit_characters"),
+            new Tidbit("collection", TidbitTrigger.CollectionArrival, "tidbit_collection_title", "tidbit_collection_body", "tidbit_collection", "vo/vo_herald_tidbit_collection"),
+            new Tidbit("deck-editor", TidbitTrigger.DeckEditorArrival, "tidbit_deck_editor_title", "tidbit_deck_editor_body", "tidbit_deck_editor", "vo/vo_herald_tidbit_deck_editor"),
+            new Tidbit("vault", TidbitTrigger.PackVaultArrival, "tidbit_vault_title", "tidbit_vault_body", "tidbit_vault", "vo/vo_herald_tidbit_vault"),
+            new Tidbit("shards", TidbitTrigger.PackVaultGiftComplete, "tidbit_shards_title", "tidbit_shards_body", "tidbit_shards", "vo/vo_herald_tidbit_shards"),
+            new Tidbit("store", TidbitTrigger.PackVaultGiftComplete, "tidbit_store_title", "tidbit_store_body", "tidbit_store", "vo/vo_herald_tidbit_store"),
+            new Tidbit("shop", TidbitTrigger.ShopArrival, "tidbit_shop_title", "tidbit_shop_body", "tidbit_shop", "vo/vo_herald_tidbit_shop"),
         };
 
         /// <summary>

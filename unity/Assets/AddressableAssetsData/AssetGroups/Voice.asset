@@ -90,6 +90,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1022bb1a34874e048a24b7756d874731
+    m_Address: vo/vo_herald_tidbit_menu
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1060b6a14a83ca24695a2039abc62eba
     m_Address: vo/vo_tidecaller_burn_1
     m_ReadOnly: 0
@@ -155,8 +160,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1e6f6be3dbd33f34a9902bc7d761d7ae
+    m_Address: vo/vo_herald_tidbit_deck_editor
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 205dfd5d0dbf7504094adcc6a1c15f35
     m_Address: vo/vo_nightveil_fatigue_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20641e008bd199244819d3a949ab2e52
+    m_Address: vo/vo_herald_queen_name
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -297,6 +312,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 40a017fc4cbd7db4fb36ef492e97c2ab
     m_Address: vo/vo_emberward_spark_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 42047cc9573879146b6ed95609d7f961
+    m_Address: vo/vo_herald_tidbit_characters
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -457,6 +477,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6736c1100df63d441bc9fe0a2f967450
     m_Address: vo/vo_tempest_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67b58690b65d2bb42afeeb07ca8ba74a
+    m_Address: vo/vo_herald_crown
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -795,6 +820,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f80730e2c2c05b4caff0432c47f0f7d
+    m_Address: vo/vo_herald_tidbit_store
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a02926e15d7b5604f8c1af04e2a41ee8
     m_Address: vo/vo_nightveil_turn_start_3
     m_ReadOnly: 0
@@ -907,6 +937,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b412e76934f2c0d4c83b59e086fdee2e
     m_Address: vo/vo_stonewarden_lose_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b54f10e2dde1b5747b2868899b16308f
+    m_Address: vo/vo_herald_tidbit_shop
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1075,8 +1110,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cba76fdc4c9a4d046ad96c3cf3cb6718
+    m_Address: vo/vo_herald_tidbit_decks
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cbc4464070c82d640a8bf263697692a8
     m_Address: vo/vo_clockwright_win_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc0d437ddf4aa1944bd2b52977360b04
+    m_Address: vo/vo_herald_tidbit_collection
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1215,6 +1260,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e2e63b38850b4364eb76880d3b6515e3
+    m_Address: vo/vo_herald_intro
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e3c70e2b33a6d954dab62e3cceb971fe
     m_Address: vo/vo_tempest_vs_stonewarden_1
     m_ReadOnly: 0
@@ -1235,8 +1285,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e97538fe66014194285494588e302506
+    m_Address: vo/vo_herald_new_king
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eae615dc9e14fd446b84eeba841d4dd6
     m_Address: vo/vo_card_grave_caretaker_solen_play_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec4d285ea273ec143904cd50edea6f6e
+    m_Address: vo/vo_herald_tidbit_match_pick
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1275,6 +1335,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f08b0dcbed5f79c448c8a53e10323446
+    m_Address: vo/vo_herald_tidbit_shards
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f1166eb571e0f484e9f3a180810e0b0c
     m_Address: vo/vo_tidecaller_vs_verdant_1
     m_ReadOnly: 0
@@ -1297,6 +1362,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f60b857472fe9ee49a6237c834ec7e62
     m_Address: vo/vo_stonewarden_turn_start_1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f68f9cafe67dace49b1c5f3d933c4213
+    m_Address: vo/vo_herald_tidbit_vault
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

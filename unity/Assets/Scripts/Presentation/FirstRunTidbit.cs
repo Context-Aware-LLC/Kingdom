@@ -52,6 +52,7 @@ namespace Kingdom.Presentation
         private readonly VisualElement _presentation;
         private readonly VisualElement _narratorSlot;
         private NarratorPortrait _narrator;
+        private NarratorVoice _voice;
 
         private readonly List<Tidbit> _queue = new List<Tidbit>();
         private Action _onDone;
@@ -95,8 +96,8 @@ namespace Kingdom.Presentation
                     _presentation.Add(_scroll.Root);
                 }
                 else _narratorSlot = _presentation.Q<VisualElement>("tidbit-narrator");
-                _overlay.RegisterCallback<DetachFromPanelEvent>(_ => Cancel());
             }
+            _overlay?.RegisterCallback<DetachFromPanelEvent>(_ => Cancel());
 
             // Hidden regardless of what the markup said — a host that forgets the hidden class would
             // otherwise open its screen behind a dimmed backdrop with no way past it.
@@ -142,13 +143,14 @@ namespace Kingdom.Presentation
             Render(_queue[0], stamp: false);
             _overlay.RemoveFromClassList(HiddenClass);
             IsShowing = true;
+            _voice = NarratorVoice.Create();
             if (_narratorSlot != null && _narrator == null)
                 _narrator = NarratorPortrait.Show(_narratorSlot, NarratorPortrait.HeraldAddress, visible =>
                 {
                     _presentation.EnableInClassList("tidbit-presentation--narrated", IsShowing && visible);
                 });
-            if (_scroll != null) _scroll.Open(Stamp);
-            else Stamp();
+            if (_scroll != null) _scroll.Open(PresentLine);
+            else PresentLine();
             return true;
         }
 
@@ -169,6 +171,7 @@ namespace Kingdom.Presentation
             // A tap while the scroll is still moving is a tap on a button that is half behind a
             // roller; it is not the player saying they have read it.
             if (!IsShowing || _queue.Count == 0 || _scroll?.IsMoving == true) return;
+            _voice?.Stop();
 
             // Recorded here rather than in Render: a beat is seen when the player says so.
             FirstRunMarkers.Mark(FirstRunMarkers.Tidbit(_queue[0].Id));
@@ -198,7 +201,7 @@ namespace Kingdom.Presentation
             _title.text = tidbit.Title;
             _body.text = tidbit.Body;
             SealStamp.Clear(_scroll?.Root);
-            if (stamp) Stamp();
+            if (stamp) PresentLine();
 
             if (_art == null) return;
 
@@ -214,6 +217,13 @@ namespace Kingdom.Presentation
                 ? new StyleBackground(StyleKeyword.None)
                 : new StyleBackground(sprite);
             _art.style.display = sprite == null ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
+        private void PresentLine()
+        {
+            if (!IsShowing || _queue.Count == 0) return;
+            Stamp();
+            _voice?.Play(_queue[0].VoiceAddress);
         }
 
         /// <summary>Every proclamation is sealed once it is open: the wax lands on the sheet's
@@ -238,6 +248,8 @@ namespace Kingdom.Presentation
         private void Hide()
         {
             IsShowing = false;
+            if (_voice != null) _voice.Close();
+            _voice = null;
             if (_narrator != null) _narrator.Close();
             _narrator = null;
             _presentation?.RemoveFromClassList("tidbit-presentation--narrated");

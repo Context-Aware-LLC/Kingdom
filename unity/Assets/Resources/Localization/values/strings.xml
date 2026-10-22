@@ -609,7 +609,7 @@
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Deck roster arrival. 'nine' = the deck limit. -->
     <string name="tidbit_decks_title">Your Decks</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Deck roster arrival. 'nine' = the deck limit. -->
-    <string name="tidbit_decks_body">Tap the \'+\' to create a deck. Tap a deck once to see options, twice to edit it.\n\nThe Counc...the group of sage advisors, has determined that you are to have not more than nine.\n\nNine is the wimit. Not 8 and not 10.\n\nBecause the old buzzards said so, that is why.</string>
+    <string name="tidbit_decks_body">Tap the \'+\' to create a deck. Tap a deck once to see options, twice to edit it.\n\nThe group of sage advisors has determined that you are to have not more than nine.\n\nNine is the limit. Not 8 and not 10.\n\nBecause the old buzzards said so, that is why.</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Match deck-pick arrival. 'Play' = button label. -->
     <string name="tidbit_match_pick_title">Choose A Deck</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Match deck-pick arrival. 'Play' = button label. -->
@@ -625,11 +625,11 @@
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Deck builder arrival. The last line is a sing-song pun; adapt freely. -->
     <string name="tidbit_deck_editor_title">Build a Deck</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Deck builder arrival. The last line is a sing-song pun; adapt freely. -->
-    <string name="tidbit_deck_editor_body">Tap a card to add. Tap a row to subtract.\n\nA deck is 30 cards, two copies max, only one of any Legendary.\n\nSing a little song to help you remember. Tap Add, Tap Subtract. Tap foot tap tap.</string>
+    <string name="tidbit_deck_editor_body">Tap a card to add. Tap a row to subtract.\n\nA deck is 30 cards, two copies max, only one of any Legendary.\n\nSing a snappy song to help you remember.\n\nTap Add, Tap Subtract. Tap your foot. Add tap, yep tap.</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Pack vault arrival. -->
     <string name="tidbit_vault_title">The Card Vault</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Pack vault arrival. -->
-    <string name="tidbit_vault_body">Drag packs to the center to open.\n\nPick one up and hold it over the rail to open multiple\n\nEverything inside is yours. The paperwork has already been filed in triplicate.</string>
+    <string name="tidbit_vault_body">Drag packs to the center to open.\n\nPick one up and hold it over the rail to open more than one\n\nEverything inside is yours. The paperwork has already been submitted</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. After the first-run gift packs are opened (shown first of two). 'bad idea' nods to the game title. -->
     <string name="tidbit_shards_title">Entering The Kingdom.</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. After the first-run gift packs are opened (shown first of two). 'bad idea' nods to the game title. -->
@@ -637,11 +637,11 @@
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. After the first-run gift (second of two). -->
     <string name="tidbit_store_title">Earn Gold</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. After the first-run gift (second of two). -->
-    <string name="tidbit_store_body">You don\'t have to be rich to live like a king.\n\nIf you toil every day completing quests you might grow up to be one.\n\nOr so I was told as a child.</string>
+    <string name="tidbit_store_body">You don\'t have to be rich to become king.\n\nIf you toil every day doing quests, you might grow up to be one.\n\nOr I overheard that once when I was young.</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Store arrival. 'Card Vault' = screen name. -->
     <string name="tidbit_shop_title">The Store</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Store arrival. 'Card Vault' = screen name. -->
-    <string name="tidbit_shop_body">If you get into trouble in the kingdom you can usually tap your way out of it\n\nJust as easily you can tap your way into some new cards\n\nPacks you buy end up in the Card Vault awaiting your tap.\n\nPay with your hard-earned Gold like every other peasant or purchase gems to skip the toil.</string>
+    <string name="tidbit_shop_body">If you get into trouble in the kingdom you must try to tap your way out of it.\n\nJust tap around on stuff; you might tap your way into some new cards.\n\nPacks you buy end up in the Card Vault awaiting your tap.\n\nPay with your hard-earned Gold like every other peasant or purchase gems to skip the drudgery.</string>
 
     <!-- ===== Board, shop, overlays (C#) ===== -->
     <!-- Helper text under the returning-player name title. Apologetic, plain. -->

@@ -41,6 +41,7 @@ namespace Kingdom.Editor
                 RunCheck("CardMaterialBinderVerify", CardMaterialBinderVerify.Run),
                 RunCheck("CardBackOwnershipVerify", CardBackOwnershipVerify.Run),
                 RunCheck("LocalizationVerify",   LocalizationVerify.Run),
+                RunCheck("HeraldVoiceVerify",     HeraldVoiceVerify.Run),
             };
 
             Debug.Log("[HeadlessVerify] ==============================");
