@@ -32,10 +32,11 @@ namespace Kingdom.Presentation
         private const float Bow = 0.08f;
         /// <summary>Dots drift toward the head at this many spacings a second.</summary>
         private const float FlowPerSecond = 1.4f;
-        /// <summary>World diameter of the dot nearest the head.</summary>
-        private const float DotSize = 0.2f;
-        private const float IdleAlpha = 0.5f;
-        private const float LockedAlpha = 0.85f;
+        /// <summary>World diameter of the dot nearest the head. Size and both alphas were raised
+        /// together because the trail was too quiet to read (Sam, 2026-10-21).</summary>
+        private const float DotSize = 0.28f;
+        private const float IdleAlpha = 0.7f;
+        private const float LockedAlpha = 1f;
         private const float LockedSwell = 1.15f;
         /// <summary>Below this length the trail is still under the thing it left, so it fades in.</summary>
         private const float FullAtLength = 0.8f;
