@@ -32,9 +32,9 @@ namespace Kingdom.Presentation
         private const float Bow = 0.08f;
         /// <summary>Dots drift toward the head at this many spacings a second.</summary>
         private const float FlowPerSecond = 1.4f;
-        /// <summary>World diameter of the dot nearest the head. Size and both alphas were raised
-        /// together because the trail was too quiet to read (Sam, 2026-10-21).</summary>
-        private const float DotSize = 0.28f;
+        /// <summary>World diameter of the dot nearest the head. Raised twice with the alphas and
+        /// the dot's solid core, because the trail was too quiet to read (Sam, 2026-10-21/22).</summary>
+        private const float DotSize = 0.34f;
         private const float IdleAlpha = 0.7f;
         private const float LockedAlpha = 1f;
         private const float LockedSwell = 1.15f;
@@ -142,8 +142,11 @@ namespace Kingdom.Presentation
             {
                 float dx = (x + 0.5f - half) / half;
                 float dy = (y + 0.5f - half) / half;
-                float falloff = Mathf.Clamp01(1f - Mathf.Sqrt(dx * dx + dy * dy));
-                pixels[y * TextureSize + x] = new Color(1f, 1f, 1f, falloff * falloff);
+                // Solid to 65% of the radius, then a soft rim. It was a glow fading from the
+                // centre, about a sixth of a solid disc's ink, and still went unnoticed after the
+                // alphas were raised (Sam, 2026-10-22).
+                float r = Mathf.Sqrt(dx * dx + dy * dy);
+                pixels[y * TextureSize + x] = new Color(1f, 1f, 1f, Mathf.SmoothStep(0f, 1f, (1f - r) / 0.35f));
             }
             _texture.SetPixels(pixels);
             _texture.Apply();
