@@ -64,7 +64,9 @@ Shader "Kingdom/AegisDome"
                 // Intensity and pulse were tuned by eye in Gamma (GammaTuned.hlsl).
                 half3 lit = TunedIn(dome.rgb) * TunedIn(_AegisColor.rgb) * _AegisIntensity * pulse;
                 // The painted shell is a glow over the card, so its alpha takes the glow curve.
-                return half4(TunedOut(lit), TunedGlowAlpha(dome.a) * _AegisColor.a);
+                // The curve keeps 0 at 0, so the hollow centre stays hollow.
+                dome.a = TunedGlowAlpha(dome.a);
+                return half4(TunedOut(lit), dome.a * _AegisColor.a);
             }
             ENDHLSL
         }
