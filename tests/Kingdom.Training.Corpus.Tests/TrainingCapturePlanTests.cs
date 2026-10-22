@@ -141,5 +141,22 @@ namespace Kingdom.Training.Corpus.Tests
                     .Intersect(baseline.Games.Select(game => game.Seed)), Is.Empty);
             });
         }
+
+        [Test]
+        public void Only_keeps_the_named_slots_unchanged_in_schedule_order_and_refuses_a_stranger()
+        {
+            TrainingCapturePlan plan = TrainingCapturePlan.Create(4, new[]
+            {
+                CardClass.EMBERWARD,
+                CardClass.TIDECALLER,
+                CardClass.GRAVEKEEP,
+            }, gameSeedOffset: 200_000_000);
+
+            var only = plan.Only(new[] { plan.Games[9].MatchId, plan.Games[2].MatchId, plan.Games[9].MatchId });
+
+            Assert.That(only, Is.EqualTo(new[] { plan.Games[2], plan.Games[9] }));
+            Assert.Throws<ArgumentException>(
+                () => plan.Only(new[] { plan.Games[0].MatchId, "training-emberward-vs-tidecaller-000099" }));
+        }
     }
 }
