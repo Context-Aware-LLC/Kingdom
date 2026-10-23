@@ -39,6 +39,9 @@
     <!-- The canonical telemetry DDL. Embedded so TelemetryDrain applies EXACTLY this text on
          startup and there is no second copy to drift (bookkeeping-is-part-of-done). -->
     <EmbeddedResource Include="Telemetry\schema.sql" />
+    <!-- The first-session funnel view. Its own resource so TelemetryDrain applies it apart from
+         the tables: a view that fails to create must not stop the drain. -->
+    <EmbeddedResource Include="Telemetry\first_session_funnel.sql" />
     <!-- The canonical accounts + entitlement DDL (EF-072). Same reason: the Postgres account store
          and entitlement ledger apply EXACTLY this text; there is no second copy to drift. -->
     <EmbeddedResource Include="Accounts\schema.sql" />

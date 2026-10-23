@@ -72,7 +72,7 @@ create table if not exists card_seen (
 -- thing to offload to cold storage if volume ever demands it.
 create table if not exists raw_event (
   event_uid   text        primary key,  -- sha256 (hex) of the exact JSONL line bytes
-  type        text        not null,     -- match_complete | match_void | card_seen
+  type        text        not null,     -- match_complete | match_void | card_seen | the funnel's rows
   ingested_at timestamptz not null default now(),
   line        jsonb       not null
 );
@@ -82,3 +82,12 @@ create index if not exists card_seen_time_idx   on card_seen (ended_at);
 create index if not exists match_env_src_idx    on match (env, source);
 create index if not exists match_seat_acct_idx  on match_seat (account_id);
 create index if not exists raw_event_type_idx   on raw_event (type);
+
+-- The first-session funnel's join keys (docs/dev-docs/specs/first-session-funnel.md). Its rows
+-- live only in raw_event, and the view `first_session_funnel` looks them up per session by these
+-- fields. The view itself is NOT in this file: it is first_session_funnel.sql, applied after this
+-- one in its own try/catch, so a view that fails to create cannot stop the drain from starting.
+create index if not exists raw_event_session_idx on raw_event ((line->>'session_id'));
+create index if not exists raw_event_account_idx on raw_event ((line->>'account_id'));
+create index if not exists raw_event_device_idx  on raw_event ((line->>'device'));
+create index if not exists raw_event_match_idx   on raw_event ((line->>'match_id'));

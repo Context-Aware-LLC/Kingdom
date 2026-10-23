@@ -44,6 +44,11 @@ namespace Kingdom.Net.Server.Telemetry
         /// <summary>Embedded canonical DDL — applied verbatim so there is no second copy to drift.</summary>
         private const string SchemaResource = "Kingdom.Net.Server.Telemetry.schema.sql";
 
+        /// <summary>The first-session funnel view, applied AFTER the schema and apart from it: the
+        /// schema runs as one command, so a view statement inside it that failed would fail the
+        /// whole apply and hold the drain in its retry loop for ever. A view must cost the view.</summary>
+        private const string FunnelViewResource = "Kingdom.Net.Server.Telemetry.first_session_funnel.sql";
+
         /// <summary>Cap on bytes pulled per tick, so a large backlog drains over several ticks rather
         /// than one enormous transaction that could time out the pooler.</summary>
         private const int MaxBytesPerTick = 1 << 20; // 1 MiB
@@ -127,11 +132,28 @@ namespace Kingdom.Net.Server.Telemetry
 
         internal async Task EnsureSchemaAsync(CancellationToken ct = default)
         {
-            string ddl = ReadSchemaResource();
             await using var conn = new NpgsqlConnection(_connString);
             await conn.OpenAsync(ct);
-            await using var cmd = new NpgsqlCommand(ddl, conn);
-            await cmd.ExecuteNonQueryAsync(ct);
+            await using (var cmd = new NpgsqlCommand(ReadResource(SchemaResource), conn))
+                await cmd.ExecuteNonQueryAsync(ct);
+
+            // Not retried: the tables are in, so the drain starts, and the next boot tries the view
+            // again. A failed `create or replace view` leaves the previous view live.
+            try
+            {
+                await using var view = new NpgsqlCommand(ReadResource(FunnelViewResource), conn);
+                await view.ExecuteNonQueryAsync(ct);
+                Console.Error.WriteLine("[telemetry-schema] view first_session_funnel applied.");
+            }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex)
+            {
+                Record(ex);
+                Console.Error.WriteLine(
+                    "[telemetry-schema] view first_session_funnel FAILED ({0}); the drain runs without it. " +
+                    "A changed column set needs `drop view first_session_funnel` first.",
+                    ex.GetBaseException().Message);
+            }
         }
 
         private async Task DrainOnceAsync(CancellationToken ct)
@@ -362,11 +384,11 @@ namespace Kingdom.Net.Server.Telemetry
             return Convert.ToHexStringLower(hash);
         }
 
-        private static string ReadSchemaResource()
+        private static string ReadResource(string name)
         {
             var asm = typeof(TelemetryDrain).Assembly;
-            using var s = asm.GetManifestResourceStream(SchemaResource)
-                ?? throw new InvalidOperationException($"Embedded schema '{SchemaResource}' not found.");
+            using var s = asm.GetManifestResourceStream(name)
+                ?? throw new InvalidOperationException($"Embedded resource '{name}' not found.");
             using var reader = new StreamReader(s, Encoding.UTF8);
             return reader.ReadToEnd();
         }
