@@ -37,6 +37,7 @@ namespace Kingdom.Editor
                 RunCheck("DeviceLayoutVerify",   DeviceLayoutVerify.Check),
                 RunCheck("InputGestureVerify",   InputGestureVerify.Run),
                 RunCheck("CollectionDeckDragVerify", CollectionDeckDragVerify.Run),
+                RunCheck("ShopPackDetailVerify", ShopPackDetailVerify.Run),
                 RunCheck("CardRevealVerify",     CardRevealVerify.Run),
                 RunCheck("CardMaterialBinderVerify", CardMaterialBinderVerify.Run),
                 RunCheck("CardBackOwnershipVerify", CardBackOwnershipVerify.Run),

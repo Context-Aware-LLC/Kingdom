@@ -113,10 +113,9 @@ namespace Kingdom.Presentation
             Wire(root, "btn-shop-close", Close);
             Wire(root, "shop-card-vault", OpenVault);
             Wire(root, "pack-detail-close", () => CloseDetail());
-            // The shell stops its own click from bubbling to the overlay's close-on-scrim handler
-            // below -- otherwise every tap on the panel would close it, the same trap CraftModal's
-            // craft-scrim comment documents.
-            _detailShell?.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
+            // The shell includes wide transparent gutters around the contained portrait art.
+            // Only the painted pack and visible controls keep a click from closing the detail.
+            _detailShell?.RegisterCallback<ClickEvent>(OnDetailClick);
             _detailOverlay?.RegisterCallback<ClickEvent>(_ => CloseDetail());
 
             _packSection = root.Q<VisualElement>("shop-section-packs");
@@ -500,6 +499,31 @@ namespace Kingdom.Presentation
                 WaitForDetailLayout(version, shell, art);
             }).ExecuteLater(16);
         }
+
+        private void OnDetailClick(ClickEvent evt)
+        {
+            Vector2 point = evt.position;
+            if (ContainsVisiblePoint(_detailActions, point) || ContainsVisiblePoint(_detailQuantityRow, point))
+            {
+                evt.StopPropagation();
+                return;
+            }
+            if (!ContainsVisiblePoint(_detailArt, point)) return;
+
+            Rect box = _detailArt.contentRect;
+            Vector2 image = BackgroundImageSize(_detailArt.resolvedStyle.backgroundImage, Vector2.zero);
+            if (box.width <= 0f || box.height <= 0f || image.x <= 0f || image.y <= 0f) return;
+
+            Vector2 size = image * Mathf.Min(box.width / image.x, box.height / image.y);
+            Rect painted = new Rect(box.center - size * 0.5f, size);
+            // WorldToLocal follows the shell's current flight transform as well as panel scaling.
+            // The element's full rectangle also contains the empty space left by Contain.
+            if (painted.Contains(_detailArt.WorldToLocal(point))) evt.StopPropagation();
+        }
+
+        private static bool ContainsVisiblePoint(VisualElement element, Vector2 point)
+            => element != null && element.resolvedStyle.display != DisplayStyle.None &&
+               element.resolvedStyle.visibility == Visibility.Visible && element.worldBound.Contains(point);
 
         private void FitDetailActionsToArt()
         {

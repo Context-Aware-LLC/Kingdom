@@ -56,10 +56,10 @@
              pack-detail-art shows the ONE piece actually tapped, not the tile's whole four-wide
              rail again, so the art the player's thumb was on travels into the card with the text
              instead of just vanishing under the scrim; OpenDetail leaves it hidden when the tap
-             did not land on a specific art slot. pack-detail-shell stops its own ClickEvent from
-             bubbling, so a tap on the panel does not fall through to this overlay's close-on-scrim
-             handler — the same trap CraftModal's craft-scrim documents. On purchase, the shell
-             flies to the Card Vault link rather than back to its source tile. -->
+             did not land on a specific art slot. Only clicks on the fitted pack image and visible
+             purchase controls stop bubbling; transparent gutters close the selection through the
+             overlay. On purchase, the shell flies to the Card Vault link rather than back to
+             its source tile. -->
         <ui:VisualElement name="pack-detail-overlay" class="pack-detail-overlay pack-detail-overlay--hidden emb-bleed">
             <ui:VisualElement name="pack-detail-shell" class="pack-detail-shell">
                 <ui:VisualElement name="pack-detail-art" class="pack-detail-art"/>
