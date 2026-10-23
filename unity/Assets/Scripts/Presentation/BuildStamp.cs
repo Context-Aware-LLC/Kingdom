@@ -42,6 +42,7 @@ namespace Kingdom.Presentation
         public const int UnknownStoreBuild = -1;
 
         private static string _display;
+        private static string _releaseId;
 
         /// <summary>
         /// The number the store orders builds by — Android versionCode, iOS build number — as
@@ -61,6 +62,24 @@ namespace Kingdom.Presentation
                     System.Globalization.CultureInfo.InvariantCulture, out int build)
                     ? build
                     : 0;
+            }
+        }
+
+        /// <summary>
+        /// The crash-reporting release id and the funnel's <c>build</c> key: <c>version+versionCode</c>,
+        /// e.g. <c>0.0.14+31</c>. The Editor, which has no stamp, reads <c>0.0.14+editor</c>; a stamp
+        /// with no store build reads <c>+0</c>. Same string on every read in a process.
+        /// </summary>
+        public static string ReleaseId
+        {
+            get
+            {
+                if (_releaseId != null) return _releaseId;
+                int code = StoreBuild;
+                _releaseId = Application.version + "+" + (code == UnknownStoreBuild
+                    ? "editor"
+                    : code.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                return _releaseId;
             }
         }
 

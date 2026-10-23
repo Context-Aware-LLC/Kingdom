@@ -354,6 +354,8 @@ namespace Kingdom.Presentation
         private void WireMatch(ICardDatabase db)
         {
             GameState s0 = _view.Current;
+            // Crash reports carry the server's match id from here until this scene goes (OnDestroy).
+            CrashReportingScope.SetMatch(s0.Id.Value);
             PlayerId seat0Id = s0.Players[0].Id;
             PlayerId seat1Id = s0.Players[1].Id;
             PlayerId localId = _net.Player;
@@ -798,6 +800,7 @@ namespace Kingdom.Presentation
 
         private void OnDestroy()
         {
+            CrashReportingScope.ClearMatch();
             ReleaseOpening();
             _questWatch.Cancel();
             _goldWatch.Cancel();

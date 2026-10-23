@@ -29,7 +29,8 @@
     "com.unity.modules.tetgen": "1.0.0",
     "com.unity.modules.tilemap": "1.0.0",
     "com.unity.modules.unitywebrequesttexture": "1.0.0",
-    "com.unity.modules.video": "1.0.0"
+    "com.unity.modules.video": "1.0.0",
+    "io.sentry.unity": "https://github.com/getsentry/unity.git#4.10.3"
   },
   "testables": [
     "com.besty.unity-skills"
