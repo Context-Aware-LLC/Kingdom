@@ -72,6 +72,12 @@ namespace Kingdom.Net.Server
         private readonly ITrainingEpisodeStore? _trainingEpisodes;
         private readonly string _p0Policy;
         private readonly string _p1Policy;
+
+        /// <summary>The first-session funnel (item 2): which seats are signed-in humans, and which of
+        /// them has had an intent accepted yet. Only the first one writes <c>first_action</c>.</summary>
+        private readonly IFunnelSink _funnel;
+        private readonly bool[] _funnelTracked = new bool[2];
+        private readonly bool[] _firstActionWritten = new bool[2];
         private readonly Seat[] _seats = new Seat[2];
         private bool _trainingCaptureActive;
 
@@ -104,7 +110,10 @@ namespace Kingdom.Net.Server
             IRankedMatchSink? rankedMatchSink = null,
             ITrainingEpisodeStore? trainingEpisodes = null,
             string p0Policy = "unspecified",
-            string p1Policy = "unspecified")
+            string p1Policy = "unspecified",
+            IFunnelSink? funnel = null,
+            bool p0FunnelTracked = false,
+            bool p1FunnelTracked = false)
         {
             _id = id;
             _seed = seed;
@@ -118,6 +127,9 @@ namespace Kingdom.Net.Server
             _trainingEpisodes = trainingEpisodes;
             _p0Policy = p0Policy;
             _p1Policy = p1Policy;
+            _funnel = funnel ?? NullFunnelSink.Instance;
+            _funnelTracked[0] = p0FunnelTracked;
+            _funnelTracked[1] = p1FunnelTracked;
             _processor = new CommandProcessor(db);
             _host = new LocalMatchHost(_processor, db, setup);
             _seats[0] = new Seat(p0, MintToken(), string.IsNullOrEmpty(p0Name) ? p0.Value : p0Name!);
@@ -327,6 +339,21 @@ namespace Kingdom.Net.Server
 
         // ── The core submit path (client and synthetic share it — §3) ────────────
 
+        /// <summary>
+        /// The funnel's <c>first_action</c>: the first intent a tracked seat SENT that the core
+        /// accepted. Clock-fired submits (an auto-confirmed mulligan, a timed-out turn) are the server
+        /// acting for a player who did nothing, which is the opposite of what this row records.
+        /// </summary>
+        private void NoteFirstAction(SubmitCause cause, int? originSeat)
+        {
+            if (cause != SubmitCause.Client || originSeat is not int seat) return;
+            if (!_funnelTracked[seat] || _firstActionWritten[seat]) return;
+            _firstActionWritten[seat] = true;
+            var account = seat == 0 ? _attribution.P0 : _attribution.P1;
+            try { _funnel.Write(ServerFunnelRows.FirstAction(_id.Value, account.Value, _time.NowMs)); }
+            catch (Exception) { /* a dropped row is not worth a dropped match */ }
+        }
+
         private CommandResult SubmitToCore(PlayerIntent intent, SubmitCause cause, int? originSeat)
         {
             string? captureBefore = CaptureObservationHash(intent.Player);
@@ -342,6 +369,7 @@ namespace Kingdom.Net.Server
             _telemetry.AfterAccepted(_host.State, observed, raw.Events, byClock: cause == SubmitCause.Clock);
 
             _replay.Append(_id, intent);
+            NoteFirstAction(cause, originSeat);
             TryRecordTrainingDecision(intent.Player, captureBefore);
 
             // Capture the emit-time visibility sidecar NOW — index-parallel to raw.Events and

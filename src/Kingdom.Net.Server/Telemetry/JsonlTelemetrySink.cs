@@ -51,7 +51,7 @@ namespace Kingdom.Net.Server.Telemetry
     /// never read" — dead weight that still had to be maintained. A version field earns its place
     /// when something branches on it; this one would not.</para>
     /// </summary>
-    public sealed class JsonlTelemetrySink : ITelemetrySink
+    public sealed class JsonlTelemetrySink : ITelemetrySink, IFunnelSink
     {
         /// <summary>Default file name under the data dir.</summary>
         public const string FileName = "telemetry.jsonl";
@@ -218,12 +218,42 @@ namespace Kingdom.Net.Server.Telemetry
         private void Append(JsonWriter w) => AppendAll(new[] { w.ToUtf8() });
 
         /// <summary>
+        /// The first-session funnel's rows (<see cref="IFunnelSink"/>): one line each, into the SAME
+        /// file under the same lock and fsync as match events, so they are exactly as durable and
+        /// the drain ships them without knowing they exist — an unknown <c>type</c> lands in
+        /// <c>raw_event</c> and nowhere else (<c>TelemetryDrain.TryBuildLine</c>).
+        ///
+        /// <para><c>type</c> first, then <c>env</c> for the reason every row carries it, then the
+        /// row's own fields in the order its writer added them.</para>
+        /// </summary>
+        public bool Write(IReadOnlyList<FunnelRow> rows)
+        {
+            if (rows.Count == 0) return true;
+            var lines = new List<byte[]>(rows.Count);
+            foreach (var row in rows)
+            {
+                var w = new JsonWriter();
+                w.BeginObject();
+                w.Name("type"); w.Str(row.Type);
+                w.Name("env"); w.Str(_env);
+                foreach (var (name, value) in row.Fields)
+                {
+                    w.Name(name);
+                    if (value is int i) w.I32(i); else w.Str(value as string);
+                }
+                w.EndObject();
+                lines.Add(w.ToUtf8());
+            }
+            return AppendAll(lines);
+        }
+
+        /// <summary>
         /// Append N rows under ONE open and ONE fsync. A partial write — disk full halfway through a
         /// `card_seen` burst — counts every row in the batch as dropped, including any that reached
         /// the file: the batch is one match's card sample, and a half-written sample would be worse
         /// than a missing one, because it looks complete to whoever groups by `cardDefId`.
         /// </summary>
-        private void AppendAll(IReadOnlyList<byte[]> rows)
+        private bool AppendAll(IReadOnlyList<byte[]> rows)
         {
             try
             {
@@ -237,6 +267,7 @@ namespace Kingdom.Net.Server.Telemetry
                     }
                     if (_fsyncEachWrite) s.Flush(true);
                 }
+                return true;
             }
             catch (Exception ex)
             {
@@ -247,6 +278,7 @@ namespace Kingdom.Net.Server.Telemetry
                     DroppedRows += rows.Count;
                     LastError = ex;
                 }
+                return false;
             }
         }
 

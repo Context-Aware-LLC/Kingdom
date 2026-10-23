@@ -55,6 +55,22 @@ namespace Kingdom.Net.Server
         public ITelemetrySink? Telemetry { get; init; }
 
         /// <summary>
+        /// Where the first-session funnel's rows go (pre-publication item 2): the client's
+        /// <c>POST /telemetry/client</c> rows, the gate's, the match socket's and Sentry's. Null →
+        /// <see cref="NullFunnelSink"/>. <see cref="FromEnvironment"/> points it at the same
+        /// <see cref="JsonlTelemetrySink"/> as <see cref="Telemetry"/>, so the rows share the match
+        /// buffer and its drain. Deliberately NOT inferred from <see cref="Telemetry"/>: a test that
+        /// injects a JSONL sink to count match rows should not find funnel rows in its file.
+        /// </summary>
+        public IFunnelSink? Funnel { get; init; }
+
+        /// <summary>
+        /// The Sentry integration's Client Secret, which signs <c>POST /telemetry/sentry</c>. Null
+        /// (unset) turns that route off with a 404. From <see cref="SentryWebhook.SecretEnvVar"/>.
+        /// </summary>
+        public string? SentryWebhookSecret { get; init; }
+
+        /// <summary>
         /// Matchmaking policy seam. Null composes the launch FIFO/band-widening queue; tests and a
         /// later durable broker can replace it without moving socket or session ownership.
         /// </summary>
@@ -301,6 +317,8 @@ namespace Kingdom.Net.Server
                 ReplaysDir = KingdomEnv.Get("KINGDOM_REPLAYS") ?? "replays",
                 TrainingInboxDir = KingdomEnv.Get("KINGDOM_TRAINING_INBOX"),
                 Telemetry = sink,
+                Funnel = sink,
+                SentryWebhookSecret = KingdomEnv.Get(SentryWebhook.SecretEnvVar),
                 TelemetryDrain = drain,
                 TokenVerifier = tokenVerifier,
                 AccountStore = accountStore,
@@ -688,6 +706,11 @@ namespace Kingdom.Net.Server
                     System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted);
             };
             builder.Services.AddSingleton<IHostedService>(new ChallengeSweeper(socialHub));
+
+            // The first-session funnel (item 2). One sink for every row the server writes.
+            IFunnelSink funnel = cfg.Funnel ?? NullFunnelSink.Instance;
+            gate.Funnel = funnel;
+            var clientTelemetry = new ClientTelemetryEndpoint(funnel, cfg.TokenVerifier, cfg.AccountStore, time);
             var socialSocket = new SocialSocket(socialHub, cfg.TokenVerifier, cfg.AccountStore, cfg.Options);
 
             // One link store for #423's routes and the restore that reads it.
@@ -733,15 +756,69 @@ namespace Kingdom.Net.Server
                 },
             }));
             // GET /update-gate — what the client asks before it shows a menu: may this build play.
-            // Unauthenticated and takes no input, because it is asked before sign-in. The contract
-            // rides along so a wire bump blocks older clients here, at boot, rather than at the
-            // queue with a close frame.
-            app.MapGet("/update-gate", () => Results.Json(new
+            // Unauthenticated, because it is asked before sign-in. The contract rides along so a
+            // wire bump blocks older clients here, at boot, rather than at the queue with a close
+            // frame.
+            //
+            // The answer takes no input. The headers it reads (session, device, platform, build,
+            // contract) feed only the funnel's gate_served row, each validated or dropped, and a
+            // request without them is answered exactly the same.
+            app.MapGet("/update-gate", (HttpContext context) =>
             {
-                contract = cfg.Options.WireContractVersion,
-                minBuildAndroid = cfg.MinClientBuildAndroid,
-                minBuildIos = cfg.MinClientBuildIos,
-            }));
+                var h = context.Request.Headers;
+                funnel.Write(ServerFunnelRows.GateServed(
+                    h[ServerFunnelRows.HeaderSession], h[ServerFunnelRows.HeaderDevice],
+                    h[ServerFunnelRows.HeaderPlatform], h[ServerFunnelRows.HeaderBuild],
+                    h[ServerFunnelRows.HeaderContract], cfg.Options.WireContractVersion,
+                    cfg.MinClientBuildAndroid, cfg.MinClientBuildIos, time.NowMs));
+                return Results.Json(new
+                {
+                    contract = cfg.Options.WireContractVersion,
+                    minBuildAndroid = cfg.MinClientBuildAndroid,
+                    minBuildIos = cfg.MinClientBuildIos,
+                });
+            });
+
+            // POST /telemetry/client — the funnel's client rows. Device token before sign-in,
+            // bearer after; rows are claims, rate-limited, used for counting. See
+            // ClientTelemetryEndpoint. The body is read capped, before authentication.
+            app.MapPost("/telemetry/client", async (HttpContext context) =>
+            {
+                var (body, oversized) = await ReadCappedBodyAsync(context, ClientTelemetryEndpoint.MaxBodyBytes);
+                ClientTelemetryResult result = await clientTelemetry.PostAsync(
+                    // Cast, not a bare null: a bare null converts to an EMPTY ReadOnlyMemory through
+                    // its array conversion, and an oversized body would then answer 400, not 413.
+                    oversized ? (ReadOnlyMemory<byte>?)null : body,
+                    BearerFrom(context),
+                    context.Request.Headers[ServerFunnelRows.HeaderDevice],
+                    CallerAddress(context),
+                    context.RequestAborted);
+                context.Response.Headers["Cache-Control"] = "no-store";
+                if (result.HttpStatus == 429) context.Response.Headers["Retry-After"] = "10";
+                return Results.Json(new
+                {
+                    status = result.Status,
+                    accepted = result.Accepted,
+                    dropped = result.Dropped,
+                }, statusCode: result.HttpStatus);
+            });
+
+            // POST /telemetry/sentry — Sentry's webhook, signed with the integration's Client
+            // Secret. Off (404) with no secret configured. See SentryWebhook.
+            app.MapPost("/telemetry/sentry", async (HttpContext context) =>
+            {
+                if (string.IsNullOrEmpty(cfg.SentryWebhookSecret)) return Results.NotFound();
+                var (body, oversized) = await ReadCappedBodyAsync(context, SentryWebhook.MaxBodyBytes);
+                var outcome = SentryWebhook.Handle(
+                    cfg.SentryWebhookSecret!, body.Span, oversized,
+                    context.Request.Headers[SentryWebhook.SignatureHeader],
+                    context.Request.Headers[SentryWebhook.ResourceHeader],
+                    time.NowMs);
+                // A 503 asks Sentry to retry a row the buffer could not take.
+                if (outcome.Row is not null && !funnel.Write(outcome.Row))
+                    return Results.Json(new { status = "unavailable" }, statusCode: 503);
+                return Results.Json(new { status = outcome.Status }, statusCode: outcome.HttpStatus);
+            });
             app.MapGet("/leaderboard", async (HttpContext context) =>
             {
                 int limit = 50;
@@ -1603,6 +1680,34 @@ namespace Kingdom.Net.Server
         ///
         /// <para>Cache-Control: no-store, for the reason <c>/roster</c> sets it.</para>
         /// </summary>
+        /// <summary>
+        /// The request body, read up to <paramref name="maxBytes"/>. Past the cap the read stops and
+        /// <c>Oversized</c> is true, so an unauthenticated caller cannot make the server buffer more
+        /// than the cap — the reason <see cref="SmallJsonStringAsync"/> caps too.
+        /// </summary>
+        private static async System.Threading.Tasks.Task<(ReadOnlyMemory<byte> Body, bool Oversized)> ReadCappedBodyAsync(
+            HttpContext context, int maxBytes)
+        {
+            if (context.Request.ContentLength > maxBytes) return (ReadOnlyMemory<byte>.Empty, true);
+
+            var buffer = new byte[Math.Min(maxBytes + 1, (int)(context.Request.ContentLength ?? 8192) + 1)];
+            int read = 0;
+            while (true)
+            {
+                if (read == buffer.Length)
+                {
+                    if (buffer.Length > maxBytes) return (ReadOnlyMemory<byte>.Empty, true);
+                    Array.Resize(ref buffer, Math.Min(maxBytes + 1, buffer.Length * 2));
+                }
+                int n = await context.Request.Body.ReadAsync(
+                    buffer.AsMemory(read, buffer.Length - read), context.RequestAborted);
+                if (n == 0) break;
+                read += n;
+                if (read > maxBytes) return (ReadOnlyMemory<byte>.Empty, true);
+            }
+            return (buffer.AsMemory(0, read), false);
+        }
+
         /// <summary>
         /// The <c>/play-games</c> routes' JSON. <c>suggestions</c> is present only on a 200 from
         /// <c>/friends/play-games</c>, an array of flat objects like every <c>/friends</c> list.
