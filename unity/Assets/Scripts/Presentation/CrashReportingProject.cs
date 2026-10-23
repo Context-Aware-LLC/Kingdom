@@ -17,12 +17,12 @@ namespace Kingdom.Presentation
     public static class CrashReportingProject
     {
         /// <summary>The Sentry project's client key (Settings → Client Keys). Empty = disabled.</summary>
-        public const string Dsn = "";
+        public const string Dsn = "https://133601fcdf9a1726f17277040b82d588@o4512305368399872.ingest.us.sentry.io/4512305395597312";
 
         /// <summary>The organisation slug, as in <c>https://sentry.io/organizations/&lt;slug&gt;/</c>.</summary>
-        public const string Organization = "";
+        public const string Organization = "context-aware";
 
         /// <summary>The project slug, as in the project's settings URL.</summary>
-        public const string Project = "";
+        public const string Project = "unity";
     }
 }
