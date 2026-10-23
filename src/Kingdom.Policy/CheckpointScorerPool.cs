@@ -118,8 +118,7 @@ namespace Kingdom.Policy
             }
             finally
             {
-                // A faulted process goes back too: it refuses every later request, which is the
-                // same fail-closed behaviour a single faulted scorer has.
+                // A faulted process goes back too: its next request restarts it.
                 _idle.Writer.TryWrite(scorer);
             }
         }

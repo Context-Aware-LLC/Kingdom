@@ -14,36 +14,48 @@ namespace Kingdom.Policy
     /// One warm Python scorer process speaking newline-delimited JSON over stdio. Requests are
     /// serialized because stdin/stdout form one ordered stream; a timeout faults and terminates the
     /// process so a late response can never be mistaken for a later decision.
+    ///
+    /// <para>A fault fails the request that caused it, and the NEXT request starts a fresh Python
+    /// child on a fresh pipe. It used to refuse every later request instead, and a pool hands a
+    /// refusing process out fastest of all, so one 5 s stall failed the 4130 arena games after it
+    /// (2026-10-22) and a capture the night before. A restart cannot change a game: the scorer is
+    /// stateless between requests and its thread count is pinned at start.</para>
     /// </summary>
     public sealed class CheckpointScorerProcess :
         ICheckpointScorer, ICheckpointStateEmbeddingScorer, ICheckpointBatchScorer, IAsyncDisposable
     {
         private const string Protocol = "emberfall-policy-scorer-v1";
 
+        /// <summary>Kept apart from the request deadline: four scorers loading torch together took
+        /// 12.4 s on an idle machine (2026-10-23), and a BelowNormal arena starting under load
+        /// missed a 30 s readiness deadline with all twelve.</summary>
+        private static readonly TimeSpan ReadinessTimeout = TimeSpan.FromMinutes(2);
+
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
 
-        private readonly Process _process;
+        private readonly ProcessStartInfo _startInfo;
         private readonly SemaphoreSlim _gate = new SemaphoreSlim(1, 1);
         private readonly TimeSpan _requestTimeout;
         private readonly StringBuilder _stderr = new StringBuilder();
+        private Process _process;
         private long _nextRequestId;
         private bool _faulted;
+        private bool _disposed;
 
-        private CheckpointScorerProcess(Process process, string checkpointSha256, TimeSpan requestTimeout)
+        private CheckpointScorerProcess(
+            ProcessStartInfo startInfo, string checkpointSha256, TimeSpan requestTimeout)
         {
-            _process = process;
+            _startInfo = startInfo;
             CheckpointSha256 = checkpointSha256;
             _requestTimeout = requestTimeout;
-            _process.ErrorDataReceived += (_, e) =>
-            {
-                if (e.Data is null) return;
-                lock (_stderr) _stderr.AppendLine(e.Data);
-            };
-            _process.BeginErrorReadLine();
+            _process = Launch();
         }
+
+        /// <summary>Fresh Python children started after a fault, over this scorer's life.</summary>
+        public int Restarts { get; private set; }
 
         public string CheckpointSha256 { get; }
 
@@ -106,14 +118,12 @@ namespace Kingdom.Policy
                     threads.ToString(System.Globalization.CultureInfo.InvariantCulture));
             }
 
-            Process process = Process.Start(start)
-                ?? throw new InvalidOperationException("Failed to start the Python checkpoint scorer.");
             string sha = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(checkpointPath))).ToLowerInvariant();
             var scorer = new CheckpointScorerProcess(
-                process, sha, requestTimeout ?? TimeSpan.FromSeconds(30));
+                start, sha, requestTimeout ?? TimeSpan.FromSeconds(30));
             try
             {
-                scorer.WaitUntilReady();
+                scorer.WaitUntilReadyAsync().GetAwaiter().GetResult();
                 return scorer;
             }
             catch
@@ -151,7 +161,7 @@ namespace Kingdom.Policy
             await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                ThrowIfUnusable();
+                await EnsureUsableAsync().ConfigureAwait(false);
 
                 long requestId = Interlocked.Increment(ref _nextRequestId);
                 string request = JsonSerializer.Serialize(new
@@ -223,7 +233,7 @@ namespace Kingdom.Policy
             await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
-                ThrowIfUnusable();
+                await EnsureUsableAsync().ConfigureAwait(false);
 
                 long requestId = Interlocked.Increment(ref _nextRequestId);
                 string request = JsonSerializer.Serialize(
@@ -286,12 +296,33 @@ namespace Kingdom.Policy
             }
         }
 
-        private void ThrowIfUnusable()
+        /// <summary>Replaces a faulted or exited child before a request is written. The caller
+        /// holds the gate, so nothing else is reading the old pipe. A restart that fails leaves
+        /// the scorer faulted and the next request tries again.</summary>
+        private async Task EnsureUsableAsync()
         {
-            if (_faulted)
-                throw new InvalidOperationException("Checkpoint scorer process is faulted and cannot accept more requests.");
-            if (_process.HasExited)
-                throw ScorerFailure($"Checkpoint scorer exited with code {_process.ExitCode}.");
+            if (_disposed) throw new ObjectDisposedException(nameof(CheckpointScorerProcess));
+            if (!_faulted && !_process.HasExited) return;
+            FaultProcess();
+            _process.Dispose();
+            lock (_stderr) _stderr.Clear();
+            _process = Launch();
+            Restarts++;
+            await WaitUntilReadyAsync().ConfigureAwait(false);
+            _faulted = false;
+        }
+
+        private Process Launch()
+        {
+            Process process = Process.Start(_startInfo)
+                ?? throw new InvalidOperationException("Failed to start the Python checkpoint scorer.");
+            process.ErrorDataReceived += (_, e) =>
+            {
+                if (e.Data is null) return;
+                lock (_stderr) _stderr.AppendLine(e.Data);
+            };
+            process.BeginErrorReadLine();
+            return process;
         }
 
         /// <summary>Writes one request line and reads the one line that answers it. The caller
@@ -346,6 +377,7 @@ namespace Kingdom.Policy
 
         public ValueTask DisposeAsync()
         {
+            _disposed = true;
             FaultProcess();
             _process.Dispose();
             _gate.Dispose();
@@ -375,21 +407,21 @@ namespace Kingdom.Policy
             catch (InvalidOperationException) { }
         }
 
-        private void WaitUntilReady()
+        private async Task WaitUntilReadyAsync()
         {
             string? line;
             try
             {
                 // Keep the deadline outside StreamReader for the same reason as request reads:
                 // cancellation-aware pipe reads can remain parked indefinitely on Windows.
-                line = _process.StandardOutput.ReadLineAsync()
-                    .WaitAsync(_requestTimeout).GetAwaiter().GetResult();
+                line = await _process.StandardOutput.ReadLineAsync()
+                    .WaitAsync(ReadinessTimeout).ConfigureAwait(false);
             }
             catch (TimeoutException)
             {
                 FaultProcess();
                 throw new TimeoutException(
-                    $"Checkpoint scorer did not become ready within {_requestTimeout.TotalSeconds:0.###} seconds.");
+                    $"Checkpoint scorer did not become ready within {ReadinessTimeout.TotalSeconds:0.###} seconds.");
             }
             catch (IOException ex)
             {
