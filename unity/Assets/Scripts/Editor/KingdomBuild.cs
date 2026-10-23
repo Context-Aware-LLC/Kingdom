@@ -95,7 +95,20 @@ namespace Kingdom.Editor
         /// and this paragraph, plus the emulator note in project memory, change together.</para>
         /// </summary>
         [MenuItem("Kingdom/Build/Android APK")]
-        public static void BuildAndroid()
+        public static void BuildAndroid() => BuildAndroid(exportProject: false);
+
+        /// <summary>
+        /// The same Android build, written out as a Gradle project that Android Studio opens
+        /// (<c>launcher/</c> + <c>unityLibrary/</c>) instead of an APK. Output:
+        /// unity/Builds/AndroidStudio. Each export overwrites that folder, so an edit made there in
+        /// Android Studio is lost on the next export unless it is carried back into Unity.
+        /// </summary>
+        [MenuItem("Kingdom/Build/Android Studio Project")]
+        public static void ExportAndroidStudioProject() => BuildAndroid(exportProject: true);
+
+        private const string AndroidStudioOutputPath = "Builds/AndroidStudio";
+
+        private static void BuildAndroid(bool exportProject)
         {
             SyncSceneList();
 
@@ -115,14 +128,20 @@ namespace Kingdom.Editor
             if (play != null && (perfCaptureBuild || profilerBuild))
                 throw new BuildFailedException(
                     "[KingdomBuild] A Play release cannot also be a perf-capture or profiler build.");
+            if (play != null && exportProject)
+                throw new BuildFailedException(
+                    "[KingdomBuild] A Play release is an AAB; it cannot also be an Android Studio export.");
 
             string originalVersion = PlayerSettings.bundleVersion;
+            bool originalExport = EditorUserBuildSettings.exportAsGoogleAndroidProject;
             bool originalFrameTimingStats = PlayerSettings.enableFrameTimingStats;
             bool originalAppBundle = EditorUserBuildSettings.buildAppBundle;
             bool originalCustomKeystore = PlayerSettings.Android.useCustomKeystore;
             string originalKeystore = PlayerSettings.Android.keystoreName;
             string originalAlias = PlayerSettings.Android.keyaliasName;
-            string outputPath = play != null ? PlayOutputPath : AndroidOutputPath;
+            string outputPath = play != null ? PlayOutputPath
+                : exportProject ? AndroidStudioOutputPath
+                : AndroidOutputPath;
 
             try
             {
@@ -164,6 +183,7 @@ namespace Kingdom.Editor
                 // a custom signing configuration into ProjectSettings whenever this menu runs.
                 PlayerSettings.Android.useCustomKeystore = false;
                 EditorUserBuildSettings.buildAppBundle = false;
+                EditorUserBuildSettings.exportAsGoogleAndroidProject = exportProject;
 
                 if (play != null)
                 {
@@ -190,7 +210,7 @@ namespace Kingdom.Editor
 
                 BuildAndroidAddressables();
 
-                Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+                Directory.CreateDirectory(exportProject ? outputPath : Path.GetDirectoryName(outputPath));
                 var options = new BuildPlayerOptions
                 {
                     scenes             = AllScenes,
@@ -243,6 +263,7 @@ namespace Kingdom.Editor
                 PlayerSettings.Android.keystorePass = "";
                 PlayerSettings.Android.keyaliasPass = "";
                 EditorUserBuildSettings.buildAppBundle = originalAppBundle;
+                EditorUserBuildSettings.exportAsGoogleAndroidProject = originalExport;
                 AssetDatabase.SaveAssets();
             }
         }
