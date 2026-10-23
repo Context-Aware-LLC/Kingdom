@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Kingdom.Net.Client.Gate;
+using Kingdom.Net.Client.Telemetry;
 using Kingdom.Net.Client.Tests.Auth;
 using NUnit.Framework;
 
@@ -71,6 +73,41 @@ namespace Kingdom.Net.Client.Tests.Gate
                 .CheckAsync(HttpUpdateGate.Android, 10, Contract);
 
             Assert.That(result.Verdict, Is.EqualTo(UpdateGateVerdict.Unreachable));
+        }
+
+        [Test]
+        public async Task The_request_carries_the_funnel_keys_the_server_logs_gate_served_with()
+        {
+            var http = new FakeAuthHttp().Reply(200, Answer());
+
+            // "" as the store platform: the Editor, whose funnel platform is still named.
+            await new HttpUpdateGate(Base, http, "0123456789abcdef0123456789abcdef", "device-token",
+                    FunnelPlatform.Editor, "0.0.14+editor")
+                .CheckAsync("", HttpUpdateGate.UnknownBuild, Contract);
+
+            var headers = http.Requests.Single().Headers;
+            Assert.That(headers, Does.Contain(new KeyValuePair<string, string>(
+                FunnelHeaders.Session, "0123456789abcdef0123456789abcdef")));
+            Assert.That(headers, Does.Contain(new KeyValuePair<string, string>(
+                FunnelHeaders.Device, "device-token")));
+            Assert.That(headers, Does.Contain(new KeyValuePair<string, string>(
+                FunnelHeaders.Platform, "editor")));
+            Assert.That(headers, Does.Contain(new KeyValuePair<string, string>(
+                FunnelHeaders.Build, "0.0.14+editor")));
+            Assert.That(headers, Does.Contain(new KeyValuePair<string, string>(
+                FunnelHeaders.Contract, Contract)));
+        }
+
+        [Test]
+        public async Task With_no_funnel_keys_the_headers_are_left_off_rather_than_sent_empty()
+        {
+            var http = new FakeAuthHttp().Reply(200, Answer());
+
+            await new HttpUpdateGate(Base, http).CheckAsync(HttpUpdateGate.Android, 10, Contract);
+
+            var names = http.Requests.Single().Headers.Select(h => h.Key).ToList();
+            Assert.That(names, Does.Not.Contain(FunnelHeaders.Session).And.Not.Contain(FunnelHeaders.Device)
+                .And.Not.Contain(FunnelHeaders.Platform).And.Not.Contain(FunnelHeaders.Build));
         }
     }
 }

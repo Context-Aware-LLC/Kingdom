@@ -168,13 +168,30 @@ namespace Kingdom.Presentation
             // RETIREMENT TRIGGER: CLAUDE.md ("What does establish it is the update gate") states
             // that the menu never shows unless the server answered at boot. Removing this call, or
             // letting any verdict but Pass through, falsifies that paragraph — rewrite it here.
-            UpdateGateResult gate = await UpdateGateOverlay.CheckAsync();
+            UpdateGateResult gate;
+            try
+            {
+                gate = await UpdateGateOverlay.CheckAsync();
+            }
+            catch (Exception)
+            {
+                // The funnel's `error` outcome. Rethrown: recording it must not change what a
+                // throwing gate does to the boot.
+                FirstSessionFunnel.GateError();
+                throw;
+            }
+            FirstSessionFunnel.Gate(gate);
             if (this == null) return;
             if (gate.Verdict != UpdateGateVerdict.Pass)
             {
                 UpdateGateOverlay.Show(gate);
                 return;
             }
+
+            // A returning player never sees the sign-in gate, so their stored session is this
+            // process's sign_in row (once per process; a sign-in through the gate records its own).
+            if (_signIn != null && !_signIn.IsRequired && AuthGateway.IsSignedIn)
+                FirstSessionFunnel.SignedInFromStoredSession();
 
             CollectionSnapshot collection = null;
             try

@@ -28,6 +28,11 @@ namespace Kingdom.Session
     {
         private readonly int _timeoutSeconds;
 
+        /// <summary>Raised on the main thread after any request through any instance completes with a
+        /// 2xx. The first-session funnel listens, because a request that just succeeded is the cheapest
+        /// moment to flush rows an unreachable boot left queued. A listener that throws is ignored.</summary>
+        public static event Action Answered;
+
         public UnityWebRequestAuthHttp(int timeoutSeconds = 20)
         {
             _timeoutSeconds = timeoutSeconds;
@@ -117,9 +122,11 @@ namespace Kingdom.Session
                         return;
                     }
 
-                    completion.SetResult(AuthHttpResponse.Completed(
+                    var response = AuthHttpResponse.Completed(
                         (int)request.responseCode,
-                        request.downloadHandler != null ? request.downloadHandler.text : ""));
+                        request.downloadHandler != null ? request.downloadHandler.text : "");
+                    completion.SetResult(response);
+                    if (response.IsSuccess) RaiseAnswered();
                 }
                 catch (Exception ex)
                 {
@@ -133,6 +140,12 @@ namespace Kingdom.Session
             };
 
             return completion.Task;
+        }
+
+        private static void RaiseAnswered()
+        {
+            try { Answered?.Invoke(); }
+            catch (Exception) { /* a listener must not turn a success into a transport failure */ }
         }
     }
 }
