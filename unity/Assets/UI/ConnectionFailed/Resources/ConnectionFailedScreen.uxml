@@ -11,7 +11,8 @@
   must resolve before anything else" shape as the account switcher.
 
   UpdateGateOverlay builds from this same tree: it rewrites the title and the reason, removes
-  Back, and turns Retry into its one button. Renaming an element here breaks both.
+  Back, and turns Retry into its one button; its waiting state removes the whole
+  .mm-modal__actions row. Renaming an element or that class here breaks both.
 
   .emb-root IS LOAD-BEARING. This tree is its own UIDocument, so no screen root is above it, and
   every token the .mm-modal__* rules read (the type scale, the spacing run, the touch floor) is
