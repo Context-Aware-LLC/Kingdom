@@ -58,10 +58,14 @@ ev as not materialized (
   from raw_event r
   where r.type in ('client_milestone', 'gate_served', 'hello', 'queue', 'queue_refused', 'first_action', 'crash')
 ),
--- Client rows that can be placed in a session and in time.
+-- Client rows that can be placed in a session and in time, one per (session, milestone,
+-- client_ts). A client that retries after losing the response posts the row again; the server
+-- stamps a new `at`, so the line hash differs and raw_event keeps both. Without this, the
+-- second copy would double gate_attempts.
 cm as not materialized (
-  select * from ev
+  select distinct on (session_id, milestone, client_ts) * from ev
   where type = 'client_milestone' and session_id ~ '^[0-9a-f]{32}$' and client_ts is not null
+  order by session_id, milestone, client_ts, at_ts
 ),
 -- Server rows that can be placed in time.
 srv as not materialized (
