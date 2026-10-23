@@ -34,9 +34,10 @@ namespace Kingdom.Presentation
     [RequireComponent(typeof(UIDocument))]
     public sealed class UpdateGateOverlay : MonoBehaviour
     {
-        // Just over a warm round trip (0.72 s measured 2026-10-23, see UpdateGateRetry), so a
-        // healthy launch passes before the waiting state would show and never flashes it.
-        private const int WaitingDelayMs = 1000;
+        // Past the boot loading screen's two-second floor, so the waiting state never lands on top
+        // of it. Measured 2026-10-23 (see UpdateGateRetry): warm 0.72 s and a wake from suspend
+        // 1.43 s both pass unseen; only a cold start (6.68 s) or a bad network shows it.
+        private const int WaitingDelayMs = 2000;
         private const string PlayListing = "https://play.google.com/store/apps/details?id=";
         // No App Store listing exists yet; until one does, iOS and desktop go to the site.
         private const string SiteRoot = "https://kingdomofbadideas.com";
