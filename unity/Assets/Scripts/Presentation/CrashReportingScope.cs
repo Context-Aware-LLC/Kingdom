@@ -27,7 +27,10 @@ namespace Kingdom.Presentation
     public static class CrashReportingScope
     {
         public const string SessionTag = "session_id";
-        public const string DeviceTag = "device";
+        /// <summary>NOT <c>device</c>: Sentry reserves that tag for the device model and overwrote ours
+        /// with "Pixel 5a" on the first real crash (2026-10-23). The funnel's key is still called
+        /// <c>device</c>; the webhook reads this tag into it.</summary>
+        public const string DeviceTag = "device_hash";
         public const string BuildTag = "build";
         /// <summary>The Supabase user id (<c>sub</c>) — the identity the server keys an account on, via
         /// <c>credential_hash = sha256(sub)</c>.</summary>
@@ -35,7 +38,7 @@ namespace Kingdom.Presentation
         public const string MatchTag = "match_id";
 
         /// <summary>
-        /// The <c>device</c> tag for a device token: lowercase hex SHA-256 of its UTF-8 bytes, first 16
+        /// The device hash for a device token: lowercase hex SHA-256 of its UTF-8 bytes, first 16
         /// characters. Never the token itself — the token is a bearer credential on hello (VULN-003).
         /// The server can derive the same value from the token it already holds to join on it.
         /// </summary>

@@ -86,8 +86,14 @@ namespace Kingdom.Net.Server.Telemetry
 
                 string? session = Tag(ev, "session_id");
                 if (!FunnelFormat.IsLowerHex(session, 32)) session = null;
-                string? device = Tag(ev, "device");
-                if (!FunnelFormat.IsLowerHex(device, 16)) device = null;
+                // NOT the `device` tag alone: Sentry reserves `device` for its own model tag ("Pixel
+                // 5a"), which displaced ours on the first real crash (2026-10-23). The client tags
+                // `device_hash`; builds before that still carry the hash as the event's user id.
+                string? device = FirstLowerHex16(
+                    Tag(ev, "device_hash"),
+                    Tag(ev, "device"),
+                    ev.TryGetProperty("user", out var user) && user.ValueKind == JsonValueKind.Object
+                        ? StringProp(user, "id") : null);
 
                 var row = new FunnelRow(RowType)
                     .Str("session_id", session)
@@ -125,6 +131,13 @@ namespace Kingdom.Net.Server.Telemetry
             => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
 
         private static string? Lower(string? s) => s?.ToLowerInvariant();
+
+        private static string? FirstLowerHex16(params string?[] candidates)
+        {
+            foreach (string? c in candidates)
+                if (FunnelFormat.IsLowerHex(c, 16)) return c;
+            return null;
+        }
 
         /// <summary>A tag off the event. Sentry sends <c>[["key","value"], …]</c>; the
         /// <c>{"key":…,"value":…}</c> form its API also uses is read too.</summary>

@@ -263,9 +263,24 @@ namespace Kingdom.Net.Server.Tests
 
         private const string Secret = "sentry-client-secret";
 
-        private static byte[] SentryError(string tagsJson, string path = "error") => Encoding.UTF8.GetBytes(
+        private static byte[] SentryError(string tagsJson, string path = "error", string userId = "x") => Encoding.UTF8.GetBytes(
             "{\"action\":\"created\",\"data\":{\"" + path + "\":{\"event_id\":\"bb78c1407cea4519aa397afc059c793d\"," +
-            "\"release\":\"0.0.14+31\",\"tags\":" + tagsJson + ",\"user\":{\"id\":\"x\"}}}}");
+            "\"release\":\"0.0.14+31\",\"tags\":" + tagsJson + ",\"user\":{\"id\":\"" + userId + "\"}}}}");
+
+        [Test]
+        public void The_Device_Comes_From_Device_Hash_Then_The_User_Id_When_Sentry_Owns_The_Device_Tag()
+        {
+            // Sentry fills `device` with the model on a real event (2026-10-23), so it must not win.
+            byte[] tagged = SentryError(
+                $"[[\"session_id\",\"{Session}\"],[\"device\",\"Pixel 5a\"],[\"device_hash\",\"fdc2f4194f79710d\"]]",
+                userId: "0000000000000000");
+            var a = SentryWebhook.Handle(Secret, tagged, false, SentryWebhook.Sign(Secret, tagged), "error", Now);
+            Assert.That(a.Row!.Get("device"), Is.EqualTo("fdc2f4194f79710d"));
+
+            byte[] older = SentryError($"[[\"session_id\",\"{Session}\"],[\"device\",\"Pixel 5a\"]]", userId: "fdc2f4194f79710d");
+            var b = SentryWebhook.Handle(Secret, older, false, SentryWebhook.Sign(Secret, older), "error", Now);
+            Assert.That(b.Row!.Get("device"), Is.EqualTo("fdc2f4194f79710d"));
+        }
 
         [Test]
         public void Sentry_Signature_Is_Hmac_Sha256_Hex_Of_The_Raw_Body()
