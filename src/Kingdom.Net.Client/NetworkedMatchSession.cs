@@ -23,6 +23,14 @@ namespace Kingdom.Net.Client
     /// </summary>
     public sealed class NetworkedMatchSession : IMatchSession, IDisposable
     {
+        /// <summary>
+        /// The close reason the server sends with status 1013 when a pairing is refused at its
+        /// session cap (<c>MatchGate.CapacityRefusal</c>, matched by exact spelling). It surfaces as
+        /// <see cref="DeadReason.ServerFull"/>: the court is full, not the player's fault, and the
+        /// boot holds them and re-queues instead of failing.
+        /// </summary>
+        public const string ServerFullReason = "server full";
+
         private readonly IWireTransport _transport;
         private readonly ClientOptions _opts;
         private readonly object _lock = new object();
@@ -549,7 +557,9 @@ namespace Kingdom.Net.Client
                 // machine (§4.3) is commit-2 timer work; the terminal transition + StopMatch signal
                 // (RC-F10) is what commit 1 must get right so the runner stops.
                 SetStateUnlocked(ConnectionState.Dead);
-                _deadReason = DeadReason.Forfeited;
+                // A refusal at the server's session cap is the one close a caller should answer
+                // by trying again rather than by failing (item 4b), so it gets its own bucket.
+                _deadReason = detail == ServerFullReason ? DeadReason.ServerFull : DeadReason.Forfeited;
                 _deadReasonDetail = detail;
                 _pending?.TrySetResult(CommandResult.Rejected(RejectReason.GameOver, StateVersion));
                 ClearPendingUnlocked();
@@ -601,10 +611,18 @@ namespace Kingdom.Net.Client
             }
         }
 
+        /// <summary>
+        /// Stop the pumps and close the socket. Closing is the load-bearing half: a queued player
+        /// who leaves (the at-capacity wait's Leave button, a scene change) must leave the SERVER's
+        /// queue too, and before 2026-10-23 this only stopped reading — the socket stayed open
+        /// with nobody behind it, so the server could still seat it and hand an opponent a ghost.
+        /// Unsubscribed first, so the local close does not report itself as a peer's.
+        /// </summary>
         public void Dispose()
         {
             try { _pumpCts?.Cancel(); } catch { /* ignore */ }
             _transport.OnClosed -= OnTransportClosed;
+            try { _ = _transport.CloseAsync(WireCloseReason.Local); } catch { /* already gone */ }
         }
     }
 }

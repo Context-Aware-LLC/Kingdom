@@ -320,6 +320,12 @@
     <string name="connection_error_server_full">The server is full. Try again in a moment.</string>
     <!-- Joke line under server full. -->
     <string name="connection_joke_server_full">The Council has asked everyone to form a queue.</string>
+    <!-- Court-full panel title: the server is at capacity and the game will keep asking for a seat (not an error). -->
+    <string name="connection_court_full_title">The court is full</string>
+    <!-- Court-full panel line, spoken as the Royal Herald. The game re-queues automatically every few seconds. -->
+    <string name="connection_court_full_herald">The Herald begs your patience: every seat in the hall is taken. We\'ll keep asking for one until it opens.</string>
+    <!-- Court-full panel button: stop waiting and return to the menu. -->
+    <string name="connection_court_full_leave">Leave the queue</string>
     <!-- Connection overlay plain line. -->
     <string name="connection_error_signed_out">You\'ve been signed out. Sign in again from the menu.</string>
     <!-- Connection overlay plain line. -->

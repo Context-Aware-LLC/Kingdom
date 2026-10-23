@@ -206,6 +206,9 @@
     <string name="connection_joke_deck_rejected">Der Rat hat es mit Anmerkungen zurückgeschickt.</string>
     <string name="connection_error_server_full">Der Server ist voll. Versuch es gleich noch einmal.</string>
     <string name="connection_joke_server_full">Der Rat bittet alle, sich ordentlich anzustellen.</string>
+    <string name="connection_court_full_title">Der Hof ist voll</string>
+    <string name="connection_court_full_herald">Der Herold bittet um Geduld: Jeder Platz im Saal ist besetzt. Wir fragen weiter nach einem, bis einer frei wird.</string>
+    <string name="connection_court_full_leave">Warteschlange verlassen</string>
     <string name="connection_error_signed_out">Du wurdest abgemeldet. Melde dich im Menü erneut an.</string>
     <string name="connection_error_version_mismatch">Diese Spielversion passt nicht zu der des Servers.</string>
     <string name="connection_error_challenge_expired">Die Herausforderung ist abgelaufen, bevor ihr beide da wart.</string>
