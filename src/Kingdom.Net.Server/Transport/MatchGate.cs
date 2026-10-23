@@ -28,7 +28,8 @@ namespace Kingdom.Net.Server.Transport
     /// policy pairs them. Reconnects skip the queue via `/ws?reconnect=1` — a transport routing
     /// hint only; authentication is the
     /// ReconnectMsg token, judged by the session (§8). Also owns the RC Q4 session cap: at
-    /// capacity, new pairings are refused with close 1013 before queueing.
+    /// capacity, new pairings are refused with close 1013 <see cref="CapacityRefusal"/> before
+    /// queueing, and the client holds the player and re-queues on its own cadence.
     ///
     /// <para><b>C-G1-8:</b> the socket connect is no longer the hello. A fresh socket must open
     /// with a <see cref="HelloMsg"/> carrying a device token, which becomes the seat's
@@ -169,6 +170,15 @@ namespace Kingdom.Net.Server.Transport
         }
 
         public int MaxSessions => _opts.MaxSessions;
+
+        /// <summary>
+        /// The close reason (with status 1013) on a pairing refused at <see cref="MaxSessions"/>.
+        /// <b>The client matches this exact spelling</b> (<c>NetworkedMatchSession.ServerFullReason</c>)
+        /// to keep the player waiting and re-queue on a short cadence instead of failing the boot
+        /// (item 4b of the first-session plan). Reword one and the other must follow, or a full
+        /// court reads to the player as an unexplained refusal.
+        /// </summary>
+        public const string CapacityRefusal = "server full";
 
         /// <summary>Is this account seated in a live match right now? Server-side only.</summary>
         public bool IsInMatch(AccountId account)
@@ -419,17 +429,37 @@ namespace Kingdom.Net.Server.Transport
             }
 
             Seating? seating;
-            int refusalCode = 1013;
-            string refusal = "server full";
+            int refusalCode;
+            string refusal;
             if (challengeTicket is null)
-                seating = await PairAsync(conn, account, checkedName, submitted, ct);
+                (seating, refusalCode, refusal) = await PairAsync(conn, account, checkedName, submitted, ct);
             else
                 (seating, refusalCode, refusal) =
                     await SeatChallengeAsync(conn, account, checkedName, submitted, challengeTicket, ct);
 
             if (seating is null)
             {
-                Console.Error.WriteLine("[gate] refused player_id={0}: {1}", account.Value, refusal);
+                // Three different stories, kept apart because the first-session funnel (item 2)
+                // reads them as different drop reasons: the box was full, the player walked away
+                // while queued, or the gate turned them away for some other cause.
+                if (refusal == CapacityRefusal)
+                {
+                    // item 2: this is the funnel's `capacity` reason. Write a raw_event row here
+                    // (type "gate_refused", reason "capacity", this account) once the funnel gives
+                    // the gate a sink for non-match events — ITelemetrySink carries only match
+                    // events today, so this log line is the record until then.
+                    Console.Error.WriteLine("[gate] refused player_id={0} reason=capacity sessions={1}/{2}",
+                                            account.Value, LiveSessions, _opts.MaxSessions);
+                }
+                else if (ct.IsCancellationRequested)
+                {
+                    Console.Error.WriteLine("[gate] left before seating player_id={0} reason=cancelled",
+                                            account.Value);
+                }
+                else
+                {
+                    Console.Error.WriteLine("[gate] refused player_id={0}: {1}", account.Value, refusal);
+                }
                 conn.Close(refusalCode, refusal);
                 await conn.PumpTask;
                 return;
@@ -470,7 +500,15 @@ namespace Kingdom.Net.Server.Transport
             await ReceiveLoopAsync(socket, pump, conn, ct);
         }
 
-        private async Task<Seating?> PairAsync(
+        /// <summary>
+        /// Queue one socket and wait for its seat. A null seating comes back with the close it is
+        /// owed: <see cref="CapacityRefusal"/> when the box is at <see cref="ServerOptions.MaxSessions"/>,
+        /// which the client answers by holding the player and re-queueing (item 4b); "match start
+        /// failed" when the pairing was made but <see cref="StartMatch"/> threw. A socket that left
+        /// while queued also comes back null — the caller tells it apart by its cancelled token, and
+        /// must, because until 2026-10-23 that path was logged as "server full".
+        /// </summary>
+        private async Task<(Seating? Seating, int RefusalCode, string Refusal)> PairAsync(
             WebSocketConnection conn, AccountId account, string displayName, SeatDeck? submitted,
             CancellationToken ct)
         {
@@ -487,7 +525,7 @@ namespace Kingdom.Net.Server.Transport
             lock (_lock)
             {
                 if (_sessions.Count + _pendingSessions >= _opts.MaxSessions)
-                    return null;   // RC Q4: refuse before queueing
+                    return (null, 1013, CapacityRefusal);   // RC Q4: refuse before queueing
                 _waiting.Add(ticket.Id, waiter);
                 _matchmaking.Enqueue(ticket);
             }
@@ -513,7 +551,7 @@ namespace Kingdom.Net.Server.Transport
                             TryBotFillTimedOutTickets();
                         }
                     }
-                    return await mySeating.Task;
+                    return (await mySeating.Task, 1011, "match start failed");
                 }
                 finally
                 {
@@ -558,7 +596,7 @@ namespace Kingdom.Net.Server.Transport
                     if (_sessions.Count + _pendingSessions >= _opts.MaxSessions)
                     {
                         opponent.Seated.TrySetResult(null);
-                        return (null, 1013, "server full");
+                        return (null, 1013, CapacityRefusal);
                     }
                     _pendingSessions++;
                 }
@@ -572,7 +610,7 @@ namespace Kingdom.Net.Server.Transport
             {
                 _challenges!.Finish(seat.ChallengeId);
                 StartMatch(opponent, me, friendly: true);
-                return (await mySeating.Task, 1013, "server full");
+                return (await mySeating.Task, 1013, CapacityRefusal);
             }
 
             using (ct.Register(() => CancelChallengeWaiting(seat.ChallengeId, me)))
@@ -585,7 +623,7 @@ namespace Kingdom.Net.Server.Transport
                 // "server full" is the opponent arriving to a gate at its session cap, which is
                 // the only way a parked waiter is completed with null by somebody else.
                 bool timedOut = !ReferenceEquals(arrived, mySeating.Task);
-                return (await mySeating.Task, timedOut ? 1008 : 1013, timedOut ? "challenge expired" : "server full");
+                return (await mySeating.Task, timedOut ? 1008 : 1013, timedOut ? "challenge expired" : CapacityRefusal);
             }
         }
 

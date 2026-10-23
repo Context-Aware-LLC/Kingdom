@@ -19,11 +19,22 @@ namespace Kingdom.Net.Client.Gate
         public UpdateGateVerdict Verdict { get; }
         public string Detail { get; }
 
-        private UpdateGateResult(UpdateGateVerdict verdict, string detail)
+        /// <summary>How many requests produced this verdict: 1 from a single
+        /// <see cref="HttpUpdateGate.CheckAsync"/>, up to <see cref="UpdateGateRetry.MaxAttempts"/>
+        /// through <see cref="UpdateGateRetry"/>, and 0 for a pass remembered from earlier in the
+        /// process, which asked nobody. The first-session funnel logs it beside the outcome.</summary>
+        public int Attempts { get; }
+
+        private UpdateGateResult(UpdateGateVerdict verdict, string detail, int attempts = 1)
         {
             Verdict = verdict;
             Detail = detail ?? "";
+            Attempts = attempts;
         }
+
+        /// <summary>The same verdict, recording how many requests it took.</summary>
+        public UpdateGateResult WithAttempts(int attempts)
+            => new UpdateGateResult(Verdict, Detail, attempts);
 
         public static UpdateGateResult Pass() => new UpdateGateResult(UpdateGateVerdict.Pass, "");
 

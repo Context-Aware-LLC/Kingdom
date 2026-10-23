@@ -78,6 +78,15 @@ namespace Kingdom.Presentation
         private bool _openingActive;
         private MulliganConfirmButtonView _mulligan;
 
+        // Item 4b: the pause between re-queues after a capacity refusal, drawn uniformly per refusal.
+        // Short enough that a freed seat is taken within seconds; spread wide enough that a full
+        // box's worth of refused clients does not return on the same tick.
+        private const float CourtFullRetryMinSeconds = 6f;
+        private const float CourtFullRetryMaxSeconds = 10f;
+        // How long a re-queue may sit in Pairing unrefused before it counts as queued.
+        private const float CourtFullQueuedAfterSeconds = 3f;
+        private GameObject _courtFull;
+
         private void Awake()
         {
             // Frame-0 coverage (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §5): the overlay is up before the
@@ -130,170 +139,231 @@ namespace Kingdom.Presentation
                 yield break;
             }
 
-            // EF-074e: the Supabase JWT for this connect, refreshed first if it is near expiry. This
-            // is awaited rather than fetched inline because a refresh is a network round trip, and
-            // the boot must not present a token that expires during the handshake — the server closes
-            // the socket on a bad one and never downgrades silently.
-            //
-            // A build with sign-in never connects without a token (Sam, 2026-10-18), and every release
-            // build has sign-in — so a player is never a guest. A failed token (refresh refused,
-            // network down) stops the boot here with Retry; a deployment with sign-in would refuse the
-            // tokenless hello anyway ("sign-in required"), and this is the legible version of that.
-            // Only an unconfigured dev build connects without a token, and only a tooling server that
-            // sets ServerOptions.AllowGuestMatches seats it.
-            Task<string> authTokenTask = AuthGateway.TokenForConnectAsync();
-            while (!authTokenTask.IsCompleted) yield return null;
-            string authToken = authTokenTask.Status == TaskStatus.RanToCompletion ? authTokenTask.Result : "";
-            if (AuthGateway.IsConfigured && string.IsNullOrEmpty(authToken))
-            {
-                BootFailed(ConnectionFailureCopy.SignInUnconfirmed);
-                yield break;
-            }
-
-            // ── C-G1-4 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-G1-REVIEW.md §3) — the gate cannot be signed on recollection ──────
-            // This client was previously constructed with default ClientOptions, so OnDesyncCapture
-            // and OnMisattribution were null. A snapshot that fails VerifyIntegrity is discarded and
-            // the mirror holds last-good state (NetworkedMatchSession.cs:260-265) — with no log, no
-            // toast and no artifact. On screen that is indistinguishable from "a minion vanished",
-            // which is exactly how the open rekindle bug presents, and it is why no offline repro can
-            // ever reach it: offline there is no wire and no verification step.
-            //
-            // NOTE: ClientOptions.DevCapture is declared but read NOWHERE in production code (only
-            // set in SnapshotApplyTests) — the sole gate on capture is OnDesyncCapture being non-null.
-            // It is set here for intent, not effect. Do not assume toggling it changes behaviour.
-            //
-            // These sinks run on the background receive pump, so they must never throw.
-            string captureDir = Path.Combine(Application.persistentDataPath, "desync");
-            var clientOptions = new ClientOptions
-            {
-                // C-G1-8: the server refuses a fresh socket whose hello carries no device token.
-                // The SIGNED-IN ACCOUNT's token, not the device's — two seats launched from one machine
-                // must arrive as two accounts. MatchGate.PairAsync never compares accounts, so they
-                // already pair; without this they simply both arrive as the same one, indistinguishable
-                // to the server and to telemetry. DeviceIdentity.Token is untouched and is still what
-                // the first account presents (DeviceAccounts) — see that class for why the persistence,
-                // not the generation, is the load-bearing half.
-                DeviceToken = DeviceAccounts.WireToken(),
-                Platform = DeviceIdentity.Platform,
-                BuildId = DeviceIdentity.BuildId,
-                // EF-073: no name. A signed-in seat is named by its identity, which the server
-                // reads off the verified token and ignores this field for (2026-10-18); an
-                // unconfigured dev build has no name to send.
-                DisplayName = "",
-                // EF-074e: the Supabase JWT; never empty on a configured build (checked above). The
-                // server keys the seat on it. Empty only from an unconfigured dev build, which a
-                // server seats on the device token only when ServerOptions.AllowGuestMatches is set.
-                AuthToken = authToken,
-                DeckSubmission = selectedDeck,
-                DevCapture = Debug.isDebugBuild,
-                OnDesyncCapture = cap => WriteDesyncCapture(captureDir, cap),
-                OnMisattribution = m => Debug.LogWarning(
-                    $"[Desync] MISATTRIBUTION match={m.MatchId} seat={m.Seat} pendingSeq={m.PendingSeq} " +
-                    $"reason={m.RejectReason} v{m.StateVersion}"),
-            };
-
-            IWireTransport transport = new WebSocketTransport();
-            if (Debug.isDebugBuild)
-            {
-                // [DesyncDbg] dev tool — see DesyncFaultInjector.
-                _faultInjector = new DesyncFaultInjector(transport);
-                transport = _faultInjector;
-            }
-            _net = new NetworkedMatchSession(transport, clientOptions);
-            _view = new MainThreadMatchSession(_net);
-
             // A friend challenge (#409) seats this socket against that friend instead of the queue.
             // The ticket rides the query string, not HelloMsg, so the wire contract did not move.
+            // Taken ONCE, outside the attempt loop below: taking it consumes it.
             string challengeTicket = ChallengeFlow.TakeTicket();
             bool challenge = challengeTicket.Length > 0;
-
-            // RC-F10: marshal terminal transitions to the main thread and stop the runner.
-            // The same handler feeds the loading overlay's status line (ConnectionState already
-            // narrates the boot: Connecting → Pairing → Live); raises come from the background
-            // receive pump, so everything goes through _view.Post.
-            // Read on the main thread only, after the connect task completes; it decides between
-            // "can't reach the server" and "lost the connection" when the close carries no reason.
-            bool reachedServer = false;
-            _net.OnConnectionStateChanged += st => _view.Post(() =>
-            {
-                if (st == ConnectionState.Pairing || st == ConnectionState.Live) reachedServer = true;
-                switch (st)
-                {
-                    case ConnectionState.Connecting: SetStatus(Loc.Get("matchmaking_status_connecting")); break;
-                    case ConnectionState.Pairing:    SetStatus(Loc.Get(challenge ? "matchmaking_status_waiting_friend" : "matchmaking_status_waiting_opponent")); break;
-                    case ConnectionState.Live:       SetStatus(Loc.Get("matchmaking_status_opponent_found")); break;
-                }
-                if (st == ConnectionState.Dead || st == ConnectionState.Ended)
-                    matchRunner.StopMatch(_net.State == ConnectionState.Ended ? _view.Current.Outcome : MatchOutcome.InProgress);
-            });
-
             string connectUrl = !challenge
                 ? serverUrl
                 : serverUrl + (serverUrl.Contains("?") ? "&" : "?") + "challenge=" + Uri.EscapeDataString(challengeTicket);
 
-            Debug.Log($"[NetworkedGameBootstrap] connecting to {serverUrl}{(challenge ? " (friend challenge)" : "")} …");
-            SetStatus(Loc.Get("matchmaking_status_connecting"));
-            Task connect;
-            try { connect = _net.ConnectAsync(new Uri(connectUrl)); }
-            catch (Exception ex)
+            // ── Item 4b: the court is full ───────────────────────────────────────────────
+            // One pass of this loop is one queue attempt: a fresh token, a fresh socket, a fresh
+            // hello and deck submit. A refusal at the server's session cap (MatchGate.CapacityRefusal,
+            // DeadReason.ServerFull) is NOT a failure: the player stays on this screen, the court-full
+            // panel says why, and the loop re-queues after a jittered pause, until seated or until the
+            // player leaves (the panel's button, or Android back via its emb-back class). Leaving
+            // changes scene, which ends this coroutine and disposes the attempt's socket in OnDestroy.
+            // A challenge is not retried: its ticket is spent, so a full court there fails as before.
+            int capacityRefusals = 0;
+            while (true)
             {
-                Debug.LogError($"[NetworkedGameBootstrap] connect threw: {ex.Message}");
-                BootFailed(ConnectionFailureCopy.Unreachable);
-                yield break;
-            }
-
-            // Bound the CONNECTING phase only, never pairing. ConnectAsync does not resolve until
-            // the match starts, so a blanket timeout would abandon a legitimate matchmaking queue;
-            // once the server has answered and we reach Pairing, the wait is unbounded on purpose.
-            //
-            // Why this exists: a half-open server — Fly's proxy terminating TLS with no healthy
-            // machine behind it — accepts TCP and then answers nothing, so the WebSocket upgrade
-            // never completes and ConnectAsync hangs forever. The failure branch below was
-            // unreachable, and the player sat on "Connecting…" with no error and nothing logged.
-            // That is how a crash-looping server presented as a silent client hang (2026-08-16).
-            const float connectTimeoutSeconds = 20f;
-            float connectDeadline = Time.realtimeSinceStartup + connectTimeoutSeconds;
-            while (!connect.IsCompleted)
-            {
-                if (_net.State == ConnectionState.Connecting && Time.realtimeSinceStartup > connectDeadline)
+                // EF-074e: the Supabase JWT for this connect, refreshed first if it is near expiry. This
+                // is awaited rather than fetched inline because a refresh is a network round trip, and
+                // the boot must not present a token that expires during the handshake — the server closes
+                // the socket on a bad one and never downgrades silently.
+                //
+                // A build with sign-in never connects without a token (Sam, 2026-10-18), and every release
+                // build has sign-in — so a player is never a guest. A failed token (refresh refused,
+                // network down) stops the boot here with Retry; a deployment with sign-in would refuse the
+                // tokenless hello anyway ("sign-in required"), and this is the legible version of that.
+                // Only an unconfigured dev build connects without a token, and only a tooling server that
+                // sets ServerOptions.AllowGuestMatches seats it.
+                Task<string> authTokenTask = AuthGateway.TokenForConnectAsync();
+                while (!authTokenTask.IsCompleted) yield return null;
+                string authToken = authTokenTask.Status == TaskStatus.RanToCompletion ? authTokenTask.Result : "";
+                if (AuthGateway.IsConfigured && string.IsNullOrEmpty(authToken))
                 {
-                    Debug.LogError($"[NetworkedGameBootstrap] no answer from {serverUrl} after " +
-                                   $"{connectTimeoutSeconds:0}s — still Connecting, so the socket opened " +
-                                   $"but the server never completed the handshake.");
-                    BootFailed(ConnectionFailureCopy.NotResponding);
+                    BootFailed(ConnectionFailureCopy.SignInUnconfirmed);
                     yield break;
                 }
-                yield return null;
-            }
-            if (connect.IsFaulted || _net.State != ConnectionState.Live)
-            {
-                Debug.LogError($"[NetworkedGameBootstrap] failed to reach a live match " +
-                               $"(state={_net.State}, dead={_net.DeadReason}, detail={_net.DeadReasonDetail}, " +
-                               $"fault={connect.Exception?.GetBaseException().Message}).");
-                // #232: DeadReasonDetail is the server's actual WS close-frame reason ("deck
-                // rejected: ...", "server full", ...) when it sent one — falling every refusal
-                // back to the bare DeadReason bucket is exactly the bug that issue fixed.
-                ConnectionFailureCopy copy =
-                    ConnectionFailureCopy.For(_net.DeadReason, _net.DeadReasonDetail, reachedServer);
 
-                // A contract refusal is usually this build being out of date — a release landed
-                // while the app was open, after the menu's update gate had already passed. Ask the
-                // gate again: if it agrees, the player needs the store, not a Retry that can never
-                // work. If it does not (a build AHEAD of the server), fall through to the reason.
-                if (_net.DeadReason == DeadReason.ContractMismatch ||
-                    _net.DeadReasonDetail == SocialClient.ContractMismatchReason)
+                // ── C-G1-4 (hist-docs/source-snapshots/2026-07-31-pre-reorganization/project/M2-G1-REVIEW.md §3) — the gate cannot be signed on recollection ──────
+                // This client was previously constructed with default ClientOptions, so OnDesyncCapture
+                // and OnMisattribution were null. A snapshot that fails VerifyIntegrity is discarded and
+                // the mirror holds last-good state (NetworkedMatchSession.cs:260-265) — with no log, no
+                // toast and no artifact. On screen that is indistinguishable from "a minion vanished",
+                // which is exactly how the open rekindle bug presents, and it is why no offline repro can
+                // ever reach it: offline there is no wire and no verification step.
+                //
+                // NOTE: ClientOptions.DevCapture is declared but read NOWHERE in production code (only
+                // set in SnapshotApplyTests) — the sole gate on capture is OnDesyncCapture being non-null.
+                // It is set here for intent, not effect. Do not assume toggling it changes behaviour.
+                //
+                // These sinks run on the background receive pump, so they must never throw.
+                string captureDir = Path.Combine(Application.persistentDataPath, "desync");
+                var clientOptions = new ClientOptions
                 {
-                    Task<UpdateGateResult> gate = UpdateGateOverlay.CheckAsync(force: true);
-                    while (!gate.IsCompleted) yield return null;
-                    if (gate.Result.Verdict == UpdateGateVerdict.UpdateRequired)
+                    // C-G1-8: the server refuses a fresh socket whose hello carries no device token.
+                    // The SIGNED-IN ACCOUNT's token, not the device's — two seats launched from one machine
+                    // must arrive as two accounts. MatchGate.PairAsync never compares accounts, so they
+                    // already pair; without this they simply both arrive as the same one, indistinguishable
+                    // to the server and to telemetry. DeviceIdentity.Token is untouched and is still what
+                    // the first account presents (DeviceAccounts) — see that class for why the persistence,
+                    // not the generation, is the load-bearing half.
+                    DeviceToken = DeviceAccounts.WireToken(),
+                    Platform = DeviceIdentity.Platform,
+                    BuildId = DeviceIdentity.BuildId,
+                    // EF-073: no name. A signed-in seat is named by its identity, which the server
+                    // reads off the verified token and ignores this field for (2026-10-18); an
+                    // unconfigured dev build has no name to send.
+                    DisplayName = "",
+                    // EF-074e: the Supabase JWT; never empty on a configured build (checked above). The
+                    // server keys the seat on it. Empty only from an unconfigured dev build, which a
+                    // server seats on the device token only when ServerOptions.AllowGuestMatches is set.
+                    AuthToken = authToken,
+                    DeckSubmission = selectedDeck,
+                    DevCapture = Debug.isDebugBuild,
+                    OnDesyncCapture = cap => WriteDesyncCapture(captureDir, cap),
+                    OnMisattribution = m => Debug.LogWarning(
+                        $"[Desync] MISATTRIBUTION match={m.MatchId} seat={m.Seat} pendingSeq={m.PendingSeq} " +
+                        $"reason={m.RejectReason} v{m.StateVersion}"),
+                };
+
+                IWireTransport transport = new WebSocketTransport();
+                if (Debug.isDebugBuild)
+                {
+                    // [DesyncDbg] dev tool — see DesyncFaultInjector.
+                    _faultInjector = new DesyncFaultInjector(transport);
+                    transport = _faultInjector;
+                }
+                // Locals, not the fields, inside the handler below: a refused attempt's late raises
+                // must land in ITS view, which nothing pumps once the next attempt replaces it, and
+                // never in the next attempt's.
+                var net = new NetworkedMatchSession(transport, clientOptions);
+                var view = new MainThreadMatchSession(net);
+                _net = net;
+                _view = view;
+
+                // While re-queueing after a refusal, the court-full panel tells the story; the status
+                // line stays quiet rather than flashing Connecting → Waiting on every attempt.
+                bool holdingForSeat = capacityRefusals > 0;
+
+                // RC-F10: marshal terminal transitions to the main thread and stop the runner.
+                // The same handler feeds the loading overlay's status line (ConnectionState already
+                // narrates the boot: Connecting → Pairing → Live); raises come from the background
+                // receive pump, so everything goes through view.Post.
+                // Read on the main thread only, after the connect task completes; it decides between
+                // "can't reach the server" and "lost the connection" when the close carries no reason.
+                bool reachedServer = false;
+                net.OnConnectionStateChanged += st => view.Post(() =>
+                {
+                    if (st == ConnectionState.Pairing || st == ConnectionState.Live) reachedServer = true;
+                    switch (st)
                     {
-                        UpdateGateOverlay.Show(gate.Result);
-                        yield break;
+                        case ConnectionState.Connecting: if (!holdingForSeat) SetStatus(Loc.Get("matchmaking_status_connecting")); break;
+                        case ConnectionState.Pairing:    if (!holdingForSeat) SetStatus(Loc.Get(challenge ? "matchmaking_status_waiting_friend" : "matchmaking_status_waiting_opponent")); break;
+                        case ConnectionState.Live:       SetStatus(Loc.Get("matchmaking_status_opponent_found")); break;
                     }
+                    // Not on a capacity refusal: that is always before any match, the boot is about
+                    // to re-queue, and a stop requested now would sit armed on the runner (its
+                    // _stopRequested) for the match the next attempt starts.
+                    if ((st == ConnectionState.Dead || st == ConnectionState.Ended) &&
+                        net.DeadReason != DeadReason.ServerFull)
+                        matchRunner.StopMatch(net.State == ConnectionState.Ended ? view.Current.Outcome : MatchOutcome.InProgress);
+                });
+
+                Debug.Log($"[NetworkedGameBootstrap] connecting to {serverUrl}{(challenge ? " (friend challenge)" : "")} …");
+                if (!holdingForSeat) SetStatus(Loc.Get("matchmaking_status_connecting"));
+                Task connect;
+                try { connect = net.ConnectAsync(new Uri(connectUrl)); }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[NetworkedGameBootstrap] connect threw: {ex.Message}");
+                    BootFailed(ConnectionFailureCopy.Unreachable);
+                    yield break;
                 }
 
-                BootFailed(copy);
-                yield break;
+                // Bound the CONNECTING phase only, never pairing. ConnectAsync does not resolve until
+                // the match starts, so a blanket timeout would abandon a legitimate matchmaking queue;
+                // once the server has answered and we reach Pairing, the wait is unbounded on purpose.
+                //
+                // Why this exists: a half-open server — Fly's proxy terminating TLS with no healthy
+                // machine behind it — accepts TCP and then answers nothing, so the WebSocket upgrade
+                // never completes and ConnectAsync hangs forever. The failure branch below was
+                // unreachable, and the player sat on "Connecting…" with no error and nothing logged.
+                // That is how a crash-looping server presented as a silent client hang (2026-08-16).
+                const float connectTimeoutSeconds = 20f;
+                float connectDeadline = Time.realtimeSinceStartup + connectTimeoutSeconds;
+                float pairingSince = -1f;
+                while (!connect.IsCompleted)
+                {
+                    ConnectionState now = net.State;
+                    if (now == ConnectionState.Connecting && Time.realtimeSinceStartup > connectDeadline)
+                    {
+                        Debug.LogError($"[NetworkedGameBootstrap] no answer from {serverUrl} after " +
+                                       $"{connectTimeoutSeconds:0}s — still Connecting, so the socket opened " +
+                                       $"but the server never completed the handshake.");
+                        BootFailed(ConnectionFailureCopy.NotResponding);
+                        yield break;
+                    }
+                    // A re-queue the server has not refused within a few seconds is IN the queue (the
+                    // capacity refusal comes straight after the hello and deck). Drop the panel and
+                    // narrate the wait like anyone else's. The client marks Pairing as soon as it has
+                    // SENT the hello, so Pairing alone does not say the server took it.
+                    if (holdingForSeat && now == ConnectionState.Pairing)
+                    {
+                        if (pairingSince < 0f) pairingSince = Time.realtimeSinceStartup;
+                        else if (Time.realtimeSinceStartup - pairingSince > CourtFullQueuedAfterSeconds)
+                        {
+                            holdingForSeat = false;
+                            HideCourtFull();
+                            SetStatus(Loc.Get("matchmaking_status_waiting_opponent"));
+                        }
+                    }
+                    yield return null;
+                }
+                if (connect.IsFaulted || net.State != ConnectionState.Live)
+                {
+                    if (!challenge && net.DeadReason == DeadReason.ServerFull)
+                    {
+                        // Item 4b: the court is full. Hold the player here and ask again. The jitter
+                        // keeps a full box's worth of refused clients from all returning on one tick.
+                        capacityRefusals++;
+                        float pause = UnityEngine.Random.Range(
+                            CourtFullRetryMinSeconds, CourtFullRetryMaxSeconds);
+                        Debug.Log($"[NetworkedGameBootstrap] the court is full (refusal {capacityRefusals}); " +
+                                  $"re-queueing in {pause:0.0}s.");
+                        net.Dispose();
+                        ShowCourtFull();
+                        float resumeAt = Time.realtimeSinceStartup + pause;
+                        while (Time.realtimeSinceStartup < resumeAt) yield return null;
+                        continue;
+                    }
+
+                    Debug.LogError($"[NetworkedGameBootstrap] failed to reach a live match " +
+                                   $"(state={net.State}, dead={net.DeadReason}, detail={net.DeadReasonDetail}, " +
+                                   $"fault={connect.Exception?.GetBaseException().Message}).");
+                    // #232: DeadReasonDetail is the server's actual WS close-frame reason ("deck
+                    // rejected: ...", "server full", ...) when it sent one — falling every refusal
+                    // back to the bare DeadReason bucket is exactly the bug that issue fixed.
+                    ConnectionFailureCopy copy =
+                        ConnectionFailureCopy.For(net.DeadReason, net.DeadReasonDetail, reachedServer);
+
+                    // A contract refusal is usually this build being out of date — a release landed
+                    // while the app was open, after the menu's update gate had already passed. Ask the
+                    // gate again: if it agrees, the player needs the store, not a Retry that can never
+                    // work. If it does not (a build AHEAD of the server), fall through to the reason.
+                    if (net.DeadReason == DeadReason.ContractMismatch ||
+                        net.DeadReasonDetail == SocialClient.ContractMismatchReason)
+                    {
+                        Task<UpdateGateResult> gate = UpdateGateOverlay.CheckAsync(force: true);
+                        while (!gate.IsCompleted) yield return null;
+                        if (gate.Result.Verdict == UpdateGateVerdict.UpdateRequired)
+                        {
+                            HideCourtFull();
+                            UpdateGateOverlay.Show(gate.Result);
+                            yield break;
+                        }
+                    }
+
+                    BootFailed(copy);
+                    yield break;
+                }
+
+                HideCourtFull();
+                break;
             }
 
             Debug.Log($"[NetworkedGameBootstrap] LIVE — seat {_net.Seat} as {_net.Player}.");
@@ -788,6 +858,7 @@ namespace Kingdom.Presentation
 
         private void BootFailed(ConnectionFailureCopy copy)
         {
+            HideCourtFull();
             if (_versus != null) _versus.NotifyBootFailed("");
             else if (_overlay != null) _overlay.NotifyBootFailed("");
 
@@ -796,6 +867,62 @@ namespace Kingdom.Presentation
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("ConnectionFailedScreen");
             uiGo.AddComponent<ConnectionFailedOverlay>().Init(copy);
+        }
+
+        /// <summary>
+        /// Item 4b: the server is at its session cap and the boot is waiting to re-queue. Built from
+        /// the boot-failure panel's tree, as <see cref="UpdateGateOverlay"/> is: the Herald's line in
+        /// place of a joke, no Retry (retrying is automatic), and Back relabelled "Leave the queue".
+        /// Back keeps its emb-back class, so Android back leaves too. Idempotent across refusals.
+        ///
+        /// <para>Text, not a voice line: the Herald's clips are recorded assets and none says the
+        /// court is full. The loading plate's status line is cleared for the same reason
+        /// <see cref="BootFailed(ConnectionFailureCopy)"/> clears it — the panel says it once.</para>
+        /// </summary>
+        private void ShowCourtFull()
+        {
+            if (_overlay != null) _overlay.SetStatus("");
+            if (_courtFull != null) return;
+
+            _courtFull = new GameObject("CourtFullUI");
+            var doc = _courtFull.AddComponent<UIDocument>();
+            doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
+            doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("ConnectionFailedScreen");
+            VisualElement root = doc.rootVisualElement;
+            if (root == null)
+            {
+                Debug.LogError("[NetworkedGameBootstrap] court-full panel has no rootVisualElement.");
+                return;
+            }
+            UiLocalizer.Attach(root);
+
+            var title = root.Q<Label>("title");
+            if (title != null) title.text = Loc.Get("connection_court_full_title");
+
+            var reason = root.Q<Label>("reason");
+            if (reason != null)
+            {
+                reason.text = Loc.Get("connection_court_full_herald");
+                reason.style.display = DisplayStyle.Flex;
+            }
+
+            root.Q<Button>("btn-retry")?.RemoveFromHierarchy();
+
+            var leave = root.Q<Button>("btn-back");
+            if (leave != null)
+            {
+                leave.text = Loc.Get("connection_court_full_leave");
+                // The scene change ends Boot() and OnDestroy disposes the attempt in flight, which
+                // closes its socket — so leaving here leaves the server's queue too.
+                leave.RegisterCallback<ClickEvent>(_ => ScreenNav.Go(ScreenNav.MainMenu));
+            }
+        }
+
+        private void HideCourtFull()
+        {
+            if (_courtFull == null) return;
+            Destroy(_courtFull);
+            _courtFull = null;
         }
 
         private void OnDestroy()

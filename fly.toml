@@ -11,7 +11,12 @@ primary_region = "sjc"
 [http_service]
   internal_port = 8080
   force_https = true
-  # Scale to zero when idle (2026-07-21, Sam): no point paying for an empty lobby.
+  # ALWAYS ONE MACHINE RUNNING (2026-10-23, Sam, pre-publication item 3): a stranger's first
+  # launch must not wait on a wake. It replaced scale-to-zero (2026-07-21), whose wake cost was
+  # measured the same day: 1.4 s from suspend, 6.7 s from stopped, against 0.7 s warm.
+  #
+  # The suspend notes below still hold: a deploy or a Fly host event can still suspend or stop
+  # the machine, and auto_start still wakes it on the next request.
   #
   # Fly's autostop triggers on CONCURRENT CONNECTIONS reaching zero, not on wall-clock
   # idleness — a live match holds open WebSockets on both sides (kept alive by client
@@ -28,7 +33,7 @@ primary_region = "sjc"
   # to "stop" without persisting match state first.
   auto_stop_machines = "suspend"
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
 
 # SINGLE MACHINE, DELIBERATELY. Machine count is not expressible here — it is set with
 # `fly scale count 1 -a emberfall`, and `fly launch` defaults to TWO for HA.

@@ -50,8 +50,8 @@ OUT_JS_PATH = Path(__file__).resolve().parent / "data.js"
 
 CARD_TYPES = ["MINION", "SPELL", "WEAPON", "HERO_POWER"]
 
-# The live match server. `fly.toml` sets min_machines_running = 0 with auto_start, so a plain GET
-# is also what WAKES a suspended machine -- which is why the health check is an HTTP request and
+# The live match server. `fly.toml` keeps one machine running, but a deploy or a Fly host event can
+# still leave it suspended, and with auto_start a plain GET is what WAKES it -- which is why the health check is an HTTP request and
 # not `fly ssh console`, whose first attempt against a suspended machine simply fails.
 HEALTH_URL = "https://emberfall.fly.dev/healthz"
 FLY_APP = "emberfall"

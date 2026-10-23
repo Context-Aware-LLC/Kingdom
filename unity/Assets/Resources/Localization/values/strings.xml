@@ -320,6 +320,12 @@
     <string name="connection_error_server_full">The server is full. Try again in a moment.</string>
     <!-- Joke line under server full. -->
     <string name="connection_joke_server_full">The Council has asked everyone to form a queue.</string>
+    <!-- Court-full panel title: the server is at capacity and the game will keep asking for a seat (not an error). -->
+    <string name="connection_court_full_title">The court is full</string>
+    <!-- Court-full panel line, spoken as the Royal Herald. The game re-queues automatically every few seconds. -->
+    <string name="connection_court_full_herald">The Herald begs your patience: every seat in the hall is taken. We\'ll keep asking for one until it opens.</string>
+    <!-- Court-full panel button: stop waiting and return to the menu. -->
+    <string name="connection_court_full_leave">Leave the queue</string>
     <!-- Connection overlay plain line. -->
     <string name="connection_error_signed_out">You\'ve been signed out. Sign in again from the menu.</string>
     <!-- Connection overlay plain line. -->
@@ -851,6 +857,12 @@
     <string name="update_gate_reason_unreachable">Kingdom of Bad Ideas needs a connection to play. Check your network and try again.\n%1$s</string>
     <!-- Gate button that opens the app store. -->
     <string name="update_gate_button_update">Update</string>
+    <!-- Gate title while the launch check is still waiting for the server (shown after about a second). Single ellipsis character. -->
+    <string name="update_gate_title_waiting">Rousing the court…</string>
+    <!-- Gate body during the first wait. Lighthearted royal-court voice; the server is 'the court'. -->
+    <string name="update_gate_reason_waiting">A herald has gone to wake the court. This usually takes a moment.</string>
+    <!-- Gate body while the check is retried automatically. %1$d = this attempt, %2$d = total attempts (3). -->
+    <string name="update_gate_reason_waiting_retry">No answer yet. The herald is knocking louder (try %1$d of %2$d).</string>
     <!-- Printed on a paper tag by the end-turn stamper on the 3D table. Two lines, small tag; joke: the turn ended without the player stamping it. -->
     <string name="board_seal_approved_by_default">APPROVED\nBY DEFAULT</string>
     <!-- Label painted on the suggestion-box table toy on the 3D board. All caps, small plate. -->

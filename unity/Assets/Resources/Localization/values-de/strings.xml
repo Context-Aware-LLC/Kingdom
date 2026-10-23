@@ -206,6 +206,9 @@
     <string name="connection_joke_deck_rejected">Der Rat hat es mit Anmerkungen zurückgeschickt.</string>
     <string name="connection_error_server_full">Der Server ist voll. Versuch es gleich noch einmal.</string>
     <string name="connection_joke_server_full">Der Rat bittet alle, sich ordentlich anzustellen.</string>
+    <string name="connection_court_full_title">Der Hof ist voll</string>
+    <string name="connection_court_full_herald">Der Herold bittet um Geduld: Jeder Platz im Saal ist besetzt. Wir fragen weiter nach einem, bis einer frei wird.</string>
+    <string name="connection_court_full_leave">Warteschlange verlassen</string>
     <string name="connection_error_signed_out">Du wurdest abgemeldet. Melde dich im Menü erneut an.</string>
     <string name="connection_error_version_mismatch">Diese Spielversion passt nicht zu der des Servers.</string>
     <string name="connection_error_challenge_expired">Die Herausforderung ist abgelaufen, bevor ihr beide da wart.</string>
@@ -481,6 +484,9 @@
     <string name="update_gate_reason_required">Eine neue Version von Kingdom of Bad Ideas ist da. Aktualisiere, um weiterzuspielen.\n%1$s</string>
     <string name="update_gate_reason_unreachable">Kingdom of Bad Ideas braucht zum Spielen eine Verbindung. Prüfe dein Netzwerk und versuch es erneut.\n%1$s</string>
     <string name="update_gate_button_update">Update</string>
+    <string name="update_gate_title_waiting">Der Hof wird geweckt…</string>
+    <string name="update_gate_reason_waiting">Ein Herold ist losgezogen, um den Hof zu wecken. Das dauert meist nur einen Moment.</string>
+    <string name="update_gate_reason_waiting_retry">Noch keine Antwort. Der Herold klopft lauter (Versuch %1$d von %2$d).</string>
     <string name="board_seal_approved_by_default">STILLSCHWEIGEND\nGENEHMIGT</string>
     <string name="board_suggestion_box_label">VORSCHLÄGE</string>
     <string name="board_suggestion_box_receipt">Dein Vorschlag wurde\nerhalten und abgelegt.</string>

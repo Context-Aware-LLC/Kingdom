@@ -146,5 +146,40 @@ namespace Kingdom.Net.Client.Tests
             Assert.That(c0.State, Is.EqualTo(ConnectionState.Dead));
             Assert.That(c0.DeadReason, Is.EqualTo(DeadReason.Forfeited));
         }
+
+        /// <summary>Item 4b: the server's capacity refusal is the one close the boot answers by
+        /// re-queueing, so it must arrive as its own bucket and not as a forfeit.</summary>
+        [Test]
+        [CancelAfter(5000)]
+        public async Task A_Capacity_Refusal_Reads_As_ServerFull()
+        {
+            var transport = new LoopbackTransport();
+            using var c0 = new NetworkedMatchSession(transport, new ClientOptions { DeviceToken = "test-device-full" });
+
+            Task connect = c0.ConnectAsync(LoopbackUri);
+            transport.ServerClose(WireCloseReason.PeerClosed, NetworkedMatchSession.ServerFullReason);
+            try { await connect; } catch (InvalidOperationException) { /* expected: no match */ }
+
+            Assert.That(c0.State, Is.EqualTo(ConnectionState.Dead));
+            Assert.That(c0.DeadReason, Is.EqualTo(DeadReason.ServerFull));
+            Assert.That(c0.DeadReasonDetail, Is.EqualTo(NetworkedMatchSession.ServerFullReason));
+        }
+
+        /// <summary>A queued player who leaves must leave the server's queue: Dispose closes the
+        /// socket rather than only ceasing to read it.</summary>
+        [Test]
+        public void Dispose_Closes_The_Transport()
+        {
+            var transport = new LoopbackTransport();
+            WireCloseReason? closed = null;
+            transport.OnClosed += (reason, _) => closed = reason;
+            var c0 = new NetworkedMatchSession(transport, new ClientOptions { DeviceToken = "test-device-leave" });
+
+            c0.Dispose();
+
+            Assert.That(closed, Is.EqualTo(WireCloseReason.Local));
+            Assert.That(c0.State, Is.Not.EqualTo(ConnectionState.Dead),
+                "a local close is not reported back as the peer's");
+        }
     }
 }
