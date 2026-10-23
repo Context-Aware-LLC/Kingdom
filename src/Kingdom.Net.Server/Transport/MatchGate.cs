@@ -89,6 +89,15 @@ namespace Kingdom.Net.Server.Transport
         /// </summary>
         public Action<AccountId, AccountId>? MatchRosterChanged { get; set; }
 
+        /// <summary>
+        /// Where the first-session funnel's server rows go (pre-publication item 2): <c>hello</c>,
+        /// <c>queue</c>, <c>queue_refused</c>, and — through each <see cref="MatchSession"/> —
+        /// <c>first_action</c>. Written only for a SIGNED-IN seat: every player signs in, so the
+        /// tokenless guest path is tooling (NetSoak, in-process tests) and a bot never says hello,
+        /// and neither is a stranger the funnel is counting.
+        /// </summary>
+        public IFunnelSink Funnel { get; set; } = NullFunnelSink.Instance;
+
         private readonly object _lock = new object();
         private readonly Dictionary<string, SessionPump> _sessions = new Dictionary<string, SessionPump>(StringComparer.Ordinal);
         private readonly Dictionary<string, WaitingPlayer> _waiting =
@@ -213,7 +222,10 @@ namespace Kingdom.Net.Server.Transport
             /// <summary>Server clock ms at enqueue (<see cref="ITimeSource.NowMs"/>). Read by
             /// <see cref="TryBotFillTimedOutTickets"/> against <see cref="ServerOptions.BotFillDelayMs"/>
             /// on the SAME band-widening wake the queue already uses — no new timer.</summary>
-            long EnqueuedAtMs);
+            long EnqueuedAtMs,
+            /// <summary>A signed-in human: this seat writes first-session funnel rows
+            /// (<see cref="Funnel"/>). False for a guest and for a bot.</summary>
+            bool FunnelTracked = false);
 
         /// <summary>Per-match attribution, or null once the session is gone. Read by the telemetry
         /// emitter; exposed for the identity tests.</summary>
@@ -285,6 +297,8 @@ namespace Kingdom.Net.Server.Transport
             // submitted deck (NOR-313); null on every path that never touches the store (guest, or
             // authenticated with no store), which is the "ownership unknown, do not constrain" case.
             Account? deckOwnerAccount = null;
+            // A signed-in seat is a player the first-session funnel counts; a guest is tooling.
+            bool funnelTracked = false;
             // The name this seat is shown under. For a signed-in player it is the one held against
             // their identity, read off the token this method has just verified; see below.
             string candidateName;
@@ -342,6 +356,11 @@ namespace Kingdom.Net.Server.Transport
                     // No account store configured — derive identity from the subject hash directly.
                     account = AccountId.FromAuthenticatedAccount(subHash);
                 }
+
+                // The funnel's `hello`: the device token binds to this account here, confirming the
+                // client's own sign_in row. The token is hashed; it is never written.
+                funnelTracked = true;
+                WriteFunnel(ServerFunnelRows.Hello(account.Value, hello.DeviceToken, _time.NowMs));
             }
             else
             {
@@ -432,10 +451,11 @@ namespace Kingdom.Net.Server.Transport
             int refusalCode;
             string refusal;
             if (challengeTicket is null)
-                (seating, refusalCode, refusal) = await PairAsync(conn, account, checkedName, submitted, ct);
-            else
                 (seating, refusalCode, refusal) =
-                    await SeatChallengeAsync(conn, account, checkedName, submitted, challengeTicket, ct);
+                    await PairAsync(conn, account, checkedName, submitted, funnelTracked, ct);
+            else
+                (seating, refusalCode, refusal) = await SeatChallengeAsync(
+                    conn, account, checkedName, submitted, challengeTicket, funnelTracked, ct);
 
             if (seating is null)
             {
@@ -444,10 +464,9 @@ namespace Kingdom.Net.Server.Transport
                 // while queued, or the gate turned them away for some other cause.
                 if (refusal == CapacityRefusal)
                 {
-                    // item 2: this is the funnel's `capacity` reason. Write a raw_event row here
-                    // (type "gate_refused", reason "capacity", this account) once the funnel gives
-                    // the gate a sink for non-match events — ITelemetrySink carries only match
-                    // events today, so this log line is the record until then.
+                    // The funnel's `capacity` reason: a queue_refused row, and the log line beside it.
+                    if (funnelTracked)
+                        WriteFunnel(ServerFunnelRows.QueueRefusedCapacity(account.Value, _time.NowMs));
                     Console.Error.WriteLine("[gate] refused player_id={0} reason=capacity sessions={1}/{2}",
                                             account.Value, LiveSessions, _opts.MaxSessions);
                 }
@@ -510,7 +529,7 @@ namespace Kingdom.Net.Server.Transport
         /// </summary>
         private async Task<(Seating? Seating, int RefusalCode, string Refusal)> PairAsync(
             WebSocketConnection conn, AccountId account, string displayName, SeatDeck? submitted,
-            CancellationToken ct)
+            bool funnelTracked, CancellationToken ct)
         {
             int rating = _ratingStore is null
                 ? _ratingForAccount(account)
@@ -520,7 +539,7 @@ namespace Kingdom.Net.Server.Transport
                 rating);
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
             var waiter = new WaitingPlayer(
-                ticket, conn, account, displayName, submitted, "human", mySeating, _time.NowMs);
+                ticket, conn, account, displayName, submitted, "human", mySeating, _time.NowMs, funnelTracked);
 
             lock (_lock)
             {
@@ -529,6 +548,8 @@ namespace Kingdom.Net.Server.Transport
                 _waiting.Add(ticket.Id, waiter);
                 _matchmaking.Enqueue(ticket);
             }
+            // Outside the lock: the sink fsyncs, and the queue must not wait on a disk.
+            if (funnelTracked) WriteFunnel(ServerFunnelRows.Queue(account.Value, _time.NowMs));
 
             StartReadyMatches();
 
@@ -578,7 +599,7 @@ namespace Kingdom.Net.Server.Transport
         /// </summary>
         private async Task<(Seating? Seating, int RefusalCode, string Refusal)> SeatChallengeAsync(
             WebSocketConnection conn, AccountId account, string displayName, SeatDeck? submitted,
-            string challengeTicket, CancellationToken ct)
+            string challengeTicket, bool funnelTracked, CancellationToken ct)
         {
             ChallengeSeat? seat = _challenges?.Redeem(challengeTicket, account.Value);
             if (seat is null) return (null, 1008, "challenge refused");
@@ -586,7 +607,7 @@ namespace Kingdom.Net.Server.Transport
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
             var me = new WaitingPlayer(
                 new MatchmakingTicket("challenge-" + Guid.NewGuid().ToString("N"), _opts.Matchmaking.DefaultRating),
-                conn, account, displayName, submitted, "human", mySeating, _time.NowMs);
+                conn, account, displayName, submitted, "human", mySeating, _time.NowMs, funnelTracked);
 
             WaitingPlayer? opponent;
             lock (_lock)
@@ -828,7 +849,8 @@ namespace Kingdom.Net.Server.Transport
                     _rankedMatchSink,
                     _trainingEpisodes,
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : first.PolicyIdentity,
-                    attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : second.PolicyIdentity);
+                    attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : second.PolicyIdentity,
+                    Funnel, first.FunnelTracked, second.FunnelTracked);
                 var pump = new SessionPump(session);
                 lock (_lock)
                 {
@@ -878,6 +900,14 @@ namespace Kingdom.Net.Server.Transport
                 second.Seated.TrySetResult(null);
                 throw;
             }
+        }
+
+        /// <summary>A funnel row never costs a player anything: the sink is contracted not to throw,
+        /// and this holds it to that on the socket path.</summary>
+        private void WriteFunnel(FunnelRow row)
+        {
+            try { Funnel.Write(row); }
+            catch (Exception ex) { Console.Error.WriteLine("[funnel] {0} row dropped: {1}", row.Type, ex.Message); }
         }
 
         /// <summary>16 hex bytes (128 bits) of SHA-256. Same shape as <see cref="AccountId"/>'s value.
