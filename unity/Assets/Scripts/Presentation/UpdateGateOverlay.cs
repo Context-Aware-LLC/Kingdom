@@ -60,8 +60,11 @@ namespace Kingdom.Presentation
             {
                 attempt = n;
                 if (waiting != null) waiting.ShowWaiting(n);
+                // The funnel's keys ride the request, so the server's gate_served row lands in the
+                // same session as this process's own gate row.
                 var gate = new HttpUpdateGate(
-                    CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(timeoutSeconds));
+                    CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(timeoutSeconds),
+                    FunnelSession.Id, DeviceIdentity.Token);
                 UpdateGateResult answer = await gate.CheckAsync(
                     Platform, BuildStamp.StoreBuild, ProtocolContract.Version);
                 if (answer.Verdict == UpdateGateVerdict.Unreachable && n < UpdateGateRetry.MaxAttempts)

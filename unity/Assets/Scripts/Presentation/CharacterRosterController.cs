@@ -5,6 +5,7 @@ using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Session;
 using Kingdom.Net.Client.Collection;
+using Kingdom.Net.Client.Telemetry;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -1091,6 +1092,9 @@ namespace Kingdom.Presentation
             }
 
             MatchDeckSelection.Select(deck.Id);
+            // The funnel's queue intent. Every way here starts at the menu's Find Game today; the
+            // result view's re-queue (item 6) will pass its own source.
+            FirstSessionFunnel.Queue(FunnelQueueSource.Menu);
             ScreenNav.Go(ScreenNav.BoardNetworked);
         }
 

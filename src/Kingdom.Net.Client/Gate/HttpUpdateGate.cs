@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Kingdom.Net.Client.Auth;
+using Kingdom.Net.Client.Telemetry;
 
 namespace Kingdom.Net.Client.Gate
 {
@@ -74,11 +75,21 @@ namespace Kingdom.Net.Client.Gate
 
         private readonly string _baseUrl;
         private readonly IAuthHttp _http;
+        private readonly string _sessionId;
+        private readonly string _deviceToken;
 
-        public HttpUpdateGate(string baseUrl, IAuthHttp http)
+        /// <param name="sessionId">The funnel's <c>session_id</c>, sent as
+        /// <see cref="FunnelHeaders.Session"/> so the server's <c>gate_served</c> row lands in the same
+        /// session as the client's <c>gate</c> row. Omitted when empty. This assembly cannot see
+        /// <c>FunnelSession</c>, so the caller passes it.</param>
+        /// <param name="deviceToken">The raw device token, sent as <see cref="FunnelHeaders.Device"/>
+        /// for the server to hash. Omitted when empty.</param>
+        public HttpUpdateGate(string baseUrl, IAuthHttp http, string? sessionId = null, string? deviceToken = null)
         {
             _baseUrl = (baseUrl ?? "").TrimEnd('/');
             _http = http ?? throw new ArgumentNullException(nameof(http));
+            _sessionId = sessionId ?? "";
+            _deviceToken = deviceToken ?? "";
         }
 
         /// <param name="platform"><see cref="Android"/>, <see cref="Ios"/>, or anything else for a
@@ -98,6 +109,10 @@ namespace Kingdom.Net.Client.Gate
             {
                 new KeyValuePair<string, string>("Accept", "application/json"),
             };
+            if (_sessionId.Length > 0)
+                headers.Add(new KeyValuePair<string, string>(FunnelHeaders.Session, _sessionId));
+            if (_deviceToken.Length > 0)
+                headers.Add(new KeyValuePair<string, string>(FunnelHeaders.Device, _deviceToken));
 
             AuthHttpResponse response = await _http
                 .GetAsync(_baseUrl + "/update-gate", headers, cancellationToken)

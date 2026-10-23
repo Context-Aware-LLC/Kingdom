@@ -746,6 +746,15 @@ namespace Kingdom.Presentation
             // the board is ready long before a player has read who they are fighting.
             if (_versus != null)
                 matchRunner.OnStateUpdated += _ => _versus.NotifyMatchReady();
+            // The funnel's board_playable: the same first released snapshot, once per match.
+            string funnelMatchId = s0.Id.Value;
+            bool boardPlayableRecorded = false;
+            matchRunner.OnStateUpdated += _ =>
+            {
+                if (boardPlayableRecorded) return;
+                boardPlayableRecorded = true;
+                FirstSessionFunnel.BoardPlayable(funnelMatchId);
+            };
 
             // ── Drive the runner: ONE seat owned; the same marshaled session sits at both indices. ─
             matchRunner.StartMatch(

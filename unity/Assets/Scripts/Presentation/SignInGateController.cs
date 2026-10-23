@@ -381,6 +381,7 @@ namespace Kingdom.Presentation
                                "the gate, so it cannot be shown and this launch proceeds unsigned. " +
                                "See #329.");
                 Skipped = true;
+                FirstSessionFunnel.SignInSkipped("no_view");
                 onSignedIn?.Invoke();
                 return;
             }
@@ -390,6 +391,7 @@ namespace Kingdom.Presentation
                 Debug.LogWarning("[SignIn] no Supabase project is configured, so first-launch " +
                                  "registration cannot run. Create Assets/Resources/SupabaseAuthSettings.asset " +
                                  "to arm it.");
+                FirstSessionFunnel.SignInSkipped("not_configured");
                 onSignedIn?.Invoke();
                 return;
             }
@@ -448,7 +450,7 @@ namespace Kingdom.Presentation
             {
                 // A restored account has been here before, whatever the form would have asked.
                 _returning = true;
-                Succeed();
+                Succeed("play_games");
                 return;
             }
             SetBusy(false, null);
@@ -568,8 +570,12 @@ namespace Kingdom.Presentation
         /// <see cref="DeviceAccounts.TryBindToIdentity"/> would sign the player in and then hand them
         /// somebody else's scope, or a blank one, with nothing logged and nothing to catch it.</para>
         /// </summary>
-        private async void Succeed()
+        private async void Succeed(string cause)
         {
+            // The funnel's sign_in row, with the path that produced it. First, so a restore that
+            // never finishes below still counts the sign-in that did happen.
+            FirstSessionFunnel.SignedIn(cause);
+
             // Bind BEFORE anything else: both the sync below and AccountCreateController's first act
             // read PlayerAccount.Local, and both have to land in the account this identity owns.
             DeviceAccounts.TryBindToIdentity(_auth.Current.UserId);
@@ -647,12 +653,14 @@ namespace Kingdom.Presentation
                 // working code from the first mail, and dropping them back to the email field would
                 // read as having lost it.
                 Debug.LogWarning($"[SignIn] BeginEmailCodeAsync failed: {result.Failure} — {result.Detail}");
+                FirstSessionFunnel.SignInFailed("send_code:" + result.Failure);
                 SetError(Explain(result, Loc.Get("signin_error_send_code")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] sending a code threw: {ex}");
+                FirstSessionFunnel.SignInFailed("send_code:exception");
                 SetError(Loc.Get("signin_error_send_code_generic"));
             }
         }
@@ -685,7 +693,7 @@ namespace Kingdom.Presentation
                 AuthResult result = await _auth.SignInWithPasswordAsync(email, password);
                 SetBusy(false, null);
 
-                if (result.Ok) { Succeed(); return; }
+                if (result.Ok) { Succeed("password"); return; }
 
                 // The email survives; only the password is cleared. Retyping an address you got right
                 // is the most annoying possible response to a mistyped password.
@@ -693,12 +701,14 @@ namespace Kingdom.Presentation
                 RefreshPrimary();
                 _passwordField?.Focus();
                 Debug.LogWarning($"[SignIn] SignInWithPasswordAsync failed: {result.Failure} — {result.Detail}");
+                FirstSessionFunnel.SignInFailed("password:" + result.Failure);
                 SetError(Explain(result, Loc.Get("signin_error_password_rejected")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] signing in with a password threw: {ex}");
+                FirstSessionFunnel.SignInFailed("password:exception");
                 SetError(Loc.Get("signin_error_generic"));
             }
         }
@@ -716,7 +726,7 @@ namespace Kingdom.Presentation
 
                 if (result.Ok)
                 {
-                    Succeed();
+                    Succeed("email_code");
                     return;
                 }
 
@@ -727,12 +737,14 @@ namespace Kingdom.Presentation
                 RefreshPrimary();
                 _codeField?.Focus();
                 Debug.LogWarning($"[SignIn] VerifyEmailCodeAsync failed: {result.Failure} — {result.Detail}");
+                FirstSessionFunnel.SignInFailed("email_code:" + result.Failure);
                 SetError(Explain(result, Loc.Get("signin_error_code_rejected")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] verifying a code threw: {ex}");
+                FirstSessionFunnel.SignInFailed("email_code:exception");
                 SetError(Loc.Get("signin_error_generic"));
             }
         }
@@ -778,7 +790,7 @@ namespace Kingdom.Presentation
 
                 if (result.Ok)
                 {
-                    Succeed();
+                    Succeed("email_link");
                     return;
                 }
 
@@ -786,12 +798,14 @@ namespace Kingdom.Presentation
                 // — a stale or already-used link should not force a fresh Send.
                 RefreshPrimary();
                 Debug.LogWarning($"[SignIn] VerifyEmailCodeAsync (deep link) failed: {result.Failure} — {result.Detail}");
+                FirstSessionFunnel.SignInFailed("email_link:" + result.Failure);
                 SetError(Explain(result, Loc.Get("signin_error_link_code_rejected")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] completing from a link threw: {ex}");
+                FirstSessionFunnel.SignInFailed("email_link:exception");
                 SetError(Loc.Get("signin_error_generic"));
             }
         }
@@ -839,7 +853,7 @@ namespace Kingdom.Presentation
                     if (result.Ok)
                     {
                         SetBusy(false, null);
-                        Succeed();
+                        Succeed("google_native");
                         return;
                     }
                     Debug.LogWarning($"[SignIn] Supabase refused the native Google token " +
@@ -871,6 +885,7 @@ namespace Kingdom.Presentation
             if (!pending.IsStarted)
             {
                 SetBusy(false, null);
+                FirstSessionFunnel.SignInFailed("google_start");
                 SetError(Loc.Get("signin_error_google_start"));
                 return;
             }
@@ -907,17 +922,19 @@ namespace Kingdom.Presentation
 
                 if (result.Ok)
                 {
-                    Succeed();
+                    Succeed("google_oauth");
                     return;
                 }
 
                 Debug.LogWarning($"[SignIn] CompleteSignInAsync (Google OAuth) failed: {result.Failure} — {result.Detail}");
+                FirstSessionFunnel.SignInFailed("google_oauth:" + result.Failure);
                 SetError(Explain(result, Loc.Get("signin_error_google_incomplete")));
             }
             catch (Exception ex)
             {
                 SetBusy(false, null);
                 Debug.LogError($"[SignIn] Google OAuth completion threw: {ex}");
+                FirstSessionFunnel.SignInFailed("google_oauth:exception");
                 SetError(Loc.Get("signin_error_google_generic"));
             }
         }
