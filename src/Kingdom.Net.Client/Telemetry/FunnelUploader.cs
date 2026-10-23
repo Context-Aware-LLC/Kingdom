@@ -53,7 +53,18 @@ namespace Kingdom.Net.Client.Telemetry
     {
         public const string Route = "/telemetry/client";
         public const int DefaultBatchSize = 25;
+
+        /// <summary>The server's per-request limits; more is a 413, which drops the batch.</summary>
+        public const int MaxRowsPerRequest = 40;
+        public const int MaxBodyBytes = 32 * 1024;
+
         public const long DebounceMs = 2_000;
+
+        /// <summary>The server's 429 carries <c>Retry-After: 10</c>. <see cref="IAuthHttp"/> carries
+        /// no response headers, so it is honoured as a floor: no backoff is ever shorter.
+        /// RETIREMENT TRIGGER: if the server's Retry-After grows past <see cref="FirstBackoffMs"/>,
+        /// raise FirstBackoffMs or give IAuthHttp a way to read the header.</summary>
+        public const long RetryAfterFloorMs = 10_000;
         public const long FirstBackoffMs = 15_000;
         public const long MaxBackoffMs = 300_000;
 
@@ -90,7 +101,7 @@ namespace Kingdom.Net.Client.Telemetry
             _bearer = bearer ?? (() => Task.FromResult(""));
             _clock = clock ?? throw new ArgumentNullException(nameof(clock));
             _log = log;
-            _batchSize = batchSize < 1 ? 1 : batchSize;
+            _batchSize = Math.Max(1, Math.Min(batchSize, MaxRowsPerRequest));
         }
 
         public bool IsFlushing => _inFlight;
@@ -138,7 +149,7 @@ namespace Kingdom.Net.Client.Telemetry
                 string bearer = await BearerAsync();
                 while (true)
                 {
-                    IReadOnlyList<FunnelQueue.Entry> batch = _queue.Peek(_batchSize);
+                    IReadOnlyList<FunnelQueue.Entry> batch = FitToBodyLimit(_queue.Peek(_batchSize));
                     if (batch.Count == 0)
                     {
                         _backoffMs = 0;
@@ -158,7 +169,13 @@ namespace Kingdom.Net.Client.Telemetry
 
                     if (response.IsSuccess)
                     {
+                        // {status, accepted, dropped}: a row the server dropped was malformed and
+                        // would be dropped again, so the whole batch leaves either way.
                         _queue.Remove(batch);
+                        if (AuthJson.TryReadTopLevel(response.Body, out var fields) &&
+                            AuthJson.TryInt64(fields, "dropped", out long dropped) && dropped > 0)
+                            Log("server dropped " + dropped.ToString(CultureInfo.InvariantCulture) +
+                                " of " + batch.Count + " row(s) as malformed.");
                         continue;
                     }
 
@@ -227,6 +244,25 @@ namespace Kingdom.Net.Client.Telemetry
             if (bearer.Length > 0)
                 headers.Add(new KeyValuePair<string, string>("Authorization", "Bearer " + bearer));
             return _http.PostJsonAsync(_baseUrl + Route, body, headers);
+        }
+
+        /// <summary>The longest prefix of <paramref name="rows"/> whose body fits
+        /// <see cref="MaxBodyBytes"/>, and never fewer than one row: a single row over the limit
+        /// goes alone, the server answers 413, and it is dropped rather than blocking the queue.</summary>
+        private static IReadOnlyList<FunnelQueue.Entry> FitToBodyLimit(IReadOnlyList<FunnelQueue.Entry> rows)
+        {
+            int bytes = Encoding.UTF8.GetByteCount("{\"rows\":[]}");
+            for (int i = 0; i < rows.Count; i++)
+            {
+                bytes += Encoding.UTF8.GetByteCount(rows[i].Json) + (i > 0 ? 1 : 0);
+                if (bytes > MaxBodyBytes && i > 0)
+                {
+                    var fitted = new List<FunnelQueue.Entry>(i);
+                    for (int k = 0; k < i; k++) fitted.Add(rows[k]);
+                    return fitted;
+                }
+            }
+            return rows;
         }
 
         private static string Body(IReadOnlyList<FunnelQueue.Entry> batch)

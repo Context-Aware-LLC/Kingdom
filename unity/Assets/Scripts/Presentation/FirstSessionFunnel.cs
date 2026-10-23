@@ -105,7 +105,8 @@ namespace Kingdom.Presentation
         /// <see cref="FunnelQueueSource"/> value.</summary>
         public static void Queue(string source) => Safely(r => r.Queue(source));
 
-        private static string Platform =>
+        /// <summary>The contract's <c>platform</c>: also sent on the update-gate request.</summary>
+        internal static string Platform =>
             Application.isEditor ? FunnelPlatform.Editor
             : Application.platform == RuntimePlatform.Android ? FunnelPlatform.Android
             : Application.platform == RuntimePlatform.IPhonePlayer ? FunnelPlatform.Ios

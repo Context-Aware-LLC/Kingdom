@@ -137,6 +137,54 @@ namespace Kingdom.Net.Client.Tests.Telemetry
         }
 
         [Test]
+        public async Task A_batch_never_exceeds_the_servers_40_rows()
+        {
+            Queue(45);
+            _http.Reply(200, "").Reply(200, "");
+
+            await Uploader(batchSize: 500).FlushAsync();
+
+            Assert.That(_http.Requests, Has.Count.EqualTo(2));
+            Assert.That(RowsIn(_http.Requests[0].Body!), Is.EqualTo(FunnelUploader.MaxRowsPerRequest));
+            Assert.That(RowsIn(_http.Requests[1].Body!), Is.EqualTo(5));
+        }
+
+        [Test]
+        public async Task A_batch_never_exceeds_the_servers_32_KiB()
+        {
+            // 25 rows of ~2.2 KB is ~55 KB: under the row cap, over the byte cap.
+            var stamp = new FunnelStamp(Session, "0.0.14+31", FunnelPlatform.Android);
+            for (int i = 0; i < 25; i++)
+                _queue.Enqueue(FunnelRow.BoardPlayable(stamp, _clock.NowMs, new string('m', 2000)));
+            for (int i = 0; i < 4; i++) _http.Reply(200, "");
+
+            await Uploader().FlushAsync();
+
+            Assert.That(_queue.Count, Is.EqualTo(0));
+            Assert.That(_http.Requests, Has.Count.GreaterThan(1));
+            foreach (var request in _http.Requests)
+                Assert.That(System.Text.Encoding.UTF8.GetByteCount(request.Body!),
+                    Is.LessThanOrEqualTo(FunnelUploader.MaxBodyBytes));
+        }
+
+        [Test]
+        public void No_backoff_is_shorter_than_the_servers_Retry_After()
+            => Assert.That(FunnelUploader.FirstBackoffMs, Is.GreaterThanOrEqualTo(FunnelUploader.RetryAfterFloorMs));
+
+        [Test]
+        public async Task The_servers_count_of_dropped_rows_still_removes_the_whole_batch()
+        {
+            Queue(3);
+            _http.Reply(200, "{\"status\":\"ok\",\"accepted\":2,\"dropped\":1}");
+
+            Assert.That(await Uploader().FlushAsync(), Is.EqualTo(FunnelFlushResult.Sent));
+            Assert.That(_queue.Count, Is.EqualTo(0));
+        }
+
+        private static int RowsIn(string body)
+            => body.Split(new[] { "\"milestone\":" }, StringSplitOptions.None).Length - 1;
+
+        [Test]
         public async Task Signed_out_the_device_header_alone_identifies_the_rows()
         {
             Queue(1);

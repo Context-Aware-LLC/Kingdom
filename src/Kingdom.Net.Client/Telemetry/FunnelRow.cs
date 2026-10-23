@@ -71,6 +71,15 @@ namespace Kingdom.Net.Client.Telemetry
         /// <summary>The RAW device token. The server hashes it and never stores it (contract,
         /// Identity); the client never logs it.</summary>
         public const string Device = "X-Kingdom-Device";
+
+        /// <summary>A <see cref="FunnelPlatform"/> value, on the update-gate request.</summary>
+        public const string Platform = "X-Kingdom-Platform";
+
+        /// <summary><c>BuildStamp.ReleaseId</c>, on the update-gate request.</summary>
+        public const string Build = "X-Kingdom-Build";
+
+        /// <summary><c>ProtocolContract.Version</c>, on the update-gate request.</summary>
+        public const string Contract = "X-Kingdom-Contract";
     }
 
     /// <summary>

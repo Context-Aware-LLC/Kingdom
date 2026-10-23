@@ -64,7 +64,8 @@ namespace Kingdom.Presentation
                 // same session as this process's own gate row.
                 var gate = new HttpUpdateGate(
                     CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(timeoutSeconds),
-                    FunnelSession.Id, DeviceIdentity.Token);
+                    FunnelSession.Id, DeviceIdentity.Token,
+                    FirstSessionFunnel.Platform, BuildStamp.ReleaseId);
                 UpdateGateResult answer = await gate.CheckAsync(
                     Platform, BuildStamp.StoreBuild, ProtocolContract.Version);
                 if (answer.Verdict == UpdateGateVerdict.Unreachable && n < UpdateGateRetry.MaxAttempts)

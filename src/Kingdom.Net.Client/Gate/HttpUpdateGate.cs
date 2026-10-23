@@ -77,6 +77,8 @@ namespace Kingdom.Net.Client.Gate
         private readonly IAuthHttp _http;
         private readonly string _sessionId;
         private readonly string _deviceToken;
+        private readonly string _funnelPlatform;
+        private readonly string _build;
 
         /// <param name="sessionId">The funnel's <c>session_id</c>, sent as
         /// <see cref="FunnelHeaders.Session"/> so the server's <c>gate_served</c> row lands in the same
@@ -84,12 +86,19 @@ namespace Kingdom.Net.Client.Gate
         /// <c>FunnelSession</c>, so the caller passes it.</param>
         /// <param name="deviceToken">The raw device token, sent as <see cref="FunnelHeaders.Device"/>
         /// for the server to hash. Omitted when empty.</param>
-        public HttpUpdateGate(string baseUrl, IAuthHttp http, string? sessionId = null, string? deviceToken = null)
+        /// <param name="funnelPlatform">A <see cref="FunnelPlatform"/> value, sent as
+        /// <see cref="FunnelHeaders.Platform"/>. Not the <c>platform</c> argument of
+        /// <see cref="CheckAsync"/>, which is empty for the Editor and desktop.</param>
+        /// <param name="build"><c>BuildStamp.ReleaseId</c>, sent as <see cref="FunnelHeaders.Build"/>.</param>
+        public HttpUpdateGate(string baseUrl, IAuthHttp http, string? sessionId = null, string? deviceToken = null,
+                              string? funnelPlatform = null, string? build = null)
         {
             _baseUrl = (baseUrl ?? "").TrimEnd('/');
             _http = http ?? throw new ArgumentNullException(nameof(http));
             _sessionId = sessionId ?? "";
             _deviceToken = deviceToken ?? "";
+            _funnelPlatform = funnelPlatform ?? "";
+            _build = build ?? "";
         }
 
         /// <param name="platform"><see cref="Android"/>, <see cref="Ios"/>, or anything else for a
@@ -113,6 +122,12 @@ namespace Kingdom.Net.Client.Gate
                 headers.Add(new KeyValuePair<string, string>(FunnelHeaders.Session, _sessionId));
             if (_deviceToken.Length > 0)
                 headers.Add(new KeyValuePair<string, string>(FunnelHeaders.Device, _deviceToken));
+            if (_funnelPlatform.Length > 0)
+                headers.Add(new KeyValuePair<string, string>(FunnelHeaders.Platform, _funnelPlatform));
+            if (_build.Length > 0)
+                headers.Add(new KeyValuePair<string, string>(FunnelHeaders.Build, _build));
+            if (!string.IsNullOrEmpty(clientContract))
+                headers.Add(new KeyValuePair<string, string>(FunnelHeaders.Contract, clientContract));
 
             AuthHttpResponse response = await _http
                 .GetAsync(_baseUrl + "/update-gate", headers, cancellationToken)
