@@ -4,8 +4,8 @@ ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
   serializedVersion: 2
-  userData: 
-  assetBundleName: 
+  userData: reimported-in-linear
+  assetBundleName:
   assetBundleVariant: 
   script: {fileID: 11500000, guid: 715df9372183c47e389bb6e19fbc3b52, type: 3}
   editorImportSettings:
