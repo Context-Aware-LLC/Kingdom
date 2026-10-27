@@ -119,6 +119,11 @@ is the older rule (the prior's top plays as they stand), and the flag is part of
 identity and of the resume identity. The seat's own pending choice (Unearth) is searched, with
 the offers as the candidates.
 
+`--search-tiebreak health` (rollout and arena; default `none`) ranks candidates level on outcome in
+a halving round by the mean hero margin their rollouts ended on before falling back to the prior:
+the trainer's `--survivor-tiebreak health`, moved into the search. It joins the seat's identity
+(`:tiebreak=health`) and the resume identity, and both are unchanged when it is off.
+
 `--scorer-batch N` gathers the scorer calls waiting at the same time into batch requests of at
 most N, one forward pass each, and `--scorer-batch-wait-ms` holds a batch open that long for
 latecomers (default 0: send what is waiting). It is faster and it is not the same numbers: a batch
