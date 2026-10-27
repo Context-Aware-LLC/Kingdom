@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: -668357930, guid: 43ec428a58422470fa764bdba9d9bc19, type: 3}
   m_Name: SentryOptions
   m_EditorClassIdentifier: Sentry.Unity.dll::Sentry.Unity.ScriptableSentryUnityOptions
-  <Enabled>k__BackingField: 0
-  <Dsn>k__BackingField: 
+  <Enabled>k__BackingField: 1
+  <Dsn>k__BackingField: https://133601fcdf9a1726f17277040b82d588@o4512305368399872.ingest.us.sentry.io/4512305395597312
   <CaptureInEditor>k__BackingField: 0
   <EnableErrorEventThrottling>k__BackingField: 0
   <ThrottleDedupeWindow>k__BackingField: 1000
@@ -69,7 +69,7 @@ MonoBehaviour:
   <MaxQueueItems>k__BackingField: 30
   <AnrDetectionEnabled>k__BackingField: 0
   <AnrTimeout>k__BackingField: 5000
-  <EnableAppHangTracking>k__BackingField: 0
+  <EnableAppHangTracking>k__BackingField: 1
   <AppHangTimeout>k__BackingField: 5000
   <CaptureFailedRequests>k__BackingField: 1
   <FailedRequestStatusCodes>k__BackingField: f401000057020000i

@@ -738,7 +738,7 @@ MonoBehaviour:
     - line: '|   suppressCommonWarnings: 1'
     - line: '|   allowUnsafeCode: 0'
     - line: '|   useDeterministicCompilation: 1'
-    - line: '|   additionalIl2CppArgs: '
+    - line: '|   additionalIl2CppArgs: '' --emit-source-mapping'''
     - line: '|   scriptingRuntimeVersion: 1'
     - line: '|   gcIncremental: 1'
     - line: '|   gcWBarrierValidation: 0'
