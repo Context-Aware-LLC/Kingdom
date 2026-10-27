@@ -627,7 +627,7 @@
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Match deck-pick arrival. 'Play' = button label. -->
     <string name="tidbit_match_pick_title">Choose A Deck</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Match deck-pick arrival. 'Play' = button label. -->
-    <string name="tidbit_match_pick_body">Tap a deck to select it, then press Play.\n\nYes. It is complicated. You will get used to it.\n\nIf you\'re lucky the opponent will not figure this part out and you will be champion.</string>
+    <string name="tidbit_match_pick_body">Tap a deck to select it, then press Play.\n\nYes. It is complicated. You will get used to it.\n\nIf you\'re lucky the opponent will not figure this part out and you get to be champion.</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Class picker arrival. -->
     <string name="tidbit_characters_title">Two Classes, One Character</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Class picker arrival. -->
