@@ -5,7 +5,7 @@
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 300,
-  "corpusDigest": "3805159e96820a6c",
+  "corpusDigest": "c963adfb7a76f87b",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -48,11 +48,11 @@
     },
     "selectorFrequency": {
       "ANY_FRIENDLY_MINION": 70,
-      "ANY_ENEMY": 28,
+      "ANY_ENEMY": 29,
       "ANY_MINION": 25,
-      "ANY_ENEMY_MINION": 24,
+      "ANY_ENEMY_MINION": 23,
       "FRIENDLY_HERO": 19,
-      "ENEMY_HERO": 12,
+      "ENEMY_HERO": 11,
       "ANY_CHARACTER": 9,
       "ANY_FRIENDLY": 3,
       "OTHER_FRIENDLY_MINIONS": 3,
@@ -61,7 +61,7 @@
       "SELF": 1
     },
     "actionFrequency": {
-      "DAMAGE_SINGLE": 37,
+      "DAMAGE_SINGLE": 36,
       "DAMAGE_AOE": 22,
       "REMOVAL": 12,
       "BOUNCE": 11,
@@ -487,16 +487,16 @@
       },
       "selectorFrequency": {
         "ANY_FRIENDLY_MINION": 13,
-        "ANY_ENEMY_MINION": 3,
         "FRIENDLY_HERO": 3,
-        "ENEMY_HERO": 2,
-        "ANY_ENEMY": 1,
+        "ANY_ENEMY": 2,
+        "ANY_ENEMY_MINION": 2,
         "ANY_FRIENDLY": 1,
-        "ANY_MINION": 1
+        "ANY_MINION": 1,
+        "ENEMY_HERO": 1
       },
       "actionFrequency": {
         "DAMAGE_AOE": 3,
-        "DAMAGE_SINGLE": 3,
+        "DAMAGE_SINGLE": 2,
         "REMOVAL": 1
       },
       "costDistribution": {
@@ -3404,12 +3404,10 @@
       "rarity": "RARE",
       "keywords": [],
       "selectors": [
-        "ANY_ENEMY_MINION",
-        "ENEMY_HERO"
+        "ANY_ENEMY"
       ],
       "actionTags": [
-        "DAMAGE_AOE",
-        "DAMAGE_SINGLE"
+        "DAMAGE_AOE"
       ],
       "tribe": null,
       "setId": "PENDINGHAM",
