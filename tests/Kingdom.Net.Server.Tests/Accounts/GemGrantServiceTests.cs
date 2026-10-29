@@ -62,10 +62,10 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 {
                     ("gems.tier.200", 200L, 199),
                     ("gems.tier.550", 550L, 499),
-                    ("gems.tier.1200", 1100L, 999),
-                    ("gems.tier.2600", 2300L, 1999),
-                    ("gems.tier.7000", 6000L, 4999),
-                    ("gems.tier.15000", 13000L, 9999),
+                    ("gems.tier.1200", 1200L, 999),
+                    ("gems.tier.2600", 2600L, 1999),
+                    ("gems.tier.7000", 7000L, 4999),
+                    ("gems.tier.15000", 15000L, 9999),
                 }));
             Assert.That(
                 GemBundleCatalog.All.Select(bundle => bundle.ProductKey),
