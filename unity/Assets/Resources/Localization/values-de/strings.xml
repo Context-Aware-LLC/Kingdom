@@ -121,7 +121,14 @@
     <string name="shop_shop_tab_packs">Boosterpacks</string>
     <string name="shop_shop_tab_gems">Edelsteinpakete</string>
     <string name="shop_shop_card_vault">Kartentresor</string>
-    <string name="shop_gem_purchases_are_coming">Edelsteinkäufe gibt es bald.</string>
+    <string name="shop_gem_status_unsupported">Edelsteinpakete gibt es in der Android-App.</string>
+    <string name="shop_gem_status_connecting">Verbinde mit Google Play …</string>
+    <string name="shop_gem_status_store_down">Google Play ist gerade nicht erreichbar.</string>
+    <string name="shop_gem_status_pending">Zahlung ausstehend. Deine Edelsteine kommen, sobald sie eingegangen ist.</string>
+    <string name="shop_gem_status_granted">Die Schatzkammer dankt. Du hast jetzt %1$s Edelsteine.</string>
+    <string name="shop_gem_status_retry">Kauf erhalten. Deine Edelsteine kommen in Kürze.</string>
+    <string name="shop_gem_status_rejected">Google Play konnte diesen Kauf nicht bestätigen.</string>
+    <string name="shop_gem_status_failed">Der Kauf hat nicht geklappt.</string>
     <string name="deck_create_error_collection_unavailable">Sammlung nicht verfügbar – siehe Konsole.</string>
     <string name="deck_create_class_tooltip">%1$s ansehen</string>
     <string name="deck_create_detail_primary_hint">Mit dieser Klasse legst du ihre Heldenkraft fest.</string>

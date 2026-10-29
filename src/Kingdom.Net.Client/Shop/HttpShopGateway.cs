@@ -17,7 +17,7 @@ namespace Kingdom.Net.Client.Shop
     }
 
     /// <summary>Authenticated shop transport. The server owns prices, wallet and purchase outcomes.</summary>
-    public sealed class HttpShopGateway : IShopGateway
+    public sealed class HttpShopGateway : IShopGateway, IGemRedeemGateway
     {
         private readonly string _baseUrl;
         private readonly IAuthHttp _http;
@@ -96,6 +96,45 @@ namespace Kingdom.Net.Client.Shop
             return new PackPurchaseResult(snapshot!, packId, unopened);
         }
 
+        public async Task<GemRedeemResult> RedeemGemsAsync(string productKey, string purchaseToken,
+                                                           CancellationToken cancellationToken = default)
+        {
+            string token = await _token().ConfigureAwait(false);
+            if (_baseUrl.Length == 0 || string.IsNullOrEmpty(token))
+                return new GemRedeemResult(GemRedeemOutcome.Retry);
+
+            string body = AuthJson.Object(
+                AuthJson.Field("provider", "play"),
+                AuthJson.Field("productId", productKey ?? ""),
+                AuthJson.Field("purchaseToken", purchaseToken ?? ""));
+            AuthHttpResponse response = await _http.PostJsonAsync(_baseUrl + "/shop/gems", body,
+                Headers(token), cancellationToken).ConfigureAwait(false);
+
+            if (response.IsTransportFailure) return new GemRedeemResult(GemRedeemOutcome.Retry);
+            WalletBalances? wallet = TryWallet(response.Body, out WalletBalances w) ? w : (WalletBalances?)null;
+            switch (response.StatusCode)
+            {
+                case 200: return new GemRedeemResult(GemRedeemOutcome.Granted, wallet);
+                case 202: return new GemRedeemResult(GemRedeemOutcome.Pending, wallet);
+                // 409 is an order id bound to another account; 422 a purchase the store disowns.
+                case 409:
+                case 422: return new GemRedeemResult(GemRedeemOutcome.Rejected, wallet);
+                // Everything else, 400 and 401 included, says nothing about the purchase itself.
+                default: return new GemRedeemResult(GemRedeemOutcome.Retry);
+            }
+        }
+
+        private static bool TryWallet(string body, out WalletBalances wallet)
+        {
+            wallet = default;
+            if (!AuthJson.TryReadNestedObject(body, "wallet", out var w) ||
+                !AuthJson.TryInt64(w, "gold", out long gold) || gold < 0 ||
+                !AuthJson.TryInt64(w, "gems", out long gems) ||
+                !AuthJson.TryInt64(w, "shards", out long shards) || shards < 0) return false;
+            wallet = new WalletBalances(gold, gems, shards);
+            return true;
+        }
+
         private static List<KeyValuePair<string, string>> Headers(string token)
             => new List<KeyValuePair<string, string>>
             {
@@ -125,8 +164,9 @@ namespace Kingdom.Net.Client.Shop
                     gemPrice < 0 || gemPrice > int.MaxValue) return false;
                 packs.Add(new PackOffer(packId, displayName, (int)goldPrice, (int)gemPrice));
             }
+            AuthJson.TryString(fields, "storeAccountId", out string storeAccountId);
             snapshot = new ShopSnapshot(new WalletBalances(gold, gems, shards), packs,
-                ShopCatalog.GemBundles, vaultCount);
+                ShopCatalog.GemBundles, vaultCount, storeAccountId);
             return true;
         }
     }

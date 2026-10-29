@@ -88,6 +88,12 @@ namespace Kingdom.Presentation
             }
         }
 
+        private void OnDisable()
+        {
+            _shop?.Dispose();
+            _shop = null;
+        }
+
         private void Exit() => ScreenNav.Go(ReturnScene);
 
         private void OpenVault()

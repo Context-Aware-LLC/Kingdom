@@ -27,6 +27,11 @@ namespace Kingdom.Net.Server.Accounts
         public long UnopenedCount { get; }
         public long VaultCount { get; }
 
+        /// <summary>The account id the client stamps on a store purchase as Play's
+        /// <c>obfuscatedAccountId</c> — see <see cref="PlayStoreReceiptValidator"/>. Set by a read only.
+        /// It is the opaque <see cref="Account.PlayerId"/>, which carries nothing personal.</summary>
+        public string StoreAccountId { get; init; } = "";
+
         public ShopEndpointResult(ShopEndpointStatus status, WalletBalances wallet = default,
                                   string packId = "", long unopenedCount = 0, long vaultCount = 0)
         {
@@ -73,7 +78,7 @@ namespace Kingdom.Net.Server.Accounts
             IReadOnlyDictionary<string, long> balances = await ledger.BalancesAsync(account.PlayerId, ct)
                 .ConfigureAwait(false);
             return new ShopEndpointResult(ShopEndpointStatus.Ready, wallet,
-                vaultCount: CountVaultPacks(balances));
+                vaultCount: CountVaultPacks(balances)) { StoreAccountId = account.PlayerId };
         }
 
         public static async Task<ShopEndpointResult> PurchaseAsync(
@@ -141,7 +146,7 @@ namespace Kingdom.Net.Server.Accounts
             return count;
         }
 
-        private static async Task<Account?> ResolveAsync(
+        internal static async Task<Account?> ResolveAsync(
             string? bearerToken, IIdentityTokenVerifier? verifier, IAccountStore? accounts,
             OnboardingGrantService? onboarding, CancellationToken ct)
         {

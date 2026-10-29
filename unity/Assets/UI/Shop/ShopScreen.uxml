@@ -39,7 +39,7 @@
                         <ui:VisualElement name="shop-pack-list" class="shop-pack-list"/>
                     </ui:VisualElement>
                     <ui:VisualElement name="shop-section-gems" class="shop-section shop-section--hidden">
-                        <ui:Label text="Gem purchases are coming soon." class="shop-section__help"/>
+                        <ui:Label name="shop-gem-status" class="shop-section__help"/>
                         <ui:VisualElement name="shop-gem-list" class="shop-gem-list"/>
                     </ui:VisualElement>
                 </ui:VisualElement>

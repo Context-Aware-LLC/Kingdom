@@ -137,6 +137,11 @@ namespace Kingdom.Net.Server
         /// <see cref="InMemoryPlayGamesLinkStore"/>; shares the accounts database in production.</summary>
         public IPlayGamesLinkStore? PlayGamesLinks { get; init; }
 
+        /// <summary>Google Play's receipt check (EF-080d). Null (default) turns <c>/shop/gems</c>
+        /// off. Built from <see cref="PlayStoreReceiptValidator.ServiceAccountEnvVar"/>: a service
+        /// account the Play Console has granted access to orders.</summary>
+        public PlayStoreReceiptValidator? PlayStore { get; init; }
+
         /// <summary>Supabase's admin API, which mints the sign-in token a Play Games restore
         /// answers (#425). Null (default) turns <c>/play-games/restore</c> off. Built from
         /// <c>KINGDOM_SUPABASE_URL</c> and <see cref="SupabaseAdmin.SecretKeyEnvVar"/>.</summary>
@@ -326,6 +331,7 @@ namespace Kingdom.Net.Server
                 FriendStore = friendStore,
                 PlayGames = GooglePlayGamesApi.FromEnvironment(),
                 PlayGamesLinks = playGamesLinks,
+                PlayStore = PlayStoreReceiptValidator.FromEnvironment(),
                 SupabaseAdmin = Identity.SupabaseAdmin.FromEnvironment(supabaseUrl),
                 EntitlementLedger = entitlementLedger,
                 QuestProgress = questProgress,
@@ -558,6 +564,9 @@ namespace Kingdom.Net.Server
             EconomyService? economy = cfg.EntitlementLedger is null
                 ? null
                 : new EconomyService(cfg.EntitlementLedger, time);
+            GemGrantService? gemGrants = cfg.EntitlementLedger is null || cfg.PlayStore is null
+                ? null
+                : new GemGrantService(cfg.EntitlementLedger, cfg.PlayStore, time);
             CraftingService? crafting = cfg.EntitlementLedger is null
                 ? null
                 : new CraftingService(cfg.EntitlementLedger, db, time);
@@ -1253,6 +1262,7 @@ namespace Kingdom.Net.Server
                 {
                     status = result.Status.ToString().ToLowerInvariant(),
                     vaultCount = result.VaultCount,
+                    storeAccountId = result.StoreAccountId,
                     wallet = new
                     {
                         gold = result.Wallet.Gold,
@@ -1260,6 +1270,43 @@ namespace Kingdom.Net.Server
                         shards = result.Wallet.Shards,
                     },
                     packs = shopOffers,
+                }, statusCode: result.HttpStatus);
+            });
+
+            // POST /shop/gems — a Play purchase in, Gems out. See GemRedeemEndpoint: the body names
+            // the store's handles for the purchase and nothing the store does not re-read itself.
+            app.MapPost("/shop/gems", async (HttpContext context) =>
+            {
+                string? provider = null, productId = null, purchaseToken = null;
+                try
+                {
+                    using var body = await JsonDocument.ParseAsync(
+                        context.Request.Body, cancellationToken: context.RequestAborted);
+                    if (body.RootElement.ValueKind == JsonValueKind.Object)
+                    {
+                        if (body.RootElement.TryGetProperty("provider", out var p) &&
+                            p.ValueKind == JsonValueKind.String) provider = p.GetString();
+                        if (body.RootElement.TryGetProperty("productId", out var id) &&
+                            id.ValueKind == JsonValueKind.String) productId = id.GetString();
+                        if (body.RootElement.TryGetProperty("purchaseToken", out var t) &&
+                            t.ValueKind == JsonValueKind.String) purchaseToken = t.GetString();
+                    }
+                }
+                catch (JsonException) { /* Malformed body becomes InvalidRequest below. */ }
+
+                GemRedeemResult result = await GemRedeemEndpoint.RedeemAsync(
+                    BearerFrom(context), provider, productId, purchaseToken, cfg.TokenVerifier,
+                    cfg.AccountStore, gemGrants, cfg.PlayStore, onboarding, context.RequestAborted);
+                context.Response.Headers["Cache-Control"] = "no-store";
+                return Results.Json(new
+                {
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    wallet = new
+                    {
+                        gold = result.Wallet.Gold,
+                        gems = result.Wallet.Gems,
+                        shards = result.Wallet.Shards,
+                    },
                 }, statusCode: result.HttpStatus);
             });
 

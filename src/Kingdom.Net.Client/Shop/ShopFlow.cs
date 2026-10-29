@@ -117,14 +117,21 @@ namespace Kingdom.Net.Client.Shop
         public IReadOnlyList<GemBundleOffer> GemBundles { get; }
         public long VaultCount { get; }
 
+        /// <summary>The id a store purchase is stamped with (Play's <c>obfuscatedAccountId</c>), so
+        /// the server can tell whose purchase a token is. Empty when the server did not send one, and
+        /// then gem bundles cannot be bought.</summary>
+        public string StoreAccountId { get; }
+
         public ShopSnapshot(WalletBalances wallet, IReadOnlyList<PackOffer>? packs,
-                            IReadOnlyList<GemBundleOffer>? gemBundles, long vaultCount = 0)
+                            IReadOnlyList<GemBundleOffer>? gemBundles, long vaultCount = 0,
+                            string? storeAccountId = null)
         {
             if (vaultCount < 0) throw new ArgumentOutOfRangeException(nameof(vaultCount));
             Wallet = wallet;
             Packs = packs ?? Array.Empty<PackOffer>();
             GemBundles = gemBundles ?? Array.Empty<GemBundleOffer>();
             VaultCount = vaultCount;
+            StoreAccountId = storeAccountId ?? "";
         }
     }
 
@@ -219,6 +226,44 @@ namespace Kingdom.Net.Client.Shop
             new GemBundleOffer("gems.tier.7000", 7000, 4999),
             new GemBundleOffer("gems.tier.15000", 15000, 9999),
         });
+    }
+
+    /// <summary>What the server made of a store purchase, phrased as what the client does next.</summary>
+    public enum GemRedeemOutcome
+    {
+        /// <summary>Gems are in the wallet (now or on an earlier try). Confirm the purchase with the store.</summary>
+        Granted,
+
+        /// <summary>Genuine but unpaid (cash, a parent's approval). Keep it; the store redelivers it.</summary>
+        Pending,
+
+        /// <summary>The server could not decide (store or network down). Keep it and try again later.</summary>
+        Retry,
+
+        /// <summary>The server judged the purchase not genuine, canceled, or someone else's. Never confirm it.</summary>
+        Rejected,
+    }
+
+    public sealed class GemRedeemResult
+    {
+        public GemRedeemOutcome Outcome { get; }
+
+        /// <summary>The authoritative wallet when the server sent one.</summary>
+        public WalletBalances? Wallet { get; }
+
+        public GemRedeemResult(GemRedeemOutcome outcome, WalletBalances? wallet = null)
+        {
+            Outcome = outcome;
+            Wallet = wallet;
+        }
+    }
+
+    /// <summary>Hands a store purchase to the account server, which checks it with the store and
+    /// grants the Gems. Safe to repeat for one purchase: the server grants it once.</summary>
+    public interface IGemRedeemGateway
+    {
+        Task<GemRedeemResult> RedeemGemsAsync(string productKey, string purchaseToken,
+                                              CancellationToken cancellationToken = default);
     }
 
     /// <summary>

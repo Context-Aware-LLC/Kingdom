@@ -14,7 +14,8 @@
     "Unity.TextMeshPro",
     "Unity.Addressables",
     "Unity.ResourceManager",
-    "Unity.InputSystem"
+    "Unity.InputSystem",
+    "Unity.Purchasing"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

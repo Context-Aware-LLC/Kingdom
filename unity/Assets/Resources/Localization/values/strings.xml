@@ -155,7 +155,22 @@
     <string name="shop_shop_tab_packs">Booster Packs</string>
     <string name="shop_shop_tab_gems">Gem Bundles</string>
     <string name="shop_shop_card_vault">Card Vault</string>
-    <string name="shop_gem_purchases_are_coming">Gem purchases are coming soon.</string>
+    <!-- Gem section note on a build with no app store (desktop, the Editor). -->
+    <string name="shop_gem_status_unsupported">Gem bundles can be bought in the Android app.</string>
+    <!-- Gem section note while the app connects to Google Play billing. -->
+    <string name="shop_gem_status_connecting">Connecting to Google Play…</string>
+    <!-- Gem section note when Google Play billing cannot be reached. -->
+    <string name="shop_gem_status_store_down">Google Play is unavailable right now.</string>
+    <!-- Gem section note for a paid-later purchase (cash, a parent approving). Gems arrive when payment clears. -->
+    <string name="shop_gem_status_pending">Payment pending. Your gems arrive as soon as it clears.</string>
+    <!-- Gem section note after a gem purchase is granted. %1$s = gem amount now in the wallet, already number-formatted. -->
+    <string name="shop_gem_status_granted">The treasury thanks you. You now have %1$s gems.</string>
+    <!-- Gem section note when the purchase went through at Google but our server could not confirm it yet; it retries. -->
+    <string name="shop_gem_status_retry">Purchase received. Your gems will arrive shortly.</string>
+    <!-- Gem section note when the server could not verify a purchase with Google Play. -->
+    <string name="shop_gem_status_rejected">Google Play could not confirm that purchase.</string>
+    <!-- Gem section note when the Google Play purchase itself failed (not a cancel). -->
+    <string name="shop_gem_status_failed">The purchase did not go through.</string>
 
     <!-- ===== Screens and dialogs (C#) ===== -->
     <!-- Error line on deck-creation and deck-roster screens when this device's collection cannot be opened. Dev-voiced ('console'); shown in shipping builds. -->

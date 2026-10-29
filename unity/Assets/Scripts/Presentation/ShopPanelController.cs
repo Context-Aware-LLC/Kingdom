@@ -40,6 +40,9 @@ namespace Kingdom.Presentation
         private readonly Label _vaultCount;
         private readonly Label _gold;
         private readonly Label _gems;
+        private readonly Label _gemStatus;
+        private readonly IGemRedeemGateway _gemRedeem;
+        private IReadOnlyList<GemBundleOffer> _gemBundles = ShopCatalog.GemBundles;
         private readonly VisualElement _detailOverlay;
         private readonly VisualElement _detailShell;
         private readonly VisualElement _detailArt;
@@ -82,6 +85,7 @@ namespace Kingdom.Presentation
             _gemList = root.Q<VisualElement>("shop-gem-list");
             _gold = root.Q<Label>("shop-gold-balance");
             _gems = root.Q<Label>("shop-gem-balance");
+            _gemStatus = root.Q<Label>("shop-gem-status");
             _vaultEntry = root.Q<VisualElement>("shop-vault-entry");
             _vaultCount = root.Q<Label>("shop-vault-count");
             _detailOverlay = root.Q<VisualElement>("pack-detail-overlay");
@@ -105,6 +109,7 @@ namespace Kingdom.Presentation
             }
             _detailArt?.RegisterCallback<GeometryChangedEvent>(_ => FitDetailActionsToArt());
             _flow = gateway != null ? new ShopFlow(gateway) : null;
+            _gemRedeem = gateway as IGemRedeemGateway;
             _packArt = packArt;
             _onClose = onClose;
             _onVault = onVault;
@@ -131,7 +136,14 @@ namespace Kingdom.Presentation
 
             RenderDisconnectedCatalog();
             RenderVaultCount(0);
+
+            GemStore.Changed += OnGemStoreChanged;
+            GemStore.EnsureStarted(_gemRedeem);
+            OnGemStoreChanged(GemStore.State, null);
         }
+
+        /// <summary>The store connection outlives this panel; call when its host goes away.</summary>
+        public void Dispose() => GemStore.Changed -= OnGemStoreChanged;
 
         public void Open()
         {
@@ -239,6 +251,39 @@ namespace Kingdom.Presentation
             if (updateVaultCount) RenderVaultCount(snapshot.VaultCount);
             RenderPacks(snapshot.Packs, snapshot.Wallet);
             RenderGemBundles(snapshot.GemBundles);
+        }
+
+        private void BuyGems(string productKey)
+        {
+            if (!GemStore.Buy(productKey, _flow?.Snapshot?.StoreAccountId))
+                SetGemStatus(GemStore.State);
+        }
+
+        private void OnGemStoreChanged(GemStoreState state, WalletBalances? wallet)
+        {
+            if (wallet.HasValue && _gems != null) _gems.text = WalletDisplay.IconAmount(wallet.Value.Gems);
+            SetGemStatus(state, wallet);
+            // Store prices and buyability arrive with the products; redraw the rows for them.
+            RenderGemBundles(_gemBundles);
+        }
+
+        private void SetGemStatus(GemStoreState state, WalletBalances? wallet = null)
+        {
+            if (_gemStatus == null) return;
+            if (!GemStore.IsSupported) state = GemStoreState.Unsupported;
+            _gemStatus.text = state switch
+            {
+                GemStoreState.Unsupported => Loc.Get("shop_gem_status_unsupported"),
+                GemStoreState.Connecting => Loc.Get("shop_gem_status_connecting"),
+                GemStoreState.StoreDown => Loc.Get("shop_gem_status_store_down"),
+                GemStoreState.Pending => Loc.Get("shop_gem_status_pending"),
+                GemStoreState.Granted => Loc.Format("shop_gem_status_granted",
+                    (wallet?.Gems ?? 0).ToString("N0")),
+                GemStoreState.Retry => Loc.Get("shop_gem_status_retry"),
+                GemStoreState.Rejected => Loc.Get("shop_gem_status_rejected"),
+                GemStoreState.Failed => Loc.Get("shop_gem_status_failed"),
+                _ => "",
+            };
         }
 
         private void RenderVaultCount(long count)
@@ -758,7 +803,11 @@ namespace Kingdom.Presentation
         private void RenderGemBundles(IReadOnlyList<GemBundleOffer> bundles)
         {
             if (_gemList == null) return;
+            _gemBundles = bundles;
             _gemList.Clear();
+            // Sellable only once Play has listed the products and the server has named the account
+            // to stamp on the purchase.
+            bool sellable = GemStore.CanBuy && !string.IsNullOrEmpty(_flow?.Snapshot?.StoreAccountId);
 
             for (int i = 0; i < bundles.Count; i++)
             {
@@ -779,13 +828,19 @@ namespace Kingdom.Presentation
                 }
                 row.Add(pile);
 
-                // A standard button: chrome comes from theme.uss. Purchases are not wired yet
-                // (the section says so), so it has no handler.
-                var amount = new Button { text = Loc.Format("common_1_s_gems", bundle.Gems.ToString("N0")) };
+                // A standard button: chrome comes from theme.uss. Tapping it opens Play's sheet.
+                string productKey = bundle.ProductKey;
+                var amount = new Button(() => BuyGems(productKey))
+                {
+                    text = Loc.Format("common_1_s_gems", bundle.Gems.ToString("N0")),
+                };
                 amount.AddToClassList("shop-gem__amount");
+                amount.SetEnabled(sellable);
                 row.Add(amount);
 
-                var price = new Label(FormatUsd(bundle.PriceCents));
+                // Play's own price string once fetched: it is in the player's currency and is
+                // what the purchase sheet will charge. The catalog's USD is the fallback.
+                var price = new Label(GemStore.LocalizedPrice(productKey) ?? FormatUsd(bundle.PriceCents));
                 price.AddToClassList("shop-gem__price");
                 row.Add(price);
                 _gemList.Add(row);
