@@ -92,6 +92,9 @@ function Find-Python {
 
 Invoke-Stage 'Restore' { dotnet restore Kingdom.slnx }
 Invoke-Stage 'Build (Release)' { dotnet build Kingdom.slnx -c Release --no-restore }
+Invoke-Stage 'Android build harness' {
+    pwsh -NoProfile -File tools/ci/test-android-build-support.ps1
+}
 
 if (-not $Quick) {
     Invoke-Stage 'Stage 1 · Lint (dotnet format)' {

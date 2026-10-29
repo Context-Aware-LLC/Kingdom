@@ -114,6 +114,8 @@ namespace Kingdom.Editor
 
             bool perfCaptureBuild = Environment.GetEnvironmentVariable(
                 "KINGDOM_PERF_CAPTURE_BUILD") == "1";
+            bool fastBuild = Environment.GetEnvironmentVariable("KINGDOM_FAST_BUILD") == "1";
+            bool cleanBuild = Environment.GetEnvironmentVariable("KINGDOM_CLEAN_BUILD") == "1";
 
             // KINGDOM_PROFILER_BUILD=1 makes the APK a development player that the Editor's
             // Profiler can attach to over adb. It exists because `dumpsys meminfo` can say a pool
@@ -125,6 +127,9 @@ namespace Kingdom.Editor
                 "KINGDOM_PROFILER_BUILD") == "1";
             string buildCommit = Environment.GetEnvironmentVariable("KINGDOM_BUILD_COMMIT");
             PlaySigning play = PlaySigning.FromEnvironment();
+            if (fastBuild && (play != null || perfCaptureBuild))
+                throw new BuildFailedException(
+                    "[KingdomBuild] Fast iteration cannot be used for a Play release or performance capture.");
             if (play != null && (perfCaptureBuild || profilerBuild))
                 throw new BuildFailedException(
                     "[KingdomBuild] A Play release cannot also be a perf-capture or profiler build.");
@@ -139,8 +144,15 @@ namespace Kingdom.Editor
             bool originalCustomKeystore = PlayerSettings.Android.useCustomKeystore;
             string originalKeystore = PlayerSettings.Android.keystoreName;
             string originalAlias = PlayerSettings.Android.keyaliasName;
+            bool originalMinify = PlayerSettings.Android.minifyRelease;
+            var originalCompiler = PlayerSettings.GetIl2CppCompilerConfiguration(NamedBuildTarget.Android);
+            var originalCodeGeneration = PlayerSettings.GetIl2CppCodeGeneration(NamedBuildTarget.Android);
+#if UNITY_ANDROID
+            var originalLto = UnityEditor.Android.UserBuildSettings.linkTimeOptimization;
+#endif
             string outputPath = play != null ? PlayOutputPath
                 : exportProject ? AndroidStudioOutputPath
+                : fastBuild ? "Builds/Android/Kingdom-fast.apk"
                 : AndroidOutputPath;
 
             try
@@ -167,17 +179,23 @@ namespace Kingdom.Editor
                     ScriptingImplementation.IL2CPP);
                 PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
 
-                // R8 and Thin LTO are forced for the same reason. The Android build profile
-                // carries both, but a headless run in a fresh Library/ has no active profile and
-                // falls back to the global settings, where Release minify is off — and with it
-                // AndroidReleaseResourceShrinking, which is a no-op unless minify is on.
-                PlayerSettings.Android.minifyRelease = true;
+                // Optimized builds must not depend on an active Editor build profile. Fast
+                // iteration explicitly trades native runtime speed and R8 shrinking for build time.
+                PlayerSettings.Android.minifyRelease = !fastBuild;
+                PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.Android,
+                    fastBuild ? Il2CppCompilerConfiguration.Debug : Il2CppCompilerConfiguration.Master);
+                PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.Android,
+                    fastBuild ? Il2CppCodeGeneration.OptimizeSize : Il2CppCodeGeneration.OptimizeSpeed);
 #if UNITY_ANDROID
                 // The Android editor assemblies are only referenced while Android is the active
                 // target, which this entry point already requires.
                 UnityEditor.Android.UserBuildSettings.linkTimeOptimization =
-                    Unity.Android.Types.AndroidLinkTimeOptimization.Thin;
+                    fastBuild ? Unity.Android.Types.AndroidLinkTimeOptimization.None
+                        : Unity.Android.Types.AndroidLinkTimeOptimization.Thin;
 #endif
+                Debug.Log(fastBuild
+                    ? "[KingdomBuild] FAST ITERATION: Debug C++, smaller code generation, no LTO or R8. Not for performance measurements."
+                    : "[KingdomBuild] OPTIMIZED: Master C++, faster runtime code generation, Thin LTO and R8.");
 
                 // This local APK path uses Unity's default debug signing. Do not silently persist
                 // a custom signing configuration into ProjectSettings whenever this menu runs.
@@ -208,7 +226,7 @@ namespace Kingdom.Editor
                               $"version {PlayerSettings.bundleVersion}");
                 }
 
-                BuildAndroidAddressables();
+                BuildAndroidAddressables(cleanBuild);
 
                 Directory.CreateDirectory(exportProject ? outputPath : Path.GetDirectoryName(outputPath));
                 var options = new BuildPlayerOptions
@@ -221,6 +239,7 @@ namespace Kingdom.Editor
                         ? BuildOptions.Development | BuildOptions.ConnectWithProfiler
                         : BuildOptions.None,
                 };
+                if (cleanBuild) options.options |= BuildOptions.CleanBuildCache;
                 if (profilerBuild)
                     // Attach over USB and let autoconnect do it. Measured 2026-08-26, Pixel 5a: the
                     // Editor creates `tcp:34998 localabstract:Unity-<package>` itself and the
@@ -255,6 +274,12 @@ namespace Kingdom.Editor
                 // capture's "+perf.<sha>" suffix is temporary.
                 if (play == null) PlayerSettings.bundleVersion = originalVersion;
                 PlayerSettings.enableFrameTimingStats = originalFrameTimingStats;
+                PlayerSettings.Android.minifyRelease = originalMinify;
+                PlayerSettings.SetIl2CppCompilerConfiguration(NamedBuildTarget.Android, originalCompiler);
+                PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.Android, originalCodeGeneration);
+#if UNITY_ANDROID
+                UnityEditor.Android.UserBuildSettings.linkTimeOptimization = originalLto;
+#endif
                 // Back to whatever the Keystore Manager had, not to off: Sam signs store builds
                 // from the Build Profiles window with the upload key configured there.
                 PlayerSettings.Android.useCustomKeystore = originalCustomKeystore;
@@ -446,7 +471,7 @@ namespace Kingdom.Editor
         /// Editor's active target changes between profile selection and build. Called by
         /// EF-060's <c>BuildAndroid()</c> after it switches the active build target.</para>
         /// </summary>
-        public static void BuildAndroidAddressables()
+        public static void BuildAndroidAddressables(bool clean = false)
         {
             var settings = UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings;
             if (settings == null)
@@ -462,7 +487,7 @@ namespace Kingdom.Editor
             settings.activeProfileId = androidProfileId;
             try
             {
-                BuildAddressables();
+                BuildAddressables(clean);
             }
             finally
             {
@@ -470,11 +495,11 @@ namespace Kingdom.Editor
             }
         }
 
-        private static void BuildAddressables()
+        private static void BuildAddressables(bool clean = true)
         {
             RequireSavedScenes();
 
-            AddressableAssetSettings.CleanPlayerContent();
+            if (clean) AddressableAssetSettings.CleanPlayerContent();
             AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult contentResult);
             if (!string.IsNullOrEmpty(contentResult.Error))
                 throw new BuildFailedException(

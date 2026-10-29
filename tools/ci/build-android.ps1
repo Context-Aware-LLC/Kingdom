@@ -9,6 +9,10 @@
 # Usage: pwsh tools/ci/build-android.ps1
 #        pwsh tools/ci/build-android.ps1 -PerfCapture
 #        pwsh tools/ci/build-android.ps1 -PlayRelease
+#        pwsh tools/ci/build-android.ps1 -Fast
+#        pwsh tools/ci/build-android.ps1 -PlayRelease -DeferSymbolUpload
+# -Clean forces script compilation and rebuilds the player/Addressables caches.
+# -DeferSymbolUpload snapshots this build's symbols and starts an independent uploader.
 #
 # -PlayRelease builds a Google Play AAB signed with the UPLOAD key instead of a debug APK. The
 # keystore lives outside the repo (default below); its password comes from
@@ -25,12 +29,17 @@ param(
                            else            { "$HOME/Unity/Hub/Editor/6000.6.4f1/Editor/Unity" }),
     [switch]$PerfCapture,
     [switch]$PlayRelease,
+    [switch]$Fast,
+    [switch]$Clean,
+    [switch]$DeferSymbolUpload,
+    [ValidateRange(1, 180)][int]$TimeoutMinutes = 60,
     [string]$Keystore = 'C:\Users\User\.keystore\KingdomOfBadIdeas\kobi-upload.keystore',
     [string]$KeyAlias = 'kobi-upload',
     [int]$VersionCode = 0
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'android-build-support.ps1')
 
 # Path.Combine, never a literal '\' - a backslash is a legal filename character on Linux.
 $REPO_ROOT  = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..'))
@@ -38,6 +47,7 @@ $PROJECT    = [System.IO.Path]::Combine($REPO_ROOT, 'unity')
 $TIMESTAMP  = (Get-Date -Format 'yyyyMMdd-HHmmss')
 $LOG        = Join-Path ([System.IO.Path]::GetTempPath()) "unity-build-android-$TIMESTAMP.log"
 $APK        = if ($PlayRelease) { [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'KingdomOfBadIdeas.aab') }
+              elseif ($Fast) { [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'Kingdom-fast.apk') }
               else              { [System.IO.Path]::Combine($PROJECT, 'Builds', 'Android', 'Kingdom.apk') }
 $BUILD_INFO = "$APK.build.json"
 
@@ -49,8 +59,8 @@ if ($LASTEXITCODE -ne 0 -or -not $BUILD_COMMIT) {
 $BUILD_STATUS = @(& git -C $REPO_ROOT status --porcelain --untracked-files=all)
 $BUILD_DIRTY = $BUILD_STATUS.Count -gt 0
 $DIRTY_SUFFIX = if ($BUILD_DIRTY) { '-dirty' } else { '' }
-if ($PlayRelease -and $PerfCapture) {
-    Write-Error 'A Play release cannot also be a performance capture build.'
+if (($PlayRelease -and $PerfCapture) -or ($Fast -and ($PlayRelease -or $PerfCapture))) {
+    Write-Error 'Choose one of -Fast, -PlayRelease, or -PerfCapture.'
     exit 1
 }
 if ($PlayRelease) {
@@ -120,7 +130,8 @@ if (Test-Path $lockFile) {
     exit 1
 }
 
-# Advance compilation-input timestamps so Unity does not skip a stale-script compile.
+# Unity imports changed scripts before executeMethod. Preserve timestamps for incremental
+# builds; the explicit clean option retains the old stale-import recovery path.
 $compileRoots = @(
     (Join-Path $PROJECT 'Assets'),
     (Join-Path $PROJECT 'Packages')
@@ -141,17 +152,21 @@ if ($compileInputs.Count -eq 0) {
     exit 1
 }
 
-$compileBarrierUtc = [DateTime]::UtcNow
-foreach ($compileInput in $compileInputs) {
-    [System.IO.File]::SetLastWriteTimeUtc($compileInput.FullName, $compileBarrierUtc)
+if ($Clean) {
+    $compileBarrierUtc = [DateTime]::UtcNow
+    foreach ($compileInput in $compileInputs) {
+        [System.IO.File]::SetLastWriteTimeUtc($compileInput.FullName, $compileBarrierUtc)
+    }
 }
 
 Write-Host "build-android: Unity   $UnityPath"
 Write-Host "build-android: project $PROJECT"
 Write-Host "build-android: log     $LOG"
 Write-Host "build-android: commit  $BUILD_COMMIT$DIRTY_SUFFIX"
-Write-Host "build-android: profile $(if ($PlayRelease) { "PLAY RELEASE (AAB, upload key '$KeyAlias')" } elseif ($PerfCapture) { 'EF-064 release capture' } else { 'standard release' })"
-Write-Host "build-android: compile barrier $($compileBarrierUtc.ToString('O')) ($($compileInputs.Count) input(s))"
+Write-Host "build-android: profile $(if ($PlayRelease) { "PLAY RELEASE (AAB, upload key '$KeyAlias')" } elseif ($Fast) { 'FAST ITERATION (not for performance measurements)' } elseif ($PerfCapture) { 'EF-064 release capture' } else { 'standard release' })"
+Write-Host "build-android: caches $(if ($Clean) { 'explicit clean rebuild' } else { 'incremental; source timestamps preserved' })"
+$symbolMode = if ($DeferSymbolUpload) { 'deferred' } elseif ($Fast) { 'skip' } else { 'inline' }
+Write-Host "build-android: symbol upload $symbolMode"
 Write-Host "build-android: launching headless (IL2CPP + ARM64)…"
 Write-Host ""
 
@@ -165,11 +180,21 @@ $unityArgs = @(
     '-logFile', "`"$LOG`""
 )
 
-$previousCaptureBuild = $env:KINGDOM_PERF_CAPTURE_BUILD
-$previousBuildCommit = $env:KINGDOM_BUILD_COMMIT
+$buildEnvironment = @{}
+foreach ($name in @('KINGDOM_PERF_CAPTURE_BUILD', 'KINGDOM_BUILD_COMMIT', 'KINGDOM_PLAY_RELEASE',
+    'KINGDOM_UPLOAD_KEYSTORE', 'KINGDOM_UPLOAD_KEY_ALIAS', 'KINGDOM_UPLOAD_KEYSTORE_PASS',
+    'KINGDOM_VERSION_CODE', 'KINGDOM_FAST_BUILD', 'KINGDOM_CLEAN_BUILD', 'KINGDOM_SYMBOL_UPLOAD')) {
+    $buildEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+}
+$buildTimer = [Diagnostics.Stopwatch]::StartNew()
+$readyTimer = [Diagnostics.Stopwatch]::StartNew()
 try {
     $env:KINGDOM_PERF_CAPTURE_BUILD = if ($PerfCapture) { '1' } else { '0' }
     $env:KINGDOM_BUILD_COMMIT = $BUILD_COMMIT
+    $env:KINGDOM_PLAY_RELEASE = if ($PlayRelease) { '1' } else { '0' }
+    $env:KINGDOM_FAST_BUILD = if ($Fast) { '1' } else { '0' }
+    $env:KINGDOM_CLEAN_BUILD = if ($Clean) { '1' } else { '0' }
+    $env:KINGDOM_SYMBOL_UPLOAD = $symbolMode
     if ($PlayRelease) {
         $env:KINGDOM_PLAY_RELEASE = '1'
         $env:KINGDOM_UPLOAD_KEYSTORE = $Keystore
@@ -179,22 +204,20 @@ try {
     }
 
     $proc = Start-Process -FilePath $UnityPath -ArgumentList $unityArgs -PassThru -NoNewWindow
-    # Android IL2CPP builds are slow; allow 30 minutes.
-    $finished = $proc.WaitForExit(1800000)
+    $finished = $proc.WaitForExit($TimeoutMinutes * 60000)
     if (-not $finished) {
-        Write-Host "build-android: ERROR — Unity timed out after 30 minutes"
-        try { $proc.Kill() } catch { Write-Host "build-android: WARNING — could not stop timed-out Unity process: $($_.Exception.Message)" }
+        Write-Host "build-android: ERROR — Unity timed out after $TimeoutMinutes minutes"
+        try { $proc.Kill($true) } catch { Write-Host "build-android: WARNING — could not stop timed-out Unity process: $($_.Exception.Message)" }
         $proc.WaitForExit()
         $unityExit = 124
     } else {
         $unityExit = $proc.ExitCode
     }
 } finally {
-    $env:KINGDOM_PERF_CAPTURE_BUILD = $previousCaptureBuild
-    $env:KINGDOM_BUILD_COMMIT = $previousBuildCommit
-    # The signing environment dies with the build; the password never outlives the Unity process.
-    Remove-Item Env:KINGDOM_PLAY_RELEASE, Env:KINGDOM_UPLOAD_KEYSTORE, Env:KINGDOM_UPLOAD_KEY_ALIAS,
-                Env:KINGDOM_UPLOAD_KEYSTORE_PASS, Env:KINGDOM_VERSION_CODE -ErrorAction SilentlyContinue
+    $buildTimer.Stop()
+    foreach ($name in $buildEnvironment.Keys) {
+        [Environment]::SetEnvironmentVariable($name, $buildEnvironment[$name], 'Process')
+    }
 }
 
 # ── Log read ─────────────────────────────────────────────────────────────────
@@ -229,7 +252,7 @@ Write-Host "build-android: Last 60 log lines:"
 $logLines | Select-Object -Last 60 | ForEach-Object { Write-Host "  $_" }
 Write-Host "build-android: =============================="
 
-if ($buildSucceeded -and -not $compileErrors -and $unityExit -eq 0) {
+if ($buildSucceeded -and -not $buildFailed -and -not $compileErrors -and $unityExit -eq 0) {
     if (-not (Test-Path -LiteralPath $APK)) {
         Write-Host "build-android: FAILED — success marker found but the build output is missing at '$APK'"
         exit 1
@@ -237,12 +260,22 @@ if ($buildSucceeded -and -not $compileErrors -and $unityExit -eq 0) {
 
     $apkItem = Get-Item -LiteralPath $APK
     $apkSha256 = (Get-FileHash -LiteralPath $APK -Algorithm SHA256).Hash.ToLowerInvariant()
+    $symbolJob = $null
+    if ($DeferSymbolUpload) {
+        $symbolJob = New-AndroidSymbolUploadJob -Project $PROJECT -Artifact $APK -Commit $BUILD_COMMIT
+    }
     $buildInfo = [ordered]@{
         schema = 1
         commit = $BUILD_COMMIT
         dirty = $BUILD_DIRTY
         perfCapture = [bool]$PerfCapture
         playRelease = [bool]$PlayRelease
+        fastIteration = [bool]$Fast
+        cleanBuild = [bool]$Clean
+        buildSeconds = [Math]::Round($buildTimer.Elapsed.TotalSeconds, 1)
+        readySeconds = [Math]::Round($readyTimer.Elapsed.TotalSeconds, 1)
+        symbolUploadMode = $symbolMode
+        symbolUploadJob = $symbolJob
         apkSha256 = $apkSha256
         apkBytes = $apkItem.Length
         builtUtc = [DateTime]::UtcNow.ToString('O')
@@ -253,6 +286,23 @@ if ($buildSucceeded -and -not $compileErrors -and $unityExit -eq 0) {
     Write-Host "build-android: SUCCESS — $(if ($PlayRelease) { 'Play AAB' } else { 'APK' }) produced"
     Write-Host "build-android: SHA256  $apkSha256"
     Write-Host "build-android: metadata $BUILD_INFO"
+    Write-Host "build-android: Unity elapsed $([Math]::Round($buildTimer.Elapsed.TotalSeconds, 1)) seconds"
+    Write-Host "build-android: artifact and snapshot ready in $([Math]::Round($readyTimer.Elapsed.TotalSeconds, 1)) seconds"
+    if ($symbolJob) {
+        $worker = Join-Path $PSScriptRoot 'upload-android-symbols.ps1'
+        $start = @{
+            FilePath = (Get-Process -Id $PID).Path
+            ArgumentList = @('-NoProfile', '-File', "`"$worker`"", '-Job', "`"$symbolJob`"")
+            PassThru = $true
+        }
+        if ($IsWindows) { $start.WindowStyle = 'Hidden' }
+        try {
+            $uploader = Start-Process @start
+            Write-Host "build-android: symbol upload running separately (PID $($uploader.Id)); status beside $symbolJob"
+        } catch {
+            Write-Warning "Player built; uploader could not start. Retry: pwsh `"$worker`" -Job `"$symbolJob`""
+        }
+    }
     if ($apkLine) { Write-Host "build-android: $apkLine" }
     exit 0
 } else {

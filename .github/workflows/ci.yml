@@ -140,6 +140,10 @@ jobs:
       - name: Build (Release)
         run: dotnet build Kingdom.slnx -c Release --no-restore
 
+      - name: Android build harness
+        shell: pwsh
+        run: ./tools/ci/test-android-build-support.ps1
+
       # ── Stage 1 — Lint (BLOCKING) ───────────────────────────────────────────────
       #
       # The rebaseline guard that stood here went with the golden replay fixtures on
