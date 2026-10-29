@@ -10,6 +10,7 @@ namespace Kingdom.Presentation
         private const float BoardViewScale = 1.05f;
         private static readonly Quaternion ViewRotation = Quaternion.LookRotation(new Vector3(0f, 0.34f, 1f), Vector3.up);
         private Camera _camera;
+        private SpriteRenderer _backdrop;
         private int _width, _height;
         private Rect _safe;
 
@@ -23,6 +24,36 @@ namespace Kingdom.Presentation
         {
             _width = Screen.width; _height = Screen.height; _safe = Screen.safeArea;
             Fit(_camera, _safe, _width, _height);
+            FitBackdrop();
+        }
+
+        public void SetBackdrop(Sprite sprite)
+        {
+            if (sprite == null) return;
+            _camera = GetComponent<Camera>();
+            if (_backdrop == null)
+            {
+                var background = new GameObject("Royal Council Hall Backdrop");
+                background.transform.SetParent(transform, false);
+                _backdrop = background.AddComponent<SpriteRenderer>();
+                _backdrop.sortingOrder = -2000;
+            }
+            _backdrop.sprite = sprite;
+            FitBackdrop();
+        }
+
+        private void FitBackdrop()
+        {
+            if (_backdrop == null || _camera == null) return;
+
+            // The hall is already painted in perspective. Keep it facing the camera behind
+            // the physical table, and cover the entire viewport without stretching the art.
+            float depth = Mathf.Lerp(_camera.nearClipPlane, _camera.farClipPlane, 0.9f);
+            float height = 2f * depth * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+            Vector2 size = _backdrop.sprite.bounds.size;
+            float scale = Mathf.Max(height / size.y, height * _camera.aspect / size.x);
+            _backdrop.transform.localPosition = new Vector3(0f, 0f, depth);
+            _backdrop.transform.localScale = new Vector3(scale, scale, 1f);
         }
 
         public static void Fit(Camera camera, Rect safe, int width, int height)

@@ -31,6 +31,7 @@ namespace Kingdom.Presentation
         private static readonly Quaternion OpponentHandTilt = Quaternion.Euler(-70f, 0f, 0f);
 
         [SerializeField] private Material glassMaterial;
+        [SerializeField] private Sprite backdrop;
         private readonly Dictionary<string, Transform> _parts = new Dictionary<string, Transform>();
         private readonly PlayerId[] _players = new PlayerId[2];
         private readonly Renderer[][] _shells = { new Renderer[10], new Renderer[10] };
@@ -106,7 +107,8 @@ namespace Kingdom.Presentation
             if (camera != null)
             {
                 if (camera.TryGetComponent(out SafeAreaCamera old)) old.enabled = false;
-                if (!camera.TryGetComponent<RoyalCouncilCamera>(out _)) camera.gameObject.AddComponent<RoyalCouncilCamera>();
+                if (!camera.TryGetComponent<RoyalCouncilCamera>(out var rig)) rig = camera.gameObject.AddComponent<RoyalCouncilCamera>();
+                rig.SetBackdrop(backdrop);
             }
         }
 
