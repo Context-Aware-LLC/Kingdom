@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kingdom build"
+  short_description: "Choose a build type and deliver consistent artifacts"
+  default_prompt: "Use $build to ask what this Kingdom of Bad Ideas build is for and deliver it with the standard folders and filenames."

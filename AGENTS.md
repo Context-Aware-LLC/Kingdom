@@ -3,6 +3,13 @@
 These project rules apply to every agent working in this repository. Role-specific instructions
 may narrow an agent's scope or forbid publishing; when they do, follow the stricter rule.
 
+## Project build command
+
+For `/build`, `$build`, or a request to produce a Kingdom game build, read and follow
+`.agents/skills/build/SKILL.md`. It owns the purpose/type question and the standard delivery
+workflow. Treat `/build` as this project's conversational alias; Codex's skill selector uses
+`$build`. Claude Code also has a project-local `/build` entry point.
+
 ## Product identity and tone
 
 - **The public game is _Kingdom of Bad Ideas_**, at `kingdomofbadideas.com`. `Bad Ideas` is the

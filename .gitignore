@@ -153,7 +153,11 @@ __pycache__/
 .claude/skills/supabase-postgres-best-practices
 # Vendor-installed agent skills — .claude/skills/* are symlinks into here.
 # Content is disposable; skills-lock.json (tracked) pins source + hash to reinstall it.
-.agents
+# Keep vendored agent skills local, but share the project's build workflow.
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/build/
 
 # Scratch match-replay logs from bot/networked smoke tests - disposable
 scratch-replays/
