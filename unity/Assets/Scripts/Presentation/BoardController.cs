@@ -808,9 +808,9 @@ namespace Kingdom.Presentation
             }
             else if (_inputRouter != null)
             {
-                // Keep zone current for hand→board transitions.
+                // Keep owner and zone current: hand→board, and a minion that changed sides.
                 var clickable = presenter.GetComponent<ClickableCard>();
-                clickable?.UpdateZone(zone);
+                clickable?.UpdateLocation(owner, zone);
             }
 
             // #236: undoes OnPlayReveal's hide. Every card still live in this snapshot passes

@@ -11,8 +11,8 @@ namespace Kingdom.Presentation
     // InputRouter now raycasts once per pointer event and reads identity off whatever it hits, so all
     // this has to do is carry that identity and keep it current.
     //
-    // Zone is refreshed on every tick so hand→board transitions don't require re-creating the
-    // component.
+    // Owner and zone are refreshed on every tick, so a hand→board move and a minion changing sides
+    // (TAKE_CONTROL) don't require re-creating the component. The presenter outlives both.
     public sealed class ClickableCard : MonoBehaviour
     {
         public InstanceId    CardId    { get; private set; }
@@ -28,7 +28,11 @@ namespace Kingdom.Presentation
             Presenter = presenter;
         }
 
-        // Called every tick by BoardController to keep zone in sync (hand → board transitions).
-        public void UpdateZone(Zone zone) => Zone = zone;
+        // Called every tick by BoardController to keep owner and zone in sync.
+        public void UpdateLocation(PlayerId ownerId, Zone zone)
+        {
+            OwnerId = ownerId;
+            Zone    = zone;
+        }
     }
 }

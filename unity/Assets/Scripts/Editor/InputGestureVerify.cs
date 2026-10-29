@@ -56,6 +56,7 @@ namespace Kingdom.Editor
             OsCanceledDuringDrag();
             OsCanceledDuringAwaitingEffectDrag();
             FullStackTurnNotYetShown();
+            StolenMinionDescriptorFollowsItsController();
             ProjectionRoundTrips();
             DragTargetingModelCore();
 
@@ -367,6 +368,46 @@ namespace Kingdom.Editor
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is HeroPowerIntent);
 
             harness.Cleanup();
+        }
+
+        /// <summary>
+        /// A minion that changes sides keeps its presenter, so the raycast descriptor on it has to
+        /// follow its controller. It used to keep the owner it spawned with: a Spring Coil taken by
+        /// Double Agent still read as ours, and ResolveAttack treats a drop on our own minion as a
+        /// miss, so it could not be attacked (Sam, 2026-10-28). The other direction is the same
+        /// defect: a minion we took could not be picked up to attack.
+        /// </summary>
+        private static void StolenMinionDescriptorFollowsItsController()
+        {
+            var root = new GameObject("StolenMinionVerifyRoot");
+            var routerGo = new GameObject("StolenMinionVerifyRouter");
+            try
+            {
+                var router = routerGo.AddComponent<InputRouter>();
+                var board = root.AddComponent<BoardController>();
+                board.Initialize(Db(), null, P0, P1, router);
+
+                CardInstance coil = Minion(P0, 13);
+                ClickableCard descriptor =
+                    board.EditorBuildCard(coil, P0, Zone.Board).GetComponent<ClickableCard>();
+                coil.Controller = P1;
+                board.EditorBuildCard(coil, P1, Zone.Board);
+
+                Check("a stolen minion's descriptor names its new controller",
+                    descriptor != null && descriptor.OwnerId == P1);
+                GameState s = NewState();
+                var m = Model(s);
+                DragSource hero = new DragSource(DragSourceKind.Attacker, m.HeroIdOf(P0), true);
+                Check("...so a drop on it resolves to an attack",
+                    descriptor != null && m.Resolve(hero,
+                        PointerSubject.OfCard(descriptor.CardId, descriptor.OwnerId, descriptor.Zone),
+                        DropPoint.Board(0f)) is AttackIntent);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(routerGo);
+            }
         }
 
         private static void FullStackReadConsumesPendingDrag()
