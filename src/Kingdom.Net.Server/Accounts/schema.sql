@@ -137,20 +137,6 @@ create index if not exists ladder_match_p1_idx on ladder_match (p1_player_id, en
 alter table ladder_player enable row level security;
 alter table ladder_match enable row level security;
 
--- The `character` table stood here until 2026-09-04 (ADR-0009). The pairing it held moved onto the
--- deck, where it rides inside `deck.body` rather than in columns of its own — see below.
---
--- NOT DROPPED HERE, DELIBERATELY. This file is `create table if not exists` throughout: it is run
--- on every server start to bring a fresh database up, so it is idempotent by construction and must
--- stay that way. A `drop table character` in it would be neither — it would run on every start
--- forever, and on the one start where a migration had half-completed it would destroy the rows the
--- migration still needed. Dropping the table is the migration's job, once, and the migration is
--- what carries the inheritance the drop makes irreversible.
---
--- RETIREMENT TRIGGER: delete this note once the production database has been migrated and the
--- table is gone. Until then it is the only record in the schema of why `character` exists in a
--- live database and in no code.
-
 -- A player's decks. body is the deck as canonical JSON (CollectionJson.WriteDecks' element shape),
 -- NOT a row per card.
 --
@@ -171,9 +157,6 @@ alter table ladder_match enable row level security;
 -- PostgresPlayerDataStore.SaveDeckAsync does a `select body ... for update`, merges through
 -- DeckPairing.Preserve and writes the result, all in one transaction. A hand-written UPDATE against
 -- this table bypasses that and can move a pairing the application refuses to move.
---
--- `character_id text not null` was a column here until 2026-09-04. Its readers were the cascade
--- delete and the roster join, both gone. A live database still has it; the migration drops it.
 create table if not exists deck (
   deck_id      text        primary key,
   player_id    text        not null,
