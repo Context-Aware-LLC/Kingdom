@@ -34,9 +34,8 @@ namespace Kingdom.Net.Server.Accounts
 
         private readonly IPushTokenVerifier _verifier;
         private readonly string _packageName;
-        private readonly IEntitlementLedger _ledger;
         private readonly IAccountStore _accounts;
-        private readonly RefundService _refunds;
+        private readonly PlayOrderRefunds _orderRefunds;
         private readonly IStoreReceiptValidator _validator;
         private readonly GemGrantService _grants;
         private readonly IStorePurchaseAcknowledger? _acknowledger;
@@ -47,11 +46,11 @@ namespace Kingdom.Net.Server.Accounts
         {
             _verifier = verifier ?? throw new ArgumentNullException(nameof(verifier));
             _packageName = packageName ?? throw new ArgumentNullException(nameof(packageName));
-            _ledger = ledger ?? throw new ArgumentNullException(nameof(ledger));
+            if (ledger == null) throw new ArgumentNullException(nameof(ledger));
             _accounts = accounts ?? throw new ArgumentNullException(nameof(accounts));
             _validator = validator ?? throw new ArgumentNullException(nameof(validator));
             _acknowledger = acknowledger;
-            _refunds = new RefundService(ledger, time);
+            _orderRefunds = new PlayOrderRefunds(ledger, accounts, time);
             _grants = new GemGrantService(ledger, validator, time);
         }
 
@@ -105,31 +104,9 @@ namespace Kingdom.Net.Server.Accounts
                 return new PlayNotificationResult(200, "ignored");
             if (!TryString(voided, "orderId", out string orderId)) return Dropped("voided_without_order");
 
-            // The ledger, not Play, says whose purchase this was: the voided notification carries no
-            // product and no account, and the grant row names both.
-            EntitlementGrant? purchase = await _ledger.FindAsync(GemGrantService.PurchaseRowId(orderId), ct)
-                .ConfigureAwait(false);
-            if (purchase == null)
-            {
-                // Paid and refunded before any grant, or never redeemed: nothing to claw back.
-                Console.WriteLine("[play-rtdn] voided order {0} was never granted; nothing to reverse", orderId);
-                return new PlayNotificationResult(200, "not_granted");
-            }
-            Account? account = await _accounts.FindByPlayerIdAsync(purchase.PlayerId, ct).ConfigureAwait(false);
-            if (account == null)
-            {
-                Console.Error.WriteLine("[play-rtdn] voided order {0}: grant names player_id={1}, which has no account",
-                    orderId, purchase.PlayerId);
-                return new PlayNotificationResult(200, "no_account");
-            }
-
-            // A quantity-based partial refund voids the same order again; gem tiers are single-quantity,
-            // so the first void reverses the whole grant and the order id makes any repeat a replay.
-            RefundOutcome outcome = await _refunds.RefundAsync(
-                account, new ValidatedStoreRefund(orderId, orderId, account.PlayerId), ct).ConfigureAwait(false);
-            Console.WriteLine("[play-rtdn] voided order {0}: {1} for player_id={2}, gems now {3}",
-                orderId, outcome.Status, account.PlayerId, outcome.Wallet.Gems);
-            return new PlayNotificationResult(200, outcome.Status.ToString().ToLowerInvariant());
+            string status = await _orderRefunds.ClawBackAsync(orderId, "play-rtdn", ct).ConfigureAwait(false);
+            if (status != "refunded") Console.WriteLine("[play-rtdn] voided order {0}: {1}", orderId, status);
+            return new PlayNotificationResult(200, status);
         }
 
         private async Task<PlayNotificationResult> OneTimeAsync(JsonElement oneTime, CancellationToken ct)

@@ -579,6 +579,10 @@ namespace Kingdom.Net.Server
                     ? null
                     : new PlayNotificationEndpoint(cfg.PlayPushVerifier, cfg.PlayStore.PackageName,
                         cfg.EntitlementLedger, cfg.AccountStore, cfg.PlayStore, cfg.PlayStore, time);
+            // The refund backstop needs no push subscription, only Play and somewhere to claw back.
+            if (cfg.PlayStore is not null && cfg.EntitlementLedger is not null && cfg.AccountStore is not null)
+                builder.Services.AddSingleton<IHostedService>(new PlayVoidedSweep(cfg.PlayStore,
+                    new PlayOrderRefunds(cfg.EntitlementLedger, cfg.AccountStore, time), time));
             CraftingService? crafting = cfg.EntitlementLedger is null
                 ? null
                 : new CraftingService(cfg.EntitlementLedger, db, time);

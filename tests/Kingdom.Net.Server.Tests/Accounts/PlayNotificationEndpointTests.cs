@@ -263,6 +263,53 @@ namespace Kingdom.Net.Server.Tests.Accounts
             Assert.That(r.Status, Is.EqualTo("ignored"));
         }
 
+        // ── The voided-list sweep ─────────────────────────────────────────────────
+
+        private sealed class VoidedList : IPlayOrders
+        {
+            public List<PlayVoidedPurchase> Rows { get; } = new List<PlayVoidedPurchase>();
+            public Task<string?> GetOrderStateAsync(string orderId, CancellationToken ct = default)
+                => Task.FromResult<string?>(null);
+            public Task<IReadOnlyList<PlayVoidedPurchase>> ListVoidedAsync(long sinceMs, CancellationToken ct = default)
+                => Task.FromResult((IReadOnlyList<PlayVoidedPurchase>)Rows);
+        }
+
+        [Test]
+        public async Task The_Sweep_Claws_Back_A_Void_Play_Never_Notified_Once()
+        {
+            await Bought("GPA.1", 200);
+            var play = new VoidedList
+            {
+                Rows =
+                {
+                    new PlayVoidedPurchase("GPA.1", "tok", 1_790_000_000_000, 0),
+                    new PlayVoidedPurchase("GPA.unredeemed", "tok-2", 1_790_000_000_000, 8),
+                },
+            };
+            var sweep = new PlayVoidedSweep(play, new PlayOrderRefunds(_ledger, _accounts, new FixedTime()), new FixedTime());
+
+            int first = await sweep.SweepAsync();
+            int second = await sweep.SweepAsync();
+
+            Assert.That(first, Is.EqualTo(1));
+            Assert.That(second, Is.EqualTo(0), "the order id makes the next pass a replay");
+            Assert.That(await Gems(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public async Task A_Notification_After_The_Sweep_Is_A_Replay()
+        {
+            await Bought("GPA.1", 200);
+            var play = new VoidedList { Rows = { new PlayVoidedPurchase("GPA.1", "tok", 1_790_000_000_000, 0) } };
+            await new PlayVoidedSweep(play, new PlayOrderRefunds(_ledger, _accounts, new FixedTime()), new FixedTime())
+                .SweepAsync();
+
+            PlayNotificationResult late = await Endpoint().HandleAsync(Bearer, Voided("GPA.1"));
+
+            Assert.That(late.Status, Is.EqualTo("replayed"));
+            Assert.That(await Gems(), Is.EqualTo(0));
+        }
+
         // ── Envelope ──────────────────────────────────────────────────────────────
 
         [Test]
