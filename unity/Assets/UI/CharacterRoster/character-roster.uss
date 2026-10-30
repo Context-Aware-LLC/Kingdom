@@ -126,7 +126,11 @@
      * CharacterRosterController.PlateChrome, vertically it is part of RowChrome. Move it and both
      * constants move with it. */
     padding: var(--space-1);
-    border-width: 2px;
+    /* Every plate carries the selection ring's full width, transparent until selected, so picking
+     * a deck repaints the ring without reflowing the grid. 2 -> 6 on 2026-10-29: 2px is under a
+     * device dp on a phone and did not register. CharacterRosterController.PlateChrome and
+     * RowChrome both charge this width. */
+    border-width: 6px;
     border-color: rgba(0, 0, 0, 0);
     border-radius: var(--space-2);
     background-color: transparent;
@@ -161,8 +165,8 @@
     top: 0;
 }
 
-/* GOLD READY RING, WHITE HOVER RING: both cut 2026-09-08 (Sam) — the blue match-pick ring below is
- * the only one left. `deck-plate-art--ready` is still toggled by CharacterRosterController off
+/* GOLD READY RING, WHITE HOVER RING: both cut 2026-09-08 (Sam) — the match-pick ring below is the
+ * only one left, and went from blue to gold on 2026-10-29 (Sam). `deck-plate-art--ready` is still toggled by CharacterRosterController off
  * `summary.Queue.IsEligible` but paints nothing; a ready deck shows as the small crown seal
  * CharacterRosterController places in the art's corner (2026-10-18).
  *
@@ -170,7 +174,7 @@
  * second ring colour on the same element would be read as one state, not two. */
 .deck-plate--selected {
     background-color: var(--surface-3);
-    border-color: var(--mana);
+    border-color: var(--accent);
 }
 
 /* The plate has no button (Sam, 2026-08-07). It is the picture, and the picture is the control:

@@ -291,7 +291,7 @@ namespace Kingdom.Presentation
 
         private void WireDeckDialog()
         {
-            _deckSelectButton?.RegisterCallback<ClickEvent>(_ => ToggleMatchPick());
+            _deckSelectButton?.RegisterCallback<ClickEvent>(_ => SelectMatchPick());
             _root.Q<Button>("deck-edit")?.RegisterCallback<ClickEvent>(_ => OpenDeckForEdit(_menuDeck.Id));
             _root.Q<Button>("deck-rename")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.Rename));
             _root.Q<Button>("deck-change-back")?.RegisterCallback<ClickEvent>(_ => ShowDeckPane(DeckPane.CardBack));
@@ -792,21 +792,21 @@ namespace Kingdom.Presentation
         ///
         /// <para>Smaller than the 70f the character rows needed, and the difference is exactly what
         /// the container cost: a name header (~27) and its padding (8) are gone. What is left is
-        /// plate padding 8 + border 4 + grid padding 4/8 = 24, and 8 to spare: the plate's bottom
+        /// plate padding 8 + border 12 + grid padding 4/8 = 32, and 8 to spare: the plate's bottom
         /// margin this once also charged is gone from the sheet.</para>
         ///
         /// <para>NONE OF THAT IS AN INPUT. <c>viewport</c> is read off the ScrollView's
         /// resolvedStyle, so this arithmetic is here to be checked against, not to be kept true by
         /// editing it — only the terms of the SUM have to move when the sheet does.</para></summary>
-        private const float RowChrome = 32f;
+        private const float RowChrome = 40f;
 
         /// <summary>Must match .deck-plate's margin (--space-2), charged once per column.</summary>
         private const float PlateGutter = 8f;
 
-        /// <summary>.deck-plate padding (--space-1) plus its 2px border, both sides — the difference
-        /// between the plate's outer width and the art inside it. The same 12dp is a term in
+        /// <summary>.deck-plate padding (--space-1) plus its 6px border, both sides — the difference
+        /// between the plate's outer width and the art inside it. The same 20px is a term in
         /// <see cref="RowChrome"/>, because the plate pays it on both axes.</summary>
-        private const float PlateChrome = 12f;
+        private const float PlateChrome = 20f;
 
         /// <summary>A row solved to land exactly on the available width is a floating-point tie;
         /// see CardWall.Layout for the wrap-one-early failure this avoids.</summary>
@@ -1019,21 +1019,23 @@ namespace Kingdom.Presentation
         private bool _menuQueueReady;
 
         /// <summary>
-        /// Toggle the open deck's match pick. Continue enters the queue; this control only changes
-        /// which plate is selected, and a second press clears that selection.
+        /// Make the open deck the match pick. Continue enters the queue; this control only changes
+        /// which plate is selected. Pressing it on the deck already picked keeps the pick and just
+        /// closes the dialog — it does not deselect (Sam, 2026-10-29); picking another deck is the
+        /// only way to move it.
         /// </summary>
-        private void ToggleMatchPick()
+        private void SelectMatchPick()
         {
             if (_menuDeck == null) return;
-            if (_pickedDeckId == _menuDeck.Id)
-                ClearPick();
-            else if (!_menuQueueReady)
+            if (_pickedDeckId != _menuDeck.Id)
             {
-                SetDeckError(Loc.Get("deck_menu_error_not_queue_ready"));
-                return;
-            }
-            else
+                if (!_menuQueueReady)
+                {
+                    SetDeckError(Loc.Get("deck_menu_error_not_queue_ready"));
+                    return;
+                }
                 _pickedDeckId = _menuDeck.Id;
+            }
 
             CloseDeckDialog();
             RebuildRoster();
