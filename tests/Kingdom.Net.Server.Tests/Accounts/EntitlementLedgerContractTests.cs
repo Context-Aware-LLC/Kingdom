@@ -241,6 +241,17 @@ namespace Kingdom.Net.Server.Tests.Accounts
         }
 
         [Test]
+        public async Task Find_Answers_The_Row_Under_That_Exact_Txn_Id()
+        {
+            await Ledger.GrantAsync(Grant("p1", "gems", 200, "store_receipt:play", "store:GPA.1:0"));
+
+            EntitlementGrant? found = await Ledger.FindAsync("store:GPA.1:0");
+
+            Assert.That(found, Is.EqualTo(Grant("p1", "gems", 200, "store_receipt:play", "store:GPA.1:0")));
+            Assert.That(await Ledger.FindAsync("store:GPA.1"), Is.Null, "an exact key, not a prefix");
+        }
+
+        [Test]
         public void Grant_Requires_A_Non_Empty_External_Txn_Id()
         {
             // The idempotency key is mandatory — an empty one would silently defeat replay protection.

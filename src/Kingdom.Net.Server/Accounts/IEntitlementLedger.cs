@@ -56,6 +56,10 @@ namespace Kingdom.Net.Server.Accounts
 
         /// <summary>The player's grants in append order — the audit / reconciliation view.</summary>
         Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(string playerId, CancellationToken ct = default);
+
+        /// <summary>The grant written under this exact <see cref="EntitlementGrant.ExternalTxnId"/>, or
+        /// null. A store refund names only the store's order, so this is how it finds whose it was.</summary>
+        Task<EntitlementGrant?> FindAsync(string externalTxnId, CancellationToken ct = default);
     }
 
     /// <summary>
@@ -218,6 +222,14 @@ namespace Kingdom.Net.Server.Accounts
             {
                 var rows = _log.Where(g => g.PlayerId == playerId).ToList();
                 return Task.FromResult((IReadOnlyList<EntitlementGrant>)rows);
+            }
+        }
+
+        public Task<EntitlementGrant?> FindAsync(string externalTxnId, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                return Task.FromResult(_log.FirstOrDefault(g => g.ExternalTxnId == externalTxnId));
             }
         }
     }

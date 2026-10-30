@@ -25,6 +25,10 @@ namespace Kingdom.Net.Server.Accounts
         public StoreUnavailableException(string message) : base(message) { }
     }
 
+    /// <summary>One row of Play's voided-purchases list. <c>VoidedReason</c> is Play's code: 7 is a
+    /// chargeback, 8 an unacknowledged purchase Play refunded by itself.</summary>
+    public sealed record PlayVoidedPurchase(string OrderId, string PurchaseToken, long VoidedTimeMillis, int VoidedReason);
+
     /// <summary>Tells the store a granted purchase was delivered. Separate from validation because
     /// it runs only AFTER the ledger write: acknowledging first and then failing to grant would leave
     /// a paid purchase the store will never refund.</summary>
@@ -47,7 +51,7 @@ namespace Kingdom.Net.Server.Accounts
     /// <para><b>Play product ids ARE the product keys</b> (<c>gems.tier.200</c> …): the Play Console
     /// one-time products were created under those ids, so there is no mapping table to drift.</para>
     /// </summary>
-    public sealed class PlayStoreReceiptValidator : IStoreReceiptValidator, IStorePurchaseAcknowledger
+    public sealed class PlayStoreReceiptValidator : IStoreReceiptValidator, IStorePurchaseAcknowledger, IPlayOrders
     {
         public const string Provider = "play";
 
@@ -73,6 +77,9 @@ namespace Kingdom.Net.Server.Accounts
             _packageName = string.IsNullOrWhiteSpace(packageName) ? DefaultPackageName : packageName;
             _accessToken = accessToken ?? throw new ArgumentNullException(nameof(accessToken));
         }
+
+        /// <summary>The application id every purchase is checked against.</summary>
+        public string PackageName => _packageName;
 
         /// <summary>Null when no service account is configured, which turns <c>/shop/gems</c> off.</summary>
         public static PlayStoreReceiptValidator? FromEnvironment()
@@ -128,6 +135,49 @@ namespace Kingdom.Net.Server.Accounts
             // also acknowledges, so either one landing is enough.
             using JsonDocument? _ = await SendAsync(HttpMethod.Post, PurchaseUrl(productId, token) + ":acknowledge", ct)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>Play's state for one order (<c>PROCESSED</c>, <c>REFUNDED</c>, …), or null when
+        /// Play does not know the order id. The reconciliation report's view of a ledger grant.</summary>
+        public async Task<string?> GetOrderStateAsync(string orderId, CancellationToken ct = default)
+        {
+            using JsonDocument? order = await SendAsync(HttpMethod.Get,
+                ApiRoot + Uri.EscapeDataString(_packageName) + "/orders/" + Uri.EscapeDataString(orderId), ct)
+                .ConfigureAwait(false);
+            if (order == null) return null;
+            return TryString(order.RootElement, "state", out string state) ? state : "";
+        }
+
+        /// <summary>Every one-time purchase Play voided (refund, chargeback, revocation) since
+        /// <paramref name="sinceMs"/>. Play keeps 30 days and clamps an older start.</summary>
+        public async Task<IReadOnlyList<PlayVoidedPurchase>> ListVoidedAsync(long sinceMs, CancellationToken ct = default)
+        {
+            long floor = DateTimeOffset.UtcNow.AddDays(-30).AddMinutes(5).ToUnixTimeMilliseconds();
+            string baseUrl = ApiRoot + Uri.EscapeDataString(_packageName) + "/purchases/voidedpurchases?type=0&maxResults=1000"
+                             + "&startTime=" + Math.Max(sinceMs, floor);
+            var rows = new List<PlayVoidedPurchase>();
+            string? page = null;
+            do
+            {
+                string url = page == null ? baseUrl : baseUrl + "&token=" + Uri.EscapeDataString(page);
+                using JsonDocument? body = await SendAsync(HttpMethod.Get, url, ct).ConfigureAwait(false);
+                if (body == null) throw new StoreUnavailableException("Play refused the voided-purchases query.");
+                JsonElement root = body.RootElement;
+                if (root.TryGetProperty("voidedPurchases", out JsonElement list) && list.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (JsonElement v in list.EnumerateArray())
+                    {
+                        if (!TryString(v, "orderId", out string orderId)) continue;
+                        TryString(v, "purchaseToken", out string token);
+                        long voidedAt = TryString(v, "voidedTimeMillis", out string at) && long.TryParse(at, out long ms) ? ms : 0;
+                        int reason = TryInt(v, "voidedReason", out int r) ? r : 0;
+                        rows.Add(new PlayVoidedPurchase(orderId, token, voidedAt, reason));
+                    }
+                }
+                page = root.TryGetProperty("tokenPagination", out JsonElement tp) &&
+                       TryString(tp, "nextPageToken", out string next) ? next : null;
+            } while (page != null);
+            return rows;
         }
 
         private string PurchaseUrl(string productId, string token)

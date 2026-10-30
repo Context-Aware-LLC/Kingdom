@@ -237,7 +237,7 @@ namespace Kingdom.Net.Server.Accounts
             string source = "store_receipt:" + purchase.Provider;
             var batch = new EntitlementBatch(
                 account.PlayerId,
-                "store:" + purchase.StoreTransactionId,
+                PurchaseBatchId(purchase.StoreTransactionId),
                 new[] { new EntitlementDelta(EconomyItems.Gems, bundle.Gems, source) },
                 requirement: null,
                 DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs));
@@ -252,6 +252,13 @@ namespace Kingdom.Net.Server.Accounts
                 result.Applied ? GemGrantStatus.Granted : GemGrantStatus.Replayed,
                 wallet);
         }
+
+        /// <summary>The ledger batch a store transaction grants under. <see cref="RefundService"/> and
+        /// <see cref="StoreReconciler"/> read the same <c>store:</c> prefix.</summary>
+        internal static string PurchaseBatchId(string storeTransactionId) => "store:" + storeTransactionId;
+
+        /// <summary>The one row a Gem purchase writes: its batch has a single delta, so index 0.</summary>
+        internal static string PurchaseRowId(string storeTransactionId) => PurchaseBatchId(storeTransactionId) + ":0";
 
         private async Task<GemGrantOutcome> RejectedAsync(
             Account account,

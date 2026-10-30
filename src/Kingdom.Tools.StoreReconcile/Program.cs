@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using Kingdom.Net.Server.Accounts;
 using Kingdom.Net.Server.Telemetry;
@@ -13,19 +12,23 @@ namespace Kingdom.Tools.StoreReconcile
     /// EF-080c reconciliation report — store transactions vs the entitlement ledger.
     ///
     /// <code>
-    ///   # KINGDOM_ACCOUNTS_DB must be exported (the session-pooler URI from .env / Supabase).
-    ///   dotnet run --project src/Kingdom.Tools.StoreReconcile [-- path/to/store_transactions.jsonl]
+    ///   # KINGDOM_ACCOUNTS_DB: the session-pooler URI from .env / Supabase.
+    ///   # KINGDOM_PLAY_SERVICE_ACCOUNT: the Play service account key (inline JSON or a path).
+    ///   dotnet run --project src/Kingdom.Tools.StoreReconcile
     /// </code>
     ///
     /// Reads <c>entitlement_grant</c> rows whose <c>external_txn_id</c> starts with <c>store:</c>
-    /// or <c>refund:</c>, then joins against the stub feed to answer three questions:
+    /// or <c>refund:</c>, asks Play about each granted order and for its 30-day voided list
+    /// (<see cref="PlayStoreFeed"/>), and answers:
     /// <list type="number">
-    /// <item>Charged at the store, no grant in our ledger → <b>OWED GOODS</b></item>
-    /// <item>Granted by us, no matching store charge → <b>INVESTIGATE</b></item>
+    /// <item>Granted by us, an order Play does not know → <b>INVESTIGATE</b></item>
     /// <item>Refunded at the store, not clawed back here → <b>OWED CLAWBACK</b></item>
+    /// <item>Paid, never granted, refunded by Play for want of an acknowledgement → listed, not an issue</item>
     /// </list>
+    /// OWED GOODS stays in the report and is always zero from this feed; see <see cref="PlayStoreFeed"/>.
     ///
-    /// Read-only. It reports; it does not fix.
+    /// Read-only. It reports; it does not fix. A missed clawback is fixed by the notification path
+    /// (<c>/store/play/notifications</c>), which Pub/Sub redelivers for seven days.
     /// Exit 0 = no issues; 1 = issues found; 2 = misconfiguration.
     /// </summary>
     internal static class Program
@@ -42,28 +45,18 @@ namespace Kingdom.Tools.StoreReconcile
                 return 2;
             }
 
-            string? feedPath = ResolveStubFeed(args.Length > 0 ? args[0] : null);
-            if (feedPath is null)
+            PlayStoreReceiptValidator? play = PlayStoreReceiptValidator.FromEnvironment();
+            if (play is null)
             {
                 Console.Error.WriteLine(
-                    "Store-transaction stub feed not found. Pass a path, or run from the repo so " +
-                    "src/Kingdom.Tools.StoreReconcile/sample/store_transactions.jsonl resolves.");
-                return 2;
-            }
-
-            IReadOnlyList<StoreTransaction> storeTxns;
-            try { storeTxns = StoreTransactionFeed.LoadJsonl(feedPath); }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Failed to load stub feed: {ex.Message}");
+                    $"{PlayStoreReceiptValidator.ServiceAccountEnvVar} is not set. Point it at the Play service account key.");
                 return 2;
             }
 
             string connString = TelemetryDrain.NormalizeConnString(connRaw);
             var csb = new NpgsqlConnectionStringBuilder(connString);
 
-            Console.WriteLine($"Feed      : {feedPath}");
-            Console.WriteLine($"Txns      : {storeTxns.Count} (store feed)");
+            Console.WriteLine($"Store     : Google Play, {play.PackageName}");
             Console.WriteLine($"Target    : {csb.Host}:{csb.Port}/{csb.Database} (ssl={csb.SslMode})");
             Console.WriteLine(new string('-', 60));
 
@@ -82,9 +75,22 @@ namespace Kingdom.Tools.StoreReconcile
             }
 
             Console.WriteLine($"Ledger    : {ledgerGrants.Count} store/refund rows in entitlement_grant");
+
+            PlayStoreFeedResult feed;
+            try
+            {
+                feed = await PlayStoreFeed.BuildAsync(play, ledgerGrants, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+            }
+            catch (StoreUnavailableException ex)
+            {
+                Console.Error.WriteLine($"PLAY QUERY FAILED: {ex.Message}");
+                return 2;
+            }
+
+            Console.WriteLine($"Txns      : {feed.Transactions.Count} (from Play)");
             Console.WriteLine(new string('-', 60));
 
-            ReconciliationReport report = StoreReconciler.Run(storeTxns, ledgerGrants);
+            ReconciliationReport report = StoreReconciler.Run(feed.Transactions, ledgerGrants);
 
             PrintCategory(
                 "OWED GOODS (charged by store, no grant in ledger)",
@@ -114,6 +120,13 @@ namespace Kingdom.Tools.StoreReconcile
                         Console.WriteLine(
                             $"  refund_id={f.StoreRefundId}  original_txn={f.OriginalTxnId}  player={f.PlayerId}");
                 });
+
+            Console.WriteLine();
+            Console.WriteLine(
+                $"[INFO] PAID, NEVER GRANTED, AUTO-REFUNDED BY PLAY (last 30 days): {feed.AutoRefundedUnacknowledged.Count}");
+            foreach (PlayVoidedPurchase v in feed.AutoRefundedUnacknowledged)
+                Console.WriteLine(
+                    $"  order_id={v.OrderId}  voided_at={DateTimeOffset.FromUnixTimeMilliseconds(v.VoidedTimeMillis):u}");
 
             Console.WriteLine(new string('-', 60));
             if (report.HasIssues)
@@ -160,26 +173,6 @@ namespace Kingdom.Tools.StoreReconcile
                     reader.GetString(4)));
             }
             return rows.AsReadOnly();
-        }
-
-        /// <summary>Explicit arg wins; otherwise walk up from the binary to the repo sample.</summary>
-        private static string? ResolveStubFeed(string? arg)
-        {
-            if (arg is not null)
-            {
-                string p = Path.GetFullPath(arg);
-                return File.Exists(p) ? p : null;
-            }
-
-            // Walk up from the binary towards the repo root, looking for the checked-in sample.
-            string? dir = AppContext.BaseDirectory;
-            for (int i = 0; i < 12 && dir is not null; i++, dir = Path.GetDirectoryName(dir))
-            {
-                string candidate = Path.Combine(
-                    dir, "src", "Kingdom.Tools.StoreReconcile", "sample", "store_transactions.jsonl");
-                if (File.Exists(candidate)) return candidate;
-            }
-            return null;
         }
     }
 }

@@ -69,6 +69,8 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 => Task.FromResult<IReadOnlyDictionary<string, long>>(new Dictionary<string, long>());
             public Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(string playerId, CancellationToken ct = default)
                 => throw new InvalidOperationException("ledger is down");
+            public Task<EntitlementGrant?> FindAsync(string externalTxnId, CancellationToken ct = default)
+                => throw new InvalidOperationException("ledger is down");
         }
 
         private sealed class StubCardDatabase : ICardDatabase
@@ -482,6 +484,8 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 => throw new InvalidOperationException("balance sweep is down");
             public Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(string playerId, CancellationToken ct = default)
                 => _inner.HistoryAsync(playerId, ct);
+            public Task<EntitlementGrant?> FindAsync(string externalTxnId, CancellationToken ct = default)
+                => _inner.FindAsync(externalTxnId, ct);
         }
     }
 }

@@ -211,6 +211,22 @@ namespace Kingdom.Net.Server.Accounts
             return rows;
         }
 
+        public async Task<EntitlementGrant?> FindAsync(string externalTxnId, CancellationToken ct = default)
+        {
+            await using var conn = new NpgsqlConnection(_connString);
+            await conn.OpenAsync(ct);
+            await using var cmd = new NpgsqlCommand(
+                "select player_id, item, qty, source, external_txn_id, created_at from entitlement_grant " +
+                "where external_txn_id=$1", conn);
+            cmd.Parameters.Add(P(NpgsqlDbType.Text, externalTxnId));
+
+            await using var r = await cmd.ExecuteReaderAsync(ct);
+            if (!await r.ReadAsync(ct)) return null;
+            return new EntitlementGrant(
+                r.GetString(0), r.GetString(1), r.GetInt64(2), r.GetString(3), r.GetString(4),
+                new DateTimeOffset(DateTime.SpecifyKind(r.GetDateTime(5), DateTimeKind.Utc)));
+        }
+
         /// <summary>
         /// Clamp a <c>sum(qty)</c> into <see cref="long"/> instead of throwing.
         ///

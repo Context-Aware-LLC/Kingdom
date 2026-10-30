@@ -2,13 +2,13 @@
 
   <!--
     Kingdom.Tools.StoreReconcile — EF-080c reconciliation report (store transactions vs ledger).
-    Read-only: queries entitlement_grant in Postgres, compares against a store-transaction JSONL
-    stub, and prints three finding categories: owed-goods, investigate, owed-clawback.
-    Credential-gated (KINGDOM_ACCOUNTS_DB), so it lives here rather than in CI.
+    Read-only: queries entitlement_grant in Postgres, asks Google Play about each granted order and
+    for its voided purchases, and prints the finding categories: investigate, owed-clawback.
+    Credential-gated (KINGDOM_ACCOUNTS_DB, KINGDOM_PLAY_SERVICE_ACCOUNT), so it lives here rather than in CI.
     Modelled on Kingdom.Tools.TelemetryVerify.
 
     Usage:
-      KINGDOM_ACCOUNTS_DB=... dotnet run -p src/Kingdom.Tools.StoreReconcile path/to/store_transactions.jsonl
+      KINGDOM_ACCOUNTS_DB=... KINGDOM_PLAY_SERVICE_ACCOUNT=... dotnet run -p src/Kingdom.Tools.StoreReconcile
 
     Exit 0 = no issues; 1 = issues found; 2 = misconfiguration.
   -->
@@ -24,11 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Kingdom.Net.Server\Kingdom.Net.Server.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Checked-in stub feed for dev use. Replace with a real platform export once EF-080d lands. -->
-    <None Include="sample\store_transactions.jsonl" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

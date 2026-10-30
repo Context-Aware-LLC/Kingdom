@@ -67,6 +67,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             public Task<long> BalanceAsync(string p, string i, CancellationToken ct = default) => _inner.BalanceAsync(p, i, ct);
             public Task<IReadOnlyDictionary<string, long>> BalancesAsync(string p, CancellationToken ct = default) => _inner.BalancesAsync(p, ct);
             public Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(string p, CancellationToken ct = default) => _inner.HistoryAsync(p, ct);
+            public Task<EntitlementGrant?> FindAsync(string t, CancellationToken ct = default) => _inner.FindAsync(t, ct);
         }
 
         private sealed class SimulatedLedgerOutage : Exception
@@ -92,6 +93,8 @@ namespace Kingdom.Net.Server.Tests.Accounts
             public Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(
                 string playerId, CancellationToken ct = default)
                 => _inner.HistoryAsync(playerId, ct);
+            public Task<EntitlementGrant?> FindAsync(string externalTxnId, CancellationToken ct = default)
+                => _inner.FindAsync(externalTxnId, ct);
 
             public Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(
                 string playerId, CancellationToken ct = default)

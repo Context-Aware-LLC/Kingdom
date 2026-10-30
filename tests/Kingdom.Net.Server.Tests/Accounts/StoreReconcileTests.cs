@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Kingdom.Net.Server.Accounts;
 using NUnit.Framework;
 
@@ -190,74 +192,15 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 Is.Null);
         }
 
-        // ---------------------------------------------------------------- StoreTransactionFeed
-
         [Test]
-        public void Feed_Parses_Purchase_And_Refund_Lines()
+        public void Refund_Of_A_Purchase_Never_Granted_Owes_Nothing()
         {
-            string jsonl =
-                "{\"kind\":\"purchase\",\"txn_id\":\"t1\",\"player_id\":\"p1\"}\n" +
-                "{\"kind\":\"refund\",\"refund_id\":\"r1\",\"original_txn_id\":\"t1\",\"player_id\":\"p1\"}\n";
+            // Play refunded an order we never granted (it was never redeemed): nothing to reverse.
+            var txns = new[] { Refund("order-never-granted", "order-never-granted", "") };
 
-            string path = WriteTempJsonl(jsonl);
-            try
-            {
-                IReadOnlyList<StoreTransaction> txns = StoreTransactionFeed.LoadJsonl(path);
-                Assert.That(txns, Has.Count.EqualTo(2));
+            ReconciliationReport report = StoreReconciler.Run(txns, Array.Empty<LedgerStoreGrant>());
 
-                Assert.That(txns[0].Kind, Is.EqualTo(StoreTransactionKind.Purchase));
-                Assert.That(txns[0].TxnId, Is.EqualTo("t1"));
-                Assert.That(txns[0].PlayerId, Is.EqualTo("p1"));
-
-                Assert.That(txns[1].Kind, Is.EqualTo(StoreTransactionKind.Refund));
-                Assert.That(txns[1].TxnId, Is.EqualTo("r1"));
-                Assert.That(txns[1].OriginalTxnId, Is.EqualTo("t1"));
-                Assert.That(txns[1].PlayerId, Is.EqualTo("p1"));
-            }
-            finally { File.Delete(path); }
-        }
-
-        [Test]
-        public void Feed_Skips_Blank_Lines_And_Comments()
-        {
-            string jsonl =
-                "\n" +
-                "// this is a comment\n" +
-                "{\"kind\":\"purchase\",\"txn_id\":\"t2\",\"player_id\":\"p2\"}\n" +
-                "\n";
-
-            string path = WriteTempJsonl(jsonl);
-            try
-            {
-                IReadOnlyList<StoreTransaction> txns = StoreTransactionFeed.LoadJsonl(path);
-                Assert.That(txns, Has.Count.EqualTo(1));
-                Assert.That(txns[0].TxnId, Is.EqualTo("t2"));
-            }
-            finally { File.Delete(path); }
-        }
-
-        [Test]
-        public void Feed_Throws_FormatException_On_Unknown_Kind()
-        {
-            string jsonl = "{\"kind\":\"cancel\",\"txn_id\":\"t3\",\"player_id\":\"p3\"}\n";
-            string path = WriteTempJsonl(jsonl);
-            try
-            {
-                Assert.Throws<FormatException>(() => StoreTransactionFeed.LoadJsonl(path));
-            }
-            finally { File.Delete(path); }
-        }
-
-        [Test]
-        public void Feed_Throws_FormatException_On_Missing_Required_Field()
-        {
-            string jsonl = "{\"kind\":\"purchase\",\"player_id\":\"p4\"}\n"; // no txn_id
-            string path = WriteTempJsonl(jsonl);
-            try
-            {
-                Assert.Throws<FormatException>(() => StoreTransactionFeed.LoadJsonl(path));
-            }
-            finally { File.Delete(path); }
+            Assert.That(report.HasIssues, Is.False);
         }
 
         // ---------------------------------------------------------------- helpers
@@ -271,11 +214,91 @@ namespace Kingdom.Net.Server.Tests.Accounts
         private static LedgerStoreGrant Grant(string externalTxnId, string playerId, string item, long qty)
             => new LedgerStoreGrant(externalTxnId, playerId, item, qty, "store_receipt:google");
 
-        private static string WriteTempJsonl(string content)
+        // ---------------------------------------------------------------- PlayStoreFeed
+
+        private const long Now = 1_790_000_000_000;
+
+        [Test]
+        public async Task Play_Feed_Reconciles_Clean_When_Every_Refund_Was_Clawed_Back()
         {
-            string path = Path.Combine(Path.GetTempPath(), $"store-reconcile-test-{Guid.NewGuid():N}.jsonl");
-            File.WriteAllText(path, content);
-            return path;
+            var play = new FakePlay
+            {
+                States = { ["GPA.1"] = "PROCESSED", ["GPA.2"] = "REFUNDED" },
+                Voided = { new PlayVoidedPurchase("GPA.2", "tok-2", Now - 1000, 1) },
+            };
+            var grants = new[]
+            {
+                Grant("store:GPA.1:0", "p1", "gems", 200),
+                Grant("store:GPA.2:0", "p2", "gems", 550),
+                Grant("refund:GPA.2:0", "p2", "gems", -550),
+            };
+
+            PlayStoreFeedResult feed = await PlayStoreFeed.BuildAsync(play, grants, Now);
+            ReconciliationReport report = StoreReconciler.Run(feed.Transactions, grants);
+
+            Assert.That(report.HasIssues, Is.False);
+            Assert.That(feed.Transactions, Has.Count.EqualTo(3), "two purchases and one refund, the refund named once");
+            Assert.That(play.VoidedSince, Is.EqualTo(Now - 30L * 24 * 3600 * 1000));
+        }
+
+        [Test]
+        public async Task Play_Feed_Names_A_Missed_Clawback_And_An_Order_Play_Does_Not_Know()
+        {
+            var play = new FakePlay
+            {
+                States = { ["GPA.1"] = "PROCESSED" },
+                Voided = { new PlayVoidedPurchase("GPA.1", "tok-1", Now - 1000, 7) },
+            };
+            var grants = new[]
+            {
+                Grant("store:GPA.1:0", "p1", "gems", 200),
+                Grant("store:GPA.ghost:0", "p3", "gems", 1200),
+            };
+
+            PlayStoreFeedResult feed = await PlayStoreFeed.BuildAsync(play, grants, Now);
+            ReconciliationReport report = StoreReconciler.Run(feed.Transactions, grants);
+
+            Assert.That(report.OwedClawback, Has.Count.EqualTo(1));
+            Assert.That(report.OwedClawback[0].StoreRefundId, Is.EqualTo("GPA.1"));
+            Assert.That(report.OwedClawback[0].PlayerId, Is.EqualTo("p1"));
+            Assert.That(report.Investigate, Has.Count.EqualTo(1));
+            Assert.That(report.Investigate[0].BaseTxnId, Is.EqualTo("GPA.ghost"));
+            Assert.That(report.OwedGoods, Is.Empty);
+        }
+
+        [Test]
+        public async Task Play_Feed_Lists_An_Ungranted_Purchase_Play_Refunded_For_Want_Of_An_Acknowledgement()
+        {
+            var play = new FakePlay
+            {
+                Voided =
+                {
+                    new PlayVoidedPurchase("GPA.never", "tok-n", Now - 1000, 8),
+                    new PlayVoidedPurchase("GPA.remorse", "tok-r", Now - 1000, 1),
+                },
+            };
+
+            PlayStoreFeedResult feed = await PlayStoreFeed.BuildAsync(play, Array.Empty<LedgerStoreGrant>(), Now);
+            ReconciliationReport report = StoreReconciler.Run(feed.Transactions, Array.Empty<LedgerStoreGrant>());
+
+            Assert.That(feed.AutoRefundedUnacknowledged.Select(v => v.OrderId), Is.EqualTo(new[] { "GPA.never" }));
+            Assert.That(report.HasIssues, Is.False, "a refund of an ungranted order owes no clawback");
+        }
+
+        private sealed class FakePlay : IPlayOrders
+        {
+            public Dictionary<string, string> States { get; } = new Dictionary<string, string>();
+            public List<PlayVoidedPurchase> Voided { get; } = new List<PlayVoidedPurchase>();
+            public long VoidedSince { get; private set; }
+
+            public Task<string?> GetOrderStateAsync(string orderId, CancellationToken ct = default)
+                => Task.FromResult(States.TryGetValue(orderId, out string? s) ? s : null);
+
+            public Task<IReadOnlyList<PlayVoidedPurchase>> ListVoidedAsync(long sinceMs, CancellationToken ct = default)
+            {
+                VoidedSince = sinceMs;
+                return Task.FromResult((IReadOnlyList<PlayVoidedPurchase>)Voided);
+            }
         }
     }
 }

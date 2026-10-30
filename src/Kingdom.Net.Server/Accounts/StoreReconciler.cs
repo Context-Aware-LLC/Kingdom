@@ -4,9 +4,9 @@ using System.Collections.Generic;
 namespace Kingdom.Net.Server.Accounts
 {
     /// <summary>
-    /// EF-080c. A store transaction from the stub feed — either a charge or a refund. A real platform
-    /// adapter will replace <see cref="StoreTransactionFeed"/> once EF-080d lands; the reconciler
-    /// itself is feed-agnostic (it consumes a list, not a file).
+    /// EF-080c. A store transaction — either a charge or a refund. <c>Kingdom.Tools.StoreReconcile</c>
+    /// builds them from Play (order state and the voided-purchases list); the reconciler itself is
+    /// feed-agnostic (it consumes a list, not a source).
     /// </summary>
     public enum StoreTransactionKind { Purchase, Refund }
 
@@ -50,8 +50,9 @@ namespace Kingdom.Net.Server.Accounts
         int LedgerRowCount);
 
     /// <summary>
-    /// EF-080c finding: the store issued a refund but our ledger has no matching clawback.
-    /// The player was refunded by the store but we never reversed the grant — we owe a clawback.
+    /// EF-080c finding: the store refunded a purchase we granted, and our ledger has no matching
+    /// clawback — we owe a clawback. A refund of a purchase we never granted is not one: there is
+    /// nothing to reverse.
     /// </summary>
     public sealed record OwedClawbackFinding(
         string StoreRefundId,
@@ -66,7 +67,7 @@ namespace Kingdom.Net.Server.Accounts
         /// <summary>Ledger grants with no matching store charge.</summary>
         public IReadOnlyList<InvestigateFinding> Investigate { get; }
 
-        /// <summary>Store refunds with no matching ledger clawback.</summary>
+        /// <summary>Store refunds of granted purchases with no matching ledger clawback.</summary>
         public IReadOnlyList<OwedClawbackFinding> OwedClawback { get; }
 
         public bool HasIssues =>
@@ -95,8 +96,6 @@ namespace Kingdom.Net.Server.Accounts
     /// <c>StartsWith("store:" + originalTxnId + ":")</c> probe in <see cref="RefundService"/>.
     /// </para>
     ///
-    /// <para><b>RETIREMENT TRIGGER</b>: when EF-080d replaces <see cref="StoreTransactionFeed"/> with
-    /// a real platform adapter, update the doc comment on <see cref="Run"/> to name the feed type.</para>
     /// </summary>
     public static class StoreReconciler
     {
@@ -153,7 +152,7 @@ namespace Kingdom.Net.Server.Accounts
                 }
                 else
                 {
-                    if (!refundGrantIds.Contains(txn.TxnId))
+                    if (storeGrantsByTxnId.ContainsKey(txn.OriginalTxnId) && !refundGrantIds.Contains(txn.TxnId))
                         owedClawback.Add(new OwedClawbackFinding(txn.TxnId, txn.OriginalTxnId, txn.PlayerId));
                 }
             }

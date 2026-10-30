@@ -142,6 +142,12 @@ namespace Kingdom.Net.Server
         /// account the Play Console has granted access to orders.</summary>
         public PlayStoreReceiptValidator? PlayStore { get; init; }
 
+        /// <summary>Checks the bearer on <c>/store/play/notifications</c>, Play's refund and purchase
+        /// feed over Pub/Sub. Null (default) turns that route off; it also needs <see cref="PlayStore"/>,
+        /// a ledger and an account store. Built from <see cref="GooglePushTokenVerifier.AudienceEnvVar"/>
+        /// and <see cref="GooglePushTokenVerifier.ServiceAccountEnvVar"/>.</summary>
+        public IPushTokenVerifier? PlayPushVerifier { get; init; }
+
         /// <summary>Supabase's admin API, which mints the sign-in token a Play Games restore
         /// answers (#425). Null (default) turns <c>/play-games/restore</c> off. Built from
         /// <c>KINGDOM_SUPABASE_URL</c> and <see cref="SupabaseAdmin.SecretKeyEnvVar"/>.</summary>
@@ -332,6 +338,7 @@ namespace Kingdom.Net.Server
                 PlayGames = GooglePlayGamesApi.FromEnvironment(),
                 PlayGamesLinks = playGamesLinks,
                 PlayStore = PlayStoreReceiptValidator.FromEnvironment(),
+                PlayPushVerifier = GooglePushTokenVerifier.FromEnvironment(),
                 SupabaseAdmin = Identity.SupabaseAdmin.FromEnvironment(supabaseUrl),
                 EntitlementLedger = entitlementLedger,
                 QuestProgress = questProgress,
@@ -567,6 +574,11 @@ namespace Kingdom.Net.Server
             GemGrantService? gemGrants = cfg.EntitlementLedger is null || cfg.PlayStore is null
                 ? null
                 : new GemGrantService(cfg.EntitlementLedger, cfg.PlayStore, time);
+            PlayNotificationEndpoint? playNotifications =
+                cfg.PlayPushVerifier is null || cfg.PlayStore is null || cfg.EntitlementLedger is null || cfg.AccountStore is null
+                    ? null
+                    : new PlayNotificationEndpoint(cfg.PlayPushVerifier, cfg.PlayStore.PackageName,
+                        cfg.EntitlementLedger, cfg.AccountStore, cfg.PlayStore, cfg.PlayStore, time);
             CraftingService? crafting = cfg.EntitlementLedger is null
                 ? null
                 : new CraftingService(cfg.EntitlementLedger, db, time);
@@ -1308,6 +1320,18 @@ namespace Kingdom.Net.Server
                         shards = result.Wallet.Shards,
                     },
                 }, statusCode: result.HttpStatus);
+            });
+
+            // POST /store/play/notifications — Play's Real-time developer notifications, pushed by
+            // Pub/Sub under its own OIDC bearer. Refunds claw back here. Off (404) unless configured.
+            // See PlayNotificationEndpoint: the status code is Pub/Sub's ack.
+            app.MapPost("/store/play/notifications", async (HttpContext context) =>
+            {
+                if (playNotifications is null) return Results.NotFound();
+                var (body, oversized) = await ReadCappedBodyAsync(context, PlayNotificationEndpoint.MaxBodyBytes);
+                PlayNotificationResult result = await playNotifications.HandleAsync(
+                    BearerFrom(context), oversized ? (ReadOnlyMemory<byte>?)null : body, context.RequestAborted);
+                return Results.Json(new { status = result.Status }, statusCode: result.HttpStatus);
             });
 
             app.MapPost("/shop/purchase", async (HttpContext context) =>
