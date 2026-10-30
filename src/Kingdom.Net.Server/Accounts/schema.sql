@@ -23,6 +23,10 @@
 -- No foreign key from entitlement_grant to account, deliberately (same reasoning as telemetry): a
 -- grant may be recorded before the account row is observed, and an FK would turn insert ORDER into a
 -- correctness condition. Both are keyed on player_id and analytics joins on it.
+--
+-- ACCOUNT DELETION names every table here by hand, because nothing cascades. A new table or column
+-- that holds a player_id, email or anything else tied to a person must be added to
+-- docs/dev-docs/operations/account-deletion.md and the deletion tool in the same commit.
 
 -- One row per player. The stable identity the ledger is keyed on. credential_hash is the SHA-256 of
 -- the bearer credential (a device token today; an OAuth subject later) — never the raw credential, so

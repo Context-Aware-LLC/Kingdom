@@ -17,6 +17,10 @@
 -- Idempotency is the natural keys + ON CONFLICT DO NOTHING. A re-read after a crash (the
 -- byte-offset checkpoint lagging the committed rows) is therefore harmless. Correctness
 -- lives in these keys, not in the checkpoint.
+--
+-- ACCOUNT DELETION names every table and raw_event line shape here by hand. A new table, or a new
+-- line type carrying an account id or device hash, must be added to
+-- docs/dev-docs/operations/account-deletion.md and the deletion tool in the same commit.
 
 -- One row per finished-or-voided match. `match_complete` and `match_void` are mutually
 -- exclusive per match, so they share this table and `status` discriminates.
