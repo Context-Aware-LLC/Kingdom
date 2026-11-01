@@ -700,7 +700,7 @@ namespace Kingdom.Presentation
                 vfxDirector.Init(artProvider, boardController);
                 PlayRevealHolds holds = vfxDirector.RevealHolds;
                 matchRunner.PlayRevealClassifier = (snapshot, events) =>
-                    PlayRevealClassifier.Classify(snapshot, events, db, holds);
+                    PlayRevealClassifier.Classify(snapshot, events, db, holds, viewer: localId);
                 matchRunner.OnPlayReveal += vfxDirector.ShowPlayReveal;
                 // #236: hide the hand copy for the beat's duration, or it and the flying reveal
                 // both read on screen at once. See BoardController.OnPlayReveal.

@@ -35,6 +35,12 @@ namespace Kingdom.Session
                  "at truth speed and queue here.")]
         [SerializeField, Range(0f, 3f)] private float commandDelaySeconds = 0.75f;
 
+        [Tooltip("Seconds the board stays up after a killing blow before the result screen covers " +
+                 "it, so the player sees what killed them: the lunge, the damage number and the " +
+                 "death shake all start on that entry's release. Only a hero at 0 health earns it " +
+                 "(a concede or a dropped socket goes straight to the screen); 0 = none.")]
+        [SerializeField, Range(0f, 4f)] private float lethalBeatSeconds = 2f;
+
         /// <summary>Per-entry pacing delay in seconds; settable at runtime (e.g. a speed toggle).</summary>
         public float CommandDelaySeconds
         {
@@ -48,8 +54,8 @@ namespace Kingdom.Session
         /// <summary>Fires per released playback entry with the projected snapshot (match start included).</summary>
         public event Action<GameState> OnStateUpdated;
 
-        /// <summary>Fires once, after the terminal entry has played out (the lethal blow is visible
-        /// before the banner).</summary>
+        /// <summary>Fires once, after the terminal entry has played out, and when a hero fell, after
+        /// the lethal beat too (the killing blow is visible before the banner).</summary>
         public event Action<MatchOutcome> OnMatchEnded;
 
         /// <summary>Optional: classify a queued-but-not-yet-visible command as a card play worth
@@ -236,6 +242,11 @@ namespace Kingdom.Session
                     if (entry.Snapshot.Outcome != MatchOutcome.InProgress)
                     {
                         _endedFired = true;
+                        // The killing blow is drawn by this release, so the banner used to land on
+                        // the same frame and cover it: a death read as the screen just appearing
+                        // (Sam, 2026-10-27). Pacing 0 (replay/perf) skips the beat like every hold.
+                        if (commandDelaySeconds > 0f && lethalBeatSeconds > 0f && AHeroFell(entry.Snapshot))
+                            yield return new WaitForSeconds(lethalBeatSeconds);
                         OnMatchEnded?.Invoke(entry.Snapshot.Outcome);
                         yield break;
                     }
@@ -264,6 +275,13 @@ namespace Kingdom.Session
             _stopRequested = true;
             _stopOutcome = finalOutcome;
             _running = false;
+        }
+
+        private static bool AHeroFell(GameState state)
+        {
+            foreach (var player in state.Players)
+                if (player.Hero.CurrentHealth <= 0) return true;
+            return false;
         }
 
         private int PickSeat(GameState state)

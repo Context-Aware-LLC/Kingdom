@@ -38,6 +38,9 @@ namespace Kingdom.Presentation
         [SerializeField] private RevealTiming minionBeat = new RevealTiming(0.12f, 0.55f, 0.18f);
         [Tooltip("Same three-phase flight as a minion, landing in the weapon socket.")]
         [SerializeField] private RevealTiming weaponBeat = new RevealTiming(0.12f, 0.60f, 0.18f);
+        [Tooltip("Extra seconds a card the OPPONENT played stays held up to be read, on top of " +
+                 "its type's hold. They have never seen it, so it needs longer than your own play.")]
+        [SerializeField, Range(0f, 2f)] private float opponentExtraReadSeconds = 0.6f;
         [Tooltip("Height of the held card as a fraction of the SCREEN's height — the size it is " +
                  "read at. See TryHeldPose for why this is a screen fraction and not a card multiple.")]
         [SerializeField, Range(0.3f, 0.9f)] private float heldScreenHeight = 0.6f;
@@ -121,7 +124,8 @@ namespace Kingdom.Presentation
                                 new SchoolTiming(SpellSchoolEffects.VerdantLeadSeconds,
                                                  SpellSchoolEffects.VerdantStaggerSeconds),
                                 new SchoolTiming(SpellSchoolEffects.HealLeadSeconds,
-                                                 SpellSchoolEffects.HealStaggerSeconds));
+                                                 SpellSchoolEffects.HealStaggerSeconds),
+                                opponentExtraReadSeconds);
 
         private RevealTiming TimingFor(CardType type) => type switch
         {
@@ -315,6 +319,9 @@ namespace Kingdom.Presentation
             if (boardAnchors == null || reveal.Def == null || _board == null) return;
 
             RevealTiming timing = TimingFor(reveal.Type);
+            // The classifier already padded the entry's hold by this; the still phase takes it, so
+            // the card lands as the entry releases, same as ever.
+            timing.HoldSeconds += reveal.ExtraReadSeconds;
 
             // Targeted → over what it hit, which is the reveal doing double duty as "this is what
             // just happened to that". Untargeted → centre stage, between the two board rows, where

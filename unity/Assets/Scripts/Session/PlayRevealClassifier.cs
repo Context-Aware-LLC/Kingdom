@@ -35,13 +35,20 @@ namespace Kingdom.Session
         public readonly SchoolTiming Verdant;
         public readonly SchoolTiming Heal;
 
+        /// <summary>Extra still time on a card the OTHER seat played. The player has never seen
+        /// it, and it lands on their board, so it needs longer to read than a card they chose
+        /// themselves (Sam, 2026-10-27). Added to the hold phase only; the travel is unchanged.</summary>
+        public readonly float OpponentExtraRead;
+
         public PlayRevealHolds(float minion, float spell, float weapon,
                                SchoolTiming earth = default, SchoolTiming lightning = default,
                                SchoolTiming fire = default, SchoolTiming shadow = default,
                                SchoolTiming clockwright = default, SchoolTiming water = default,
                                SchoolTiming frost = default, SchoolTiming gravekeep = default,
-                               SchoolTiming verdant = default, SchoolTiming heal = default)
+                               SchoolTiming verdant = default, SchoolTiming heal = default,
+                               float opponentExtraRead = 0f)
         {
+            OpponentExtraRead = opponentExtraRead;
             Minion = minion;
             Spell  = spell;
             Weapon = weapon;
@@ -218,14 +225,22 @@ namespace Kingdom.Session
         /// a spell effect runs on past the card.</summary>
         public readonly float CardSeconds;
 
+        /// <summary>Still time added to this card's own type beat (an opponent's card is held
+        /// longer to be read). Already inside <see cref="CardSeconds"/> and
+        /// <see cref="HoldSeconds"/>; VfxDirector adds it to the hold phase of the flight so the
+        /// card and the queue still finish together.</summary>
+        public readonly float ExtraReadSeconds;
+
         public PlayReveal(CardDefinition def, InstanceId source, InstanceId? target,
                           PlayerId controller, CardType type, float holdSeconds,
                           RevealDestination destination, int destSlot, int destBoardCount,
                           IReadOnlyList<InstanceId> struck = null,
                           IReadOnlyList<InstanceId> healed = null,
                           SpellEffect effect = SpellEffect.None, float cardSeconds = -1f,
-                          IReadOnlyList<InstanceId> touched = null, bool drowns = false)
+                          IReadOnlyList<InstanceId> touched = null, bool drowns = false,
+                          float extraReadSeconds = 0f)
         {
+            ExtraReadSeconds = extraReadSeconds;
             Drowns = drowns;
             Touched = touched ?? System.Array.Empty<InstanceId>();
             Struck = struck ?? System.Array.Empty<InstanceId>();
@@ -261,9 +276,12 @@ namespace Kingdom.Session
         /// <summary>The first <see cref="GameEventKind.CardPlayed"/> in this entry's batch whose
         /// card type has a non-zero hold, or null if there isn't one.
         /// Only the first — a command resolves one played card at a time in this M1 slice, so a
-        /// second CardPlayed fact in the same batch isn't a case that exists yet.</summary>
+        /// second CardPlayed fact in the same batch isn't a case that exists yet.
+        /// <paramref name="viewer"/> is the seat watching; a card anyone else played gets
+        /// <see cref="PlayRevealHolds.OpponentExtraRead"/>. Null gives every card the same beat.</summary>
         public static PlayReveal? Classify(GameState snapshot, IReadOnlyList<GameEvent> events,
-                                           ICardDatabase db, PlayRevealHolds holds)
+                                           ICardDatabase db, PlayRevealHolds holds,
+                                           PlayerId? viewer = null)
         {
             if (snapshot == null || events == null || db == null) return null;
 
@@ -280,6 +298,9 @@ namespace Kingdom.Session
 
                 float hold = holds.For(def.Type);
                 if (hold <= 0f) continue;   // type tuned to no reveal — keep looking
+                float extraRead = viewer.HasValue && played.Controller != viewer.Value
+                    ? System.Math.Max(0f, holds.OpponentExtraRead) : 0f;
+                hold += extraRead;
 
                 InstanceId? target = null;
                 for (int j = i + 1; j < events.Count; j++)
@@ -324,7 +345,7 @@ namespace Kingdom.Session
 
                 return new PlayReveal(def, source, target, played.Controller, def.Type, hold + tail,
                                       dest, slot, boardCount, struck, healed, effect, hold,
-                                      touched, Has<DrownAction>(def));
+                                      touched, Has<DrownAction>(def), extraRead);
             }
 
             return null;
