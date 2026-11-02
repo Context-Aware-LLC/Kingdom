@@ -19,6 +19,7 @@ text under `## Prompt` goes to the generator.
   is under `$LOCALAPPDATA/Microsoft/WinGet/Packages/Gyan.FFmpeg_*/ffmpeg-*/bin/`.
   `ffmpeg -sseof -0.2 -i clip.mp4 -update 1 clip-last-frame.png`
 - **End frame:** the plate cropped and scaled to exactly the start frame's size. Look at the crop.
+- **Both frames match the film's one output shape.** Check the output size of every new clip.
 
 ## The prompt, in this order
 
@@ -72,7 +73,13 @@ line, in this same commit or the next. **Proven** means a clip got better with t
 - **A character entering alone can arrive in profile.** Have them already in place when the
   scene is revealed, and name the angle: `three-quarter ... exactly as in the end frame`.
 
+- **A clip starting from anything but the previous clip's real last frame jumps at the cut.** A
+  fresh crop of the same plate jumped 68px; the wider 21:9 plate jumped to 76% size with bars.
+
 ### Suspected (2026-11-02)
+
+- **The generator centre-crops a frame of the wrong shape.** The 68px jump is exactly the gap
+  between an off-centre crop and a centred one, so keep crops centred.
 
 - **Name an action's start, or it can run backwards.** A scoop aimed at a cone came off the cone
   instead. That prompt was also cut off mid-beat, so this one may be the limit.
