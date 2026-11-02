@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kingdom account deletion"
+  short_description: "Verify a support-mail deletion request, dry-run the plan, delete only on Sam's approval"
+  default_prompt: "Use $delete-account to verify this Kingdom of Bad Ideas deletion request and prepare a dry-run plan for Sam to approve."

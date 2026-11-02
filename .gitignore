@@ -158,6 +158,7 @@ __pycache__/
 !.agents/skills/
 .agents/skills/*
 !.agents/skills/build/
+!.agents/skills/delete-account/
 
 # Scratch match-replay logs from bot/networked smoke tests - disposable
 scratch-replays/
