@@ -67,6 +67,7 @@ line, in this same commit or the next. **Proven** means a clip got better with t
   the next arrival in while the last one is still in frame, so there is no empty stretch.
 - **Long travel eats the payoff.** Over a wall took most of 12s and left about 2s of gate. A close
   foreground element sweeping across the frame gets there in 1.5s and leaves 6s for the scene.
+  This wall wipe is the default way between two scenes that are far apart (Sam: very effective).
 - **A character entering alone can arrive in profile.** Have them already in place when the
   scene is revealed, and name the angle: `three-quarter ... exactly as in the end frame`.
 
