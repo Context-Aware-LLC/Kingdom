@@ -41,7 +41,7 @@ namespace Kingdom.Presentation
         private bool _suspended;
 
         private static MusicDirector _instance;
-        private string _heldScene;   // non-null: silent until the active scene is no longer this one
+        private string _heldScene;   // non-null: silent until the next scene load (see OnSceneLoaded)
 
         /// <summary>Fades the current track out and stays silent until the next scene loads — the
         /// match end, where the victory stinger plays and the battle loop would talk over it.</summary>
@@ -78,6 +78,7 @@ namespace Kingdom.Presentation
             source.outputAudioMixerGroup = AudioSettings.MusicGroup;
             _source = source;
             _instance = this;
+            SceneManager.sceneLoaded += OnSceneLoaded;
 
             LoadPool(MenuPool);
             LoadPool(BattlePool);
@@ -187,8 +188,17 @@ namespace Kingdom.Presentation
             pool.Cursor = 0;
         }
 
+        /// <summary>A load ends the hold, even of the SAME scene: the result screen's Play Again
+        /// reloads <c>BoardNetworked</c> from <c>BoardNetworked</c>, and a hold keyed on the scene's
+        /// name alone would leave that whole rematch silent.</summary>
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (mode == LoadSceneMode.Single) _heldScene = null;
+        }
+
         private void OnDestroy()
         {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
             if (_instance == this) _instance = null;
             // Reverse order: each asset load depends on the locations handle that produced it.
             for (int i = _handles.Count - 1; i >= 0; i--)

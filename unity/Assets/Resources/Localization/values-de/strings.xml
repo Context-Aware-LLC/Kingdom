@@ -420,6 +420,8 @@
     <item quantity="other">%1$d weitere Befunde wurden ins Hauptbuch eingetragen.</item>
     </plurals>
     <string name="match_result_tap_to_continue">Tippen zum Fortfahren</string>
+    <string name="match_result_play_again">Nochmal spielen</string>
+    <string name="match_result_tap_to_change_deck">Woanders tippen, um das Deck zu wechseln</string>
     <string name="settings_sign_out_title_email">Von %1$s abmelden?</string>
     <string name="settings_sign_out_title">Abmelden?</string>
     <string name="settings_sign_out_subtitle">Deine Karten und Decks bleiben in deinem Konto. Zum Spielen musst du dich erneut anmelden.</string>

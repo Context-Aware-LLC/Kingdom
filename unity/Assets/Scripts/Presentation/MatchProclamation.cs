@@ -30,6 +30,7 @@ namespace Kingdom.Presentation
         public const int MaxFindingsShown = 4;
 
         private const string HiddenColumnClass = "proc-column--hidden";
+        private const string HiddenActionsClass = "proc-actions--hidden";
         private const int StampDelayMs = 160;   // the first wax, after the sheet stops
         private const int StampGapMs = 420;     // between one finding's wax and the next
         private const float SealSize = 64f;
@@ -42,6 +43,8 @@ namespace Kingdom.Presentation
         private readonly VisualElement _findingsColumn;
         private readonly VisualElement _findings;
         private readonly Label _footer;
+        private readonly VisualElement _actions;
+        private readonly Button _playAgain;
         private readonly IUiSpriteProvider _sprites;
         private readonly List<VisualElement> _findingRows = new List<VisualElement>();
 
@@ -61,6 +64,8 @@ namespace Kingdom.Presentation
             _findingsColumn = root.Q<VisualElement>("proc-findings-column");
             _findings = root.Q<VisualElement>("proc-findings");
             _footer = root.Q<Label>("proc-footer");
+            _actions = root.Q<VisualElement>("proc-actions");
+            _playAgain = root.Q<Button>("proc-play-again");
 
             (string verdict, string verdictClass) = Judge(outcome, localSeat);
             var verdictLabel = root.Q<Label>("proc-verdict");
@@ -135,6 +140,31 @@ namespace Kingdom.Presentation
         public void SetFooter(string text)
         {
             if (_footer != null) _footer.text = string.IsNullOrEmpty(text) ? " " : text;
+        }
+
+        /// <summary>Show Play Again and run <paramref name="onPress"/> when it is pressed. Until
+        /// this is called the row is hidden, and the screen offers only the tap to deck selection.</summary>
+        public void ShowPlayAgain(Action onPress)
+        {
+            if (_playAgain == null) return;
+            _playAgain.text = Loc.Get("match_result_play_again");
+            _playAgain.clicked += () => onPress?.Invoke();
+            _actions?.RemoveFromClassList(HiddenActionsClass);
+        }
+
+        /// <summary>
+        /// True when <paramref name="screenPosition"/> (Input System pixels, origin bottom-left) is
+        /// on Play Again. The sequence's tap-anywhere reads the pointer, not UI events, so it has to
+        /// be told to leave a press on the button to the button — otherwise the press leaves for
+        /// deck selection a frame before the button's click arrives.
+        /// </summary>
+        public bool IsOverPlayAgain(Vector2 screenPosition)
+        {
+            if (_playAgain?.panel == null || _actions == null || _actions.ClassListContains(HiddenActionsClass))
+                return false;
+            Vector2 panelPosition = RuntimePanelUtils.ScreenToPanel(
+                _playAgain.panel, new Vector2(screenPosition.x, Screen.height - screenPosition.y));
+            return _playAgain.worldBound.Contains(panelPosition);
         }
 
         private void WriteFindings(IReadOnlyList<string> ids)

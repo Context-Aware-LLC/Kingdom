@@ -76,6 +76,11 @@ namespace Kingdom.Presentation
         private VersusOverlay _versus;
         private SparkCoinOpening _coinOpening;
         private bool _openingActive;
+
+        /// <summary>The deck this match was queued with, for the result screen's Play Again.
+        /// Empty when there is nothing to replay: a friend challenge (its ticket is spent, and a
+        /// rematch would need the friend's half of a new handshake) or the dev fallback deck.</summary>
+        private string _rematchDeckId = "";
         private MulliganConfirmButtonView _mulligan;
 
         // Item 4b: the pause between re-queues after a capacity refusal, drawn uniformly per refusal.
@@ -130,7 +135,7 @@ namespace Kingdom.Presentation
             SubmitDeckMsg selectedDeck;
             try
             {
-                selectedDeck = ConsumeSelectedDeck(db);
+                selectedDeck = ConsumeSelectedDeck(db, out _rematchDeckId);
             }
             catch (Exception ex)
             {
@@ -144,6 +149,7 @@ namespace Kingdom.Presentation
             // Taken ONCE, outside the attempt loop below: taking it consumes it.
             string challengeTicket = ChallengeFlow.TakeTicket();
             bool challenge = challengeTicket.Length > 0;
+            if (challenge) _rematchDeckId = "";
             string connectUrl = !challenge
                 ? serverUrl
                 : serverUrl + (serverUrl.Contains("?") ? "&" : "?") + "challenge=" + Uri.EscapeDataString(challengeTicket);
@@ -370,8 +376,9 @@ namespace Kingdom.Presentation
             WireMatch(db);
         }
 
-        private static SubmitDeckMsg ConsumeSelectedDeck(ICardDatabase db)
+        private static SubmitDeckMsg ConsumeSelectedDeck(ICardDatabase db, out string playedDeckId)
         {
+            playedDeckId = "";
             string chosenDeckId = MatchDeckSelection.Take();
             if (string.IsNullOrEmpty(chosenDeckId))
             {
@@ -407,6 +414,7 @@ namespace Kingdom.Presentation
             // is guaranteed to be an actual match start with a re-validated, queue-ready deck (Sam,
             // 2026-08-09) — what Find Game pre-arms its pick from next time.
             account.RecordLastPlayed(deck.Id);
+            playedDeckId = deck.Id;
 
             var lines = new List<DeckCardLine>(deck.Entries.Count);
             for (int i = 0; i < deck.Entries.Count; i++)
@@ -726,7 +734,8 @@ namespace Kingdom.Presentation
                     // The MatchEndMsg follows the final snapshot, so its reason and findings beat the drain.
                     reason: _net.EndReason,
                     findings: _net.EndFindings,
-                    gold: _goldWatch.EarnedAsync());
+                    gold: _goldWatch.EarnedAsync(),
+                    rematchDeckId: _rematchDeckId);
                 MusicDirector.FadeOutUntilSceneChange();            // the battle loop would clash with the stinger
                 cardSounds.OnMatchEnded(outcome, _net.Seat);
                 _ = PlayGamesServices.SyncAchievementsAfterMatchAsync();   // never throws; nothing waits on it

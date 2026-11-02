@@ -2,7 +2,7 @@
 <!--
   MatchProclamation.uxml — the result screen, read off the herald's scroll (whimsy pass
   2026-10-17, #2): the verdict and why, the spoils (Gold, quests), and the Council's Findings,
-  each stamped. Built at runtime by MatchEndBanner.Show through Resources, the same pattern
+  each stamped; then Play Again, for a queued match. Built at runtime by MatchEndBanner.Show through Resources, the same pattern
   ConnectionFailedScreen uses; MatchProclamation fills it and ProclamationScroll wraps the sheet.
 
   .emb-root IS LOAD-BEARING, as it is on ConnectionFailedScreen: this tree is its own UIDocument,
@@ -27,6 +27,9 @@
                     <ui:Label text="The Council's Findings" class="proc-heading" />
                     <ui:VisualElement name="proc-findings" />
                 </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="proc-actions" class="proc-actions proc-actions--hidden">
+                <ui:Button name="proc-play-again" text="Play again" class="proc-play-again emb-primary" />
             </ui:VisualElement>
             <ui:Label name="proc-footer" text=" " class="proc-footer" />
         </ui:VisualElement>

@@ -43,6 +43,19 @@ namespace Kingdom.Presentation
             ScreenNav.Go(ScreenNav.CharacterRoster);
         }
 
+        /// <summary>
+        /// The result screen's Play Again: queue <paramref name="deckId"/> again and load the board,
+        /// skipping the roster. It is the same deck the last match submitted, so it was queue ready a
+        /// match ago; <see cref="NetworkedGameBootstrap"/> re-validates it exactly as it does a
+        /// roster pick, and a deck that has stopped being playable fails there with the usual copy.
+        /// </summary>
+        public static void Rematch(string deckId)
+        {
+            Select(deckId);
+            FirstSessionFunnel.Queue(FunnelQueueSource.ResultView);
+            ScreenNav.Go(ScreenNav.BoardNetworked);
+        }
+
         public static void Cancel()
         {
             Choosing = false;
@@ -1094,8 +1107,8 @@ namespace Kingdom.Presentation
             }
 
             MatchDeckSelection.Select(deck.Id);
-            // The funnel's queue intent. Every way here starts at the menu's Find Game today; the
-            // result view's re-queue (item 6) will pass its own source.
+            // The funnel's queue intent. Every way here starts at the menu's Find Game or the result
+            // screen's tap-through; the result screen's Play Again passes its own source (Rematch).
             FirstSessionFunnel.Queue(FunnelQueueSource.Menu);
             ScreenNav.Go(ScreenNav.BoardNetworked);
         }

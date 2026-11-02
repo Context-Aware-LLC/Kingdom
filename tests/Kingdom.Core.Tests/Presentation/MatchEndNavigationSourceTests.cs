@@ -48,6 +48,45 @@ namespace Kingdom.Core.Tests.Presentation
                 $"{bootstrapFile} must enter the shared result-and-return path.");
         }
 
+        // Launch item 6: one tap from the result screen back into the queue.
+        [Test]
+        public void Play_Again_Requeues_The_Same_Deck_As_A_Result_View_Queue()
+        {
+            string sequenceSource = StripComments(PresentationSource("MatchEndSequence.cs"));
+            string selectionSource = StripComments(PresentationSource("CharacterRosterController.cs"));
+            string bootstrapSource = StripComments(PresentationSource("NetworkedGameBootstrap.cs"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(sequenceSource, Does.Match(@"MatchDeckSelection\.Rematch\("),
+                    "Play Again must go through the one rematch door.");
+                Assert.That(selectionSource, Does.Match(
+                        @"void Rematch\(string deckId\)\s*\{\s*Select\(deckId\);\s*" +
+                        @"FirstSessionFunnel\.Queue\(FunnelQueueSource\.ResultView\);\s*" +
+                        @"ScreenNav\.Go\(ScreenNav\.BoardNetworked\);"),
+                    "A rematch arms the deck, records a result_view queue for the funnel, and loads the board.");
+                Assert.That(bootstrapSource, Does.Contain("if (challenge) _rematchDeckId = \"\";"),
+                    "A friend challenge must not offer Play Again: queueing would seat a stranger.");
+                Assert.That(bootstrapSource, Does.Contain("rematchDeckId: _rematchDeckId"),
+                    "The result screen needs the deck this match was queued with.");
+            });
+        }
+
+        // Play Again reloads BoardNetworked from BoardNetworked. A music hold keyed on the scene's
+        // name alone never sees that as a change, and the whole rematch plays silent.
+        [Test]
+        public void Music_Hold_Ends_On_Any_Scene_Load_So_A_Rematch_Is_Not_Silent()
+        {
+            string source = StripComments(PresentationSource("MusicDirector.cs"));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(source, Does.Contain("SceneManager.sceneLoaded += OnSceneLoaded;"));
+                Assert.That(source, Does.Match(
+                    @"void OnSceneLoaded\(Scene scene, LoadSceneMode mode\)\s*\{[^}]*_heldScene = null;"));
+            });
+        }
+
         private static string StripComments(string source)
         {
             source = Regex.Replace(source, @"/\*.*?\*/", " ", RegexOptions.Singleline);

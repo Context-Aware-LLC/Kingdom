@@ -117,3 +117,25 @@
     margin-top: var(--space-4);
     -unity-text-align: middle-center;
 }
+
+/* Play Again (launch item 6). Hidden until MatchProclamation.ShowPlayAgain, which the
+   sequence calls when the screen can be left, and never shown for a friend challenge.
+   The box is .tidbit-done's, restated as that rule restates the roster's: this tree
+   links no sheet that sizes a button. */
+.proc-actions {
+    flex-direction: row;
+    justify-content: center;
+    margin-top: var(--space-4);
+}
+
+.proc-actions--hidden {
+    display: none;
+}
+
+.proc-play-again {
+    min-width: 220px;
+    height: 68px;
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+    font-size: var(--type-body);
+}

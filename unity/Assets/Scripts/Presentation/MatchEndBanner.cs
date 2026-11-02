@@ -15,7 +15,7 @@ namespace Kingdom.Presentation
     /// the Council's Findings. Built on demand by NetworkedGameBootstrap's OnMatchEnded handler as
     /// its own UIDocument, the Resources-loaded pattern <see cref="ConnectionFailedOverlay"/> uses.
     /// <see cref="MatchEndSequence"/> paces what follows — spoils, voice line, linger — and
-    /// returns every match mode to deck selection.
+    /// then offers Play Again (a queued match only) or returns to deck selection.
     /// </summary>
     public static class MatchEndBanner
     {
@@ -30,12 +30,15 @@ namespace Kingdom.Presentation
         /// <param name="reason">The server's end reason; null when it never arrived.</param>
         /// <param name="findings">The Council's Findings this seat committed, from the match-end
         /// message; null or empty stamps none.</param>
+        /// <param name="rematchDeckId">The deck this match was queued with; Play Again requeues it.
+        /// Null or empty offers no Play Again, only the way back to deck selection.</param>
         public static GameObject Show(MatchOutcome outcome, int localSeat,
                                       Task<IReadOnlyList<QuestAdvance>> quests = null,
                                       Action playVoiceLine = null,
                                       MatchEndReason? reason = null,
                                       IReadOnlyList<string> findings = null,
-                                      Task<long> gold = null)
+                                      Task<long> gold = null,
+                                      string rematchDeckId = null)
         {
             var root = new GameObject("MatchEndBanner");
             var doc = root.AddComponent<UIDocument>();
@@ -50,7 +53,7 @@ namespace Kingdom.Presentation
             else
                 Debug.LogError("[MatchEnd] No rootVisualElement: is MatchProclamation.uxml in a Resources folder?");
 
-            root.AddComponent<MatchEndSequence>().Init(proclamation, quests, gold, playVoiceLine);
+            root.AddComponent<MatchEndSequence>().Init(proclamation, quests, gold, playVoiceLine, rematchDeckId);
             return root;
         }
     }
