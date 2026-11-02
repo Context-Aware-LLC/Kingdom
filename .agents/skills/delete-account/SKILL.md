@@ -21,10 +21,11 @@ test -d src/Kingdom.Tools.AccountDelete && echo present || echo missing
 grep -n '^\*\*Status' docs/dev-docs/operations/account-deletion.md
 ```
 
-If the tool is missing or the status still says it is not runnable: do the step 1 checks that need
-no tool (the authentication check, the someone-else's-account case), draft any reply they call
-for, then tell Sam the request is waiting on the tool. Matching the address to an account needs
-the tool, so the request is not fully verified yet; say so.
+If the tool is missing, or the status line says the first run still waits on something: do the
+step 1 checks that need no tool (the authentication check, the someone-else's-account case), draft
+any reply they call for, then tell Sam the request is waiting and on what, as the status line names
+it. Matching the address to an account needs the tool, so the request is not fully verified yet;
+say so.
 **Never stand in for the tool** with SQL, the Supabase dashboard, the Admin API, `wrangler d1` or a
 script you write. The deletion is a fixed tool in the repo; nothing else touches the stores.
 
@@ -56,15 +57,18 @@ out. Keep drafts to what the runbook says the message covers; promise nothing el
 ## 3. Plan (dry run)
 
 ```bash
-dotnet run --project src/Kingdom.Tools.AccountDelete -- plan --email <address>
+dotnet run --project src/Kingdom.Tools.AccountDelete -- plan --email <address> \
+    --request <gmail message id> --received <received time, ISO 8601>
 ```
 
 The tool resolves the identity (email → Supabase user → `sub` → `credential_hash` → `player_id`,
-cross-checked against `account.email` and `account.credential_hash`) and writes a plan file. Do not
-run those lookups yourself.
+cross-checked against `account.email` and `account.credential_hash`), writes a plan file outside
+the repo and prints the counts, the file's path and its SHA-256. Do not run those lookups yourself.
 
-Stop and hand to Sam, without a plan, if the tool reports: more than one Supabase user for the
-address, an `account.kind` of `superuser`, a mismatch between the two identity checks, or any error.
+It prints `NO PLAN:` and the reason when it stops. "No Supabase user has that address" is the
+step 1 no-match case: draft the reply asking them to write from the address they sign in with.
+Every other `NO PLAN:` (more than one Supabase user, no account row, a superuser, a mismatch
+between the identity checks, the address on a second account) and any error: stop and hand to Sam.
 
 Send Sam, in the conversation (not in mail, a commit, an issue or the brain):
 
@@ -72,7 +76,7 @@ Send Sam, in the conversation (not in mail, a commit, an issue or the brain):
 - the authentication result (pass, and which: DKIM or SPF)
 - per store, the rows or objects and counts the plan will touch, from the tool's summary
 - the kept `store:` / `refund:` rows count and the archive expiry date
-- the plan file's path and SHA-256 (`sha256sum <plan file>` if the tool does not print it)
+- the plan file's path and SHA-256, as the tool printed them
 
 Then ask: **"Approve deletion plan `<sha256>`?"** and stop.
 
@@ -89,12 +93,20 @@ does not match the file), show Sam the new plan and ask again.
 ## 5. Execute
 
 ```bash
-dotnet run --project src/Kingdom.Tools.AccountDelete -- execute --plan <plan file>
+dotnet run --project src/Kingdom.Tools.AccountDelete -- execute --plan <plan file> --approved <sha256>
 ```
 
-Only with the approved plan file, unchanged. The tool does the steps in the runbook's order
-(Supabase Auth, the JWT wait, accounts DB, telemetry DB, D1, the deletion record) and refuses a
-plan whose hash or row counts moved. If it refuses, stops or fails partway:
+Only with the approved plan file, unchanged, and the hash Sam approved. The tool does the steps in
+the runbook's order (Supabase Auth, the JWT wait, accounts DB, telemetry DB, D1, the deletion
+record) and refuses a plan whose hash, row counts or devices moved.
+
+- **Exit 3, `WAITING:`** the login is deleted and the databases wait out the token lifetime. Tell
+  Sam the time it prints, and run the same command again after it. Resuming the approved plan
+  needs no new approval; it continues from the deletion record.
+- **Exit 0, `DONE:`** the tool has deleted the plan file itself. Note the archive expiry it printed
+  for the completion reply.
+
+If it refuses (exit 1), stops or fails partway:
 
 - report what it says to Sam and stop; a failed run **resumes** from the deletion record, it is
   not restarted, and a re-run needs a fresh plan and a fresh approval.
@@ -115,9 +127,9 @@ out). Tell Sam it is ready to send.
   only to the tool's arguments and to Sam in the conversation. Never write them to a log you
   create, a commit, a PR, an issue, the brain, memory, a task note or a file in the repo. Refer
   to the request by its Gmail message id.
-- **Plan files are company admin records, never repo files.** Keep them outside the repo
-  (`git add` nothing the tool writes) and delete each once its deletion record is complete or Sam
-  cancels.
+- **Plan files are company admin records, never repo files.** The tool writes them outside the
+  repo and deletes each once its deletion record is complete; delete one yourself only when Sam
+  cancels. `git add` nothing the tool writes.
 - Do not quote the requester's mail in drafts or messages beyond what the reply needs.
 
 ## Never

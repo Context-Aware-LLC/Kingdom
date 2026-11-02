@@ -19,6 +19,7 @@
     <Project Path="src/Kingdom.Tools.TelemetryVerify/Kingdom.Tools.TelemetryVerify.csproj" />
     <Project Path="src/Kingdom.Tools.TrainingCorpus/Kingdom.Tools.TrainingCorpus.csproj" />
     <Project Path="src/Kingdom.Tools.StoreReconcile/Kingdom.Tools.StoreReconcile.csproj" />
+    <Project Path="src/Kingdom.Tools.AccountDelete/Kingdom.Tools.AccountDelete.csproj" />
     <Project Path="src/Kingdom.Training.Corpus/Kingdom.Training.Corpus.csproj" />
   </Folder>
   <Folder Name="/tests/">

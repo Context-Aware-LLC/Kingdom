@@ -299,3 +299,34 @@ create table if not exists play_games_link (
 );
 
 alter table play_games_link enable row level security;
+
+-- ── Account deletion (docs/dev-docs/operations/account-deletion.md) ───────────────────────────
+-- One row per approved deletion run, written ONLY by Kingdom.Tools.AccountDelete. Each step of the
+-- run stamps its column as it completes, so a run that stops partway resumes from here rather than
+-- repeating a step. The accounts step stamps inside its own transaction, so it is done or not done,
+-- never half.
+--
+-- NO EMAIL AND NO player_id, EVER — not even while the run is in flight. The plan file (kept outside
+-- the repo, deleted when the run completes) carries those; this row is the company's record that a
+-- deletion happened and when, and must not become a second copy of the identity it removed.
+-- The request is named by its Gmail message id only.
+--
+-- tombstone_id is the random `deleted-<uuid>` written over the player's id in the rows that are kept
+-- for other people's history (ladder_match, match_seat, card_seen). archive_expires_on is when the
+-- kept store:/refund: ledger rows may be purged: April 15 of the year after deletion, plus 7 years.
+create table if not exists account_deletion (
+  plan_sha256             text        primary key,   -- the approved plan file's hash
+  request_message_id      text        not null,      -- the Gmail message id of the request
+  request_received_at     timestamptz not null,
+  tombstone_id            text        not null unique,
+  started_at              timestamptz not null,
+  auth_delete_started_at  timestamptz,               -- the Admin API call was about to be made
+  auth_deleted_at         timestamptz,               -- step a; the JWT wait counts from here
+  accounts_db_at          timestamptz,               -- step c
+  telemetry_db_at         timestamptz,               -- step d
+  prereg_at               timestamptz,               -- step e (Cloudflare D1)
+  completed_at            timestamptz,               -- step f
+  archive_expires_on      date
+);
+
+alter table account_deletion enable row level security;

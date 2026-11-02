@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kingdom.Tools.AccountDelete — the account deletion tool the runbook names
+    (docs/dev-docs/operations/account-deletion.md), run by the delete-account skill.
+
+      plan     read-only dry run: resolves the account, counts what would go, writes a plan file
+               OUTSIDE the repo and prints its SHA-256.
+      execute  runs ONE approved plan, named by its hash. Refuses a changed file or moved counts.
+               Resumes from the account_deletion record; pauses (exit 3) for the JWT wait.
+
+    Credential-gated (KINGDOM_ACCOUNTS_DB, KINGDOM_TELEMETRY_DB, KINGDOM_SUPABASE_URL,
+    KINGDOM_SUPABASE_SECRET_KEY, KINGDOM_CLOUDFLARE_ACCOUNT_ID, KINGDOM_CLOUDFLARE_D1_TOKEN),
+    so it lives here rather than in CI. Modelled on Kingdom.Tools.StoreReconcile.
+
+    Exit 0 = done; 1 = refused (hand to Sam); 2 = misconfiguration or error; 3 = waiting, run again later.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <AssemblyName>Kingdom.Tools.AccountDelete</AssemblyName>
+    <RootNamespace>Kingdom.Tools.AccountDelete</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kingdom.Net.Server\Kingdom.Net.Server.csproj" />
+  </ItemGroup>
+
+</Project>

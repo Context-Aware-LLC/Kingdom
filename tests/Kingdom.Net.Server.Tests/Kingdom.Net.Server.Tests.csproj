@@ -35,6 +35,9 @@
     <ProjectReference Include="..\..\src\Kingdom.Net.Server\Kingdom.Net.Server.csproj" />
     <ProjectReference Include="..\..\src\Kingdom.Training.Corpus\Kingdom.Training.Corpus.csproj" />
     <ProjectReference Include="..\..\src\Kingdom.Tools.NetSoak\Kingdom.Tools.NetSoak.csproj" />
+    <!-- The account deletion tool: its planner and executor run against in-memory stores here, and
+         against a throwaway Postgres when KINGDOM_LEDGER_DB is set. -->
+    <ProjectReference Include="..\..\src\Kingdom.Tools.AccountDelete\Kingdom.Tools.AccountDelete.csproj" />
     <!-- FixtureCard/ShippedCards: one definition of "a card id in a fixture", shared. -->
     <ProjectReference Include="..\Kingdom.Core.Tests\Kingdom.Core.Tests.csproj" />
   </ItemGroup>

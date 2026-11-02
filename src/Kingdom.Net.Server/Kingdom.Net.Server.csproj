@@ -24,6 +24,7 @@
     <InternalsVisibleTo Include="Kingdom.Net.Server.Tests" />
     <InternalsVisibleTo Include="Kingdom.Tools.TelemetryVerify" />
     <InternalsVisibleTo Include="Kingdom.Tools.StoreReconcile" />
+    <InternalsVisibleTo Include="Kingdom.Tools.AccountDelete" />
   </ItemGroup>
 
   <ItemGroup>
