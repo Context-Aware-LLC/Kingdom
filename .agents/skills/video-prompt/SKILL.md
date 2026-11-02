@@ -5,8 +5,8 @@ description: Use when writing or revising a prompt for a Kingdom of Bad Ideas cu
 
 # Video prompts
 
-The generator takes a start frame, an end frame and a prompt. It reads the frames first, and it
-drops the end of a long prompt without saying so.
+The generator takes a start frame, an end frame and a prompt, and it drops the end of a long
+prompt without saying so.
 
 ## The file
 
@@ -53,8 +53,9 @@ line, in this same commit or the next. **Proven** means a clip got better with t
 
 - **The limit is about 2,049 characters.** Everything after it is ignored with no error, which
   costs the payoff beat and the closing lines. A wrong ending can be a line the model never saw.
-- **The image outranks the text.** 50+ generations of "one-legged" failed because the end frame's
-  stump read as a raised thigh. Repainting the frame fixed it. Change the frame, not the wording.
+- **A body the model will not draw is a redesign, not a rewording.** 50+ generations of a
+  one-legged skeleton failed, in every wording and after repainting the end frame. Replacing the
+  joke with an intact skeleton worked. Change the scene after a handful of failures.
 - **Camera direction follows the subject.** Moving right means exits on the left and arrivals on
   the right. Arrivals come in the end frame's left-to-right order.
 - **The model invents anything that is only named.** "The dog" became a different dog that morphed
