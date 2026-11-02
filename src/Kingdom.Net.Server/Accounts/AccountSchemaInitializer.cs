@@ -54,7 +54,7 @@ namespace Kingdom.Net.Server.Accounts
                         // deploy-verification line that names the wrong tables is worse than none,
                         // since its whole job is confirming from outside that they exist.
                         "[accounts-schema] applied: account, entitlement_grant, ladder_player, " +
-                        "ladder_match, deck, quest_progress." +
+                        "ladder_match, deck, quest_progress, completed_match." +
                         (attempt > 0 ? $" (after {attempt} failed attempt(s))" : ""));
                     return;
                 }

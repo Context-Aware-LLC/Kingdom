@@ -125,6 +125,9 @@ namespace Kingdom.Net.Server.Telemetry
     /// <param name="MostBulwarks">The most Bulwark minions the seat had on the board at once.</param>
     /// <param name="FellTo">What dealt the blow that took this seat's hero to 0 Health; None when it
     /// was never taken there, so a row written before the field existed reads as standing.</param>
+    /// <param name="Policy">Who played the seat: <c>human</c>, or the bot's policy identity
+    /// (<c>greedy-ai.v3</c>, <c>checkpoint:&lt;sha&gt;:argmax</c>). This is how a first-match
+    /// (launch item 5) or bot-fill row says WHICH bot it was. Null on a row built without one.</param>
     public sealed record SeatOutcome(
         AccountId Account,
         CardClass Class,
@@ -145,7 +148,8 @@ namespace Kingdom.Net.Server.Telemetry
         int BigMinionsBounced = 0,
         int LegendariesLost = 0,
         int MostBulwarks = 0,
-        FinalBlow FellTo = FinalBlow.None);
+        FinalBlow FellTo = FinalBlow.None,
+        string? Policy = null);
 
     /// <summary>
     /// What landed the hit that took a hero from above 0 Health to 0 or below, as seen from the hero

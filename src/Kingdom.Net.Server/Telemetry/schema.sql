@@ -81,6 +81,10 @@ create table if not exists raw_event (
   line        jsonb       not null
 );
 
+-- Who played each seat (launch item 5): `human`, or a bot's policy identity such as `greedy-ai.v3`
+-- or `checkpoint:<sha>:argmax`. Added after the table; null on rows drained before it existed.
+alter table match_seat add column if not exists policy text;
+
 create index if not exists card_seen_card_idx  on card_seen (card_def_id);
 create index if not exists card_seen_time_idx   on card_seen (ended_at);
 create index if not exists match_env_src_idx    on match (env, source);

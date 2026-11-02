@@ -83,6 +83,20 @@ namespace Kingdom.Net.Server.Tests
         }
 
         [Test]
+        public void A_Seats_Policy_Lands_In_Its_Column_And_A_Human_Seat_Lands_Null()
+        {
+            var cmds = ParseFirstLineOf(sink =>
+            {
+                MatchCompleteEvent e = Complete("m1");
+                sink.MatchComplete(e with { P1 = e.P1 with { Policy = "greedy-ai.v3" } });
+            });
+
+            Assert.That(Sql(cmds[2]), Does.Contain(", policy)"));
+            Assert.That(Val(cmds[2], 8), Is.EqualTo(DBNull.Value));
+            Assert.That(Val(cmds[3], 8), Is.EqualTo("greedy-ai.v3"));
+        }
+
+        [Test]
         public void Void_Line_Maps_To_A_Void_Match_And_Account_Only_Seats()
         {
             var cmds = ParseFirstLineOf(sink => sink.MatchVoid(Void("m2")));

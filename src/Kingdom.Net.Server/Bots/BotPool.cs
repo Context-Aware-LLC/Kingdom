@@ -9,9 +9,22 @@ using Kingdom.Net.Server.Identity;
 
 namespace Kingdom.Net.Server.Bots
 {
+    /// <summary>Which policy an acquired bot plays. <see cref="Default"/> is ordinary bot fill:
+    /// the configured bot model, or Greedy. The other two are the first-match policy's
+    /// (<c>Matchmaking.FirstMatchPolicy</c>, launch item 5).</summary>
+    public enum BotOpponent
+    {
+        Default,
+        /// <summary>A newcomer's first match: <c>greedy-ai.v3</c>.</summary>
+        Greedy,
+        /// <summary>A newcomer's second match: the pinned second-match model (H1), or Greedy when
+        /// none is configured. Never the moving champion.</summary>
+        SecondMatch,
+    }
+
     public interface IBotPool
     {
-        BotHandle? TryAcquire();
+        BotHandle? TryAcquire(BotOpponent opponent = BotOpponent.Default);
 
         /// <summary>True if <paramref name="account"/> belongs to a roster bot — busy or idle, once
         /// it has ever been provisioned. Lets a caller (<c>MatchGate.StartMatch</c>, via
@@ -57,6 +70,8 @@ namespace Kingdom.Net.Server.Bots
     {
         private readonly ICardDatabase _db;
         private readonly Func<SeatDeck, ISeatPolicy> _policyFactory;
+        private readonly Func<SeatDeck, ISeatPolicy> _greedyFactory;
+        private readonly Func<SeatDeck, ISeatPolicy> _secondMatchFactory;
         private readonly object _lock = new object();
         private readonly Dictionary<string, ResolvedBotAccount> _ready = new Dictionary<string, ResolvedBotAccount>(StringComparer.Ordinal);
         private readonly HashSet<string> _busy = new HashSet<string>(StringComparer.Ordinal);
@@ -66,11 +81,16 @@ namespace Kingdom.Net.Server.Bots
         /// question. Backs <see cref="IsBotAccount"/>.</summary>
         private readonly HashSet<AccountId> _botAccounts = new HashSet<AccountId>();
 
-        public BotPool(ICardDatabase db, Func<SeatDeck, ISeatPolicy>? policyFactory = null)
+        /// <param name="policyFactory">Ordinary bot fill's policy; null is Greedy.</param>
+        /// <param name="secondMatchFactory">A newcomer's second match (<see cref="BotOpponent.SecondMatch"/>);
+        /// null is Greedy.</param>
+        public BotPool(ICardDatabase db, Func<SeatDeck, ISeatPolicy>? policyFactory = null,
+            Func<SeatDeck, ISeatPolicy>? secondMatchFactory = null)
         {
             _db = db;
-            _policyFactory = policyFactory
-                ?? (_ => new GreedySeatPolicy(new CommandProcessor(_db), _db));
+            _greedyFactory = _ => new GreedySeatPolicy(new CommandProcessor(_db), _db);
+            _policyFactory = policyFactory ?? _greedyFactory;
+            _secondMatchFactory = secondMatchFactory ?? _greedyFactory;
         }
 
         public void MarkReady(ResolvedBotAccount account)
@@ -88,7 +108,9 @@ namespace Kingdom.Net.Server.Bots
         }
 
         /// <summary>
-        /// Seats one idle bot, chosen UNIFORMLY at random among the idle ones.
+        /// Seats one idle bot, chosen UNIFORMLY at random among the idle ones, playing the policy
+        /// <paramref name="opponent"/> names. The roster entry (name and deck) is the same draw
+        /// whichever policy plays it.
         ///
         /// <para><b>Why not simply the first idle entry.</b> That is what this did, and with a
         /// two-name roster it read as harmless. It is not a tie-break — <see cref="_ready"/> is keyed
@@ -103,8 +125,14 @@ namespace Kingdom.Net.Server.Bots
         /// seated is a matchmaking decision, made before the match exists, exactly like
         /// <c>MatchGate.MintSeed</c>'s own jitter.</para>
         /// </summary>
-        public BotHandle? TryAcquire()
+        public BotHandle? TryAcquire(BotOpponent opponent = BotOpponent.Default)
         {
+            Func<SeatDeck, ISeatPolicy> factory = opponent switch
+            {
+                BotOpponent.Greedy => _greedyFactory,
+                BotOpponent.SecondMatch => _secondMatchFactory,
+                _ => _policyFactory,
+            };
             lock (_lock)
             {
                 var idle = new List<string>(_ready.Count);
@@ -123,7 +151,7 @@ namespace Kingdom.Net.Server.Bots
                 var seat = new BotSeatRunner(
                     resolved.Username,
                     resolved.DisplayName,
-                    _policyFactory(resolved.Deck));
+                    factory(resolved.Deck));
                 return new BotHandle(resolved.Account, resolved.DisplayName, resolved.Deck, seat, () =>
                 {
                     lock (_lock) _busy.Remove(username);

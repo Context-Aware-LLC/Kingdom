@@ -201,6 +201,22 @@ create index if not exists quest_progress_player_day_idx
 -- Server-private, like the ladder tables above: Supabase's Data API gets no policies and no rows.
 alter table quest_progress enable row level security;
 
+-- Every match a player has finished, bot matches included (launch item 5, Sam 2026-10-26: a
+-- newcomer's first match is against Greedy and their second against H1). ONE ROW PER (player, match),
+-- never a counter, for quest_progress's reason: the key is the idempotency story, so a redelivered
+-- result writes nothing. The gate reads only the first two ids per player, through the primary key.
+-- A seat is a human's; bot accounts and AI soak never get a row (CompletedMatchLedger).
+create table if not exists completed_match (
+  player_id  text        not null,
+  match_id   text        not null,
+  ended_at   timestamptz not null,
+  primary key (player_id, match_id)
+);
+
+create index if not exists completed_match_player_ended_idx on completed_match (player_id, ended_at);
+
+alter table completed_match enable row level security;
+
 -- Achievements, the Ledger of Bad Ideas (AchievementCatalog). ONE ROW PER ACHIEVEMENT A PLAYER HAS
 -- EARNED, written once: the primary key keeps the first match and date, and a later earning
 -- writes nothing. Nothing ever deletes a row, because the stores behind it cannot delete an

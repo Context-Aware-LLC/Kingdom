@@ -49,6 +49,34 @@ namespace Kingdom.Net.Server.Tests.Bots
         }
 
         [Test]
+        public void A_Second_Match_Model_Without_Bot_Fill_Refuses_To_Start()
+        {
+            // The same rule for the pinned second-match model (launch item 5).
+            var cfg = NewConfig() with
+            {
+                SecondMatchBotModelPath = "F:/nonexistent/bot-model-h1",
+                BotRosterPath = null,
+            };
+
+            var ex = Assert.Throws<InvalidOperationException>(() => ServerApp.Build(cfg));
+            Assert.That(ex!.Message, Does.Contain("bot-fill is not enabled"));
+        }
+
+        [Test]
+        public void A_Second_Match_Model_That_Will_Not_Load_Refuses_To_Start()
+        {
+            var cfg = NewConfig() with
+            {
+                SecondMatchBotModelPath = "F:/nonexistent/bot-model-h1",
+                BotRosterPath = Support.SessionHarness.RepoFile("tooling", "data", "bot-roster.json"),
+                AccountStore = new Kingdom.Net.Server.Accounts.InMemoryAccountStore(new SystemTimeSource()),
+            };
+
+            var ex = Assert.Throws<InvalidOperationException>(() => ServerApp.Build(cfg));
+            Assert.That(ex!.Message, Does.Contain("could not load"));
+        }
+
+        [Test]
         public void No_Model_Starts_Quietly_As_Greedy()
         {
             // The common case and the one that must stay boring: every existing deploy sets none of

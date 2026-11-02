@@ -121,7 +121,10 @@ namespace Kingdom.Net.Server
             _time = time;
             _replay = replay;
             _setup = setup;
-            _telemetry = new MatchTelemetryRecorder(id, setup, telemetry, attribution, db);
+            // A seat whose policy nobody named writes no `policy` field, so soak captures stay byte
+            // for byte what the direct table writes (DirectCaptureTests).
+            _telemetry = new MatchTelemetryRecorder(id, setup, telemetry, attribution, db,
+                NamedPolicy(p0Policy), NamedPolicy(p1Policy));
             _attribution = attribution ?? MatchAttribution.None;
             _rankedMatchSink = rankedMatchSink ?? NullRankedMatchSink.Instance;
             _trainingEpisodes = trainingEpisodes;
@@ -801,5 +804,7 @@ namespace Kingdom.Net.Server
                 OnDisconnected(seat);
             }
         }
+
+        private static string? NamedPolicy(string policy) => policy == "unspecified" ? null : policy;
     }
 }

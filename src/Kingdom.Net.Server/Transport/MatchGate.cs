@@ -77,6 +77,13 @@ namespace Kingdom.Net.Server.Transport
         /// </summary>
         private readonly IChallengeTickets? _challenges;
 
+        /// <summary>
+        /// The first-match policy's count of each account's finished matches (launch item 5). Null
+        /// turns the policy off and every seat queues as it always has. Only a signed-in seat is
+        /// asked about: guests are tooling, and a bot never queues.
+        /// </summary>
+        private readonly ICompletedMatchCounter? _firstMatches;
+
         /// <summary>The first player of each accepted challenge to arrive, parked until the
         /// second does. Keyed by challenge id; never in <see cref="_matchmaking"/>.</summary>
         private readonly Dictionary<string, WaitingPlayer> _challengeWaiting =
@@ -120,7 +127,8 @@ namespace Kingdom.Net.Server.Transport
             ITrainingEpisodeStore? trainingEpisodes = null,
             OnboardingGrantService? onboarding = null,
             IEntitlementLedger? entitlementLedger = null,
-            IChallengeTickets? challenges = null)
+            IChallengeTickets? challenges = null,
+            ICompletedMatchCounter? firstMatches = null)
             : this(
                 opts,
                 time,
@@ -138,7 +146,8 @@ namespace Kingdom.Net.Server.Transport
                 trainingEpisodes,
                 onboarding,
                 entitlementLedger,
-                challenges)
+                challenges,
+                firstMatches)
         {
         }
 
@@ -152,7 +161,8 @@ namespace Kingdom.Net.Server.Transport
             ITrainingEpisodeStore? trainingEpisodes = null,
             OnboardingGrantService? onboarding = null,
             IEntitlementLedger? entitlementLedger = null,
-            IChallengeTickets? challenges = null)
+            IChallengeTickets? challenges = null,
+            ICompletedMatchCounter? firstMatches = null)
         {
             _opts = opts;
             _time = time;
@@ -171,6 +181,7 @@ namespace Kingdom.Net.Server.Transport
             _onboarding = onboarding;
             _entitlementLedger = entitlementLedger;
             _challenges = challenges;
+            _firstMatches = firstMatches;
         }
 
         public int LiveSessions
@@ -225,7 +236,12 @@ namespace Kingdom.Net.Server.Transport
             long EnqueuedAtMs,
             /// <summary>A signed-in human: this seat writes first-session funnel rows
             /// (<see cref="Funnel"/>). False for a guest and for a bot.</summary>
-            bool FunnelTracked = false);
+            bool FunnelTracked = false,
+            /// <summary>Set for a newcomer the first-match policy owes a bot (launch item 5). Such a
+            /// waiter is in <see cref="_waiting"/> but NEVER in <see cref="_matchmaking"/>, so no
+            /// pairing can reach it, and <see cref="TryBotFillTimedOutTickets"/> seats it with no
+            /// delay against this policy.</summary>
+            BotOpponent? FirstMatchBot = null);
 
         /// <summary>Per-match attribution, or null once the session is gone. Read by the telemetry
         /// emitter; exposed for the identity tests.</summary>
@@ -537,21 +553,28 @@ namespace Kingdom.Net.Server.Transport
             var ticket = new MatchmakingTicket(
                 Guid.NewGuid().ToString("N"),
                 rating);
+            BotOpponent? firstMatchBot = await FirstMatchBotAsync(account, funnelTracked, ct);
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
             var waiter = new WaitingPlayer(
-                ticket, conn, account, displayName, submitted, "human", mySeating, _time.NowMs, funnelTracked);
+                ticket, conn, account, displayName, submitted, "human", mySeating, _time.NowMs, funnelTracked,
+                firstMatchBot);
 
             lock (_lock)
             {
                 if (_sessions.Count + _pendingSessions >= _opts.MaxSessions)
                     return (null, 1013, CapacityRefusal);   // RC Q4: refuse before queueing
                 _waiting.Add(ticket.Id, waiter);
-                _matchmaking.Enqueue(ticket);
+                // A newcomer owed a bot never enters the pairing queue, so no human can be paired
+                // with them however the queue is woken.
+                if (firstMatchBot is null) _matchmaking.Enqueue(ticket);
             }
             // Outside the lock: the sink fsyncs, and the queue must not wait on a disk.
             if (funnelTracked) WriteFunnel(ServerFunnelRows.Queue(account.Value, _time.NowMs));
 
             StartReadyMatches();
+            // Zero fill delay for a newcomer. If every bot is busy they stay parked, still out of
+            // the queue, and the wake below retries.
+            if (firstMatchBot is not null) TryBotFillTimedOutTickets();
 
             // Re-run the policy when a band boundary passes so two already-queued ratings can
             // match because of waiting alone; a third arrival is not required to wake the queue.
@@ -648,6 +671,36 @@ namespace Kingdom.Net.Server.Transport
             }
         }
 
+        /// <summary>
+        /// The bot <see cref="FirstMatchPolicy"/> owes this seat, or null for the ordinary queue.
+        /// Only a signed-in seat on a box with both the policy and a bot pool is asked.
+        ///
+        /// <para><b>A count that cannot be read is treated as a newcomer's</b>, and they play
+        /// Greedy: the one outcome launch item 5 forbids is a newcomer meeting a human, and a
+        /// veteran dealt one easy bot match is the cheap side of that trade.</para>
+        /// </summary>
+        private async Task<BotOpponent?> FirstMatchBotAsync(AccountId account, bool funnelTracked, CancellationToken ct)
+        {
+            if (_firstMatches is null || _botPool is null || !funnelTracked) return null;
+            int completed;
+            try
+            {
+                completed = await _firstMatches.CountAsync(account, FirstMatchPolicy.BotOnlyMatches, ct);
+            }
+            catch (Exception ex) when (!ct.IsCancellationRequested)
+            {
+                Console.Error.WriteLine(
+                    "[gate] first-match count unreadable for player_id={0}, seating as a newcomer: {1}",
+                    account.Value, ex.Message);
+                completed = 0;
+            }
+            BotOpponent? bot = FirstMatchPolicy.For(completed);
+            if (bot is not null)
+                Console.Error.WriteLine("[gate] first-match player_id={0} completed={1} bot={2}",
+                    account.Value, completed, bot);
+            return bot;
+        }
+
         private void CancelChallengeWaiting(string challengeId, WaitingPlayer waiter)
         {
             lock (_lock)
@@ -717,6 +770,9 @@ namespace Kingdom.Net.Server.Transport
         /// two humans go through — no new pairing algorithm, no reliance on rating-band luck (design doc
         /// §Timeout → direct pairing). A no-op unless <see cref="_botPool"/> is configured. If the pool has
         /// no bot free, the ticket is left queued and re-evaluated on the next wake.
+        ///
+        /// <para>A newcomer the first-match policy owes a bot is due at once, whatever the delay,
+        /// and is seated against the policy it is owed rather than the bot-fill default.</para>
         /// </summary>
         private void TryBotFillTimedOutTickets()
         {
@@ -731,12 +787,12 @@ namespace Kingdom.Net.Server.Transport
                     long now = _time.NowMs;
                     foreach (var w in _waiting.Values)
                     {
-                        if (now - w.EnqueuedAtMs < _opts.BotFillDelayMs) continue;
+                        if (w.FirstMatchBot is null && now - w.EnqueuedAtMs < _opts.BotFillDelayMs) continue;
                         if (oldest is null || w.EnqueuedAtMs < oldest.EnqueuedAtMs) oldest = w;
                     }
                     if (oldest is null) return;
 
-                    bot = _botPool.TryAcquire();
+                    bot = _botPool.TryAcquire(oldest.FirstMatchBot ?? BotOpponent.Default);
                     if (bot is null) return;   // no bot free; leave the ticket queued, retry next wake
 
                     _waiting.Remove(oldest.Ticket.Id);

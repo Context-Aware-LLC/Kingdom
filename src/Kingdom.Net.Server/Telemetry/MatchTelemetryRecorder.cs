@@ -101,12 +101,17 @@ namespace Kingdom.Net.Server.Telemetry
         /// <summary>The Council's Findings read off each command's events.</summary>
         private readonly FindingsObserver _findings;
 
+        /// <summary>Each seat's policy identity, written on its <c>match_seat</c> row.</summary>
+        private readonly string?[] _policies = new string?[2];
+
         /// <param name="db">The card data the findings read a card's cost, rarity and type from.
         /// Null leaves those findings at none, which only a test that does not reach them should pass.</param>
         public MatchTelemetryRecorder(
             MatchId id, MatchSetup setup, ITelemetrySink? telemetry, MatchAttribution? attribution,
-            ICardDatabase? db = null)
+            ICardDatabase? db = null, string? p0Policy = null, string? p1Policy = null)
         {
+            _policies[0] = p0Policy;
+            _policies[1] = p1Policy;
             _findings = new FindingsObserver(db);
             _id = id;
             _setup = setup;
@@ -368,7 +373,8 @@ namespace Kingdom.Net.Server.Telemetry
                 _findings.BigMinionsBounced[seat],
                 _findings.LegendariesLost[seat],
                 _findings.MostBulwarks[seat],
-                state.Players[seat].Hero.CurrentHealth <= 0 ? _findings.FellTo[seat] : FinalBlow.None);
+                state.Players[seat].Hero.CurrentHealth <= 0 ? _findings.FellTo[seat] : FinalBlow.None,
+                _policies[seat]);
         }
 
         /// <summary>

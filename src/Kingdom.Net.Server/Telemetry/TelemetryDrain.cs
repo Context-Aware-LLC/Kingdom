@@ -286,13 +286,17 @@ namespace Kingdom.Net.Server.Telemetry
         {
             var kept = new List<string>();
             foreach (var e in s.GetProperty("mulliganKept").EnumerateArray()) kept.Add(CardId(e));
+            // `policy` is absent on lines written before it existed; those land as null.
+            object policy = s.TryGetProperty("policy", out var pol) && pol.ValueKind == JsonValueKind.String
+                ? pol.GetString()! : DBNull.Value;
             into.Add(Cmd(
-                "insert into match_seat (match_id, seat, account_id, class_id, deck_id, deck_hash, result, mulligan_kept) " +
-                "values ($1,$2,$3,$4,$5,$6,$7,$8) on conflict (match_id, seat) do nothing",
+                "insert into match_seat (match_id, seat, account_id, class_id, deck_id, deck_hash, result, mulligan_kept, policy) " +
+                "values ($1,$2,$3,$4,$5,$6,$7,$8,$9) on conflict (match_id, seat) do nothing",
                 P(NpgsqlDbType.Text, mid), P(NpgsqlDbType.Text, seat), P(NpgsqlDbType.Text, Str(s, "accountId")),
                 P(NpgsqlDbType.Text, Str(s, "classId")), P(NpgsqlDbType.Text, Str(s, "deckId")),
                 P(NpgsqlDbType.Text, Str(s, "deckHash")), P(NpgsqlDbType.Text, Str(s, "result")),
-                P(NpgsqlDbType.Array | NpgsqlDbType.Text, kept.ToArray())));
+                P(NpgsqlDbType.Array | NpgsqlDbType.Text, kept.ToArray()),
+                P(NpgsqlDbType.Text, policy)));
         }
 
         private static void BuildMatchVoid(JsonElement r, List<NpgsqlBatchCommand> into)

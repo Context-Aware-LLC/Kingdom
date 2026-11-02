@@ -23,12 +23,18 @@ COPY tooling/data/bot-roster.json /app/bot-roster.json
 # KINGDOM_BOT_MODEL and bots play Greedy; set it to a directory that will not load and the
 # server refuses to start rather than quietly serve Greedy.
 COPY tooling/data/bot-model/ /app/bot-model/
+# The network a newcomer's SECOND match is played against (launch item 5, Sam 2026-10-26): H1,
+# checkpoint 978b89297989, pinned. Never the moving champion above. Unset
+# KINGDOM_BOT_MODEL_SECOND_MATCH and game 2 is Greedy too; set it to a directory that will not load
+# and the server refuses to start.
+COPY tooling/data/bot-model-h1/ /app/bot-model-h1/
 # /data is the Fly volume (fly.toml [mounts], vol_rkgwj19p5yykeyo4). All durable outputs MUST point
 # inside it: the container filesystem is replaced on every deploy, so a relative default would
 # collect telemetry that looks healthy right up until the next machine swap eats it (C-G1-8).
 ENV KINGDOM_CARDS=/app/cards \
     KINGDOM_BOT_ROSTER=/app/bot-roster.json \
     KINGDOM_BOT_MODEL=/app/bot-model \
+    KINGDOM_BOT_MODEL_SECOND_MATCH=/app/bot-model-h1 \
     KINGDOM_REPLAYS=/data/replays \
     KINGDOM_TRAINING_INBOX=/data/training-inbox \
     KINGDOM_TELEMETRY=/data \

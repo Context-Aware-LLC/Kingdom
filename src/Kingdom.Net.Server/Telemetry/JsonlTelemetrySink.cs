@@ -207,6 +207,9 @@ namespace Kingdom.Net.Server.Telemetry
             w.Name("legendariesLost"); w.I32(s.LegendariesLost);
             w.Name("mostBulwarks"); w.I32(s.MostBulwarks);
             w.Name("fellTo"); w.I32((int)s.FellTo);
+            // Omitted rather than null when unknown: the drain reads a missing key as null, and
+            // every line written before this field existed has none.
+            if (s.Policy is not null) { w.Name("policy"); w.Str(s.Policy); }
             w.EndObject();
         }
 

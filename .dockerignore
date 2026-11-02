@@ -43,6 +43,8 @@ tooling/data/*
 !tooling/data/bot-roster.json
 # --- the bot's network (Dockerfile.server, COPY tooling/data/bot-model/) ---
 !tooling/data/bot-model/
+# --- the second-match bot's network, H1 pinned (Dockerfile.server, COPY tooling/data/bot-model-h1/) ---
+!tooling/data/bot-model-h1/
 
 # The web card authoring tool (deploy/cardweb/Dockerfile). This file is an ALLOWLIST -- it opens
 # with `*`, so anything not re-included here is simply absent from the build context and the

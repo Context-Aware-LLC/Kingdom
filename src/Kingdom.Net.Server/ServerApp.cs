@@ -235,6 +235,23 @@ namespace Kingdom.Net.Server
         public string? BotModelPath { get; init; }
 
         /// <summary>
+        /// The bot-model directory a newcomer's SECOND match is played against (launch item 5, Sam
+        /// 2026-10-26): H1, pinned, never the moving champion in <see cref="BotModelPath"/>. Unset
+        /// means that match is Greedy too, and the server says so at startup; set and unloadable
+        /// refuses to start, as <see cref="BotModelPath"/> does. From
+        /// <c>KINGDOM_BOT_MODEL_SECOND_MATCH</c>.
+        /// </summary>
+        public string? SecondMatchBotModelPath { get; init; }
+
+        /// <summary>
+        /// Where each player's finished matches are recorded, which is how the first-match policy
+        /// knows a newcomer. Null (default) uses <see cref="InMemoryCompletedMatchStore"/>, so a box
+        /// with no Postgres forgets on restart and deals a returning player Greedy again. Shares the
+        /// accounts database in production.
+        /// </summary>
+        public ICompletedMatchStore? CompletedMatches { get; init; }
+
+        /// <summary>
         /// The oldest store build <c>GET /update-gate</c> lets play, per platform: Android
         /// versionCode and iOS build number. 0 (default) holds nobody back. From
         /// <c>KINGDOM_MIN_BUILD_ANDROID</c> / <c>KINGDOM_MIN_BUILD_IOS</c>.
@@ -320,6 +337,9 @@ namespace Kingdom.Net.Server
             IAchievementStore? achievements = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresAchievementStore(accountsDb!);
+            ICompletedMatchStore? completedMatches = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new PostgresCompletedMatchStore(accountsDb!);
 
             return new ServerConfig
             {
@@ -343,12 +363,14 @@ namespace Kingdom.Net.Server
                 EntitlementLedger = entitlementLedger,
                 QuestProgress = questProgress,
                 Achievements = achievements,
+                CompletedMatches = completedMatches,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
                 // deployment — null here (unset) is what keeps every existing deploy's matchmaking
                 // behavior unchanged, same as every other optional seam above.
                 BotRosterPath = KingdomEnv.Get("KINGDOM_BOT_ROSTER"),
                 BotModelPath = KingdomEnv.Get("KINGDOM_BOT_MODEL"),
+                SecondMatchBotModelPath = KingdomEnv.Get("KINGDOM_BOT_MODEL_SECOND_MATCH"),
                 MinClientBuildAndroid = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_ANDROID"),
                 MinClientBuildIos = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_IOS"),
                 // Guests are tooling only, so a booted server turns them away unless it opted in.
@@ -423,19 +445,19 @@ namespace Kingdom.Net.Server
         /// <see cref="LearnedBotCounters"/> counts.
         /// </summary>
         private static (Func<SeatDeck, ISeatPolicy> Factory, LearnedBot Bot)? BuildBotPolicyFactory(
-            ServerConfig cfg, ICardDatabase db)
+            string? modelPath, string envVar, string role, ICardDatabase db)
         {
-            if (string.IsNullOrWhiteSpace(cfg.BotModelPath)) return null;
+            if (string.IsNullOrWhiteSpace(modelPath)) return null;
 
             OnnxCheckpointScorer scorer;
             try
             {
-                scorer = OnnxCheckpointScorer.Open(cfg.BotModelPath!, intraOpThreads: 1);
+                scorer = OnnxCheckpointScorer.Open(modelPath!, intraOpThreads: 1);
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException(
-                    $"KINGDOM_BOT_MODEL is set to '{cfg.BotModelPath}' but the model could not "
+                    $"{envVar} is set to '{modelPath}' but the model could not "
                     + $"load: {ex.GetType().Name}: {ex.Message}. Refusing to start with bot seats "
                     + "silently falling back to Greedy.", ex);
             }
@@ -445,11 +467,11 @@ namespace Kingdom.Net.Server
             foreach (var card in db.AllCollectible()) collectible.Add(card.Id);
             IReadOnlyList<int> unknown = scorer.UnknownCards(collectible);
             Console.Error.WriteLine(
-                $"[bots] learned bot seats enabled: checkpoint sha256={bot.CheckpointSha256} "
+                $"[bots] learned bot seats enabled ({role}): checkpoint sha256={bot.CheckpointSha256} "
                 + $"model sha256={bot.ModelSha256}");
             if (unknown.Count > 0)
                 Console.Error.WriteLine(
-                    $"[bots] the bot model does not know {unknown.Count} collectible card(s): "
+                    $"[bots] the {role} bot model does not know {unknown.Count} collectible card(s): "
                     + string.Join(", ", unknown));
             return (deck =>
             {
@@ -523,15 +545,23 @@ namespace Kingdom.Net.Server
             // all -- the exact failure the fatal-startup rule exists to prevent, arriving through
             // the one door it did not cover. There are THREE cases, not two: never configured,
             // configured and broken, and configured but unreachable.
-            if (botPool is null && !string.IsNullOrWhiteSpace(cfg.BotModelPath)
-                && (string.IsNullOrWhiteSpace(cfg.BotRosterPath) || cfg.AccountStore is null))
+            foreach (var (path, envVar) in new[]
+                     {
+                         (cfg.BotModelPath, "KINGDOM_BOT_MODEL"),
+                         (cfg.SecondMatchBotModelPath, "KINGDOM_BOT_MODEL_SECOND_MATCH"),
+                     })
             {
-                throw new InvalidOperationException(
-                    "KINGDOM_BOT_MODEL is set but bot-fill is not enabled: it needs "
-                    + "KINGDOM_BOT_ROSTER and a configured AccountStore. Refusing to start as a "
-                    + "Greedy server while configured for a learned one.");
+                if (botPool is null && !string.IsNullOrWhiteSpace(path)
+                    && (string.IsNullOrWhiteSpace(cfg.BotRosterPath) || cfg.AccountStore is null))
+                {
+                    throw new InvalidOperationException(
+                        $"{envVar} is set but bot-fill is not enabled: it needs "
+                        + "KINGDOM_BOT_ROSTER and a configured AccountStore. Refusing to start as a "
+                        + "Greedy server while configured for a learned one.");
+                }
             }
             LearnedBot? learnedBot = null;
+            LearnedBot? secondMatchBot = null;
 
             if (botPool is null && !string.IsNullOrWhiteSpace(cfg.BotRosterPath))
             {
@@ -542,9 +572,17 @@ namespace Kingdom.Net.Server
                 else
                 {
                     var roster = BotRoster.LoadFromFile(cfg.BotRosterPath!, db);
-                    var learned = BuildBotPolicyFactory(cfg, db);
+                    var learned = BuildBotPolicyFactory(cfg.BotModelPath, "KINGDOM_BOT_MODEL", "bot fill", db);
                     learnedBot = learned?.Bot;
-                    var pool = new BotPool(db, learned?.Factory);
+                    // A newcomer's second match (launch item 5). Its own scorer, pinned: the bot-fill
+                    // model above moves with every promotion, and this one must not.
+                    var second = BuildBotPolicyFactory(
+                        cfg.SecondMatchBotModelPath, "KINGDOM_BOT_MODEL_SECOND_MATCH", "second match", db);
+                    secondMatchBot = second?.Bot;
+                    if (second is null)
+                        Console.Error.WriteLine(
+                            "[bots] KINGDOM_BOT_MODEL_SECOND_MATCH is unset: a newcomer's second match is Greedy.");
+                    var pool = new BotPool(db, learned?.Factory, second?.Factory);
                     builder.Services.AddSingleton<IHostedService>(
                         new BotAccountProvisioner(cfg.AccountStore, roster, pool));
                     botPool = pool;
@@ -611,6 +649,19 @@ namespace Kingdom.Net.Server
                     "[rewards] no {0} configured — match Gold rewards are DISABLED and every finished " +
                     "match pays nothing.",
                     cfg.EntitlementLedger is null ? "entitlement ledger" : "account store");
+            }
+
+            // The first-match policy (launch item 5): a signed-in newcomer's first two matches are
+            // against a fixed bot, so it needs a bot pool, and it reads each player's finished
+            // matches off the same ranked sink. Without bot-fill there is nothing to seat a
+            // newcomer against, and matchmaking is exactly as it was.
+            CompletedMatchLedger? firstMatches = null;
+            if (botPool is not null)
+            {
+                firstMatches = new CompletedMatchLedger(
+                    cfg.CompletedMatches ?? new InMemoryCompletedMatchStore(), botPool.IsBotAccount);
+                builder.Services.AddSingleton<IHostedService>(firstMatches);
+                matchSink = new CompositeRankedMatchSink(matchSink, firstMatches);
             }
 
             // Daily quests (dev-docs/specs/daily-quests.md). Same two prerequisites as the reward
@@ -709,7 +760,8 @@ namespace Kingdom.Net.Server
                 trainingEpisodes,
                 onboarding,
                 cfg.EntitlementLedger,
-                challenges);
+                challenges,
+                firstMatches);
 
             // The social surface (#409). The hub asks the gate who is in a match and the gate
             // tells the hub when that changes; neither holds the other, so a box with no social
@@ -778,6 +830,14 @@ namespace Kingdom.Net.Server
                     model = learnedBot.ModelSha256,
                     decisions = learnedBot.Counters.Decisions,
                     fallbacks = learnedBot.Counters.Fallbacks,
+                },
+                // A newcomer's second match (launch item 5). Null when it plays Greedy.
+                secondMatchBot = secondMatchBot is null ? null : new
+                {
+                    checkpoint = secondMatchBot.CheckpointSha256,
+                    model = secondMatchBot.ModelSha256,
+                    decisions = secondMatchBot.Counters.Decisions,
+                    fallbacks = secondMatchBot.Counters.Fallbacks,
                 },
             }));
             // GET /update-gate — what the client asks before it shows a menu: may this build play.

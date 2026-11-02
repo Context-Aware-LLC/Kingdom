@@ -125,6 +125,19 @@ namespace Kingdom.Net.Server.Tests
         }
 
         [Test]
+        public void A_Seat_Carries_The_Policy_That_Played_It_And_A_Human_Seat_Carries_None()
+        {
+            // Which bot a newcomer met (launch item 5) is read off this field.
+            MatchCompleteEvent e = Complete("m1");
+            e = e with { P1 = e.P1 with { Policy = "greedy-ai.v3" } };
+            new JsonlTelemetrySink(_dir, "local").MatchComplete(e);
+
+            var players = Rows().Single().GetProperty("players");
+            Assert.That(players[1].GetProperty("policy").GetString(), Is.EqualTo("greedy-ai.v3"));
+            Assert.That(players[0].TryGetProperty("policy", out _), Is.False);
+        }
+
+        [Test]
         public void A_Seat_Carries_Its_Findings_Counters()
         {
             MatchCompleteEvent e = Complete("m1");
