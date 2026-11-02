@@ -265,7 +265,7 @@ namespace Kingdom.Net.Server.Tests
         private static int FirstCollectibleOfClass(CardClass cls)
             => Db.AllCollectible().Where(d => d.Class == cls).OrderBy(d => d.Id).First().Id;
 
-        // ── Socket harness (mirrors GuestIdentityTests) ───────────────────────────
+        // ── Socket harness (mirrors TokenlessIdentityTests) ───────────────────────────
 
         private static async Task WithServerAsync(Func<Uri, Task> body)
         {

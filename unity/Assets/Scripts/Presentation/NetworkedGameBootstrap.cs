@@ -165,11 +165,11 @@ namespace Kingdom.Presentation
                 // the socket on a bad one and never downgrades silently.
                 //
                 // A build with sign-in never connects without a token (Sam, 2026-10-18), and every release
-                // build has sign-in — so a player is never a guest. A failed token (refresh refused,
+                // build has sign-in. A failed token (refresh refused,
                 // network down) stops the boot here with Retry; a deployment with sign-in would refuse the
                 // tokenless hello anyway ("sign-in required"), and this is the legible version of that.
                 // Only an unconfigured dev build connects without a token, and only a tooling server that
-                // sets ServerOptions.AllowGuestMatches seats it.
+                // sets ServerOptions.AllowTokenlessMatches seats it.
                 Task<string> authTokenTask = AuthGateway.TokenForConnectAsync();
                 while (!authTokenTask.IsCompleted) yield return null;
                 string authToken = authTokenTask.Status == TaskStatus.RanToCompletion ? authTokenTask.Result : "";
@@ -211,7 +211,7 @@ namespace Kingdom.Presentation
                     DisplayName = "",
                     // EF-074e: the Supabase JWT; never empty on a configured build (checked above). The
                     // server keys the seat on it. Empty only from an unconfigured dev build, which a
-                    // server seats on the device token only when ServerOptions.AllowGuestMatches is set.
+                    // server seats on the device token only when ServerOptions.AllowTokenlessMatches is set.
                     AuthToken = authToken,
                     DeckSubmission = selectedDeck,
                     DevCapture = Debug.isDebugBuild,

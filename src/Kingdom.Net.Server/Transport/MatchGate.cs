@@ -33,7 +33,7 @@ namespace Kingdom.Net.Server.Transport
     ///
     /// <para><b>C-G1-8:</b> the socket connect is no longer the hello. A fresh socket must open
     /// with a <see cref="HelloMsg"/> carrying a device token, which becomes the seat's
-    /// <see cref="AccountId"/> — stable across restarts, unlike the <c>guest-&lt;counter&gt;</c>
+    /// <see cref="AccountId"/> — stable across restarts, unlike the per-process counter
     /// it replaces. A socket that says nothing is refused rather than queued, which also means a
     /// dead waiter can no longer occupy the pairing slot.</para>
     ///
@@ -80,7 +80,7 @@ namespace Kingdom.Net.Server.Transport
         /// <summary>
         /// The first-match policy's count of each account's finished matches (launch item 5). Null
         /// turns the policy off and every seat queues as it always has. Only a signed-in seat is
-        /// asked about: guests are tooling, and a bot never queues.
+        /// asked about: a tokenless seat is tooling, and a bot never queues.
         /// </summary>
         private readonly ICompletedMatchCounter? _firstMatches;
 
@@ -100,7 +100,7 @@ namespace Kingdom.Net.Server.Transport
         /// Where the first-session funnel's server rows go (pre-publication item 2): <c>hello</c>,
         /// <c>queue</c>, <c>queue_refused</c>, and — through each <see cref="MatchSession"/> —
         /// <c>first_action</c>. Written only for a SIGNED-IN seat: every player signs in, so the
-        /// tokenless guest path is tooling (NetSoak, in-process tests) and a bot never says hello,
+        /// tokenless path is tooling (NetSoak, in-process tests) and a bot never says hello,
         /// and neither is a stranger the funnel is counting.
         /// </summary>
         public IFunnelSink Funnel { get; set; } = NullFunnelSink.Instance;
@@ -116,7 +116,7 @@ namespace Kingdom.Net.Server.Transport
         private readonly Dictionary<string, (AccountId p0, AccountId p1)> _accounts =
             new Dictionary<string, (AccountId, AccountId)>(StringComparer.Ordinal);
 
-        private int _nextGuest;
+        private int _nextSeat;
 
         public MatchGate(
             ServerOptions opts, ITimeSource time, ICardDatabase db, IDeckProvider decks,
@@ -235,7 +235,7 @@ namespace Kingdom.Net.Server.Transport
             /// on the SAME band-widening wake the queue already uses — no new timer.</summary>
             long EnqueuedAtMs,
             /// <summary>A signed-in human: this seat writes first-session funnel rows
-            /// (<see cref="Funnel"/>). False for a guest and for a bot.</summary>
+            /// (<see cref="Funnel"/>). False for a tokenless tooling seat and for a bot.</summary>
             bool FunnelTracked = false,
             /// <summary>Set for a newcomer the first-match policy owes a bot (launch item 5). Such a
             /// waiter is in <see cref="_waiting"/> but NEVER in <see cref="_matchmaking"/>, so no
@@ -301,19 +301,19 @@ namespace Kingdom.Net.Server.Transport
             // ── EF-074c (NOR-229). AuthToken present → verified against Supabase JWKS via
             //    IIdentityTokenVerifier; on success the subject hash is resolved through IAccountStore
             //    to a stable player_id. An invalid token CLOSES the socket — no silent fallback to
-            //    guest, because a downgrade is how a rejected credential still gets in.
-            //    AuthToken absent → guest path (AccountId.FromDeviceToken), only where
-            //    ServerOptions.AllowGuestMatches opts in.
+            //    the tokenless path, because a downgrade is how a rejected credential still gets in.
+            //    AuthToken absent → tokenless tooling path (AccountId.FromDeviceToken), only where
+            //    ServerOptions.AllowTokenlessMatches opts in.
             //
             //    VULN-003 latent item 2 in security.md remains standing: its trigger is value
             //    attaching to an account, and this ticket attaches none. See security.md §Latent.
             AccountId account;
             // The durable Account behind this seat, when one was resolved through the store. It carries
             // the AccountKind and the player_id that AccountOwnedCounts.ForAsync reads to gate L6 on a
-            // submitted deck (NOR-313); null on every path that never touches the store (guest, or
+            // submitted deck (NOR-313); null on every path that never touches the store (tokenless, or
             // authenticated with no store), which is the "ownership unknown, do not constrain" case.
             Account? deckOwnerAccount = null;
-            // A signed-in seat is a player the first-session funnel counts; a guest is tooling.
+            // A signed-in seat is a player the first-session funnel counts; a tokenless seat is tooling.
             bool funnelTracked = false;
             // The name this seat is shown under. For a signed-in player it is the one held against
             // their identity, read off the token this method has just verified; see below.
@@ -380,11 +380,11 @@ namespace Kingdom.Net.Server.Transport
             }
             else
             {
-                // A device token alone is a guest: no collection to check a deck against, no quests,
+                // A device token alone is a tokenless tooling seat: no collection to check a deck against, no quests,
                 // no achievements. Players never get here (Sam, 2026-10-18) — the client refuses to
-                // connect without a sign-in token — so a deployment with sign-in turns guests away,
-                // and only a dev or tooling box (NetSoak) opts in. See ServerOptions.AllowGuestMatches.
-                if (!_opts.AllowGuestMatches)
+                // connect without a sign-in token — so a deployment with sign-in turns it away,
+                // and only a dev or tooling box (NetSoak) opts in. See ServerOptions.AllowTokenlessMatches.
+                if (!_opts.AllowTokenlessMatches)
                 {
                     conn.Close(1008, "sign-in required");
                     await conn.PumpTask;
@@ -395,7 +395,7 @@ namespace Kingdom.Net.Server.Transport
             }
 
             // ── VULN-002 §4 (EF-073). THIS IS THE HALF THAT COUNTS. The name is peer-authored either
-            //    way: a signed-in player writes their own user_metadata, and a guest types theirs into
+            //    way: a signed-in player writes their own user_metadata, and a tokenless tooling seat types its own into
             //    the hello. So it is re-checked here, on arrival, with the IDENTICAL predicate —
             //    Kingdom.Core.Collection is UnityEngine-free for exactly this reason, and a
             //    re-implementation here would be a second definition free to drift on a length or a
@@ -612,8 +612,8 @@ namespace Kingdom.Net.Server.Transport
         /// <para><b>The ticket is judged against the AUTHENTICATED account, not taken on its
         /// own.</b> <see cref="IChallengeTickets.Redeem"/> is handed the account this socket's
         /// hello resolved to, so a ticket in the wrong hands — sniffed, guessed, or presented by
-        /// a guest — redeems nothing. A device-token guest can never hold one: tickets are only
-        /// issued over <c>/social</c>, which has no guest path.</para>
+        /// a tokenless seat — redeems nothing. A tokenless seat can never hold one: tickets are only
+        /// issued over <c>/social</c>, which requires a sign-in token.</para>
         ///
         /// <para>The first to arrive parks in <see cref="_challengeWaiting"/>; the second starts
         /// the match. If the second never comes the first is told so after
@@ -865,8 +865,8 @@ namespace Kingdom.Net.Server.Transport
                 // PlayerId stays a PER-MATCH handle and is deliberately NOT the identity: it is
                 // broadcast to the opponent in OpponentInfo and it lands in hash-canonical GameState.
                 // Identity rides alongside in _accounts, server-side only (C-G1-8).
-                var p0 = new PlayerId("guest-" + Interlocked.Increment(ref _nextGuest));
-                var p1 = new PlayerId("guest-" + Interlocked.Increment(ref _nextGuest));
+                var p0 = new PlayerId("seat-" + Interlocked.Increment(ref _nextSeat));
+                var p1 = new PlayerId("seat-" + Interlocked.Increment(ref _nextSeat));
                 var id = new MatchId(Guid.NewGuid().ToString("N"));
                 matchKey = id.Value;
                 ulong seed = MintSeed();

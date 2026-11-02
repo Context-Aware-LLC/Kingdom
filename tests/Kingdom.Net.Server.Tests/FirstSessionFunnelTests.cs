@@ -549,7 +549,7 @@ namespace Kingdom.Net.Server.Tests
 
         [Test]
         [CancelAfter(60_000)]
-        public async Task Guest_Tooling_Seats_Write_No_Funnel_Rows()
+        public async Task Tokenless_Tooling_Seats_Write_No_Funnel_Rows()
         {
             var sink = new InMemoryFunnelSink();
             await WithAppAsync(sink, null, null, async (_, wsUri) =>
@@ -557,9 +557,9 @@ namespace Kingdom.Net.Server.Tests
                 using var c0 = new ClientWebSocket();
                 using var c1 = new ClientWebSocket();
                 await c0.ConnectAsync(wsUri, CancellationToken.None);
-                await SendHelloAsync(c0, "guest-a", "");
+                await SendHelloAsync(c0, "tokenless-a", "");
                 await c1.ConnectAsync(wsUri, CancellationToken.None);
-                await SendHelloAsync(c1, "guest-b", "");
+                await SendHelloAsync(c1, "tokenless-b", "");
                 var start0 = await ExpectAsync<MatchStartMsg>(c0);
                 await ExpectAsync<MatchStartMsg>(c1);
                 var matchId = new MatchId(start0.Snapshot.State.Id.Value);
@@ -603,7 +603,7 @@ namespace Kingdom.Net.Server.Tests
                 Options = new ServerOptions
                 {
                     HelloTimeoutMs = 30_000,
-                    AllowGuestMatches = true,
+                    AllowTokenlessMatches = true,
                     MaxSessions = maxSessions,
                 },
             });

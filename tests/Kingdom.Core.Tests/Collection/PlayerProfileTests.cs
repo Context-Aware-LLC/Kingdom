@@ -6,7 +6,7 @@ using Kingdom.Core.Collection;
 namespace Kingdom.Core.Tests.Collection
 {
     /// <summary>
-    /// The display-name half of guest identity (accounts posture decision 6a).
+    /// The device-local display-name profile.
     ///
     /// <para>The behaviours worth pinning are the ones a caller would otherwise re-derive: first run
     /// is an unnamed profile and not an error, a corrupt file is an error and not an unnamed profile,

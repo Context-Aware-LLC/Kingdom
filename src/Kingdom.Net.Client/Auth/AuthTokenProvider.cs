@@ -11,8 +11,8 @@ namespace Kingdom.Net.Client.Auth
     /// <para><b>This never throws on the connect path.</b> <see cref="TokenForConnectAsync"/> returns
     /// the empty string for every unhappy case — no project configured, not signed in, refresh
     /// refused, network down. Empty is not a way into a match: a configured client refuses to connect
-    /// without a token and shows Retry, so a player is never a guest. Only tooling connects tokenless,
-    /// to a server that sets <c>ServerOptions.AllowGuestMatches</c>. The server has no silent
+    /// without a token and shows Retry. Only tooling connects tokenless,
+    /// to a server that sets <c>ServerOptions.AllowTokenlessMatches</c>. The server has no silent
     /// downgrade — it closes the socket on a bad token — so sending a token we already know is dead
     /// would turn a sign-in problem into a failed match.</para>
     ///

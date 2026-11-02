@@ -84,8 +84,8 @@ namespace Kingdom.Net.Server.Tests.Social
                 using (ClientWebSocket thief = await MatchSocketAsync(ws, Cy, annTicket))
                     Assert.That(await ClosedAsync(thief), Is.True,
                         "Ann's ticket presented by another signed-in account must seat nobody");
-                using (ClientWebSocket guest = await MatchSocketAsync(ws, authToken: "", benTicket))
-                    Assert.That(await ClosedAsync(guest), Is.True, "nor by a guest");
+                using (ClientWebSocket tokenless = await MatchSocketAsync(ws, authToken: "", benTicket))
+                    Assert.That(await ClosedAsync(tokenless), Is.True, "nor by a tokenless seat");
 
                 // ── the private match ───────────────────────────────────────────────────
                 using ClientWebSocket annMatch = await MatchSocketAsync(ws, Ann, annTicket);

@@ -53,8 +53,7 @@ namespace Kingdom.Net.Client.Auth
     /// <para><b>The empty session is signed out, and it is a first-class state.</b>
     /// <see cref="None"/> is what a player who has never signed in has, what a signed-out player has,
     /// and what a player whose refresh was rejected falls back to. None of those reaches a match: a
-    /// configured client refuses to connect without a token and sends the player to sign in. A
-    /// player is never a guest.</para>
+    /// configured client refuses to connect without a token and sends the player to sign in.</para>
     ///
     /// <para><b>Nothing here is verified locally.</b> <see cref="UserId"/> and <see cref="Email"/> are
     /// read out of the JWT payload without checking its signature, because the client has no business

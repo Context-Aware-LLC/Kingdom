@@ -16,7 +16,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
     /// unconstrained pool render identically.</para>
     ///
     /// <para>The three states that must stay distinct are the whole point of this fixture: <b>null</b>
-    /// (unknown — a guest, or a box with no economy), <b>an empty projection</b> (a real account that
+    /// (unknown — a tokenless tooling seat, or a box with no economy), <b>an empty projection</b> (a real account that
     /// owns nothing), and <b><c>AllCardsOwnedCounts</c></b> (an identity never meant to be
     /// constrained). Collapsing any two of them either locks legitimate players out of their decks or
     /// hands everyone every card.</para>
@@ -124,7 +124,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
         public async Task No_Account_Is_Unknown_Rather_Than_Empty()
         {
             Assert.That(await AccountOwnedCounts.ForAsync(null, new InMemoryEntitlementLedger()),
-                Is.Null, "a guest seat's ownership is unknown; treating it as empty undecks the player");
+                Is.Null, "a tokenless seat's ownership is unknown; treating it as empty undecks the player");
         }
 
         [Test]

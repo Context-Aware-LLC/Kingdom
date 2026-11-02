@@ -137,10 +137,10 @@ namespace Kingdom.Net.Server.Tests.Social
         [Test]
         public async Task A_Match_Seat_That_Never_Opened_The_Social_Surface_Is_Not_Minted_A_Code()
         {
-            await _hub.MatchRosterChangedAsync("guest-seat", "bot-seat");
+            await _hub.MatchRosterChangedAsync("tokenless-seat", "bot-seat");
 
             Assert.That((await _store.ReadAsync(A)).Self.Code, Is.EqualTo(_codes[A]));
-            Assert.That(await _store.RequestAsync(A, "guest-seat", Limits), Is.EqualTo(FriendRequestOutcome.Refused),
+            Assert.That(await _store.RequestAsync(A, "tokenless-seat", Limits), Is.EqualTo(FriendRequestOutcome.Refused),
                 "the store refuses a target with no identity — so this proves none was minted");
         }
 

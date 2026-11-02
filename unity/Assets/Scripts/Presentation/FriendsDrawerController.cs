@@ -87,7 +87,7 @@ namespace Kingdom.Presentation
 
         /// <summary>
         /// Build and bind the button and drawer. Returns null, and builds nothing, when nobody is
-        /// signed in: <c>/friends</c> has no guest path, so a button there would open a drawer
+        /// signed in: <c>/friends</c> requires a sign-in token, so a button there would open a drawer
         /// that can only apologise.
         /// </summary>
         public static FriendsDrawerController Mount()

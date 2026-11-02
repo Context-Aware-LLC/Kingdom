@@ -11,7 +11,7 @@ namespace Kingdom.Session
     /// <c>HelloMsg.DeviceToken</c>, but it is a local folder key and a telemetry id: when a sign-in
     /// token is present the server keys the seat on that and never on this. Only tooling (NetSoak,
     /// in-process test servers) connects on the device token alone, behind
-    /// <c>ServerOptions.AllowGuestMatches</c>.</para>
+    /// <c>ServerOptions.AllowTokenlessMatches</c>.</para>
     ///
     /// <para>Generated ONCE on this device and persisted forever after. That persistence is the
     /// entire point: every telemetry row emitted against a non-persistent token is unattributable,

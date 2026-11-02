@@ -26,9 +26,9 @@ namespace Kingdom.Net.Server.Tests
     ///
     /// Three DONE-WHEN cases:
     ///   1. Valid token → authenticated account (not the device-token hash).
-    ///   2. Invalid token → socket closed; no downgrade to guest.
-    ///   3. Absent token → the tooling-only guest identity, on a box that allows guests (players
-    ///      always send a token; see ServerOptions.AllowGuestMatches).
+    ///   2. Invalid token → socket closed; no downgrade to the tokenless path.
+    ///   3. Absent token → the tooling-only device-token identity, on a box that allows it (players
+    ///      always send a token; see ServerOptions.AllowTokenlessMatches).
     /// </summary>
     [TestFixture]
     [Category("Contract")]
@@ -99,23 +99,23 @@ namespace Kingdom.Net.Server.Tests
                 await SendHelloAsync(bad, DeviceToken, authToken: "bad.token.here");
 
                 bool closed = await WaitForCloseAsync(bad, TimeSpan.FromSeconds(10));
-                Assert.That(closed, Is.True, "an invalid auth token must close the socket, not fall back to guest");
+                Assert.That(closed, Is.True, "an invalid auth token must close the socket, not fall back to the tokenless path");
             });
         }
 
-        // ── 3. Absent token → guest path unchanged ───────────────────────────────
+        // ── 3. Absent token → tokenless path unchanged ───────────────────────────────
 
         [Test]
         [CancelAfter(60_000)]
-        public async Task Absent_Auth_Token_Uses_Guest_Device_Token_Identity()
+        public async Task Absent_Auth_Token_Uses_Device_Token_Identity()
         {
             var verifier = new StubVerifier(TokenVerificationResult.Fail(TokenVerificationFailure.Malformed));
             var store = new InMemoryAccountStore(new FakeTime());
 
             await WithServerAsync(verifier, store, async (wsUri, gate) =>
             {
-                const string tokenA = "device-token-guest-a";
-                const string tokenB = "device-token-guest-b";
+                const string tokenA = "device-token-tokenless-a";
+                const string tokenB = "device-token-tokenless-b";
 
                 using var c0 = new ClientWebSocket();
                 using var c1 = new ClientWebSocket();
@@ -130,7 +130,7 @@ namespace Kingdom.Net.Server.Tests
                 var accounts = gate.AccountsOf(new MatchId(start0.Snapshot.State.Id.Value));
                 Assert.That(accounts, Is.Not.Null);
 
-                // Guest accounts are the device-token hash, not from the verifier or store.
+                // Tokenless seats are keyed on the device-token hash, not from the verifier or store.
                 Assert.That(new[] { accounts!.Value.p0, accounts.Value.p1 }, Is.EquivalentTo(
                     new[] { AccountId.FromDeviceToken(tokenA), AccountId.FromDeviceToken(tokenB) }));
             });
@@ -180,12 +180,12 @@ namespace Kingdom.Net.Server.Tests
         }
 
         /// <summary>
-        /// A tooling guest seat writes nothing: it never resolves an account, so the onboarding
+        /// A tokenless tooling seat writes nothing: it never resolves an account, so the onboarding
         /// grant is never asked about it.
         /// </summary>
         [Test]
         [CancelAfter(60_000)]
-        public async Task A_Guest_Connect_Writes_Nothing_To_The_Ledger()
+        public async Task A_Tokenless_Connect_Writes_Nothing_To_The_Ledger()
         {
             var verifier = new StubVerifier(TokenVerificationResult.Fail(TokenVerificationFailure.Malformed));
             var store = new InMemoryAccountStore(new FakeTime());
@@ -193,8 +193,8 @@ namespace Kingdom.Net.Server.Tests
 
             await WithServerAsync(verifier, store, async (wsUri, gate) =>
             {
-                const string tokenA = "device-token-onboard-guest-a";
-                const string tokenB = "device-token-onboard-guest-b";
+                const string tokenA = "device-token-onboard-tokenless-a";
+                const string tokenB = "device-token-onboard-tokenless-b";
 
                 using var c0 = new ClientWebSocket();
                 using var c1 = new ClientWebSocket();
@@ -208,7 +208,7 @@ namespace Kingdom.Net.Server.Tests
 
                 foreach (string token in new[] { tokenA, tokenB })
                     Assert.That(await ledger.HistoryAsync(AccountId.FromDeviceToken(token).Value), Is.Empty,
-                        "a guest seat never reaches the account store, so nothing can be granted to it");
+                        "a tokenless seat never reaches the account store, so nothing can be granted to it");
             }, ledger);
         }
 

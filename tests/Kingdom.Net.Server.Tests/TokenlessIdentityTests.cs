@@ -14,10 +14,10 @@ using NUnit.Framework;
 namespace Kingdom.Net.Server.Tests
 {
     /// <summary>
-    /// C-G1-8 step 1 — guest identity at the connect door (telemetry-spec §0, accounts posture
-    /// decision 6a).
+    /// C-G1-8 step 1 — device-token identity at the connect door for a tokenless tooling seat
+    /// (telemetry-spec §0).
     ///
-    /// Before this, `MatchGate` minted `guest-&lt;Interlocked.Increment&gt;` from a per-process
+    /// Before this, `MatchGate` minted a seat id from a per-process
     /// counter: identity reset on every server restart, which on a scale-to-zero machine is
     /// near-constant. Two matches by the same tester an hour apart were different players. Any
     /// telemetry emitted against that is unattributable and — unlike the account registry, which
@@ -29,7 +29,7 @@ namespace Kingdom.Net.Server.Tests
     // NonParallelizable for this reason. Run alongside the other socket fixtures these tests failed
     // roughly 1 run in 6 and never once in isolation (8/8 clean).
     [NonParallelizable]
-    public sealed class GuestIdentityTests
+    public sealed class TokenlessIdentityTests
     {
         private const string TokenA = "8f14e45fce8f4b6ea1c2d3e4f5a6b7c8";
         private const string TokenB = "0123456789abcdef0123456789abcdef";
@@ -40,7 +40,7 @@ namespace Kingdom.Net.Server.Tests
         public void Same_Device_Token_Yields_The_Same_Account_Across_Processes()
         {
             // Pure function of the token — no counter, no seed, no process state. This is the
-            // whole property `guest-<counter>` lacked.
+            // whole property the old counter lacked.
             var firstDerivation = AccountId.FromDeviceToken(TokenA);
             var secondDerivation = AccountId.FromDeviceToken(TokenA);
             Assert.That(secondDerivation, Is.EqualTo(firstDerivation));

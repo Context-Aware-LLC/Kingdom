@@ -12,7 +12,7 @@ namespace Kingdom.Session
     ///
     /// <para><b>Every release build carries it.</b> Its absence is a dev-only state: no project, so
     /// connects carry no sign-in token and only a tooling server that sets
-    /// <c>ServerOptions.AllowGuestMatches</c> will seat them. A player never reaches that path. It is
+    /// <c>ServerOptions.AllowTokenlessMatches</c> will seat them. A player never reaches that path. It is
     /// still <c>Resources.Load</c> returning null rather than a required reference, because a missing
     /// config must not be able to fail a boot.</para>
     ///

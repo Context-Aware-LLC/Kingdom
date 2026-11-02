@@ -18,7 +18,7 @@ namespace Kingdom.Net.Client.Auth
     ///
     /// <para><b>Unconfigured is a legal state, not a failure — but only for dev and tooling.</b> Every
     /// release build is configured. A build with no project set connects without a sign-in token,
-    /// which only a server that sets <c>ServerOptions.AllowGuestMatches</c> will seat; a player never
+    /// which only a server that sets <c>ServerOptions.AllowTokenlessMatches</c> will seat; a player never
     /// reaches that path.</para>
     /// </summary>
     public sealed record SupabaseAuthConfig

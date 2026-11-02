@@ -77,8 +77,8 @@ namespace Kingdom.Net.Server
         public IMatchmakingQueue? MatchmakingQueue { get; init; }
 
         /// <summary>
-        /// Trusted server-side rating lookup for queue tickets. Null preserves today's unrated
-        /// guest behavior by using <see cref="MatchmakingQueueOptions.DefaultRating"/>; ratings
+        /// Trusted server-side rating lookup for queue tickets. Null leaves every seat
+        /// unrated, using <see cref="MatchmakingQueueOptions.DefaultRating"/>; ratings
         /// never come from a client hello. Do not attach a persisted rating to the bearer-token
         /// <see cref="AccountId"/> until VULN-003's authentication requirement is satisfied.
         /// </summary>
@@ -94,8 +94,8 @@ namespace Kingdom.Net.Server
         /// Supabase JWT verifier (EF-074a/c). Null → auth tokens in HelloMsg are rejected with
         /// 1008 "authentication not configured". Populated from <c>KINGDOM_SUPABASE_URL</c> in
         /// production, where <see cref="ServerConfig.FromEnvironment"/> refuses to boot without it;
-        /// injected directly in tests. An absent token takes the tooling-only guest path, and only
-        /// where <see cref="ServerOptions.AllowGuestMatches"/> opts in.
+        /// injected directly in tests. An absent token takes the tokenless tooling path, and only
+        /// where <see cref="ServerOptions.AllowTokenlessMatches"/> opts in.
         /// </summary>
         public IIdentityTokenVerifier? TokenVerifier { get; init; }
 
@@ -275,21 +275,16 @@ namespace Kingdom.Net.Server
                 ? null
                 : new TelemetryDrain(sink.Path, dbConn!);
 
-            // EF-074c: Supabase JWT verifier. REQUIRED: players can only sign in (the client refuses
-            // to connect without a token), so a box without it could seat nobody but tooling guests
-            // and would look healthy doing it. Booting without it takes the explicit dev opt-in
-            // KINGDOM_ALLOW_GUEST_MATCHES=1, which is also the switch that lets those guests play.
-            bool allowGuests = KingdomEnv.Get("KINGDOM_ALLOW_GUEST_MATCHES") == "1";
+            // EF-074c: Supabase JWT verifier. REQUIRED, with no opt-out: players can only sign in
+            // (the client refuses to connect without a token), so a box without it could seat nobody
+            // and would look healthy doing it. A booted server never seats a tokenless hello; only an
+            // in-process test box and NetSoak's loopback, which build their config directly, do.
             string? supabaseUrl = KingdomEnv.Get("KINGDOM_SUPABASE_URL");
-            if (string.IsNullOrWhiteSpace(supabaseUrl) && !allowGuests)
+            if (string.IsNullOrWhiteSpace(supabaseUrl))
                 throw new InvalidOperationException(
                     "KINGDOM_SUPABASE_URL is not set. The server cannot verify a sign-in without it, " +
-                    "and every player signs in. Set it to the Supabase project URL, or set " +
-                    "KINGDOM_ALLOW_GUEST_MATCHES=1 to boot a dev box that seats unauthenticated " +
-                    "tooling clients only.");
-            IIdentityTokenVerifier? tokenVerifier = string.IsNullOrWhiteSpace(supabaseUrl)
-                ? null
-                : new SupabaseTokenVerifier(supabaseUrl);
+                    "and every player signs in. Set it to the Supabase project URL.");
+            IIdentityTokenVerifier tokenVerifier = new SupabaseTokenVerifier(supabaseUrl);
 
             // EF-072/074c: durable account store (optional — absent means email is not persisted
             // and authenticated identity is derived from the subject hash alone).
@@ -373,8 +368,8 @@ namespace Kingdom.Net.Server
                 SecondMatchBotModelPath = KingdomEnv.Get("KINGDOM_BOT_MODEL_SECOND_MATCH"),
                 MinClientBuildAndroid = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_ANDROID"),
                 MinClientBuildIos = MinBuildFromEnvironment("KINGDOM_MIN_BUILD_IOS"),
-                // Guests are tooling only, so a booted server turns them away unless it opted in.
-                Options = new ServerOptions { AllowGuestMatches = allowGuests },
+                // Tokenless seats are in-process tooling only, so a booted server always turns them away.
+                Options = new ServerOptions { AllowTokenlessMatches = false },
             };
         }
 
@@ -688,7 +683,7 @@ namespace Kingdom.Net.Server
             }
 
             // Achievements, decorated onto the same sink for the same reason. They need only the
-            // account store, to tell an account from a tooling guest seat; without one GET /achievements
+            // account store, to tell an account from a tokenless tooling seat; without one GET /achievements
             // answers 503 and nothing is recorded.
             AchievementService? achievementService = null;
             if (cfg.AccountStore is not null)

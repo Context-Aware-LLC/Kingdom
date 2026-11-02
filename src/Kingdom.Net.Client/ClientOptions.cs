@@ -54,7 +54,7 @@ namespace Kingdom.Net.Client
         /// makes every telemetry row unattributable.
         /// <para><b>Not an identity.</b> A player is identified by <see cref="AuthToken"/>, which the
         /// client always sends; the server never keys a seat on this when that is present. Only
-        /// tooling connects on this alone, behind <c>ServerOptions.AllowGuestMatches</c>. A UUID by
+        /// tooling connects on this alone, behind <c>ServerOptions.AllowTokenlessMatches</c>. A UUID by
         /// convention.</para>
         /// <para>Empty means the server refuses the connect. That is deliberate: an unattributable
         /// match is worse than a failed one, because it silently pollutes the balance sample.</para>
@@ -91,7 +91,7 @@ namespace Kingdom.Net.Client
         /// <summary>
         /// The Supabase JWT from whichever sign-in method the player used (magic link, OAuth).
         /// A player always sends one. Empty is the tooling-only path (NetSoak, in-process test
-        /// servers), refused unless the server sets <c>ServerOptions.AllowGuestMatches</c>.
+        /// servers), refused unless the server sets <c>ServerOptions.AllowTokenlessMatches</c>.
         /// Do not validate or inspect this here; pass it through to the server unchanged.
         /// </summary>
         public string AuthToken { get; init; } = "";

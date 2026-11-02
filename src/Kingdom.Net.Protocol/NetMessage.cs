@@ -59,7 +59,7 @@ namespace Kingdom.Net.Protocol
         //    for itself — a length bound is not a clip. Add it to VULN-002 §4 when you write it.
         string DisplayName = "",
         // ── EF-074b — carries the Supabase JWT the player received at sign-in.
-        //    Empty is the tooling-only guest path, refused unless ServerOptions.AllowGuestMatches;
+        //    Empty is the tooling-only tokenless path, refused unless ServerOptions.AllowTokenlessMatches;
         //    the client never connects without one (Sam, 2026-10-18).
         //    The server verifies this token in EF-074c; this layer is transport only.
         string AuthToken = "") : NetMessage;

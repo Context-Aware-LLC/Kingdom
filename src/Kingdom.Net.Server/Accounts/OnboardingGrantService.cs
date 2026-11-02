@@ -40,8 +40,8 @@ namespace Kingdom.Net.Server.Accounts
     /// mistaken for never having received it, and no convention about empty-versus-absent files has
     /// to be maintained by every future writer.</para>
     ///
-    /// <para>Every account that reaches this is a signed-in player or a bot: the tooling-only guest
-    /// seat (<c>ServerOptions.AllowGuestMatches</c>) never resolves an <see cref="Account"/> at all.</para>
+    /// <para>Every account that reaches this is a signed-in player or a bot: the tokenless tooling
+    /// seat (<c>ServerOptions.AllowTokenlessMatches</c>) never resolves an <see cref="Account"/> at all.</para>
     ///
     /// <para>The starter shard credit has its own permanent transaction key so existing accounts
     /// receive it once without changing the historical signup batch.</para>

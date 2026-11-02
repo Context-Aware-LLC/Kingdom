@@ -14,7 +14,7 @@ namespace Kingdom.Net.Server.Accounts
     /// then binds an implementation rather than forcing a rewrite.
     ///
     /// <para>A player's account is keyed on their verified Supabase identity (credential kind
-    /// <c>supabase</c>); roster bots use <c>bot</c>. A tooling guest seat resolves no account.</para>
+    /// <c>supabase</c>); roster bots use <c>bot</c>. A tokenless tooling seat resolves no account.</para>
     ///
     /// <para>Two implementations share this contract and one test suite: an in-memory one for tests and
     /// dev, and a Postgres one modelled on <c>TelemetryDrain</c> for production.</para>

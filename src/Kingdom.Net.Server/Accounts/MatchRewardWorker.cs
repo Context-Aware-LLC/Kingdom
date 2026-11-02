@@ -153,7 +153,7 @@ namespace Kingdom.Net.Server.Accounts
 
         /// <summary>
         /// One seat's payment. A seat with no account behind it is paid nothing and is not an error:
-        /// a tooling guest seat (<c>ServerOptions.AllowGuestMatches</c>, never a player) carries an
+        /// a tokenless tooling seat (<c>ServerOptions.AllowTokenlessMatches</c>, never a player) carries an
         /// <see cref="AccountId"/> derived from its device token, so the lookup misses. Refusing
         /// loudly here would log on every such match.
         /// </summary>

@@ -9,7 +9,7 @@ namespace Kingdom.Net.Client.Tests.Auth
     ///
     /// <para>Every test here is about the same promise: the provider hands out a token the server
     /// will accept, or none at all. The server closes the socket on a bad token, so a session that
-    /// cannot produce a good one answers empty — and an empty token is not a guest: the client refuses
+    /// cannot produce a good one answers empty — and an empty token is not a way in: the client refuses
     /// to connect without one (<c>NetworkedGameBootstrap</c>) and sends the player to sign in.</para>
     /// </summary>
     [TestFixture]

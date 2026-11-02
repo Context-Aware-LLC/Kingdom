@@ -11,7 +11,7 @@ namespace Kingdom.Net.Server.Matchmaking
     /// </summary>
     public sealed record MatchmakingQueueOptions
     {
-        /// <summary>Rating used by today's guest path until the account store supplies MMR.</summary>
+        /// <summary>Rating used for any seat the server has no MMR for.</summary>
         public int DefaultRating { get; init; } = 1_000;
         public int InitialRatingBand { get; init; } = 100;
         public int RatingBandStep { get; init; } = 100;

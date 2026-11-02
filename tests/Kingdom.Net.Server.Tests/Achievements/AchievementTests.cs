@@ -289,7 +289,7 @@ namespace Kingdom.Net.Server.Tests.Achievements
         [Test]
         public async Task A_Seat_With_No_Account_Row_Earns_Nothing()
         {
-            // A tooling guest seat: its player id is a device-token hash no account row carries.
+            // A tokenless tooling seat: its player id is a device-token hash no account row carries.
             var h = await HarnessAsync();
 
             IReadOnlyList<string> earned = await h.Service().ApplyAsync(Everything("device-token-hash"));

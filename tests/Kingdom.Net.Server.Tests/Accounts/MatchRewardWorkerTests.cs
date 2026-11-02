@@ -260,18 +260,18 @@ namespace Kingdom.Net.Server.Tests.Accounts
         {
             var accounts = new InMemoryAccountStore(new FakeTime());
             Account p0 = await accounts.ResolveOrCreateAsync("supabase", "subject-0");
-            // A guest never reaches the account store at all: its AccountId is derived from the
+            // A tokenless tooling seat never reaches the account store at all: its AccountId is derived from the
             // device token, so the lookup misses. That is the shape this asserts — not an error,
             // just nobody to pay.
-            AccountId guest = AccountId.FromDeviceToken("device-token-guest");
+            AccountId tokenless = AccountId.FromDeviceToken("device-token-tokenless");
 
             InMemoryEntitlementLedger ledger = await PayAsync(
                 accounts,
-                Result("match-1", AccountId.FromAuthenticatedAccount(p0.PlayerId), guest,
+                Result("match-1", AccountId.FromAuthenticatedAccount(p0.PlayerId), tokenless,
                        MatchOutcome.Player0Win));
 
             long paid = await ledger.BalanceAsync(p0.PlayerId, EconomyItems.Gold);
-            long unpaid = await ledger.BalanceAsync(guest.Value, EconomyItems.Gold);
+            long unpaid = await ledger.BalanceAsync(tokenless.Value, EconomyItems.Gold);
 
             Assert.Multiple(() =>
             {

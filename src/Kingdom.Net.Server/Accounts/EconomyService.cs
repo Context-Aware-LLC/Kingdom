@@ -46,7 +46,7 @@ namespace Kingdom.Net.Server.Accounts
     {
         /// <summary>Every inventory write is keyed on a durable player id. Accounts come only from
         /// <see cref="IAccountStore"/> — a signed-in player or a bot — so this guards a malformed row,
-        /// not a kind of player: the tooling-only guest seat never resolves an <see cref="Account"/>.</summary>
+        /// not a kind of player: the tokenless tooling seat never resolves an <see cref="Account"/>.</summary>
         public static void RequireDurable(Account account)
         {
             if (account == null) throw new ArgumentNullException(nameof(account));

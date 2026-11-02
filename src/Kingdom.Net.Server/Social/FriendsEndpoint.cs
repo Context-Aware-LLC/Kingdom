@@ -180,7 +180,7 @@ namespace Kingdom.Net.Server.Social
     ///
     /// <para>Resolves the account exactly as <see cref="SessionEndpoint"/> and
     /// <see cref="RosterEndpoint"/> do — verifier, then <c>CredentialHash.Of(identity.Subject)</c>,
-    /// then <c>ResolveOrCreateAsync</c>. A guest device token never reaches here: there is no
+    /// then <c>ResolveOrCreateAsync</c>. A bare device token never reaches here: there is no
     /// bearer to verify, so the friends graph only ever holds signed-in accounts.</para>
     ///
     /// <para><b>Every target is named by friend code and no <c>player_id</c> is ever answered.</b>

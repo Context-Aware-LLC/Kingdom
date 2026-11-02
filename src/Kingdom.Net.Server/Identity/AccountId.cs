@@ -5,18 +5,18 @@ using System.Text;
 namespace Kingdom.Net.Server.Identity
 {
     /// <summary>
-    /// A tooling guest seat's stable telemetry identity, derived from its device token. Players never
+    /// A tokenless tooling seat's stable telemetry identity, derived from its device token. Players never
     /// take this path: they are identified by their Supabase account (see MatchGate).
     ///
     /// <para><b>Derived, never minted.</b> It is a pure function of the client's device token, so it
-    /// survives server restarts. Its predecessor — <c>guest-&lt;Interlocked.Increment&gt;</c> — was
+    /// survives server restarts. Its predecessor was
     /// a per-process counter, so identity reset on every restart and no emitted telemetry row could
     /// be attributed to a returning player.</para>
     ///
     /// <para><b>Deliberately not the raw token.</b> The token is a bearer identity: whoever holds it
     /// can claim to be that player. Storing its hash means a leaked telemetry dump cannot be
-    /// replayed as somebody's identity, and the raw value never reaches disk. Conversion to a real
-    /// account still works — the client presents its token, the server hashes and looks up.</para>
+    /// replayed as somebody's identity, and the raw value never reaches disk. The same hash is how
+    /// the server looks a token up — it never stores or compares the raw value.</para>
     ///
     /// <para><b>Never on the wire.</b> This type lives server-side only. It must never be placed in
     /// <c>PlayerId</c>, which is broadcast to the opponent in <c>OpponentInfo</c>, and never in
@@ -63,7 +63,7 @@ namespace Kingdom.Net.Server.Identity
             Span<byte> digest = stackalloc byte[32];
             SHA256.HashData(Encoding.UTF8.GetBytes(deviceToken), digest);
 
-            // 128 bits is ample to key a guest population and keeps the id eyeball-comparable in
+            // 128 bits is ample to key every device token and keeps the id eyeball-comparable in
             // a JSONL row; it matches MatchId's 32-hex-char shape.
             var sb = new StringBuilder(32);
             for (int i = 0; i < 16; i++) sb.Append(digest[i].ToString("x2"));

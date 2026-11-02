@@ -93,10 +93,10 @@ namespace Kingdom.Net.Server
         /// Whether a hello with a device token and no sign-in token may play. Players never send one
         /// (the client refuses to connect unsigned); it is a tooling seat with no collection to check a
         /// deck against and no quests or achievements (Sam, 2026-10-18). <c>ServerConfig.FromEnvironment</c>
-        /// sets this from <c>KINGDOM_ALLOW_GUEST_MATCHES=1</c> alone, and refuses to boot without
-        /// <c>KINGDOM_SUPABASE_URL</c> unless it is set. True here so an in-process test box and
-        /// NetSoak's loopback, which build their config directly, keep working.
+        /// always sets this false and refuses to boot without <c>KINGDOM_SUPABASE_URL</c>. True here
+        /// so an in-process test box and NetSoak's loopback, which build their config directly, keep
+        /// working.
         /// </summary>
-        public bool AllowGuestMatches { get; init; } = true;
+        public bool AllowTokenlessMatches { get; init; } = true;
     }
 }

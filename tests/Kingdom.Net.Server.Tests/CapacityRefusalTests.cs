@@ -122,7 +122,7 @@ namespace Kingdom.Net.Server.Tests
                 Options = new ServerOptions
                 {
                     HelloTimeoutMs = 30_000,
-                    AllowGuestMatches = true,
+                    AllowTokenlessMatches = true,
                     MaxSessions = maxSessions,
                 },
             });

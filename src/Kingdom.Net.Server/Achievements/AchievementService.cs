@@ -55,7 +55,7 @@ namespace Kingdom.Net.Server.Achievements
                 if (definition.EarnedBy(facts)) earned.Add(definition.Id);
             if (earned.Count == 0) return None;
 
-            // A tooling guest seat (ServerOptions.AllowGuestMatches, never a player) has no account
+            // A tokenless tooling seat (ServerOptions.AllowTokenlessMatches, never a player) has no account
             // to keep a Ledger on; GET /achievements could not show it one either.
             Account? account = await _accounts.FindByPlayerIdAsync(facts.PlayerId, ct).ConfigureAwait(false);
             if (account is null) return None;

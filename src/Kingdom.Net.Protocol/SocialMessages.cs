@@ -20,7 +20,7 @@ namespace Kingdom.Net.Protocol
 
     // ── client → server ─────────────────────────────────────────────────────────────────
 
-    /// <summary>The mandatory first frame. There is no guest path: a socket with no verifiable
+    /// <summary>The mandatory first frame. There is no tokenless path: a socket with no verifiable
     /// token has no friends to hear about and is closed.</summary>
     public sealed record SocialHelloMsg(string AuthToken, string ClientContractVersion) : SocialMsg;
 

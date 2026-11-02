@@ -14,7 +14,7 @@ namespace Kingdom.Net.Server.Identity
     /// because a symmetric key can mint tokens — a game server must never hold one.
     ///
     /// <para><b>Fail closed.</b> An unreachable JWKS endpoint, unknown kid, or unparseable token is
-    /// always a rejection. There is no guest fallback and no pass-through.</para>
+    /// always a rejection. There is no tokenless fallback and no pass-through.</para>
     ///
     /// <para><b>JWKS cache.</b> Keys are fetched once and cached for <c>cacheMaxAge</c> (default
     /// 5 minutes). An unknown kid triggers a single refresh before returning <see cref="TokenVerificationFailure.UnknownKid"/>,

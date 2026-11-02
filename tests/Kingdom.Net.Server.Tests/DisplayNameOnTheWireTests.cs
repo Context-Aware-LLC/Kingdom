@@ -29,7 +29,7 @@ namespace Kingdom.Net.Server.Tests
     /// </summary>
     [TestFixture]
     [Category("Contract")]
-    // Boots real Kestrel hosts on ephemeral ports — same reason GuestIdentityTests is serialized.
+    // Boots real Kestrel hosts on ephemeral ports — same reason TokenlessIdentityTests is serialized.
     [NonParallelizable]
     public sealed class DisplayNameOnTheWireTests
     {
@@ -37,7 +37,7 @@ namespace Kingdom.Net.Server.Tests
         private const string TokenB = "bb23456789abcdef0123456789abcdef";
 
         /// <summary>The server's fallback is the seat id it minted (MatchGate.NameForSeat).</summary>
-        private const string SeatIdPrefix = "guest-";
+        private const string SeatIdPrefix = "seat-";
 
         // ── The name that passes ─────────────────────────────────────────────────
 
@@ -209,7 +209,7 @@ namespace Kingdom.Net.Server.Tests
 
         [Test]
         [CancelAfter(60_000)]
-        public async Task A_Box_With_Sign_In_Turns_A_Guest_Away()
+        public async Task A_Box_With_Sign_In_Turns_A_Tokenless_Seat_Away()
         {
             await WithServerAsync(async wsUri =>
             {
@@ -249,7 +249,7 @@ namespace Kingdom.Net.Server.Tests
         /// <para><b>Do not replace this with <c>Does.Not.Contain("‮")</c>.</b> NUnit's substring
         /// constraint compares CULTURE-SENSITIVELY, and bidi/zero-width characters are
         /// collation-IGNORABLE — so the needle folds to the empty string, every haystack "contains"
-        /// it, and the assertion fails against a perfectly good <c>guest-2</c>. Written the other way
+        /// it, and the assertion fails against a perfectly good <c>seat-2</c>. Written the other way
         /// round (asserting presence) the same fold makes the test pass no matter what the server
         /// sent, which is the failure mode that matters here: a green test over an unchecked name.
         /// <c>string.IndexOf(char)</c> is ordinal and has neither behaviour.</para>
@@ -281,7 +281,7 @@ namespace Kingdom.Net.Server.Tests
             });
 
         /// <param name="signIn">A box with sign-in, as a deployment is: it verifies tokens with
-        /// <see cref="NamedVerifier"/> and turns guests away.</param>
+        /// <see cref="NamedVerifier"/> and turns tokenless seats away.</param>
         private static async Task WithServerAsync(Func<Uri, Task> body, bool signIn = false)
         {
             string replays = Path.Combine(Path.GetTempPath(), "kingdom-displayname-" + Guid.NewGuid().ToString("N"));
@@ -291,9 +291,9 @@ namespace Kingdom.Net.Server.Tests
                 CardsDir = SessionHarness.CardDataDir(),
                 ReplaysDir = replays,
                 TokenVerifier = signIn ? new NamedVerifier() : null,
-                // Generous for the same reason GuestIdentityTests is: a short deadline made the
+                // Generous for the same reason TokenlessIdentityTests is: a short deadline made the
                 // PAIRING tests flaky under load, and every test here needs a pair to exist.
-                Options = new ServerOptions { HelloTimeoutMs = 30_000, AllowGuestMatches = !signIn },
+                Options = new ServerOptions { HelloTimeoutMs = 30_000, AllowTokenlessMatches = !signIn },
             });
             await built.App.StartAsync();
             try

@@ -5,9 +5,9 @@ using Kingdom.Net.Protocol;
 namespace Kingdom.Net.Protocol.Tests
 {
     /// <summary>
-    /// C-G1-8 step 1 — the connect handshake that carries guest identity (telemetry-spec §0:
-    /// "identity = guest device token", accounts posture decision 6a). Before this, the socket
-    /// connect WAS the hello and the server minted `guest-&lt;counter&gt;` from a per-process
+    /// C-G1-8 step 1 — the connect handshake that carries the device token (telemetry-spec §0).
+    /// Before this, the socket
+    /// connect WAS the hello and the server minted a seat id from a per-process
     /// counter — so identity reset on every restart and no emitted row could be attributed.
     ///
     /// The hello is also the first client→server carrier for the client's contract version, which
@@ -54,9 +54,9 @@ namespace Kingdom.Net.Protocol.Tests
         }
 
         [Test]
-        public void Hello_Without_AuthToken_Decodes_As_Guest()
+        public void Hello_Without_AuthToken_Decodes_As_Tokenless()
         {
-            // EF-074b binding constraint 1: absent authToken → empty string → guest path.
+            // EF-074b binding constraint 1: absent authToken → empty string → tokenless tooling path.
             // A hello from a client that predates EF-074b must decode cleanly.
             var bytes = System.Text.Encoding.UTF8.GetBytes(
                 "{\"v\":1,\"matchId\":\"m\",\"seq\":0,\"type\":\"hello\",\"body\":{\"deviceToken\":\"abc\"}}");

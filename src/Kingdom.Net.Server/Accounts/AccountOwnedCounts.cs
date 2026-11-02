@@ -26,9 +26,9 @@ namespace Kingdom.Net.Server.Accounts
         ///   <item><b><see cref="AccountKind.Superuser"/></b> → <see cref="AllCardsOwnedCounts"/>. A bot
         ///     opponent or an internal/QA identity: never constrained, whatever the ledger says, and
         ///     the ledger is not even consulted.</item>
-        ///   <item><b>No account</b> → null. Every seat resolved without the account store: a tooling
-        ///     guest seat (<c>ServerOptions.AllowGuestMatches</c>, off unless a box opts in with
-        ///     <c>KINGDOM_ALLOW_GUEST_MATCHES=1</c>), or a signed-in connect on a dev box with no
+        ///   <item><b>No account</b> → null. Every seat resolved without the account store: a tokenless
+        ///     tooling seat (<c>ServerOptions.AllowTokenlessMatches</c>, never on a booted server),
+        ///     or a signed-in connect on a dev box with no
         ///     accounts database. Neither is a player on a deployment, and their ownership is
         ///     genuinely unknown, which is not the same as owning nothing. Null here means
         ///     UNCONSTRAINED — this branch hands out the full pool, so do not widen it.</item>

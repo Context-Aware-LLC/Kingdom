@@ -18,9 +18,8 @@ namespace Kingdom.Session
     ///
     /// <para><b>A release build is always configured.</b> Every shipped build carries the
     /// <see cref="SupabaseAuthSettings"/> asset, and <c>NetworkedGameBootstrap</c> refuses to connect
-    /// a configured build without a token — so a player always presents one, and a player is never a
-    /// guest. An unconfigured build is a dev-only state: <c>HelloMsg.AuthToken</c> stays empty, and
-    /// only a tooling server that sets <c>ServerOptions.AllowGuestMatches</c> will seat it. Unconfigured
+    /// a configured build without a token — so a player always presents one. An unconfigured build is a dev-only state: <c>HelloMsg.AuthToken</c> stays empty, and
+    /// only a tooling server that sets <c>ServerOptions.AllowTokenlessMatches</c> will seat it. Unconfigured
     /// also holds the first-launch gate open, because a gate in front of a sign-in that cannot
     /// succeed would simply stop the game booting. See <c>SignInGateController.IsRequired</c>.</para>
     ///

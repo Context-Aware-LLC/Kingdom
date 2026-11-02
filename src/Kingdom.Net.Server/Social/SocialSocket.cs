@@ -14,7 +14,7 @@ namespace Kingdom.Net.Server.Social
     /// The <c>/social</c> route's socket driver (#409): hello, then frames into
     /// <see cref="SocialHub"/> until the socket dies.
     ///
-    /// <para><b>There is no guest path, and no fallback to one.</b> The first frame must be a
+    /// <para><b>There is no tokenless path, and no fallback to one.</b> The first frame must be a
     /// <see cref="SocialHelloMsg"/> whose token verifies; anything else closes the socket. The
     /// account is resolved exactly as every HTTP route resolves it — verifier, then
     /// <c>CredentialHash.Of(identity.Subject)</c>, then <c>ResolveOrCreateAsync</c> — so this
