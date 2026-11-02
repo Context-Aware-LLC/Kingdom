@@ -70,6 +70,9 @@ try {
     $invalidBuild = & pwsh -NoProfile -File (Join-Path $PSScriptRoot 'build-android.ps1') -Fast -PlayRelease 2>&1
     Assert-True ($LASTEXITCODE -ne 0 -and ($invalidBuild -join "`n").Contains('Choose one')) 'Fast Play release was not rejected.'
     Write-Host 'PASS: immutable symbols, mapping selection, secret exclusion, validation, failure/retry, corruption, containment, and fast/release guard.'
+    # The guard check above runs a build that is MEANT to fail, and leaves its exit code behind.
+    # GitHub's pwsh step ends with `exit $LASTEXITCODE`, so without this the step fails after PASS.
+    $global:LASTEXITCODE = 0
 } finally {
     $env:SENTRY_AUTH_TOKEN = $previousToken
     $env:KINGDOM_TEST_UPLOAD_FAIL = $previousFailure
