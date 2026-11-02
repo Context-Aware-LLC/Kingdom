@@ -76,6 +76,10 @@ line, in this same commit or the next. **Proven** means a clip got better with t
 - **A clip starting from anything but the previous clip's real last frame jumps at the cut.** A
   fresh crop of the same plate jumped 68px; the wider 21:9 plate jumped to 76% size with bars.
 
+- **"Generation failed" after about 12s can be the model.** The Default model is PixVerse behind
+  Hyper3D, and it returns `GENERATION_FAILED` with no reason and no charge. The same frames and
+  prompt worked on Seedance 2.0, so switch models before rewriting anything.
+
 ### Suspected (2026-11-02)
 
 - **The generator centre-crops a frame of the wrong shape.** The 68px jump is exactly the gap
