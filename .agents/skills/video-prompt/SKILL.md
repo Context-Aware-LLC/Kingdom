@@ -39,7 +39,7 @@ text under `## Prompt` goes to the generator.
 Count it, and quote the output. Stay under 2,000.
 
 ```bash
-python -c "import sys;t=open(sys.argv[1],encoding='utf-8').read().replace('\r\n','\n').split('## Prompt\n',1)[1].strip();print(len(t),'chars, limit 2049, spare',2049-len(t))" <file>
+python -c "import sys;t=open(sys.argv[1],encoding='utf-8').read().replace('\r\n','\n').split('## Prompt\n',1)[1].strip();print(len(t),'chars, limit 2048, spare',2048-len(t))" <file>
 ```
 
 When a clip ignores its ending, run the count before rewording anything.
@@ -52,7 +52,7 @@ line, in this same commit or the next. **Proven** means a clip got better with t
 
 ### Proven (2026-11-02)
 
-- **The limit is about 2,049 characters.** Everything after it is ignored with no error, which
+- **The limit is 2,048 characters.** Everything after it is ignored with no error, which
   costs the payoff beat and the closing lines. A wrong ending can be a line the model never saw.
 - **A body the model will not draw is a redesign, not a rewording.** 50+ generations of a
   one-legged skeleton failed, in every wording and after repainting the end frame. Replacing the
