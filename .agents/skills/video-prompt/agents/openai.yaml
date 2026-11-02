@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kingdom video prompts"
+  short_description: "Write cutscene transition prompts within the limit and keep the gotcha list current"
+  default_prompt: "Use $video-prompt to write this Kingdom of Bad Ideas transition prompt, count it, and record any new gotcha."
