@@ -80,6 +80,10 @@ line, in this same commit or the next. **Proven** means a clip got better with t
   Hyper3D, and it returns `GENERATION_FAILED` with no reason and no charge. The same frames and
   prompt worked on Seedance 2.0, so switch models before rewriting anything.
 
+- **A clip's first frame is not always its start frame.** A 1280x560 start came back as 1656x720
+  and sat 20px lower at the cut. Measure the cut, then warp the first second of the new clip to
+  match and ease back to normal; scaling alone leaves a gap at the frame edge.
+
 ### Suspected (2026-11-02)
 
 - **The generator centre-crops a frame of the wrong shape.** The 68px jump is exactly the gap
