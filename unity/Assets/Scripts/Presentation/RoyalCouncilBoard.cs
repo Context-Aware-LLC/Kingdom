@@ -102,6 +102,10 @@ namespace Kingdom.Presentation
             _properties.SetFloat("roughnessFactor", 0.72f);
             _properties.SetFloat("metallicFactor", 0.05f);
             cups.SetPropertyBlock(_properties);
+            // The rail crowns are a painted emblem on a flat quad laid over the wood. Its material
+            // is alpha-BLENDED, and URP's shadow pass ignores alpha unless a material clips, so
+            // the whole quad cast a square shadow round each crown. A printed emblem casts none.
+            Part("RC.Static.Brand.CrownFuse.Icon").GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
             AddLighting();
             Camera camera = Camera.main;
             if (camera != null)
