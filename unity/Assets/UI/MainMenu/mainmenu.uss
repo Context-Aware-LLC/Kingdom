@@ -719,12 +719,19 @@
     margin-top: var(--space-3);
 }
 
-/* ---------- First-launch sign-in gate (EF-074e / NOR-231) ---------- */
-/* Nearly opaque, where an ordinary modal is 0.78. A dialog you can see the menu through reads as
- * something you could dismiss to get back to it; this one cannot be dismissed, and looking
- * dismissible is what would make a player hunt for the close button that is not there. */
+/* ---------- Update gate (UpdateGateOverlay: waiting, update required, unreachable) ---------- */
+/* A painted scene, not a dim over the menu (Sam, 2026-11-02). A dialog you can see the menu through
+ * reads as something you could dismiss to get back to it; this one cannot be dismissed, and looking
+ * dismissible is what would make a player hunt for the close button that is not there. The backdrop
+ * hides the menu completely, and the panel goes translucent so the scene reads through it. */
 .mm-modal--gate {
-    background-color: rgba(11, 14, 19, 0.96);
+    background-color: var(--surface-0);
+    background-image: url("/Assets/Art/Backgrounds/UpdateGate_Backdrop.png");
+    -unity-background-scale-mode: scale-and-crop;
+}
+.mm-modal--gate .mm-modal__panel {
+    background-color: rgba(11, 14, 19, 0.78);
+    border-color: rgba(240, 138, 60, 0.35);
 }
 
 /* ---------- Blocking modal: failed boot and forced update (ConnectionFailedScreen.uxml) ----------

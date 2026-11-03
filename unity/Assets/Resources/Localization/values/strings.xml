@@ -870,8 +870,8 @@
     <string name="update_gate_title_required">Update required</string>
     <!-- Blocking gate title when the server did not answer at launch. -->
     <string name="update_gate_title_unreachable">Couldn\'t reach the server</string>
-    <!-- Gate body. %1$s = a joke line (ConnectionFailureCopy.UpdateJoke, localized separately). 'Kingdom of Bad Ideas' is the game title. -->
-    <string name="update_gate_reason_required">A new version of Kingdom of Bad Ideas is out. Update to keep playing.\n%1$s</string>
+    <!-- Gate body. %1$s = a joke line that already says the build is out of date (ConnectionFailureCopy.UpdateJoke, localized separately), so this adds only the instruction. -->
+    <string name="update_gate_reason_required">%1$s Update to keep playing.</string>
     <!-- Gate body. %1$s = a joke line (ConnectionFailureCopy.Unreachable.Joke, localized separately). 'Kingdom of Bad Ideas' is the game title. -->
     <string name="update_gate_reason_unreachable">Kingdom of Bad Ideas needs a connection to play. Check your network and try again.\n%1$s</string>
     <!-- Gate button that opens the app store. -->

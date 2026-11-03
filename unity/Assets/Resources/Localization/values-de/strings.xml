@@ -490,7 +490,7 @@
     <string name="unearth_title_choose">WÄHLE EINE KARTE ZUM EXHUMIEREN</string>
     <string name="update_gate_title_required">Update erforderlich</string>
     <string name="update_gate_title_unreachable">Server nicht erreichbar</string>
-    <string name="update_gate_reason_required">Eine neue Version von Kingdom of Bad Ideas ist da. Aktualisiere, um weiterzuspielen.\n%1$s</string>
+    <string name="update_gate_reason_required">%1$s Aktualisiere, um weiterzuspielen.</string>
     <string name="update_gate_reason_unreachable">Kingdom of Bad Ideas braucht zum Spielen eine Verbindung. Prüfe dein Netzwerk und versuch es erneut.\n%1$s</string>
     <string name="update_gate_button_update">Update</string>
     <string name="update_gate_title_waiting">Der Hof wird geweckt…</string>
