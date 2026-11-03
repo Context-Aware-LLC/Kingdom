@@ -257,6 +257,21 @@ namespace Kingdom.Core.Tests.Projection
         }
 
         [Test]
+        public void Projection_Drops_The_Server_Only_Health_Before()
+        {
+            var e = new GameEvent(GameEventKind.DamageApplied, 7, new InstanceId(4), new InstanceId(5), 9,
+                EventFlags.None, healthBefore: 3);
+            var vis = new EventVisibility(IdVisibility.Public, IdVisibility.Public);
+
+            foreach (int seat in new[] { 0, 1 })
+            {
+                var projected = ProjectOne(e, seat, vis);
+                Assert.That(projected.Amount, Is.EqualTo(9));
+                Assert.That(projected.HealthBefore, Is.Null, "HealthBefore is telemetry for the King, never sent");
+            }
+        }
+
+        [Test]
         public void Projection_Rejects_An_Unknown_Semantic_Kind_For_The_Whole_Batch()
         {
             var events = new[]

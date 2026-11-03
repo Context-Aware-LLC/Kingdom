@@ -34,7 +34,13 @@ namespace Kingdom.Net.Server.Achievements
         int LegendariesLost = 0,
         int MostBulwarks = 0,
         FinalBlow FellTo = FinalBlow.None,
-        FinalBlow EnemyFellTo = FinalBlow.None)
+        FinalBlow EnemyFellTo = FinalBlow.None,
+        int OverkillBest = 0,
+        int UnspentMana = 0,
+        int FatigueDamage = 0,
+        int TollDamage = 0,
+        int StolenDamage = 0,
+        int HeroPowerDamage = 0)
     {
         /// <summary>Both attributed seats of one finished match.</summary>
         public static IReadOnlyList<AchievementMatchFacts> From(MatchCompleteEvent complete)
@@ -84,7 +90,13 @@ namespace Kingdom.Net.Server.Achievements
                 seat.LegendariesLost,
                 seat.MostBulwarks,
                 seat.FellTo,
-                enemy.FellTo);
+                enemy.FellTo,
+                seat.OverkillBest,
+                seat.UnspentMana,
+                seat.FatigueDamage,
+                seat.TollDamage,
+                seat.StolenDamage,
+                seat.HeroPowerDamage);
     }
 
     /// <summary>One achievement: its text, its store counterpart and the rule that earns it.</summary>

@@ -98,6 +98,9 @@ namespace Kingdom.Net.Server.Telemetry
         /// <summary>Turns each seat ended with 10 mana unspent (<see cref="SeatOutcome.TurnsEndedWithTenUnspent"/>).</summary>
         private readonly int[] _turnsEndedWithTenUnspent = new int[2];
 
+        /// <summary>Mana left at each of the seat's turn ends, summed (<see cref="SeatOutcome.UnspentMana"/>).</summary>
+        private readonly int[] _unspentMana = new int[2];
+
         /// <summary>The Council's Findings read off each command's events.</summary>
         private readonly FindingsObserver _findings;
 
@@ -159,6 +162,7 @@ namespace Kingdom.Net.Server.Telemetry
             {
                 if (byClock) _turnsTimedOut[end.seat]++;
                 if (end.unspent >= 10) _turnsEndedWithTenUnspent[end.seat]++;
+                _unspentMana[end.seat] += end.unspent;
             }
             ObserveHands(state);
             for (int seat = 0; seat < 2; seat++) _minionsLost[seat] += MinionDeaths(state, pending.Watch, seat);
@@ -177,6 +181,22 @@ namespace Kingdom.Net.Server.Telemetry
                     if (state.Players[seat].Graveyard.Exists(c => c.Id == burned)) { _cardsBurned[seat]++; break; }
             }
         }
+
+        /// <summary>
+        /// <paramref name="seat"/>'s exact commission numbers so far (#421). Live: read it after any
+        /// accepted command for the score as it builds, and at the end for the score that banks,
+        /// which is the same numbers <see cref="SeatBlock"/> writes on the seat's outcome.
+        /// </summary>
+        internal FindingsObserver.Tally TallyFor(int seat)
+            => new FindingsObserver.Tally(
+                _findings.OverkillBest[seat],
+                _findings.SelfDamage[seat],
+                _unspentMana[seat],
+                _findings.FatigueDamage[seat],
+                _cardsBurned[seat],
+                _findings.TollDamage[seat],
+                _findings.StolenDamage[seat],
+                _findings.HeroPowerDamage[seat]);
 
         internal static BoardWatch Watch(GameState state, PlayerIntent intent)
         {
@@ -353,6 +373,7 @@ namespace Kingdom.Net.Server.Telemetry
         {
             var deck = seat == 0 ? _setup.P0Deck : _setup.P1Deck;
             var @class = state.Players[seat].Hero.Class;
+            FindingsObserver.Tally tally = TallyFor(seat);
             return new SeatOutcome(
                 seat == 0 ? _attribution.P0 : _attribution.P1,
                 @class,
@@ -365,16 +386,22 @@ namespace Kingdom.Net.Server.Telemetry
                 _heroPowersUsed[seat],
                 state.Players[seat].Hero.CurrentHealth,
                 seat == 0 ? state.FatigueCounter0 : state.FatigueCounter1,
-                _cardsBurned[seat],
+                tally.CardsBurned,
                 _turnsTimedOut[seat],
                 _turnsEndedWithTenUnspent[seat],
-                _findings.SelfDamage[seat],
+                tally.SelfDamage,
                 _findings.Overkills[seat],
                 _findings.BigMinionsBounced[seat],
                 _findings.LegendariesLost[seat],
                 _findings.MostBulwarks[seat],
                 state.Players[seat].Hero.CurrentHealth <= 0 ? _findings.FellTo[seat] : FinalBlow.None,
-                _policies[seat]);
+                _policies[seat],
+                tally.OverkillBest,
+                tally.UnspentMana,
+                tally.FatigueDamage,
+                tally.TollDamage,
+                tally.StolenDamage,
+                tally.HeroPowerDamage);
         }
 
         /// <summary>

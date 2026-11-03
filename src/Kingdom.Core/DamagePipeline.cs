@@ -116,6 +116,10 @@ namespace Kingdom.Core
                 }
             }
 
+            // Observation only (GameEvent.HealthBefore): the Health this hit landed on, read here
+            // because nothing downstream of the event can recover it once a mid-command buff is in play.
+            int healthBefore = target.IsHero ? target.Hero!.CurrentHealth : target.Minion!.CurrentHealth;
+
             if (target.IsHero)
             {
                 var hero = target.Hero!;
@@ -136,7 +140,8 @@ namespace Kingdom.Core
                 target.Minion!.CurrentHealth -= amount;
             }
 
-            buf.Emit(GameEventKind.DamageApplied, source: source, target: target.Id, amount: amount);
+            buf.Emit(GameEventKind.DamageApplied, source: source, target: target.Id, amount: amount,
+                healthBefore: healthBefore);
 
             if (sourceKeywords != null && source.HasValue)
             {

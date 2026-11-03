@@ -224,6 +224,19 @@ namespace Kingdom.Net.Protocol.Tests
             Assert.That(((EventsMsg)omitted.Message!).Events[0].TimedOut, Is.False);
         }
 
+        [Test]
+        public void Health_Before_Is_Never_Written_To_The_Wire()
+        {
+            var bare = new GameEvent(GameEventKind.DamageApplied, 9, new InstanceId(3), new InstanceId(4), 5, EventFlags.None);
+            var observed = new GameEvent(GameEventKind.DamageApplied, 9, new InstanceId(3), new InstanceId(4), 5,
+                EventFlags.None, healthBefore: 2);
+
+            string Encode(GameEvent e)
+                => Encoding.UTF8.GetString(ProtocolCodec.Encode(new EventsMsg(21, new[] { e }), M, Seq));
+
+            Assert.That(Encode(observed), Is.EqualTo(Encode(bare)));
+        }
+
         [TestCase("\"yes\"", "TurnEnded")]
         [TestCase("true", "TurnStarted")]
         public void Invalid_Timeout_Hint_Is_Rejected(string value, string kind)
