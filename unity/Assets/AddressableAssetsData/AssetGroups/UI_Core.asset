@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: UI_Core
   m_GUID: 3d766df806eca424e9276c2b8a291061
   m_SerializeEntries:
-  - m_GUID: 7d2bdda4a7e9fa649999f62f86e9d5bb
-    m_Address: characters/RoyalHeraldAnnouncer
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 020c8c18a4a64529b0e69dfbde5b29b6
     m_Address: ui/effect_spell_frost_caster
     m_ReadOnly: 0
@@ -200,6 +195,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 539ca906e2399ab408d62481ba82818f
+    m_Address: ui/achievement_overkill
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 59d95ebe303f8b947976c4ec334624f0
     m_Address: ui/effect_shroud_smoke_left
     m_ReadOnly: 0
@@ -230,6 +230,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 62add37cb4e108d428d5e7a5532b51a3
+    m_Address: ui/achievement_technically
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6388db4718a0e60498fc0296e8271d35
     m_Address: ui/stone_hp
     m_ReadOnly: 0
@@ -250,6 +255,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69995d54c65547b4e93fa341d70b8b80
+    m_Address: ui/ui_king_crown
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 69dd013b64c04c2f9549224e530e4b26
     m_Address: ui/effect_spell_lightning_arc
     m_ReadOnly: 0
@@ -267,6 +277,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6e0d23c5f7ab48bfa96410e8c4d19b14
     m_Address: ui/ui_button_secondary_slate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e51a0d4a3f6c2c4abef1e94216fc66c
+    m_Address: ui/achievement_too_many_ideas
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -310,8 +325,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7d2bdda4a7e9fa649999f62f86e9d5bb
+    m_Address: characters/RoyalHeraldAnnouncer
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7e1032a6a8b919e489d8370dd510b362
     m_Address: materials/M_LoadingOrb
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 81ba75c1d16c37a4b83d61cc052faa33
+    m_Address: ui/achievement_waste_not
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -352,6 +377,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8b9c792d2971468c9506526237449386
     m_Address: ui/deck-stack-player-royal-council
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 904c18b835e04804c851ce06114fe907
+    m_Address: ui/achievement_out_of_ideas
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -405,8 +435,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a942540de0cb7bd4daa8c836ef8fe514
+    m_Address: ui/achievement_signature_move
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a9c138db28ba4273900034893703d7ff
     m_Address: ui/effect_spell_earth_impact
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9eda9b488b34324792e42c36910bc99
+    m_Address: ui/ui_ledger_book
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ab34fe553762727438b9a9be451e66a5
+    m_Address: ui/achievement_self_starter
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -615,6 +660,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f5f699656cfc3954e9563e379ce6a6b8
+    m_Address: ui/achievement_return_to_sender
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6444f22790c48b2ae717e6eb2aa444d
     m_Address: ui/ui_scroll_fade
     m_ReadOnly: 0
@@ -637,6 +687,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fed706617f96430eadf6b90e84d060a7
     m_Address: ui/ui_card_vault_packs
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff5959532ddad9a469ea82e6b2fb6686
+    m_Address: ui/achievement_posthumous
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
