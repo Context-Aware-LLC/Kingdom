@@ -31,8 +31,9 @@ namespace Kingdom.Net.Server.Tests.King
             public long NowMs { get; set; }
         }
 
-        /// <summary>Card backs as the ledger keys them, without the catalog: the prize backs do not
-        /// exist in <see cref="CardBackDefinitions"/> yet, so the real seam cannot name them.</summary>
+        /// <summary>Card backs as the ledger keys them, without the catalog: the harness's ids
+        /// (101-103, 201-202) are not rows of <see cref="CardBackDefinitions"/>, so the real seam
+        /// cannot name them.</summary>
         private sealed class FakeBacks : IPrizeBacks
         {
             private readonly HashSet<string> _keys = new HashSet<string>(StringComparer.Ordinal);
@@ -323,8 +324,14 @@ namespace Kingdom.Net.Server.Tests.King
         [Test]
         public void Every_prize_back_is_in_the_catalog()
         {
-            // Vacuous until the art lands; then a typo'd id would fail every back pass for ever.
-            Assert.That(CardBackDefinitions.PlaceBackIds.Count, Is.EqualTo(0).Or.EqualTo(3));
+            // A typo'd id would fail every back pass for ever; an empty pool would settle every
+            // repeat holder with gold, permanently.
+            Assert.That(CardBackDefinitions.PlaceBackIds.Count, Is.EqualTo(3));
+            Assert.That(CardBackDefinitions.PoolIds, Is.Not.Empty);
+            Assert.That(CardBackDefinitions.PoolIds, Is.Unique);
+            Assert.That(CardBackDefinitions.PlaceBackIds, Is.Unique);
+            Assert.That(CardBackDefinitions.PlaceBackIds.Concat(CardBackDefinitions.PoolIds),
+                Does.Not.Contain(CardBackDefinitions.DefaultId), "everyone owns the default; it is no prize");
             foreach (int id in CardBackDefinitions.PlaceBackIds.Concat(CardBackDefinitions.PoolIds))
                 Assert.That(CardBackDefinitions.TryGet(id, out _), Is.True, "back " + id);
             Assert.That(CardBackDefinitions.PoolIds.Intersect(CardBackDefinitions.PlaceBackIds), Is.Empty,

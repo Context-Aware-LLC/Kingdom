@@ -12,7 +12,6 @@ namespace Kingdom.Presentation
         public const string ArtFolder = "Assets/Art/Cards/Backs";
         public static IReadOnlyList<CardBackDefinition> All => CardBackDefinitions.All;
         public static CardBackDefinition Default => CardBackDefinitions.All[0];
-        public static bool HasChoice => All.Count > 1;
 
         public static CardBackDefinition Resolve(int id) =>
             CardBackDefinitions.TryGet(id, out var back) ? back : Default;

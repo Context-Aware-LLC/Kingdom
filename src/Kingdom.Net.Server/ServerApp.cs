@@ -756,10 +756,6 @@ namespace Kingdom.Net.Server
                 }
                 else
                 {
-                    if (CardBackDefinitions.PlaceBackIds.Count == 0)
-                        Console.Error.WriteLine(
-                            "[king] no place backs are in the catalog: closed reigns pay gold, and their backs " +
-                            "wait for the first sweep after the backs land.");
                     builder.Services.AddSingleton<IHostedService>(new King.KingPayoutSweep(
                         favorStore, cfg.AccountStore, economy, new King.LedgerPrizeBacks(cfg.EntitlementLedger),
                         cfg.FavorPrizes, sweepReignOne, time,

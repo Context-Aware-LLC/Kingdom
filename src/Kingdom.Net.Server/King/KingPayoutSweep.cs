@@ -45,8 +45,8 @@ namespace Kingdom.Net.Server.King
     /// <para><b>Two passes.</b> The gold pass pays gold by place, writes a prize row per paid
     /// place, and closes the reign; <c>paid_at</c> is written last, and every grant is keyed on
     /// the reign, so a pass killed halfway re-runs the whole reign and pays nobody twice. The back
-    /// pass then settles each top-three row's card back, and is skipped entirely while no place
-    /// backs are in the catalog: the rows wait, and the first sweep after the art lands pays them.</para>
+    /// pass then settles each top-three row's card back, and is skipped entirely while it is given no
+    /// place backs: the rows wait, and the first sweep that has them pays them.</para>
     ///
     /// <para>A player whose account is gone is skipped and their place left empty; nobody is
     /// promoted into it. So is a Favorite the operator struck before the sweep. Superusers never

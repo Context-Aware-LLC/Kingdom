@@ -255,9 +255,8 @@ namespace Kingdom.Net.Server.Tests
         //
         // The submission's cardBackId is client-authored. The gate honours it only when the account
         // it already resolved owns that back, and otherwise seats the player on the default with no
-        // close and nothing said to the client. Only CardBackDefinitions.DefaultId is in the catalog
-        // until the King's prize backs land, so the socket tests can only ever OBSERVE the default;
-        // the verdict tests below are what tell owned, unowned and unknown apart.
+        // close and nothing said to the client. The verdict tests tell owned, unowned and unknown
+        // apart; the socket tests show what each verdict puts on both seats' match start.
 
         [Test]
         public async Task An_owned_back_is_honoured()
@@ -290,6 +289,34 @@ namespace Kingdom.Net.Server.Tests
                 MatchStartMsg start = conn.Last<MatchStartMsg>();
                 Assert.That(start.BackIds, Is.EqualTo(new[] { 42, CardBackDefinitions.DefaultId }),
                     $"seat {start.Seat} sees seat 0's back first and seat 1's second");
+            }
+        }
+
+        [Test]
+        public async Task An_owned_prize_back_reaches_both_seats_and_an_unowned_one_does_not()
+        {
+            int owned = CardBackDefinitions.PoolIds[0];
+            int unowned = CardBackDefinitions.PoolIds[1];
+            var (account, ledger) = await AccountWithLedgerAsync();
+            await CardBackOwnership.GrantAsync(ledger, account, owned, "test", "grant-owned");
+            Assert.That((await DeckSubmission.ResolveCardBackAsync(owned, account, ledger)).Verdict,
+                Is.EqualTo(CardBackVerdict.Owned));
+            CardBackChoice refused = await DeckSubmission.ResolveCardBackAsync(unowned, account, ledger);
+            Assert.That((refused.Verdict, refused.BackId), Is.EqualTo((CardBackVerdict.Unowned, CardBackDefinitions.DefaultId)));
+
+            // Over the wire: one socket asks for the back the account owns, the other for one it
+            // does not. Seats are dealt by the queue, so the expectation is built from the seat the
+            // owning socket landed in; both clients must agree on it.
+            var starts = await SeatTwoAuthenticatedAsync(new[] { owned, unowned }, revokeDefault: false, granted: owned);
+            int ownedSeat = starts[0].Start.Seat;
+            Assert.That(starts[1].Start.Seat, Is.EqualTo(1 - ownedSeat));
+            var expected = new int[2];
+            expected[ownedSeat] = owned;
+            expected[1 - ownedSeat] = CardBackDefinitions.DefaultId;
+            foreach (var (start, json) in starts)
+            {
+                Assert.That(json, Does.Contain($"\"backIds\":[{expected[0]},{expected[1]}]"));
+                Assert.That(start.BackIds, Is.EqualTo(expected), $"seat {start.Seat}");
             }
         }
 
@@ -418,14 +445,22 @@ namespace Kingdom.Net.Server.Tests
         /// <summary>Two authenticated <c>?deck=1</c> sockets of one Superuser account (so L6 passes
         /// a generated deck and the refusal under test can only be the back's), each asking for
         /// <paramref name="cardBackId"/>. Returns each seat's match start with its raw JSON.</summary>
-        private static async Task<List<(MatchStartMsg Start, string Json)>> SeatTwoAuthenticatedAsync(
+        private static Task<List<(MatchStartMsg Start, string Json)>> SeatTwoAuthenticatedAsync(
             int cardBackId, bool revokeDefault)
+            => SeatTwoAuthenticatedAsync(new[] { cardBackId, cardBackId }, revokeDefault, granted: 0);
+
+        /// <summary>As above, the first socket asking for <paramref name="cardBackIds"/>[0] and the
+        /// second for [1], with <paramref name="granted"/> (when positive) granted to the account
+        /// first. Results are in socket order, not seat order.</summary>
+        private static async Task<List<(MatchStartMsg Start, string Json)>> SeatTwoAuthenticatedAsync(
+            int[] cardBackIds, bool revokeDefault, int granted)
         {
             var store = new InMemoryAccountStore(new FakeTime());
             var ledger = new InMemoryEntitlementLedger();
             Account account = await store.ResolveOrCreateAsync("supabase", HashCredential(BackSubject), "backs@example.com");
             account = (await store.SetKindAsync(account.PlayerId, AccountKind.Superuser))!;
             if (revokeDefault) await RevokeDefaultAsync(account, ledger);
+            if (granted > 0) await CardBackOwnership.GrantAsync(ledger, account, granted, "test", "grant-" + granted);
 
             var starts = new List<(MatchStartMsg, string)>();
             string replays = Path.Combine(Path.GetTempPath(), "kingdom-backs-" + Guid.NewGuid().ToString("N"));
@@ -445,15 +480,17 @@ namespace Kingdom.Net.Server.Tests
                 var deckUri = new Uri($"ws://127.0.0.1:{baseUri.Port}/ws?deck=1");
                 using var c0 = new ClientWebSocket();
                 using var c1 = new ClientWebSocket();
-                foreach (var ws in new[] { c0, c1 })
+                var sockets = new[] { c0, c1 };
+                for (int i = 0; i < sockets.Length; i++)
                 {
+                    ClientWebSocket ws = sockets[i];
                     await ws.ConnectAsync(deckUri, CancellationToken.None);
                     await SendAsync(ws, ProtocolCodec.Encode(
                         new HelloMsg("device-backs", ProtocolContract.Version, "test", "deck-tests",
                             DisplayName: "", AuthToken: "valid.token.here"), ProtocolCodec.PreMatch, 0));
                     await SendAsync(ws, ProtocolCodec.Encode(
                         new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT,
-                            LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT), cardBackId), ProtocolCodec.PreMatch, 1));
+                            LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT), cardBackIds[i]), ProtocolCodec.PreMatch, 1));
                 }
                 starts.Add(await ExpectRawAsync<MatchStartMsg>(c0));
                 starts.Add(await ExpectRawAsync<MatchStartMsg>(c1));

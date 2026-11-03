@@ -47,7 +47,7 @@ namespace Kingdom.Net.Server.Tests.King
         }
 
         /// <summary>Card backs as the ledger keys them, without the catalog, as in KingPayoutSweepTests:
-        /// the pool backs do not exist in <see cref="CardBackDefinitions"/> yet.</summary>
+        /// the harness's pool ids are not rows of <see cref="CardBackDefinitions"/>.</summary>
         private sealed class FakeBacks : IPrizeBacks
         {
             private readonly HashSet<string> _keys = new HashSet<string>(StringComparer.Ordinal);
