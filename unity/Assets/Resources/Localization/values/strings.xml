@@ -986,6 +986,15 @@
     <string name="commission_signature_move_name">Signature Move</string>
     <string name="commission_signature_move_scored">Damage dealt by your Hero Power</string>
     <string name="commission_signature_move_decree">His Majesty would like the Hero Power to earn its keep.</string>
+    <string name="commission_comeback_name">Comeback</string>
+    <string name="commission_comeback_scored">The furthest behind on Health you were</string>
+    <string name="commission_comeback_decree">His Majesty enjoys a comeback, and has asked for a worse one.</string>
+    <string name="commission_the_long_game_name">The Long Game</string>
+    <string name="commission_the_long_game_scored">The last turn of the game</string>
+    <string name="commission_the_long_game_decree">His Majesty has nowhere to be.</string>
+    <string name="commission_overgrown_name">Overgrown</string>
+    <string name="commission_overgrown_scored">The largest minion you had on the board, Attack plus Health</string>
+    <string name="commission_overgrown_decree">His Majesty would like something bigger.</string>
     <!-- In-match commission card, under a greyed score: the commission needs a win, so the number is not banked yet. -->
     <string name="king_counts_if_win">Counts if you win</string>
     <!-- In-match commission card, under the score. %1$s = this player's best score this reign, a number. -->

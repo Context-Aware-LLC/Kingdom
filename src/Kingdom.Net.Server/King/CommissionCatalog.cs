@@ -42,6 +42,9 @@ namespace Kingdom.Net.Server.King
             new Commission(CommissionIds.Posthumous, false, false, f => f.TollDamage),
             new Commission(CommissionIds.ReturnToSender, false, false, f => f.StolenDamage),
             new Commission(CommissionIds.SignatureMove, false, false, f => f.HeroPowerDamage),
+            new Commission(CommissionIds.Comeback, true, false, f => f.MostHealthDeficit),
+            new Commission(CommissionIds.TheLongGame, true, false, f => f.TurnCount),
+            new Commission(CommissionIds.Overgrown, false, false, f => f.LargestMinion),
         });
 
         /// <summary>The commission with this id, or null when there is none.</summary>
