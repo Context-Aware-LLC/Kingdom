@@ -276,12 +276,12 @@ namespace Kingdom.Net.Server.Tests.King
             await Store.CloseChoiceAsync(2, "a", 202, default);
             await Store.CloseChoiceAsync(1, "a", 201, default);
             await Store.CloseChoiceAsync(1, "b", 201, default);
-            await Store.CloseChoiceAsync(3, "c", null, default);   // settled in gold: nothing to deliver
+            await Store.CloseChoiceAsync(3, "c", null, default);   // settled in gold: the gold is owed too
 
             Assert.That((await Store.UndeliveredChoicesAsync("a", default)).Select(p => (p.Reign, p.BackId)),
                 Is.EqualTo(new (int, int?)[] { (1, 201), (2, 202) }));
-            Assert.That((await Store.UndeliveredChoicesAsync(null, default)).Select(p => (p.Reign, p.PlayerId)),
-                Is.EqualTo(new[] { (1, "a"), (1, "b"), (2, "a") }));
+            Assert.That((await Store.UndeliveredChoicesAsync(null, default)).Select(p => (p.Reign, p.PlayerId, p.BackId)),
+                Is.EqualTo(new (int, string, int?)[] { (1, "a", 201), (1, "b", 201), (2, "a", 202), (3, "c", null) }));
 
             await Store.MarkChoiceDeliveredAsync(1, "a", default);
             await Store.MarkChoiceDeliveredAsync(1, "a", default);   // twice is harmless
@@ -307,6 +307,9 @@ namespace Kingdom.Net.Server.Tests.King
             Assert.That(await Store.ClosedChoiceAsync(1, "a", default), Is.EqualTo(new ClosedChoice(1, "a", 201, false)));
             await Store.MarkChoiceDeliveredAsync(1, "a", default);
             Assert.That(await Store.ClosedChoiceAsync(1, "a", default), Is.EqualTo(new ClosedChoice(1, "a", 201, true)));
+            Assert.That(await Store.ClosedChoiceAsync(2, "a", default), Is.EqualTo(new ClosedChoice(2, "a", null, false)),
+                "gold is owed until marked, like a back");
+            await Store.MarkChoiceDeliveredAsync(2, "a", default);
             Assert.That(await Store.ClosedChoiceAsync(2, "a", default), Is.EqualTo(new ClosedChoice(2, "a", null, true)));
             Assert.That(await Store.ClosedChoiceAsync(3, "a", default), Is.Null, "still open");
             Assert.That(await Store.ClosedChoiceAsync(4, "a", default), Is.Null, "never a choice");

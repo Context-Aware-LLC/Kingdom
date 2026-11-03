@@ -65,7 +65,11 @@ namespace Kingdom.Net.Server.King
     ///
     /// <para><b>Two choices can compete for the last pool back.</b> A choice whose pool has nothing
     /// left the player lacks is settled when it is next read: <see cref="FavorPrizeSettings.PoolEmptyGold"/>,
-    /// keyed as the sweep keys it, so it can never pay twice, and the choice closes.</para>
+    /// keyed as the sweep keys it, so it can never pay twice. <b>Gold is close-before-pay too</b>:
+    /// the pool can look empty only because a racing claim has just closed this very choice on a
+    /// back and granted it, so gold is paid only by the caller whose conditional close records the
+    /// gold outcome. The loser pays nothing and answers from the row. A gold grant that fails
+    /// leaves the row closed and undelivered, and the same repair re-issues it on its key.</para>
     /// </summary>
     public sealed class PrizeChoiceEndpoint
     {
@@ -120,6 +124,7 @@ namespace Kingdom.Net.Server.King
                 var choices = new List<PrizeChoice>(open.Count);
                 foreach (FavorPrize prize in open)
                 {
+                    // Settled or lost to a racing claim, the choice is closed either way: not listed.
                     if (lacking.Count == 0)
                         await SettleInGoldAsync(account, prize.Reign, ct).ConfigureAwait(false);
                     else
@@ -160,6 +165,7 @@ namespace Kingdom.Net.Server.King
                 IReadOnlyList<int> lacking = await LackingAsync(account, pending, ct).ConfigureAwait(false);
                 if (lacking.Count == 0)
                 {
+                    // Won or lost, the row now says how the choice closed: gold, or a racing claim's back.
                     await SettleInGoldAsync(account, reign, ct).ConfigureAwait(false);
                     return await AnswerClosedAsync(account, reign).ConfigureAwait(false);
                 }
@@ -174,8 +180,8 @@ namespace Kingdom.Net.Server.King
                 // Claimed, and the row records the back: from here a dropped connection must not stop
                 // the grant halfway. One that fails anyway answers 503 and is delivered later; a
                 // repeated claim then answers granted.
-                if (!await DeliverAsync(_favor, _backs!, account, prize with { BackId = backId, ChoiceOpen = false },
-                        CancellationToken.None).ConfigureAwait(false))
+                if (!await DeliverAsync(account, prize with { BackId = backId, ChoiceOpen = false }, CancellationToken.None)
+                        .ConfigureAwait(false))
                     return Answer(PrizeChoiceStatus.Unavailable, 503);
                 return new PrizeChoiceResult(PrizeChoiceStatus.Granted, NoChoices, 200, BackId: backId);
             }
@@ -188,28 +194,36 @@ namespace Kingdom.Net.Server.King
         }
 
         /// <summary>
-        /// Grants a closed choice's recorded back on its key, then marks it delivered. Idempotent:
-        /// a back already granted on that key is a duplicate the ledger ignores. False, with a log
-        /// line, when the grant or the mark fails; the row stays undelivered for the next try.
-        /// The sweep calls this too (<see cref="KingPayoutSweep"/>).
+        /// Pays a closed choice what it closed on, on its key, then marks it delivered: the recorded
+        /// back keyed <c>king-choice:{reign}</c>, or, when the back is null, <paramref name="poolEmptyGold"/>
+        /// keyed <c>king-pool:{reign}</c> as the sweep keys it. Idempotent: a repeated key is a
+        /// duplicate the ledger ignores. False, with a log line, when the grant or the mark fails;
+        /// the row stays undelivered for the next try. The sweep calls this too (<see cref="KingPayoutSweep"/>).
         /// </summary>
-        public static async Task<bool> DeliverAsync(IFavorStore favor, IPrizeBacks backs, Account account,
-            FavorPrize chosen, CancellationToken ct)
+        public static async Task<bool> DeliverAsync(IFavorStore favor, IPrizeBacks backs, EconomyService economy,
+            long poolEmptyGold, Account account, FavorPrize closed, CancellationToken ct)
         {
-            if (chosen.BackId is not int backId) return true;
             try
             {
-                await backs.GrantAsync(account, backId, ChoiceEventId(chosen.Reign), ct).ConfigureAwait(false);
-                await favor.MarkChoiceDeliveredAsync(chosen.Reign, chosen.PlayerId, ct).ConfigureAwait(false);
+                if (closed.BackId is int backId)
+                    await backs.GrantAsync(account, backId, ChoiceEventId(closed.Reign), ct).ConfigureAwait(false);
+                else
+                    await KingPayoutSweep.GrantGoldAsync(economy, account, poolEmptyGold,
+                        KingPayoutSweep.PoolEmptyEventId(closed.Reign), closed.Reign, ct).ConfigureAwait(false);
+                await favor.MarkChoiceDeliveredAsync(closed.Reign, closed.PlayerId, ct).ConfigureAwait(false);
                 return true;
             }
             catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
             {
-                Console.Error.WriteLine("[king] reign {0}: chosen back {1} for player_id={2} not delivered yet; retried later: {3}",
-                    chosen.Reign, backId, chosen.PlayerId, ex.Message);
+                Console.Error.WriteLine("[king] reign {0}: {1} for player_id={2} not delivered yet; retried later: {3}",
+                    closed.Reign, closed.BackId is int id ? "chosen back " + id.ToString(CultureInfo.InvariantCulture) : "pool gold",
+                    closed.PlayerId, ex.Message);
                 return false;
             }
         }
+
+        private Task<bool> DeliverAsync(Account account, FavorPrize closed, CancellationToken ct)
+            => DeliverAsync(_favor, _backs!, _economy!, _prizes!.PoolEmptyGold, account, closed, ct);
 
         /// <summary>
         /// The pool as this build's catalog knows it. A pool id that is not a row of
@@ -240,13 +254,13 @@ namespace Kingdom.Net.Server.King
             return lacking;
         }
 
-        /// <summary>Delivers this player's chosen backs whose grant never confirmed. Returns the
-        /// ones still undelivered, which count as owned: they are the player's, only late.</summary>
+        /// <summary>Delivers this player's closed choices whose back or gold never confirmed. Returns
+        /// the backs still undelivered, which count as owned: they are the player's, only late.</summary>
         private async Task<ISet<int>> DeliverPendingAsync(Account account, CancellationToken ct)
         {
             var still = new HashSet<int>();
-            foreach (FavorPrize chosen in await _favor.UndeliveredChoicesAsync(account.PlayerId, ct).ConfigureAwait(false))
-                if (!await DeliverAsync(_favor, _backs!, account, chosen, ct).ConfigureAwait(false) && chosen.BackId is int id)
+            foreach (FavorPrize closed in await _favor.UndeliveredChoicesAsync(account.PlayerId, ct).ConfigureAwait(false))
+                if (!await DeliverAsync(account, closed, ct).ConfigureAwait(false) && closed.BackId is int id)
                     still.Add(id);
             return still;
         }
@@ -262,22 +276,27 @@ namespace Kingdom.Net.Server.King
             ClosedChoice? closed = await _favor.ClosedChoiceAsync(reign, account.PlayerId, CancellationToken.None)
                 .ConfigureAwait(false);
             if (closed is null) return Answer(PrizeChoiceStatus.None, 200);
-            if (closed.BackId is not int backId)
-                return new PrizeChoiceResult(PrizeChoiceStatus.Gold, NoChoices, 200, Gold: _prizes!.PoolEmptyGold);
             if (!closed.Delivered &&
-                !await DeliverAsync(_favor, _backs!, account,
-                    new FavorPrize(reign, account.PlayerId, 0, 0, backId, false), CancellationToken.None).ConfigureAwait(false))
+                !await DeliverAsync(account, new FavorPrize(reign, account.PlayerId, 0, 0, closed.BackId, false),
+                    CancellationToken.None).ConfigureAwait(false))
                 return Answer(PrizeChoiceStatus.Unavailable, 503);
-            return new PrizeChoiceResult(PrizeChoiceStatus.Granted, NoChoices, 200, BackId: backId);
+            return closed.BackId is int backId
+                ? new PrizeChoiceResult(PrizeChoiceStatus.Granted, NoChoices, 200, BackId: backId)
+                : new PrizeChoiceResult(PrizeChoiceStatus.Gold, NoChoices, 200, Gold: _prizes!.PoolEmptyGold);
         }
 
-        /// <summary>Gold first, keyed as the sweep keys it, then the close: a close that fails
-        /// leaves the choice to settle again, and the key pays nothing twice.</summary>
+        /// <summary>
+        /// Close, then pay: the pool may look empty only because a racing claim has just closed this
+        /// choice on a back and granted it. Only the caller whose conditional close records the gold
+        /// outcome pays; a loser pays nothing. A failed payment leaves the row undelivered for the
+        /// repair, keyed as the sweep keys it, so it can never pay twice.
+        /// </summary>
         private async Task SettleInGoldAsync(Account account, int reign, CancellationToken ct)
         {
-            await KingPayoutSweep.GrantGoldAsync(_economy!, account, _prizes!.PoolEmptyGold,
-                KingPayoutSweep.PoolEmptyEventId(reign), reign, ct).ConfigureAwait(false);
-            await _favor.CloseChoiceAsync(reign, account.PlayerId, null, ct).ConfigureAwait(false);
+            if (!await _favor.CloseChoiceAsync(reign, account.PlayerId, null, ct).ConfigureAwait(false)) return;
+            // Closed: from here a dropped connection must not stop the payment halfway.
+            await DeliverAsync(account, new FavorPrize(reign, account.PlayerId, 0, 0, null, false), CancellationToken.None)
+                .ConfigureAwait(false);
         }
 
         private async Task<(Account? Account, PrizeChoiceResult? Failure)> ResolveAsync(string? bearer, CancellationToken ct)

@@ -256,7 +256,7 @@ namespace Kingdom.Net.Server.King
             await conn.OpenAsync(ct);
             await using var cmd = new NpgsqlCommand(
                 "update favor_prize set choice_open = false, choice_closed = true, back_id = $3, " +
-                "choice_grant_pending = ($3 is not null) " +
+                "choice_grant_pending = true " +
                 "where reign = $1 and player_id = $2 and choice_open", conn);
             cmd.Parameters.Add(P(NpgsqlDbType.Integer, reign));
             cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));

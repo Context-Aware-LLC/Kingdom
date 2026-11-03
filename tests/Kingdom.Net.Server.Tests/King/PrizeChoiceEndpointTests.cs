@@ -84,8 +84,16 @@ namespace Kingdom.Net.Server.Tests.King
                 return Task.CompletedTask;
             }
 
+            /// <summary>Runs once, inside the first OwnsAsync call after it is set: a racing request
+            /// that lands between the caller's read of the choice and its read of ownership.</summary>
+            public Func<Task>? InterleaveOnce { get; set; }
+
             public async Task<bool> OwnsAsync(Account account, int backId, CancellationToken ct)
             {
+                Func<Task>? interleave = InterleaveOnce;
+                InterleaveOnce = null;
+                if (interleave != null) await interleave().ConfigureAwait(false);
+
                 bool wait = false;
                 lock (_lock)
                 {
@@ -100,12 +108,31 @@ namespace Kingdom.Net.Server.Tests.King
             }
         }
 
+        /// <summary>The in-memory ledger whose gold writes (batches) fail while <see cref="Down"/>.</summary>
+        private sealed class GoldLedger : IEntitlementLedger
+        {
+            private readonly InMemoryEntitlementLedger _inner;
+            public bool Down { get; set; }
+            public GoldLedger(InMemoryEntitlementLedger inner) => _inner = inner;
+
+            public Task<EntitlementBatchResult> ApplyBatchAsync(EntitlementBatch batch, CancellationToken ct = default)
+                => Down ? throw new InvalidOperationException("ledger is down") : _inner.ApplyBatchAsync(batch, ct);
+            public Task<GrantResult> GrantAsync(EntitlementGrant grant, CancellationToken ct = default) => _inner.GrantAsync(grant, ct);
+            public Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(string playerId, CancellationToken ct = default)
+                => _inner.AcquirePlayerMutationLockAsync(playerId, ct);
+            public Task<long> BalanceAsync(string playerId, string item, CancellationToken ct = default) => _inner.BalanceAsync(playerId, item, ct);
+            public Task<IReadOnlyDictionary<string, long>> BalancesAsync(string playerId, CancellationToken ct = default) => _inner.BalancesAsync(playerId, ct);
+            public Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(string playerId, CancellationToken ct = default) => _inner.HistoryAsync(playerId, ct);
+            public Task<EntitlementGrant?> FindAsync(string externalTxnId, CancellationToken ct = default) => _inner.FindAsync(externalTxnId, ct);
+        }
+
         private sealed class Harness
         {
             public FakeTime Time { get; } = new FakeTime();
             public InMemoryAccountStore Accounts { get; }
             public InMemoryFavorStore Store { get; } = new InMemoryFavorStore();
             public InMemoryEntitlementLedger Ledger { get; } = new InMemoryEntitlementLedger();
+            public GoldLedger Gold { get; }
             public FakeBacks Backs { get; } = new FakeBacks();
             public Verifier Verifier { get; } = new Verifier();
             public PrizeChoiceEndpoint Endpoint { get; }
@@ -113,7 +140,8 @@ namespace Kingdom.Net.Server.Tests.King
             public Harness(int postsPerMinute = 100)
             {
                 Accounts = new InMemoryAccountStore(Time);
-                Endpoint = new PrizeChoiceEndpoint(Verifier, Accounts, Store, Backs, new EconomyService(Ledger, Time),
+                Gold = new GoldLedger(Ledger);
+                Endpoint = new PrizeChoiceEndpoint(Verifier, Accounts, Store, Backs, new EconomyService(Gold, Time),
                     Prizes, Pool, new FriendRequestLimiter(Time, max: postsPerMinute, windowMs: 60_000));
             }
 
@@ -138,7 +166,7 @@ namespace Kingdom.Net.Server.Tests.King
             /// <summary>The Tuesday sweep over the same store and backs, with no place backs and no
             /// reign due: all it has to do is deliver.</summary>
             public KingPayoutSweep Sweep()
-                => new KingPayoutSweep(Store, Accounts, new EconomyService(Ledger, Time), Backs, Prizes,
+                => new KingPayoutSweep(Store, Accounts, new EconomyService(Gold, Time), Backs, Prizes,
                     Time.NowMs, Time, Array.Empty<int>(), Pool);
         }
 
@@ -488,6 +516,99 @@ namespace Kingdom.Net.Server.Tests.King
             Assert.That((result.Status, result.Gold), Is.EqualTo((PrizeChoiceStatus.Gold, (long?)Prizes.PoolEmptyGold)));
             Assert.That(await h.GoldAsync(p), Is.EqualTo(Prizes.PoolEmptyGold));
             Assert.That((await h.Store.PrizeAsync(2, p))!.ChoiceOpen, Is.False);
+        }
+
+        // ── Gold is close-before-pay (fix round 2) ────────────────────────────────────────
+
+        [Test]
+        public async Task A_read_racing_a_back_claim_pays_the_back_and_not_the_gold()
+        {
+            // The read sees the choice open, then a claim closes it on 201, the last back the player
+            // lacked, and grants it. The read now finds the pool owned: it must not pay gold too.
+            var h = new Harness();
+            string p = await h.OpenChoiceAsync("good", 2);
+            h.Backs.Owned.Add((p, 202));
+            PrizeChoiceResult? claim = null;
+            h.Backs.InterleaveOnce = async () => claim = await h.ChooseAsync("good", 2, 201);
+
+            PrizeChoiceResult read = await h.Endpoint.ReadAsync("good");
+            long gold = await h.GoldAsync(p);
+            ClosedChoice? closed = await h.Store.ClosedChoiceAsync(2, p);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That((claim?.Status, claim?.BackId), Is.EqualTo(((PrizeChoiceStatus?)PrizeChoiceStatus.Granted, (int?)201)),
+                    "the claim ran inside the read, between its two reads");
+                Assert.That(read.Choices, Is.Empty);
+                Assert.That(gold, Is.Zero, "exactly one of gold and the back is paid");
+                Assert.That(h.Backs.Applied, Is.EqualTo(new[] { "201:" + p + ":king-choice:2" }));
+                Assert.That(closed, Is.EqualTo(new ClosedChoice(2, p, 201, true)));
+            });
+        }
+
+        [Test]
+        public async Task A_claim_racing_a_back_claim_into_the_gold_path_is_told_the_back()
+        {
+            var h = new Harness();
+            string p = await h.OpenChoiceAsync("good", 2);
+            h.Backs.Owned.Add((p, 202));
+            PrizeChoiceResult? first = null;
+            h.Backs.InterleaveOnce = async () => first = await h.ChooseAsync("good", 2, 201);
+
+            PrizeChoiceResult second = await h.ChooseAsync("good", 2, 201);
+            long gold = await h.GoldAsync(p);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(first?.Status, Is.EqualTo(PrizeChoiceStatus.Granted));
+                Assert.That((second.Status, second.BackId), Is.EqualTo((PrizeChoiceStatus.Granted, (int?)201)),
+                    "the gold path lost the close, so it answers from the row");
+                Assert.That(gold, Is.Zero);
+                Assert.That(h.Backs.Applied, Has.Count.EqualTo(1));
+            });
+        }
+
+        [Test]
+        public async Task A_gold_settle_whose_payment_fails_is_paid_once_by_the_next_read()
+        {
+            var h = new Harness();
+            string p = await h.OpenChoiceAsync("good", 2);
+            h.Backs.Owned.Add((p, 201));
+            h.Backs.Owned.Add((p, 202));
+            h.Gold.Down = true;
+
+            PrizeChoiceResult down = await h.Endpoint.ReadAsync("good");
+            PrizeChoiceResult claimWhileDown = await h.ChooseAsync("good", 2, 201);
+            ClosedChoice? owed = await h.Store.ClosedChoiceAsync(2, p);
+            h.Gold.Down = false;
+            await h.Endpoint.ReadAsync("good");
+            await h.Endpoint.ReadAsync("good");
+            PrizeChoiceResult claimAfter = await h.ChooseAsync("good", 2, 201);
+
+            Assert.That(down.Choices, Is.Empty, "closed in gold, though not yet paid");
+            Assert.That(claimWhileDown.HttpStatus, Is.EqualTo(503), "owed and still undeliverable");
+            Assert.That(owed, Is.EqualTo(new ClosedChoice(2, p, null, false)));
+            Assert.That(await h.GoldAsync(p), Is.EqualTo(Prizes.PoolEmptyGold), "paid once, on the sweep's key");
+            Assert.That((claimAfter.Status, claimAfter.Gold), Is.EqualTo((PrizeChoiceStatus.Gold, (long?)Prizes.PoolEmptyGold)));
+            Assert.That(await h.Store.UndeliveredChoicesAsync(null), Is.Empty);
+        }
+
+        [Test]
+        public async Task A_gold_settle_whose_payment_fails_is_paid_once_by_the_sweep()
+        {
+            var h = new Harness();
+            string p = await h.OpenChoiceAsync("good", 2);
+            h.Backs.Owned.Add((p, 201));
+            h.Backs.Owned.Add((p, 202));
+            h.Gold.Down = true;
+            await h.Endpoint.ReadAsync("good");
+            h.Gold.Down = false;
+
+            await h.Sweep().SweepAsync(CancellationToken.None);
+            await h.Sweep().SweepAsync(CancellationToken.None);
+
+            Assert.That(await h.GoldAsync(p), Is.EqualTo(Prizes.PoolEmptyGold));
+            Assert.That(await h.Store.UndeliveredChoicesAsync(null), Is.Empty);
         }
 
         // ── Refusals at the door ──────────────────────────────────────────────────────────

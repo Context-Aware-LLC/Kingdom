@@ -53,8 +53,8 @@ namespace Kingdom.Net.Server.King
     /// reach the board at all (<see cref="FavorService"/>). An account deleted through the
     /// deletion tool is different: that tool removes its scores, so the next player moves up.</para>
     ///
-    /// <para>Each pass also delivers any back a player chose whose grant never confirmed
-    /// (<see cref="DeliverChosenBacksAsync"/>).</para>
+    /// <para>Each pass also delivers any closed choice whose back or gold never confirmed
+    /// (<see cref="DeliverClosedChoicesAsync"/>).</para>
     ///
     /// <para><b>One window it does not close:</b> a match that banks a score after the grace, between
     /// a killed gold pass and its re-run, can move a paid player down a place. Their first grant
@@ -125,19 +125,20 @@ namespace Kingdom.Net.Server.King
             foreach (UnpaidReign reign in await _store.UnpaidReignsAsync(payableBefore, ct).ConfigureAwait(false))
                 await PayGoldAsync(reign, ct).ConfigureAwait(false);
 
-            await DeliverChosenBacksAsync(ct).ConfigureAwait(false);
+            await DeliverClosedChoicesAsync(ct).ConfigureAwait(false);
             if (_placeBackIds.Count == 0) return;
             await SettleBacksAsync(ct).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Backs a player chose (<see cref="PrizeChoiceEndpoint"/>) whose grant never confirmed: a
-        /// crash between the close and the grant, or a grant that timed out. Each is granted again
-        /// on its own key, so one that did land is a duplicate. Runs whether or not the place backs
+        /// Choices closed through <see cref="PrizeChoiceEndpoint"/> whose payment never confirmed: a
+        /// chosen back, or the pool-empty gold a closed choice was settled in. A crash between the
+        /// close and the payment, or a payment that timed out. Each is paid again on its own key,
+        /// so one that did land is a duplicate. Runs whether or not the place backs
         /// exist, since a choice is the pool's. A deleted player's is dropped. One that fails again
         /// is logged and waits for the next pass; it does not stop the others.
         /// </summary>
-        private async Task DeliverChosenBacksAsync(CancellationToken ct)
+        private async Task DeliverClosedChoicesAsync(CancellationToken ct)
         {
             foreach (FavorPrize chosen in await _store.UndeliveredChoicesAsync(null, ct).ConfigureAwait(false))
             {
@@ -147,7 +148,8 @@ namespace Kingdom.Net.Server.King
                     await _store.MarkChoiceDeliveredAsync(chosen.Reign, chosen.PlayerId, ct).ConfigureAwait(false);
                     continue;
                 }
-                await PrizeChoiceEndpoint.DeliverAsync(_store, _backs, account, chosen, ct).ConfigureAwait(false);
+                await PrizeChoiceEndpoint.DeliverAsync(_store, _backs, _economy, _prizes.PoolEmptyGold, account, chosen, ct)
+                    .ConfigureAwait(false);
             }
         }
 
