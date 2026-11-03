@@ -269,8 +269,14 @@ namespace Kingdom.Presentation
             {
                 case PointerSubjectKind.Card:
                     if (pressed.Owner != _p0Id) return DragSource.None;
+                    // The descriptor's zone is the PRESENTED one, which trails the mirror by the
+                    // playback queue. A card the authority has already played still reads Hand
+                    // until its entry is shown, and picking it up again would queue a second play
+                    // of a card that is gone.
                     if (pressed.Zone == Zone.Hand)
-                        return new DragSource(DragSourceKind.HandCard, pressed.Id, HandCardNeedsTarget(pressed.Id));
+                        return OwnHandContains(pressed.Id)
+                            ? new DragSource(DragSourceKind.HandCard, pressed.Id, HandCardNeedsTarget(pressed.Id))
+                            : DragSource.None;
                     if (pressed.Zone == Zone.Board)
                         return new DragSource(DragSourceKind.Attacker, pressed.Id, true);
                     return DragSource.None;
@@ -614,6 +620,17 @@ namespace Kingdom.Presentation
             foreach (TargetChoiceRequirement requirement in Targeting.PlayerChoicePlan(
                          State, _db, _p0Id, def, trigger, source))
                 if (requirement.RequiredCount > 0) return true;
+            return false;
+        }
+
+        private bool OwnHandContains(InstanceId cardId)
+        {
+            foreach (PlayerState ps in State.Players)
+            {
+                if (ps.Id != _p0Id) continue;
+                foreach (CardInstance ci in ps.Hand)
+                    if (ci.Id.Equals(cardId)) return true;
+            }
             return false;
         }
 

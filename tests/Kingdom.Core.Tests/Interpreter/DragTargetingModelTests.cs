@@ -136,6 +136,24 @@ namespace Kingdom.Core.Tests.Interpreter
         }
 
         [Test]
+        public void A_Card_The_Mirror_Has_Already_Played_Cannot_Be_Picked_Up()
+        {
+            // The descriptor still says Hand until the playback queue shows the play; the mirror
+            // already knows the card is gone, and a second drag would queue a second play of it.
+            var body = Minion(FixtureCard.Id("body"));
+            var db = new FakeCardDatabase().Register(body);
+            GameState state = State();
+            var card = new CardInstance(state.NextInstanceId(), body.Id, P0) { Zone = Zone.Hand };
+            state.Players[0].Hand.Add(card);
+            var model = new DragTargetingModel(P0, db) { State = state };
+            state.Players[0].Hand.Remove(card);
+
+            DragSource source = model.BeginSource(PointerSubject.OfCard(card.Id, P0, Zone.Hand));
+
+            Assert.That(source.Kind, Is.EqualTo(DragSourceKind.None));
+        }
+
+        [Test]
         public void An_Unaffordable_Card_Dropped_On_The_Board_Returns_To_Hand()
         {
             var body = Minion(FixtureCard.Id("unaffordable"));

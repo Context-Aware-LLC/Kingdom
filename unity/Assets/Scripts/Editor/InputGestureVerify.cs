@@ -47,6 +47,7 @@ namespace Kingdom.Editor
             FullStackReadConsumesPendingDrag();
             FullStackTapDoesNotArm();
             FullStackDragResolve();
+            FullStackPlayInFlightCannotBeRegrabbed();
             FullStackDragCancellation();
             FullStackOpenBoardPlays();
             FullStackTargetedSpellDrag();
@@ -208,6 +209,15 @@ namespace Kingdom.Editor
                         updateMethod.Invoke(Router, null);
                 }
                 StartCapturingIntents();
+            }
+
+            /// <summary>The authority refuses the play it was sent: what MatchRunner does after a
+            /// rejected submit, on the intent it took off the queue.</summary>
+            public void AuthorityRejects(PlayerIntent intent, RejectReason reason)
+            {
+                _input.Enqueue(intent);
+                _input.TryGetIntent(out _);
+                _input.OnRejected(reason);
             }
 
             public bool CycleTarget(bool reverse = false) => Router.CycleAwaitingTarget(reverse);
@@ -474,6 +484,39 @@ namespace Kingdom.Editor
             harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
             Check("drag-and-drop on the board submits PlayCardIntent",
                 harness.SubmittedIntents.Count == 1 && harness.SubmittedIntents[0] is PlayCardIntent);
+
+            harness.Cleanup();
+        }
+
+        /// <summary>
+        /// A submitted play cannot be picked up again until the authority answers (Sam,
+        /// 2026-11-02). Re-dragging the Coin while its play was in flight queued three more plays
+        /// of it, each refused NotInHand, and the card hung at every new drop point. A refusal
+        /// hands the card back.
+        /// </summary>
+        private static void FullStackPlayInFlightCannotBeRegrabbed()
+        {
+            GameState s = NewState();
+            var harness = new InputRouterHarness(s, Db(), P0);
+
+            void DragCard0ToBoard()
+            {
+                harness.StepFrames(new PointerSample(PointerPhase.Pressed,  new Vector2(25, 200)));
+                harness.StepFrames(new PointerSample(PointerPhase.Held,     new Vector2(25, 215)));
+                harness.StepFrames(new PointerSample(PointerPhase.Released, new Vector2(200, 300)));
+            }
+
+            DragCard0ToBoard();
+            Check("first drop submits the play", harness.SubmittedIntents.Count == 1);
+
+            DragCard0ToBoard();
+            Check("the same card cannot be played again while its play is in flight",
+                harness.SubmittedIntents.Count == 1);
+
+            harness.AuthorityRejects(harness.SubmittedIntents[0], RejectReason.IllegalTarget);
+            DragCard0ToBoard();
+            Check("a refused play hands the card back, so it can be played again",
+                harness.SubmittedIntents.Count == 2);
 
             harness.Cleanup();
         }

@@ -86,8 +86,62 @@ namespace Kingdom.Presentation
 
         private void OnDestroy()
         {
+            if (_p0Input != null) _p0Input.InFlightRejected -= OnAuthorityRejected;
             _pointer?.Dispose();
             _aimTrail?.Dispose();
+        }
+
+        // ── Plays waiting on the authority ──────────────────────────────────────────
+        //
+        // A submitted play leaves its card at the drop point until the snapshot that relocates
+        // it. Until that snapshot the mirror still has the card in hand, so the courtesy validator
+        // passes a second drag of the same card, and every re-drag queued another play behind the
+        // first — each one refused NotInHand once the first landed, while the card "hung" at each
+        // new drop point (Sam, 2026-11-02, the Coin on turn 4; Editor.log shows three refusals
+        // per stall). So a card is not pickable again until the authority answers: a snapshot
+        // that takes it out of the hand, or a refusal, which puts it back where it was lifted.
+        private readonly struct InFlightPlay
+        {
+            public readonly Transform Card;
+            public readonly Vector3 RestPos;
+            public readonly Quaternion RestRot;
+
+            public InFlightPlay(Transform card, Vector3 restPos, Quaternion restRot)
+            {
+                Card = card;
+                RestPos = restPos;
+                RestRot = restRot;
+            }
+        }
+
+        private readonly Dictionary<InstanceId, InFlightPlay> _inFlight = new Dictionary<InstanceId, InFlightPlay>();
+
+        private void OnAuthorityRejected(PlayerIntent intent)
+        {
+            if (intent is not PlayCardIntent play || !_inFlight.TryGetValue(play.Card, out InFlightPlay waiting))
+                return;
+            _inFlight.Remove(play.Card);
+            // Unity's ==: the presenter may have been destroyed by a redraw in the meantime.
+            if (waiting.Card == null) return;
+            waiting.Card.localPosition = waiting.RestPos;
+            waiting.Card.localRotation = waiting.RestRot;
+        }
+
+        /// <summary>Drops every waiting play whose card has left our hand in the mirror: the
+        /// authority accepted it, and the playback queue will move the card from here.</summary>
+        private void PruneInFlight(GameState state)
+        {
+            if (_inFlight.Count == 0 || state == null) return;
+            PlayerState own = null;
+            foreach (PlayerState ps in state.Players)
+                if (ps.Id == _p0Id) { own = ps; break; }
+            if (own == null) return;
+            var stillInHand = new HashSet<InstanceId>();
+            foreach (CardInstance card in own.Hand) stillInHand.Add(card.Id);
+            var answered = new List<InstanceId>();
+            foreach (InstanceId id in _inFlight.Keys)
+                if (!stillInHand.Contains(id)) answered.Add(id);
+            foreach (InstanceId id in answered) _inFlight.Remove(id);
         }
 
         private GameState          _currentState;
@@ -172,6 +226,9 @@ namespace Kingdom.Presentation
         public void Init(PlayerId p0Id, HotSeatInput p0Input, ICardDatabase db = null,
                          ICommandValidator validator = null)
         {
+            if (_p0Input != null) _p0Input.InFlightRejected -= OnAuthorityRejected;
+            if (p0Input != null) p0Input.InFlightRejected += OnAuthorityRejected;
+            _inFlight.Clear();
             _p0Id      = p0Id;
             _p0Input   = p0Input;
             _validator = validator;
@@ -186,6 +243,7 @@ namespace Kingdom.Presentation
         {
             _currentState = state;
             if (_model != null) _model.State = state;
+            PruneInFlight(state);
 
             // Mulligan toss selection lives only while our seat is still deciding; once the phase
             // passes or our confirm lands, clear marks from any presenters that survived the redraw
@@ -290,6 +348,7 @@ namespace Kingdom.Presentation
 
             DragSource src = _model.BeginSource(subject);
             if (src.Kind == DragSourceKind.None) return;
+            if (src.Kind == DragSourceKind.HandCard && _inFlight.ContainsKey(src.Id)) return;
 
             _source          = src;
             _sourcePresenter = presenter;
@@ -489,6 +548,8 @@ namespace Kingdom.Presentation
             // A rejected intent emits no snapshot, so treating it as a successful drop strands the
             // visual until an unrelated accepted action happens to refresh the hand.
             bool submitted = Submit(intent);
+            if (submitted && intent is PlayCardIntent play)
+                _inFlight[play.Card] = new InFlightPlay(_sourceTransform, _sourceRestLocalPos, _sourceRestLocalRot);
             CancelGesture(restoreVisual: !submitted);
             return submitted;
         }
@@ -1021,7 +1082,7 @@ namespace Kingdom.Presentation
                 Debug.LogWarning($"[InputRouter] local reject {reason} judged on mirror " +
                                  $"v{_currentState.StateVersion} phase={_currentState.Phase} " +
                                  $"active={_currentState.ActivePlayer} intent={intent.GetType().Name}");
-                _p0Input.OnRejected(reason ?? RejectReason.NotImplemented);
+                _p0Input.OnLocalRejected(reason ?? RejectReason.NotImplemented);
                 return false;
             }
             _p0Input.Enqueue(intent);

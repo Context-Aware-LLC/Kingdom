@@ -16,7 +16,17 @@ namespace Kingdom.Presentation
         private readonly PlayerId _playerId;
         private readonly Queue<PlayerIntent> _queue = new();
 
+        // The intent MatchRunner took last. The submit seam is single-in-flight
+        // (NetworkedMatchSession §7.1), so an authority rejection always answers this one.
+        private PlayerIntent _inFlight;
+
         public HotSeatInput(PlayerId playerId) => _playerId = playerId;
+
+        /// <summary>The authority refused the intent it was sent. InputRouter puts a refused
+        /// play's card back in the hand: nothing else would, because a refusal emits no snapshot.
+        /// This is the card's position, not a player-facing message — rejections have no toast by
+        /// decision (#268, 2026-08-26), and this event must not grow one.</summary>
+        public event System.Action<PlayerIntent> InFlightRejected;
 
         // Called by InputRouter to push a human-driven intent into the queue.
         public void Enqueue(PlayerIntent intent)
@@ -26,16 +36,25 @@ namespace Kingdom.Presentation
 
         public bool TryGetIntent(out PlayerIntent intent)
         {
-            if (_queue.Count > 0) { intent = _queue.Dequeue(); return true; }
+            if (_queue.Count > 0) { intent = _inFlight = _queue.Dequeue(); return true; }
             intent = null;
             return false;
         }
 
-        /// <summary>Every rejection lands here — local validator and authority both
-        /// (InputRouter.Submit and MatchRunner both call it). DIAGNOSTIC ONLY: rejections have no
-        /// player-facing surface by decision (#268, 2026-08-26), so this log is the only trace.
-        /// Nothing subscribes; do not reintroduce an event here to feed a toast.</summary>
+        /// <summary>An AUTHORITY rejection (MatchRunner, after a submit resolves). The log is the
+        /// only player-invisible trace of it.</summary>
         public void OnRejected(RejectReason reason)
+        {
+            Debug.LogWarning($"[HotSeatInput:{_playerId}] intent rejected — {reason}");
+            PlayerIntent rejected = _inFlight;
+            _inFlight = null;
+            if (rejected != null) InFlightRejected?.Invoke(rejected);
+        }
+
+        /// <summary>A LOCAL rejection (InputRouter's courtesy validator). Never sent, so it is not
+        /// the in-flight intent, and routing it through <see cref="OnRejected"/> would hand the
+        /// refusal to whatever play is genuinely still waiting on the server.</summary>
+        public void OnLocalRejected(RejectReason reason)
         {
             Debug.LogWarning($"[HotSeatInput:{_playerId}] intent rejected — {reason}");
         }
