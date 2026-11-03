@@ -104,6 +104,8 @@ namespace Kingdom.Presentation
         {
             UpdateGateOverlay overlay = Create();
             if (overlay == null) return null;
+            // Above the real gate, which a launch may still be showing on the same sorting order.
+            overlay.GetComponent<UIDocument>().sortingOrder = 2;
             if (verdict.HasValue) overlay.ShowVerdict(verdict.Value);
             else overlay.ShowWaiting(1);
             return overlay.gameObject;
@@ -191,12 +193,15 @@ namespace Kingdom.Presentation
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
             bool stale = verdict == UpdateGateVerdict.UpdateRequired;
 
+            // The stale build gets no heading and no instruction (Sam, 2026-11-02): the decree says
+            // it is out of date and the one button says Update, so a title would be a third "update".
             var title = root.Q<Label>("title");
-            if (title != null) title.text = Loc.Get(stale ? "update_gate_title_required" : "update_gate_title_unreachable");
+            if (stale) title?.RemoveFromHierarchy();
+            else if (title != null) title.text = Loc.Get("update_gate_title_unreachable");
 
             if (_reason != null)
                 _reason.text = stale
-                    ? Loc.Format("update_gate_reason_required", ConnectionFailureCopy.UpdateJoke)
+                    ? ConnectionFailureCopy.UpdateJoke
                     : Loc.Format("update_gate_reason_unreachable", ConnectionFailureCopy.Unreachable.Joke);
 
             var action = root.Q<Button>("btn-retry");

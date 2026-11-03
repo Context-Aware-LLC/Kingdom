@@ -843,6 +843,16 @@
     background-color: rgba(11, 14, 19, 0.78);
     border-color: rgba(240, 138, 60, 0.35);
 }
+/* Near white and a size up from the blocking modal's body, for the same reason as the sign-in
+ * screen's loose text (Sam, 2026-11-02): ink-2 was illegible over the painted scene. Two classes on
+ * the root, because the .mm-modal--blocking rules below set the help's size and come later. */
+.mm-modal--gate .mm-modal__title {
+    color: rgb(255, 255, 255);
+}
+.mm-modal--blocking.mm-modal--gate .mm-modal__help {
+    color: rgb(255, 250, 240);
+    font-size: var(--type-h2);
+}
 /* The waiting state's burning crown: a three-frame strip, one frame wide, so the image is 300% of
  * the box and UpdateGateOverlay steps background-position-x through 0%, 50% and 100%. */
 .mm-gate__fuse {
