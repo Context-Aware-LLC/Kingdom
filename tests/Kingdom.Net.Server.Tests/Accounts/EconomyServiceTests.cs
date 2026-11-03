@@ -176,6 +176,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
         [TestCase(GoldRewardKind.DailyQuest, "daily_quest")]
         [TestCase(GoldRewardKind.FirstWinOfDay, "first_win")]
         [TestCase(GoldRewardKind.Match, "match_reward")]
+        [TestCase(GoldRewardKind.KingsFavor, "kings_favor")]
         public async Task Gold_Faucets_Grant_A_Caller_Supplied_Amount(
             GoldRewardKind kind,
             string expectedSource)

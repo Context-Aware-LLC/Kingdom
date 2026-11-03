@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Kingdom.Core;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Protocol;
+using Kingdom.Net.Server.Achievements;
+using Kingdom.Net.Server.King;
 
 namespace Kingdom.Net.Server.Telemetry
 {
@@ -261,10 +263,18 @@ namespace Kingdom.Net.Server.Telemetry
                 SeatBlock(state, 0, outcome), SeatBlock(state, 1, outcome));
         }
 
-        /// <summary>Emit a row <see cref="Summarize"/> built, then the per-card sample.</summary>
-        public void Complete(GameState state, MatchCompleteEvent complete)
+        /// <summary>
+        /// Emit a row <see cref="Summarize"/> built, then the per-card sample. <paramref name="king"/>
+        /// goes only to an <see cref="AchievementSink"/>, which banks the Favor; it stays off the row
+        /// because the row is written to telemetry and the seating carries the players' names.
+        /// </summary>
+        public void Complete(GameState state, MatchCompleteEvent complete, KingSeating? king = null)
         {
-            Emit(() => _telemetry.MatchComplete(complete));
+            Emit(() =>
+            {
+                if (king is not null && _telemetry is AchievementSink favor) favor.MatchComplete(complete, king);
+                else _telemetry.MatchComplete(complete);
+            });
             Emit(() => _telemetry.CardsSeen(new CardSeenEvent(
                 _id, complete.EndedAtUtc, _attribution.Source, CardRows(state, complete.Outcome))));
         }

@@ -13,6 +13,7 @@ using Kingdom.Net.Server.Accounts;
 using Kingdom.Net.Server.Bots;
 using Kingdom.Net.Server.Decks;
 using Kingdom.Net.Server.Identity;
+using Kingdom.Net.Server.King;
 using Kingdom.Net.Server.Matchmaking;
 using Kingdom.Net.Server.Ranking;
 using Kingdom.Net.Server.Replay;
@@ -84,6 +85,17 @@ namespace Kingdom.Net.Server.Transport
         /// </summary>
         private readonly ICompletedMatchCounter? _firstMatches;
 
+        /// <summary>
+        /// The King's Favor scores, read for each seat's best when a match starts. Null, or a null
+        /// <see cref="_reignOneMs"/>, seats every match with no King: nothing banks and no card shows.
+        /// </summary>
+        private readonly IFavorStore? _favor;
+        private readonly long? _reignOneMs;
+
+        /// <summary>How long a match start may wait on reading the two bests. A slow store costs
+        /// the in-match card its "best this reign" line, never the match.</summary>
+        private static readonly TimeSpan KingBestReadTimeout = TimeSpan.FromSeconds(2);
+
         /// <summary>The first player of each accepted challenge to arrive, parked until the
         /// second does. Keyed by challenge id; never in <see cref="_matchmaking"/>.</summary>
         private readonly Dictionary<string, WaitingPlayer> _challengeWaiting =
@@ -128,7 +140,9 @@ namespace Kingdom.Net.Server.Transport
             OnboardingGrantService? onboarding = null,
             IEntitlementLedger? entitlementLedger = null,
             IChallengeTickets? challenges = null,
-            ICompletedMatchCounter? firstMatches = null)
+            ICompletedMatchCounter? firstMatches = null,
+            IFavorStore? favor = null,
+            long? reignOneMs = null)
             : this(
                 opts,
                 time,
@@ -147,7 +161,9 @@ namespace Kingdom.Net.Server.Transport
                 onboarding,
                 entitlementLedger,
                 challenges,
-                firstMatches)
+                firstMatches,
+                favor,
+                reignOneMs)
         {
         }
 
@@ -162,7 +178,9 @@ namespace Kingdom.Net.Server.Transport
             OnboardingGrantService? onboarding = null,
             IEntitlementLedger? entitlementLedger = null,
             IChallengeTickets? challenges = null,
-            ICompletedMatchCounter? firstMatches = null)
+            ICompletedMatchCounter? firstMatches = null,
+            IFavorStore? favor = null,
+            long? reignOneMs = null)
         {
             _opts = opts;
             _time = time;
@@ -182,6 +200,8 @@ namespace Kingdom.Net.Server.Transport
             _entitlementLedger = entitlementLedger;
             _challenges = challenges;
             _firstMatches = firstMatches;
+            _favor = favor;
+            _reignOneMs = reignOneMs;
         }
 
         public int LiveSessions
@@ -898,15 +918,18 @@ namespace Kingdom.Net.Server.Transport
                     seat0.HeroClass, seat0.Deck, seat1.HeroClass, seat1.Deck,
                     fallback.HeroMaxHealth, fallback.SparkTokenId);
 
+                string p0Name = NameForSeat(first.DisplayName, p0);
+                string p1Name = NameForSeat(second.DisplayName, p1);
                 var session = new MatchSession(
                     id, seed, _opts, _time, _db, setup, _replay, p0, p1,
                     _telemetry, attribution,
-                    NameForSeat(first.DisplayName, p0), NameForSeat(second.DisplayName, p1),
+                    p0Name, p1Name,
                     _rankedMatchSink,
                     _trainingEpisodes,
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : first.PolicyIdentity,
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : second.PolicyIdentity,
-                    Funnel, first.FunnelTracked, second.FunnelTracked);
+                    Funnel, first.FunnelTracked, second.FunnelTracked,
+                    SeatKing(attribution, p0Name, p1Name));
                 var pump = new SessionPump(session);
                 lock (_lock)
                 {
@@ -955,6 +978,34 @@ namespace Kingdom.Net.Server.Transport
                 first.Seated.TrySetResult(null);
                 second.Seated.TrySetResult(null);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// The King this match plays for, fixed now so a match running across Tuesday midnight
+        /// keeps its commission and banks to the reign it started in. Null for a friend or soak
+        /// match, and on a box with no King configured.
+        ///
+        /// <para><b>Blocks on the store</b>, bounded by <see cref="KingBestReadTimeout"/>:
+        /// <see cref="StartMatch"/> is synchronous, and the bot-fill path's <c>.Result</c> read
+        /// depends on it staying so. An in-memory store answers at once.</para>
+        /// </summary>
+        private KingSeating? SeatKing(MatchAttribution attribution, string p0Name, string p1Name)
+        {
+            if (_favor is null || _reignOneMs is not long reignOne) return null;
+            try
+            {
+                using var timeout = new CancellationTokenSource(KingBestReadTimeout);
+                return KingSeating.ForMatchAsync(
+                        _favor, attribution.Source, reignOne, _time.NowMs,
+                        attribution.P0, attribution.P1, p0Name, p1Name, timeout.Token)
+                    .GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                // The match is worth more than its Favor: it plays on, for no King.
+                Console.Error.WriteLine("[king] a match was seated with no King: {0}", ex.Message);
+                return null;
             }
         }
 

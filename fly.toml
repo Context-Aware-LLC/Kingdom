@@ -5,6 +5,12 @@
 app = "emberfall"
 primary_region = "sjc"
 
+# How long a deploy waits after the stop signal before killing the machine. It must outlast the
+# server's own 30 s shutdown timeout (ServerApp, HostOptions.ShutdownTimeout), which is how long
+# AchievementSink gets to bank the King's Favor scores of the matches that just ended. Fly's
+# default, 5 s, would cut that drain off and lose them on every deploy.
+kill_timeout = "35s"
+
 [build]
   dockerfile = "deploy/walking-skeleton/Dockerfile.server"
 

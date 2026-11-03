@@ -40,6 +40,8 @@ namespace Kingdom.Net.Server.Accounts
         DailyQuest,
         FirstWinOfDay,
         Match,
+        /// <summary>The King's Favor: the first qualifying score in a reign, and a closed reign's places.</summary>
+        KingsFavor,
     }
 
     internal static class EconomyAccountPolicy
@@ -138,6 +140,7 @@ namespace Kingdom.Net.Server.Accounts
                 GoldRewardKind.DailyQuest => "daily_quest",
                 GoldRewardKind.FirstWinOfDay => "first_win",
                 GoldRewardKind.Match => "match_reward",
+                GoldRewardKind.KingsFavor => "kings_favor",
                 _ => throw new ArgumentOutOfRangeException(nameof(kind)),
             };
             var batch = new EntitlementBatch(

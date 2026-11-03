@@ -195,6 +195,12 @@ namespace Kingdom.Net.Server
         public King.IFavorStore? Favor { get; init; }
 
         /// <summary>
+        /// The King's Favor gold. Null (default) pays none: scores still bank. From
+        /// <c>KINGDOM_FAVOR_PRIZES</c>, which logs and pays nothing when unset or invalid.
+        /// </summary>
+        public King.FavorPrizeSettings? FavorPrizes { get; init; }
+
+        /// <summary>
         /// What a finished match and a completed quest pay. Null (default) uses the shipping
         /// schedule in <see cref="GoldRewardPolicy"/>; a test injects its own so an assertion never
         /// depends on a live tuning number. It is a policy rather than a set of amounts on
@@ -372,6 +378,7 @@ namespace Kingdom.Net.Server
                 QuestProgress = questProgress,
                 Achievements = achievements,
                 Favor = favor,
+                FavorPrizes = King.FavorPrizeSettings.FromEnvironment(),
                 CompletedMatches = completedMatches,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
@@ -505,6 +512,10 @@ namespace Kingdom.Net.Server
         {
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseUrls(cfg.Urls);
+            // Long enough for AchievementSink to drain on a deploy, or the King's Favor scores of the
+            // matches that just ended are lost. Stated rather than left to the default (also 30 s)
+            // because something depends on it. fly.toml's kill_timeout must outlast it.
+            builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = TimeSpan.FromSeconds(30));
 
             // The drain rides the host lifecycle: it starts after the app is up and gets a graceful
             // StopAsync on shutdown. Absent unless KINGDOM_TELEMETRY_DB is configured.
@@ -699,16 +710,25 @@ namespace Kingdom.Net.Server
             // Achievements, decorated onto the same sink for the same reason. They need only the
             // account store, to tell an account from a tokenless tooling seat; without one GET /achievements
             // answers 503 and nothing is recorded.
+            //
+            // The King's Favor banks from the same worker and needs the same store, to keep Superuser
+            // accounts off the board. Without one the gate seats every match with no King.
+            //
+            // One Favor store for the process: the gate, the worker and GET /king/roll must share the
+            // in-memory default, or the Roll reads a store nothing writes to.
+            King.IFavorStore favorStore = cfg.Favor ?? new King.InMemoryFavorStore();
             AchievementService? achievementService = null;
+            King.FavorService? favorService = null;
             if (cfg.AccountStore is not null)
             {
                 achievementService = new AchievementService(
                     cfg.Achievements ?? new InMemoryAchievementStore(),
                     cfg.AccountStore,
                     isBotAccount);
+                favorService = new King.FavorService(favorStore, cfg.AccountStore, economy, cfg.FavorPrizes);
 
                 var achievementSink = new AchievementSink(
-                    telemetry ?? NullTelemetrySink.Instance, achievementService);
+                    telemetry ?? NullTelemetrySink.Instance, achievementService, favorService);
                 builder.Services.AddSingleton<IHostedService>(achievementSink);
                 telemetry = achievementSink;
             }
@@ -770,7 +790,9 @@ namespace Kingdom.Net.Server
                 onboarding,
                 cfg.EntitlementLedger,
                 challenges,
-                firstMatches);
+                firstMatches,
+                favorService is null ? null : favorStore,
+                cfg.ReignOneMs);
 
             // The social surface (#409). The hub asks the gate who is in a match and the gate
             // tells the hub when that changes; neither holds the other, so a box with no social
@@ -939,9 +961,6 @@ namespace Kingdom.Net.Server
             // GET /king/roll — every reign from this one back to Reign 1, newest first, with the
             // Favorite of each closed one. The current reign has none yet; a reign nobody won, or whose
             // Favorite was struck or deleted, reads null. Epithet and fate are pool indices, like /king.
-            //
-            // One shared store for the process: the in-memory default must not be rebuilt per request.
-            King.IFavorStore favorStore = cfg.Favor ?? new King.InMemoryFavorStore();
             app.MapGet("/king/roll", async (HttpContext context) =>
             {
                 context.Response.Headers["Cache-Control"] = "no-store";

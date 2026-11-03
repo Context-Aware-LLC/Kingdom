@@ -7,6 +7,7 @@ using Kingdom.Core.Projection;
 using Kingdom.Core.Serialization;
 using Kingdom.Net.Protocol;
 using Kingdom.Net.Server.Achievements;
+using Kingdom.Net.Server.King;
 using Kingdom.Net.Server.Replay;
 using Kingdom.Net.Server.Ranking;
 using Kingdom.Net.Server.Telemetry;
@@ -73,6 +74,10 @@ namespace Kingdom.Net.Server
         private readonly string _p0Policy;
         private readonly string _p1Policy;
 
+        /// <summary>The King this match plays for, fixed at the start (see <see cref="KingSeating"/>),
+        /// or null in a friend or soak match, or when there is no King.</summary>
+        private readonly KingSeating? _king;
+
         /// <summary>The first-session funnel (item 2): which seats are signed-in humans, and which of
         /// them has had an intent accepted yet. Only the first one writes <c>first_action</c>.</summary>
         private readonly IFunnelSink _funnel;
@@ -113,7 +118,8 @@ namespace Kingdom.Net.Server
             string p1Policy = "unspecified",
             IFunnelSink? funnel = null,
             bool p0FunnelTracked = false,
-            bool p1FunnelTracked = false)
+            bool p1FunnelTracked = false,
+            KingSeating? king = null)
         {
             _id = id;
             _seed = seed;
@@ -130,6 +136,7 @@ namespace Kingdom.Net.Server
             _trainingEpisodes = trainingEpisodes;
             _p0Policy = p0Policy;
             _p1Policy = p1Policy;
+            _king = king;
             _funnel = funnel ?? NullFunnelSink.Instance;
             _funnelTracked[0] = p0FunnelTracked;
             _funnelTracked[1] = p1FunnelTracked;
@@ -628,7 +635,8 @@ namespace Kingdom.Net.Server
             // class out of live state — and after the wire messages, because a telemetry problem
             // must never cost a player their match-end screen.
             var outcome = _host.State.Outcome;
-            if (summary is not null) _telemetry.Complete(_host.State, summary);
+            // The King's Favor banks from the same event, off the match thread. A void never gets here.
+            if (summary is not null) _telemetry.Complete(_host.State, summary, _king);
 
             // Ratings are a projection of the authoritative result, never client input. The sink
             // rejects bot-fill, AI soak, self-play and unattributed matches before they can move it.
