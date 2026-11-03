@@ -54,7 +54,7 @@ namespace Kingdom.Net.Server.Tests.King
         }
 
         private static KingSeating King(string commission, int reign = 4)
-            => new KingSeating(reign, commission, null, null, "Alice", "Bob");
+            => new KingSeating(reign, commission, null, null, "Alice", "Bob", true, true);
 
         private static AchievementMatchFacts Facts(
             string playerId,
@@ -401,9 +401,9 @@ namespace Kingdom.Net.Server.Tests.King
             KingSeating? king = await KingSeating.ForMatchAsync(
                 store, source, ReignOne, inReignTwo,
                 AccountId.FromAuthenticatedAccount("player-a"), AccountId.FromAuthenticatedAccount("player-b"),
-                "A", "B", CancellationToken.None);
+                "A", "B", true, true, CancellationToken.None);
 
-            Assert.That(king, Is.EqualTo(new KingSeating(2, KingSchedule.For(2).Commission, 6, null, "A", "B")));
+            Assert.That(king, Is.EqualTo(new KingSeating(2, KingSchedule.For(2).Commission, 6, null, "A", "B", true, true)));
         }
 
         [TestCase(TelemetrySource.Friendly)]
@@ -413,7 +413,7 @@ namespace Kingdom.Net.Server.Tests.King
             KingSeating? king = await KingSeating.ForMatchAsync(
                 new InMemoryFavorStore(), source, ReignOne, ReignOne + 1_000,
                 AccountId.FromAuthenticatedAccount("player-a"), AccountId.FromAuthenticatedAccount("player-b"),
-                "A", "B", CancellationToken.None);
+                "A", "B", true, true, CancellationToken.None);
 
             Assert.That(king, Is.Null);
         }
@@ -424,7 +424,7 @@ namespace Kingdom.Net.Server.Tests.King
             KingSeating? king = await KingSeating.ForMatchAsync(
                 new InMemoryFavorStore(), TelemetrySource.Ladder, ReignOne, ReignOne - 1,
                 AccountId.FromAuthenticatedAccount("player-a"), AccountId.FromAuthenticatedAccount("player-b"),
-                "A", "B", CancellationToken.None);
+                "A", "B", true, true, CancellationToken.None);
 
             Assert.That(king, Is.Null);
         }

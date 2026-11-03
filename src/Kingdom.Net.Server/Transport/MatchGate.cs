@@ -271,7 +271,12 @@ namespace Kingdom.Net.Server.Transport
             /// waiter is in <see cref="_waiting"/> but NEVER in <see cref="_matchmaking"/>, so no
             /// pairing can reach it, and <see cref="TryBotFillTimedOutTickets"/> seats it with no
             /// delay against this policy.</summary>
-            BotOpponent? FirstMatchBot = null);
+            BotOpponent? FirstMatchBot = null,
+            /// <summary>The seat can hold a place in the King's Favor (#421): it resolved an
+            /// account, and not a Superuser one. <see cref="FavorService"/> banks nothing for any
+            /// other seat, so the commission card is not shown to it either. False for a bot, whose
+            /// account is a Superuser, and for a tokenless tooling seat.</summary>
+            bool FavorEligible = false);
 
         /// <summary>Per-match attribution, or null once the session is gone. Read by the telemetry
         /// emitter; exposed for the identity tests.</summary>
@@ -498,7 +503,8 @@ namespace Kingdom.Net.Server.Transport
             string refusal;
             if (challengeTicket is null)
                 (seating, refusalCode, refusal) =
-                    await PairAsync(conn, account, checkedName, submitted, funnelTracked, ct);
+                    await PairAsync(conn, account, checkedName, submitted, funnelTracked,
+                        favorEligible: deckOwnerAccount is not null && deckOwnerAccount.Kind != AccountKind.Superuser, ct);
             else
                 (seating, refusalCode, refusal) = await SeatChallengeAsync(
                     conn, account, checkedName, submitted, challengeTicket, funnelTracked, ct);
@@ -575,7 +581,7 @@ namespace Kingdom.Net.Server.Transport
         /// </summary>
         private async Task<(Seating? Seating, int RefusalCode, string Refusal)> PairAsync(
             WebSocketConnection conn, AccountId account, string displayName, SeatDeck? submitted,
-            bool funnelTracked, CancellationToken ct)
+            bool funnelTracked, bool favorEligible, CancellationToken ct)
         {
             int rating = _ratingStore is null
                 ? _ratingForAccount(account)
@@ -587,7 +593,7 @@ namespace Kingdom.Net.Server.Transport
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
             var waiter = new WaitingPlayer(
                 ticket, conn, account, displayName, submitted, "human", mySeating, _time.NowMs, funnelTracked,
-                firstMatchBot);
+                firstMatchBot, favorEligible);
 
             lock (_lock)
             {
@@ -939,7 +945,7 @@ namespace Kingdom.Net.Server.Transport
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : first.PolicyIdentity,
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : second.PolicyIdentity,
                     Funnel, first.FunnelTracked, second.FunnelTracked,
-                    SeatKing(attribution, p0Name, p1Name));
+                    SeatKing(attribution, p0Name, p1Name, first.FavorEligible, second.FavorEligible));
                 var pump = new SessionPump(session);
                 lock (_lock)
                 {
@@ -1000,7 +1006,8 @@ namespace Kingdom.Net.Server.Transport
         /// <see cref="StartMatch"/> is synchronous, and the bot-fill path's <c>.Result</c> read
         /// depends on it staying so. An in-memory store answers at once.</para>
         /// </summary>
-        private KingSeating? SeatKing(MatchAttribution attribution, string p0Name, string p1Name)
+        private KingSeating? SeatKing(MatchAttribution attribution, string p0Name, string p1Name,
+            bool p0Eligible, bool p1Eligible)
         {
             if (_favor is null || _reignOneMs is not long reignOne) return null;
             try
@@ -1008,7 +1015,7 @@ namespace Kingdom.Net.Server.Transport
                 using var timeout = new CancellationTokenSource(KingBestReadTimeout);
                 return KingSeating.ForMatchAsync(
                         _favor, attribution.Source, reignOne, _time.NowMs,
-                        attribution.P0, attribution.P1, p0Name, p1Name, timeout.Token)
+                        attribution.P0, attribution.P1, p0Name, p1Name, p0Eligible, p1Eligible, timeout.Token)
                     .GetAwaiter().GetResult();
             }
             catch (Exception ex)

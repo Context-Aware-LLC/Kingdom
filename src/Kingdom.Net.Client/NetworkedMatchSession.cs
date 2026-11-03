@@ -159,8 +159,8 @@ namespace Kingdom.Net.Client
         /// to hide the card. The server scores it; the client never computes one.</summary>
         public CommissionProgress? Commission { get { lock (_lock) return _commission; } }
         /// <summary><c>MatchEndMsg.Commission</c> — this seat's final score and whether it is a new
-        /// best, for the match-end proclamation. Null until the server says, in a match with no King,
-        /// and when a commission that needs a win was lost.</summary>
+        /// best, for the match-end proclamation. Null until the server says, and whenever the score
+        /// does not count; the server decides that, so a final here is always one to proclaim.</summary>
         public CommissionFinal? EndCommission { get { lock (_lock) return _endCommission; } }
         /// <summary>The server's close-frame reason text, when it sent one (#232) — null for a local
         /// close, a transport fault, or a peer close that carried no text. Prefer this over

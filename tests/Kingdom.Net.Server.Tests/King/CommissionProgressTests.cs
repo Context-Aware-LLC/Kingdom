@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Protocol;
+using Kingdom.Net.Server.Achievements;
 using Kingdom.Net.Server.King;
 using Kingdom.Net.Server.Telemetry;
 using Kingdom.Net.Server.Tests.Support;
@@ -19,8 +20,9 @@ namespace Kingdom.Net.Server.Tests.King
     [Category("Contract")]
     public sealed class CommissionProgressTests
     {
-        private static KingSeating Seating(string commission, int? bestP0 = null, int? bestP1 = null)
-            => new KingSeating(3, commission, bestP0, bestP1, "Alice", "Bobby");
+        private static KingSeating Seating(string commission, int? bestP0 = null, int? bestP1 = null,
+            bool eligibleP0 = true, bool eligibleP1 = true)
+            => new KingSeating(3, commission, bestP0, bestP1, "Alice", "Bobby", eligibleP0, eligibleP1);
 
         private static int ActiveSeat(SessionHarness h)
             => h.Session.Host.State.SeatOf(h.Session.Host.State.ActivePlayer);
@@ -97,10 +99,13 @@ namespace Kingdom.Net.Server.Tests.King
         [Test]
         public void Botfill_and_ladder_send_the_same_shape()
         {
+            // Seat 1 is a human on the ladder and a bot (a Superuser, so never eligible) in bot-fill.
+            // Seat 0 is the human whose wire must not give the bot away.
             List<byte[]>[] Run(TelemetrySource source, out CommissionProgress?[] starts)
             {
                 var h = new SessionHarness(attributed: true, source: source,
-                    king: Seating(CommissionIds.WasteNot, bestP0: 9, bestP1: 4));
+                    king: Seating(CommissionIds.WasteNot, bestP0: 9, bestP1: 4,
+                        eligibleP1: source != TelemetrySource.BotFill));
                 starts = new[] { StartProgress(h, 0), StartProgress(h, 1) };
                 h.ConfirmMulligans();
                 EndTurn(h);
@@ -113,16 +118,14 @@ namespace Kingdom.Net.Server.Tests.King
             List<byte[]>[] botFill = Run(TelemetrySource.BotFill, out CommissionProgress?[] botFillStarts);
 
             Assert.That(ladderStarts[0], Is.Not.Null, "the field is there to compare");
-            Assert.That(botFillStarts, Is.EqualTo(ladderStarts), "the same card at match start");
-            for (int seat = 0; seat < 2; seat++)
-            {
-                Assert.That(botFill[seat].Count, Is.EqualTo(ladder[seat].Count), $"seat {seat}: the same number of frames");
-                for (int i = 0; i < ladder[seat].Count; i++)
-                    Assert.That(Encoding.UTF8.GetString(botFill[seat][i]), Is.EqualTo(Encoding.UTF8.GetString(ladder[seat][i])),
-                        $"seat {seat} frame {i}: a bot-filled match is byte for byte a ladder match");
-            }
+            Assert.That(botFillStarts[0], Is.EqualTo(ladderStarts[0]), "the same card at match start");
+            Assert.That(botFill[0].Count, Is.EqualTo(ladder[0].Count), "the human seat: the same number of frames");
+            for (int i = 0; i < ladder[0].Count; i++)
+                Assert.That(Encoding.UTF8.GetString(botFill[0][i]), Is.EqualTo(Encoding.UTF8.GetString(ladder[0][i])),
+                    $"human seat frame {i}: a bot-filled match is byte for byte a ladder match");
             Assert.That(ladder[0].Any(f => Encoding.UTF8.GetString(f).Contains("\"commission\"")), Is.True,
                 "the frames compared carry the field");
+            Assert.That(botFillStarts[1], Is.Null, "the bot's own seat, a Superuser, is shown nothing");
         }
 
         /// <summary>Every frame but the match start, whose reconnect token is minted at random.</summary>
@@ -151,8 +154,15 @@ namespace Kingdom.Net.Server.Tests.King
             Assert.That(h.Conn0.Last<SnapshotMsg>().Commission!.CountsIfYouWin, Is.True);
 
             Concede(h, 1);
-            Assert.That(h.Conn0.Last<SnapshotMsg>().Commission!.CountsIfYouWin, Is.False,
-                "the last snapshot is of a finished match");
+            CommissionProgress winner = h.Conn0.Last<SnapshotMsg>().Commission!;
+            Assert.That(winner.CountsIfYouWin, Is.False, "the last snapshot is of a finished match");
+            Assert.That(winner.Score, Is.EqualTo(h.Session.Host.State.Players[0].Hero.CurrentHealth),
+                "the winner's number now counts, and is shown ungreyed");
+
+            CommissionProgress loser = h.Conn1.Last<SnapshotMsg>().Commission!;
+            Assert.That(loser.CountsIfYouWin, Is.False);
+            Assert.That(loser.Score, Is.Null,
+                "a lost win-only score counts for nothing, so the server stops showing it");
         }
 
         [Test]
@@ -181,21 +191,25 @@ namespace Kingdom.Net.Server.Tests.King
             Assert.That(final.NewBest, Is.True, "lower is better, and it beats 40");
         }
 
-        [Test]
-        public void A_final_that_ties_or_misses_the_best_is_not_new()
+        /// <summary>Technically: lower is better, and seat 0 wins at its full Health when seat 1
+        /// concedes straight after the mulligan.</summary>
+        private static CommissionFinal TechnicallyFinalAgainst(int? bestP0)
         {
-            var tie = new SessionHarness(king: Seating(CommissionIds.Technically));
-            int health0 = tie.Session.Host.State.Players[0].Hero.CurrentHealth;
-
-            var h = new SessionHarness(king: Seating(CommissionIds.Technically, bestP0: health0));
+            var h = new SessionHarness(king: Seating(CommissionIds.Technically, bestP0: bestP0));
             h.ConfirmMulligans();
             Concede(h, 1);
-            Assert.That(h.Conn0.Last<MatchEndMsg>().Commission!.NewBest, Is.False, "a tie goes to whoever got there first");
+            return h.Conn0.Last<MatchEndMsg>().Commission!;
+        }
 
-            var first = new SessionHarness(king: Seating(CommissionIds.Technically));
-            first.ConfirmMulligans();
-            Concede(first, 1);
-            Assert.That(first.Conn0.Last<MatchEndMsg>().Commission!.NewBest, Is.True, "a first score is a best");
+        [Test]
+        public void New_best_only_when_the_final_strictly_beats_the_best()
+        {
+            int health0 = new SessionHarness().Session.Host.State.Players[0].Hero.CurrentHealth;
+
+            Assert.That(TechnicallyFinalAgainst(null).NewBest, Is.True, "a first score is a best");
+            Assert.That(TechnicallyFinalAgainst(health0 + 1).NewBest, Is.True, "lower beats a higher best");
+            Assert.That(TechnicallyFinalAgainst(health0).NewBest, Is.False, "a tie goes to whoever got there first");
+            Assert.That(TechnicallyFinalAgainst(health0 - 1).NewBest, Is.False, "a final that misses the best is not new");
         }
 
         [Test]
@@ -210,14 +224,63 @@ namespace Kingdom.Net.Server.Tests.King
         }
 
         [Test]
-        public void A_lost_commission_that_needs_no_win_still_carries_its_final()
+        public void A_final_that_does_not_qualify_carries_null()
         {
             var h = new SessionHarness(king: Seating(CommissionIds.Overkill));
             h.ConfirmMulligans();
             Concede(h, 0);
 
-            Assert.That(h.Conn0.Last<MatchEndMsg>().Commission, Is.EqualTo(new CommissionFinal(CommissionIds.Overkill, 0, false)),
-                "the loser of a commission that needs no win is still told the number");
+            Assert.That(h.Conn0.Last<MatchEndMsg>().Commission, Is.Null, "an Overkill of 0 banks nothing, so there is no final");
+            Assert.That(h.Conn1.Last<MatchEndMsg>().Commission, Is.Null, "the winner's 0 does not qualify either");
         }
+
+        [Test]
+        public void A_lost_commission_that_needs_no_win_still_carries_a_qualifying_final()
+        {
+            KingSeating king = Seating(CommissionIds.Overkill, bestP0: 3);
+            CommissionFinal? final = king.FinalFor(0, Facts(SeatResult.Loss, overkillBest: 5));
+            Assert.That(final, Is.EqualTo(new CommissionFinal(CommissionIds.Overkill, 5, true)),
+                "Overkill needs no win, so a loser who qualifies is told the number");
+        }
+
+        [Test]
+        public void An_ineligible_seat_is_shown_nothing_and_the_other_seat_is_unchanged()
+        {
+            var both = new SessionHarness(king: Seating(CommissionIds.Technically, bestP0: 40, bestP1: 40));
+            var su = new SessionHarness(king: Seating(CommissionIds.Technically, bestP0: 40, bestP1: 40, eligibleP1: false));
+            foreach (SessionHarness h in new[] { both, su })
+            {
+                h.ConfirmMulligans();
+                EndTurn(h);
+                Concede(h, 0);   // seat 1 wins, so a final would be owed
+            }
+
+            Assert.That(su.Conn1.MessagesOf<SnapshotMsg>().All(s => s.Commission is null), Is.True,
+                "a Superuser or unattributed seat banks nothing, so it is sent no card");
+            Assert.That(su.Conn1.Last<MatchStartMsg>().Snapshot.Commission, Is.Null);
+            Assert.That(su.Conn1.Last<MatchEndMsg>().Commission, Is.Null, "and no final, though it won");
+            Assert.That(both.Conn1.Last<MatchEndMsg>().Commission, Is.Not.Null, "the same win, eligible, has one");
+
+            List<byte[]> withPeer = NotMatchStart(both.Conn0), withSuperuser = NotMatchStart(su.Conn0);
+            Assert.That(withSuperuser.Count, Is.EqualTo(withPeer.Count));
+            for (int i = 0; i < withPeer.Count; i++)
+                Assert.That(Encoding.UTF8.GetString(withSuperuser[i]), Is.EqualTo(Encoding.UTF8.GetString(withPeer[i])),
+                    $"frame {i}: the other seat's wire does not change with its opponent's eligibility");
+        }
+
+        [Test]
+        public void An_ineligible_seat_gets_null_from_both_builders()
+        {
+            KingSeating king = Seating(CommissionIds.Overkill, eligibleP0: false);
+            AchievementMatchFacts facts = Facts(SeatResult.Win, overkillBest: 5);
+            Assert.That(king.ProgressFor(0, facts, live: true), Is.Null);
+            Assert.That(king.FinalFor(0, facts), Is.Null);
+            Assert.That(king.ProgressFor(1, facts, live: true), Is.Not.Null, "the eligible seat is unaffected");
+            Assert.That(king.FinalFor(1, facts), Is.Not.Null);
+        }
+
+        private static AchievementMatchFacts Facts(SeatResult result, int overkillBest)
+            => new AchievementMatchFacts("m", "player", DateTimeOffset.UnixEpoch, TelemetrySource.Ladder, result,
+                MatchEndReason.Win, 5, 0, 0, 0, OverkillBest: overkillBest);
     }
 }

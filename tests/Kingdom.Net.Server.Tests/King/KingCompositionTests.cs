@@ -110,6 +110,85 @@ namespace Kingdom.Net.Server.Tests.King
             }
         }
 
+        [Test]
+        [CancelAfter(60_000)]
+        public async Task A_Superuser_seat_is_shown_no_commission_through_the_real_server()
+        {
+            int reign = Enumerable.Range(1, CommissionIds.Launch.Count)
+                .First(r => KingSchedule.For(r).Commission == CommissionIds.Technically);
+            long reignOneMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+                              - (reign - 1) * KingCalendar.WeekMs - 60_000;
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-king-" + Guid.NewGuid().ToString("N"));
+            var built = ServerApp.BuildWithGate(new ServerConfig
+            {
+                Urls = "http://127.0.0.1:0",
+                CardsDir = SessionHarness.CardDataDir(),
+                ReplaysDir = replays,
+                TokenVerifier = new PerTokenVerifier(),
+                AccountStore = new SuperuserByEmail(new InMemoryAccountStore(new FakeTime()), "token-a@example.com"),
+                Favor = new InMemoryFavorStore(),
+                ReignOneMs = reignOneMs,
+            });
+
+            await built.App.StartAsync();
+            try
+            {
+                var baseUri = new Uri(built.App.Urls.First());
+                var wsUri = new Uri($"ws://127.0.0.1:{baseUri.Port}/ws");
+                using var c0 = new ClientWebSocket();
+                using var c1 = new ClientWebSocket();
+                await c0.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(c0, "token-a");
+                await c1.ConnectAsync(wsUri, CancellationToken.None);
+                await SendHelloAsync(c1, "token-b");
+
+                MatchStartMsg start0 = await ExpectAsync<MatchStartMsg>(c0);
+                MatchStartMsg start1 = await ExpectAsync<MatchStartMsg>(c1);
+                Assert.That(start0.Snapshot.Commission, Is.Null, "the Superuser seat banks nothing, so it is shown no card");
+                Assert.That(start1.Snapshot.Commission, Is.Not.Null, "the player beside it still has theirs");
+
+                // The Superuser wins a Technically match: a final would be owed to anyone else.
+                var matchId = new MatchId(start0.Snapshot.State.Id.Value);
+                await SendAsync(c0, new IntentMsg(0, new MulliganIntent(start0.PlayerId, Array.Empty<InstanceId>())), matchId, 1);
+                await SendAsync(c1, new IntentMsg(0, new MulliganIntent(start1.PlayerId, Array.Empty<InstanceId>())), matchId, 1);
+                await SendAsync(c1, new IntentMsg(0, new ConcedeIntent(start1.PlayerId)), matchId, 2);
+                MatchEndMsg end0 = await ExpectAsync<MatchEndMsg>(c0);
+                Assert.That(end0.Outcome, Is.EqualTo(start0.Seat == 0 ? MatchOutcome.Player0Win : MatchOutcome.Player1Win));
+                Assert.That(end0.Commission, Is.Null, "and no final, though it won");
+            }
+            finally
+            {
+                await built.App.StopAsync();
+                try { Directory.Delete(replays, recursive: true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>Makes the account behind one email a Superuser as it is resolved, the kind a bot
+        /// or a QA identity carries.</summary>
+        private sealed class SuperuserByEmail : IAccountStore
+        {
+            private readonly IAccountStore _inner;
+            private readonly string _email;
+            public SuperuserByEmail(IAccountStore inner, string email) { _inner = inner; _email = email; }
+
+            public async Task<Account> ResolveOrCreateAsync(string credentialKind, string credentialHash,
+                string? email = null, CancellationToken ct = default)
+            {
+                Account account = await _inner.ResolveOrCreateAsync(credentialKind, credentialHash, email, ct);
+                if (email != _email || account.Kind == AccountKind.Superuser) return account;
+                return (await _inner.SetKindAsync(account.PlayerId, AccountKind.Superuser, ct))!;
+            }
+
+            public Task<Account?> FindByPlayerIdAsync(string playerId, CancellationToken ct = default)
+                => _inner.FindByPlayerIdAsync(playerId, ct);
+            public Task<Account?> SetKindAsync(string playerId, AccountKind kind, CancellationToken ct = default)
+                => _inner.SetKindAsync(playerId, kind, ct);
+            public Task<Account?> MarkOnboardedAsync(string playerId, CancellationToken ct = default)
+                => _inner.MarkOnboardedAsync(playerId, ct);
+            public Task<Account?> MarkSeenAsync(string playerId, CancellationToken ct = default)
+                => _inner.MarkSeenAsync(playerId, ct);
+        }
+
         /// <summary>Each auth token is its own player, so the two seats are two accounts. A signed-in
         /// seat's name comes from its identity, not its hello.</summary>
         private sealed class PerTokenVerifier : IIdentityTokenVerifier

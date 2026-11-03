@@ -817,7 +817,11 @@ namespace Kingdom.Net.Server
         {
             if (_king is null || summary is null) return null;
             try { return _king.FinalFor(seat, AchievementMatchFacts.ForSeat(summary, seat)); }
-            catch (Exception) { return null; }   // decoration; never the match-end
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("[king] match {0} seat {1} commission final was not scored: {2}", _id.Value, seat, ex.Message);
+                return null;
+            }
         }
 
         private void Broadcast(NetMessage msg)

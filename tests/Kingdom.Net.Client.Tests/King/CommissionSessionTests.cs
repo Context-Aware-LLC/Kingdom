@@ -24,7 +24,7 @@ namespace Kingdom.Net.Client.Tests.King
         [Test]
         public async Task The_card_arrives_with_the_match_and_follows_each_snapshot()
         {
-            using var peer = new LoopbackServerPeer(king: new KingSeating(2, CommissionIds.WasteNot, 9, 4, "A", "B"));
+            using var peer = new LoopbackServerPeer(king: new KingSeating(2, CommissionIds.WasteNot, 9, 4, "A", "B", true, true));
             using NetworkedMatchSession c0 = Client(peer, 0);
             using NetworkedMatchSession c1 = Client(peer, 1);
             await StartPairAsync(peer, c0, c1);
@@ -52,7 +52,7 @@ namespace Kingdom.Net.Client.Tests.King
         [Test]
         public async Task The_final_arrives_with_the_match_end()
         {
-            using var peer = new LoopbackServerPeer(king: new KingSeating(2, CommissionIds.Technically, 40, 40, "A", "B"));
+            using var peer = new LoopbackServerPeer(king: new KingSeating(2, CommissionIds.Technically, 40, 40, "A", "B", true, true));
             using NetworkedMatchSession c0 = Client(peer, 0);
             using NetworkedMatchSession c1 = Client(peer, 1);
             await StartPairAsync(peer, c0, c1);

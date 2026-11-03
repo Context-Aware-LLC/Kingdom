@@ -204,8 +204,9 @@ namespace Kingdom.Net.Protocol
     /// Find Game match. Additive and optional on the wire: an older peer omits it and decodes as
     /// none, which is why it did not move <see cref="ProtocolContract.Version"/>.</param>
     /// <param name="Commission">The receiving seat's final commission score (#421), optional key
-    /// <c>commission</c>. Null in a match that plays for no King, and when a commission that needs a
-    /// win was not won, because then nothing scores.</param>
+    /// <c>commission</c>. Null whenever nothing banks: a match that plays for no King, a seat that
+    /// cannot hold a place, a commission that needs a win and was not won, and a score that does not
+    /// qualify. The server decides; a final that arrives is a score that counts.</param>
     public sealed record MatchEndMsg(
         MatchOutcome Outcome, MatchEndReason Reason, IReadOnlyList<string>? Findings = null,
         CommissionFinal? Commission = null) : NetMessage
@@ -218,7 +219,8 @@ namespace Kingdom.Net.Protocol
     /// draws it and never computes a score of its own.
     /// </summary>
     /// <param name="Id">A <see cref="CommissionIds"/> id.</param>
-    /// <param name="Score">Null until the seat qualifies; the card shows how it is scored until then.</param>
+    /// <param name="Score">Null until the seat qualifies, when the card shows how it is scored, and
+    /// null again once a win-only commission is lost. Drawn as sent; the client applies no rule.</param>
     /// <param name="CountsIfYouWin">True while the commission needs a win and the match is live: the
     /// number is greyed, with "Counts if you win".</param>
     /// <param name="Best">The seat's best this reign when the match began, or null.</param>
