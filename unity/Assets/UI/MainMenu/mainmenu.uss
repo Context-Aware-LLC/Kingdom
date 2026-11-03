@@ -843,6 +843,17 @@
     background-color: rgba(11, 14, 19, 0.78);
     border-color: rgba(240, 138, 60, 0.35);
 }
+/* The waiting state's burning crown: a three-frame strip, one frame wide, so the image is 300% of
+ * the box and UpdateGateOverlay steps background-position-x through 0%, 50% and 100%. */
+.mm-gate__fuse {
+    width: 220px;
+    height: 220px;
+    align-self: center;
+    margin-bottom: var(--space-4);
+    background-image: url("/Assets/Art/UI/Loading/crown_logo_long_fuse_burn_3frame.png");
+    background-size: 300% 100%;
+    background-repeat: no-repeat;
+}
 
 /* ---------- Blocking modal: failed boot and forced update (ConnectionFailedScreen.uxml) ----------
  * The whole screen is this panel and one decision, read on a phone, so it takes the top of the

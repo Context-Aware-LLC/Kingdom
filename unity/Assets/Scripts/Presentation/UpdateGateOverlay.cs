@@ -41,6 +41,9 @@ namespace Kingdom.Presentation
         private const string PlayListing = "https://play.google.com/store/apps/details?id=";
         // No App Store listing exists yet; until one does, iOS and desktop go to the site.
         private const string SiteRoot = "https://kingdomofbadideas.com";
+        private const string FuseClass = "mm-gate__fuse";
+        private const int FuseFrames = 3;
+        private const long FuseFrameMs = 320;
 
         private static bool _passed;
 
@@ -143,6 +146,7 @@ namespace Kingdom.Presentation
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
             // The whole row, not just the button, so an empty row does not pad the panel.
             root.Q(className: "mm-modal__actions")?.RemoveFromHierarchy();
+            if (root.Q(className: FuseClass) == null) root.Q("panel")?.Insert(0, BurningFuse());
 
             var title = root.Q<Label>("title");
             if (title != null) title.text = Loc.Get("update_gate_title_waiting");
@@ -150,6 +154,23 @@ namespace Kingdom.Presentation
                 _reason.text = attempt <= 1
                     ? Loc.Get("update_gate_reason_waiting")
                     : Loc.Format("update_gate_reason_waiting_retry", attempt, UpdateGateRetry.MaxAttempts);
+        }
+
+        /// <summary>The crown's fuse burns down and is relit, on a loop, so a cold start that holds
+        /// this screen for seconds never looks frozen. The schedule belongs to the element, so it
+        /// stops when the overlay is destroyed.</summary>
+        private static VisualElement BurningFuse()
+        {
+            var fuse = new VisualElement();
+            fuse.AddToClassList(FuseClass);
+            int frame = 0;
+            fuse.schedule.Execute(() =>
+            {
+                fuse.style.backgroundPositionX = new BackgroundPosition(
+                    BackgroundPositionKeyword.Left, new Length(frame * 50f, LengthUnit.Percent));
+                frame = (frame + 1) % FuseFrames;
+            }).Every(FuseFrameMs);
+            return fuse;
         }
 
         private void ShowVerdict(UpdateGateVerdict verdict)
