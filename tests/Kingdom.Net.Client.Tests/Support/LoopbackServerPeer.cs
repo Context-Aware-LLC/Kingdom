@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Kingdom.Core;
+using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Client;
 using Kingdom.Net.Client.Loopback;
@@ -83,7 +84,10 @@ namespace Kingdom.Net.Client.Tests.Support
         public static FileCardDatabase Db => _db ??= FileCardDatabase.LoadDirectory(CardDataDir());
 
         /// <param name="king">The King the match plays for, or null for a friend match (#421).</param>
-        public LoopbackServerPeer(ServerOptions? options = null, KingSeating? king = null)
+        /// <param name="cardBacks">Each seat's card back as the gate would have settled it, or null
+        /// for the default on both (#421).</param>
+        public LoopbackServerPeer(ServerOptions? options = null, KingSeating? king = null,
+            (int P0, int P1)? cardBacks = null)
         {
             // These tests jump the clock a whole mulligan/turn in ONE tick to drive a server clock.
             // The decision-24 stall guard is built to read exactly that shape as "the server was
@@ -97,7 +101,9 @@ namespace Kingdom.Net.Client.Tests.Support
             _conn0 = new SeatConnection(Transport0);
             _conn1 = new SeatConnection(Transport1);
             Session = new MatchSession(Id, 0xE17BEEF5EEDUL, opts, Time, Db, PrebuiltDecks.EmberwardVsTidecaller(), Replay, P0, P1,
-                king: king);
+                king: king,
+                p0CardBack: cardBacks?.P0 ?? CardBackDefinitions.DefaultId,
+                p1CardBack: cardBacks?.P1 ?? CardBackDefinitions.DefaultId);
         }
 
         public void BindClients(NetworkedMatchSession c0, NetworkedMatchSession c1)

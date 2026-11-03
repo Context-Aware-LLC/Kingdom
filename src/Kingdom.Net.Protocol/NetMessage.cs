@@ -99,11 +99,18 @@ namespace Kingdom.Net.Protocol
     /// into a throwaway <c>Character</c> built only so the validator's signature lined up. The
     /// deck carries its pairing now, so the object being validated and the deck being played are
     /// one thing rather than two that happened to agree.</para>
+    ///
+    /// <para><see cref="CardBackId"/> (#421, optional key <c>cardBackId</c>) is the back the player
+    /// chose for this deck; absent and 0 both mean unset. <b>Client-authored, so a request and never
+    /// a grant:</b> <c>MatchGate</c> honours it only when the account it resolved owns that back,
+    /// and seats the player on the default otherwise, with no close and nothing said to the client
+    /// (security.md, "Card backs on the wire").</para>
     /// </summary>
     public sealed record SubmitDeckMsg(
         CardClass PrimaryClass,
         CardClass SecondaryClass,
-        IReadOnlyList<DeckCardLine> Cards) : NetMessage;
+        IReadOnlyList<DeckCardLine> Cards,
+        int CardBackId = 0) : NetMessage;
 
     /// <summary>A player intent + the client's last-applied StateVersion (stale-client detection,
     /// netcode §3.2). Which decoded intents a client may SUBMIT is the server's §4.6 allowlist —
@@ -178,14 +185,31 @@ namespace Kingdom.Net.Protocol
     /// projected snapshot. <b>The seed is server-side only and is NEVER sent</b> (ADR-0004 / decision 19).
     /// <see cref="ReconnectToken"/> is the B1 additive field (dev-docs/contracts/wire-protocol.md:41, RC F2):
     /// the opaque credential the client must present in <see cref="ReconnectMsg"/>. Empty on decode
-    /// when an older encoder omitted it (A5 §8 forward-compat).</summary>
+    /// when an older encoder omitted it (A5 §8 forward-compat).
+    /// <para><see cref="BackIds"/> (#421, optional key <c>backIds</c>) is each seat's card back,
+    /// seat 0 then seat 1, as the server settled them: both seats are sent both, so a player's back
+    /// is seen by their opponent. A cosmetic and not game state, so it rides beside the snapshot and
+    /// outside its hash. Absent decodes to the default for both seats. An id the client does not
+    /// know draws the default back.</para></summary>
     public sealed record MatchStartMsg(
         PlayerId PlayerId,
         int Seat,
         string WireContractVersion,
         OpponentInfo Opponent,
         SnapshotMsg Snapshot,
-        string ReconnectToken = "") : NetMessage;
+        string ReconnectToken = "",
+        IReadOnlyList<int>? BackIds = null) : NetMessage
+    {
+        /// <summary><c>CardBackDefinitions.DefaultId</c>. This assembly cannot reference
+        /// <c>Kingdom.Core.Collection</c>, so it holds a copy; <c>CardBackFieldTests</c> pins the two
+        /// together.</summary>
+        public const int DefaultBackId = 1;
+
+        /// <summary>The card back for engine seat <paramref name="seat"/>, or the default when there
+        /// is no such seat or no backs were sent.</summary>
+        public int BackIdOf(int seat)
+            => BackIds is { Count: 2 } ids && (seat == 0 || seat == 1) ? ids[seat] : DefaultBackId;
+    }
 
     public readonly struct OpponentInfo
     {

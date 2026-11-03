@@ -426,7 +426,10 @@ namespace Kingdom.Presentation
             // bound to, and SubmitDeckMsg carried that character's id alongside it — an id the
             // message's own doc said "is not an identity the server trusts", which is why removing it
             // cost the wire nothing.
-            return new SubmitDeckMsg(deck.PrimaryClass, deck.SecondaryClass, lines);
+            //
+            // The deck's back rides with it (#421) as a request: the server shows it only if this
+            // account owns it, and the default otherwise, without telling us.
+            return new SubmitDeckMsg(deck.PrimaryClass, deck.SecondaryClass, lines, deck.CardBackId);
         }
 
         private void WireMatch(ICardDatabase db)
@@ -505,6 +508,9 @@ namespace Kingdom.Presentation
                 boardAnchors.SetPlayers(localId, remoteId);
                 boardController.Initialize(db, boardAnchors, localId, remoteId, inputRouter, matchRunner,
                                            localHumanId: localId);
+                // Each seat's card back (#421), by ENGINE seat, before the opening hand is drawn.
+                boardController.SetCardBack(seat0Id, _net.CardBackOf(0));
+                boardController.SetCardBack(seat1Id, _net.CardBackOf(1));
                 matchRunner.OnStateUpdated += boardController.OnStateUpdated;
                 MatchOpeningDeal opening = MatchOpeningDeal.From(s0, localId);
                 if (opening != null && inputRouter != null && Camera.main != null)

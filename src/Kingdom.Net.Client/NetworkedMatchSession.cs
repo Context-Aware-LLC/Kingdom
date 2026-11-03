@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Protocol;
 
@@ -51,6 +52,7 @@ namespace Kingdom.Net.Client
         private int _seat = -1;
         private PlayerId _player;
         private string _opponentName = string.Empty;
+        private int[] _backIds = { CardBackDefinitions.DefaultId, CardBackDefinitions.DefaultId };
 
         private ulong _outSeq;
         private long _lastSendMs;
@@ -146,6 +148,14 @@ namespace Kingdom.Net.Client
         /// defense in depth and not the fix</b> — but obligation 4 of VULN-002 §4 is genuinely
         /// client-side, so a NEW renderer of this string owns it and does not inherit it.</para></summary>
         public string OpponentName { get { lock (_lock) return _opponentName; } }
+        /// <summary><c>MatchStartMsg.BackIds</c> — the card back engine seat <paramref name="seat"/>
+        /// plays under (#421), for both players' hidden cards. The server has already checked the
+        /// owner holds it. The default before the match starts and for a seat that is not 0 or 1;
+        /// an id this build does not know is the renderer's to resolve (<c>CardBackCatalog</c>).</summary>
+        public int CardBackOf(int seat)
+        {
+            lock (_lock) return seat == 0 || seat == 1 ? _backIds[seat] : CardBackDefinitions.DefaultId;
+        }
         public ConnectionState State { get { lock (_lock) return _state; } }
         public DeadReason DeadReason { get { lock (_lock) return _deadReason; } }
         /// <summary><c>MatchEndMsg.Reason</c> — why the match ended, for the result line. Null
@@ -349,6 +359,7 @@ namespace Kingdom.Net.Client
                 _seat = ms.Seat;
                 _player = ms.PlayerId;
                 _opponentName = ms.Opponent.DisplayName ?? string.Empty;
+                _backIds = new[] { ms.BackIdOf(0), ms.BackIdOf(1) };
                 _current = ms.Snapshot.State;   // initial mirror; no OnSnapshot for the initial (a4 §3)
                 _commission = ms.Snapshot.Commission;
                 SetStateUnlocked(ConnectionState.Live);

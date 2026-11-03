@@ -17,6 +17,7 @@ namespace Kingdom.Presentation
         private Mesh _disc;
         private Vector3 _landing;
         private bool _local;
+        private int _backId;
 
         public static SparkCoinOpening Create(Transform parent, BoardController board,
             BoardAnchors anchors, ICardDatabase database, IArtProvider art,
@@ -30,6 +31,8 @@ namespace Kingdom.Presentation
             var opening = host.AddComponent<SparkCoinOpening>();
             opening._destination = destination;
             opening._local = deal.SecondPlayer == local;
+            // The Spark lands in the second player's hand, so it turns over to THEIR back.
+            opening._backId = board.CardBackOf(deal.SecondPlayer);
             opening._landing = new Vector3(0f, opening._local ? -2.65f : 2.65f, -0.30f);
             opening.BuildCoin();
             opening._card = board.BuildFocusedCard(host.transform, spark, new CardLiveState(default));
@@ -85,7 +88,7 @@ namespace Kingdom.Presentation
                     _card.transform.localScale = Vector3.one * Mathf.Lerp(0.05f, HandFanLayout.RestScale,
                         Mathf.Clamp01(t * 3f));
                     // The opponent receives a known Spark, but their resting hand remains backs.
-                    if (!_local && t > 0.7f) _card.SetHidden();
+                    if (!_local && t > 0.7f) _card.SetHidden(_backId);
                 }
                 yield return null;
             }

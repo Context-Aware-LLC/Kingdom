@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using Kingdom.Core;
+using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Core.Projection;
 using Kingdom.Core.Serialization;
@@ -78,6 +79,12 @@ namespace Kingdom.Net.Server
         /// or null in a friend or soak match, or when there is no King.</summary>
         private readonly KingSeating? _king;
 
+        /// <summary>Each seat's card back, seat 0 then seat 1 (#421), sent to BOTH seats on the
+        /// match start. Already judged by <c>MatchGate</c> against the seat's account, as the
+        /// display names are already checked; this class carries them and does not re-judge. Not
+        /// game state: never in the replay, the projection or the hash.</summary>
+        private readonly int[] _backIds;
+
         /// <summary>The first-session funnel (item 2): which seats are signed-in humans, and which of
         /// them has had an intent accepted yet. Only the first one writes <c>first_action</c>.</summary>
         private readonly IFunnelSink _funnel;
@@ -119,7 +126,9 @@ namespace Kingdom.Net.Server
             IFunnelSink? funnel = null,
             bool p0FunnelTracked = false,
             bool p1FunnelTracked = false,
-            KingSeating? king = null)
+            KingSeating? king = null,
+            int p0CardBack = CardBackDefinitions.DefaultId,
+            int p1CardBack = CardBackDefinitions.DefaultId)
         {
             _id = id;
             _seed = seed;
@@ -137,6 +146,7 @@ namespace Kingdom.Net.Server
             _p0Policy = p0Policy;
             _p1Policy = p1Policy;
             _king = king;
+            _backIds = new[] { p0CardBack, p1CardBack };
             _funnel = funnel ?? NullFunnelSink.Instance;
             _funnelTracked[0] = p0FunnelTracked;
             _funnelTracked[1] = p1FunnelTracked;
@@ -187,7 +197,8 @@ namespace Kingdom.Net.Server
                     // The Seat holds it precisely so this line cannot be the place a raw name enters.
                     new OpponentInfo(opp.Player, opp.DisplayName),
                     SnapshotFor(seat),
-                    me.ReconnectToken));
+                    me.ReconnectToken,
+                    _backIds));
             }
 
             _mulliganDeadlineMs = now + _opts.MulliganMs;

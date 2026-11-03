@@ -495,7 +495,16 @@ namespace Kingdom.Net.Server.Transport
                     return;
                 }
                 Console.Error.WriteLine("[gate] accepted deck player_id={0}", account.Value);
-                submitted = outcome.Seat;
+
+                // #421: the back the deck asked for, judged against the account resolved above and
+                // no other lookup. Anything but an owned back seats the player on the default with
+                // no close and nothing said to the client; the reason is logged here only.
+                CardBackChoice back = await DeckSubmission.ResolveCardBackAsync(
+                    deckMsg.CardBackId, deckOwnerAccount, _entitlementLedger, ct);
+                if (back.Verdict != CardBackVerdict.Owned && back.Verdict != CardBackVerdict.Unset)
+                    Console.Error.WriteLine("[gate] card back {0} not honoured for player_id={1}: {2}",
+                                            deckMsg.CardBackId, account.Value, back.Verdict);
+                submitted = outcome.Seat.WithCardBack(back.BackId);
             }
 
             Seating? seating;
@@ -945,7 +954,9 @@ namespace Kingdom.Net.Server.Transport
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : first.PolicyIdentity,
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : second.PolicyIdentity,
                     Funnel, first.FunnelTracked, second.FunnelTracked,
-                    SeatKing(attribution, p0Name, p1Name, first.FavorEligible, second.FavorEligible));
+                    SeatKing(attribution, p0Name, p1Name, first.FavorEligible, second.FavorEligible),
+                    // #421: judged at the handshake; a bot's and the fallback's are the default.
+                    seat0.CardBackId, seat1.CardBackId);
                 var pump = new SessionPump(session);
                 lock (_lock)
                 {

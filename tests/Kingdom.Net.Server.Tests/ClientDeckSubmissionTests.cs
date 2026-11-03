@@ -3,14 +3,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Kingdom.Core;
 using Kingdom.Core.Cards;
 using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Protocol;
 using Kingdom.Net.Server;
+using Kingdom.Net.Server.Accounts;
+using Kingdom.Net.Server.Bots;
 using Kingdom.Net.Server.Decks;
+using Kingdom.Net.Server.Identity;
+using Kingdom.Net.Server.Matchmaking;
+using Kingdom.Net.Server.Replay;
 using Kingdom.Net.Server.Tests.Support;
 using NUnit.Framework;
 using Kingdom.Core.Tests.Support;
@@ -243,6 +251,250 @@ namespace Kingdom.Net.Server.Tests
             });
         }
 
+        // ── Card backs (#421) ─────────────────────────────────────────────────────
+        //
+        // The submission's cardBackId is client-authored. The gate honours it only when the account
+        // it already resolved owns that back, and otherwise seats the player on the default with no
+        // close and nothing said to the client. Only CardBackDefinitions.DefaultId is in the catalog
+        // until the King's prize backs land, so the socket tests can only ever OBSERVE the default;
+        // the verdict tests below are what tell owned, unowned and unknown apart.
+
+        [Test]
+        public async Task An_owned_back_is_honoured()
+        {
+            var (account, ledger) = await AccountWithLedgerAsync();
+            CardBackChoice choice = await DeckSubmission.ResolveCardBackAsync(
+                CardBackDefinitions.DefaultId, account, ledger);
+
+            Assert.That(choice.Verdict, Is.EqualTo(CardBackVerdict.Owned), "every durable account owns the default");
+            Assert.That(choice.BackId, Is.EqualTo(CardBackDefinitions.DefaultId));
+        }
+
+        [Test]
+        public void An_owned_back_reaches_both_seats()
+        {
+            // The gate has already judged the back by the time a session holds it, so the session
+            // carries whatever it was handed. 42 is a value nothing else produces: seeing it at
+            // index 0 on BOTH seats' match start is the route, seat-indexed, not the default.
+            var c0 = new FakeConnection();
+            var c1 = new FakeConnection();
+            var session = new MatchSession(
+                new MatchId("m-backs"), SessionHarness.Seed, new ServerOptions(), new FakeTime(), Db,
+                PrebuiltDecks.EmberwardVsTidecaller(), new InMemoryReplayStore(),
+                new PlayerId("p0"), new PlayerId("p1"),
+                p0CardBack: 42, p1CardBack: CardBackDefinitions.DefaultId);
+            session.Start(c0, c1);
+
+            foreach (FakeConnection conn in new[] { c0, c1 })
+            {
+                MatchStartMsg start = conn.Last<MatchStartMsg>();
+                Assert.That(start.BackIds, Is.EqualTo(new[] { 42, CardBackDefinitions.DefaultId }),
+                    $"seat {start.Seat} sees seat 0's back first and seat 1's second");
+            }
+        }
+
+        [Test]
+        public async Task An_unowned_back_falls_back_to_the_default()
+        {
+            var (account, ledger) = await AccountWithLedgerAsync();
+            await RevokeDefaultAsync(account, ledger);
+
+            CardBackChoice choice = await DeckSubmission.ResolveCardBackAsync(
+                CardBackDefinitions.DefaultId, account, ledger);
+            Assert.That(choice.Verdict, Is.EqualTo(CardBackVerdict.Unowned));
+            Assert.That(choice.BackId, Is.EqualTo(CardBackDefinitions.DefaultId));
+
+            // Over the wire: no close, no error, both seats seated on the default.
+            var starts = await SeatTwoAuthenticatedAsync(CardBackDefinitions.DefaultId, revokeDefault: true);
+            foreach (var (start, json) in starts)
+            {
+                Assert.That(json, Does.Contain("\"backIds\":[1,1]"), "the server sent the backs it settled on");
+                Assert.That(start.BackIds, Is.EqualTo(new[] { CardBackDefinitions.DefaultId, CardBackDefinitions.DefaultId }));
+            }
+        }
+
+        [Test]
+        public async Task An_unknown_back_falls_back_to_the_default()
+        {
+            var (account, ledger) = await AccountWithLedgerAsync();
+            CardBackChoice choice = await DeckSubmission.ResolveCardBackAsync(999, account, ledger);
+            Assert.That(choice.Verdict, Is.EqualTo(CardBackVerdict.Unknown));
+            Assert.That(choice.BackId, Is.EqualTo(CardBackDefinitions.DefaultId));
+            Assert.That(DeckSubmission.ResolveCardBack(-5, null).Verdict, Is.EqualTo(CardBackVerdict.Unknown),
+                "a negative id is unknown, not an error");
+
+            var starts = await SeatTwoAuthenticatedAsync(999, revokeDefault: false);
+            foreach (var (start, json) in starts)
+            {
+                Assert.That(json, Does.Contain("\"backIds\":[1,1]"));
+                Assert.That(start.BackIds, Is.EqualTo(new[] { CardBackDefinitions.DefaultId, CardBackDefinitions.DefaultId }));
+            }
+        }
+
+        [Test]
+        public async Task An_unset_back_or_an_unattributed_seat_uses_the_default()
+        {
+            Assert.That(DeckSubmission.ResolveCardBack(0, null).Verdict, Is.EqualTo(CardBackVerdict.Unset));
+            Assert.That(DeckSubmission.ResolveCardBack(0, null).BackId, Is.EqualTo(CardBackDefinitions.DefaultId));
+
+            CardBackChoice tokenless = await DeckSubmission.ResolveCardBackAsync(
+                CardBackDefinitions.DefaultId, account: null, ledger: new InMemoryEntitlementLedger());
+            Assert.That(tokenless.Verdict, Is.EqualTo(CardBackVerdict.OwnershipUnavailable));
+            Assert.That(tokenless.BackId, Is.EqualTo(CardBackDefinitions.DefaultId));
+
+            var (account, _) = await AccountWithLedgerAsync();
+            CardBackChoice down = await DeckSubmission.ResolveCardBackAsync(
+                CardBackDefinitions.DefaultId, account, new FailingLedger());
+            Assert.That(down.Verdict, Is.EqualTo(CardBackVerdict.OwnershipUnavailable),
+                "a ledger that cannot be read costs the player their back, never their match");
+            Assert.That(down.BackId, Is.EqualTo(CardBackDefinitions.DefaultId));
+        }
+
+        [Test]
+        [CancelAfter(60_000)]
+        public async Task A_bot_seat_uses_the_default()
+        {
+            Assert.That(new SeatDeck(CardClass.EMBERWARD, PrebuiltDecks.EmberwardDeck()).CardBackId,
+                Is.EqualTo(CardBackDefinitions.DefaultId), "a bot's deck is built with no back of its own");
+
+            var pool = new BotPool(Db);
+            pool.MarkReady(new ResolvedBotAccount(
+                "ember_knight", AccountId.FromAuthenticatedAccount("player-ember_knight"), "ember_knight",
+                new SeatDeck(CardClass.EMBERWARD, PrebuiltDecks.EmberwardDeck())));
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-backs-bot-" + Guid.NewGuid().ToString("N"));
+            var built = ServerApp.BuildWithGate(new ServerConfig
+            {
+                Urls = "http://127.0.0.1:0",
+                CardsDir = SessionHarness.CardDataDir(),
+                ReplaysDir = replays,
+                Options = new ServerOptions
+                {
+                    BotFillDelayMs = 200,
+                    Matchmaking = new MatchmakingQueueOptions { BandWideningIntervalMs = 100 },
+                },
+            }, pool);
+            await built.App.StartAsync();
+            try
+            {
+                var baseUri = new Uri(built.App.Urls.First());
+                using var human = new ClientWebSocket();
+                await human.ConnectAsync(new Uri($"ws://127.0.0.1:{baseUri.Port}/ws?deck=1"), CancellationToken.None);
+                await SendAsync(human, ProtocolCodec.Encode(
+                    new HelloMsg("device-backs-bot", ProtocolContract.Version, "test", "deck-tests"), ProtocolCodec.PreMatch, 0));
+                await SendAsync(human, ProtocolCodec.Encode(
+                    new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT,
+                        LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT), 999), ProtocolCodec.PreMatch, 1));
+
+                var (start, json) = await ExpectRawAsync<MatchStartMsg>(human);
+                // The bot seat's back is on the wire as a back, the same field a human's rides in.
+                Assert.That(json, Does.Contain("\"backIds\":[1,1]"));
+                Assert.That(start.BackIdOf(1 - start.Seat), Is.EqualTo(CardBackDefinitions.DefaultId));
+            }
+            finally
+            {
+                await built.App.StopAsync();
+                try { if (Directory.Exists(replays)) Directory.Delete(replays, recursive: true); }
+                catch (IOException) { }
+            }
+        }
+
+        private const string BackSubject = "supabase-user-card-backs";
+
+        private static async Task<(Account Account, InMemoryEntitlementLedger Ledger)> AccountWithLedgerAsync()
+        {
+            var store = new InMemoryAccountStore(new FakeTime());
+            Account account = await store.ResolveOrCreateAsync("supabase", HashCredential(BackSubject), "backs@example.com");
+            return (account, new InMemoryEntitlementLedger());
+        }
+
+        private static async Task RevokeDefaultAsync(Account account, IEntitlementLedger ledger)
+        {
+            // Granted first, so the starter-v1 grant cannot land again on top of the revocation.
+            await CardBackOwnership.EnsureDefaultAsync(ledger, account);
+            await ledger.GrantAsync(new EntitlementGrant(account.PlayerId, CardBackOwnership.Item(CardBackDefinitions.DefaultId),
+                -1, "revoke", "revoke-default-back", account.CreatedAt));
+        }
+
+        /// <summary>Two authenticated <c>?deck=1</c> sockets of one Superuser account (so L6 passes
+        /// a generated deck and the refusal under test can only be the back's), each asking for
+        /// <paramref name="cardBackId"/>. Returns each seat's match start with its raw JSON.</summary>
+        private static async Task<List<(MatchStartMsg Start, string Json)>> SeatTwoAuthenticatedAsync(
+            int cardBackId, bool revokeDefault)
+        {
+            var store = new InMemoryAccountStore(new FakeTime());
+            var ledger = new InMemoryEntitlementLedger();
+            Account account = await store.ResolveOrCreateAsync("supabase", HashCredential(BackSubject), "backs@example.com");
+            account = (await store.SetKindAsync(account.PlayerId, AccountKind.Superuser))!;
+            if (revokeDefault) await RevokeDefaultAsync(account, ledger);
+
+            var starts = new List<(MatchStartMsg, string)>();
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-backs-" + Guid.NewGuid().ToString("N"));
+            var app = ServerApp.Build(new ServerConfig
+            {
+                Urls = "http://127.0.0.1:0",
+                CardsDir = SessionHarness.CardDataDir(),
+                ReplaysDir = replays,
+                TokenVerifier = new StubVerifier(),
+                AccountStore = store,
+                EntitlementLedger = ledger,
+            });
+            await app.StartAsync();
+            try
+            {
+                var baseUri = new Uri(app.Urls.First());
+                var deckUri = new Uri($"ws://127.0.0.1:{baseUri.Port}/ws?deck=1");
+                using var c0 = new ClientWebSocket();
+                using var c1 = new ClientWebSocket();
+                foreach (var ws in new[] { c0, c1 })
+                {
+                    await ws.ConnectAsync(deckUri, CancellationToken.None);
+                    await SendAsync(ws, ProtocolCodec.Encode(
+                        new HelloMsg("device-backs", ProtocolContract.Version, "test", "deck-tests",
+                            DisplayName: "", AuthToken: "valid.token.here"), ProtocolCodec.PreMatch, 0));
+                    await SendAsync(ws, ProtocolCodec.Encode(
+                        new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT,
+                            LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT), cardBackId), ProtocolCodec.PreMatch, 1));
+                }
+                starts.Add(await ExpectRawAsync<MatchStartMsg>(c0));
+                starts.Add(await ExpectRawAsync<MatchStartMsg>(c1));
+            }
+            finally
+            {
+                await app.StopAsync();
+                try { if (Directory.Exists(replays)) Directory.Delete(replays, recursive: true); }
+                catch (IOException) { }
+            }
+            return starts;
+        }
+
+        private static string HashCredential(string value)
+        {
+            byte[] digest = SHA256.HashData(Encoding.UTF8.GetBytes(value));
+            var sb = new StringBuilder(32);
+            for (int i = 0; i < 16; i++) sb.Append(digest[i].ToString("x2"));
+            return sb.ToString();
+        }
+
+        private sealed class StubVerifier : IIdentityTokenVerifier
+        {
+            public Task<TokenVerificationResult> VerifyAsync(string rawToken, CancellationToken ct = default)
+                => Task.FromResult(TokenVerificationResult.Ok(
+                    new VerifiedIdentity(BackSubject, "backs@example.com", EmailVerified: true)));
+        }
+
+        /// <summary>A ledger whose every call fails, as a database outage would.</summary>
+        private sealed class FailingLedger : IEntitlementLedger
+        {
+            private static InvalidOperationException Down() => new InvalidOperationException("ledger down");
+            public Task<GrantResult> GrantAsync(EntitlementGrant grant, CancellationToken ct = default) => throw Down();
+            public Task<EntitlementBatchResult> ApplyBatchAsync(EntitlementBatch batch, CancellationToken ct = default) => throw Down();
+            public Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(string playerId, CancellationToken ct = default) => throw Down();
+            public Task<long> BalanceAsync(string playerId, string item, CancellationToken ct = default) => throw Down();
+            public Task<IReadOnlyDictionary<string, long>> BalancesAsync(string playerId, CancellationToken ct = default) => throw Down();
+            public Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(string playerId, CancellationToken ct = default) => throw Down();
+            public Task<EntitlementGrant?> FindAsync(string externalTxnId, CancellationToken ct = default) => throw Down();
+        }
+
         // ── Deck construction ─────────────────────────────────────────────────────
 
         /// <summary>The submission carried a character id as its first member until ADR-0009. The
@@ -323,6 +575,11 @@ namespace Kingdom.Net.Server.Tests
         }
 
         private static async Task<T> ExpectAsync<T>(ClientWebSocket ws) where T : NetMessage
+            => (await ExpectRawAsync<T>(ws)).Message;
+
+        /// <summary>The next <typeparamref name="T"/> and the JSON it arrived as, so a test can tell a
+        /// field the server sent from one the decoder defaulted.</summary>
+        private static async Task<(T Message, string Json)> ExpectRawAsync<T>(ClientWebSocket ws) where T : NetMessage
         {
             var buffer = new byte[1024 * 1024];
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
@@ -338,9 +595,10 @@ namespace Kingdom.Net.Server.Tests
                     total += result.Count;
                 } while (!result.EndOfMessage);
 
-                var res = ProtocolCodec.Decode(new ReadOnlySpan<byte>(buffer, 0, total).ToArray());
+                byte[] frame = new ReadOnlySpan<byte>(buffer, 0, total).ToArray();
+                var res = ProtocolCodec.Decode(frame);
                 if (!res.Ok) throw new InvalidOperationException($"Server sent undecodable frame: {res.Error} {res.Detail}");
-                if (res.Message is T t) return t;
+                if (res.Message is T t) return (t, Encoding.UTF8.GetString(frame));
             }
         }
     }

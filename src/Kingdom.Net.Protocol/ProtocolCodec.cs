@@ -105,6 +105,8 @@ namespace Kingdom.Net.Protocol
                         w.EndObject();
                     }
                     w.EndArray();
+                    // Optional (#421): 0 is the unset selection, so it is the absent key.
+                    if (m.CardBackId != 0) { w.Name("cardBackId"); w.I32(m.CardBackId); }
                     w.EndObject();
                     break;
                 case IntentMsg m:
@@ -172,6 +174,14 @@ namespace Kingdom.Net.Protocol
                     w.Name("snapshot");
                     WriteSnapshotBody(w, m.Snapshot);
                     w.Name("reconnectToken"); w.Str(m.ReconnectToken);
+                    // Optional (#421) and outside the snapshot hash: each seat's card back.
+                    if (m.BackIds is IReadOnlyList<int> backs)
+                    {
+                        w.Name("backIds");
+                        w.BeginArray();
+                        foreach (int back in backs) w.I32(back);
+                        w.EndArray();
+                    }
                     w.EndObject();
                     break;
                 case MatchEndMsg m:
@@ -378,7 +388,13 @@ namespace Kingdom.Net.Protocol
                 cards.Add(new DeckCardLine(cardId, count));
             }
 
-            return DecodeResult.Success(new SubmitDeckMsg(primary, secondary, cards), matchId, seq);
+            // Optional (#421): absent is 0, the unset selection. Any integer decodes: which backs
+            // exist and which this account owns is MatchGate's business, never the codec's.
+            int cardBackId = 0;
+            if (body.TryGet("cardBackId", out var cbVal) && !cbVal.TryI32(out cardBackId))
+                return DecodeResult.Fail(ProtocolError.BadField, "bad 'cardBackId'", matchId, seq);
+
+            return DecodeResult.Success(new SubmitDeckMsg(primary, secondary, cards, cardBackId), matchId, seq);
         }
 
         private static DecodeResult ReadReconnect(JVal body, MatchId matchId, ulong seq)
@@ -596,8 +612,18 @@ namespace Kingdom.Net.Protocol
             if (body.TryGet("reconnectToken", out var tokVal) && !tokVal.TryStr(out token))
                 return DecodeResult.Fail(ProtocolError.BadField, "bad 'reconnectToken'", matchId, seq);
 
+            // Optional (#421): absent is the default back for both seats. Present, it is exactly
+            // two integers, seat 0 then seat 1.
+            int[] backIds = { MatchStartMsg.DefaultBackId, MatchStartMsg.DefaultBackId };
+            if (body.TryGet("backIds", out var backsVal))
+            {
+                if (backsVal.Kind != JKind.Array || backsVal.Items!.Count != 2
+                    || !backsVal.Items[0].TryI32(out backIds[0]) || !backsVal.Items[1].TryI32(out backIds[1]))
+                    return DecodeResult.Fail(ProtocolError.BadField, "bad 'backIds'", matchId, seq);
+            }
+
             var msg = new MatchStartMsg(new PlayerId(player), seat, wcv,
-                new OpponentInfo(new PlayerId(oppId), oppName), snapshot, token);
+                new OpponentInfo(new PlayerId(oppId), oppName), snapshot, token, backIds);
             return DecodeResult.Success(msg, matchId, seq);
         }
 

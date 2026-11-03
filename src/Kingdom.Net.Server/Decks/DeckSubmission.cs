@@ -1,25 +1,38 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Kingdom.Core;
 using Kingdom.Core.Cards;
 using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Protocol;
+using Kingdom.Net.Server.Accounts;
 
 namespace Kingdom.Net.Server.Decks
 {
-    /// <summary>One seat's resolved match contribution: a hero class and a pre-shuffle-ordered
-    /// decklist. Produced either from an accepted <see cref="SubmitDeckMsg"/> or, for a seat that
-    /// submits nothing, from the prebuilt fallback (<see cref="FromFallback"/>).</summary>
+    /// <summary>One seat's resolved match contribution: a hero class, a pre-shuffle-ordered
+    /// decklist and the card back it plays under. Produced either from an accepted
+    /// <see cref="SubmitDeckMsg"/> or, for a seat that submits nothing, from the prebuilt fallback
+    /// (<see cref="FromFallback"/>).</summary>
     public readonly struct SeatDeck
     {
         public readonly CardClass HeroClass;
         public readonly IReadOnlyList<int> Deck;
+        /// <summary>The back this seat's cards show both players (#421). Already judged: the default
+        /// unless <c>MatchGate</c> found the back owned by the account it resolved. A bot's deck and
+        /// the prebuilt fallback never carry one of their own.</summary>
+        public readonly int CardBackId;
 
-        public SeatDeck(CardClass heroClass, IReadOnlyList<int> deck)
+        public SeatDeck(CardClass heroClass, IReadOnlyList<int> deck,
+                        int cardBackId = CardBackDefinitions.DefaultId)
         {
             HeroClass = heroClass;
             Deck = deck;
+            CardBackId = cardBackId;
         }
+
+        public SeatDeck WithCardBack(int cardBackId) => new SeatDeck(HeroClass, Deck, cardBackId);
 
         /// <summary>The prebuilt <see cref="MatchSetup"/>'s seat, decomposed so a non-submitting seat
         /// keeps exactly today's fixed deck (EF-071 is additive — a plain <c>/ws</c> client is dealt
@@ -112,7 +125,84 @@ namespace Kingdom.Net.Server.Decks
             foreach (var id in order)
                 for (int i = 0; i < summed[id]; i++) ordered.Add(id);
 
+            // The back is NOT taken from the message here: this method has no account, and a
+            // client-authored id is only ever a request. MatchGate judges it (ResolveCardBackAsync).
             return DeckSubmissionResult.Ok(new SeatDeck(msg.PrimaryClass, ordered));
+        }
+
+        /// <summary>
+        /// Judge the client-authored <see cref="SubmitDeckMsg.CardBackId"/> against
+        /// <paramref name="owned"/>, the account's card-back ownership as
+        /// <see cref="CardBackOwnership.ReadAsync"/> returns it (known backs only), or null when it
+        /// could not be read. <b>Never refuses:</b> anything but an owned back is the default, so a
+        /// bad id costs the player their back and never their match. Pure.
+        /// </summary>
+        public static CardBackChoice ResolveCardBack(int requested, IReadOnlyDictionary<int, long>? owned)
+        {
+            if (requested == 0) return new CardBackChoice(CardBackDefinitions.DefaultId, CardBackVerdict.Unset);
+            if (!CardBackDefinitions.TryGet(requested, out _))
+                return new CardBackChoice(CardBackDefinitions.DefaultId, CardBackVerdict.Unknown);
+            if (owned is null)
+                return new CardBackChoice(CardBackDefinitions.DefaultId, CardBackVerdict.OwnershipUnavailable);
+            return owned.TryGetValue(requested, out long count) && count > 0
+                ? new CardBackChoice(requested, CardBackVerdict.Owned)
+                : new CardBackChoice(CardBackDefinitions.DefaultId, CardBackVerdict.Unowned);
+        }
+
+        /// <summary>
+        /// <see cref="ResolveCardBack"/> with the ownership read from <paramref name="ledger"/> for
+        /// <paramref name="account"/>, the account <c>MatchGate</c> already resolved for the seat. A
+        /// seat with no account (tokenless tooling) or no ledger, and a read that fails, are
+        /// <see cref="CardBackVerdict.OwnershipUnavailable"/>: the default, never an exception.
+        /// Superusers are judged like anyone else; they bypass card legality, not entitlements.
+        /// </summary>
+        public static async Task<CardBackChoice> ResolveCardBackAsync(int requested, Account? account,
+            IEntitlementLedger? ledger, CancellationToken ct = default)
+        {
+            // Nothing to read for an unset or unknown back, and no account to read it for.
+            if (requested == 0 || !CardBackDefinitions.TryGet(requested, out _)
+                || account is null || ledger is null)
+                return ResolveCardBack(requested, null);
+
+            IReadOnlyDictionary<int, long>? owned;
+            try
+            {
+                owned = await CardBackOwnership.ReadAsync(ledger, account, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (!(ex is OperationCanceledException && ct.IsCancellationRequested))
+            {
+                Console.Error.WriteLine("[gate] card-back ownership unreadable for player_id={0}: {1}",
+                    account.PlayerId, ex.Message);
+                owned = null;
+            }
+            return ResolveCardBack(requested, owned);
+        }
+    }
+
+    /// <summary>Why a seat plays under the back it does (#421). Only <see cref="Owned"/> honours
+    /// the request; every other verdict is <see cref="CardBackDefinitions.DefaultId"/>.</summary>
+    public enum CardBackVerdict
+    {
+        /// <summary>The deck asked for none (0).</summary>
+        Unset,
+        Owned,
+        /// <summary>A real back this account does not hold, or no longer holds.</summary>
+        Unowned,
+        /// <summary>Not in <see cref="CardBackDefinitions"/>.</summary>
+        Unknown,
+        /// <summary>No account, no ledger, or a ledger read that failed.</summary>
+        OwnershipUnavailable,
+    }
+
+    public readonly struct CardBackChoice
+    {
+        public readonly int BackId;
+        public readonly CardBackVerdict Verdict;
+
+        public CardBackChoice(int backId, CardBackVerdict verdict)
+        {
+            BackId = backId;
+            Verdict = verdict;
         }
     }
 }

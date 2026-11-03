@@ -5,8 +5,8 @@ using UnityEngine;
 namespace Kingdom.Presentation
 {
     /// <summary>Unity art resolution for the shared numeric card-back catalog. The picker filters
-    /// these definitions through the server's ownership response. Match backs still use card_back;
-    /// per-seat cosmetic rendering must be wired before adding a second live back.</summary>
+    /// these definitions through the server's ownership response. In a match each seat's hidden
+    /// cards draw that seat's back, as <c>MatchStartMsg.BackIds</c> names it.</summary>
     public static class CardBackCatalog
     {
         public const string ArtFolder = "Assets/Art/Cards/Backs";

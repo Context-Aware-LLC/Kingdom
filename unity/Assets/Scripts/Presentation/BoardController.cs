@@ -153,6 +153,18 @@ namespace Kingdom.Presentation
         // they're tracked positionally per owner instead.
         private readonly Dictionary<PlayerId, List<CardPresenter>> _cardBacks = new();
 
+        // Each player's card back (#421), the back every hidden card they own shows. Unset is the
+        // default: only a networked match has backs to set.
+        private readonly Dictionary<PlayerId, int> _backIds = new();
+
+        /// <summary>The back <paramref name="owner"/>'s hidden cards show both players (#421), from
+        /// <c>NetworkedMatchSession.CardBackOf</c>. Set before the first state update, so the opening
+        /// hand is drawn with it.</summary>
+        public void SetCardBack(PlayerId owner, int backId) => _backIds[owner] = backId;
+
+        internal int CardBackOf(PlayerId owner)
+            => _backIds.TryGetValue(owner, out int backId) ? backId : CardBackCatalog.Default.Id;
+
         // Tracks every InstanceId that was live last tick so we can destroy departed cards.
         private readonly HashSet<InstanceId> _lastLive = new();
         private readonly HashSet<InstanceId> _thisLive = new();
@@ -742,7 +754,7 @@ namespace Kingdom.Presentation
                 CardPresenter presenter = CreatePresenter(anchor != null ? anchor : transform);
                 var binder = presenter.GetComponent<CardMaterialBinder>();
                 if (binder != null) DestroyObj(binder);
-                presenter.SetHidden();
+                presenter.SetHidden(CardBackOf(owner));
                 SetCardSorting(presenter, Zone.Hand, slot);
                 if (!OpeningSpark(owner, slot)) LaunchDrawFlight(presenter.transform, owner);
                 backs.Add(presenter);
