@@ -41,6 +41,11 @@ namespace Kingdom.Presentation
     {
         private const string HiddenClass = "tidbit-overlay--hidden";
         private const int StampDelayMs = 120;
+        // Off (Sam, 2026-11-02): the Herald's 3D figure looked terrible beside the scroll. His
+        // voice lines still play; only the figure is withheld, so the scroll keeps its centred
+        // layout. Readonly rather than const so the guarded call is not flagged unreachable.
+        // RETIREMENT TRIGGER: when the Herald model is redone, set this true and delete this note.
+        private static readonly bool ShowsHerald = false;
 
         private readonly VisualElement _overlay;
         private readonly VisualElement _card;
@@ -144,7 +149,7 @@ namespace Kingdom.Presentation
             _overlay.RemoveFromClassList(HiddenClass);
             IsShowing = true;
             _voice = NarratorVoice.Create();
-            if (_narratorSlot != null && _narrator == null)
+            if (ShowsHerald && _narratorSlot != null && _narrator == null)
                 _narrator = NarratorPortrait.Show(_narratorSlot, NarratorPortrait.HeraldAddress, visible =>
                 {
                     _presentation.EnableInClassList("tidbit-presentation--narrated", IsShowing && visible);
