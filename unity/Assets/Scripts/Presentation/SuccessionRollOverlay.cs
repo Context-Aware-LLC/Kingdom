@@ -61,7 +61,7 @@ namespace Kingdom.Presentation
             VisualElement sheet = root.Q<VisualElement>("roll-sheet");
             if (sheet?.parent != null) _scroll = new ProclamationScroll(sheet);
 
-            ShowStatus(Loc.Get("king.roll.status_loading"));
+            ShowStatus(Loc.Get("king_roll_status_loading"));
             _scroll?.Open();
             _ = LoadAsync();
         }
@@ -93,7 +93,7 @@ namespace Kingdom.Presentation
 
             if (roll.Count == 0)
             {
-                ShowStatus(Loc.Get("king.roll.status_failed"));
+                ShowStatus(Loc.Get("king_roll_status_failed"));
                 return;
             }
             ShowRoll(roll);
@@ -127,18 +127,19 @@ namespace Kingdom.Presentation
 
             var head = new VisualElement();
             head.AddToClassList("roll-entry__head");
-            head.Add(Line(Loc.Format("king.roll.reign", entry.Reign), "roll-entry__reign"));
+            head.Add(Line(Loc.Format("king_roll_reign", entry.Reign), "roll-entry__reign"));
             string epithet = KingText.Epithet(entry.Epithet);
             head.Add(Line(epithet, "roll-entry__epithet"));
             box.Add(head);
 
-            box.Add(Line(reigning ? Loc.Get("king.roll.reigning") : KingText.Fate(entry.Fate), "roll-entry__fate"));
+            box.Add(Line(reigning ? Loc.Get("king_roll_reigning") : KingText.Fate(entry.Fate), "roll-entry__fate"));
 
             var favor = new VisualElement();
             favor.AddToClassList("roll-entry__favor");
             if (string.IsNullOrEmpty(entry.Favorite))
             {
-                Label none = Line(Loc.Get(reigning ? "king.roll.undecided" : "king.roll.no_favorite"),
+                // Two literal calls, not one with a ternary key, so LocalizationVerify sees both.
+                Label none = Line(reigning ? Loc.Get("king_roll_undecided") : Loc.Get("king_roll_no_favorite"),
                     "roll-entry__favor-of");
                 none.AddToClassList("roll-entry__favor-of--none");
                 favor.Add(none);
@@ -146,7 +147,7 @@ namespace Kingdom.Presentation
             else
             {
                 favor.Add(NameLabel(entry.Favorite));
-                favor.Add(Line(Loc.Format("king.roll.favorite_of", epithet), "roll-entry__favor-of"));
+                favor.Add(Line(Loc.Format("king_roll_favorite_of", epithet), "roll-entry__favor-of"));
             }
             box.Add(favor);
             return box;
@@ -190,21 +191,21 @@ namespace Kingdom.Presentation
     {
         /// <summary>The <c>strings.xml</c> row for epithet pool index <paramref name="index"/> (0-based;
         /// the rows count from 1).</summary>
-        public static string EpithetKey(int index) => "king.epithet." + (index + 1).ToString(CultureInfo.InvariantCulture);
+        public static string EpithetKey(int index) => "king_epithet_" + (index + 1).ToString(CultureInfo.InvariantCulture);
 
         /// <summary>The <c>strings.xml</c> row for fate pool index <paramref name="index"/>.</summary>
-        public static string FateKey(int index) => "king.fate." + (index + 1).ToString(CultureInfo.InvariantCulture);
+        public static string FateKey(int index) => "king_fate_" + (index + 1).ToString(CultureInfo.InvariantCulture);
 
         /// <summary>A commission's row: <paramref name="part"/> is <c>name</c>, <c>scored</c> or
         /// <c>decree</c>.</summary>
-        public static string CommissionKey(string id, string part) => "commission." + id + "." + part;
+        public static string CommissionKey(string id, string part) => "commission_" + id + "_" + part;
 
         /// <summary>The parts every commission in <see cref="CommissionIds"/> carries.</summary>
         public static readonly string[] CommissionParts = { "name", "scored", "decree" };
 
-        public static string Epithet(int index) => Loc.Find(EpithetKey(index)) ?? Loc.Get("king.epithet.unknown");
+        public static string Epithet(int index) => Loc.Find(EpithetKey(index)) ?? Loc.Get("king_epithet_unknown");
 
-        public static string Fate(int index) => Loc.Find(FateKey(index)) ?? Loc.Get("king.fate.unknown");
+        public static string Fate(int index) => Loc.Find(FateKey(index)) ?? Loc.Get("king_fate_unknown");
 
         /// <summary>The commission's <paramref name="part"/>, or null when this build has no row.</summary>
         public static string Commission(string id, string part)

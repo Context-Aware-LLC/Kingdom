@@ -394,7 +394,7 @@ namespace Kingdom.Presentation
 
         /// <summary>Last reign the Herald announced on this device. On the device, not the account
         /// (spec, "On the main menu"): a new King is news once per handset.</summary>
-        private const string LastHeardReignKey = "king.last_heard_reign";
+        private const string LastHeardReignKey = "king_last_heard_reign";
         private const int KingTimeoutSeconds = 10;
 
         /// <summary>The crown, its plaque and the commission, hidden until a King is read. With no
@@ -438,7 +438,7 @@ namespace Kingdom.Presentation
             if (_kingPlaque != null) _kingPlaque.text = KingText.Epithet(king.Epithet);
             // A commission this build has no words for is left out, never printed by id.
             string name = KingText.Commission(king.Commission, "name");
-            SetKingLine(_kingCommission, name == null ? null : Loc.Format("king.menu.commission", name));
+            SetKingLine(_kingCommission, name == null ? null : Loc.Format("king_menu_commission", name));
             SetKingLine(_kingScored, name == null ? null : KingText.Commission(king.Commission, "scored"));
             SetKingLine(_kingDecree, name == null ? null : KingText.Commission(king.Commission, "decree"));
             _kingDock.style.display = DisplayStyle.Flex;
@@ -482,8 +482,8 @@ namespace Kingdom.Presentation
             var herald = new Tidbit(
                 "king_reign_" + reign.ToString(CultureInfo.InvariantCulture),
                 TidbitTrigger.MainMenuArrival,
-                "king.herald.title",
-                "king.herald.body",
+                "king_herald_title",
+                "king_herald_body",
                 artKey: null,
                 // No recording of this line exists yet; the card reads complete without one. When one
                 // lands in Assets/Sound/Voice/Herald, pass its "vo/..." address here.

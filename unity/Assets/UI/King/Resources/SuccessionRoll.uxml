@@ -22,7 +22,7 @@
                 <ui:Label text="The Succession Roll" class="tidbit-title roll-title" />
             </ui:VisualElement>
             <ui:Label name="roll-status" text="The archivist is unrolling the Roll." class="roll-status" />
-            <ui:ScrollView name="roll-list" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="roll-list" />
+            <ui:ScrollView name="roll-list" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="roll-list" />
             <ui:VisualElement class="roll-footer">
                 <ui:Button name="roll-close" text="Close" class="roll-button emb-primary" />
             </ui:VisualElement>
