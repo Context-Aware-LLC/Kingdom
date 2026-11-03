@@ -269,8 +269,8 @@ namespace Kingdom.Net.Client.Tests.King
             Assert.That(await gateway.FetchRollAsync(default), Is.Empty);
             Assert.That(await gateway.FetchFavorAsync(default), Is.Null);
             Assert.That(await gateway.FetchStandingAsync("tok", default), Is.Null);
-            Assert.That(await gateway.FetchPrizeChoicesAsync("tok", default), Is.Empty);
-            Assert.That(await gateway.ChooseBackAsync("tok", 2, 201, default), Is.EqualTo(PrizeChooseOutcome.Failed));
+            Assert.That(await gateway.FetchPrizeChoicesAsync("tok", default), Is.Null);
+            Assert.That((await gateway.ChooseBackAsync("tok", 2, 201, default)).Outcome, Is.EqualTo(PrizeChooseOutcome.Failed));
             Assert.That(http.Requests, Is.Empty);
         }
 
@@ -282,16 +282,25 @@ namespace Kingdom.Net.Client.Tests.King
             var http = new FakeAuthHttp().Reply(200,
                 "{\"status\":\"ok\",\"choices\":[{\"reign\":2,\"place\":1,\"backIds\":[201,202]},{\"reign\":3,\"place\":3,\"backIds\":[ 202 ]}]}");
 
-            IReadOnlyList<PrizeChoiceOffer> offers = await new HttpKingGateway(Base, http).FetchPrizeChoicesAsync("tok", default);
+            IReadOnlyList<PrizeChoiceOffer>? offers = await new HttpKingGateway(Base, http).FetchPrizeChoicesAsync("tok", default);
 
-            Assert.That(offers.Select(o => (o.Reign, o.Place, string.Join(",", o.BackIds))),
+            Assert.That(offers!.Select(o => (o.Reign, o.Place, string.Join(",", o.BackIds))),
                 Is.EqualTo(new[] { (2, 1, "201,202"), (3, 3, "202") }));
             var request = http.Requests.Single();
             Assert.That((request.Url, request.Verb), Is.EqualTo((Base + "/king/prize", "GET")));
             Assert.That(request.Headers, Has.Member(new KeyValuePair<string, string>("Authorization", "Bearer tok")));
         }
 
-        [TestCase(200, "{\"status\":\"ok\",\"choices\":[]}")]
+        [Test]
+        public async Task No_open_choices_read_as_empty_not_null()
+        {
+            var http = new FakeAuthHttp().Reply(200, "{\"status\":\"ok\",\"choices\":[]}");
+
+            IReadOnlyList<PrizeChoiceOffer>? offers = await new HttpKingGateway(Base, http).FetchPrizeChoicesAsync("tok", default);
+
+            Assert.That(offers, Is.Not.Null.And.Empty);
+        }
+
         [TestCase(401, "{\"status\":\"unauthenticated\"}")]
         [TestCase(503, "{\"status\":\"unavailable\"}")]
         [TestCase(200, "{\"status\":\"ok\"}")]
@@ -299,28 +308,42 @@ namespace Kingdom.Net.Client.Tests.King
         [TestCase(200, "{\"status\":\"ok\",\"choices\":[{\"reign\":2,\"place\":1,\"backIds\":[\"201\"]}]}")]
         [TestCase(200, "{\"status\":\"ok\",\"choices\":[{\"reign\":2,\"place\":1,\"backIds\":[0]}]}")]
         [TestCase(200, "{\"status\":\"ok\",\"choices\":[{\"reign\":2,\"backIds\":[201]}]}")]
-        public async Task Prize_choices_that_are_absent_failed_or_unreadable_are_empty(int status, string body)
+        public async Task Prize_choices_that_failed_or_are_unreadable_are_null(int status, string body)
         {
             var http = new FakeAuthHttp().Reply(status, body);
 
-            Assert.That(await new HttpKingGateway(Base, http).FetchPrizeChoicesAsync("tok", default), Is.Empty);
+            Assert.That(await new HttpKingGateway(Base, http).FetchPrizeChoicesAsync("tok", default), Is.Null);
         }
 
         [Test]
-        public async Task Choosing_posts_the_reign_and_back()
+        public async Task Choosing_posts_the_reign_and_back_and_reads_the_recorded_back()
         {
-            var http = new FakeAuthHttp().Reply(200, "{\"status\":\"granted\"}");
+            // The server answers the back it recorded, which a repeat claim may not have named.
+            var http = new FakeAuthHttp().Reply(200, "{\"status\":\"granted\",\"backId\":202}");
 
-            PrizeChooseOutcome outcome = await new HttpKingGateway(Base, http).ChooseBackAsync("tok", 2, 201, default);
+            PrizeChooseResult result = await new HttpKingGateway(Base, http).ChooseBackAsync("tok", 2, 201, default);
 
-            Assert.That(outcome, Is.EqualTo(PrizeChooseOutcome.Granted));
+            Assert.That((result.Outcome, result.BackId), Is.EqualTo((PrizeChooseOutcome.Granted, (int?)202)));
             var request = http.Requests.Single();
             Assert.That((request.Url, request.Verb, request.Body),
                 Is.EqualTo((Base + "/king/prize/choose", "POST", "{\"reign\":2,\"backId\":201}")));
             Assert.That(request.Headers, Has.Member(new KeyValuePair<string, string>("Authorization", "Bearer tok")));
         }
 
+        [Test]
+        public async Task Gold_instead_of_a_back_reads_its_amount()
+        {
+            var http = new FakeAuthHttp().Reply(200, "{\"status\":\"gold\",\"gold\":150}");
+
+            PrizeChooseResult result = await new HttpKingGateway(Base, http).ChooseBackAsync("tok", 2, 201, default);
+
+            Assert.That((result.Outcome, result.Gold), Is.EqualTo((PrizeChooseOutcome.Gold, (long?)150)));
+        }
+
         [TestCase(200, "{\"status\":\"none\"}", PrizeChooseOutcome.None)]
+        [TestCase(200, "{\"status\":\"granted\"}", PrizeChooseOutcome.Failed)]
+        [TestCase(200, "{\"status\":\"granted\",\"backId\":0}", PrizeChooseOutcome.Failed)]
+        [TestCase(200, "{\"status\":\"gold\"}", PrizeChooseOutcome.Failed)]
         [TestCase(400, "{\"status\":\"invalid\"}", PrizeChooseOutcome.Invalid)]
         [TestCase(413, "{\"status\":\"invalid\"}", PrizeChooseOutcome.Invalid)]
         [TestCase(401, "{\"status\":\"unauthenticated\"}", PrizeChooseOutcome.Failed)]
@@ -331,15 +354,15 @@ namespace Kingdom.Net.Client.Tests.King
         {
             var http = new FakeAuthHttp().Reply(status, body);
 
-            Assert.That(await new HttpKingGateway(Base, http).ChooseBackAsync("tok", 2, 201, default), Is.EqualTo(expected));
+            Assert.That((await new HttpKingGateway(Base, http).ChooseBackAsync("tok", 2, 201, default)).Outcome, Is.EqualTo(expected));
         }
 
         [Test]
         public async Task Choosing_offline_fails()
         {
-            var http = new FakeAuthHttp().ReplyTransportFailure("{\"status\":\"granted\"}");
+            var http = new FakeAuthHttp().ReplyTransportFailure("{\"status\":\"granted\",\"backId\":201}");
 
-            Assert.That(await new HttpKingGateway(Base, http).ChooseBackAsync("tok", 2, 201, default),
+            Assert.That((await new HttpKingGateway(Base, http).ChooseBackAsync("tok", 2, 201, default)).Outcome,
                 Is.EqualTo(PrizeChooseOutcome.Failed));
         }
     }

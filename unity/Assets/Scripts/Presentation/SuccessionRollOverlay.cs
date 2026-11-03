@@ -26,6 +26,9 @@ namespace Kingdom.Presentation
     {
         private const int TimeoutSeconds = 10;
 
+        /// <summary>The overlay's GameObject name. The menu's arrival sequence finds an open one by it.</summary>
+        public const string ObjectName = "SuccessionRollUI";
+
         private Label _status;
         private ScrollView _list;
         private ProclamationScroll _scroll;
@@ -34,7 +37,7 @@ namespace Kingdom.Presentation
         /// <summary>Open the Roll over whatever screen is up. Returns the overlay's GameObject.</summary>
         public static GameObject Open()
         {
-            var go = new GameObject("SuccessionRollUI");
+            var go = new GameObject(ObjectName);
             var doc = go.AddComponent<UIDocument>();
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("SuccessionRoll");

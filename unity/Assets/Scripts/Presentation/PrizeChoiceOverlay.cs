@@ -18,9 +18,11 @@ namespace Kingdom.Presentation
     /// the choice until it is claimed, and the next arrival offers it again.</para>
     ///
     /// <para><b>The server decides.</b> The offered backs are the server's, already less the ones the
-    /// player owns, and a claim is a request: an answer of <c>none</c> or <c>invalid</c> means the
-    /// pool or the choice moved under the screen, so it reads the choices again and shows what is
-    /// left. Several open choices are offered one after another.</para>
+    /// player owns, and a claim is a request. After every claim the screen reads the choices again
+    /// and shows only what the server still offers, with a line saying what became of the claim:
+    /// the back the server recorded, gold instead, a refusal, or, when a claim failed but its reign
+    /// is gone from the list, that the gift is on its way. Several open choices are offered one
+    /// after another.</para>
     ///
     /// <para>Built as its own UIDocument through Resources and read on the herald's scroll, the way
     /// <see cref="SuccessionRollOverlay"/> is.</para>
@@ -29,6 +31,9 @@ namespace Kingdom.Presentation
     public sealed class PrizeChoiceOverlay : MonoBehaviour
     {
         private const int TimeoutSeconds = 10;
+
+        /// <summary>The overlay's GameObject name. The menu's arrival sequence finds an open one by it.</summary>
+        public const string ObjectName = "PrizeChoiceUI";
 
         private Label _body;
         private Label _status;
@@ -46,7 +51,7 @@ namespace Kingdom.Presentation
         /// <summary>Open on <paramref name="offers"/>[0]. Returns the overlay's GameObject.</summary>
         public static GameObject Open(IReadOnlyList<PrizeChoiceOffer> offers)
         {
-            var go = new GameObject("PrizeChoiceUI");
+            var go = new GameObject(ObjectName);
             var doc = go.AddComponent<UIDocument>();
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("PrizeChoice");
@@ -169,45 +174,80 @@ namespace Kingdom.Presentation
             _later?.SetEnabled(false);
             SetStatus(null);
 
-            PrizeChooseOutcome outcome;
+            int reign = _offer.Reign;
+            PrizeChooseResult result;
             IReadOnlyList<PrizeChoiceOffer> remaining = null;
             try
             {
                 var gateway = new HttpKingGateway(CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(TimeoutSeconds));
                 string token = await AuthGateway.TokenForConnectAsync();
-                outcome = await gateway.ChooseBackAsync(token, _offer.Reign, _selected);
-                // Granted, gone or refused, the choices have moved: read what is left.
-                if (outcome != PrizeChooseOutcome.Failed)
-                    remaining = await gateway.FetchPrizeChoicesAsync(token);
+                result = await gateway.ChooseBackAsync(token, reign, _selected);
+                // Whatever the answer, what to show next is the server's list: even a failed claim
+                // may have closed the choice. Null means it could not be read.
+                remaining = await gateway.FetchPrizeChoicesAsync(token);
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[PrizeChoice] claim threw ({ex.GetType().Name}: {ex.Message}).");
-                outcome = PrizeChooseOutcome.Failed;
+                result = PrizeChooseResult.Failed;
             }
 
             if (this == null) return;   // the menu left while the claim was in flight
             _busy = false;
             _later?.SetEnabled(true);
 
-            if (outcome == PrizeChooseOutcome.Failed)
+            if (result.Outcome == PrizeChooseOutcome.Failed && (remaining == null || Offers(remaining, reign)))
             {
+                // Not known to have closed: the same offer stays, to try again.
                 SetStatus(Loc.Get("king_prize_failed"));
                 _claim?.SetEnabled(_selected != 0);
                 return;
             }
 
+            string message = MessageFor(result);
+            // Only ever the server's list, so a reign it has closed is never offered again.
             if (remaining != null && Show(remaining))
             {
-                if (outcome == PrizeChooseOutcome.Granted) SetStatus(Loc.Get("king_prize_granted_more"));
+                SetStatus(message);
                 return;
             }
 
             // Nothing left to offer: say what became of this one, and leave only Close.
             _list?.Clear();
-            if (outcome == PrizeChooseOutcome.Granted) SetStatus(Loc.Get("king_prize_granted"));
-            else SetStatus(Loc.Get("king_prize_gone"));
+            SetStatus(message);
             SetFooter(claimable: false);
+        }
+
+        private static bool Offers(IReadOnlyList<PrizeChoiceOffer> offers, int reign)
+        {
+            foreach (PrizeChoiceOffer offer in offers)
+                if (offer.Reign == reign) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// What became of the claim. A granted back is named from the server's answer, never the
+        /// tile tapped: a repeated claim is told the back the first one closed on. A failed claim
+        /// that reaches here closed anyway (the server no longer offers its reign), so its gift is
+        /// on the way and the next visit delivers it.
+        /// </summary>
+        private static string MessageFor(PrizeChooseResult result)
+        {
+            switch (result.Outcome)
+            {
+                case PrizeChooseOutcome.Granted:
+                    return result.BackId is int id && CardBackDefinitions.TryGet(id, out CardBackDefinition back)
+                        ? Loc.Format("king_prize_granted", back.Name)
+                        : Loc.Get("king_prize_granted_unnamed");
+                case PrizeChooseOutcome.Gold:
+                    return Loc.Format("king_prize_gold", result.Gold ?? 0);
+                case PrizeChooseOutcome.Invalid:
+                    return Loc.Get("king_prize_refused");
+                case PrizeChooseOutcome.None:
+                    return Loc.Get("king_prize_gone");
+                default:
+                    return Loc.Get("king_prize_on_its_way");
+            }
         }
 
         private void SetFooter(bool claimable)

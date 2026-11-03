@@ -30,6 +30,10 @@ namespace Kingdom.Presentation
         public const int EntriesPerPage = 6;
 
         private const int TimeoutSeconds = 10;
+
+        /// <summary>The overlay's GameObject name. The menu's arrival sequence finds an open one by it.</summary>
+        public const string ObjectName = "LedgerUI";
+
         private const float SealSize = 72f;
 
         private VisualElement _page;
@@ -49,7 +53,7 @@ namespace Kingdom.Presentation
         /// <summary>Open the Ledger over whatever screen is up. Returns the overlay's GameObject.</summary>
         public static GameObject Open()
         {
-            var go = new GameObject("LedgerUI");
+            var go = new GameObject(ObjectName);
             var doc = go.AddComponent<UIDocument>();
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("LedgerScreen");

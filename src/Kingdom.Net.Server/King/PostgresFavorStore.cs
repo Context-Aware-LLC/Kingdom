@@ -255,7 +255,8 @@ namespace Kingdom.Net.Server.King
             await using var conn = new NpgsqlConnection(_connString);
             await conn.OpenAsync(ct);
             await using var cmd = new NpgsqlCommand(
-                "update favor_prize set choice_open = false, back_id = $3, choice_grant_pending = ($3 is not null) " +
+                "update favor_prize set choice_open = false, choice_closed = true, back_id = $3, " +
+                "choice_grant_pending = ($3 is not null) " +
                 "where reign = $1 and player_id = $2 and choice_open", conn);
             cmd.Parameters.Add(P(NpgsqlDbType.Integer, reign));
             cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
@@ -286,6 +287,20 @@ namespace Kingdom.Net.Server.King
             cmd.Parameters.Add(P(NpgsqlDbType.Integer, reign));
             cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
             await cmd.ExecuteNonQueryAsync(ct);
+        }
+
+        public async Task<ClosedChoice?> ClosedChoiceAsync(int reign, string playerId, CancellationToken ct = default)
+        {
+            await using var conn = new NpgsqlConnection(_connString);
+            await conn.OpenAsync(ct);
+            await using var cmd = new NpgsqlCommand(
+                "select back_id, choice_grant_pending from favor_prize " +
+                "where reign = $1 and player_id = $2 and choice_closed", conn);
+            cmd.Parameters.Add(P(NpgsqlDbType.Integer, reign));
+            cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+            await using NpgsqlDataReader r = await cmd.ExecuteReaderAsync(ct);
+            if (!await r.ReadAsync(ct)) return null;
+            return new ClosedChoice(reign, playerId, r.IsDBNull(0) ? null : r.GetInt32(0), !r.GetBoolean(1));
         }
 
         /// <summary>Reads the six columns reign, player_id, place, gold, back_id, choice_open, in that order.</summary>

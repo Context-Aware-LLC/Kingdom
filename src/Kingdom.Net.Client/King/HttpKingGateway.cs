@@ -136,14 +136,38 @@ namespace Kingdom.Net.Client.King
     /// <summary>How <c>POST /king/prize/choose</c> answered.</summary>
     public enum PrizeChooseOutcome
     {
-        /// <summary>The back is the player's.</summary>
+        /// <summary>The choice is closed on <see cref="PrizeChooseResult.BackId"/>, which is the player's.</summary>
         Granted,
-        /// <summary>The choice is gone: claimed already, or settled in gold.</summary>
+        /// <summary>The choice was paid in <see cref="PrizeChooseResult.Gold"/> gold: the player owns the whole pool.</summary>
+        Gold,
+        /// <summary>No choice of this player's for that reign.</summary>
         None,
         /// <summary>The server refused the back: the pool changed, or the player owns it now.</summary>
         Invalid,
-        /// <summary>No answer: offline, signed out, rate limited, or the server could not say.</summary>
+        /// <summary>No answer: offline, signed out, rate limited, or the server could not say. The
+        /// choice may still have closed; read the choices again before saying anything.</summary>
         Failed,
+    }
+
+    /// <summary>The answer to <c>POST /king/prize/choose</c>.</summary>
+    public sealed class PrizeChooseResult
+    {
+        public static readonly PrizeChooseResult Failed = new PrizeChooseResult(PrizeChooseOutcome.Failed, null, null);
+
+        public PrizeChooseOutcome Outcome { get; }
+
+        /// <summary>On <see cref="PrizeChooseOutcome.Granted"/>, the back the server recorded.</summary>
+        public int? BackId { get; }
+
+        /// <summary>On <see cref="PrizeChooseOutcome.Gold"/>, the gold paid.</summary>
+        public long? Gold { get; }
+
+        public PrizeChooseResult(PrizeChooseOutcome outcome, int? backId, long? gold)
+        {
+            Outcome = outcome;
+            BackId = backId;
+            Gold = gold;
+        }
     }
 
     /// <summary>
@@ -269,13 +293,13 @@ namespace Kingdom.Net.Client.King
             return new FavorStanding(place, score, seals);
         }
 
-        /// <summary>The signed-in player's open back choices, oldest reign first. Empty when there are
-        /// none and when they could not be read: either way the menu offers nothing, and the choice
-        /// waits for the next arrival. An unreadable choice empties the whole list.</summary>
-        public async Task<IReadOnlyList<PrizeChoiceOffer>> FetchPrizeChoicesAsync(string accessToken,
+        /// <summary>The signed-in player's open back choices, oldest reign first; empty when there are
+        /// none. <b>Null when they could not be read</b>, which the pick screen must not mistake for
+        /// "the choice is gone". An unreadable choice nulls the whole list.</summary>
+        public async Task<IReadOnlyList<PrizeChoiceOffer>?> FetchPrizeChoicesAsync(string accessToken,
             CancellationToken cancellationToken = default)
         {
-            var none = Array.Empty<PrizeChoiceOffer>();
+            IReadOnlyList<PrizeChoiceOffer>? none = null;
             if (string.IsNullOrEmpty(accessToken)) return none;
             string? body = await GetAsync("/king/prize", accessToken, cancellationToken).ConfigureAwait(false);
             if (body == null || !ReadStatus(body, out _) ||
@@ -301,11 +325,13 @@ namespace Kingdom.Net.Client.King
             return offers;
         }
 
-        /// <summary>Claim <paramref name="backId"/> for <paramref name="reign"/>'s open choice.</summary>
-        public async Task<PrizeChooseOutcome> ChooseBackAsync(string accessToken, int reign, int backId,
+        /// <summary>Claim <paramref name="backId"/> for <paramref name="reign"/>'s open choice. A
+        /// <c>granted</c> answer names the back the choice is closed on, which is the server's record
+        /// and not necessarily the one this call named.</summary>
+        public async Task<PrizeChooseResult> ChooseBackAsync(string accessToken, int reign, int backId,
             CancellationToken cancellationToken = default)
         {
-            if (!IsConfigured || string.IsNullOrEmpty(accessToken)) return PrizeChooseOutcome.Failed;
+            if (!IsConfigured || string.IsNullOrEmpty(accessToken)) return PrizeChooseResult.Failed;
             string json = "{\"reign\":" + reign.ToString(CultureInfo.InvariantCulture) +
                           ",\"backId\":" + backId.ToString(CultureInfo.InvariantCulture) + "}";
             var headers = new List<KeyValuePair<string, string>>
@@ -321,13 +347,21 @@ namespace Kingdom.Net.Client.King
             if (response.IsTransportFailure ||
                 !AuthJson.TryReadTopLevel(response.Body, out IReadOnlyDictionary<string, string> fields) ||
                 !AuthJson.TryString(fields, "status", out string status))
-                return PrizeChooseOutcome.Failed;
+                return PrizeChooseResult.Failed;
             switch (status)
             {
-                case "granted": return PrizeChooseOutcome.Granted;
-                case "none": return PrizeChooseOutcome.None;
-                case "invalid": return PrizeChooseOutcome.Invalid;
-                default: return PrizeChooseOutcome.Failed;
+                case "granted":
+                    // A granted answer without its back cannot say what was granted: read it as unread.
+                    return TryCount(fields, "backId", 1, out int granted)
+                        ? new PrizeChooseResult(PrizeChooseOutcome.Granted, granted, null)
+                        : PrizeChooseResult.Failed;
+                case "gold":
+                    return AuthJson.TryInt64(fields, "gold", out long gold) && gold >= 0
+                        ? new PrizeChooseResult(PrizeChooseOutcome.Gold, null, gold)
+                        : PrizeChooseResult.Failed;
+                case "none": return new PrizeChooseResult(PrizeChooseOutcome.None, null, null);
+                case "invalid": return new PrizeChooseResult(PrizeChooseOutcome.Invalid, null, null);
+                default: return PrizeChooseResult.Failed;
             }
         }
 

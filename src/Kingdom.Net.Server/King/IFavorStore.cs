@@ -20,6 +20,10 @@ namespace Kingdom.Net.Server.King
     /// </summary>
     public sealed record FavorPrize(int Reign, string PlayerId, int Place, long Gold, int? BackId, bool ChoiceOpen);
 
+    /// <summary>How a choice the player held was closed: on <see cref="BackId"/>, or in gold when it
+    /// is null. <see cref="Delivered"/> is false while a chosen back's grant is unconfirmed.</summary>
+    public sealed record ClosedChoice(int Reign, string PlayerId, int? BackId, bool Delivered);
+
     /// <summary>A closed reign whose gold is not paid yet, and whether the operator struck its Favorite.</summary>
     public sealed record UnpaidReign(int Reign, bool Struck);
 
@@ -106,6 +110,11 @@ namespace Kingdom.Net.Server.King
 
         /// <summary>The chosen back's grant landed, or has nobody left to go to.</summary>
         Task MarkChoiceDeliveredAsync(int reign, string playerId, CancellationToken ct = default);
+
+        /// <summary>The player's choice for the reign as <see cref="CloseChoiceAsync"/> closed it, or
+        /// null when it is open, was never a choice, or there is no row. A row the operator closed by
+        /// hand (reverse-favor-prize.sql) reads null too.</summary>
+        Task<ClosedChoice?> ClosedChoiceAsync(int reign, string playerId, CancellationToken ct = default);
     }
 
     /// <summary>The in-memory store — the default for tests and single-box dev.</summary>
@@ -116,6 +125,7 @@ namespace Kingdom.Net.Server.King
             new Dictionary<(int, string), FavorScore>();
         private readonly Dictionary<int, ReignRecord> _reigns = new Dictionary<int, ReignRecord>();
         private readonly HashSet<(int Reign, string PlayerId)> _undelivered = new HashSet<(int, string)>();
+        private readonly HashSet<(int Reign, string PlayerId)> _closedChoices = new HashSet<(int, string)>();
         private readonly Dictionary<(int Reign, string PlayerId), (FavorPrize Prize, bool Settled)> _prizes =
             new Dictionary<(int, string), (FavorPrize, bool)>();
 
@@ -319,6 +329,7 @@ namespace Kingdom.Net.Server.King
                 if (!_prizes.TryGetValue(key, out var p) || !p.Prize.ChoiceOpen) return Task.FromResult(false);
                 _prizes[key] = (p.Prize with { BackId = backId, ChoiceOpen = false }, p.Settled);
                 if (backId != null) _undelivered.Add(key);
+                _closedChoices.Add(key);
                 return Task.FromResult(true);
             }
         }
@@ -340,6 +351,30 @@ namespace Kingdom.Net.Server.King
         {
             lock (_lock) _undelivered.Remove((reign, playerId));
             return Task.CompletedTask;
+        }
+
+        public Task<ClosedChoice?> ClosedChoiceAsync(int reign, string playerId, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                var key = (reign, playerId);
+                if (!_closedChoices.Contains(key)) return Task.FromResult<ClosedChoice?>(null);
+                return Task.FromResult<ClosedChoice?>(
+                    new ClosedChoice(reign, playerId, _prizes[key].Prize.BackId, !_undelivered.Contains(key)));
+            }
+        }
+
+        /// <summary>What reverse-favor-prize.sql step 2 does to a choice: closed by hand, nothing
+        /// owed, and no longer read as the player's choice. Not on <see cref="IFavorStore"/>.</summary>
+        public void Reverse(int reign, string playerId)
+        {
+            lock (_lock)
+            {
+                var key = (reign, playerId);
+                if (_prizes.TryGetValue(key, out var p)) _prizes[key] = (p.Prize with { ChoiceOpen = false }, true);
+                _undelivered.Remove(key);
+                _closedChoices.Remove(key);
+            }
         }
 
         /// <summary>Best first; ties to the earlier arrival, then the id so the order is total.</summary>

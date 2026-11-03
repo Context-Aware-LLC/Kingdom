@@ -159,8 +159,7 @@ namespace Kingdom.Net.Server.Tests.King
 
             Assert.Multiple(() =>
             {
-                Assert.That(result.Status, Is.EqualTo(PrizeChoiceStatus.Granted));
-                Assert.That(result.HttpStatus, Is.EqualTo(200));
+                Assert.That((result.Status, result.HttpStatus, result.BackId), Is.EqualTo((PrizeChoiceStatus.Granted, 200, (int?)202)));
                 Assert.That(h.Backs.Applied, Is.EqualTo(new[] { "202:" + p + ":king-choice:2" }),
                     "the key reverse-favor-prize.sql reverses a chosen back by");
                 Assert.That(row, Is.EqualTo(new FavorPrize(2, p, 1, 500, 202, false)));
@@ -171,7 +170,7 @@ namespace Kingdom.Net.Server.Tests.King
         }
 
         [Test]
-        public async Task Choosing_twice_grants_once()
+        public async Task Choosing_twice_grants_once_and_answers_the_recorded_back()
         {
             var h = new Harness();
             await h.OpenChoiceAsync("good", 2);
@@ -180,8 +179,9 @@ namespace Kingdom.Net.Server.Tests.King
             PrizeChoiceResult same = await h.ChooseAsync("good", 2, 201);
             PrizeChoiceResult other = await h.ChooseAsync("good", 2, 202);
 
-            Assert.That(same.Status, Is.EqualTo(PrizeChoiceStatus.None));
-            Assert.That(other.Status, Is.EqualTo(PrizeChoiceStatus.None));
+            Assert.That((same.Status, same.BackId), Is.EqualTo((PrizeChoiceStatus.Granted, (int?)201)));
+            Assert.That((other.Status, other.BackId), Is.EqualTo((PrizeChoiceStatus.Granted, (int?)201)),
+                "the server's recorded back, not the one the repeat named");
             Assert.That(h.Backs.Applied, Has.Count.EqualTo(1));
         }
 
@@ -198,8 +198,8 @@ namespace Kingdom.Net.Server.Tests.King
                 Task.Run(() => h.ChooseAsync("good", 2, 201)),
                 Task.Run(() => h.ChooseAsync("good", 2, 202)));
 
-            Assert.That(results.Select(r => r.Status),
-                Is.EquivalentTo(new[] { PrizeChoiceStatus.Granted, PrizeChoiceStatus.None }));
+            Assert.That(results.Select(r => r.Status), Is.All.EqualTo(PrizeChoiceStatus.Granted));
+            Assert.That(results[0].BackId, Is.EqualTo(results[1].BackId), "both are told the winner's back");
             Assert.That(h.Backs.Applied, Has.Count.EqualTo(1));
         }
 
@@ -278,21 +278,25 @@ namespace Kingdom.Net.Server.Tests.King
             h.Backs.FailGrants = true;
 
             PrizeChoiceResult failed = await h.ChooseAsync("good", 2, 201);
-            PrizeChoiceResult another = await h.ChooseAsync("good", 2, 202);
+            PrizeChoiceResult another = await h.ChooseAsync("good", 2, 202);   // the ledger is still down
             FavorPrize? row = await h.Store.PrizeAsync(2, p);
             h.Backs.FailGrants = false;
             PrizeChoiceResult first = await h.Endpoint.ReadAsync("good");
+            int callsAfterFirst = h.Backs.Calls;
             PrizeChoiceResult second = await h.Endpoint.ReadAsync("good");
+            PrizeChoiceResult repeat = await h.ChooseAsync("good", 2, 202);
 
             Assert.Multiple(() =>
             {
                 Assert.That((failed.Status, failed.HttpStatus), Is.EqualTo((PrizeChoiceStatus.Unavailable, 503)));
-                Assert.That(another.Status, Is.EqualTo(PrizeChoiceStatus.None), "the closed choice takes no second pick");
+                Assert.That(another.HttpStatus, Is.EqualTo(503), "still owed, still undeliverable: no second pick, no false none");
                 Assert.That(row, Is.EqualTo(new FavorPrize(2, p, 1, 500, 201, false)), "closed, with the back it chose");
                 Assert.That(first.Choices, Is.Empty);
                 Assert.That(second.Choices, Is.Empty);
+                Assert.That(h.Backs.Calls, Is.EqualTo(callsAfterFirst), "the second read grants nothing");
+                Assert.That((repeat.Status, repeat.BackId), Is.EqualTo((PrizeChoiceStatus.Granted, (int?)201)),
+                    "a repeat claim is told the back it already has");
                 Assert.That(h.Backs.Applied, Is.EqualTo(new[] { "201:" + p + ":king-choice:2" }));
-                Assert.That(h.Backs.Calls, Is.EqualTo(2), "the failed grant, then one delivery; the second read grants nothing");
             });
         }
 
@@ -342,11 +346,43 @@ namespace Kingdom.Net.Server.Tests.King
             PrizeChoiceResult read = await h.Endpoint.ReadAsync("good");
 
             Assert.That(timedOut.HttpStatus, Is.EqualTo(503));
-            Assert.That(again.Status, Is.EqualTo(PrizeChoiceStatus.None));
+            Assert.That((again.Status, again.BackId), Is.EqualTo((PrizeChoiceStatus.Granted, (int?)201)),
+                "the retry is told what it got, not what it named");
             Assert.That(read.Choices, Is.Empty);
             Assert.That(h.Backs.Applied, Is.EqualTo(new[] { "201:" + p + ":king-choice:2" }),
                 "the re-delivery is a duplicate on the same key, and 202 is never granted");
             Assert.That(await h.Store.UndeliveredChoicesAsync(null), Is.Empty);
+        }
+
+        [Test]
+        public async Task A_back_still_owed_is_not_offered_on_a_second_choice()
+        {
+            var h = new Harness();
+            await h.OpenChoiceAsync("good", 2);
+            await h.OpenChoiceAsync("good", 3, place: 2);
+            h.Backs.FailGrants = true;   // 201 is chosen for reign 2 and stays undelivered throughout
+
+            await h.ChooseAsync("good", 2, 201);
+            PrizeChoiceResult read = await h.Endpoint.ReadAsync("good");
+            PrizeChoiceResult again = await h.ChooseAsync("good", 3, 201);
+
+            Assert.That(read.Choices.Select(c => (c.Reign, string.Join(",", c.BackIds))), Is.EqualTo(new[] { (3, "202") }));
+            Assert.That(again.Status, Is.EqualTo(PrizeChoiceStatus.Invalid));
+            Assert.That(h.Backs.Applied, Is.Empty);
+        }
+
+        [Test]
+        public async Task A_choice_the_operator_reversed_answers_none()
+        {
+            var h = new Harness();
+            string p = await h.OpenChoiceAsync("good", 2);
+            await h.ChooseAsync("good", 2, 201);
+            h.Store.Reverse(2, p);
+
+            PrizeChoiceResult result = await h.ChooseAsync("good", 2, 201);
+
+            Assert.That(result.Status, Is.EqualTo(PrizeChoiceStatus.None));
+            Assert.That(h.Backs.Calls, Is.EqualTo(1));
         }
 
         [Test]
@@ -393,7 +429,7 @@ namespace Kingdom.Net.Server.Tests.King
                 Assert.That(second.Choices, Is.Empty);
                 Assert.That(gold, Is.EqualTo(Prizes.PoolEmptyGold));
                 Assert.That(row!.ChoiceOpen, Is.False);
-                Assert.That(post.Status, Is.EqualTo(PrizeChoiceStatus.None));
+                Assert.That((post.Status, post.Gold), Is.EqualTo((PrizeChoiceStatus.Gold, (long?)Prizes.PoolEmptyGold)));
             });
         }
 
@@ -433,14 +469,14 @@ namespace Kingdom.Net.Server.Tests.King
                 Assert.That(before.Choices.Select(c => (c.Reign, c.BackIds.Single())), Is.EqualTo(new[] { (2, 201), (3, 201) }));
                 Assert.That(chose.Status, Is.EqualTo(PrizeChoiceStatus.Granted));
                 Assert.That(after.Choices, Is.Empty);
-                Assert.That(late.Status, Is.EqualTo(PrizeChoiceStatus.None));
+                Assert.That((late.Status, late.Gold), Is.EqualTo((PrizeChoiceStatus.Gold, (long?)Prizes.PoolEmptyGold)));
                 Assert.That(gold, Is.EqualTo(Prizes.PoolEmptyGold));
                 Assert.That(h.Backs.Applied, Has.Count.EqualTo(1));
             });
         }
 
         [Test]
-        public async Task A_post_for_a_choice_the_pool_ran_dry_under_settles_it_and_answers_none()
+        public async Task A_post_for_a_choice_the_pool_ran_dry_under_settles_it_and_answers_gold()
         {
             var h = new Harness();
             string p = await h.OpenChoiceAsync("good", 2);
@@ -449,7 +485,7 @@ namespace Kingdom.Net.Server.Tests.King
 
             PrizeChoiceResult result = await h.ChooseAsync("good", 2, 201);
 
-            Assert.That(result.Status, Is.EqualTo(PrizeChoiceStatus.None));
+            Assert.That((result.Status, result.Gold), Is.EqualTo((PrizeChoiceStatus.Gold, (long?)Prizes.PoolEmptyGold)));
             Assert.That(await h.GoldAsync(p), Is.EqualTo(Prizes.PoolEmptyGold));
             Assert.That((await h.Store.PrizeAsync(2, p))!.ChoiceOpen, Is.False);
         }
@@ -532,16 +568,18 @@ namespace Kingdom.Net.Server.Tests.King
         // ── Through the composition root ──────────────────────────────────────────────────
 
         private static async Task<(HttpStatusCode Status, JsonElement Body, bool NoStore)> SendAsync(
-            Func<HttpClient, Uri, Task<HttpResponseMessage>> send)
+            Func<HttpClient, Uri, Task<HttpResponseMessage>> send,
+            InMemoryFavorStore? favor = null, InMemoryAccountStore? accounts = null)
         {
             var app = ServerApp.Build(new ServerConfig
             {
                 Urls = "http://127.0.0.1:0",
                 CardsDir = SessionHarness.CardDataDir(),
-                AccountStore = new InMemoryAccountStore(new FakeTime()),
+                AccountStore = accounts ?? new InMemoryAccountStore(new FakeTime()),
                 TokenVerifier = new Verifier(),
                 EntitlementLedger = new InMemoryEntitlementLedger(),
                 FavorPrizes = Prizes,
+                Favor = favor,
             });
             await app.StartAsync();
             try
@@ -589,6 +627,41 @@ namespace Kingdom.Net.Server.Tests.King
                 Assert.That(goodRead.Body.GetProperty("choices").GetArrayLength(), Is.Zero);
                 Assert.That(goodRead.NoStore, Is.True);
                 Assert.That(goodChoose.Body.GetProperty("status").GetString(), Is.EqualTo("none"));
+            });
+        }
+
+        [Test]
+        [Category("Contract")]
+        [CancelAfter(30_000)]
+        public async Task A_closed_choice_answers_its_back_or_its_gold_over_http()
+        {
+            // The real ledger and the catalog's one back: the shape HttpKingGateway reads.
+            var accounts = new InMemoryAccountStore(new FakeTime());
+            var favor = new InMemoryFavorStore();
+            string p = (await accounts.ResolveOrCreateAsync("supabase", CredentialHash.Of("subject-good"), "good@example.com")).PlayerId;
+            foreach (int reign in new[] { 2, 3 })
+            {
+                await favor.RecordPrizeAsync(new FavorPrize(reign, p, 1, 500, null, false));
+                await favor.ClosePaidAsync(reign, p, "name");
+                await favor.SettleBackAsync(reign, p, null, true);
+            }
+            await favor.CloseChoiceAsync(2, p, CardBackDefinitions.DefaultId);   // chosen, not yet delivered
+            await favor.CloseChoiceAsync(3, p, null);                            // settled in gold
+
+            var back = await SendAsync((h, root) => h.SendAsync(
+                Request(HttpMethod.Post, root, "/king/prize/choose", "good", "{\"reign\":2,\"backId\":999}")), favor, accounts);
+            var gold = await SendAsync((h, root) => h.SendAsync(
+                Request(HttpMethod.Post, root, "/king/prize/choose", "good", "{\"reign\":3,\"backId\":999}")), favor, accounts);
+
+            IReadOnlyList<FavorPrize> undelivered = await favor.UndeliveredChoicesAsync(null);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(back.Body.GetProperty("status").GetString(), Is.EqualTo("granted"));
+                Assert.That(back.Body.GetProperty("backId").GetInt32(), Is.EqualTo(CardBackDefinitions.DefaultId));
+                Assert.That(gold.Body.GetProperty("status").GetString(), Is.EqualTo("gold"));
+                Assert.That(gold.Body.GetProperty("gold").GetInt64(), Is.EqualTo(Prizes.PoolEmptyGold));
+                Assert.That(undelivered, Is.Empty, "the repeat claim delivered it");
             });
         }
 

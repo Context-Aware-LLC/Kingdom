@@ -1030,9 +1030,16 @@
     <!-- Buttons. Later closes the scroll and keeps the prize for the next visit to the menu. -->
     <string name="king_prize_claim">Claim</string>
     <string name="king_prize_later">Later</string>
-    <!-- After a claim. -->
-    <string name="king_prize_granted">It is yours. Any deck may wear it now.</string>
-    <string name="king_prize_granted_more">It is yours. His Majesty owes you another.</string>
-    <string name="king_prize_gone">That gift has already been collected.</string>
+    <!-- After a claim. %1$s = the card back's name, e.g. Gravekeep: the back the server recorded, which may differ from the one tapped. -->
+    <string name="king_prize_granted">%1$s is yours. Any deck may wear it now.</string>
+    <!-- The same, for a back this version of the game has no name for. -->
+    <string name="king_prize_granted_unnamed">His Majesty\'s gift is yours. Any deck may wear it now.</string>
+    <!-- %1$d = the gold paid, a number. The player already owns every back on offer. -->
+    <string name="king_prize_gold">You already own every back on offer, so His Majesty paid you %1$d gold instead.</string>
+    <!-- The back tapped is no longer on offer (owned since, or the pool changed). -->
+    <string name="king_prize_refused">That back is no longer on offer. Choose another.</string>
+    <string name="king_prize_gone">That gift is no longer on offer.</string>
+    <!-- The claim got no answer, but the server no longer offers it: it went through and will be delivered. -->
+    <string name="king_prize_on_its_way">Your gift is on its way. The royal couriers will see to it.</string>
     <string name="king_prize_failed">His Majesty\'s clerks could not deliver it. Try again in a moment.</string>
 </resources>

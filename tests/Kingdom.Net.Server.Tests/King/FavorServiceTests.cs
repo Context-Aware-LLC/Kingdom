@@ -467,6 +467,8 @@ namespace Kingdom.Net.Server.Tests.King
                 => throw new InvalidOperationException("favor store is down");
             public Task MarkChoiceDeliveredAsync(int reign, string playerId, CancellationToken ct = default)
                 => throw new InvalidOperationException("favor store is down");
+            public Task<ClosedChoice?> ClosedChoiceAsync(int reign, string playerId, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
         }
 
         /// <summary>One ladder match between the harness player (seat 0) and a second account,

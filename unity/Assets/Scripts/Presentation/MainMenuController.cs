@@ -536,12 +536,12 @@ namespace Kingdom.Presentation
                 return;
             }
 
-            if (this == null || offers.Count == 0) return;   // the menu left while the read was in flight
-            // The overlays are found by the GameObject names their Open methods give them.
+            if (this == null || offers == null || offers.Count == 0) return;   // left, unread, or none
+            // Each overlay is found by its ObjectName, the name its Open method gives its GameObject.
             if (_tidbit?.IsShowing == true ||
                 _root.Query(className: "mm-modal").Where(m => !m.ClassListContains("mm-modal--hidden")).First() != null ||
-                GameObject.Find("SuccessionRollUI") != null || GameObject.Find("LedgerUI") != null ||
-                GameObject.Find("PrizeChoiceUI") != null)
+                GameObject.Find(SuccessionRollOverlay.ObjectName) != null || GameObject.Find(LedgerOverlay.ObjectName) != null ||
+                GameObject.Find(PrizeChoiceOverlay.ObjectName) != null)
                 return;
             PrizeChoiceOverlay.Open(offers);
         }

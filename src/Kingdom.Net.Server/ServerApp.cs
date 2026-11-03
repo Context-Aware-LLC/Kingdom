@@ -2033,14 +2033,20 @@ namespace Kingdom.Net.Server
         }
 
         /// <summary>
-        /// The <c>/king/prize</c> routes' JSON: <c>status</c> always, and on GET's 200 the open
-        /// <c>choices</c>, each <c>{reign, place, backIds}</c>. Per-account, so no-store.
+        /// The <c>/king/prize</c> routes' JSON: <c>status</c> always; on GET's 200 the open
+        /// <c>choices</c>, each <c>{reign, place, backIds}</c>; on POST's <c>granted</c> the
+        /// <c>backId</c> the choice is closed on, and on <c>gold</c> the <c>gold</c> paid.
+        /// Per-account, so no-store.
         /// </summary>
         private static IResult PrizeChoiceJson(HttpContext context, King.PrizeChoiceResult result, bool withChoices)
         {
             context.Response.Headers["Cache-Control"] = "no-store";
             if (result.HttpStatus == 429) context.Response.Headers["Retry-After"] = "60";
             string status = result.Status.ToString().ToLowerInvariant();
+            if (result.BackId is int backId)
+                return Results.Json(new { status, backId }, statusCode: result.HttpStatus);
+            if (result.Gold is long gold)
+                return Results.Json(new { status, gold }, statusCode: result.HttpStatus);
             if (!withChoices || result.HttpStatus != 200)
                 return Results.Json(new { status }, statusCode: result.HttpStatus);
 

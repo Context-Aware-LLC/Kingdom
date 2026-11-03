@@ -94,6 +94,7 @@ namespace Kingdom.Net.Server.Tests.King
             public Task<bool> CloseChoiceAsync(int reign, string playerId, int? backId, CancellationToken ct = default) => _inner.CloseChoiceAsync(reign, playerId, backId, ct);
             public Task<IReadOnlyList<FavorPrize>> UndeliveredChoicesAsync(string? playerId, CancellationToken ct = default) => _inner.UndeliveredChoicesAsync(playerId, ct);
             public Task MarkChoiceDeliveredAsync(int reign, string playerId, CancellationToken ct = default) => _inner.MarkChoiceDeliveredAsync(reign, playerId, ct);
+            public Task<ClosedChoice?> ClosedChoiceAsync(int reign, string playerId, CancellationToken ct = default) => _inner.ClosedChoiceAsync(reign, playerId, ct);
         }
 
         private sealed class Harness

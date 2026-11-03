@@ -291,6 +291,27 @@ namespace Kingdom.Net.Server.Tests.King
                 "delivery changes nothing a reader sees");
             Assert.That(await Store.OpenChoicesAsync("a", default), Is.Empty, "a choice never reopens");
         }
+
+        [Test]
+        public async Task A_closed_choice_reads_back_how_it_closed()
+        {
+            await OpenChoiceAsync(1, "a");
+            await OpenChoiceAsync(2, "a");
+            await OpenChoiceAsync(3, "a");
+            await Store.RecordPrizeAsync(new FavorPrize(4, "a", 1, 100, null, false), default);
+            await Store.ClosePaidAsync(4, null, null, default);
+            await Store.SettleBackAsync(4, "a", 101, false, default);   // a place back: never a choice
+            await Store.CloseChoiceAsync(1, "a", 201, default);
+            await Store.CloseChoiceAsync(2, "a", null, default);
+
+            Assert.That(await Store.ClosedChoiceAsync(1, "a", default), Is.EqualTo(new ClosedChoice(1, "a", 201, false)));
+            await Store.MarkChoiceDeliveredAsync(1, "a", default);
+            Assert.That(await Store.ClosedChoiceAsync(1, "a", default), Is.EqualTo(new ClosedChoice(1, "a", 201, true)));
+            Assert.That(await Store.ClosedChoiceAsync(2, "a", default), Is.EqualTo(new ClosedChoice(2, "a", null, true)));
+            Assert.That(await Store.ClosedChoiceAsync(3, "a", default), Is.Null, "still open");
+            Assert.That(await Store.ClosedChoiceAsync(4, "a", default), Is.Null, "never a choice");
+            Assert.That(await Store.ClosedChoiceAsync(1, "b", default), Is.Null);
+        }
     }
 
     [TestFixture]
