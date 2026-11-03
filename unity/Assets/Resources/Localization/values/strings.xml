@@ -871,8 +871,8 @@
     <string name="unearth_title_choose">CHOOSE A CARD TO UNEARTH</string>
     <!-- Blocking gate title when the server did not answer at launch. -->
     <string name="update_gate_title_unreachable">Couldn\'t reach the server</string>
-    <!-- Gate body. %1$s = a joke line (ConnectionFailureCopy.Unreachable.Joke, localized separately). 'Kingdom of Bad Ideas' is the game title. -->
-    <string name="update_gate_reason_unreachable">Kingdom of Bad Ideas needs a connection to play. Check your network and try again.\n%1$s</string>
+    <!-- Gate body. %1$s = a joke line (ConnectionFailureCopy.Unreachable.Joke, localized separately). -->
+    <string name="update_gate_reason_unreachable">Check your network and try again.\n%1$s</string>
     <!-- Gate button that opens the app store. -->
     <string name="update_gate_button_update">Update</string>
     <!-- Gate title while the launch check is still waiting for the server (shown after about a second). Single ellipsis character. -->
