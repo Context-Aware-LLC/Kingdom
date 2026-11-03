@@ -204,7 +204,7 @@
     <string name="collection_empty_owns_everything">Du besitzt hier jede Karte.</string>
     <string name="connection_joke_update">Die Krone hat einen neuen Erlass verkündet, und deiner ist veraltet.</string>
     <string name="connection_error_unreachable">Server nicht erreichbar. Prüfe deine Verbindung und versuch es erneut.</string>
-    <string name="connection_joke_courier">Der Kurierballon ist mal wieder vom Kurs abgekommen.</string>
+    <string name="connection_joke_courier">Der Kurierballon ist vom Kurs abgekommen.</string>
     <string name="connection_error_not_responding">Der Server antwortet nicht. Versuch es gleich noch einmal.</string>
     <string name="connection_error_lost">Verbindung zum Server verloren.</string>
     <string name="connection_error_sign_in_unconfirmed">Wir konnten deine Anmeldung nicht bestätigen. Prüfe deine Verbindung und versuch es erneut.</string>

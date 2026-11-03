@@ -321,7 +321,7 @@
     <!-- Connection overlay plain line. -->
     <string name="connection_error_unreachable">Can\'t reach the server. Check your connection and try again.</string>
     <!-- Joke line under unreachable / not responding / lost-connection errors. -->
-    <string name="connection_joke_courier">The courier balloon has drifted off course again.</string>
+    <string name="connection_joke_courier">The courier balloon has drifted off course.</string>
     <!-- Connection overlay plain line. -->
     <string name="connection_error_not_responding">The server isn\'t answering. Try again in a moment.</string>
     <!-- Connection overlay plain line. -->
