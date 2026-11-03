@@ -41,6 +41,9 @@ namespace Kingdom.Net.Server
         /// <summary>Directory scanned for *.cards.json. Null → walk up to the repo's canonical dir (dev).</summary>
         public string? CardsDir { get; init; }
         public string ReplaysDir { get; init; } = "replays";
+        /// <summary>Unix ms of Reign 1's start (a Tuesday 00:00 UTC). Null → there is no King and
+        /// <c>GET /king</c> says so. From <c>KINGDOM_REIGN_ONE</c>.</summary>
+        public long? ReignOneMs { get; init; }
         /// <summary>Null disables live training capture. A configured directory receives only
         /// finalized replay/manifest pairs and may live on the same durable volume as replays.</summary>
         public string? TrainingInboxDir { get; init; }
@@ -341,6 +344,7 @@ namespace Kingdom.Net.Server
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
                 CardsDir = KingdomEnv.Get("KINGDOM_CARDS"),
                 ReplaysDir = KingdomEnv.Get("KINGDOM_REPLAYS") ?? "replays",
+                ReignOneMs = King.KingEnv.ReignOneFromEnvironment(),
                 TrainingInboxDir = KingdomEnv.Get("KINGDOM_TRAINING_INBOX"),
                 Telemetry = sink,
                 Funnel = sink,
@@ -898,6 +902,29 @@ namespace Kingdom.Net.Server
                 if (outcome.Row is not null && !funnel.Write(outcome.Row))
                     return Results.Json(new { status = "unavailable" }, statusCode: 503);
                 return Results.Json(new { status = outcome.Status }, statusCode: outcome.HttpStatus);
+            });
+            // GET /king — this week's King. A pure function of the clock and the reign-one setting,
+            // so every client agrees. No auth: it is the same for everyone.
+            //
+            // Cache-Control: no-store, because the answer flips at Tuesday midnight.
+            app.MapGet("/king", (HttpContext context) =>
+            {
+                context.Response.Headers["Cache-Control"] = "no-store";
+                if (cfg.ReignOneMs is not long reignOne)
+                    return Results.Json(new { status = "none" });
+                int number = King.KingCalendar.ReignAt(time.NowMs, reignOne);
+                if (number < 1)
+                    return Results.Json(new { status = "none" });
+                King.Reign reign = King.KingSchedule.For(number);
+                return Results.Json(new
+                {
+                    status = "ok",
+                    reign = reign.Number,
+                    epithet = reign.Epithet,
+                    fate = reign.Fate,
+                    commission = reign.Commission,
+                    endsAtMs = King.KingCalendar.StartMs(number + 1, reignOne),
+                });
             });
             app.MapGet("/leaderboard", async (HttpContext context) =>
             {
