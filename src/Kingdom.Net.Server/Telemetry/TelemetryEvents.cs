@@ -136,6 +136,12 @@ namespace Kingdom.Net.Server.Telemetry
     /// <param name="TollDamage">Damage the seat's Tolls dealt the enemy hero.</param>
     /// <param name="StolenDamage">Damage minions the seat took from the other side dealt that side's hero.</param>
     /// <param name="HeroPowerDamage">Damage the seat's Hero Power dealt the other side's hero and minions.</param>
+    /// <param name="MostHealthDeficit">The furthest the seat's hero Health fell below the enemy
+    /// hero's, read after every command; 0 for a seat never behind. Health only, not Armor. The
+    /// Comeback achievement and commission (#443).</param>
+    /// <param name="LargestMinion">The largest Attack plus current Health of any minion on the
+    /// seat's board after any command, a minion taken from the other side included while the seat
+    /// holds it. The Overgrown achievement and commission (#443).</param>
     public sealed record SeatOutcome(
         AccountId Account,
         CardClass Class,
@@ -163,7 +169,9 @@ namespace Kingdom.Net.Server.Telemetry
         int FatigueDamage = 0,
         int TollDamage = 0,
         int StolenDamage = 0,
-        int HeroPowerDamage = 0);
+        int HeroPowerDamage = 0,
+        int MostHealthDeficit = 0,
+        int LargestMinion = 0);
 
     /// <summary>
     /// What landed the hit that took a hero from above 0 Health to 0 or below, as seen from the hero

@@ -16,9 +16,10 @@ namespace Kingdom.Editor
     ///
     /// <para>Checks every epithet and fate the server's pools can name
     /// (<see cref="CommissionIds.EpithetCount"/>, <see cref="CommissionIds.FateCount"/>), every part of
-    /// every commission in <see cref="CommissionIds.Launch"/>, that no two epithets or fates read
-    /// the same, and that every launch commission has its card image on disk. Reads the English
-    /// table directly, so the player's language cannot cover a gap.
+    /// every commission in <see cref="CommissionIds.All"/>, which a server test holds every epoch of
+    /// the schedule to, that no two epithets or fates read the same, and that every one of those
+    /// commissions has its card image on disk. Reads the English table directly, so the player's
+    /// language cannot cover a gap.
     /// Registered in <see cref="HeadlessVerify"/>.</para>
     /// </summary>
     public static class KingVerify
@@ -36,7 +37,7 @@ namespace Kingdom.Editor
             CheckPool("epithet", CommissionIds.EpithetCount, KingText.EpithetKey, english, missing, repeated);
             CheckPool("fate", CommissionIds.FateCount, KingText.FateKey, english, missing, repeated);
             var noSprite = new List<string>();
-            foreach (string id in CommissionIds.Launch)
+            foreach (string id in CommissionIds.All)
             {
                 foreach (string part in KingText.CommissionParts)
                     Need(KingText.CommissionKey(id, part), english, missing);
@@ -54,8 +55,8 @@ namespace Kingdom.Editor
                 throw new InvalidOperationException("No commission image at " + string.Join(", ", noSprite) + ".");
 
             Debug.Log($"[KingVerify] PASS: {CommissionIds.EpithetCount} epithets, {CommissionIds.FateCount} fates, " +
-                      $"{CommissionIds.Launch.Count} commissions x {KingText.CommissionParts.Length} parts, " +
-                      $"{CommissionIds.Launch.Count} commission images.");
+                      $"{CommissionIds.All.Count} commissions x {KingText.CommissionParts.Length} parts, " +
+                      $"{CommissionIds.All.Count} commission images.");
         }
 
         /// <summary>Where the commission card's image for <paramref name="id"/> lives. Under

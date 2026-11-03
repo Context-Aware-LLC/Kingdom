@@ -71,6 +71,13 @@ namespace Kingdom.Net.Protocol
                 "Finish the enemy hero with your Hero Power.", "The Council had assumed it was decorative."),
             Finding("own_goal", "Own Goal",
                 "Lose to your own spell.", "Pyra was very impressed."),
+            Finding("comeback", "Comeback",
+                "Win a match after falling 20 Health behind the enemy hero.",
+                "The Council's earlier remarks have been struck from the record."),
+            Finding("the_long_game", "The Long Game",
+                "Win a match on turn 40 or later.", "The Council has sent out for supper twice."),
+            Finding("overgrown", "Overgrown",
+                "Have a minion on your board whose Attack and Health add up to 30 or more.", "Hodge has been asked to widen the doors."),
         });
 
         /// <summary>The text for this id, or null for one this build does not know.</summary>

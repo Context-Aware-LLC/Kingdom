@@ -240,9 +240,11 @@ namespace Kingdom.Net.Server.Tests.King
         [CancelAfter(30_000)]
         public async Task Me_lists_one_seal_per_commission_across_reigns()
         {
-            int cycle = CommissionIds.Launch.Count;
-            int again = 1 + cycle;   // the same commission as reign 1, one rotation later
-            Assume.That(KingSchedule.For(again).Commission, Is.EqualTo(KingSchedule.For(1).Commission));
+            // The first reign after 1 with reign 1's commission. Searched, not computed from a pool
+            // size: an epoch that grows the rotation (#443) moves it, and the Assume that used to stand
+            // here turned the test inconclusive, not red, when it did.
+            int again = Enumerable.Range(2, 100).First(r => KingSchedule.For(r).Commission == KingSchedule.For(1).Commission);
+            Assert.That(again, Is.GreaterThan(3), "precondition: reigns 2 and 3 hold other commissions");
             await using var server = new Server();
             string me = await server.GoodPlayerIdAsync();
             await server.Favor.RecordAsync(Score(1, me, 4, T0), false);

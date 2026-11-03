@@ -1,11 +1,3 @@
-Self-Starter,Deal 15 damage to your own hero in one match. Pyra has asked for your name.,False,,Revealed,15,11
-Overkill,Deal 10 damage to a minion with 1 Health. It has been thoroughly informed.,False,,Revealed,10,12
-Hubris,Have a minion of yours costing 8 or more returned to your hand. It had only just unpacked.,False,,Revealed,15,13
-Gift Horse,"Lose control of your Legendary to the other side. It writes, occasionally.",False,,Revealed,15,14
-Seven Walls,Have seven Bulwark minions at once. Hodge would like to see the plans.,False,,Revealed,25,15
-The Last Idea,Lose to an empty deck. It was a good plan. It was in there somewhere.,False,,Revealed,10,16
-Technically,Win a match with your hero at 0 Health or below. The Council has ruled that it counts.,False,,Revealed,50,17
-Posthumous,Win with damage from a minion's Toll. The deceased has been informed.,False,,Revealed,25,18
-Return to Sender,Win with a minion you took from your opponent. They would like it back.,False,,Revealed,25,19
-Signature Move,Finish the enemy hero with your Hero Power. The Council had assumed it was decorative.,False,,Revealed,25,20
-Own Goal,Lose to your own spell. Pyra was very impressed.,False,,Revealed,15,21
+Comeback,Win a match after falling 20 Health behind the enemy hero. The Council's earlier remarks have been struck from the record.,False,,Revealed,25,22
+The Long Game,Win a match on turn 40 or later. The Council has sent out for supper twice.,False,,Revealed,25,23
+Overgrown,Have a minion on your board whose Attack and Health add up to 30 or more. Hodge has been asked to widen the doors.,False,,Revealed,25,24
