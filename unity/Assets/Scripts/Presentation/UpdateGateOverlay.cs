@@ -97,6 +97,19 @@ namespace Kingdom.Presentation
             if (overlay != null) overlay.ShowVerdict(result.Verdict);
         }
 
+#if UNITY_EDITOR
+        /// <summary>For <c>Kingdom/Preview/Update Gate</c>: one state of this screen with no server
+        /// asked. Null is the waiting state. Returns the host so the preview can take it down.</summary>
+        public static GameObject Preview(UpdateGateVerdict? verdict)
+        {
+            UpdateGateOverlay overlay = Create();
+            if (overlay == null) return null;
+            if (verdict.HasValue) overlay.ShowVerdict(verdict.Value);
+            else overlay.ShowWaiting(1);
+            return overlay.gameObject;
+        }
+#endif
+
         private static UpdateGateOverlay Create()
         {
             var uiGo = new GameObject("UpdateGateUI");
