@@ -77,7 +77,7 @@ namespace Kingdom.Net.Protocol
             Finding("the_long_game", "The Long Game",
                 "Win a match on turn 40 or later.", "The Council has sent out for supper twice."),
             Finding("overgrown", "Overgrown",
-                "Have a minion whose Attack and Health add up to 30 or more.", "Hodge has been asked to widen the doors."),
+                "Have a minion on your board whose Attack and Health add up to 30 or more.", "Hodge has been asked to widen the doors."),
         });
 
         /// <summary>The text for this id, or null for one this build does not know.</summary>

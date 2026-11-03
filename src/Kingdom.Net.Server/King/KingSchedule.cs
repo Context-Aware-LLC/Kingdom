@@ -14,7 +14,11 @@ namespace Kingdom.Net.Server.King
     /// <param name="FirstIndex">The pool position the epoch's first reign takes. 0 starts every
     /// pool over; an epoch that keeps the epithet and fate pools sets it to the number of reigns
     /// before it, so its first King is the one the old epoch would have crowned next rather than
-    /// a repeat of Reign 1's epithet and fate.</param>
+    /// a repeat of Reign 1's epithet and fate. It shifts the commission index too, so the reigns the
+    /// old epoch already announced stay the same only while the new commission list keeps the old
+    /// one's entries at those positions (epoch 2 keeps Launch's first three; reigns 2 and 3 depend
+    /// on it). Ship a new epoch before its first changed reign begins, and never roll back past it:
+    /// either moves a live board's commission mid-reign.</param>
     public sealed record KingEpoch(int FromReign, IReadOnlyList<string> Commissions, int EpithetCount, int FateCount,
                                    int FirstIndex = 0);
 
