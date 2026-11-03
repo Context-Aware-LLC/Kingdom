@@ -46,10 +46,11 @@ namespace Kingdom.Net.Server.Accounts
         Task<Account?> SetKindAsync(string playerId, AccountKind kind, CancellationToken ct = default);
 
         /// <summary>
-        /// Records that this player has completed onboarding. <b>One-way and idempotent</b> — there is
-        /// deliberately no un-set: clearing it would replay character creation for a player who
-        /// already has characters, which is the exact failure the flag exists to prevent. Returns null
-        /// if <paramref name="playerId"/> names no account.
+        /// Records that this player's starter gift was granted and opened. <b>One-way and
+        /// idempotent</b> — there is deliberately no un-set. Called only by
+        /// <c>OnboardingGrantService.MarkOnboardedIfCompleteAsync</c>, which checks the ledger first;
+        /// calling it from anywhere else marks a player without that check. Returns null if
+        /// <paramref name="playerId"/> names no account.
         /// </summary>
         Task<Account?> MarkOnboardedAsync(string playerId, CancellationToken ct = default);
 

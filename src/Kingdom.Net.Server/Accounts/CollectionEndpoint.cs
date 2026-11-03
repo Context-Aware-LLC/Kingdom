@@ -182,10 +182,14 @@ namespace Kingdom.Net.Server.Accounts
                 try
                 {
                     await onboarding.EnsureGrantedAsync(account, ct).ConfigureAwait(false);
+                    // The backfill: an account that emptied its shelf before the flag was derived
+                    // is marked on its next launch, because this is the route every launch reaches.
+                    account = await onboarding.MarkOnboardedIfCompleteAsync(account, accountStore, ct)
+                        .ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine("[collection] onboarding grant failed for player_id={0}: {1}",
+                    Console.Error.WriteLine("[collection] onboarding grant or flag failed for player_id={0}: {1}",
                         account.PlayerId, ex.Message);
                 }
             }

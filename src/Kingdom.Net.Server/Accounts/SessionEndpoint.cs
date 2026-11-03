@@ -64,7 +64,8 @@ namespace Kingdom.Net.Server.Accounts
     /// gives.</b> The grant fires when an account RESOLVES, and a player who never queues never
     /// resolved one. Idempotent on <c>signup:{playerId}</c>, so a third call site grants exactly
     /// once. A grant failure must NOT fail the handshake — that would turn a database blip into a
-    /// game that will not start.</para>
+    /// game that will not start. The flag it reports is re-derived right after the grant, by
+    /// <see cref="OnboardingGrantService.MarkOnboardedIfCompleteAsync"/>.</para>
     ///
     /// <para><b>It stamps <see cref="Account.LastSeen"/>, and today that stamp never lands:</b>
     /// no client calls this route yet. The stamp that actually moves the column is the one in
@@ -109,12 +110,14 @@ namespace Kingdom.Net.Server.Accounts
                 try
                 {
                     await onboarding.EnsureGrantedAsync(account, ct).ConfigureAwait(false);
+                    account = await onboarding.MarkOnboardedIfCompleteAsync(account, accountStore, ct)
+                        .ConfigureAwait(false);
                 }
                 catch (System.Exception ex)
                 {
                     // Logged, never swallowed silently: a grant failing every time is invisible
                     // otherwise. But it does not cost the player their launch.
-                    System.Console.Error.WriteLine("[session] onboarding grant failed: {0}", ex.Message);
+                    System.Console.Error.WriteLine("[session] onboarding grant or flag failed: {0}", ex.Message);
                 }
             }
 

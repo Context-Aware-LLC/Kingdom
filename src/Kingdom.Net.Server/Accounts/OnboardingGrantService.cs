@@ -143,5 +143,41 @@ namespace Kingdom.Net.Server.Accounts
                 "after this account was onboarded; it must not be re-granted under the same " +
                 "transaction id. Granting the difference is a migration, not a signup.");
         }
+
+        /// <summary>
+        /// Sets <see cref="Account.Onboarded"/> once the gift is both GIVEN and OPENED (Sam,
+        /// 2026-11-02): at least one starter pack opened, and none left unopened. Returns the account
+        /// as it now stands.
+        ///
+        /// <para><b>The only writer of the flag, and it is derived, never requested.</b> The ledger
+        /// already holds both halves, so no client call can mark a player early — the hole
+        /// <c>POST /onboarding/complete</c> carried until it was deleted on the same day.</para>
+        ///
+        /// <para><b>The opened marker is what proves the grant.</b> The starter line is grant-only
+        /// (<see cref="BoosterPack.StarterSku"/>), so an opened starter can only have come from
+        /// signup — and a zero balance alone would also describe an account whose grant never
+        /// landed.</para>
+        ///
+        /// <para>Called after every starter open and on every resolve that fires the grant, so an
+        /// account that emptied its shelf before this existed is backfilled on its next launch.</para>
+        /// </summary>
+        public async Task<Account> MarkOnboardedIfCompleteAsync(Account account, IAccountStore accounts,
+                                                                CancellationToken ct = default)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            if (accounts == null) throw new ArgumentNullException(nameof(accounts));
+            if (account.Onboarded) return account;
+
+            string starter = OnboardingGrant.StarterPack().Id;
+            long unopened = await _ledger.BalanceAsync(account.PlayerId, starter, ct).ConfigureAwait(false);
+            if (unopened > 0) return account;
+
+            long opened = await _ledger
+                .BalanceAsync(account.PlayerId, BoosterPackGrantService.OpenedItemPrefix + starter, ct)
+                .ConfigureAwait(false);
+            if (opened <= 0) return account;
+
+            return await accounts.MarkOnboardedAsync(account.PlayerId, ct).ConfigureAwait(false) ?? account;
+        }
     }
 }

@@ -1166,27 +1166,10 @@ namespace Kingdom.Net.Server
                 }, statusCode: result.HttpStatus);
             });
 
-            // POST /onboarding/complete — the terminal write of the onboarding flow. The ONLY route
-            // that sets onboarded; runs at the end, after the entitlement grant has landed. Same
-            // auth pairing as /session and /roster. Idempotent — a retried call after a dropped
-            // response still answers 200, never an error.
-            app.MapPost("/onboarding/complete", async (HttpContext context) =>
-            {
-                string? bearer = null;
-                string? header = context.Request.Headers["Authorization"];
-                if (!string.IsNullOrEmpty(header) &&
-                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                    bearer = header.Substring("Bearer ".Length).Trim();
-
-                OnboardingCompleteResult result = await OnboardingCompleteEndpoint.CompleteAsync(
-                    bearer, cfg.TokenVerifier, cfg.AccountStore, context.RequestAborted);
-
-                return Results.Json(new
-                {
-                    // "completed" | "unauthenticated" | "unavailable".
-                    status = result.Status.ToString().ToLowerInvariant(),
-                }, statusCode: result.HttpStatus);
-            });
+            // POST /onboarding/complete stood here until 2026-11-02. No client ever called it, and
+            // it let a client set a one-way flag the ledger can derive: onboarded now means the
+            // starter gift was granted AND opened, and OnboardingGrantService sets it from the
+            // ledger after a starter open and on every resolve.
 
             // The /friends routes (#409) — a player's code, friends, requests and blocks. One JSON
             // shape for all of them, because every 200 carries the caller's graph as it now stands

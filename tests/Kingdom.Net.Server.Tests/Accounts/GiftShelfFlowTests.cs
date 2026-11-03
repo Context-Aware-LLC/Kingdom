@@ -149,6 +149,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
 
             var seen = new List<long>();
             var instances = new List<string>();
+            var onboarded = new List<bool>();
             for (int i = 0; i < OnboardingGrant.StarterPackCount; i++)
             {
                 PackOpenEndpointResult opened = await PackOpenEndpoint.OpenAsync(
@@ -156,6 +157,8 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 Assert.That(opened.Status, Is.EqualTo(PackOpenEndpointStatus.Opened),
                             $"open {i + 1} of {OnboardingGrant.StarterPackCount}");
                 instances.Add(opened.PackInstanceId);
+                // Read before the collection re-read, so this is the OPEN's doing.
+                onboarded.Add(await OnboardedAsync(store));
 
                 CollectionResult read = await CollectionEndpoint.ReadAsync(
                     Token, new StubVerifier(), store, ledger, economy: null, onboarding: onboarding);
@@ -166,6 +169,74 @@ namespace Kingdom.Net.Server.Tests.Accounts
                         "five taps must be five pack instances, or some were replays");
             Assert.That(seen, Is.EqualTo(new List<long> { 4, 3, 2, 1, 0 }),
                         "the shelf must count down one per open");
+            Assert.That(onboarded, Is.EqualTo(new List<bool> { false, false, false, false, true }),
+                        "onboarded means the gift was given AND opened — the last open sets it, no earlier one");
+        }
+
+        [Test]
+        public async Task A_granted_but_unopened_gift_is_not_onboarded()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var store = new InMemoryAccountStore(new FixedTime());
+            var onboarding = new OnboardingGrantService(ledger, Cards(), new FixedTime());
+
+            SessionResult session = await SessionEndpoint.ReadAsync(
+                Token, new StubVerifier(), store, onboarding);
+
+            Assert.That(session.Onboarded, Is.False, "granted is half of it; opened is the other half");
+        }
+
+        [Test]
+        public async Task Opening_the_whole_gift_in_one_batch_onboards()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var store = new InMemoryAccountStore(new FixedTime());
+            ICardDatabase cards = Cards();
+            var onboarding = new OnboardingGrantService(ledger, cards, new FixedTime());
+            var opener = new BoosterPackGrantService(
+                ledger, new InMemoryPackPityStore(), new FixedPackSeedSource(0xC0FFEE),
+                cards, new FixedTime());
+
+            PackOpenBatchEndpointResult opened = await PackOpenEndpoint.OpenManyAsync(
+                Token, StarterId, OnboardingGrant.StarterPackCount, new StubVerifier(), store, ledger,
+                opener, onboarding);
+            Assert.That(opened.Opens.Count, Is.EqualTo(OnboardingGrant.StarterPackCount));
+
+            SessionResult session = await SessionEndpoint.ReadAsync(
+                Token, new StubVerifier(), store, onboarding);
+            Assert.That(session.Onboarded, Is.True);
+        }
+
+        [Test]
+        public async Task A_shelf_emptied_before_the_flag_was_derived_is_backfilled_on_launch()
+        {
+            // The accounts that exist today: every pack opened by a server that never set the flag.
+            var ledger = new InMemoryEntitlementLedger();
+            var store = new InMemoryAccountStore(new FixedTime());
+            ICardDatabase cards = Cards();
+            var onboarding = new OnboardingGrantService(ledger, cards, new FixedTime());
+            var opener = new BoosterPackGrantService(
+                ledger, new InMemoryPackPityStore(), new FixedPackSeedSource(0xC0FFEE),
+                cards, new FixedTime());
+
+            await CollectionEndpoint.ReadAsync(
+                Token, new StubVerifier(), store, ledger, economy: null, onboarding: onboarding);
+            for (int i = 0; i < OnboardingGrant.StarterPackCount; i++)
+                await PackOpenEndpoint.OpenAsync(
+                    Token, StarterId, new StubVerifier(), store, ledger, opener, onboarding: null);
+            Assert.That(await OnboardedAsync(store), Is.False, "precondition: nothing has set it yet");
+
+            await CollectionEndpoint.ReadAsync(
+                Token, new StubVerifier(), store, ledger, economy: null, onboarding: onboarding);
+
+            Assert.That(await OnboardedAsync(store), Is.True,
+                        "GET /collection is the route every launch reaches, so it is where the backfill lands");
+        }
+
+        private static async Task<bool> OnboardedAsync(InMemoryAccountStore store)
+        {
+            Account account = await store.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+            return account.Onboarded;
         }
     }
 }

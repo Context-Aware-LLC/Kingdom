@@ -13,9 +13,9 @@ namespace Kingdom.Session
     /// <para><b>A presentation fact, not an entitlement.</b> It lives on local disk beside
     /// <c>owned-cards.json</c> rather than in the ledger because nothing here is owed to the player:
     /// its worst failure is a reinstalling player seeing a nice animation once more. Compare
-    /// <c>onboarded</c> on the account, which is a server flag and is deliberately NOT what the gift
-    /// routes on (nothing calls <c>POST /onboarding/complete</c>, so it is false for every account
-    /// that has ever existed — #344).</para>
+    /// <c>onboarded</c> on the account, a server flag derived from the same ledger (true once the
+    /// starter gift is granted and fully opened) and deliberately NOT what the gift routes on: it
+    /// only says the gift is over, never which pack is next.</para>
     ///
     /// <para><b>It never decides whether a player gets something, only whether they get a cutscene.</b>
     /// The starter-pack <i>route</i> is the ledger balance; this file picks the <i>mode</i> once you

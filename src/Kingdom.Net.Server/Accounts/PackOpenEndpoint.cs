@@ -238,6 +238,9 @@ namespace Kingdom.Net.Server.Accounts
                     .OpenAsync(account, pack, instanceId, ct)
                     .ConfigureAwait(false);
 
+                await MarkOnboardedIfStarterAsync(onboarding, accountStore, account, pack, ct)
+                    .ConfigureAwait(false);
+
                 return new PackOpenEndpointResult(
                     outcome.Status == PackOpenStatus.Opened
                         ? PackOpenEndpointStatus.Opened
@@ -318,6 +321,9 @@ namespace Kingdom.Net.Server.Accounts
                 if (outcomes.Count == 0)
                     return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.NoneOwned, pack.Id);
 
+                await MarkOnboardedIfStarterAsync(onboarding, accountStore, account, pack, ct)
+                    .ConfigureAwait(false);
+
                 var opens = new List<PackOpenEndpointResult>(outcomes.Count);
                 foreach (PackOpenOutcome outcome in outcomes)
                 {
@@ -339,6 +345,28 @@ namespace Kingdom.Net.Server.Accounts
                     account.PlayerId, pack.Id, ex.Message);
                 return new PackOpenBatchEndpointResult(PackOpenEndpointStatus.Conflict, pack.Id,
                     detail: ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// The open that empties the starter shelf is the one that onboards the player — see
+        /// <see cref="OnboardingGrantService.MarkOnboardedIfCompleteAsync"/>. A failure is logged and
+        /// costs nothing: the cards are already theirs, and the next <c>GET /collection</c> retries.
+        /// </summary>
+        private static async Task MarkOnboardedIfStarterAsync(
+            OnboardingGrantService? onboarding, IAccountStore accountStore, Account account,
+            BoosterPack pack, CancellationToken ct)
+        {
+            if (onboarding is null) return;
+            if (!string.Equals(pack.Id, OnboardingGrant.StarterPack().Id, StringComparison.Ordinal)) return;
+            try
+            {
+                await onboarding.MarkOnboardedIfCompleteAsync(account, accountStore, ct).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                Console.Error.WriteLine("[packs] onboarded flag failed for player_id={0}: {1}",
+                    account.PlayerId, ex.Message);
             }
         }
 

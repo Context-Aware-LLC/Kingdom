@@ -37,10 +37,10 @@ namespace Kingdom.Net.Server.Accounts
         /// for bot accounts, which never present an auth token.</summary>
         string? Email = null,
         AccountKind Kind = AccountKind.Standard,
-        /// <summary>Has this player ever completed onboarding? One-way — see
-        /// <c>IAccountStore.MarkOnboardedAsync</c>. It exists so a client can tell "brand new player"
-        /// from "the read failed" when a roster comes back empty; those are the same absence
-        /// otherwise, and creating a second time is the damaging reading.
+        /// <summary>Has this player been GIVEN and OPENED their starter gift (Sam, 2026-11-02)? Derived
+        /// from the ledger by <c>OnboardingGrantService.MarkOnboardedIfCompleteAsync</c>, the only
+        /// writer; one-way — see <c>IAccountStore.MarkOnboardedAsync</c>. Nothing on the client routes
+        /// on it today: the gift routes on the starter-pack balance it is derived from.
         ///
         /// <para><b>A default of false is correct HERE and dangerous ON THE WIRE.</b> Server-side a
         /// new account genuinely has not onboarded. But whatever projects this to a client must keep

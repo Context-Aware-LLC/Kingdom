@@ -145,7 +145,7 @@ namespace Kingdom.Net.Server.Tests
         /// </summary>
         [Test]
         [CancelAfter(60_000)]
-        public async Task A_Verified_Account_Is_Onboarded_On_Connect()
+        public async Task A_Verified_Account_Is_Granted_On_Connect()
         {
             var verifier = new StubVerifier(TokenVerificationResult.Ok(
                 new VerifiedIdentity(Subject, Email, EmailVerified: true)));

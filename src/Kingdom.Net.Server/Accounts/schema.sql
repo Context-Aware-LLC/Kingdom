@@ -50,13 +50,10 @@ alter table account add column if not exists email text;
 -- new row to 'standard', same idempotent-alter posture as email above.
 alter table account add column if not exists kind text not null default 'standard';
 
--- Has this player ever completed onboarding? (Sam, 2026-09-01.) ONE-WAY: false → true, never back.
---
--- It exists to kill an ambiguity the client cannot otherwise resolve. A returning player's roster is
--- read from the server, and an empty answer means either "brand new, send them to character
--- creation" or "the read failed" — indistinguishable, and guessing wrong walks a player with an
--- existing collection through creation a second time. With this flag the client has three states
--- instead of two, and only one of them creates anything.
+-- Has this player been GIVEN and OPENED their starter gift? (Added 2026-09-01; meaning set by Sam
+-- 2026-11-02.) ONE-WAY: false → true, never back. Derived from the ledger, never client-requested:
+-- OnboardingGrantService.MarkOnboardedIfCompleteAsync sets it once a starter pack has been opened and
+-- none remain unopened.
 --
 -- **The flag only works if ABSENT cannot decode to false.** A missing field defaulting to false
 -- reproduces the exact bug it was added to remove, because a failed read then reads as a new player.
