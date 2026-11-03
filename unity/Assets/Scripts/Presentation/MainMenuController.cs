@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Kingdom.Core.Collection;
 using Kingdom.Net.Client.Auth;
 using Kingdom.Net.Client.Collection;
 using Kingdom.Net.Client.Gate;
+using Kingdom.Net.Client.King;
 using Kingdom.Net.Client.Quests;
 using Kingdom.Net.Client.Shop;
 using Kingdom.Session;
@@ -55,6 +57,15 @@ namespace Kingdom.Presentation
         private Label _questStatus;
         private HttpQuestGateway _questGateway;
         private Label _vaultPackCount;
+        private VisualElement _kingDock;
+        private Label _kingPlaque;
+        private Label _kingCommission;
+        private Label _kingScored;
+        private Label _kingDecree;
+        /// <summary>This launch's read of <c>GET /king</c>, started once the update gate passes.
+        /// Null until then, and on every path that never reaches it.</summary>
+        private Task<KingNow> _kingRequest;
+        private FirstRunTidbit _tidbit;
         private Rect _lastSafeArea;
         private int _lastSafeAreaScreenWidth = -1;
         private int _lastSafeAreaScreenHeight = -1;
@@ -100,6 +111,7 @@ namespace Kingdom.Presentation
             Wire("btn-leaderboards", OnLeaderboards);
             Wire("btn-card-vault", OnCardVault);
             Wire("btn-ledger", () => LedgerOverlay.Open());
+            Wire("btn-king", () => SuccessionRollOverlay.Open());
             Wire("btn-leaderboard-close", CloseLeaderboard);
             BindAchievements();
             BindLeaderboard();
@@ -109,6 +121,7 @@ namespace Kingdom.Presentation
             BindWalletBalances();
             BindQuestPanel();
             BindVaultEntry();
+            BindKing();
 
             MountSettingsOverlay();
             _signIn = new SignInGateController(_root, AuthGateway.Provider);
@@ -187,6 +200,10 @@ namespace Kingdom.Presentation
                 UpdateGateOverlay.Show(gate);
                 return;
             }
+
+            // Not awaited: the crown appears when the King is read, and nothing below waits on him.
+            _kingRequest = FetchKingAsync();
+            _ = ShowKingAsync(_kingRequest);
 
             // A returning player never sees the sign-in gate, so their stored session is this
             // process's sign_in row (once per process; a sign-in through the gate records its own).
@@ -367,7 +384,118 @@ namespace Kingdom.Presentation
             // First look (#403). FinishBootstrap reveals the menu even on a launch BeginFirstRun
             // has already sent elsewhere, and a lesson shown under a pending scene change is one
             // the player glimpses and never reads.
-            if (!_leavingForFirstRun) new FirstRunTidbit(_root).Show(TidbitTrigger.MainMenuArrival);
+            if (_leavingForFirstRun) return;
+            _tidbit = new FirstRunTidbit(_root);
+            bool firstLook = _tidbit.Show(TidbitTrigger.MainMenuArrival);
+            _ = AnnounceKingAsync(firstLook);
+        }
+
+        // ── The King of the Week (#421) ────────────────────────────────────────────────
+
+        /// <summary>Last reign the Herald announced on this device. On the device, not the account
+        /// (spec, "On the main menu"): a new King is news once per handset.</summary>
+        private const string LastHeardReignKey = "king.last_heard_reign";
+        private const int KingTimeoutSeconds = 10;
+
+        /// <summary>The crown, its plaque and the commission, hidden until a King is read. With no
+        /// King the dock is exactly the vault and the book.</summary>
+        private void BindKing()
+        {
+            _kingDock = _root.Q<VisualElement>("king-dock");
+            _kingPlaque = _root.Q<Label>("king-plaque");
+            _kingCommission = _root.Q<Label>("king-commission");
+            _kingScored = _root.Q<Label>("king-scored");
+            _kingDecree = _root.Q<Label>("king-decree");
+            if (_kingDock != null) _kingDock.style.display = DisplayStyle.None;
+        }
+
+        /// <summary>This week's King, or null when there is none or he could not be read. The route
+        /// is public, so no token: it answers the same for everyone.</summary>
+        private static async Task<KingNow> FetchKingAsync()
+        {
+            try
+            {
+                return await new HttpKingGateway(
+                    CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(KingTimeoutSeconds)).FetchKingAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[King] read threw ({ex.GetType().Name}: {ex.Message}); no crown this launch.");
+                return null;
+            }
+        }
+
+        private async Task ShowKingAsync(Task<KingNow> request)
+        {
+            KingNow king = await request;
+            if (this == null || _kingDock == null) return;   // the menu left while the read was in flight
+            if (king == null)
+            {
+                _kingDock.style.display = DisplayStyle.None;
+                return;
+            }
+
+            if (_kingPlaque != null) _kingPlaque.text = KingText.Epithet(king.Epithet);
+            // A commission this build has no words for is left out, never printed by id.
+            string name = KingText.Commission(king.Commission, "name");
+            SetKingLine(_kingCommission, name == null ? null : Loc.Format("king.menu.commission", name));
+            SetKingLine(_kingScored, name == null ? null : KingText.Commission(king.Commission, "scored"));
+            SetKingLine(_kingDecree, name == null ? null : KingText.Commission(king.Commission, "decree"));
+            _kingDock.style.display = DisplayStyle.Flex;
+        }
+
+        private static void SetKingLine(Label label, string text)
+        {
+            if (label == null) return;
+            label.text = string.IsNullOrEmpty(text) ? " " : text;
+            label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
+        /// <summary>
+        /// The Herald, on the first launch of a new reign: <i>"The King has 'ost his wits! Long 'ive
+        /// the King!"</i> Only for a reign later than the last one heard on this device, and never
+        /// on top of the first-run lesson — that launch records the reign silently, so the next
+        /// announcement is the next King's.
+        ///
+        /// <para><b>The tidbit is built here, not registered in <see cref="TidbitCatalog"/></b>, so
+        /// <c>HeraldVoiceVerify</c> does not demand a recording that does not exist yet. Its id is
+        /// per reign because FirstRunTidbit shows an id once. The reign counts as heard when the scroll
+        /// rolls shut, the same moment the tidbit marker is written: a player who quits mid-card has
+        /// not heard it.</para>
+        /// </summary>
+        private async Task AnnounceKingAsync(bool firstLook)
+        {
+            if (_kingRequest == null) return;
+            KingNow king = await _kingRequest;
+            if (this == null || king == null || _tidbit == null) return;
+
+            int heard = PlayerPrefs.GetInt(LastHeardReignKey, 0);
+            if (king.Reign <= heard) return;
+
+            int reign = king.Reign;
+            if (firstLook || _tidbit.IsShowing)
+            {
+                RememberReign(reign);
+                return;
+            }
+
+            var herald = new Tidbit(
+                "king_reign_" + reign.ToString(CultureInfo.InvariantCulture),
+                TidbitTrigger.MainMenuArrival,
+                "king.herald.title",
+                "king.herald.body",
+                artKey: null,
+                // No recording of this line exists yet; the card reads complete without one. When one
+                // lands in Assets/Sound/Voice/Herald, pass its "vo/..." address here.
+                voiceAddress: null);
+            _tidbit.Show(new[] { herald }, () => RememberReign(reign));
+        }
+
+        private static void RememberReign(int reign)
+        {
+            if (reign <= PlayerPrefs.GetInt(LastHeardReignKey, 0)) return;
+            PlayerPrefs.SetInt(LastHeardReignKey, reign);
+            PlayerPrefs.Save();
         }
 
         /// <summary>

@@ -191,7 +191,7 @@
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 
-/* ---------- Dock: Card Vault packs and the Ledger book ----------
+/* ---------- Dock: Card Vault packs, the Ledger book and the King's crown ----------
  * Each control's art is its silhouette. Keep the transparent edges visible and the 160px height
  * so the reserved navigation band does not move the menu rows. The book sits to the vault's
  * right (Sam, 2026-10-21). */
@@ -248,6 +248,59 @@
 }
 .mm-ledger-art {
     background-image: url("/Assets/Art/UI/Chrome/ui_ledger_book.png");
+}
+/* The King of the Week (#421): the crown on its cushion beside the book, and his plaque and
+ * commission beside it. Hidden in the markup until GET /king names a King; with none the row
+ * is exactly the vault and the book. The copy sits BESIDE the crown, not under it, so the dock
+ * keeps its 160px band: the crown's left edge is inside the 568px command column, so anything
+ * taller would rise into the menu rows above it. The copy starts past that column, over the stage. */
+.mm-king-dock {
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: flex-end;
+    margin-left: var(--space-4);
+}
+.mm-king-button,
+.mm-king-art {
+    width: 160px;
+    min-width: 160px;
+}
+.mm-king-art {
+    background-image: url("/Assets/Art/UI/Chrome/ui_king_crown.png");
+}
+.mm-king-copy {
+    width: 520px;
+    flex-shrink: 0;
+    margin-left: var(--space-2);
+    padding-bottom: var(--space-2);
+    justify-content: flex-end;
+}
+.mm-king-plaque,
+.mm-king-commission,
+.mm-king-scored,
+.mm-king-decree {
+    color: var(--ink-1);
+    white-space: normal;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.85);
+}
+.mm-king-plaque {
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    color: rgb(255, 226, 179);
+}
+.mm-king-commission {
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+}
+.mm-king-scored {
+    font-size: var(--type-caption);
+}
+.mm-king-decree {
+    font-size: var(--type-caption);
+    -unity-font-style: italic;
+    color: rgb(217, 210, 195);
 }
 .mm-dock-button:hover,
 .mm-dock-button:focus {

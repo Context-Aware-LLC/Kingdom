@@ -69,6 +69,20 @@ namespace Kingdom.Net.Client.Auth
             => TryReadTopLevel(json, keepContainers: false, out fields);
 
         /// <summary>
+        /// <see cref="TryReadTopLevel(string, out IReadOnlyDictionary{string, string})"/>, also naming
+        /// every member whose value is the JSON literal <c>null</c>. The plain read cannot: it keeps a
+        /// string's text without its quotes, so <c>null</c> and <c>"null"</c> both read as
+        /// <c>null</c>. That matters wherever a peer-authored name can be absent — <c>null</c> is a
+        /// legal player name.
+        /// </summary>
+        public static bool TryReadTopLevelWithNulls(string json, out IReadOnlyDictionary<string, string> fields,
+                                                    out HashSet<string> nulls)
+        {
+            nulls = new HashSet<string>(StringComparer.Ordinal);
+            return TryReadTopLevel(json, keepContainers: false, out fields, nulls);
+        }
+
+        /// <summary>
         /// A nested object member, parsed with the same reader — <c>user_metadata</c> inside a JWT
         /// payload, and nothing else so far.
         ///
@@ -158,7 +172,8 @@ namespace Kingdom.Net.Client.Auth
         }
 
         private static bool TryReadTopLevel(string json, bool keepContainers,
-                                            out IReadOnlyDictionary<string, string> fields)
+                                            out IReadOnlyDictionary<string, string> fields,
+                                            ISet<string>? nulls = null)
         {
             var map = new Dictionary<string, string>(StringComparer.Ordinal);
             fields = map;
@@ -195,6 +210,7 @@ namespace Kingdom.Net.Client.Auth
                 {
                     if (!TryReadString(json, ref pos, out string value)) return false;
                     map[name] = value;
+                    nulls?.Remove(name);   // a repeated member: the last one wins, as in the map
                 }
                 else
                 {
@@ -204,6 +220,7 @@ namespace Kingdom.Net.Client.Auth
                         pos++;
                     if (pos == start) return false;
                     map[name] = json.Substring(start, pos - start);
+                    if (nulls != null && map[name] == "null") nulls.Add(name);
                 }
 
                 SkipWhitespace(json, ref pos);
