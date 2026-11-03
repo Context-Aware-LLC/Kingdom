@@ -1020,7 +1020,7 @@ namespace Kingdom.Presentation
             {
                 board = await gateway.FetchFavorAsync(token);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 board = null;   // a tab switch or a close cancelled it; nothing went wrong
             }
@@ -1078,7 +1078,7 @@ namespace Kingdom.Presentation
                 string accessToken = await AuthGateway.TokenForConnectAsync();
                 return await gateway.FetchStandingAsync(accessToken, token);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
                 return null;   // a tab switch or a close cancelled it; nothing went wrong
             }
