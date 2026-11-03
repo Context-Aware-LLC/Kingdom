@@ -50,7 +50,13 @@ namespace Kingdom.Net.Server.King
     ///
     /// <para>A player whose account is gone is skipped and their place left empty; nobody is
     /// promoted into it. So is a Favorite the operator struck before the sweep. Superusers never
-    /// reach the board at all (<see cref="FavorService"/>).</para>
+    /// reach the board at all (<see cref="FavorService"/>). An account deleted through the
+    /// deletion tool is different: that tool removes its scores, so the next player moves up.</para>
+    ///
+    /// <para><b>One window it does not close:</b> a match that banks a score after the grace, between
+    /// a killed gold pass and its re-run, can move a paid player down a place. Their first grant
+    /// stands, since a conflict counts as paid, and the player promoted past them is paid too, so
+    /// that reign overpays by one place. That needs a match running over two hours past midnight.</para>
     /// </summary>
     public sealed class KingPayoutSweep : BackgroundService
     {
