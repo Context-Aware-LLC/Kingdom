@@ -70,6 +70,7 @@ namespace Kingdom.Presentation
         public const string VerdantCasterKey = "effect_spell_verdant_caster";
         public const string VerdantTravelKey = "effect_spell_verdant_travel";
         public const string VerdantTargetKey = "effect_spell_verdant_target";
+        public const string GravekeepSummonKey = "effect_spell_gravekeep_summon";
 
         /// <summary>The first rock lands this long after the reveal card is gone, and each further
         /// target this long after the one before. VfxDirector hands both to the classifier, which
@@ -645,6 +646,37 @@ namespace Kingdom.Presentation
         }
 
         private const float BurstSeconds = 0.45f * Tempo;
+
+        /// <summary>A minion a Gravekeep card summons assembles out of a bone pile where it lands
+        /// (Sam, 2026-11-03: Bone Horde, and every Gravekeep effect that summons). The three
+        /// frames go heap, half-built, standing; the last holds, then fades off the minion.</summary>
+        public const float BoneRiseSeconds = 0.75f * Tempo;
+        public const float BoneStaggerSeconds = 0.08f * Tempo;
+        private const float BoneFadeSeconds = 0.3f * Tempo;
+
+        public static IEnumerator BoneRise(Transform parent, Sprite sheet, Camera camera, Transform target,
+                                           Vector3 fallback, float startIn)
+        {
+            if (startIn > 0f) yield return new WaitForSeconds(startIn);
+            if (parent == null || sheet == null || camera == null) yield break;
+
+            SpriteRenderer sr = MakeRenderer(parent, "GravekeepBoneRise");
+            Sprite[] frames = FramesOf(sheet);
+            Vector3 last = target != null ? target.position : fallback;
+            float total = BoneRiseSeconds + BoneFadeSeconds;
+            float elapsed = 0f;
+            while (elapsed < total && sr != null)
+            {
+                elapsed += Time.deltaTime;
+                if (target != null) last = target.position;
+                Show(sr, frames, Mathf.Clamp01(elapsed / BoneRiseSeconds));
+                Place(sr, camera, last, BoardController.CardW * 1.5f);
+                float fade = Mathf.Clamp01((elapsed - BoneRiseSeconds) / BoneFadeSeconds);
+                sr.color = new Color(1f, 1f, 1f, Mathf.Clamp01(elapsed / (0.08f * Tempo)) * (1f - fade));
+                yield return null;
+            }
+            if (sr != null) Object.Destroy(sr.gameObject);
+        }
 
         public static float BuildupStartsAt(float cardSeconds) =>
             Mathf.Max(0f, cardSeconds + EarthLeadSeconds - FallSeconds - BuildupSeconds * 0.85f);

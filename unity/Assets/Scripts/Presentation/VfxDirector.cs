@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Kingdom.Core.Cards;
 using Kingdom.Core.Contracts;
 using Kingdom.Session;
 using UnityEngine;
@@ -78,6 +79,7 @@ namespace Kingdom.Presentation
         private IArtProvider _artProvider;
         private BoardController _board;
         private IUiSpriteProvider _uiSprites;
+        private ICardDatabase _db;
 
         /// <summary>The bolt leaves the socket when the cast is this far up the portrait, so the
         /// two overlap instead of queueing.</summary>
@@ -145,8 +147,9 @@ namespace Kingdom.Presentation
         /// the art provider for its illustration and BoardController.BuildDetachedCard for the
         /// same frame/art-fit/name rig a card in hand or on the board gets. Called once by
         /// NetworkedGameBootstrap, after boardController.Initialize (BuildDetachedCard depends on it).</summary>
-        public void Init(IArtProvider artProvider, BoardController board)
+        public void Init(IArtProvider artProvider, BoardController board, ICardDatabase db = null)
         {
+            _db = db;
             _artProvider = artProvider;
             _board = board;
             if (boardAnchors == null && board != null) boardAnchors = board.GetComponent<BoardAnchors>();
@@ -853,6 +856,61 @@ namespace Kingdom.Presentation
         {
             foreach (var e in batch)
                 PlayEvent(e);
+            PlayGravekeepSummons(batch);
+        }
+
+        /// <summary>
+        /// Every minion a Gravekeep card summons rises out of a bone pile as it appears (Sam,
+        /// 2026-11-03: Bone Horde, and every Gravekeep effect that summons). A summon event names
+        /// only the new minion, so the summoner is read off the batch: the card played, or the
+        /// minion that died (a Toll), most recently before it. Runs as the entry releases, which is
+        /// when the board draws the new minions.
+        /// </summary>
+        private void PlayGravekeepSummons(IReadOnlyList<GameEvent> batch)
+        {
+            if (_db == null || _state == null || _board == null) return;
+            Camera cam = Camera.main;
+            if (cam == null) return;
+            InstanceId? cause = null;
+            int n = 0;
+            Sprite bones = null;
+            foreach (GameEvent e in batch)
+            {
+                if ((e.Kind == GameEventKind.CardPlayed || e.Kind == GameEventKind.CardDestroyed) && e.Source.HasValue)
+                {
+                    cause = e.Source;
+                    continue;
+                }
+                if (e.Kind != GameEventKind.CardSummoned || !e.Source.HasValue || !cause.HasValue) continue;
+                if (ClassOf(cause.Value) != CardClass.GRAVEKEEP) continue;
+
+                Transform visual = _board.ResolveCombatVisual(e.Source.Value);
+                Vector3? at = ResolvePosition(e.Source);
+                if (visual == null && !at.HasValue) continue;
+#if UNITY_EDITOR
+                _uiSprites ??= new EditorUiSpriteProvider();
+#else
+                _uiSprites ??= new AddressableUiSpriteProvider();
+#endif
+                bones ??= _uiSprites.Get(SpellSchoolEffects.GravekeepSummonKey);
+                if (bones == null) return;
+                StartCoroutine(SpellSchoolEffects.BoneRise(transform, bones, cam, visual,
+                    at ?? visual.position, n++ * SpellSchoolEffects.BoneStaggerSeconds));
+            }
+        }
+
+        /// <summary>The class of a card anywhere the presented state can see it: board, hand,
+        /// weapon or graveyard (a Toll's minion has died by the time its summon is drawn).</summary>
+        private CardClass? ClassOf(InstanceId id)
+        {
+            foreach (PlayerState ps in _state.Players)
+            {
+                CardInstance card = ps.Board.Find(c => c.Id == id) ?? ps.Graveyard.Find(c => c.Id == id)
+                    ?? ps.Hand.Find(c => c.Id == id) ?? (ps.Weapon != null && ps.Weapon.Id == id ? ps.Weapon : null);
+                if (card != null)
+                    return _db.TryGet(card.DefinitionId, out CardDefinition def) ? def.Class : (CardClass?)null;
+            }
+            return null;
         }
 
         private void PlayEvent(GameEvent e)

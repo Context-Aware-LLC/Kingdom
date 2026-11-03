@@ -390,6 +390,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a26d6489d0134852934d2ce262e3d33d
+    m_Address: ui/effect_spell_gravekeep_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a2f7fde1a48d4f458f59e740e6e32d43
     m_Address: ui/turn-hourglass-royal-council
     m_ReadOnly: 0

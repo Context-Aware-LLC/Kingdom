@@ -705,7 +705,7 @@ namespace Kingdom.Presentation
                 // RETIREMENT TRIGGER: a third bootstrap, or match wiring lifted into something
                 // shared — this block moves with it, or that path loses the beat exactly the way
                 // this one did.
-                vfxDirector.Init(artProvider, boardController);
+                vfxDirector.Init(artProvider, boardController, db);
                 PlayRevealHolds holds = vfxDirector.RevealHolds;
                 matchRunner.PlayRevealClassifier = (snapshot, events) =>
                     PlayRevealClassifier.Classify(snapshot, events, db, holds, viewer: localId);
