@@ -1120,7 +1120,6 @@
 }
 .account-create-screen .mm-modal__help {
     font-size: 30px;
-    color: rgb(217, 210, 195);
 }
 .account-create-screen .mm-modal__title,
 .account-create-screen .mm-modal__help,
@@ -1133,6 +1132,25 @@
 }
 .account-create-screen .mm-modal__error {
     font-size: 26px;
+}
+/* EVERY LOOSE LINE IS NEAR WHITE (Sam, 2026-11-02): anything not in a field or on a button sits
+ * on the bright backdrop through a half-clear plate, and the theme's ink-2 grey and the deep
+ * negative red were illegible there. The error keeps its hue, lifted. */
+.account-create-screen .mm-modal__title {
+    color: rgb(255, 255, 255);
+}
+.account-create-screen .mm-modal__help {
+    color: rgb(255, 250, 240);
+}
+.account-create-screen .mm-signin__or,
+.account-create-screen .mm-signin__resend {
+    color: rgb(255, 244, 226);
+}
+.account-create-screen .mm-signin__resend:hover {
+    color: rgb(255, 255, 255);
+}
+.account-create-screen .mm-modal__error {
+    color: rgb(255, 150, 140);
 }
 .account-create-screen .mm-modal__field {
     font-size: 34px;
