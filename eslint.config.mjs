@@ -7,5 +7,5 @@ export default defineConfig([
   { ignores: ["**/*.js", "**/*.cjs", "**/*.mjs"] },
   { files: ["**/*.json"], plugins: { json }, language: "json/json", extends: ["json/recommended"] },
   { files: ["**/*.md"], plugins: { markdown }, language: "markdown/gfm", extends: ["markdown/recommended"] },
-  { files: ["**/*.css"], plugins: { css }, language: "css/css", extends: ["css/recommended"] },
+  { files: ["**/*.uss"], plugins: { css }, language: "css/css", extends: ["css/recommended"] },
 ]);
