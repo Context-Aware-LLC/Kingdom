@@ -51,10 +51,38 @@
     align-content: flex-start;
 }
 
+/* Icon, then text, then the right gutter. The 96 of right padding is the seals' gutter
+   (LedgerOverlay places each 72 wide at right 8), so no text runs under the wax. */
 .ledger-entry {
     width: 50%;
     height: 176px;
     padding: var(--space-2) 96px var(--space-2) var(--space-2);
+    flex-direction: row;
+    align-items: center;
+}
+
+/* THE ICON IS 96 (2026-11-02). Every pixel of it comes out of the text's width, and the
+   entry's 160 of content height is fixed, so the smallest icon that still reads won: 4/3 of
+   the 72 seal, ~36dp on a Pixel 5a. An ESTIMATE, in Inter against every AchievementTexts row,
+   not a measurement: on a 2400-wide panel the text box goes 640 -> 528, 2 entries gain a line
+   (6 at 128) and Comeback's four lines run ~20 past 160, as they do at any icon size. A
+   1920-wide (16:9) panel starts at 467, already 2 entries over, and 96 makes it 7; that is
+   the entry height's problem, not one an icon size can solve. The slot keeps its size with no
+   art, so a missing sprite leaves the page laid out the same. */
+.ledger-entry__icon {
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
+    margin-right: var(--space-4);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* A basis of 0 that grows: exactly the width the icon and the gutter leave, so the labels wrap
+   inside it. Not overflow: hidden, which on a shrinkable flex child deletes children. */
+.ledger-entry__text {
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-direction: column;
 }
 
 .ledger-entry__name {
@@ -86,6 +114,15 @@
 .ledger-entry--unearned .ledger-entry__name {
     color: rgba(84, 58, 34, 0.5);
     letter-spacing: 4px;
+}
+
+/* Its icon greyed, like a locked achievement in Play Games: the built-in grayscale filter
+   (USS filter, Unity 6.3+; no shader of ours) for the colour, and plain opacity for the dim,
+   at the 0.5 the line beside it fades to. Opacity is the element property, not the filter's
+   opacity(), so the icon still reads as locked if the filter ever renders nothing. */
+.ledger-entry--unearned .ledger-entry__icon {
+    filter: grayscale(100%);
+    opacity: 0.5;
 }
 
 .ledger-footer {

@@ -197,30 +197,41 @@ namespace Kingdom.Presentation
             Sprite kingSeal = _seals.Count > 0 ? _sprites?.Get(KingText.SealSpriteKey) : null;
             int first = _pageIndex * EntriesPerPage;
             for (int i = first; i < Mathf.Min(first + EntriesPerPage, _entries.Count); i++)
-                _page.Add(Entry(_entries[i], seal, _seals.Contains(_entries[i].Text.Id) ? kingSeal : null));
+            {
+                LedgerEntry entry = _entries[i];
+                Sprite icon = _sprites?.Get(KingText.AchievementSpriteKey(entry.Text.Id));
+                _page.Add(Entry(entry, icon, seal, _seals.Contains(entry.Text.Id) ? kingSeal : null));
+            }
         }
 
+        /// <param name="icon">The achievement's own image (Sam, 2026-11-02): in full colour once
+        /// earned, greyed by ledger.uss until then. Null, for an achievement with no art yet, leaves
+        /// its slot empty and the page laid out exactly as with one.</param>
         /// <param name="kingSeal">His seal, for a commission page the player placed in; null for none.
         /// It sits in the gutter under the crown's place, so it never covers the text. Placing does
         /// not require the achievement, so an unearned page can carry it too, alone.</param>
-        private static VisualElement Entry(LedgerEntry entry, Sprite seal, Sprite kingSeal)
+        private static VisualElement Entry(LedgerEntry entry, Sprite icon, Sprite seal, Sprite kingSeal)
         {
             var box = new VisualElement();
             box.AddToClassList("ledger-entry");
+            box.Add(Icon(icon));
+            var text = new VisualElement();
+            text.AddToClassList("ledger-entry__text");
+            box.Add(text);
             if (!entry.Earned)
             {
                 box.AddToClassList("ledger-entry--unearned");
-                box.Add(Line(Loc.Get("ledger_entry_under_review"), "ledger-entry__name"));
+                text.Add(Line(Loc.Get("ledger_entry_under_review"), "ledger-entry__name"));
                 if (kingSeal != null)
                     SealStamp.Place(box, kingSeal, SealSize, right: 8f, top: 4f, tiltDegrees: -Tilt(entry.Text.Id));
                 return box;
             }
 
-            box.Add(Line(entry.Text.Name, "ledger-entry__name"));
-            box.Add(Line(entry.Text.Plain, "ledger-entry__plain"));
-            box.Add(Line(entry.Text.Citation, "ledger-entry__citation"));
+            text.Add(Line(entry.Text.Name, "ledger-entry__name"));
+            text.Add(Line(entry.Text.Plain, "ledger-entry__plain"));
+            text.Add(Line(entry.Text.Citation, "ledger-entry__citation"));
             if (entry.EarnedAt is DateTimeOffset at)
-                box.Add(Line(Loc.Format("ledger_entry_date", at.ToLocalTime().ToString("d MMMM yyyy", CultureInfo.InvariantCulture)),
+                text.Add(Line(Loc.Format("ledger_entry_date", at.ToLocalTime().ToString("d MMMM yyyy", CultureInfo.InvariantCulture)),
                     "ledger-entry__date"));
             // The wax a past stamp left: a fixed tilt per entry, so turning back to a page does not
             // reshuffle every seal on it.
@@ -240,6 +251,16 @@ namespace Kingdom.Presentation
             int sum = 0;
             foreach (char c in id) sum += c;
             return (sum & 15) - 8;
+        }
+
+        /// <summary>The icon's slot, sized by ledger.uss whether or not there is art to fill it, so
+        /// every page's text starts at the same x.</summary>
+        private static VisualElement Icon(Sprite sprite)
+        {
+            var icon = new VisualElement { pickingMode = PickingMode.Ignore };
+            icon.AddToClassList("ledger-entry__icon");
+            if (sprite != null) icon.style.backgroundImage = new StyleBackground(sprite);
+            return icon;
         }
 
         private static Label Line(string text, string className)
