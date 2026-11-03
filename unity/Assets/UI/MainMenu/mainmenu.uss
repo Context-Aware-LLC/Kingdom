@@ -669,31 +669,63 @@
     margin-left: var(--space-2);
 }
 
-/* ---------- Ranked ladder ---------- */
+/* ---------- Ranked ladder and the King's Favor ----------
+ * Two boards in one modal (#421). 960 rather than 820 so both tab titles sit on one line beside
+ * Close; a tab still wraps rather than clip if a translation runs long. */
 .mm-leaderboard {
-    width: 820px;
+    width: 960px;
     max-width: 100%;
     height: 100%;
     padding: var(--space-6);
     border-color: rgba(240, 166, 60, 0.55);
 }
-/* Title and close on ONE row, close hard right. The title takes the growth, so there is no wrapper
- * element between it and the header — a `__heading` box existed only to stack a kicker above the
- * title, and the kicker is gone. */
+/* Tabs and close on ONE row, close hard right. The tab bar takes the growth. */
 .mm-leaderboard__header {
     flex-direction: row;
     align-items: center;
     margin-bottom: var(--space-4);
 }
-.mm-leaderboard__title {
+.mm-leaderboard__tabs {
     flex-grow: 1;
     flex-shrink: 1;
-    color: var(--ink-1);
-    font-size: var(--type-h1);
+    flex-direction: row;
+    align-items: stretch;
+}
+/* A tab is the board's name and its selector at once, copied from .shop-tab (shop.uss): --on is
+ * CONTRAST plus the underline and never changes geometry, so switching boards cannot reflow the
+ * header. white-space: normal, so a long title wraps instead of pushing Close off the panel. */
+.mm-leaderboard__tab {
+    flex-shrink: 1;
+    min-height: var(--touch-min);
+    padding: 0 var(--space-4);
+    margin: 0;
+    border-width: 0;
+    border-bottom-width: 3px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+    color: var(--ink-2);
+    font-size: var(--type-h2);
     -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    transition-property: color, border-bottom-color;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.mm-leaderboard__tab:hover {
+    color: var(--ink-1);
+}
+.mm-leaderboard__tab--on {
+    color: var(--ink-1);
+    border-bottom-color: var(--accent);
 }
 .mm-leaderboard__close {
     margin-left: var(--space-6);
+}
+.mm-leaderboard__columns--hidden {
+    display: none;
 }
 .mm-leaderboard__columns,
 .mm-leaderboard__row {
@@ -731,15 +763,22 @@
     font-size: var(--type-label);
     -unity-font-style: bold;
 }
+/* A player's name: PEER-AUTHORED. Clipped in PIXELS here and drawn with rich text off where the
+ * row is built (MainMenuController.NameLabelFor), the pair security.md sets, as .fr-row__name. */
 .mm-leaderboard__name {
     flex-grow: 1;
     flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     padding-left: var(--space-2);
     color: var(--ink-1);
     font-size: var(--type-body);
     -unity-font-style: bold;
 }
-.mm-leaderboard__rating {
+.mm-leaderboard__rating,
+.mm-leaderboard__score {
     width: 100px;
     color: var(--accent);
     font-size: var(--type-body);
@@ -764,6 +803,15 @@
     color: var(--negative);
 }
 .mm-leaderboard__status--hidden {
+    display: none;
+}
+/* Your own place on the Favor board, pinned under the list when you are off it. Holds one row
+ * built like the list's; the accent rule sets it apart from the hundred above. */
+.mm-leaderboard__me {
+    border-top-width: 2px;
+    border-top-color: var(--accent);
+}
+.mm-leaderboard__me--hidden {
     display: none;
 }
 .mm-leaderboard__updated {

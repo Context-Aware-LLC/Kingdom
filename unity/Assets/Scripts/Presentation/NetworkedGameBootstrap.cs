@@ -739,7 +739,9 @@ namespace Kingdom.Presentation
                     reason: _net.EndReason,
                     findings: _net.EndFindings,
                     gold: _goldWatch.EarnedAsync(),
-                    rematchDeckId: _rematchDeckId);
+                    rematchDeckId: _rematchDeckId,
+                    // The same message carries the King's final (#421); null in a match for no King.
+                    commission: _net.EndCommission);
                 MusicDirector.FadeOutUntilSceneChange();            // the battle loop would clash with the stinger
                 cardSounds.OnMatchEnded(outcome, _net.Seat);
                 _ = PlayGamesServices.SyncAchievementsAfterMatchAsync();   // never throws; nothing waits on it

@@ -136,7 +136,8 @@ namespace Kingdom.Presentation
 
             var favor = new VisualElement();
             favor.AddToClassList("roll-entry__favor");
-            if (string.IsNullOrEmpty(entry.Favorite))
+            // Null is no Favorite; "" is a Favorite with no name to show (KingText.SubjectName).
+            if (entry.Favorite == null)
             {
                 // Two literal calls, not one with a ternary key, so LocalizationVerify sees both.
                 Label none = Line(reigning ? Loc.Get("king_roll_undecided") : Loc.Get("king_roll_no_favorite"),
@@ -146,7 +147,7 @@ namespace Kingdom.Presentation
             }
             else
             {
-                favor.Add(NameLabel(entry.Favorite));
+                favor.Add(NameLabel(KingText.SubjectName(entry.Favorite)));
                 favor.Add(Line(Loc.Format("king_roll_favorite_of", epithet), "roll-entry__favor-of"));
             }
             box.Add(favor);
@@ -207,6 +208,11 @@ namespace Kingdom.Presentation
         /// a file of that name under <c>Assets/Art/UI/Achievements/</c>.</summary>
         public static string AchievementSpriteKey(string id) => "achievement_" + id;
 
+        /// <summary>His seal on a commission's Ledger page (spec, "Prizes"): the menu's crown, in
+        /// UI_Core already. No seal art of his own exists; replacing the sprite under this key
+        /// is all a new one needs.</summary>
+        public const string SealSpriteKey = "ui_king_crown";
+
         public static string Epithet(int index) => Loc.Find(EpithetKey(index)) ?? Loc.Get("king_epithet_unknown");
 
         public static string Fate(int index) => Loc.Find(FateKey(index)) ?? Loc.Get("king_fate_unknown");
@@ -214,5 +220,11 @@ namespace Kingdom.Presentation
         /// <summary>The commission's <paramref name="part"/>, or null when this build has no row.</summary>
         public static string Commission(string id, string part)
             => string.IsNullOrEmpty(id) ? null : Loc.Find(CommissionKey(id, part));
+
+        /// <summary>A name off the Favor board or the Roll. The server sends <c>""</c> for a player with
+        /// no name to show (a blank, or a per-match seat handle: <c>FavorNames</c>), and the words
+        /// for that are the client's.</summary>
+        public static string SubjectName(string shown)
+            => string.IsNullOrEmpty(shown) ? Loc.Get("king_favor_unnamed") : shown;
     }
 }

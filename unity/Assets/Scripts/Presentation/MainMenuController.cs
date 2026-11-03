@@ -48,6 +48,13 @@ namespace Kingdom.Presentation
         private Label _leaderboardStatus;
         private Label _leaderboardUpdated;
         private CancellationTokenSource _leaderboardRequest;
+        private Button _ladderTab;
+        private Button _favorTab;
+        private VisualElement _ladderColumns;
+        private VisualElement _favorColumns;
+        private VisualElement _favorMe;
+        /// <summary>Which board the modal shows. It always opens on the ladder.</summary>
+        private bool _showingFavor;
 
         private Label _goldBalance;
         private Label _gemBalance;
@@ -429,6 +436,8 @@ namespace Kingdom.Presentation
         {
             KingNow king = await request;
             if (this == null || _kingDock == null) return;   // the menu left while the read was in flight
+            // The Favor board is this reign's, so with no King there is no tab for it.
+            if (_favorTab != null) _favorTab.style.display = king == null ? DisplayStyle.None : DisplayStyle.Flex;
             if (king == null)
             {
                 _kingDock.style.display = DisplayStyle.None;
@@ -893,12 +902,22 @@ namespace Kingdom.Presentation
             {
                 if (evt.target == _leaderboardModal) CloseLeaderboard();
             });
+
+            // Two boards, one list (#421). The tabs are ShopPanelController's: each names its board
+            // and selects it, and ShowBoard is the one place both halves change together.
+            _ladderTab = _root.Q<Button>("leaderboard-tab-ladder");
+            _favorTab = _root.Q<Button>("leaderboard-tab-favor");
+            _ladderColumns = _root.Q<VisualElement>("leaderboard-columns");
+            _favorColumns = _root.Q<VisualElement>("favor-columns");
+            _favorMe = _root.Q<VisualElement>("favor-me");
+            if (_ladderTab != null) _ladderTab.clicked += () => ShowBoard(favor: false);
+            if (_favorTab != null) _favorTab.clicked += () => ShowBoard(favor: true);
         }
 
         private void OnLeaderboards()
         {
             Show(_leaderboardModal);
-            _ = RefreshLeaderboardAsync();
+            ShowBoard(favor: false);
         }
 
         private void CloseLeaderboard()
@@ -907,12 +926,40 @@ namespace Kingdom.Presentation
             Hide(_leaderboardModal);
         }
 
-        private async System.Threading.Tasks.Task RefreshLeaderboardAsync()
+        /// <summary>Marks the tab, swaps the column heads and reads that board. A board is read every
+        /// time it is shown: the Favor moves with every match, and a tab is cheaper than a stale one.</summary>
+        private void ShowBoard(bool favor)
+        {
+            _showingFavor = favor;
+            Toggle(_ladderTab, "mm-leaderboard__tab--on", !favor);
+            Toggle(_favorTab, "mm-leaderboard__tab--on", favor);
+            Toggle(_ladderColumns, "mm-leaderboard__columns--hidden", favor);
+            Toggle(_favorColumns, "mm-leaderboard__columns--hidden", !favor);
+            _favorMe?.Clear();
+            Toggle(_favorMe, "mm-leaderboard__me--hidden", true);
+            _ = favor ? RefreshFavorAsync() : RefreshLeaderboardAsync();
+        }
+
+        private static void Toggle(VisualElement element, string className, bool on)
+        {
+            if (element == null) return;
+            if (on) element.AddToClassList(className);
+            else element.RemoveFromClassList(className);
+        }
+
+        /// <summary>Cancels the read the other board (or an earlier tap) still has in flight, so
+        /// a slow answer can never draw over the board now showing.</summary>
+        private CancellationToken BeginBoardRead()
         {
             _leaderboardRequest?.Cancel();
             _leaderboardRequest?.Dispose();
             _leaderboardRequest = new CancellationTokenSource();
-            CancellationToken token = _leaderboardRequest.Token;
+            return _leaderboardRequest.Token;
+        }
+
+        private async System.Threading.Tasks.Task RefreshLeaderboardAsync()
+        {
+            CancellationToken token = BeginBoardRead();
 
             _leaderboardList?.Clear();
             SetLeaderboardStatus(Loc.Get("common_calling_the_keepers"), error: false, visible: true);
@@ -951,18 +998,105 @@ namespace Kingdom.Presentation
                     $"{generated.ToLocalTime():h:mm tt}", entries.Length);
         }
 
+        /// <summary>
+        /// The King's Favor board for this reign: rank, player, score, best first in the
+        /// commission's own direction (the server sorts). Your own place is pinned under the list
+        /// when you are off it, since the board answers only its top hundred.
+        /// </summary>
+        private async System.Threading.Tasks.Task RefreshFavorAsync()
+        {
+            CancellationToken token = BeginBoardRead();
+
+            _leaderboardList?.Clear();
+            SetLeaderboardStatus(Loc.Get("common_calling_the_keepers"), error: false, visible: true);
+            if (_leaderboardUpdated != null) _leaderboardUpdated.text = " ";
+
+            var gateway = new HttpKingGateway(CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(KingTimeoutSeconds));
+            Task<FavorStanding> standing = FetchStandingAsync(gateway, token);
+            FavorBoard board;
+            try
+            {
+                board = await gateway.FetchFavorAsync(token);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[King] Favor board read threw ({ex.GetType().Name}: {ex.Message}).");
+                board = null;
+            }
+            FavorStanding me = await standing;
+            if (this == null || token.IsCancellationRequested || !_showingFavor) return;
+
+            // No King and an unread board are one null (HttpKingGateway); the tab only shows while a
+            // King is known, so here it is a failed read.
+            if (board == null)
+            {
+                SetLeaderboardStatus(Loc.Get("king_favor_error"), error: true, visible: true);
+                return;
+            }
+
+            if (_leaderboardUpdated != null)
+            {
+                // A commission this build has no words for is left out, never printed by id.
+                string scored = KingText.Commission(board.Commission, "scored");
+                _leaderboardUpdated.text = scored == null
+                    ? Loc.Format("king_roll_reign", board.Reign)
+                    : Loc.Format("king_favor_footer", board.Reign, scored);
+            }
+
+            if (board.Rows.Count == 0)
+                SetLeaderboardStatus(Loc.Get("king_favor_empty"), error: false, visible: true);
+            else
+            {
+                SetLeaderboardStatus("", error: false, visible: false);
+                foreach (FavorBoardRow entry in board.Rows)
+                    _leaderboardList?.Add(BuildBoardRow(entry.Place, KingText.SubjectName(entry.Name),
+                        entry.Score.ToString(CultureInfo.InvariantCulture), "mm-leaderboard__score", record: null));
+            }
+
+            if (_favorMe != null && me?.Place is int place && place > board.Rows.Count)
+            {
+                // "You" is reserved by PlayerName, so no player can be shown under it.
+                _favorMe.Add(BuildBoardRow(place, Loc.Get("common_you"),
+                    (me.Score ?? 0).ToString(CultureInfo.InvariantCulture), "mm-leaderboard__score", record: null));
+                _favorMe.RemoveFromClassList("mm-leaderboard__me--hidden");
+            }
+        }
+
+        /// <summary>The signed-in player's standing, or null when signed out or unread. Never throws:
+        /// the board shows without it.</summary>
+        private static async Task<FavorStanding> FetchStandingAsync(HttpKingGateway gateway, CancellationToken token)
+        {
+            try
+            {
+                if (!AuthGateway.IsSignedIn) return null;
+                string accessToken = await AuthGateway.TokenForConnectAsync();
+                return await gateway.FetchStandingAsync(accessToken, token);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[King] Favor standing read threw ({ex.GetType().Name}: {ex.Message}).");
+                return null;
+            }
+        }
+
         private static VisualElement BuildLeaderboardRow(LeaderboardRow entry)
+            => BuildBoardRow(entry.rank, entry.displayName ?? Loc.Get("leaderboard_unnamed_player"),
+                entry.rating.ToString(), "mm-leaderboard__rating",
+                Loc.Format("leaderboard_record", entry.wins, entry.losses, entry.draws));
+
+        /// <summary>One line of either board. <paramref name="record"/> is the ladder's W-L-D, and
+        /// null leaves the column out.</summary>
+        private static VisualElement BuildBoardRow(int rank, string name, string number, string numberClass, string record)
         {
             var row = new VisualElement();
             row.AddToClassList("mm-leaderboard__row");
-            if (entry.rank % 2 == 0) row.AddToClassList("mm-leaderboard__row--even");
-            if (entry.rank <= 3) row.AddToClassList("mm-leaderboard__row--podium");
+            if (rank % 2 == 0) row.AddToClassList("mm-leaderboard__row--even");
+            if (rank <= 3) row.AddToClassList("mm-leaderboard__row--podium");
 
-            row.Add(LabelFor(Loc.Format("leaderboard_rank", entry.rank), "mm-leaderboard__rank"));
-            row.Add(LabelFor(entry.displayName ?? Loc.Get("leaderboard_unnamed_player"), "mm-leaderboard__name"));
-            row.Add(LabelFor(entry.rating.ToString(), "mm-leaderboard__rating"));
-            row.Add(LabelFor(Loc.Format("leaderboard_record", entry.wins, entry.losses, entry.draws),
-                "mm-leaderboard__record"));
+            row.Add(LabelFor(Loc.Format("leaderboard_rank", rank), "mm-leaderboard__rank"));
+            row.Add(NameLabelFor(name));
+            row.Add(LabelFor(number, numberClass));
+            if (record != null) row.Add(LabelFor(record, "mm-leaderboard__record"));
             return row;
         }
 
@@ -971,6 +1105,20 @@ namespace Kingdom.Presentation
             var label = new Label(text);
             label.AddToClassList(className);
             label.pickingMode = PickingMode.Ignore;
+            return label;
+        }
+
+        /// <summary>
+        /// A player's name on either board. It is PEER-AUTHORED, and this is the renderer's half of
+        /// the obligation security.md sets for every such name, the same pair as
+        /// <c>FriendsDrawerController.NameLabel</c>: <b>rich text off</b>, here, and <b>a clip in
+        /// pixels</b>, in <c>.mm-leaderboard__name</c> (mainmenu.uss).
+        /// </summary>
+        private static Label NameLabelFor(string name)
+        {
+            Label label = LabelFor(name, "mm-leaderboard__name");
+            label.enableRichText = false;
+            label.parseEscapeSequences = false;
             return label;
         }
 

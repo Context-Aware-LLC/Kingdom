@@ -35,6 +35,21 @@
     margin-bottom: var(--space-6);
 }
 
+/* The King's commission line (#421): the commission, the score, and New best. Gold, like
+   .proc-gold, because it is a prize line; hidden in a match that plays for no King. */
+.proc-commission {
+    font-size: var(--type-h2);
+    -unity-font-style: bold;
+    color: rgb(150, 98, 18);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-bottom: var(--space-6);
+}
+
+.proc-commission--hidden {
+    display: none;
+}
+
 .proc-columns {
     flex-direction: row;
     align-self: stretch;

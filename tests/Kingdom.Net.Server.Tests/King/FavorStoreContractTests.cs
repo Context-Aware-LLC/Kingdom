@@ -121,6 +121,18 @@ namespace Kingdom.Net.Server.Tests.King
         }
 
         [Test]
+        public async Task Reigns_played_lists_each_reign_the_player_scored_in_once()
+        {
+            await Store.RecordAsync(Score(3, "p", 2, T0), false, default);
+            await Store.RecordAsync(Score(1, "p", 5, T0), false, default);
+            await Store.RecordAsync(Score(1, "p", 9, T0.AddHours(1)), false, default);
+            await Store.RecordAsync(Score(2, "q", 4, T0), false, default);
+
+            Assert.That(await Store.ReignsPlayedAsync("p", default), Is.EqualTo(new[] { 1, 3 }));
+            Assert.That(await Store.ReignsPlayedAsync("nobody", default), Is.Empty);
+        }
+
+        [Test]
         public async Task Roll_is_newest_first_and_honours_the_limit()
         {
             await SeedReignAsync(1, "a", "Alice", false);

@@ -115,6 +115,20 @@ namespace Kingdom.Net.Server.King
             return rows;
         }
 
+        public async Task<IReadOnlyList<int>> ReignsPlayedAsync(string playerId, CancellationToken ct = default)
+        {
+            // One row per (reign, player) is the table's key, so no DISTINCT is needed.
+            var reigns = new List<int>();
+            await using var conn = new NpgsqlConnection(_connString);
+            await conn.OpenAsync(ct);
+            await using var cmd = new NpgsqlCommand(
+                "select reign from favor_score where player_id = $1 order by reign", conn);
+            cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+            await using NpgsqlDataReader r = await cmd.ExecuteReaderAsync(ct);
+            while (await r.ReadAsync(ct)) reigns.Add(r.GetInt32(0));
+            return reigns;
+        }
+
         private static NpgsqlParameter P(NpgsqlDbType type, object value)
             => new NpgsqlParameter { NpgsqlDbType = type, Value = value };
     }

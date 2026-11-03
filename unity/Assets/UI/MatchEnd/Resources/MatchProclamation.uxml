@@ -17,6 +17,7 @@
         <ui:VisualElement name="proc-sheet" class="tidbit-card proc-sheet">
             <ui:Label name="proc-verdict" text=" " class="tidbit-title proc-verdict" />
             <ui:Label name="proc-reason" text=" " class="proc-reason" />
+            <ui:Label name="proc-commission" text=" " class="proc-commission proc-commission--hidden" />
             <ui:VisualElement class="proc-columns">
                 <ui:VisualElement name="proc-spoils" class="proc-column proc-column--hidden">
                     <ui:Label text="Spoils" class="proc-heading" />

@@ -133,6 +133,132 @@ namespace Kingdom.Net.Client.Tests.King
             Assert.That(await new HttpKingGateway(Base, http).FetchRollAsync(default), Is.Empty);
         }
 
+        // The server sends "" for a Favorite with no name to show (FavorNames); null is no Favorite.
+        [Test]
+        public async Task An_unnamed_Favorite_is_empty_not_absent()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"status\":\"ok\",\"reigns\":[{\"reign\":2,\"epithet\":7,\"fate\":11,\"favorite\":\"\"}," +
+                "{\"reign\":1,\"epithet\":0,\"fate\":0,\"favorite\":null}]}");
+
+            IReadOnlyList<RollEntry> roll = await new HttpKingGateway(Base, http).FetchRollAsync(default);
+
+            Assert.That(roll[0].Favorite, Is.EqualTo(""));
+            Assert.That(roll[1].Favorite, Is.Null);
+        }
+
+        // ── GET /king/favor ──────────────────────────────────────────────────────────────
+
+        private const string Board =
+            "{\"status\":\"ok\",\"reign\":2,\"commission\":\"technically\",\"lowerIsBetter\":true,\"rows\":[" +
+            "{\"place\":1,\"name\":\"Lady Grimsby\",\"score\":1}," +
+            "{\"place\":2,\"name\":\"\",\"score\":3}," +
+            "{\"place\":3,\"name\":\"null\",\"score\":-2}]}";
+
+        [Test]
+        public async Task The_board_maps_every_row_in_order()
+        {
+            var http = new FakeAuthHttp().Reply(200, Board);
+
+            FavorBoard? board = await new HttpKingGateway(Base, http).FetchFavorAsync(default);
+
+            Assert.That(http.Requests.Single().Url, Is.EqualTo(Base + "/king/favor"));
+            Assert.That(board, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(board!.Reign, Is.EqualTo(2));
+                Assert.That(board.Commission, Is.EqualTo("technically"));
+                Assert.That(board.LowerIsBetter, Is.True);
+                Assert.That(board.Rows.Select(r => (r.Place, r.Name, r.Score)),
+                    Is.EqualTo(new[] { (1, "Lady Grimsby", 1), (2, "", 3), (3, "null", -2) }),
+                    "an empty name is the placeholder's cue; a player named null is a name");
+            });
+        }
+
+        [Test]
+        public async Task An_empty_board_is_a_board()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"status\":\"ok\",\"reign\":1,\"commission\":\"overkill\",\"lowerIsBetter\":false,\"rows\":[]}");
+
+            FavorBoard? board = await new HttpKingGateway(Base, http).FetchFavorAsync(default);
+
+            Assert.That(board, Is.Not.Null);
+            Assert.That(board!.Rows, Is.Empty);
+            Assert.That(board.LowerIsBetter, Is.False);
+        }
+
+        [TestCase(200, "{\"status\":\"none\"}")]
+        [TestCase(500, "{}")]
+        [TestCase(200, "{\"status\":\"ok\",\"reign\":1,\"commission\":\"overkill\",\"lowerIsBetter\":false}")]
+        [TestCase(200, "{\"status\":\"ok\",\"reign\":1,\"commission\":\"overkill\",\"rows\":[]}")]
+        [TestCase(200, "{\"status\":\"ok\",\"reign\":1,\"commission\":\"overkill\",\"lowerIsBetter\":false,\"rows\":[{\"place\":1,\"score\":3}]}")]
+        [TestCase(200, "{\"status\":\"ok\",\"reign\":1,\"commission\":\"overkill\",\"lowerIsBetter\":false,\"rows\":[{\"place\":0,\"name\":\"a\",\"score\":3}]}")]
+        public async Task A_board_that_is_absent_failed_or_unreadable_is_null(int status, string body)
+        {
+            var http = new FakeAuthHttp().Reply(status, body);
+
+            Assert.That(await new HttpKingGateway(Base, http).FetchFavorAsync(default), Is.Null);
+        }
+
+        // ── GET /king/favor/me ───────────────────────────────────────────────────────────
+
+        [Test]
+        public async Task The_standing_maps_place_score_and_seals_and_sends_the_bearer()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"status\":\"ok\",\"place\":101,\"score\":-1,\"seals\":[\"overkill\",\"technically\"]}");
+
+            FavorStanding? me = await new HttpKingGateway(Base, http).FetchStandingAsync("tok", default);
+
+            Assert.That(me, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(me!.Place, Is.EqualTo(101));
+                Assert.That(me.Score, Is.EqualTo(-1));
+                Assert.That(me.Seals, Is.EqualTo(new[] { "overkill", "technically" }));
+                Assert.That(http.Requests.Single().Url, Is.EqualTo(Base + "/king/favor/me"));
+                Assert.That(http.Requests.Single().Headers,
+                    Has.Member(new KeyValuePair<string, string>("Authorization", "Bearer tok")));
+            });
+        }
+
+        [Test]
+        public async Task A_player_off_the_board_has_no_place_but_keeps_seals()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"status\":\"ok\",\"place\":null,\"score\":null,\"seals\":[\"waste_not\"]}");
+
+            FavorStanding? me = await new HttpKingGateway(Base, http).FetchStandingAsync("tok", default);
+
+            Assert.That(me, Is.Not.Null);
+            Assert.That(me!.Place, Is.Null);
+            Assert.That(me.Score, Is.Null);
+            Assert.That(me.Seals, Is.EqualTo(new[] { "waste_not" }));
+        }
+
+        [TestCase(200, "{\"status\":\"none\"}")]
+        [TestCase(401, "{\"status\":\"unauthenticated\",\"place\":null,\"score\":null,\"seals\":[]}")]
+        [TestCase(503, "{\"status\":\"unavailable\",\"place\":null,\"score\":null,\"seals\":[]}")]
+        [TestCase(200, "{\"status\":\"ok\",\"place\":null,\"score\":null}")]
+        [TestCase(200, "{\"status\":\"ok\",\"place\":null,\"score\":null,\"seals\":[3]}")]
+        [TestCase(200, "{\"status\":\"ok\",\"place\":0,\"score\":4,\"seals\":[]}")]
+        public async Task A_standing_that_is_absent_failed_or_unreadable_is_null(int status, string body)
+        {
+            var http = new FakeAuthHttp().Reply(status, body);
+
+            Assert.That(await new HttpKingGateway(Base, http).FetchStandingAsync("tok", default), Is.Null);
+        }
+
+        [Test]
+        public async Task No_token_never_reaches_the_network()
+        {
+            var http = new FakeAuthHttp();
+
+            Assert.That(await new HttpKingGateway(Base, http).FetchStandingAsync("", default), Is.Null);
+            Assert.That(http.Requests, Is.Empty);
+        }
+
         [Test]
         public async Task An_unconfigured_gateway_never_reaches_the_network()
         {
@@ -141,6 +267,8 @@ namespace Kingdom.Net.Client.Tests.King
 
             Assert.That(await gateway.FetchKingAsync(default), Is.Null);
             Assert.That(await gateway.FetchRollAsync(default), Is.Empty);
+            Assert.That(await gateway.FetchFavorAsync(default), Is.Null);
+            Assert.That(await gateway.FetchStandingAsync("tok", default), Is.Null);
             Assert.That(http.Requests, Is.Empty);
         }
     }

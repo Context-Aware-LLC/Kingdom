@@ -43,6 +43,10 @@ namespace Kingdom.Net.Server.King
 
         /// <summary>The closed reigns that have a record, newest first.</summary>
         Task<IReadOnlyList<RollRow>> RollAsync(int limit, CancellationToken ct = default);
+
+        /// <summary>Every reign the player has a score in, oldest first, each once. The current
+        /// reign counts: qualifying earns his seal at once, not at the close.</summary>
+        Task<IReadOnlyList<int>> ReignsPlayedAsync(string playerId, CancellationToken ct = default);
     }
 
     /// <summary>The in-memory store — the default for tests and single-box dev.</summary>
@@ -120,6 +124,20 @@ namespace Kingdom.Net.Server.King
                     .Select(r => new RollRow(r.Key, r.Value.Struck ? null : r.Value.Name))
                     .ToList();
                 return Task.FromResult<IReadOnlyList<RollRow>>(rows);
+            }
+        }
+
+        public Task<IReadOnlyList<int>> ReignsPlayedAsync(string playerId, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                var reigns = _scores.Values
+                    .Where(s => s.PlayerId == playerId)
+                    .Select(s => s.Reign)
+                    .Distinct()
+                    .OrderBy(r => r)
+                    .ToList();
+                return Task.FromResult<IReadOnlyList<int>>(reigns);
             }
         }
 

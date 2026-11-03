@@ -983,15 +983,67 @@ namespace Kingdom.Net.Server
                 for (int number = current; number >= 1 && reigns.Count < RollLimit; number--)
                 {
                     King.Reign reign = King.KingSchedule.For(number);
+                    string? favorite = number == current ? null : favorites.GetValueOrDefault(number);
                     reigns.Add(new
                     {
                         reign = reign.Number,
                         epithet = reign.Epithet,
                         fate = reign.Fate,
-                        favorite = number == current ? null : favorites.GetValueOrDefault(number),
+                        // "" is a Favorite with no name to show (see FavorNames); null is none at all.
+                        favorite = favorite is null ? null : King.FavorNames.Shown(favorite),
                     });
                 }
                 return Results.Json(new { status = "ok", reigns });
+            });
+            // GET /king/favor — this reign's King's Favor board, best first in the commission's own
+            // direction, ties to whoever got there first. Public, like the Roll: names and scores
+            // only, never an id. A name goes out through FavorNames, so no seat handle reaches it.
+            app.MapGet("/king/favor", async (HttpContext context) =>
+            {
+                context.Response.Headers["Cache-Control"] = "no-store";
+                if (cfg.ReignOneMs is not long reignOne)
+                    return Results.Json(new { status = "none" });
+                int current = King.KingCalendar.ReignAt(time.NowMs, reignOne);
+                if (current < 1)
+                    return Results.Json(new { status = "none" });
+
+                string commission = King.KingSchedule.For(current).Commission;
+                bool lowerIsBetter = King.CommissionCatalog.Find(commission)?.LowerIsBetter ?? false;
+                var rows = new List<object>();
+                foreach (King.FavorRow row in await favorStore.TopAsync(
+                             current, lowerIsBetter, King.FavorEndpoint.BoardLimit, context.RequestAborted))
+                    rows.Add(new { place = row.Place, name = King.FavorNames.Shown(row.DisplayName), score = row.Score });
+                return Results.Json(new { status = "ok", reign = current, commission, lowerIsBetter, rows });
+            });
+            // GET /king/favor/me — the bearer's own place and best this reign, which the board above
+            // cannot show once they are off its hundred rows, and the commissions whose seal they hold
+            // on the Ledger. Per-identity, so no-store for the reason /rating gives.
+            app.MapGet("/king/favor/me", async (HttpContext context) =>
+            {
+                context.Response.Headers["Cache-Control"] = "no-store";
+                if (cfg.ReignOneMs is not long reignOne)
+                    return Results.Json(new { status = "none" });
+                int current = King.KingCalendar.ReignAt(time.NowMs, reignOne);
+                if (current < 1)
+                    return Results.Json(new { status = "none" });
+
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                King.FavorStandingResult result = await King.FavorEndpoint.ReadStandingAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, favorStore, current, context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "ok" | "unauthenticated" | "unavailable"; place and score are null off the board.
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    place = result.Place,
+                    score = result.Score,
+                    seals = result.Seals,
+                }, statusCode: result.HttpStatus);
             });
             app.MapGet("/leaderboard", async (HttpContext context) =>
             {

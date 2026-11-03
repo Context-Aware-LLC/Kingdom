@@ -171,6 +171,43 @@ namespace Kingdom.Net.Client.Auth
             return false;
         }
 
+        /// <summary>
+        /// A nested ARRAY OF STRINGS — <c>seals</c> on <c>GET /king/favor/me</c>, and nothing else so
+        /// far. Returns false when the member is absent or is not an array, and rejects the whole array
+        /// when any element is not a string, for the reason <see cref="TryReadRawObjectArray"/> gives.
+        /// </summary>
+        public static bool TryReadStringArray(string json, string name, out IReadOnlyList<string> items)
+        {
+            var list = new List<string>();
+            items = list;
+
+            if (!TryReadTopLevel(json, keepContainers: true, out var outer)) return false;
+            if (!outer.TryGetValue(name, out string? raw) || string.IsNullOrEmpty(raw)) return false;
+
+            int pos = 0;
+            SkipWhitespace(raw!, ref pos);
+            if (pos >= raw!.Length || raw[pos] != '[') return false;
+            pos++;
+
+            SkipWhitespace(raw, ref pos);
+            if (pos < raw.Length && raw[pos] == ']') return true;
+
+            while (pos < raw.Length)
+            {
+                SkipWhitespace(raw, ref pos);
+                if (!TryReadString(raw, ref pos, out string value)) return false;
+                list.Add(value);
+
+                SkipWhitespace(raw, ref pos);
+                if (pos >= raw.Length) return false;
+                if (raw[pos] == ',') { pos++; continue; }
+                if (raw[pos] == ']') return true;
+                return false;
+            }
+
+            return false;
+        }
+
         private static bool TryReadTopLevel(string json, bool keepContainers,
                                             out IReadOnlyDictionary<string, string> fields,
                                             ISet<string>? nulls = null)

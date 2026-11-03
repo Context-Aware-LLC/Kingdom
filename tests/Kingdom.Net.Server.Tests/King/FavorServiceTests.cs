@@ -443,6 +443,8 @@ namespace Kingdom.Net.Server.Tests.King
                 => throw new InvalidOperationException("favor store is down");
             public Task<IReadOnlyList<RollRow>> RollAsync(int limit, CancellationToken ct = default)
                 => throw new InvalidOperationException("favor store is down");
+            public Task<IReadOnlyList<int>> ReignsPlayedAsync(string playerId, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
         }
 
         /// <summary>One ladder match between the harness player (seat 0) and a second account,

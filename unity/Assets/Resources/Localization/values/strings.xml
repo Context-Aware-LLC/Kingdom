@@ -138,6 +138,9 @@
     <string name="main_menu_player">PLAYER</string>
     <string name="main_menu_rating">RATING</string>
     <string name="main_menu_leaderboard_updated">Ratings update after every eligible match.</string>
+    <!-- The leaderboard modal's second tab: this reign's King's Favor board. -->
+    <string name="main_menu_the_king_s_favorites">The King\'s Favorites</string>
+    <string name="main_menu_score">SCORE</string>
     <string name="match_proclamation_spoils">Spoils</string>
     <string name="match_proclamation_the_council_s_findings">The Council\'s Findings</string>
     <string name="match_settings_toggle_mute_mute">Mute</string>
@@ -1008,4 +1011,14 @@
     <string name="king_roll_undecided">His Majesty has not yet chosen a Favorite.</string>
     <!-- A closed reign nobody placed in, or whose Favorite was struck. -->
     <string name="king_roll_no_favorite">His Majesty named no Favorite.</string>
+    <!-- In place of a name on the Favor board and the Roll, for a player who never chose one. -->
+    <string name="king_favor_unnamed">A Subject of the Crown</string>
+    <!-- The King's Favor board, in the leaderboard modal. -->
+    <string name="king_favor_error">His Majesty\'s clerks have mislaid the Favor. Try again in a moment.</string>
+    <string name="king_favor_empty">Nobody has caught His Majesty\'s eye yet this reign.</string>
+    <!-- Under the Favor board. %1$d = the reign number; %2$s = how the commission is scored, e.g. The lowest Health you won at. -->
+    <string name="king_favor_footer">Reign %1$d · %2$s</string>
+    <!-- The match-end proclamation, under the reason. %1$s = the commission's name, e.g. Overkill; %2$d = this match's score. -->
+    <string name="king_proc_commission">His commission, %1$s: %2$d</string>
+    <string name="king_proc_commission_new_best">His commission, %1$s: %2$d. New best!</string>
 </resources>
