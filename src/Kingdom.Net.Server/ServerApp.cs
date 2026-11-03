@@ -189,6 +189,12 @@ namespace Kingdom.Net.Server
         public IAchievementStore? Achievements { get; init; }
 
         /// <summary>
+        /// Where the King's Favor scores live. Null (default) uses <see cref="King.InMemoryFavorStore"/>,
+        /// so a box with no Postgres forgets them on restart. Shares the accounts database in production.
+        /// </summary>
+        public King.IFavorStore? Favor { get; init; }
+
+        /// <summary>
         /// What a finished match and a completed quest pay. Null (default) uses the shipping
         /// schedule in <see cref="GoldRewardPolicy"/>; a test injects its own so an assertion never
         /// depends on a live tuning number. It is a policy rather than a set of amounts on
@@ -335,6 +341,9 @@ namespace Kingdom.Net.Server
             IAchievementStore? achievements = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresAchievementStore(accountsDb!);
+            King.IFavorStore? favor = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new King.PostgresFavorStore(accountsDb!);
             ICompletedMatchStore? completedMatches = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresCompletedMatchStore(accountsDb!);
@@ -362,6 +371,7 @@ namespace Kingdom.Net.Server
                 EntitlementLedger = entitlementLedger,
                 QuestProgress = questProgress,
                 Achievements = achievements,
+                Favor = favor,
                 CompletedMatches = completedMatches,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
@@ -925,6 +935,40 @@ namespace Kingdom.Net.Server
                     commission = reign.Commission,
                     endsAtMs = King.KingCalendar.StartMs(number + 1, reignOne),
                 });
+            });
+            // GET /king/roll — every reign from this one back to Reign 1, newest first, with the
+            // Favorite of each closed one. The current reign has none yet; a reign nobody won, or whose
+            // Favorite was struck or deleted, reads null. Epithet and fate are pool indices, like /king.
+            //
+            // One shared store for the process: the in-memory default must not be rebuilt per request.
+            King.IFavorStore favorStore = cfg.Favor ?? new King.InMemoryFavorStore();
+            app.MapGet("/king/roll", async (HttpContext context) =>
+            {
+                context.Response.Headers["Cache-Control"] = "no-store";
+                if (cfg.ReignOneMs is not long reignOne)
+                    return Results.Json(new { status = "none" });
+                int current = King.KingCalendar.ReignAt(time.NowMs, reignOne);
+                if (current < 1)
+                    return Results.Json(new { status = "none" });
+
+                const int RollLimit = 200;
+                var favorites = new Dictionary<int, string?>();
+                foreach (King.RollRow row in await favorStore.RollAsync(RollLimit, context.RequestAborted))
+                    favorites[row.Reign] = row.FavoriteName;
+
+                var reigns = new List<object>();
+                for (int number = current; number >= 1 && reigns.Count < RollLimit; number--)
+                {
+                    King.Reign reign = King.KingSchedule.For(number);
+                    reigns.Add(new
+                    {
+                        reign = reign.Number,
+                        epithet = reign.Epithet,
+                        fate = reign.Fate,
+                        favorite = number == current ? null : favorites.GetValueOrDefault(number),
+                    });
+                }
+                return Results.Json(new { status = "ok", reigns });
             });
             app.MapGet("/leaderboard", async (HttpContext context) =>
             {
