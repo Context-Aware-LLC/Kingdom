@@ -173,6 +173,21 @@ namespace Kingdom.Net.Server.Tests.Achievements
         }
 
         [Test]
+        public void Hero_power_damage_to_your_own_side_scores_zero()
+        {
+            var t = new Table(
+                Cast(new DamageAction(3, Auto("FRIENDLY_HERO")), "self"),
+                Cast(new DamageAction(4, Auto("ANY_FRIENDLY_MINION")), "own_minion"));
+            int me = t.Me;
+            t.Play(Five);
+            t.HeroPower();               // 3 to my hero, 4 to my minion
+
+            Assert.That(t.State.Players[me].Hero.CurrentHealth, Is.EqualTo(27), "precondition: the Hero Power hit me");
+            Assert.That(t.Tally(me).HeroPowerDamage, Is.Zero);
+            Assert.That(t.Tally(me).SelfDamage, Is.EqualTo(3), "Self-Starter is where self-harm scores");
+        }
+
+        [Test]
         public void Hero_power_damage_counts_a_hit_on_the_enemy_hero_for_its_caster_only()
         {
             var t = new Table(Cast(new DamageAction(2, Auto("ENEMY_HERO"))));

@@ -63,7 +63,7 @@ namespace Kingdom.Net.Server.Telemetry
             public int TollDamage { get; }
             /// <summary>Damage minions the seat took from the other side dealt that side's hero.</summary>
             public int StolenDamage { get; }
-            /// <summary>Damage the seat's Hero Power dealt, on any character.</summary>
+            /// <summary>Damage the seat's Hero Power dealt the other side's hero and minions.</summary>
             public int HeroPowerDamage { get; }
         }
 
@@ -147,9 +147,11 @@ namespace Kingdom.Net.Server.Telemetry
                 {
                     case GameEventKind.DamageApplied when amount > 0 && e.Target.HasValue:
                         int? sourceSeat = e.Source is InstanceId s ? ControllerOf(state, before, s) : null;
-                        // Signature Move scores everything the Hero Power dealt, on any character. A Hero
+                        // Signature Move scores what the Hero Power dealt the other side, hero and minions
+                        // alike; harm to your own side is Self-Starter's commission, not this one. A Hero
                         // Power's damage is sourced to its caster's hero, and only its own command counts.
-                        if (before.HeroPowerSeat is int caster && e.Source == state.Players[caster].Hero.Id)
+                        if (before.HeroPowerSeat is int caster && e.Source == state.Players[caster].Hero.Id
+                            && ControllerOf(state, before, e.Target.Value) is int struck && struck != caster)
                             HeroPowerDamage[caster] += amount;
                         if (heroSeat >= 0)
                         {

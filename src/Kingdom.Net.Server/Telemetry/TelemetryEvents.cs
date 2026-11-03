@@ -135,7 +135,7 @@ namespace Kingdom.Net.Server.Telemetry
     /// <param name="FatigueDamage">Fatigue damage the seat's hero took.</param>
     /// <param name="TollDamage">Damage the seat's Tolls dealt the enemy hero.</param>
     /// <param name="StolenDamage">Damage minions the seat took from the other side dealt that side's hero.</param>
-    /// <param name="HeroPowerDamage">Damage the seat's Hero Power dealt, on any character.</param>
+    /// <param name="HeroPowerDamage">Damage the seat's Hero Power dealt the other side's hero and minions.</param>
     public sealed record SeatOutcome(
         AccountId Account,
         CardClass Class,
