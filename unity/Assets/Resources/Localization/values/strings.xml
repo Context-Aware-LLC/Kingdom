@@ -876,7 +876,7 @@
     <!-- Gate button that opens the app store. -->
     <string name="update_gate_button_update">Update</string>
     <!-- Gate title while the launch check is still waiting for the server (shown after about a second). Single ellipsis character. -->
-    <string name="update_gate_title_waiting">Rousing the court…</string>
+    <string name="update_gate_title_waiting">Rousing the Queen…</string>
     <!-- Gate body during the first wait. Lighthearted royal-court voice; the server is 'the court'. -->
     <string name="update_gate_reason_waiting">A herald has gone to wake the court. This usually takes a moment.</string>
     <!-- Gate body while the check is retried automatically. %1$d = this attempt, %2$d = total attempts (3). -->

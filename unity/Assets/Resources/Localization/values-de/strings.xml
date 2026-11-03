@@ -491,7 +491,7 @@
     <string name="update_gate_title_unreachable">Server nicht erreichbar</string>
     <string name="update_gate_reason_unreachable">Prüfe dein Netzwerk und versuch es erneut.\n%1$s</string>
     <string name="update_gate_button_update">Update</string>
-    <string name="update_gate_title_waiting">Der Hof wird geweckt…</string>
+    <string name="update_gate_title_waiting">Die Königin wird geweckt…</string>
     <string name="update_gate_reason_waiting">Ein Herold ist losgezogen, um den Hof zu wecken. Das dauert meist nur einen Moment.</string>
     <string name="update_gate_reason_waiting_retry">Noch keine Antwort. Der Herold klopft lauter (Versuch %1$d von %2$d).</string>
     <string name="board_seal_approved_by_default">STILLSCHWEIGEND\nGENEHMIGT</string>
