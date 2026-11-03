@@ -36,6 +36,17 @@ namespace Kingdom.Net.Server.Tests.King
         public void An_unknown_id_has_no_rule()
             => Assert.That(CommissionCatalog.Find("comeback"), Is.Null);
 
+        [Test]
+        public void The_board_direction_is_the_commissions_and_an_unknown_id_sorts_highest_first()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.That(CommissionCatalog.LowerIsBetter(CommissionIds.Technically), Is.True);
+                Assert.That(CommissionCatalog.LowerIsBetter(CommissionIds.Overkill), Is.False);
+                Assert.That(CommissionCatalog.LowerIsBetter("comeback"), Is.False);
+            });
+        }
+
         [TestCase(CommissionIds.Technically, 11)]
         [TestCase(CommissionIds.TooManyIdeas, 12)]
         [TestCase(CommissionIds.SelfStarter, 13)]

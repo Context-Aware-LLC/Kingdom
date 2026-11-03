@@ -246,6 +246,9 @@ create table if not exists favor_score (
   primary key (reign, player_id)
 );
 
+-- The Ledger's seals read every reign one player scored in; the key leads with reign, not player.
+create index if not exists favor_score_player_reign_idx on favor_score (player_id, reign);
+
 create table if not exists favor_prize (
   reign       int     not null,
   player_id   text    not null,

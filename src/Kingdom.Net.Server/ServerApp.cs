@@ -1008,7 +1008,7 @@ namespace Kingdom.Net.Server
                     return Results.Json(new { status = "none" });
 
                 string commission = King.KingSchedule.For(current).Commission;
-                bool lowerIsBetter = King.CommissionCatalog.Find(commission)?.LowerIsBetter ?? false;
+                bool lowerIsBetter = King.CommissionCatalog.LowerIsBetter(commission);
                 var rows = new List<object>();
                 foreach (King.FavorRow row in await favorStore.TopAsync(
                              current, lowerIsBetter, King.FavorEndpoint.BoardLimit, context.RequestAborted))

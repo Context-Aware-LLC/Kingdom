@@ -254,7 +254,8 @@ namespace Kingdom.Net.Server.Tests.King
             var (_, body, _) = await server.GetAsync("/king/favor/me", "good");
 
             string[] seals = body.GetProperty("seals").EnumerateArray().Select(s => s.GetString()!).ToArray();
-            Assert.That(seals, Is.EquivalentTo(new[] { KingSchedule.For(1).Commission, KingSchedule.For(2).Commission }));
+            Assert.That(seals, Is.EqualTo(new[] { KingSchedule.For(1).Commission, KingSchedule.For(2).Commission }),
+                "oldest first, each commission once, at the reign it was first earned");
         }
 
         [TestCase("bad")]

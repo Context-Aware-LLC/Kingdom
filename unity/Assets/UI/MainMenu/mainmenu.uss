@@ -671,7 +671,7 @@
 
 /* ---------- Ranked ladder and the King's Favor ----------
  * Two boards in one modal (#421). 960 rather than 820 so both tab titles sit on one line beside
- * Close; a tab still wraps rather than clip if a translation runs long. */
+ * Close at --type-body; a tab that still runs long (a translation) ellipsizes rather than wrap. */
 .mm-leaderboard {
     width: 960px;
     max-width: 100%;
@@ -688,16 +688,20 @@
 .mm-leaderboard__tabs {
     flex-grow: 1;
     flex-shrink: 1;
+    min-width: 0;
     flex-direction: row;
     align-items: stretch;
 }
 /* A tab is the board's name and its selector at once, copied from .shop-tab (shop.uss): --on is
  * CONTRAST plus the underline and never changes geometry, so switching boards cannot reflow the
- * header. white-space: normal, so a long title wraps instead of pushing Close off the panel. */
+ * header. --type-body, not .shop-tab's --type-h2: at h2 the two titles and Close overrun the
+ * panel's ~912px inside. One line always; min-width 0 lets a tab shrink, and the ellipsis is the
+ * backstop if it has to, never a wrap and never Close pushed off the panel. */
 .mm-leaderboard__tab {
     flex-shrink: 1;
+    min-width: 0;
     min-height: var(--touch-min);
-    padding: 0 var(--space-4);
+    padding: 0 var(--space-3);
     margin: 0;
     border-width: 0;
     border-bottom-width: 3px;
@@ -706,10 +710,13 @@
     background-color: rgba(0, 0, 0, 0);
     background-image: none;
     color: var(--ink-2);
-    font-size: var(--type-h2);
+    font-size: var(--type-body);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
-    white-space: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -unity-text-overflow-position: end;
     transition-property: color, border-bottom-color;
     transition-duration: 0.1s;
     transition-timing-function: ease-out;
@@ -721,7 +728,9 @@
     color: var(--ink-1);
     border-bottom-color: var(--accent);
 }
+/* Close never gives width to the tabs: they shrink, it does not. */
 .mm-leaderboard__close {
+    flex-shrink: 0;
     margin-left: var(--space-6);
 }
 .mm-leaderboard__columns--hidden {

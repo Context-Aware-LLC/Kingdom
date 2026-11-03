@@ -435,9 +435,11 @@ namespace Kingdom.Presentation
         private async Task ShowKingAsync(Task<KingNow> request)
         {
             KingNow king = await request;
-            if (this == null || _kingDock == null) return;   // the menu left while the read was in flight
-            // The Favor board is this reign's, so with no King there is no tab for it.
+            if (this == null) return;   // the menu left while the read was in flight
+            // The Favor board is this reign's, so with no King there is no tab for it. Before the
+            // dock check: the tab lives in the leaderboard modal and does not need the dock.
             if (_favorTab != null) _favorTab.style.display = king == null ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_kingDock == null) return;
             if (king == null)
             {
                 _kingDock.style.display = DisplayStyle.None;
@@ -1018,6 +1020,10 @@ namespace Kingdom.Presentation
             {
                 board = await gateway.FetchFavorAsync(token);
             }
+            catch (OperationCanceledException)
+            {
+                board = null;   // a tab switch or a close cancelled it; nothing went wrong
+            }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[King] Favor board read threw ({ex.GetType().Name}: {ex.Message}).");
@@ -1071,6 +1077,10 @@ namespace Kingdom.Presentation
                 if (!AuthGateway.IsSignedIn) return null;
                 string accessToken = await AuthGateway.TokenForConnectAsync();
                 return await gateway.FetchStandingAsync(accessToken, token);
+            }
+            catch (OperationCanceledException)
+            {
+                return null;   // a tab switch or a close cancelled it; nothing went wrong
             }
             catch (Exception ex)
             {

@@ -89,7 +89,7 @@ namespace Kingdom.Net.Server.King
                     verified.Identity!.Email,
                     ct).ConfigureAwait(false);
 
-                bool lowerIsBetter = CommissionCatalog.Find(KingSchedule.For(reign).Commission)?.LowerIsBetter ?? false;
+                bool lowerIsBetter = CommissionCatalog.LowerIsBetter(KingSchedule.For(reign).Commission);
                 int? place = await favor.PlaceAsync(reign, account.PlayerId, lowerIsBetter, ct).ConfigureAwait(false);
                 int? score = place is null
                     ? null
@@ -106,6 +106,8 @@ namespace Kingdom.Net.Server.King
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
+                Console.Error.WriteLine("[king] GET /king/favor/me for reign {0} failed; answering 503: {1}",
+                    reign, ex.Message);
                 return Unavailable();
             }
         }

@@ -51,5 +51,24 @@ namespace Kingdom.Net.Server.King
                 if (c.Id == id) return c;
             return null;
         }
+
+        private static readonly HashSet<string> UnknownLogged = new HashSet<string>(StringComparer.Ordinal);
+
+        /// <summary>
+        /// The board's direction for <paramref name="id"/>: the one place a reader asks it. An id this
+        /// catalog does not know sorts highest first and is logged, once per id, the way
+        /// <c>FavorService</c> logs one it cannot bank. Nothing banks under such an id, so its board
+        /// is empty whichever way it sorts; the log line is what says why.
+        /// </summary>
+        public static bool LowerIsBetter(string id)
+        {
+            Commission? commission = Find(id);
+            if (commission is not null) return commission.LowerIsBetter;
+            bool first;
+            lock (UnknownLogged) first = UnknownLogged.Add(id ?? "");
+            if (first)
+                Console.Error.WriteLine("[king] no commission '{0}' in the catalog; its board sorts highest first.", id);
+            return false;
+        }
     }
 }
