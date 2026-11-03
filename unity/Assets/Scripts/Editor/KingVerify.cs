@@ -16,13 +16,15 @@ namespace Kingdom.Editor
     ///
     /// <para>Checks every epithet and fate the server's pools can name
     /// (<see cref="CommissionIds.EpithetCount"/>, <see cref="CommissionIds.FateCount"/>), every part of
-    /// every commission in <see cref="CommissionIds.Launch"/>, and that no two epithets or fates read
-    /// the same. Reads the English table directly, so the player's language cannot cover a gap.
+    /// every commission in <see cref="CommissionIds.Launch"/>, that no two epithets or fates read
+    /// the same, and that every launch commission has its card image on disk. Reads the English
+    /// table directly, so the player's language cannot cover a gap.
     /// Registered in <see cref="HeadlessVerify"/>.</para>
     /// </summary>
     public static class KingVerify
     {
         private const string EnglishTable = "Assets/Resources/Localization/values";
+        private const string AchievementsFolder = "Assets/Art/UI/Achievements";
 
         [MenuItem("Kingdom/Verify/King of the Week")]
         public static void Run()
@@ -33,18 +35,32 @@ namespace Kingdom.Editor
 
             CheckPool("epithet", CommissionIds.EpithetCount, KingText.EpithetKey, english, missing, repeated);
             CheckPool("fate", CommissionIds.FateCount, KingText.FateKey, english, missing, repeated);
+            var noSprite = new List<string>();
             foreach (string id in CommissionIds.Launch)
+            {
                 foreach (string part in KingText.CommissionParts)
                     Need(KingText.CommissionKey(id, part), english, missing);
+                string sprite = SpritePath(id);
+                if (!File.Exists(sprite)) noSprite.Add(sprite);
+            }
 
             if (missing.Count > 0)
                 throw new InvalidOperationException("No English row for " + string.Join(", ", missing) + ".");
             if (repeated.Count > 0)
                 throw new InvalidOperationException("Repeated in the King's pools: " + string.Join("; ", repeated) + ".");
+            // The commission card draws this image; a missing one leaves a blank where the card's
+            // whole identity should be, and the sprite provider only warns.
+            if (noSprite.Count > 0)
+                throw new InvalidOperationException("No commission image at " + string.Join(", ", noSprite) + ".");
 
             Debug.Log($"[KingVerify] PASS: {CommissionIds.EpithetCount} epithets, {CommissionIds.FateCount} fates, " +
-                      $"{CommissionIds.Launch.Count} commissions x {KingText.CommissionParts.Length} parts.");
+                      $"{CommissionIds.Launch.Count} commissions x {KingText.CommissionParts.Length} parts, " +
+                      $"{CommissionIds.Launch.Count} commission images.");
         }
+
+        /// <summary>Where the commission card's image for <paramref name="id"/> lives. Under
+        /// <c>Assets/Art/UI/</c>, so it ships in UI_Core at <c>ui/achievement_{id}</c>.</summary>
+        private static string SpritePath(string id) => $"{AchievementsFolder}/{KingText.AchievementSpriteKey(id)}.png";
 
         private static void CheckPool(string pool, int count, Func<int, string> key,
             Dictionary<string, string> english, List<string> missing, List<string> repeated)

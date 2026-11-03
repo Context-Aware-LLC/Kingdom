@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CommissionCard.uxml: the King's commission in the upper right of the board (King of the Week,
+  #421). Built at runtime by CommissionCardView through Resources, the pattern MatchProclamation
+  uses, and filled entirely from the server's per seat progress.
+
+  .emb-root IS LOAD-BEARING: this tree is its own UIDocument, so nothing above it declares the
+  tokens theme.uss's rules read.
+
+  Furniture, not a card in play: the full card is picking-mode Ignore and never takes a press.
+  Only the chip (narrow screens) and the scrim (while the chip's card is open) are pickable.
+  Every text is written by the view; the single spaces only keep each line's height.
+  No doubled hyphen in this comment.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../../Common/theme.uss" />
+    <Style src="../commission-card.uss" />
+
+    <ui:VisualElement name="cc-root" class="emb-root emb-bleed cc-root" picking-mode="Ignore">
+        <ui:VisualElement name="cc-scrim" class="cc-scrim" />
+
+        <ui:VisualElement name="cc-chip" class="cc-chip emb-edge">
+            <ui:VisualElement name="cc-chip-image" class="cc-chip__image" picking-mode="Ignore" />
+            <ui:Label name="cc-chip-score" text=" " class="cc-chip__score" picking-mode="Ignore" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="cc-card" class="cc-card emb-edge" picking-mode="Ignore">
+            <ui:VisualElement name="cc-image" class="cc-card__image" picking-mode="Ignore" />
+            <ui:Label name="cc-ribbon" text=" " class="cc-card__ribbon" picking-mode="Ignore" />
+            <ui:VisualElement class="cc-card__text" picking-mode="Ignore">
+                <ui:Label name="cc-rules" text=" " class="cc-card__line cc-card__rules" picking-mode="Ignore" />
+                <ui:Label name="cc-score" text=" " class="cc-card__line cc-card__score" picking-mode="Ignore" />
+                <ui:Label name="cc-sub" text=" " class="cc-card__line cc-card__sub" picking-mode="Ignore" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

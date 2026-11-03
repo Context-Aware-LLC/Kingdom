@@ -203,6 +203,10 @@ namespace Kingdom.Presentation
         /// <summary>The parts every commission in <see cref="CommissionIds"/> carries.</summary>
         public static readonly string[] CommissionParts = { "name", "scored", "decree" };
 
+        /// <summary>A commission's image: the UI sprite key of the achievement it is drawn from,
+        /// a file of that name under <c>Assets/Art/UI/Achievements/</c>.</summary>
+        public static string AchievementSpriteKey(string id) => "achievement_" + id;
+
         public static string Epithet(int index) => Loc.Find(EpithetKey(index)) ?? Loc.Get("king_epithet_unknown");
 
         public static string Fate(int index) => Loc.Find(FateKey(index)) ?? Loc.Get("king_fate_unknown");

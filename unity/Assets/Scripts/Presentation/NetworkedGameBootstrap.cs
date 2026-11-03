@@ -676,7 +676,11 @@ namespace Kingdom.Presentation
             {
                 var settings = MatchSettingsController.Mount(inputRouter.OnConcedeClicked,
                                                               showConcede: true, allowSceneReload: false);
-                inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
+                // The King's commission card (#421). Shows nothing until the server sends one, which
+                // it never does in a friend match. Its chip form opens a card that gates the board.
+                var commission = CommissionCardView.Mount(_net);
+                _view.OnCommission += commission.OnCommission;
+                inputRouter.UiBlocksInput = () => settings.IsBlockingInput || commission.IsBlockingInput;
             }
 
             // Rejections have NO player-facing surface, by decision (#268, 2026-08-26): the
@@ -1019,6 +1023,7 @@ namespace Kingdom.Presentation
                 _inner.OnSnapshot  += st => _mainThread.Enqueue(() => OnSnapshot?.Invoke(st));
                 _inner.OnEvents    += batch => _mainThread.Enqueue(() => OnEvents?.Invoke(batch));
                 _inner.OnTurnTimer += t => _mainThread.Enqueue(() => OnTurnTimer?.Invoke(t));
+                _inner.OnCommission += c => _mainThread.Enqueue(() => OnCommission?.Invoke(c));
             }
 
             /// <summary>Queue an action to run on the main thread (drained by <see cref="Pump"/>).</summary>
@@ -1035,6 +1040,9 @@ namespace Kingdom.Presentation
             public event Action<GameState> OnSnapshot;
             public event GameEventStream OnEvents;
             public event Action<TurnTimer> OnTurnTimer;
+            /// <summary>Not on <see cref="IMatchSession"/>: the King's card is a networked match's
+            /// alone, so it is marshalled here beside the rest and read off this concrete type.</summary>
+            public event Action<CommissionProgress> OnCommission;
         }
     }
 }

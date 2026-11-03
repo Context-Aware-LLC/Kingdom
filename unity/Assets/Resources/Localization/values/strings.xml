@@ -983,6 +983,10 @@
     <string name="commission_signature_move_name">Signature Move</string>
     <string name="commission_signature_move_scored">Damage dealt by your Hero Power</string>
     <string name="commission_signature_move_decree">His Majesty would like the Hero Power to earn its keep.</string>
+    <!-- In-match commission card, under a greyed score: the commission needs a win, so the number is not banked yet. -->
+    <string name="king_counts_if_win">Counts if you win</string>
+    <!-- In-match commission card, under the score. %1$s = this player's best score this reign, a number. -->
+    <string name="king_best">Your best this reign: %1$s</string>
     <!-- Main menu, beside the crown. %1$s = the commission's name, e.g. Overkill. -->
     <string name="king_menu_commission">His commission: %1$s</string>
     <!-- Tooltip on the crown in the main menu dock. -->
