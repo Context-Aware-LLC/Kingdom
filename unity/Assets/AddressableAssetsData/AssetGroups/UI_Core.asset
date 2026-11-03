@@ -230,6 +230,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 617f66d89491cb549bd69c940f3d9016
+    m_Address: ui/card_back_verdant_reliquary
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 62add37cb4e108d428d5e7a5532b51a3
     m_Address: ui/achievement_technically
     m_ReadOnly: 0
@@ -335,6 +340,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e60470af6994354b91521b88f94c053
+    m_Address: ui/card_back_tideglass
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 81ba75c1d16c37a4b83d61cc052faa33
     m_Address: ui/achievement_waste_not
     m_ReadOnly: 0
@@ -410,6 +420,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d1516013257dae4db7c720ec820cbba
+    m_Address: ui/card_back_gravekeep_bell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9ec13429942d46a49fa74aa5d5541c50
     m_Address: ui/socket_health_heart
     m_ReadOnly: 0
@@ -422,6 +437,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a2f7fde1a48d4f458f59e740e6e32d43
     m_Address: ui/turn-hourglass-royal-council
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3880307161f62c4d9c323a5359e6f1d
+    m_Address: ui/card_back_wayfarers_knot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3fb89d1797db4047b62b70692554620
+    m_Address: ui/card_back_emberweave
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -457,6 +482,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ab4e54501ebe4781ba0b3d37290aa542
     m_Address: materials/M_Frost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: abb64a9f2ddfeb94885bf628abbf5ba9
+    m_Address: ui/card_back_moonlit_orrery
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -532,6 +562,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cbd67f49f7df9334da1f041fa01afed4
     m_Address: materials/M_CardArt
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc6beac4f509b31478fe7a9702e9304b
+    m_Address: ui/card_back_rekindled_seal
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -637,6 +672,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e79c64ac84684ad78a660f8f5b30b0d4
     m_Address: ui/socket_health
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7cca81fe5126ac4e91ac26c4446c2ea
+    m_Address: ui/card_back_verdant_acorn
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
