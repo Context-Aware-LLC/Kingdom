@@ -219,6 +219,11 @@ namespace Kingdom.Session
         /// <summary>The played card can drown, so its damaged characters get the drown wash.</summary>
         public readonly bool Drowns;
 
+        /// <summary>Where each minion the card summons will stand once the entry releases: its
+        /// controller, its board slot and that row's size, read off the post-play snapshot like
+        /// <see cref="DestSlot"/>. Never null.</summary>
+        public readonly IReadOnlyList<SummonSpot> Summoned;
+
         /// <summary>The card drew at least one card, so its school's landing effect plays over the
         /// caster's deck, after everything it hit (Sam, 2026-11-03: Maren's Deep Bargain).</summary>
         public readonly bool Draws;
@@ -242,8 +247,10 @@ namespace Kingdom.Session
                           IReadOnlyList<InstanceId> healed = null,
                           SpellEffect effect = SpellEffect.None, float cardSeconds = -1f,
                           IReadOnlyList<InstanceId> touched = null, bool drowns = false,
-                          float extraReadSeconds = 0f, bool draws = false)
+                          float extraReadSeconds = 0f, bool draws = false,
+                          IReadOnlyList<SummonSpot> summoned = null)
         {
+            Summoned = summoned ?? System.Array.Empty<SummonSpot>();
             Draws = draws;
             ExtraReadSeconds = extraReadSeconds;
             Drowns = drowns;
@@ -261,6 +268,21 @@ namespace Kingdom.Session
             Destination = destination;
             DestSlot = destSlot;
             DestBoardCount = destBoardCount;
+        }
+    }
+
+    /// <summary>A board slot a summoned minion is about to stand in.</summary>
+    public readonly struct SummonSpot
+    {
+        public readonly PlayerId Owner;
+        public readonly int Slot;
+        public readonly int BoardCount;
+
+        public SummonSpot(PlayerId owner, int slot, int boardCount)
+        {
+            Owner = owner;
+            Slot = slot;
+            BoardCount = boardCount;
         }
     }
 
@@ -340,8 +362,17 @@ namespace Kingdom.Session
                         touched.Add(f.Source.Value);
                 }
                 bool draws = false;
-                for (int j = i + 1; j < events.Count && !draws; j++)
-                    draws = events[j].Kind == GameEventKind.CardDrawn;
+                var summoned = new List<SummonSpot>();
+                for (int j = i + 1; j < events.Count; j++)
+                {
+                    GameEvent f = events[j];
+                    if (f.Kind == GameEventKind.CardDrawn) draws = true;
+                    if (f.Kind == GameEventKind.CardSummoned && f.Source.HasValue
+                        && TryLocate(snapshot, f.Source.Value, out CardInstance summon,
+                                     out RevealDestination at, out int summonSlot, out int summonRow)
+                        && at == RevealDestination.BoardSlot)
+                        summoned.Add(new SummonSpot(summon.Controller, summonSlot, summonRow));
+                }
 
                 // A character damaged or healed already has its effect.
                 touched.RemoveAll(t => struck.Contains(t) || healed.Contains(t));
@@ -363,16 +394,23 @@ namespace Kingdom.Session
                 // The deck counts as one more landing for a spell that draws.
                 float tail = holds.For(effect).Tail(struck.Count + touched.Count
                     + (draws && def.Type == CardType.SPELL ? 1 : 0));
+                // Mass Rebirth holds its orbit over every slot a minion is about to rise in.
+                if (def.Id == MassRebirthId)
+                    tail = System.Math.Max(tail, holds.For(effect).Tail(System.Math.Max(1, summoned.Count)));
                 if (def.Type == CardType.SPELL)
                     tail = System.Math.Max(tail, holds.Heal.Tail(healed.Count));
 
                 return new PlayReveal(def, source, target, played.Controller, def.Type, hold + tail,
                                       dest, slot, boardCount, struck, healed, effect, hold,
-                                      touched, Has<DrownAction>(def), extraRead, draws);
+                                      touched, Has<DrownAction>(def), extraRead, draws, summoned);
             }
 
             return null;
         }
+
+        /// <summary>Mass Rebirth: its bell-and-lantern orbit marks each slot a minion is about to
+        /// be reanimated into (Sam, 2026-11-03). Keyed by id because nothing on the card says so.</summary>
+        public const int MassRebirthId = 209;
 
         /// <summary>Which Tidecaller spells are frost rather than water: any that freezes, plus
         /// the two damage spells named for frost. Keyed by card id for those two because nothing

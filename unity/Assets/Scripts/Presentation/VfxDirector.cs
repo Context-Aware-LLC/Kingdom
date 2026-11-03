@@ -588,6 +588,22 @@ namespace Kingdom.Presentation
                 }
             }
 
+            if (reveal.Def.Id == PlayRevealClassifier.MassRebirthId && reveal.Summoned.Count > 0)
+            {
+                // Over every slot a minion is about to be reanimated into, from the moment the card
+                // is gone until the entry releases and the minions rise.
+                Sprite orbit = _uiSprites.Get(SpellSchoolEffects.GravekeepRebirthKey);
+                for (int i = 0; orbit != null && i < reveal.Summoned.Count; i++)
+                {
+                    SummonSpot spot = reveal.Summoned[i];
+                    boardAnchors.SetBoardCount(spot.Owner, spot.BoardCount);
+                    Transform slot = boardAnchors.AnchorFor(spot.Owner, Zone.Board, spot.Slot);
+                    if (slot == null) continue;
+                    StartCoroutine(SpellSchoolEffects.RebirthOrbit(transform, orbit, cam, slot.position,
+                        reveal.CardSeconds * 0.6f, reveal.HoldSeconds));
+                }
+            }
+
             if (reveal.Effect == SpellEffect.Verdant)
             {
                 StartCoroutine(SpellSchoolEffects.Gather(transform,

@@ -630,6 +630,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9cd1d50de114a449b8aadaf3e2fcc89
+    m_Address: ui/effect_spell_gravekeep_rebirth
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fb699d89e47381d4dac712fce01c1560
     m_Address: materials/M_CardEdge
     m_ReadOnly: 0
