@@ -78,7 +78,8 @@ namespace Kingdom.Net.Server.Accounts
             IReadOnlyDictionary<string, long> balances = await ledger.BalancesAsync(account.PlayerId, ct)
                 .ConfigureAwait(false);
             return new ShopEndpointResult(ShopEndpointStatus.Ready, wallet,
-                vaultCount: CountVaultPacks(balances)) { StoreAccountId = account.PlayerId };
+                vaultCount: CountVaultPacks(balances))
+            { StoreAccountId = account.PlayerId };
         }
 
         public static async Task<ShopEndpointResult> PurchaseAsync(
