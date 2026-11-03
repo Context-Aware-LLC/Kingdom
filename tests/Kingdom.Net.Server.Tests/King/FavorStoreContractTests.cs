@@ -19,8 +19,8 @@ namespace Kingdom.Net.Server.Tests.King
 
         protected abstract Task<IFavorStore> CreateAsync();
 
-        /// <summary>Writes a closed reign's row. Nothing on <see cref="IFavorStore"/> does, yet:
-        /// the close-out task owns that write.</summary>
+        /// <summary>Writes a reign's row, unpaid, as an operator script would: nothing on
+        /// <see cref="IFavorStore"/> strikes a reign or names a Favorite without paying it.</summary>
         protected abstract Task SeedReignAsync(int reign, string? favoriteId, string? favoriteName, bool struck);
 
         [SetUp]
@@ -61,7 +61,7 @@ namespace Kingdom.Net.Server.Tests.King
             Assert.That(await Store.RecordAsync(Score(1, "p", 9, T0.AddHours(1), "New"), false, default), Is.EqualTo(4));
 
             FavorRow only = (await Store.TopAsync(1, false, 10, default)).Single();
-            Assert.That(only, Is.EqualTo(new FavorRow(1, "New", 9)));
+            Assert.That(only, Is.EqualTo(new FavorRow(1, "New", 9, "p")));
         }
 
         [Test]
@@ -153,6 +153,83 @@ namespace Kingdom.Net.Server.Tests.King
             IReadOnlyList<RollRow> roll = await Store.RollAsync(10, default);
 
             Assert.That(roll.Select(r => (r.Reign, r.FavoriteName)), Is.EqualTo(new (int, string?)[] { (2, null), (1, null) }));
+        }
+
+        // ── The Tuesday sweep's half ──────────────────────────────────────────────────────
+
+        [Test]
+        public async Task Unpaid_reigns_are_every_earlier_reign_not_yet_paid()
+        {
+            await SeedReignAsync(3, null, null, true);
+            await Store.ClosePaidAsync(2, "a", "Alice", default);
+
+            Assert.That(await Store.UnpaidReignsAsync(5, default),
+                Is.EqualTo(new[] { new UnpaidReign(1, false), new UnpaidReign(3, true), new UnpaidReign(4, false) }));
+            Assert.That(await Store.UnpaidReignsAsync(1, default), Is.Empty);
+            Assert.That(await Store.UnpaidReignsAsync(0, default), Is.Empty);
+        }
+
+        [Test]
+        public async Task Closing_is_once_and_keeps_a_strike()
+        {
+            await SeedReignAsync(1, null, null, true);
+            await Store.ClosePaidAsync(1, "a", "Alice", default);
+            await Store.ClosePaidAsync(2, "a", "Alice", default);
+            await Store.ClosePaidAsync(2, "b", "Bob", default);
+
+            IReadOnlyList<RollRow> roll = await Store.RollAsync(10, default);
+
+            Assert.That(roll.Select(r => (r.Reign, r.FavoriteName)), Is.EqualTo(new (int, string?)[] { (2, "Alice"), (1, null) }));
+            Assert.That(await Store.UnpaidReignsAsync(3, default), Is.Empty);
+        }
+
+        [Test]
+        public async Task A_prize_is_written_once()
+        {
+            await Store.RecordPrizeAsync(new FavorPrize(1, "a", 1, 500, null, false), default);
+            await Store.RecordPrizeAsync(new FavorPrize(1, "a", 2, 300, null, false), default);
+
+            Assert.That(await Store.PrizeAsync(1, "a", default), Is.EqualTo(new FavorPrize(1, "a", 1, 500, null, false)));
+            Assert.That(await Store.PrizeAsync(1, "b", default), Is.Null);
+        }
+
+        [Test]
+        public async Task Holding_a_place_counts_only_earlier_reigns()
+        {
+            await Store.RecordPrizeAsync(new FavorPrize(2, "a", 1, 500, null, false), default);
+
+            Assert.That(await Store.HasHeldPlaceAsync("a", 1, 2, default), Is.False);
+            Assert.That(await Store.HasHeldPlaceAsync("a", 1, 3, default), Is.True);
+            Assert.That(await Store.HasHeldPlaceAsync("a", 2, 3, default), Is.False);
+            Assert.That(await Store.HasHeldPlaceAsync("b", 1, 3, default), Is.False);
+        }
+
+        [Test]
+        public async Task Unsettled_backs_are_a_paid_reigns_top_places_until_settled_once()
+        {
+            foreach ((string player, int place) in new[] { ("a", 1), ("b", 2), ("c", 3), ("d", 4) })
+                await Store.RecordPrizeAsync(new FavorPrize(1, player, place, 100, null, false), default);
+            await Store.RecordPrizeAsync(new FavorPrize(2, "e", 1, 100, null, false), default);   // reign 2 unpaid
+            await Store.ClosePaidAsync(1, "a", "Alice", default);
+
+            Assert.That((await Store.UnsettledBacksAsync(3, default)).Select(p => p.PlayerId), Is.EqualTo(new[] { "a", "b", "c" }));
+
+            await Store.SettleBackAsync(1, "b", 102, false, default);
+            await Store.SettleBackAsync(1, "b", null, true, default);
+
+            Assert.That((await Store.UnsettledBacksAsync(3, default)).Select(p => p.PlayerId), Is.EqualTo(new[] { "a", "c" }));
+            Assert.That(await Store.PrizeAsync(1, "b", default), Is.EqualTo(new FavorPrize(1, "b", 2, 100, 102, false)));
+        }
+
+        [Test]
+        public async Task A_struck_reigns_first_waits_for_no_back()
+        {
+            await SeedReignAsync(3, null, null, true);
+            await Store.RecordPrizeAsync(new FavorPrize(3, "f", 1, 100, null, false), default);
+            await Store.RecordPrizeAsync(new FavorPrize(3, "g", 2, 100, null, false), default);
+            await Store.ClosePaidAsync(3, "f", "Fay", default);
+
+            Assert.That((await Store.UnsettledBacksAsync(3, default)).Select(p => p.PlayerId), Is.EqualTo(new[] { "g" }));
         }
     }
 

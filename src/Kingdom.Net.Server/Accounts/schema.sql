@@ -234,7 +234,9 @@ alter table achievement_earned enable row level security;
 -- ── King of the Week (#421) ────────────────────────────────────────────────────────────────────
 -- favor_score: one row per (reign, player) holding that player's BEST score for the reign. The
 -- board reads it; reached_at breaks ties (earlier wins) and does not move on an equal score.
--- favor_prize: what a placed player is owed for a reign, written once when the reign closes.
+-- favor_prize: what a placed player was paid for a reign, written once when the reign's gold is
+-- paid. A top-three row's back is settled later, by a separate pass, because the place backs' art
+-- can land after the reign closes: back_settled_at null means its back is still owed.
 -- king_reign: one row per closed reign. favorite_id/favorite_name are nulled by account deletion
 -- (the reign stays, like ladder_match, and reads as having no Favorite).
 create table if not exists favor_score (
@@ -258,6 +260,8 @@ create table if not exists favor_prize (
   choice_open boolean not null default false,
   primary key (reign, player_id)
 );
+
+alter table favor_prize add column if not exists back_settled_at timestamptz;
 
 create table if not exists king_reign (
   reign         int     primary key,

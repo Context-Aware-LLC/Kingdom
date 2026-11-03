@@ -737,6 +737,32 @@ namespace Kingdom.Net.Server
                 telemetry = achievementSink;
             }
 
+            // The Tuesday sweep (#421) pays each closed reign. It needs a King to count reigns
+            // from, the gold amounts, a ledger to pay into and the accounts that tell a deleted
+            // player from a live one; without any of them it does not start, and says so once
+            // here when there is a King to pay for.
+            if (cfg.ReignOneMs is long sweepReignOne)
+            {
+                if (cfg.FavorPrizes is null || economy is null || cfg.EntitlementLedger is null || cfg.AccountStore is null)
+                {
+                    Console.Error.WriteLine(
+                        "[king] the payout sweep is OFF ({0} missing): closed reigns are not paid until it runs.",
+                        cfg.FavorPrizes is null ? King.FavorPrizeSettings.EnvVar
+                            : cfg.AccountStore is null ? "account store" : "entitlement ledger");
+                }
+                else
+                {
+                    if (CardBackDefinitions.PlaceBackIds.Count == 0)
+                        Console.Error.WriteLine(
+                            "[king] no place backs are in the catalog: closed reigns pay gold, and their backs " +
+                            "wait for the first sweep after the backs land.");
+                    builder.Services.AddSingleton<IHostedService>(new King.KingPayoutSweep(
+                        favorStore, cfg.AccountStore, economy, new King.LedgerPrizeBacks(cfg.EntitlementLedger),
+                        cfg.FavorPrizes, sweepReignOne, time,
+                        CardBackDefinitions.PlaceBackIds, CardBackDefinitions.PoolIds));
+                }
+            }
+
             // The pack line. Two things have to be present for a pack to be openable at all, and
             // BOTH absences are configuration rather than failure — the route answers 503 and the
             // rest of the server is unaffected:

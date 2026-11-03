@@ -9,8 +9,19 @@ namespace Kingdom.Net.Server.King
     /// <summary>A player's best score in one reign, and when they first reached it.</summary>
     public sealed record FavorScore(int Reign, string PlayerId, string DisplayName, int Score, DateTimeOffset ReachedAt);
 
-    /// <summary>One line of a reign's board.</summary>
-    public sealed record FavorRow(int Place, string DisplayName, int Score);
+    /// <summary>One line of a reign's board. <see cref="PlayerId"/> is for the payout sweep and
+    /// never goes to a client: GET /king/favor sends place, name and score only.</summary>
+    public sealed record FavorRow(int Place, string DisplayName, int Score, string PlayerId);
+
+    /// <summary>
+    /// What one placed player was paid for a closed reign. Written once, by the gold pass, with
+    /// <see cref="BackId"/> null and <see cref="ChoiceOpen"/> false; the back pass then settles a
+    /// top-three row, once, with the back it granted or the choice it opened.
+    /// </summary>
+    public sealed record FavorPrize(int Reign, string PlayerId, int Place, long Gold, int? BackId, bool ChoiceOpen);
+
+    /// <summary>A closed reign whose gold is not paid yet, and whether the operator struck its Favorite.</summary>
+    public sealed record UnpaidReign(int Reign, bool Struck);
 
     /// <summary>One closed reign and its Favorite. <see cref="FavoriteName"/> is null when nobody
     /// played, or the Favorite was struck, or their account was deleted.</summary>
@@ -47,6 +58,33 @@ namespace Kingdom.Net.Server.King
         /// <summary>Every reign the player has a score in, oldest first, each once. The current
         /// reign counts: qualifying earns his seal at once, not at the close.</summary>
         Task<IReadOnlyList<int>> ReignsPlayedAsync(string playerId, CancellationToken ct = default);
+
+        // ── The Tuesday sweep (KingPayoutSweep) ──────────────────────────────────────────────
+
+        /// <summary>Every reign from 1 to <paramref name="beforeReign"/> - 1 whose gold is not paid,
+        /// oldest first. A reign nobody played is listed too: it still has to close.</summary>
+        Task<IReadOnlyList<UnpaidReign>> UnpaidReignsAsync(int beforeReign, CancellationToken ct = default);
+
+        /// <summary>True when the player has a prize row at <paramref name="place"/> in a reign
+        /// before <paramref name="beforeReign"/>, settled or not.</summary>
+        Task<bool> HasHeldPlaceAsync(string playerId, int place, int beforeReign, CancellationToken ct = default);
+
+        /// <summary>Writes the prize row. A row already there for the reign and player is kept as it is.</summary>
+        Task RecordPrizeAsync(FavorPrize prize, CancellationToken ct = default);
+
+        /// <summary>Marks the reign paid and names its Favorite. Once: a reign already paid keeps
+        /// its record. A strike set before the close survives it.</summary>
+        Task ClosePaidAsync(int reign, string? favoriteId, string? favoriteName, CancellationToken ct = default);
+
+        /// <summary>The player's prize for the reign, or null.</summary>
+        Task<FavorPrize?> PrizeAsync(int reign, string playerId, CancellationToken ct = default);
+
+        /// <summary>Paid reigns' prize rows at <paramref name="throughPlace"/> or better whose back
+        /// is not settled, oldest reign first, then by place. A struck reign's 1st is left out.</summary>
+        Task<IReadOnlyList<FavorPrize>> UnsettledBacksAsync(int throughPlace, CancellationToken ct = default);
+
+        /// <summary>Settles a prize row's back, once: a row already settled is not changed.</summary>
+        Task SettleBackAsync(int reign, string playerId, int? backId, bool choiceOpen, CancellationToken ct = default);
     }
 
     /// <summary>The in-memory store — the default for tests and single-box dev.</summary>
@@ -55,14 +93,33 @@ namespace Kingdom.Net.Server.King
         private readonly object _lock = new object();
         private readonly Dictionary<(int Reign, string PlayerId), FavorScore> _scores =
             new Dictionary<(int, string), FavorScore>();
-        private readonly Dictionary<int, (string? Name, bool Struck)> _reigns =
-            new Dictionary<int, (string?, bool)>();
+        private readonly Dictionary<int, ReignRecord> _reigns = new Dictionary<int, ReignRecord>();
+        private readonly Dictionary<(int Reign, string PlayerId), (FavorPrize Prize, bool Settled)> _prizes =
+            new Dictionary<(int, string), (FavorPrize, bool)>();
 
-        /// <summary>Writes a closed reign's record. Not on <see cref="IFavorStore"/>: the close-out
-        /// owns that write in production; this is the seam tests use.</summary>
+        private sealed class ReignRecord
+        {
+            public string? FavoriteId;
+            public string? FavoriteName;
+            public bool Struck;
+            public bool Paid;
+        }
+
+        /// <summary>Writes a reign's record, unpaid, as an operator script would. Not on
+        /// <see cref="IFavorStore"/>: this is the seam tests use.</summary>
         public void SeedReign(int reign, string? favoriteId, string? favoriteName, bool struck)
         {
-            lock (_lock) _reigns[reign] = (favoriteName, struck);
+            lock (_lock) _reigns[reign] = new ReignRecord { FavoriteId = favoriteId, FavoriteName = favoriteName, Struck = struck };
+        }
+
+        /// <summary>What strike-favorite.sql does: flags the reign struck, paid or not.</summary>
+        public void Strike(int reign)
+        {
+            lock (_lock)
+            {
+                if (!_reigns.TryGetValue(reign, out ReignRecord? r)) _reigns[reign] = r = new ReignRecord();
+                r.Struck = true;
+            }
         }
 
         public Task<int?> RecordAsync(FavorScore score, bool lowerIsBetter, CancellationToken ct = default)
@@ -94,7 +151,7 @@ namespace Kingdom.Net.Server.King
             {
                 var rows = Ranked(reign, lowerIsBetter)
                     .Take(Math.Max(0, limit))
-                    .Select((s, i) => new FavorRow(i + 1, s.DisplayName, s.Score))
+                    .Select((s, i) => new FavorRow(i + 1, s.DisplayName, s.Score, s.PlayerId))
                     .ToList();
                 return Task.FromResult<IReadOnlyList<FavorRow>>(rows);
             }
@@ -121,7 +178,7 @@ namespace Kingdom.Net.Server.King
                 var rows = _reigns
                     .OrderByDescending(r => r.Key)
                     .Take(Math.Max(0, limit))
-                    .Select(r => new RollRow(r.Key, r.Value.Struck ? null : r.Value.Name))
+                    .Select(r => new RollRow(r.Key, r.Value.Struck ? null : r.Value.FavoriteName))
                     .ToList();
                 return Task.FromResult<IReadOnlyList<RollRow>>(rows);
             }
@@ -139,6 +196,84 @@ namespace Kingdom.Net.Server.King
                     .ToList();
                 return Task.FromResult<IReadOnlyList<int>>(reigns);
             }
+        }
+
+        public Task<IReadOnlyList<UnpaidReign>> UnpaidReignsAsync(int beforeReign, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                var unpaid = new List<UnpaidReign>();
+                for (int reign = 1; reign < beforeReign; reign++)
+                {
+                    _reigns.TryGetValue(reign, out ReignRecord? r);
+                    if (r is null || !r.Paid) unpaid.Add(new UnpaidReign(reign, r?.Struck ?? false));
+                }
+                return Task.FromResult<IReadOnlyList<UnpaidReign>>(unpaid);
+            }
+        }
+
+        public Task<bool> HasHeldPlaceAsync(string playerId, int place, int beforeReign, CancellationToken ct = default)
+        {
+            lock (_lock)
+                return Task.FromResult(_prizes.Values.Any(p =>
+                    p.Prize.PlayerId == playerId && p.Prize.Place == place && p.Prize.Reign < beforeReign));
+        }
+
+        public Task RecordPrizeAsync(FavorPrize prize, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                var key = (prize.Reign, prize.PlayerId);
+                if (!_prizes.ContainsKey(key)) _prizes[key] = (prize, false);
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task ClosePaidAsync(int reign, string? favoriteId, string? favoriteName, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                if (!_reigns.TryGetValue(reign, out ReignRecord? r)) _reigns[reign] = r = new ReignRecord();
+                if (!r.Paid)
+                {
+                    r.FavoriteId = favoriteId;
+                    r.FavoriteName = favoriteName;
+                    r.Paid = true;
+                }
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task<FavorPrize?> PrizeAsync(int reign, string playerId, CancellationToken ct = default)
+        {
+            lock (_lock)
+                return Task.FromResult(_prizes.TryGetValue((reign, playerId), out var p) ? p.Prize : null);
+        }
+
+        public Task<IReadOnlyList<FavorPrize>> UnsettledBacksAsync(int throughPlace, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                var rows = _prizes.Values
+                    .Where(p => !p.Settled && p.Prize.Place <= throughPlace)
+                    .Where(p => _reigns.TryGetValue(p.Prize.Reign, out ReignRecord? r) && r.Paid &&
+                                !(r.Struck && p.Prize.Place == 1))
+                    .Select(p => p.Prize)
+                    .OrderBy(p => p.Reign).ThenBy(p => p.Place)
+                    .ToList();
+                return Task.FromResult<IReadOnlyList<FavorPrize>>(rows);
+            }
+        }
+
+        public Task SettleBackAsync(int reign, string playerId, int? backId, bool choiceOpen, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                var key = (reign, playerId);
+                if (_prizes.TryGetValue(key, out var p) && !p.Settled)
+                    _prizes[key] = (p.Prize with { BackId = backId, ChoiceOpen = choiceOpen }, true);
+            }
+            return Task.CompletedTask;
         }
 
         /// <summary>Best first; ties to the earlier arrival, then the id so the order is total.</summary>

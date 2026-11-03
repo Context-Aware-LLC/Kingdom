@@ -81,7 +81,7 @@ namespace Kingdom.Net.Server.Tests.King
 
             Assert.That(await h.Store.BestAsync(4, h.PlayerId), Is.EqualTo(7));
             Assert.That((await h.Store.TopAsync(4, false, 10)).Single(),
-                Is.EqualTo(new FavorRow(1, "Alice", 7)), "the board shows the name the seat played under");
+                Is.EqualTo(new FavorRow(1, "Alice", 7, h.PlayerId)), "the board shows the name the seat played under");
         }
 
         [Test]
@@ -444,6 +444,20 @@ namespace Kingdom.Net.Server.Tests.King
             public Task<IReadOnlyList<RollRow>> RollAsync(int limit, CancellationToken ct = default)
                 => throw new InvalidOperationException("favor store is down");
             public Task<IReadOnlyList<int>> ReignsPlayedAsync(string playerId, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task<IReadOnlyList<UnpaidReign>> UnpaidReignsAsync(int beforeReign, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task<bool> HasHeldPlaceAsync(string playerId, int place, int beforeReign, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task RecordPrizeAsync(FavorPrize prize, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task ClosePaidAsync(int reign, string? favoriteId, string? favoriteName, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task<FavorPrize?> PrizeAsync(int reign, string playerId, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task<IReadOnlyList<FavorPrize>> UnsettledBacksAsync(int throughPlace, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task SettleBackAsync(int reign, string playerId, int? backId, bool choiceOpen, CancellationToken ct = default)
                 => throw new InvalidOperationException("favor store is down");
         }
 
