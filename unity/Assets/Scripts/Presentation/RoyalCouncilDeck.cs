@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Kingdom.Presentation
 {
-    /// <summary>One combined edge mesh per stack; only the redacted count enters this view.</summary>
+    /// <summary>One combined edge mesh per stack, topped by the owner's public card-back art.</summary>
     public sealed class RoyalCouncilDeck : MonoBehaviour, IPointerHoverTarget
     {
         private MeshFilter _source;
@@ -11,6 +11,11 @@ namespace Kingdom.Presentation
         private Mesh _stack;
         private Renderer _stackRenderer;
         private Transform _top;
+        private MeshFilter _topFilter;
+        private Renderer _topRenderer;
+        private Mesh _backMesh;
+        private Sprite _backSprite;
+        private MaterialPropertyBlock _backProperties;
         private Vector3 _topRest;
         private Transform _drawAnchor;
         private TextMeshPro _label;
@@ -26,6 +31,8 @@ namespace Kingdom.Presentation
             _sourceRenderer = card.GetComponent<Renderer>();
             _sourceRenderer.enabled = false;
             _top = top; _topRest = top.position; _step = 0.004f * modelScale;
+            _topFilter = top.GetComponent<MeshFilter>();
+            _topRenderer = top.GetComponent<Renderer>();
             // Imported card thickness is local Y. Follow the authored rack orientation so
             // a recessed, upright deck grows within its slot as the visible count changes.
             _stackDirection = card.up.normalized;
@@ -47,6 +54,48 @@ namespace Kingdom.Presentation
 
         public void SetDrawAnchor(Transform anchor) => _drawAnchor = anchor;
 
+        /// <summary>Dress the existing top card without changing the stack's geometry or count.</summary>
+        public void SetCardBack(Sprite sprite)
+        {
+            if (sprite == null || sprite == _backSprite) return;
+            Material art = MaterialCatalog.Get(MaterialCatalog.CardArt);
+            if (art == null) return;
+
+            if (_backMesh == null)
+            {
+                // The imported top is a thin box with packed box UVs. The upright rack puts
+                // local Z across the card and -X up it. Map that face to one complete image
+                // on a private mesh; the shared model and gold rim stay intact.
+                _backMesh = Instantiate(_topFilter.sharedMesh);
+                _backMesh.name = "Deck card-back face";
+                Bounds bounds = _backMesh.bounds;
+                Vector3[] vertices = _backMesh.vertices;
+                var uv = new Vector2[vertices.Length];
+                for (int i = 0; i < vertices.Length; i++)
+                    uv[i] = new Vector2(
+                        Mathf.InverseLerp(bounds.min.z, bounds.max.z, vertices[i].z),
+                        1f - Mathf.InverseLerp(bounds.min.x, bounds.max.x, vertices[i].x));
+                _backMesh.uv = uv;
+                _topFilter.sharedMesh = _backMesh;
+
+                Material[] materials = _topRenderer.sharedMaterials;
+                materials[0] = art;
+                _topRenderer.sharedMaterials = materials;
+                _backProperties = new MaterialPropertyBlock();
+            }
+
+            Rect rect = sprite.textureRect;
+            Texture2D texture = sprite.texture;
+            _backProperties.SetTexture("_BaseMap", texture);
+            _backProperties.SetColor("_BaseColor", Color.white);
+            _backProperties.SetVector("_BaseMap_ST", new Vector4(
+                rect.width / texture.width, rect.height / texture.height,
+                rect.x / texture.width, rect.y / texture.height));
+            // Only the card-back submesh changes; the second submesh keeps its metal border.
+            _topRenderer.SetPropertyBlock(_backProperties, 0);
+            _backSprite = sprite;
+        }
+
         public void SetCount(int count)
         {
             count = Mathf.Max(0, count);
@@ -67,7 +116,7 @@ namespace Kingdom.Presentation
                 _stack.CombineMeshes(cards, true, true, false);
             }
             Bounds bounds = _sourceRenderer.bounds;
-            bounds.Encapsulate(_top.GetComponent<Renderer>().bounds);
+            bounds.Encapsulate(_topRenderer.bounds);
             _hit.center = transform.InverseTransformPoint(bounds.center);
             _hit.size = new Vector3(bounds.size.x, bounds.size.y, Mathf.Max(0.12f, bounds.size.z));
             _label.transform.position = new Vector3(bounds.center.x, bounds.center.y, bounds.min.z - 0.1f);
@@ -78,9 +127,16 @@ namespace Kingdom.Presentation
         void IPointerHoverTarget.OnPointerExit() => _label.gameObject.SetActive(false);
         private void OnDestroy()
         {
-            if (_stack == null) return;
-            if (Application.isPlaying) Destroy(_stack);
-            else DestroyImmediate(_stack);
+            if (Application.isPlaying)
+            {
+                if (_stack != null) Destroy(_stack);
+                if (_backMesh != null) Destroy(_backMesh);
+            }
+            else
+            {
+                if (_stack != null) DestroyImmediate(_stack);
+                if (_backMesh != null) DestroyImmediate(_backMesh);
+            }
         }
     }
 }

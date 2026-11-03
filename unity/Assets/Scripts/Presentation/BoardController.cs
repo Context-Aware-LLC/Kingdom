@@ -153,11 +153,11 @@ namespace Kingdom.Presentation
         // they're tracked positionally per owner instead.
         private readonly Dictionary<PlayerId, List<CardPresenter>> _cardBacks = new();
 
-        // Each player's card back (#421), the back every hidden card they own shows. Unset is the
-        // default: only a networked match has backs to set.
+        // Each player's card back (#421), shown on their hidden cards and physical deck pile.
+        // Unset is the default: only a networked match has backs to set.
         private readonly Dictionary<PlayerId, int> _backIds = new();
 
-        /// <summary>The back <paramref name="owner"/>'s hidden cards show both players (#421), from
+        /// <summary>The back <paramref name="owner"/>'s hidden cards and deck show both players (#421), from
         /// <c>NetworkedMatchSession.CardBackOf</c>. Set before the first state update, so the opening
         /// hand is drawn with it.</summary>
         public void SetCardBack(PlayerId owner, int backId) => _backIds[owner] = backId;
@@ -626,6 +626,10 @@ namespace Kingdom.Presentation
 
             foreach (PlayerState ps in state.Players)
             {
+                if (boardAnchors != null && boardAnchors.Tabletop != null)
+                    boardAnchors.Tabletop.SetCardBack(ps.Id,
+                        CardBackCatalog.SpriteFor(CardBackOf(ps.Id), _uiSprites));
+
                 // Attack-affordance context (CardLiveState.BuildReadiness): only the local
                 // human's minions, on their own Main turn, show ready-glow / exhausted-dim.
                 bool ownerMayAct = ps.Id == _localHumanId

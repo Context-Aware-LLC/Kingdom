@@ -187,6 +187,13 @@ namespace Kingdom.Presentation
             _bound = true;
         }
 
+        public void SetCardBack(PlayerId owner, Sprite sprite)
+        {
+            if (!_bound) return;
+            for (int seat = 0; seat < _players.Length; seat++)
+                if (_players[seat] == owner) _decks[seat].SetCardBack(sprite);
+        }
+
         public void OnStateUpdated(GameState state)
         {
             if (!_bound || state == null) return;
