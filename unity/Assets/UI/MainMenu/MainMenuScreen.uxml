@@ -49,12 +49,6 @@
                     <ui:Button name="btn-king" text="" tooltip="Open the Succession Roll" class="mm-dock-button mm-king-button">
                         <ui:VisualElement picking-mode="Ignore" class="mm-dock-art mm-king-art"/>
                     </ui:Button>
-                    <ui:VisualElement picking-mode="Ignore" class="mm-king-copy">
-                        <ui:Label name="king-plaque" text=" " picking-mode="Ignore" class="mm-king-plaque"/>
-                        <ui:Label name="king-commission" text=" " picking-mode="Ignore" class="mm-king-commission"/>
-                        <ui:Label name="king-scored" text=" " picking-mode="Ignore" class="mm-king-scored"/>
-                        <ui:Label name="king-decree" text=" " picking-mode="Ignore" class="mm-king-decree"/>
-                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

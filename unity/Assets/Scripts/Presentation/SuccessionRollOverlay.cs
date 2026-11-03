@@ -11,8 +11,9 @@ using UnityEngine.UIElements;
 namespace Kingdom.Presentation
 {
     /// <summary>
-    /// The Succession Roll (King of the Week, #421): every King since the first, newest first, each
-    /// with his fate and the player who was his Favorite. Opened from the crown in the main menu dock.
+    /// The Succession Roll (King of the Week, #421): this week's King and his commission, then every
+    /// King since the first, newest first, each with his fate and the player who was his Favorite.
+    /// Opened from the crown in the main menu dock, which shows nothing else.
     ///
     /// <para><b>The server's Roll is the record</b> (<c>GET /king/roll</c>), read each time it opens.
     /// A failed read says so: an answered Roll always holds the reign on the throne, so an empty one
@@ -35,17 +36,20 @@ namespace Kingdom.Presentation
         private bool _closing;
 
         /// <summary>Open the Roll over whatever screen is up. Returns the overlay's GameObject.</summary>
-        public static GameObject Open()
+        /// <param name="king">The King on the throne, whose epithet and commission head the Roll; null
+        /// leaves that block hidden. The menu passes the one it already read, so opening costs no
+        /// second request.</param>
+        public static GameObject Open(KingNow king = null)
         {
             var go = new GameObject(ObjectName);
             var doc = go.AddComponent<UIDocument>();
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("SuccessionRoll");
-            go.AddComponent<SuccessionRollOverlay>().Init();
+            go.AddComponent<SuccessionRollOverlay>().Init(king);
             return go;
         }
 
-        private void Init()
+        private void Init(KingNow king)
         {
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
             if (root == null)
@@ -61,12 +65,50 @@ namespace Kingdom.Presentation
             Button close = root.Q<Button>("roll-close");
             if (close != null) close.clicked += Close;
 
+            ShowNow(root, king);
+
             VisualElement sheet = root.Q<VisualElement>("roll-sheet");
             if (sheet?.parent != null) _scroll = new ProclamationScroll(sheet);
 
             ShowStatus(Loc.Get("king_roll_status_loading"));
             _scroll?.Open();
             _ = LoadAsync();
+        }
+
+        /// <summary>This week: his epithet, his commission, how it is scored, his decree, and the
+        /// image of the achievement it is named for. A commission this build has no words for is
+        /// left out, never printed by id, and so is its image.</summary>
+        private static void ShowNow(VisualElement root, KingNow king)
+        {
+            VisualElement now = root.Q<VisualElement>("roll-now");
+            if (now == null || king == null) return;
+
+            SetLine(root.Q<Label>("roll-now-epithet"), KingText.Epithet(king.Epithet));
+            string name = KingText.Commission(king.Commission, "name");
+            SetLine(root.Q<Label>("roll-now-commission"), name == null ? null : Loc.Format("king_menu_commission", name));
+            SetLine(root.Q<Label>("roll-now-scored"), name == null ? null : KingText.Commission(king.Commission, "scored"));
+            SetLine(root.Q<Label>("roll-now-decree"), name == null ? null : KingText.Commission(king.Commission, "decree"));
+
+            VisualElement icon = root.Q<VisualElement>("roll-now-icon");
+            if (icon != null)
+            {
+#if UNITY_EDITOR
+                IUiSpriteProvider sprites = new EditorUiSpriteProvider();
+#else
+                IUiSpriteProvider sprites = new AddressableUiSpriteProvider();
+#endif
+                Sprite sprite = name == null ? null : sprites.Get(KingText.AchievementSpriteKey(king.Commission));
+                if (sprite != null) icon.style.backgroundImage = new StyleBackground(sprite);
+                else icon.style.display = DisplayStyle.None;
+            }
+            now.style.display = DisplayStyle.Flex;
+        }
+
+        private static void SetLine(Label label, string text)
+        {
+            if (label == null) return;
+            label.text = string.IsNullOrEmpty(text) ? " " : text;
+            label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
         }
 
         private void Close()

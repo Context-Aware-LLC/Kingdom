@@ -249,11 +249,10 @@
 .mm-ledger-art {
     background-image: url("/Assets/Art/UI/Chrome/ui_ledger_book.png");
 }
-/* The King of the Week (#421): the crown on its cushion beside the book, and his plaque and
- * commission beside it. Hidden in the markup until GET /king names a King; with none the row
- * is exactly the vault and the book. The copy sits BESIDE the crown, not under it, so the dock
- * keeps its 160px band: the crown's left edge is inside the 568px command column, so anything
- * taller would rise into the menu rows above it. The copy starts past that column, over the stage. */
+/* The King of the Week (#421): the crown on its cushion beside the book. Hidden in the markup
+ * until GET /king names a King; with none the row is exactly the vault and the book. His epithet
+ * and commission are on the Succession Roll the crown opens, not here: over the stage art they
+ * could not be read (Sam, 2026-11-03). */
 .mm-king-dock {
     flex-shrink: 0;
     flex-direction: row;
@@ -267,40 +266,6 @@
 }
 .mm-king-art {
     background-image: url("/Assets/Art/UI/Chrome/ui_king_crown.png");
-}
-.mm-king-copy {
-    width: 520px;
-    flex-shrink: 0;
-    margin-left: var(--space-2);
-    padding-bottom: var(--space-2);
-    justify-content: flex-end;
-}
-.mm-king-plaque,
-.mm-king-commission,
-.mm-king-scored,
-.mm-king-decree {
-    color: var(--ink-1);
-    white-space: normal;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
-    -unity-text-outline-width: 1px;
-    -unity-text-outline-color: rgba(0, 0, 0, 0.85);
-}
-.mm-king-plaque {
-    font-size: var(--type-body);
-    -unity-font-style: bold;
-    color: rgb(255, 226, 179);
-}
-.mm-king-commission {
-    font-size: var(--type-label);
-    -unity-font-style: bold;
-}
-.mm-king-scored {
-    font-size: var(--type-caption);
-}
-.mm-king-decree {
-    font-size: var(--type-caption);
-    -unity-font-style: italic;
-    color: rgb(217, 210, 195);
 }
 .mm-dock-button:hover,
 .mm-dock-button:focus {

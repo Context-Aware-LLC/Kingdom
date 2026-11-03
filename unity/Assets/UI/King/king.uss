@@ -35,9 +35,65 @@
     font-size: var(--type-display);
 }
 
+/* THIS WEEK: the King on the throne and his commission, with the image of the achievement the
+   commission is named for. The menu dock shows only the crown, so this is where a player reads
+   what he wants (Sam, 2026-11-03). Its height comes out of the list's, so the sheet the scroll
+   measures stays the same tall: 456 before it, 304 + this block's ~152 now. */
+.roll-now {
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(84, 58, 34, 0.45);
+}
+
+.roll-now__icon {
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
+    margin-right: var(--space-4);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* A basis of 0 that grows: the width the icon leaves, so the lines wrap inside it. */
+.roll-now__text {
+    flex-basis: 0;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.roll-now__epithet {
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    color: rgb(58, 36, 18);
+    white-space: normal;
+}
+
+.roll-now__commission {
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    color: rgb(84, 58, 34);
+    white-space: normal;
+}
+
+.roll-now__scored {
+    font-size: var(--type-caption);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+}
+
+.roll-now__decree {
+    font-size: var(--type-caption);
+    -unity-font-style: italic;
+    color: rgb(120, 92, 62);
+    white-space: normal;
+}
+
 /* Takes the list's place while the Roll is read, or when it could not be. */
 .roll-status {
-    height: 456px;
+    height: 304px;
     font-size: var(--type-body);
     color: rgb(84, 58, 34);
     white-space: normal;
@@ -45,7 +101,7 @@
 }
 
 .roll-list {
-    height: 456px;
+    height: 304px;
     flex-shrink: 0;
 }
 

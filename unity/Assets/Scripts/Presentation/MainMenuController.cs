@@ -65,10 +65,8 @@ namespace Kingdom.Presentation
         private HttpQuestGateway _questGateway;
         private Label _vaultPackCount;
         private VisualElement _kingDock;
-        private Label _kingPlaque;
-        private Label _kingCommission;
-        private Label _kingScored;
-        private Label _kingDecree;
+        /// <summary>The King last read, for the Succession Roll to show his commission. Null until read.</summary>
+        private KingNow _king;
         /// <summary>This launch's read of <c>GET /king</c>, started once the update gate passes.
         /// Null until then, and on every path that never reaches it.</summary>
         private Task<KingNow> _kingRequest;
@@ -118,7 +116,7 @@ namespace Kingdom.Presentation
             Wire("btn-leaderboards", OnLeaderboards);
             Wire("btn-card-vault", OnCardVault);
             Wire("btn-ledger", () => LedgerOverlay.Open());
-            Wire("btn-king", () => SuccessionRollOverlay.Open());
+            Wire("btn-king", () => SuccessionRollOverlay.Open(_king));
             Wire("btn-leaderboard-close", CloseLeaderboard);
             BindAchievements();
             BindLeaderboard();
@@ -404,15 +402,11 @@ namespace Kingdom.Presentation
         private const string LastHeardReignKey = "king_last_heard_reign";
         private const int KingTimeoutSeconds = 10;
 
-        /// <summary>The crown, its plaque and the commission, hidden until a King is read. With no
-        /// King the dock is exactly the vault and the book.</summary>
+        /// <summary>The crown, hidden until a King is read. With no King the dock is exactly the
+        /// vault and the book.</summary>
         private void BindKing()
         {
             _kingDock = _root.Q<VisualElement>("king-dock");
-            _kingPlaque = _root.Q<Label>("king-plaque");
-            _kingCommission = _root.Q<Label>("king-commission");
-            _kingScored = _root.Q<Label>("king-scored");
-            _kingDecree = _root.Q<Label>("king-decree");
             if (_kingDock != null) _kingDock.style.display = DisplayStyle.None;
         }
 
@@ -446,20 +440,10 @@ namespace Kingdom.Presentation
                 return;
             }
 
-            if (_kingPlaque != null) _kingPlaque.text = KingText.Epithet(king.Epithet);
-            // A commission this build has no words for is left out, never printed by id.
-            string name = KingText.Commission(king.Commission, "name");
-            SetKingLine(_kingCommission, name == null ? null : Loc.Format("king_menu_commission", name));
-            SetKingLine(_kingScored, name == null ? null : KingText.Commission(king.Commission, "scored"));
-            SetKingLine(_kingDecree, name == null ? null : KingText.Commission(king.Commission, "decree"));
+            // His words are on the Succession Roll, which the crown opens: beside the crown, over
+            // the stage art, they could not be read (Sam, 2026-11-03).
+            _king = king;
             _kingDock.style.display = DisplayStyle.Flex;
-        }
-
-        private static void SetKingLine(Label label, string text)
-        {
-            if (label == null) return;
-            label.text = string.IsNullOrEmpty(text) ? " " : text;
-            label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
         }
 
         /// <summary>
