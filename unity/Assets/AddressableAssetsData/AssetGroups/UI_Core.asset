@@ -255,6 +255,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6669eb5db2cff6e48a9dcb317b559518
+    m_Address: ui/achievement_proceed_unwisely
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 67322842c6cbd7a42aa523b041480088
     m_Address: ui/rolled-complete
     m_ReadOnly: 0
@@ -330,6 +335,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7870345b2d5dbd640ae245d8e784206a
+    m_Address: ui/achievement_own_goal
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7c1e9ab350d24f6a8e73b042c95d1682
     m_Address: ui/icon_currency_gems
     m_ReadOnly: 0
@@ -385,6 +395,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8881308d544fb0c4da1d36609e81383a
+    m_Address: ui/achievement_seven_walls
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8a7b922312a3b184297e117a03d6b5cd
     m_Address: ui/paper
     m_ReadOnly: 0
@@ -400,11 +415,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8b9c792d2971468c9506526237449386
-    m_Address: ui/deck-stack-player-royal-council
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 904c18b835e04804c851ce06114fe907
     m_Address: ui/achievement_out_of_ideas
     m_ReadOnly: 0
@@ -415,8 +425,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 928026b9c3a0d094486493b5ce2ce8ce
+    m_Address: ui/achievement_gift_horse
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 96639c2fa6d74b4e95d61ef2653ab769
     m_Address: ui/hero-power
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 97bfb926233a5a24faa8cdfc5fff478f
+    m_Address: ui/achievement_early_retirement
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -470,8 +490,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5856b60c98a4d643acf7221829012fd
+    m_Address: ui/achievement_approved_by_default
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a8102c8a7f624ef9a7052111af114d01
     m_Address: ui/effect_hero_cast_stonewarden
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a87010010b0b1e145a91eb686a07152d
+    m_Address: ui/achievement_second_thoughts
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -515,6 +545,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: acd5a06ec4d16a742a6155c26f63d36e
+    m_Address: ui/achievement_hubris
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ad564e9d4c1441c48844708d545546ab
     m_Address: ui/effect_hero_cast_verdant
     m_ReadOnly: 0
@@ -532,6 +567,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b237916dc1c040e88d1160476f4e0a8e
     m_Address: ui/effect_hero_cast_clockwright
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b55d218656676db4da971535ec6c9f6b
+    m_Address: ui/achievement_the_last_idea
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -605,6 +645,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d0f55862264f04a43a18c5a4ed86dd8c
+    m_Address: ui/achievement_mutual_respect
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d0fc776f8071429da08550ae133cbbeb
     m_Address: ui/socket_cost
     m_ReadOnly: 0
@@ -670,6 +715,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dfd85ef78c96a6540b2ae33e05ba09b0
+    m_Address: ui/achievement_against_advice
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e005acad0f5ea3844bfe7e42567e0f6c
     m_Address: ui/app_icon_1024
     m_ReadOnly: 0
@@ -682,11 +732,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e3d0ab896b5040a1b08f4650fb842413
     m_Address: ui/effect_frost_crystals_right
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e73678a62d6c4307b466ba7b80e2c135
-    m_Address: ui/deck-stack-enemy-royal-council
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -732,6 +777,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6a417c05c2e4e6bad388519b296ea0a
     m_Address: ui/effect_frost_crystals_lower
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f758caf88ae940c44861bbae0b0caa37
+    m_Address: ui/achievement_working_as_intended
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

@@ -35,7 +35,9 @@ namespace Kingdom.Presentation
     // underneath the cache.
     public sealed class AddressableUiSpriteProvider : IUiSpriteProvider
     {
-        private const string AddressPrefix = "ui/";
+        /// <summary>What a UI sprite key is addressed under in UI_Core. Public for the Editor checks
+        /// that prove a key's art is there.</summary>
+        public const string AddressPrefix = "ui/";
 
         private static readonly Dictionary<string, Sprite> _cache = new();
 
