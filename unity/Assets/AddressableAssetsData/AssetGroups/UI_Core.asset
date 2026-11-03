@@ -110,6 +110,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 17f5387d002108442be8b2771b1ecfdb
+    m_Address: ui/achievement_comeback
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1c861f74e57c4f29a7e8f75e5cb77698
     m_Address: ui/effect_spell_fire_flame
     m_ReadOnly: 0
@@ -300,6 +305,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 72cb66ad7ac16744191e248d6ca9c6fc
+    m_Address: ui/achievement_the_long_game
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 72d28e5c8b05a0642a11ef5a145552e0
     m_Address: materials/M_Glow
     m_ReadOnly: 0
@@ -342,6 +352,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7e60470af6994354b91521b88f94c053
     m_Address: ui/card_back_tideglass
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 81a9d23697f7ba74596d9f21fb5a3e66
+    m_Address: ui/achievement_overgrown
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
