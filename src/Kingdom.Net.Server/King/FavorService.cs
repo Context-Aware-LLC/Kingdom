@@ -10,8 +10,9 @@ namespace Kingdom.Net.Server.King
 {
     /// <summary>
     /// Banks one seat's commission score into the King's Favor at match end, and pays the gold for
-    /// the first qualifying score in a reign. Called from <see cref="AchievementSink"/>'s worker, off
-    /// the match thread, once per attributed seat.
+    /// qualifying in a reign: attempted on every qualifying score, paid once, because the grant is
+    /// keyed on the reign. Called from <see cref="AchievementSink"/>'s worker, off the match thread,
+    /// once per attributed seat.
     ///
     /// <para><b>Ladder and bot-filled matches only</b>, as with achievements: a friend match never
     /// scores, and a bot-filled one scores exactly like a human one or the board gives the bot away.
@@ -64,22 +65,41 @@ namespace Kingdom.Net.Server.King
             Account? account = await _accounts.FindByPlayerIdAsync(facts.PlayerId, ct).ConfigureAwait(false);
             if (account is null || account.Kind == AccountKind.Superuser) return;
 
-            int? prior = await _store.RecordAsync(
+            await _store.RecordAsync(
                 new FavorScore(king.Reign, facts.PlayerId, displayName, score, facts.EndedAtUtc),
                 commission.LowerIsBetter, ct).ConfigureAwait(false);
-            if (prior is null) await PayQualifyingGoldAsync(account, king.Reign, ct).ConfigureAwait(false);
+            await PayQualifyingGoldAsync(account, king.Reign, ct).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// The first qualifying score in a reign earns gold, once. Driven by the store answering
-        /// "no prior best", and keyed on the reign so a replayed match pays nothing twice.
+        /// Qualifying in a reign earns gold once. It is attempted on EVERY qualifying score, not only
+        /// the first, and the <c>king-qualify:{reign}</c> key makes every repeat free: a grant lost
+        /// to a crash or a ledger failure after the score banked is paid by the player's next one.
+        ///
+        /// <para>A conflict means the key is already paid under other terms, typically
+        /// <c>QualifyGold</c> changed mid-reign. That is "already paid", not a failure: the score
+        /// banked and the player got their gold, so it must not reach the worker as one.</para>
         /// </summary>
         private async Task PayQualifyingGoldAsync(Account account, int reign, CancellationToken ct)
         {
             if (_economy is null || _prizes is null || _prizes.QualifyGold <= 0) return;
-            await _economy.GrantGoldAsync(
-                account, GoldRewardKind.KingsFavor, _prizes.QualifyGold,
-                "king-qualify:" + reign.ToString(CultureInfo.InvariantCulture), ct).ConfigureAwait(false);
+            try
+            {
+                await _economy.GrantGoldAsync(
+                    account, GoldRewardKind.KingsFavor, _prizes.QualifyGold,
+                    "king-qualify:" + reign.ToString(CultureInfo.InvariantCulture), ct).ConfigureAwait(false);
+            }
+            catch (GoldGrantConflictException)
+            {
+                // Already paid; see the summary.
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // The score is already banked, so this must not read as "not banked" in the worker.
+                Console.Error.WriteLine(
+                    "[king] reign {0} qualifying gold for player_id={1} was not paid; their next qualifying " +
+                    "score retries it: {2}", reign, account.PlayerId, ex.Message);
+            }
         }
     }
 }

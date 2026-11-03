@@ -199,6 +199,19 @@ namespace Kingdom.Net.Server.Tests.Accounts
         }
 
         [Test]
+        public async Task The_Same_Reward_Id_At_A_Different_Amount_Is_A_Typed_Conflict()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            Account account = AuthenticatedAccount();
+            var economy = new EconomyService(ledger, new FixedTime());
+            await economy.GrantGoldAsync(account, GoldRewardKind.KingsFavor, 50, "king-qualify:4");
+
+            Assert.ThrowsAsync<GoldGrantConflictException>(async () =>
+                await economy.GrantGoldAsync(account, GoldRewardKind.KingsFavor, 75, "king-qualify:4"));
+            Assert.That(await ledger.BalanceAsync(account.PlayerId, EconomyItems.Gold), Is.EqualTo(50));
+        }
+
+        [Test]
         public async Task Retrying_The_Same_Gold_Reward_Does_Not_Grant_Twice()
         {
             var ledger = new InMemoryEntitlementLedger();

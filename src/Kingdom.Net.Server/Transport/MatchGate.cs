@@ -10,6 +10,7 @@ using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Protocol;
 using Kingdom.Net.Server.Accounts;
+using Kingdom.Net.Server.Achievements;
 using Kingdom.Net.Server.Bots;
 using Kingdom.Net.Server.Decks;
 using Kingdom.Net.Server.Identity;
@@ -202,6 +203,15 @@ namespace Kingdom.Net.Server.Transport
             _firstMatches = firstMatches;
             _favor = favor;
             _reignOneMs = reignOneMs;
+
+            // The King reaches the worker that banks him only through MatchTelemetryRecorder's
+            // `is AchievementSink` check, so any other sink here would play every match for a King
+            // and bank none of them, silently. Refuse to start instead.
+            if (_favor is not null && _telemetry is not AchievementSink)
+                throw new InvalidOperationException(
+                    "MatchGate was given a Favor store but its telemetry sink is " + _telemetry.GetType().Name +
+                    ", not the AchievementSink that banks the King's Favor. Keep AchievementSink the " +
+                    "outermost telemetry decorator, or pass no Favor store.");
         }
 
         public int LiveSessions

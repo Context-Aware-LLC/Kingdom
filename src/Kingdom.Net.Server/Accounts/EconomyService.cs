@@ -44,6 +44,19 @@ namespace Kingdom.Net.Server.Accounts
         KingsFavor,
     }
 
+    /// <summary>
+    /// <see cref="EconomyService.GrantGoldAsync"/> was asked to pay a reward event id the ledger
+    /// already holds with a different amount or source. Nothing was paid by this call; the earlier
+    /// grant stands. Its own type so a caller that retries on purpose can tell it from a failure.
+    /// </summary>
+    public sealed class GoldGrantConflictException : InvalidOperationException
+    {
+        public GoldGrantConflictException()
+            : base("The reward event id is already bound to a different Gold grant.")
+        {
+        }
+    }
+
     internal static class EconomyAccountPolicy
     {
         /// <summary>Every inventory write is keyed on a durable player id. Accounts come only from
@@ -150,9 +163,7 @@ namespace Kingdom.Net.Server.Accounts
                 requirement: null,
                 DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs));
             EntitlementBatchResult result = await _ledger.ApplyBatchAsync(batch, ct).ConfigureAwait(false);
-            if (result.Conflict)
-                throw new InvalidOperationException(
-                    "The reward event id is already bound to a different Gold grant.");
+            if (result.Conflict) throw new GoldGrantConflictException();
             return await GetWalletAsync(account, ct).ConfigureAwait(false);
         }
 

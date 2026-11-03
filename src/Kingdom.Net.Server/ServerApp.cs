@@ -730,6 +730,10 @@ namespace Kingdom.Net.Server
                 var achievementSink = new AchievementSink(
                     telemetry ?? NullTelemetrySink.Instance, achievementService, favorService);
                 builder.Services.AddSingleton<IHostedService>(achievementSink);
+                // KEEP THIS THE OUTERMOST DECORATOR. The King's seating reaches the Favor only through
+                // MatchTelemetryRecorder.Complete's `is AchievementSink` check, so a sink wrapped
+                // around this one would bank nothing. MatchGate's constructor throws if the telemetry
+                // it is given with a Favor store is anything else.
                 telemetry = achievementSink;
             }
 

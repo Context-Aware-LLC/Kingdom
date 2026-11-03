@@ -281,6 +281,82 @@ namespace Kingdom.Net.Server.Tests.King
             Assert.That(await h.GoldAsync(h.PlayerId), Is.Zero);
         }
 
+        /// <summary>The in-memory ledger, failing its first <paramref name="failures"/> batch writes.</summary>
+        private sealed class FlakyLedger : IEntitlementLedger
+        {
+            private readonly InMemoryEntitlementLedger _inner;
+            private int _failures;
+            public FlakyLedger(InMemoryEntitlementLedger inner, int failures) { _inner = inner; _failures = failures; }
+
+            public Task<EntitlementBatchResult> ApplyBatchAsync(EntitlementBatch batch, CancellationToken ct = default)
+                => _failures-- > 0
+                    ? throw new InvalidOperationException("ledger is down")
+                    : _inner.ApplyBatchAsync(batch, ct);
+            public Task<GrantResult> GrantAsync(EntitlementGrant grant, CancellationToken ct = default) => _inner.GrantAsync(grant, ct);
+            public Task<IAsyncDisposable> AcquirePlayerMutationLockAsync(string playerId, CancellationToken ct = default)
+                => _inner.AcquirePlayerMutationLockAsync(playerId, ct);
+            public Task<long> BalanceAsync(string playerId, string item, CancellationToken ct = default) => _inner.BalanceAsync(playerId, item, ct);
+            public Task<IReadOnlyDictionary<string, long>> BalancesAsync(string playerId, CancellationToken ct = default) => _inner.BalancesAsync(playerId, ct);
+            public Task<IReadOnlyList<EntitlementGrant>> HistoryAsync(string playerId, CancellationToken ct = default) => _inner.HistoryAsync(playerId, ct);
+            public Task<EntitlementGrant?> FindAsync(string externalTxnId, CancellationToken ct = default) => _inner.FindAsync(externalTxnId, ct);
+        }
+
+        [Test]
+        public async Task A_failed_qualifying_grant_is_paid_by_the_next_qualifying_score()
+        {
+            // The score banks before the gold. A grant that fails after it must not cost the gold for
+            // good: the next qualifying score in the reign pays it, and only once.
+            var h = await Harness.CreateAsync();
+            var service = new FavorService(h.Store, h.Accounts,
+                new EconomyService(new FlakyLedger(h.Ledger, failures: 1), h.Time), Prizes);
+
+            await service.ApplyAsync(Facts(h.PlayerId, overkill: 5), King(CommissionIds.Overkill), "Alice", CancellationToken.None);
+            Assert.That(await h.Store.BestAsync(4, h.PlayerId), Is.EqualTo(5), "the score banked");
+            Assert.That(await h.GoldAsync(h.PlayerId), Is.Zero, "the grant failed");
+
+            await service.ApplyAsync(Facts(h.PlayerId, overkill: 2), King(CommissionIds.Overkill), "Alice", CancellationToken.None);
+            await service.ApplyAsync(Facts(h.PlayerId, overkill: 8), King(CommissionIds.Overkill), "Alice", CancellationToken.None);
+
+            Assert.That(await h.GoldAsync(h.PlayerId), Is.EqualTo(Prizes.QualifyGold));
+            Assert.That(await h.Ledger.HistoryAsync(h.PlayerId), Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public async Task A_conflicting_qualifying_grant_counts_as_already_paid()
+        {
+            // QualifyGold changed mid-reign: the key is already paid at the old amount. The score still
+            // banks, nothing more is paid, and the worker logs nothing about this match.
+            var h = await Harness.CreateAsync();
+            await h.Service().ApplyAsync(Facts(h.PlayerId, overkill: 3), King(CommissionIds.Overkill), "Alice",
+                CancellationToken.None);
+            var raised = new FavorService(h.Store, h.Accounts, new EconomyService(h.Ledger, h.Time),
+                Prizes with { QualifyGold = Prizes.QualifyGold + 25 });
+            var sink = new AchievementSink(NullTelemetrySink.Instance,
+                new AchievementService(new InMemoryAchievementStore(), h.Accounts), raised);
+            var complete = new MatchCompleteEvent(
+                new MatchId("conflict-match"), Now, MatchEndReason.Win, MatchOutcome.Player0Win, 9, TelemetrySource.Ladder,
+                new SeatOutcome(AccountId.FromAuthenticatedAccount(h.PlayerId), CardClass.EMBERWARD, "deck-0", "hash-0",
+                    SeatResult.Win, Array.Empty<int>(), OverkillBest: 9),
+                new SeatOutcome(AccountId.Unattributed, CardClass.TIDECALLER, "deck-1", "hash-1", SeatResult.Loss,
+                    Array.Empty<int>()));
+
+            var err = new System.IO.StringWriter();
+            System.IO.TextWriter original = Console.Error;
+            Console.SetError(err);
+            try
+            {
+                await sink.EvaluateAsync(complete, King(CommissionIds.Overkill));
+            }
+            finally
+            {
+                Console.SetError(original);
+            }
+
+            Assert.That(await h.Store.BestAsync(4, h.PlayerId), Is.EqualTo(9), "the better score banked");
+            Assert.That(await h.GoldAsync(h.PlayerId), Is.EqualTo(Prizes.QualifyGold), "paid once, at the first amount");
+            Assert.That(err.ToString(), Does.Not.Contain("conflict-match").And.Not.Contain("[king]"));
+        }
+
         // ── The prize settings ────────────────────────────────────────────────────────────
 
         [Test]

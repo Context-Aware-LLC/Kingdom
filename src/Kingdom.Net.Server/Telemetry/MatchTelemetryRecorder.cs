@@ -267,6 +267,8 @@ namespace Kingdom.Net.Server.Telemetry
         /// Emit a row <see cref="Summarize"/> built, then the per-card sample. <paramref name="king"/>
         /// goes only to an <see cref="AchievementSink"/>, which banks the Favor; it stays off the row
         /// because the row is written to telemetry and the seating carries the players' names.
+        /// The AchievementSink must therefore be the sink this recorder holds, not one wrapped inside
+        /// another: <c>MatchGate</c>'s constructor enforces that whenever it is given a Favor store.
         /// </summary>
         public void Complete(GameState state, MatchCompleteEvent complete, KingSeating? king = null)
         {
