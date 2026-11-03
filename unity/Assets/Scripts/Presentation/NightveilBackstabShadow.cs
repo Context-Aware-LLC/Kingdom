@@ -7,11 +7,11 @@ namespace Kingdom.Presentation
     internal static class NightveilBackstabShadow
     {
         public const string SpriteKey = "effect_hero_power_nightveil";
-        public const float PortraitWipeSeconds = 0.55f;
-        public const float RiseSeconds = 0.55f;
+        public const float PortraitWipeSeconds = 0.55f * SpellSchoolEffects.Tempo;
+        public const float RiseSeconds = 0.55f * SpellSchoolEffects.Tempo;
         // The shadow sits behind the hero's frame (8) and portrait (9).
         private const int SortOrder = 7;
-        private const float PortraitScale = 0.62f;
+        private const float PortraitScale = 0.62f * SpellSchoolEffects.Size;
         private const float Opacity = 0.72f;
         private const float FadeSeconds = 1.0f;
 

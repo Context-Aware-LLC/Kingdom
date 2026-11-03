@@ -46,14 +46,15 @@ namespace Kingdom.Presentation
 
             bolt.enabled = false;
             flash.enabled = true;
-            float hold = 0.08f;
+            const float flashSeconds = 0.08f * SpellSchoolEffects.Tempo;
+            float hold = flashSeconds;
             while (hold > 0f)
             {
                 if (parent == null) break;
                 hold -= Time.deltaTime;
                 float pulse = 1f + 0.22f * Mathf.Sin(hold * 45f);
-                flash.transform.localScale = Vector3.one * (0.78f * pulse);
-                Color c = Green; c.a = Mathf.Clamp01(hold / 0.08f);
+                flash.transform.localScale = Vector3.one * (0.78f * SpellSchoolEffects.Size * pulse);
+                Color c = Green; c.a = Mathf.Clamp01(hold / flashSeconds);
                 flash.color = c;
                 yield return null;
             }
@@ -117,7 +118,7 @@ namespace Kingdom.Presentation
             renderer.sortingOrder = SortOrder;
             renderer.color = Green;
             renderer.enabled = false;
-            go.transform.localScale = Vector3.one * .78f;
+            go.transform.localScale = Vector3.one * .78f * SpellSchoolEffects.Size;
             return renderer;
         }
     }

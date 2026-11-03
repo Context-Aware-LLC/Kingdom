@@ -10,8 +10,8 @@ namespace Kingdom.Presentation
         public const string SpriteKey = "effect_hero_power_emberward";
         private const int SortOrder = 82;
         private const float DepthFraction = 0.06f;
-        private const float TrailThickness = 0.72f;
-        private const float BloomSeconds = 0.16f;
+        private const float TrailThickness = 0.72f * SpellSchoolEffects.Size;
+        private const float BloomSeconds = 0.16f * SpellSchoolEffects.Tempo;
         private static Sprite _impactSprite;
 
         public static IEnumerator Play(Transform parent, Sprite sprite, Camera camera,
@@ -73,7 +73,7 @@ namespace Kingdom.Presentation
                 bolt.color = c;
                 Color hot = new Color(1f, 0.56f, 0.16f, a * 0.9f);
                 bloom.color = hot;
-                bloom.transform.localScale = Vector3.one * Mathf.Lerp(0.9f, 1.35f,
+                bloom.transform.localScale = Vector3.one * SpellSchoolEffects.Size * Mathf.Lerp(0.9f, 1.35f,
                     Mathf.Clamp01(fade / BloomSeconds));
                 yield return null;
             }
@@ -106,7 +106,7 @@ namespace Kingdom.Presentation
             var go = new GameObject("FireboltImpactBloom");
             go.transform.SetParent(parent, true);
             go.transform.position = position;
-            go.transform.localScale = Vector3.one * 0.9f;
+            go.transform.localScale = Vector3.one * 0.9f * SpellSchoolEffects.Size;
             var renderer = go.AddComponent<SpriteRenderer>();
             SpriteMaterials.Set(renderer, _impactSprite);
             renderer.sortingOrder = SortOrder;

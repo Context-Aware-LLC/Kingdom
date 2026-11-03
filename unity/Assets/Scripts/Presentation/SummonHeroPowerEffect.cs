@@ -14,8 +14,8 @@ namespace Kingdom.Presentation
         public static IEnumerator Play(Transform parent, Sprite sheet, Transform slot,
                                        float releaseInSeconds)
         {
-            const float leadSeconds = 0.92f;
-            const float tailSeconds = 0.24f;
+            const float leadSeconds = 0.92f * SpellSchoolEffects.Tempo;
+            const float tailSeconds = 0.24f * SpellSchoolEffects.Tempo;
             float wait = Mathf.Max(0f, releaseInSeconds - leadSeconds);
             float duration = Mathf.Min(releaseInSeconds, leadSeconds) + tailSeconds;
             if (wait > 0f) yield return new WaitForSeconds(wait);
@@ -50,7 +50,7 @@ namespace Kingdom.Presentation
                 elapsed += Time.deltaTime;
                 int frame = Mathf.Min(Columns * Rows - 1, Mathf.FloorToInt(elapsed / frameSeconds));
                 SpriteMaterials.Set(renderer, frames[frame]);
-                float scale = 2.15f / Mathf.Max(renderer.sprite.bounds.size.x, renderer.sprite.bounds.size.y);
+                float scale = 2.15f * SpellSchoolEffects.Size / Mathf.Max(renderer.sprite.bounds.size.x, renderer.sprite.bounds.size.y);
                 go.transform.localScale = Vector3.one * scale;
                 go.transform.position = slot.position + Vector3.back * 0.06f;
                 float fade = Mathf.InverseLerp(duration * 0.72f, duration, elapsed);

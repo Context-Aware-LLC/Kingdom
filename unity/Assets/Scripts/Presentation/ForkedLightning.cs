@@ -34,10 +34,10 @@ namespace Kingdom.Presentation
 
         /// <summary>The most the sprite is scaled ACROSS its length. At 1 the arc stands about
         /// five world units tall; a card is two.</summary>
-        private const float MaxThickness = 0.2f;
+        private const float MaxThickness = 0.2f * SpellSchoolEffects.Size;
         /// <summary>How long a hop stays lit after it lands, and how long it takes to go.</summary>
-        private const float LingerSeconds = 0.06f;
-        private const float FadeSeconds = 0.16f;
+        private const float LingerSeconds = 0.06f * SpellSchoolEffects.Tempo;
+        private const float FadeSeconds = 0.16f * SpellSchoolEffects.Tempo;
 
         /// <summary>Card materials are opaque, so depth is what draws the bolt over them — it
         /// rides this fraction of the way from the board to the camera. Lifting along the camera

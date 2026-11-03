@@ -29,6 +29,17 @@ namespace Kingdom.Presentation
 
     internal static class SpellSchoolEffects
     {
+        /// <summary>
+        /// How much slower and bigger every spell effect, and every hero power effect, plays than
+        /// it was first drawn (Sam, 2026-11-03: "too fast and possibly also too small"). Every
+        /// duration below and in the hero power effects is a base value times <see cref="Tempo"/>,
+        /// and every drawn size passes through <see cref="Size"/>, so these two numbers retune the
+        /// whole set together. The playback queue's holds are computed from the same durations,
+        /// so the board still redraws as each effect lands.
+        /// </summary>
+        public const float Tempo = 1.5f;
+        public const float Size = 1.3f;
+
         public const string FireFlameKey = "effect_spell_fire_flame";
         public const string FireBuildupKey = "effect_spell_fire_buildup";
         public const string FireImpactKey = "effect_spell_fire_impact";
@@ -63,39 +74,39 @@ namespace Kingdom.Presentation
         /// <summary>The first rock lands this long after the reveal card is gone, and each further
         /// target this long after the one before. VfxDirector hands both to the classifier, which
         /// lengthens the entry's hold by the same amount.</summary>
-        public const float EarthLeadSeconds = 0.55f;
-        public const float EarthStaggerSeconds = 0.09f;
+        public const float EarthLeadSeconds = 0.55f * Tempo;
+        public const float EarthStaggerSeconds = 0.09f * Tempo;
 
         /// <summary>The healing sparkles reach the first target this long after the reveal card is
         /// gone, and each further target this long after the one before.</summary>
-        public const float HealLeadSeconds = 0.42f;
+        public const float HealLeadSeconds = 0.42f * Tempo;
 
         /// <summary>The bolt strikes the first target this long after the reveal card is gone,
         /// and each further target this long after the one before.</summary>
-        public const float LightningLeadSeconds = 0.32f;
-        public const float LightningStaggerSeconds = 0.07f;
-        private const float ArcSeconds = 0.26f;      // ends just after the strike
-        private const float StrikeSeconds = 0.32f;   // starts just before it
+        public const float LightningLeadSeconds = 0.32f * Tempo;
+        public const float LightningStaggerSeconds = 0.07f * Tempo;
+        private const float ArcSeconds = 0.26f * Tempo;      // ends just after the strike
+        private const float StrikeSeconds = 0.32f * Tempo;   // starts just before it
         // The strike's tip sits this far below the frame's centre, as a fraction of its height,
         // so it is the tip that lands on the target.
         private const float StrikeTipOffset = 0.43f;
         /// <summary>The fireball reaches the first target this long after the reveal card is
         /// gone, and each further target this long after the one before.</summary>
-        public const float FireLeadSeconds = 0.5f;
-        public const float FireStaggerSeconds = 0.08f;
-        private const float FlareSeconds = 0.42f;
-        private const float FireballSeconds = 0.3f;
-        private const float FireImpactSeconds = 0.4f;
+        public const float FireLeadSeconds = 0.5f * Tempo;
+        public const float FireStaggerSeconds = 0.08f * Tempo;
+        private const float FlareSeconds = 0.42f * Tempo;
+        private const float FireballSeconds = 0.3f * Tempo;
+        private const float FireImpactSeconds = 0.4f * Tempo;
 
         /// <summary>The shadow reaches the first target this long after the reveal card is gone,
         /// and each further target this long after the one before.</summary>
-        public const float ShadowLeadSeconds = 0.5f;
-        public const float ShadowStaggerSeconds = 0.1f;
-        private const float ShadowTravelSeconds = 0.4f;
-        private const float ShadowImpactSeconds = 0.5f;
+        public const float ShadowLeadSeconds = 0.5f * Tempo;
+        public const float ShadowStaggerSeconds = 0.1f * Tempo;
+        private const float ShadowTravelSeconds = 0.4f * Tempo;
+        private const float ShadowImpactSeconds = 0.5f * Tempo;
         /// <summary>The black wipe across the caster's portrait takes this long, and finishes as
         /// the first wisp leaves.</summary>
-        public const float ShadowWipeSeconds = 0.4f;
+        public const float ShadowWipeSeconds = 0.4f * Tempo;
 
         // The head of a fireball or shadow wisp sits right of the frame's centre, its trail to the
         // left; this is its offset as a fraction of the drawn width, so the head, not the middle
@@ -104,58 +115,58 @@ namespace Kingdom.Presentation
 
         /// <summary>The parts reach the first target this long after the reveal card is gone,
         /// and each further target this long after the one before.</summary>
-        public const float ClockwrightLeadSeconds = 0.5f;
-        public const float ClockwrightStaggerSeconds = 0.08f;
-        private const float ClockwrightTravelSeconds = 0.32f;
-        private const float ClockwrightTargetSeconds = 0.45f;
+        public const float ClockwrightLeadSeconds = 0.5f * Tempo;
+        public const float ClockwrightStaggerSeconds = 0.08f * Tempo;
+        private const float ClockwrightTravelSeconds = 0.32f * Tempo;
+        private const float ClockwrightTargetSeconds = 0.45f * Tempo;
         // The caster effect, Clockwright's gathering gears or Tempest's charge, runs this long
         // and peaks as the first missile leaves.
-        private const float GatherSeconds = 0.5f;
+        private const float GatherSeconds = 0.5f * Tempo;
 
         /// <summary>Tidecaller's two schools. Water throws a wave and splashes; frost throws a
         /// shard and lands no effect of its own, because the freeze's crystals are the target
         /// effect (Sam, 2026-10-14). A drowned character gets the wash instead of the splash.</summary>
-        public const float WaterLeadSeconds = 0.5f;
-        public const float WaterStaggerSeconds = 0.08f;
-        private const float WaterTravelSeconds = 0.34f;
-        private const float WaterSplashSeconds = 0.45f;
-        private const float DrownWashSeconds = 0.6f;
-        public const float FrostLeadSeconds = 0.45f;
-        public const float FrostStaggerSeconds = 0.07f;
-        private const float FrostTravelSeconds = 0.26f;
+        public const float WaterLeadSeconds = 0.5f * Tempo;
+        public const float WaterStaggerSeconds = 0.08f * Tempo;
+        private const float WaterTravelSeconds = 0.34f * Tempo;
+        private const float WaterSplashSeconds = 0.45f * Tempo;
+        private const float DrownWashSeconds = 0.6f * Tempo;
+        public const float FrostLeadSeconds = 0.45f * Tempo;
+        public const float FrostStaggerSeconds = 0.07f * Tempo;
+        private const float FrostTravelSeconds = 0.26f * Tempo;
         // The frost shard's point is at the frame's right edge, further out than a ball's head.
         private const float FrostHeadOffset = 0.4f;
 
         /// <summary>Gravekeep: grave mist and bone rise on the caster, a skull trailing green
         /// smoke goes to each character it damages, and soulfire bursts with bone shards there.</summary>
-        public const float GravekeepLeadSeconds = 0.5f;
-        public const float GravekeepStaggerSeconds = 0.09f;
-        private const float GravekeepTravelSeconds = 0.36f;
-        private const float GravekeepTargetSeconds = 0.5f;
+        public const float GravekeepLeadSeconds = 0.5f * Tempo;
+        public const float GravekeepStaggerSeconds = 0.09f * Tempo;
+        private const float GravekeepTravelSeconds = 0.36f * Tempo;
+        private const float GravekeepTargetSeconds = 0.5f * Tempo;
         // The skull sits at the frame's right edge, the smoke trailing behind it.
         private const float SkullHeadOffset = 0.38f;
 
         /// <summary>Verdant: vines twirl up on the caster, a vine with sprouting leaves reaches
         /// each character it damages, and a wreath of vines closes around it there. A healed
         /// character keeps the healing shimmer instead.</summary>
-        public const float VerdantLeadSeconds = 0.5f;
-        public const float VerdantStaggerSeconds = 0.08f;
-        private const float VerdantTravelSeconds = 0.36f;
-        private const float VerdantTargetSeconds = 0.55f;
+        public const float VerdantLeadSeconds = 0.5f * Tempo;
+        public const float VerdantStaggerSeconds = 0.08f * Tempo;
+        private const float VerdantTravelSeconds = 0.36f * Tempo;
+        private const float VerdantTargetSeconds = 0.55f * Tempo;
         // The vine's curled tip sits right of centre, the leafy trail behind it.
         private const float VineHeadOffset = 0.33f;
-        public const float HealStaggerSeconds = 0.05f;
-        private const float HealTravelSeconds = 0.36f;
+        public const float HealStaggerSeconds = 0.05f * Tempo;
+        private const float HealTravelSeconds = 0.36f * Tempo;
         // The lead star sits right of the frame's centre; this is its offset as a fraction of the
         // drawn width, so the star, not the middle of the trail, is what arrives.
         private const float HealHeadOffset = 0.27f;
 
         private const int SortOrder = 82;
         private const float DepthFraction = 0.06f;
-        private const float BuildupSeconds = 0.62f;
-        private const float FallSeconds = 0.34f;
-        private const float ImpactSeconds = 0.36f;
-        private const float ShimmerSeconds = 0.55f;
+        private const float BuildupSeconds = 0.62f * Tempo;
+        private const float FallSeconds = 0.34f * Tempo;
+        private const float ImpactSeconds = 0.36f * Tempo;
+        private const float ShimmerSeconds = 0.55f * Tempo;
         private const float PoofSeconds = 0.5f;
 
         private static readonly Dictionary<Sprite, Sprite[]> Frames = new();
@@ -277,7 +288,8 @@ namespace Kingdom.Presentation
                 float t = Mathf.Clamp01(elapsed / PoofSeconds);
                 if (target != null) last = target.position;
                 Show(sr, frames, t);
-                Place(sr, camera, last, BoardController.CardW * Mathf.Lerp(1.1f, 1.6f, t));
+                // Not a spell effect: Place enlarges by Size, and the Venom poof keeps its own size.
+                Place(sr, camera, last, BoardController.CardW * Mathf.Lerp(1.1f, 1.6f, t) / Size);
                 sr.color = new Color(1f, 1f, 1f, Mathf.Clamp01(t * 10f) * (1f - Ramp(t, 0.6f)));
                 yield return null;
             }
@@ -370,7 +382,7 @@ namespace Kingdom.Presentation
             sr.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
             sr.transform.localScale = new Vector3(
                 delta.magnitude / 0.85f / Mathf.Max(extent.x, 0.001f),
-                BoardController.CardW * 0.9f / Mathf.Max(extent.y, 0.001f), 1f);
+                BoardController.CardW * 0.9f * Size / Mathf.Max(extent.y, 0.001f), 1f);
         }
 
         public static float HealArrivesAt(float cardSeconds, int index) =>
@@ -578,7 +590,7 @@ namespace Kingdom.Presentation
         /// <summary>When a caster effect of <see cref="GatherSeconds"/> starts so it peaks as the
         /// first missile of a school with this lead leaves, about a third of a second later.</summary>
         public static float GatherStartsAt(float cardSeconds, float lead) =>
-            Mathf.Max(0f, cardSeconds + lead - 0.32f - GatherSeconds * 0.8f);
+            Mathf.Max(0f, cardSeconds + lead - 0.32f * Tempo - GatherSeconds * 0.8f);
 
         /// <summary>A school's caster effect (Clockwright's gears, Tempest's charge, Tidecaller's
         /// water or frost): plays the three frames once, growing a little, and fades out at the
@@ -632,7 +644,7 @@ namespace Kingdom.Presentation
             if (sr != null) Object.Destroy(sr.gameObject);
         }
 
-        private const float BurstSeconds = 0.45f;
+        private const float BurstSeconds = 0.45f * Tempo;
 
         public static float BuildupStartsAt(float cardSeconds) =>
             Mathf.Max(0f, cardSeconds + EarthLeadSeconds - FallSeconds - BuildupSeconds * 0.85f);
@@ -650,7 +662,7 @@ namespace Kingdom.Presentation
             if (sr.sprite == null) return;
             sr.transform.position = Vector3.Lerp(at, camera.transform.position, DepthFraction);
             Vector3 extent = sr.sprite.bounds.size;
-            sr.transform.localScale = Vector3.one * (worldSize / Mathf.Max(extent.x, extent.y, 0.001f));
+            sr.transform.localScale = Vector3.one * (worldSize * Size / Mathf.Max(extent.x, extent.y, 0.001f));
         }
 
         private static SpriteRenderer MakeRenderer(Transform parent, string name)

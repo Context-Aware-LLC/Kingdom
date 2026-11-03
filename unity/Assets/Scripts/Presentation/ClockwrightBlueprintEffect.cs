@@ -7,8 +7,8 @@ namespace Kingdom.Presentation
     internal static class ClockwrightBlueprintEffect
     {
         public const string SpriteKey = "effect_hero_power_blueprint";
-        public const float GatherSeconds = 0.30f;
-        private const float TailSeconds = 0.35f;
+        public const float GatherSeconds = 0.30f * SpellSchoolEffects.Tempo;
+        private const float TailSeconds = 0.35f * SpellSchoolEffects.Tempo;
 
         public static IEnumerator Play(Transform parent, Sprite art, Transform deck,
                                        float releaseInSeconds)
@@ -24,7 +24,7 @@ namespace Kingdom.Presentation
             SpriteMaterials.Set(renderer, art);
             // Below the flying card (80), above the deck furniture.
             renderer.sortingOrder = 79;
-            float scale = DeckPileView.PileW * 1.5f / Mathf.Max(art.bounds.size.x, art.bounds.size.y);
+            float scale = DeckPileView.PileW * 1.5f * SpellSchoolEffects.Size / Mathf.Max(art.bounds.size.x, art.bounds.size.y);
             float duration = gather + TailSeconds;
             // Timed destruction also cleans up if the director is disabled mid-animation.
             Object.Destroy(go, duration + 0.1f);

@@ -47,9 +47,9 @@ namespace Kingdom.Presentation
 
         [Header("Hero power cast")]
         [Tooltip("Seconds the cast effect takes to rise up the caster's portrait.")]
-        [SerializeField, Range(0.1f, 1f)] private float heroCastSeconds = 0.35f;
+        [SerializeField, Range(0.1f, 1f)] private float heroCastSeconds = 0.35f * SpellSchoolEffects.Tempo;
         [Tooltip("Seconds from the first spark off the socket to the strike.")]
-        [SerializeField, Range(0.1f, 1f)] private float heroPowerLeadSeconds = 0.24f;
+        [SerializeField, Range(0.1f, 1f)] private float heroPowerLeadSeconds = 0.24f * SpellSchoolEffects.Tempo;
 
         /// <summary>How far in front of everything the reveal card rides while it is in flight, so
         /// it never clips into the hand fan it is leaving or the board row it is joining.</summary>
@@ -93,7 +93,7 @@ namespace Kingdom.Presentation
                                heroCastSeconds * BoltLeavesAtCast + heroPowerLeadSeconds,
                                PortraitCastEffect.TotalSeconds(NightveilBackstabShadow.PortraitWipeSeconds)
                                    + NightveilBackstabShadow.RiseSeconds,
-                               1.35f,
+                               1.35f * SpellSchoolEffects.Tempo,
                                PortraitCastEffect.TotalSeconds(heroCastSeconds)
                                    + ClockwrightBlueprintEffect.GatherSeconds);
 

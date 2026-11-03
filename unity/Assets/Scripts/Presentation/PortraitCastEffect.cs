@@ -19,8 +19,8 @@ namespace Kingdom.Presentation
     /// </summary>
     internal sealed class PortraitCastEffect
     {
-        private const float HoldSeconds = 0.10f;
-        private const float FadeSeconds = 0.30f;
+        private const float HoldSeconds = 0.10f * SpellSchoolEffects.Tempo;
+        private const float FadeSeconds = 0.30f * SpellSchoolEffects.Tempo;
         internal static float TotalSeconds(float wipeSeconds) => wipeSeconds + HoldSeconds + FadeSeconds;
         /// <summary>Horizontal slices the mask is cut into. The oval's edge is this smooth.</summary>
         private const int Rows = 24;

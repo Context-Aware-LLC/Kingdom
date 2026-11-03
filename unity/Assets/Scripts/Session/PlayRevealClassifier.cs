@@ -322,6 +322,18 @@ namespace Kingdom.Session
                     else if (Touches(f.Kind) && !touched.Contains(f.Target.Value))
                         touched.Add(f.Target.Value);
                 }
+                // A DESTROY marks its target lethal, and the death sweep emits CardDestroyed with
+                // the dying minion as the SOURCE and no target, so the loop above never matched
+                // one and every destroy spell landed no effect (2026-11-03: Petrify, Death Mark,
+                // Undertow, Finish the Job, Contract Kill, Scrap for Parts, Last Rite). Anything
+                // that died in this entry without the spell damaging it is the spell's doing.
+                for (int j = i + 1; j < events.Count; j++)
+                {
+                    GameEvent f = events[j];
+                    if (f.Kind == GameEventKind.CardDestroyed && f.Source.HasValue && f.Source != source
+                        && !touched.Contains(f.Source.Value))
+                        touched.Add(f.Source.Value);
+                }
                 // A character damaged or healed already has its effect.
                 touched.RemoveAll(t => struck.Contains(t) || healed.Contains(t));
 
