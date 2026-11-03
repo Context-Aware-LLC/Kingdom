@@ -25,8 +25,14 @@ namespace Kingdom.Presentation
     ///
     /// <para>Built as its own UIDocument through Resources on the settings panel, the pattern
     /// <see cref="MatchEndBanner"/> uses, and sorted under every other document on that panel.
-    /// Its right inset is <c>.emb-edge</c>'s alone, clear of the punch-hole camera. Updates arrive on the main thread through NetworkedGameBootstrap's marshalling
-    /// session, the same path as OnSnapshot.</para>
+    /// Updates arrive on the main thread through NetworkedGameBootstrap's marshalling session, the
+    /// same path as OnSnapshot.</para>
+    ///
+    /// <para><b>The right inset is <c>.emb-edge</c>'s alone, and it does NOT clear the Pixel 5a's
+    /// punch-hole camera.</b> The cutout is 136 px deep at the panel's 1:1 scale and the inset is 52,
+    /// so the camera covers about the right 30 px of the image. That is a known trade-off: any
+    /// further in, and the card sits on the opponent's Hero Power. The cutout depth is tracked in
+    /// #350.</para>
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public sealed class CommissionCardView : MonoBehaviour
@@ -57,16 +63,22 @@ namespace Kingdom.Presentation
         private bool _shown;
         private bool _wide;
         private bool _open;
-        private bool _pointerOverChip;
+        /// <summary>The pointer whose press began on the chip, held until it lifts; -1 for none.</summary>
+        private int _chipPointer = -1;
         private int _screenWidth;
         private int _screenHeight;
 
         /// <summary>True while the chip's full card is open. Board input waits until it closes.</summary>
         public bool IsOpen => _shown && !_wide && _open;
 
-        /// <summary>What InputRouter.UiBlocksInput reads: the card is open, or the pointer is on the
-        /// chip, which has no physics collider (the settings gear's reason exactly).</summary>
-        public bool IsBlockingInput => IsOpen || (_shown && !_wide && _pointerOverChip);
+        /// <summary>What InputRouter.UiBlocksInput reads: the card is open, or a press STARTED on the
+        /// chip and has not lifted. The chip has no physics collider, so the router would otherwise
+        /// read that press as one on the board.
+        ///
+        /// <para>Deliberately not hover, which is the settings gear's rule. The router cancels any
+        /// gesture on a frame this is true, so a card dragged across the chip would be dropped.
+        /// Capture keeps the press counted when the finger slides off the chip before lifting.</para></summary>
+        public bool IsBlockingInput => IsOpen || (_shown && !_wide && _chipPointer != -1);
 
         /// <summary>Build the card and show what <paramref name="session"/> holds now. The match
         /// start's card raises no event, so this read is the only way it is seen; later cards arrive
@@ -119,9 +131,23 @@ namespace Kingdom.Presentation
 
             if (_chip != null)
             {
-                _chip.RegisterCallback<ClickEvent>(_ => SetOpen(!_open));
-                _chip.RegisterCallback<PointerEnterEvent>(_ => _pointerOverChip = true);
-                _chip.RegisterCallback<PointerLeaveEvent>(_ => _pointerOverChip = false);
+                // The capture idiom of FriendsDrawerController.WireChatDrag. The toggle is decided
+                // here on lift, inside the chip, rather than by ClickEvent, so it does not depend on
+                // how a click is synthesised under capture.
+                _chip.RegisterCallback<PointerDownEvent>(e =>
+                {
+                    if (_chipPointer != -1) return;
+                    _chipPointer = e.pointerId;
+                    _chip.CapturePointer(e.pointerId);
+                });
+                _chip.RegisterCallback<PointerUpEvent>(e =>
+                {
+                    if (e.pointerId != _chipPointer) return;
+                    bool inside = _chip.worldBound.Contains(e.position);
+                    _chip.ReleasePointer(e.pointerId);
+                    if (inside) SetOpen(!_open);
+                });
+                _chip.RegisterCallback<PointerCaptureOutEvent>(_ => _chipPointer = -1);
             }
             // The full card is Ignore, so a tap on it lands here or on the chip: both close it.
             _scrim?.RegisterCallback<ClickEvent>(_ => SetOpen(false));
@@ -234,7 +260,7 @@ namespace Kingdom.Presentation
         private void OnDisable()
         {
             _open = false;
-            _pointerOverChip = false;
+            _chipPointer = -1;
         }
     }
 }
