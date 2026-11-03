@@ -208,6 +208,50 @@ namespace Kingdom.Net.Client.Auth
             return false;
         }
 
+        /// <summary>
+        /// A nested ARRAY OF INTEGERS — <c>backIds</c> in a <c>GET /king/prize</c> choice, and nothing
+        /// else so far. Returns false when the member is absent or is not an array, and rejects the
+        /// whole array when any element is not an integer, for the reason
+        /// <see cref="TryReadRawObjectArray"/> gives.
+        /// </summary>
+        public static bool TryReadInt64Array(string json, string name, out IReadOnlyList<long> items)
+        {
+            var list = new List<long>();
+            items = list;
+
+            if (!TryReadTopLevel(json, keepContainers: true, out var outer)) return false;
+            if (!outer.TryGetValue(name, out string? raw) || string.IsNullOrEmpty(raw)) return false;
+
+            int pos = 0;
+            SkipWhitespace(raw!, ref pos);
+            if (pos >= raw!.Length || raw[pos] != '[') return false;
+            pos++;
+
+            SkipWhitespace(raw, ref pos);
+            if (pos < raw.Length && raw[pos] == ']') return true;
+
+            while (pos < raw.Length)
+            {
+                SkipWhitespace(raw, ref pos);
+                int start = pos;
+                while (pos < raw.Length && raw[pos] != ',' && raw[pos] != ']' &&
+                       raw[pos] != ' ' && raw[pos] != '\t' && raw[pos] != '\n' && raw[pos] != '\r')
+                    pos++;
+                if (!long.TryParse(raw.Substring(start, pos - start), NumberStyles.AllowLeadingSign,
+                        CultureInfo.InvariantCulture, out long value))
+                    return false;
+                list.Add(value);
+
+                SkipWhitespace(raw, ref pos);
+                if (pos >= raw.Length) return false;
+                if (raw[pos] == ',') { pos++; continue; }
+                if (raw[pos] == ']') return true;
+                return false;
+            }
+
+            return false;
+        }
+
         private static bool TryReadTopLevel(string json, bool keepContainers,
                                             out IReadOnlyDictionary<string, string> fields,
                                             ISet<string>? nulls = null)

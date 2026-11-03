@@ -1021,4 +1021,18 @@
     <!-- The match-end proclamation, under the reason. %1$s = the commission's name, e.g. Overkill; %2$d = this match's score. -->
     <string name="king_proc_commission">His commission, %1$s: %2$d</string>
     <string name="king_proc_commission_new_best">His commission, %1$s: %2$d. New best!</string>
+    <!-- The prize choice on menu arrival: a top-three place the player has held before earns one card back from a pool. -->
+    <string name="king_prize_title">A Gift from the Crown</string>
+    <!-- %1$d = the reign number. One line per place, because the place is said in words. -->
+    <string name="king_prize_body_first">Reign %1$d: His Majesty\'s Favorite, and not for the first time. Choose a card back from the royal wardrobe.</string>
+    <string name="king_prize_body_second">Reign %1$d: second in His Majesty\'s Favor, and not for the first time. Choose a card back from the royal wardrobe.</string>
+    <string name="king_prize_body_third">Reign %1$d: third in His Majesty\'s Favor, and not for the first time. Choose a card back from the royal wardrobe.</string>
+    <!-- Buttons. Later closes the scroll and keeps the prize for the next visit to the menu. -->
+    <string name="king_prize_claim">Claim</string>
+    <string name="king_prize_later">Later</string>
+    <!-- After a claim. -->
+    <string name="king_prize_granted">It is yours. Any deck may wear it now.</string>
+    <string name="king_prize_granted_more">It is yours. His Majesty owes you another.</string>
+    <string name="king_prize_gone">That gift has already been collected.</string>
+    <string name="king_prize_failed">His Majesty\'s clerks could not deliver it. Try again in a moment.</string>
 </resources>

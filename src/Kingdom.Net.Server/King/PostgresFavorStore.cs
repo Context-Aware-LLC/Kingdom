@@ -234,6 +234,48 @@ namespace Kingdom.Net.Server.King
             await cmd.ExecuteNonQueryAsync(ct);
         }
 
+        public async Task<IReadOnlyList<FavorPrize>> OpenChoicesAsync(string playerId, CancellationToken ct = default)
+        {
+            var rows = new List<FavorPrize>();
+            await using var conn = new NpgsqlConnection(_connString);
+            await conn.OpenAsync(ct);
+            await using var cmd = new NpgsqlCommand(
+                "select reign, player_id, place, gold, back_id, choice_open from favor_prize " +
+                "where player_id = $1 and choice_open order by reign", conn);
+            cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+            await using NpgsqlDataReader r = await cmd.ExecuteReaderAsync(ct);
+            while (await r.ReadAsync(ct)) rows.Add(ReadPrize(r));
+            return rows;
+        }
+
+        public async Task<bool> CloseChoiceAsync(int reign, string playerId, int? backId, CancellationToken ct = default)
+        {
+            // The WHERE is the race guard: a second close waits on the first's row lock, re-reads
+            // choice_open as false, and updates nothing.
+            await using var conn = new NpgsqlConnection(_connString);
+            await conn.OpenAsync(ct);
+            await using var cmd = new NpgsqlCommand(
+                "update favor_prize set choice_open = false, back_id = $3 " +
+                "where reign = $1 and player_id = $2 and choice_open", conn);
+            cmd.Parameters.Add(P(NpgsqlDbType.Integer, reign));
+            cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+            cmd.Parameters.Add(P(NpgsqlDbType.Integer, (object?)backId ?? DBNull.Value));
+            return await cmd.ExecuteNonQueryAsync(ct) == 1;
+        }
+
+        public async Task ReopenChoiceAsync(int reign, string playerId, int backId, CancellationToken ct = default)
+        {
+            await using var conn = new NpgsqlConnection(_connString);
+            await conn.OpenAsync(ct);
+            await using var cmd = new NpgsqlCommand(
+                "update favor_prize set choice_open = true, back_id = null " +
+                "where reign = $1 and player_id = $2 and not choice_open and back_id = $3", conn);
+            cmd.Parameters.Add(P(NpgsqlDbType.Integer, reign));
+            cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
+            cmd.Parameters.Add(P(NpgsqlDbType.Integer, backId));
+            await cmd.ExecuteNonQueryAsync(ct);
+        }
+
         /// <summary>Reads the six columns reign, player_id, place, gold, back_id, choice_open, in that order.</summary>
         private static FavorPrize ReadPrize(NpgsqlDataReader r)
             => new FavorPrize(r.GetInt32(0), r.GetString(1), r.GetInt32(2), r.GetInt64(3),

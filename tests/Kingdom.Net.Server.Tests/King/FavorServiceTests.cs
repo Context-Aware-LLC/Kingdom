@@ -459,6 +459,12 @@ namespace Kingdom.Net.Server.Tests.King
                 => throw new InvalidOperationException("favor store is down");
             public Task SettleBackAsync(int reign, string playerId, int? backId, bool choiceOpen, CancellationToken ct = default)
                 => throw new InvalidOperationException("favor store is down");
+            public Task<IReadOnlyList<FavorPrize>> OpenChoicesAsync(string playerId, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task<bool> CloseChoiceAsync(int reign, string playerId, int? backId, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task ReopenChoiceAsync(int reign, string playerId, int backId, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
         }
 
         /// <summary>One ladder match between the harness player (seat 0) and a second account,

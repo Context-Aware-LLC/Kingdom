@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Kingdom.Net.Client.Auth;
@@ -113,10 +114,43 @@ namespace Kingdom.Net.Client.King
         }
     }
 
+    /// <summary>One open back choice, as <c>GET /king/prize</c> answers it: the reign and place that
+    /// earned it, and the pool backs the player does not own. Never empty: the server settles a
+    /// choice with nothing left to offer in gold instead of listing it.</summary>
+    public sealed class PrizeChoiceOffer
+    {
+        public int Reign { get; }
+        public int Place { get; }
+
+        /// <summary><c>CardBackDefinitions</c> ids, in pool order.</summary>
+        public IReadOnlyList<int> BackIds { get; }
+
+        public PrizeChoiceOffer(int reign, int place, IReadOnlyList<int> backIds)
+        {
+            Reign = reign;
+            Place = place;
+            BackIds = backIds;
+        }
+    }
+
+    /// <summary>How <c>POST /king/prize/choose</c> answered.</summary>
+    public enum PrizeChooseOutcome
+    {
+        /// <summary>The back is the player's.</summary>
+        Granted,
+        /// <summary>The choice is gone: claimed already, or settled in gold.</summary>
+        None,
+        /// <summary>The server refused the back: the pool changed, or the player owns it now.</summary>
+        Invalid,
+        /// <summary>No answer: offline, signed out, rate limited, or the server could not say.</summary>
+        Failed,
+    }
+
     /// <summary>
-    /// Read-only client for <c>GET /king</c>, <c>GET /king/roll</c> and <c>GET /king/favor</c>, which
-    /// are public and the same for everyone, so no token is sent; and <c>GET /king/favor/me</c>, which
-    /// takes the bearer. Every failure comes back as data, never as an exception.
+    /// Client for <c>GET /king</c>, <c>GET /king/roll</c> and <c>GET /king/favor</c>, which are public
+    /// and the same for everyone, so no token is sent; and <c>GET /king/favor/me</c>,
+    /// <c>GET /king/prize</c> and <c>POST /king/prize/choose</c>, which take the bearer. Every failure
+    /// comes back as data, never as an exception.
     ///
     /// <para><b>No King and an unread King are both null</b>, and both mean the same thing to the
     /// menu: no crown. Nothing a player can do depends on the King, so the difference has nowhere to
@@ -233,6 +267,68 @@ namespace Kingdom.Net.Client.King
                 score = (int)s;
             }
             return new FavorStanding(place, score, seals);
+        }
+
+        /// <summary>The signed-in player's open back choices, oldest reign first. Empty when there are
+        /// none and when they could not be read: either way the menu offers nothing, and the choice
+        /// waits for the next arrival. An unreadable choice empties the whole list.</summary>
+        public async Task<IReadOnlyList<PrizeChoiceOffer>> FetchPrizeChoicesAsync(string accessToken,
+            CancellationToken cancellationToken = default)
+        {
+            var none = Array.Empty<PrizeChoiceOffer>();
+            if (string.IsNullOrEmpty(accessToken)) return none;
+            string? body = await GetAsync("/king/prize", accessToken, cancellationToken).ConfigureAwait(false);
+            if (body == null || !ReadStatus(body, out _) ||
+                !AuthJson.TryReadRawObjectArray(body, "choices", out IReadOnlyList<string> raw))
+                return none;
+
+            var offers = new List<PrizeChoiceOffer>(raw.Count);
+            foreach (string row in raw)
+            {
+                if (!AuthJson.TryReadTopLevel(row, out IReadOnlyDictionary<string, string> fields) ||
+                    !TryCount(fields, "reign", 1, out int reign) ||
+                    !TryCount(fields, "place", 1, out int place) ||
+                    !AuthJson.TryReadInt64Array(row, "backIds", out IReadOnlyList<long> ids) || ids.Count == 0)
+                    return none;
+                var backIds = new List<int>(ids.Count);
+                foreach (long id in ids)
+                {
+                    if (id < 1 || id > int.MaxValue) return none;
+                    backIds.Add((int)id);
+                }
+                offers.Add(new PrizeChoiceOffer(reign, place, backIds));
+            }
+            return offers;
+        }
+
+        /// <summary>Claim <paramref name="backId"/> for <paramref name="reign"/>'s open choice.</summary>
+        public async Task<PrizeChooseOutcome> ChooseBackAsync(string accessToken, int reign, int backId,
+            CancellationToken cancellationToken = default)
+        {
+            if (!IsConfigured || string.IsNullOrEmpty(accessToken)) return PrizeChooseOutcome.Failed;
+            string json = "{\"reign\":" + reign.ToString(CultureInfo.InvariantCulture) +
+                          ",\"backId\":" + backId.ToString(CultureInfo.InvariantCulture) + "}";
+            var headers = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("Authorization", "Bearer " + accessToken),
+                new KeyValuePair<string, string>("Accept", "application/json"),
+            };
+            AuthHttpResponse response = await _http
+                .PostJsonAsync(_baseUrl + "/king/prize/choose", json, headers, cancellationToken)
+                .ConfigureAwait(false);
+
+            // Refusals carry their status on a 4xx, so the body is read whatever the code.
+            if (response.IsTransportFailure ||
+                !AuthJson.TryReadTopLevel(response.Body, out IReadOnlyDictionary<string, string> fields) ||
+                !AuthJson.TryString(fields, "status", out string status))
+                return PrizeChooseOutcome.Failed;
+            switch (status)
+            {
+                case "granted": return PrizeChooseOutcome.Granted;
+                case "none": return PrizeChooseOutcome.None;
+                case "invalid": return PrizeChooseOutcome.Invalid;
+                default: return PrizeChooseOutcome.Failed;
+            }
         }
 
         private Task<string?> GetAsync(string path, CancellationToken cancellationToken)

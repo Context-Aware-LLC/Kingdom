@@ -136,3 +136,78 @@
     padding-right: var(--space-6);
     font-size: var(--type-body);
 }
+
+/* ============================================================================
+   THE PRIZE CHOICE: one card back from the pool, for a top-three place held
+   before (#421). Opened on menu arrival by PrizeChoiceOverlay, on the same
+   scroll as the Roll; it borrows the Roll's header, footer and buttons.
+
+   The backs sit in a FIXED-height list, like the Roll's, so the sheet is the
+   same size however big the pool grows. Tiles wrap in rows inside it.
+   ============================================================================ */
+
+.prize-overlay .tidbit-scroll {
+    width: 64%;
+    max-width: 90%;
+}
+
+.prize-sheet {
+    flex-shrink: 0;
+}
+
+.prize-body {
+    font-size: var(--type-body);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin-bottom: var(--space-4);
+}
+
+.prize-backs {
+    height: 360px;
+    flex-shrink: 0;
+}
+
+.prize-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* A card back is about 5:7. A tile is a button, but not chrome: no slate sprite
+   behind the art (theme.uss, "EVERY BUTTON IS CHROME"). */
+.prize-back {
+    width: 168px;
+    height: 232px;
+    margin: var(--space-2);
+    padding: var(--space-1);
+    background-image: none;
+    border-width: 4px;
+    border-radius: var(--space-2);
+    border-color: rgba(84, 58, 34, 0.25);
+}
+
+.prize-back--on {
+    border-color: rgb(240, 166, 60);
+}
+
+.prize-back__art {
+    flex-grow: 1;
+    border-radius: var(--space-1);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* Under the list: what happened to a claim. Empty, it still holds its line, so
+   the footer does not jump when a message arrives. */
+.prize-status {
+    min-height: 48px;
+    margin-top: var(--space-2);
+    font-size: var(--type-label);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.prize-footer .roll-button {
+    margin-left: var(--space-4);
+}

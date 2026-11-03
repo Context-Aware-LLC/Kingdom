@@ -231,6 +231,53 @@ namespace Kingdom.Net.Server.Tests.King
 
             Assert.That((await Store.UnsettledBacksAsync(3, default)).Select(p => p.PlayerId), Is.EqualTo(new[] { "g" }));
         }
+
+        /// <summary>A paid reign's prize row with its choice open, as the sweep's back pass leaves it.</summary>
+        private async Task OpenChoiceAsync(int reign, string player, int place = 1)
+        {
+            await Store.RecordPrizeAsync(new FavorPrize(reign, player, place, 100, null, false), default);
+            await Store.ClosePaidAsync(reign, null, null, default);
+            await Store.SettleBackAsync(reign, player, null, true, default);
+        }
+
+        [Test]
+        public async Task Open_choices_are_the_players_own_oldest_first()
+        {
+            await OpenChoiceAsync(3, "a", 2);
+            await OpenChoiceAsync(1, "a");
+            await OpenChoiceAsync(2, "b");
+            await Store.RecordPrizeAsync(new FavorPrize(4, "a", 1, 100, null, false), default);   // no choice
+
+            Assert.That((await Store.OpenChoicesAsync("a", default)).Select(p => (p.Reign, p.Place)),
+                Is.EqualTo(new[] { (1, 1), (3, 2) }));
+        }
+
+        [Test]
+        public async Task A_choice_closes_once_and_keeps_the_back()
+        {
+            await OpenChoiceAsync(1, "a");
+
+            Assert.That(await Store.CloseChoiceAsync(1, "a", 201, default), Is.True);
+            Assert.That(await Store.CloseChoiceAsync(1, "a", 202, default), Is.False);
+            Assert.That(await Store.CloseChoiceAsync(1, "nobody", 202, default), Is.False);
+
+            Assert.That(await Store.PrizeAsync(1, "a", default), Is.EqualTo(new FavorPrize(1, "a", 1, 100, 201, false)));
+            Assert.That(await Store.OpenChoicesAsync("a", default), Is.Empty);
+            Assert.That(await Store.UnsettledBacksAsync(3, default), Is.Empty, "a closed choice is not owed a back");
+        }
+
+        [Test]
+        public async Task A_choice_reopens_only_on_the_back_it_closed_on()
+        {
+            await OpenChoiceAsync(1, "a");
+            await Store.CloseChoiceAsync(1, "a", 201, default);
+
+            await Store.ReopenChoiceAsync(1, "a", 202, default);
+            Assert.That(await Store.OpenChoicesAsync("a", default), Is.Empty);
+
+            await Store.ReopenChoiceAsync(1, "a", 201, default);
+            Assert.That(await Store.PrizeAsync(1, "a", default), Is.EqualTo(new FavorPrize(1, "a", 1, 100, null, true)));
+        }
     }
 
     [TestFixture]

@@ -1071,6 +1071,28 @@ namespace Kingdom.Net.Server
                     seals = result.Seals,
                 }, statusCode: result.HttpStatus);
             });
+            // GET /king/prize and POST /king/prize/choose — a repeat top-three place's back, picked
+            // from the pool (PrizeChoiceEndpoint). The back id is client-authored: the body is
+            // capped before auth, and the id is checked against an open choice, the pool and the
+            // ledger. Not gated on a King: a choice opened under one stays open for good.
+            var prizeChoice = new King.PrizeChoiceEndpoint(
+                cfg.TokenVerifier, cfg.AccountStore, favorStore,
+                cfg.EntitlementLedger is null ? null : new King.LedgerPrizeBacks(cfg.EntitlementLedger),
+                economy, cfg.FavorPrizes, CardBackDefinitions.PoolIds,
+                new FriendRequestLimiter(time, max: 10, windowMs: 60_000));
+            app.MapGet("/king/prize", async (HttpContext context) =>
+            {
+                return PrizeChoiceJson(context,
+                    await prizeChoice.ReadAsync(BearerFrom(context), context.RequestAborted), withChoices: true);
+            });
+            app.MapPost("/king/prize/choose", async (HttpContext context) =>
+            {
+                var (body, oversized) = await ReadCappedBodyAsync(context, King.PrizeChoiceEndpoint.MaxBodyBytes);
+                return PrizeChoiceJson(context, await prizeChoice.ChooseAsync(
+                    // Cast, not a bare null, for the reason /telemetry/client gives.
+                    oversized ? (ReadOnlyMemory<byte>?)null : body,
+                    BearerFrom(context), context.RequestAborted), withChoices: false);
+            });
             app.MapGet("/leaderboard", async (HttpContext context) =>
             {
                 int limit = 50;
@@ -1960,29 +1982,6 @@ namespace Kingdom.Net.Server
         }
 
         /// <summary>
-        /// The one JSON shape every <c>/friends</c> route answers with.
-        ///
-        /// <para>The lists are OMITTED on anything but a 200, for the reason <c>/roster</c> omits
-        /// its decks: an absent field cannot be misread as "this player has no friends".</para>
-        ///
-        /// <para>Each list is an ARRAY OF FLAT OBJECTS with scalar values, which is the only
-        /// shape the client's <c>AuthJson.TryReadObjectArray</c> reads. <c>outgoing</c> and
-        /// <c>blocked</c> carry the code ALONE, deliberately — see <see cref="FriendsEndpoint"/>
-        /// for why a name there would be a lookup service.</para>
-        ///
-        /// <para><b>A player with no name is sent <c>""</c>, never <c>null</c>.</b> The client's
-        /// reader keeps a bare literal as its raw text, so a JSON <c>null</c> arrives as the
-        /// four-character string "null" and would be drawn as a friend called null. An empty
-        /// string cannot be a name (<c>PlayerName.MinLength</c>) and reads as absent.</para>
-        ///
-        /// <para><c>displayName</c> is peer-authored text. Its renderer is
-        /// <c>FriendsDrawerController.NameLabel</c>, which owes what the nameplate owes: rich text
-        /// OFF, and a clip in PIXELS. A further renderer inherits both (security.md, "Friends
-        /// routes").</para>
-        ///
-        /// <para>Cache-Control: no-store, for the reason <c>/roster</c> sets it.</para>
-        /// </summary>
-        /// <summary>
         /// The request body, read up to <paramref name="maxBytes"/>. Past the cap the read stops and
         /// <c>Oversized</c> is true, so an unauthenticated caller cannot make the server buffer more
         /// than the cap — the reason <see cref="SmallJsonStringAsync"/> caps too.
@@ -2029,6 +2028,47 @@ namespace Kingdom.Net.Server
             return Results.Json(new { status, suggestions = rows }, statusCode: result.HttpStatus);
         }
 
+        /// <summary>
+        /// The <c>/king/prize</c> routes' JSON: <c>status</c> always, and on GET's 200 the open
+        /// <c>choices</c>, each <c>{reign, place, backIds}</c>. Per-account, so no-store.
+        /// </summary>
+        private static IResult PrizeChoiceJson(HttpContext context, King.PrizeChoiceResult result, bool withChoices)
+        {
+            context.Response.Headers["Cache-Control"] = "no-store";
+            if (result.HttpStatus == 429) context.Response.Headers["Retry-After"] = "60";
+            string status = result.Status.ToString().ToLowerInvariant();
+            if (!withChoices || result.HttpStatus != 200)
+                return Results.Json(new { status }, statusCode: result.HttpStatus);
+
+            var choices = new List<object>(result.Choices.Count);
+            foreach (King.PrizeChoice c in result.Choices)
+                choices.Add(new { reign = c.Reign, place = c.Place, backIds = c.BackIds });
+            return Results.Json(new { status, choices }, statusCode: result.HttpStatus);
+        }
+
+        /// <summary>
+        /// The one JSON shape every <c>/friends</c> route answers with.
+        ///
+        /// <para>The lists are OMITTED on anything but a 200, for the reason <c>/roster</c> omits
+        /// its decks: an absent field cannot be misread as "this player has no friends".</para>
+        ///
+        /// <para>Each list is an ARRAY OF FLAT OBJECTS with scalar values, which is the only
+        /// shape the client's <c>AuthJson.TryReadObjectArray</c> reads. <c>outgoing</c> and
+        /// <c>blocked</c> carry the code ALONE, deliberately — see <see cref="FriendsEndpoint"/>
+        /// for why a name there would be a lookup service.</para>
+        ///
+        /// <para><b>A player with no name is sent <c>""</c>, never <c>null</c>.</b> The client's
+        /// reader keeps a bare literal as its raw text, so a JSON <c>null</c> arrives as the
+        /// four-character string "null" and would be drawn as a friend called null. An empty
+        /// string cannot be a name (<c>PlayerName.MinLength</c>) and reads as absent.</para>
+        ///
+        /// <para><c>displayName</c> is peer-authored text. Its renderer is
+        /// <c>FriendsDrawerController.NameLabel</c>, which owes what the nameplate owes: rich text
+        /// OFF, and a clip in PIXELS. A further renderer inherits both (security.md, "Friends
+        /// routes").</para>
+        ///
+        /// <para>Cache-Control: no-store, for the reason <c>/roster</c> sets it.</para>
+        /// </summary>
         private static IResult FriendsJson(HttpContext context, FriendsResult result)
         {
             context.Response.Headers["Cache-Control"] = "no-store";

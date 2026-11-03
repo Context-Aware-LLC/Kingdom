@@ -473,15 +473,22 @@ namespace Kingdom.Presentation
         /// per reign because FirstRunTidbit shows an id once. The reign counts as heard when the scroll
         /// rolls shut, the same moment the tidbit marker is written: a player who quits mid-card has
         /// not heard it.</para>
+        ///
+        /// <para><b>This is also the arrival sequence.</b> Arrival shows one scroll at a time: the
+        /// first-run lesson, else the Herald, then a prize choice (<see cref="OfferPrizeAsync"/>)
+        /// once the Herald rolls shut, or at once when he has nothing to say.</para>
         /// </summary>
         private async Task AnnounceKingAsync(bool firstLook)
         {
             if (_kingRequest == null) return;
             KingNow king = await _kingRequest;
-            if (this == null || king == null || _tidbit == null) return;
+            if (this == null || _tidbit == null) return;
+
+            // No King, or none read: no Herald, but a choice opened under an earlier one still waits.
+            if (king == null) { _ = OfferPrizeAsync(firstLook); return; }
 
             int heard = PlayerPrefs.GetInt(LastHeardReignKey, 0);
-            if (king.Reign <= heard) return;
+            if (king.Reign <= heard) { _ = OfferPrizeAsync(firstLook); return; }
 
             int reign = king.Reign;
             if (firstLook || _tidbit.IsShowing)
@@ -499,7 +506,44 @@ namespace Kingdom.Presentation
                 // No recording of this line exists yet; the card reads complete without one. When one
                 // lands in Assets/Sound/Voice/Herald, pass its "vo/..." address here.
                 voiceAddress: null);
-            _tidbit.Show(new[] { herald }, () => RememberReign(reign));
+            _tidbit.Show(new[] { herald }, () =>
+            {
+                RememberReign(reign);
+                _ = OfferPrizeAsync(firstLook: false);
+            });
+        }
+
+        /// <summary>
+        /// A card back to choose (#421), when a top-three place the player held before has opened
+        /// one. Only into a quiet menu: never over the first-run lesson, a tidbit, or the Roll or
+        /// Ledger the player opened while the read was in flight. Skipped, the choice waits on the
+        /// server for the next arrival; nothing expires.
+        /// </summary>
+        private async Task OfferPrizeAsync(bool firstLook)
+        {
+            if (firstLook || !AuthGateway.IsSignedIn) return;
+
+            System.Collections.Generic.IReadOnlyList<PrizeChoiceOffer> offers;
+            try
+            {
+                string token = await AuthGateway.TokenForConnectAsync();
+                offers = await new HttpKingGateway(
+                    CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(KingTimeoutSeconds)).FetchPrizeChoicesAsync(token);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[King] prize choices not read ({ex.GetType().Name}: {ex.Message}); offered next arrival.");
+                return;
+            }
+
+            if (this == null || offers.Count == 0) return;   // the menu left while the read was in flight
+            // The overlays are found by the GameObject names their Open methods give them.
+            if (_tidbit?.IsShowing == true ||
+                _root.Query(className: "mm-modal").Where(m => !m.ClassListContains("mm-modal--hidden")).First() != null ||
+                GameObject.Find("SuccessionRollUI") != null || GameObject.Find("LedgerUI") != null ||
+                GameObject.Find("PrizeChoiceUI") != null)
+                return;
+            PrizeChoiceOverlay.Open(offers);
         }
 
         private static void RememberReign(int reign)

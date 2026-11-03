@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  PrizeChoice.uxml: a repeat top-three place's prize, one card back picked from the pool (King of
+  the Week, #421). Built at runtime by PrizeChoiceOverlay through Resources, the pattern
+  SuccessionRoll uses, and read on the herald's scroll: ProclamationScroll wraps prize-sheet in
+  code, so the rollers are not in this markup.
+
+  .emb-root IS LOAD-BEARING: this tree is its own UIDocument, so nothing above it declares the
+  type and spacing tokens the rules here read.
+
+  The backs sit in a ScrollView with both scrollers Hidden in the markup, which is the mechanism
+  (theme.uss says why the USS rule alone is not). No doubled hyphen in this comment.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../../Common/theme.uss" />
+    <Style src="../../Common/tidbit.uss" />
+    <Style src="../king.uss" />
+
+    <ui:VisualElement name="prize" class="emb-root emb-bleed tidbit-overlay prize-overlay">
+        <ui:VisualElement name="prize-sheet" class="tidbit-card prize-sheet">
+            <ui:VisualElement class="roll-header">
+                <ui:Label text="A Gift from the Crown" class="tidbit-title roll-title" />
+            </ui:VisualElement>
+            <ui:Label name="prize-body" class="prize-body" />
+            <ui:ScrollView name="prize-backs" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="prize-backs" />
+            <ui:Label name="prize-status" class="prize-status" />
+            <ui:VisualElement class="roll-footer prize-footer">
+                <ui:Button name="prize-later" text="Later" class="roll-button" />
+                <ui:Button name="prize-claim" text="Claim" class="roll-button emb-primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -34,7 +34,8 @@ namespace Kingdom.Core.Collection
         /// none. With none the Tuesday sweep pays gold and holds every top-three back until the
         /// first sweep after they land here. Ids here must also be rows of <see cref="All"/>.</summary>
         // RETIREMENT TRIGGER: empty only because the art does not exist yet (plan Task 10). Filling
-        // these is the whole of wiring them: KingPayoutSweep already reads both lists. Fill BOTH in
+        // these is the whole of wiring them: KingPayoutSweep already reads both lists, and
+        // PrizeChoiceEndpoint (the pick screen's routes) reads the pool. Fill BOTH in
         // the same commit: place backs without a pool settle every repeat holder with PoolEmptyGold
         // on the first back pass, permanently, instead of opening them a choice.
         public static IReadOnlyList<int> PlaceBackIds { get; } = Array.AsReadOnly(new int[0]);

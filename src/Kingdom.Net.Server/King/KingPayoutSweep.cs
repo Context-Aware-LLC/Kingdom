@@ -147,7 +147,7 @@ namespace Kingdom.Net.Server.King
                 if (account is null) continue;   // deleted: the place stays empty
 
                 long gold = row.Place <= _prizes.Gold.Count ? _prizes.Gold[row.Place - 1] : 0;
-                await GrantGoldAsync(account, gold, eventId, reign.Reign, ct).ConfigureAwait(false);
+                await GrantGoldAsync(_economy, account, gold, eventId, reign.Reign, ct).ConfigureAwait(false);
                 await _store.RecordPrizeAsync(new FavorPrize(reign.Reign, row.PlayerId, row.Place, gold, null, false), ct)
                     .ConfigureAwait(false);
                 if (row.Place == 1)
@@ -190,7 +190,7 @@ namespace Kingdom.Net.Server.King
                 }
                 else
                 {
-                    await GrantGoldAsync(account, _prizes.PoolEmptyGold, "king-pool:" + reignText, prize.Reign, ct)
+                    await GrantGoldAsync(_economy, account, _prizes.PoolEmptyGold, PoolEmptyEventId(prize.Reign), prize.Reign, ct)
                         .ConfigureAwait(false);
                     await _store.SettleBackAsync(prize.Reign, prize.PlayerId, null, false, ct).ConfigureAwait(false);
                 }
@@ -204,21 +204,27 @@ namespace Kingdom.Net.Server.King
             return false;
         }
 
+        /// <summary>The key of the gold paid instead of a back when the player owns the whole pool.
+        /// One key per reign and player, whether the sweep pays it or <see cref="PrizeChoiceEndpoint"/>
+        /// settles a choice the pool ran dry under, so the two can never both pay.</summary>
+        internal static string PoolEmptyEventId(int reign) => "king-pool:" + reign.ToString(CultureInfo.InvariantCulture);
+
         /// <summary>
         /// Keyed on <paramref name="eventId"/>, so a repeat pays nothing. A conflict means the key
         /// was paid under other terms (the settings changed between a killed pass and its re-run):
         /// that is "already paid", or the reign would never close.
         /// </summary>
-        private async Task GrantGoldAsync(Account account, long amount, string eventId, int reign, CancellationToken ct)
+        internal static async Task GrantGoldAsync(EconomyService economy, Account account, long amount, string eventId,
+            int reign, CancellationToken ct)
         {
             if (amount <= 0) return;
             try
             {
-                await _economy.GrantGoldAsync(account, GoldRewardKind.KingsFavor, amount, eventId, ct).ConfigureAwait(false);
+                await economy.GrantGoldAsync(account, GoldRewardKind.KingsFavor, amount, eventId, ct).ConfigureAwait(false);
             }
             catch (GoldGrantConflictException)
             {
-                Console.Error.WriteLine("[king-sweep] reign {0}: {1} for player_id={2} was already paid another amount; kept.",
+                Console.Error.WriteLine("[king] reign {0}: {1} for player_id={2} was already paid another amount; kept.",
                     reign, eventId, account.PlayerId);
             }
         }

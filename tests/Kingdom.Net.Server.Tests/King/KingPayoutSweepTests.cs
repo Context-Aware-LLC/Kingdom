@@ -90,6 +90,9 @@ namespace Kingdom.Net.Server.Tests.King
             public Task ClosePaidAsync(int reign, string? favoriteId, string? favoriteName, CancellationToken ct = default) => _inner.ClosePaidAsync(reign, favoriteId, favoriteName, ct);
             public Task<FavorPrize?> PrizeAsync(int reign, string playerId, CancellationToken ct = default) => _inner.PrizeAsync(reign, playerId, ct);
             public Task<IReadOnlyList<FavorPrize>> UnsettledBacksAsync(int throughPlace, CancellationToken ct = default) => _inner.UnsettledBacksAsync(throughPlace, ct);
+            public Task<IReadOnlyList<FavorPrize>> OpenChoicesAsync(string playerId, CancellationToken ct = default) => _inner.OpenChoicesAsync(playerId, ct);
+            public Task<bool> CloseChoiceAsync(int reign, string playerId, int? backId, CancellationToken ct = default) => _inner.CloseChoiceAsync(reign, playerId, backId, ct);
+            public Task ReopenChoiceAsync(int reign, string playerId, int backId, CancellationToken ct = default) => _inner.ReopenChoiceAsync(reign, playerId, backId, ct);
         }
 
         private sealed class Harness

@@ -85,6 +85,22 @@ namespace Kingdom.Net.Server.King
 
         /// <summary>Settles a prize row's back, once: a row already settled is not changed.</summary>
         Task SettleBackAsync(int reign, string playerId, int? backId, bool choiceOpen, CancellationToken ct = default);
+
+        // ── Choosing a back (PrizeChoiceEndpoint) ─────────────────────────────────────────────
+
+        /// <summary>The player's prize rows whose back choice is open, oldest reign first.</summary>
+        Task<IReadOnlyList<FavorPrize>> OpenChoicesAsync(string playerId, CancellationToken ct = default);
+
+        /// <summary>
+        /// Closes an open choice, recording the back chosen, or null when it was paid in gold
+        /// instead. True only for the call that closed it: a closed choice is not changed, so of
+        /// two racing closes exactly one returns true.
+        /// </summary>
+        Task<bool> CloseChoiceAsync(int reign, string playerId, int? backId, CancellationToken ct = default);
+
+        /// <summary>Reopens a choice closed on <paramref name="backId"/> whose grant then failed.
+        /// Only a closed choice still recording that back is reopened.</summary>
+        Task ReopenChoiceAsync(int reign, string playerId, int backId, CancellationToken ct = default);
     }
 
     /// <summary>The in-memory store — the default for tests and single-box dev.</summary>
@@ -272,6 +288,41 @@ namespace Kingdom.Net.Server.King
                 var key = (reign, playerId);
                 if (_prizes.TryGetValue(key, out var p) && !p.Settled)
                     _prizes[key] = (p.Prize with { BackId = backId, ChoiceOpen = choiceOpen }, true);
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<FavorPrize>> OpenChoicesAsync(string playerId, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                var rows = _prizes.Values
+                    .Where(p => p.Prize.PlayerId == playerId && p.Prize.ChoiceOpen)
+                    .Select(p => p.Prize)
+                    .OrderBy(p => p.Reign)
+                    .ToList();
+                return Task.FromResult<IReadOnlyList<FavorPrize>>(rows);
+            }
+        }
+
+        public Task<bool> CloseChoiceAsync(int reign, string playerId, int? backId, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                var key = (reign, playerId);
+                if (!_prizes.TryGetValue(key, out var p) || !p.Prize.ChoiceOpen) return Task.FromResult(false);
+                _prizes[key] = (p.Prize with { BackId = backId, ChoiceOpen = false }, p.Settled);
+                return Task.FromResult(true);
+            }
+        }
+
+        public Task ReopenChoiceAsync(int reign, string playerId, int backId, CancellationToken ct = default)
+        {
+            lock (_lock)
+            {
+                var key = (reign, playerId);
+                if (_prizes.TryGetValue(key, out var p) && !p.Prize.ChoiceOpen && p.Prize.BackId == backId)
+                    _prizes[key] = (p.Prize with { BackId = null, ChoiceOpen = true }, p.Settled);
             }
             return Task.CompletedTask;
         }
