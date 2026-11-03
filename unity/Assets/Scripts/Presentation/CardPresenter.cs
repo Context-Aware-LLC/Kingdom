@@ -197,7 +197,9 @@ namespace Kingdom.Presentation
 
         // Card-back mode for projected hidden cards (dev-docs/architecture/determinism-and-projection.md:23): no definition,
         // no live state — hide everything face-side and show the back sprite if the atlas has one.
-        public void SetHidden()
+        // backId is the OWNING seat's back (#421, NetworkedMatchSession.CardBackOf): the opponent's
+        // hand shows the opponent's back. An id this build does not know draws the default.
+        public void SetHidden(int backId)
         {
             if (nameLabel != null)       nameLabel.gameObject.SetActive(false);
             if (costLabel != null)       costLabel.gameObject.SetActive(false);
@@ -211,11 +213,11 @@ namespace Kingdom.Presentation
             if (gemRenderer != null)     gemRenderer.gameObject.SetActive(false);
             if (tooltipBanner != null)   tooltipBanner.SetActive(false);
 
-            // Back sprite if authored ("card_back" atlas key); otherwise the frame stays empty
-            // and the dark body quad reads as the back — acceptable until the asset lands.
+            // The back's sprite when it resolves; otherwise the frame stays empty and the dark
+            // body quad reads as the back.
             if (frameRenderer != null && _ui != null)
             {
-                Sprite back = _ui.Get("card_back");
+                Sprite back = CardBackCatalog.SpriteFor(backId, _ui);
                 if (back != null) SpriteMaterials.SetPreservingSize(frameRenderer, back);
             }
 

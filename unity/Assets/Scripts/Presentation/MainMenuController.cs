@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Kingdom.Core.Collection;
 using Kingdom.Net.Client.Auth;
 using Kingdom.Net.Client.Collection;
 using Kingdom.Net.Client.Gate;
+using Kingdom.Net.Client.King;
 using Kingdom.Net.Client.Quests;
 using Kingdom.Net.Client.Shop;
 using Kingdom.Session;
@@ -46,6 +48,13 @@ namespace Kingdom.Presentation
         private Label _leaderboardStatus;
         private Label _leaderboardUpdated;
         private CancellationTokenSource _leaderboardRequest;
+        private Button _ladderTab;
+        private Button _favorTab;
+        private VisualElement _ladderColumns;
+        private VisualElement _favorColumns;
+        private VisualElement _favorMe;
+        /// <summary>Which board the modal shows. It always opens on the ladder.</summary>
+        private bool _showingFavor;
 
         private Label _goldBalance;
         private Label _gemBalance;
@@ -55,6 +64,15 @@ namespace Kingdom.Presentation
         private Label _questStatus;
         private HttpQuestGateway _questGateway;
         private Label _vaultPackCount;
+        private VisualElement _kingDock;
+        private Label _kingPlaque;
+        private Label _kingCommission;
+        private Label _kingScored;
+        private Label _kingDecree;
+        /// <summary>This launch's read of <c>GET /king</c>, started once the update gate passes.
+        /// Null until then, and on every path that never reaches it.</summary>
+        private Task<KingNow> _kingRequest;
+        private FirstRunTidbit _tidbit;
         private Rect _lastSafeArea;
         private int _lastSafeAreaScreenWidth = -1;
         private int _lastSafeAreaScreenHeight = -1;
@@ -100,6 +118,7 @@ namespace Kingdom.Presentation
             Wire("btn-leaderboards", OnLeaderboards);
             Wire("btn-card-vault", OnCardVault);
             Wire("btn-ledger", () => LedgerOverlay.Open());
+            Wire("btn-king", () => SuccessionRollOverlay.Open());
             Wire("btn-leaderboard-close", CloseLeaderboard);
             BindAchievements();
             BindLeaderboard();
@@ -109,6 +128,7 @@ namespace Kingdom.Presentation
             BindWalletBalances();
             BindQuestPanel();
             BindVaultEntry();
+            BindKing();
 
             MountSettingsOverlay();
             _signIn = new SignInGateController(_root, AuthGateway.Provider);
@@ -187,6 +207,10 @@ namespace Kingdom.Presentation
                 UpdateGateOverlay.Show(gate);
                 return;
             }
+
+            // Not awaited: the crown appears when the King is read, and nothing below waits on him.
+            _kingRequest = FetchKingAsync();
+            _ = ShowKingAsync(_kingRequest);
 
             // A returning player never sees the sign-in gate, so their stored session is this
             // process's sign_in row (once per process; a sign-in through the gate records its own).
@@ -367,7 +391,166 @@ namespace Kingdom.Presentation
             // First look (#403). FinishBootstrap reveals the menu even on a launch BeginFirstRun
             // has already sent elsewhere, and a lesson shown under a pending scene change is one
             // the player glimpses and never reads.
-            if (!_leavingForFirstRun) new FirstRunTidbit(_root).Show(TidbitTrigger.MainMenuArrival);
+            if (_leavingForFirstRun) return;
+            _tidbit = new FirstRunTidbit(_root);
+            bool firstLook = _tidbit.Show(TidbitTrigger.MainMenuArrival);
+            _ = AnnounceKingAsync(firstLook);
+        }
+
+        // ── The King of the Week (#421) ────────────────────────────────────────────────
+
+        /// <summary>Last reign the Herald announced on this device. On the device, not the account
+        /// (spec, "On the main menu"): a new King is news once per handset.</summary>
+        private const string LastHeardReignKey = "king_last_heard_reign";
+        private const int KingTimeoutSeconds = 10;
+
+        /// <summary>The crown, its plaque and the commission, hidden until a King is read. With no
+        /// King the dock is exactly the vault and the book.</summary>
+        private void BindKing()
+        {
+            _kingDock = _root.Q<VisualElement>("king-dock");
+            _kingPlaque = _root.Q<Label>("king-plaque");
+            _kingCommission = _root.Q<Label>("king-commission");
+            _kingScored = _root.Q<Label>("king-scored");
+            _kingDecree = _root.Q<Label>("king-decree");
+            if (_kingDock != null) _kingDock.style.display = DisplayStyle.None;
+        }
+
+        /// <summary>This week's King, or null when there is none or he could not be read. The route
+        /// is public, so no token: it answers the same for everyone.</summary>
+        private static async Task<KingNow> FetchKingAsync()
+        {
+            try
+            {
+                return await new HttpKingGateway(
+                    CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(KingTimeoutSeconds)).FetchKingAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[King] read threw ({ex.GetType().Name}: {ex.Message}); no crown this launch.");
+                return null;
+            }
+        }
+
+        private async Task ShowKingAsync(Task<KingNow> request)
+        {
+            KingNow king = await request;
+            if (this == null) return;   // the menu left while the read was in flight
+            // The Favor board is this reign's, so with no King there is no tab for it. Before the
+            // dock check: the tab lives in the leaderboard modal and does not need the dock.
+            if (_favorTab != null) _favorTab.style.display = king == null ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_kingDock == null) return;
+            if (king == null)
+            {
+                _kingDock.style.display = DisplayStyle.None;
+                return;
+            }
+
+            if (_kingPlaque != null) _kingPlaque.text = KingText.Epithet(king.Epithet);
+            // A commission this build has no words for is left out, never printed by id.
+            string name = KingText.Commission(king.Commission, "name");
+            SetKingLine(_kingCommission, name == null ? null : Loc.Format("king_menu_commission", name));
+            SetKingLine(_kingScored, name == null ? null : KingText.Commission(king.Commission, "scored"));
+            SetKingLine(_kingDecree, name == null ? null : KingText.Commission(king.Commission, "decree"));
+            _kingDock.style.display = DisplayStyle.Flex;
+        }
+
+        private static void SetKingLine(Label label, string text)
+        {
+            if (label == null) return;
+            label.text = string.IsNullOrEmpty(text) ? " " : text;
+            label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
+        /// <summary>
+        /// The Herald, on the first launch of a new reign: <i>"The King has 'ost his wits! Long 'ive
+        /// the King!"</i> Only for a reign later than the last one heard on this device, and never
+        /// on top of the first-run lesson — that launch records the reign silently, so the next
+        /// announcement is the next King's.
+        ///
+        /// <para><b>The tidbit is built here, not registered in <see cref="TidbitCatalog"/></b>, so
+        /// <c>HeraldVoiceVerify</c> does not demand a recording that does not exist yet. Its id is
+        /// per reign because FirstRunTidbit shows an id once. The reign counts as heard when the scroll
+        /// rolls shut, the same moment the tidbit marker is written: a player who quits mid-card has
+        /// not heard it.</para>
+        ///
+        /// <para><b>This is also the arrival sequence.</b> Arrival shows one scroll at a time: the
+        /// first-run lesson, else the Herald, then a prize choice (<see cref="OfferPrizeAsync"/>)
+        /// once the Herald rolls shut, or at once when he has nothing to say.</para>
+        /// </summary>
+        private async Task AnnounceKingAsync(bool firstLook)
+        {
+            if (_kingRequest == null) return;
+            KingNow king = await _kingRequest;
+            if (this == null || _tidbit == null) return;
+
+            // No King, or none read: no Herald, but a choice opened under an earlier one still waits.
+            if (king == null) { _ = OfferPrizeAsync(firstLook); return; }
+
+            int heard = PlayerPrefs.GetInt(LastHeardReignKey, 0);
+            if (king.Reign <= heard) { _ = OfferPrizeAsync(firstLook); return; }
+
+            int reign = king.Reign;
+            if (firstLook || _tidbit.IsShowing)
+            {
+                RememberReign(reign);
+                return;
+            }
+
+            var herald = new Tidbit(
+                "king_reign_" + reign.ToString(CultureInfo.InvariantCulture),
+                TidbitTrigger.MainMenuArrival,
+                "king_herald_title",
+                "king_herald_body",
+                artKey: null,
+                // No recording of this line exists yet; the card reads complete without one. When one
+                // lands in Assets/Sound/Voice/Herald, pass its "vo/..." address here.
+                voiceAddress: null);
+            _tidbit.Show(new[] { herald }, () =>
+            {
+                RememberReign(reign);
+                _ = OfferPrizeAsync(firstLook: false);
+            });
+        }
+
+        /// <summary>
+        /// A card back to choose (#421), when a top-three place the player held before has opened
+        /// one. Only into a quiet menu: never over the first-run lesson, a tidbit, or the Roll or
+        /// Ledger the player opened while the read was in flight. Skipped, the choice waits on the
+        /// server for the next arrival; nothing expires.
+        /// </summary>
+        private async Task OfferPrizeAsync(bool firstLook)
+        {
+            if (firstLook || !AuthGateway.IsSignedIn) return;
+
+            System.Collections.Generic.IReadOnlyList<PrizeChoiceOffer> offers;
+            try
+            {
+                string token = await AuthGateway.TokenForConnectAsync();
+                offers = await new HttpKingGateway(
+                    CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(KingTimeoutSeconds)).FetchPrizeChoicesAsync(token);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[King] prize choices not read ({ex.GetType().Name}: {ex.Message}); offered next arrival.");
+                return;
+            }
+
+            if (this == null || offers == null || offers.Count == 0) return;   // left, unread, or none
+            // Each overlay is found by its ObjectName, the name its Open method gives its GameObject.
+            if (_tidbit?.IsShowing == true ||
+                _root.Query(className: "mm-modal").Where(m => !m.ClassListContains("mm-modal--hidden")).First() != null ||
+                GameObject.Find(SuccessionRollOverlay.ObjectName) != null || GameObject.Find(LedgerOverlay.ObjectName) != null ||
+                GameObject.Find(PrizeChoiceOverlay.ObjectName) != null)
+                return;
+            PrizeChoiceOverlay.Open(offers);
+        }
+
+        private static void RememberReign(int reign)
+        {
+            if (reign <= PlayerPrefs.GetInt(LastHeardReignKey, 0)) return;
+            PlayerPrefs.SetInt(LastHeardReignKey, reign);
+            PlayerPrefs.Save();
         }
 
         /// <summary>
@@ -765,12 +948,22 @@ namespace Kingdom.Presentation
             {
                 if (evt.target == _leaderboardModal) CloseLeaderboard();
             });
+
+            // Two boards, one list (#421). The tabs are ShopPanelController's: each names its board
+            // and selects it, and ShowBoard is the one place both halves change together.
+            _ladderTab = _root.Q<Button>("leaderboard-tab-ladder");
+            _favorTab = _root.Q<Button>("leaderboard-tab-favor");
+            _ladderColumns = _root.Q<VisualElement>("leaderboard-columns");
+            _favorColumns = _root.Q<VisualElement>("favor-columns");
+            _favorMe = _root.Q<VisualElement>("favor-me");
+            if (_ladderTab != null) _ladderTab.clicked += () => ShowBoard(favor: false);
+            if (_favorTab != null) _favorTab.clicked += () => ShowBoard(favor: true);
         }
 
         private void OnLeaderboards()
         {
             Show(_leaderboardModal);
-            _ = RefreshLeaderboardAsync();
+            ShowBoard(favor: false);
         }
 
         private void CloseLeaderboard()
@@ -779,12 +972,40 @@ namespace Kingdom.Presentation
             Hide(_leaderboardModal);
         }
 
-        private async System.Threading.Tasks.Task RefreshLeaderboardAsync()
+        /// <summary>Marks the tab, swaps the column heads and reads that board. A board is read every
+        /// time it is shown: the Favor moves with every match, and a tab is cheaper than a stale one.</summary>
+        private void ShowBoard(bool favor)
+        {
+            _showingFavor = favor;
+            Toggle(_ladderTab, "mm-leaderboard__tab--on", !favor);
+            Toggle(_favorTab, "mm-leaderboard__tab--on", favor);
+            Toggle(_ladderColumns, "mm-leaderboard__columns--hidden", favor);
+            Toggle(_favorColumns, "mm-leaderboard__columns--hidden", !favor);
+            _favorMe?.Clear();
+            Toggle(_favorMe, "mm-leaderboard__me--hidden", true);
+            _ = favor ? RefreshFavorAsync() : RefreshLeaderboardAsync();
+        }
+
+        private static void Toggle(VisualElement element, string className, bool on)
+        {
+            if (element == null) return;
+            if (on) element.AddToClassList(className);
+            else element.RemoveFromClassList(className);
+        }
+
+        /// <summary>Cancels the read the other board (or an earlier tap) still has in flight, so
+        /// a slow answer can never draw over the board now showing.</summary>
+        private CancellationToken BeginBoardRead()
         {
             _leaderboardRequest?.Cancel();
             _leaderboardRequest?.Dispose();
             _leaderboardRequest = new CancellationTokenSource();
-            CancellationToken token = _leaderboardRequest.Token;
+            return _leaderboardRequest.Token;
+        }
+
+        private async System.Threading.Tasks.Task RefreshLeaderboardAsync()
+        {
+            CancellationToken token = BeginBoardRead();
 
             _leaderboardList?.Clear();
             SetLeaderboardStatus(Loc.Get("common_calling_the_keepers"), error: false, visible: true);
@@ -823,18 +1044,113 @@ namespace Kingdom.Presentation
                     $"{generated.ToLocalTime():h:mm tt}", entries.Length);
         }
 
+        /// <summary>
+        /// The King's Favor board for this reign: rank, player, score, best first in the
+        /// commission's own direction (the server sorts). Your own place is pinned under the list
+        /// when you are off it, since the board answers only its top hundred.
+        /// </summary>
+        private async System.Threading.Tasks.Task RefreshFavorAsync()
+        {
+            CancellationToken token = BeginBoardRead();
+
+            _leaderboardList?.Clear();
+            SetLeaderboardStatus(Loc.Get("common_calling_the_keepers"), error: false, visible: true);
+            if (_leaderboardUpdated != null) _leaderboardUpdated.text = " ";
+
+            var gateway = new HttpKingGateway(CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(KingTimeoutSeconds));
+            Task<FavorStanding> standing = FetchStandingAsync(gateway, token);
+            FavorBoard board;
+            try
+            {
+                board = await gateway.FetchFavorAsync(token);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                board = null;   // a tab switch or a close cancelled it; nothing went wrong
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[King] Favor board read threw ({ex.GetType().Name}: {ex.Message}).");
+                board = null;
+            }
+            FavorStanding me = await standing;
+            if (this == null || token.IsCancellationRequested || !_showingFavor) return;
+
+            // No King and an unread board are one null (HttpKingGateway); the tab only shows while a
+            // King is known, so here it is a failed read.
+            if (board == null)
+            {
+                SetLeaderboardStatus(Loc.Get("king_favor_error"), error: true, visible: true);
+                return;
+            }
+
+            if (_leaderboardUpdated != null)
+            {
+                // A commission this build has no words for is left out, never printed by id.
+                string scored = KingText.Commission(board.Commission, "scored");
+                _leaderboardUpdated.text = scored == null
+                    ? Loc.Format("king_roll_reign", board.Reign)
+                    : Loc.Format("king_favor_footer", board.Reign, scored);
+            }
+
+            if (board.Rows.Count == 0)
+                SetLeaderboardStatus(Loc.Get("king_favor_empty"), error: false, visible: true);
+            else
+            {
+                SetLeaderboardStatus("", error: false, visible: false);
+                foreach (FavorBoardRow entry in board.Rows)
+                    _leaderboardList?.Add(BuildBoardRow(entry.Place, KingText.SubjectName(entry.Name),
+                        entry.Score.ToString(CultureInfo.InvariantCulture), "mm-leaderboard__score", record: null));
+            }
+
+            if (_favorMe != null && me?.Place is int place && place > board.Rows.Count)
+            {
+                // "You" is reserved by PlayerName, so no player can be shown under it.
+                _favorMe.Add(BuildBoardRow(place, Loc.Get("common_you"),
+                    (me.Score ?? 0).ToString(CultureInfo.InvariantCulture), "mm-leaderboard__score", record: null));
+                _favorMe.RemoveFromClassList("mm-leaderboard__me--hidden");
+            }
+        }
+
+        /// <summary>The signed-in player's standing, or null when signed out or unread. Never throws:
+        /// the board shows without it.</summary>
+        private static async Task<FavorStanding> FetchStandingAsync(HttpKingGateway gateway, CancellationToken token)
+        {
+            try
+            {
+                if (!AuthGateway.IsSignedIn) return null;
+                string accessToken = await AuthGateway.TokenForConnectAsync();
+                return await gateway.FetchStandingAsync(accessToken, token);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                return null;   // a tab switch or a close cancelled it; nothing went wrong
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[King] Favor standing read threw ({ex.GetType().Name}: {ex.Message}).");
+                return null;
+            }
+        }
+
         private static VisualElement BuildLeaderboardRow(LeaderboardRow entry)
+            => BuildBoardRow(entry.rank, entry.displayName ?? Loc.Get("leaderboard_unnamed_player"),
+                entry.rating.ToString(), "mm-leaderboard__rating",
+                Loc.Format("leaderboard_record", entry.wins, entry.losses, entry.draws));
+
+        /// <summary>One line of either board. <paramref name="record"/> is the ladder's W-L-D, and
+        /// null leaves the column out.</summary>
+        private static VisualElement BuildBoardRow(int rank, string name, string number, string numberClass, string record)
         {
             var row = new VisualElement();
             row.AddToClassList("mm-leaderboard__row");
-            if (entry.rank % 2 == 0) row.AddToClassList("mm-leaderboard__row--even");
-            if (entry.rank <= 3) row.AddToClassList("mm-leaderboard__row--podium");
+            if (rank % 2 == 0) row.AddToClassList("mm-leaderboard__row--even");
+            if (rank <= 3) row.AddToClassList("mm-leaderboard__row--podium");
 
-            row.Add(LabelFor(Loc.Format("leaderboard_rank", entry.rank), "mm-leaderboard__rank"));
-            row.Add(LabelFor(entry.displayName ?? Loc.Get("leaderboard_unnamed_player"), "mm-leaderboard__name"));
-            row.Add(LabelFor(entry.rating.ToString(), "mm-leaderboard__rating"));
-            row.Add(LabelFor(Loc.Format("leaderboard_record", entry.wins, entry.losses, entry.draws),
-                "mm-leaderboard__record"));
+            row.Add(LabelFor(Loc.Format("leaderboard_rank", rank), "mm-leaderboard__rank"));
+            row.Add(NameLabelFor(name));
+            row.Add(LabelFor(number, numberClass));
+            if (record != null) row.Add(LabelFor(record, "mm-leaderboard__record"));
             return row;
         }
 
@@ -843,6 +1159,20 @@ namespace Kingdom.Presentation
             var label = new Label(text);
             label.AddToClassList(className);
             label.pickingMode = PickingMode.Ignore;
+            return label;
+        }
+
+        /// <summary>
+        /// A player's name on either board. It is PEER-AUTHORED, and this is the renderer's half of
+        /// the obligation security.md sets for every such name, the same pair as
+        /// <c>FriendsDrawerController.NameLabel</c>: <b>rich text off</b>, here, and <b>a clip in
+        /// pixels</b>, in <c>.mm-leaderboard__name</c> (mainmenu.uss).
+        /// </summary>
+        private static Label NameLabelFor(string name)
+        {
+            Label label = LabelFor(name, "mm-leaderboard__name");
+            label.enableRichText = false;
+            label.parseEscapeSequences = false;
             return label;
         }
 

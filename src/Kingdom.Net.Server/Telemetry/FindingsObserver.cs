@@ -10,10 +10,14 @@ namespace Kingdom.Net.Server.Telemetry
     /// command's event stream against a snapshot taken before it, so like the rest of
     /// <see cref="MatchTelemetryRecorder"/> it observes the core from outside and touches no game state.
     ///
-    /// <para><b>Health is replayed, not read.</b> An event carries the damage dealt but not the Health
-    /// it was dealt to, so a minion's and a hero's Health is carried forward through the command's
-    /// events from the snapshot. A stat change mid-command (<see cref="GameEventKind.StatsModified"/>)
-    /// is not replayed, which can misjudge an Overkill on a minion buffed in the same command.</para>
+    /// <para><b>A minion's Health is read; a hero's is replayed.</b> A hit's
+    /// <see cref="GameEvent.HealthBefore"/> is the Health it really landed on, so both Overkills are
+    /// exact even on a minion buffed earlier in the same command, which a replay through
+    /// <see cref="GameEventKind.StatsModified"/> cannot see. A hero's Health and Armor are still
+    /// carried forward from the snapshot, because the final blow needs Armor too.</para>
+    ///
+    /// <para><b>The King's commissions read <see cref="Tally"/></b> (#421). Those numbers decide
+    /// prizes, so each is a sum or a best over every hit, never an estimate.</para>
     /// </summary>
     internal sealed class FindingsObserver
     {
@@ -22,13 +26,45 @@ namespace Kingdom.Net.Server.Telemetry
         {
             /// <summary>The seat controlling each hero, board minion and weapon.</summary>
             public readonly Dictionary<InstanceId, int> Seat = new Dictionary<InstanceId, int>();
-            /// <summary>Each board minion's Health.</summary>
-            public readonly Dictionary<InstanceId, int> MinionHealth = new Dictionary<InstanceId, int>();
             public readonly HashSet<InstanceId> InHandOrDeck = new HashSet<InstanceId>();
             public readonly int[] HeroHealth = new int[2];
             public readonly int[] HeroArmor = new int[2];
             public int? HeroPowerSeat;
-            public InstanceId? Attacker;
+        }
+
+        /// <summary>One seat's exact commission numbers (#421), read through
+        /// <c>MatchTelemetryRecorder.TallyFor</c>, which adds the two the recorder counts itself.</summary>
+        public readonly struct Tally
+        {
+            public Tally(int overkillBest, int selfDamage, int unspentMana, int fatigueDamage, int cardsBurned,
+                         int tollDamage, int stolenDamage, int heroPowerDamage)
+            {
+                OverkillBest = overkillBest;
+                SelfDamage = selfDamage;
+                UnspentMana = unspentMana;
+                FatigueDamage = fatigueDamage;
+                CardsBurned = cardsBurned;
+                TollDamage = tollDamage;
+                StolenDamage = stolenDamage;
+                HeroPowerDamage = heroPowerDamage;
+            }
+
+            /// <summary>The most damage the seat dealt beyond a living minion's Health in one hit.</summary>
+            public int OverkillBest { get; }
+            /// <summary>Damage the seat's own cards, hero and Hero Power dealt its own hero.</summary>
+            public int SelfDamage { get; }
+            /// <summary>Mana left at each of the seat's turn ends, summed.</summary>
+            public int UnspentMana { get; }
+            /// <summary>Fatigue damage the seat's hero took.</summary>
+            public int FatigueDamage { get; }
+            /// <summary>Cards the seat drew into a full hand.</summary>
+            public int CardsBurned { get; }
+            /// <summary>Damage the seat's Tolls dealt the enemy hero, Armor-soaked damage included.</summary>
+            public int TollDamage { get; }
+            /// <summary>Damage minions the seat took from the other side dealt that side's hero.</summary>
+            public int StolenDamage { get; }
+            /// <summary>Damage the seat's Hero Power dealt the other side's hero and minions.</summary>
+            public int HeroPowerDamage { get; }
         }
 
         private const int OverkillHit = 10;
@@ -41,6 +77,11 @@ namespace Kingdom.Net.Server.Telemetry
 
         public readonly int[] SelfDamage = new int[2];
         public readonly int[] Overkills = new int[2];
+        public readonly int[] OverkillBest = new int[2];
+        public readonly int[] FatigueDamage = new int[2];
+        public readonly int[] TollDamage = new int[2];
+        public readonly int[] StolenDamage = new int[2];
+        public readonly int[] HeroPowerDamage = new int[2];
         public readonly int[] BigMinionsBounced = new int[2];
         public readonly int[] LegendariesLost = new int[2];
         public readonly int[] MostBulwarks = new int[2];
@@ -77,17 +118,12 @@ namespace Kingdom.Net.Server.Telemetry
                 before.Seat[ps.Hero.Id] = seat;
                 before.HeroHealth[seat] = ps.Hero.CurrentHealth;
                 before.HeroArmor[seat] = ps.Hero.Armor;
-                foreach (CardInstance minion in ps.Board)
-                {
-                    before.Seat[minion.Id] = seat;
-                    before.MinionHealth[minion.Id] = minion.CurrentHealth;
-                }
+                foreach (CardInstance minion in ps.Board) before.Seat[minion.Id] = seat;
                 if (ps.Weapon != null) before.Seat[ps.Weapon.Id] = seat;
                 foreach (CardInstance c in ps.Hand) before.InHandOrDeck.Add(c.Id);
                 foreach (CardInstance c in ps.Deck) before.InHandOrDeck.Add(c.Id);
             }
             if (intent is HeroPowerIntent) before.HeroPowerSeat = state.SeatOf(intent.Player);
-            if (intent is AttackIntent attack) before.Attacker = attack.Attacker;
             return before;
         }
 
@@ -98,7 +134,10 @@ namespace Kingdom.Net.Server.Telemetry
 
             int[] heroHealth = { before.HeroHealth[0], before.HeroHealth[1] };
             int[] heroArmor = { before.HeroArmor[0], before.HeroArmor[1] };
-            var minionHealth = new Dictionary<InstanceId, int>(before.MinionHealth);
+            // Minions whose death this command has already announced. A Toll rings after its
+            // minion's CardDestroyed, so a hit from one of these is its Toll, and a hit from a
+            // minion not yet in here is its Attack, even when it goes on to die in the same trade.
+            var died = new HashSet<InstanceId>();
 
             foreach (GameEvent e in events)
             {
@@ -108,29 +147,42 @@ namespace Kingdom.Net.Server.Telemetry
                 {
                     case GameEventKind.DamageApplied when amount > 0 && e.Target.HasValue:
                         int? sourceSeat = e.Source is InstanceId s ? ControllerOf(state, before, s) : null;
+                        // Signature Move scores what the Hero Power dealt the other side, hero and minions
+                        // alike; harm to your own side is Self-Starter's commission, not this one. A Hero
+                        // Power's damage is sourced to its caster's hero, and only its own command counts.
+                        if (before.HeroPowerSeat is int caster && e.Source == state.Players[caster].Hero.Id
+                            && ControllerOf(state, before, e.Target.Value) is int struck && struck != caster)
+                            HeroPowerDamage[caster] += amount;
                         if (heroSeat >= 0)
                         {
                             if (sourceSeat == heroSeat) SelfDamage[heroSeat] += amount;
+                            else if (sourceSeat is int dealer)
+                                Credit(dealer, Named(state, before, died, e.Source, sourceSeat, heroSeat), amount);
                             int soak = heroArmor[heroSeat] < amount ? heroArmor[heroSeat] : amount;
                             heroArmor[heroSeat] -= soak;
                             if (Falls(heroHealth, heroSeat, amount - soak))
-                                FellTo[heroSeat] = Blow(state, before, e.Source, sourceSeat, heroSeat);
+                                FellTo[heroSeat] = Blow(state, before, died, e.Source, sourceSeat, heroSeat);
                         }
-                        else if (minionHealth.TryGetValue(e.Target.Value, out int health))
+                        else if (e.HealthBefore is int health && health > 0 && sourceSeat is int dealer)
                         {
-                            if (health == 1 && amount >= OverkillHit && sourceSeat is int dealer) Overkills[dealer]++;
-                            minionHealth[e.Target.Value] = health - amount;
+                            // A minion already at 0 is dead and waiting on the death check; a further
+                            // hit on it kills nothing, so it scores no Overkill of either kind.
+                            if (health == 1 && amount >= OverkillHit) Overkills[dealer]++;
+                            if (amount - health > OverkillBest[dealer]) OverkillBest[dealer] = amount - health;
                         }
+                        break;
+
+                    case GameEventKind.CardDestroyed when e.Source.HasValue:
+                        died.Add(e.Source.Value);
                         break;
 
                     case GameEventKind.FatigueDamage when heroSeat >= 0:
+                        FatigueDamage[heroSeat] += amount;
                         if (Falls(heroHealth, heroSeat, amount)) FellTo[heroSeat] = FinalBlow.Fatigue;
                         break;
 
-                    case GameEventKind.HealthRestored when e.Target.HasValue:
-                        if (heroSeat >= 0) heroHealth[heroSeat] += amount;
-                        else if (minionHealth.TryGetValue(e.Target.Value, out int healed))
-                            minionHealth[e.Target.Value] = healed + amount;
+                    case GameEventKind.HealthRestored when heroSeat >= 0:
+                        heroHealth[heroSeat] += amount;
                         break;
 
                     case GameEventKind.ArmorGained when heroSeat >= 0:
@@ -166,13 +218,25 @@ namespace Kingdom.Net.Server.Telemetry
             return was > 0 && heroHealth[seat] <= 0;
         }
 
-        private FinalBlow Blow(GameState state, Before before, InstanceId? source, int? sourceSeat, int fallen)
+        /// <summary>A hit <paramref name="dealer"/> landed on the other side's hero, credited to every
+        /// commission whose kind <paramref name="named"/> says it was. Event amounts, so a hit the
+        /// Armor soaked still counts as dealt.</summary>
+        private void Credit(int dealer, FinalBlow named, int amount)
         {
-            FinalBlow blow = Named(state, before, source, sourceSeat, fallen);
+            if ((named & FinalBlow.Toll) != 0) TollDamage[dealer] += amount;
+            if ((named & FinalBlow.StolenMinion) != 0) StolenDamage[dealer] += amount;
+        }
+
+        private FinalBlow Blow(GameState state, Before before, HashSet<InstanceId> died, InstanceId? source,
+                               int? sourceSeat, int fallen)
+        {
+            FinalBlow blow = Named(state, before, died, source, sourceSeat, fallen);
             return blow == FinalBlow.None ? FinalBlow.Other : blow;
         }
 
-        private FinalBlow Named(GameState state, Before before, InstanceId? source, int? sourceSeat, int fallen)
+        /// <param name="died">Minions whose death the command announced before this hit.</param>
+        private FinalBlow Named(GameState state, Before before, HashSet<InstanceId> died, InstanceId? source,
+                                int? sourceSeat, int fallen)
         {
             if (source is not InstanceId id) return FinalBlow.None;
             FinalBlow blow = sourceSeat == fallen ? FinalBlow.OwnSide : FinalBlow.None;
@@ -186,9 +250,10 @@ namespace Kingdom.Net.Server.Telemetry
             if (def.Type == CardType.SPELL) blow |= FinalBlow.Spell;
             if (def.Type == CardType.MINION)
             {
-                // A Toll is rung by a death, so its source has left the board; a minion that died
-                // trading blows in its own attack dealt that hit with its Attack, not its Toll.
-                if (card!.Zone != Zone.Board && id != before.Attacker && HasToll(def)) blow |= FinalBlow.Toll;
+                // A Toll is rung by a death, so it lands after its minion's death is announced; a
+                // hit landed before that is the minion's Attack. Decided by event order, which is
+                // what lets an attacker that dies in its own trade still be credited its Toll.
+                if (died.Contains(id) && HasToll(def)) blow |= FinalBlow.Toll;
                 if (sourceSeat is int controller && controller != fallen
                     && _startedOn.TryGetValue(id, out int owner) && owner == fallen)
                     blow |= FinalBlow.StolenMinion;

@@ -138,6 +138,9 @@
     <string name="main_menu_player">PLAYER</string>
     <string name="main_menu_rating">RATING</string>
     <string name="main_menu_leaderboard_updated">Ratings update after every eligible match.</string>
+    <!-- The leaderboard modal's second tab: this reign's King's Favor board. -->
+    <string name="main_menu_the_king_s_favorites">The King\'s Favorites</string>
+    <string name="main_menu_score">SCORE</string>
     <string name="match_proclamation_spoils">Spoils</string>
     <string name="match_proclamation_the_council_s_findings">The Council\'s Findings</string>
     <string name="match_settings_toggle_mute_mute">Mute</string>
@@ -888,4 +891,155 @@
     <string name="board_suggestion_box_label">SUGGESTIONS</string>
     <!-- Receipt slip popping out of the suggestion-box table toy when tapped. Two lines; bureaucratic deadpan. -->
     <string name="board_suggestion_box_receipt">Your suggestion has been\nreceived and filed.</string>
+    <!-- ===== King of the Week (#421) ===== -->
+    <!-- The King is never named or seen, and the Council commends him; it never mocks. Draft pools for Sam to edit (2026-11-02). -->
+    <!-- Epithets: the server picks one per reign as a pool index; king_epithet_N is index N-1. Each regnal title is an act of buffoonery. Never renumber: a reign keeps its row forever. -->
+    <string name="king_epithet_1">His Majesty, Who Moved the Moat</string>
+    <string name="king_epithet_2">His Majesty, Who Paved the Lake</string>
+    <string name="king_epithet_3">His Majesty, Who Taxed the Fog</string>
+    <string name="king_epithet_4">His Majesty, Who Declared War on Thursday</string>
+    <string name="king_epithet_5">His Majesty, Who Reversed the River</string>
+    <string name="king_epithet_6">His Majesty, Who Promoted the Goat</string>
+    <string name="king_epithet_7">His Majesty, Who Painted the Sun</string>
+    <string name="king_epithet_8">His Majesty, Who Banished the Letter Q</string>
+    <string name="king_epithet_9">His Majesty, Who Built the Tower Downward</string>
+    <string name="king_epithet_10">His Majesty, Who Pardoned the Weather</string>
+    <string name="king_epithet_11">His Majesty, Who Ate the Royal Seal</string>
+    <string name="king_epithet_12">His Majesty, Who Lent Out the Crown</string>
+    <string name="king_epithet_13">His Majesty, Who Counted to Eleven Twice</string>
+    <string name="king_epithet_14">His Majesty, Who Besieged His Own Castle</string>
+    <string name="king_epithet_15">His Majesty, Who Outlawed Stairs</string>
+    <string name="king_epithet_16">His Majesty, Who Posted Himself Abroad</string>
+    <string name="king_epithet_17">His Majesty, Who Appointed the Dragon Treasurer</string>
+    <string name="king_epithet_18">His Majesty, Who Sold the Left Wing</string>
+    <string name="king_epithet_19">His Majesty, Who Annexed the Garden Shed</string>
+    <string name="king_epithet_20">His Majesty, Who Signed Everything Twice</string>
+    <string name="king_epithet_21">His Majesty, Who Founded the Ministry of Naps</string>
+    <string name="king_epithet_22">His Majesty, Who Bricked Up the Front Door</string>
+    <string name="king_epithet_23">His Majesty, Who Filled the Moat with Soup</string>
+    <string name="king_epithet_24">His Majesty, Who Crowned Himself Again</string>
+    <string name="king_epithet_25">His Majesty, Who Pickled the Crown Jewels</string>
+    <string name="king_epithet_26">His Majesty, Who Rescheduled Tuesday</string>
+    <string name="king_epithet_27">His Majesty, Who Challenged the Tide</string>
+    <string name="king_epithet_28">His Majesty, Who Sent the Hounds for the Taxes</string>
+    <string name="king_epithet_29">His Majesty, Who Knighted the Chickens</string>
+    <string name="king_epithet_30">His Majesty, Who Ordered More Ideas</string>
+    <!-- Fates: how each King left the throne. All end the same way, somewhere new. Same numbering rule as the epithets. -->
+    <string name="king_fate_1">Lost his wits at the joust.</string>
+    <string name="king_fate_2">Lost his wits counting the treasury.</string>
+    <string name="king_fate_3">Lost his wits in the hedge maze.</string>
+    <string name="king_fate_4">Lost his wits at the banquet.</string>
+    <string name="king_fate_5">Lost his wits on the castle stairs.</string>
+    <string name="king_fate_6">Lost his wits in the royal archives.</string>
+    <string name="king_fate_7">Lost his wits during his own coronation.</string>
+    <string name="king_fate_8">Lost his wits at the village fair.</string>
+    <string name="king_fate_9">Lost his wits on the drawbridge.</string>
+    <string name="king_fate_10">Lost his wits in the wine cellar.</string>
+    <string name="king_fate_11">Lost his wits at the falconry display.</string>
+    <string name="king_fate_12">Lost his wits in the throne room.</string>
+    <string name="king_fate_13">Lost his wits reading the small print.</string>
+    <string name="king_fate_14">Lost his wits on the way to the Council.</string>
+    <string name="king_fate_15">Lost his wits in the kitchens.</string>
+    <string name="king_fate_16">Lost his wits at the harvest festival.</string>
+    <string name="king_fate_17">Lost his wits halfway up the tower.</string>
+    <string name="king_fate_18">Lost his wits in the orchard.</string>
+    <string name="king_fate_19">Lost his wits sitting for his portrait.</string>
+    <string name="king_fate_20">Lost his wits during the Council\'s minutes.</string>
+    <string name="king_fate_21">Lost his wits in the stables.</string>
+    <string name="king_fate_22">Lost his wits at the fishing pond.</string>
+    <string name="king_fate_23">Lost his wits in the bath.</string>
+    <string name="king_fate_24">Lost his wits over a game of chess.</string>
+    <string name="king_fate_25">Lost his wits in the armoury.</string>
+    <string name="king_fate_26">Lost his wits at midnight on a Tuesday.</string>
+    <string name="king_fate_27">Lost his wits in the rose garden.</string>
+    <string name="king_fate_28">Lost his wits at the top of the bell tower.</string>
+    <string name="king_fate_29">Lost his wits at the masquerade.</string>
+    <string name="king_fate_30">Lost his wits in the moat.</string>
+    <!-- Shown when a newer server names an epithet or fate this build has no row for. -->
+    <string name="king_epithet_unknown">His Majesty</string>
+    <string name="king_fate_unknown">Lost his wits.</string>
+    <!-- Commissions, keyed by CommissionIds. name = its title; scored = how it is scored (menu and in-match card); decree = the line under it on the menu. Verbatim from the King of the Week design. -->
+    <string name="commission_overkill_name">Overkill</string>
+    <string name="commission_overkill_scored">Damage beyond a minion\'s remaining Health, in one hit</string>
+    <string name="commission_overkill_decree">His Majesty wishes to see a minion hit far harder than necessary.</string>
+    <string name="commission_technically_name">Technically</string>
+    <string name="commission_technically_scored">The lowest Health you won at</string>
+    <string name="commission_technically_decree">His Majesty would like to see how little it takes.</string>
+    <string name="commission_self_starter_name">Self-Starter</string>
+    <string name="commission_self_starter_scored">Damage your own cards dealt your own hero</string>
+    <string name="commission_self_starter_decree">His Majesty admires commitment.</string>
+    <string name="commission_waste_not_name">Waste Not</string>
+    <string name="commission_waste_not_scored">Mana left unspent across the game</string>
+    <string name="commission_waste_not_decree">His Majesty is saving up.</string>
+    <string name="commission_out_of_ideas_name">Out of Ideas</string>
+    <string name="commission_out_of_ideas_scored">Fatigue damage taken</string>
+    <string name="commission_out_of_ideas_decree">His Majesty would like to see what happens after the ideas run out.</string>
+    <string name="commission_too_many_ideas_name">Too Many Ideas</string>
+    <string name="commission_too_many_ideas_scored">Cards burned from a full hand</string>
+    <string name="commission_too_many_ideas_decree">His Majesty has more ideas than he can hold, and wishes the same for you.</string>
+    <string name="commission_posthumous_name">Posthumous</string>
+    <string name="commission_posthumous_scored">Damage to the enemy hero from Tolls</string>
+    <string name="commission_posthumous_decree">His Majesty admires a minion who keeps working after it dies.</string>
+    <string name="commission_return_to_sender_name">Return to Sender</string>
+    <string name="commission_return_to_sender_scored">Damage to the enemy hero from minions you took from them</string>
+    <string name="commission_return_to_sender_decree">His Majesty finds it more polite to use their own.</string>
+    <string name="commission_signature_move_name">Signature Move</string>
+    <string name="commission_signature_move_scored">Damage dealt by your Hero Power</string>
+    <string name="commission_signature_move_decree">His Majesty would like the Hero Power to earn its keep.</string>
+    <!-- In-match commission card, under a greyed score: the commission needs a win, so the number is not banked yet. -->
+    <string name="king_counts_if_win">Counts if you win</string>
+    <!-- In-match commission card, under the score. %1$s = this player's best score this reign, a number. -->
+    <string name="king_best">Your best this reign: %1$s</string>
+    <!-- Main menu, beside the crown. %1$s = the commission's name, e.g. Overkill. -->
+    <string name="king_menu_commission">His commission: %1$s</string>
+    <!-- Tooltip on the crown in the main menu dock. -->
+    <string name="king_crown_tooltip">Open the Succession Roll</string>
+    <!-- The Herald's announcement on the first launch of a new reign. The body is the Herald's dropped-aitch accent; keep it. -->
+    <string name="king_herald_title">By Order of the Council</string>
+    <string name="king_herald_body">The King has \'ost his wits! Long \'ive the King!</string>
+    <!-- The Succession Roll: every King since the first, newest first. -->
+    <string name="king_roll_title">The Succession Roll</string>
+    <string name="king_roll_status_loading">The archivist is unrolling the Roll.</string>
+    <string name="king_roll_status_failed">The Roll could not be fetched. The archivist has gone to look again; close this and try in a moment.</string>
+    <!-- %1$d = the reign number. -->
+    <string name="king_roll_reign">Reign %1$d</string>
+    <!-- In place of a fate, for the King on the throne now. -->
+    <string name="king_roll_reigning">Reigns still.</string>
+    <!-- After a player's name, on its own label. %1$s = the King's epithet, e.g. His Majesty, Who Moved the Moat. -->
+    <string name="king_roll_favorite_of">Favorite of %1$s.</string>
+    <!-- The reign on the throne now, whose Favorite is not decided until it closes. -->
+    <string name="king_roll_undecided">His Majesty has not yet chosen a Favorite.</string>
+    <!-- A closed reign nobody placed in, or whose Favorite was struck. -->
+    <string name="king_roll_no_favorite">His Majesty named no Favorite.</string>
+    <!-- In place of a name on the Favor board and the Roll, for a player who never chose one. -->
+    <string name="king_favor_unnamed">A Subject of the Crown</string>
+    <!-- The King's Favor board, in the leaderboard modal. -->
+    <string name="king_favor_error">His Majesty\'s clerks have mislaid the Favor. Try again in a moment.</string>
+    <string name="king_favor_empty">Nobody has caught His Majesty\'s eye yet this reign.</string>
+    <!-- Under the Favor board. %1$d = the reign number; %2$s = how the commission is scored, e.g. The lowest Health you won at. -->
+    <string name="king_favor_footer">Reign %1$d · %2$s</string>
+    <!-- The match-end proclamation, under the reason. %1$s = the commission's name, e.g. Overkill; %2$d = this match's score. -->
+    <string name="king_proc_commission">His commission, %1$s: %2$d</string>
+    <string name="king_proc_commission_new_best">His commission, %1$s: %2$d. New best!</string>
+    <!-- The prize choice on menu arrival: a top-three place the player has held before earns one card back from a pool. -->
+    <string name="king_prize_title">A Gift from the Crown</string>
+    <!-- %1$d = the reign number. One line per place, because the place is said in words. -->
+    <string name="king_prize_body_first">Reign %1$d: His Majesty\'s Favorite, and not for the first time. Choose a card back from the royal wardrobe.</string>
+    <string name="king_prize_body_second">Reign %1$d: second in His Majesty\'s Favor, and not for the first time. Choose a card back from the royal wardrobe.</string>
+    <string name="king_prize_body_third">Reign %1$d: third in His Majesty\'s Favor, and not for the first time. Choose a card back from the royal wardrobe.</string>
+    <!-- Buttons. Later closes the scroll and keeps the prize for the next visit to the menu. -->
+    <string name="king_prize_claim">Claim</string>
+    <string name="king_prize_later">Later</string>
+    <!-- After a claim. %1$s = the card back's name, e.g. Gravekeep: the back the server recorded, which may differ from the one tapped. -->
+    <string name="king_prize_granted">%1$s is yours. Any deck may wear it now.</string>
+    <!-- The same, for a back this version of the game has no name for. -->
+    <string name="king_prize_granted_unnamed">His Majesty\'s gift is yours. Any deck may wear it now.</string>
+    <!-- %1$d = the gold paid, a number. The player already owns every back on offer. -->
+    <string name="king_prize_gold">You already own every back on offer, so His Majesty paid you %1$d gold instead.</string>
+    <!-- The back tapped is no longer on offer (owned since, or the pool changed). -->
+    <string name="king_prize_refused">That back is no longer on offer. Choose another.</string>
+    <string name="king_prize_gone">That gift is no longer on offer.</string>
+    <!-- The claim got no answer, but the server no longer offers it: it went through and will be delivered. -->
+    <string name="king_prize_on_its_way">Your gift is on its way. The royal couriers will see to it.</string>
+    <string name="king_prize_failed">His Majesty\'s clerks could not deliver it. Try again in a moment.</string>
 </resources>

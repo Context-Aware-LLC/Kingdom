@@ -48,9 +48,11 @@ namespace Kingdom.Presentation
         private readonly IUiSpriteProvider _sprites;
         private readonly List<VisualElement> _findingRows = new List<VisualElement>();
 
+        /// <param name="commission">The King's commission final for this seat (#421), off the
+        /// match-end message. Null writes nothing: the server sends one only when the score counts.</param>
         public MatchProclamation(VisualElement root, MatchOutcome outcome, int localSeat,
                                  MatchEndReason? reason, IReadOnlyList<string> findings,
-                                 IUiSpriteProvider sprites = null)
+                                 IUiSpriteProvider sprites = null, CommissionFinal commission = null)
         {
             _root = root ?? throw new ArgumentNullException(nameof(root));
 #if UNITY_EDITOR
@@ -76,6 +78,7 @@ namespace Kingdom.Presentation
             }
             var reasonLabel = root.Q<Label>("proc-reason");
             if (reasonLabel != null) reasonLabel.text = ResultDetail(outcome, localSeat, reason);
+            WriteCommission(root.Q<Label>("proc-commission"), commission);
             if (_footer != null) _footer.text = " ";
             if (_gold != null) _gold.style.display = DisplayStyle.None;
 
@@ -190,6 +193,24 @@ namespace Kingdom.Presentation
                 _findings.Add(label);
             }
             if (known > 0) _findingsColumn?.RemoveFromClassList(HiddenColumnClass);
+        }
+
+        /// <summary>
+        /// The King's line, under the reason: the commission, this match's score, and <i>New best</i>
+        /// when it beat the player's best this reign (spec, "In the match"). This is where a win-only
+        /// score becomes real. The server decided it counts; the client only words it, and a
+        /// commission this build has no name for is left out rather than printed by id.
+        /// </summary>
+        private static void WriteCommission(Label line, CommissionFinal commission)
+        {
+            if (line == null || commission == null) return;
+            string name = KingText.Commission(commission.Id, "name");
+            if (name == null) return;
+            // Two literal calls, not one with a ternary key, so LocalizationVerify sees both.
+            line.text = commission.NewBest
+                ? Loc.Format("king_proc_commission_new_best", name, commission.Score)
+                : Loc.Format("king_proc_commission", name, commission.Score);
+            line.RemoveFromClassList("proc-commission--hidden");
         }
 
         private void StampFindings()

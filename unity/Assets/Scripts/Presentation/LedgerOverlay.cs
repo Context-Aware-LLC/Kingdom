@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using Kingdom.Net.Client.Achievements;
+using Kingdom.Net.Client.King;
 using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -29,6 +30,10 @@ namespace Kingdom.Presentation
         public const int EntriesPerPage = 6;
 
         private const int TimeoutSeconds = 10;
+
+        /// <summary>The overlay's GameObject name. The menu's arrival sequence finds an open one by it.</summary>
+        public const string ObjectName = "LedgerUI";
+
         private const float SealSize = 72f;
 
         private VisualElement _page;
@@ -40,12 +45,15 @@ namespace Kingdom.Presentation
         private VisualElement _pager;
         private IUiSpriteProvider _sprites;
         private IReadOnlyList<LedgerEntry> _entries = Array.Empty<LedgerEntry>();
+        /// <summary>Commission ids whose page carries the King's seal (#421). A commission id is its
+        /// achievement's id, so it names the page with no mapping.</summary>
+        private HashSet<string> _seals = new HashSet<string>(StringComparer.Ordinal);
         private int _pageIndex;
 
         /// <summary>Open the Ledger over whatever screen is up. Returns the overlay's GameObject.</summary>
         public static GameObject Open()
         {
-            var go = new GameObject("LedgerUI");
+            var go = new GameObject(ObjectName);
             var doc = go.AddComponent<UIDocument>();
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("LedgerScreen");
@@ -95,8 +103,11 @@ namespace Kingdom.Presentation
                 else
                 {
                     string token = await AuthGateway.TokenForConnectAsync();
+                    // His seals ride alongside, read in parallel; the Ledger never waits on them failing.
+                    Task<HashSet<string>> seals = FetchSealsAsync(token);
                     snapshot = await new HttpAchievementGateway(
                         CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(TimeoutSeconds)).FetchAsync(token);
+                    _seals = await seals;
                 }
             }
             catch (Exception ex)
@@ -122,6 +133,25 @@ namespace Kingdom.Presentation
                     ShowStatus(Loc.Get("ledger_status_fetch_failed"));
                     break;
             }
+        }
+
+        /// <summary>The commissions whose seal the player holds, from <c>GET /king/favor/me</c>. Empty
+        /// when there is no King or the read fails: a missing seal is the quiet failure here, and the
+        /// achievements read still decides what the Ledger says.</summary>
+        private static async Task<HashSet<string>> FetchSealsAsync(string token)
+        {
+            var seals = new HashSet<string>(StringComparer.Ordinal);
+            try
+            {
+                FavorStanding standing = await new HttpKingGateway(
+                    CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(TimeoutSeconds)).FetchStandingAsync(token);
+                if (standing != null) seals.UnionWith(standing.Seals);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Ledger] King's seals not read ({ex.GetType().Name}: {ex.Message}).");
+            }
+            return seals;
         }
 
         private void ShowStatus(string text)
@@ -164,12 +194,16 @@ namespace Kingdom.Presentation
             _next?.SetEnabled(_pageIndex < pages - 1);
 
             Sprite seal = _sprites?.Get(SealStamp.SpriteKey);
+            Sprite kingSeal = _seals.Count > 0 ? _sprites?.Get(KingText.SealSpriteKey) : null;
             int first = _pageIndex * EntriesPerPage;
             for (int i = first; i < Mathf.Min(first + EntriesPerPage, _entries.Count); i++)
-                _page.Add(Entry(_entries[i], seal));
+                _page.Add(Entry(_entries[i], seal, _seals.Contains(_entries[i].Text.Id) ? kingSeal : null));
         }
 
-        private static VisualElement Entry(LedgerEntry entry, Sprite seal)
+        /// <param name="kingSeal">His seal, for a commission page the player placed in; null for none.
+        /// It sits in the gutter under the crown's place, so it never covers the text. Placing does
+        /// not require the achievement, so an unearned page can carry it too, alone.</param>
+        private static VisualElement Entry(LedgerEntry entry, Sprite seal, Sprite kingSeal)
         {
             var box = new VisualElement();
             box.AddToClassList("ledger-entry");
@@ -177,6 +211,8 @@ namespace Kingdom.Presentation
             {
                 box.AddToClassList("ledger-entry--unearned");
                 box.Add(Line(Loc.Get("ledger_entry_under_review"), "ledger-entry__name"));
+                if (kingSeal != null)
+                    SealStamp.Place(box, kingSeal, SealSize, right: 8f, top: 4f, tiltDegrees: -Tilt(entry.Text.Id));
                 return box;
             }
 
@@ -191,6 +227,10 @@ namespace Kingdom.Presentation
             if (seal != null)
                 SealStamp.Place(box, seal, SealSize, right: 8f, top: 4f,
                     tiltDegrees: Tilt(entry.Text.Id));
+            // Beside the crown: the same gutter, one seal down (the entry is 176 tall; 4 + 72 + 8 + 72).
+            if (kingSeal != null)
+                SealStamp.Place(box, kingSeal, SealSize, right: 8f, top: 84f,
+                    tiltDegrees: -Tilt(entry.Text.Id));
             return box;
         }
 

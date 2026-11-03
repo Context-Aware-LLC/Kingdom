@@ -1,0 +1,186 @@
+/* ============================================================================
+   THE COMMISSION CARD: the King's commission in the upper right of the board (#421).
+   Built by CommissionCardView over the match, and fed by the server alone.
+
+   Every number is in the 1080-tall authored panel (theme.uss), copied from the
+   approved mockup docs/dev-docs/design/art/king-of-the-week-commission-card.html.
+   USS has no gradients or box shadows, so the card's 160deg brown gradient is its
+   midpoint colour and the drop shadow is gone.
+
+   TWO FORMS, CHOSEN BY SCREEN ASPECT IN CODE:
+     above 2:1   the full card, 280 x 424, 24 from the top edge;
+     2:1 or less the chip: image and number in the band above the table, which a
+                 tap opens into the full card over the opponent's hero ring.
+
+   THE CHIP'S BAND. Projected through RoyalCouncilCamera.Fit (the live board's
+   camera; board_camera_fit.py models the retired BoardCameraRig), the opponent's
+   Hero Power is the highest thing on the right of the table: its top sits near
+   y 118 at 1920 x 1080 and y 199 at 1440 x 1080. The chip ends at y 112. An
+   estimate from the prefab's mount points, so measure it.
+
+   THE RIGHT INSET IS .emb-edge's ALONE (controller ruling, 2026-11-02): both the card and
+   the chip carry it in the UXML and anchor at right 0, which audit_edge_safety.py requires.
+   IT DOES NOT CLEAR THE PIXEL 5a's PUNCH-HOLE. That cutout is 136 px deep at this panel's
+   1:1 scale and --edge-safe is 52, so the camera still covers about the right 30 px of the
+   image (x 2264..2294, y 40..145). A known trade-off: moving further in puts the card on
+   the opponent's Hero Power. The cutout depth is tracked in #350.
+
+   THE TEXT IS MEASURED IN ONE FONT. The card sets Modern Antiqua, the font every button
+   uses, so its widths can be checked against the .ttf rather than Unity's default theme
+   font. The task 7 report has the arithmetic.
+   ============================================================================ */
+
+.cc-root {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Catches the tap that closes an opened card anywhere on screen. Clear, and shown only while
+   the chip's card is open, when board input is gated off anyway. */
+.cc-scrim {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    display: none;
+}
+
+/* ---------- The full card ---------- */
+
+.cc-card {
+    position: absolute;
+    top: 24px;
+    right: 0;
+    width: 280px;
+    height: 424px;
+    padding: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    background-color: rgb(83, 56, 25);
+    border-width: 4px;
+    border-color: rgb(199, 154, 62);
+    border-radius: 16px;
+    -unity-font-definition: url("/Assets/Art/Fonts/ModernAntiqua-Regular UITK.asset");
+}
+
+.cc-card__image {
+    width: 172px;
+    height: 172px;
+    flex-shrink: 0;
+    align-self: center;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* ONE LINE, AT 26 NOT THE MOCKUP's 32. The ribbon is 260 wide (the card's 248 of content plus
+   its -6 margins). The longest name, "Return to Sender", is 305.7 px in bold at 32; 26 is the
+   largest even size that fits, at 248.3. One size for all nine, because a per-name size would need
+   runtime text measurement, which nothing in this repo does yet. The ellipsis is only a guard. A
+   Label has no children, so overflow: hidden here cannot eat any. */
+.cc-card__ribbon {
+    flex-shrink: 0;
+    margin: -14px -6px 0 -6px;
+    padding: 4px 0;
+    background-color: rgb(124, 21, 16);
+    border-radius: 4px;
+    color: rgb(246, 231, 193);
+    font-size: 26px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Exactly the height the card leaves: a basis of 0 that grows and never shrinks. So the clip
+   never takes a whole child the way a shrinkable overflow: hidden does; it only trims a line that
+   would otherwise cross the card's bottom border. */
+.cc-card__text {
+    flex-basis: 0;
+    flex-grow: 1;
+    flex-shrink: 0;
+    overflow: hidden;
+    margin-top: 8px;
+    padding: 10px;
+    flex-direction: column;
+    justify-content: center;
+    background-color: rgb(236, 220, 180);
+    border-radius: 6px;
+}
+
+/* Every label in the card: none of Label's default margin or padding, which the box's
+   tight vertical budget cannot spare. */
+.cc-card__line {
+    margin: 0;
+    padding: 0;
+    color: rgb(56, 34, 15);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.cc-card__rules {
+    font-size: 28px;
+}
+
+/* A fixed height of one em keeps the mockup's line-height: 1. UI Toolkit has no
+   line-height, and a 92px line would leave the box too little room for the line under it. */
+.cc-card__score {
+    height: 92px;
+    font-size: 92px;
+    -unity-font-style: bold;
+    color: rgb(140, 28, 19);
+}
+
+.cc-card__sub {
+    margin-top: 4px;
+    font-size: 27px;
+}
+
+/* ---------- The chip (2:1 and narrower) ---------- */
+
+.cc-chip {
+    position: absolute;
+    top: 8px;
+    right: 0;
+    height: 104px;
+    padding: 8px;
+    flex-direction: row;
+    align-items: center;
+    background-color: rgb(83, 56, 25);
+    border-width: 4px;
+    border-color: rgb(199, 154, 62);
+    border-radius: 16px;
+    -unity-font-definition: url("/Assets/Art/Fonts/ModernAntiqua-Regular UITK.asset");
+    display: none;
+}
+
+.cc-chip__image {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.cc-chip__score {
+    min-width: 56px;
+    height: 64px;
+    margin: 0 0 0 8px;
+    padding: 0 8px;
+    background-color: rgb(236, 220, 180);
+    border-radius: 6px;
+    font-size: 48px;
+    -unity-font-style: bold;
+    color: rgb(140, 28, 19);
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+}
+
+/* Greyed while the score needs a win: #8a6a3a, the approved colour. */
+.cc-card__score.cc-score--if-win,
+.cc-chip__score.cc-score--if-win {
+    color: rgb(138, 106, 58);
+}

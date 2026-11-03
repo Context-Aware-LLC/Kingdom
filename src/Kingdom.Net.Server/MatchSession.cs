@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using Kingdom.Core;
+using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Core.Projection;
 using Kingdom.Core.Serialization;
 using Kingdom.Net.Protocol;
 using Kingdom.Net.Server.Achievements;
+using Kingdom.Net.Server.King;
 using Kingdom.Net.Server.Replay;
 using Kingdom.Net.Server.Ranking;
 using Kingdom.Net.Server.Telemetry;
@@ -73,6 +75,16 @@ namespace Kingdom.Net.Server
         private readonly string _p0Policy;
         private readonly string _p1Policy;
 
+        /// <summary>The King this match plays for, fixed at the start (see <see cref="KingSeating"/>),
+        /// or null in a friend or soak match, or when there is no King.</summary>
+        private readonly KingSeating? _king;
+
+        /// <summary>Each seat's card back, seat 0 then seat 1 (#421), sent to BOTH seats on the
+        /// match start. Already judged by <c>MatchGate</c> against the seat's account, as the
+        /// display names are already checked; this class carries them and does not re-judge. Not
+        /// game state: never in the replay, the projection or the hash.</summary>
+        private readonly int[] _backIds;
+
         /// <summary>The first-session funnel (item 2): which seats are signed-in humans, and which of
         /// them has had an intent accepted yet. Only the first one writes <c>first_action</c>.</summary>
         private readonly IFunnelSink _funnel;
@@ -113,7 +125,10 @@ namespace Kingdom.Net.Server
             string p1Policy = "unspecified",
             IFunnelSink? funnel = null,
             bool p0FunnelTracked = false,
-            bool p1FunnelTracked = false)
+            bool p1FunnelTracked = false,
+            KingSeating? king = null,
+            int p0CardBack = CardBackDefinitions.DefaultId,
+            int p1CardBack = CardBackDefinitions.DefaultId)
         {
             _id = id;
             _seed = seed;
@@ -130,6 +145,8 @@ namespace Kingdom.Net.Server
             _trainingEpisodes = trainingEpisodes;
             _p0Policy = p0Policy;
             _p1Policy = p1Policy;
+            _king = king;
+            _backIds = new[] { p0CardBack, p1CardBack };
             _funnel = funnel ?? NullFunnelSink.Instance;
             _funnelTracked[0] = p0FunnelTracked;
             _funnelTracked[1] = p1FunnelTracked;
@@ -179,8 +196,9 @@ namespace Kingdom.Net.Server
                     // VULN-002 §4.2: opp.DisplayName, never a value read off a wire message here.
                     // The Seat holds it precisely so this line cannot be the place a raw name enters.
                     new OpponentInfo(opp.Player, opp.DisplayName),
-                    SnapshotMsg.Of(_host.Snapshot(me.Player)),
-                    me.ReconnectToken));
+                    SnapshotFor(seat),
+                    me.ReconnectToken,
+                    _backIds));
             }
 
             _mulliganDeadlineMs = now + _opts.MulliganMs;
@@ -620,7 +638,8 @@ namespace Kingdom.Net.Server
                 Console.Error.WriteLine("[telemetry] match {0} could not be summarised: {1}", _id.Value, ex.Message);
             }
             for (int seat = 0; seat < 2; seat++)
-                Send(seat, new MatchEndMsg(_host.State.Outcome, reason, FindingsFor(summary, seat)));
+                Send(seat, new MatchEndMsg(_host.State.Outcome, reason, FindingsFor(summary, seat),
+                    CommissionFinalFor(summary, seat)));
             _replay.Complete(_id, _host.State.Outcome);
             CompleteTrainingCapture();
 
@@ -628,7 +647,8 @@ namespace Kingdom.Net.Server
             // class out of live state — and after the wire messages, because a telemetry problem
             // must never cost a player their match-end screen.
             var outcome = _host.State.Outcome;
-            if (summary is not null) _telemetry.Complete(_host.State, summary);
+            // The King's Favor banks from the same event, off the match thread. A void never gets here.
+            if (summary is not null) _telemetry.Complete(_host.State, summary, _king);
 
             // Ratings are a projection of the authoritative result, never client input. The sink
             // rejects bot-fill, AI soak, self-play and unattributed matches before they can move it.
@@ -771,8 +791,49 @@ namespace Kingdom.Net.Server
 
         // ── Outbound (enqueue-only — RC F5) ──────────────────────────────────────
 
-        private void SendSnapshot(int seat)
-            => Send(seat, SnapshotMsg.Of(_host.Snapshot(_seats[seat].Player)));
+        private void SendSnapshot(int seat) => Send(seat, SnapshotFor(seat));
+
+        /// <summary>
+        /// <paramref name="seat"/>'s projected snapshot, carrying that seat's own commission card
+        /// (#421). Every snapshot a seat is sent is built here, the match start's included, so a
+        /// reconnect or a resync gets the card back with nothing else to remember. The card rides
+        /// outside the hash.
+        /// </summary>
+        private SnapshotMsg SnapshotFor(int seat)
+            => SnapshotMsg.Of(_host.Snapshot(_seats[seat].Player), CommissionFor(seat));
+
+        /// <summary>
+        /// Null when the match plays for no King. A failure costs the card, never the snapshot: the
+        /// score is decoration, and the snapshot is the match.
+        /// </summary>
+        private CommissionProgress? CommissionFor(int seat)
+        {
+            if (_king is null) return null;
+            try
+            {
+                var state = _host.State;
+                return _king.ProgressFor(seat, _telemetry.FactsSoFar(state, seat, NowUtc()),
+                    live: state.Outcome == MatchOutcome.InProgress);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("[king] match {0} seat {1} commission was not scored: {2}", _id.Value, seat, ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>The seat's final, off the summary the Favor banks from. A summary that could not
+        /// be built costs the final, never the match-end screen.</summary>
+        private CommissionFinal? CommissionFinalFor(MatchCompleteEvent? summary, int seat)
+        {
+            if (_king is null || summary is null) return null;
+            try { return _king.FinalFor(seat, AchievementMatchFacts.ForSeat(summary, seat)); }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("[king] match {0} seat {1} commission final was not scored: {2}", _id.Value, seat, ex.Message);
+                return null;
+            }
+        }
 
         private void Broadcast(NetMessage msg)
         {

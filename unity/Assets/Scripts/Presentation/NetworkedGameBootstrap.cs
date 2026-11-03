@@ -426,7 +426,10 @@ namespace Kingdom.Presentation
             // bound to, and SubmitDeckMsg carried that character's id alongside it — an id the
             // message's own doc said "is not an identity the server trusts", which is why removing it
             // cost the wire nothing.
-            return new SubmitDeckMsg(deck.PrimaryClass, deck.SecondaryClass, lines);
+            //
+            // The deck's back rides with it (#421) as a request: the server shows it only if this
+            // account owns it, and the default otherwise, without telling us.
+            return new SubmitDeckMsg(deck.PrimaryClass, deck.SecondaryClass, lines, deck.CardBackId);
         }
 
         private void WireMatch(ICardDatabase db)
@@ -505,6 +508,9 @@ namespace Kingdom.Presentation
                 boardAnchors.SetPlayers(localId, remoteId);
                 boardController.Initialize(db, boardAnchors, localId, remoteId, inputRouter, matchRunner,
                                            localHumanId: localId);
+                // Each seat's card back (#421), by ENGINE seat, before the opening hand is drawn.
+                boardController.SetCardBack(seat0Id, _net.CardBackOf(0));
+                boardController.SetCardBack(seat1Id, _net.CardBackOf(1));
                 matchRunner.OnStateUpdated += boardController.OnStateUpdated;
                 MatchOpeningDeal opening = MatchOpeningDeal.From(s0, localId);
                 if (opening != null && inputRouter != null && Camera.main != null)
@@ -676,7 +682,11 @@ namespace Kingdom.Presentation
             {
                 var settings = MatchSettingsController.Mount(inputRouter.OnConcedeClicked,
                                                               showConcede: true, allowSceneReload: false);
-                inputRouter.UiBlocksInput = () => settings.IsBlockingInput;
+                // The King's commission card (#421). Shows nothing until the server sends one, which
+                // it never does in a friend match. Its chip form opens a card that gates the board.
+                var commission = CommissionCardView.Mount(_net);
+                _view.OnCommission += commission.OnCommission;
+                inputRouter.UiBlocksInput = () => settings.IsBlockingInput || commission.IsBlockingInput;
             }
 
             // Rejections have NO player-facing surface, by decision (#268, 2026-08-26): the
@@ -735,7 +745,9 @@ namespace Kingdom.Presentation
                     reason: _net.EndReason,
                     findings: _net.EndFindings,
                     gold: _goldWatch.EarnedAsync(),
-                    rematchDeckId: _rematchDeckId);
+                    rematchDeckId: _rematchDeckId,
+                    // The same message carries the King's final (#421); null in a match for no King.
+                    commission: _net.EndCommission);
                 MusicDirector.FadeOutUntilSceneChange();            // the battle loop would clash with the stinger
                 cardSounds.OnMatchEnded(outcome, _net.Seat);
                 _ = PlayGamesServices.SyncAchievementsAfterMatchAsync();   // never throws; nothing waits on it
@@ -1019,6 +1031,7 @@ namespace Kingdom.Presentation
                 _inner.OnSnapshot  += st => _mainThread.Enqueue(() => OnSnapshot?.Invoke(st));
                 _inner.OnEvents    += batch => _mainThread.Enqueue(() => OnEvents?.Invoke(batch));
                 _inner.OnTurnTimer += t => _mainThread.Enqueue(() => OnTurnTimer?.Invoke(t));
+                _inner.OnCommission += c => _mainThread.Enqueue(() => OnCommission?.Invoke(c));
             }
 
             /// <summary>Queue an action to run on the main thread (drained by <see cref="Pump"/>).</summary>
@@ -1035,6 +1048,9 @@ namespace Kingdom.Presentation
             public event Action<GameState> OnSnapshot;
             public event GameEventStream OnEvents;
             public event Action<TurnTimer> OnTurnTimer;
+            /// <summary>Not on <see cref="IMatchSession"/>: the King's card is a networked match's
+            /// alone, so it is marshalled here beside the rest and read off this concrete type.</summary>
+            public event Action<CommissionProgress> OnCommission;
         }
     }
 }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SuccessionRoll.uxml: every King since the first, newest first, each with his fate and his
+  Favorite (King of the Week, #421). Built at runtime by SuccessionRollOverlay through Resources,
+  the pattern LedgerScreen uses, and read on the herald's scroll: ProclamationScroll wraps
+  roll-sheet in code, so the rollers are not in this markup.
+
+  .emb-root IS LOAD-BEARING: this tree is its own UIDocument, so nothing above it declares the
+  type and spacing tokens the rules here read.
+
+  The list is a ScrollView with both scrollers Hidden in the markup, which is the mechanism
+  (theme.uss says why the USS rule alone is not). No doubled hyphen in this comment.
+-->
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="../../Common/theme.uss" />
+    <Style src="../../Common/tidbit.uss" />
+    <Style src="../king.uss" />
+
+    <ui:VisualElement name="roll" class="emb-root emb-bleed tidbit-overlay roll-overlay">
+        <ui:VisualElement name="roll-sheet" class="tidbit-card roll-sheet">
+            <ui:VisualElement class="roll-header">
+                <ui:Label text="The Succession Roll" class="tidbit-title roll-title" />
+            </ui:VisualElement>
+            <ui:Label name="roll-status" text="The archivist is unrolling the Roll." class="roll-status" />
+            <ui:ScrollView name="roll-list" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="roll-list" />
+            <ui:VisualElement class="roll-footer">
+                <ui:Button name="roll-close" text="Close" class="roll-button emb-primary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

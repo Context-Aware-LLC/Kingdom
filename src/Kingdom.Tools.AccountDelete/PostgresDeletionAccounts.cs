@@ -57,6 +57,11 @@ namespace Kingdom.Tools.AccountDelete
             (CountKeys.QuestProgress, "from quest_progress where player_id = @p", "delete from quest_progress where player_id = @p"),
             (CountKeys.CompletedMatch, "from completed_match where player_id = @p", "delete from completed_match where player_id = @p"),
             (CountKeys.AchievementEarned, "from achievement_earned where player_id = @p", "delete from achievement_earned where player_id = @p"),
+            (CountKeys.FavorScore, "from favor_score where player_id = @p", "delete from favor_score where player_id = @p"),
+            (CountKeys.FavorPrize, "from favor_prize where player_id = @p", "delete from favor_prize where player_id = @p"),
+            // The reign is history other people read, so it stays with no Favorite named.
+            (CountKeys.KingReign, "from king_reign where favorite_id = @p",
+                "update king_reign set favorite_id = null, favorite_name = null where favorite_id = @p"),
             (CountKeys.LadderPlayer, "from ladder_player where player_id = @p", "delete from ladder_player where player_id = @p"),
             // The match row is the opponent's history too, so it stays with the tombstone in our seat.
             (CountKeys.LadderMatch, "from ladder_match where p0_player_id = @p or p1_player_id = @p",

@@ -66,6 +66,9 @@ insert into deck values ('d1', '{Pid}', '{{}}', {at}, {at}), ('d2', '{Friend}', 
 insert into quest_progress values ('{Pid}', 'q1', '2026-10-01', 'm1', 1, {at});
 insert into completed_match values ('{Pid}', 'm1', {at}), ('{Friend}', 'm1', {at});
 insert into achievement_earned values ('{Pid}', 'a1', 'm1', {at});
+insert into favor_score values (1, '{Pid}', 'Me', 5, {at}), (1, '{Friend}', 'Pal', 4, {at});
+insert into favor_prize values (1, '{Pid}', 1, 100, 3, false), (1, '{Friend}', 2, 50, null, false);
+insert into king_reign (reign, favorite_id, favorite_name) values (1, '{Pid}', 'Me'), (2, '{Friend}', 'Pal');
 insert into ladder_player (player_id, display_name, rating, updated_at) values ('{Pid}', 'Me', 1000, {at}), ('{Friend}', 'Pal', 1000, {at});
 insert into ladder_match (match_id, ended_at, p0_player_id, p1_player_id, outcome) values
   ('m1', {at}, '{Pid}', '{Friend}', 'p0_win'), ('m2', {at}, '{Friend}', '{Pid}', 'draw');
@@ -121,14 +124,31 @@ insert into raw_event (event_uid, type, line) values
             Assert.That(plan!.Devices, Is.EqualTo(new[] { DeviceOwn, DeviceShared }));
             Assert.That(plan.Counts, Is.EqualTo(new SortedDictionary<string, long>(StringComparer.Ordinal)
             {
-                [CountKeys.AuthUsers] = 1, [CountKeys.AuthIdentities] = 1,
-                [CountKeys.Account] = 1, [CountKeys.GrantDelete] = 1, [CountKeys.GrantKept] = 2, [CountKeys.Deck] = 1,
-                [CountKeys.QuestProgress] = 1, [CountKeys.CompletedMatch] = 1, [CountKeys.AchievementEarned] = 1,
-                [CountKeys.LadderPlayer] = 1, [CountKeys.LadderMatch] = 2, [CountKeys.FriendCode] = 1,
-                [CountKeys.Friendship] = 1, [CountKeys.FriendBlock] = 1, [CountKeys.PlayGamesLink] = 1,
-                [CountKeys.MatchSeat] = 1, [CountKeys.CardSeen] = 1, [CountKeys.RawAccount] = 3,
-                [CountKeys.RawPlayers] = 2, [CountKeys.RawDeviceOnly] = 2,
-                [CountKeys.Devices] = 2, [CountKeys.DevicesShared] = 1,
+                [CountKeys.AuthUsers] = 1,
+                [CountKeys.AuthIdentities] = 1,
+                [CountKeys.Account] = 1,
+                [CountKeys.GrantDelete] = 1,
+                [CountKeys.GrantKept] = 2,
+                [CountKeys.Deck] = 1,
+                [CountKeys.QuestProgress] = 1,
+                [CountKeys.CompletedMatch] = 1,
+                [CountKeys.AchievementEarned] = 1,
+                [CountKeys.FavorScore] = 1,
+                [CountKeys.FavorPrize] = 1,
+                [CountKeys.KingReign] = 1,
+                [CountKeys.LadderPlayer] = 1,
+                [CountKeys.LadderMatch] = 2,
+                [CountKeys.FriendCode] = 1,
+                [CountKeys.Friendship] = 1,
+                [CountKeys.FriendBlock] = 1,
+                [CountKeys.PlayGamesLink] = 1,
+                [CountKeys.MatchSeat] = 1,
+                [CountKeys.CardSeen] = 1,
+                [CountKeys.RawAccount] = 3,
+                [CountKeys.RawPlayers] = 2,
+                [CountKeys.RawDeviceOnly] = 2,
+                [CountKeys.Devices] = 2,
+                [CountKeys.DevicesShared] = 1,
                 [CountKeys.Prereg] = 1,
             }));
         }
@@ -166,8 +186,12 @@ insert into raw_event (event_uid, type, line) values
             Assert.That(await ScalarAsync($"select count(*) from match_seat where account_id = '{t}'"), Is.EqualTo(1));
             Assert.That(await ScalarAsync($"select count(*) from card_seen where account_id = '{t}'"), Is.EqualTo(1));
 
+            // The reign stays, with no favorite named; the friend's reign is untouched.
+            Assert.That(await ScalarAsync("select count(*) from king_reign where reign = 1 and favorite_id is null and favorite_name is null"), Is.EqualTo(1));
+            Assert.That(await ScalarAsync($"select count(*) from king_reign where reign = 2 and favorite_id = '{Friend}'"), Is.EqualTo(1));
+
             // The friend keeps everything that is only theirs.
-            foreach (string table in new[] { "account", "deck", "completed_match", "ladder_player", "friend_code" })
+            foreach (string table in new[] { "account", "deck", "completed_match", "ladder_player", "friend_code", "favor_score", "favor_prize" })
                 Assert.That(await ScalarAsync($"select count(*) from {table} where player_id = '{Friend}'"), Is.EqualTo(1), table);
 
             // Telemetry: the player's lines and their own device's lines are gone; the shared device's

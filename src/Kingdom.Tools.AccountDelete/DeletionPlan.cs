@@ -116,6 +116,9 @@ namespace Kingdom.Tools.AccountDelete
         public const string QuestProgress = "accounts.quest_progress.delete";
         public const string CompletedMatch = "accounts.completed_match.delete";
         public const string AchievementEarned = "accounts.achievement_earned.delete";
+        public const string FavorScore = "accounts.favor_score.delete";
+        public const string FavorPrize = "accounts.favor_prize.delete";
+        public const string KingReign = "accounts.king_reign.favorite_cleared";
         public const string LadderPlayer = "accounts.ladder_player.delete";
         public const string LadderMatch = "accounts.ladder_match.tombstone";
         public const string FriendCode = "accounts.friend_code.delete";

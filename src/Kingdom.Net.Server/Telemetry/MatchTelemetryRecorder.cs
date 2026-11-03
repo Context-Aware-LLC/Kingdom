@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Kingdom.Core;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Protocol;
+using Kingdom.Net.Server.Achievements;
+using Kingdom.Net.Server.King;
 
 namespace Kingdom.Net.Server.Telemetry
 {
@@ -98,6 +100,9 @@ namespace Kingdom.Net.Server.Telemetry
         /// <summary>Turns each seat ended with 10 mana unspent (<see cref="SeatOutcome.TurnsEndedWithTenUnspent"/>).</summary>
         private readonly int[] _turnsEndedWithTenUnspent = new int[2];
 
+        /// <summary>Mana left at each of the seat's turn ends, summed (<see cref="SeatOutcome.UnspentMana"/>).</summary>
+        private readonly int[] _unspentMana = new int[2];
+
         /// <summary>The Council's Findings read off each command's events.</summary>
         private readonly FindingsObserver _findings;
 
@@ -159,6 +164,7 @@ namespace Kingdom.Net.Server.Telemetry
             {
                 if (byClock) _turnsTimedOut[end.seat]++;
                 if (end.unspent >= 10) _turnsEndedWithTenUnspent[end.seat]++;
+                _unspentMana[end.seat] += end.unspent;
             }
             ObserveHands(state);
             for (int seat = 0; seat < 2; seat++) _minionsLost[seat] += MinionDeaths(state, pending.Watch, seat);
@@ -177,6 +183,31 @@ namespace Kingdom.Net.Server.Telemetry
                     if (state.Players[seat].Graveyard.Exists(c => c.Id == burned)) { _cardsBurned[seat]++; break; }
             }
         }
+
+        /// <summary>
+        /// <paramref name="seat"/>'s exact commission numbers so far (#421). Live: read it after any
+        /// accepted command for the score as it builds, and at the end for the score that banks,
+        /// which is the same numbers <see cref="SeatBlock"/> writes on the seat's outcome.
+        /// </summary>
+        internal FindingsObserver.Tally TallyFor(int seat)
+            => new FindingsObserver.Tally(
+                _findings.OverkillBest[seat],
+                _findings.SelfDamage[seat],
+                _unspentMana[seat],
+                _findings.FatigueDamage[seat],
+                _cardsBurned[seat],
+                _findings.TollDamage[seat],
+                _findings.StolenDamage[seat],
+                _findings.HeroPowerDamage[seat]);
+
+        /// <summary>
+        /// <paramref name="seat"/>'s facts as they stand mid-match (#421), built by
+        /// <see cref="Summarize"/> exactly as the banked row is, so a commission scores the live
+        /// match by the same numbers it will bank. The result and end reason mean nothing until the
+        /// match ends; no commission's score reads them, and the card greys a win-only score instead.
+        /// </summary>
+        internal AchievementMatchFacts FactsSoFar(GameState state, int seat, DateTimeOffset nowUtc)
+            => AchievementMatchFacts.ForSeat(Summarize(state, nowUtc, MatchEndReason.Win), seat);
 
         internal static BoardWatch Watch(GameState state, PlayerIntent intent)
         {
@@ -241,10 +272,20 @@ namespace Kingdom.Net.Server.Telemetry
                 SeatBlock(state, 0, outcome), SeatBlock(state, 1, outcome));
         }
 
-        /// <summary>Emit a row <see cref="Summarize"/> built, then the per-card sample.</summary>
-        public void Complete(GameState state, MatchCompleteEvent complete)
+        /// <summary>
+        /// Emit a row <see cref="Summarize"/> built, then the per-card sample. <paramref name="king"/>
+        /// goes only to an <see cref="AchievementSink"/>, which banks the Favor; it stays off the row
+        /// because the row is written to telemetry and the seating carries the players' names.
+        /// The AchievementSink must therefore be the sink this recorder holds, not one wrapped inside
+        /// another: <c>MatchGate</c>'s constructor enforces that whenever it is given a Favor store.
+        /// </summary>
+        public void Complete(GameState state, MatchCompleteEvent complete, KingSeating? king = null)
         {
-            Emit(() => _telemetry.MatchComplete(complete));
+            Emit(() =>
+            {
+                if (king is not null && _telemetry is AchievementSink favor) favor.MatchComplete(complete, king);
+                else _telemetry.MatchComplete(complete);
+            });
             Emit(() => _telemetry.CardsSeen(new CardSeenEvent(
                 _id, complete.EndedAtUtc, _attribution.Source, CardRows(state, complete.Outcome))));
         }
@@ -353,6 +394,7 @@ namespace Kingdom.Net.Server.Telemetry
         {
             var deck = seat == 0 ? _setup.P0Deck : _setup.P1Deck;
             var @class = state.Players[seat].Hero.Class;
+            FindingsObserver.Tally tally = TallyFor(seat);
             return new SeatOutcome(
                 seat == 0 ? _attribution.P0 : _attribution.P1,
                 @class,
@@ -365,16 +407,22 @@ namespace Kingdom.Net.Server.Telemetry
                 _heroPowersUsed[seat],
                 state.Players[seat].Hero.CurrentHealth,
                 seat == 0 ? state.FatigueCounter0 : state.FatigueCounter1,
-                _cardsBurned[seat],
+                tally.CardsBurned,
                 _turnsTimedOut[seat],
                 _turnsEndedWithTenUnspent[seat],
-                _findings.SelfDamage[seat],
+                tally.SelfDamage,
                 _findings.Overkills[seat],
                 _findings.BigMinionsBounced[seat],
                 _findings.LegendariesLost[seat],
                 _findings.MostBulwarks[seat],
                 state.Players[seat].Hero.CurrentHealth <= 0 ? _findings.FellTo[seat] : FinalBlow.None,
-                _policies[seat]);
+                _policies[seat],
+                tally.OverkillBest,
+                tally.UnspentMana,
+                tally.FatigueDamage,
+                tally.TollDamage,
+                tally.StolenDamage,
+                tally.HeroPowerDamage);
         }
 
         /// <summary>

@@ -26,9 +26,18 @@ namespace Kingdom.Core.Contracts
         /// <summary>Session-only presentation metadata: the server clock ended this turn.
         /// False for core/replay events; never changes rules or the canonical state hash.</summary>
         public readonly bool TimedOut;
+        /// <summary>Server-only observation: the target's Health the instant before a
+        /// <see cref="GameEventKind.DamageApplied"/> that landed on a minion or hero (armor not
+        /// included). Null on every other event, an Aegis-absorbed hit included. It is what the King's
+        /// Overkill commission is scored from, because Health replayed through the event stream misses
+        /// a stat change made earlier in the same command. Same contract as <see cref="TimedOut"/>:
+        /// never read by rules, never hashed, and dropped by the projector and the codec, so it never
+        /// reaches the wire.</summary>
+        public readonly int? HealthBefore;
 
         public GameEvent(GameEventKind kind, ulong sequence, InstanceId? source, InstanceId? target,
-                         int? amount, EventFlags flags, PresentationCue? cueOverride = null, bool timedOut = false)
+                         int? amount, EventFlags flags, PresentationCue? cueOverride = null, bool timedOut = false,
+                         int? healthBefore = null)
         {
             Kind = kind;
             Sequence = sequence;
@@ -38,6 +47,7 @@ namespace Kingdom.Core.Contracts
             Flags = flags;
             CueOverride = cueOverride;
             TimedOut = timedOut;
+            HealthBefore = healthBefore;
         }
 
         public override string ToString()

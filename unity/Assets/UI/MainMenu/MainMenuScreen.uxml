@@ -45,6 +45,17 @@
                 <ui:Button name="btn-ledger" text="" tooltip="Open the Ledger" class="mm-dock-button mm-ledger-button">
                     <ui:VisualElement picking-mode="Ignore" class="mm-dock-art mm-ledger-art"/>
                 </ui:Button>
+                <ui:VisualElement name="king-dock" class="mm-king-dock" style="display: none;">
+                    <ui:Button name="btn-king" text="" tooltip="Open the Succession Roll" class="mm-dock-button mm-king-button">
+                        <ui:VisualElement picking-mode="Ignore" class="mm-dock-art mm-king-art"/>
+                    </ui:Button>
+                    <ui:VisualElement picking-mode="Ignore" class="mm-king-copy">
+                        <ui:Label name="king-plaque" text=" " picking-mode="Ignore" class="mm-king-plaque"/>
+                        <ui:Label name="king-commission" text=" " picking-mode="Ignore" class="mm-king-commission"/>
+                        <ui:Label name="king-scored" text=" " picking-mode="Ignore" class="mm-king-scored"/>
+                        <ui:Label name="king-decree" text=" " picking-mode="Ignore" class="mm-king-decree"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="footer" class="mm-footer emb-edge">
@@ -52,18 +63,29 @@
         </ui:VisualElement>
         <ui:VisualElement name="leaderboard-modal" class="mm-modal mm-modal--hidden emb-bleed">
             <ui:VisualElement class="mm-modal__panel mm-leaderboard">
+                <!-- THE TABS ARE THE BOARD TITLES, as in ShopScreen.uxml. The Favor tab stays hidden
+                     until a King is read (MainMenuController.ShowKingAsync), like king-dock. -->
                 <ui:VisualElement class="mm-leaderboard__header">
-                    <ui:Label text="The Official Register of Winners" class="mm-leaderboard__title"/>
+                    <ui:VisualElement class="mm-leaderboard__tabs">
+                        <ui:Button name="leaderboard-tab-ladder" text="The Official Register of Winners" class="mm-leaderboard__tab mm-leaderboard__tab--on"/>
+                        <ui:Button name="leaderboard-tab-favor" text="The King's Favorites" class="mm-leaderboard__tab" style="display: none;"/>
+                    </ui:VisualElement>
                     <ui:Button name="btn-leaderboard-close" text="Close" class="mm-modal__button mm-leaderboard__close"/>
                 </ui:VisualElement>
-                <ui:VisualElement class="mm-leaderboard__columns">
+                <ui:VisualElement name="leaderboard-columns" class="mm-leaderboard__columns">
                     <ui:Label text="RANK" class="mm-leaderboard__rank"/>
                     <ui:Label text="PLAYER" class="mm-leaderboard__name"/>
                     <ui:Label text="RATING" class="mm-leaderboard__rating"/>
                     <ui:Label text="W — L — D" class="mm-leaderboard__record"/>
                 </ui:VisualElement>
+                <ui:VisualElement name="favor-columns" class="mm-leaderboard__columns mm-leaderboard__columns--hidden">
+                    <ui:Label text="RANK" class="mm-leaderboard__rank"/>
+                    <ui:Label text="PLAYER" class="mm-leaderboard__name"/>
+                    <ui:Label text="SCORE" class="mm-leaderboard__score"/>
+                </ui:VisualElement>
                 <ui:Label name="leaderboard-status" text="Calling the keepers…" class="mm-leaderboard__status"/>
-                <ui:ScrollView name="leaderboard-list" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" class="mm-leaderboard__list"/>
+                <ui:ScrollView name="leaderboard-list" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="mm-leaderboard__list"/>
+                <ui:VisualElement name="favor-me" class="mm-leaderboard__me mm-leaderboard__me--hidden"/>
                 <ui:Label name="leaderboard-updated" text="Ratings update after every eligible match." class="mm-leaderboard__updated"/>
             </ui:VisualElement>
         </ui:VisualElement>

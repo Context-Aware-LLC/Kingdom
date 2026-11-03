@@ -80,7 +80,9 @@ for line in sys.stdin:
             {
                 using Process? probe = Process.Start(new ProcessStartInfo("python", "--version")
                 {
-                    UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                 });
                 return probe is not null && probe.WaitForExit(10_000) && probe.ExitCode == 0;
             }

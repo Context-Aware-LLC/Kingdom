@@ -1,0 +1,213 @@
+/* ============================================================================
+   THE SUCCESSION ROLL: every King since the first, newest first (#421).
+   Opened from the crown in the main menu dock by SuccessionRollOverlay.
+
+   The dim and the paper come from tidbit.uss (.tidbit-overlay, .tidbit-card), and
+   ProclamationScroll builds the rollers around .roll-sheet in code. Sized in the
+   2400 x 1080 authored panel (#349).
+
+   The list has a FIXED height, so the sheet the scroll measures is the same tall
+   whether the Roll holds one reign or a hundred. It scrolls rather than turning
+   pages because it only grows; its scrollers are hidden in the markup.
+   ============================================================================ */
+
+/* Wider than a tidbit's half screen: an epithet and a fate share a line's width. */
+.roll-overlay .tidbit-scroll {
+    width: 64%;
+    max-width: 90%;
+}
+
+.roll-sheet {
+    flex-shrink: 0;
+}
+
+.roll-header {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: center;
+    margin-bottom: var(--space-4);
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(84, 58, 34, 0.45);
+    padding-bottom: var(--space-2);
+}
+
+.roll-title {
+    font-size: var(--type-display);
+}
+
+/* Takes the list's place while the Roll is read, or when it could not be. */
+.roll-status {
+    height: 456px;
+    font-size: var(--type-body);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.roll-list {
+    height: 456px;
+    flex-shrink: 0;
+}
+
+.roll-entry {
+    padding: var(--space-3) var(--space-2);
+    border-bottom-width: 1px;
+    border-bottom-color: rgba(84, 58, 34, 0.25);
+}
+
+.roll-entry__head {
+    flex-direction: row;
+    align-items: flex-end;
+}
+
+.roll-entry__reign {
+    width: 148px;
+    flex-shrink: 0;
+    font-size: var(--type-label);
+    color: rgb(120, 92, 62);
+}
+
+.roll-entry__epithet {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    color: rgb(58, 36, 18);
+    white-space: normal;
+}
+
+.roll-entry__fate {
+    margin-left: 148px;
+    font-size: var(--type-label);
+    -unity-font-style: italic;
+    color: rgb(84, 58, 34);
+    white-space: normal;
+}
+
+.roll-entry__favor {
+    flex-direction: row;
+    align-items: flex-end;
+    margin-left: 148px;
+    margin-top: var(--space-1);
+}
+
+/* A PLAYER'S NAME: peer-authored. The clip in pixels is this rule, and rich text is off where
+   SuccessionRollOverlay builds the label (security.md; the same pair as .fr-row__name). A Label
+   has no children, so overflow: hidden on a shrinkable one is safe here. */
+.roll-entry__name {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 360px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+    color: rgb(58, 36, 18);
+    margin-right: var(--space-2);
+}
+
+.roll-entry__favor-of {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: 0;
+    font-size: var(--type-label);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+}
+
+/* The current reign, and a reign with no Favorite: one line, faded. */
+.roll-entry__favor-of--none {
+    color: rgba(84, 58, 34, 0.6);
+    -unity-font-style: italic;
+}
+
+.roll-footer {
+    flex-direction: row;
+    justify-content: flex-end;
+    margin-top: var(--space-4);
+}
+
+.roll-button {
+    min-width: 148px;
+    height: 68px;
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+    font-size: var(--type-body);
+}
+
+/* ============================================================================
+   THE PRIZE CHOICE: one card back from the pool, for a top-three place held
+   before (#421). Opened on menu arrival by PrizeChoiceOverlay, on the same
+   scroll as the Roll; it borrows the Roll's header, footer and buttons.
+
+   The backs sit in a FIXED-height list, like the Roll's, so the sheet is the
+   same size however big the pool grows. Tiles wrap in rows inside it.
+   ============================================================================ */
+
+.prize-overlay .tidbit-scroll {
+    width: 64%;
+    max-width: 90%;
+}
+
+.prize-sheet {
+    flex-shrink: 0;
+}
+
+.prize-body {
+    font-size: var(--type-body);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+    -unity-text-align: middle-center;
+    margin-bottom: var(--space-4);
+}
+
+.prize-backs {
+    height: 360px;
+    flex-shrink: 0;
+}
+
+.prize-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* A card back is about 5:7. A tile is a button, but not chrome: no slate sprite
+   behind the art (theme.uss, "EVERY BUTTON IS CHROME"). */
+.prize-back {
+    width: 168px;
+    height: 232px;
+    margin: var(--space-2);
+    padding: var(--space-1);
+    background-image: none;
+    border-width: 4px;
+    border-radius: var(--space-2);
+    border-color: rgba(84, 58, 34, 0.25);
+}
+
+.prize-back--on {
+    border-color: rgb(240, 166, 60);
+}
+
+.prize-back__art {
+    flex-grow: 1;
+    border-radius: var(--space-1);
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* Under the list: what happened to a claim. Empty, it still holds its line, so
+   the footer does not jump when a message arrives. */
+.prize-status {
+    min-height: 48px;
+    margin-top: var(--space-2);
+    font-size: var(--type-label);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.prize-footer .roll-button {
+    margin-left: var(--space-4);
+}

@@ -228,6 +228,58 @@ create table if not exists achievement_earned (
 
 alter table achievement_earned enable row level security;
 
+-- ── King of the Week (#421) ────────────────────────────────────────────────────────────────────
+-- favor_score: one row per (reign, player) holding that player's BEST score for the reign. The
+-- board reads it; reached_at breaks ties (earlier wins) and does not move on an equal score.
+-- favor_prize: what a placed player was paid for a reign, written once when the reign's gold is
+-- paid. A top-three row's back is settled later, by a separate pass, because the place backs' art
+-- can land after the reign closes: back_settled_at null means its back is still owed.
+-- king_reign: one row per closed reign. favorite_id/favorite_name are nulled by account deletion
+-- (the reign stays, like ladder_match, and reads as having no Favorite).
+create table if not exists favor_score (
+  reign        int         not null,
+  player_id    text        not null,
+  display_name text        not null,
+  score        int         not null,
+  reached_at   timestamptz not null,
+  primary key (reign, player_id)
+);
+
+-- The Ledger's seals read every reign one player scored in; the key leads with reign, not player.
+create index if not exists favor_score_player_reign_idx on favor_score (player_id, reign);
+
+create table if not exists favor_prize (
+  reign       int     not null,
+  player_id   text    not null,
+  place       int     not null,
+  gold        bigint  not null default 0,
+  back_id     int,
+  choice_open boolean not null default false,
+  primary key (reign, player_id)
+);
+
+alter table favor_prize add column if not exists back_settled_at timestamptz;
+-- A closed choice whose payment is not confirmed: its back, or its pool-empty gold when back_id is
+-- null. The close comes before the payment (only one caller may win), so a crash or a timed-out
+-- grant leaves this true, and the next sweep or the player's next GET /king/prize pays again on the
+-- same key. A choice never reopens.
+alter table favor_prize add column if not exists choice_grant_pending boolean not null default false;
+-- A choice the player closed (on back_id, or in gold when it is null), as opposed to a row that was
+-- never a choice or that the operator closed by hand. A repeated claim reads it to answer honestly.
+alter table favor_prize add column if not exists choice_closed boolean not null default false;
+
+create table if not exists king_reign (
+  reign         int     primary key,
+  favorite_id   text,
+  favorite_name text,
+  struck        boolean not null default false,
+  paid_at       timestamptz
+);
+
+alter table favor_score enable row level security;
+alter table favor_prize enable row level security;
+alter table king_reign enable row level security;
+
 -- ── Friends (#409) ─────────────────────────────────────────────────────────────────────────────
 -- Keyed on player_id like everything else here, and on NOTHING from `account.email`: some accounts
 -- authenticate without one (Sam, 2026-10-01), and a friends graph that needed it would exclude them.

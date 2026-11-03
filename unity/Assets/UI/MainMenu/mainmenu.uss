@@ -191,7 +191,7 @@
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 
-/* ---------- Dock: Card Vault packs and the Ledger book ----------
+/* ---------- Dock: Card Vault packs, the Ledger book and the King's crown ----------
  * Each control's art is its silhouette. Keep the transparent edges visible and the 160px height
  * so the reserved navigation band does not move the menu rows. The book sits to the vault's
  * right (Sam, 2026-10-21). */
@@ -248,6 +248,59 @@
 }
 .mm-ledger-art {
     background-image: url("/Assets/Art/UI/Chrome/ui_ledger_book.png");
+}
+/* The King of the Week (#421): the crown on its cushion beside the book, and his plaque and
+ * commission beside it. Hidden in the markup until GET /king names a King; with none the row
+ * is exactly the vault and the book. The copy sits BESIDE the crown, not under it, so the dock
+ * keeps its 160px band: the crown's left edge is inside the 568px command column, so anything
+ * taller would rise into the menu rows above it. The copy starts past that column, over the stage. */
+.mm-king-dock {
+    flex-shrink: 0;
+    flex-direction: row;
+    align-items: flex-end;
+    margin-left: var(--space-4);
+}
+.mm-king-button,
+.mm-king-art {
+    width: 160px;
+    min-width: 160px;
+}
+.mm-king-art {
+    background-image: url("/Assets/Art/UI/Chrome/ui_king_crown.png");
+}
+.mm-king-copy {
+    width: 520px;
+    flex-shrink: 0;
+    margin-left: var(--space-2);
+    padding-bottom: var(--space-2);
+    justify-content: flex-end;
+}
+.mm-king-plaque,
+.mm-king-commission,
+.mm-king-scored,
+.mm-king-decree {
+    color: var(--ink-1);
+    white-space: normal;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.85);
+}
+.mm-king-plaque {
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    color: rgb(255, 226, 179);
+}
+.mm-king-commission {
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+}
+.mm-king-scored {
+    font-size: var(--type-caption);
+}
+.mm-king-decree {
+    font-size: var(--type-caption);
+    -unity-font-style: italic;
+    color: rgb(217, 210, 195);
 }
 .mm-dock-button:hover,
 .mm-dock-button:focus {
@@ -616,31 +669,72 @@
     margin-left: var(--space-2);
 }
 
-/* ---------- Ranked ladder ---------- */
+/* ---------- Ranked ladder and the King's Favor ----------
+ * Two boards in one modal (#421). 960 rather than 820 so both tab titles sit on one line beside
+ * Close at --type-body; a tab that still runs long (a translation) ellipsizes rather than wrap. */
 .mm-leaderboard {
-    width: 820px;
+    width: 960px;
     max-width: 100%;
     height: 100%;
     padding: var(--space-6);
     border-color: rgba(240, 166, 60, 0.55);
 }
-/* Title and close on ONE row, close hard right. The title takes the growth, so there is no wrapper
- * element between it and the header — a `__heading` box existed only to stack a kicker above the
- * title, and the kicker is gone. */
+/* Tabs and close on ONE row, close hard right. The tab bar takes the growth. */
 .mm-leaderboard__header {
     flex-direction: row;
     align-items: center;
     margin-bottom: var(--space-4);
 }
-.mm-leaderboard__title {
+.mm-leaderboard__tabs {
     flex-grow: 1;
     flex-shrink: 1;
-    color: var(--ink-1);
-    font-size: var(--type-h1);
-    -unity-font-style: bold;
+    min-width: 0;
+    flex-direction: row;
+    align-items: stretch;
 }
+/* A tab is the board's name and its selector at once, copied from .shop-tab (shop.uss): --on is
+ * CONTRAST plus the underline and never changes geometry, so switching boards cannot reflow the
+ * header. --type-body, not .shop-tab's --type-h2: at h2 the two titles and Close overrun the
+ * panel's ~912px inside. One line always; min-width 0 lets a tab shrink, and the ellipsis is the
+ * backstop if it has to, never a wrap and never Close pushed off the panel. */
+.mm-leaderboard__tab {
+    flex-shrink: 1;
+    min-width: 0;
+    min-height: var(--touch-min);
+    padding: 0 var(--space-3);
+    margin: 0;
+    border-width: 0;
+    border-bottom-width: 3px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-radius: 0;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: none;
+    color: var(--ink-2);
+    font-size: var(--type-body);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -unity-text-overflow-position: end;
+    transition-property: color, border-bottom-color;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+.mm-leaderboard__tab:hover {
+    color: var(--ink-1);
+}
+.mm-leaderboard__tab--on {
+    color: var(--ink-1);
+    border-bottom-color: var(--accent);
+}
+/* Close never gives width to the tabs: they shrink, it does not. */
 .mm-leaderboard__close {
+    flex-shrink: 0;
     margin-left: var(--space-6);
+}
+.mm-leaderboard__columns--hidden {
+    display: none;
 }
 .mm-leaderboard__columns,
 .mm-leaderboard__row {
@@ -678,15 +772,22 @@
     font-size: var(--type-label);
     -unity-font-style: bold;
 }
+/* A player's name: PEER-AUTHORED. Clipped in PIXELS here and drawn with rich text off where the
+ * row is built (MainMenuController.NameLabelFor), the pair security.md sets, as .fr-row__name. */
 .mm-leaderboard__name {
     flex-grow: 1;
     flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     padding-left: var(--space-2);
     color: var(--ink-1);
     font-size: var(--type-body);
     -unity-font-style: bold;
 }
-.mm-leaderboard__rating {
+.mm-leaderboard__rating,
+.mm-leaderboard__score {
     width: 100px;
     color: var(--accent);
     font-size: var(--type-body);
@@ -711,6 +812,15 @@
     color: var(--negative);
 }
 .mm-leaderboard__status--hidden {
+    display: none;
+}
+/* Your own place on the Favor board, pinned under the list when you are off it. Holds one row
+ * built like the list's; the accent rule sets it apart from the hundred above. */
+.mm-leaderboard__me {
+    border-top-width: 2px;
+    border-top-color: var(--accent);
+}
+.mm-leaderboard__me--hidden {
     display: none;
 }
 .mm-leaderboard__updated {

@@ -99,11 +99,18 @@ namespace Kingdom.Net.Protocol
     /// into a throwaway <c>Character</c> built only so the validator's signature lined up. The
     /// deck carries its pairing now, so the object being validated and the deck being played are
     /// one thing rather than two that happened to agree.</para>
+    ///
+    /// <para><see cref="CardBackId"/> (#421, optional key <c>cardBackId</c>) is the back the player
+    /// chose for this deck; absent and 0 both mean unset. <b>Client-authored, so a request and never
+    /// a grant:</b> <c>MatchGate</c> honours it only when the account it resolved owns that back,
+    /// and seats the player on the default otherwise, with no close and nothing said to the client
+    /// (security.md, "Card backs on the wire").</para>
     /// </summary>
     public sealed record SubmitDeckMsg(
         CardClass PrimaryClass,
         CardClass SecondaryClass,
-        IReadOnlyList<DeckCardLine> Cards) : NetMessage;
+        IReadOnlyList<DeckCardLine> Cards,
+        int CardBackId = 0) : NetMessage;
 
     /// <summary>A player intent + the client's last-applied StateVersion (stale-client detection,
     /// netcode §3.2). Which decoded intents a client may SUBMIT is the server's §4.6 allowlist —
@@ -142,17 +149,23 @@ namespace Kingdom.Net.Protocol
         /// <summary>The projected <see cref="GameState"/> for this recipient (projection is the
         /// server's job — B1 composes <c>GameStateProjector.Project</c> → this).</summary>
         public GameState State { get; }
+        /// <summary>The King's commission as it stands for THIS recipient (#421), or null in a match
+        /// that plays for no King, which is how the client knows to hide the card. Optional key
+        /// <c>commission</c>. It is not game state: <see cref="Hash"/> covers <see cref="State"/>
+        /// alone, so this rides outside the hash and never moves it.</summary>
+        public CommissionProgress? Commission { get; }
 
-        internal SnapshotMsg(ulong stateVersion, string hash, GameState state)
+        internal SnapshotMsg(ulong stateVersion, string hash, GameState state, CommissionProgress? commission = null)
         {
             StateVersion = stateVersion;
             Hash = hash;
             State = state;
+            Commission = commission;
         }
 
         /// <summary>The one public construction path: hash computed internally, version read off the state.</summary>
-        public static SnapshotMsg Of(GameState projected)
-            => new SnapshotMsg(projected.StateVersion, GameStateHasher.Hash(projected), projected);
+        public static SnapshotMsg Of(GameState projected, CommissionProgress? commission = null)
+            => new SnapshotMsg(projected.StateVersion, GameStateHasher.Hash(projected), projected, commission);
 
         /// <summary>Recompute the canonical hash of <see cref="State"/> and compare to <see cref="Hash"/>
         /// (the client-side mirror-integrity check).</summary>
@@ -172,14 +185,31 @@ namespace Kingdom.Net.Protocol
     /// projected snapshot. <b>The seed is server-side only and is NEVER sent</b> (ADR-0004 / decision 19).
     /// <see cref="ReconnectToken"/> is the B1 additive field (dev-docs/contracts/wire-protocol.md:41, RC F2):
     /// the opaque credential the client must present in <see cref="ReconnectMsg"/>. Empty on decode
-    /// when an older encoder omitted it (A5 §8 forward-compat).</summary>
+    /// when an older encoder omitted it (A5 §8 forward-compat).
+    /// <para><see cref="BackIds"/> (#421, optional key <c>backIds</c>) is each seat's card back,
+    /// seat 0 then seat 1, as the server settled them: both seats are sent both, so a player's back
+    /// is seen by their opponent. A cosmetic and not game state, so it rides beside the snapshot and
+    /// outside its hash. Absent decodes to the default for both seats. An id the client does not
+    /// know draws the default back.</para></summary>
     public sealed record MatchStartMsg(
         PlayerId PlayerId,
         int Seat,
         string WireContractVersion,
         OpponentInfo Opponent,
         SnapshotMsg Snapshot,
-        string ReconnectToken = "") : NetMessage;
+        string ReconnectToken = "",
+        IReadOnlyList<int>? BackIds = null) : NetMessage
+    {
+        /// <summary><c>CardBackDefinitions.DefaultId</c>. This assembly cannot reference
+        /// <c>Kingdom.Core.Collection</c>, so it holds a copy; <c>CardBackFieldTests</c> pins the two
+        /// together.</summary>
+        public const int DefaultBackId = 1;
+
+        /// <summary>The card back for engine seat <paramref name="seat"/>, or the default when there
+        /// is no such seat or no backs were sent.</summary>
+        public int BackIdOf(int seat)
+            => BackIds is { Count: 2 } ids && (seat == 0 || seat == 1) ? ids[seat] : DefaultBackId;
+    }
 
     public readonly struct OpponentInfo
     {
@@ -197,11 +227,33 @@ namespace Kingdom.Net.Protocol
     /// <see cref="AchievementTexts"/> ids, so each seat is sent its own message. Empty outside a
     /// Find Game match. Additive and optional on the wire: an older peer omits it and decodes as
     /// none, which is why it did not move <see cref="ProtocolContract.Version"/>.</param>
+    /// <param name="Commission">The receiving seat's final commission score (#421), optional key
+    /// <c>commission</c>. Null whenever nothing banks: a match that plays for no King, a seat that
+    /// cannot hold a place, a commission that needs a win and was not won, and a score that does not
+    /// qualify. The server decides; a final that arrives is a score that counts.</param>
     public sealed record MatchEndMsg(
-        MatchOutcome Outcome, MatchEndReason Reason, IReadOnlyList<string>? Findings = null) : NetMessage
+        MatchOutcome Outcome, MatchEndReason Reason, IReadOnlyList<string>? Findings = null,
+        CommissionFinal? Commission = null) : NetMessage
     {
         public IReadOnlyList<string> FindingIds => Findings ?? Array.Empty<string>();
     }
+
+    /// <summary>
+    /// One seat's commission card mid-match (#421). Server-authored, per seat: the client words and
+    /// draws it and never computes a score of its own.
+    /// </summary>
+    /// <param name="Id">A <see cref="CommissionIds"/> id.</param>
+    /// <param name="Score">Null until the seat qualifies, when the card shows how it is scored, and
+    /// null again once a win-only commission is lost. Drawn as sent; the client applies no rule.</param>
+    /// <param name="CountsIfYouWin">True while the commission needs a win and the match is live: the
+    /// number is greyed, with "Counts if you win".</param>
+    /// <param name="Best">The seat's best this reign when the match began, or null.</param>
+    public sealed record CommissionProgress(string Id, int? Score, bool CountsIfYouWin, int? Best);
+
+    /// <summary>One seat's final commission score (#421), for the match-end proclamation.</summary>
+    /// <param name="NewBest">True when it beats the seat's best this reign. A tie is not new: the
+    /// board gives a tie to whoever reached it first.</param>
+    public sealed record CommissionFinal(string Id, int Score, bool NewBest);
 
     public enum MatchEndReason { Win, Concede, Timeout, Disconnect }
 

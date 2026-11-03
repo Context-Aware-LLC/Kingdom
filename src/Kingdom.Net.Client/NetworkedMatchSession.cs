@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Protocol;
 
@@ -39,6 +40,8 @@ namespace Kingdom.Net.Client
         private DeadReason _deadReason = DeadReason.None;
         private MatchEndReason? _endReason;
         private IReadOnlyList<string> _endFindings = Array.Empty<string>();
+        private CommissionProgress? _commission;
+        private CommissionFinal? _endCommission;
         // #232: the server's WS close-frame reason text, when the peer supplied one (MatchGate's
         // "deck timeout" / "deck rejected: ..." / "server full" — see WebSocketTransport). DeadReason
         // stays the coarse bucket UI code branches on; this is what a player actually reads.
@@ -49,6 +52,7 @@ namespace Kingdom.Net.Client
         private int _seat = -1;
         private PlayerId _player;
         private string _opponentName = string.Empty;
+        private int[] _backIds = { CardBackDefinitions.DefaultId, CardBackDefinitions.DefaultId };
 
         private ulong _outSeq;
         private long _lastSendMs;
@@ -144,6 +148,14 @@ namespace Kingdom.Net.Client
         /// defense in depth and not the fix</b> — but obligation 4 of VULN-002 §4 is genuinely
         /// client-side, so a NEW renderer of this string owns it and does not inherit it.</para></summary>
         public string OpponentName { get { lock (_lock) return _opponentName; } }
+        /// <summary><c>MatchStartMsg.BackIds</c> — the card back engine seat <paramref name="seat"/>
+        /// plays under (#421), for both players' hidden cards. The server has already checked the
+        /// owner holds it. The default before the match starts and for a seat that is not 0 or 1;
+        /// an id this build does not know is the renderer's to resolve (<c>CardBackCatalog</c>).</summary>
+        public int CardBackOf(int seat)
+        {
+            lock (_lock) return seat == 0 || seat == 1 ? _backIds[seat] : CardBackDefinitions.DefaultId;
+        }
         public ConnectionState State { get { lock (_lock) return _state; } }
         public DeadReason DeadReason { get { lock (_lock) return _deadReason; } }
         /// <summary><c>MatchEndMsg.Reason</c> — why the match ended, for the result line. Null
@@ -152,6 +164,14 @@ namespace Kingdom.Net.Client
         /// <summary><c>MatchEndMsg.Findings</c> — the Council's Findings this seat committed, as
         /// <c>AchievementTexts</c> ids, for the result screen. Empty until the server says.</summary>
         public IReadOnlyList<string> EndFindings { get { lock (_lock) return _endFindings; } }
+        /// <summary>The King's commission card for this seat (#421), off the last applied snapshot,
+        /// the match start's included. Null in a match that plays for no King, which is the signal
+        /// to hide the card. The server scores it; the client never computes one.</summary>
+        public CommissionProgress? Commission { get { lock (_lock) return _commission; } }
+        /// <summary><c>MatchEndMsg.Commission</c> — this seat's final score and whether it is a new
+        /// best, for the match-end proclamation. Null until the server says, and whenever the score
+        /// does not count; the server decides that, so a final here is always one to proclaim.</summary>
+        public CommissionFinal? EndCommission { get { lock (_lock) return _endCommission; } }
         /// <summary>The server's close-frame reason text, when it sent one (#232) — null for a local
         /// close, a transport fault, or a peer close that carried no text. Prefer this over
         /// <see cref="DeadReason"/> when presenting a refusal to the player; it is the difference
@@ -167,6 +187,10 @@ namespace Kingdom.Net.Client
 
         public event Action<bool>? OnPendingChanged;
         public event Action<ConnectionState>? OnConnectionStateChanged;
+        /// <summary>Raised from the snapshot path, after <c>OnSnapshot</c>, for each applied snapshot
+        /// that carries a card. Like <c>OnSnapshot</c> it does not fire for the match start's
+        /// snapshot: read <see cref="Commission"/> when the match starts. Fires off the pump.</summary>
+        public event Action<CommissionProgress>? OnCommission;
 
         // ── Lifecycle ───────────────────────────────────────────────────────────────
 
@@ -335,7 +359,9 @@ namespace Kingdom.Net.Client
                 _seat = ms.Seat;
                 _player = ms.PlayerId;
                 _opponentName = ms.Opponent.DisplayName ?? string.Empty;
+                _backIds = new[] { ms.BackIdOf(0), ms.BackIdOf(1) };
                 _current = ms.Snapshot.State;   // initial mirror; no OnSnapshot for the initial (a4 §3)
+                _commission = ms.Snapshot.Commission;
                 SetStateUnlocked(ConnectionState.Live);
             }
             _matchStarted?.TrySetResult(true);
@@ -348,6 +374,7 @@ namespace Kingdom.Net.Client
         private void ApplySnapshot(SnapshotMsg s, byte[] rawFrame, ulong envelopeSeq)
         {
             GameState? applied = null;
+            CommissionProgress? commission = null;
             List<GameEvent>? flush = null;
             bool pendingResolved = false;
             lock (_lock)
@@ -367,6 +394,8 @@ namespace Kingdom.Net.Client
                 _resyncPending = false;
                 _current = s.State;             // WHOLESALE REPLACE — only ever a verified state
                 applied = s.State;
+                _commission = s.Commission;     // and the card with it, never ahead of the state it scores
+                commission = s.Commission;
                 pendingResolved = MaybeResolvePendingOkUnlocked(s.StateVersion);
                 if (_pendingEvents.TryGetValue(s.StateVersion, out var batch))
                 {
@@ -376,6 +405,7 @@ namespace Kingdom.Net.Client
             }
 
             if (applied is not null) OnSnapshot?.Invoke(applied);
+            if (commission is not null) OnCommission?.Invoke(commission);
             if (flush is not null) OnEvents?.Invoke(flush);
             if (pendingResolved) OnPendingChanged?.Invoke(false);
         }
@@ -441,6 +471,7 @@ namespace Kingdom.Net.Client
                 resolve = _pending;
                 _endReason = end.Reason;
                 _endFindings = end.FindingIds;
+                _endCommission = end.Commission;
                 ClearPendingUnlocked();
                 SetStateUnlocked(ConnectionState.Ended);
             }

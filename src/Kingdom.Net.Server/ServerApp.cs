@@ -41,6 +41,9 @@ namespace Kingdom.Net.Server
         /// <summary>Directory scanned for *.cards.json. Null → walk up to the repo's canonical dir (dev).</summary>
         public string? CardsDir { get; init; }
         public string ReplaysDir { get; init; } = "replays";
+        /// <summary>Unix ms of Reign 1's start (a Tuesday 00:00 UTC). Null → there is no King and
+        /// <c>GET /king</c> says so. From <c>KINGDOM_REIGN_ONE</c>.</summary>
+        public long? ReignOneMs { get; init; }
         /// <summary>Null disables live training capture. A configured directory receives only
         /// finalized replay/manifest pairs and may live on the same durable volume as replays.</summary>
         public string? TrainingInboxDir { get; init; }
@@ -184,6 +187,18 @@ namespace Kingdom.Net.Server
         /// Shares the accounts database in production, keyed on the same <c>player_id</c>.
         /// </summary>
         public IAchievementStore? Achievements { get; init; }
+
+        /// <summary>
+        /// Where the King's Favor scores live. Null (default) uses <see cref="King.InMemoryFavorStore"/>,
+        /// so a box with no Postgres forgets them on restart. Shares the accounts database in production.
+        /// </summary>
+        public King.IFavorStore? Favor { get; init; }
+
+        /// <summary>
+        /// The King's Favor gold. Null (default) pays none: scores still bank. From
+        /// <c>KINGDOM_FAVOR_PRIZES</c>, which logs and pays nothing when unset or invalid.
+        /// </summary>
+        public King.FavorPrizeSettings? FavorPrizes { get; init; }
 
         /// <summary>
         /// What a finished match and a completed quest pay. Null (default) uses the shipping
@@ -332,6 +347,9 @@ namespace Kingdom.Net.Server
             IAchievementStore? achievements = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresAchievementStore(accountsDb!);
+            King.IFavorStore? favor = string.IsNullOrWhiteSpace(accountsDb)
+                ? null
+                : new King.PostgresFavorStore(accountsDb!);
             ICompletedMatchStore? completedMatches = string.IsNullOrWhiteSpace(accountsDb)
                 ? null
                 : new PostgresCompletedMatchStore(accountsDb!);
@@ -341,6 +359,7 @@ namespace Kingdom.Net.Server
                 Urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://+:8080",
                 CardsDir = KingdomEnv.Get("KINGDOM_CARDS"),
                 ReplaysDir = KingdomEnv.Get("KINGDOM_REPLAYS") ?? "replays",
+                ReignOneMs = King.KingEnv.ReignOneFromEnvironment(),
                 TrainingInboxDir = KingdomEnv.Get("KINGDOM_TRAINING_INBOX"),
                 Telemetry = sink,
                 Funnel = sink,
@@ -358,6 +377,8 @@ namespace Kingdom.Net.Server
                 EntitlementLedger = entitlementLedger,
                 QuestProgress = questProgress,
                 Achievements = achievements,
+                Favor = favor,
+                FavorPrizes = King.FavorPrizeSettings.FromEnvironment(),
                 CompletedMatches = completedMatches,
                 RatingStore = ratingStore,
                 // Bot-fill (design doc §Bot roster & provisioning) is otherwise unreachable on a real
@@ -491,6 +512,10 @@ namespace Kingdom.Net.Server
         {
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.UseUrls(cfg.Urls);
+            // Long enough for AchievementSink to drain on a deploy, or the King's Favor scores of the
+            // matches that just ended are lost. Stated rather than left to the default (also 30 s)
+            // because something depends on it. fly.toml's kill_timeout must outlast it.
+            builder.Services.Configure<HostOptions>(o => o.ShutdownTimeout = TimeSpan.FromSeconds(30));
 
             // The drain rides the host lifecycle: it starts after the app is up and gets a graceful
             // StopAsync on shutdown. Absent unless KINGDOM_TELEMETRY_DB is configured.
@@ -685,18 +710,57 @@ namespace Kingdom.Net.Server
             // Achievements, decorated onto the same sink for the same reason. They need only the
             // account store, to tell an account from a tokenless tooling seat; without one GET /achievements
             // answers 503 and nothing is recorded.
+            //
+            // The King's Favor banks from the same worker and needs the same store, to keep Superuser
+            // accounts off the board. Without one the gate seats every match with no King.
+            //
+            // One Favor store for the process: the gate, the worker and GET /king/roll must share the
+            // in-memory default, or the Roll reads a store nothing writes to.
+            King.IFavorStore favorStore = cfg.Favor ?? new King.InMemoryFavorStore();
+            // The prize pool as this build's catalog knows it: an id with no catalog row is left out,
+            // with a log line here, rather than failing every read of every player's choice.
+            IReadOnlyList<int> prizePool = King.PrizeChoiceEndpoint.CatalogPool(
+                CardBackDefinitions.PoolIds, id => CardBackDefinitions.TryGet(id, out _));
             AchievementService? achievementService = null;
+            King.FavorService? favorService = null;
             if (cfg.AccountStore is not null)
             {
                 achievementService = new AchievementService(
                     cfg.Achievements ?? new InMemoryAchievementStore(),
                     cfg.AccountStore,
                     isBotAccount);
+                favorService = new King.FavorService(favorStore, cfg.AccountStore, economy, cfg.FavorPrizes);
 
                 var achievementSink = new AchievementSink(
-                    telemetry ?? NullTelemetrySink.Instance, achievementService);
+                    telemetry ?? NullTelemetrySink.Instance, achievementService, favorService);
                 builder.Services.AddSingleton<IHostedService>(achievementSink);
+                // KEEP THIS THE OUTERMOST DECORATOR. The King's seating reaches the Favor only through
+                // MatchTelemetryRecorder.Complete's `is AchievementSink` check, so a sink wrapped
+                // around this one would bank nothing. MatchGate's constructor throws if the telemetry
+                // it is given with a Favor store is anything else.
                 telemetry = achievementSink;
+            }
+
+            // The Tuesday sweep (#421) pays each closed reign. It needs a King to count reigns
+            // from, the gold amounts, a ledger to pay into and the accounts that tell a deleted
+            // player from a live one; without any of them it does not start, and says so once
+            // here when there is a King to pay for.
+            if (cfg.ReignOneMs is long sweepReignOne)
+            {
+                if (cfg.FavorPrizes is null || economy is null || cfg.EntitlementLedger is null || cfg.AccountStore is null)
+                {
+                    Console.Error.WriteLine(
+                        "[king] the payout sweep is OFF ({0} missing): closed reigns are not paid until it runs.",
+                        cfg.FavorPrizes is null ? King.FavorPrizeSettings.EnvVar
+                            : cfg.AccountStore is null ? "account store" : "entitlement ledger");
+                }
+                else
+                {
+                    builder.Services.AddSingleton<IHostedService>(new King.KingPayoutSweep(
+                        favorStore, cfg.AccountStore, economy, new King.LedgerPrizeBacks(cfg.EntitlementLedger),
+                        cfg.FavorPrizes, sweepReignOne, time,
+                        CardBackDefinitions.PlaceBackIds, prizePool));
+                }
             }
 
             // The pack line. Two things have to be present for a pack to be openable at all, and
@@ -756,7 +820,9 @@ namespace Kingdom.Net.Server
                 onboarding,
                 cfg.EntitlementLedger,
                 challenges,
-                firstMatches);
+                firstMatches,
+                favorService is null ? null : favorStore,
+                cfg.ReignOneMs);
 
             // The social surface (#409). The hub asks the gate who is in a match and the gate
             // tells the hub when that changes; neither holds the other, so a box with no social
@@ -898,6 +964,134 @@ namespace Kingdom.Net.Server
                 if (outcome.Row is not null && !funnel.Write(outcome.Row))
                     return Results.Json(new { status = "unavailable" }, statusCode: 503);
                 return Results.Json(new { status = outcome.Status }, statusCode: outcome.HttpStatus);
+            });
+            // GET /king — this week's King. A pure function of the clock and the reign-one setting,
+            // so every client agrees. No auth: it is the same for everyone.
+            //
+            // Cache-Control: no-store, because the answer flips at Tuesday midnight.
+            app.MapGet("/king", (HttpContext context) =>
+            {
+                context.Response.Headers["Cache-Control"] = "no-store";
+                if (cfg.ReignOneMs is not long reignOne)
+                    return Results.Json(new { status = "none" });
+                int number = King.KingCalendar.ReignAt(time.NowMs, reignOne);
+                if (number < 1)
+                    return Results.Json(new { status = "none" });
+                King.Reign reign = King.KingSchedule.For(number);
+                return Results.Json(new
+                {
+                    status = "ok",
+                    reign = reign.Number,
+                    epithet = reign.Epithet,
+                    fate = reign.Fate,
+                    commission = reign.Commission,
+                    endsAtMs = King.KingCalendar.StartMs(number + 1, reignOne),
+                });
+            });
+            // GET /king/roll — every reign from this one back to Reign 1, newest first, with the
+            // Favorite of each closed one. The current reign has none yet; a reign nobody won, or whose
+            // Favorite was struck or deleted, reads null. Epithet and fate are pool indices, like /king.
+            app.MapGet("/king/roll", async (HttpContext context) =>
+            {
+                context.Response.Headers["Cache-Control"] = "no-store";
+                if (cfg.ReignOneMs is not long reignOne)
+                    return Results.Json(new { status = "none" });
+                int current = King.KingCalendar.ReignAt(time.NowMs, reignOne);
+                if (current < 1)
+                    return Results.Json(new { status = "none" });
+
+                const int RollLimit = 200;
+                var favorites = new Dictionary<int, string?>();
+                foreach (King.RollRow row in await favorStore.RollAsync(RollLimit, context.RequestAborted))
+                    favorites[row.Reign] = row.FavoriteName;
+
+                var reigns = new List<object>();
+                for (int number = current; number >= 1 && reigns.Count < RollLimit; number--)
+                {
+                    King.Reign reign = King.KingSchedule.For(number);
+                    string? favorite = number == current ? null : favorites.GetValueOrDefault(number);
+                    reigns.Add(new
+                    {
+                        reign = reign.Number,
+                        epithet = reign.Epithet,
+                        fate = reign.Fate,
+                        // "" is a Favorite with no name to show (see FavorNames); null is none at all.
+                        favorite = favorite is null ? null : King.FavorNames.Shown(favorite),
+                    });
+                }
+                return Results.Json(new { status = "ok", reigns });
+            });
+            // GET /king/favor — this reign's King's Favor board, best first in the commission's own
+            // direction, ties to whoever got there first. Public, like the Roll: names and scores
+            // only, never an id. A name goes out through FavorNames, so no seat handle reaches it.
+            app.MapGet("/king/favor", async (HttpContext context) =>
+            {
+                context.Response.Headers["Cache-Control"] = "no-store";
+                if (cfg.ReignOneMs is not long reignOne)
+                    return Results.Json(new { status = "none" });
+                int current = King.KingCalendar.ReignAt(time.NowMs, reignOne);
+                if (current < 1)
+                    return Results.Json(new { status = "none" });
+
+                string commission = King.KingSchedule.For(current).Commission;
+                bool lowerIsBetter = King.CommissionCatalog.LowerIsBetter(commission);
+                var rows = new List<object>();
+                foreach (King.FavorRow row in await favorStore.TopAsync(
+                             current, lowerIsBetter, King.FavorEndpoint.BoardLimit, context.RequestAborted))
+                    rows.Add(new { place = row.Place, name = King.FavorNames.Shown(row.DisplayName), score = row.Score });
+                return Results.Json(new { status = "ok", reign = current, commission, lowerIsBetter, rows });
+            });
+            // GET /king/favor/me — the bearer's own place and best this reign, which the board above
+            // cannot show once they are off its hundred rows, and the commissions whose seal they hold
+            // on the Ledger. Per-identity, so no-store for the reason /rating gives.
+            app.MapGet("/king/favor/me", async (HttpContext context) =>
+            {
+                context.Response.Headers["Cache-Control"] = "no-store";
+                if (cfg.ReignOneMs is not long reignOne)
+                    return Results.Json(new { status = "none" });
+                int current = King.KingCalendar.ReignAt(time.NowMs, reignOne);
+                if (current < 1)
+                    return Results.Json(new { status = "none" });
+
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                King.FavorStandingResult result = await King.FavorEndpoint.ReadStandingAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, favorStore, current, context.RequestAborted);
+
+                return Results.Json(new
+                {
+                    // "ok" | "unauthenticated" | "unavailable"; place and score are null off the board.
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    place = result.Place,
+                    score = result.Score,
+                    seals = result.Seals,
+                }, statusCode: result.HttpStatus);
+            });
+            // GET /king/prize and POST /king/prize/choose — a repeat top-three place's back, picked
+            // from the pool (PrizeChoiceEndpoint). The back id is client-authored: the body is
+            // capped before auth, and the id is checked against an open choice, the pool and the
+            // ledger. Not gated on a King: a choice opened under one stays open for good.
+            var prizeChoice = new King.PrizeChoiceEndpoint(
+                cfg.TokenVerifier, cfg.AccountStore, favorStore,
+                cfg.EntitlementLedger is null ? null : new King.LedgerPrizeBacks(cfg.EntitlementLedger),
+                economy, cfg.FavorPrizes, prizePool,
+                new FriendRequestLimiter(time, max: 10, windowMs: 60_000));
+            app.MapGet("/king/prize", async (HttpContext context) =>
+            {
+                return PrizeChoiceJson(context,
+                    await prizeChoice.ReadAsync(BearerFrom(context), context.RequestAborted), withChoices: true);
+            });
+            app.MapPost("/king/prize/choose", async (HttpContext context) =>
+            {
+                var (body, oversized) = await ReadCappedBodyAsync(context, King.PrizeChoiceEndpoint.MaxBodyBytes);
+                return PrizeChoiceJson(context, await prizeChoice.ChooseAsync(
+                    // Cast, not a bare null, for the reason /telemetry/client gives.
+                    oversized ? (ReadOnlyMemory<byte>?)null : body,
+                    BearerFrom(context), context.RequestAborted), withChoices: false);
             });
             app.MapGet("/leaderboard", async (HttpContext context) =>
             {
@@ -1771,29 +1965,6 @@ namespace Kingdom.Net.Server
         }
 
         /// <summary>
-        /// The one JSON shape every <c>/friends</c> route answers with.
-        ///
-        /// <para>The lists are OMITTED on anything but a 200, for the reason <c>/roster</c> omits
-        /// its decks: an absent field cannot be misread as "this player has no friends".</para>
-        ///
-        /// <para>Each list is an ARRAY OF FLAT OBJECTS with scalar values, which is the only
-        /// shape the client's <c>AuthJson.TryReadObjectArray</c> reads. <c>outgoing</c> and
-        /// <c>blocked</c> carry the code ALONE, deliberately — see <see cref="FriendsEndpoint"/>
-        /// for why a name there would be a lookup service.</para>
-        ///
-        /// <para><b>A player with no name is sent <c>""</c>, never <c>null</c>.</b> The client's
-        /// reader keeps a bare literal as its raw text, so a JSON <c>null</c> arrives as the
-        /// four-character string "null" and would be drawn as a friend called null. An empty
-        /// string cannot be a name (<c>PlayerName.MinLength</c>) and reads as absent.</para>
-        ///
-        /// <para><c>displayName</c> is peer-authored text. Its renderer is
-        /// <c>FriendsDrawerController.NameLabel</c>, which owes what the nameplate owes: rich text
-        /// OFF, and a clip in PIXELS. A further renderer inherits both (security.md, "Friends
-        /// routes").</para>
-        ///
-        /// <para>Cache-Control: no-store, for the reason <c>/roster</c> sets it.</para>
-        /// </summary>
-        /// <summary>
         /// The request body, read up to <paramref name="maxBytes"/>. Past the cap the read stops and
         /// <c>Oversized</c> is true, so an unauthenticated caller cannot make the server buffer more
         /// than the cap — the reason <see cref="SmallJsonStringAsync"/> caps too.
@@ -1840,6 +2011,53 @@ namespace Kingdom.Net.Server
             return Results.Json(new { status, suggestions = rows }, statusCode: result.HttpStatus);
         }
 
+        /// <summary>
+        /// The <c>/king/prize</c> routes' JSON: <c>status</c> always; on GET's 200 the open
+        /// <c>choices</c>, each <c>{reign, place, backIds}</c>; on POST's <c>granted</c> the
+        /// <c>backId</c> the choice is closed on, and on <c>gold</c> the <c>gold</c> paid.
+        /// Per-account, so no-store.
+        /// </summary>
+        private static IResult PrizeChoiceJson(HttpContext context, King.PrizeChoiceResult result, bool withChoices)
+        {
+            context.Response.Headers["Cache-Control"] = "no-store";
+            if (result.HttpStatus == 429) context.Response.Headers["Retry-After"] = "60";
+            string status = result.Status.ToString().ToLowerInvariant();
+            if (result.BackId is int backId)
+                return Results.Json(new { status, backId }, statusCode: result.HttpStatus);
+            if (result.Gold is long gold)
+                return Results.Json(new { status, gold }, statusCode: result.HttpStatus);
+            if (!withChoices || result.HttpStatus != 200)
+                return Results.Json(new { status }, statusCode: result.HttpStatus);
+
+            var choices = new List<object>(result.Choices.Count);
+            foreach (King.PrizeChoice c in result.Choices)
+                choices.Add(new { reign = c.Reign, place = c.Place, backIds = c.BackIds });
+            return Results.Json(new { status, choices }, statusCode: result.HttpStatus);
+        }
+
+        /// <summary>
+        /// The one JSON shape every <c>/friends</c> route answers with.
+        ///
+        /// <para>The lists are OMITTED on anything but a 200, for the reason <c>/roster</c> omits
+        /// its decks: an absent field cannot be misread as "this player has no friends".</para>
+        ///
+        /// <para>Each list is an ARRAY OF FLAT OBJECTS with scalar values, which is the only
+        /// shape the client's <c>AuthJson.TryReadObjectArray</c> reads. <c>outgoing</c> and
+        /// <c>blocked</c> carry the code ALONE, deliberately — see <see cref="FriendsEndpoint"/>
+        /// for why a name there would be a lookup service.</para>
+        ///
+        /// <para><b>A player with no name is sent <c>""</c>, never <c>null</c>.</b> The client's
+        /// reader keeps a bare literal as its raw text, so a JSON <c>null</c> arrives as the
+        /// four-character string "null" and would be drawn as a friend called null. An empty
+        /// string cannot be a name (<c>PlayerName.MinLength</c>) and reads as absent.</para>
+        ///
+        /// <para><c>displayName</c> is peer-authored text. Its renderer is
+        /// <c>FriendsDrawerController.NameLabel</c>, which owes what the nameplate owes: rich text
+        /// OFF, and a clip in PIXELS. A further renderer inherits both (security.md, "Friends
+        /// routes").</para>
+        ///
+        /// <para>Cache-Control: no-store, for the reason <c>/roster</c> sets it.</para>
+        /// </summary>
         private static IResult FriendsJson(HttpContext context, FriendsResult result)
         {
             context.Response.Headers["Cache-Control"] = "no-store";

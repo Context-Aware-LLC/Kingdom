@@ -223,7 +223,10 @@ namespace Kingdom.Presentation
         {
             if (!IsShowing || _queue.Count == 0) return;
             Stamp();
-            _voice?.Play(_queue[0].VoiceAddress);
+            // A tidbit built in code (the Herald's new-reign announcement, MainMenuController) can
+            // have no recording yet; the card is complete without one.
+            string voice = _queue[0].VoiceAddress;
+            if (!string.IsNullOrEmpty(voice)) _voice?.Play(voice);
         }
 
         /// <summary>Every proclamation is sealed once it is open: the wax lands on the sheet's

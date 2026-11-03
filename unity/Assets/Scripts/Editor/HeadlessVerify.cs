@@ -43,6 +43,7 @@ namespace Kingdom.Editor
                 RunCheck("CardBackOwnershipVerify", CardBackOwnershipVerify.Run),
                 RunCheck("LocalizationVerify",   LocalizationVerify.Run),
                 RunCheck("HeraldVoiceVerify",     HeraldVoiceVerify.Run),
+                RunCheck("KingVerify",           KingVerify.Run),
             };
 
             Debug.Log("[HeadlessVerify] ==============================");

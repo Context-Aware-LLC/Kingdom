@@ -454,7 +454,7 @@ namespace Kingdom.Net.Server.Tests
                 Assert.That(sink.OfType("client_milestone"), Has.Count.EqualTo(1));
 
                 using var huge = new HttpRequestMessage(HttpMethod.Post, "/telemetry/client")
-                    { Content = new ByteArrayContent(new byte[ClientTelemetryEndpoint.MaxBodyBytes + 1]) };
+                { Content = new ByteArrayContent(new byte[ClientTelemetryEndpoint.MaxBodyBytes + 1]) };
                 huge.Headers.Add(ServerFunnelRows.HeaderDevice, Device);
                 Assert.That((await http.SendAsync(huge)).StatusCode, Is.EqualTo(HttpStatusCode.RequestEntityTooLarge));
 

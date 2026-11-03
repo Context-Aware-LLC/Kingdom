@@ -84,7 +84,8 @@ namespace Kingdom.Presentation
                 {
                     ClearOffer();
                     _title.text = Loc.Get("unearth_title_opponent");
-                    BuildOpponentBacks();
+                    // The opponent is choosing, so the backs are theirs.
+                    BuildOpponentBacks(state.Players[0].Id == _localPlayer ? state.Players[1].Id : state.Players[0].Id);
                 }
                 _audience = UnearthChoiceAudience.Opponent;
                 return;
@@ -191,9 +192,10 @@ namespace Kingdom.Presentation
 
         // Never derived from a real option count (UnearthChoiceModel redacts it from the
         // opponent) — always OpponentBackCount, the fixed "choose one of three" offer shape.
-        private void BuildOpponentBacks()
+        private void BuildOpponentBacks(PlayerId chooser)
         {
             if (_board == null) return;
+            int backId = _board.CardBackOf(chooser);
             _slotCount = OpponentBackCount;
             LayoutSurface();
 
@@ -202,7 +204,7 @@ namespace Kingdom.Presentation
                 Transform anchor = PlaceCardSlot(index, OpponentBackCount, $"Back_{index}");
                 CardPresenter card = _board.BuildDetachedCard(anchor);
                 card.gameObject.name = "Back";
-                card.SetHidden();
+                card.SetHidden(backId);
                 _cards.Add(anchor.gameObject);
                 _slotIndices.Add(index);
             }

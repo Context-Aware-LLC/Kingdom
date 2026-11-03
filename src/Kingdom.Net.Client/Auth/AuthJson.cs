@@ -69,6 +69,20 @@ namespace Kingdom.Net.Client.Auth
             => TryReadTopLevel(json, keepContainers: false, out fields);
 
         /// <summary>
+        /// <see cref="TryReadTopLevel(string, out IReadOnlyDictionary{string, string})"/>, also naming
+        /// every member whose value is the JSON literal <c>null</c>. The plain read cannot: it keeps a
+        /// string's text without its quotes, so <c>null</c> and <c>"null"</c> both read as
+        /// <c>null</c>. That matters wherever a peer-authored name can be absent — <c>null</c> is a
+        /// legal player name.
+        /// </summary>
+        public static bool TryReadTopLevelWithNulls(string json, out IReadOnlyDictionary<string, string> fields,
+                                                    out HashSet<string> nulls)
+        {
+            nulls = new HashSet<string>(StringComparer.Ordinal);
+            return TryReadTopLevel(json, keepContainers: false, out fields, nulls);
+        }
+
+        /// <summary>
         /// A nested object member, parsed with the same reader — <c>user_metadata</c> inside a JWT
         /// payload, and nothing else so far.
         ///
@@ -157,8 +171,90 @@ namespace Kingdom.Net.Client.Auth
             return false;
         }
 
+        /// <summary>
+        /// A nested ARRAY OF STRINGS — <c>seals</c> on <c>GET /king/favor/me</c>, and nothing else so
+        /// far. Returns false when the member is absent or is not an array, and rejects the whole array
+        /// when any element is not a string, for the reason <see cref="TryReadRawObjectArray"/> gives.
+        /// </summary>
+        public static bool TryReadStringArray(string json, string name, out IReadOnlyList<string> items)
+        {
+            var list = new List<string>();
+            items = list;
+
+            if (!TryReadTopLevel(json, keepContainers: true, out var outer)) return false;
+            if (!outer.TryGetValue(name, out string? raw) || string.IsNullOrEmpty(raw)) return false;
+
+            int pos = 0;
+            SkipWhitespace(raw!, ref pos);
+            if (pos >= raw!.Length || raw[pos] != '[') return false;
+            pos++;
+
+            SkipWhitespace(raw, ref pos);
+            if (pos < raw.Length && raw[pos] == ']') return true;
+
+            while (pos < raw.Length)
+            {
+                SkipWhitespace(raw, ref pos);
+                if (!TryReadString(raw, ref pos, out string value)) return false;
+                list.Add(value);
+
+                SkipWhitespace(raw, ref pos);
+                if (pos >= raw.Length) return false;
+                if (raw[pos] == ',') { pos++; continue; }
+                if (raw[pos] == ']') return true;
+                return false;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// A nested ARRAY OF INTEGERS — <c>backIds</c> in a <c>GET /king/prize</c> choice, and nothing
+        /// else so far. Returns false when the member is absent or is not an array, and rejects the
+        /// whole array when any element is not an integer, for the reason
+        /// <see cref="TryReadRawObjectArray"/> gives.
+        /// </summary>
+        public static bool TryReadInt64Array(string json, string name, out IReadOnlyList<long> items)
+        {
+            var list = new List<long>();
+            items = list;
+
+            if (!TryReadTopLevel(json, keepContainers: true, out var outer)) return false;
+            if (!outer.TryGetValue(name, out string? raw) || string.IsNullOrEmpty(raw)) return false;
+
+            int pos = 0;
+            SkipWhitespace(raw!, ref pos);
+            if (pos >= raw!.Length || raw[pos] != '[') return false;
+            pos++;
+
+            SkipWhitespace(raw, ref pos);
+            if (pos < raw.Length && raw[pos] == ']') return true;
+
+            while (pos < raw.Length)
+            {
+                SkipWhitespace(raw, ref pos);
+                int start = pos;
+                while (pos < raw.Length && raw[pos] != ',' && raw[pos] != ']' &&
+                       raw[pos] != ' ' && raw[pos] != '\t' && raw[pos] != '\n' && raw[pos] != '\r')
+                    pos++;
+                if (!long.TryParse(raw.Substring(start, pos - start), NumberStyles.AllowLeadingSign,
+                        CultureInfo.InvariantCulture, out long value))
+                    return false;
+                list.Add(value);
+
+                SkipWhitespace(raw, ref pos);
+                if (pos >= raw.Length) return false;
+                if (raw[pos] == ',') { pos++; continue; }
+                if (raw[pos] == ']') return true;
+                return false;
+            }
+
+            return false;
+        }
+
         private static bool TryReadTopLevel(string json, bool keepContainers,
-                                            out IReadOnlyDictionary<string, string> fields)
+                                            out IReadOnlyDictionary<string, string> fields,
+                                            ISet<string>? nulls = null)
         {
             var map = new Dictionary<string, string>(StringComparer.Ordinal);
             fields = map;
@@ -195,6 +291,7 @@ namespace Kingdom.Net.Client.Auth
                 {
                     if (!TryReadString(json, ref pos, out string value)) return false;
                     map[name] = value;
+                    nulls?.Remove(name);   // a repeated member: the last one wins, as in the map
                 }
                 else
                 {
@@ -204,6 +301,7 @@ namespace Kingdom.Net.Client.Auth
                         pos++;
                     if (pos == start) return false;
                     map[name] = json.Substring(start, pos - start);
+                    if (nulls != null && map[name] == "null") nulls.Add(name);
                 }
 
                 SkipWhitespace(json, ref pos);

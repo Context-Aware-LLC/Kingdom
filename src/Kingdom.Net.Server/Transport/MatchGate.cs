@@ -10,9 +10,11 @@ using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
 using Kingdom.Net.Protocol;
 using Kingdom.Net.Server.Accounts;
+using Kingdom.Net.Server.Achievements;
 using Kingdom.Net.Server.Bots;
 using Kingdom.Net.Server.Decks;
 using Kingdom.Net.Server.Identity;
+using Kingdom.Net.Server.King;
 using Kingdom.Net.Server.Matchmaking;
 using Kingdom.Net.Server.Ranking;
 using Kingdom.Net.Server.Replay;
@@ -84,6 +86,17 @@ namespace Kingdom.Net.Server.Transport
         /// </summary>
         private readonly ICompletedMatchCounter? _firstMatches;
 
+        /// <summary>
+        /// The King's Favor scores, read for each seat's best when a match starts. Null, or a null
+        /// <see cref="_reignOneMs"/>, seats every match with no King: nothing banks and no card shows.
+        /// </summary>
+        private readonly IFavorStore? _favor;
+        private readonly long? _reignOneMs;
+
+        /// <summary>How long a match start may wait on reading the two bests. A slow store costs
+        /// the in-match card its "best this reign" line, never the match.</summary>
+        private static readonly TimeSpan KingBestReadTimeout = TimeSpan.FromSeconds(2);
+
         /// <summary>The first player of each accepted challenge to arrive, parked until the
         /// second does. Keyed by challenge id; never in <see cref="_matchmaking"/>.</summary>
         private readonly Dictionary<string, WaitingPlayer> _challengeWaiting =
@@ -128,7 +141,9 @@ namespace Kingdom.Net.Server.Transport
             OnboardingGrantService? onboarding = null,
             IEntitlementLedger? entitlementLedger = null,
             IChallengeTickets? challenges = null,
-            ICompletedMatchCounter? firstMatches = null)
+            ICompletedMatchCounter? firstMatches = null,
+            IFavorStore? favor = null,
+            long? reignOneMs = null)
             : this(
                 opts,
                 time,
@@ -147,7 +162,9 @@ namespace Kingdom.Net.Server.Transport
                 onboarding,
                 entitlementLedger,
                 challenges,
-                firstMatches)
+                firstMatches,
+                favor,
+                reignOneMs)
         {
         }
 
@@ -162,7 +179,9 @@ namespace Kingdom.Net.Server.Transport
             OnboardingGrantService? onboarding = null,
             IEntitlementLedger? entitlementLedger = null,
             IChallengeTickets? challenges = null,
-            ICompletedMatchCounter? firstMatches = null)
+            ICompletedMatchCounter? firstMatches = null,
+            IFavorStore? favor = null,
+            long? reignOneMs = null)
         {
             _opts = opts;
             _time = time;
@@ -182,6 +201,17 @@ namespace Kingdom.Net.Server.Transport
             _entitlementLedger = entitlementLedger;
             _challenges = challenges;
             _firstMatches = firstMatches;
+            _favor = favor;
+            _reignOneMs = reignOneMs;
+
+            // The King reaches the worker that banks him only through MatchTelemetryRecorder's
+            // `is AchievementSink` check, so any other sink here would play every match for a King
+            // and bank none of them, silently. Refuse to start instead.
+            if (_favor is not null && _telemetry is not AchievementSink)
+                throw new InvalidOperationException(
+                    "MatchGate was given a Favor store but its telemetry sink is " + _telemetry.GetType().Name +
+                    ", not the AchievementSink that banks the King's Favor. Keep AchievementSink the " +
+                    "outermost telemetry decorator, or pass no Favor store.");
         }
 
         public int LiveSessions
@@ -241,7 +271,12 @@ namespace Kingdom.Net.Server.Transport
             /// waiter is in <see cref="_waiting"/> but NEVER in <see cref="_matchmaking"/>, so no
             /// pairing can reach it, and <see cref="TryBotFillTimedOutTickets"/> seats it with no
             /// delay against this policy.</summary>
-            BotOpponent? FirstMatchBot = null);
+            BotOpponent? FirstMatchBot = null,
+            /// <summary>The seat can hold a place in the King's Favor (#421): it resolved an
+            /// account, and not a Superuser one. <see cref="FavorService"/> banks nothing for any
+            /// other seat, so the commission card is not shown to it either. False for a bot, whose
+            /// account is a Superuser, and for a tokenless tooling seat.</summary>
+            bool FavorEligible = false);
 
         /// <summary>Per-match attribution, or null once the session is gone. Read by the telemetry
         /// emitter; exposed for the identity tests.</summary>
@@ -460,7 +495,16 @@ namespace Kingdom.Net.Server.Transport
                     return;
                 }
                 Console.Error.WriteLine("[gate] accepted deck player_id={0}", account.Value);
-                submitted = outcome.Seat;
+
+                // #421: the back the deck asked for, judged against the account resolved above and
+                // no other lookup. Anything but an owned back seats the player on the default with
+                // no close and nothing said to the client; the reason is logged here only.
+                CardBackChoice back = await DeckSubmission.ResolveCardBackAsync(
+                    deckMsg.CardBackId, deckOwnerAccount, _entitlementLedger, ct);
+                if (back.Verdict != CardBackVerdict.Owned && back.Verdict != CardBackVerdict.Unset)
+                    Console.Error.WriteLine("[gate] card back {0} not honoured for player_id={1}: {2}",
+                                            deckMsg.CardBackId, account.Value, back.Verdict);
+                submitted = outcome.Seat.WithCardBack(back.BackId);
             }
 
             Seating? seating;
@@ -468,7 +512,8 @@ namespace Kingdom.Net.Server.Transport
             string refusal;
             if (challengeTicket is null)
                 (seating, refusalCode, refusal) =
-                    await PairAsync(conn, account, checkedName, submitted, funnelTracked, ct);
+                    await PairAsync(conn, account, checkedName, submitted, funnelTracked,
+                        favorEligible: deckOwnerAccount is not null && deckOwnerAccount.Kind != AccountKind.Superuser, ct);
             else
                 (seating, refusalCode, refusal) = await SeatChallengeAsync(
                     conn, account, checkedName, submitted, challengeTicket, funnelTracked, ct);
@@ -545,7 +590,7 @@ namespace Kingdom.Net.Server.Transport
         /// </summary>
         private async Task<(Seating? Seating, int RefusalCode, string Refusal)> PairAsync(
             WebSocketConnection conn, AccountId account, string displayName, SeatDeck? submitted,
-            bool funnelTracked, CancellationToken ct)
+            bool funnelTracked, bool favorEligible, CancellationToken ct)
         {
             int rating = _ratingStore is null
                 ? _ratingForAccount(account)
@@ -557,7 +602,7 @@ namespace Kingdom.Net.Server.Transport
             var mySeating = new TaskCompletionSource<Seating?>(TaskCreationOptions.RunContinuationsAsynchronously);
             var waiter = new WaitingPlayer(
                 ticket, conn, account, displayName, submitted, "human", mySeating, _time.NowMs, funnelTracked,
-                firstMatchBot);
+                firstMatchBot, favorEligible);
 
             lock (_lock)
             {
@@ -898,15 +943,20 @@ namespace Kingdom.Net.Server.Transport
                     seat0.HeroClass, seat0.Deck, seat1.HeroClass, seat1.Deck,
                     fallback.HeroMaxHealth, fallback.SparkTokenId);
 
+                string p0Name = NameForSeat(first.DisplayName, p0);
+                string p1Name = NameForSeat(second.DisplayName, p1);
                 var session = new MatchSession(
                     id, seed, _opts, _time, _db, setup, _replay, p0, p1,
                     _telemetry, attribution,
-                    NameForSeat(first.DisplayName, p0), NameForSeat(second.DisplayName, p1),
+                    p0Name, p1Name,
                     _rankedMatchSink,
                     _trainingEpisodes,
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : first.PolicyIdentity,
                     attribution.Source == TelemetrySource.AiSoak ? "ai-soak" : second.PolicyIdentity,
-                    Funnel, first.FunnelTracked, second.FunnelTracked);
+                    Funnel, first.FunnelTracked, second.FunnelTracked,
+                    SeatKing(attribution, p0Name, p1Name, first.FavorEligible, second.FavorEligible),
+                    // #421: judged at the handshake; a bot's and the fallback's are the default.
+                    seat0.CardBackId, seat1.CardBackId);
                 var pump = new SessionPump(session);
                 lock (_lock)
                 {
@@ -955,6 +1005,35 @@ namespace Kingdom.Net.Server.Transport
                 first.Seated.TrySetResult(null);
                 second.Seated.TrySetResult(null);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// The King this match plays for, fixed now so a match running across Tuesday midnight
+        /// keeps its commission and banks to the reign it started in. Null for a friend or soak
+        /// match, and on a box with no King configured.
+        ///
+        /// <para><b>Blocks on the store</b>, bounded by <see cref="KingBestReadTimeout"/>:
+        /// <see cref="StartMatch"/> is synchronous, and the bot-fill path's <c>.Result</c> read
+        /// depends on it staying so. An in-memory store answers at once.</para>
+        /// </summary>
+        private KingSeating? SeatKing(MatchAttribution attribution, string p0Name, string p1Name,
+            bool p0Eligible, bool p1Eligible)
+        {
+            if (_favor is null || _reignOneMs is not long reignOne) return null;
+            try
+            {
+                using var timeout = new CancellationTokenSource(KingBestReadTimeout);
+                return KingSeating.ForMatchAsync(
+                        _favor, attribution.Source, reignOne, _time.NowMs,
+                        attribution.P0, attribution.P1, p0Name, p1Name, p0Eligible, p1Eligible, timeout.Token)
+                    .GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                // The match is worth more than its Favor: it plays on, for no King.
+                Console.Error.WriteLine("[king] a match was seated with no King: {0}", ex.Message);
+                return null;
             }
         }
 

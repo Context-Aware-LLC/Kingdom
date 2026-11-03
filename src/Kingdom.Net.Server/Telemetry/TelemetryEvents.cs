@@ -128,6 +128,14 @@ namespace Kingdom.Net.Server.Telemetry
     /// <param name="Policy">Who played the seat: <c>human</c>, or the bot's policy identity
     /// (<c>greedy-ai.v3</c>, <c>checkpoint:&lt;sha&gt;:argmax</c>). This is how a first-match
     /// (launch item 5) or bot-fill row says WHICH bot it was. Null on a row built without one.</param>
+    /// <param name="OverkillBest">The most damage the seat dealt beyond a living minion's Health in
+    /// one hit. The King's Overkill commission (#421); the Overkill achievement reads
+    /// <see cref="Overkills"/>, a different thing.</param>
+    /// <param name="UnspentMana">Mana left at each of the seat's turn ends, summed.</param>
+    /// <param name="FatigueDamage">Fatigue damage the seat's hero took.</param>
+    /// <param name="TollDamage">Damage the seat's Tolls dealt the enemy hero.</param>
+    /// <param name="StolenDamage">Damage minions the seat took from the other side dealt that side's hero.</param>
+    /// <param name="HeroPowerDamage">Damage the seat's Hero Power dealt the other side's hero and minions.</param>
     public sealed record SeatOutcome(
         AccountId Account,
         CardClass Class,
@@ -149,7 +157,13 @@ namespace Kingdom.Net.Server.Telemetry
         int LegendariesLost = 0,
         int MostBulwarks = 0,
         FinalBlow FellTo = FinalBlow.None,
-        string? Policy = null);
+        string? Policy = null,
+        int OverkillBest = 0,
+        int UnspentMana = 0,
+        int FatigueDamage = 0,
+        int TollDamage = 0,
+        int StolenDamage = 0,
+        int HeroPowerDamage = 0);
 
     /// <summary>
     /// What landed the hit that took a hero from above 0 Health to 0 or below, as seen from the hero

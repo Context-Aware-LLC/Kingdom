@@ -80,7 +80,9 @@ namespace Kingdom.Core.Tests.Presentation
                     "IsRequired must account for a gate that already gave up this run, or a skip "
                     + "leaves MainMenu dispatching to AccountCreate for ever (#329).");
 
-                Assert.That(gate, Does.Match(@"(?s)Skipped\s*=\s*true;\s*\n\s*onSignedIn\?\.Invoke\(\);"),
+                // Statements may sit between the two (the funnel records the skip there); what matters
+                // is that the latch comes first, with no return or other hand-off in between.
+                Assert.That(gate, Does.Match(@"Skipped\s*=\s*true;(?:\s*\n[^\n{}]*?;){0,3}\s*\n\s*onSignedIn\?\.Invoke\(\);"),
                     "The escape hatch must latch BEFORE handing control on. Setting it afterwards, "
                     + "or not at all, is the boot loop.");
             });

@@ -41,11 +41,12 @@ namespace Kingdom.Core
         /// </summary>
         public void Emit(GameEventKind kind, InstanceId? source = null, InstanceId? target = null,
                          int? amount = null, EventFlags flags = EventFlags.None,
-                         PresentationCue? cueOverride = null)
+                         PresentationCue? cueOverride = null, int? healthBefore = null)
         {
             GameEventPolicy.Validate(kind, amount, flags, cueOverride);
 
-            var e = new GameEvent(kind, _state.NextEventSequence, source, target, amount, flags, cueOverride);
+            var e = new GameEvent(kind, _state.NextEventSequence, source, target, amount, flags, cueOverride,
+                                  healthBefore: healthBefore);
             var visibility = new EventVisibility(Classify(source), Classify(target));
             _state.NextEventSequence++;
             _events.Add(e);

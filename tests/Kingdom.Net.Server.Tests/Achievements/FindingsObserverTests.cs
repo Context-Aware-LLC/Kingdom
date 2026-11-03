@@ -68,6 +68,21 @@ namespace Kingdom.Net.Server.Tests.Achievements
         }
 
         [Test]
+        public void A_Toll_Rung_By_An_Attacker_Dying_In_Its_Own_Trade_Is_Still_A_Toll()
+        {
+            var t = new Table();
+            int me = t.Me;
+            InstanceId bomb = t.Play(TollBomb);
+            t.EndTurn();
+            InstanceId wall = t.Play(Wall);
+            t.EndTurn();
+            t.State.Players[1 - me].Hero.CurrentHealth = 5;
+            t.Do(new AttackIntent(t.State.ActivePlayer, bomb, new TargetRef(wall)));
+
+            Assert.That(t.Finish()[1 - me].FellTo, Is.EqualTo(FinalBlow.Toll));
+        }
+
+        [Test]
         public void A_Stolen_Minions_Toll_Finishes_Its_Owner_As_A_Stolen_Minion()
         {
             var t = new Table();

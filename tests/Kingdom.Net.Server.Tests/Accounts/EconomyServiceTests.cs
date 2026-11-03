@@ -176,6 +176,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
         [TestCase(GoldRewardKind.DailyQuest, "daily_quest")]
         [TestCase(GoldRewardKind.FirstWinOfDay, "first_win")]
         [TestCase(GoldRewardKind.Match, "match_reward")]
+        [TestCase(GoldRewardKind.KingsFavor, "kings_favor")]
         public async Task Gold_Faucets_Grant_A_Caller_Supplied_Amount(
             GoldRewardKind kind,
             string expectedSource)
@@ -195,6 +196,19 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 Assert.That(history[0].Source, Is.EqualTo(expectedSource));
                 Assert.That(history[0].Qty, Is.EqualTo(75));
             });
+        }
+
+        [Test]
+        public async Task The_Same_Reward_Id_At_A_Different_Amount_Is_A_Typed_Conflict()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            Account account = AuthenticatedAccount();
+            var economy = new EconomyService(ledger, new FixedTime());
+            await economy.GrantGoldAsync(account, GoldRewardKind.KingsFavor, 50, "king-qualify:4");
+
+            Assert.ThrowsAsync<GoldGrantConflictException>(async () =>
+                await economy.GrantGoldAsync(account, GoldRewardKind.KingsFavor, 75, "king-qualify:4"));
+            Assert.That(await ledger.BalanceAsync(account.PlayerId, EconomyItems.Gold), Is.EqualTo(50));
         }
 
         [Test]

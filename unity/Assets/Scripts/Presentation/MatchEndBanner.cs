@@ -32,13 +32,16 @@ namespace Kingdom.Presentation
         /// message; null or empty stamps none.</param>
         /// <param name="rematchDeckId">The deck this match was queued with; Play Again requeues it.
         /// Null or empty offers no Play Again, only the way back to deck selection.</param>
+        /// <param name="commission">This seat's King's commission final, from the match-end
+        /// message; null writes no line.</param>
         public static GameObject Show(MatchOutcome outcome, int localSeat,
                                       Task<IReadOnlyList<QuestAdvance>> quests = null,
                                       Action playVoiceLine = null,
                                       MatchEndReason? reason = null,
                                       IReadOnlyList<string> findings = null,
                                       Task<long> gold = null,
-                                      string rematchDeckId = null)
+                                      string rematchDeckId = null,
+                                      CommissionFinal commission = null)
         {
             var root = new GameObject("MatchEndBanner");
             var doc = root.AddComponent<UIDocument>();
@@ -49,7 +52,8 @@ namespace Kingdom.Presentation
             UiLocalizer.Attach(doc.rootVisualElement);
             MatchProclamation proclamation = null;
             if (doc.rootVisualElement != null)
-                proclamation = new MatchProclamation(doc.rootVisualElement, outcome, localSeat, reason, findings);
+                proclamation = new MatchProclamation(doc.rootVisualElement, outcome, localSeat, reason, findings,
+                                                     commission: commission);
             else
                 Debug.LogError("[MatchEnd] No rootVisualElement: is MatchProclamation.uxml in a Resources folder?");
 
