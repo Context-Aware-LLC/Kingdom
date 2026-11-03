@@ -96,8 +96,8 @@
         <ui:VisualElement name="name-view">
             <ui:VisualElement class="mm-modal__columns mm-row">
                 <ui:VisualElement class="mm-modal__pitch">
-                    <ui:Label name="name-title" text="What should we call you?" class="mm-modal__title"/>
-                    <ui:Label name="name-help" text="This is the name other players see. Choose carefully — it is permanent. To change it later you would have to contact support." class="mm-modal__help"/>
+                    <ui:Label name="name-title" text="How shall the herald announce you?" class="mm-modal__title"/>
+                    <ui:Label name="name-help" text="Every rival will see it. The royal scribe writes in permanent ink, so choose well: changing it later means petitioning support." class="mm-modal__help"/>
                 </ui:VisualElement>
                 <ui:VisualElement class="mm-modal__form">
                     <ui:TextField name="name-field" max-length="16" placeholder-text="Display name (up to 16 letters)" class="mm-modal__field"/>

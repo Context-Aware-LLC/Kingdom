@@ -80,8 +80,8 @@
     <string name="account_create_btn_signin_new">I am new here</string>
     <string name="account_create_btn_signin_resend">Send another code</string>
     <string name="account_create_btn_signin_code_instead">Email me a code instead</string>
-    <string name="account_create_name_title">What should we call you?</string>
-    <string name="account_create_name_help">This is the name other players see. Choose carefully — it is permanent. To change it later you would have to contact support.</string>
+    <string name="account_create_name_title">How shall the herald announce you?</string>
+    <string name="account_create_name_help">Every rival will see it. The royal scribe writes in permanent ink, so choose well: changing it later means petitioning support.</string>
     <string name="account_create_name_field_hint">Display name (up to 16 letters)</string>
     <string name="account_create_btn_name_confirm">Continue</string>
     <string name="account_create_name_password_help">Optional: set a password so you can sign back in without checking your email.</string>

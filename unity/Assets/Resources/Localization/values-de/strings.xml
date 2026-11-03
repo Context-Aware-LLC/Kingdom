@@ -46,8 +46,8 @@
     <string name="account_create_btn_signin_new">Ich bin neu hier</string>
     <string name="account_create_btn_signin_resend">Neuen Code senden</string>
     <string name="account_create_btn_signin_code_instead">Lieber Code per E-Mail</string>
-    <string name="account_create_name_title">Wie sollen wir dich nennen?</string>
-    <string name="account_create_name_help">Diesen Namen sehen andere Spieler. Wähle mit Bedacht – er ist endgültig. Ändern ginge später nur über den Support.</string>
+    <string name="account_create_name_title">Wie soll der Herold dich ankündigen?</string>
+    <string name="account_create_name_help">Jeder Rivale wird ihn sehen. Der königliche Schreiber nutzt dauerhafte Tinte, also wähle gut: Ändern geht später nur per Bittgesuch an den Support.</string>
     <string name="account_create_name_field_hint">Anzeigename (bis zu 16 Zeichen)</string>
     <string name="account_create_btn_name_confirm">Weiter</string>
     <string name="account_create_name_password_help">Optional: Lege ein Passwort fest, dann kannst du dich ohne Blick ins Postfach wieder anmelden.</string>
