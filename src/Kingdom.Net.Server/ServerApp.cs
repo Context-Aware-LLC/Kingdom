@@ -717,6 +717,10 @@ namespace Kingdom.Net.Server
             // One Favor store for the process: the gate, the worker and GET /king/roll must share the
             // in-memory default, or the Roll reads a store nothing writes to.
             King.IFavorStore favorStore = cfg.Favor ?? new King.InMemoryFavorStore();
+            // The prize pool as this build's catalog knows it: an id with no catalog row is left out,
+            // with a log line here, rather than failing every read of every player's choice.
+            IReadOnlyList<int> prizePool = King.PrizeChoiceEndpoint.CatalogPool(
+                CardBackDefinitions.PoolIds, id => CardBackDefinitions.TryGet(id, out _));
             AchievementService? achievementService = null;
             King.FavorService? favorService = null;
             if (cfg.AccountStore is not null)
@@ -759,7 +763,7 @@ namespace Kingdom.Net.Server
                     builder.Services.AddSingleton<IHostedService>(new King.KingPayoutSweep(
                         favorStore, cfg.AccountStore, economy, new King.LedgerPrizeBacks(cfg.EntitlementLedger),
                         cfg.FavorPrizes, sweepReignOne, time,
-                        CardBackDefinitions.PlaceBackIds, CardBackDefinitions.PoolIds));
+                        CardBackDefinitions.PlaceBackIds, prizePool));
                 }
             }
 
@@ -1078,7 +1082,7 @@ namespace Kingdom.Net.Server
             var prizeChoice = new King.PrizeChoiceEndpoint(
                 cfg.TokenVerifier, cfg.AccountStore, favorStore,
                 cfg.EntitlementLedger is null ? null : new King.LedgerPrizeBacks(cfg.EntitlementLedger),
-                economy, cfg.FavorPrizes, CardBackDefinitions.PoolIds,
+                economy, cfg.FavorPrizes, prizePool,
                 new FriendRequestLimiter(time, max: 10, windowMs: 60_000));
             app.MapGet("/king/prize", async (HttpContext context) =>
             {

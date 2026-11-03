@@ -262,6 +262,10 @@ create table if not exists favor_prize (
 );
 
 alter table favor_prize add column if not exists back_settled_at timestamptz;
+-- A choice closed on a back whose grant is not confirmed. The close comes before the grant (only
+-- one claim may win), so a crash or a timed-out grant leaves this true, and the next sweep or the
+-- player's next GET /king/prize re-grants on the same key. A choice never reopens.
+alter table favor_prize add column if not exists choice_grant_pending boolean not null default false;
 
 create table if not exists king_reign (
   reign         int     primary key,

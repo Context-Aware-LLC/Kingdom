@@ -54,7 +54,11 @@ namespace Kingdom.Net.Server.Tests.King
             private readonly object _lock = new object();
             public HashSet<(string Player, int Back)> Owned { get; } = new HashSet<(string, int)>();
             public List<string> Applied { get; } = new List<string>();
+            public int Calls { get; private set; }
             public bool FailGrants { get; set; }
+
+            /// <summary>The grant lands, then the call throws: a ledger write that committed and timed out.</summary>
+            public bool ThrowAfterGrant { get; set; }
 
             /// <summary>When set, that many OwnsAsync calls each wait until all of them have arrived,
             /// so concurrent requests are all past their reads before any of them writes.</summary>
@@ -65,6 +69,7 @@ namespace Kingdom.Net.Server.Tests.King
 
             public Task GrantAsync(Account account, int backId, string eventId, CancellationToken ct)
             {
+                lock (_lock) Calls++;
                 if (FailGrants) throw new InvalidOperationException("ledger down");
                 lock (_lock)
                 {
@@ -75,6 +80,7 @@ namespace Kingdom.Net.Server.Tests.King
                         Owned.Add((account.PlayerId, backId));
                     }
                 }
+                if (ThrowAfterGrant) throw new TimeoutException("ledger answered late");
                 return Task.CompletedTask;
             }
 
@@ -128,6 +134,12 @@ namespace Kingdom.Net.Server.Tests.King
                 => Endpoint.ChooseAsync(Body("{\"reign\":" + reign + ",\"backId\":" + backId + "}"), bearer);
 
             public Task<long> GoldAsync(string player) => Ledger.BalanceAsync(player, EconomyItems.Gold);
+
+            /// <summary>The Tuesday sweep over the same store and backs, with no place backs and no
+            /// reign due: all it has to do is deliver.</summary>
+            public KingPayoutSweep Sweep()
+                => new KingPayoutSweep(Store, Accounts, new EconomyService(Ledger, Time), Backs, Prizes,
+                    Time.NowMs, Time, Array.Empty<int>(), Pool);
         }
 
         private static ReadOnlyMemory<byte>? Body(string json) => Encoding.UTF8.GetBytes(json);
@@ -142,6 +154,7 @@ namespace Kingdom.Net.Server.Tests.King
 
             PrizeChoiceResult result = await h.ChooseAsync("good", 2, 202);
             FavorPrize? row = await h.Store.PrizeAsync(2, p);
+            IReadOnlyList<FavorPrize> undelivered = await h.Store.UndeliveredChoicesAsync(null);
             PrizeChoiceResult read = await h.Endpoint.ReadAsync("good");
 
             Assert.Multiple(() =>
@@ -151,7 +164,9 @@ namespace Kingdom.Net.Server.Tests.King
                 Assert.That(h.Backs.Applied, Is.EqualTo(new[] { "202:" + p + ":king-choice:2" }),
                     "the key reverse-favor-prize.sql reverses a chosen back by");
                 Assert.That(row, Is.EqualTo(new FavorPrize(2, p, 1, 500, 202, false)));
+                Assert.That(undelivered, Is.Empty, "a confirmed grant is marked delivered");
                 Assert.That(read.Choices, Is.Empty);
+                Assert.That(h.Backs.Calls, Is.EqualTo(1), "the read after it grants nothing");
             });
         }
 
@@ -253,20 +268,93 @@ namespace Kingdom.Net.Server.Tests.King
             Assert.That((await h.Store.PrizeAsync(2, theirs))!.ChoiceOpen, Is.True);
         }
 
+        // ── A grant that does not confirm (controller ruling: a choice never reopens) ─────
+
         [Test]
-        public async Task A_grant_that_throws_reopens_the_choice()
+        public async Task A_grant_that_throws_leaves_the_choice_closed_and_the_next_read_delivers_it_once()
         {
             var h = new Harness();
             string p = await h.OpenChoiceAsync("good", 2);
             h.Backs.FailGrants = true;
 
             PrizeChoiceResult failed = await h.ChooseAsync("good", 2, 201);
+            PrizeChoiceResult another = await h.ChooseAsync("good", 2, 202);
+            FavorPrize? row = await h.Store.PrizeAsync(2, p);
             h.Backs.FailGrants = false;
-            PrizeChoiceResult retried = await h.ChooseAsync("good", 2, 202);
+            PrizeChoiceResult first = await h.Endpoint.ReadAsync("good");
+            PrizeChoiceResult second = await h.Endpoint.ReadAsync("good");
 
-            Assert.That(failed.HttpStatus, Is.EqualTo(503));
-            Assert.That(retried.Status, Is.EqualTo(PrizeChoiceStatus.Granted));
-            Assert.That(await h.Store.PrizeAsync(2, p), Is.EqualTo(new FavorPrize(2, p, 1, 500, 202, false)));
+            Assert.Multiple(() =>
+            {
+                Assert.That((failed.Status, failed.HttpStatus), Is.EqualTo((PrizeChoiceStatus.Unavailable, 503)));
+                Assert.That(another.Status, Is.EqualTo(PrizeChoiceStatus.None), "the closed choice takes no second pick");
+                Assert.That(row, Is.EqualTo(new FavorPrize(2, p, 1, 500, 201, false)), "closed, with the back it chose");
+                Assert.That(first.Choices, Is.Empty);
+                Assert.That(second.Choices, Is.Empty);
+                Assert.That(h.Backs.Applied, Is.EqualTo(new[] { "201:" + p + ":king-choice:2" }));
+                Assert.That(h.Backs.Calls, Is.EqualTo(2), "the failed grant, then one delivery; the second read grants nothing");
+            });
+        }
+
+        [Test]
+        public async Task A_grant_that_throws_is_delivered_once_by_the_sweep()
+        {
+            var h = new Harness();
+            string p = await h.OpenChoiceAsync("good", 2);
+            h.Backs.FailGrants = true;
+            await h.ChooseAsync("good", 2, 201);
+            h.Backs.FailGrants = false;
+
+            await h.Sweep().SweepAsync(CancellationToken.None);
+            await h.Sweep().SweepAsync(CancellationToken.None);
+
+            Assert.That(h.Backs.Applied, Is.EqualTo(new[] { "201:" + p + ":king-choice:2" }));
+            Assert.That(h.Backs.Calls, Is.EqualTo(2), "the failed grant, then one delivery; the second sweep grants nothing");
+            Assert.That(await h.Store.UndeliveredChoicesAsync(null), Is.Empty);
+        }
+
+        [Test]
+        public async Task A_sweep_that_cannot_deliver_yet_keeps_trying()
+        {
+            var h = new Harness();
+            await h.OpenChoiceAsync("good", 2);
+            h.Backs.FailGrants = true;
+            await h.ChooseAsync("good", 2, 201);
+
+            await h.Sweep().SweepAsync(CancellationToken.None);   // still down: logged, not thrown
+            h.Backs.FailGrants = false;
+            await h.Sweep().SweepAsync(CancellationToken.None);
+
+            Assert.That(h.Backs.Applied, Has.Count.EqualTo(1));
+            Assert.That(await h.Store.UndeliveredChoicesAsync(null), Is.Empty);
+        }
+
+        [Test]
+        public async Task A_grant_that_landed_then_threw_allows_no_second_pick()
+        {
+            var h = new Harness();
+            string p = await h.OpenChoiceAsync("good", 2);
+            h.Backs.ThrowAfterGrant = true;
+
+            PrizeChoiceResult timedOut = await h.ChooseAsync("good", 2, 201);
+            h.Backs.ThrowAfterGrant = false;
+            PrizeChoiceResult again = await h.ChooseAsync("good", 2, 202);
+            PrizeChoiceResult read = await h.Endpoint.ReadAsync("good");
+
+            Assert.That(timedOut.HttpStatus, Is.EqualTo(503));
+            Assert.That(again.Status, Is.EqualTo(PrizeChoiceStatus.None));
+            Assert.That(read.Choices, Is.Empty);
+            Assert.That(h.Backs.Applied, Is.EqualTo(new[] { "201:" + p + ":king-choice:2" }),
+                "the re-delivery is a duplicate on the same key, and 202 is never granted");
+            Assert.That(await h.Store.UndeliveredChoicesAsync(null), Is.Empty);
+        }
+
+        [Test]
+        public void The_pool_leaves_out_ids_the_catalog_does_not_hold()
+        {
+            IReadOnlyList<int> pool = PrizeChoiceEndpoint.CatalogPool(new[] { 201, 999, 202 }, id => id != 999);
+
+            Assert.That(pool, Is.EqualTo(new[] { 201, 202 }));
         }
 
         // ── Reading ───────────────────────────────────────────────────────────────────────

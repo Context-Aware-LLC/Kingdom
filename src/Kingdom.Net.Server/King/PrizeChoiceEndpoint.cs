@@ -48,9 +48,12 @@ namespace Kingdom.Net.Server.King
     /// <para><b>Race-safe by a conditional close.</b> A grant is keyed on the back as well as the
     /// reign (<see cref="CardBackOwnership"/>), so a key alone would let two POSTs naming different
     /// backs both grant. The close comes first and only one caller can make it
-    /// (<see cref="IFavorStore.CloseChoiceAsync"/>); that caller grants, keyed
-    /// <c>king-choice:{reign}</c>, and a grant that throws reopens the choice. A server killed
-    /// between the close and the grant leaves the row naming a back the ledger does not hold.</para>
+    /// (<see cref="IFavorStore.CloseChoiceAsync"/>); it records the back, and that caller grants,
+    /// keyed <c>king-choice:{reign}</c>. <b>A choice never reopens</b>, so no second pick is ever
+    /// possible. A grant that throws, times out, or is cut off by a crash leaves the row closed
+    /// and undelivered, and <see cref="DeliverAsync"/> grants the recorded back again on the same
+    /// key, on the player's next GET and on every sweep, until it is confirmed. The ledger answers
+    /// a repeated key as a duplicate, so a grant that landed before its timeout is not paid twice.</para>
     ///
     /// <para><b>Two choices can compete for the last pool back.</b> A choice whose pool has nothing
     /// left the player lacks is settled when it is next read: <see cref="FavorPrizeSettings.PoolEmptyGold"/>,
@@ -100,6 +103,10 @@ namespace Kingdom.Net.Server.King
 
             try
             {
+                // A back chosen earlier whose grant never confirmed: delivered before anything is listed.
+                foreach (FavorPrize chosen in await _favor.UndeliveredChoicesAsync(account.PlayerId, ct).ConfigureAwait(false))
+                    await DeliverAsync(_favor, _backs!, account, chosen, ct).ConfigureAwait(false);
+
                 IReadOnlyList<FavorPrize> open = await _favor.OpenChoicesAsync(account.PlayerId, ct).ConfigureAwait(false);
                 if (open.Count == 0) return new PrizeChoiceResult(PrizeChoiceStatus.Ok, NoChoices, 200);
 
@@ -152,16 +159,11 @@ namespace Kingdom.Net.Server.King
                 if (!await _favor.CloseChoiceAsync(reign, account.PlayerId, backId, ct).ConfigureAwait(false))
                     return Answer(PrizeChoiceStatus.None, 200);   // another request closed it first
 
-                // Claimed: from here a dropped connection must not stop the grant halfway.
-                try
-                {
-                    await _backs!.GrantAsync(account, backId, ChoiceEventId(reign), CancellationToken.None).ConfigureAwait(false);
-                }
-                catch
-                {
-                    await _favor.ReopenChoiceAsync(reign, account.PlayerId, backId, CancellationToken.None).ConfigureAwait(false);
-                    throw;
-                }
+                // Claimed, and the row records the back: from here a dropped connection must not stop
+                // the grant halfway. One that fails anyway answers 503 below and is delivered later.
+                if (!await DeliverAsync(_favor, _backs!, account, prize with { BackId = backId, ChoiceOpen = false },
+                        CancellationToken.None).ConfigureAwait(false))
+                    return Answer(PrizeChoiceStatus.Unavailable, 503);
                 return Answer(PrizeChoiceStatus.Granted, 200);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -170,6 +172,47 @@ namespace Kingdom.Net.Server.King
                     reign, account.PlayerId, ex.Message);
                 return Answer(PrizeChoiceStatus.Unavailable, 503);
             }
+        }
+
+        /// <summary>
+        /// Grants a closed choice's recorded back on its key, then marks it delivered. Idempotent:
+        /// a back already granted on that key is a duplicate the ledger ignores. False, with a log
+        /// line, when the grant or the mark fails; the row stays undelivered for the next try.
+        /// The sweep calls this too (<see cref="KingPayoutSweep"/>).
+        /// </summary>
+        public static async Task<bool> DeliverAsync(IFavorStore favor, IPrizeBacks backs, Account account,
+            FavorPrize chosen, CancellationToken ct)
+        {
+            if (chosen.BackId is not int backId) return true;
+            try
+            {
+                await backs.GrantAsync(account, backId, ChoiceEventId(chosen.Reign), ct).ConfigureAwait(false);
+                await favor.MarkChoiceDeliveredAsync(chosen.Reign, chosen.PlayerId, ct).ConfigureAwait(false);
+                return true;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+            {
+                Console.Error.WriteLine("[king] reign {0}: chosen back {1} for player_id={2} not delivered yet; retried later: {3}",
+                    chosen.Reign, backId, chosen.PlayerId, ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// The pool as this build's catalog knows it. A pool id that is not a row of
+        /// <c>CardBackDefinitions.All</c> is left out with a log line, once, at composition: granting
+        /// or reading it would throw (<see cref="CardBackOwnership.Item"/>), and every player holding a
+        /// choice would get a 503 instead of the backs that do exist.
+        /// </summary>
+        public static IReadOnlyList<int> CatalogPool(IReadOnlyList<int> poolIds, Func<int, bool> inCatalog)
+        {
+            var known = new List<int>(poolIds.Count);
+            foreach (int id in poolIds)
+            {
+                if (inCatalog(id)) known.Add(id);
+                else Console.Error.WriteLine("[king] pool back {0} is not in CardBackDefinitions.All; left out of the pool.", id);
+            }
+            return known;
         }
 
         /// <summary>The key reverse-favor-prize.sql reverses a chosen back by.</summary>

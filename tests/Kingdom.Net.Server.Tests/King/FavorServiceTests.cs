@@ -463,7 +463,9 @@ namespace Kingdom.Net.Server.Tests.King
                 => throw new InvalidOperationException("favor store is down");
             public Task<bool> CloseChoiceAsync(int reign, string playerId, int? backId, CancellationToken ct = default)
                 => throw new InvalidOperationException("favor store is down");
-            public Task ReopenChoiceAsync(int reign, string playerId, int backId, CancellationToken ct = default)
+            public Task<IReadOnlyList<FavorPrize>> UndeliveredChoicesAsync(string? playerId, CancellationToken ct = default)
+                => throw new InvalidOperationException("favor store is down");
+            public Task MarkChoiceDeliveredAsync(int reign, string playerId, CancellationToken ct = default)
                 => throw new InvalidOperationException("favor store is down");
         }
 

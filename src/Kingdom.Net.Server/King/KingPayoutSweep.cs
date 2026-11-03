@@ -53,6 +53,9 @@ namespace Kingdom.Net.Server.King
     /// reach the board at all (<see cref="FavorService"/>). An account deleted through the
     /// deletion tool is different: that tool removes its scores, so the next player moves up.</para>
     ///
+    /// <para>Each pass also delivers any back a player chose whose grant never confirmed
+    /// (<see cref="DeliverChosenBacksAsync"/>).</para>
+    ///
     /// <para><b>One window it does not close:</b> a match that banks a score after the grace, between
     /// a killed gold pass and its re-run, can move a paid player down a place. Their first grant
     /// stands, since a conflict counts as paid, and the player promoted past them is paid too, so
@@ -122,8 +125,30 @@ namespace Kingdom.Net.Server.King
             foreach (UnpaidReign reign in await _store.UnpaidReignsAsync(payableBefore, ct).ConfigureAwait(false))
                 await PayGoldAsync(reign, ct).ConfigureAwait(false);
 
+            await DeliverChosenBacksAsync(ct).ConfigureAwait(false);
             if (_placeBackIds.Count == 0) return;
             await SettleBacksAsync(ct).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Backs a player chose (<see cref="PrizeChoiceEndpoint"/>) whose grant never confirmed: a
+        /// crash between the close and the grant, or a grant that timed out. Each is granted again
+        /// on its own key, so one that did land is a duplicate. Runs whether or not the place backs
+        /// exist, since a choice is the pool's. A deleted player's is dropped. One that fails again
+        /// is logged and waits for the next pass; it does not stop the others.
+        /// </summary>
+        private async Task DeliverChosenBacksAsync(CancellationToken ct)
+        {
+            foreach (FavorPrize chosen in await _store.UndeliveredChoicesAsync(null, ct).ConfigureAwait(false))
+            {
+                Account? account = await _accounts.FindByPlayerIdAsync(chosen.PlayerId, ct).ConfigureAwait(false);
+                if (account is null)
+                {
+                    await _store.MarkChoiceDeliveredAsync(chosen.Reign, chosen.PlayerId, ct).ConfigureAwait(false);
+                    continue;
+                }
+                await PrizeChoiceEndpoint.DeliverAsync(_store, _backs, account, chosen, ct).ConfigureAwait(false);
+            }
         }
 
         private async Task PayGoldAsync(UnpaidReign reign, CancellationToken ct)

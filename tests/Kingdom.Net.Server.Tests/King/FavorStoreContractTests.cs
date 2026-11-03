@@ -267,16 +267,29 @@ namespace Kingdom.Net.Server.Tests.King
         }
 
         [Test]
-        public async Task A_choice_reopens_only_on_the_back_it_closed_on()
+        public async Task A_choice_closed_on_a_back_is_undelivered_until_marked()
         {
             await OpenChoiceAsync(1, "a");
+            await OpenChoiceAsync(2, "a", 3);
+            await OpenChoiceAsync(1, "b");
+            await OpenChoiceAsync(3, "c");
+            await Store.CloseChoiceAsync(2, "a", 202, default);
             await Store.CloseChoiceAsync(1, "a", 201, default);
+            await Store.CloseChoiceAsync(1, "b", 201, default);
+            await Store.CloseChoiceAsync(3, "c", null, default);   // settled in gold: nothing to deliver
 
-            await Store.ReopenChoiceAsync(1, "a", 202, default);
-            Assert.That(await Store.OpenChoicesAsync("a", default), Is.Empty);
+            Assert.That((await Store.UndeliveredChoicesAsync("a", default)).Select(p => (p.Reign, p.BackId)),
+                Is.EqualTo(new (int, int?)[] { (1, 201), (2, 202) }));
+            Assert.That((await Store.UndeliveredChoicesAsync(null, default)).Select(p => (p.Reign, p.PlayerId)),
+                Is.EqualTo(new[] { (1, "a"), (1, "b"), (2, "a") }));
 
-            await Store.ReopenChoiceAsync(1, "a", 201, default);
-            Assert.That(await Store.PrizeAsync(1, "a", default), Is.EqualTo(new FavorPrize(1, "a", 1, 100, null, true)));
+            await Store.MarkChoiceDeliveredAsync(1, "a", default);
+            await Store.MarkChoiceDeliveredAsync(1, "a", default);   // twice is harmless
+
+            Assert.That((await Store.UndeliveredChoicesAsync("a", default)).Select(p => p.Reign), Is.EqualTo(new[] { 2 }));
+            Assert.That(await Store.PrizeAsync(1, "a", default), Is.EqualTo(new FavorPrize(1, "a", 1, 100, 201, false)),
+                "delivery changes nothing a reader sees");
+            Assert.That(await Store.OpenChoicesAsync("a", default), Is.Empty, "a choice never reopens");
         }
     }
 

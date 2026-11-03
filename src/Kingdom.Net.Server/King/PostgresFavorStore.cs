@@ -255,7 +255,7 @@ namespace Kingdom.Net.Server.King
             await using var conn = new NpgsqlConnection(_connString);
             await conn.OpenAsync(ct);
             await using var cmd = new NpgsqlCommand(
-                "update favor_prize set choice_open = false, back_id = $3 " +
+                "update favor_prize set choice_open = false, back_id = $3, choice_grant_pending = ($3 is not null) " +
                 "where reign = $1 and player_id = $2 and choice_open", conn);
             cmd.Parameters.Add(P(NpgsqlDbType.Integer, reign));
             cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
@@ -263,16 +263,28 @@ namespace Kingdom.Net.Server.King
             return await cmd.ExecuteNonQueryAsync(ct) == 1;
         }
 
-        public async Task ReopenChoiceAsync(int reign, string playerId, int backId, CancellationToken ct = default)
+        public async Task<IReadOnlyList<FavorPrize>> UndeliveredChoicesAsync(string? playerId, CancellationToken ct = default)
+        {
+            var rows = new List<FavorPrize>();
+            await using var conn = new NpgsqlConnection(_connString);
+            await conn.OpenAsync(ct);
+            await using var cmd = new NpgsqlCommand(
+                "select reign, player_id, place, gold, back_id, choice_open from favor_prize " +
+                "where choice_grant_pending and ($1::text is null or player_id = $1) order by reign, place, player_id collate \"C\"", conn);
+            cmd.Parameters.Add(P(NpgsqlDbType.Text, (object?)playerId ?? DBNull.Value));
+            await using NpgsqlDataReader r = await cmd.ExecuteReaderAsync(ct);
+            while (await r.ReadAsync(ct)) rows.Add(ReadPrize(r));
+            return rows;
+        }
+
+        public async Task MarkChoiceDeliveredAsync(int reign, string playerId, CancellationToken ct = default)
         {
             await using var conn = new NpgsqlConnection(_connString);
             await conn.OpenAsync(ct);
             await using var cmd = new NpgsqlCommand(
-                "update favor_prize set choice_open = true, back_id = null " +
-                "where reign = $1 and player_id = $2 and not choice_open and back_id = $3", conn);
+                "update favor_prize set choice_grant_pending = false where reign = $1 and player_id = $2", conn);
             cmd.Parameters.Add(P(NpgsqlDbType.Integer, reign));
             cmd.Parameters.Add(P(NpgsqlDbType.Text, playerId));
-            cmd.Parameters.Add(P(NpgsqlDbType.Integer, backId));
             await cmd.ExecuteNonQueryAsync(ct);
         }
 
