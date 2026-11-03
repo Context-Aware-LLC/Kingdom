@@ -620,26 +620,36 @@ namespace Kingdom.Presentation
                 SpellEffect.Verdant     => _uiSprites.Get(SpellSchoolEffects.VerdantTargetKey),
                 _                       => null, // frost: the freeze's crystals are its target effect
             };
+            float LandsAt(int n) => reveal.Effect switch
+            {
+                SpellEffect.Earth       => SpellSchoolEffects.RockLandsAt(reveal.CardSeconds, n),
+                SpellEffect.Lightning   => SpellSchoolEffects.LightningStrikesAt(reveal.CardSeconds, n),
+                SpellEffect.Fire        => SpellSchoolEffects.FireballLandsAt(reveal.CardSeconds, n),
+                SpellEffect.Shadow      => SpellSchoolEffects.ShadowLandsAt(reveal.CardSeconds, n),
+                SpellEffect.Water       => SpellSchoolEffects.WaterLandsAt(reveal.CardSeconds, n),
+                SpellEffect.Gravekeep   => SpellSchoolEffects.GravekeepLandsAt(reveal.CardSeconds, n),
+                SpellEffect.Verdant     => SpellSchoolEffects.VerdantLandsAt(reveal.CardSeconds, n),
+                _                       => SpellSchoolEffects.ClockwrightLandsAt(reveal.CardSeconds, n),
+            };
             for (int i = 0; touchedSheet != null && i < reveal.Touched.Count; i++)
             {
                 InstanceId id = reveal.Touched[i];
                 Vector3? at = ResolvePosition(id);
                 Transform visual = _board.ResolveCombatVisual(id);
                 if (visual == null && !at.HasValue) continue;
-                int n = reveal.Struck.Count + i;
-                float landsAt = reveal.Effect switch
-                {
-                    SpellEffect.Earth       => SpellSchoolEffects.RockLandsAt(reveal.CardSeconds, n),
-                    SpellEffect.Lightning   => SpellSchoolEffects.LightningStrikesAt(reveal.CardSeconds, n),
-                    SpellEffect.Fire        => SpellSchoolEffects.FireballLandsAt(reveal.CardSeconds, n),
-                    SpellEffect.Shadow      => SpellSchoolEffects.ShadowLandsAt(reveal.CardSeconds, n),
-                    SpellEffect.Water       => SpellSchoolEffects.WaterLandsAt(reveal.CardSeconds, n),
-                    SpellEffect.Gravekeep   => SpellSchoolEffects.GravekeepLandsAt(reveal.CardSeconds, n),
-                    SpellEffect.Verdant     => SpellSchoolEffects.VerdantLandsAt(reveal.CardSeconds, n),
-                    _                       => SpellSchoolEffects.ClockwrightLandsAt(reveal.CardSeconds, n),
-                };
                 StartCoroutine(SpellSchoolEffects.Burst(transform, touchedSheet, cam, visual,
-                    at ?? visual.position, landsAt));
+                    at ?? visual.position, LandsAt(reveal.Struck.Count + i)));
+            }
+
+            // A spell that draws lands its school's effect on the caster's deck, after everything
+            // it hit (Sam, 2026-11-03: Maren's Deep Bargain, the water splash over the card stack).
+            // Frost has no landing effect of its own, so a frost spell's draw shows none.
+            if (reveal.Draws && touchedSheet != null)
+            {
+                Transform deck = boardAnchors.AnchorFor(reveal.Controller, Zone.Deck, 0);
+                if (deck != null)
+                    StartCoroutine(SpellSchoolEffects.Burst(transform, touchedSheet, cam, deck,
+                        deck.position, LandsAt(reveal.Struck.Count + reveal.Touched.Count)));
             }
 
             Sprite shimmer = reveal.Healed.Count > 0 ? _uiSprites.Get(SpellSchoolEffects.HealShimmerKey) : null;

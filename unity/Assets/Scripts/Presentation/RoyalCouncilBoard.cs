@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Kingdom.Core.Contracts;
 using UnityEngine;
@@ -192,25 +193,99 @@ namespace Kingdom.Presentation
             for (int s = 0; s < 2; s++)
             {
                 PlayerState player = state.Players[state.SeatOf(_players[s])];
-                int temporary = Mathf.Min(player.Mana.Temporary, player.Mana.Available);
-                int permanent = player.Mana.Available - temporary;
-                for (int i = 0; i < 10; i++)
-                {
-                    bool full = i < player.Mana.Available;
-                    bool temp = full && i >= permanent;
-                    bool locked = i >= player.Mana.Available + player.Mana.Spent && i < player.Mana.Available + player.Mana.Spent + player.Mana.Locked;
-                    bool earned = i < player.Mana.Available + player.Mana.Spent + player.Mana.Locked;
-                    Color shell = full ? (temp ? new Color(0.45f, 0.78f, 1f, 0.16f) : new Color(0.08f, 0.34f, 0.62f, 0.12f))
-                        : locked ? new Color(0.62f, 0.26f, 0.11f, 0.28f) : new Color(0.66f, 0.82f, 0.92f, earned ? 0.10f : 0.035f);
-                    Tint(_shells[s][i], shell, temp ? new Color(0.12f, 0.22f, 0.25f) : Color.black);
-                    Tint(_cores[s][i],temp ? new Color(0.28f,0.62f,0.82f,0.67f) : new Color(0.035f,0.28f,0.6f,0.64f),
-                        temp ? new Color(0.04f,0.14f,0.19f) : new Color(0.015f,0.075f,0.13f));
-                    _cores[s][i].enabled = full;
-                }
+                ApplyOrbs(s, player.Mana);
+                QueueOrbFlickers(s, state.TurnNumber, player.Mana);
                 _decks[s].SetCount(player.Deck.Count);
             }
+            _lastMana = state;
             _seal.OnStateUpdated(state);
             _clock.OnStateUpdated(state);
+        }
+
+        private static readonly Color TempCore = new Color(0.28f, 0.62f, 0.82f, 0.67f);
+        private static readonly Color TempCoreGlow = new Color(0.04f, 0.14f, 0.19f);
+        private static readonly Color FullCore = new Color(0.035f, 0.28f, 0.6f, 0.64f);
+        private static readonly Color FullCoreGlow = new Color(0.015f, 0.075f, 0.13f);
+
+        // An earned crystal is one the player owns, filled or not. Max is the crystals earned and
+        // Available + Spent + Locked the ones in use this turn, which runs past Max with temporary
+        // crystals. Reading only the second drew an empty earned crystal (Seedling Rite, Quicken)
+        // exactly like a socket nobody owns.
+        private static int Earned(ManaPool mana)
+            => Mathf.Max(mana.Max, mana.Available + mana.Spent + mana.Locked);
+
+        private void ApplyOrbs(int s, ManaPool mana)
+        {
+            int temporary = Mathf.Min(mana.Temporary, mana.Available);
+            int permanent = mana.Available - temporary;
+            int earnedCount = Earned(mana);
+            for (int i = 0; i < 10; i++)
+            {
+                bool full = i < mana.Available;
+                bool temp = full && i >= permanent;
+                bool locked = i >= mana.Available + mana.Spent && i < mana.Available + mana.Spent + mana.Locked;
+                bool earned = i < earnedCount;
+                Color shell = full ? (temp ? new Color(0.45f, 0.78f, 1f, 0.16f) : new Color(0.08f, 0.34f, 0.62f, 0.12f))
+                    : locked ? new Color(0.62f, 0.26f, 0.11f, 0.28f) : new Color(0.66f, 0.82f, 0.92f, earned ? 0.10f : 0.035f);
+                Tint(_shells[s][i], shell, temp ? new Color(0.12f, 0.22f, 0.25f) : Color.black);
+                Tint(_cores[s][i], temp ? TempCore : FullCore, temp ? TempCoreGlow : FullCoreGlow);
+                _cores[s][i].enabled = full && !_flickering[s, i];
+            }
+        }
+
+        // ── Crystals a card hands out mid-turn (Sam, 2026-11-03) ───────────────────────
+        // A crystal earned EMPTY (Seedling Rite) flickers to life and goes out; temporary crystals
+        // (Overcharge, The Spark) flicker to life and stay lit. Read off the presented mana rather
+        // than an event, so it lands as the board redraws, and only within one turn: a turn
+        // start raises Max and refills it in the same step, which is neither shape.
+        private GameState _lastMana;
+        private readonly bool[,] _flickering = new bool[2, 10];
+
+        private void QueueOrbFlickers(int s, int turn, ManaPool mana)
+        {
+            if (_lastMana == null || _lastMana.TurnNumber != turn || !Application.isPlaying) return;
+            ManaPool before = _lastMana.Players[_lastMana.SeatOf(_players[s])].Mana;
+
+            int earnedBefore = Earned(before), earnedNow = Earned(mana);
+            if (earnedNow > earnedBefore && mana.Available <= before.Available)
+                for (int i = earnedBefore; i < earnedNow && i < 10; i++)
+                    StartCoroutine(FlickerOrb(s, i, staysLit: false));
+
+            int gainedTemp = mana.Temporary - before.Temporary;
+            if (gainedTemp > 0)
+                for (int i = Mathf.Max(0, mana.Available - gainedTemp); i < mana.Available && i < 10; i++)
+                    StartCoroutine(FlickerOrb(s, i, staysLit: true));
+        }
+
+        // On/off beats of a crystal catching, in seconds; the last "on" is the one that holds.
+        private static readonly float[] FlickerBeats = { 0.06f, 0.09f, 0.05f, 0.13f, 0.08f, 0.07f, 0.22f };
+        private const float GoOutSeconds = 0.35f;
+
+        private IEnumerator FlickerOrb(int s, int i, bool staysLit)
+        {
+            if (_flickering[s, i]) yield break;
+            _flickering[s, i] = true;
+            Renderer core = _cores[s][i];
+            Color colour = staysLit ? TempCore : FullCore;
+            Color glow = (staysLit ? TempCoreGlow : FullCoreGlow) * 3f;
+            for (int beat = 0; beat < FlickerBeats.Length && core != null; beat++)
+            {
+                core.enabled = beat % 2 == 0;
+                Tint(core, colour, glow);
+                yield return new WaitForSeconds(FlickerBeats[beat] * SpellSchoolEffects.Tempo);
+            }
+            if (!staysLit && core != null)
+            {
+                for (float t = 0f; t < GoOutSeconds * SpellSchoolEffects.Tempo && core != null; t += Time.deltaTime)
+                {
+                    float k = 1f - t / (GoOutSeconds * SpellSchoolEffects.Tempo);
+                    Tint(core, new Color(colour.r, colour.g, colour.b, colour.a * k), glow * k);
+                    yield return null;
+                }
+            }
+            _flickering[s, i] = false;
+            // Hand the orb back to whatever the board now says, which may have moved on meanwhile.
+            if (_lastMana != null) ApplyOrbs(s, _lastMana.Players[_lastMana.SeatOf(_players[s])].Mana);
         }
 
         public void OnTurnTimer(TurnTimer timer) => _clock.OnTurnTimer(timer);

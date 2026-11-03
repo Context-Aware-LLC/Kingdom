@@ -219,6 +219,10 @@ namespace Kingdom.Session
         /// <summary>The played card can drown, so its damaged characters get the drown wash.</summary>
         public readonly bool Drowns;
 
+        /// <summary>The card drew at least one card, so its school's landing effect plays over the
+        /// caster's deck, after everything it hit (Sam, 2026-11-03: Maren's Deep Bargain).</summary>
+        public readonly bool Draws;
+
         public readonly SpellEffect Effect;
 
         /// <summary>When the reveal card itself is gone. Equal to <see cref="HoldSeconds"/> unless
@@ -238,8 +242,9 @@ namespace Kingdom.Session
                           IReadOnlyList<InstanceId> healed = null,
                           SpellEffect effect = SpellEffect.None, float cardSeconds = -1f,
                           IReadOnlyList<InstanceId> touched = null, bool drowns = false,
-                          float extraReadSeconds = 0f)
+                          float extraReadSeconds = 0f, bool draws = false)
         {
+            Draws = draws;
             ExtraReadSeconds = extraReadSeconds;
             Drowns = drowns;
             Touched = touched ?? System.Array.Empty<InstanceId>();
@@ -334,6 +339,10 @@ namespace Kingdom.Session
                         && !touched.Contains(f.Source.Value))
                         touched.Add(f.Source.Value);
                 }
+                bool draws = false;
+                for (int j = i + 1; j < events.Count && !draws; j++)
+                    draws = events[j].Kind == GameEventKind.CardDrawn;
+
                 // A character damaged or healed already has its effect.
                 touched.RemoveAll(t => struck.Contains(t) || healed.Contains(t));
 
@@ -351,13 +360,15 @@ namespace Kingdom.Session
                         CardClass.VERDANT     => SpellEffect.Verdant,
                         _                     => SpellEffect.None,
                     };
-                float tail = holds.For(effect).Tail(struck.Count + touched.Count);
+                // The deck counts as one more landing for a spell that draws.
+                float tail = holds.For(effect).Tail(struck.Count + touched.Count
+                    + (draws && def.Type == CardType.SPELL ? 1 : 0));
                 if (def.Type == CardType.SPELL)
                     tail = System.Math.Max(tail, holds.Heal.Tail(healed.Count));
 
                 return new PlayReveal(def, source, target, played.Controller, def.Type, hold + tail,
                                       dest, slot, boardCount, struck, healed, effect, hold,
-                                      touched, Has<DrownAction>(def), extraRead);
+                                      touched, Has<DrownAction>(def), extraRead, draws);
             }
 
             return null;
