@@ -87,6 +87,9 @@ line, in this same commit or the next. **Proven** means a clip got better with t
 - **Give every figure something to do until it leaves.** "Takes a few more steps and stops"
   left a skeleton standing with its hand in the air for seconds.
 
+- **A short glitch in a good clip gets painted out, not regenerated.** A stream of water from a
+  padlock lasted 18 frames. Patching the area from an earlier clean frame removed it for free.
+
 ### Suspected (2026-11-02)
 
 - **The generator centre-crops a frame of the wrong shape.** The 68px jump is exactly the gap
@@ -98,7 +101,5 @@ line, in this same commit or the next. **Proven** means a clip got better with t
   static remains". Say what leaves, once, and stop.
 - **Fast moves stream flame hair** like a comet. Say it stays close around her head.
 - **A face in the end frame wins.** Written dismay may fade into a calm end frame.
-- **Background detail comes alive.** A distant waterfall in the frame seemed to gush out from
-  behind the gate as the camera passed. Say the distance stays still.
 - **Every generation is a new roll.** A good run is not a saved state; reuse its seed if the tool
   offers one.
