@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  SuccessionRoll.uxml: this week's King and his commission (roll-now), then every King since the
-  first, newest first, each with his fate and his Favorite (King of the Week, #421). Built at runtime by SuccessionRollOverlay through Resources,
-  the pattern LedgerScreen uses, and read on the herald's scroll: ProclamationScroll wraps
-  roll-sheet in code, so the rollers are not in this markup.
+  SuccessionRoll.uxml: His Majesty's commission this week, and last week's Favorite under it (King
+  of the Week, #421). Built at runtime by SuccessionRollOverlay through Resources, the pattern
+  LedgerScreen uses, and read on the herald's scroll: ProclamationScroll wraps roll-sheet in code, so
+  the rollers are not in this markup. Past winners belong on a leaderboard of their own (Sam,
+  2026-11-03), and the reign's Favor board gets a link here once it is ready.
 
   .emb-root IS LOAD-BEARING: this tree is its own UIDocument, so nothing above it declares the
-  type and spacing tokens the rules here read.
-
-  The list is a ScrollView with both scrollers Hidden in the markup, which is the mechanism
-  (theme.uss says why the USS rule alone is not). No doubled hyphen in this comment.
+  type and spacing tokens the rules here read. No doubled hyphen in this comment.
 -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <Style src="../../Common/theme.uss" />
@@ -19,19 +17,19 @@
     <ui:VisualElement name="roll" class="emb-root emb-bleed tidbit-overlay roll-overlay">
         <ui:VisualElement name="roll-sheet" class="tidbit-card roll-sheet">
             <ui:VisualElement class="roll-header">
-                <ui:Label text="The Succession Roll" class="tidbit-title roll-title" />
+                <ui:Label text="His Majesty's Commission" class="tidbit-title roll-title" />
             </ui:VisualElement>
-            <ui:VisualElement name="roll-now" class="roll-now" style="display: none;">
+            <ui:VisualElement name="roll-now" class="roll-now">
                 <ui:VisualElement name="roll-now-icon" picking-mode="Ignore" class="roll-now__icon" />
-                <ui:VisualElement class="roll-now__text">
-                    <ui:Label name="roll-now-epithet" text=" " class="roll-now__epithet" />
-                    <ui:Label name="roll-now-commission" text=" " class="roll-now__commission" />
-                    <ui:Label name="roll-now-scored" text=" " class="roll-now__scored" />
-                    <ui:Label name="roll-now-decree" text=" " class="roll-now__decree" />
-                </ui:VisualElement>
+                <ui:Label name="roll-now-epithet" text=" " class="roll-now__epithet" />
+                <ui:Label name="roll-now-commission" text=" " class="roll-now__commission" />
+                <ui:Label name="roll-now-scored" text=" " class="roll-now__scored" />
+                <ui:Label name="roll-now-decree" text=" " class="roll-now__decree" />
             </ui:VisualElement>
-            <ui:Label name="roll-status" text="The archivist is unrolling the Roll." class="roll-status" />
-            <ui:ScrollView name="roll-list" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="roll-list" />
+            <ui:VisualElement name="roll-last" class="roll-last">
+                <ui:Label text="Last week's Favorite" class="roll-last__title" />
+                <ui:VisualElement name="roll-last-line" class="roll-last__line" />
+            </ui:VisualElement>
             <ui:VisualElement class="roll-footer">
                 <ui:Button name="roll-close" text="Close" class="roll-button emb-primary" />
             </ui:VisualElement>

@@ -65,7 +65,7 @@ namespace Kingdom.Presentation
         private HttpQuestGateway _questGateway;
         private Label _vaultPackCount;
         private VisualElement _kingDock;
-        /// <summary>The King last read, for the Succession Roll to show his commission. Null until read.</summary>
+        /// <summary>The King last read, for the commission sheet the crown opens. Null until read.</summary>
         private KingNow _king;
         /// <summary>This launch's read of <c>GET /king</c>, started once the update gate passes.
         /// Null until then, and on every path that never reaches it.</summary>
@@ -440,7 +440,7 @@ namespace Kingdom.Presentation
                 return;
             }
 
-            // His words are on the Succession Roll, which the crown opens: beside the crown, over
+            // His words are on the commission sheet the crown opens: beside the crown, over
             // the stage art, they could not be read (Sam, 2026-11-03).
             _king = king;
             _kingDock.style.display = DisplayStyle.Flex;

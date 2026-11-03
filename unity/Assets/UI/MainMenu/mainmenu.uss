@@ -251,7 +251,7 @@
 }
 /* The King of the Week (#421): the crown on its cushion beside the book. Hidden in the markup
  * until GET /king names a King; with none the row is exactly the vault and the book. His epithet
- * and commission are on the Succession Roll the crown opens, not here: over the stage art they
+ * and commission are on the sheet the crown opens, not here: over the stage art they
  * could not be read (Sam, 2026-11-03). */
 .mm-king-dock {
     flex-shrink: 0;

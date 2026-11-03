@@ -995,25 +995,21 @@
     <string name="king_counts_if_win">Counts if you win</string>
     <!-- In-match commission card, under the score. %1$s = this player's best score this reign, a number. -->
     <string name="king_best">Your best this reign: %1$s</string>
-    <!-- Main menu, beside the crown. %1$s = the commission's name, e.g. Overkill. -->
+    <!-- His Majesty's Commission sheet, under his epithet. %1$s = the commission's name, e.g. Overkill. -->
     <string name="king_menu_commission">His commission: %1$s</string>
     <!-- Tooltip on the crown in the main menu dock. -->
-    <string name="king_crown_tooltip">Open the Succession Roll</string>
+    <string name="king_crown_tooltip">Read His Majesty\'s commission</string>
     <!-- The Herald's announcement on the first launch of a new reign. The body is the Herald's dropped-aitch accent; keep it. -->
     <string name="king_herald_title">By Order of the Council</string>
     <string name="king_herald_body">The King has \'ost his wits! Long \'ive the King!</string>
-    <!-- The Succession Roll: every King since the first, newest first. -->
-    <string name="king_roll_title">The Succession Roll</string>
-    <string name="king_roll_status_loading">The archivist is unrolling the Roll.</string>
-    <string name="king_roll_status_failed">The Roll could not be fetched. The archivist has gone to look again; close this and try in a moment.</string>
+    <!-- The sheet the crown opens: this week's commission, and last week's Favorite under it. -->
+    <string name="king_roll_title">His Majesty\'s Commission</string>
+    <!-- Heading over last week's winner on that sheet. -->
+    <string name="king_roll_last_week">Last week\'s Favorite</string>
     <!-- %1$d = the reign number. -->
     <string name="king_roll_reign">Reign %1$d</string>
-    <!-- In place of a fate, for the King on the throne now. -->
-    <string name="king_roll_reigning">Reigns still.</string>
     <!-- After a player's name, on its own label. %1$s = the King's epithet, e.g. His Majesty, Who Moved the Moat. -->
     <string name="king_roll_favorite_of">Favorite of %1$s.</string>
-    <!-- The reign on the throne now, whose Favorite is not decided until it closes. -->
-    <string name="king_roll_undecided">His Majesty has not yet chosen a Favorite.</string>
     <!-- A closed reign nobody placed in, or whose Favorite was struck. -->
     <string name="king_roll_no_favorite">His Majesty named no Favorite.</string>
     <!-- In place of a name on the Favor board and the Roll, for a player who never chose one. -->

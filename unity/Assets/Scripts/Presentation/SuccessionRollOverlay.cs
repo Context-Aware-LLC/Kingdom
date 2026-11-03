@@ -11,16 +11,23 @@ using UnityEngine.UIElements;
 namespace Kingdom.Presentation
 {
     /// <summary>
-    /// The Succession Roll (King of the Week, #421): this week's King and his commission, then every
-    /// King since the first, newest first, each with his fate and the player who was his Favorite.
-    /// Opened from the crown in the main menu dock, which shows nothing else.
+    /// His Majesty's Commission (King of the Week, #421): this week's commission, with the image of
+    /// the achievement it is named for, his epithet, how it is scored and his decree; and under it,
+    /// last week's Favorite. Opened from the crown in the main menu dock, which shows nothing else,
+    /// because beside the crown over the stage art the words could not be read (Sam, 2026-11-03).
     ///
-    /// <para><b>The server's Roll is the record</b> (<c>GET /king/roll</c>), read each time it opens.
-    /// A failed read says so: an answered Roll always holds the reign on the throne, so an empty one
-    /// can only be an unread one.</para>
+    /// <para><b>Past winners are not here.</b> They belong on a leaderboard of their own, and the
+    /// reign's Favor board gets a link from this sheet once it is ready (Sam, 2026-11-03).</para>
+    ///
+    /// <para>The commission comes from the King the menu already read, so it shows at once. Last
+    /// week's Favorite is the second line of the server's Roll (<c>GET /king/roll</c>, newest
+    /// first), read on opening; until it is read, if it cannot be, or in Reign 1, that block stays
+    /// hidden without changing the sheet's height.</para>
     ///
     /// <para>Built as its own UIDocument through Resources, the way <see cref="LedgerOverlay"/> is,
-    /// and read on the herald's scroll the way <see cref="MatchProclamation"/> is.</para>
+    /// and read on the herald's scroll the way <see cref="MatchProclamation"/> is. The class keeps
+    /// the feature's first name; the menu's arrival sequence finds the open overlay by
+    /// <see cref="ObjectName"/>.</para>
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public sealed class SuccessionRollOverlay : MonoBehaviour
@@ -30,15 +37,14 @@ namespace Kingdom.Presentation
         /// <summary>The overlay's GameObject name. The menu's arrival sequence finds an open one by it.</summary>
         public const string ObjectName = "SuccessionRollUI";
 
-        private Label _status;
-        private ScrollView _list;
+        private VisualElement _last;
+        private VisualElement _lastLine;
         private ProclamationScroll _scroll;
         private bool _closing;
 
-        /// <summary>Open the Roll over whatever screen is up. Returns the overlay's GameObject.</summary>
-        /// <param name="king">The King on the throne, whose epithet and commission head the Roll; null
-        /// leaves that block hidden. The menu passes the one it already read, so opening costs no
-        /// second request.</param>
+        /// <summary>Open the sheet over whatever screen is up. Returns the overlay's GameObject.</summary>
+        /// <param name="king">The King on the throne, whose commission the sheet shows. The menu
+        /// passes the one it already read, so the commission costs no second request.</param>
         public static GameObject Open(KingNow king = null)
         {
             var go = new GameObject(ObjectName);
@@ -60,48 +66,41 @@ namespace Kingdom.Presentation
             }
             UiLocalizer.Attach(root);
 
-            _status = root.Q<Label>("roll-status");
-            _list = root.Q<ScrollView>("roll-list");
             Button close = root.Q<Button>("roll-close");
             if (close != null) close.clicked += Close;
 
             ShowNow(root, king);
+            _last = root.Q<VisualElement>("roll-last");
+            _lastLine = root.Q<VisualElement>("roll-last-line");
+            if (_last != null) _last.style.visibility = Visibility.Hidden;
 
             VisualElement sheet = root.Q<VisualElement>("roll-sheet");
             if (sheet?.parent != null) _scroll = new ProclamationScroll(sheet);
-
-            ShowStatus(Loc.Get("king_roll_status_loading"));
             _scroll?.Open();
-            _ = LoadAsync();
+            _ = LoadLastWeekAsync();
         }
 
-        /// <summary>This week: his epithet, his commission, how it is scored, his decree, and the
-        /// image of the achievement it is named for. A commission this build has no words for is
-        /// left out, never printed by id, and so is its image.</summary>
+        /// <summary>His epithet, his commission, how it is scored, his decree, and the image of the
+        /// achievement it is named for. A commission this build has no words for is left out, never
+        /// printed by id, and so is its image.</summary>
         private static void ShowNow(VisualElement root, KingNow king)
         {
-            VisualElement now = root.Q<VisualElement>("roll-now");
-            if (now == null || king == null) return;
-
-            SetLine(root.Q<Label>("roll-now-epithet"), KingText.Epithet(king.Epithet));
-            string name = KingText.Commission(king.Commission, "name");
+            string name = king == null ? null : KingText.Commission(king.Commission, "name");
+            SetLine(root.Q<Label>("roll-now-epithet"), king == null ? null : KingText.Epithet(king.Epithet));
             SetLine(root.Q<Label>("roll-now-commission"), name == null ? null : Loc.Format("king_menu_commission", name));
             SetLine(root.Q<Label>("roll-now-scored"), name == null ? null : KingText.Commission(king.Commission, "scored"));
             SetLine(root.Q<Label>("roll-now-decree"), name == null ? null : KingText.Commission(king.Commission, "decree"));
 
             VisualElement icon = root.Q<VisualElement>("roll-now-icon");
-            if (icon != null)
-            {
+            if (icon == null) return;
 #if UNITY_EDITOR
-                IUiSpriteProvider sprites = new EditorUiSpriteProvider();
+            IUiSpriteProvider sprites = new EditorUiSpriteProvider();
 #else
-                IUiSpriteProvider sprites = new AddressableUiSpriteProvider();
+            IUiSpriteProvider sprites = new AddressableUiSpriteProvider();
 #endif
-                Sprite sprite = name == null ? null : sprites.Get(KingText.AchievementSpriteKey(king.Commission));
-                if (sprite != null) icon.style.backgroundImage = new StyleBackground(sprite);
-                else icon.style.display = DisplayStyle.None;
-            }
-            now.style.display = DisplayStyle.Flex;
+            Sprite sprite = name == null ? null : sprites.Get(KingText.AchievementSpriteKey(king.Commission));
+            if (sprite != null) icon.style.backgroundImage = new StyleBackground(sprite);
+            else icon.style.display = DisplayStyle.None;
         }
 
         private static void SetLine(Label label, string text)
@@ -120,7 +119,7 @@ namespace Kingdom.Presentation
             _scroll.Close(() => { if (this != null) Destroy(gameObject); });
         }
 
-        private async Task LoadAsync()
+        private async Task LoadLastWeekAsync()
         {
             IReadOnlyList<RollEntry> roll;
             try
@@ -131,77 +130,36 @@ namespace Kingdom.Presentation
             catch (Exception ex)
             {
                 Debug.LogWarning($"[SuccessionRoll] read threw ({ex.GetType().Name}: {ex.Message}).");
-                roll = Array.Empty<RollEntry>();
-            }
-
-            if (this == null) return;   // closed while the read was in flight
-
-            if (roll.Count == 0)
-            {
-                ShowStatus(Loc.Get("king_roll_status_failed"));
                 return;
             }
-            ShowRoll(roll);
+
+            if (this == null || _last == null || _lastLine == null) return;   // closed while the read was in flight
+            // Newest first: the reign on the throne, then last week's. Reign 1 has no last week.
+            if (roll.Count < 2) return;
+            ShowLastWeek(roll[1]);
         }
 
-        private void ShowStatus(string text)
+        private void ShowLastWeek(RollEntry entry)
         {
-            if (_status != null)
-            {
-                _status.text = text;
-                _status.style.display = DisplayStyle.Flex;
-            }
-            if (_list != null) _list.style.display = DisplayStyle.None;
-        }
-
-        private void ShowRoll(IReadOnlyList<RollEntry> roll)
-        {
-            if (_list == null) return;
-            if (_status != null) _status.style.display = DisplayStyle.None;
-            _list.style.display = DisplayStyle.Flex;
-            _list.Clear();
-            // The server lists the reign on the throne first; it has no fate yet and no Favorite.
-            for (int i = 0; i < roll.Count; i++)
-                _list.Add(Entry(roll[i], reigning: i == 0));
-        }
-
-        private static VisualElement Entry(RollEntry entry, bool reigning)
-        {
-            var box = new VisualElement();
-            box.AddToClassList("roll-entry");
-
-            var head = new VisualElement();
-            head.AddToClassList("roll-entry__head");
-            head.Add(Line(Loc.Format("king_roll_reign", entry.Reign), "roll-entry__reign"));
-            string epithet = KingText.Epithet(entry.Epithet);
-            head.Add(Line(epithet, "roll-entry__epithet"));
-            box.Add(head);
-
-            box.Add(Line(reigning ? Loc.Get("king_roll_reigning") : KingText.Fate(entry.Fate), "roll-entry__fate"));
-
-            var favor = new VisualElement();
-            favor.AddToClassList("roll-entry__favor");
+            _lastLine.Clear();
             // Null is no Favorite; "" is a Favorite with no name to show (KingText.SubjectName).
             if (entry.Favorite == null)
             {
-                // Two literal calls, not one with a ternary key, so LocalizationVerify sees both.
-                Label none = Line(reigning ? Loc.Get("king_roll_undecided") : Loc.Get("king_roll_no_favorite"),
-                    "roll-entry__favor-of");
+                Label none = Line(Loc.Get("king_roll_no_favorite"), "roll-entry__favor-of");
                 none.AddToClassList("roll-entry__favor-of--none");
-                favor.Add(none);
+                _lastLine.Add(none);
             }
             else
             {
-                favor.Add(NameLabel(KingText.SubjectName(entry.Favorite)));
-                favor.Add(Line(Loc.Format("king_roll_favorite_of", epithet), "roll-entry__favor-of"));
+                _lastLine.Add(NameLabel(KingText.SubjectName(entry.Favorite)));
+                _lastLine.Add(Line(Loc.Format("king_roll_favorite_of", KingText.Epithet(entry.Epithet)), "roll-entry__favor-of"));
             }
-            box.Add(favor);
-            return box;
+            _last.style.visibility = Visibility.Visible;
         }
 
         /// <summary>
-        /// The one place a Favorite's name is drawn. It is PEER-AUTHORED, and this is the renderer's
-        /// half of the obligation security.md sets for every such name, the same pair as
+        /// The one place a Favorite's name is drawn here. It is PEER-AUTHORED, and this is the
+        /// renderer's half of the obligation security.md sets for every such name, the same pair as
         /// <c>FriendsDrawerController.NameLabel</c>: <b>rich text off</b>, here, and <b>a clip in
         /// pixels</b>, in <c>.roll-entry__name</c> (king.uss).
         /// </summary>

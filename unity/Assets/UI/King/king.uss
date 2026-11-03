@@ -1,17 +1,18 @@
 /* ============================================================================
-   THE SUCCESSION ROLL: every King since the first, newest first (#421).
-   Opened from the crown in the main menu dock by SuccessionRollOverlay.
+   HIS MAJESTY'S COMMISSION: this week's commission, and last week's Favorite
+   under it (#421). Opened from the crown in the main menu dock by
+   SuccessionRollOverlay; the dock shows only the crown, because beside it over
+   the stage art the words could not be read (Sam, 2026-11-03).
 
    The dim and the paper come from tidbit.uss (.tidbit-overlay, .tidbit-card), and
    ProclamationScroll builds the rollers around .roll-sheet in code. Sized in the
    2400 x 1080 authored panel (#349).
 
-   The list has a FIXED height, so the sheet the scroll measures is the same tall
-   whether the Roll holds one reign or a hundred. It scrolls rather than turning
-   pages because it only grows; its scrollers are hidden in the markup.
+   Both blocks have FIXED heights, and last week's is hidden by visibility, not
+   display, so the sheet the scroll measures is the same tall before and after
+   the Roll is read, and whether there was a last week at all.
    ============================================================================ */
 
-/* Wider than a tidbit's half screen: an epithet and a fate share a line's width. */
 .roll-overlay .tidbit-scroll {
     width: 64%;
     max-width: 90%;
@@ -35,117 +36,74 @@
     font-size: var(--type-display);
 }
 
-/* THIS WEEK: the King on the throne and his commission, with the image of the achievement the
-   commission is named for. The menu dock shows only the crown, so this is where a player reads
-   what he wants (Sam, 2026-11-03). Its height comes out of the list's, so the sheet the scroll
-   measures stays the same tall: 456 before it, 304 + this block's ~152 now. */
+/* The commission: the image of the achievement it is named for, then his epithet, its name,
+   how it is scored and his decree, centred down the sheet. */
 .roll-now {
-    flex-direction: row;
-    align-items: center;
+    height: 344px;
     flex-shrink: 0;
-    margin-bottom: var(--space-4);
-    padding-bottom: var(--space-3);
-    border-bottom-width: 2px;
-    border-bottom-color: rgba(84, 58, 34, 0.45);
+    align-items: center;
+    justify-content: center;
 }
 
 .roll-now__icon {
-    width: 96px;
-    height: 96px;
+    width: 144px;
+    height: 144px;
     flex-shrink: 0;
-    margin-right: var(--space-4);
+    margin-bottom: var(--space-3);
     -unity-background-scale-mode: scale-to-fit;
 }
 
-/* A basis of 0 that grows: the width the icon leaves, so the lines wrap inside it. */
-.roll-now__text {
-    flex-basis: 0;
-    flex-grow: 1;
-    min-width: 0;
-}
-
-.roll-now__epithet {
-    font-size: var(--type-body);
-    -unity-font-style: bold;
-    color: rgb(58, 36, 18);
-    white-space: normal;
-}
-
-.roll-now__commission {
-    font-size: var(--type-label);
-    -unity-font-style: bold;
-    color: rgb(84, 58, 34);
-    white-space: normal;
-}
-
-.roll-now__scored {
-    font-size: var(--type-caption);
-    color: rgb(84, 58, 34);
-    white-space: normal;
-}
-
+.roll-now__epithet,
+.roll-now__commission,
+.roll-now__scored,
 .roll-now__decree {
-    font-size: var(--type-caption);
-    -unity-font-style: italic;
-    color: rgb(120, 92, 62);
-    white-space: normal;
-}
-
-/* Takes the list's place while the Roll is read, or when it could not be. */
-.roll-status {
-    height: 304px;
-    font-size: var(--type-body);
-    color: rgb(84, 58, 34);
     white-space: normal;
     -unity-text-align: middle-center;
 }
 
-.roll-list {
-    height: 304px;
-    flex-shrink: 0;
-}
-
-.roll-entry {
-    padding: var(--space-3) var(--space-2);
-    border-bottom-width: 1px;
-    border-bottom-color: rgba(84, 58, 34, 0.25);
-}
-
-.roll-entry__head {
-    flex-direction: row;
-    align-items: flex-end;
-}
-
-.roll-entry__reign {
-    width: 148px;
-    flex-shrink: 0;
+.roll-now__epithet {
     font-size: var(--type-label);
     color: rgb(120, 92, 62);
 }
 
-.roll-entry__epithet {
-    flex-grow: 1;
-    flex-shrink: 1;
-    min-width: 0;
-    font-size: var(--type-body);
+.roll-now__commission {
+    font-size: var(--type-h2);
     -unity-font-style: bold;
     color: rgb(58, 36, 18);
-    white-space: normal;
 }
 
-.roll-entry__fate {
-    margin-left: 148px;
+.roll-now__scored {
+    margin-top: var(--space-1);
+    font-size: var(--type-body);
+    color: rgb(84, 58, 34);
+}
+
+.roll-now__decree {
+    margin-top: var(--space-1);
     font-size: var(--type-label);
     -unity-font-style: italic;
-    color: rgb(84, 58, 34);
-    white-space: normal;
+    color: rgb(120, 92, 62);
 }
 
-.roll-entry__favor {
+.roll-last {
+    height: 96px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-top-width: 1px;
+    border-top-color: rgba(84, 58, 34, 0.25);
+}
+
+.roll-last__title {
+    font-size: var(--type-caption);
+    color: rgb(120, 92, 62);
+}
+
+.roll-last__line {
     flex-direction: row;
     align-items: flex-end;
-    margin-left: 148px;
-    margin-top: var(--space-1);
+    justify-content: center;
+    max-width: 100%;
 }
 
 /* A PLAYER'S NAME: peer-authored. The clip in pixels is this rule, and rich text is off where
@@ -165,7 +123,6 @@
 }
 
 .roll-entry__favor-of {
-    flex-grow: 1;
     flex-shrink: 1;
     min-width: 0;
     font-size: var(--type-label);
@@ -173,7 +130,7 @@
     white-space: normal;
 }
 
-/* The current reign, and a reign with no Favorite: one line, faded. */
+/* A last week with no Favorite: one line, faded. */
 .roll-entry__favor-of--none {
     color: rgba(84, 58, 34, 0.6);
     -unity-font-style: italic;
