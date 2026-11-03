@@ -1117,13 +1117,13 @@
     background-image: url("/Assets/Art/Backgrounds/Login_Backdrop.png");
     -unity-background-scale-mode: scale-and-crop;
 }
-/* The plate hugs its content (flex-grow 0) so the backdrop shows below it. Mostly clear (Sam
- * stepping it up 5% at a time from 0.5 until the text reads, 2026-11-02), so the loose text below
- * carries a shadow to stay legible over the bright backdrop. */
+/* The plate hugs its content (flex-grow 0) so the backdrop shows below it. 0.6 is where Sam
+ * judged the text legible (2026-11-02, stepped up from 0.5), and the plate is still partly clear,
+ * so the loose text below carries a shadow to stay legible over the bright backdrop. */
 .account-create-screen #signin-view,
 .account-create-screen #name-view {
     flex-grow: 0;
-    background-color: rgba(11, 14, 19, 0.55);
+    background-color: rgba(11, 14, 19, 0.6);
     border-width: 2px;
     border-color: rgba(240, 138, 60, 0.35);
     border-radius: 18px;
