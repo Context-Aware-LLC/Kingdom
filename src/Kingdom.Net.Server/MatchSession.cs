@@ -186,7 +186,7 @@ namespace Kingdom.Net.Server
                     // VULN-002 §4.2: opp.DisplayName, never a value read off a wire message here.
                     // The Seat holds it precisely so this line cannot be the place a raw name enters.
                     new OpponentInfo(opp.Player, opp.DisplayName),
-                    SnapshotMsg.Of(_host.Snapshot(me.Player)),
+                    SnapshotFor(seat),
                     me.ReconnectToken));
             }
 
@@ -627,7 +627,8 @@ namespace Kingdom.Net.Server
                 Console.Error.WriteLine("[telemetry] match {0} could not be summarised: {1}", _id.Value, ex.Message);
             }
             for (int seat = 0; seat < 2; seat++)
-                Send(seat, new MatchEndMsg(_host.State.Outcome, reason, FindingsFor(summary, seat)));
+                Send(seat, new MatchEndMsg(_host.State.Outcome, reason, FindingsFor(summary, seat),
+                    CommissionFinalFor(summary, seat)));
             _replay.Complete(_id, _host.State.Outcome);
             CompleteTrainingCapture();
 
@@ -779,8 +780,45 @@ namespace Kingdom.Net.Server
 
         // ── Outbound (enqueue-only — RC F5) ──────────────────────────────────────
 
-        private void SendSnapshot(int seat)
-            => Send(seat, SnapshotMsg.Of(_host.Snapshot(_seats[seat].Player)));
+        private void SendSnapshot(int seat) => Send(seat, SnapshotFor(seat));
+
+        /// <summary>
+        /// <paramref name="seat"/>'s projected snapshot, carrying that seat's own commission card
+        /// (#421). Every snapshot a seat is sent is built here, the match start's included, so a
+        /// reconnect or a resync gets the card back with nothing else to remember. The card rides
+        /// outside the hash.
+        /// </summary>
+        private SnapshotMsg SnapshotFor(int seat)
+            => SnapshotMsg.Of(_host.Snapshot(_seats[seat].Player), CommissionFor(seat));
+
+        /// <summary>
+        /// Null when the match plays for no King. A failure costs the card, never the snapshot: the
+        /// score is decoration, and the snapshot is the match.
+        /// </summary>
+        private CommissionProgress? CommissionFor(int seat)
+        {
+            if (_king is null) return null;
+            try
+            {
+                var state = _host.State;
+                return _king.ProgressFor(seat, _telemetry.FactsSoFar(state, seat, NowUtc()),
+                    live: state.Outcome == MatchOutcome.InProgress);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine("[king] match {0} seat {1} commission was not scored: {2}", _id.Value, seat, ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>The seat's final, off the summary the Favor banks from. A summary that could not
+        /// be built costs the final, never the match-end screen.</summary>
+        private CommissionFinal? CommissionFinalFor(MatchCompleteEvent? summary, int seat)
+        {
+            if (_king is null || summary is null) return null;
+            try { return _king.FinalFor(seat, AchievementMatchFacts.ForSeat(summary, seat)); }
+            catch (Exception) { return null; }   // decoration; never the match-end
+        }
 
         private void Broadcast(NetMessage msg)
         {

@@ -185,6 +185,15 @@ namespace Kingdom.Net.Protocol
                         foreach (string id in m.FindingIds) w.Str(id);
                         w.EndArray();
                     }
+                    if (m.Commission is CommissionFinal final)
+                    {
+                        w.Name("commission");
+                        w.BeginObject();
+                        w.Name("id"); w.Str(final.Id);
+                        w.Name("score"); w.I32(final.Score);
+                        w.Name("newBest"); w.Bool(final.NewBest);
+                        w.EndObject();
+                    }
                     w.EndObject();
                     break;
                 default:
@@ -198,6 +207,17 @@ namespace Kingdom.Net.Protocol
             w.Name("stateVersion"); w.U64(m.StateVersion);
             w.Name("hash"); w.Str(m.Hash);
             w.Name("state"); SnapshotJsonCodec.Write(w, m.State);
+            // Optional and outside the hash (#421): absent in a match that plays for no King.
+            if (m.Commission is CommissionProgress c)
+            {
+                w.Name("commission");
+                w.BeginObject();
+                w.Name("id"); w.Str(c.Id);
+                if (c.Score is int score) { w.Name("score"); w.I32(score); }
+                w.Name("countsIfYouWin"); w.Bool(c.CountsIfYouWin);
+                if (c.Best is int best) { w.Name("best"); w.I32(best); }
+                w.EndObject();
+            }
             w.EndObject();
         }
 
@@ -399,7 +419,44 @@ namespace Kingdom.Net.Protocol
             { detail = "missing/bad 'hash'"; return false; }
             if (!body.TryGet("state", out var stVal) || !SnapshotJsonCodec.TryRead(stVal, out var state, out detail))
                 return false;
-            msg = new SnapshotMsg(stateVersion, hash, state);
+            CommissionProgress? commission = null;
+            if (body.TryGet("commission", out var cVal) && !TryReadCommissionProgress(cVal, out commission))
+            { detail = "bad 'commission'"; return false; }
+            msg = new SnapshotMsg(stateVersion, hash, state, commission);
+            return true;
+        }
+
+        /// <summary>The snapshot's optional <c>commission</c> (#421). Absent keys inside it are the
+        /// nulls the encoder omits; a present key of the wrong type is a bad field.</summary>
+        private static bool TryReadCommissionProgress(JVal obj, out CommissionProgress? progress)
+        {
+            progress = null;
+            if (obj.Kind != JKind.Object) return false;
+            if (!obj.TryGet("id", out var idVal) || !idVal.TryStr(out string id)) return false;
+            if (!obj.TryGet("countsIfYouWin", out var cVal) || !cVal.TryBool(out bool countsIfYouWin)) return false;
+            if (!TryOptI32(obj, "score", out int? score) || !TryOptI32(obj, "best", out int? best)) return false;
+            progress = new CommissionProgress(id, score, countsIfYouWin, best);
+            return true;
+        }
+
+        private static bool TryReadCommissionFinal(JVal obj, out CommissionFinal? final)
+        {
+            final = null;
+            if (obj.Kind != JKind.Object) return false;
+            if (!obj.TryGet("id", out var idVal) || !idVal.TryStr(out string id)) return false;
+            if (!obj.TryGet("score", out var sVal) || !sVal.TryI32(out int score)) return false;
+            if (!obj.TryGet("newBest", out var nVal) || !nVal.TryBool(out bool newBest)) return false;
+            final = new CommissionFinal(id, score, newBest);
+            return true;
+        }
+
+        /// <summary>An optional integer: absent is null and true, present-but-not-an-integer is false.</summary>
+        private static bool TryOptI32(JVal obj, string name, out int? value)
+        {
+            value = null;
+            if (!obj.TryGet(name, out var v)) return true;
+            if (!v.TryI32(out int i)) return false;
+            value = i;
             return true;
         }
 
@@ -573,7 +630,11 @@ namespace Kingdom.Net.Protocol
                     findings.Add(id);
                 }
             }
-            return DecodeResult.Success(new MatchEndMsg(outcome, reason, findings), matchId, seq);
+            // Optional (see MatchEndMsg.Commission): absent is no final.
+            CommissionFinal? commission = null;
+            if (body.TryGet("commission", out var cVal) && !TryReadCommissionFinal(cVal, out commission))
+                return DecodeResult.Fail(ProtocolError.BadField, "bad 'commission'", matchId, seq);
+            return DecodeResult.Success(new MatchEndMsg(outcome, reason, findings, commission), matchId, seq);
         }
     }
 }

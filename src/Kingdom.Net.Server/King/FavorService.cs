@@ -59,7 +59,7 @@ namespace Kingdom.Net.Server.King
             // "A game you won" includes a win by concede or timeout: the result is the test, not the reason.
             if (commission.NeedsWin && facts.Result != SeatResult.Win) return;
             int score = commission.Score(facts);
-            if (!commission.LowerIsBetter && score <= 0) return;
+            if (!commission.Qualifies(score)) return;
 
             // A tokenless tooling seat has no account row and so no place on a board.
             Account? account = await _accounts.FindByPlayerIdAsync(facts.PlayerId, ct).ConfigureAwait(false);

@@ -200,6 +200,15 @@ namespace Kingdom.Net.Server.Telemetry
                 _findings.StolenDamage[seat],
                 _findings.HeroPowerDamage[seat]);
 
+        /// <summary>
+        /// <paramref name="seat"/>'s facts as they stand mid-match (#421), built by
+        /// <see cref="Summarize"/> exactly as the banked row is, so a commission scores the live
+        /// match by the same numbers it will bank. The result and end reason mean nothing until the
+        /// match ends; no commission's score reads them, and the card greys a win-only score instead.
+        /// </summary>
+        internal AchievementMatchFacts FactsSoFar(GameState state, int seat, DateTimeOffset nowUtc)
+            => AchievementMatchFacts.ForSeat(Summarize(state, nowUtc, MatchEndReason.Win), seat);
+
         internal static BoardWatch Watch(GameState state, PlayerIntent intent)
         {
             var watch = new BoardWatch { DeathClock = state.NextDeathSequence };

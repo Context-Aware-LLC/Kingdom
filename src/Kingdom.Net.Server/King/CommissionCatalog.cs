@@ -13,7 +13,17 @@ namespace Kingdom.Net.Server.King
     /// <param name="NeedsWin">Only a won match banks, a win by concede or timeout included.</param>
     /// <param name="LowerIsBetter">The board sorts ascending. Such a commission also places at 0 or
     /// below, because those are legitimate scores there; every other one needs a score above 0.</param>
-    public sealed record Commission(string Id, bool NeedsWin, bool LowerIsBetter, Func<AchievementMatchFacts, int> Score);
+    public sealed record Commission(string Id, bool NeedsWin, bool LowerIsBetter, Func<AchievementMatchFacts, int> Score)
+    {
+        /// <summary>Whether <paramref name="score"/> can take a place: above 0, or anything at all
+        /// where lower is better. The in-match card shows no number until this holds.</summary>
+        public bool Qualifies(int score) => LowerIsBetter || score > 0;
+
+        /// <summary>Whether <paramref name="score"/> strictly beats <paramref name="best"/>. A tie
+        /// does not, because the board gives a tie to whoever reached it first.</summary>
+        public bool Beats(int score, int? best)
+            => best is not int held || (LowerIsBetter ? score < held : score > held);
+    }
 
     /// <summary>
     /// Every commission the King can ask for, by its permanent <see cref="CommissionIds"/> id. The

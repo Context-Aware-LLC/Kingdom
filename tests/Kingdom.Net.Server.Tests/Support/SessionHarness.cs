@@ -7,6 +7,7 @@ using Kingdom.Net.Protocol;
 using Kingdom.Net.Server;
 using Kingdom.Net.Server.Data;
 using Kingdom.Net.Server.Identity;
+using Kingdom.Net.Server.King;
 using Kingdom.Net.Server.Replay;
 using Kingdom.Net.Server.Ranking;
 using Kingdom.Net.Server.Telemetry;
@@ -146,7 +147,8 @@ namespace Kingdom.Net.Server.Tests.Support
         public SessionHarness(
             ServerOptions? options = null, bool start = true,
             bool attributed = false, TelemetrySource source = TelemetrySource.Ladder,
-            IRankedMatchSink? rankedMatchSink = null)
+            IRankedMatchSink? rankedMatchSink = null,
+            KingSeating? king = null)
         {
             // Clock tests advance far past the heartbeat timeout on purpose; liveness has its own test.
             // They also jump the clock a whole turn in ONE tick, which the decision-24 stall guard
@@ -167,7 +169,8 @@ namespace Kingdom.Net.Server.Tests.Support
                 attributed
                     ? new MatchAttribution(AccountFor(0), AccountFor(1), source)
                     : MatchAttribution.None,
-                rankedMatchSink: rankedMatchSink);
+                rankedMatchSink: rankedMatchSink,
+                king: king);
             if (start) Session.Start(Conn0, Conn1);
         }
 

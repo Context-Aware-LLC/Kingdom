@@ -142,17 +142,23 @@ namespace Kingdom.Net.Protocol
         /// <summary>The projected <see cref="GameState"/> for this recipient (projection is the
         /// server's job — B1 composes <c>GameStateProjector.Project</c> → this).</summary>
         public GameState State { get; }
+        /// <summary>The King's commission as it stands for THIS recipient (#421), or null in a match
+        /// that plays for no King, which is how the client knows to hide the card. Optional key
+        /// <c>commission</c>. It is not game state: <see cref="Hash"/> covers <see cref="State"/>
+        /// alone, so this rides outside the hash and never moves it.</summary>
+        public CommissionProgress? Commission { get; }
 
-        internal SnapshotMsg(ulong stateVersion, string hash, GameState state)
+        internal SnapshotMsg(ulong stateVersion, string hash, GameState state, CommissionProgress? commission = null)
         {
             StateVersion = stateVersion;
             Hash = hash;
             State = state;
+            Commission = commission;
         }
 
         /// <summary>The one public construction path: hash computed internally, version read off the state.</summary>
-        public static SnapshotMsg Of(GameState projected)
-            => new SnapshotMsg(projected.StateVersion, GameStateHasher.Hash(projected), projected);
+        public static SnapshotMsg Of(GameState projected, CommissionProgress? commission = null)
+            => new SnapshotMsg(projected.StateVersion, GameStateHasher.Hash(projected), projected, commission);
 
         /// <summary>Recompute the canonical hash of <see cref="State"/> and compare to <see cref="Hash"/>
         /// (the client-side mirror-integrity check).</summary>
@@ -197,11 +203,31 @@ namespace Kingdom.Net.Protocol
     /// <see cref="AchievementTexts"/> ids, so each seat is sent its own message. Empty outside a
     /// Find Game match. Additive and optional on the wire: an older peer omits it and decodes as
     /// none, which is why it did not move <see cref="ProtocolContract.Version"/>.</param>
+    /// <param name="Commission">The receiving seat's final commission score (#421), optional key
+    /// <c>commission</c>. Null in a match that plays for no King, and when a commission that needs a
+    /// win was not won, because then nothing scores.</param>
     public sealed record MatchEndMsg(
-        MatchOutcome Outcome, MatchEndReason Reason, IReadOnlyList<string>? Findings = null) : NetMessage
+        MatchOutcome Outcome, MatchEndReason Reason, IReadOnlyList<string>? Findings = null,
+        CommissionFinal? Commission = null) : NetMessage
     {
         public IReadOnlyList<string> FindingIds => Findings ?? Array.Empty<string>();
     }
+
+    /// <summary>
+    /// One seat's commission card mid-match (#421). Server-authored, per seat: the client words and
+    /// draws it and never computes a score of its own.
+    /// </summary>
+    /// <param name="Id">A <see cref="CommissionIds"/> id.</param>
+    /// <param name="Score">Null until the seat qualifies; the card shows how it is scored until then.</param>
+    /// <param name="CountsIfYouWin">True while the commission needs a win and the match is live: the
+    /// number is greyed, with "Counts if you win".</param>
+    /// <param name="Best">The seat's best this reign when the match began, or null.</param>
+    public sealed record CommissionProgress(string Id, int? Score, bool CountsIfYouWin, int? Best);
+
+    /// <summary>One seat's final commission score (#421), for the match-end proclamation.</summary>
+    /// <param name="NewBest">True when it beats the seat's best this reign. A tie is not new: the
+    /// board gives a tie to whoever reached it first.</param>
+    public sealed record CommissionFinal(string Id, int Score, bool NewBest);
 
     public enum MatchEndReason { Win, Concede, Timeout, Disconnect }
 

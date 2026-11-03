@@ -1,6 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Kingdom.Net.Protocol;
+using Kingdom.Net.Server.Achievements;
 using Kingdom.Net.Server.Identity;
 using Kingdom.Net.Server.Telemetry;
 
@@ -41,6 +43,43 @@ namespace Kingdom.Net.Server.King
                 await BestAsync(store, reign, p1, ct).ConfigureAwait(false),
                 p0Name,
                 p1Name);
+        }
+
+        /// <summary>The seat's best this reign when the match began, or null.</summary>
+        public int? BestFor(int seat) => seat == 0 ? BestP0 : BestP1;
+
+        /// <summary>
+        /// <paramref name="seat"/>'s commission card for its own snapshot, scored off
+        /// <paramref name="soFar"/> by the same <see cref="Commission.Score"/> that banks it, so the
+        /// live number and the final one cannot disagree. Null for a commission the catalog does
+        /// not know, which banks nothing either.
+        /// </summary>
+        /// <param name="live">The match is still in progress; a win-only score is greyed until it ends.</param>
+        public CommissionProgress? ProgressFor(int seat, AchievementMatchFacts soFar, bool live)
+        {
+            Commission? commission = CommissionCatalog.Find(CommissionId);
+            if (commission is null) return null;
+            int score = commission.Score(soFar);
+            return new CommissionProgress(
+                commission.Id,
+                commission.Qualifies(score) ? score : (int?)null,
+                commission.NeedsWin && live,
+                BestFor(seat));
+        }
+
+        /// <summary>
+        /// <paramref name="seat"/>'s final score for its match end, read off the same facts
+        /// <see cref="FavorService"/> banks from. Null when a commission that needs a win was not
+        /// won, because then nothing scores.
+        /// </summary>
+        public CommissionFinal? FinalFor(int seat, AchievementMatchFacts final)
+        {
+            Commission? commission = CommissionCatalog.Find(CommissionId);
+            if (commission is null) return null;
+            if (commission.NeedsWin && final.Result != SeatResult.Win) return null;
+            int score = commission.Score(final);
+            return new CommissionFinal(commission.Id, score,
+                commission.Qualifies(score) && commission.Beats(score, BestFor(seat)));
         }
 
         private static async Task<int?> BestAsync(IFavorStore store, int reign, AccountId account, CancellationToken ct)
