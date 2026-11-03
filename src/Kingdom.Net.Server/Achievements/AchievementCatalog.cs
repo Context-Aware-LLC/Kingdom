@@ -158,9 +158,9 @@ namespace Kingdom.Net.Server.Achievements
             // #443: one per commission that had none, so its card has an image. Thresholds are
             // Sam's (2026-11-03). No Play Console entry yet, so no id: earned and kept here, and
             // unlocked in Play once the id lands.
-            Rule("comeback", "", f => f.Result == SeatResult.Win && f.MostHealthDeficit >= 20),
-            Rule("the_long_game", "", f => f.Result == SeatResult.Win && f.TurnCount >= 40),
-            Rule("overgrown", "", f => f.LargestMinion >= 30),
+            Rule("comeback", "CgkIkJ2NnuUeEAIQFg", f => f.Result == SeatResult.Win && f.MostHealthDeficit >= 20),
+            Rule("the_long_game", "CgkIkJ2NnuUeEAIQGA", f => f.Result == SeatResult.Win && f.TurnCount >= 40),
+            Rule("overgrown", "CgkIkJ2NnuUeEAIQFw", f => f.LargestMinion >= 30),
         });
 
         /// <summary>
