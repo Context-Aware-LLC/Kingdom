@@ -129,22 +129,61 @@ namespace Kingdom.Net.Server.Tests.Achievements
         }
 
         [Test]
-        public void Hero_power_damage_counts_only_hits_on_the_enemy_hero()
+        public void A_toll_attacker_that_dies_in_its_own_trade_still_counts_its_toll()
         {
             var t = new Table();
+            int me = t.Me;
+            InstanceId bomb = t.Play(TollBomb);        // 1/1, Toll: 4 to the enemy hero
+            t.EndTurn();
+            InstanceId five = t.Play(Five);             // 1/5, theirs
+            t.EndTurn();
+            t.Attack(bomb, five);                       // the bomb dies to retaliation, then its Toll rings
+
+            Assert.That(t.State.Players[1 - me].Hero.CurrentHealth, Is.EqualTo(26), "precondition: the Toll landed");
+            Assert.That(t.Tally(me).TollDamage, Is.EqualTo(4));
+        }
+
+        [Test]
+        public void A_toll_minions_own_attack_hit_is_not_toll()
+        {
+            var t = new Table();
+            int me = t.Me;
+            InstanceId bomb = t.Play(TollBomb);
+            t.EndTurn();
+            t.EndTurn();
+            t.Attack(bomb, t.State.Players[1 - me].Hero.Id);
+
+            Assert.That(t.State.Players[1 - me].Hero.CurrentHealth, Is.EqualTo(29), "precondition: the attack landed");
+            Assert.That(t.Tally(me).TollDamage, Is.Zero);
+        }
+
+        [Test]
+        public void Hero_power_damage_counts_a_hit_on_an_enemy_minion()
+        {
+            var t = new Table(Cast(new DamageAction(4, Auto("ANY_ENEMY_MINION"))));
             int me = t.Me;
             t.EndTurn();
             t.Play(Five);
             t.EndTurn();
-            t.HeroPower();               // 2 to their hero, 3 to mine, 4 to their minion
+            t.HeroPower();               // 4 to their minion
             t.Play(FaceBolt);            // 5 to their hero, not the Hero Power
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(t.Tally(me).HeroPowerDamage, Is.EqualTo(2));
-                Assert.That(t.Tally(me).SelfDamage, Is.EqualTo(3));
-                Assert.That(t.Tally(1 - me).HeroPowerDamage, Is.Zero);
-            });
+            Assert.That(t.Tally(me).HeroPowerDamage, Is.EqualTo(4));
+            Assert.That(t.Tally(1 - me).HeroPowerDamage, Is.Zero);
+        }
+
+        [Test]
+        public void Hero_power_damage_counts_a_hit_on_the_enemy_hero_for_its_caster_only()
+        {
+            var t = new Table(Cast(new DamageAction(2, Auto("ENEMY_HERO"))));
+            int me = t.Me;
+            t.HeroPower();               // 2 to their hero
+            t.Play(FaceBolt);            // not the Hero Power
+            t.EndTurn();
+            t.HeroPower();               // theirs: 2 to my hero, credited to them
+
+            Assert.That(t.Tally(me).HeroPowerDamage, Is.EqualTo(2));
+            Assert.That(t.Tally(1 - me).HeroPowerDamage, Is.EqualTo(2));
         }
 
         // ── Turn-end and draw totals ──────────────────────────────────────────────
@@ -232,8 +271,10 @@ namespace Kingdom.Net.Server.Tests.Achievements
             private readonly InMemoryTelemetrySink _sink = new InMemoryTelemetrySink();
             private readonly MatchTelemetryRecorder _recorder;
 
-            public Table()
+            /// <param name="heroPower">Both heroes' Hero Power; by default 2 damage to the enemy hero.</param>
+            public Table(params RuleDefinition[] heroPower)
             {
+                if (heroPower.Length == 0) heroPower = new[] { Cast(new DamageAction(2, Auto("ENEMY_HERO"))) };
                 var db = new FakeCardDatabase()
                     .Register(Spell(Zap3, Cast(new DamageAction(3, new TargetSpec("ANY_MINION", TargetSelection.Of(1))))))
                     .Register(Spell(Zap7, Cast(new DamageAction(7, new TargetSpec("ANY_MINION", TargetSelection.Of(1))))))
@@ -260,12 +301,7 @@ namespace Kingdom.Net.Server.Tests.Achievements
                         id: ps.Hero.HeroPowerId, handle: $"hp{ps.Hero.HeroPowerId}", name: "hp",
                         type: CardType.HERO_POWER, cost: 2, attack: null, health: null, durability: null,
                         @class: CardClass.NEUTRAL, rarity: Rarity.COMMON, keywords: Array.Empty<Keyword>(),
-                        rules: new[]
-                        {
-                            Cast(new DamageAction(2, Auto("ENEMY_HERO")), "face"),
-                            Cast(new DamageAction(3, Auto("FRIENDLY_HERO")), "self"),
-                            Cast(new DamageAction(4, Auto("ANY_ENEMY_MINION")), "minion"),
-                        },
+                        rules: heroPower,
                         flavorText: "", artId: "art/hp", setId: SetId.CORE,
                         collectible: false, tribe: null, factionId: ""));
 
@@ -297,6 +333,9 @@ namespace Kingdom.Net.Server.Tests.Achievements
                 State.Players[Me].Mana.Available = unspent;
                 EndTurn();
             }
+
+            public void Attack(InstanceId attacker, InstanceId defender)
+                => Do(new AttackIntent(State.ActivePlayer, attacker, new TargetRef(defender)));
 
             public void HeroPower()
             {
