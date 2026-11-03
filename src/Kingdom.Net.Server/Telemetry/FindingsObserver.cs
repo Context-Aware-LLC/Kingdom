@@ -37,8 +37,11 @@ namespace Kingdom.Net.Server.Telemetry
         public readonly struct Tally
         {
             public Tally(int overkillBest, int selfDamage, int unspentMana, int fatigueDamage, int cardsBurned,
-                         int tollDamage, int stolenDamage, int heroPowerDamage)
+                         int tollDamage, int stolenDamage, int heroPowerDamage, int mostHealthDeficit,
+                         int largestMinion)
             {
+                MostHealthDeficit = mostHealthDeficit;
+                LargestMinion = largestMinion;
                 OverkillBest = overkillBest;
                 SelfDamage = selfDamage;
                 UnspentMana = unspentMana;
@@ -65,6 +68,10 @@ namespace Kingdom.Net.Server.Telemetry
             public int StolenDamage { get; }
             /// <summary>Damage the seat's Hero Power dealt the other side's hero and minions.</summary>
             public int HeroPowerDamage { get; }
+            /// <summary>The furthest the seat's hero Health fell below the enemy hero's (#443).</summary>
+            public int MostHealthDeficit { get; }
+            /// <summary>The largest Attack plus Health of a minion on the seat's board (#443).</summary>
+            public int LargestMinion { get; }
         }
 
         private const int OverkillHit = 10;
@@ -85,12 +92,24 @@ namespace Kingdom.Net.Server.Telemetry
         public readonly int[] BigMinionsBounced = new int[2];
         public readonly int[] LegendariesLost = new int[2];
         public readonly int[] MostBulwarks = new int[2];
+        public readonly int[] MostHealthDeficit = new int[2];
+        public readonly int[] LargestMinion = new int[2];
         public readonly FinalBlow[] FellTo = new FinalBlow[2];
 
         /// <param name="db">Null leaves every finding that needs a card's cost, rarity or type at none.</param>
         public FindingsObserver(ICardDatabase? db) => _db = db;
 
-        /// <summary>Notes where every card is, which is how a stolen minion is told from its owner's.</summary>
+        /// <summary>
+        /// Notes where every card is, which is how a stolen minion is told from its owner's, and the
+        /// bests read off the board as it stands.
+        ///
+        /// <para><b>Comeback and Overgrown read real state, between commands</b> (#443): the moments
+        /// a player can see, after the opening deal and after every accepted command. Nothing is
+        /// replayed, so a buff, an aura or damage earlier in the same command is already in the
+        /// numbers. A swing that begins and ends inside one command is never on screen and does not
+        /// count. A minion counts for the seat whose board it is on, so one taken from the other
+        /// side counts for its taker while it stays there.</para>
+        /// </summary>
         public void Observe(GameState state)
         {
             for (int seat = 0; seat < 2; seat++)
@@ -104,8 +123,16 @@ namespace Kingdom.Net.Server.Telemetry
 
                 int bulwarks = 0;
                 foreach (CardInstance minion in ps.Board)
+                {
                     if (minion.Keywords.Contains(Keyword.BULWARK)) bulwarks++;
+                    int size = minion.CurrentAttack + minion.CurrentHealth;
+                    if (size > LargestMinion[seat]) LargestMinion[seat] = size;
+                }
                 if (bulwarks > MostBulwarks[seat]) MostBulwarks[seat] = bulwarks;
+
+                // Health, not Armor: Armor is not what the Health bar shows.
+                int behind = state.Players[1 - seat].Hero.CurrentHealth - ps.Hero.CurrentHealth;
+                if (behind > MostHealthDeficit[seat]) MostHealthDeficit[seat] = behind;
             }
         }
 

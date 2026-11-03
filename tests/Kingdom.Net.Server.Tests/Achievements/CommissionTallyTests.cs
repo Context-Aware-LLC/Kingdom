@@ -31,6 +31,10 @@ namespace Kingdom.Net.Server.Tests.Achievements
         private static readonly int Trio = FixtureCard.Id("tally_trio");
         private static readonly int Five = FixtureCard.Id("tally_five");
         private static readonly int TollBomb = FixtureCard.Id("tally_toll_bomb");
+        private static readonly int Giant = FixtureCard.Id("tally_giant");
+        private static readonly int Colossus = FixtureCard.Id("tally_colossus");
+        private static readonly int Grow2 = FixtureCard.Id("tally_grow2");
+        private static readonly int Grow5 = FixtureCard.Id("tally_grow5");
 
         // ── Overkill ──────────────────────────────────────────────────────────────
 
@@ -201,6 +205,121 @@ namespace Kingdom.Net.Server.Tests.Achievements
             Assert.That(t.Tally(1 - me).HeroPowerDamage, Is.EqualTo(2));
         }
 
+        // ── Comeback: the furthest behind on Health ───────────────────────────────
+
+        [Test]
+        public void Health_deficit_keeps_the_furthest_behind_after_it_is_erased()
+        {
+            var t = new Table();
+            int me = t.Me;
+            t.EndTurn();
+            for (int i = 0; i < 4; i++) t.Play(FaceBolt);   // theirs: 20 to me, 10 against 30
+            t.EndTurn();
+            for (int i = 0; i < 4; i++) t.Play(FaceBolt);   // mine: 20 back, 10 against 10
+
+            Assert.That(t.State.Players[me].Hero.CurrentHealth, Is.EqualTo(t.State.Players[1 - me].Hero.CurrentHealth),
+                "precondition: level again");
+            Assert.That(t.Tally(me).MostHealthDeficit, Is.EqualTo(20));
+            Assert.That(t.Tally(1 - me).MostHealthDeficit, Is.Zero, "never behind; a lead is not a negative deficit");
+        }
+
+        [Test]
+        public void Health_deficit_is_measured_against_the_enemy_heros_Health_not_a_full_bar()
+        {
+            var t = new Table();
+            int me = t.Me;
+            for (int i = 0; i < 2; i++) t.Play(FaceBolt);   // mine: they are at 20
+            t.EndTurn();
+            for (int i = 0; i < 5; i++) t.Play(FaceBolt);   // theirs: I am at 5
+
+            Assert.That(t.Tally(me).MostHealthDeficit, Is.EqualTo(15), "5 against their 20, not 5 against 30");
+            Assert.That(t.Tally(1 - me).MostHealthDeficit, Is.EqualTo(10), "they were 20 against my 30 first");
+        }
+
+        [Test]
+        public void Armor_is_not_Health_for_the_deficit()
+        {
+            var t = new Table();
+            int me = t.Me;
+            t.State.Players[me].Hero.Armor = 20;
+            t.EndTurn();
+            for (int i = 0; i < 4; i++) t.Play(FaceBolt);   // all 20 soaked
+
+            Assert.That(t.State.Players[me].Hero.CurrentHealth, Is.EqualTo(30), "precondition: the Armor took it all");
+            Assert.That(t.Tally(me).MostHealthDeficit, Is.Zero);
+        }
+
+        // ── Overgrown: the largest minion on the board ────────────────────────────
+
+        [Test]
+        public void Largest_minion_is_attack_plus_health_on_the_board()
+        {
+            var t = new Table();
+            int me = t.Me;
+            t.Play(Squire);              // 1/1
+            t.Play(Giant);               // 4/6
+
+            Assert.That(t.Tally(me).LargestMinion, Is.EqualTo(10));
+            Assert.That(t.Tally(1 - me).LargestMinion, Is.Zero);
+        }
+
+        [Test]
+        public void A_buff_grows_the_largest_minion_and_later_damage_does_not_shrink_the_record()
+        {
+            var t = new Table();
+            int me = t.Me;
+            InstanceId giant = t.Play(Giant);   // 4/6: 10
+            t.Play(Grow5, giant);               // 9/11: 20
+            t.Play(Zap7, giant);                // 9/4: 13
+
+            Assert.That(t.Tally(me).LargestMinion, Is.EqualTo(20));
+        }
+
+        [Test]
+        public void Largest_minion_reads_current_Health_so_damage_taken_first_stays_off()
+        {
+            var t = new Table();
+            int me = t.Me;
+            InstanceId giant = t.Play(Giant);   // 4/6: 10
+            t.Play(Zap3, giant);                // 4/3: 7
+            t.Play(Grow2, giant);               // 6/5: 11, not 4+6+2+2
+
+            Assert.That(t.Tally(me).LargestMinion, Is.EqualTo(11));
+        }
+
+        [Test]
+        public void A_stolen_minion_counts_for_whoever_controls_it_at_the_time()
+        {
+            var t = new Table();
+            int me = t.Me;
+            t.EndTurn();
+            InstanceId colossus = t.Play(Colossus);   // 10/10, theirs: 20 for them
+            t.EndTurn();
+            t.Play(Steal, colossus);                  // mine now: 20 for me
+            t.Play(Grow5, colossus);                  // 15/15 under me: 30 for me, not them
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(t.Tally(me).LargestMinion, Is.EqualTo(30));
+                Assert.That(t.Tally(1 - me).LargestMinion, Is.EqualTo(20));
+            });
+        }
+
+        [Test]
+        public void Minions_in_hand_or_deck_never_count()
+        {
+            var t = new Table();
+            int me = t.Me;
+            PlayerState ps = t.State.Players[me];
+            ps.Hand.Add(new CardInstance(t.State.NextInstanceId(), Colossus, ps.Id)
+            { Zone = Zone.Hand, CurrentAttack = 10, CurrentHealth = 10, MaxHealth = 10 });
+            ps.Deck.Add(new CardInstance(t.State.NextInstanceId(), Colossus, ps.Id)
+            { Zone = Zone.Deck, CurrentAttack = 10, CurrentHealth = 10, MaxHealth = 10 });
+            t.Play(Squire);              // 1/1, the only minion on a board
+
+            Assert.That(t.Tally(me).LargestMinion, Is.EqualTo(2));
+        }
+
         // ── Turn-end and draw totals ──────────────────────────────────────────────
 
         [Test]
@@ -244,7 +363,9 @@ namespace Kingdom.Net.Server.Tests.Achievements
             t.Play(Zap7, squire);
             t.Play(Zap3, bomb);
             t.HeroPower();
+            t.Play(Giant);
             t.EndTurnWith(6);
+            for (int i = 0; i < 4; i++) t.Play(FaceBolt);   // theirs: me at 10
 
             FindingsObserver.Tally tally = t.Tally(me);
             MatchCompleteEvent complete = t.Finish();
@@ -257,6 +378,8 @@ namespace Kingdom.Net.Server.Tests.Achievements
                 Assert.That(tally.TollDamage, Is.EqualTo(4));
                 Assert.That(tally.HeroPowerDamage, Is.EqualTo(2));
                 Assert.That(tally.UnspentMana, Is.EqualTo(6));
+                Assert.That(tally.MostHealthDeficit, Is.EqualTo(14), "their 24, after my Toll and Hero Power, against my 10");
+                Assert.That(tally.LargestMinion, Is.EqualTo(10));
 
                 Assert.That(seat.OverkillBest, Is.EqualTo(tally.OverkillBest));
                 Assert.That(seat.UnspentMana, Is.EqualTo(tally.UnspentMana));
@@ -266,6 +389,8 @@ namespace Kingdom.Net.Server.Tests.Achievements
                 Assert.That(seat.HeroPowerDamage, Is.EqualTo(tally.HeroPowerDamage));
                 Assert.That(seat.SelfDamage, Is.EqualTo(tally.SelfDamage));
                 Assert.That(seat.CardsBurned, Is.EqualTo(tally.CardsBurned));
+                Assert.That(seat.MostHealthDeficit, Is.EqualTo(tally.MostHealthDeficit));
+                Assert.That(seat.LargestMinion, Is.EqualTo(tally.LargestMinion));
 
                 Assert.That(facts.OverkillBest, Is.EqualTo(tally.OverkillBest));
                 Assert.That(facts.UnspentMana, Is.EqualTo(tally.UnspentMana));
@@ -273,6 +398,8 @@ namespace Kingdom.Net.Server.Tests.Achievements
                 Assert.That(facts.TollDamage, Is.EqualTo(tally.TollDamage));
                 Assert.That(facts.StolenDamage, Is.EqualTo(tally.StolenDamage));
                 Assert.That(facts.HeroPowerDamage, Is.EqualTo(tally.HeroPowerDamage));
+                Assert.That(facts.MostHealthDeficit, Is.EqualTo(tally.MostHealthDeficit));
+                Assert.That(facts.LargestMinion, Is.EqualTo(tally.LargestMinion));
             });
         }
 
@@ -298,6 +425,10 @@ namespace Kingdom.Net.Server.Tests.Achievements
                         Cast(new ModifyStatsAction(0, 2, Auto("ANY_ENEMY_MINION")), "buff"),
                         Cast(new DamageAction(9, Auto("ANY_ENEMY_MINION")), "hit")))
                     .Register(Spell(Steal, Cast(new TakeControlAction(new TargetSpec("ANY_ENEMY_MINION", TargetSelection.Of(1))))))
+                    .Register(Spell(Grow2, Cast(new ModifyStatsAction(2, 2, new TargetSpec("ANY_MINION", TargetSelection.Of(1))))))
+                    .Register(Spell(Grow5, Cast(new ModifyStatsAction(5, 5, new TargetSpec("ANY_MINION", TargetSelection.Of(1))))))
+                    .Register(Minion(Giant, health: 6, attack: 4))
+                    .Register(Minion(Colossus, health: 10, attack: 10))
                     .Register(Minion(Squire, health: 1))
                     .Register(Minion(Trio, health: 3))
                     .Register(Minion(Five, health: 5))
@@ -393,10 +524,10 @@ namespace Kingdom.Net.Server.Tests.Achievements
                 flavorText: "", artId: "art/" + FixtureCard.Handle(id), setId: SetId.CORE,
                 collectible: true, tribe: null, factionId: "");
 
-        private static CardDefinition Minion(int id, int health, RuleDefinition? toll = null)
+        private static CardDefinition Minion(int id, int health, RuleDefinition? toll = null, int attack = 1)
             => new CardDefinition(
                 id: id, handle: FixtureCard.Handle(id), name: FixtureCard.Handle(id),
-                type: CardType.MINION, cost: 0, attack: 1, health: health, durability: null,
+                type: CardType.MINION, cost: 0, attack: attack, health: health, durability: null,
                 @class: CardClass.NEUTRAL, rarity: Rarity.COMMON, keywords: Array.Empty<Keyword>(),
                 rules: toll != null ? new[] { toll } : Array.Empty<RuleDefinition>(),
                 flavorText: "", artId: "art/" + FixtureCard.Handle(id), setId: SetId.CORE,

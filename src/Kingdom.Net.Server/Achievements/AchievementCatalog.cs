@@ -40,7 +40,9 @@ namespace Kingdom.Net.Server.Achievements
         int FatigueDamage = 0,
         int TollDamage = 0,
         int StolenDamage = 0,
-        int HeroPowerDamage = 0)
+        int HeroPowerDamage = 0,
+        int MostHealthDeficit = 0,
+        int LargestMinion = 0)
     {
         /// <summary>Both attributed seats of one finished match.</summary>
         public static IReadOnlyList<AchievementMatchFacts> From(MatchCompleteEvent complete)
@@ -96,7 +98,9 @@ namespace Kingdom.Net.Server.Achievements
                 seat.FatigueDamage,
                 seat.TollDamage,
                 seat.StolenDamage,
-                seat.HeroPowerDamage);
+                seat.HeroPowerDamage,
+                seat.MostHealthDeficit,
+                seat.LargestMinion);
     }
 
     /// <summary>One achievement: its text, its store counterpart and the rule that earns it.</summary>
@@ -151,6 +155,12 @@ namespace Kingdom.Net.Server.Achievements
             Rule("return_to_sender", "CgkIkJ2NnuUeEAIQCw", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.StolenMinion) != 0),
             Rule("signature_move", "CgkIkJ2NnuUeEAIQDQ", f => f.Result == SeatResult.Win && (f.EnemyFellTo & FinalBlow.HeroPower) != 0),
             Rule("own_goal", "CgkIkJ2NnuUeEAIQDA", f => f.Result == SeatResult.Loss && (f.FellTo & (FinalBlow.Spell | FinalBlow.OwnSide)) == (FinalBlow.Spell | FinalBlow.OwnSide)),
+            // #443: one per commission that had none, so its card has an image. Thresholds are
+            // Sam's (2026-11-03). No Play Console entry yet, so no id: earned and kept here, and
+            // unlocked in Play once the id lands.
+            Rule("comeback", "", f => f.Result == SeatResult.Win && f.MostHealthDeficit >= 20),
+            Rule("the_long_game", "", f => f.Result == SeatResult.Win && f.TurnCount >= 40),
+            Rule("overgrown", "", f => f.LargestMinion >= 30),
         });
 
         /// <summary>

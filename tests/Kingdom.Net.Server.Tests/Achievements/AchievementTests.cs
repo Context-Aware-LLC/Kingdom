@@ -60,11 +60,12 @@ namespace Kingdom.Net.Server.Tests.Achievements
         private static AchievementMatchFacts Everything(
             string playerId, string matchId = "match-1", TelemetrySource source = TelemetrySource.Ladder)
             => new AchievementMatchFacts(
-                matchId, playerId, Now, source, SeatResult.Win, MatchEndReason.Win, TurnCount: 9,
+                matchId, playerId, Now, source, SeatResult.Win, MatchEndReason.Win, TurnCount: 40,
                 EnemyMinionsDestroyed: 3, MulliganReplaced: 1, HeroPowersUsed: 2, FinalHealth: 1,
                 FatigueDraws: 1, CardsBurned: 1, TurnsTimedOut: 1, TurnsEndedWithTenUnspent: 1,
                 SelfDamage: 15, Overkills: 1, BigMinionsBounced: 1, LegendariesLost: 1, MostBulwarks: 7,
-                EnemyFellTo: FinalBlow.Toll | FinalBlow.StolenMinion | FinalBlow.HeroPower);
+                EnemyFellTo: FinalBlow.Toll | FinalBlow.StolenMinion | FinalBlow.HeroPower,
+                MostHealthDeficit: 20, LargestMinion: 30);
 
         // ── The catalog ───────────────────────────────────────────────────────────────────
 
@@ -133,6 +134,7 @@ namespace Kingdom.Net.Server.Tests.Achievements
         [TestCase("seven_walls")]
         [TestCase("the_last_idea")]
         [TestCase("own_goal")]
+        [TestCase("overgrown")]
         public void Each_Achievement_Fires_On_Its_Own_Fact(string id)
         {
             var quiet = new AchievementMatchFacts(
@@ -155,6 +157,7 @@ namespace Kingdom.Net.Server.Tests.Achievements
                 "seven_walls" => quiet with { MostBulwarks = 7 },
                 "the_last_idea" => quiet with { FellTo = FinalBlow.Fatigue },
                 "own_goal" => quiet with { FellTo = FinalBlow.Spell | FinalBlow.OwnSide },
+                "overgrown" => quiet with { LargestMinion = 30 },
                 _ => quiet with { Result = SeatResult.Win, EndReason = MatchEndReason.Win, FinalHealth = 30 },
             };
 
@@ -166,6 +169,8 @@ namespace Kingdom.Net.Server.Tests.Achievements
         [TestCase("posthumous")]
         [TestCase("return_to_sender")]
         [TestCase("signature_move")]
+        [TestCase("comeback")]
+        [TestCase("the_long_game")]
         public void Each_Winning_Finding_Fires_On_Its_Own_Fact_Beside_The_Win(string id)
         {
             var win = new AchievementMatchFacts(
@@ -176,11 +181,51 @@ namespace Kingdom.Net.Server.Tests.Achievements
                 "technically" => win with { FinalHealth = -1, FellTo = FinalBlow.Other },
                 "posthumous" => win with { EnemyFellTo = FinalBlow.Toll },
                 "return_to_sender" => win with { EnemyFellTo = FinalBlow.StolenMinion },
+                "comeback" => win with { MostHealthDeficit = 20 },
+                "the_long_game" => win with { TurnCount = 40 },
                 _ => win with { EnemyFellTo = FinalBlow.HeroPower },
             };
 
             Assert.That(AchievementCatalog.All.Where(a => a.EarnedBy(facts)).Select(a => a.Id),
                 Is.EquivalentTo(new[] { "against_advice", id }));
+        }
+
+        // Sam, 2026-11-03: 20 Health behind, turn 40, Attack plus Health 30. A threshold is one
+        // number, and the one beside it must not count.
+        [TestCase("comeback", 19, false)]
+        [TestCase("comeback", 20, true)]
+        [TestCase("the_long_game", 39, false)]
+        [TestCase("the_long_game", 40, true)]
+        [TestCase("overgrown", 29, false)]
+        [TestCase("overgrown", 30, true)]
+        public void The_Commission_Achievements_Start_At_Their_Threshold(string id, int value, bool earned)
+        {
+            var win = new AchievementMatchFacts(
+                "match-1", "player", Now, TelemetrySource.Ladder, SeatResult.Win, MatchEndReason.Win,
+                TurnCount: 9, EnemyMinionsDestroyed: 0, MulliganReplaced: 0, HeroPowersUsed: 0, FinalHealth: 30);
+            AchievementMatchFacts facts = id switch
+            {
+                "comeback" => win with { MostHealthDeficit = value },
+                "the_long_game" => win with { TurnCount = value },
+                _ => win with { LargestMinion = value },
+            };
+
+            Assert.That(AchievementCatalog.Find(id)!.EarnedBy(facts), Is.EqualTo(earned));
+        }
+
+        [TestCase("comeback", false)]
+        [TestCase("the_long_game", false)]
+        [TestCase("overgrown", true)]
+        public void Only_Overgrown_Of_The_Three_Counts_In_A_Loss(string id, bool earned)
+        {
+            var loss = new AchievementMatchFacts(
+                "match-1", "player", Now, TelemetrySource.Ladder, SeatResult.Loss, MatchEndReason.Win,
+                TurnCount: 60, EnemyMinionsDestroyed: 0, MulliganReplaced: 0, HeroPowersUsed: 0,
+                MostHealthDeficit: 25, LargestMinion: 40);
+
+            Assert.That(AchievementCatalog.Find(id)!.EarnedBy(loss), Is.EqualTo(earned));
+            Assert.That(AchievementCatalog.Find(id)!.EarnedBy(loss with { Result = SeatResult.Draw }), Is.EqualTo(earned),
+                "a draw is not a win either");
         }
 
         [Test]

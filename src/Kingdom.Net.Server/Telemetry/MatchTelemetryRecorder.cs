@@ -198,7 +198,9 @@ namespace Kingdom.Net.Server.Telemetry
                 _cardsBurned[seat],
                 _findings.TollDamage[seat],
                 _findings.StolenDamage[seat],
-                _findings.HeroPowerDamage[seat]);
+                _findings.HeroPowerDamage[seat],
+                _findings.MostHealthDeficit[seat],
+                _findings.LargestMinion[seat]);
 
         /// <summary>
         /// <paramref name="seat"/>'s facts as they stand mid-match (#421), built by
@@ -422,7 +424,9 @@ namespace Kingdom.Net.Server.Telemetry
                 tally.FatigueDamage,
                 tally.TollDamage,
                 tally.StolenDamage,
-                tally.HeroPowerDamage);
+                tally.HeroPowerDamage,
+                tally.MostHealthDeficit,
+                tally.LargestMinion);
         }
 
         /// <summary>
