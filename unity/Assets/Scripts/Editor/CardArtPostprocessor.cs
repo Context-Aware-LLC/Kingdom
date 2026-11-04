@@ -140,12 +140,17 @@ namespace Kingdom.Editor
         // diverge. Not the UI lane either: these are 1-2 MB full-alpha spheres and atlasing
         // them would blow the atlas for no packing win.
         //
-        // Mips OFF - an orb is drawn at or near its native size over a plate, never minified
-        // into the distance. Alpha is load-bearing (VersusOverlay composites it), so no crunch.
+        // Mips ON, trilinear. Orbs are drawn far below source size: the illustrated loading
+        // plate puts a 512px orb in the footer at 9% of screen height (~100px on a phone), and
+        // the versus plate draws one at 18.5%. Without a mip chain the swirl aliases into
+        // speckle and the rim goes jagged (Sam's screenshot, 2026-11-04). Keep every orb a
+        // power-of-two square: mips on a non-power-of-two sprite import uncompressed (see
+        // ApplyUiFrame). Alpha is load-bearing (VersusOverlay composites it), so no crunch.
         static void ApplyOrb(TextureImporter importer)
         {
             ApplySpriteCommon(importer);
-            importer.mipmapEnabled = false;
+            importer.mipmapEnabled = true;
+            importer.filterMode = FilterMode.Trilinear;
             SetPlatform(importer, "Standalone", 2048, TextureImporterFormat.BC7);
             SetPlatform(importer, "Android", 1024, TextureImporterFormat.ASTC_6x6);
             SetPlatform(importer, "iPhone", 1024, TextureImporterFormat.ASTC_6x6);
