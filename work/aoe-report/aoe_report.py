@@ -1,13 +1,18 @@
 """List every card that damages or drowns a whole side, as a markdown table.
 
 A selection that equals its selector's whole pool is "all": ANY_ENEMY 8 (seven minions and the
-hero), ANY_ENEMY_MINION 7, ANY_MINION 14. Run from the repo root:
+hero), ANY_ENEMY_MINION 7, ANY_MINION 14. Runs from any directory:
     python work/aoe-report/aoe_report.py
 """
 import glob
 import json
+import sys
+from pathlib import Path
 
-CARD_DATA = "unity/Assets/CardData/*.cards.json"
+# Anchored to this file, not the working directory: a cwd-relative glob run from anywhere but
+# the repo root matched nothing and printed an empty table that read as "no area cards".
+REPO = Path(__file__).resolve().parents[2]
+CARD_DATA = str(REPO / "unity" / "Assets" / "CardData" / "*.cards.json")
 WHOLE = {("ANY_ENEMY", "8"): "all enemies",
          ("ANY_ENEMY_MINION", "7"): "enemy minions",
          ("ANY_MINION", "14"): "all minions"}
@@ -15,7 +20,10 @@ CLASS_ORDER = ["NEUTRAL"]
 
 
 def rows():
-    for path in sorted(glob.glob(CARD_DATA)):
+    paths = sorted(glob.glob(CARD_DATA))
+    if not paths:
+        sys.exit(f"no card files match {CARD_DATA}")
+    for path in paths:
         for card in json.load(open(path, encoding="utf-8")):
             backdraft, hits = 0, []
             for rule in card.get("rules", []):
