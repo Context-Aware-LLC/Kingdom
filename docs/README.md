@@ -1,11 +1,11 @@
-[![Kingdom CI — determinism gates](https://github.com/mrsonord2240/tcg-hearthlike/actions/workflows/ci.yml/badge.svg)](https://github.com/mrsonord2240/tcg-hearthlike/actions/workflows/ci.yml)
+[![Kingdom CI — determinism gates](https://github.com/Context-Aware-LLC/Kingdom/actions/workflows/ci.yml/badge.svg)](https://github.com/Context-Aware-LLC/Kingdom/actions/workflows/ci.yml)
 
 The maintained documentation is organized by audience and purpose:
 
 | Root | Audience | Contract |
 |---|---|---|
 | [`pub-docs/`](pub-docs/) | Players and community | Concise, publishable rules and policies. No internal implementation, security findings, stale plans, or unannounced specifics. |
-| [`dev-docs/`](dev-docs/) | Developers and project contributors | Concise current contracts, architecture, pipelines, operating guidance, and explicitly labeled open work. |
+| `dev-docs/` | Developers and project contributors | Concise current contracts, architecture, pipelines, operating guidance, and explicitly labeled open work. **Private** — kept in a separate repository, not this one, along with `marketing/` and `sam/`. |
 | [`hist-docs/`](hist-docs/) | Maintainers tracing project history | Loss-preserving snapshots, decisions, drafts, audits, milestone records, and superseded or repetitive context. Not a source of current truth. |
 
 Information may belong to more than one audience. Reuse the fact, but write it at the audience's level: a player-facing rule may also appear as an implementation contract, while the historical tree preserves the dated source and rationale behind both.

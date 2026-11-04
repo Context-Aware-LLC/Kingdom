@@ -50,6 +50,15 @@ the static fonts Unity ships, because Unity cannot set a variable font's axes.
 `tooling/scripts/` and `tools/ci/` hold automation.
 See `src/README.md` for the engine map.
 
+**`docs/dev-docs/`, `docs/marketing/` and `docs/sam/` are not in this repo** (2026-11-04, ahead of
+going public). They live in the private `Context-Aware-LLC/kingdom-docs` repo, cloned at
+`Documents\Project Docs\Kingdom\docs`, and each is a gitignored directory junction into that
+clone, so every `docs/dev-docs/...` path still opens. Two consequences: **an edit there is
+committed in the docs repo, not here**; and because they are gitignored, **a Grep or `rg` over
+the repo root silently skips them** — search `docs/dev-docs` by explicit path. A fresh clone or
+worktree has no junctions; make them with
+`New-Item -ItemType Junction -Path docs\<dir> -Target "<Project Docs>\Kingdom\docs\<dir>"`.
+
 **The core is `netstandard2.1`, NOT .NET 10.**
 Every `Kingdom.Core.*` project, plus `Kingdom.Net.Client` and `Kingdom.Net.Protocol`, targets `netstandard2.1` because:
 **Unity consumes them as local packages** and cannot load a `net10.0` assembly. Only `Kingdom.Net.Server`,

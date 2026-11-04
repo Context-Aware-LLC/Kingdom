@@ -10,6 +10,13 @@ For `/build`, `$build`, or a request to produce a Kingdom game build, read and f
 workflow. Treat `/build` as this project's conversational alias; Codex's skill selector uses
 `$build`. Claude Code also has a project-local `/build` entry point.
 
+## Private docs are a junction, not part of this repo
+
+`docs/dev-docs/`, `docs/marketing/` and `docs/sam/` live in the private `kingdom-docs` repo,
+cloned at `Documents\Project Docs\Kingdom\docs`; here each is a gitignored directory junction
+into that clone. Commit edits to them in the docs repo. A repo-root search skips them, so search
+them by explicit path. A fresh clone or worktree needs the junctions made (see `CLAUDE.md`).
+
 ## Product identity and tone
 
 - **The public game is _Kingdom of Bad Ideas_**, at `kingdomofbadideas.com`. `Bad Ideas` is the

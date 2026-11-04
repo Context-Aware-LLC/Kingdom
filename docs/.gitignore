@@ -9,3 +9,10 @@
 # If you find yourself wanting to re-add this directory, that is the signal to fix the
 # live doc instead. Sam will point you at the archive on the rare occasion it matters.
 hist-docs/
+
+# Private, and NOT in this repository since 2026-11-04: they live in the kingdom-docs repo, cloned
+# at Documents\Project Docs\Kingdom\docs. Locally each of these is a directory junction into that
+# clone, so every docs/dev-docs/... path in code, comments and CLAUDE.md still resolves.
+dev-docs
+marketing
+sam

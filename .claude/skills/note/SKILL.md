@@ -34,4 +34,7 @@ timeline entry on `projects/kingdom/<subject>` — see the brain rules in the gl
 ## Then
 
 Commit the doc by explicit path (`git commit --only <path>`) and push, per the standing git grant.
+Every target above is in the private docs repo, reached through a junction: commit with
+`git -C "C:\Users\User\Documents\Project Docs\Kingdom\docs"` and the path relative to it
+(`sam/sams-scratchpad.md`), never in the game repo, which ignores these files.
 Reply in one line: where it went. No restating the note.
