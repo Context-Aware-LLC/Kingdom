@@ -135,7 +135,7 @@ if (-not $Quick) {
 # Stage 2 — the .NET test suites.
 #
 # Archived out 2026-08-18, brought BACK 2026-08-24 at Sam's direction, minus the card-authoring block
-# (`CardValidation/`, plus the Unity authoring model the old csproj compiled in). Five projects.
+# (`CardValidation/`, plus the Unity authoring model the old csproj compiled in). Every test project runs.
 # The archive at C:\Users\User\Documents\emberfall-test-archive is history now, not the live copy.
 #
 # BLOCKING since 2026-08-30, which is what it now looks like: no LASTEXITCODE reset, so a red suite
@@ -171,46 +171,12 @@ Invoke-Stage 'Stage 6c · UI edge-clearance audit' {
     if ($LASTEXITCODE -ne 0) { throw "edge audit exit $LASTEXITCODE" }
     python tests/python/test_audit_edge_safety.py -v
 }
-Invoke-Stage 'Stage 6c · Training exporter tests' {
-    $exportPython = Find-Python -Import 'numpy'
-    if (-not $exportPython) {
-        throw 'No Python with NumPy found; set KINGDOM_TRAINING_PYTHON'
-    }
-    & $exportPython tests/python/test_training_exporters.py -v
-}
 Invoke-Stage 'Stage 6c2 · C# graph resolver tests' {
     $resolverPython = Find-Python
     if (-not $resolverPython) {
         throw 'No runnable Python found; set KINGDOM_TRAINING_PYTHON'
     }
-    & $resolverPython tests/python/test_capture_my_games.py -v
-    if ($LASTEXITCODE -ne 0) { throw "capture tests exit $LASTEXITCODE" }
     & $resolverPython tests/python/test_csharp_resolver.py -v
-}
-Invoke-Stage 'Stage 6d · Training trainer tests' {
-    $trainingPython = Find-Python -Import 'numpy, torch'
-    if (-not $trainingPython) {
-        throw 'No Python with NumPy and Torch found; set KINGDOM_TRAINING_PYTHON'
-    }
-    $previousRequirement = $env:KINGDOM_REQUIRE_TORCH
-    try {
-        $env:KINGDOM_REQUIRE_TORCH = '1'
-        & $trainingPython tests/python/test_training_trainer.py -v
-        if ($LASTEXITCODE -ne 0) {
-            throw "Training trainer tests failed with exit code $LASTEXITCODE."
-        }
-
-        & $trainingPython tests/python/test_training_exporters.py -v -k checkpoint_scorer
-        if ($LASTEXITCODE -ne 0) {
-            throw "Live checkpoint scorer test failed with exit code $LASTEXITCODE."
-        }
-    } finally {
-        if ($null -eq $previousRequirement) {
-            Remove-Item Env:KINGDOM_REQUIRE_TORCH -ErrorAction SilentlyContinue
-        } else {
-            $env:KINGDOM_REQUIRE_TORCH = $previousRequirement
-        }
-    }
 }
 
 if ($Nightly) {

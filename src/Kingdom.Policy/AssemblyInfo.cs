@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 // widened to public for two callers' benefit.
 [assembly: InternalsVisibleTo("Kingdom.Tools.NetSoak")]
 // The checkpoint, search and league commands left NetSoak for the training half of the harness.
+// Kingdom.Tools.TrainingSoak(.Tests) and Kingdom.Tools.TrainingCorpus live in the private kingdom-training repo, which builds against this one as its game/ submodule.
 [assembly: InternalsVisibleTo("Kingdom.Tools.TrainingSoak")]
 [assembly: InternalsVisibleTo("Kingdom.Tools.TrainingSoak.Tests")]
 [assembly: InternalsVisibleTo("Kingdom.Net.Server")]

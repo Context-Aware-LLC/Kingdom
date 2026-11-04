@@ -334,7 +334,7 @@ namespace Kingdom.Core.Contracts
         // RETIREMENT TRIGGER: adding a second member here ends this enum's carve-out in
         // WireMutationSweepTests.Mutated_Field_Survives_The_Wire.
         // Drop "PendingChoice.Kind" from that branch in the same commit.
-        // RETIREMENT TRIGGER: Kingdom.Tools.TrainingSoak's Determinizer.DeterminizeFair carries the
+        // RETIREMENT TRIGGER: Kingdom.Tools.TrainingSoak's (kingdom-training repo) Determinizer.DeterminizeFair carries the
         // viewer's own Unearth into a sampled world, on an argument that is about Unearth alone
         // (nothing in it is hidden from its chooser). A second member is declined there until
         // that argument is made for it; make it, or the fair search silently stops searching it.

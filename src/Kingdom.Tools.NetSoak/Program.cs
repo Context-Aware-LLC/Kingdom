@@ -1682,7 +1682,7 @@ namespace Kingdom.Tools.NetSoak
             var md = new System.Text.StringBuilder();
             md.Append("# Kingdom balance corpus (EF-030)\n\n");
             // Name the directory actually ground: KINGDOM_BALANCE_CORPUS points this at other
-            // populations (bot_roster_to_corpus.py), and a header claiming the hand-authored set
+            // populations (kingdom-training: bot_roster_to_corpus.py), and a header claiming the hand-authored set
             // would mislabel those grids.
             string corpusDir = Environment.GetEnvironmentVariable("KINGDOM_BALANCE_CORPUS") is { Length: > 0 } env
                 ? env : BalanceCorpusLoader.RepoRelativeDir;
@@ -2047,7 +2047,7 @@ namespace Kingdom.Tools.NetSoak
         ///
         /// <para>RETIREMENT TRIGGER: if <c>PrebuiltDecks.EmberwardVsTidecaller</c> stops resolving to
         /// <see cref="DefaultCorpusHeroHp"/>, the first paragraph is wrong — fix it here, in
-        /// <c>tooling/scripts/bot_roster_to_corpus.py</c>, and in that method's own comment.</para>
+        /// <c>kingdom-training: tooling/scripts/bot_roster_to_corpus.py</c>, and in that method's own comment.</para>
         /// </summary>
         private static int ParseHeroHp(string[] args)
         {

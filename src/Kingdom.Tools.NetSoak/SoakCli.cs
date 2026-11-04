@@ -253,6 +253,8 @@ namespace Kingdom.Tools.NetSoak
                 // remains deterministic and KINGDOM_BUILD_REVISION can pin a deployment explicitly.
             }
 
+            // NOTE: this is NetSoak's own assembly even when Kingdom.Tools.TrainingSoak (kingdom-training) calls
+            // ResolveBuildRevision, so the revision a kingdom-training run reports is the game's NetSoak assembly's.
             return typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
                 .InformationalVersion ?? "unknown-build";
         }

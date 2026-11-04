@@ -238,3 +238,6 @@ tooling/auditor/**
 card-admin/cardweb
 # Profiler captures: generated, and a single .data file runs past the 100 MB GitHub limit.
 unity/ProfilerCaptures/
+
+# Trained bot models live in the private kingdom-training repo; the files stay on disk locally.
+tooling/data/bot-model/

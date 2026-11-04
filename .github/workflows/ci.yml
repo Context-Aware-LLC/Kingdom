@@ -245,26 +245,9 @@ jobs:
       # .NET side cannot do — it reads Targeting's selector switch and TargetSpec's default-choice
       # policy, then fails (exit 2) when either structural seam is incomplete. C14b is only as
       # true as that policy.
-      - name: "Stage 6c · Training exporter tests (stdlib unittest)"
-        run: python3 tests/python/test_training_exporters.py -v
-
       - name: "Stage 6c2 · C# graph resolver tests (stdlib unittest)"
         run: |
-          python3 tests/python/test_capture_my_games.py -v
           python3 tests/python/test_csharp_resolver.py -v
-
-      - name: "Stage 6d · Install training trainer validation dependency"
-        run: python3 -m pip install "numpy>=1.26"
-
-      - name: "Stage 6d · Install CPU Torch for model and learnability tests"
-        run: python3 -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-
-      - name: "Stage 6d · Training trainer tests"
-        env:
-          KINGDOM_REQUIRE_TORCH: "1"
-        run: |
-          python3 tests/python/test_training_trainer.py -v
-          python3 tests/python/test_training_exporters.py -v -k checkpoint_scorer
 
       # CardCi (Stage 6 above) warns on missing art — placeholder-art policy, M2 decision 18.
       # This step closes the gap for artIds that point at filenames that never existed: it fails

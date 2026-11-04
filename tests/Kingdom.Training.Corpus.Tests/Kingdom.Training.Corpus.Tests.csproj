@@ -26,7 +26,6 @@
     <ProjectReference Include="..\..\src\Kingdom.Net.Server\Kingdom.Net.Server.csproj" />
     <ProjectReference Include="..\..\src\Kingdom.Training.Corpus\Kingdom.Training.Corpus.csproj" />
     <ProjectReference Include="..\..\src\Kingdom.Tools.NetSoak\Kingdom.Tools.NetSoak.csproj" />
-    <ProjectReference Include="..\..\src\Kingdom.Tools.DecisionReview\Kingdom.Tools.DecisionReview.csproj" />
     <!-- FixtureCard/ShippedCards: one definition of "a card id in a fixture", shared. -->
     <ProjectReference Include="..\Kingdom.Core.Tests\Kingdom.Core.Tests.csproj" />
   </ItemGroup>
