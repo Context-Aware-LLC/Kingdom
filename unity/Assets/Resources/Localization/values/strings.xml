@@ -194,7 +194,7 @@
     <!-- Button on class detail view when the class is already picked. -->
     <string name="deck_create_detail_deselect_button">Deselect</string>
     <!-- Confirm view summary. %1$s = primary class name, %2$s = secondary class name. -->
-    <string name="deck_create_confirm_summary">%1$s + %2$s — %1$s\'s Hero Power, cards from both. This pairing is permanent.</string>
+    <string name="deck_create_confirm_summary">%1$s + %2$s — %1$s\'s Hero Power, cards from both.</string>
     <!-- Same button for a player with no decks yet. -->
     <string name="deck_create_first_deck_button">Build my first deck</string>
     <!-- Confirm view note. %1$s = primary class, %2$s = secondary class. -->
