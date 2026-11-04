@@ -14,7 +14,7 @@ namespace Kingdom.Tools.NetSoak
     /// Checks the ONNX bot against the Python scorer it replaces, two ways.
     ///
     /// <para><c>onnx-parity &lt;fixture.jsonl&gt; &lt;bot-model-dir&gt;</c> reads decisions the
-    /// Python encoder already encoded and scored (<c>training_trainer onnx-parity-fixture</c>) and
+    /// Python encoder already encoded and scored (<c>training_trainer onnx-parity-fixture</c>, in kingdom-training) and
     /// requires the C# encoder to produce every input array EXACTLY, and ONNX Runtime to reproduce
     /// the logits to <see cref="LogitTolerance"/> and the argmax always.</para>
     ///

@@ -11,7 +11,7 @@ namespace Kingdom.Policy
 {
     /// <summary>
     /// A checkpoint scored in-process through ONNX Runtime: no Python, no subprocess. Reads a
-    /// bot-model directory written by <c>python -m tooling.scripts.training_trainer export-onnx</c>
+    /// bot-model directory written (in the private kingdom-training repo) by <c>python -m tooling.scripts.training_trainer export-onnx</c>
     /// (<c>model.onnx</c> and <c>bot-model.json</c>) and builds the network's inputs with
     /// <see cref="PolicyDecisionEncoder"/>, the C# port of the Python encoder.
     ///

@@ -110,7 +110,7 @@ namespace Kingdom.Tools.NetSoak
                     "live" => Fail("usage: live <wss-url> [matches] [--latency ms] [--jitter ms] [--loss permille] [--disconnect frames]"),
                     "liveai" => await RunLiveAiAsync(args),
                     "onnx-parity" when args.Length >= 3 => OnnxParity.RunFixture(args),
-                    "onnx-parity" => Fail("usage: onnx-parity <fixture.jsonl> <bot-model-dir>  (fixture from: python -m tooling.scripts.training_trainer onnx-parity-fixture)"),
+                    "onnx-parity" => Fail("usage: onnx-parity <fixture.jsonl> <bot-model-dir>  (fixture from, in kingdom-training: python -m tooling.scripts.training_trainer onnx-parity-fixture)"),
                     "fault" => await RunFaultSelfTestAsync(),
                     "join" when args.Length >= 2 => await RunJoinAsync(new Uri(args[1])),
                     "join" => Fail("usage: join <wss-url>"),
