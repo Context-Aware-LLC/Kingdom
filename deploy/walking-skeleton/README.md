@@ -16,9 +16,14 @@ designed — "do not grow the echo; start `Kingdom.Net.Server` fresh."
 
 ## Deploying an update
 
-1. From the **repo root** (that is where `fly.toml` lives, and the image builds FROM THE REPO
+1. Fetch the champion bot model from the private training repo (`tooling/data/bot-model/` is
+   gitignored and `Dockerfile.server` COPYs it; the build fails without it). From the repo root:
+   `pwsh deploy/walking-skeleton/fetch-bot-model.ps1 -TrainingRepo C:/Users/User/Documents/kingdom-training`
+   It copies the model named in `models/champion.json` and exits non-zero unless the C#
+   encoder reproduces the model's `parity-fixture.jsonl` with `encodingMismatches=0`.
+2. From the **repo root** (that is where `fly.toml` lives, and the image builds FROM THE REPO
    ROOT — RC F4, since `Dockerfile.server` needs `src/` + the card data): `fly deploy`.
-2. Verify from off-network: `curl https://emberfall.fly.dev/healthz` →
+3. Verify from off-network: `curl https://emberfall.fly.dev/healthz` →
    `{"status":"ok","sessions":0,"cap":64,...}`, then connect two WebSocket clients to
    `wss://emberfall.fly.dev/ws` and confirm both receive `match_start`.
 
