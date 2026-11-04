@@ -28,3 +28,11 @@
 -keep class com.google.android.gms.common.api.** { *; }
 -keep class com.google.android.gms.common.data.DataBufferUtils { *; }
 -keep class com.google.android.gms.nearby.** { *; }
+
+# Google Play Billing, used by Unity IAP 5. IAP reaches it only through JNI (an AndroidJavaProxy for
+# PurchasesUpdatedListener and calls by name), and IAP 5 relies on the billing AAR's own consumer
+# rules being merged, which this build does not get. Without these R8 removes the library and the
+# gem store fails to start with ClassNotFoundException: PurchasesUpdatedListener (0.0.19, Sentry
+# UNITY-6, 2026-11-04). Unity's published workaround for IAP 5.3.1+.
+-keep class com.android.billingclient.api.** { *; }
+-keep interface com.android.billingclient.api.* { *; }
