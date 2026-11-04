@@ -67,7 +67,7 @@ namespace Kingdom.Core.Cards
                 // AURA is an activation, not a trigger, so it cannot come back through TryTrigger's
                 // enum sweep — it has no Trigger member to be. Its marker is taken first and the rest
                 // of the sentence reads exactly like any other run of effects.
-                // "Deals 2 instead if…" is not a rule of its own: it amends the damage the
+                // "Deals 2 if…" is not a rule of its own: it amends the damage the
                 // sentence before it read.
                 if (TryInstead(sentence, parsed)) continue;
 

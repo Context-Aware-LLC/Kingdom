@@ -1,8 +1,8 @@
 {
   "1": {
     "name": "Sengender Bolzen",
-    "text": "Verursache {dmg:1} Schaden. Stattdessen {dmg:2}, wenn dein Held in diesem Zug Schaden erlitten hat.",
-    "src": "79043496c6d4713e"
+    "text": "Verursache {dmg:1} Schaden, oder {dmg:2}, wenn dein Held in diesem Zug Schaden erlitten hat.",
+    "src": "641b533b1864b67c"
   },
   "2": {
     "name": "Gezeitenschutz",

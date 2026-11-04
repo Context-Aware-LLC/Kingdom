@@ -14,7 +14,7 @@ She has one answer, and it is fire. She aims it at the enemy hero from the first
 - Cards that trade Health for power.
 - Minions that attack the turn you play them.
 
-**Searing Bolt:** Deal 1 damage. Deals 2 instead if your hero has taken damage this turn.
+**Searing Bolt:** Deal 1 damage. Deals 2 if your hero has taken damage this turn.
 
 ## [Clockwright](https://kingdomofbadideas.com/docs/heroes/clockwright)
 

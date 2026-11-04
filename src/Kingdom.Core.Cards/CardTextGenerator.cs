@@ -501,7 +501,7 @@ namespace Kingdom.Core.Cards
             foreach (RuleAction action in actions)
             {
                 if (!(action is DamageAction damage) || !damage.InsteadAmount.HasValue) continue;
-                // "Deals 2 instead" has to have one damage to stand in for. In a joined run it would
+                // "Deals 2 if…" has to have one damage to stand in for. In a joined run it would
                 // read against whichever clause happened to come last.
                 if (actions.Count != 1) throw Unsupported("action", "DAMAGE with an instead-amount in a joined run");
                 sentence += " " + InsteadSentence(damage);
@@ -553,13 +553,13 @@ namespace Kingdom.Core.Cards
             }
         }
 
-        /// <summary>"Deals 2 instead if your hero has taken damage this turn."</summary>
+        /// <summary>"Deals 2 if your hero has taken damage this turn." No "instead" (Sam, 2026-11-03).</summary>
         /// <remarks>The condition is spoken by <see cref="ConditionPrefix"/> and only re-cased here, so
         /// a condition reads the same whether it gates a rule or switches an amount.</remarks>
         private static string InsteadSentence(DamageAction damage)
         {
             string condition = ConditionPrefix(damage.InsteadCondition!).TrimEnd(' ', ',');
-            return $"Deals {Damage(damage.InsteadAmount!.Value)} instead {Decapitalize(condition)}.";
+            return $"Deals {Damage(damage.InsteadAmount!.Value)} {Decapitalize(condition)}.";
         }
 
         /// <summary>How a rider is spoken, for a parser that must match what was printed.</summary>
