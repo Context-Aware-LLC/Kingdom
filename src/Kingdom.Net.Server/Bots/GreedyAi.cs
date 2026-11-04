@@ -18,7 +18,7 @@ namespace Kingdom.Net.Server.Bots
     /// recorded before this date was measured against v2 and does NOT compare to one measured
     /// after. A league directory initialised against v2 is refused by <c>PolicyLeague.Validate</c>
     /// rather than quietly continued — re-init it. See
-    /// <c>docs/dev-docs/project/rl-training-history.md</c> §14.</para>
+    /// <c>docs/rl-training-history.md</c> §14.</para>
     ///
     /// <para><b>The Unity <c>Kingdom.AI.PlayingAi</c> was NOT given the v3 changes.</b> It used
     /// to be kept in step with this file; it only fills our own seat, so it was left at the v2

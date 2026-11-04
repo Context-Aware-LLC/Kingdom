@@ -8,6 +8,8 @@ The maintained documentation is organized by audience and purpose:
 | `dev-docs/` | Developers and project contributors | Concise current contracts, architecture, pipelines, operating guidance, and explicitly labeled open work. **Private** — kept in a separate repository, not this one, along with `marketing/` and `sam/`. |
 | [`hist-docs/`](hist-docs/) | Maintainers tracing project history | Loss-preserving snapshots, decisions, drafts, audits, milestone records, and superseded or repetitive context. Not a source of current truth. |
 
+The bot-training write-ups sit at this root: [`rl-training-history.md`](rl-training-history.md), the whole arc, and [`rl-training-generation-1.md`](rl-training-generation-1.md), the first generation.
+
 Information may belong to more than one audience. Reuse the fact, but write it at the audience's level: a player-facing rule may also appear as an implementation contract, while the historical tree preserves the dated source and rationale behind both.
 
 ## Maintenance rules
