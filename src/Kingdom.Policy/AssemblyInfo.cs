@@ -11,6 +11,9 @@ using System.Runtime.CompilerServices;
 // the SERVER could serve a learned bot. The grants follow the code rather than the code being
 // widened to public for two callers' benefit.
 [assembly: InternalsVisibleTo("Kingdom.Tools.NetSoak")]
+// The checkpoint, search and league commands left NetSoak for the training half of the harness.
+[assembly: InternalsVisibleTo("Kingdom.Tools.TrainingSoak")]
+[assembly: InternalsVisibleTo("Kingdom.Tools.TrainingSoak.Tests")]
 [assembly: InternalsVisibleTo("Kingdom.Net.Server")]
 [assembly: InternalsVisibleTo("Kingdom.Net.Server.Tests")]
 // The corpus tool hands DistinctPlayKey to the builder, which sits beneath this assembly and so

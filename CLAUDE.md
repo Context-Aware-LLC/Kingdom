@@ -118,7 +118,7 @@ tables. The spec doc is a copy of those, and the copy is the thing to fix.
 have to move together are the canonical serializer, the projection and the snapshot codec — miss one
 and the client and server disagree about a state neither can prove wrong.
 
-**A `dotnet test` that matches zero tests exits 0.** All five .NET test projects must stay
+**A `dotnet test` that matches zero tests exits 0.** Every .NET test project must stay
 registered in `Kingdom.slnx`, because a run that matches nothing is green for the wrong reason.
 **Read the count, not the badge.**
 

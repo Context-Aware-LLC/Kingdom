@@ -160,7 +160,7 @@ jobs:
       #
       # Archived out 2026-08-18, brought back at Sam's direction on 2026-08-24 minus the
       # card-authoring block (`CardValidation/`, plus the Unity authoring model the old csproj
-      # compiled in). All five projects are registered in Kingdom.slnx — which matters, because a
+      # compiled in). Every test project is registered in Kingdom.slnx — which matters, because a
       # `dotnet test` matching zero tests exits 0 and would make this job green for the wrong
       # reason. Read the count, not the exit code.
       #

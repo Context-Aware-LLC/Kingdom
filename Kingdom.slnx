@@ -18,6 +18,7 @@
     <Project Path="src/Kingdom.Tools.OddsDisclosure/Kingdom.Tools.OddsDisclosure.csproj" />
     <Project Path="src/Kingdom.Tools.TelemetryVerify/Kingdom.Tools.TelemetryVerify.csproj" />
     <Project Path="src/Kingdom.Tools.TrainingCorpus/Kingdom.Tools.TrainingCorpus.csproj" />
+    <Project Path="src/Kingdom.Tools.TrainingSoak/Kingdom.Tools.TrainingSoak.csproj" />
     <Project Path="src/Kingdom.Tools.StoreReconcile/Kingdom.Tools.StoreReconcile.csproj" />
     <Project Path="src/Kingdom.Tools.AccountDelete/Kingdom.Tools.AccountDelete.csproj" />
     <Project Path="src/Kingdom.Training.Corpus/Kingdom.Training.Corpus.csproj" />
@@ -28,5 +29,6 @@
     <Project Path="tests/Kingdom.Net.Protocol.Tests/Kingdom.Net.Protocol.Tests.csproj" />
     <Project Path="tests/Kingdom.Net.Server.Tests/Kingdom.Net.Server.Tests.csproj" />
     <Project Path="tests/Kingdom.Training.Corpus.Tests/Kingdom.Training.Corpus.Tests.csproj" />
+    <Project Path="tests/Kingdom.Tools.TrainingSoak.Tests/Kingdom.Tools.TrainingSoak.Tests.csproj" />
   </Folder>
 </Solution>

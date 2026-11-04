@@ -149,8 +149,8 @@ if (-not $Quick) {
 # live in this block, and the "STAGE 2" section of the summary at the bottom of this file. The
 # stage names its own failures now, and a second voice saying so was only ever noise.
 #
-# A `dotnet test` MATCHING ZERO TESTS EXITS 0, so blocking is not the same as verified: all five
-# projects must stay registered in Kingdom.slnx or this stage is green for the wrong reason.
+# A `dotnet test` MATCHING ZERO TESTS EXITS 0, so blocking is not the same as verified: every test
+# project must stay registered in Kingdom.slnx or this stage is green for the wrong reason.
 # Read the count, not the badge.
 Invoke-Stage 'Stage 2 · .NET test suites' {
     dotnet test Kingdom.slnx -c Release --no-build --nologo

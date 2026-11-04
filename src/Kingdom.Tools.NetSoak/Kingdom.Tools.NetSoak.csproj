@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Kingdom.Tools.NetSoak — the B3 soak-harness SEAM (hist-docs/source-snapshots/2026-07-31-pre-reorganization/engineering/b3-networked-session-design.md §10,
+    commit 2). A net10 console app that drives NetworkedMatchSession against B1's REAL MatchSession,
+    over LoopbackTransport (deterministic, offline) or real wss (the live droplet), asserting
+    per-message hash integrity (the client's RC-F8 verify, armed in all builds) and terminal-outcome
+    agreement with the replay log, and SURFACING the RC-F7 mis-attribution counter — the evidence
+    gate for appliedSeq at G1 (ruling 2). This is the SEAM; the full run (hundreds of matches,
+    latency/loss gates, real AI via the F6 port) is Phase 3.
+
+    Doc said tools/Kingdom.Net.Soak; as-built follows the Kingdom.Tools.CardCi precedent
+    (a tool lives in src/ as Kingdom.Tools.*). b3 §10/§14 reconciled to this path.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>Kingdom.Tools.NetSoak</AssemblyName>
+    <RootNamespace>Kingdom.Tools.NetSoak</RootNamespace>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!--
+    SERVER GC IS WHAT MAKES `workers` WORTH PASSING. A soak game allocates about 180 MB, so the
+    workstation collector, which stops every thread for each collection, makes twelve workers
+    SLOWER than one (measured 2026-10-06, 448 Greedy games: 11.0/s serial, 6.8/s at 12 workers on
+    workstation GC, 37.9/s on server GC). It costs a serial run nothing. The remaining ceiling,
+    about 45 games/s on this machine at any worker or process count, is allocation volume, not
+    the collector: `[ai] throughput` prints the pause time and bytes allocated on every run.
+    Nearly all of that volume is the client/server loopback (about 1.5 MB per intent in snapshots
+    and hashes); Greedy's own decision allocates about 1 KB. Numbers and scripts:
+    work/parallel-rollouts/result-20261006.md.
+  -->
+  <PropertyGroup>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      EF-075 `liveai` boots the REAL ServerApp Kestrel host in-process (real sockets, no deploy), so
+      this tool compiles against the ASP.NET Core shared framework. The reference does NOT flow
+      transitively from the Web-SDK Kingdom.Net.Server, so it is declared explicitly here — the same
+      framework the server already loads at runtime; nothing state-adjacent, no Firewall impact.
+    -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kingdom.Core.Contracts\Kingdom.Core.Contracts.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Cards\Kingdom.Core.Cards.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Collection\Kingdom.Core.Collection.csproj" />
+    <ProjectReference Include="..\Kingdom.Core.Serialization\Kingdom.Core.Serialization.csproj" />
+    <ProjectReference Include="..\Kingdom.Core\Kingdom.Core.csproj" />
+    <ProjectReference Include="..\Kingdom.Net.Protocol\Kingdom.Net.Protocol.csproj" />
+    <ProjectReference Include="..\Kingdom.Net.Server\Kingdom.Net.Server.csproj" />
+    <ProjectReference Include="..\Kingdom.Net.Client\Kingdom.Net.Client.csproj" />
+    <ProjectReference Include="..\Kingdom.Training.Corpus\Kingdom.Training.Corpus.csproj" />
+    <ProjectReference Include="..\Kingdom.Policy\Kingdom.Policy.csproj" />
+  </ItemGroup>
+
+</Project>

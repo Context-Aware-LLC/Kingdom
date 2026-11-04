@@ -134,7 +134,7 @@ another batch size. Without the flag nothing changes. Measurements and the confi
 in `work/gpu-batching/result-20261011.md`.
 
 ```powershell
-dotnet run --project src/Kingdom.Tools.NetSoak -c Release -- rollout 2 `
+dotnet run --project src/Kingdom.Tools.TrainingSoak -c Release -- rollout 2 `
   "F:\EmberfallData\exports\<rl-export>" "F:\EmberfallData\runs\<run>\best-model.pt" `
   "F:\EmberfallData\rollouts\<new-capture>" --all-classes --deck-dir "<deck pool>" `
   --selection fair-search --search-plays 4 --search-sims 32 --workers 4 --scorer-processes 10
