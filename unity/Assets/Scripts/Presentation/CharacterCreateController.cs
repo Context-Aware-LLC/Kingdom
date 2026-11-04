@@ -203,8 +203,8 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>
-        /// One PLATE per class (#312): the class portrait, the class name, and the class's hero
-        /// power on a line beneath it, so the pick is no longer blind. Before this the plate was
+        /// One PLATE per class (#312): the hero portrait, "Hero - Class", and the hero power's ring
+        /// captioned with its name. What the power does is the detail view's. Before this the plate was
         /// the class name and nothing else — eight labels in boxes, distinguished only by a
         /// coloured spine.
         ///
@@ -257,19 +257,24 @@ namespace Kingdom.Presentation
             var body = new VisualElement { pickingMode = PickingMode.Ignore };
             body.AddToClassList("hero-choice-body");
 
-            var name = new Label(prettyName) { pickingMode = PickingMode.Ignore };
+            var name = new Label(HeroTitle(heroClass)) { pickingMode = PickingMode.Ignore };
             name.AddToClassList("hero-choice-name");
             body.Add(name);
 
-            var power = new Label(HeroPowerLine(heroClass)) { pickingMode = PickingMode.Ignore };
-            power.AddToClassList("hero-choice-power");
-            // On pass 2 the power line is still WORTH SHOWING and no longer TRUE of this pick: the
+            plate.Add(body);
+
+            // The plate names the power and shows its ring; what it DOES waits for the detail
+            // view (Sam, 2026-11-03), so the picker reads as eight heroes, not eight rules texts.
+            var powerSlot = new VisualElement { pickingMode = PickingMode.Ignore };
+            powerSlot.AddToClassList("hero-choice-power-slot");
+            var powerTitle = new Label(HeroPowerName(heroClass)) { pickingMode = PickingMode.Ignore };
+            powerTitle.AddToClassList("hero-choice-power-name");
+            // On pass 2 the power is still WORTH SHOWING and no longer TRUE of this pick: the
             // secondary class contributes cards only. Dimming says "this is information about the
             // class, not about what you are choosing" without making the plates change shape
             // between the two passes.
-            power.EnableInClassList("hero-choice-power--muted", !ChoosingPrimary);
-            body.Add(power);
-            plate.Add(body);
+            powerSlot.EnableInClassList("hero-choice-power--muted", !ChoosingPrimary);
+            powerSlot.Add(powerTitle);
 
             // The hero power's own socket ring, holding the class's hero-power art (#312). Both
             // halves already existed and neither was reachable from this screen: the ring is the
@@ -287,7 +292,8 @@ namespace Kingdom.Presentation
             glyph.AddToClassList("hero-choice-glyph");
             glyph.AddToClassList("class-tab_art-" + heroClass.ToString().ToLowerInvariant());
             ring.Add(glyph);
-            plate.Add(ring);
+            powerSlot.Add(ring);
+            plate.Add(powerSlot);
 
             if (selected)
             {
@@ -300,22 +306,27 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>
-        /// "Searing Bolt · Deal 1 damage." — the class's hero power, read off the power CARD by way
-        /// of <see cref="HeroPowers.ForClass"/>, the same seam the detail view and match start use.
-        /// A class with no power card yields an empty line rather than a placeholder.
-        ///
-        /// <para><b>Unstyled on purpose, unlike the detail view's copy of the same string.</b>
-        /// <c>CardTextStyling.Style</c> wraps keywords in <c>&lt;size=120%&gt;</c>, which grows the
-        /// line box — on a plate with ~50dp of room under the class name that is the difference
-        /// between two lines fitting and the second one being clipped. The emphasis is worth its
-        /// height in the detail panel and is not worth it here.</para>
+        /// "Pyra - Emberward": the class's hero, then the class. The hero's name has one home,
+        /// the voice-line table the versus banter is generated from, so a renamed hero is renamed
+        /// here too. A class with no hero there shows the class alone.
         /// </summary>
-        private string HeroPowerLine(CardClass heroClass)
+        private static string HeroTitle(CardClass heroClass)
+        {
+            string hero = VersusBanterLines.HeroName(heroClass);
+            string label = CardClassTokens.Label(heroClass);
+            return string.IsNullOrEmpty(hero) ? label : Loc.Format("deck_create_hero_title", hero, label);
+        }
+
+        /// <summary>
+        /// The class's hero power's name, read off the power CARD by way of
+        /// <see cref="HeroPowers.ForClass"/>, the same seam the detail view and match start use.
+        /// A class with no power card yields an empty caption rather than a placeholder.
+        /// </summary>
+        private string HeroPowerName(CardClass heroClass)
         {
             int powerId = HeroPowers.ForClass(heroClass);
             if (_db == null || powerId <= 0 || !_db.TryGet(powerId, out CardDefinition power)) return "";
-            string name = CardLoc.Name(power, _db), text = CardLoc.PlainText(power, _db);
-            return string.IsNullOrEmpty(text) ? name : $"{name} · {text}";
+            return CardLoc.Name(power, _db);
         }
 
         /// <summary>
@@ -357,7 +368,7 @@ namespace Kingdom.Presentation
                     if (sprite != null) _detailPortrait.style.backgroundImage = new StyleBackground(sprite);
                 });
             }
-            if (_detailName != null) _detailName.text = CardClassTokens.Label(heroClass);
+            if (_detailName != null) _detailName.text = HeroTitle(heroClass);
             if (_detailPass != null)
                 _detailPass.text = ChoosingPrimary
                     ? Loc.Get("deck_create_detail_primary_hint")

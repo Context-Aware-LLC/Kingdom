@@ -186,6 +186,7 @@
     <string name="deck_create_error_collection_unavailable">Collection unavailable — see the console.</string>
     <!-- Tooltip on a class plate in the class picker. %1$s = class name. -->
     <string name="deck_create_class_tooltip">View %1$s</string>
+    <string name="deck_create_hero_title">%1$s - %2$s</string>
     <!-- Class detail view, first pick (primary class). -->
     <string name="deck_create_detail_primary_hint">Selecting this class locks in its Hero Power.</string>
     <!-- Class detail view, second pick. %1$s = primary class name (possessive in English; rephrase freely). -->

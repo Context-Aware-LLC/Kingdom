@@ -793,22 +793,17 @@
  * panel, i.e. 6% of its height. (It was the `expanded` step of a screen-class run; #349 deleted
  * the run and folded that step into the base, so 26 is simply the value now.) The same 26 is 2.4% of 1080 and
  * reads as a caption beside a 204-unit portrait. 56 restores the proportion the token was chosen
- * for. Same reasoning for the power line below. */
+ * for. The title ("Fenwick - Clockwright") has the body to itself since the power's description
+ * moved to the detail view; white-space: normal is the fallback for a narrow column, where a
+ * second line is better than a cut word. */
 .hero-choice-name {
     font-size: 56px;
     -unity-font-style: bold;
     color: var(--ink-1);
-}
-
-/* white-space: normal so the two long powers (Chain Spark, Backstab) wrap to a second line rather
- * than being cut mid-word. There is room for it now: 56 + 2 x ~40 = 136 of the 204 the plate has,
- * where at the old size a two-line power measured 45 against 38 of remaining space and clipped. */
-.hero-choice-power {
-    font-size: 32px;
-    color: var(--ink-2);
     white-space: normal;
 }
 
+/* Pass 2: the power-slot (its name and ring) is about the class, not about this pick. */
 .hero-choice-power--muted {
     opacity: 0.5;
 }
@@ -819,8 +814,10 @@
  * Board/hero-power.png (the same ring the board loads) was cut at 1424x1424 with a 730x747 aperture, so the hole is 0.5126 of
  * the file. It ships at 512x512 (power-of-two, so the mipped texture can compress); the fraction
  * is unchanged.
- * Drawn at 200 the hole is ~103 across, and the glyph inside is sized to 92 so a little metal
- * always overlaps it rather than the two meeting on a seam.
+ * Drawn at 152 the hole is ~78 across, and the glyph inside is sized to 70 so a little metal
+ * always overlaps it rather than the two meeting on a seam. 152, not the old 200, because the
+ * power's name now sits above the ring inside the same 204 of plate height: ~40 of label, 4 of
+ * gap, 152 of ring.
  *
  * BOTH NUMBERS MOVE WHEN THE SPRITE IS RE-CUT, and nothing warns. This ring has already been
  * re-exported twice: the first install was ap/canvas 0.5748, where 200 would have given a 115 hole
@@ -830,12 +827,26 @@
  *
  * The ring is a plain background-image, not a 9-slice: it is round, and slicing a circle stretches
  * its middle into a capsule. Fixed size and scale-to-fit are the only correct treatment. */
-.hero-choice-ring {
-    width: 200px;
-    height: 200px;
+/* The ring and the power's name above it, as one column on the right of the plate. */
+.hero-choice-power-slot {
     flex-shrink: 0;
     align-self: center;
+    align-items: center;
     margin-left: var(--space-4);
+}
+
+.hero-choice-power-name {
+    font-size: 32px;
+    -unity-font-style: bold;
+    color: var(--ink-1);
+    -unity-text-align: middle-center;
+    margin-bottom: var(--space-1);
+}
+
+.hero-choice-ring {
+    width: 152px;
+    height: 152px;
+    flex-shrink: 0;
     background-image: url("/Assets/Art/UI/Board/hero-power.png");
     -unity-background-scale-mode: scale-to-fit;
     align-items: center;
@@ -845,9 +856,9 @@
 /* scale-to-fit, NOT scale-and-crop: the hero-power arts are square and full-bleed, and cropping
  * one into the ring's circle would cut the glyph rather than frame it. */
 .hero-choice-glyph {
-    width: 92px;
-    height: 92px;
-    border-radius: 46px;
+    width: 70px;
+    height: 70px;
+    border-radius: 35px;
     -unity-background-scale-mode: scale-to-fit;
 }
 

@@ -131,6 +131,7 @@
     <string name="shop_gem_status_failed">Der Kauf hat nicht geklappt.</string>
     <string name="deck_create_error_collection_unavailable">Sammlung nicht verfügbar – siehe Konsole.</string>
     <string name="deck_create_class_tooltip">%1$s ansehen</string>
+    <string name="deck_create_hero_title">%1$s - %2$s</string>
     <string name="deck_create_detail_primary_hint">Mit dieser Klasse legst du ihre Heldenkraft fest.</string>
     <string name="deck_create_detail_secondary_hint">Diese Klasse fügt deinem Pool ihre Karten hinzu. Deine Heldenkraft bleibt die von %1$s.</string>
     <string name="deck_create_detail_deselect_button">Abwählen</string>
