@@ -63,7 +63,6 @@ namespace Kingdom.Presentation
         private AspectRatioFitter _aspect;
         private RawImage _picture;
         private RawImage _splash;
-        private UnityWebRequest _download;
         private bool _prepared;
         private bool _finished;
 
@@ -184,10 +183,36 @@ namespace Kingdom.Presentation
 
             if (!File.Exists(cachedPath))
             {
-                bool downloaded = false;
-                yield return DownloadFilm(cachedPath, ok => downloaded = ok);
+                string url = ResolveVideoUrl();
+                if (string.IsNullOrEmpty(url))
+                {
+                    Debug.LogWarning("[OpeningCinematic] no Supabase project configured; " +
+                                     "skipping the opening film.");
+                    Complete();
+                    yield break;
+                }
+
+                OpeningFilmDownload.Begin(url, cachedPath);
+
+                float deadline = Time.realtimeSinceStartup + DownloadTimeoutSeconds;
+                while (OpeningFilmDownload.InProgress && !_finished)
+                {
+                    // The deadline only guards against a connection that never starts moving —
+                    // once real bytes are landing, let it run to completion regardless of size.
+                    if (OpeningFilmDownload.DownloadedBytes == 0 && Time.realtimeSinceStartup > deadline)
+                    {
+                        OpeningFilmDownload.Abort();
+                        break;
+                    }
+                    yield return null;
+                }
+
+                // A skip leaves the download running on its own; the next launch plays from cache.
                 if (_finished) yield break;
-                if (!downloaded)
+
+                // Covers a failed request, an abort, and a rename that did not land; the download
+                // logs its own reason.
+                if (!File.Exists(cachedPath))
                 {
                     Complete();
                     yield break;
@@ -196,80 +221,6 @@ namespace Kingdom.Presentation
 
             BuildPlayer(cachedPath);
             yield return PrepareAndPlay();
-        }
-
-        /// <summary>Downloads straight to a `.part` file and renames on success, so a killed process
-        /// or a skip mid-download never leaves a truncated file at <paramref name="cachedPath"/> for
-        /// a later launch to mistake for a complete, playable cache.</summary>
-        private IEnumerator DownloadFilm(string cachedPath, Action<bool> setResult)
-        {
-            string url = ResolveVideoUrl();
-            if (string.IsNullOrEmpty(url))
-            {
-                Debug.LogWarning("[OpeningCinematic] no Supabase project configured; " +
-                                 "skipping the opening film.");
-                setResult(false);
-                yield break;
-            }
-
-            string partPath = cachedPath + ".part";
-
-            using (_download = new UnityWebRequest(url, UnityWebRequest.kHttpVerbGET))
-            {
-                _download.downloadHandler = new DownloadHandlerFile(partPath) { removeFileOnAbort = true };
-                _download.timeout = 0; // Skip() is the escape hatch, not a fixed deadline on a real download.
-
-                UnityWebRequestAsyncOperation op = _download.SendWebRequest();
-
-                float deadline = Time.realtimeSinceStartup + DownloadTimeoutSeconds;
-                while (!op.isDone && !_finished)
-                {
-                    // The deadline only guards against a connection that never starts moving —
-                    // once real bytes are landing, let it run to completion regardless of size.
-                    if (_download.downloadedBytes == 0 && Time.realtimeSinceStartup > deadline)
-                    {
-                        _download.Abort();
-                        break;
-                    }
-                    yield return null;
-                }
-
-                if (_finished)
-                {
-                    // Skip() already aborted this request; the `using` below disposes it. Null the
-                    // field FIRST so OnDestroy's own `_download.Abort()` guard can't reach a request
-                    // that is about to be (or already is) disposed.
-                    _download = null;
-                    setResult(false);
-                    yield break;
-                }
-
-                if (_download.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogWarning($"[OpeningCinematic] film download failed ({_download.error}); " +
-                                     "skipping to MainMenu.");
-                    _download = null;
-                    setResult(false);
-                    yield break;
-                }
-
-                _download = null;
-            }
-
-            try
-            {
-                if (File.Exists(cachedPath)) File.Delete(cachedPath);
-                File.Move(partPath, cachedPath);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[OpeningCinematic] could not finalize the downloaded film ({ex.Message}); " +
-                                 "skipping to MainMenu.");
-                setResult(false);
-                yield break;
-            }
-
-            setResult(true);
         }
 
         /// <summary>`{projectUrl}/storage/v1/object/public/{StorageObjectPath}` off the SAME project
@@ -324,6 +275,7 @@ namespace Kingdom.Presentation
         // canvas has nothing to raycast against yet. Skip() and Complete() both bail once the film
         // is finished, so a press on the frame it ends on is harmless. Also live during the splash
         // download (Sam, 2026-09-27) -- a player who wants out should not be held for a 60MB fetch.
+        // The skip ends the wait, not the fetch: see OpeningFilmDownload.
         private void Update()
         {
             if (_finished) return;
@@ -352,7 +304,6 @@ namespace Kingdom.Presentation
             _finished = true;
             _active = false;
 
-            if (_download != null) _download.Abort();
             if (_player != null) _player.Stop();
             if (_picture != null) _picture.enabled = false;
             if (_splash != null) _splash.enabled = false;
@@ -431,12 +382,6 @@ namespace Kingdom.Presentation
 
         private void OnDestroy()
         {
-            if (_download != null)
-            {
-                _download.Abort();
-                _download = null;
-            }
-
             if (_player != null)
             {
                 _player.prepareCompleted -= OnPrepared;
@@ -463,6 +408,77 @@ namespace Kingdom.Presentation
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
+        }
+    }
+
+    /// <summary>The first-launch fetch of the opening film, owned by the process rather than by
+    /// <see cref="OpeningCinematic"/>. A skip during the splash used to abort the request and throw
+    /// the partial file away, so every player who tapped through the splash on first launch
+    /// re-downloaded the film from the start on the next launch, and the one after (Sam,
+    /// 2026-11-04: Storage egress against the Supabase quota). Now the skip only ends the wait: the
+    /// request keeps running with no screen, the next launch finds the finished file and plays it,
+    /// and the film is fetched once per install.
+    ///
+    /// <para>Writes to a `.part` file and renames on success, so a killed process never leaves a
+    /// truncated file at the cache path for a later launch to mistake for a complete, playable
+    /// cache.</para></summary>
+    internal static class OpeningFilmDownload
+    {
+        private static UnityWebRequest _request;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => _request = null;
+
+        public static bool InProgress => _request != null;
+
+        public static ulong DownloadedBytes => _request != null ? _request.downloadedBytes : 0UL;
+
+        /// <summary>Starts the fetch unless one is already running in this process.</summary>
+        public static void Begin(string url, string cachedPath)
+        {
+            if (_request != null) return;
+
+            string partPath = cachedPath + ".part";
+            var request = new UnityWebRequest(url, UnityWebRequest.kHttpVerbGET)
+            {
+                downloadHandler = new DownloadHandlerFile(partPath) { removeFileOnAbort = true },
+                timeout = 0 // no fixed deadline on a real download; see the no-bytes guard in Run().
+            };
+            _request = request;
+            request.SendWebRequest().completed += _ => Finish(request, partPath, cachedPath);
+        }
+
+        /// <summary>Gives up on a connection that never started moving. The partial file is
+        /// removed by the handler.</summary>
+        public static void Abort()
+        {
+            if (_request != null) _request.Abort();
+        }
+
+        private static void Finish(UnityWebRequest request, string partPath, string cachedPath)
+        {
+            bool ok = request.result == UnityWebRequest.Result.Success;
+            string error = request.error;
+
+            // Dispose before the rename so the handler has let go of the `.part` file.
+            if (_request == request) _request = null;
+            request.Dispose();
+
+            if (!ok)
+            {
+                Debug.LogWarning($"[OpeningCinematic] film download failed ({error}).");
+                return;
+            }
+
+            try
+            {
+                if (File.Exists(cachedPath)) File.Delete(cachedPath);
+                File.Move(partPath, cachedPath);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[OpeningCinematic] could not finalize the downloaded film ({ex.Message}).");
+            }
         }
     }
 }
