@@ -32,7 +32,22 @@ namespace Kingdom.Net.Client
         /// </summary>
         public const string ServerFullReason = "server full";
 
-        private readonly IWireTransport _transport;
+        /// <summary>The server's close text for a reconnect it will not honour: a wrong token, or a
+        /// match that is no longer running (<c>MatchGate</c>, <c>MatchSession.OnReconnect</c>). Matched
+        /// by exact spelling, like <see cref="ServerFullReason"/>.</summary>
+        public const string ReconnectRefusedReason = "reconnect refused";
+
+        /// <summary>Pauses between reconnect attempts. The first is short because the common drop is
+        /// a Wi-Fi band switch that is back inside three seconds (2026-11-04, Sam's Pixel).</summary>
+        private static readonly int[] ReconnectBackoffMs = { 250, 500, 1000, 2000, 3000 };
+
+        /// <summary>The wire in use. Replaced by each reconnect attempt, so every read of it is
+        /// under <see cref="_lock"/> or of a local copied out from under it.</summary>
+        private IWireTransport _transport;
+        /// <summary>The close handler subscribed to <see cref="_transport"/>, kept so it can be
+        /// unsubscribed. Each transport gets its own, bound to it, so a close from a wire this
+        /// session has already replaced is recognised as stale and ignored.</summary>
+        private Action<WireCloseReason, string?> _closeHandler;
         private readonly ClientOptions _opts;
         private readonly object _lock = new object();
 
@@ -82,6 +97,13 @@ namespace Kingdom.Net.Client
         private Task? _timerTask;
         private TaskCompletionSource<bool>? _matchStarted;
 
+        // Reconnect (wire-protocol.md "Recovery"; match-lifecycle §7.2). The token is the server's
+        // MatchStartMsg.ReconnectToken; the uri is the connect uri, which a reconnect re-targets.
+        private string _reconnectToken = string.Empty;
+        private Uri? _connectUri;
+        private CancellationTokenSource? _reconnectCts;
+        private bool _disposed;
+
         // Inbound-processed high-water for deterministic tests (no Task.Delay): each handled frame
         // bumps the counter and releases waiters at or below it.
         private int _inboundProcessed;
@@ -91,8 +113,12 @@ namespace Kingdom.Net.Client
         {
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _opts = options ?? new ClientOptions();
-            _transport.OnClosed += OnTransportClosed;
+            _closeHandler = CloseHandlerFor(transport);
+            _transport.OnClosed += _closeHandler;
         }
+
+        private Action<WireCloseReason, string?> CloseHandlerFor(IWireTransport transport)
+            => (reason, detail) => OnPeerClosed(transport, detail);
 
         // ── IMatchSession ─────────────────────────────────────────────────────────
 
@@ -205,6 +231,7 @@ namespace Kingdom.Net.Client
                     "device, persist it, and pass it here; a per-launch token is not an identity.");
 
             SetState(ConnectionState.Connecting);
+            _connectUri = uri;
             _matchStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             SubmitDeckMsg? deck = _opts.DeckSubmission;
             await _transport.ConnectAsync(deck is null ? uri : WithDeckOptIn(uri), ct).ConfigureAwait(false);
@@ -231,9 +258,14 @@ namespace Kingdom.Net.Client
             }
 
             SetState(ConnectionState.Pairing);
-            StartPump();
+            StartPump(_transport);
             await _matchStarted.Task.ConfigureAwait(false);
         }
+
+        /// <summary>The connect uri re-targeted at the server's reconnect route. Path kept, query
+        /// replaced: a deck opt-in or a challenge ticket belongs to pairing, which a reconnect skips.</summary>
+        private static Uri ReconnectUriFor(Uri connectUri)
+            => new UriBuilder(connectUri) { Query = "reconnect=1" }.Uri;
 
         private static Uri WithDeckOptIn(Uri uri)
         {
@@ -244,11 +276,14 @@ namespace Kingdom.Net.Client
             return builder.Uri;
         }
 
-        private void StartPump()
+        /// <summary>Start the receive pump and the liveness timer on <paramref name="transport"/>.
+        /// Each pair belongs to one wire: a reconnect cancels the old pair and starts a new one.</summary>
+        private void StartPump(IWireTransport transport)
         {
-            _pumpCts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken.None);
-            _pumpTask = Task.Run(() => PumpLoopAsync(_pumpCts.Token));
-            _timerTask = Task.Run(() => TimerLoopAsync(_pumpCts.Token));
+            var cts = new CancellationTokenSource();
+            lock (_lock) _pumpCts = cts;
+            _pumpTask = Task.Run(() => PumpLoopAsync(transport, cts.Token));
+            _timerTask = Task.Run(() => TimerLoopAsync(transport, cts.Token));
         }
 
         /// <summary>
@@ -260,10 +295,10 @@ namespace Kingdom.Net.Client
         ///  - send-idle ≥ HeartbeatIdleMs ⇒ send a HeartbeatMsg (the server echoes it, so a
         ///    healthy link is never inbound-silent for long either);
         ///  - inbound-silent ≥ InboundSilenceMs despite those echoes ⇒ the link is truly dead.
-        ///    The §4.3 reconnect machine is not built (commit-2), so this is terminal via the
-        ///    same OnPeerClosed path a detected socket drop takes — no more ghost-ship UI.
+        ///    That takes the same OnPeerClosed path a detected socket drop takes: a reconnect when
+        ///    <see cref="ClientOptions.ReconnectTransport"/> is set, Dead otherwise.
         /// </summary>
-        private async Task TimerLoopAsync(CancellationToken ct)
+        private async Task TimerLoopAsync(IWireTransport transport, CancellationToken ct)
         {
             try
             {
@@ -288,8 +323,8 @@ namespace Kingdom.Net.Client
                     if (linkDead)
                     {
                         // CloseAsync raises the transport's OnClosed, which lands in OnPeerClosed.
-                        await _transport.CloseAsync(WireCloseReason.Fault).ConfigureAwait(false);
-                        OnPeerClosed();   // idempotent — no-op if the event already transitioned us
+                        await transport.CloseAsync(WireCloseReason.Fault).ConfigureAwait(false);
+                        OnPeerClosed(transport);   // idempotent — no-op if the event already transitioned us
                         break;
                     }
                 }
@@ -297,19 +332,20 @@ namespace Kingdom.Net.Client
             catch (OperationCanceledException) { /* shutting down */ }
         }
 
-        private async Task PumpLoopAsync(CancellationToken ct)
+        private async Task PumpLoopAsync(IWireTransport transport, CancellationToken ct)
         {
             try
             {
                 while (!ct.IsCancellationRequested)
                 {
-                    byte[]? frame = await _transport.ReceiveAsync(ct).ConfigureAwait(false);
-                    if (frame is null) { OnPeerClosed(); break; }
+                    byte[]? frame = await transport.ReceiveAsync(ct).ConfigureAwait(false);
+                    if (ct.IsCancellationRequested) break;   // this wire was replaced; its last read is not news
+                    if (frame is null) { OnPeerClosed(transport); break; }
                     HandleFrame(frame);
                 }
             }
             catch (OperationCanceledException) { /* shutting down */ }
-            catch (Exception) { OnPeerClosed(); }
+            catch (Exception) { OnPeerClosed(transport); }
         }
 
         // ── Inbound ───────────────────────────────────────────────────────────────
@@ -358,6 +394,7 @@ namespace Kingdom.Net.Client
                 _matchId = new MatchId(ms.Snapshot.State.Id.Value);
                 _seat = ms.Seat;
                 _player = ms.PlayerId;
+                _reconnectToken = ms.ReconnectToken ?? string.Empty;
                 _opponentName = ms.Opponent.DisplayName ?? string.Empty;
                 _backIds = new[] { ms.BackIdOf(0), ms.BackIdOf(1) };
                 _current = ms.Snapshot.State;   // initial mirror; no OnSnapshot for the initial (a4 §3)
@@ -554,7 +591,14 @@ namespace Kingdom.Net.Client
         {
             _lastSendMs = _opts.Clock.NowMs;
             byte[] frame = ProtocolCodec.Encode(msg, _matchId, seq);
-            _ = _transport.SendAsync(frame, CancellationToken.None);
+            // Observed, not awaited: a send on a wire that has just died throws, and an unobserved
+            // fault is noise. The death itself arrives through the pump or the liveness timer.
+            try
+            {
+                _transport.SendAsync(frame, CancellationToken.None)
+                    .ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+            }
+            catch (Exception) { /* a transport that throws synchronously once closed — same story */ }
         }
 
         private void ClearPendingUnlocked()
@@ -579,14 +623,27 @@ namespace Kingdom.Net.Client
             return true;
         }
 
-        private void OnPeerClosed(string? detail = null)
+        /// <summary>
+        /// A wire closed. From a wire this session has already replaced, nothing. While Reconnecting,
+        /// nothing either: the attempt that owns that wire sees its own failure. From a live match
+        /// with <see cref="ClientOptions.ReconnectTransport"/> set and a close the server would take
+        /// back, <see cref="ConnectionState.Reconnecting"/>. Anything else is terminal, as it always
+        /// was: Dead, which stops the runner (RC-F10).
+        /// </summary>
+        private void OnPeerClosed(IWireTransport from, string? detail = null)
         {
             lock (_lock)
             {
-                if (_state is ConnectionState.Ended or ConnectionState.Dead) return;
-                // Commit 1: a socket drop with no reconnect wiring is terminal. The reconnect state
-                // machine (§4.3) is commit-2 timer work; the terminal transition + StopMatch signal
-                // (RC-F10) is what commit 1 must get right so the runner stops.
+                if (!ReferenceEquals(from, _transport)) return;
+                if (_state is ConnectionState.Ended or ConnectionState.Dead or ConnectionState.Reconnecting) return;
+
+                if (_state == ConnectionState.Live && !_disposed && _opts.ReconnectTransport is not null &&
+                    _reconnectToken.Length > 0 && _connectUri is not null && IsRecoverableClose(detail))
+                {
+                    BeginReconnectUnlocked();
+                    return;
+                }
+
                 SetStateUnlocked(ConnectionState.Dead);
                 // A refusal at the server's session cap is the one close a caller should answer
                 // by trying again rather than by failing (item 4b), so it gets its own bucket.
@@ -606,7 +663,179 @@ namespace Kingdom.Net.Client
             }
         }
 
-        private void OnTransportClosed(WireCloseReason reason, string? detail) => OnPeerClosed(detail);
+        /// <summary>A close the server would take back: no reason text at all (the network went,
+        /// which is the case this exists for), or one of the two the server sends when IT gave up on
+        /// a link that may be perfectly healthy. Every other reason is a decision — superseded,
+        /// refused, a protocol strike, the match over — and reconnecting would argue with it.</summary>
+        private static bool IsRecoverableClose(string? detail)
+            => detail is null || detail == "liveness timeout" || detail == "send overflow";
+
+        // ── Reconnect (wire-protocol.md "Recovery"; match-lifecycle §7.2) ───────────────
+
+        /// <summary>Enter Reconnecting. Must hold <see cref="_lock"/>. The pending submit resolves
+        /// rejected — the server may or may not have taken it, and the snapshot the reconnect brings
+        /// back is the only honest answer to which. Events waiting on a snapshot are dropped for the
+        /// same reason: a reconnect is snapshot-only (match-lifecycle §7.2).</summary>
+        private void BeginReconnectUnlocked()
+        {
+            SetStateUnlocked(ConnectionState.Reconnecting);
+            _pending?.TrySetResult(CommandResult.Rejected(RejectReason.GameOver, StateVersion));
+            ClearPendingUnlocked();
+            _pendingEvents.Clear();
+            try { _pumpCts?.Cancel(); } catch (ObjectDisposedException) { }
+            IWireTransport dead = _transport;
+            _ = dead.CloseAsync(WireCloseReason.Fault)
+                .ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+
+            var cts = new CancellationTokenSource();
+            _reconnectCts = cts;
+            _ = Task.Run(() => ReconnectLoopAsync(cts.Token));
+        }
+
+        private enum AttemptResult { Resumed, Failed, Refused }
+
+        /// <summary>Try, pause, try again, until the match is back, the server refuses, or
+        /// <see cref="ClientOptions.ReconnectBudgetMs"/> runs out. The budget is measured on the
+        /// client's clock from the drop; an attempt already under way when it runs out finishes.</summary>
+        private async Task ReconnectLoopAsync(CancellationToken ct)
+        {
+            long deadline = _opts.Clock.NowMs + _opts.ReconnectBudgetMs;
+            int failures = 0;
+            try
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    (AttemptResult result, string? detail) = await TryReconnectOnceAsync(ct).ConfigureAwait(false);
+                    if (result == AttemptResult.Resumed) return;
+                    if (result == AttemptResult.Refused)
+                    {
+                        FailReconnect(detail == ReconnectRefusedReason ? DeadReason.MatchGone : DeadReason.Forfeited, detail);
+                        return;
+                    }
+                    if (_opts.Clock.NowMs >= deadline)
+                    {
+                        FailReconnect(DeadReason.ConnectionLost, null);
+                        return;
+                    }
+                    await _opts.ReconnectDelay(ReconnectBackoffMs[Math.Min(failures, ReconnectBackoffMs.Length - 1)], ct)
+                        .ConfigureAwait(false);
+                    failures++;
+                }
+            }
+            catch (OperationCanceledException) { /* disposed */ }
+        }
+
+        /// <summary>
+        /// One attempt: a fresh wire on the reconnect route, the <see cref="ReconnectMsg"/> as its
+        /// first frame, then the server's first answer, all inside
+        /// <see cref="ClientOptions.ReconnectAttemptTimeoutMs"/>. The answer is the current projected
+        /// snapshot (match-lifecycle §7.2 step 5), which applies through the ordinary verified path.
+        /// It may carry the version this client already holds, so the attempt marks a resync pending
+        /// first: that is exactly the exemption a same-version answer needs, and the one
+        /// <see cref="ApplySnapshot"/> already has.
+        /// </summary>
+        private async Task<(AttemptResult, string?)> TryReconnectOnceAsync(CancellationToken ct)
+        {
+            IWireTransport wire;
+            try { wire = _opts.ReconnectTransport!(); }
+            catch (Exception) { return (AttemptResult.Failed, null); }
+
+            string? closeDetail = null;
+            Action<WireCloseReason, string?> handler = (reason, detail) =>
+            {
+                if (detail is not null) closeDetail = detail;
+                OnPeerClosed(wire, detail);
+            };
+            wire.OnClosed += handler;
+
+            Uri uri;
+            lock (_lock)
+            {
+                if (_state != ConnectionState.Reconnecting || ct.IsCancellationRequested)
+                {
+                    wire.OnClosed -= handler;
+                    return (AttemptResult.Failed, null);
+                }
+                _transport.OnClosed -= _closeHandler;
+                _transport = wire;
+                _closeHandler = handler;
+                uri = ReconnectUriFor(_connectUri!);
+            }
+
+            using var attempt = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            try
+            {
+                await WithinAttemptAsync(wire.ConnectAsync(uri, attempt.Token), attempt).ConfigureAwait(false);
+
+                byte[] hello;
+                lock (_lock)
+                {
+                    hello = ProtocolCodec.Encode(new ReconnectMsg(_player, _reconnectToken, StateVersion), _matchId, ++_outSeq);
+                    _resyncPending = true;
+                    _resyncSentMs = _opts.Clock.NowMs;
+                }
+                await WithinAttemptAsync(wire.SendAsync(hello, attempt.Token), attempt).ConfigureAwait(false);
+
+                Task<byte[]?> answer = wire.ReceiveAsync(attempt.Token);
+                await WithinAttemptAsync(answer, attempt).ConfigureAwait(false);
+                byte[]? first = await answer.ConfigureAwait(false);
+                if (first is null)
+                    return (IsRecoverableClose(closeDetail) ? AttemptResult.Failed : AttemptResult.Refused, closeDetail);
+
+                lock (_lock)
+                {
+                    long now = _opts.Clock.NowMs;
+                    _lastRecvMs = now;
+                    _lastSendMs = now;
+                }
+                HandleFrame(first);
+                lock (_lock)
+                {
+                    if (_state != ConnectionState.Reconnecting) return (AttemptResult.Resumed, null);   // the frame ended it
+                    SetStateUnlocked(ConnectionState.Live);
+                }
+                StartPump(wire);
+                return (AttemptResult.Resumed, null);
+            }
+            catch (Exception)
+            {
+                attempt.Cancel();
+                try { await wire.CloseAsync(WireCloseReason.Local).ConfigureAwait(false); }
+                catch (Exception) { /* already gone */ }
+                return (AttemptResult.Failed, closeDetail);
+            }
+        }
+
+        /// <summary>Await <paramref name="step"/>, or throw <see cref="TimeoutException"/> when the
+        /// attempt's time runs out first. A real socket's connect does not observe its token, so the
+        /// bound has to live out here.</summary>
+        private async Task WithinAttemptAsync(Task step, CancellationTokenSource attempt)
+        {
+            Task timeout = Task.Delay(TimeSpan.FromMilliseconds(_opts.ReconnectAttemptTimeoutMs), attempt.Token);
+            Task done = await Task.WhenAny(step, timeout).ConfigureAwait(false);
+            if (done != step)
+            {
+                _ = step.ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+                throw new TimeoutException("reconnect attempt timed out");
+            }
+            await step.ConfigureAwait(false);   // rethrows a fault
+        }
+
+        private void FailReconnect(DeadReason reason, string? detail)
+        {
+            IWireTransport wire;
+            lock (_lock)
+            {
+                if (_state != ConnectionState.Reconnecting) return;
+                _deadReason = reason;
+                _deadReasonDetail = detail;
+                _resyncPending = false;
+                SetStateUnlocked(ConnectionState.Dead);
+                wire = _transport;
+            }
+            _ = wire.CloseAsync(WireCloseReason.Local)
+                .ContinueWith(t => _ = t.Exception, TaskContinuationOptions.OnlyOnFaulted);
+        }
 
         // ── Deterministic test synchronization (no Task.Delay — §11) ─────────────────
 
@@ -651,9 +880,16 @@ namespace Kingdom.Net.Client
         /// </summary>
         public void Dispose()
         {
-            try { _pumpCts?.Cancel(); } catch { /* ignore */ }
-            _transport.OnClosed -= OnTransportClosed;
-            try { _ = _transport.CloseAsync(WireCloseReason.Local); } catch { /* already gone */ }
+            IWireTransport wire;
+            lock (_lock)
+            {
+                _disposed = true;
+                try { _pumpCts?.Cancel(); } catch { /* ignore */ }
+                try { _reconnectCts?.Cancel(); } catch { /* ignore */ }
+                wire = _transport;
+                wire.OnClosed -= _closeHandler;
+            }
+            try { _ = wire.CloseAsync(WireCloseReason.Local); } catch { /* already gone */ }
         }
     }
 }

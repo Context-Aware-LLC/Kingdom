@@ -113,6 +113,61 @@ namespace Kingdom.Net.Client.Tests
             }
         }
 
+        /// <summary>The reconnect, end to end over real sockets: the gate's <c>?reconnect=1</c>
+        /// route, its first-frame decode, the session's token check and its snapshot answer. The
+        /// loopback tests prove the session logic; this proves the route is the one the client
+        /// dials.</summary>
+        [Test]
+        [CancelAfter(60_000)]
+        public async Task A_Socket_Killed_Mid_Match_Reconnects_Over_A_Real_Socket_And_Plays_On()
+        {
+            string replays = Path.Combine(Path.GetTempPath(), "kingdom-client-ws-" + Guid.NewGuid().ToString("N"));
+            var app = ServerApp.Build(new ServerConfig
+            {
+                Urls = "http://127.0.0.1:0",
+                CardsDir = LoopbackServerPeer.CardDataDir(),
+                ReplaysDir = replays,
+            });
+            await app.StartAsync();
+
+            var firstWire = new WebSocketTransport();
+            var c0 = new NetworkedMatchSession(firstWire, new ClientOptions
+            {
+                DeviceToken = "test-device-0",
+                ReconnectTransport = () => new WebSocketTransport(),
+            });
+            var c1 = new NetworkedMatchSession(new WebSocketTransport(), new ClientOptions { DeviceToken = "test-device-1" });
+
+            try
+            {
+                var baseUri = new Uri(app.Urls.First());
+                var wsUri = new Uri($"ws://127.0.0.1:{baseUri.Port}/ws");
+                await Task.WhenAll(c0.ConnectAsync(wsUri), c1.ConnectAsync(wsUri));
+                Assert.That((await c0.SubmitAsync(new MulliganIntent(c0.Player, Array.Empty<InstanceId>()))).Accepted, Is.True);
+                Assert.That((await c1.SubmitAsync(new MulliganIntent(c1.Player, Array.Empty<InstanceId>()))).Accepted, Is.True);
+
+                Task reconnecting = WaitForState(c0, ConnectionState.Reconnecting);
+                await firstWire.CloseAsync(WireCloseReason.Fault);   // the network goes, as far as c0 can tell
+                await reconnecting.WaitAsync(TimeSpan.FromSeconds(10));
+                await WaitForState(c0, ConnectionState.Live).WaitAsync(TimeSpan.FromSeconds(20));
+
+                // Back in the same match: the opponent's concession reaches the reconnected seat.
+                Task ended0 = WaitForState(c0, ConnectionState.Ended);
+                _ = c1.SubmitAsync(new ConcedeIntent(c1.Player));
+                await ended0.WaitAsync(TimeSpan.FromSeconds(20));
+
+                Assert.That(c0.Current.Outcome, Is.EqualTo(c0.Seat == 0 ? MatchOutcome.Player0Win : MatchOutcome.Player1Win));
+            }
+            finally
+            {
+                c0.Dispose();
+                c1.Dispose();
+                await app.StopAsync();
+                try { if (Directory.Exists(replays)) Directory.Delete(replays, recursive: true); }
+                catch (IOException) { }
+            }
+        }
+
         private static Task WaitForState(NetworkedMatchSession s, ConnectionState target)
         {
             var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);

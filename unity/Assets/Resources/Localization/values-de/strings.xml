@@ -214,6 +214,9 @@
     <string name="connection_joke_courier">Der Kurierballon ist vom Kurs abgekommen.</string>
     <string name="connection_error_not_responding">Der Server antwortet nicht. Versuch es gleich noch einmal.</string>
     <string name="connection_error_lost">Verbindung zum Server verloren.</string>
+    <string name="connection_reconnecting_title">Verbinde erneut…</string>
+    <string name="connection_reconnecting_herald">Der Kurierballon kehrt um. Dein Platz wird freigehalten.</string>
+    <string name="connection_reconnecting_leave">Match verlassen</string>
     <string name="connection_error_sign_in_unconfirmed">Wir konnten deine Anmeldung nicht bestätigen. Prüfe deine Verbindung und versuch es erneut.</string>
     <string name="connection_joke_guards">Die Wachen erkennen dich nicht mehr.</string>
     <string name="connection_error_deck_rejected">Dein Deck wurde abgewiesen. %1$s</string>
@@ -420,6 +423,8 @@
     <string name="match_result_reason_opponent_conceded">Aufgegeben. Eine seltene gute Idee.</string>
     <string name="match_result_reason_opponent_timeout">Zwei Züge verpasst. Der Rat erklärt sie für abwesend.</string>
     <string name="match_result_reason_victory">Der Rat behauptet schon, es sei seine Idee gewesen.</string>
+    <string name="match_result_verdict_disconnected">VERTAGT</string>
+    <string name="match_result_reason_disconnected">Der Kurierballon ist abgetrieben, bevor der Rat entscheiden konnte.</string>
     <string name="match_result_gold_earned">+%1$d Gold</string>
     <string name="match_result_quest_complete">Erfüllt   +%1$d Gold</string>
     <string name="match_result_quest_progress">%1$d / %2$d   (+%3$d)</string>

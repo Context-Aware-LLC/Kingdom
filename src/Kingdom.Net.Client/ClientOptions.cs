@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Kingdom.Net.Protocol;
 
 namespace Kingdom.Net.Client
@@ -32,6 +34,26 @@ namespace Kingdom.Net.Client
 
         /// <summary>Guaranteed reconnect floor from client-detected loss (b3 §4.3, decision 20: 60s).</summary>
         public long ReconnectBudgetMs { get; init; } = 60_000;
+
+        /// <summary>
+        /// A fresh wire for each reconnect attempt. Set, a live match whose socket drops enters
+        /// <see cref="ConnectionState.Reconnecting"/> and tries the server's <c>?reconnect=1</c> route
+        /// until <see cref="ReconnectBudgetMs"/> runs out. Null, a drop is terminal
+        /// (<see cref="ConnectionState.Dead"/>), which is what a bot seat and the soak want: they have
+        /// no player to bring back.
+        /// <para>A factory and not a transport because a wire is one-shot: once closed, neither
+        /// implementation opens again.</para>
+        /// </summary>
+        public Func<IWireTransport>? ReconnectTransport { get; init; }
+
+        /// <summary>One reconnect attempt — connect, send, and the server's first answer — gives up
+        /// after this long. A real socket's TCP connect does not observe a cancellation token, so on
+        /// a network that is still down it would otherwise hang the whole budget on one try.</summary>
+        public long ReconnectAttemptTimeoutMs { get; init; } = 8_000;
+
+        /// <summary>The pause between reconnect attempts, injectable so a test can retry without
+        /// sleeping (b3 §11).</summary>
+        public Func<int, CancellationToken, Task> ReconnectDelay { get; init; } = (ms, ct) => Task.Delay(ms, ct);
 
         /// <summary>Resyncs tolerated per match before escalation → <see cref="ConnectionState.Dead"/>
         /// (b3 §4.5: 3; the 4th is fatal).</summary>

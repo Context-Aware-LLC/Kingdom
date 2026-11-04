@@ -208,7 +208,14 @@ namespace Kingdom.Net.Server
 
         public void Dispatch(SessionCommand cmd)
         {
-            if (Ended) return;
+            if (Ended)
+            {
+                // The gate drops a finished session from its table a beat after it ends, so a
+                // reconnect can still be routed here. Answer it the way the gate answers one for a
+                // match it no longer holds; dropped, the client waits out its attempt on silence.
+                if (cmd is SessionCommand.Reconnect late) late.Connection.Close(1008, "reconnect refused");
+                return;
+            }
             switch (cmd)
             {
                 case SessionCommand.Frame f: OnFrame(f.Origin, f.Bytes); break;

@@ -243,11 +243,17 @@ namespace Kingdom.Presentation
             return row;
         }
 
+        /// <summary>InProgress is the connection ending before the match did — a reconnect that
+        /// never got through, or one the server refused because the match was already over. The
+        /// client does not know the result then, so it does not claim one. It used to fall through
+        /// to DEFEAT, which is how a three-second Wi-Fi blip read as a loss (2026-11-04). Drawn in
+        /// the draw's colours: neither side's, and no new style to keep.</summary>
         private static (string, string) Judge(MatchOutcome outcome, int localSeat) => outcome switch
         {
             MatchOutcome.Player0Win when localSeat == 0 => (Loc.Get("match_result_verdict_victory"), "proc-verdict--victory"),
             MatchOutcome.Player1Win when localSeat == 1 => (Loc.Get("match_result_verdict_victory"), "proc-verdict--victory"),
             MatchOutcome.Draw                           => (Loc.Get("match_result_verdict_draw"), "proc-verdict--draw"),
+            MatchOutcome.InProgress                     => (Loc.Get("match_result_verdict_disconnected"), "proc-verdict--draw"),
             _                                           => (Loc.Get("match_result_verdict_defeat"), "proc-verdict--defeat"),
         };
 
@@ -257,6 +263,7 @@ namespace Kingdom.Presentation
         private static string ResultDetail(MatchOutcome outcome, int localSeat, MatchEndReason? reason)
         {
             if (outcome == MatchOutcome.Draw) return Loc.Get("match_result_reason_draw");
+            if (outcome == MatchOutcome.InProgress) return Loc.Get("match_result_reason_disconnected");
 
             bool localWon = outcome == MatchOutcome.Player0Win && localSeat == 0
                             || outcome == MatchOutcome.Player1Win && localSeat == 1;

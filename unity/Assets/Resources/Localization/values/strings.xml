@@ -340,6 +340,12 @@
     <string name="connection_error_not_responding">The server isn\'t answering. Try again in a moment.</string>
     <!-- Connection overlay plain line. -->
     <string name="connection_error_lost">Lost the connection to the server.</string>
+    <!-- Title of the panel over the board while a dropped match connection is being restored. The match keeps running on the server meanwhile. -->
+    <string name="connection_reconnecting_title">Reconnecting…</string>
+    <!-- Line under the reconnecting title. Same courier-balloon running joke as connection_joke_courier, now on its way back. -->
+    <string name="connection_reconnecting_herald">The courier balloon is circling back. Your seat is being held.</string>
+    <!-- Button on the reconnecting panel: give up on the match and go to the main menu. -->
+    <string name="connection_reconnecting_leave">Leave the match</string>
     <!-- Connection overlay plain line. -->
     <string name="connection_error_sign_in_unconfirmed">We couldn\'t confirm your sign-in. Check your connection and try again.</string>
     <!-- Joke line under sign-in failures (British spelling 'recognise'). -->
@@ -748,6 +754,10 @@
     <string name="match_result_reason_opponent_timeout">They missed two turns. The Council has ruled them absent.</string>
     <!-- Line under VICTORY for a normal win. The council takes credit. -->
     <string name="match_result_reason_victory">The Council has already claimed it was their idea.</string>
+    <!-- Large verdict when the connection ended before the match did, so the result is unknown. Not a win or a loss. All caps like the other verdicts. -->
+    <string name="match_result_verdict_disconnected">ADJOURNED</string>
+    <!-- Line under ADJOURNED: the connection was lost and could not be restored. Courier-balloon running joke. -->
+    <string name="match_result_reason_disconnected">The courier balloon drifted off before the Council could rule.</string>
     <!-- Spoils column: Gold paid by this match. %1$d = amount. -->
     <string name="match_result_gold_earned">+%1$d Gold</string>
     <!-- Quest row detail when the quest completed this match. %1$d = Gold reward. Three spaces are deliberate spacing. -->

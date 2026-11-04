@@ -28,5 +28,12 @@ namespace Kingdom.Net.Client
         Forfeited,
         Desync,
         ContractMismatch,
+        /// <summary>The wire dropped mid-match and no reconnect got through inside
+        /// <see cref="ClientOptions.ReconnectBudgetMs"/>. The match may still be running.</summary>
+        ConnectionLost,
+        /// <summary>A reconnect reached the server and it refused: the match is no longer running.
+        /// It ended, by the idle rule or the opponent, while this client was away, and the result
+        /// went to a socket that was not there.</summary>
+        MatchGone,
     }
 }

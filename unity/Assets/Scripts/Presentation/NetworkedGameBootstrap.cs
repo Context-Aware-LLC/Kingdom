@@ -91,6 +91,8 @@ namespace Kingdom.Presentation
         // How long a re-queue may sit in Pairing unrefused before it counts as queued.
         private const float CourtFullQueuedAfterSeconds = 3f;
         private GameObject _courtFull;
+        /// <summary>The panel over the board while a dropped match connection is restored.</summary>
+        private GameObject _reconnecting;
 
         private void Awake()
         {
@@ -225,6 +227,10 @@ namespace Kingdom.Presentation
                     OnMisattribution = m => Debug.LogWarning(
                         $"[Desync] MISATTRIBUTION match={m.MatchId} seat={m.Seat} pendingSeq={m.PendingSeq} " +
                         $"reason={m.RejectReason} v{m.StateVersion}"),
+                    // A dropped socket mid-match goes back to the same seat (match-lifecycle §7.2)
+                    // instead of ending the match on this screen. A plain socket each time: the
+                    // desync injector below is for the first wire's frames, not for recovery.
+                    ReconnectTransport = () => new WebSocketTransport(),
                 };
 
                 IWireTransport transport = new WebSocketTransport();
@@ -255,6 +261,14 @@ namespace Kingdom.Presentation
                 bool reachedServer = false;
                 net.OnConnectionStateChanged += st => view.Post(() =>
                 {
+                    // The panel follows the session's state NOW, not the event's: the events are
+                    // raised off the thread pool, so a quick Reconnecting → Live can arrive here
+                    // in either order, and keying off the event could leave the panel up over a
+                    // match that is already back.
+                    Debug.Log($"[NetworkedGameBootstrap] connection {st} (now {net.State}, {net.DeadReason})");
+                    if (net.State == ConnectionState.Reconnecting) ShowReconnecting();
+                    else HideReconnecting();
+
                     if (st == ConnectionState.Pairing || st == ConnectionState.Live) reachedServer = true;
                     switch (st)
                     {
@@ -953,6 +967,58 @@ namespace Kingdom.Presentation
             if (_courtFull == null) return;
             Destroy(_courtFull);
             _courtFull = null;
+        }
+
+        /// <summary>
+        /// The match's socket dropped and the session is trying to get back to the same seat. Built
+        /// from the boot-failure panel's tree, as the court-full panel is, and for the same reason:
+        /// it covers the board, so nothing can be played onto a mirror that has stopped updating.
+        /// No Retry (retrying is automatic); Back leaves the match, which the server then plays out
+        /// without this seat. The session ends it either way — Live again, or Dead, which brings the
+        /// proclamation up over it — and <see cref="HideReconnecting"/> takes it down.
+        /// </summary>
+        private void ShowReconnecting()
+        {
+            if (_reconnecting != null) return;
+
+            _reconnecting = new GameObject("ReconnectingUI");
+            var doc = _reconnecting.AddComponent<UIDocument>();
+            doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
+            doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("ConnectionFailedScreen");
+            VisualElement root = doc.rootVisualElement;
+            if (root == null)
+            {
+                Debug.LogError("[NetworkedGameBootstrap] reconnecting panel has no rootVisualElement.");
+                return;
+            }
+            UiLocalizer.Attach(root);
+
+            var title = root.Q<Label>("title");
+            if (title != null) title.text = Loc.Get("connection_reconnecting_title");
+
+            var reason = root.Q<Label>("reason");
+            if (reason != null)
+            {
+                reason.text = Loc.Get("connection_reconnecting_herald");
+                reason.style.display = DisplayStyle.Flex;
+            }
+
+            root.Q<Button>("btn-retry")?.RemoveFromHierarchy();
+
+            var leave = root.Q<Button>("btn-back");
+            if (leave != null)
+            {
+                leave.text = Loc.Get("connection_reconnecting_leave");
+                // The scene change disposes the session (OnDestroy), which stops the reconnect.
+                leave.RegisterCallback<ClickEvent>(_ => ScreenNav.Go(ScreenNav.MainMenu));
+            }
+        }
+
+        private void HideReconnecting()
+        {
+            if (_reconnecting == null) return;
+            Destroy(_reconnecting);
+            _reconnecting = null;
         }
 
         private void OnDestroy()

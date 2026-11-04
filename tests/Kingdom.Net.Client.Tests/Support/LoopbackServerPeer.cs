@@ -46,25 +46,108 @@ namespace Kingdom.Net.Client.Tests.Support
         private sealed class SeatConnection : IServerConnection
         {
             private readonly LoopbackTransport _transport;
-            public int Count { get; private set; }
+            private readonly LoopbackServerPeer _peer;
+            private readonly int _seat;
             public int? CloseCode { get; private set; }
             public Func<byte[], byte[]>? Intercept;   // tamper server→client frames in transit (RC-F8 tests)
 
-            public SeatConnection(LoopbackTransport transport) => _transport = transport;
+            public SeatConnection(LoopbackServerPeer peer, int seat, LoopbackTransport transport)
+            {
+                _peer = peer;
+                _seat = seat;
+                _transport = transport;
+            }
 
             public bool TryEnqueue(byte[] frame)
             {
-                Count++;
+                Interlocked.Increment(ref _peer._sentTo[_seat]);
                 _transport.EnqueueInbound(Intercept is null ? frame : Intercept(frame));
                 return true;
             }
 
+            /// <summary>Carries the reason text through, as a real socket's close frame does — a
+            /// reconnecting client reads "reconnect refused" off it.</summary>
             public void Close(int closeCode, string reason)
             {
                 CloseCode ??= closeCode;
-                _transport.ServerClose();
+                _transport.ServerClose(WireCloseReason.PeerClosed, reason);
             }
         }
+
+        /// <summary>
+        /// What a reconnecting client is handed by <see cref="ReconnectWireFor"/>: a fresh loopback
+        /// wire that relays each frame the moment it is sent, standing in for the gate's
+        /// <c>HandleReconnectAsync</c>. The first frame is decoded the way the gate decodes it and
+        /// posted as <see cref="SessionCommand.Reconnect"/>; every later one is an ordinary frame on
+        /// the connection the session bound, or dropped if it bound none (a refused token).
+        /// </summary>
+        private sealed class ReconnectingWire : IWireTransport
+        {
+            private readonly LoopbackServerPeer _peer;
+            private readonly LoopbackTransport _inner = new LoopbackTransport();
+            private readonly SeatConnection _conn;
+            private bool _sentFirst;
+
+            public ReconnectingWire(LoopbackServerPeer peer, int seat)
+            {
+                _peer = peer;
+                _conn = new SeatConnection(peer, seat, _inner);
+            }
+
+            public event Action<WireCloseReason, string?>? OnClosed
+            {
+                add => _inner.OnClosed += value;
+                remove => _inner.OnClosed -= value;
+            }
+
+            public Task ConnectAsync(Uri uri, CancellationToken ct)
+            {
+                _peer.ReconnectUris.Enqueue(uri);
+                if (_peer.NetworkDown) throw new System.IO.IOException("network unreachable (test)");
+                return Task.CompletedTask;
+            }
+
+            public async Task SendAsync(ReadOnlyMemory<byte> utf8, CancellationToken ct)
+            {
+                await _inner.SendAsync(utf8, ct).ConfigureAwait(false);
+                while (_inner.TryDequeueOutbound(out var bytes))
+                {
+                    lock (_peer._dispatchGate)
+                    {
+                        if (!_sentFirst)
+                        {
+                            _sentFirst = true;
+                            var decoded = ProtocolCodec.Decode(bytes);
+                            if (decoded.Ok && decoded.Message is ReconnectMsg msg)
+                                _peer.Session.Dispatch(new SessionCommand.Reconnect(msg, _conn));
+                            else
+                                _conn.Close(1008, "expected reconnect");
+                            continue;
+                        }
+                        _peer.Session.Dispatch(new SessionCommand.Frame(_conn, bytes));
+                    }
+                }
+            }
+
+            public Task<byte[]?> ReceiveAsync(CancellationToken ct) => _inner.ReceiveAsync(ct);
+
+            public Task CloseAsync(WireCloseReason reason) => _inner.CloseAsync(reason);
+        }
+
+        private readonly object _dispatchGate = new object();
+        private readonly int[] _sentTo = new int[2];
+
+        /// <summary>While true, every reconnect wire's connect throws, as a phone with no network
+        /// does. Flip it back to let the next attempt through.</summary>
+        public volatile bool NetworkDown;
+
+        /// <summary>Every uri a reconnect wire was asked to connect to, in order.</summary>
+        public System.Collections.Concurrent.ConcurrentQueue<Uri> ReconnectUris { get; } =
+            new System.Collections.Concurrent.ConcurrentQueue<Uri>();
+
+        /// <summary>The <see cref="ClientOptions.ReconnectTransport"/> for the client in
+        /// <paramref name="seat"/>: each call is one fresh reconnect wire into this peer's session.</summary>
+        public Func<IWireTransport> ReconnectWireFor(int seat) => () => new ReconnectingWire(this, seat);
 
         public FakeServerClock Time { get; } = new FakeServerClock();
         public InMemoryReplayStore Replay { get; } = new InMemoryReplayStore();
@@ -98,8 +181,8 @@ namespace Kingdom.Net.Client.Tests.Support
                 HeartbeatTimeoutMs = long.MaxValue / 4,
                 StallGuardMs = long.MaxValue / 4,
             };
-            _conn0 = new SeatConnection(Transport0);
-            _conn1 = new SeatConnection(Transport1);
+            _conn0 = new SeatConnection(this, 0, Transport0);
+            _conn1 = new SeatConnection(this, 1, Transport1);
             Session = new MatchSession(Id, 0xE17BEEF5EEDUL, opts, Time, Db, PrebuiltDecks.EmberwardVsTidecaller(), Replay, P0, P1,
                 king: king,
                 p0CardBack: cardBacks?.P0 ?? CardBackDefinitions.DefaultId,
@@ -139,14 +222,22 @@ namespace Kingdom.Net.Client.Tests.Support
 
         public Task TickAsync() => WithDeltaAsync(() => Session.Dispatch(new SessionCommand.ClockTick()));
 
+        /// <summary>The frames the server has enqueued to <paramref name="seat"/>, on whichever wire
+        /// it held at the time.</summary>
+        public int SentTo(int seat) => Volatile.Read(ref _sentTo[seat]);
+
+        /// <summary>Counts per SEAT, not per connection, so the wait stays right across a
+        /// reconnect. It assumes a seat's client is reading the wire the frames went to; a seat
+        /// that is away receives nothing to wait for, which is why a test holding one away must
+        /// not use these for that seat.</summary>
         private async Task WithDeltaAsync(System.Action serverAction)
         {
-            int before0 = _client0?.InboundProcessed ?? 0, count0 = _conn0.Count;
-            int before1 = _client1?.InboundProcessed ?? 0, count1 = _conn1.Count;
-            serverAction();
+            int before0 = _client0?.InboundProcessed ?? 0, count0 = SentTo(0);
+            int before1 = _client1?.InboundProcessed ?? 0, count1 = SentTo(1);
+            lock (_dispatchGate) serverAction();
             var tasks = new List<Task>(2);
-            if (_client0 is not null) tasks.Add(_client0.WaitInboundAsync(before0 + (_conn0.Count - count0)));
-            if (_client1 is not null) tasks.Add(_client1.WaitInboundAsync(before1 + (_conn1.Count - count1)));
+            if (_client0 is not null) tasks.Add(_client0.WaitInboundAsync(before0 + (SentTo(0) - count0)));
+            if (_client1 is not null) tasks.Add(_client1.WaitInboundAsync(before1 + (SentTo(1) - count1)));
             await Task.WhenAll(tasks).ConfigureAwait(false);
         }
 
@@ -166,8 +257,18 @@ namespace Kingdom.Net.Client.Tests.Support
                     DeviceTokens[origin == _conn0 ? 0 : 1] = hello.DeviceToken;
                     continue;
                 }
-                Session.Dispatch(new SessionCommand.Frame(origin, bytes));
+                lock (_dispatchGate) Session.Dispatch(new SessionCommand.Frame(origin, bytes));
             }
+        }
+
+        /// <summary>The network under seat <paramref name="seat"/>'s ORIGINAL wire goes: the client
+        /// sees its socket close with no reason, and the session hears the disconnect, as the gate's
+        /// receive loop posts it when a real socket dies.</summary>
+        public void DropOriginalWire(int seat)
+        {
+            SeatConnection conn = seat == 0 ? _conn0 : _conn1;
+            (seat == 0 ? Transport0 : Transport1).ServerClose();
+            lock (_dispatchGate) Session.Dispatch(new SessionCommand.Disconnected(conn));
         }
 
         /// <summary>Device tokens seen at the door, seat-indexed — the gate's attribution, mirrored

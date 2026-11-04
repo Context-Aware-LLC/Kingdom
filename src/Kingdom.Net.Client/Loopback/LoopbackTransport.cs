@@ -133,11 +133,16 @@ namespace Kingdom.Net.Client.Loopback
                 _serverCloseDetail = detail;
                 if (_waiter is not null) { waiter = _waiter; _waiter = null; }
             }
-            waiter?.TrySetResult(null);
             // With no buffered frames, waking an active receive is the close boundary and can
             // signal immediately. Otherwise ReceiveAsync drains the queue first and raises the
             // event only when it reaches EOF, matching an orderly socket close.
+            //
+            // The event goes BEFORE the wake, as a real socket orders them (WebSocketTransport
+            // raises, then returns null). Woken first, the reader can act on a close whose reason
+            // it has not been told yet — and a reconnecting session reads a missing reason as "the
+            // network went" and retries a close the server meant.
             if (waiter is not null) RaiseClosed(reason, detail);
+            waiter?.TrySetResult(null);
         }
     }
 }
