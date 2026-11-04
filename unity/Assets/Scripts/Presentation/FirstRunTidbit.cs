@@ -228,8 +228,7 @@ namespace Kingdom.Presentation
         {
             if (!IsShowing || _queue.Count == 0) return;
             Stamp();
-            // A tidbit built in code (the Herald's new-reign announcement, MainMenuController) can
-            // have no recording yet; the card is complete without one.
+            // A tidbit without a recording is still a complete card.
             string voice = _queue[0].VoiceAddress;
             if (!string.IsNullOrEmpty(voice)) _voice?.Play(voice);
         }

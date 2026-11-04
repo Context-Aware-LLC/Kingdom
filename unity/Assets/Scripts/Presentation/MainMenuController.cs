@@ -461,9 +461,8 @@ namespace Kingdom.Presentation
         /// on top of the first-run lesson — that launch records the reign silently, so the next
         /// announcement is the next King's.
         ///
-        /// <para><b>The tidbit is built here, not registered in <see cref="TidbitCatalog"/></b>, so
-        /// <c>HeraldVoiceVerify</c> does not demand a recording that does not exist yet. Its id is
-        /// per reign because FirstRunTidbit shows an id once. The reign counts as heard when the scroll
+        /// <para><b>The tidbit is built here, not registered in <see cref="TidbitCatalog"/></b>,
+        /// because its id is per reign and FirstRunTidbit shows an id once. The reign counts as heard when the scroll
         /// rolls shut, the same moment the tidbit marker is written: a player who quits mid-card has
         /// not heard it.</para>
         ///
@@ -496,9 +495,7 @@ namespace Kingdom.Presentation
                 "king_herald_title",
                 "king_herald_body",
                 artKey: null,
-                // No recording of this line exists yet; the card reads complete without one. When one
-                // lands in Assets/Sound/Voice/Herald, pass its "vo/..." address here.
-                voiceAddress: null);
+                voiceAddress: "vo/vo_herald_new_king");
             _tidbit.Show(new[] { herald }, () =>
             {
                 RememberReign(reign);
