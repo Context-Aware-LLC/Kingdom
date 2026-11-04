@@ -3,8 +3,9 @@
   SuccessionRoll.uxml: His Majesty's commission this week, and last week's Favorite under it (King
   of the Week, #421). Built at runtime by SuccessionRollOverlay through Resources, the pattern
   LedgerScreen uses, and read on the herald's scroll: ProclamationScroll wraps roll-sheet in code, so
-  the rollers are not in this markup. Past winners belong on a leaderboard of their own (Sam,
-  2026-11-03), and the reign's Favor board gets a link here once it is ready.
+  the rollers are not in this markup. Past winners are on a leaderboard of their own, the
+  Succession Roll tab of the leaderboard modal (Sam, 2026-11-03), and roll-favor opens that
+  modal on this reign's Favor board.
 
   .emb-root IS LOAD-BEARING: this tree is its own UIDocument, so nothing above it declares the
   type and spacing tokens the rules here read. No doubled hyphen in this comment.
@@ -31,6 +32,7 @@
                 <ui:VisualElement name="roll-last-line" class="roll-last__line" />
             </ui:VisualElement>
             <ui:VisualElement class="roll-footer">
+                <ui:Button name="roll-favor" text="The King's Favorites" class="roll-button roll-footer__favor" />
                 <ui:Button name="roll-close" text="Close" class="roll-button emb-primary" />
             </ui:VisualElement>
         </ui:VisualElement>

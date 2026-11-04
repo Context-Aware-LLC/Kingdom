@@ -150,6 +150,11 @@
     font-size: var(--type-body);
 }
 
+/* The way to this reign's Favor board, slate beside the ember Close. */
+.roll-footer__favor {
+    margin-right: var(--space-4);
+}
+
 /* ============================================================================
    THE PRIZE CHOICE: one card back from the pool, for a top-three place held
    before (#421). Opened on menu arrival by PrizeChoiceOverlay, on the same

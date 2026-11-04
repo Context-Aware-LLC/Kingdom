@@ -634,11 +634,13 @@
     margin-left: var(--space-2);
 }
 
-/* ---------- Ranked ladder and the King's Favor ----------
- * Two boards in one modal (#421). 960 rather than 820 so both tab titles sit on one line beside
- * Close at --type-body; a tab that still runs long (a translation) ellipsizes rather than wrap. */
+/* ---------- Ranked ladder, the King's Favor and the Succession Roll ----------
+ * Three boards in one modal (#421). 1200 so all three tab titles sit on one line beside Close at
+ * --type-body: measured in Modern Antiqua at 24px with synthetic bold, the titles and their padding
+ * are about 975 and Close about 140, against 1152 inside. A tab that still runs long (a
+ * translation) ellipsizes rather than wrap. */
 .mm-leaderboard {
-    width: 960px;
+    width: 1200px;
     max-width: 100%;
     height: 100%;
     padding: var(--space-6);
@@ -764,6 +766,50 @@
     color: var(--ink-2);
     font-size: var(--type-label);
     -unity-text-align: middle-right;
+}
+/* The Succession Roll: reign, Favorite, and the King in two lines, his epithet over his fate. The
+ * row grows to hold both lines; the King takes more of the width than the name, because an epithet
+ * runs to fifty characters and a name to twenty. */
+.mm-leaderboard__row--roll {
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+}
+.mm-leaderboard__reign {
+    width: 120px;
+    flex-shrink: 0;
+    color: var(--ink-2);
+    font-size: var(--type-label);
+    -unity-font-style: bold;
+}
+.mm-leaderboard__row--roll .mm-leaderboard__name,
+#roll-columns .mm-leaderboard__name {
+    flex-basis: 0;
+}
+.mm-leaderboard__name--none {
+    color: var(--ink-2);
+    -unity-font-style: italic;
+    font-size: var(--type-label);
+}
+.mm-leaderboard__king {
+    flex-grow: 1.6;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-width: 0;
+    padding-left: var(--space-4);
+}
+.mm-leaderboard__epithet,
+.mm-leaderboard__fate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.mm-leaderboard__epithet {
+    color: var(--ink-1);
+    font-size: var(--type-label);
+}
+.mm-leaderboard__fate {
+    color: var(--ink-2);
+    font-size: var(--type-caption);
 }
 .mm-leaderboard__status {
     flex-grow: 1;

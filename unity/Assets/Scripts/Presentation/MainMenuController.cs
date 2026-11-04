@@ -50,11 +50,17 @@ namespace Kingdom.Presentation
         private CancellationTokenSource _leaderboardRequest;
         private Button _ladderTab;
         private Button _favorTab;
+        private Button _rollTab;
         private VisualElement _ladderColumns;
         private VisualElement _favorColumns;
+        private VisualElement _rollColumns;
         private VisualElement _favorMe;
-        /// <summary>Which board the modal shows. It always opens on the ladder.</summary>
-        private bool _showingFavor;
+
+        private enum Board { Ladder, Favor, Roll }
+
+        /// <summary>Which board the modal shows. The leaderboard button opens it on the ladder; the
+        /// commission sheet opens it on the Favor.</summary>
+        private Board _board;
 
         private Label _goldBalance;
         private Label _gemBalance;
@@ -116,7 +122,7 @@ namespace Kingdom.Presentation
             Wire("btn-leaderboards", OnLeaderboards);
             Wire("btn-card-vault", OnCardVault);
             Wire("btn-ledger", () => LedgerOverlay.Open());
-            Wire("btn-king", () => SuccessionRollOverlay.Open(_king));
+            Wire("btn-king", () => SuccessionRollOverlay.Open(_king, OpenFavorBoard));
             Wire("btn-leaderboard-close", CloseLeaderboard);
             BindAchievements();
             BindLeaderboard();
@@ -430,9 +436,12 @@ namespace Kingdom.Presentation
         {
             KingNow king = await request;
             if (this == null) return;   // the menu left while the read was in flight
-            // The Favor board is this reign's, so with no King there is no tab for it. Before the
-            // dock check: the tab lives in the leaderboard modal and does not need the dock.
-            if (_favorTab != null) _favorTab.style.display = king == null ? DisplayStyle.None : DisplayStyle.Flex;
+            // The Favor board is this reign's and the Roll is every reign's, so with no King there is
+            // no tab for either. Before the dock check: the tabs live in the leaderboard modal and do
+            // not need the dock.
+            DisplayStyle kingTabs = king == null ? DisplayStyle.None : DisplayStyle.Flex;
+            if (_favorTab != null) _favorTab.style.display = kingTabs;
+            if (_rollTab != null) _rollTab.style.display = kingTabs;
             if (_kingDock == null) return;
             if (king == null)
             {
@@ -933,21 +942,33 @@ namespace Kingdom.Presentation
                 if (evt.target == _leaderboardModal) CloseLeaderboard();
             });
 
-            // Two boards, one list (#421). The tabs are ShopPanelController's: each names its board
-            // and selects it, and ShowBoard is the one place both halves change together.
+            // Three boards, one list (#421). The tabs are ShopPanelController's: each names its board
+            // and selects it, and ShowBoard is the one place the tabs and columns change together.
             _ladderTab = _root.Q<Button>("leaderboard-tab-ladder");
             _favorTab = _root.Q<Button>("leaderboard-tab-favor");
+            _rollTab = _root.Q<Button>("leaderboard-tab-roll");
             _ladderColumns = _root.Q<VisualElement>("leaderboard-columns");
             _favorColumns = _root.Q<VisualElement>("favor-columns");
+            _rollColumns = _root.Q<VisualElement>("roll-columns");
             _favorMe = _root.Q<VisualElement>("favor-me");
-            if (_ladderTab != null) _ladderTab.clicked += () => ShowBoard(favor: false);
-            if (_favorTab != null) _favorTab.clicked += () => ShowBoard(favor: true);
+            if (_ladderTab != null) _ladderTab.clicked += () => ShowBoard(Board.Ladder);
+            if (_favorTab != null) _favorTab.clicked += () => ShowBoard(Board.Favor);
+            if (_rollTab != null) _rollTab.clicked += () => ShowBoard(Board.Roll);
         }
 
         private void OnLeaderboards()
         {
             Show(_leaderboardModal);
-            ShowBoard(favor: false);
+            ShowBoard(Board.Ladder);
+        }
+
+        /// <summary>The commission sheet's way to this reign's board. It calls once it has rolled up,
+        /// which may be after the menu has gone.</summary>
+        private void OpenFavorBoard()
+        {
+            if (this == null) return;
+            Show(_leaderboardModal);
+            ShowBoard(Board.Favor);
         }
 
         private void CloseLeaderboard()
@@ -958,16 +979,23 @@ namespace Kingdom.Presentation
 
         /// <summary>Marks the tab, swaps the column heads and reads that board. A board is read every
         /// time it is shown: the Favor moves with every match, and a tab is cheaper than a stale one.</summary>
-        private void ShowBoard(bool favor)
+        private void ShowBoard(Board board)
         {
-            _showingFavor = favor;
-            Toggle(_ladderTab, "mm-leaderboard__tab--on", !favor);
-            Toggle(_favorTab, "mm-leaderboard__tab--on", favor);
-            Toggle(_ladderColumns, "mm-leaderboard__columns--hidden", favor);
-            Toggle(_favorColumns, "mm-leaderboard__columns--hidden", !favor);
+            _board = board;
+            Toggle(_ladderTab, "mm-leaderboard__tab--on", board == Board.Ladder);
+            Toggle(_favorTab, "mm-leaderboard__tab--on", board == Board.Favor);
+            Toggle(_rollTab, "mm-leaderboard__tab--on", board == Board.Roll);
+            Toggle(_ladderColumns, "mm-leaderboard__columns--hidden", board != Board.Ladder);
+            Toggle(_favorColumns, "mm-leaderboard__columns--hidden", board != Board.Favor);
+            Toggle(_rollColumns, "mm-leaderboard__columns--hidden", board != Board.Roll);
             _favorMe?.Clear();
             Toggle(_favorMe, "mm-leaderboard__me--hidden", true);
-            _ = favor ? RefreshFavorAsync() : RefreshLeaderboardAsync();
+            _ = board switch
+            {
+                Board.Favor => RefreshFavorAsync(),
+                Board.Roll => RefreshRollAsync(),
+                _ => RefreshLeaderboardAsync(),
+            };
         }
 
         private static void Toggle(VisualElement element, string className, bool on)
@@ -1058,7 +1086,7 @@ namespace Kingdom.Presentation
                 board = null;
             }
             FavorStanding me = await standing;
-            if (this == null || token.IsCancellationRequested || !_showingFavor) return;
+            if (this == null || token.IsCancellationRequested || _board != Board.Favor) return;
 
             // No King and an unread board are one null (HttpKingGateway); the tab only shows while a
             // King is known, so here it is a failed read.
@@ -1094,6 +1122,82 @@ namespace Kingdom.Presentation
                     (me.Score ?? 0).ToString(CultureInfo.InvariantCulture), "mm-leaderboard__score", record: null));
                 _favorMe.RemoveFromClassList("mm-leaderboard__me--hidden");
             }
+        }
+
+        /// <summary>
+        /// The Succession Roll: every reign that has ended, newest first, with its Favorite and the
+        /// King who named them (Sam, 2026-11-03: past winners get a leaderboard of their own). The
+        /// reign on the throne is left off, since it has no Favorite until it ends.
+        /// </summary>
+        private async System.Threading.Tasks.Task RefreshRollAsync()
+        {
+            CancellationToken token = BeginBoardRead();
+
+            _leaderboardList?.Clear();
+            SetLeaderboardStatus(Loc.Get("common_calling_the_keepers"), error: false, visible: true);
+            if (_leaderboardUpdated != null) _leaderboardUpdated.text = " ";
+
+            System.Collections.Generic.IReadOnlyList<RollEntry> roll;
+            try
+            {
+                roll = await new HttpKingGateway(CollectionGateway.BaseUrl, new UnityWebRequestAuthHttp(KingTimeoutSeconds))
+                    .FetchRollAsync(token);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                return;   // a tab switch or a close cancelled it; nothing went wrong
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[King] Succession Roll read threw ({ex.GetType().Name}: {ex.Message}).");
+                roll = null;
+            }
+            if (this == null || token.IsCancellationRequested || _board != Board.Roll) return;
+
+            // The tab shows only while a King is known, and his reign is always the Roll's first line,
+            // so an empty Roll is a failed read (HttpKingGateway answers one for both).
+            if (roll == null || roll.Count == 0 || _king == null)
+            {
+                SetLeaderboardStatus(Loc.Get("king_roll_error"), error: true, visible: true);
+                return;
+            }
+
+            if (_leaderboardUpdated != null) _leaderboardUpdated.text = Loc.Get("king_roll_footer");
+            int shown = 0;
+            foreach (RollEntry entry in roll)
+            {
+                if (entry.Reign >= _king.Reign) continue;
+                _leaderboardList?.Add(BuildRollRow(entry));
+                shown++;
+            }
+            if (shown == 0) SetLeaderboardStatus(Loc.Get("king_roll_empty"), error: false, visible: true);
+            else SetLeaderboardStatus("", error: false, visible: false);
+        }
+
+        /// <summary>One closed reign: its number, its Favorite, and the King, by epithet and fate.</summary>
+        private static VisualElement BuildRollRow(RollEntry entry)
+        {
+            var row = new VisualElement();
+            row.AddToClassList("mm-leaderboard__row");
+            row.AddToClassList("mm-leaderboard__row--roll");
+            if (entry.Reign % 2 == 0) row.AddToClassList("mm-leaderboard__row--even");
+
+            row.Add(LabelFor(Loc.Format("king_roll_reign", entry.Reign), "mm-leaderboard__reign"));
+            // Null is no Favorite; "" is a Favorite with no name to show (KingText.SubjectName).
+            if (entry.Favorite == null)
+            {
+                Label none = LabelFor(Loc.Get("king_roll_no_favorite"), "mm-leaderboard__name");
+                none.AddToClassList("mm-leaderboard__name--none");
+                row.Add(none);
+            }
+            else row.Add(NameLabelFor(KingText.SubjectName(entry.Favorite)));
+
+            var king = new VisualElement { pickingMode = PickingMode.Ignore };
+            king.AddToClassList("mm-leaderboard__king");
+            king.Add(LabelFor(KingText.Epithet(entry.Epithet), "mm-leaderboard__epithet"));
+            king.Add(LabelFor(KingText.Fate(entry.Fate), "mm-leaderboard__fate"));
+            row.Add(king);
+            return row;
         }
 
         /// <summary>The signed-in player's standing, or null when signed out or unread. Never throws:

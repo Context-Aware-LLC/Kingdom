@@ -16,8 +16,9 @@ namespace Kingdom.Presentation
     /// last week's Favorite. Opened from the crown in the main menu dock, which shows nothing else,
     /// because beside the crown over the stage art the words could not be read (Sam, 2026-11-03).
     ///
-    /// <para><b>Past winners are not here.</b> They belong on a leaderboard of their own, and the
-    /// reign's Favor board gets a link from this sheet once it is ready (Sam, 2026-11-03).</para>
+    /// <para><b>Past winners are not here.</b> They are on a leaderboard of their own, the Succession
+    /// Roll tab of the main menu's leaderboard modal (Sam, 2026-11-03). The sheet's other button
+    /// closes it and opens that modal on this reign's Favor board.</para>
     ///
     /// <para>The commission comes from the King the menu already read, so it shows at once. Last
     /// week's Favorite is the second line of the server's Roll (<c>GET /king/roll</c>, newest
@@ -45,17 +46,19 @@ namespace Kingdom.Presentation
         /// <summary>Open the sheet over whatever screen is up. Returns the overlay's GameObject.</summary>
         /// <param name="king">The King on the throne, whose commission the sheet shows. The menu
         /// passes the one it already read, so the commission costs no second request.</param>
-        public static GameObject Open(KingNow king = null)
+        /// <param name="openFavor">Opens this reign's Favor board, called once the sheet has rolled
+        /// up. Null, or no King, hides the button.</param>
+        public static GameObject Open(KingNow king = null, Action openFavor = null)
         {
             var go = new GameObject(ObjectName);
             var doc = go.AddComponent<UIDocument>();
             doc.panelSettings   = Resources.Load<PanelSettings>("MatchSettingsPanelSettings");
             doc.visualTreeAsset = Resources.Load<VisualTreeAsset>("SuccessionRoll");
-            go.AddComponent<SuccessionRollOverlay>().Init(king);
+            go.AddComponent<SuccessionRollOverlay>().Init(king, openFavor);
             return go;
         }
 
-        private void Init(KingNow king)
+        private void Init(KingNow king, Action openFavor)
         {
             VisualElement root = GetComponent<UIDocument>().rootVisualElement;
             if (root == null)
@@ -67,7 +70,14 @@ namespace Kingdom.Presentation
             UiLocalizer.Attach(root);
 
             Button close = root.Q<Button>("roll-close");
-            if (close != null) close.clicked += Close;
+            if (close != null) close.clicked += () => Close(null);
+            Button favor = root.Q<Button>("roll-favor");
+            if (favor != null)
+            {
+                // The board is this reign's, so with no King there is nothing for it to show.
+                if (openFavor == null || king == null) favor.style.display = DisplayStyle.None;
+                else favor.clicked += () => Close(openFavor);
+            }
 
             ShowNow(root, king);
             _last = root.Q<VisualElement>("roll-last");
@@ -110,13 +120,20 @@ namespace Kingdom.Presentation
             label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
         }
 
-        private void Close()
+        /// <param name="then">Runs once the sheet is gone, so whatever it opens is not drawn under
+        /// the scroll.</param>
+        private void Close(Action then)
         {
             // A tap while the scroll moves is a tap on a button half behind a roller.
             if (_closing || _scroll?.IsMoving == true) return;
             _closing = true;
-            if (_scroll == null) { Destroy(gameObject); return; }
-            _scroll.Close(() => { if (this != null) Destroy(gameObject); });
+            if (_scroll == null) { Destroy(gameObject); then?.Invoke(); return; }
+            _scroll.Close(() =>
+            {
+                if (this == null) return;
+                Destroy(gameObject);
+                then?.Invoke();
+            });
         }
 
         private async Task LoadLastWeekAsync()

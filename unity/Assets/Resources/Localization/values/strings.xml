@@ -141,6 +141,11 @@
     <!-- The leaderboard modal's second tab: this reign's King's Favor board. -->
     <string name="main_menu_the_king_s_favorites">The King\'s Favorites</string>
     <string name="main_menu_score">SCORE</string>
+    <!-- The leaderboard modal's third tab: every closed reign, newest first, and its Favorite. -->
+    <string name="main_menu_the_succession_roll">The Succession Roll</string>
+    <string name="main_menu_reign">REIGN</string>
+    <string name="main_menu_favorite">FAVORITE</string>
+    <string name="main_menu_king">KING</string>
     <string name="match_proclamation_spoils">Spoils</string>
     <string name="match_proclamation_the_council_s_findings">The Council\'s Findings</string>
     <string name="match_settings_toggle_mute_mute">Mute</string>
@@ -1019,6 +1024,11 @@
     <string name="king_favor_empty">Nobody has caught His Majesty\'s eye yet this reign.</string>
     <!-- Under the Favor board. %1$d = the reign number; %2$s = how the commission is scored, e.g. The lowest Health you won at. -->
     <string name="king_favor_footer">Reign %1$d · %2$s</string>
+    <!-- The Succession Roll tab of the leaderboard modal. -->
+    <string name="king_roll_error">His Majesty\'s clerks have mislaid the Roll. Try again in a moment.</string>
+    <string name="king_roll_empty">No King has finished his reign yet. The first Favorite is named when this one ends.</string>
+    <!-- Under the Roll. -->
+    <string name="king_roll_footer">Every King since the first, the latest at the top.</string>
     <!-- The match-end proclamation, under the reason. %1$s = the commission's name, e.g. Overkill; %2$d = this match's score. -->
     <string name="king_proc_commission">His commission, %1$s: %2$d</string>
     <string name="king_proc_commission_new_best">His commission, %1$s: %2$d. New best!</string>
