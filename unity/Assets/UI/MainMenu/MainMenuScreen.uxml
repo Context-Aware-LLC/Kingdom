@@ -55,17 +55,17 @@
         <ui:VisualElement name="footer" class="mm-footer emb-edge">
             <ui:Label name="version-label" text="—" class="mm-version"/>
         </ui:VisualElement>
-        <ui:VisualElement name="leaderboard-modal" class="mm-modal mm-modal--board mm-modal--hidden emb-bleed">
+        <ui:VisualElement name="leaderboard-modal" class="mm-modal mm-modal--hidden emb-bleed">
             <ui:VisualElement class="mm-modal__panel mm-leaderboard">
                 <!-- THE TABS ARE THE BOARD TITLES, as in ShopScreen.uxml. The Favor and Roll tabs stay
-                     hidden until a King is read (MainMenuController.ShowKingAsync), like king-dock. -->
+                     hidden until a King is read (MainMenuController.ShowKingAsync), like king-dock.
+                     The row is the tabs' alone: Close is bottom left, in the footer (Sam, 2026-11-03). -->
                 <ui:VisualElement class="mm-leaderboard__header">
                     <ui:VisualElement class="mm-leaderboard__tabs">
                         <ui:Button name="leaderboard-tab-ladder" text="Ladder" class="mm-leaderboard__tab mm-leaderboard__tab--on"/>
                         <ui:Button name="leaderboard-tab-favor" text="King's Favorites" class="mm-leaderboard__tab" style="display: none;"/>
                         <ui:Button name="leaderboard-tab-roll" text="The Succession Roll" class="mm-leaderboard__tab" style="display: none;"/>
                     </ui:VisualElement>
-                    <ui:Button name="btn-leaderboard-close" text="Close" class="mm-modal__button mm-leaderboard__close"/>
                 </ui:VisualElement>
                 <ui:VisualElement name="leaderboard-columns" class="mm-leaderboard__columns">
                     <ui:Label text="RANK" class="mm-leaderboard__rank"/>
@@ -86,7 +86,10 @@
                 <ui:Label name="leaderboard-status" text="Calling the keepers…" class="mm-leaderboard__status"/>
                 <ui:ScrollView name="leaderboard-list" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="mm-leaderboard__list"/>
                 <ui:VisualElement name="favor-me" class="mm-leaderboard__me mm-leaderboard__me--hidden"/>
-                <ui:Label name="leaderboard-updated" text="Ratings update after every eligible match." class="mm-leaderboard__updated"/>
+                <ui:VisualElement class="mm-leaderboard__footer">
+                    <ui:Button name="btn-leaderboard-close" text="Close" class="mm-modal__button mm-leaderboard__close"/>
+                    <ui:Label name="leaderboard-updated" text="Ratings update after every eligible match." class="mm-leaderboard__updated"/>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <!-- TIDBIT: the first-look card, driven by FirstRunTidbit (#403). LAST CHILD ON PURPOSE:

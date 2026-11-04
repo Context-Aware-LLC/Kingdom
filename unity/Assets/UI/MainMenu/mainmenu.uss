@@ -635,23 +635,16 @@
 }
 
 /* ---------- Ranked ladder, the King's Favor and the Succession Roll ----------
- * Three boards on one FULL-SCREEN page (#421). As a 1200px panel every tab title ellipsized on
- * Sam's screen (2026-11-03), so the boards take the whole screen: an opaque backdrop hides the
- * menu, and the board itself is a borderless column, as wide as the screen up to 1600 so a row's
- * name and number do not drift two thousand pixels apart on a 20:9 phone. */
-.mm-modal--board {
-    background-color: var(--surface-0);
-}
+ * Three boards in one modal (#421). The tab row belongs to the tabs alone, and Close sits bottom
+ * left in the footer (Sam, 2026-11-03): with Close beside them, every title ellipsized in this
+ * panel, and a full-screen page was too much. */
 .mm-leaderboard {
-    width: 100%;
-    max-width: 1600px;
+    width: 1200px;
+    max-width: 100%;
     height: 100%;
-    padding: var(--space-4) 0;
-    background-color: rgba(0, 0, 0, 0);
-    border-width: 0;
-    border-radius: 0;
+    padding: var(--space-6);
+    border-color: rgba(240, 166, 60, 0.55);
 }
-/* Tabs and close on ONE row, close hard right. The tab bar takes the growth. */
 .mm-leaderboard__header {
     flex-direction: row;
     align-items: center;
@@ -666,9 +659,9 @@
 }
 /* A tab is the board's name and its selector at once, copied from .shop-tab (shop.uss), at its
  * --type-h2: --on is CONTRAST plus the underline and never changes geometry, so switching boards
- * cannot reflow the header. A tab is as wide as its title and never shrinks: on the full-screen
- * page the three titles and Close measure about 910 of a 4:3 screen's 1440. The ellipsis stays as the
- * backstop for a translation that still runs long, never a wrap and never Close pushed off. */
+ * cannot reflow the header. A tab is as wide as its title and never shrinks: the three titles
+ * measure about 770 of the row's 1152. The ellipsis stays as the backstop for a translation that
+ * still runs long, never a wrap. */
 .mm-leaderboard__tab {
     flex-shrink: 0;
     min-height: var(--touch-min);
@@ -699,10 +692,16 @@
     color: var(--ink-1);
     border-bottom-color: var(--accent);
 }
-/* Close never gives width to the tabs: they shrink, it does not. */
+/* Close bottom left, the footer note beside it. */
+.mm-leaderboard__footer {
+    flex-direction: row;
+    align-items: center;
+    margin-top: var(--space-4);
+}
 .mm-leaderboard__close {
     flex-shrink: 0;
-    margin-left: var(--space-6);
+    margin-left: 0;
+    margin-right: var(--space-6);
 }
 .mm-leaderboard__columns--hidden {
     display: none;
@@ -839,9 +838,10 @@
     display: none;
 }
 .mm-leaderboard__updated {
+    flex-shrink: 1;
+    min-width: 0;
     color: var(--ink-2);
     font-size: var(--type-caption);
-    margin-top: var(--space-3);
 }
 
 /* ---------- Update gate (UpdateGateOverlay: waiting, update required, unreachable) ---------- */
