@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Kingdom.Core.Collection;
 using Kingdom.Net.Client.Collection;
 using Kingdom.Net.Client.Shop;
 using Kingdom.Session;
@@ -110,7 +109,10 @@ namespace Kingdom.Presentation
         /// hold a starter pack (see <c>OnboardingGrant.StarterPack</c>). Once one can be bought, a
         /// returning player opening one would be sent home to a guided menu: gate
         /// <see cref="FinishGift"/> on the first-run route instead.</para></summary>
-        private static readonly string StarterPackId = OnboardingGrant.StarterPack().Id;
+        // Qualified, not imported: Kingdom.Core.Collection also declares a PackOpenResult, and a
+        // using for it makes every PackOpenResult below ambiguous with the gateway's (CS0104).
+        private static readonly string StarterPackId =
+            Kingdom.Core.Collection.OnboardingGrant.StarterPack().Id;
 
         private VisualElement _root;
         private VisualElement _rack;
