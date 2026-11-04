@@ -635,16 +635,21 @@
 }
 
 /* ---------- Ranked ladder, the King's Favor and the Succession Roll ----------
- * Three boards in one modal (#421). 1200 so all three tab titles sit on one line beside Close at
- * --type-body: measured in Modern Antiqua at 24px with synthetic bold, the titles and their padding
- * are about 975 and Close about 140, against 1152 inside. A tab that still runs long (a
- * translation) ellipsizes rather than wrap. */
+ * Three boards on one FULL-SCREEN page (#421). As a 1200px panel every tab title ellipsized on
+ * Sam's screen (2026-11-03), so the boards take the whole screen: an opaque backdrop hides the
+ * menu, and the board itself is a borderless column, as wide as the screen up to 1600 so a row's
+ * name and number do not drift two thousand pixels apart on a 20:9 phone. */
+.mm-modal--board {
+    background-color: var(--surface-0);
+}
 .mm-leaderboard {
-    width: 1200px;
-    max-width: 100%;
+    width: 100%;
+    max-width: 1600px;
     height: 100%;
-    padding: var(--space-6);
-    border-color: rgba(240, 166, 60, 0.55);
+    padding: var(--space-4) 0;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    border-radius: 0;
 }
 /* Tabs and close on ONE row, close hard right. The tab bar takes the growth. */
 .mm-leaderboard__header {
@@ -659,16 +664,15 @@
     flex-direction: row;
     align-items: stretch;
 }
-/* A tab is the board's name and its selector at once, copied from .shop-tab (shop.uss): --on is
- * CONTRAST plus the underline and never changes geometry, so switching boards cannot reflow the
- * header. --type-body, not .shop-tab's --type-h2: at h2 the two titles and Close overrun the
- * panel's ~912px inside. One line always; min-width 0 lets a tab shrink, and the ellipsis is the
- * backstop if it has to, never a wrap and never Close pushed off the panel. */
+/* A tab is the board's name and its selector at once, copied from .shop-tab (shop.uss), at its
+ * --type-h2: --on is CONTRAST plus the underline and never changes geometry, so switching boards
+ * cannot reflow the header. A tab is as wide as its title and never shrinks: on the full-screen
+ * page the three titles and Close measure about 910 of a 4:3 screen's 1440. The ellipsis stays as the
+ * backstop for a translation that still runs long, never a wrap and never Close pushed off. */
 .mm-leaderboard__tab {
-    flex-shrink: 1;
-    min-width: 0;
+    flex-shrink: 0;
     min-height: var(--touch-min);
-    padding: 0 var(--space-3);
+    padding: 0 var(--space-6);
     margin: 0;
     border-width: 0;
     border-bottom-width: 3px;
@@ -677,7 +681,7 @@
     background-color: rgba(0, 0, 0, 0);
     background-image: none;
     color: var(--ink-2);
-    font-size: var(--type-body);
+    font-size: var(--type-h2);
     -unity-font-style: bold;
     -unity-text-align: middle-center;
     white-space: nowrap;

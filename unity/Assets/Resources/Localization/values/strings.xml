@@ -133,13 +133,14 @@
     <string name="main_menu_btn_leaderboards">Leaderboards</string>
     <string name="main_menu_btn_card_vault_tooltip">Open Card Vault</string>
     <string name="main_menu_btn_ledger_tooltip">Open the Ledger</string>
-    <string name="main_menu_the_official_register_of">The Official Register of Winners</string>
+    <!-- The leaderboard modal's first tab: the ranked ladder. -->
+    <string name="main_menu_ladder">Ladder</string>
     <string name="main_menu_rank">RANK</string>
     <string name="main_menu_player">PLAYER</string>
     <string name="main_menu_rating">RATING</string>
     <string name="main_menu_leaderboard_updated">Ratings update after every eligible match.</string>
     <!-- The leaderboard modal's second tab: this reign's King's Favor board. -->
-    <string name="main_menu_the_king_s_favorites">The King\'s Favorites</string>
+    <string name="main_menu_king_s_favorites">King\'s Favorites</string>
     <string name="main_menu_score">SCORE</string>
     <!-- The leaderboard modal's third tab: every closed reign, newest first, and its Favorite. -->
     <string name="main_menu_the_succession_roll">The Succession Roll</string>

@@ -32,7 +32,7 @@
                 <ui:VisualElement name="roll-last-line" class="roll-last__line" />
             </ui:VisualElement>
             <ui:VisualElement class="roll-footer">
-                <ui:Button name="roll-favor" text="The King's Favorites" class="roll-button roll-footer__favor" />
+                <ui:Button name="roll-favor" text="King's Favorites" class="roll-button roll-footer__favor" />
                 <ui:Button name="roll-close" text="Close" class="roll-button emb-primary" />
             </ui:VisualElement>
         </ui:VisualElement>

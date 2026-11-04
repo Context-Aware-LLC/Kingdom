@@ -99,7 +99,7 @@
     <string name="main_menu_btn_leaderboards">Ranglisten</string>
     <string name="main_menu_btn_card_vault_tooltip">Kartentresor öffnen</string>
     <string name="main_menu_btn_ledger_tooltip">Hauptbuch öffnen</string>
-    <string name="main_menu_the_official_register_of">Das amtliche Siegerverzeichnis</string>
+    <string name="main_menu_ladder">Rangliste</string>
     <string name="main_menu_rank">RANG</string>
     <string name="main_menu_player">SPIELER</string>
     <string name="main_menu_rating">WERTUNG</string>
