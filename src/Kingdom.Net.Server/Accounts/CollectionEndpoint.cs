@@ -182,14 +182,25 @@ namespace Kingdom.Net.Server.Accounts
                 try
                 {
                     await onboarding.EnsureGrantedAsync(account, ct).ConfigureAwait(false);
-                    // The backfill: an account that emptied its shelf before the flag was derived
-                    // is marked on its next launch, because this is the route every launch reaches.
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    Console.Error.WriteLine("[collection] onboarding grant failed for player_id={0}: {1}",
+                        account.PlayerId, ex.Message);
+                }
+
+                // The backfill: an account that emptied its shelf before the flag was derived is
+                // marked on its next launch, because this is the route every launch reaches. Its own
+                // try, NOT the grant's: an account onboarded under older grant terms Conflicts on
+                // every resolve, and that refusal must not also stop the flag the ledger proves.
+                try
+                {
                     account = await onboarding.MarkOnboardedIfCompleteAsync(account, accountStore, ct)
                         .ConfigureAwait(false);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    Console.Error.WriteLine("[collection] onboarding grant or flag failed for player_id={0}: {1}",
+                    Console.Error.WriteLine("[collection] onboarded flag failed for player_id={0}: {1}",
                         account.PlayerId, ex.Message);
                 }
             }

@@ -233,6 +233,70 @@ namespace Kingdom.Net.Server.Tests.Accounts
                         "GET /collection is the route every launch reaches, so it is where the backfill lands");
         }
 
+        /// <summary>The card pool one release later: one more common, so the grant's indexed rows no
+        /// longer match what an older account was given and the signup batch comes back Conflict.</summary>
+        private static ICardDatabase CardsAfterAContentChange()
+        {
+            var cards = new List<CardDefinition>(Cards().AllCollectible())
+            {
+                Card("common_added_later", Rarity.COMMON, SetId.PENDINGHAM),
+            };
+            return new StubCardDatabase(cards);
+        }
+
+        /// <summary>An account onboarded under the old grant, every starter opened, flag never set —
+        /// then served by a build whose grant resolves differently. Precondition-checked, so a test
+        /// that passes here is not passing because the grant quietly succeeded.</summary>
+        private static async Task<(InMemoryAccountStore store, InMemoryEntitlementLedger ledger,
+                                   OnboardingGrantService current)> DriftedAndFullyOpenedAsync()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var store = new InMemoryAccountStore(new FixedTime());
+            ICardDatabase old = Cards();
+            var then = new OnboardingGrantService(ledger, old, new FixedTime());
+            var opener = new BoosterPackGrantService(
+                ledger, new InMemoryPackPityStore(), new FixedPackSeedSource(0xC0FFEE), old, new FixedTime());
+
+            Account account = await store.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));
+            await then.EnsureGrantedAsync(account);
+            for (int i = 0; i < OnboardingGrant.StarterPackCount; i++)
+                await PackOpenEndpoint.OpenAsync(
+                    Token, StarterId, new StubVerifier(), store, ledger, opener, onboarding: null);
+            Assert.That(await OnboardedAsync(store), Is.False, "precondition: nothing has set it yet");
+
+            var current = new OnboardingGrantService(ledger, CardsAfterAContentChange(), new FixedTime());
+            Assert.ThrowsAsync<InvalidOperationException>(() => current.EnsureGrantedAsync(account),
+                "precondition: the drifted grant must conflict, or this test proves nothing");
+            return (store, ledger, current);
+        }
+
+        [Test]
+        public async Task A_drifted_grant_does_not_block_the_collection_backfill()
+        {
+            // Every account onboarded before the launch set last changed is in this state: its signup
+            // batch Conflicts on every resolve (by design — it keeps what it was given). The flag is
+            // derived from the opened starter alone, so the conflict must not stop it being set.
+            var (store, ledger, current) = await DriftedAndFullyOpenedAsync();
+
+            await CollectionEndpoint.ReadAsync(
+                Token, new StubVerifier(), store, ledger, economy: null, onboarding: current);
+
+            Assert.That(await OnboardedAsync(store), Is.True,
+                        "a refused re-grant is not an unopened gift; the backfill must still land");
+        }
+
+        [Test]
+        public async Task A_drifted_grant_does_not_block_the_session_backfill()
+        {
+            var (store, _, current) = await DriftedAndFullyOpenedAsync();
+
+            SessionResult session = await SessionEndpoint.ReadAsync(
+                Token, new StubVerifier(), store, current);
+
+            Assert.That(session.Onboarded, Is.True,
+                        "/session must report the flag the ledger already proves");
+        }
+
         private static async Task<bool> OnboardedAsync(InMemoryAccountStore store)
         {
             Account account = await store.ResolveOrCreateAsync("supabase", CredentialHash.Of(Subject));

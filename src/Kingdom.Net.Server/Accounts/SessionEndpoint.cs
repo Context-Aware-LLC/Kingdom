@@ -110,14 +110,24 @@ namespace Kingdom.Net.Server.Accounts
                 try
                 {
                     await onboarding.EnsureGrantedAsync(account, ct).ConfigureAwait(false);
-                    account = await onboarding.MarkOnboardedIfCompleteAsync(account, accountStore, ct)
-                        .ConfigureAwait(false);
                 }
-                catch (System.Exception ex)
+                catch (System.Exception ex) when (ex is not System.OperationCanceledException)
                 {
                     // Logged, never swallowed silently: a grant failing every time is invisible
                     // otherwise. But it does not cost the player their launch.
-                    System.Console.Error.WriteLine("[session] onboarding grant or flag failed: {0}", ex.Message);
+                    System.Console.Error.WriteLine("[session] onboarding grant failed: {0}", ex.Message);
+                }
+
+                // Separate from the grant, as on /collection: a drifted signup batch Conflicts on
+                // every resolve and must not also hold back the flag the ledger already proves.
+                try
+                {
+                    account = await onboarding.MarkOnboardedIfCompleteAsync(account, accountStore, ct)
+                        .ConfigureAwait(false);
+                }
+                catch (System.Exception ex) when (ex is not System.OperationCanceledException)
+                {
+                    System.Console.Error.WriteLine("[session] onboarded flag failed: {0}", ex.Message);
                 }
             }
 
