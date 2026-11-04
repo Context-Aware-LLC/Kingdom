@@ -935,7 +935,7 @@ namespace Kingdom.Net.Server.Transport
                 // RETIREMENT TRIGGER: this line is why PrebuiltDecks is a dial on EVERY match rather
                 // than only the fallback ones. If HP ever stops coming from `fallback`, say so in
                 // PrebuiltDecks' class doc, in NetSoak's ParseHeroHp, and in
-                // tooling/scripts/bot_roster_to_corpus.py — all three assert this coupling by name.
+                // kingdom-training: tooling/scripts/bot_roster_to_corpus.py — all three assert this coupling by name.
                 var fallback = _decks.NextMatch();
                 var seat0 = first.Deck ?? SeatDeck.FromFallback(fallback, 0);
                 var seat1 = second.Deck ?? SeatDeck.FromFallback(fallback, 1);

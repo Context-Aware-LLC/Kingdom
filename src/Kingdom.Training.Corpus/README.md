@@ -17,7 +17,8 @@ match publishes a self-contained replay under `replays/` and appends its manifes
 abandoned, or capture-failed matches never receive a row. The ordinary operational journal remains
 under `/data/replays`.
 
-From the repository root, start the local watcher before playing:
+From the root of the private `kingdom-training` repo (the watcher moved there with the rest of the
+training tooling), start the local watcher before playing:
 
 ```powershell
 python tooling/scripts/capture_my_games.py
@@ -27,7 +28,7 @@ It polls Fly, verifies each finalized replay checksum, and appends new rows idem
 `F:\EmberfallData\human-inbox`. Stop it with Ctrl+C. Use `--once` to synchronize pending games and
 exit, `--out <directory>` to select another inbox, or `KINGDOM_HUMAN_INBOX` to change the default.
 The directory is still raw input: materialize a new immutable corpus version with the normal
-`Kingdom.Tools.TrainingCorpus build` command before exporting it for training.
+`Kingdom.Tools.TrainingCorpus build` command (private `kingdom-training` repo) before exporting it for training.
 
 Live capture currently labels ordinary connected seats `human`, roster bots with their policy
 identity, and synthetic soak seats `ai-soak`. Capturing all clean live matches is acceptable only
@@ -79,6 +80,8 @@ populations with no overlapping match seeds.
 
 The .NET builder, rather than Python, replays through the real Kingdom core and enumerates legal
 actions. Every observation is projected for the acting player before it is serialized.
+
+From the private `kingdom-training` repo root:
 
 ```powershell
 dotnet run --project src/Kingdom.Tools.TrainingCorpus -c Release -- build `
@@ -133,8 +136,10 @@ records `scorerBatch` in its identity: it cannot resume an unbatched capture, no
 another batch size. Without the flag nothing changes. Measurements and the configuration to use are
 in `work/gpu-batching/result-20261011.md`.
 
+From the private `kingdom-training` repo root:
+
 ```powershell
-dotnet run --project src/Kingdom.Tools.NetSoak -c Release -- rollout 2 `
+dotnet run --project src/Kingdom.Tools.TrainingSoak -c Release -- rollout 2 `
   "F:\EmberfallData\exports\<rl-export>" "F:\EmberfallData\runs\<run>\best-model.pt" `
   "F:\EmberfallData\rollouts\<new-capture>" --all-classes --deck-dir "<deck pool>" `
   --selection fair-search --search-plays 4 --search-sims 32 --workers 4 --scorer-processes 10
@@ -211,7 +216,9 @@ to `TrainingCorpusBuilder` as a `PlayKeyRule` because this assembly sits beneath
 
 The dependency-free streaming exporters validate this directory and can write all large artifacts
 to an external drive. Full format, split, padding, and restart semantics are documented in
-`tooling/scripts/training_exporters/README.md`.
+`tooling/scripts/training_exporters/README.md` in the private `kingdom-training` repo.
+
+From that repo's root:
 
 ```powershell
 python -m tooling.scripts.training_exporters export-rl `

@@ -29,6 +29,8 @@ for line in sys.stdin:
                       'logits': [0.0] * len(request['legalActions']), 'value': 0.5}), flush=True)
 ";
 
+        private const string ScriptVariable = CheckpointScorerProcess.ScriptVariable;
+
         private string _root = "";
 
         [SetUp]
@@ -64,6 +66,57 @@ for line in sys.stdin:
                 Assert.That(after.Logits, Has.Count.EqualTo(2));
                 Assert.That(scorer.Restarts, Is.EqualTo(1));
             });
+        }
+
+        [Test]
+        public async Task ScorerScriptFromEnvironmentNeedsNoRepositoryRoot()
+        {
+            // No tooling/ anywhere above this script: only the variable can find it.
+            string elsewhere = Path.Combine(
+                Path.GetTempPath(), "scorer-env-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(elsewhere);
+            string script = Path.Combine(elsewhere, "training_scorer.py");
+            File.WriteAllText(script, FakeScorer);
+            string? previous = Environment.GetEnvironmentVariable(ScriptVariable);
+            try
+            {
+                Environment.SetEnvironmentVariable(ScriptVariable, script);
+                await using CheckpointScorerProcess scorer = CheckpointScorerProcess.Start(
+                    Path.Combine(_root, "export"), Path.Combine(_root, "model.pt"));
+                PolicyScore score = await Score(scorer, "normal");
+                Assert.That(score.Logits, Has.Count.EqualTo(2));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ScriptVariable, previous);
+                // The scorer's working directory is the script's folder and a just-killed
+                // process can still hold it; the OS temp sweep owns whatever is left.
+                try { Directory.Delete(elsewhere, recursive: true); } catch (IOException) { }
+            }
+        }
+
+        [Test]
+        public void ScorerScriptFromEnvironmentMissingFileNamesTheVariable()
+        {
+            string missing = Path.Combine(_root, "nowhere", "training_scorer.py");
+            string? previous = Environment.GetEnvironmentVariable(ScriptVariable);
+            try
+            {
+                Environment.SetEnvironmentVariable(ScriptVariable, missing);
+                var ex = Assert.Throws<FileNotFoundException>(() =>
+                    CheckpointScorerProcess.Start(
+                        Path.Combine(_root, "export"), Path.Combine(_root, "model.pt"),
+                        repositoryRoot: _root));
+                Assert.Multiple(() =>
+                {
+                    Assert.That(ex!.Message, Does.Contain(ScriptVariable));
+                    Assert.That(ex.Message, Does.Contain(missing));
+                });
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(ScriptVariable, previous);
+            }
         }
 
         private static Task<PolicyScore> Score(ICheckpointScorer scorer, string observation)

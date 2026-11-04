@@ -22,7 +22,10 @@ COPY tooling/data/bot-roster.json /app/bot-roster.json
 # The network every bot seat plays (export-onnx), run in-process by ONNX Runtime. Unset
 # KINGDOM_BOT_MODEL and bots play Greedy; set it to a directory that will not load and the
 # server refuses to start rather than quietly serve Greedy.
-COPY tooling/data/bot-model/ /app/bot-model/
+# The folder is gitignored and filled by deploy/walking-skeleton/fetch-bot-model.ps1 from the private
+# training repo; run that before building. The two files are named because COPY of an empty
+# directory succeeds and ships a server with no model.
+COPY tooling/data/bot-model/model.onnx tooling/data/bot-model/bot-model.json /app/bot-model/
 # The network a newcomer's SECOND match is played against (launch item 5, Sam 2026-10-26): H1,
 # checkpoint 978b89297989, pinned. Never the moving champion above. Unset
 # KINGDOM_BOT_MODEL_SECOND_MATCH and game 2 is Greedy too; set it to a directory that will not load

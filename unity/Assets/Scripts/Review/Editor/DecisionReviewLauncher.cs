@@ -73,7 +73,7 @@ namespace Kingdom.Review
                 EditorUtility.DisplayDialog(
                     "Not a review bundle",
                     $"'{chosen}' has no bundle-manifest.json.\n\nBuild one with:\n"
-                    + "dotnet run --project src/Kingdom.Tools.DecisionReview -- build "
+                    + "(in the private kingdom-training repo) dotnet run --project src/Kingdom.Tools.DecisionReview -- build "
                     + "--corpus <dir> --sample <file> --cards <dir> --out <dir>",
                     "OK");
                 return "";

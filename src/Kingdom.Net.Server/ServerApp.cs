@@ -243,7 +243,7 @@ namespace Kingdom.Net.Server
 
         /// <summary>
         /// A bot-model directory for bot seats to play: <c>model.onnx</c> and <c>bot-model.json</c>,
-        /// written by <c>python -m tooling.scripts.training_trainer export-onnx</c> and run
+        /// written (in the private kingdom-training repo) by <c>python -m tooling.scripts.training_trainer export-onnx</c> and run
         /// in-process by <see cref="OnnxCheckpointScorer"/>, so the server needs no Python. Unset
         /// means bot seats play <see cref="GreedyAi"/>. From <c>KINGDOM_BOT_MODEL</c>.
         /// </summary>
