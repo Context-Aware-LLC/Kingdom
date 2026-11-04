@@ -270,11 +270,21 @@ namespace Kingdom.Net.Client.Auth
         /// <see cref="TokenForConnectAsync"/>: setting a password is something the player asked for
         /// right now, not a background refresh, so a failure has to reach them rather than be
         /// swallowed into an empty result.</para>
+        ///
+        /// <para><b>It refreshes a stale token first.</b> The name step calls this seconds after a
+        /// sign-in, but Settings calls it on a session that may be hours old, and an expired access
+        /// token is refused as though the password were the problem.</para>
         /// </summary>
         public async Task<AuthResult> SetPasswordAsync(string password, CancellationToken cancellationToken = default)
         {
             AuthSession session = Current;
             if (!session.IsPresent) return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+            if (session.NeedsRefresh(_clock.NowMs, _refreshSkewMs))
+            {
+                AuthResult refreshed = await RefreshAsync(cancellationToken).ConfigureAwait(false);
+                if (!refreshed.Ok) return refreshed;
+                session = refreshed.Session;
+            }
 
             return await _backend.SetPasswordAsync(session.AccessToken, password, cancellationToken)
                 .ConfigureAwait(false);

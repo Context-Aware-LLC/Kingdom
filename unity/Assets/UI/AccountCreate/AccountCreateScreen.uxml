@@ -87,6 +87,9 @@
                      have one. This is their way through and it must never be hidden on the password
                      step, or that step is a dead end for exactly the players it was built for. -->
                 <ui:Button name="btn-signin-code-instead" text="Email me a code instead" class="mm-signin__resend" style="display: none;"/>
+                <!-- The returning player's way to the password step. The code is the default because
+                     a password exists only if the player set one (Sam, 2026-11-03). -->
+                <ui:Button name="btn-signin-use-password" text="Use my password" class="mm-signin__resend" style="display: none;"/>
             </ui:VisualElement>
         </ui:VisualElement>
 

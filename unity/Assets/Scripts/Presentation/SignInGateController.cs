@@ -84,9 +84,10 @@ namespace Kingdom.Presentation
             /// <summary>The mail is away; asking for the code that is in it.</summary>
             Code,
 
-            /// <summary>A returning player, asked for the address and the password they set when they
-            /// made the account. Always offers the mailed code as a way out, because the password was
-            /// optional and half the accounts in existence have none.</summary>
+            /// <summary>A returning player who chose "Use my password": the address and the password.
+            /// Reached only by that link — "I have an account" asks for the code, because the password
+            /// is optional and most accounts have none (Sam, 2026-11-03). Always offers the mailed
+            /// code as the way back.</summary>
             Password,
         }
 
@@ -103,6 +104,7 @@ namespace Kingdom.Presentation
         private readonly Button _resend;
         private readonly Button _googleButton;
         private readonly Button _codeInstead;
+        private readonly Button _usePassword;
         private readonly VisualElement _or;
         private readonly VisualElement _choice;
         private readonly Button _newButton;
@@ -183,6 +185,7 @@ namespace Kingdom.Presentation
             _otherEmail = root.Q<Button>("btn-signin-other-email");
             _resend = root.Q<Button>("btn-signin-resend");
             _codeInstead = root.Q<Button>("btn-signin-code-instead");
+            _usePassword = root.Q<Button>("btn-signin-use-password");
             _googleButton = root.Q<Button>("btn-signin-google");
             _or = root.Q<VisualElement>("signin-or");
             _choice = root.Q<VisualElement>("signin-choice");
@@ -212,6 +215,7 @@ namespace Kingdom.Presentation
             });
             _resend?.RegisterCallback<ClickEvent>(_ => SendCode(_sentTo));
             _codeInstead?.RegisterCallback<ClickEvent>(_ => SendCode(_emailField?.value ?? ""));
+            _usePassword?.RegisterCallback<ClickEvent>(_ => ToEmailStep(returning: true, "", usePassword: true));
             _googleButton?.RegisterCallback<ClickEvent>(_ => OnGoogleSignIn());
             _newButton?.RegisterCallback<ClickEvent>(_ => ToEmailStep(returning: false, ""));
             _returningButton?.RegisterCallback<ClickEvent>(_ => ToEmailStep(returning: true, ""));
@@ -527,6 +531,7 @@ namespace Kingdom.Presentation
             Display(_otherEmail, false);
             Display(_resend, false);
             Display(_codeInstead, false);
+            Display(_usePassword, false);
             Display(_googleButton, true);
             Display(_or, true);
             _passwordField?.SetValueWithoutNotify("");
@@ -535,25 +540,35 @@ namespace Kingdom.Presentation
             SetError(message);
         }
 
-        private void ToEmailStep(bool returning, string message)
+        /// <summary>
+        /// The address, for a code — or, with <paramref name="usePassword"/>, the address and a
+        /// password. Both branches start on the code: a password exists only if the player set one
+        /// (the name step, or Settings), so asking for it first asked most players for something
+        /// they never had. The email field keeps its value across the two, so switching costs
+        /// nothing typed.
+        /// </summary>
+        private void ToEmailStep(bool returning, string message, bool usePassword = false)
         {
-            _step = returning ? Step.Password : Step.Email;
+            usePassword &= returning;
+            _step = usePassword ? Step.Password : Step.Email;
             _returning = returning;
             _sentTo = "";
 
             if (_title != null) _title.text = Loc.Get(returning ? "signin_returning_title" : "signin_new_title");
             if (_help != null)
-                _help.text = Loc.Get(returning ? "signin_returning_help" : "account_create_signin_help");
+                _help.text = Loc.Get(usePassword ? "signin_password_help"
+                    : returning ? "signin_returning_help" : "account_create_signin_help");
 
             Display(_choice, false);
             Display(_emailField, true);
-            Display(_passwordField, returning);
+            Display(_passwordField, usePassword);
             Display(_codeField, false);
             Display(_primary, true);
             Display(_back, true);
             Display(_otherEmail, false);
             Display(_resend, false);
-            Display(_codeInstead, returning);
+            Display(_codeInstead, usePassword);
+            Display(_usePassword, returning && !usePassword);
             Display(_googleButton, true);
             Display(_or, true);
             _passwordField?.SetValueWithoutNotify("");
@@ -561,7 +576,8 @@ namespace Kingdom.Presentation
 
             SetError(message);
             RefreshPrimary();
-            _emailField?.Focus();
+            if (usePassword && !string.IsNullOrWhiteSpace(_emailField?.value)) _passwordField?.Focus();
+            else _emailField?.Focus();
         }
 
         private void ToCodeStep(string email)
@@ -581,6 +597,7 @@ namespace Kingdom.Presentation
             Display(_otherEmail, true);
             Display(_resend, true);
             Display(_codeInstead, false);
+            Display(_usePassword, false);
             Display(_googleButton, false);
             Display(_or, false);
             _codeField?.SetValueWithoutNotify("");
@@ -1098,6 +1115,7 @@ namespace Kingdom.Presentation
             _otherEmail?.SetEnabled(!busy);
             _resend?.SetEnabled(!busy);
             _codeInstead?.SetEnabled(!busy);
+            _usePassword?.SetEnabled(!busy);
             _googleButton?.SetEnabled(!busy);
             _newButton?.SetEnabled(!busy);
             _returningButton?.SetEnabled(!busy);

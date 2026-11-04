@@ -80,6 +80,7 @@
     <string name="account_create_btn_signin_new">I am new here</string>
     <string name="account_create_btn_signin_resend">Send another code</string>
     <string name="account_create_btn_signin_code_instead">Email me a code instead</string>
+    <string name="account_create_btn_signin_use_password">Use my password</string>
     <string name="account_create_name_title">How shall the herald announce you?</string>
     <string name="account_create_name_help">Every rival will see it. The royal scribe writes in permanent ink, so choose well: changing it later means petitioning support.</string>
     <string name="account_create_name_field_hint">Display name (up to 16 letters)</string>
@@ -158,6 +159,12 @@
     <string name="match_settings_btn_privacy">Privacy Policy</string>
     <string name="match_settings_btn_terms">Terms of Service</string>
     <string name="match_settings_btn_delete_account">Delete account</string>
+    <string name="match_settings_btn_set_password">Set a password</string>
+    <!-- Settings password view. The fields reuse the sign-in Password / Confirm password hints. -->
+    <string name="match_settings_password_help">Sign in with it on any device. Emailed codes still work.</string>
+    <string name="settings_password_saving">Saving…</string>
+    <string name="settings_password_saved">Saved. Use it next time you sign in.</string>
+    <string name="settings_password_failed">Could not save it. Try again.</string>
     <string name="match_settings_confirm_subtitle">This counts as a loss.</string>
     <string name="pack_vault_vault_banner_title">A gift to start you off</string>
     <string name="pack_vault_vault_banner_body">Open them and keep everything inside.</string>
@@ -592,7 +599,9 @@
     <!-- Email step title, new player. -->
     <string name="signin_new_title">Create your account</string>
     <!-- Email step help, returning player. -->
-    <string name="signin_returning_help">Sign in with the email and password you used before. No password? We can email you a code instead.</string>
+    <string name="signin_returning_help">Enter the address you signed up with and we will send you a six-digit code.</string>
+    <!-- Help on the password step, reached by the "Use my password" link. -->
+    <string name="signin_password_help">Enter your address and the password you set.</string>
     <!-- Code step title. -->
     <string name="signin_code_title">Check your email</string>
     <!-- Code step help. %1$s = email address. -->

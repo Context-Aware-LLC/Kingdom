@@ -1,4 +1,5 @@
 using System;
+using Kingdom.Net.Client.Auth;
 using Kingdom.Session;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -32,6 +33,11 @@ namespace Kingdom.Presentation
         private VisualElement _viewConfirm;
         private VisualElement _viewAccount;
         private VisualElement _viewLanguage;
+        private VisualElement _viewPassword;
+        private TextField _passwordNew, _passwordConfirm;
+        private Label _passwordStatus;
+        private Button _passwordSave;
+        private bool _savingPassword;
 
         // The public site. Deletion is a web request (support mailbox), not an endpoint: the server
         // has no delete-account path, and Play policy only needs the in-app entry to reach it.
@@ -108,6 +114,7 @@ namespace Kingdom.Presentation
             _viewConfirm = root.Q<VisualElement>("view-confirm");
             _viewAccount = root.Q<VisualElement>("view-account");
             _viewLanguage = root.Q<VisualElement>("view-language");
+            _viewPassword = root.Q<VisualElement>("view-password");
 
             _confirmTitle    = root.Q<Label>("confirm-title");
             _confirmSubtitle = root.Q<Label>("confirm-subtitle");
@@ -144,6 +151,7 @@ namespace Kingdom.Presentation
 
             BindAudioSettings(root);
             BindSignOut(root);
+            BindPassword(root);
 
             // Click-out closes the overlay. It never concedes — closing is always safe.
             var scrim = root.Q<VisualElement>("scrim");
@@ -172,21 +180,17 @@ namespace Kingdom.Presentation
             _isOpen = false;
         }
 
-        private void ShowMenu()
+        /// <summary>Exactly one view shows at a time; every Show* goes through here so a new view is
+        /// one more entry in this list rather than one more line in every other method.</summary>
+        private void ShowOnly(VisualElement view)
         {
-            if (_viewLanguage != null) _viewLanguage.style.display = DisplayStyle.None;
-            if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.Flex;
-            if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.None;
-            if (_viewAccount != null) _viewAccount.style.display = DisplayStyle.None;
+            foreach (VisualElement v in new[] { _viewMenu, _viewConfirm, _viewAccount, _viewLanguage, _viewPassword })
+                if (v != null) v.style.display = ReferenceEquals(v, view) ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
-        private void ShowAccount()
-        {
-            if (_viewLanguage != null) _viewLanguage.style.display = DisplayStyle.None;
-            if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.None;
-            if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.None;
-            if (_viewAccount != null) _viewAccount.style.display = DisplayStyle.Flex;
-        }
+        private void ShowMenu() => ShowOnly(_viewMenu);
+
+        private void ShowAccount() => ShowOnly(_viewAccount);
 
         /// <summary>
         /// Fill the shared confirm view and show it. <paramref name="danger"/> is the red treatment —
@@ -207,10 +211,7 @@ namespace Kingdom.Presentation
                 _confirmButton.EnableInClassList("ms-item--danger", danger);
             }
 
-            if (_viewMenu != null)    _viewMenu.style.display    = DisplayStyle.None;
-            if (_viewAccount != null) _viewAccount.style.display = DisplayStyle.None;
-            if (_viewLanguage != null) _viewLanguage.style.display = DisplayStyle.None;
-            if (_viewConfirm != null) _viewConfirm.style.display = DisplayStyle.Flex;
+            ShowOnly(_viewConfirm);
         }
 
         private void ConfirmConcede()
@@ -243,10 +244,7 @@ namespace Kingdom.Presentation
                 list.Add(row);
             }
 
-            if (_viewMenu != null)     _viewMenu.style.display     = DisplayStyle.None;
-            if (_viewConfirm != null)  _viewConfirm.style.display  = DisplayStyle.None;
-            if (_viewAccount != null)  _viewAccount.style.display  = DisplayStyle.None;
-            _viewLanguage.style.display = DisplayStyle.Flex;
+            ShowOnly(_viewLanguage);
         }
 
         private void PickLanguage(string code)
@@ -393,6 +391,103 @@ namespace Kingdom.Presentation
 
             Close();
             ReloadThisScene();
+        }
+
+        // ── Password (Sam, 2026-11-03) ──────────────────────────────────────────────────
+
+        /// <summary>
+        /// Set or replace the signed-in account's password. Until this the name step was the only
+        /// place a password could be set, so a Google account, or anyone who skipped it there, could
+        /// never use the sign-in screen's "Use my password".
+        ///
+        /// <para>Shown in-match too: unlike Sign out it reloads nothing. Hidden with no session,
+        /// because there is no identity to put it on.</para>
+        /// </summary>
+        private void BindPassword(VisualElement root)
+        {
+            var entry = root.Q<Button>("btn-set-password");
+            _passwordNew = root.Q<TextField>("password-new");
+            _passwordConfirm = root.Q<TextField>("password-confirm");
+            _passwordStatus = root.Q<Label>("password-status");
+            _passwordSave = root.Q<Button>("btn-password-save");
+            if (entry == null || _viewPassword == null) return;
+
+            bool signedIn;
+            try { signedIn = AuthGateway.IsSignedIn; }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MatchSettings] could not read the sign-in state ({ex.GetType().Name}); " +
+                                 "hiding Set a password.");
+                signedIn = false;
+            }
+            entry.style.display = signedIn ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!signedIn) return;
+
+            Wire(root, "btn-set-password", ShowPassword);
+            Wire(root, "btn-password-back", ShowAccount);
+            Wire(root, "btn-password-save", SavePassword);
+            _passwordNew?.RegisterValueChangedCallback(_ => SetPasswordStatus("", false));
+            _passwordConfirm?.RegisterValueChangedCallback(_ => SetPasswordStatus("", false));
+            _passwordConfirm?.RegisterCallback<KeyDownEvent>(evt =>
+            {
+                if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter) SavePassword();
+            });
+        }
+
+        private void ShowPassword()
+        {
+            _passwordNew?.SetValueWithoutNotify("");
+            _passwordConfirm?.SetValueWithoutNotify("");
+            SetPasswordStatus("", false);
+            ShowOnly(_viewPassword);
+            _passwordNew?.Focus();
+        }
+
+        /// <summary>Same rules as the name step's optional password, and the same messages, so the
+        /// two places a password is set can never disagree about what a valid one is.</summary>
+        private async void SavePassword()
+        {
+            if (_savingPassword) return;
+            string password = _passwordNew?.value ?? "";
+            string confirm = _passwordConfirm?.value ?? "";
+            if (password.Length < 6) { SetPasswordStatus(Loc.Get("account_password_too_short"), true); return; }
+            if (password != confirm) { SetPasswordStatus(Loc.Get("account_password_mismatch"), true); return; }
+
+            _savingPassword = true;
+            _passwordSave?.SetEnabled(false);
+            SetPasswordStatus(Loc.Get("settings_password_saving"), false);
+            try
+            {
+                AuthResult result = await AuthGateway.Provider.SetPasswordAsync(password);
+                if (this == null) return;
+                if (result.Ok)
+                {
+                    _passwordNew?.SetValueWithoutNotify("");
+                    _passwordConfirm?.SetValueWithoutNotify("");
+                    SetPasswordStatus(Loc.Get("settings_password_saved"), false);
+                    return;
+                }
+                Debug.LogWarning($"[MatchSettings] SetPasswordAsync failed: {result.Failure} — {result.Detail}");
+                SetPasswordStatus(string.IsNullOrEmpty(result.Detail)
+                    ? Loc.Get("settings_password_failed") : result.Detail, true);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[MatchSettings] setting a password threw: {ex}");
+                if (this != null) SetPasswordStatus(Loc.Get("settings_password_failed"), true);
+            }
+            finally
+            {
+                _savingPassword = false;
+                if (this != null) _passwordSave?.SetEnabled(true);
+            }
+        }
+
+        private void SetPasswordStatus(string message, bool error)
+        {
+            if (_passwordStatus == null) return;
+            _passwordStatus.text = string.IsNullOrEmpty(message) ? " " : message;
+            _passwordStatus.EnableInClassList("ms-status--error", error);
         }
 
         // Application.Quit() is a no-op in the Editor (there is no player process to close), so

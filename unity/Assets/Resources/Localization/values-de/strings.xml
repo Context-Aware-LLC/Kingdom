@@ -46,6 +46,7 @@
     <string name="account_create_btn_signin_new">Ich bin neu hier</string>
     <string name="account_create_btn_signin_resend">Neuen Code senden</string>
     <string name="account_create_btn_signin_code_instead">Lieber Code per E-Mail</string>
+    <string name="account_create_btn_signin_use_password">Mit Passwort anmelden</string>
     <string name="account_create_name_title">Wie soll der Herold dich ankündigen?</string>
     <string name="account_create_name_help">Jeder Rivale wird ihn sehen. Der königliche Schreiber nutzt dauerhafte Tinte, also wähle gut: Ändern geht später nur per Bittgesuch an den Support.</string>
     <string name="account_create_name_field_hint">Anzeigename (bis zu 16 Zeichen)</string>
@@ -115,6 +116,11 @@
     <string name="match_settings_btn_privacy">Datenschutz</string>
     <string name="match_settings_btn_terms">Nutzungsbedingungen</string>
     <string name="match_settings_btn_delete_account">Konto löschen</string>
+    <string name="match_settings_btn_set_password">Passwort festlegen</string>
+    <string name="match_settings_password_help">Damit meldest du dich auf jedem Gerät an. Codes per E-Mail funktionieren weiterhin.</string>
+    <string name="settings_password_saving">Wird gespeichert …</string>
+    <string name="settings_password_saved">Gespeichert. Nutze es bei der nächsten Anmeldung.</string>
+    <string name="settings_password_failed">Konnte nicht gespeichert werden. Versuch es noch mal.</string>
     <string name="match_settings_confirm_subtitle">Das zählt als Niederlage.</string>
     <string name="pack_vault_vault_banner_title">Ein Geschenk für den Anfang</string>
     <string name="pack_vault_vault_banner_body">Öffne sie und behalte alles, was drin ist.</string>
@@ -340,7 +346,8 @@
     <string name="signin_choose_help">Hast du schon mal gespielt?</string>
     <string name="signin_returning_title">Willkommen zurück</string>
     <string name="signin_new_title">Erstelle dein Konto</string>
-    <string name="signin_returning_help">Melde dich mit der E-Mail-Adresse und dem Passwort an, die du bisher benutzt hast. Kein Passwort? Wir können dir stattdessen einen Code mailen.</string>
+    <string name="signin_returning_help">Gib die Adresse ein, mit der du dich registriert hast, und wir schicken dir einen sechsstelligen Code.</string>
+    <string name="signin_password_help">Gib deine Adresse und das Passwort ein, das du festgelegt hast.</string>
     <string name="signin_code_title">Sieh in deine E-Mails</string>
     <string name="signin_code_help">Wir haben einen sechsstelligen Code an %1$s gesendet. Kopiere ihn und komm zurück, dann wird er automatisch eingetragen.</string>
     <string name="signin_restoring_collection">Stelle deine Sammlung wieder her…</string>

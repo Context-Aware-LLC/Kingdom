@@ -60,10 +60,24 @@
 
                 <!-- Account view (#385). Every row opens the website in the system browser. -->
                 <ui:VisualElement name="view-account" class="ms-view ms-hidden">
+                    <!-- Hidden unless signed in: a password is set on the signed-in identity. -->
+                    <ui:Button name="btn-set-password" text="Set a password" class="ms-item" style="display: none;" />
                     <ui:Button name="btn-privacy" text="Privacy Policy" class="ms-item" />
                     <ui:Button name="btn-terms" text="Terms of Service" class="ms-item" />
                     <ui:Button name="btn-delete-account" text="Delete account" class="ms-item ms-item--danger" />
                     <ui:Button name="btn-account-back" text="Back" class="ms-item emb-back" />
+                </ui:VisualElement>
+
+                <!-- Password view (Sam, 2026-11-03). Sets or replaces the signed-in account's
+                     password, which the sign-in screen's "Use my password" trades for a session.
+                     Until this existed the name step was the only place to set one. -->
+                <ui:VisualElement name="view-password" class="ms-view ms-hidden">
+                    <ui:Label text="Sign in with it on any device. Emailed codes still work." class="ms-subtitle" />
+                    <ui:TextField name="password-new" password="true" placeholder-text="Password" class="ms-field" />
+                    <ui:TextField name="password-confirm" password="true" placeholder-text="Confirm password" class="ms-field" />
+                    <ui:Label name="password-status" text=" " class="ms-status" />
+                    <ui:Button name="btn-password-save" text="Save" class="ms-item" />
+                    <ui:Button name="btn-password-back" text="Back" class="ms-item emb-back" />
                 </ui:VisualElement>
 
                 <!-- Language view: one row per shipped language, filled by the controller. -->

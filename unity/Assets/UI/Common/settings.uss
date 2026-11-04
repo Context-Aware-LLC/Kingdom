@@ -225,6 +225,40 @@
     translate: 0 1px;
 }
 
+/* ---------- Password view (2026-11-03) ----------
+ * The fields copy the sign-in screen's (mainmenu.uss, .account-create-screen .mm-modal__field) so
+ * a password is typed into the same-looking box it is later typed into to sign in. */
+.ms-root .ms-field {
+    font-size: var(--type-h2);
+    margin: var(--space-4) 0 0 0;
+}
+.ms-root .ms-field > .unity-base-text-field__input {
+    min-height: 68px;
+    padding: 12px 20px;
+    color: var(--ink-1);
+    background-color: rgba(8, 11, 16, 0.92);
+    border-width: 2px;
+    border-color: rgba(239, 228, 207, 0.22);
+    border-radius: 10px;
+}
+.ms-root .ms-field:focus > .unity-base-text-field__input {
+    border-color: rgb(240, 138, 60);
+}
+.ms-root .ms-field .unity-base-text-field__input--placeholder {
+    color: rgba(169, 177, 187, 0.85);
+}
+/* A space when empty, so the buttons below hold still when a message appears. */
+.ms-root .ms-status {
+    font-size: var(--type-body);
+    color: var(--ink-2);
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin-top: var(--space-4);
+}
+.ms-root .ms-status--error {
+    color: var(--negative);
+}
+
 /* Concede is destructive: it reads in the negative colour and warms on hover. */
 .ms-root .ms-item--danger {
     color: var(--negative);

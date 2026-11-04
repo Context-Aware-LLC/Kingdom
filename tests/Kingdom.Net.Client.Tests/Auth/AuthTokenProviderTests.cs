@@ -221,6 +221,22 @@ namespace Kingdom.Net.Client.Tests.Auth
         }
 
         [Test]
+        public async Task Setting_a_password_on_an_expired_session_refreshes_first()
+        {
+            // Settings sets a password on a session that may be hours old, unlike the name step.
+            var clock = new FakeClock(1_000_000);
+            var fresh = Signed(clock.NowMs + 3_600_000, access: "access-2", refresh: "refresh-2");
+            var backend = new FakeAuthBackend().OnRefresh(AuthResult.Succeeded(fresh));
+            var store = new InMemoryAuthSessionStore(Signed(clock.NowMs - 1, access: "access-1"));
+            var provider = new AuthTokenProvider(backend, store, clock);
+
+            AuthResult result = await provider.SetPasswordAsync("a new password");
+
+            Assert.That(result.Ok, Is.True);
+            Assert.That(backend.LastPasswordAccessToken, Is.EqualTo("access-2"));
+        }
+
+        [Test]
         public async Task Storing_the_name_trades_a_still_good_token_for_one_that_carries_it()
         {
             // The token in hand was minted before the name existed. It is hours from expiring, so
