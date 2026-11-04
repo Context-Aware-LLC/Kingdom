@@ -21,7 +21,7 @@ namespace Kingdom.Net.Server.Tests.Bots
     /// loads a model or plays a move — so between them they could both pass against a serving path
     /// that never serves. *Compiling is not running*, and neither is a green unit test.
     ///
-    /// WHAT IT PROVES THAT NOTHING ELSE DOES. That the shipped model in `tooling/data/bot-model`
+    /// WHAT IT PROVES THAT NOTHING ELSE DOES. That the tracked H1 model in `tooling/data/bot-model-h1`
     /// loads inside the server, that ONNX Runtime's native library is found, and that the bot's
     /// first decision (its mulligan) came from the model: `/healthz` counts it as served, with no
     /// fallback to Greedy.
@@ -46,7 +46,7 @@ namespace Kingdom.Net.Server.Tests.Bots
                 ReplaysDir = replays,
                 BotRosterPath = SessionHarness.RepoFile("tooling", "data", "bot-roster.json"),
                 AccountStore = new InMemoryAccountStore(new SystemTimeSource()),
-                BotModelPath = SessionHarness.RepoFile("tooling", "data", "bot-model"),
+                BotModelPath = SessionHarness.RepoFile("tooling", "data", "bot-model-h1"),
                 Options = new ServerOptions
                 {
                     BotFillDelayMs = 300,

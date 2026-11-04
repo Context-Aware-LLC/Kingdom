@@ -239,5 +239,6 @@ card-admin/cardweb
 # Profiler captures: generated, and a single .data file runs past the 100 MB GitHub limit.
 unity/ProfilerCaptures/
 
-# Trained bot models live in the private kingdom-training repo; the files stay on disk locally.
+# Trained bot models live in the private kingdom-training repo. This folder is filled by
+# deploy/walking-skeleton/fetch-bot-model.ps1 from there; only H1 (bot-model-h1/) is tracked.
 tooling/data/bot-model/

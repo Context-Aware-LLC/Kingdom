@@ -17,7 +17,8 @@ match publishes a self-contained replay under `replays/` and appends its manifes
 abandoned, or capture-failed matches never receive a row. The ordinary operational journal remains
 under `/data/replays`.
 
-From the repository root, start the local watcher before playing:
+From the root of the private `kingdom-training` repo (the watcher moved there with the rest of the
+training tooling), start the local watcher before playing:
 
 ```powershell
 python tooling/scripts/capture_my_games.py

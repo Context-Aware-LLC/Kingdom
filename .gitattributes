@@ -32,6 +32,7 @@ unity/Assets/CardData/*.cards.json text eol=lf
 # silently rewrite CR/LF pairs inside the payload and invalidate the evidence.
 *.frame binary
 
-# The bot's network (tooling/data/bot-model/model.onnx). Its manifest pins its sha256, so a
+# The bot's network (tooling/data/bot-model-h1/model.onnx, and the champion fetched into the
+# gitignored tooling/data/bot-model/ at deploy time). Its manifest pins its sha256, so a
 # line-ending conversion would make the server refuse to load it.
 *.onnx  binary
