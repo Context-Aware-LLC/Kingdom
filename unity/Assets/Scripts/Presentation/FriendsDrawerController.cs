@@ -138,7 +138,6 @@ namespace Kingdom.Presentation
             _lists     = _root.Q<ScrollView>("lists");
 
             _root.Q<Button>("btn-friends")?.RegisterCallback<ClickEvent>(_ => Open());
-            _root.Q<Button>("btn-close")?.RegisterCallback<ClickEvent>(_ => Close());
             _root.Q<VisualElement>("scrim")?.RegisterCallback<ClickEvent>(_ => Close());
             _root.Q<Button>("btn-copy-code")?.RegisterCallback<ClickEvent>(_ => CopyOwnCode());
             _root.Q<Button>("btn-share-code")?.RegisterCallback<ClickEvent>(_ => ShareOwnCode());

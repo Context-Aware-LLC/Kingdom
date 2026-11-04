@@ -386,11 +386,3 @@
     padding: 0 var(--space-4);
     font-size: var(--type-body);
 }
-
-.fr-root .fr-close {
-    flex-shrink: 0;
-    height: 84px;
-    margin: var(--space-6) 0 0 0;
-    font-size: var(--type-h2);
-    -unity-font-style: bold;
-}

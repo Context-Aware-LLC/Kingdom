@@ -76,8 +76,6 @@
             <ui:Label name="status" text=" " class="fr-status" />
 
             <ui:ScrollView name="lists" mode="Vertical" vertical-scroller-visibility="Hidden" horizontal-scroller-visibility="Hidden" touch-scroll-type="Clamped" class="fr-lists" />
-
-            <ui:Button name="btn-close" text="Close" class="fr-close" />
         </ui:VisualElement>
 
     </ui:VisualElement>
