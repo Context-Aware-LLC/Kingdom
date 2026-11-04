@@ -20,8 +20,8 @@ param(
     [string]$Configuration = 'Debug',
     # Hub's default install location, which differs per platform (and the Linux binary has no
     # .exe). Override with -UnityPath for any non-Hub install.
-    [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.6.4f1\Editor\Unity.exe' }
-                           else            { "$HOME/Unity/Hub/Editor/6000.6.4f1/Editor/Unity" })
+    [string]$UnityPath = $(if ($IsWindows) { 'C:\Program Files\Unity\Hub\Editor\6000.7.0b7\Editor\Unity.exe' }
+                           else            { "$HOME/Unity/Hub/Editor/6000.7.0b7/Editor/Unity" })
 )
 
 $ErrorActionPreference = 'Stop'
