@@ -55,7 +55,6 @@
                 <ui:TextField name="signin-email" placeholder-text="Email address" keyboard-type="EmailAddress" class="mm-modal__field signin-field"/>
                 <ui:TextField name="signin-password" password="true" placeholder-text="Password" class="mm-modal__field signin-field" style="display: none;"/>
                 <ui:TextField name="signin-code" max-length="6" placeholder-text="6-digit code" keyboard-type="NumberPad" class="mm-modal__field mm-signin__code" style="display: none;"/>
-                <ui:Button name="btn-signin-back" text="Use another email" class="mm-modal__button signin-btn" style="display: none;"/>
                 <ui:Button name="btn-signin-primary" text="Email me a code" class="mm-modal__button signin-btn"/>
             </ui:VisualElement>
             <ui:VisualElement class="signin-line">
@@ -77,6 +76,9 @@
                     <ui:Label text="I Jest!" class="mm-signin__or"/>
                     <ui:Button name="btn-signin-new" text="I am new here" class="mm-modal__button signin-btn"/>
                 </ui:VisualElement>
+                <!-- Code step only, where the email field is hidden and so cannot simply be
+                     retyped. It returns to the email step with the address still in the field. -->
+                <ui:Button name="btn-signin-other-email" text="Use another email" class="mm-modal__button signin-btn" style="display: none;"/>
             </ui:VisualElement>
             <ui:VisualElement class="signin-line">
                 <ui:Label name="signin-error" text=" " class="mm-modal__error"/>
@@ -116,6 +118,13 @@
                 <ui:Label name="name-error" text=" " class="mm-modal__error"/>
             </ui:VisualElement>
         </ui:VisualElement>
+
+        <!-- Back to the new or returning choice, in the corner every screen's Back uses. A child
+             of the ROOT, not the sign-in view, for the reason CharacterCreateScreen gives: an
+             absolute child of the plate would sit inside its padding. Last child so it paints
+             over both views. SignInGateController shows it on the email, password and code steps
+             only, and hides it once a session exists, so the name view never shows it. -->
+        <ui:Button name="btn-signin-back" text="Back" class="emb-back emb-back-button" style="display: none;"/>
 
     </ui:VisualElement>
 </ui:UXML>

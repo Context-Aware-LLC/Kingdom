@@ -99,6 +99,7 @@ namespace Kingdom.Presentation
         private readonly Label _error;
         private readonly Button _primary;
         private readonly Button _back;
+        private readonly Button _otherEmail;
         private readonly Button _resend;
         private readonly Button _googleButton;
         private readonly Button _codeInstead;
@@ -179,6 +180,7 @@ namespace Kingdom.Presentation
             _error = root.Q<Label>("signin-error");
             _primary = root.Q<Button>("btn-signin-primary");
             _back = root.Q<Button>("btn-signin-back");
+            _otherEmail = root.Q<Button>("btn-signin-other-email");
             _resend = root.Q<Button>("btn-signin-resend");
             _codeInstead = root.Q<Button>("btn-signin-code-instead");
             _googleButton = root.Q<Button>("btn-signin-google");
@@ -199,9 +201,15 @@ namespace Kingdom.Presentation
             // registered with `?.`, so a partially-authored screen still wires up whatever it has.
             _primary?.RegisterCallback<ClickEvent>(_ => OnPrimary());
             // Back returns to the fork, not to the email field. A player who took the wrong branch
-            // has no other way to correct it, and the email field they would land on is the one they
-            // just typed into — so "back" that only clears a text field reads as broken.
+            // has no other way to correct it, and on the email step the field is right there to
+            // retype — which is why "Use another email" exists on the code step only, where the
+            // field is hidden. It lands on the email step with the sent-to address in the field.
             _back?.RegisterCallback<ClickEvent>(_ => ToChoiceStep(""));
+            _otherEmail?.RegisterCallback<ClickEvent>(_ =>
+            {
+                _emailField?.SetValueWithoutNotify(_sentTo);
+                ToEmailStep(_returning, "");
+            });
             _resend?.RegisterCallback<ClickEvent>(_ => SendCode(_sentTo));
             _codeInstead?.RegisterCallback<ClickEvent>(_ => SendCode(_emailField?.value ?? ""));
             _googleButton?.RegisterCallback<ClickEvent>(_ => OnGoogleSignIn());
@@ -516,6 +524,7 @@ namespace Kingdom.Presentation
             Display(_codeField, false);
             Display(_primary, false);
             Display(_back, false);
+            Display(_otherEmail, false);
             Display(_resend, false);
             Display(_codeInstead, false);
             Display(_googleButton, true);
@@ -542,6 +551,7 @@ namespace Kingdom.Presentation
             Display(_codeField, false);
             Display(_primary, true);
             Display(_back, true);
+            Display(_otherEmail, false);
             Display(_resend, false);
             Display(_codeInstead, returning);
             Display(_googleButton, true);
@@ -568,6 +578,7 @@ namespace Kingdom.Presentation
             Display(_codeField, true);
             Display(_primary, true);
             Display(_back, true);
+            Display(_otherEmail, true);
             Display(_resend, true);
             Display(_codeInstead, false);
             Display(_googleButton, false);
@@ -635,6 +646,8 @@ namespace Kingdom.Presentation
             SetBusy(false, null);
 
             _modal?.AddToClassList("mm-modal--hidden");
+            // The corner Back lives on the root, not in the view, so it does not hide with it.
+            Display(_back, false);
             ShowRestoring(null);
             done?.Invoke();
         }
@@ -652,6 +665,8 @@ namespace Kingdom.Presentation
             foreach (VisualElement line in _modal.Children())
                 Display(line, label == null || line == header);
             Display(_help, label == null);
+            // A wait offers no way back. Null leaves it to the step method that always follows.
+            if (label != null) Display(_back, false);
             if (label != null && _title != null) _title.text = label;
         }
 
@@ -1080,6 +1095,7 @@ namespace Kingdom.Presentation
                 else RefreshPrimaryText();
             }
             _back?.SetEnabled(!busy);
+            _otherEmail?.SetEnabled(!busy);
             _resend?.SetEnabled(!busy);
             _codeInstead?.SetEnabled(!busy);
             _googleButton?.SetEnabled(!busy);
