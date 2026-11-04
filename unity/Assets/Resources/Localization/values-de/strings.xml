@@ -341,7 +341,7 @@
     <string name="signin_new_title">Erstelle dein Konto</string>
     <string name="signin_returning_help">Melde dich mit der E-Mail-Adresse und dem Passwort an, die du bisher benutzt hast. Kein Passwort? Wir können dir stattdessen einen Code mailen.</string>
     <string name="signin_code_title">Sieh in deine E-Mails</string>
-    <string name="signin_code_help">Wir haben einen sechsstelligen Code an %1$s gesendet. Gib ihn unten ein.</string>
+    <string name="signin_code_help">Wir haben einen sechsstelligen Code an %1$s gesendet. Kopiere ihn und komm zurück, dann wird er automatisch eingetragen.</string>
     <string name="signin_restoring_collection">Stelle deine Sammlung wieder her…</string>
     <string name="signin_restoring_decks">Stelle deine Decks wieder her…</string>
     <string name="signin_error_email_required">Gib deine E-Mail-Adresse ein.</string>

@@ -31,10 +31,11 @@ namespace Kingdom.Presentation
     /// NOR-264 proved end to end. The undiagnosed magic-link exception cannot recur here because none
     /// of its code runs.</para>
     ///
-    /// <para><b>One dependency outside this file remains, as of 2026-08-08.</b> The Supabase email
-    /// template needs a button/link added pointing at
-    /// <c>emberfall://auth?code={{ .Token }}&amp;email={{ .Email | urlquery }}</c> — dashboard-side,
-    /// Sam's to add. The Android half is done: <c>PlayerSettings.Android.useCustomMainManifest</c> is
+    /// <para><b>The mails no longer carry that link (Sam, 2026-11-03).</b> Mail clients strip a
+    /// custom scheme, so the link did nothing for most players, and the signup template carried ONLY
+    /// the link — a new player got no code at all. Both templates now show the code alone, and
+    /// <see cref="FillCodeFromClipboard"/> takes it off the clipboard when the player comes back. The
+    /// handler below still accepts the link if one arrives. The Android half: <c>PlayerSettings.Android.useCustomMainManifest</c> is
     /// on and <c>Assets/Plugins/Android/AndroidManifest.xml</c> declares the <c>emberfall://auth</c>
     /// intent-filter on the launcher activity, base-copied from Unity's own last generated
     /// <c>unityLibrary</c> manifest so every Unity-owned attribute (activity class, IL2CPP lib name,
@@ -317,6 +318,7 @@ namespace Kingdom.Presentation
         /// </summary>
         private void OnFocusChanged(bool focused)
         {
+            if (focused) FillCodeFromClipboard();
             if (!focused || !_awaitingOAuth || _modal == null) return;
 
             _modal.schedule.Execute(() =>
@@ -327,6 +329,35 @@ namespace Kingdom.Presentation
                 SetBusy(false, null);
                 SetError(Loc.Get("signin_google_cancelled"));
             }).ExecuteLater(OAuthReturnGraceMs);
+        }
+
+        /// <summary>The last code taken off the clipboard, so a stale one that was refused is not
+        /// submitted again every time the player switches back.</summary>
+        private string _clipboardTried = "";
+
+        /// <summary>
+        /// The player copied the code in their mail app and came back: fill it in and sign in.
+        /// The mail cannot copy anything itself, so this is the half of "tap to copy" the game owns.
+        /// Only a clipboard holding a code and little else counts — a copied sentence that happens
+        /// to contain six digits is not the player handing us a code.
+        /// </summary>
+        private void FillCodeFromClipboard()
+        {
+            if (_step != Step.Code || _busy || _modal == null || _codeField == null) return;
+            if (_codeField.value.Length > 0) return;
+
+            string raw = (GUIUtility.systemCopyBuffer ?? "").Trim();
+            if (raw.Length == 0 || raw.Length > EmailCode.Length + 4) return;
+            int digits = 0;
+            foreach (char c in raw) if (c >= '0' && c <= '9') digits++;
+            if (digits != EmailCode.Length) return;
+
+            string code = EmailCode.Normalize(raw);
+            if (code == _clipboardTried) return;
+            _clipboardTried = code;
+            _codeField.SetValueWithoutNotify(code);
+            RefreshPrimary();
+            Verify();
         }
 
         /// <summary>

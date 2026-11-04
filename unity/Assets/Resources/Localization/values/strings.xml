@@ -595,7 +595,7 @@
     <!-- Code step title. -->
     <string name="signin_code_title">Check your email</string>
     <!-- Code step help. %1$s = email address. -->
-    <string name="signin_code_help">We sent a six-digit code to %1$s. Enter it below.</string>
+    <string name="signin_code_help">We sent a six-digit code to %1$s. Copy it and come back, and it fills itself in.</string>
     <!-- Restoring overlay. -->
     <string name="signin_restoring_collection">Restoring your collection…</string>
     <!-- Restoring overlay. -->
