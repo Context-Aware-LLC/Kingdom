@@ -82,12 +82,28 @@ namespace Kingdom.Policy
             if (!File.Exists(checkpointPath))
                 throw new FileNotFoundException("Checkpoint file not found.", checkpointPath);
 
-            string root = repositoryRoot is null
-                ? FindRepositoryRoot()
-                : Path.GetFullPath(repositoryRoot);
-            string script = Path.Combine(root, "tooling", "scripts", "training_scorer.py");
-            if (!File.Exists(script))
-                throw new FileNotFoundException("Training scorer entry point not found.", script);
+            // KINGDOM_SCORER_SCRIPT wins: the scorer lives in the training repo, which no
+            // directory walk from here can find. Unset, the walk-up below runs unchanged.
+            string? configured = Environment.GetEnvironmentVariable(ScriptVariable);
+            string root;
+            string script;
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                script = Path.GetFullPath(configured);
+                if (!File.Exists(script))
+                    throw new FileNotFoundException(
+                        $"{ScriptVariable} points at a file that does not exist: {script}", script);
+                root = Path.GetDirectoryName(script)!;
+            }
+            else
+            {
+                root = repositoryRoot is null
+                    ? FindRepositoryRoot()
+                    : Path.GetFullPath(repositoryRoot);
+                script = Path.Combine(root, "tooling", "scripts", "training_scorer.py");
+                if (!File.Exists(script))
+                    throw new FileNotFoundException("Training scorer entry point not found.", script);
+            }
 
             var start = new ProcessStartInfo
             {
@@ -450,6 +466,9 @@ namespace Kingdom.Policy
                     $"Checkpoint scorer readiness protocol was '{ready.Protocol}', expected '{Protocol}'.");
             }
         }
+
+        /// <summary>Environment variable holding the absolute path of <c>training_scorer.py</c>.</summary>
+        public const string ScriptVariable = "KINGDOM_SCORER_SCRIPT";
 
         private static string FindRepositoryRoot()
         {
