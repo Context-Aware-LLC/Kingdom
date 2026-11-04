@@ -65,38 +65,47 @@ foreach ($name in $files) {
     if (-not (Test-Path -LiteralPath (Join-Path $source $name) -PathType Leaf)) { Fail "champion folder lacks $name`: $source" }
 }
 
+# Anything that terminates between the copy and a passing parity check (a throw, a missing
+# dotnet, Ctrl+C) still reaches this finally and empties the folder.
+$passed = $false
 try {
-    New-Item -ItemType Directory -Path $target -Force | Out-Null
-    foreach ($name in $files) {
-        Copy-Item -LiteralPath (Join-Path $source $name) -Destination (Join-Path $target $name) -Force
+    try {
+        New-Item -ItemType Directory -Path $target -Force | Out-Null
+        foreach ($name in $files) {
+            Copy-Item -LiteralPath (Join-Path $source $name) -Destination (Join-Path $target $name) -Force
+        }
+    } catch {
+        Fail "copy failed: $($_.Exception.Message)"
     }
-} catch {
-    Fail "copy failed: $($_.Exception.Message)"
-}
-foreach ($name in $files) {
-    $a = (Get-FileHash -LiteralPath (Join-Path $source $name) -Algorithm SHA256).Hash
-    $b = (Get-FileHash -LiteralPath (Join-Path $target $name) -Algorithm SHA256).Hash
-    if ($a -ne $b) { Fail "copy of $name does not match its source (sha256 $a vs $b)" }
-}
-Write-Host "fetch-bot-model: copied $($champion.model) -> tooling/data/bot-model/"
+    foreach ($name in $files) {
+        $a = (Get-FileHash -LiteralPath (Join-Path $source $name) -Algorithm SHA256).Hash
+        $b = (Get-FileHash -LiteralPath (Join-Path $target $name) -Algorithm SHA256).Hash
+        if ($a -ne $b) { Fail "copy of $name does not match its source (sha256 $a vs $b)" }
+    }
+    Write-Host "fetch-bot-model: copied $($champion.model) -> tooling/data/bot-model/"
 
-Push-Location $repoRoot
-try {
-    $output = & dotnet run --project src/Kingdom.Tools.NetSoak -c Release -- onnx-parity $fixture $target 2>&1 | ForEach-Object { "$_" }
-    $exit = $LASTEXITCODE
+    Push-Location $repoRoot
+    try {
+        $output = & dotnet run --project src/Kingdom.Tools.NetSoak -c Release -- onnx-parity $fixture $target 2>&1 | ForEach-Object { "$_" }
+        $exit = $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+    $output | ForEach-Object { Write-Host $_ }
+
+    $parityLine = $output | Where-Object { $_ -match '^\[onnx-parity\] decisions=' } | Select-Object -Last 1
+    if (-not $parityLine) { Fail "onnx-parity printed no result line (dotnet exit $exit)" }
+    if ($parityLine -match 'encodingMismatches=(\d+)') {
+        if ([int]$Matches[1] -gt 0) { Fail "encoder parity broken: encodingMismatches=$($Matches[1])" }
+    } else {
+        Fail "could not read encodingMismatches from: $parityLine"
+    }
+    if ($exit -ne 0) { Fail "onnx-parity exited $exit" }
+
+    Write-Host 'fetch-bot-model: parity OK'
+
+    $passed = $true
+    exit 0
 } finally {
-    Pop-Location
+    if (-not $passed) { Clear-Target }
 }
-$output | ForEach-Object { Write-Host $_ }
-
-$parityLine = $output | Where-Object { $_ -match '^\[onnx-parity\] decisions=' } | Select-Object -Last 1
-if (-not $parityLine) { Fail "onnx-parity printed no result line (dotnet exit $exit)" }
-if ($parityLine -match 'encodingMismatches=(\d+)') {
-    if ([int]$Matches[1] -gt 0) { Fail "encoder parity broken: encodingMismatches=$($Matches[1])" }
-} else {
-    Fail "could not read encodingMismatches from: $parityLine"
-}
-if ($exit -ne 0) { Fail "onnx-parity exited $exit" }
-
-Write-Host 'fetch-bot-model: parity OK'
-exit 0
