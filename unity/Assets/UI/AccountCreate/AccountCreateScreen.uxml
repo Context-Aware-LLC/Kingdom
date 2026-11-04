@@ -118,8 +118,10 @@
                 <ui:Label name="name-password-help" text="Optional: set a password so you can sign back in without checking your email." class="mm-modal__help" style="display: none;"/>
                 <ui:TextField name="name-password" password="true" placeholder-text="Password (optional)" class="mm-modal__field" style="display: none;"/>
                 <ui:TextField name="name-password-confirm" password="true" placeholder-text="Confirm password" class="mm-modal__field" style="display: none;"/>
-                <ui:Label name="name-error" text=" " class="mm-modal__error"/>
             </ui:VisualElement>
+            <!-- ITS OWN LINE, not the end of row 2. As row 2's last child it sat to the right of the
+                 help and both password fields, mostly past the screen edge (Sam, 2026-11-03). -->
+            <ui:Label name="name-error" text=" " class="mm-modal__error mm-name-error"/>
         </ui:VisualElement>
 
         <!-- Back to the new or returning choice, in the corner every screen's Back uses. A child
