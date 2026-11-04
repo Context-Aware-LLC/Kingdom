@@ -85,6 +85,35 @@ namespace Kingdom.Presentation
         /// <summary>True once <see cref="BeginFirstRun"/> has sent this launch to another scene.</summary>
         private bool _leavingForFirstRun;
 
+        /// <summary>
+        /// True while the collection guide holds this menu: a new player has just opened their
+        /// starter packs, so every destination but Collection is dimmed and disabled, and Collection
+        /// pulses (Sam, 2026-11-04). Read once per arrival in <see cref="ApplyCollectionGuide"/>.
+        /// </summary>
+        private bool _guiding;
+
+        /// <summary>Collection's soft brightness pulse while the guide holds the menu.</summary>
+        private IVisualElementScheduledItem _guidePulse;
+
+        /// <summary>The friends drawer this screen mounted, so the guide can lock its button too.</summary>
+        private FriendsDrawerController _friends;
+
+        /// <summary>Half a pulse: the time to swing from dim to bright, and the matching
+        /// transition-duration on <c>.mm-button--guide</c> in mainmenu.uss. Change both together.</summary>
+        private const int GuidePulseHalfMs = 1100;
+
+        /// <summary>
+        /// Everything the guide dims and disables: every way off this menu except Collection. The
+        /// settings gear stays live (sound, language, sign-out are not destinations), and so does the
+        /// quest strip, which claims rewards in place rather than going anywhere. Containers are
+        /// named where a button carries a badge or sits in one, so the whole thing dims as a unit.
+        /// </summary>
+        private static readonly string[] GuideLockedElements =
+        {
+            "btn-find-game", "btn-store", "btn-leaderboards",
+            "vault-dock", "btn-ledger", "king-dock", "btn-achievements",
+        };
+
         private const float TopRailSafeAreaMarginPercent = 2f;
         private static readonly string StarterPackId = OnboardingGrant.StarterPack().Id;
 
@@ -385,6 +414,9 @@ namespace Kingdom.Presentation
         /// once the plate has finished fading.</summary>
         private void RevealMenu()
         {
+            // Before the menu is shown, so a guided player never sees a frame of live buttons.
+            if (!_leavingForFirstRun) ApplyCollectionGuide();
+
             _root.RemoveFromClassList("mm-root--hidden");
             // Let the revealed tree paint once at its entrance pose before transitioning the
             // command assembly into place. Removing both classes in the same layout pass snaps
@@ -398,7 +430,81 @@ namespace Kingdom.Presentation
             if (_leavingForFirstRun) return;
             _tidbit = new FirstRunTidbit(_root);
             bool firstLook = _tidbit.Show(TidbitTrigger.MainMenuArrival);
-            _ = AnnounceKingAsync(firstLook);
+            // While the guide holds the menu nothing else opens over it: the Herald records the
+            // reign silently and a prize choice waits for the next arrival, exactly as they do under
+            // the first-run lesson.
+            _ = AnnounceKingAsync(firstLook || _guiding);
+        }
+
+        // ── First-run collection guide (Sam, 2026-11-04) ───────────────────────────────
+
+        /// <summary>
+        /// Hold a new player to Collection: dim and disable every other destination and pulse
+        /// Collection's brightness, until they tap it.
+        ///
+        /// <para><b>Armed by the vault, lifted here.</b> <c>PackVaultController</c> writes
+        /// <see cref="FirstRunMarkers.CollectionGuide"/> when the last starter pack opens, and
+        /// <see cref="OnCollection"/> writes <see cref="FirstRunMarkers.CollectionGuideDone"/>. A
+        /// returning player has neither marker and is never guided. The markers are read here, after
+        /// the boot's identity bind, because that bind can switch the account they are scoped to.</para>
+        ///
+        /// <para><b>It survives a relaunch</b>, because the markers are on disk: a player who quits
+        /// on the guided menu comes back to it.</para>
+        /// </summary>
+        private void ApplyCollectionGuide()
+        {
+            bool pending;
+            try
+            {
+                pending = AuthGateway.IsSignedIn && FirstRunMarkers.CollectionGuidePending();
+            }
+            catch (Exception ex)
+            {
+                // A guide that cannot be read must not be able to lock the front door.
+                Debug.LogWarning($"[MainMenu] could not read the collection guide " +
+                                 $"({ex.GetType().Name}: {ex.Message}); showing the full menu.");
+                pending = false;
+            }
+
+            _guiding = pending;
+            if (!pending) return;
+
+            foreach (string name in GuideLockedElements)
+            {
+                VisualElement element = _root.Q<VisualElement>(name);
+                if (element == null) continue;
+                element.SetEnabled(false);
+                element.AddToClassList("mm-guide-locked");
+            }
+            _friends?.SetGuideLocked(true);
+
+            var collection = _root.Q<Button>("btn-collection");
+            if (collection == null) return;
+            collection.AddToClassList("mm-button--guide");
+            // USS does the easing (transition on .mm-button--guide); this only flips the bright class
+            // each half period, the same pattern the vault's entrance uses. The schedule is owned by
+            // the element, so a scene change drops it with the panel.
+            _guidePulse = collection.schedule
+                .Execute(() => collection.ToggleInClassList("mm-button--guide-bright"))
+                .Every(GuidePulseHalfMs);
+        }
+
+        /// <summary>The player went to Collection: the guide is done for good.</summary>
+        private void CompleteCollectionGuide()
+        {
+            if (!_guiding) return;
+            _guiding = false;
+            _guidePulse?.Pause();
+            try
+            {
+                FirstRunMarkers.Mark(FirstRunMarkers.CollectionGuideDone);
+            }
+            catch (Exception ex)
+            {
+                // Costs one more guided menu on the next arrival, never the trip to Collection.
+                Debug.LogWarning($"[MainMenu] could not record the collection guide as done " +
+                                 $"({ex.GetType().Name}: {ex.Message}).");
+            }
         }
 
         // ── The King of the Week (#421) ────────────────────────────────────────────────
@@ -564,7 +670,13 @@ namespace Kingdom.Presentation
         {
             var button = _root.Q<Button>(name);
             if (button == null) { Debug.LogWarning($"[MainMenu] Button '{name}' not found in UXML."); return; }
-            button.RegisterCallback<ClickEvent>(_ => onClick());
+            // Belt and braces: the guide disables these elements, and this keeps a click that
+            // slips past (a stale event, a future control) from leaving the guided menu.
+            button.RegisterCallback<ClickEvent>(_ =>
+            {
+                if (_guiding && name != "btn-collection") return;
+                onClick();
+            });
         }
 
         // ── Build stamp ────────────────────────────────────────────────────────────────
@@ -797,7 +909,7 @@ namespace Kingdom.Presentation
             MatchSettingsController.Mount(onConcede: null, showConcede: false);
             // #409: the friends button sits directly above the gear, on every top-level screen
             // except the match.
-            FriendsDrawerController.Mount();
+            _friends = FriendsDrawerController.Mount();
         }
 
         // ── Shared modal plumbing ───────────────────────────────────────────────────────
@@ -836,6 +948,7 @@ namespace Kingdom.Presentation
         private void OnCollection()
         {
             if (_collectionTransitioning) return;
+            CompleteCollectionGuide();
             MatchDeckSelection.Cancel();
             CollectionController.ReturnScene = ScreenNav.MainMenu;
             CollectionController.PendingDeckId = "";

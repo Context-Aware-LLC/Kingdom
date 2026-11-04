@@ -49,6 +49,33 @@ namespace Kingdom.Session
         public static string Tidbit(string id) => string.IsNullOrEmpty(id) ? null : "tidbit:" + id;
 
         /// <summary>
+        /// The collection guide is ARMED: this player has just opened the last of their starter packs,
+        /// so the main menu dims everything but Collection until they go there (Sam, 2026-11-04).
+        /// Written by <c>PackVaultController</c> when the starter line reaches zero on an open.
+        ///
+        /// <para><b>Armed positively, never inferred from an absence.</b> The guide is on only while
+        /// this marker is present and <see cref="CollectionGuideDone"/> is not. A player who finished
+        /// their starter packs before this marker existed has neither, so a returning player updating
+        /// into this build never finds their menu locked.</para>
+        /// </summary>
+        public const string CollectionGuide = "guide:collection";
+
+        /// <summary>The player has gone to Collection from the guided menu, which lifts the guide for
+        /// good. Written by <c>MainMenuController</c> on the Collection tap.</summary>
+        public const string CollectionGuideDone = "guide:collection-done";
+
+        /// <summary>
+        /// True while the main menu should hold the player to Collection: the guide was armed and has
+        /// not been completed. One read of the file, not two. Every failure reads as false, so a
+        /// broken marker store can only ever release the menu, never lock it.
+        /// </summary>
+        public static bool CollectionGuidePending()
+        {
+            List<string> markers = Load();
+            return markers.Contains(CollectionGuide) && !markers.Contains(CollectionGuideDone);
+        }
+
+        /// <summary>
         /// <c>first-run.json</c>, in the scope directory beside <c>owned-cards.json</c> and
         /// <c>decks.json</c>.
         ///

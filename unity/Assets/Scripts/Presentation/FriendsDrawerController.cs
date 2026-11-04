@@ -366,6 +366,19 @@ namespace Kingdom.Presentation
             _badge.EnableInClassList("fr-badge--hidden", unread == 0);
         }
 
+        /// <summary>
+        /// Dim and disable the friends button while the main menu's collection guide holds a new player
+        /// on Collection (Sam, 2026-11-04). The drawer is built per scene, so the lock goes away with
+        /// the menu that set it and never follows the player into another screen.
+        /// </summary>
+        public void SetGuideLocked(bool locked)
+        {
+            Button button = _root?.Q<Button>("btn-friends");
+            if (button == null) return;
+            button.SetEnabled(!locked);
+            button.style.opacity = locked ? new StyleFloat(0.35f) : new StyleFloat(StyleKeyword.Null);
+        }
+
         private void OnDestroy()
         {
             SocialGateway.Received -= OnSocial;

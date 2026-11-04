@@ -120,7 +120,8 @@ namespace Kingdom.Core.Collection
         /// so sharing an id with the retail pack would make a granted pack and a bought pack one
         /// balance — and would let a retail entitlement be opened at these boosted odds. RETIREMENT
         /// TRIGGER: if the starter pack is ever put on sale, it is this separation that has to be
-        /// reconsidered, not the odds.</para>
+        /// reconsidered, not the odds — and so does <c>PackVaultController.FinishGift</c>, which reads
+        /// an emptied starter line as the end of first run.</para>
         /// </summary>
         public static BoosterPack StarterPack()
             => new BoosterPack(LaunchExpansion, StarterPackCardCount, StarterOdds, BoosterPack.StarterSku);

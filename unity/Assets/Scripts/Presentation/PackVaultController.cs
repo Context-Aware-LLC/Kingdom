@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Kingdom.Core.Collection;
 using Kingdom.Net.Client.Collection;
 using Kingdom.Net.Client.Shop;
 using Kingdom.Session;
@@ -101,6 +102,16 @@ namespace Kingdom.Presentation
         private const int EntranceSlotStepMs = 90;
         private const float LoadingDegreesPerSecond = 36f;
 
+        /// <summary>The starter-pack line the onboarding grant hands over. Opening the last of these is
+        /// the end of the gift, whichever face the vault is wearing.
+        ///
+        /// <para>RETIREMENT TRIGGER: THE STARTER PACK GOES ON SALE. This reads "the starter line hit
+        /// zero" as "first run's packs are done", which holds only while the grant is the one way to
+        /// hold a starter pack (see <c>OnboardingGrant.StarterPack</c>). Once one can be bought, a
+        /// returning player opening one would be sent home to a guided menu: gate
+        /// <see cref="FinishGift"/> on the first-run route instead.</para></summary>
+        private static readonly string StarterPackId = OnboardingGrant.StarterPack().Id;
+
         private VisualElement _root;
         private VisualElement _rack;
         private VisualElement _stage;
@@ -122,6 +133,15 @@ namespace Kingdom.Presentation
         /// <summary>True once this visit has opened a pack. An empty rack means "the last pack is
         /// gone" only when it does; a player who arrives at an empty vault has finished nothing.</summary>
         private bool _openedAPack;
+
+        /// <summary>True once this visit has opened a starter pack. The end of the gift is "this visit
+        /// opened one and the line is now empty" — never just "the line is empty", which is every
+        /// returning player's vault.</summary>
+        private bool _openedStarterPack;
+
+        /// <summary>True once <see cref="FinishGift"/> has taken over the screen, so a second render
+        /// while its tidbit is up cannot start it twice.</summary>
+        private bool _finishingGift;
 
         private string _returnScene = "MainMenu";
 
@@ -227,6 +247,8 @@ namespace Kingdom.Presentation
             _tear = new PackTearAnimator();
             _tidbit = new FirstRunTidbit(root);
             _openedAPack = false;
+            _openedStarterPack = false;
+            _finishingGift = false;
             _cancel = new CancellationTokenSource();
 
             _drag = new PackRackDrag(root, _stage, _rail, ResolveSource,
@@ -403,6 +425,15 @@ namespace Kingdom.Presentation
             _shelfBalance = new Dictionary<string, long>(StringComparer.Ordinal);
             if (packs != null)
                 foreach (KeyValuePair<string, long> line in packs) _shelfBalance[line.Key] = line.Value;
+
+            // The last starter pack is open: the gift is over, and first run carries on at the main
+            // menu (Sam, 2026-11-04). Checked against the balance being drawn, so it fires on the
+            // render after the player dismisses that pack's reveal, never under it.
+            if (_openedStarterPack && Held(StarterPackId) <= 0)
+            {
+                FinishGift();
+                return;
+            }
 
             // Ordinal, so the rack does not reorder itself between two reads of the same balance.
             var lines = new List<KeyValuePair<string, long>>();
@@ -696,6 +727,8 @@ namespace Kingdom.Presentation
                     MarkGiftSeen();
                     ReleaseGiftLock();
                     _openedAPack = true;
+                    if (string.Equals(packId, StarterPackId, StringComparison.Ordinal))
+                        _openedStarterPack = true;
                 }
 
                 if (receipts.Count == 0)
@@ -803,6 +836,55 @@ namespace Kingdom.Presentation
                 return;
             }
             Refresh();
+        }
+
+        /// <summary>
+        /// The starter packs are all open. Arm the main menu's collection guide, play the gift's
+        /// closing tidbits, then go home to the menu without waiting for Back (Sam, 2026-11-04: "after
+        /// a new user opens their grant packs auto navigate back to the menu").
+        ///
+        /// <para><b>The guide is armed BEFORE the tidbits</b>, for the same force-quit reason the gift
+        /// marker is written on the open: a player who quits under the closing scroll has finished
+        /// their packs, and the next launch's menu should still point them at Collection.</para>
+        ///
+        /// <para>Any other packs this player holds stay in the vault, reachable from the menu once the
+        /// guide lifts. The gift is the starter line; the rest is not part of first run.</para>
+        /// </summary>
+        private void FinishGift()
+        {
+            if (_finishingGift) return;
+            _finishingGift = true;
+
+            try
+            {
+                FirstRunMarkers.Mark(FirstRunMarkers.CollectionGuide);
+            }
+            catch (Exception ex)
+            {
+                // Same contract as MarkGiftSeen: a marker that does not land costs the player the
+                // guided menu, never the trip home.
+                Debug.LogWarning($"[PackVault] could not arm the collection guide " +
+                                 $"({ex.GetType().Name}: {ex.Message}).");
+            }
+
+            ReleaseGiftLock();
+            ShowBanner(false);
+            _rack?.Clear();
+            ClearStagePack();
+            SetStageHint(false);
+            SetRailVisible(false);
+            SetStatus("");
+            SetBusy(true);
+
+            void GoHome()
+            {
+                if (this != null && isActiveAndEnabled) ScreenNav.Go(ScreenNav.MainMenu);
+            }
+
+            // Show calls onDone itself when every card is already seen or the markup is missing, so
+            // the trip home never depends on a tidbit being shown.
+            if (_tidbit != null) _tidbit.Show(TidbitTrigger.PackVaultGiftComplete, GoHome);
+            else GoHome();
         }
 
         // ── Chrome ──────────────────────────────────────────────────────────────────────
