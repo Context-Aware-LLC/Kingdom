@@ -381,7 +381,7 @@
     <string name="tidbit_characters_title">Zwei Klassen, ein Charakter</string>
     <string name="tidbit_characters_body">Heutzutage braucht jeder einen Nebenjob.\n\nDeine erste Wahl bestimmt deine Heldenkraft.\nDie zweite erweitert den Kartenpool, aus dem du baust.\n\nZwei Persönlichkeiten reichen meist nicht, um König zu werden, aber man weiß ja nie...</string>
     <string name="tidbit_collection_title">Die Sammlung</string>
-    <string name="tidbit_collection_body">Jede Karte, die du besitzt, ist hier. Die Karten, die du gern hättest, auch.\n\nTippe auf eine, um eine Kopie herzustellen oder ein Duplikat in Splitter zu zerlegen.\n\nKarten gibt es in 4 Seltenheitsstufen: \nGewöhnlich - Rosa, Selten - Blau, Episch - Lila, Legendär - Rot.\n\nDer Decks-Knopf zeigt dir genau das, was draufsteht. Denk nicht zu viel drüber nach.</string>
+    <string name="tidbit_collection_body">Jede Karte, die du besitzt, ist hier. Die Karten, die du gern hättest, auch.\n\nTippe auf eine, um eine Kopie herzustellen oder ein Duplikat in Splitter zu zerlegen.\n\nKarten gibt es in 4 Seltenheiten: \nGewöhnlich - Rosa, Selten - Blau, Episch - Lila, Legendär - Rot.\n\nDer Decks-Knopf zeigt dir genau das, was draufsteht. Denk nicht zu viel drüber nach.</string>
     <string name="tidbit_deck_editor_title">Deck bauen</string>
     <string name="tidbit_deck_editor_body">Tippe auf eine Karte, um sie hinzuzufügen. Tippe auf eine Zeile, um sie abzuziehen.\n\nEin Deck hat 30 Karten, höchstens zwei Kopien, von legendären Karten nur eine.\n\nSing ein kleines Lied, damit du es dir merkst: Tipp dazu, tipp davon. Füßchen tipp, tapp, tapp.</string>
     <string name="tidbit_vault_title">Der Kartentresor</string>
