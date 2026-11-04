@@ -974,8 +974,11 @@ namespace Kingdom.Presentation
             // Show the email step as the backing UI (email field is hidden while busy). Google is
             // offered on both branches and answers "new or returning" by itself — the identity either
             // exists already or it does not — so the flag it is given here is arbitrary and only
-            // decides the heading behind a busy panel.
-            if (_step != Step.Email) ToEmailStep(returning: false, "");
+            // decides the heading behind a busy panel. It must be reset rather than inherited: since
+            // the returning branch opens on Step.Email too (2026-11-03), skipping the call left
+            // _returning true, and a Google account with no name was then told its old name could
+            // not be found.
+            if (_step != Step.Email || _returning) ToEmailStep(returning: false, "");
             _primary?.SetEnabled(false);
 
             try
