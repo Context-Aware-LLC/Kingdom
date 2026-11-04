@@ -20,7 +20,7 @@ designed — "do not grow the echo; start `Kingdom.Net.Server` fresh."
    gitignored and `Dockerfile.server` COPYs it; the build fails without it). From the repo root:
    `pwsh deploy/walking-skeleton/fetch-bot-model.ps1 -TrainingRepo C:/Users/User/Documents/kingdom-training`
    It copies the model named in `models/champion.json` and exits non-zero unless the C#
-   encoder reproduces the model's `parity-fixture.jsonl` with `encodingMismatches=0`.
+   encoder reproduces the model's `parity-fixture.jsonl` with `encodingMismatches=0`. The script empties `tooling/data/bot-model/` first and leaves it filled only on a pass, so after a failed run there is nothing to deploy: fix the cause and re-run.
 2. From the **repo root** (that is where `fly.toml` lives, and the image builds FROM THE REPO
    ROOT — RC F4, since `Dockerfile.server` needs `src/` + the card data): `fly deploy`.
 3. Verify from off-network: `curl https://emberfall.fly.dev/healthz` →

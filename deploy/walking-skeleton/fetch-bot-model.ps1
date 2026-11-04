@@ -12,6 +12,11 @@
     parity-fixture.jsonl. Exits non-zero, naming the cause, when champion.json or the fixture is
     missing, a copy fails, parity does not run, or encodingMismatches is above 0.
 
+    tooling/data/bot-model/ is emptied at the very start, before any check, and is left filled ONLY
+    when parity passes. Any failure empties it again, so a failed run can never leave a stale or
+    unverified model for a later `fly deploy` to ship. Everything in it is recoverable from the
+    training repo by re-running this script.
+
 .EXAMPLE
     pwsh deploy/walking-skeleton/fetch-bot-model.ps1 -TrainingRepo C:\Users\User\Documents\kingdom-training
 #>
@@ -21,13 +26,21 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Clear-Target {
+    if (Test-Path -LiteralPath $script:target) { Remove-Item -LiteralPath $script:target -Recurse -Force }
+}
+
 function Fail([string]$message) {
+    try { Clear-Target } catch { [Console]::Error.WriteLine("fetch-bot-model: could not empty $script:target`: $($_.Exception.Message)") }
     [Console]::Error.WriteLine("fetch-bot-model: $message")
     exit 1
 }
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $target = Join-Path $repoRoot 'tooling/data/bot-model'
+
+# Empty the deploy folder before any check: it is refilled only by a run that passes parity.
+try { Clear-Target } catch { Fail "could not empty $target`: $($_.Exception.Message)" }
 
 if (-not (Test-Path -LiteralPath $TrainingRepo -PathType Container)) { Fail "training repo not found: $TrainingRepo" }
 
@@ -52,9 +65,7 @@ foreach ($name in $files) {
     if (-not (Test-Path -LiteralPath (Join-Path $source $name) -PathType Leaf)) { Fail "champion folder lacks $name`: $source" }
 }
 
-# Replace the folder wholesale so a stale file from an earlier champion cannot ride along.
 try {
-    if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force }
     New-Item -ItemType Directory -Path $target -Force | Out-Null
     foreach ($name in $files) {
         Copy-Item -LiteralPath (Join-Path $source $name) -Destination (Join-Path $target $name) -Force
