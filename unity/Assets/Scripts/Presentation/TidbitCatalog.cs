@@ -22,6 +22,10 @@ namespace Kingdom.Presentation
         /// about to leave for account creation or the starter gift.</summary>
         MainMenuArrival,
 
+        /// <summary>The main menu, on the return from opening the starter packs: after the menu's
+        /// first look, with the quest row lit, before the Collection guide (Sam, 2026-11-05).</summary>
+        QuestsHighlighted,
+
         /// <summary>Arriving at <see cref="CharacterRosterController"/> to manage decks.</summary>
         RosterArrival,
 
@@ -99,8 +103,9 @@ namespace Kingdom.Presentation
     /// not wired is worse than no entry. Gem bundles have been buyable since 2026-10-29, which is
     /// why the store card may mention Gems.</para>
     ///
-    /// <para><b>A trigger returns a SEQUENCE.</b> <see cref="TidbitTrigger.PackVaultGiftComplete"/>
-    /// fires shards and then store, back to back.</para>
+    /// <para><b>A trigger returns a SEQUENCE</b>, even where today it holds one card. The return
+    /// from the starter packs chains three triggers on the menu instead: MainMenuArrival, the quest
+    /// row lit, QuestsHighlighted, then the Collection guide (<c>MainMenuController</c>).</para>
     /// </summary>
     public static class TidbitCatalog
     {
@@ -117,7 +122,7 @@ namespace Kingdom.Presentation
             new Tidbit("deck-editor", TidbitTrigger.DeckEditorArrival, "tidbit_deck_editor_title", "tidbit_deck_editor_body", "tidbit_deck_editor", "vo/vo_herald_tidbit_deck_editor"),
             new Tidbit("vault", TidbitTrigger.PackVaultArrival, "tidbit_vault_title", "tidbit_vault_body", "tidbit_vault", "vo/vo_herald_tidbit_vault"),
             new Tidbit("shards", TidbitTrigger.PackVaultGiftComplete, "tidbit_shards_title", "tidbit_shards_body", "tidbit_shards", "vo/vo_herald_tidbit_shards"),
-            new Tidbit("store", TidbitTrigger.PackVaultGiftComplete, "tidbit_store_title", "tidbit_store_body", "tidbit_store", "vo/vo_herald_tidbit_store"),
+            new Tidbit("store", TidbitTrigger.QuestsHighlighted, "tidbit_store_title", "tidbit_store_body", "tidbit_store", "vo/vo_herald_tidbit_store"),
             new Tidbit("shop", TidbitTrigger.ShopArrival, "tidbit_shop_title", "tidbit_shop_body", "tidbit_shop", "vo/vo_herald_tidbit_shop"),
         };
 

@@ -492,6 +492,23 @@
     background-color: rgba(12, 16, 22, 0.28);
     border-radius: var(--space-2);
 }
+/* The first-run quest lesson lights the cards (MainMenuController.LightQuests). The border is
+ * always there and transparent, so lighting it moves nothing; the 1.1s matches GuidePulseHalfMs. */
+.mm-quest-row {
+    border-width: 2px;
+    border-color: rgba(0, 0, 0, 0);
+    transition-property: border-color, background-color;
+    transition-duration: 1.1s;
+    transition-timing-function: ease-in-out;
+}
+.main-menu .mm-quest-strip--guide .mm-quest-row {
+    border-color: rgba(232, 196, 104, 0.45);
+    background-color: rgba(58, 46, 18, 0.42);
+}
+.main-menu .mm-quest-strip--guide.mm-quest-strip--guide-bright .mm-quest-row {
+    border-color: rgb(255, 222, 132);
+    background-color: rgba(92, 72, 24, 0.58);
+}
 .mm-quest-row--complete {
     opacity: 0.78;
 }

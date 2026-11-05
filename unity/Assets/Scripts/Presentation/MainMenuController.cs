@@ -99,6 +99,10 @@ namespace Kingdom.Presentation
 
         /// <summary>The guided button's soft brightness pulse.</summary>
         private IVisualElementScheduledItem _guidePulse;
+        private IVisualElementScheduledItem _questPulse;
+
+        /// <summary>How long the quest row is lit on its own before the store lesson opens over it.</summary>
+        private const int QuestHighlightMs = 2400;
 
         /// <summary>The friends drawer this screen mounted, so the guide can lock its button too.</summary>
         private FriendsDrawerController _friends;
@@ -582,6 +586,15 @@ namespace Kingdom.Presentation
                 return;
             }
 
+            // Back from the starter packs: the menu's lesson, the quest row, the store lesson, and
+            // only then the Collection guide (Sam, 2026-11-05).
+            if (_guideTarget == CollectionButton)
+            {
+                PlayReturnFromPacks();
+                _ = AnnounceKingAsync(firstLook: true);
+                return;
+            }
+
             // The vault guide follows the grant's own tidbit, so the menu's lesson waits until the
             // packs are open.
             bool firstLook = _guideTarget != VaultButton && _tidbit.Show(TidbitTrigger.MainMenuArrival);
@@ -592,6 +605,47 @@ namespace Kingdom.Presentation
         }
 
         // ── First-run guide (Sam, 2026-11-04) ──────────────────────────────────────────
+
+        /// <summary>
+        /// The menu a new player comes back to after the starter packs: "the quintessential joys"
+        /// first, then the quest row lit while "you don't have to be rich to become king" (which is
+        /// about questing) is read, then the Collection guide. The whole menu is locked until then.
+        /// A lesson already seen is skipped, and the row is lit only for the store lesson it
+        /// illustrates.
+        /// </summary>
+        private void PlayReturnFromPacks()
+        {
+            GuideTo("");
+            _tidbit.Show(TidbitTrigger.MainMenuArrival, () =>
+            {
+                if (FirstRunMarkers.Has(FirstRunMarkers.Tidbit("store")))
+                {
+                    GuideTo(CollectionButton);
+                    return;
+                }
+                VisualElement strip = _root.Q<VisualElement>("quest-strip");
+                LightQuests(strip, true);
+                _root.schedule.Execute(() => _tidbit.Show(TidbitTrigger.QuestsHighlighted, () =>
+                {
+                    LightQuests(strip, false);
+                    GuideTo(CollectionButton);
+                })).ExecuteLater(QuestHighlightMs);
+            });
+        }
+
+        /// <summary>The quest row's guide pulse: the same breath as a guided button, on the cards.</summary>
+        private void LightQuests(VisualElement strip, bool on)
+        {
+            _questPulse?.Pause();
+            _questPulse = null;
+            if (strip == null) return;
+            strip.EnableInClassList("mm-quest-strip--guide", on);
+            strip.RemoveFromClassList("mm-quest-strip--guide-bright");
+            if (on)
+                _questPulse = strip.schedule
+                    .Execute(() => strip.ToggleInClassList("mm-quest-strip--guide-bright"))
+                    .Every(GuidePulseHalfMs);
+        }
 
         /// <summary>
         /// Hold a new player to one destination: dim and disable every other one and pulse the
