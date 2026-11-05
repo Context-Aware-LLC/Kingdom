@@ -164,9 +164,13 @@ namespace Kingdom.Presentation
         /// asking for a code would otherwise get a refusal that reads like a wrong code.</summary>
         private string _sentTo = "";
 
+        /// <summary>The screen this gate sits on; hidden while the restore's loading plate shows.</summary>
+        private readonly VisualElement _root;
+
         public SignInGateController(VisualElement root, AuthTokenProvider auth)
         {
             _auth = auth ?? throw new ArgumentNullException(nameof(auth));
+            _root = root;
 
             // THE GATE'S OWN VIEW. `signin-view`, not `signin-modal`: first run became a SCENE on
             // 2026-08-25 and the .mm-modal overlay was replaced by two sibling views. This lookup
@@ -656,9 +660,14 @@ namespace Kingdom.Presentation
             // MainMenuController.ResumeThenFinishBootstrap.
             string accessToken = await AuthGateway.TokenForConnectAsync();
             SetBusy(true, null);
-            ShowRestoring(Loc.Get("signin_restoring_collection"));
+            // A new player has nothing to restore, so they are not told otherwise (Sam, 2026-11-05).
+            string collectionLine = Loc.Get(_returning ? "signin_restoring_collection" : "signin_opening_gates");
+            string decksLine = Loc.Get(_returning ? "signin_restoring_decks" : "signin_opening_gates");
+            LoadingOverlay plate = CoverWithPlate(collectionLine);
+            if (plate == null) ShowRestoring(collectionLine);
             await CollectionGateway.SyncAsync(accessToken);
-            ShowRestoring(Loc.Get("signin_restoring_decks"));
+            if (plate != null) plate.SetStatus(decksLine);
+            else ShowRestoring(decksLine);
             await RosterGateway.SyncAsync(accessToken);
             SetBusy(false, null);
 
@@ -666,7 +675,38 @@ namespace Kingdom.Presentation
             // The corner Back lives on the root, not in the view, so it does not hide with it.
             Display(_back, false);
             ShowRestoring(null);
+            // The next view is set up underneath while the plate still covers it; the screen paints
+            // again once the plate has faded. A continuation that loads another scene takes the
+            // plate with it, and that scene brings its own.
             done?.Invoke();
+            if (plate != null)
+            {
+                plate.OnFadedOut += RevealRoot;
+                plate.NotifyReady();
+            }
+        }
+
+        /// <summary>
+        /// The restore waits over a loading plate instead of the form (Sam, 2026-11-05). The plate is
+        /// world-space behind this Screen Space Overlay panel, so the panel stops painting rather
+        /// than the plate covering it — opacity, as <c>CollectionController.ShowLoadingPlate</c>
+        /// explains. Null with no camera, and the status line on the modal stands in.
+        /// </summary>
+        private LoadingOverlay CoverWithPlate(string status)
+        {
+            LoadingOverlay plate = LoadingOverlay.Create(Camera.main, LoadingOverlay.GatesPlate);
+            if (plate == null) return null;
+            plate.SetStatus(status);
+            _root.SetEnabled(false);
+            _root.style.opacity = 0f;
+            return plate;
+        }
+
+        private void RevealRoot()
+        {
+            if (_root == null) return;
+            _root.style.opacity = 1f;
+            _root.SetEnabled(true);
         }
 
         /// <summary>

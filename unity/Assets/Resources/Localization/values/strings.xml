@@ -614,6 +614,8 @@
     <string name="signin_code_help">We sent a six-digit code to %1$s. Copy it and come back, and it fills itself in.</string>
     <!-- Restoring overlay. -->
     <string name="signin_restoring_collection">Restoring your collection…</string>
+    <!-- Restoring overlay, for a NEW player: they have nothing to restore. -->
+    <string name="signin_opening_gates">Opening the gates of Pendingham.</string>
     <!-- Restoring overlay. -->
     <string name="signin_restoring_decks">Restoring your decks…</string>
     <!-- Validation. -->

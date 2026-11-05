@@ -95,6 +95,8 @@ namespace Kingdom.Presentation
         public const string CollectionPlate = "LoadingPlate_ClockwrightCollection";
         public const string ReturnPlate = "LoadingPlate_GravekeepDog";
         public const string MatchPlate = "LoadingPlate_ClockwrightBreakfast";
+        /// <summary>The wait after a sign-in while the collection and decks come down (Sam, 2026-11-05).</summary>
+        public const string GatesPlate = "LoadingPlate_TempestBarber";
 
         /// <summary>
         /// Build the rig under <paramref name="cam"/>. Null camera → null (overlay skipped, boot
@@ -130,7 +132,7 @@ namespace Kingdom.Presentation
             overlay._plateName = string.IsNullOrWhiteSpace(plateName) ? DefaultPlate : plateName;
             overlay._illustrated = overlay._plateName == IntroPlate
                 || overlay._plateName == CollectionPlate || overlay._plateName == ReturnPlate
-                || overlay._plateName == MatchPlate;
+                || overlay._plateName == MatchPlate || overlay._plateName == GatesPlate;
             overlay._orbName = string.IsNullOrWhiteSpace(orbName) ? null : orbName;
             overlay.Build(cam, dist);
             return overlay;
