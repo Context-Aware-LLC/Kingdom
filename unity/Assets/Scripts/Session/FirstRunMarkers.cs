@@ -67,6 +67,11 @@ namespace Kingdom.Session
         /// </summary>
         public const string CollectionGuide = "guide:collection";
 
+        /// <summary>The quest lesson is ARMED: this player has created a character (a deck), so the next
+        /// main menu lights the quest row and reads the store tidbit (Sam, 2026-11-05). Written by
+        /// <c>CharacterCreateController</c>; the lesson is done once tidbit "store" is seen.</summary>
+        public const string QuestLesson = "lesson:quests";
+
         /// <summary>The player has gone to Collection from the guided menu, which lifts the guide for
         /// good. Written by <c>MainMenuController</c> on the Collection tap.</summary>
         public const string CollectionGuideDone = "guide:collection-done";

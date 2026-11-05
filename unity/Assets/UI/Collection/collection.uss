@@ -1233,6 +1233,17 @@
 .chrome-button:disabled {
     opacity: 0.42;
 }
+/* The first-run guide (CollectionController.Light): the controller flips --bright every 1.1s and
+ * this eases between the tints, as on the main menu. Tint only darkens, so bright is full value. */
+.chrome-button.col-guide {
+    -unity-background-image-tint-color: rgb(150, 155, 162);
+    transition-property: -unity-background-image-tint-color, opacity, translate;
+    transition-duration: 1.1s, 0.1s, 0.1s;
+    transition-timing-function: ease-in-out, ease-out, ease-out;
+}
+.chrome-button.col-guide.col-guide--bright {
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
 .col-query-actions .chrome-button {
     min-height: 64px;
     height: 64px;

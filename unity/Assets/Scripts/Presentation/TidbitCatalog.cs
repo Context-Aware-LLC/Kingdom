@@ -22,8 +22,8 @@ namespace Kingdom.Presentation
         /// about to leave for account creation or the starter gift.</summary>
         MainMenuArrival,
 
-        /// <summary>The main menu, on the return from opening the starter packs: after the menu's
-        /// first look, with the quest row lit, before the Collection guide (Sam, 2026-11-05).</summary>
+        /// <summary>The main menu, after the player's first character is created, with the quest row
+        /// lit (Sam, 2026-11-05).</summary>
         QuestsHighlighted,
 
         /// <summary>Arriving at <see cref="CharacterRosterController"/> to manage decks.</summary>
@@ -38,6 +38,10 @@ namespace Kingdom.Presentation
 
         /// <summary>Arriving at <see cref="CollectionController"/> with no deck open.</summary>
         CollectionArrival,
+
+        /// <summary>In <see cref="CollectionController"/>, right after the collection's own lesson,
+        /// with the Filters button lit; the Decks button is lit after it (Sam, 2026-11-05).</summary>
+        FiltersHighlighted,
 
         /// <summary>A deck has just opened for editing in <see cref="CollectionController"/>,
         /// whether the roster handed it in or the player chose it from the drawer.</summary>
@@ -103,9 +107,9 @@ namespace Kingdom.Presentation
     /// not wired is worse than no entry. Gem bundles have been buyable since 2026-10-29, which is
     /// why the store card may mention Gems.</para>
     ///
-    /// <para><b>A trigger returns a SEQUENCE</b>, even where today it holds one card. The return
-    /// from the starter packs chains three triggers on the menu instead: MainMenuArrival, the quest
-    /// row lit, QuestsHighlighted, then the Collection guide (<c>MainMenuController</c>).</para>
+    /// <para><b>A trigger returns a SEQUENCE</b>, even where today it holds one card. Chains across
+    /// triggers with something lit between them live in the hosts: the Collection's lesson, the
+    /// Filters lit, FiltersHighlighted, the Decks button lit (<c>CollectionController</c>).</para>
     /// </summary>
     public static class TidbitCatalog
     {
@@ -119,6 +123,8 @@ namespace Kingdom.Presentation
             new Tidbit("match-pick", TidbitTrigger.MatchPickArrival, "tidbit_match_pick_title", "tidbit_match_pick_body", "tidbit_match_pick", "vo/vo_herald_tidbit_match_pick"),
             new Tidbit("characters", TidbitTrigger.CharacterCreateArrival, "tidbit_characters_title", "tidbit_characters_body", "tidbit_characters", "vo/vo_herald_tidbit_characters"),
             new Tidbit("collection", TidbitTrigger.CollectionArrival, "tidbit_collection_title", "tidbit_collection_body", "tidbit_collection", "vo/vo_herald_tidbit_collection"),
+            // Copy is blank until Sam writes it, and it has no Herald recording yet.
+            new Tidbit("filters", TidbitTrigger.FiltersHighlighted, "tidbit_filters_title", "tidbit_filters_body", "tidbit_filters"),
             new Tidbit("deck-editor", TidbitTrigger.DeckEditorArrival, "tidbit_deck_editor_title", "tidbit_deck_editor_body", "tidbit_deck_editor", "vo/vo_herald_tidbit_deck_editor"),
             new Tidbit("vault", TidbitTrigger.PackVaultArrival, "tidbit_vault_title", "tidbit_vault_body", "tidbit_vault", "vo/vo_herald_tidbit_vault"),
             new Tidbit("shards", TidbitTrigger.PackVaultGiftComplete, "tidbit_shards_title", "tidbit_shards_body", "tidbit_shards", "vo/vo_herald_tidbit_shards"),

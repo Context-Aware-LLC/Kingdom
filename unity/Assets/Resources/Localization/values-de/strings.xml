@@ -391,7 +391,9 @@
     <string name="tidbit_match_pick_title">Wähle ein Deck</string>
     <string name="tidbit_match_pick_body">Tippe auf ein Deck, um es auszuwählen, und dann auf Spielen.\n\nJa. Es ist kompliziert. Du gewöhnst dich daran.\n\nMit etwas Glück kapiert dein Gegner diesen Teil nie, und du wirst Champion.</string>
     <string name="tidbit_characters_title">Zwei Klassen, ein Charakter</string>
-    <string name="tidbit_characters_body">Heutzutage braucht jeder einen Nebenjob.\n\nDeine erste Wahl bestimmt deine Heldenkraft.\nDie zweite erweitert den Kartenpool, aus dem du baust.\n\nZwei Persönlichkeiten reichen meist nicht, um König zu werden, aber man weiß ja nie...</string>
+    <string name="tidbit_characters_body">Heutzutage braucht jeder einen Nebenjob.\n\nDie erste Wahl bestimmt deine Heldenkraft.\nDie zweite erweitert den Kartenpool, aus dem du baust.\n\nZwei Persönlichkeiten reichen meist nicht, um König zu werden, aber man weiß ja nie...</string>
+    <string name="tidbit_filters_title">Filter</string>
+    <string name="tidbit_filters_body"></string>
     <string name="tidbit_collection_title">Die Sammlung</string>
     <string name="tidbit_collection_body">Jede Karte, die du besitzt, ist hier. Die Karten, die du gern hättest, auch.\n\nTippe auf eine, um eine Kopie herzustellen oder ein Duplikat in Splitter zu zerlegen.\n\nKarten gibt es in 4 Seltenheiten: \nGewöhnlich - Rosa, Selten - Blau, Episch - Lila, Legendär - Rot.\n\nDer Decks-Knopf zeigt dir genau das, was draufsteht. Denk nicht zu viel drüber nach.</string>
     <string name="tidbit_deck_editor_title">Deck bauen</string>

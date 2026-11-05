@@ -300,8 +300,50 @@ namespace Kingdom.Presentation
         private void OfferFirstLook()
         {
             if (_tidbit == null || _tidbit.IsShowing) return;
-            _tidbit.Show(EditingDeck ? TidbitTrigger.DeckEditorArrival : TidbitTrigger.CollectionArrival);
+            if (EditingDeck) { _tidbit.Show(TidbitTrigger.DeckEditorArrival); return; }
+            // The collection's lesson, then the Filters lit with their own lesson, then the Decks
+            // button lit until it is tapped (Sam, 2026-11-05). A lesson already seen is skipped,
+            // and the lights come on only for one still to be read.
+            _tidbit.Show(TidbitTrigger.CollectionArrival, () =>
+            {
+                if (_tidbit == null || FirstRunMarkers.Has(FirstRunMarkers.Tidbit("filters"))) return;
+                Light(_queryToggleButton);
+                _root.schedule.Execute(() => _tidbit?.Show(TidbitTrigger.FiltersHighlighted, () =>
+                {
+                    Light(_decksButton);
+                })).ExecuteLater(GuideLeadMs);
+            });
         }
+
+        /// <summary>The breath a guided button takes, as on the main menu; the same 1.1s.</summary>
+        private const int GuidePulseHalfMs = 1100;
+        /// <summary>How long a button is lit on its own before its lesson opens over it.</summary>
+        private const int GuideLeadMs = 1600;
+        private Button _guided;
+        private IVisualElementScheduledItem _guidePulse;
+
+        /// <summary>Pulse <paramref name="button"/> until it is tapped or another is lit; null
+        /// puts the light out.</summary>
+        private void Light(Button button)
+        {
+            _guidePulse?.Pause();
+            _guidePulse = null;
+            if (_guided != null)
+            {
+                _guided.RemoveFromClassList("col-guide");
+                _guided.RemoveFromClassList("col-guide--bright");
+                _guided.UnregisterCallback<ClickEvent>(PutOutLight);
+            }
+            _guided = button;
+            if (button == null) return;
+            button.AddToClassList("col-guide");
+            button.RegisterCallback<ClickEvent>(PutOutLight);
+            _guidePulse = button.schedule
+                .Execute(() => button.ToggleInClassList("col-guide--bright"))
+                .Every(GuidePulseHalfMs);
+        }
+
+        private void PutOutLight(ClickEvent _) => Light(null);
 
         /// <summary>
         /// Consume the roster handoff after the Collection shell is fully live. A broken id leaves

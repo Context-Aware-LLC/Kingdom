@@ -526,6 +526,12 @@ namespace Kingdom.Presentation
                 Debug.Log($"[DeckCreate] created {kind} deck '{created.Name}' " +
                           $"pairing={created.PrimaryClass}/{created.SecondaryClass} " +
                           $"({created.TotalCount} cards); opening deck builder.");
+                try { FirstRunMarkers.Mark(FirstRunMarkers.QuestLesson); }
+                catch (Exception ex)
+                {
+                    // Costs the quest lesson, never the deck.
+                    Debug.LogWarning($"[DeckCreate] could not arm the quest lesson ({ex.GetType().Name}: {ex.Message}).");
+                }
                 OpenDeckForEdit(created.Id);
             }
             catch (DeckGenerationException ex)

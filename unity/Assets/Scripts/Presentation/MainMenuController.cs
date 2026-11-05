@@ -586,11 +586,19 @@ namespace Kingdom.Presentation
                 return;
             }
 
-            // Back from the starter packs: the menu's lesson, the quest row, the store lesson, and
-            // only then the Collection guide (Sam, 2026-11-05).
+            // Back from the starter packs: the menu's lesson, then the Collection guide
+            // (Sam, 2026-11-05).
             if (_guideTarget == CollectionButton)
             {
                 PlayReturnFromPacks();
+                _ = AnnounceKingAsync(firstLook: true);
+                return;
+            }
+
+            // After the first character: the quest row lit and the store lesson read over it.
+            if (_guideTarget == null && QuestLessonPending())
+            {
+                PlayQuestLesson();
                 _ = AnnounceKingAsync(firstLook: true);
                 return;
             }
@@ -608,29 +616,46 @@ namespace Kingdom.Presentation
 
         /// <summary>
         /// The menu a new player comes back to after the starter packs: "the quintessential joys"
-        /// first, then the quest row lit while "you don't have to be rich to become king" (which is
-        /// about questing) is read, then the Collection guide. The whole menu is locked until then.
-        /// A lesson already seen is skipped, and the row is lit only for the store lesson it
-        /// illustrates.
+        /// with the whole menu locked, then the Collection guide. A lesson already seen is skipped.
+        /// The quest lesson waits for the first character (<see cref="PlayQuestLesson"/>), when the
+        /// quest row has had time to load (Sam, 2026-11-05).
         /// </summary>
         private void PlayReturnFromPacks()
         {
             GuideTo("");
-            _tidbit.Show(TidbitTrigger.MainMenuArrival, () =>
+            _tidbit.Show(TidbitTrigger.MainMenuArrival, () => GuideTo(CollectionButton));
+        }
+
+        /// <summary>Armed by the first character, done once the store tidbit has been read. Every
+        /// failure reads as not pending, so a broken marker store can only skip the lesson.</summary>
+        private static bool QuestLessonPending()
+        {
+            try
             {
-                if (FirstRunMarkers.Has(FirstRunMarkers.Tidbit("store")))
-                {
-                    GuideTo(CollectionButton);
-                    return;
-                }
-                VisualElement strip = _root.Q<VisualElement>("quest-strip");
-                LightQuests(strip, true);
-                _root.schedule.Execute(() => _tidbit.Show(TidbitTrigger.QuestsHighlighted, () =>
-                {
-                    LightQuests(strip, false);
-                    GuideTo(CollectionButton);
-                })).ExecuteLater(QuestHighlightMs);
-            });
+                return AuthGateway.IsSignedIn && FirstRunMarkers.Has(FirstRunMarkers.QuestLesson)
+                    && !FirstRunMarkers.Has(FirstRunMarkers.Tidbit("store"));
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MainMenu] could not read the quest lesson ({ex.GetType().Name}: {ex.Message}).");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// The quest row lit, then "you don't have to be rich to become king" (which is about
+        /// questing) read over it, with the menu locked until it is closed.
+        /// </summary>
+        private void PlayQuestLesson()
+        {
+            GuideTo("");
+            VisualElement strip = _root.Q<VisualElement>("quest-strip");
+            LightQuests(strip, true);
+            _root.schedule.Execute(() => _tidbit.Show(TidbitTrigger.QuestsHighlighted, () =>
+            {
+                LightQuests(strip, false);
+                GuideTo(null);
+            })).ExecuteLater(QuestHighlightMs);
         }
 
         /// <summary>The quest row's guide pulse: the same breath as a guided button, on the cards.</summary>

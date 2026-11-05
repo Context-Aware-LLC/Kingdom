@@ -689,11 +689,14 @@
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Class picker arrival. -->
     <string name="tidbit_characters_title">Two Classes, One Character</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Class picker arrival. -->
-    <string name="tidbit_characters_body">These days, everyone needs a side hustle.\n\nYour first choice determines your hero power.\nThe second adds to the card pool you build from.\n\nTwo personalities is not usually enough to become King but you never know...</string>
+    <string name="tidbit_characters_body">These days, everyone needs a side hustle.\n\nThe first choice determines your hero power.\nThe second adds to the card pool you build from.\n\nTwo personalities is not usually enough to become King but you never know...</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Collection arrival. Render/Reduce/Decks are UI verbs; rarity names should match rarity_* keys. -->
     <string name="tidbit_collection_title">The Collection</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Collection arrival. Render/Reduce/Decks are UI verbs; rarity names should match rarity_* keys. -->
     <string name="tidbit_collection_body">Every card you own is here. So are the cards you wish you owned.\n\nTap one to Render a copy, or to Reduce a spare into shards.\n\nCards come in 4 different rarities: \nCommon - Pink, Rare - Blue, Epic - Purple, Legendary - Red.\n\nThe Decks button shows you the thing it says. Don\'t over think it.</string>
+    <!-- Collection, Filters lit. Blank until written (Sam, 2026-11-05). -->
+    <string name="tidbit_filters_title">Filters</string>
+    <string name="tidbit_filters_body"></string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Deck builder arrival. The last line is a sing-song pun; adapt freely. -->
     <string name="tidbit_deck_editor_title">Build a Deck</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Deck builder arrival. The last line is a sing-song pun; adapt freely. -->
