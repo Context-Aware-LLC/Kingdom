@@ -42,6 +42,8 @@ namespace Kingdom.Tools.NetSoak
     ///                            playable classes played as its own N-match soak, emitting an
     ///                            N×N win-rate grid. Every cell is gated on cleanliness AND a
     ///                            non-zero intent mix; any tripped cell fails the run (exit 1).
+    ///                            `--deck-dir DIR` plays a hand-built one-deck-per-pairing pool
+    ///                            instead of generated decks.
     ///   ladder [N] [outDir] [--hp N]
     ///                          — N matches over the same corpus decks, but with a fresh RANDOM
     ///                            PAIR drawn for every match instead of an even sweep of the grid.
@@ -98,7 +100,8 @@ namespace Kingdom.Tools.NetSoak
                     "matrix" => await RunMatrixAsync(ParseCount(args, 1, 40), ParseOutDir(args, 2),
                                                      noSecondary: args.Contains("--no-secondary", StringComparer.Ordinal),
                                                      primaryOnly: args.Contains("--primary-only", StringComparer.Ordinal),
-                                                     drafts: (int)ParseUlongFlag(args, "--drafts", 2)),
+                                                     drafts: (int)ParseUlongFlag(args, "--drafts", 2),
+                                                     deckDir: ParseOptionalStringFlag(args, "--deck-dir")),
                     "class-pass" => await RunClassPassAsync(args),
                     "corpus" => await RunCorpusAsync(ParseCount(args, 1, 20), ParseOutDir(args, 2), ParseHeroHp(args)),
                     "ladder" => await RunLadderAsync(ParseCount(args, 1, 200), ParseLadderOutDir(args, 2), ParseHeroHp(args)),
@@ -118,7 +121,7 @@ namespace Kingdom.Tools.NetSoak
                     "probe" => Fail("usage: probe <wss-url>"),
                     "stall" when args.Length >= 2 => await RunStallAsync(new Uri(args[1]), ParseCount(args, 2, 40)),
                     "stall" => Fail("usage: stall <wss-url> [thinkSeconds]"),
-                    _ => Fail($"unknown mode '{mode}' — use: loopback [N] | ai [N] [outDir] [--workers N] [--direct] | dataset [N] [outDir] [--workers N] [--direct] | dataset-matrix <matches-per-pair> <outDir> (--classes A,B,... | --all-classes) [--deck-dir DIR] [--game-seed-offset N] [--workers N] [--direct] | matrix [N] [outDir] | class-pass <CLASS> [N] [outDir] [--seed N] | corpus [N] [outDir] [--hp N] | ladder [N] [outDir] [--hp N] | live <wss-url> [N] [--latency ms] [--jitter ms] [--loss permille] [--disconnect frames] | liveai [N] | liveai <wss-url> [N] | join <wss-url> | stall <wss-url> [thinkSeconds] | fault  (checkpoint, arena, rollout and the league commands: Kingdom.Tools.TrainingSoak)"),
+                    _ => Fail($"unknown mode '{mode}' — use: loopback [N] | ai [N] [outDir] [--workers N] [--direct] | dataset [N] [outDir] [--workers N] [--direct] | dataset-matrix <matches-per-pair> <outDir> (--classes A,B,... | --all-classes) [--deck-dir DIR] [--game-seed-offset N] [--workers N] [--direct] | matrix [N] [outDir] [--drafts N] [--no-secondary | --primary-only | --deck-dir DIR] | class-pass <CLASS> [N] [outDir] [--seed N] | corpus [N] [outDir] [--hp N] | ladder [N] [outDir] [--hp N] | live <wss-url> [N] [--latency ms] [--jitter ms] [--loss permille] [--disconnect frames] | liveai [N] | liveai <wss-url> [N] | join <wss-url> | stall <wss-url> [thinkSeconds] | fault  (checkpoint, arena, rollout and the league commands: Kingdom.Tools.TrainingSoak)"),
                 };
             }
             catch (Exception ex)
@@ -782,10 +785,19 @@ namespace Kingdom.Tools.NetSoak
         /// <param name="drafts">`--drafts N`: decks dealt per class per cell, cycled every two games so
         /// each draft plays both seat orders (default 2, Sam, 2026-10-06). `--drafts 1` is the old
         /// one-deck-per-cell matrix.</param>
+        /// <param name="deckDir">`--deck-dir DIR`: play every cell from a hand-built pool of one deck
+        /// per ordered class pairing (the training repo's cohesive pool shape) instead of the
+        /// generator, so the grid measures decks someone built on purpose (Sam, 2026-11-04). Cell
+        /// A-vs-B plays deck A_B against B_A, the same pairing <see cref="PolicyArenaDeckPool.Resolve"/>
+        /// gives the policy arena. A pool has no A_A deck, so a mirror cell plays A's first pairing in
+        /// enum order against itself; the diagonal reads ~50% by construction either way.
+        /// Excludes the three generator switches.</param>
         private static async Task<int> RunMatrixAsync(int matchesPerCell, string outDir, bool noSecondary = false,
-                                                      bool primaryOnly = false, int drafts = 2)
+                                                      bool primaryOnly = false, int drafts = 2, string? deckDir = null)
         {
             if (drafts < 1) throw new ArgumentException("--drafts must be at least 1.");
+            if (deckDir is not null && (noSecondary || primaryOnly))
+                throw new ArgumentException("--deck-dir plays the pool's decks; it cannot combine with --no-secondary or --primary-only.");
             int maxSecondaryCopies = noSecondary || primaryOnly ? 0 : MaxSecondaryClassCards;
             bool includeNeutral = !primaryOnly;
             // The matrix gets its own folder by default so its telemetry never merges with the
@@ -801,8 +813,11 @@ namespace Kingdom.Tools.NetSoak
                 TelemetrySource.AiSoak);
 
             CardClass[] classes = PlayableClasses();
+            PolicyArenaDeckPool? pool = deckDir is null ? null : PolicyArenaDeckPool.Load(deckDir, db, classes);
+            if (pool is not null) drafts = 1;
             Console.WriteLine($"[matrix] {classes.Length}×{classes.Length} = {classes.Length * classes.Length} cells,"
-                              + $" {matchesPerCell} match(es) each, {drafts} draft(s) per class"
+                              + $" {matchesPerCell} match(es) each, "
+                              + (pool is not null ? $"deck pool {pool.SourceDirectory} (sha256 {pool.Sha256})" : $"{drafts} draft(s) per class")
                               + $"{(primaryOnly ? ", primary-class decks only" : noSecondary ? ", primary + NEUTRAL decks only" : "")}"
                               + $" → {sink.Path}");
 
@@ -814,8 +829,17 @@ namespace Kingdom.Tools.NetSoak
                 foreach (CardClass b in classes)
                 {
                     var dealt = new List<(MatchSetup even, MatchSetup odd)>(drafts);
-                    for (ulong reroll = 0; reroll < (ulong)drafts; reroll++)
-                        dealt.Add(ResolveSoakSetups(a, b, db, maxSecondaryCopies, reroll, includeNeutral));
+                    if (pool is not null)
+                    {
+                        CardClass partner = a != b ? b : classes.First(c => c != a);
+                        IReadOnlyList<int> deckA = pool.Deck(a, partner);
+                        IReadOnlyList<int> deckB = a != b ? pool.Deck(b, a) : deckA;
+                        dealt.Add((new MatchSetup(a, deckA, b, deckB, heroMaxHealth: 30),
+                                   new MatchSetup(b, deckB, a, deckA, heroMaxHealth: 30)));
+                    }
+                    else
+                        for (ulong reroll = 0; reroll < (ulong)drafts; reroll++)
+                            dealt.Add(ResolveSoakSetups(a, b, db, maxSecondaryCopies, reroll, includeNeutral));
                     ulong seedBase = 0xE17BEEF5EEDUL + (ulong)(++cellIndex) * 100_003UL;
                     MatchupResult r = await RunMatchupAsync(matchesPerCell, dealt, db, validator,
                                                             sink, attribution, seedBase,
@@ -838,7 +862,10 @@ namespace Kingdom.Tools.NetSoak
                 }
 
             WriteMatrixArtifacts(outDir, classes, cells, matchesPerCell,
-                deckNote: primaryOnly
+                deckNote: pool is not null
+                    ? $" Decks: the hand-built pool `{pool.SourceDirectory}` (`--deck-dir`, sha256 {pool.Sha256}) — "
+                      + "cell A vs B plays deck A/B against B/A; a mirror plays A's first pairing against itself."
+                    : primaryOnly
                     ? " Decks: primary class ONLY (`--primary-only`) — no NEUTRAL, no secondary."
                     : noSecondary
                         ? " Decks: primary class + NEUTRAL only (`--no-secondary`), no secondary-class copies."

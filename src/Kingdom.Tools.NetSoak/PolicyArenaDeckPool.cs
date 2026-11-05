@@ -107,6 +107,12 @@ namespace Kingdom.Tools.NetSoak
             return new PolicyArenaDeckPool(fullPath, Hash(decks), decks);
         }
 
+        /// <summary>The one deck for an ordered primary/secondary pairing.</summary>
+        public IReadOnlyList<int> Deck(CardClass primary, CardClass secondary)
+            => _decks.TryGetValue((primary, secondary), out IReadOnlyList<int>? deck)
+                ? deck
+                : throw new InvalidDataException($"Arena deck pool has no {primary}/{secondary} deck.");
+
         public MatchSetup Resolve(CardClass first, CardClass second)
         {
             if (!_decks.TryGetValue((first, second), out IReadOnlyList<int>? firstDeck)
