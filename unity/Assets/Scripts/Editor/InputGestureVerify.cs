@@ -821,6 +821,11 @@ namespace Kingdom.Editor
 
             s.Players[0].Weapon = null;
 
+            s.Players[0].HeroAttackThisTurn = 1;
+            Check("press on our unarmed hero with Attack this turn starts an Attacker drag",
+                m.BeginSource(PointerSubject.OfHero(m.HeroIdOf(P0), P0)).Kind == DragSourceKind.Attacker);
+            s.Players[0].HeroAttackThisTurn = 0;
+
             Check("press on our hero power starts a HeroPower gesture",
                 m.BeginSource(PointerSubject.OfHeroPower(P0)).Kind == DragSourceKind.HeroPower);
 

@@ -102,6 +102,7 @@ namespace Kingdom.Core.Projection
             proj.HeroPowerUsedThisTurn = ps.HeroPowerUsedThisTurn;
             proj.HeroAttacksUsedThisTurn = ps.HeroAttacksUsedThisTurn;
             proj.HeroDamageTakenThisTurn = ps.HeroDamageTakenThisTurn;
+            proj.HeroAttackThisTurn = ps.HeroAttackThisTurn;
             proj.NextTurnBackdraftLock = ps.NextTurnBackdraftLock;
 
             return proj;

@@ -182,6 +182,25 @@ namespace Kingdom.Core
             if (atk == 0 && hp == 0) return;
             foreach (var t in ctx.Targets)
             {
+                if (t.IsHero)
+                {
+                    // A hero has no stats to enchant. Its Attack is gained for this turn only and its
+                    // Health as Armor (Empower, 2026-11-04). C36 admits only gains here.
+                    PlayerState owner = ctx.State.Players[t.Seat];
+                    if (atk > 0)
+                    {
+                        owner.HeroAttackThisTurn += atk;
+                        ctx.Events.Emit(GameEventKind.StatsModified, source: ctx.Source.Identity,
+                            target: owner.Hero.Id, amount: atk);
+                    }
+                    if (hp > 0)
+                    {
+                        owner.Hero.Armor += hp;
+                        ctx.Events.Emit(GameEventKind.ArmorGained, source: owner.Hero.Id,
+                            target: owner.Hero.Id, amount: hp);
+                    }
+                    continue;
+                }
                 if (!t.IsMinion) continue;
                 var m = t.Minion!;
                 // The enchantment IS the record; DerivedStats recomputes live stats from the list

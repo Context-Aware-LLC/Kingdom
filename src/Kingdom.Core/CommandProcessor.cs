@@ -306,6 +306,7 @@ namespace Kingdom.Core
             // after all end effects have resolved. Frost retains its controller-turn clock.
             foreach (PlayerState player in state.Players)
             {
+                player.HeroAttackThisTurn = 0;
                 EffectList.ExpireCurrentTurn(player.Hero.Effects);
                 foreach (CardInstance minion in player.Board)
                     EffectList.ExpireCurrentTurn(minion.Effects);
@@ -589,9 +590,10 @@ namespace Kingdom.Core
 
             if (attacker.IsHero)
             {
-                if (ps.Weapon == null) { reason = RejectReason.WeaponMissing; return false; }
+                // A weapon, or Attack gained this turn (GAIN_HERO_ATTACK), is what lets a hero swing.
+                if (ps.Weapon == null && ps.HeroAttackThisTurn <= 0) { reason = RejectReason.WeaponMissing; return false; }
                 if (ps.Hero.IsFrosted()) { reason = RejectReason.AttackerFrosted; return false; }
-                int maxAttacks = ps.Weapon.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
+                int maxAttacks = ps.Weapon != null && ps.Weapon.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
                 if (ps.HeroAttacksUsedThisTurn >= maxAttacks) { reason = RejectReason.NoAttacksLeft; return false; }
             }
             else
@@ -650,11 +652,11 @@ namespace Kingdom.Core
 
             int attackerAtk = attacker.IsMinion
                 ? attacker.Minion!.CurrentAttack
-                : ps.Weapon!.CurrentAttack;
+                : (ps.Weapon?.CurrentAttack ?? 0) + ps.HeroAttackThisTurn;
 
             var attackerKws = attacker.IsMinion
                 ? new HashSet<Keyword>(attacker.Minion!.Keywords)
-                : new HashSet<Keyword>(ps.Weapon!.Keywords);
+                : ps.Weapon != null ? new HashSet<Keyword>(ps.Weapon.Keywords) : new HashSet<Keyword>();
 
             // attackerKws already resolves minion-vs-weapon (line above), so OVERWHELM/VANGUARD
             // read off it too rather than re-deriving from attacker.Minion — a weapon carrying

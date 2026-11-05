@@ -149,8 +149,9 @@ namespace Kingdom.Core.Tests.Targeting
                     findings.Add($"SAYS-ENEMY-HITS-FRIENDLY  \"{sentence}\" — {spec.Selector} " +
                                  "can resolve onto the controller's own side.");
 
+                // "…a friendly minion +1/+1, or give your hero …" names the hero it can pick (Empower).
                 if (Mentions(sentence, "minion") && !Mentions(sentence, "character") &&
-                    resolved.Any(c => c.IsHero))
+                    !Mentions(sentence, "or give your hero") && resolved.Any(c => c.IsHero))
                     findings.Add($"SAYS-MINION-HITS-HERO  \"{sentence}\" — {spec.Selector} " +
                                  "produced a hero candidate.");
 

@@ -546,15 +546,23 @@ namespace Kingdom.Core.Cards
 
             // Whole-sentence primitives are tested before splitting at commas/conjunctions.
             // The renderer is still the only spelling of their grammar.
-            foreach (RuleAction candidate in new RuleAction[]
+            var whole = new List<RuleAction>
             {
                 new PreventLethalDamageAction(new TargetSpec("OTHER_FRIENDLY_MINIONS", TargetSelection.Of(6))),
                 new RepeatNextMinionPlayAction(),
-            })
+            };
+            // "Give a friendly minion +1/+1, or give your hero …" is one stat change on ANY_FRIENDLY
+            // (Empower); its comma and "and" are not clause boundaries.
+            foreach (KeyValuePair<int, int> delta in Deltas(sentence.Replace(",", "")))
+                whole.Add(new ModifyStatsAction(delta.Key, delta.Value,
+                    new TargetSpec("ANY_FRIENDLY", TargetSelection.Of(1))));
+            foreach (RuleAction candidate in whole)
             {
                 var single = new[] { candidate };
-                if (!string.Equals(CardTextGenerator.DescribeActions(single, names, trigger), sentence,
-                        StringComparison.Ordinal)) continue;
+                string printed;
+                try { printed = CardTextGenerator.DescribeActions(single, names, trigger); }
+                catch (Exception) { continue; }
+                if (!string.Equals(printed, sentence, StringComparison.Ordinal)) continue;
                 actions = single;
                 reason = "";
                 return true;

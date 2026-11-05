@@ -121,7 +121,7 @@ namespace Kingdom.AI
                 if (atk != null) return atk;
             }
 
-            if (ps.Weapon != null)
+            if (ps.Weapon != null || ps.HeroAttackThisTurn > 0)
             {
                 // Face first for the hero: swinging into a minion means taking its attack back, and
                 // the weapon spends durability either way. Bulwark still forces the trade.

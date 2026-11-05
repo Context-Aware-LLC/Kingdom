@@ -5,7 +5,7 @@
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 300,
-  "corpusDigest": "991dcafd0bc329e3",
+  "corpusDigest": "9953b545dc4154ca",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -47,14 +47,14 @@
       "LIFEDRAIN": 6
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 71,
+      "ANY_FRIENDLY_MINION": 70,
       "ANY_ENEMY": 29,
       "ANY_MINION": 25,
       "ANY_ENEMY_MINION": 23,
       "FRIENDLY_HERO": 18,
       "ENEMY_HERO": 11,
       "ANY_CHARACTER": 9,
-      "ANY_FRIENDLY": 3,
+      "ANY_FRIENDLY": 4,
       "OTHER_FRIENDLY_MINIONS": 3,
       "ANY_GRAVEYARD_MINION": 1,
       "FRIENDLY_GRAVEYARD_MINION": 1,
@@ -709,10 +709,11 @@
         "VENOM": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 15,
+        "ANY_FRIENDLY_MINION": 14,
         "FRIENDLY_HERO": 4,
         "ANY_CHARACTER": 1,
         "ANY_ENEMY": 1,
+        "ANY_FRIENDLY": 1,
         "ANY_MINION": 1
       },
       "actionFrequency": {
@@ -856,7 +857,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [
-        "ANY_FRIENDLY_MINION"
+        "ANY_FRIENDLY"
       ],
       "actionTags": [],
       "tribe": null,

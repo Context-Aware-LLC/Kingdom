@@ -528,6 +528,10 @@ namespace Kingdom.Core.Cards
             return (allowed.Zones & TargetAxes.OfZone(zone)) != 0 && (allowed.Types & typeBit) != 0;
         }
 
+        /// <summary>Whether a selector's query can produce a hero.</summary>
+        public static bool SelectorReachesHero(string selector)
+            => (SelectorShape(selector).Types & TargetTypes.Hero) != 0;
+
         public static bool HasCompatibleTarget(RuleAction action, string selector,
             CardType sourceType, Trigger trigger)
         {
@@ -603,7 +607,10 @@ namespace Kingdom.Core.Cards
                 case FrostAction _:
                 case DrownAction _:
                     return new TargetShape(TargetZones.Board, TargetTypes.Hero | TargetTypes.Minion);
+                // On a hero a stat change is Attack this turn and Armor (Empower, 2026-11-04);
+                // CardValidator C36 holds a hero-reaching one to the shape that says so.
                 case ModifyStatsAction _:
+                    return new TargetShape(TargetZones.Board, TargetTypes.Hero | TargetTypes.Minion);
                 case GrantKeywordAction _:
                 case PreventLethalDamageAction _:
                 // Board minions only, and NOT weapons, though a weapon can carry a toll (EF-020).

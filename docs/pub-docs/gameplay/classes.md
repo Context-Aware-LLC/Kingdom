@@ -97,6 +97,6 @@ He plays the long game. He heals through the early turns, grows his mana ahead o
 - Cards that add Mana Crystals early.
 - Large minions whose extra damage carries through to the enemy hero.
 
-**Empower:** Give a friendly minion +1/+1.
+**Empower:** Give a friendly minion +1/+1, or give your hero +1 Attack this turn and 1 Armor.
 
 Neutral cards belong to no class and may be used in every deck.

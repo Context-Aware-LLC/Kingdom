@@ -173,7 +173,7 @@ The NOR-319 brief described hero powers that do not match the shipped data. The 
 | **TIDECALLER** | Tidal Ward — summon a 0/2 `BULWARK` | **Summon `token_tide_wisp`, which is a 1/2 `BULWARK`.** |
 | STONEWARDEN | Earthwall — summon a 0/3 `BULWARK` token | Correct (`token_stone_shard`, 0/3, `BULWARK`) |
 | TEMPEST | Chain Spark — 1 damage to 2 random enemies | Correct |
-| VERDANT | Empower — give a friendly minion +1/+1 | Correct |
+| VERDANT | Empower — a friendly minion +1/+1, or your hero +1 Attack this turn and 1 Armor | Correct |
 | NIGHTVEIL | Shadow Mark — give a friendly minion `SHROUD` | Correct |
 | CLOCKWRIGHT | Blueprint — draw a card | Correct |
 

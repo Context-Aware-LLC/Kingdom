@@ -38,7 +38,7 @@ namespace Kingdom.Core.Tests.Support
             },
             [typeof(PlayerState)] = new[]
             {
-                "Board", "Deck", "Graveyard", "Hand", "Hero", "HeroAttacksUsedThisTurn",
+                "Board", "Deck", "Graveyard", "Hand", "Hero", "HeroAttackThisTurn", "HeroAttacksUsedThisTurn",
                 "HeroDamageTakenThisTurn", "HeroPowerUsedThisTurn", "Id", "Mana", "NextTurnBackdraftLock", "Weapon"
             },
             // EXPERIMENT (effect-model fork): IsFrosted and FrostThawPending left this inventory because
@@ -121,6 +121,7 @@ namespace Kingdom.Core.Tests.Support
             ["PlayerState.HeroPowerUsedThisTurn"] = s => s.Players[0].HeroPowerUsedThisTurn = !s.Players[0].HeroPowerUsedThisTurn,
             ["PlayerState.HeroAttacksUsedThisTurn"] = s => s.Players[0].HeroAttacksUsedThisTurn++,
             ["PlayerState.HeroDamageTakenThisTurn"] = s => s.Players[0].HeroDamageTakenThisTurn++,
+            ["PlayerState.HeroAttackThisTurn"] = s => s.Players[0].HeroAttackThisTurn++,
             ["PlayerState.NextTurnBackdraftLock"] = s => s.Players[0].NextTurnBackdraftLock++,
 
             // HeroInstance (seat 0's hero)
@@ -246,6 +247,7 @@ namespace Kingdom.Core.Tests.Support
             p0.Mana = new ManaPool { Max = 5, Available = 3, Spent = 2, Locked = 1, Temporary = 1 };
             p0.HeroAttacksUsedThisTurn = 1;
             p0.HeroDamageTakenThisTurn = 3;
+            p0.HeroAttackThisTurn = 1;
             p0.NextTurnBackdraftLock = 2;
 
             // Seat 1: sparse on purpose (empty zones + null weapon are also canonical branches).

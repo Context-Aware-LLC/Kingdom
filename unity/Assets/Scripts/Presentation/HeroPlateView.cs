@@ -20,6 +20,8 @@ namespace Kingdom.Presentation
         private static readonly Color SelectedTint = new Color(1.00f, 0.85f, 0.10f);
         // Valid-target cue: cyan to match CardMaterialBinder's target glow.
         private static readonly Color TargetableTint = new Color(0.25f, 0.90f, 1.00f);
+        // Armor reads as steel beside the Health it shields.
+        private static readonly Color ArmorInk = new Color(0.78f, 0.82f, 0.88f);
 
         // hero-frame.png is 1024x1536, so this keeps its native 2:3 aspect. Royal Council's
         // painted portrait fixtures have more room than the old board anchors; grow the complete
@@ -48,6 +50,8 @@ namespace Kingdom.Presentation
         private Renderer     _plate;
         private Renderer     _portrait;
         private TextMeshPro  _hpLabel;
+        private TextMeshPro  _attackLabel;
+        private TextMeshPro  _armorLabel;
         private HealthNumber _hp;
         private CardClass _heroClass;
         private IUiSpriteProvider _uiSprites;
@@ -102,26 +106,44 @@ namespace Kingdom.Presentation
                 new Vector3(0.648f * FixtureScale, 0.162f * FixtureScale, -0.02f),
                 6.345f * FixtureScale,
                 HpFull);
+            // Attack gained this turn mirrors HP on the portrait's left edge; Armor sits under HP.
+            // Both are hidden at zero, which is nearly always (Empower, 2026-11-04). Not yet seen
+            // on a device: the positions are the HP label's, mirrored and dropped.
+            _attackLabel = MakeLabel(transform, "Attack",
+                new Vector3(-0.648f * FixtureScale, 0.162f * FixtureScale, -0.02f),
+                6.345f * FixtureScale, HealthInk.Buffed);
+            _armorLabel = MakeLabel(transform, "Armor",
+                new Vector3(0.648f * FixtureScale, -0.38f * FixtureScale, -0.02f),
+                4.2f * FixtureScale, ArmorInk);
             if (_tabletop)
             {
                 // Centre both totals below the portraits and face the fixed tabletop view,
                 // so the digits remain square instead of following the board's perspective.
-                _hpLabel.transform.localPosition = new Vector3(0f, -0.82f, -0.01f);
-                Camera camera = Camera.main;
-                if (camera != null)
-                {
-                    // Lift along the viewing ray to clear the rim without shifting the
-                    // number sideways relative to its point on the portrait.
-                    Vector3 screen = camera.WorldToScreenPoint(_hpLabel.transform.position);
-                    screen.z -= .5f;
-                    _hpLabel.transform.SetPositionAndRotation(camera.ScreenToWorldPoint(screen), camera.transform.rotation);
-                }
-                _hpLabel.enableAutoSizing = false;
-                _hpLabel.overflowMode = TextOverflowModes.Overflow;
-                _hpLabel.fontSize = _hpLabel.fontSizeMax = 7.8f;
-                _hpLabel.fontSizeMin = 7.8f;
-                _hpLabel.rectTransform.sizeDelta = new Vector2(1.5f, 1.6f);
+                FaceTabletop(_hpLabel, new Vector3(0f, -0.82f, -0.01f), 7.8f);
+                FaceTabletop(_attackLabel, new Vector3(-0.62f, -0.82f, -0.01f), 6.2f);
+                FaceTabletop(_armorLabel, new Vector3(0.62f, -0.82f, -0.01f), 6.2f);
             }
+            _attackLabel.gameObject.SetActive(false);
+            _armorLabel.gameObject.SetActive(false);
+        }
+
+        private static void FaceTabletop(TextMeshPro label, Vector3 localPosition, float fontSize)
+        {
+            label.transform.localPosition = localPosition;
+            Camera camera = Camera.main;
+            if (camera != null)
+            {
+                // Lift along the viewing ray to clear the rim without shifting the
+                // number sideways relative to its point on the portrait.
+                Vector3 screen = camera.WorldToScreenPoint(label.transform.position);
+                screen.z -= .5f;
+                label.transform.SetPositionAndRotation(camera.ScreenToWorldPoint(screen), camera.transform.rotation);
+            }
+            label.enableAutoSizing = false;
+            label.overflowMode = TextOverflowModes.Overflow;
+            label.fontSize = label.fontSizeMax = fontSize;
+            label.fontSizeMin = fontSize;
+            label.rectTransform.sizeDelta = new Vector2(1.5f, 1.6f);
         }
 
         private void SetPortrait(Sprite sprite)
@@ -146,8 +168,22 @@ namespace Kingdom.Presentation
             _hp.Show(_hpLabel, hero.CurrentHealth,
                      HealthInk.Resting(hero.CurrentHealth, hero.MaxHealth, hero.MaxHealth));
 
+            // The total the hero would hit for, shown only while some of it was gained this turn;
+            // a weapon alone already shows its Attack in the weapon socket.
+            int attack = (ps.Weapon?.CurrentAttack ?? 0) + ps.HeroAttackThisTurn;
+            ShowCount(_attackLabel, ps.HeroAttackThisTurn > 0 ? attack : 0, "");
+            ShowCount(_armorLabel, hero.Armor, "+");
+
             _frosted = hero.IsFrosted();
             ApplyPlateTint();
+        }
+
+        private static void ShowCount(TextMeshPro label, int value, string prefix)
+        {
+            if (label == null) return;
+            bool show = value > 0;
+            if (label.gameObject.activeSelf != show) label.gameObject.SetActive(show);
+            if (show) label.text = prefix + value.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
 
         /// <summary>Play this hero's cast up the portrait: wait <paramref name="delaySeconds"/>,

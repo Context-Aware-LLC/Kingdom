@@ -16,8 +16,8 @@
   },
   "4": {
     "name": "Stärken",
-    "text": "Gib einem befreundeten Diener +1/+1.",
-    "src": "589114718d3d45fb"
+    "text": "Gib einem befreundeten Diener +1/+1 oder gib deinem Helden in diesem Zug +1 {label:attack} und 1 Rüstung.",
+    "src": "2ec15cc3ad27013e"
   },
   "5": {
     "name": "Bauplan",

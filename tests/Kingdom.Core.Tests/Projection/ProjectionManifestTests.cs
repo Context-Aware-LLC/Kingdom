@@ -63,6 +63,7 @@ namespace Kingdom.Core.Tests.Projection
                 ["HeroPowerUsedThisTurn"] = "PUBLIC",
                 ["HeroAttacksUsedThisTurn"] = "PUBLIC",
                 ["HeroDamageTakenThisTurn"] = "PUBLIC",
+                ["HeroAttackThisTurn"] = "PUBLIC",
                 ["NextTurnBackdraftLock"] = "PUBLIC",
             },
             [typeof(HeroInstance)] = new()

@@ -102,7 +102,7 @@ namespace Kingdom.Net.Server.Bots
             }
 
             // 2. Attack. Minions trade first — the validator, not this loop, enforces bulwark and
-            //    shroud — then the hero swings if a weapon is equipped.
+            //    shroud — then the hero swings if it has Attack (a weapon, or Empower's this turn).
             foreach (CardInstance attacker in ps.Board)
             {
                 AttackIntent? atk = TryAttack(state, me, attacker.Id, attacker.CurrentAttack, foe,
@@ -110,11 +110,11 @@ namespace Kingdom.Net.Server.Bots
                 if (atk is not null) return atk;
             }
 
-            if (ps.Weapon is not null)
+            if (HeroAttack(ps) > 0)
             {
                 // Face first for the hero: swinging into a minion means taking its attack back, and
                 // the weapon has durability to spend either way. Bulwark still forces the trade.
-                AttackIntent? swing = TryAttack(state, me, ps.Hero.Id, ps.Weapon.CurrentAttack, foe,
+                AttackIntent? swing = TryAttack(state, me, ps.Hero.Id, HeroAttack(ps), foe,
                     validator, preferFace: true);
                 if (swing is not null) return swing;
             }
@@ -427,12 +427,12 @@ namespace Kingdom.Net.Server.Bots
                 first ??= hit;
             }
 
-            if (ps.Weapon is not null)
+            if (HeroAttack(ps) > 0)
             {
                 var swing = new AttackIntent(me, ps.Hero.Id, face);
                 if (validator.CanExecute(state, swing, out _))
                 {
-                    total += ps.Weapon.CurrentAttack;
+                    total += HeroAttack(ps);
                     first ??= swing;
                 }
             }
@@ -473,19 +473,27 @@ namespace Kingdom.Net.Server.Bots
             return null;
         }
 
+        /// <summary>What the hero hits for: the weapon's Attack plus any gained this turn.</summary>
+        private static int HeroAttack(PlayerState ps) => (ps.Weapon?.CurrentAttack ?? 0) + ps.HeroAttackThisTurn;
+
         // ── Hero power ────────────────────────────────────────────────────────────
 
         /// <summary>
         /// Hero powers are not declared in card data, so their intent cannot be read the way a card's
         /// can. Enemy hero first (the common damage power), then enemy minions, then friendly — the
         /// validator rejects whatever the power cannot legally hit.
+        ///
+        /// <para>Friendly minions come before the friendly hero (2026-11-04). The only power that
+        /// accepts both and not the enemy hero is Verdant's Empower, where the hero is the fallback
+        /// for an empty board; every other power stops at the enemy hero or takes at most one of
+        /// the two, so the swap changes nothing else.</para>
         /// </summary>
         private static List<TargetRef> HeroPowerCandidates(PlayerState ps, PlayerState foe)
         {
             var list = new List<TargetRef> { new TargetRef(foe.Hero.Id) };
             foreach (CardInstance m in foe.Board) list.Add(new TargetRef(m.Id));
-            list.Add(new TargetRef(ps.Hero.Id));
             foreach (CardInstance m in ps.Board) list.Add(new TargetRef(m.Id));
+            list.Add(new TargetRef(ps.Hero.Id));
             return list;
         }
 

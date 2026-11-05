@@ -217,6 +217,10 @@ namespace Kingdom.Core.Contracts
         /// included. Cleared for BOTH players at every turn start, so "this turn" never reaches back
         /// into the opponent's. Read by <c>HERO_DAMAGED_THIS_TURN</c>.</summary>
         public int HeroDamageTakenThisTurn;
+        /// <summary>Attack this hero has gained for the current turn (<c>GAIN_HERO_ATTACK</c>, Verdant's
+        /// Empower). Added to the weapon's, and lets the hero attack with none equipped. Cleared for
+        /// BOTH players when a turn ends.</summary>
+        public int HeroAttackThisTurn;
         public int NextTurnBackdraftLock; // crystals to lock at next start-of-turn
 
         public PlayerState(PlayerId id, HeroInstance hero)

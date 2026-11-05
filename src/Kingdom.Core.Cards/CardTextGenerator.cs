@@ -523,6 +523,25 @@ namespace Kingdom.Core.Cards
                 : Undot(RenderAction(action, pool, sourcePronoun));
 
         /// <summary>
+        /// "Give a friendly minion +1/+1, or give your hero +1 Attack this turn and 1 Armor." — a stat
+        /// change aimed at <c>ANY_FRIENDLY</c> (Empower, Sam 2026-11-04). On a hero the Attack lasts the
+        /// turn and the Health is Armor, so the hero half is spelled out rather than left to read as
+        /// "Give a friendly character +1/+1". <c>CardValidator</c> C36 admits it with gains only.
+        /// "Attack" takes the ON_ATTACK label's slot, the game's one word for it.
+        /// </summary>
+        private static string MinionOrYourHero(ModifyStatsAction a, string sourcePronoun)
+        {
+            TargetSpec t = a.Target;
+            var minion = new TargetSpec("ANY_FRIENDLY_MINION", t.Selection, t.Filter, t.Binding);
+            var gifts = new List<string>(2);
+            if (a.AttackDelta > 0) gifts.Add($"{Delta(a.AttackDelta)} {LabelWord("Attack")} this turn");
+            if (a.HealthDelta > 0) gifts.Add($"{a.HealthDelta} Armor");
+            if (gifts.Count == 0) throw Unsupported("action", "MODIFY_STATS on ANY_FRIENDLY with no gain");
+            return $"Give {Target(minion, sourcePronoun)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}, " +
+                   $"or give your hero {string.Join(" and ", gifts)}.";
+        }
+
+        /// <summary>
         /// A rider as the clause behind the semicolon: what the chosen target gains if it was your
         /// minion, or what you get if it was your hero.
         ///
@@ -1278,6 +1297,8 @@ namespace Kingdom.Core.Cards
                 // restriction.
                 ModifyStatsAction a when IsSelf(a.Target)
                     => $"Gain {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
+                ModifyStatsAction a when a.Target.Selector == "ANY_FRIENDLY"
+                    => MinionOrYourHero(a, sourcePronoun),
                 ModifyStatsAction a => $"Give {Target(a.Target, sourcePronoun)} {Delta(a.AttackDelta)}/{Delta(a.HealthDelta)}.",
                 GrantKeywordAction a => $"Give {Target(a.Target, sourcePronoun)} {KeywordWord(a.Keyword)}.",
                 DestroyAction a => $"{DestroyVerb(a.Target)} {Target(a.Target, sourcePronoun)}.",

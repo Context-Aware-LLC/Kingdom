@@ -78,6 +78,7 @@ namespace Kingdom.Net.Protocol
             w.Name("heroPowerUsedThisTurn"); w.Bool(p.HeroPowerUsedThisTurn);
             w.Name("heroAttacksUsedThisTurn"); w.I32(p.HeroAttacksUsedThisTurn);
             w.Name("heroDamageTakenThisTurn"); w.I32(p.HeroDamageTakenThisTurn);
+            w.Name("heroAttackThisTurn"); w.I32(p.HeroAttackThisTurn);
             w.Name("nextTurnBackdraftLock"); w.I32(p.NextTurnBackdraftLock);
             w.EndObject();
         }
@@ -315,10 +316,13 @@ namespace Kingdom.Net.Protocol
             if (!TryBoolField(obj, "heroPowerUsedThisTurn", out bool hpUsed, ref detail)) return false;
             if (!TryI32Field(obj, "heroAttacksUsedThisTurn", out int heroAtks, ref detail)) return false;
             if (!TryI32Field(obj, "heroDamageTakenThisTurn", out int heroDamage, ref detail)) return false;
+            if (!TryI32Field(obj, "heroAttackThisTurn", out int heroAttack, ref detail)) return false;
+            if (heroAttack < 0) { detail = "negative heroAttackThisTurn"; return false; }
             if (!TryI32Field(obj, "nextTurnBackdraftLock", out int backdraft, ref detail)) return false;
             player.HeroPowerUsedThisTurn = hpUsed;
             player.HeroAttacksUsedThisTurn = heroAtks;
             player.HeroDamageTakenThisTurn = heroDamage;
+            player.HeroAttackThisTurn = heroAttack;
             player.NextTurnBackdraftLock = backdraft;
             return true;
         }

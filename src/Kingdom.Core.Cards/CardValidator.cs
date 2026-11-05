@@ -358,6 +358,18 @@ namespace Kingdom.Core.Cards
                     }
                 }
 
+                // C36 — on a hero a stat change is Attack this turn and Armor, and only one shape says
+                // so: "Give a friendly minion +1/+1, or give your hero …" (ANY_FRIENDLY, gains only).
+                // Any other selector that can pick a hero would print a promise nobody reads right.
+                if (rule.Action is ModifyStatsAction stat && !IsSelfOrTriggerSource(stat.Target.Selector) &&
+                    RuleActionCapabilities.SelectorReachesHero(stat.Target.Selector) &&
+                    (stat.Target.Selector != "ANY_FRIENDLY" || stat.AttackDelta < 0 || stat.HealthDelta < 0 ||
+                     stat.AttackDelta + stat.HealthDelta == 0))
+                    Err("C36-STATS-ON-HERO", $"{prefix}.action.target.selector",
+                        $"MODIFY_STATS on '{stat.Target.Selector}' can pick a hero. On a hero it means Attack " +
+                        "this turn and Armor, which only ANY_FRIENDLY with non-negative gains prints: " +
+                        "\"Give a friendly minion +1/+1, or give your hero +1 Attack this turn and 1 Armor.\"");
+
                 // C33 — "Deals N instead if…". The amount is picked from game state before the hit
                 // lands, so the switch has to be a condition that reads state and nothing else.
                 if (rule.Action is DamageAction switched && switched.InsteadAmount.HasValue)
@@ -713,6 +725,9 @@ namespace Kingdom.Core.Cards
         }
 
         /// <summary>Whether a selector can ever hand back the controller's own minion, or his hero.</summary>
+        private static bool IsSelfOrTriggerSource(string selector)
+            => selector == "SELF" || selector == "TRIGGER_SOURCE";
+
         private static bool CanProduceOwn(string selector, FriendlyTargetKind kind)
         {
             if (!TargetQueries.TryGet(selector, out TargetQuery query)) return false;

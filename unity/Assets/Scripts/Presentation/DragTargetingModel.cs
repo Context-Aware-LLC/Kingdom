@@ -231,9 +231,9 @@ namespace Kingdom.Presentation
         /// pointer when it can swing, so starting a gesture that the server is certain to reject
         /// would show the player a pick-up for an attack that cannot happen.</para>
         ///
-        /// <para>RETIREMENT TRIGGER: a hero attack that does not come from a weapon (an
-        /// attack-granting effect, a claws-style hero power) makes the weapon test wrong here and
-        /// in <c>ValidateAttack</c> together.</para>
+        /// <para>A hero swings with a weapon OR with Attack gained this turn
+        /// (<c>PlayerState.HeroAttackThisTurn</c>, Verdant's Empower) — the same test as
+        /// <c>ValidateAttack</c>; the two move together.</para>
         /// </summary>
         public bool HeroCanAttack()
         {
@@ -241,9 +241,9 @@ namespace Kingdom.Presentation
             PlayerState ps = null;
             foreach (PlayerState p in State.Players)
                 if (p.Id == _p0Id) { ps = p; break; }
-            if (ps?.Weapon == null) return false;
+            if (ps == null || (ps.Weapon == null && ps.HeroAttackThisTurn <= 0)) return false;
             if (ps.Hero.IsFrosted()) return false;
-            int maxAttacks = ps.Weapon.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
+            int maxAttacks = ps.Weapon != null && ps.Weapon.Keywords.Contains(Keyword.DOUBLESTRIKE) ? 2 : 1;
             return ps.HeroAttacksUsedThisTurn < maxAttacks;
         }
 

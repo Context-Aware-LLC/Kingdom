@@ -459,8 +459,10 @@ namespace Kingdom.Core.Tests.Interpreter
         [Test]
         public void Action_Capability_Filters_Presentation_And_Rejects_A_NoOp_Player_Target()
         {
+            // GRANT_KEYWORD, not MODIFY_STATS: a stat change on a hero means Attack this turn and
+            // Armor since Empower (2026-11-04), so it is no longer a no-op there.
             var buff = Spell(FixtureCard.Id("buff"), TestRules.Rule("buff", Trigger.ON_CAST,
-                new ModifyStatsAction(1, 1,
+                new GrantKeywordAction(Keyword.AEGIS,
                     new TargetSpec("ANY_FRIENDLY", TargetSelection.Of(1)))));
             var body = Minion(FixtureCard.Id("body"));
             var db = new FakeCardDatabase().Register(buff).Register(body);
@@ -472,7 +474,7 @@ namespace Kingdom.Core.Tests.Interpreter
                 state, db, state.Players[0].Id, buff, Trigger.ON_CAST);
 
             Assert.That(candidates.Select(c => c.Instance), Is.EqualTo(new[] { minion.Id }),
-                "BUFF can affect a minion but not the friendly hero produced by ANY_FRIENDLY.");
+                "A keyword grant can affect a minion but not the friendly hero produced by ANY_FRIENDLY.");
             var rejected = new CommandProcessor(db).Execute(state, new PlayCardIntent(
                 state.Players[0].Id, card.Id, 0,
                 new[] { new TargetRef(state.Players[0].Hero.Id) }));

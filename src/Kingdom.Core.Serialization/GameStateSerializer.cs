@@ -59,6 +59,7 @@ namespace Kingdom.Core.Serialization
             w.Bool(p.HeroPowerUsedThisTurn);
             w.I32(p.HeroAttacksUsedThisTurn);
             w.I32(p.HeroDamageTakenThisTurn);
+            w.I32(p.HeroAttackThisTurn);
             w.I32(p.NextTurnBackdraftLock);
         }
 
