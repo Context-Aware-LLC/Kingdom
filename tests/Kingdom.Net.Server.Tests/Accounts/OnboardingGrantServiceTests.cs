@@ -146,19 +146,24 @@ namespace Kingdom.Net.Server.Tests.Accounts
 
             IReadOnlyList<EntitlementGrant> history = await ledger.HistoryAsync(account.PlayerId);
             Assert.That(history, Is.Not.Empty);
-            int shardRows = 0;
+            int shardRows = 0, goldRows = 0;
             foreach (EntitlementGrant row in history)
             {
                 Assert.That(row.Source, Is.EqualTo(OnboardingGrantService.GrantSource));
                 bool starterShards = row.Item == EconomyItems.Shards;
+                bool starterGold = row.Item == EconomyItems.Gold;
                 if (starterShards) shardRows++;
-                Assert.That(row.ExternalTxnId,
-                            Does.StartWith((starterShards
-                                ? OnboardingGrantService.StarterShardsTxnPrefix
-                                : OnboardingGrantService.TxnPrefix) + account.PlayerId),
+                if (starterGold) goldRows++;
+                string prefix = starterShards ? OnboardingGrantService.StarterShardsTxnPrefix
+                    : starterGold ? OnboardingGrantService.StarterGoldTxnPrefix
+                    : OnboardingGrantService.TxnPrefix;
+                Assert.That(row.ExternalTxnId, Does.StartWith(prefix + account.PlayerId),
                             "the once-per-account key must be the player's own signup transaction");
             }
-            Assert.That(shardRows, Is.EqualTo(1), "the starter credit has its own once-only transaction");
+            Assert.That(shardRows, Is.EqualTo(1), "the starter shards have their own once-only transaction");
+            Assert.That(goldRows, Is.EqualTo(1), "the starter gold has its own once-only transaction");
+            Assert.That(await ledger.BalanceAsync(account.PlayerId, EconomyItems.Gold),
+                        Is.EqualTo(OnboardingGrant.StarterGoldCount));
         }
 
         // ── once, and only once ──────────────────────────────────────────────────────────────

@@ -53,11 +53,12 @@ namespace Kingdom.Presentation
     /// <para><b>Two modes, one screen</b> (<see cref="PackVaultMode"/>). <see cref="PackVaultMode.Gift"/>
     /// is the onboarding beat: it opens with a banner and a staggered entrance, it hides Back until a
     /// pack has actually been opened, and it always goes home to the main menu. The mode is set by the
-    /// caller (<c>MainMenuController.BeginFirstRun</c>) and consumed on arrival.</para>
+    /// caller (<c>MainMenuController.OnCardVault</c>, which the menu's vault guide holds the player
+    /// to) and consumed on arrival.</para>
     ///
-    /// <para><b>The BALANCE routes; the MARKER only picks the mode.</b> That split is what makes
+    /// <para><b>The BALANCE guides; the MARKER only picks the mode.</b> That split is what makes
     /// starter packs unstrandable, and it is the reason <see cref="FirstRunMarkers.Gift"/> is written
-    /// HERE — on the first pack opened — rather than by whatever routed the player in. A player who
+    /// HERE — on the first pack opened — rather than by whatever sent the player in. A player who
     /// force-quits the instant this scene loads has not had their gift yet, and must get it on the
     /// next launch.</para>
     ///

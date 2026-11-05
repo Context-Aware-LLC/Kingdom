@@ -43,8 +43,8 @@ namespace Kingdom.Net.Server.Accounts
     /// <para>Every account that reaches this is a signed-in player or a bot: the tokenless tooling
     /// seat (<c>ServerOptions.AllowTokenlessMatches</c>) never resolves an <see cref="Account"/> at all.</para>
     ///
-    /// <para>The starter shard credit has its own permanent transaction key so existing accounts
-    /// receive it once without changing the historical signup batch.</para>
+    /// <para>The starter shard and gold credits each have their own permanent transaction key so
+    /// existing accounts receive them once without changing the historical signup batch.</para>
     ///
     /// <para><b>Resolves the grant without opening packs.</b> It resolves the plan from the
     /// card database and writes ledger rows; it opens no packs. The starter packs land as an
@@ -62,6 +62,9 @@ namespace Kingdom.Net.Server.Accounts
         /// <summary>A separate event so existing accounts get the trial credit without altering
         /// or replaying their original signup batch.</summary>
         public const string StarterShardsTxnPrefix = "signup_shards_v1:";
+
+        /// <summary>The starter gold's own once-only event, on the shards' pattern (Sam, 2026-11-04).</summary>
+        public const string StarterGoldTxnPrefix = "signup_gold_v1:";
 
         /// <summary>Ledger <c>source</c> for every row this service writes.</summary>
         public const string GrantSource = "signup";
@@ -92,6 +95,10 @@ namespace Kingdom.Net.Server.Accounts
             GrantResult shards = await _ledger.GrantAsync(new EntitlementGrant(
                 account.PlayerId, EconomyItems.Shards, OnboardingGrant.StarterShardCount, GrantSource,
                 StarterShardsTxnPrefix + account.PlayerId,
+                DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs)), ct).ConfigureAwait(false);
+            GrantResult gold = await _ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, EconomyItems.Gold, OnboardingGrant.StarterGoldCount, GrantSource,
+                StarterGoldTxnPrefix + account.PlayerId,
                 DateTimeOffset.FromUnixTimeMilliseconds(_time.NowMs)), ct).ConfigureAwait(false);
 
             OnboardingGrantPlan plan = OnboardingGrant.Resolve(_cards);
@@ -129,7 +136,8 @@ namespace Kingdom.Net.Server.Accounts
 
             EntitlementBatchResult result = await _ledger.ApplyBatchAsync(batch, ct).ConfigureAwait(false);
             if (result.Applied) return OnboardingOutcome.Granted;
-            if (result.Duplicate) return shards.Applied ? OnboardingOutcome.Granted : OnboardingOutcome.AlreadyGranted;
+            if (result.Duplicate)
+                return shards.Applied || gold.Applied ? OnboardingOutcome.Granted : OnboardingOutcome.AlreadyGranted;
 
             // Conflict means this account's signup transaction id is bound to a DIFFERENT set of
             // deltas than the grant now resolves to — the grant's CONTENTS changed after this player

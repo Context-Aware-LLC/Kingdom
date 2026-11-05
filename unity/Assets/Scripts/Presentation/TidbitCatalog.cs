@@ -14,6 +14,10 @@ namespace Kingdom.Presentation
     /// </summary>
     public enum TidbitTrigger
     {
+        /// <summary>The main menu, on a new account's first arrival, just before the starter grant
+        /// is presented on the menu's empty right side (Sam, 2026-11-04).</summary>
+        StarterGrant,
+
         /// <summary>The main menu has been revealed and is staying on screen — not a launch that is
         /// about to leave for account creation or the starter gift.</summary>
         MainMenuArrival,
@@ -104,6 +108,9 @@ namespace Kingdom.Presentation
         // resolved when read, so a language switch reaches the next card shown.
         private static readonly Tidbit[] Registered =
         {
+            // No recording yet: a tidbit without one is still a complete card, and HeraldVoiceVerify
+            // names it as awaiting narration rather than failing.
+            new Tidbit("grant", TidbitTrigger.StarterGrant, "tidbit_grant_title", "tidbit_grant_body", "tidbit_grant"),
             new Tidbit("menu", TidbitTrigger.MainMenuArrival, "tidbit_menu_title", "tidbit_menu_body", "tidbit_menu", "vo/vo_herald_tidbit_menu"),
             new Tidbit("decks", TidbitTrigger.RosterArrival, "tidbit_decks_title", "tidbit_decks_body", "tidbit_decks", "vo/vo_herald_tidbit_decks"),
             new Tidbit("match-pick", TidbitTrigger.MatchPickArrival, "tidbit_match_pick_title", "tidbit_match_pick_body", "tidbit_match_pick", "vo/vo_herald_tidbit_match_pick"),

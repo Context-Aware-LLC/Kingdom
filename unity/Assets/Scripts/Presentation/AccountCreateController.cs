@@ -38,18 +38,14 @@ namespace Kingdom.Presentation
     /// skipped (Sam, 2026-08-08). There is no back gesture out of this scene either — deliberately
     /// no <c>emb-back</c> anywhere in the UXML.</para>
     ///
-    /// <para><b>Where it hands off, and why not always to the menu.</b> The old
-    /// <c>ConfirmName</c> ended by sending a player with an empty roster to CharacterRoster, since
-    /// a first launch has no character to play. That is preserved exactly: empty roster goes to the
-    /// roster, anything else to the menu. Losing it would leave a brand-new account on a menu whose
-    /// every button needs a character.</para>
+    /// <para><b>It always hands off to the menu</b>, where a new account's starter grant is
+    /// presented (Sam, 2026-11-04). See <see cref="Continue"/>.</para>
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public sealed class AccountCreateController : MonoBehaviour
     {
         private VisualElement _root;
         private VisualElement _signInView, _nameView;
-        private PlayerAccount _account;
         private SignInGateController _signIn;
 
         private Label _nameError;
@@ -67,7 +63,6 @@ namespace Kingdom.Presentation
             }
             UiLocalizer.Attach(_root);
 
-            _account = PlayerAccount.Local;
             _signInView = _root.Q<VisualElement>("signin-view");
             _nameView = _root.Q<VisualElement>("name-view");
 
@@ -129,9 +124,6 @@ namespace Kingdom.Presentation
         /// has nothing left to do and gets out of the way immediately.</summary>
         private void BeginNameStep()
         {
-            // The gate has already bound this device to the signed-in identity, so Local is now the
-            // account that identity owns rather than whichever one the device happened to mint.
-            _account = PlayerAccount.Local;
             // The name lives against the identity (2026-10-18), so a returning player on a new
             // phone already has it in the token they just signed in with, and skips this step.
             if (!AuthGateway.NeedsDisplayName) { Continue(); return; }
@@ -255,23 +247,13 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>
-        /// Leave, and never come back. A brand-new account has no deck, and every button on the
-        /// Main Menu needs one — so an empty roster goes to CharacterRoster rather than the menu.
-        /// This is the continuation the old <c>MainMenuController.ConfirmName</c> ended with, moved
-        /// intact.
-        ///
-        /// <para>It asked for characters until ADR-0009. The condition is unchanged in substance:
-        /// the thing you need before the menu is useful is a DECK, and a character was only ever
-        /// the container one arrived in.</para>
+        /// Leave, and never come back: always to the Main Menu, where the starter grant is presented
+        /// (Sam, 2026-11-04). A brand-new account used to go to CharacterRoster on an empty roster,
+        /// which put deck building ahead of the gift; the menu now guides the player to the vault
+        /// and then to Collection instead.
         /// </summary>
         private void Continue()
         {
-            if (_account != null && _account.Decks().Count == 0)
-            {
-                CharacterRosterController.ReturnScene = ScreenNav.MainMenu;
-                ScreenNav.Go(ScreenNav.CharacterRoster);
-                return;
-            }
             ScreenNav.Go(ScreenNav.MainMenu);
         }
 

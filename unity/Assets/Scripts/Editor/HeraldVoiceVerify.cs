@@ -32,16 +32,21 @@ namespace Kingdom.Editor
             }
 
             var tutorialAddresses = new HashSet<string>();
+            var unvoiced = new List<string>();
             foreach (TidbitTrigger trigger in Enum.GetValues(typeof(TidbitTrigger)))
                 foreach (Tidbit tidbit in TidbitCatalog.For(trigger))
                 {
+                    // A line that has not been recorded yet is declared by a null address. A
+                    // declared address that does not resolve is still a failure.
+                    if (string.IsNullOrEmpty(tidbit.VoiceAddress)) { unvoiced.Add(tidbit.Id); continue; }
                     Require(addresses.Contains(tidbit.VoiceAddress),
                         $"Tutorial {tidbit.Id} has no registered Herald recording.");
                     Require(tutorialAddresses.Add(tidbit.VoiceAddress),
                         $"Tutorial {tidbit.Id} shares another lesson's voice recording.");
                 }
             Debug.Log($"[HeraldVoiceVerify] PASS: {recordings} addressable recordings; " +
-                $"{tutorialAddresses.Count} tutorials with distinct playable narration.");
+                $"{tutorialAddresses.Count} tutorials with distinct playable narration" +
+                (unvoiced.Count == 0 ? "." : $"; awaiting a recording: {string.Join(", ", unvoiced)}."));
         }
 
         private static void Require(bool condition, string message)

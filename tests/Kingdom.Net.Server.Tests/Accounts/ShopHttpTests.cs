@@ -80,7 +80,8 @@ namespace Kingdom.Net.Server.Tests.Accounts
                     Is.EqualTo(beforeVaultCount + 1), "a replay must not increment the badge twice");
                 Assert.That(receipt.RootElement.TryGetProperty("awards", out _), Is.False,
                     "purchase must not reveal cards");
-                Assert.That(await ledger.BalanceAsync(buyer.PlayerId, EconomyItems.Gold), Is.EqualTo(200));
+                Assert.That(await ledger.BalanceAsync(buyer.PlayerId, EconomyItems.Gold),
+                    Is.EqualTo(200 + OnboardingGrant.StarterGoldCount), "the purchase spends from the seeded gold plus the signup gold");
                 Assert.That(await ledger.BalanceAsync(buyer.PlayerId, "pack.pendingham"), Is.EqualTo(1));
                 using JsonDocument collection = JsonDocument.Parse(await http.GetStringAsync("/collection"));
                 Assert.That(collection.RootElement.GetProperty("packs").GetProperty("pack.pendingham")

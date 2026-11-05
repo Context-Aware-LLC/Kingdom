@@ -9,7 +9,8 @@ namespace Kingdom.Core.Collection
     /// What a brand-new account is given, once, the first time its session resolves
     /// (<b>Sam, 2026-08-12</b>; rares added 2026-09-02). A copy of every collectible
     /// <b>common and rare</b> in the launch pairing, and <see cref="StarterPackCount"/> boosted
-    /// booster packs, plus <see cref="StarterShardCount"/> crafting shards.
+    /// booster packs, plus <see cref="StarterShardCount"/> crafting shards and
+    /// <see cref="StarterGoldCount"/> gold.
     ///
     /// <para><b>This is the product decision <see cref="IOwnedCardStore"/> used to say nobody had
     /// made.</b> That paragraph is gone; this type is where the answer lives, in the collection
@@ -76,8 +77,14 @@ namespace Kingdom.Core.Collection
         /// <summary>Packs handed over with the grant.</summary>
         public const int StarterPackCount = 5;
 
-        /// <summary>Once-per-account crafting trial credit, separate from the original card/pack batch.</summary>
-        public const int StarterShardCount = 50;
+        /// <summary>Once-per-account crafting trial credit, separate from the original card/pack batch.
+        /// 200 since Sam, 2026-11-04 (was 50). The amount is bound to its transaction id at the moment
+        /// it lands, so an account credited 50 before then keeps 50: the raise reaches new accounts.</summary>
+        public const int StarterShardCount = 200;
+
+        /// <summary>Once-per-account gold, granted beside the shards and presented on the main menu
+        /// with them (Sam, 2026-11-04).</summary>
+        public const int StarterGoldCount = 200;
 
         /// <summary>
         /// Cards in a starter pack — <b>8, not the 5 <see cref="BoosterPack.DefaultCardCount"/> Sam

@@ -18,9 +18,9 @@ namespace Kingdom.Session
     /// only says the gift is over, never which pack is next.</para>
     ///
     /// <para><b>It never decides whether a player gets something, only whether they get a cutscene.</b>
-    /// The starter-pack <i>route</i> is the ledger balance; this file picks the <i>mode</i> once you
-    /// are there. Gating the route on a marker would strand four packs behind a beat that had already
-    /// played — see <c>MainMenuController.BeginFirstRun</c> and §"Slice 2" of the spec.</para>
+    /// The menu's guide to the vault is the ledger balance; this file picks the vault's <i>mode</i>
+    /// once you are there. Gating the guide on a marker would strand four packs behind a beat that
+    /// had already played — see <c>MainMenuController.BeginFirstRun</c> and §"Slice 2" of the spec.</para>
     ///
     /// <para><b>Nothing is cached.</b> The file is two lines and is read at most twice in a session,
     /// while a cache would have to be invalidated on every <see cref="DeviceAccounts.SwitchTo"/> the
@@ -39,6 +39,13 @@ namespace Kingdom.Session
         /// vault — a player who force-quits the instant the scene loads has not had their gift yet.
         /// </summary>
         public const string Gift = "gift";
+
+        /// <summary>
+        /// The starter grant has been presented on the main menu: the royal-grant tidbit, then the
+        /// shards, gold and packs flying to where they live (Sam, 2026-11-04). Written when the last
+        /// item lands, so a player who quits mid-presentation sees it again.
+        /// </summary>
+        public const string GiftPresented = "gift:presented";
 
         /// <summary>
         /// The marker for one first-run tidbit, namespaced so a catalog id can never collide with

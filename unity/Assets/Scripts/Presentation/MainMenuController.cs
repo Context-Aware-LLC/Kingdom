@@ -86,13 +86,18 @@ namespace Kingdom.Presentation
         private bool _leavingForFirstRun;
 
         /// <summary>
-        /// True while the collection guide holds this menu: a new player has just opened their
-        /// starter packs, so every destination but Collection is dimmed and disabled, and Collection
-        /// pulses (Sam, 2026-11-04). Read once per arrival in <see cref="ApplyCollectionGuide"/>.
+        /// The one button the first-run guide leaves live, or null when the menu is free (Sam,
+        /// 2026-11-04). <see cref="VaultButton"/> while starter packs are unopened,
+        /// <see cref="CollectionButton"/> once they are, and the empty string while the starter grant
+        /// is being presented, which locks every destination. Decided once per arrival in
+        /// <see cref="ApplyGuide"/>.
         /// </summary>
-        private bool _guiding;
+        private string _guideTarget;
 
-        /// <summary>Collection's soft brightness pulse while the guide holds the menu.</summary>
+        private const string CollectionButton = "btn-collection";
+        private const string VaultButton = "btn-card-vault";
+
+        /// <summary>The guided button's soft brightness pulse.</summary>
         private IVisualElementScheduledItem _guidePulse;
 
         /// <summary>The friends drawer this screen mounted, so the guide can lock its button too.</summary>
@@ -103,16 +108,30 @@ namespace Kingdom.Presentation
         private const int GuidePulseHalfMs = 1100;
 
         /// <summary>
-        /// Everything the guide dims and disables: every way off this menu except Collection. The
-        /// settings gear stays live (sound, language, sign-out are not destinations), and so does the
-        /// quest strip, which claims rewards in place rather than going anywhere. Containers are
-        /// named where a button carries a badge or sits in one, so the whole thing dims as a unit.
+        /// Everything the guide can dim and disable: every way off this menu. The guided one is
+        /// skipped. The settings gear stays live (sound, language, sign-out are not destinations), and
+        /// so does the quest strip, which claims rewards in place rather than going anywhere.
+        /// Containers are named where a button carries a badge or sits in one, so the whole thing dims
+        /// as a unit; <see cref="GuideContainer"/> maps a guided button to its entry here.
         /// </summary>
-        private static readonly string[] GuideLockedElements =
+        private static readonly string[] GuideLockableElements =
         {
-            "btn-find-game", "btn-store", "btn-leaderboards",
+            "btn-find-game", CollectionButton, "btn-store", "btn-leaderboards",
             "vault-dock", "btn-ledger", "king-dock", "btn-achievements",
         };
+
+        private static string GuideContainer(string button) => button == VaultButton ? "vault-dock" : button;
+
+        /// <summary>Unopened starter packs on this arrival's shelf read. Drives the vault guide and the
+        /// vault's mode. Zero when the shelf could not be read, which leaves the menu free.</summary>
+        private long _starterPacks;
+
+        /// <summary>This arrival's shelf read, kept for the starter grant presentation.</summary>
+        private CollectionSnapshot _shelf;
+
+        /// <summary>True when this arrival presents the starter grant: a new account's first menu.
+        /// See <see cref="BeginFirstRun"/>.</summary>
+        private bool _presentGift;
 
         private const float TopRailSafeAreaMarginPercent = 2f;
         private static readonly string StarterPackId = OnboardingGrant.StarterPack().Id;
@@ -326,16 +345,21 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>
-        /// First-run routing: register, name yourself, then surface any unopened starter gift.
+        /// First-run routing: register, name yourself, then the starter gift, on this menu.
         ///
         /// <para><b>Registration comes first and cannot be skipped.</b> The two prompts are chained
         /// rather than shown together — the sign-in gate calls back once a session exists, and only
         /// then does the name prompt open. Opening both would stack two modals on a player who has not
         /// seen the game yet, and the name is the smaller of the two questions.</para>
         ///
-        /// <para><b>The starter balance routes; the marker does not.</b> Every launch that still holds
-        /// starter packs returns to the vault. <see cref="FirstRunMarkers.Gift"/> only suppresses the
-        /// one-time congratulations treatment after the player has actually opened their first pack.</para>
+        /// <para><b>The gift is presented here, not in another scene</b> (Sam, 2026-11-04). A new
+        /// account's first menu shows the royal-grant tidbit, then the shards, gold and packs flying to
+        /// where they live (<see cref="PresentGift"/>), then guides the player to the vault.</para>
+        ///
+        /// <para><b>The starter balance guides; the marker does not.</b> Every arrival that still
+        /// holds starter packs holds the player to the vault (<see cref="ApplyGuide"/>).
+        /// <see cref="FirstRunMarkers.GiftPresented"/> only stops the presentation playing twice, and
+        /// <see cref="FirstRunMarkers.Gift"/> picks the vault's congratulations face.</para>
         /// </summary>
         private async Task BeginFirstRun(CollectionSnapshot collection = null)
         {
@@ -349,7 +373,7 @@ namespace Kingdom.Presentation
             //
             // Sam's 2026-08-08 ruling made this unskippable, so leaving is not optional and there is
             // no path that continues into the menu with the gate outstanding. AccountCreate hands
-            // the player on itself — to CharacterRoster on an empty roster, back here otherwise.
+            // the player back here, where the gift is presented.
             bool needsAccount = _signIn != null && _signIn.IsRequired;
             bool needsName = AuthGateway.NeedsDisplayName;
             if (needsAccount || needsName)
@@ -361,26 +385,83 @@ namespace Kingdom.Presentation
 
             if (!AuthGateway.IsSignedIn) return;
 
-            // The ledger balance owns this route. The local marker only decides whether the vault
-            // wears its congratulations face, so quitting after one open cannot strand the rest of
-            // the starter packs behind a marker that has already been written.
+            // The ledger balance owns the vault guide. The local markers only decide whether the
+            // grant is presented and which face the vault wears, so quitting after one open cannot
+            // strand the rest of the starter packs behind a marker that has already been written.
             // Reuse a successful startup snapshot so the menu does not read /collection twice. Stay
             // self-sufficient when startup had no authoritative answer: a transient failure there
             // must not strand the gift, and TokenForConnectAsync is a no-op when the token is fresh.
             var snapshot = collection != null && collection.HasAuthoritativePacks
                 ? collection
                 : await PackGateway.ReadShelfAsync(await AuthGateway.TokenForConnectAsync());
-            RenderWalletBalances(snapshot);
-            RenderVaultEntry(snapshot);
-            if (snapshot.PackCount(StarterPackId) <= 0) return;
+            _shelf = snapshot;
+            _starterPacks = snapshot.PackCount(StarterPackId);
+            // Only before any starter pack is opened: a player who has opened one has had the gift.
+            _presentGift = _starterPacks > 0
+                && !FirstRunMarkers.Has(FirstRunMarkers.Gift)
+                && !FirstRunMarkers.Has(FirstRunMarkers.GiftPresented);
 
-            PackVaultController.ReturnScene = ScreenNav.MainMenu;
-            PackVaultController.Pending = null;
-            PackVaultController.Mode = FirstRunMarkers.Has(FirstRunMarkers.Gift)
-                ? PackVaultMode.Vault
-                : PackVaultMode.Gift;
-            _leavingForFirstRun = true;
-            ScreenNav.Go(ScreenNav.PackVault);
+            if (!_presentGift)
+            {
+                RenderWalletBalances(snapshot);
+                RenderVaultEntry(snapshot);
+                return;
+            }
+
+            // The menu opens on the balances from before the grant; each one ticks up as its item
+            // lands (PresentGift).
+            RenderWalletBalances(snapshot, OnboardingGrant.StarterGoldCount, OnboardingGrant.StarterShardCount);
+            RenderVaultEntry(snapshot, _starterPacks);
+        }
+
+        // ── Starter grant presentation (Sam, 2026-11-04) ───────────────────────────────
+
+        /// <summary>
+        /// The royal-grant tidbit, then the grant itself on the menu's empty right side: shards fly
+        /// into Collection, gold into the gold total, the packs into the vault. Every destination is
+        /// locked meanwhile; afterwards the vault guide takes over.
+        /// </summary>
+        private void PresentGift()
+        {
+            _tidbit.Show(TidbitTrigger.StarterGrant, () =>
+            {
+                if (this == null || _root == null) return;
+
+                Sprite packArt = null;
+                new PackArtProvider().LoadPackArt(StarterPackId, pieces =>
+                {
+                    if (pieces != null && pieces.Count > 0) packArt = pieces[0].Sprite;
+                });
+
+                CollectionSnapshot shelf = _shelf;
+                bool wallet = shelf != null && shelf.HasAuthoritativeWallet;
+                var beats = new[]
+                {
+                    new StarterGiftPresentation.Beat(
+                        Loc.Get("menu_gift_shards"),
+                        Loc.Format("menu_gift_amount", OnboardingGrant.StarterShardCount),
+                        1, "mm-gift-icon--shards", null, _root.Q<VisualElement>(CollectionButton),
+                        () => { if (wallet && _shardBalance != null) _shardBalance.text = WalletDisplay.IconAmount(shelf.Wallet.Shards); }),
+                    new StarterGiftPresentation.Beat(
+                        Loc.Get("menu_gift_gold"),
+                        Loc.Format("menu_gift_amount", OnboardingGrant.StarterGoldCount),
+                        1, "mm-gift-icon--gold", null, _root.Q<VisualElement>("gold-wallet"),
+                        () => { if (wallet && _goldBalance != null) _goldBalance.text = WalletDisplay.IconAmount(shelf.Wallet.Gold); }),
+                    new StarterGiftPresentation.Beat(
+                        Loc.Get("menu_gift_packs"),
+                        Loc.Format("menu_gift_amount", _starterPacks),
+                        (int)Math.Min(_starterPacks, OnboardingGrant.StarterPackCount),
+                        "mm-gift-icon--pack", packArt, _root.Q<VisualElement>(VaultButton),
+                        () => RenderVaultEntry(shelf)),
+                };
+                StarterGiftPresentation.Play(_root, beats, () =>
+                {
+                    if (this == null) return;
+                    FirstRunMarkers.Mark(FirstRunMarkers.GiftPresented);
+                    _presentGift = false;
+                    GuideTo(VaultButton);
+                });
+            });
         }
 
         /// <summary>Bootstrap (identity/account) is done. Reveal the menu once the boot plate has
@@ -415,7 +496,7 @@ namespace Kingdom.Presentation
         private void RevealMenu()
         {
             // Before the menu is shown, so a guided player never sees a frame of live buttons.
-            if (!_leavingForFirstRun) ApplyCollectionGuide();
+            if (!_leavingForFirstRun) ApplyGuide();
 
             _root.RemoveFromClassList("mm-root--hidden");
             // Let the revealed tree paint once at its entrance pose before transitioning the
@@ -429,48 +510,78 @@ namespace Kingdom.Presentation
             // the player glimpses and never reads.
             if (_leavingForFirstRun) return;
             _tidbit = new FirstRunTidbit(_root);
-            bool firstLook = _tidbit.Show(TidbitTrigger.MainMenuArrival);
+            if (_presentGift)
+            {
+                PresentGift();
+                // Nothing else opens over the grant: the Herald records the reign silently and a
+                // prize choice waits for the next arrival.
+                _ = AnnounceKingAsync(firstLook: true);
+                return;
+            }
+
+            // The vault guide follows the grant's own tidbit, so the menu's lesson waits until the
+            // packs are open.
+            bool firstLook = _guideTarget != VaultButton && _tidbit.Show(TidbitTrigger.MainMenuArrival);
             // While the guide holds the menu nothing else opens over it: the Herald records the
             // reign silently and a prize choice waits for the next arrival, exactly as they do under
             // the first-run lesson.
-            _ = AnnounceKingAsync(firstLook || _guiding);
+            _ = AnnounceKingAsync(firstLook || _guideTarget != null);
         }
 
-        // ── First-run collection guide (Sam, 2026-11-04) ───────────────────────────────
+        // ── First-run guide (Sam, 2026-11-04) ──────────────────────────────────────────
 
         /// <summary>
-        /// Hold a new player to Collection: dim and disable every other destination and pulse
-        /// Collection's brightness, until they tap it.
+        /// Hold a new player to one destination: dim and disable every other one and pulse the
+        /// guided button's brightness, until they tap it. Unopened starter packs guide to the vault;
+        /// then the collection guide guides to Collection. While the grant is being presented,
+        /// everything is locked.
         ///
-        /// <para><b>Armed by the vault, lifted here.</b> <c>PackVaultController</c> writes
-        /// <see cref="FirstRunMarkers.CollectionGuide"/> when the last starter pack opens, and
-        /// <see cref="OnCollection"/> writes <see cref="FirstRunMarkers.CollectionGuideDone"/>. A
-        /// returning player has neither marker and is never guided. The markers are read here, after
-        /// the boot's identity bind, because that bind can switch the account they are scoped to.</para>
+        /// <para><b>The vault guide is the starter balance</b>, read this arrival; nothing on disk
+        /// arms it, so it ends the moment the last starter pack is opened.</para>
         ///
-        /// <para><b>It survives a relaunch</b>, because the markers are on disk: a player who quits
-        /// on the guided menu comes back to it.</para>
+        /// <para><b>The collection guide is armed by the vault, lifted here.</b>
+        /// <c>PackVaultController</c> writes <see cref="FirstRunMarkers.CollectionGuide"/> when the
+        /// last starter pack opens, and <see cref="OnCollection"/> writes
+        /// <see cref="FirstRunMarkers.CollectionGuideDone"/>. A returning player has neither marker
+        /// and is never guided. The markers are read here, after the boot's identity bind, because
+        /// that bind can switch the account they are scoped to. They are on disk, so a player who
+        /// quits on the guided menu comes back to it.</para>
         /// </summary>
-        private void ApplyCollectionGuide()
+        private void ApplyGuide()
         {
-            bool pending;
+            string target = null;
             try
             {
-                pending = AuthGateway.IsSignedIn && FirstRunMarkers.CollectionGuidePending();
+                if (AuthGateway.IsSignedIn)
+                {
+                    if (_presentGift) target = "";
+                    else if (_starterPacks > 0) target = VaultButton;
+                    else if (FirstRunMarkers.CollectionGuidePending()) target = CollectionButton;
+                }
             }
             catch (Exception ex)
             {
                 // A guide that cannot be read must not be able to lock the front door.
-                Debug.LogWarning($"[MainMenu] could not read the collection guide " +
+                Debug.LogWarning($"[MainMenu] could not read the first-run guide " +
                                  $"({ex.GetType().Name}: {ex.Message}); showing the full menu.");
-                pending = false;
+                target = null;
             }
 
-            _guiding = pending;
-            if (!pending) return;
+            GuideTo(target);
+        }
 
-            foreach (string name in GuideLockedElements)
+        /// <summary>Lock every destination but <paramref name="target"/> and pulse it. Null frees the
+        /// menu; the empty string locks all of it.</summary>
+        private void GuideTo(string target)
+        {
+            ReleaseGuide();
+            _guideTarget = target;
+            if (target == null) return;
+
+            string live = GuideContainer(target);
+            foreach (string name in GuideLockableElements)
             {
+                if (name == live) continue;
                 VisualElement element = _root.Q<VisualElement>(name);
                 if (element == null) continue;
                 element.SetEnabled(false);
@@ -478,22 +589,48 @@ namespace Kingdom.Presentation
             }
             _friends?.SetGuideLocked(true);
 
-            var collection = _root.Q<Button>("btn-collection");
-            if (collection == null) return;
-            collection.AddToClassList("mm-button--guide");
+            if (target.Length == 0) return;
+            var button = _root.Q<Button>(target);
+            if (button == null) return;
+            button.AddToClassList("mm-button--guide");
             // USS does the easing (transition on .mm-button--guide); this only flips the bright class
             // each half period, the same pattern the vault's entrance uses. The schedule is owned by
             // the element, so a scene change drops it with the panel.
-            _guidePulse = collection.schedule
-                .Execute(() => collection.ToggleInClassList("mm-button--guide-bright"))
+            _guidePulse = button.schedule
+                .Execute(() => button.ToggleInClassList("mm-button--guide-bright"))
                 .Every(GuidePulseHalfMs);
+        }
+
+        /// <summary>Undo whatever <see cref="GuideTo"/> last did.</summary>
+        private void ReleaseGuide()
+        {
+            _guidePulse?.Pause();
+            _guidePulse = null;
+            if (_guideTarget == null) return;
+
+            foreach (string name in GuideLockableElements)
+            {
+                VisualElement element = _root.Q<VisualElement>(name);
+                if (element == null || !element.ClassListContains("mm-guide-locked")) continue;
+                element.SetEnabled(true);
+                element.RemoveFromClassList("mm-guide-locked");
+            }
+            _friends?.SetGuideLocked(false);
+
+            if (_guideTarget.Length > 0)
+            {
+                var button = _root.Q<Button>(_guideTarget);
+                button?.RemoveFromClassList("mm-button--guide");
+                button?.RemoveFromClassList("mm-button--guide-bright");
+            }
+            _guideTarget = null;
         }
 
         /// <summary>The player went to Collection: the guide is done for good.</summary>
         private void CompleteCollectionGuide()
         {
-            if (!_guiding) return;
-            _guiding = false;
+            if (_guideTarget != CollectionButton) return;
+            _guideTarget = null;
             _guidePulse?.Pause();
             try
             {
@@ -674,7 +811,7 @@ namespace Kingdom.Presentation
             // slips past (a stale event, a future control) from leaving the guided menu.
             button.RegisterCallback<ClickEvent>(_ =>
             {
-                if (_guiding && name != "btn-collection") return;
+                if (_guideTarget != null && name != _guideTarget) return;
                 onClick();
             });
         }
@@ -720,18 +857,20 @@ namespace Kingdom.Presentation
         /// icons carry the currency names, so the labels render amounts only. The fallback is never
         /// persisted or spent.
         /// </summary>
-        private void RenderWalletBalances(CollectionSnapshot snapshot)
+        /// <param name="withheldGold">Gold not shown yet, because it is still to land in the starter
+        /// grant presentation. The same for <paramref name="withheldShards"/>.</param>
+        private void RenderWalletBalances(CollectionSnapshot snapshot, long withheldGold = 0, long withheldShards = 0)
         {
             string fallback = WalletDisplay.IconAmount(0);
             bool available = snapshot != null && snapshot.HasAuthoritativeWallet;
             string gold = available
-                ? WalletDisplay.IconAmount(snapshot.Wallet.Gold)
+                ? WalletDisplay.IconAmount(Math.Max(0, snapshot.Wallet.Gold - withheldGold))
                 : fallback;
             string gems = available
                 ? WalletDisplay.IconAmount(snapshot.Wallet.Gems)
                 : fallback;
             string shards = available
-                ? WalletDisplay.IconAmount(snapshot.Wallet.Shards)
+                ? WalletDisplay.IconAmount(Math.Max(0, snapshot.Wallet.Shards - withheldShards))
                 : fallback;
 
             if (_goldBalance != null) _goldBalance.text = gold;
@@ -1000,7 +1139,10 @@ namespace Kingdom.Presentation
         {
             PackVaultController.ReturnScene = ScreenNav.MainMenu;
             PackVaultController.Pending = null;
-            PackVaultController.Mode = PackVaultMode.Vault;
+            // Starter packs still held and none opened yet: the vault wears its gift face.
+            PackVaultController.Mode = _starterPacks > 0 && !FirstRunMarkers.Has(FirstRunMarkers.Gift)
+                ? PackVaultMode.Gift
+                : PackVaultMode.Vault;
             ScreenNav.Go(ScreenNav.PackVault);
         }
 
@@ -1016,7 +1158,9 @@ namespace Kingdom.Presentation
             }
         }
 
-        private void RenderVaultEntry(Kingdom.Net.Client.Collection.CollectionSnapshot snapshot)
+        /// <param name="withheld">Packs not counted yet, because they are still to land in the starter
+        /// grant presentation.</param>
+        private void RenderVaultEntry(Kingdom.Net.Client.Collection.CollectionSnapshot snapshot, long withheld = 0)
         {
             if (_vaultPackCount == null) return;
 
@@ -1025,9 +1169,10 @@ namespace Kingdom.Presentation
             {
                 foreach (long count in snapshot.Packs.Values)
                 {
-                    if (count > 0) total = Math.Min(100, total + Math.Min(100, count));
+                    if (count > 0) total += count;
                 }
             }
+            total = Math.Min(100, Math.Max(0, total - withheld));
 
             _vaultPackCount.style.display = total > 0 ? DisplayStyle.Flex : DisplayStyle.None;
             _vaultPackCount.text = total > 99
