@@ -39,7 +39,7 @@ namespace Kingdom.Core.Tests.Targeting
         private static readonly int[] Sample =
         {
             1,        // hero_power_searing_bolt
-            4,        // hero_power_quicken
+            4,        // hero_power_empower
             1066,     // clock_clockwork_sniper
             1075,     // night_kira_blade_of_shadows
             1058,     // tide_hollowshell_warden

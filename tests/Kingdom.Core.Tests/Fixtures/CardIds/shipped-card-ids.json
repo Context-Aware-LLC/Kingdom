@@ -19,7 +19,7 @@
   },
   {
     "id": 4,
-    "handle": "hero_power_quicken",
+    "handle": "hero_power_empower",
     "type": "HERO_POWER",
     "setId": "CORE"
   },

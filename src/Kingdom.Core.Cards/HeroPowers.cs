@@ -29,7 +29,7 @@ namespace Kingdom.Core.Cards
             CardClass.EMBERWARD => 1,    // hero_power_searing_bolt
             CardClass.TIDECALLER => 2,   // hero_power_tidal_ward
             CardClass.GRAVEKEEP => 3,    // hero_power_weaken
-            CardClass.VERDANT => 4,      // hero_power_quicken
+            CardClass.VERDANT => 4,      // hero_power_empower
             CardClass.CLOCKWRIGHT => 5,  // hero_power_blueprint
             CardClass.NIGHTVEIL => 6,    // hero_power_backstab
             CardClass.STONEWARDEN => 7,  // hero_power_earthwall

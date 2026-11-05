@@ -173,13 +173,13 @@ The NOR-319 brief described hero powers that do not match the shipped data. The 
 | **TIDECALLER** | Tidal Ward — summon a 0/2 `BULWARK` | **Summon `token_tide_wisp`, which is a 1/2 `BULWARK`.** |
 | STONEWARDEN | Earthwall — summon a 0/3 `BULWARK` token | Correct (`token_stone_shard`, 0/3, `BULWARK`) |
 | TEMPEST | Chain Spark — 1 damage to 2 random enemies | Correct |
-| VERDANT | Quicken — restore 3 HP to hero | Correct |
+| VERDANT | Empower — give a friendly minion +1/+1 | Correct |
 | NIGHTVEIL | Shadow Mark — give a friendly minion `SHROUD` | Correct |
 | CLOCKWRIGHT | Blueprint — draw a card | Correct |
 
 **A character gets exactly one hero power, from its primary class.** `MatchEngine.cs:49` stamps
 `HeroPowers.ForClass(setup.P0Class)` — a single class, not a pair. So in a `TEMPEST / VERDANT`
-character, Verdant's *Quicken* is unavailable; Verdant contributes cards only. Never plan a deck
+character, Verdant's *Empower* is unavailable; Verdant contributes cards only. Never plan a deck
 around the secondary class's hero power.
 
 ---

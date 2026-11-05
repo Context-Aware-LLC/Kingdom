@@ -11,13 +11,13 @@
   },
   "3": {
     "name": "Schwächen",
-    "text": "Gib einem Diener -1/+0.",
-    "src": "296318758dcb7e23"
+    "text": "Gib einem Diener -1/-1.",
+    "src": "bc8d3e4ce6054c6c"
   },
   "4": {
-    "name": "Beleben",
-    "text": "Stelle 3 Leben deines Helden wieder her.",
-    "src": "e04b204d288f9ad3"
+    "name": "Stärken",
+    "text": "Gib einem befreundeten Diener +1/+1.",
+    "src": "589114718d3d45fb"
   },
   "5": {
     "name": "Bauplan",

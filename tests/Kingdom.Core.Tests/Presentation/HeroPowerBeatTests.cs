@@ -28,7 +28,7 @@ namespace Kingdom.Core.Tests.Presentation
 
         [TestCase(0)]
         [TestCase(1)]
-        public void Quicken_at_full_health_still_plays_its_portrait_cast(int seat)
+        public void Empower_plays_its_portrait_cast(int seat)
         {
             GameState state = State(CardClass.VERDANT);
             InstanceId hero = state.Players[seat].Hero.Id;
@@ -39,7 +39,6 @@ namespace Kingdom.Core.Tests.Presentation
             Assert.That(result!.Value.Delivery, Is.EqualTo(HeroPowerDelivery.None));
             Assert.That(result.Value.Hero, Is.EqualTo(hero));
             Assert.That(result.Value.HoldSeconds, Is.EqualTo(0.35f));
-            Assert.That(state.Players[seat].Hero.CurrentHealth, Is.EqualTo(30));
         }
 
         [Test]

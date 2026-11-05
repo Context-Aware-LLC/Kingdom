@@ -5,7 +5,7 @@
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
   "totalCards": 300,
-  "corpusDigest": "f6da0847f5fa5935",
+  "corpusDigest": "991dcafd0bc329e3",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -47,11 +47,11 @@
       "LIFEDRAIN": 6
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 70,
+      "ANY_FRIENDLY_MINION": 71,
       "ANY_ENEMY": 29,
       "ANY_MINION": 25,
       "ANY_ENEMY_MINION": 23,
-      "FRIENDLY_HERO": 19,
+      "FRIENDLY_HERO": 18,
       "ENEMY_HERO": 11,
       "ANY_CHARACTER": 9,
       "ANY_FRIENDLY": 3,
@@ -709,8 +709,8 @@
         "VENOM": 1
       },
       "selectorFrequency": {
-        "ANY_FRIENDLY_MINION": 14,
-        "FRIENDLY_HERO": 5,
+        "ANY_FRIENDLY_MINION": 15,
+        "FRIENDLY_HERO": 4,
         "ANY_CHARACTER": 1,
         "ANY_ENEMY": 1,
         "ANY_MINION": 1
@@ -846,7 +846,7 @@
     },
     {
       "id": 4,
-      "name": "Quicken",
+      "name": "Empower",
       "type": "HERO_POWER",
       "cost": 2,
       "attack": null,
@@ -856,7 +856,7 @@
       "rarity": "COMMON",
       "keywords": [],
       "selectors": [
-        "FRIENDLY_HERO"
+        "ANY_FRIENDLY_MINION"
       ],
       "actionTags": [],
       "tribe": null,

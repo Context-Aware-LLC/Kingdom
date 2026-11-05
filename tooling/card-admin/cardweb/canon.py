@@ -12,19 +12,16 @@ Two independent things have to match, or the corpus churns:
    empty must be omitted here too -- writing `"text": ""` where C# writes nothing is a diff on
    every subsequent save, in both directions, forever.
 
-2. ESCAPING. System.Text.Json's default JavaScriptEncoder, which is NOT json.dumps. Probed
-   directly against net10.0 on 2026-08-27 over every ASCII code point plus representative
-   non-ASCII; the table below is that measurement, not a reading of the docs. The surprises
-   that a hand-written implementation gets wrong:
+2. ESCAPING. JavaScriptEncoder.UnsafeRelaxedJsonEscaping, the writer's encoder since
+   3c4a516c (2026-10-15; before that it was the default encoder, which escaped + ' & < > `).
+   Probed directly against net10.0 on 2026-11-04 over every ASCII code point plus
+   representative non-ASCII; this is that measurement, not a reading of the docs:
 
-       "   ->  \\u0022      (NOT \\")
-       &   ->  \\u0026          '   ->  \\u0027
-       +   ->  \\u002B          <   ->  \\u003C
-       >   ->  \\u003E          `   ->  \\u0060
-       \\   ->  \\\\          every non-ASCII -> \\uXXXX, UPPERCASE hex
-
-   Backspace/tab/newline/formfeed/return take their short forms; every other control and
-   U+007F go to \\uXXXX.
+       "   ->  \\"          \\   ->  \\\\          every other printable ASCII is raw
+       Backspace/tab/newline/formfeed/return take their short forms; every other control
+       and U+007F go to \\uXXXX, UPPERCASE hex.
+       Non-ASCII is raw (e with acute, em dash, euro, even U+00AD) EXCEPT separators
+       (U+00A0, U+2028, U+2029), U+FEFF and astral code points (surrogate pairs).
 
 VERIFY, DO NOT TRUST. `--selftest` re-serializes every row of every set file and compares
 bytes. Run it after any change here, and after any change to the C# writer. A field added to
@@ -41,24 +38,30 @@ from __future__ import annotations
 import json
 import pathlib
 import sys
+import unicodedata
 
 # Short escapes System.Text.Json emits instead of \uXXXX. Measured, not assumed.
 _SHORT = {
-    0x08: "\\b", 0x09: "\\t", 0x0A: "\\n", 0x0C: "\\f", 0x0D: "\\r", 0x5C: "\\\\",
+    0x08: "\\b", 0x09: "\\t", 0x0A: "\\n", 0x0C: "\\f", 0x0D: "\\r", 0x22: '\\"', 0x5C: "\\\\",
 }
 
-# Printable ASCII that STJ nonetheless escapes, on top of the controls.
-_FORCE_ESCAPE = frozenset('"&\'+<>`')
+# Non-ASCII categories the relaxed encoder still escapes: separators, controls, surrogates,
+# private use and unassigned. U+FEFF is escaped though it is Cf; U+00AD (also Cf) is not.
+_ESCAPED_CATEGORIES = frozenset(("Zs", "Zl", "Zp", "Cc", "Cs", "Co", "Cn"))
+
+
+def _escapes_non_ascii(cp: int) -> bool:
+    return cp > 0xFFFF or cp == 0xFEFF or unicodedata.category(chr(cp)) in _ESCAPED_CATEGORIES
 
 
 def escape(s: str) -> str:
-    """Encode a string body the way System.Text.Json's default encoder does."""
+    """Encode a string body the way UnsafeRelaxedJsonEscaping does."""
     out = []
     for ch in s:
         cp = ord(ch)
         if cp in _SHORT:
             out.append(_SHORT[cp])
-        elif cp < 0x20 or cp == 0x7F or ch in _FORCE_ESCAPE or cp > 0x7E:
+        elif cp < 0x20 or cp == 0x7F or (cp > 0x7F and _escapes_non_ascii(cp)):
             # Uppercase hex, and surrogate pairs for astral code points -- STJ writes UTF-16.
             if cp > 0xFFFF:
                 cp -= 0x10000
@@ -218,5 +221,5 @@ def selftest(card_dir: pathlib.Path) -> int:
 
 
 if __name__ == "__main__":
-    REPO = pathlib.Path(__file__).resolve().parents[2]
+    REPO = pathlib.Path(__file__).resolve().parents[3]  # tooling/card-admin/cardweb/canon.py
     raise SystemExit(selftest(REPO / "unity" / "Assets" / "CardData"))
