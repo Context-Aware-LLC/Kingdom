@@ -168,6 +168,12 @@ create table if not exists deck (
 
 create index if not exists deck_player_idx on deck (player_id);
 
+-- Server-private, same as the ladder tables above: RLS on, no policies, so Supabase's Data API
+-- reads nothing. The server connects as the owning role, which RLS does not apply to.
+alter table account enable row level security;
+alter table entitlement_grant enable row level security;
+alter table deck enable row level security;
+
 -- Daily quest progress (dev-docs/specs/daily-quests.md §6). ONE ROW PER MATCH that advanced a
 -- quest, never a counter: the primary key below is the whole idempotency story, so a redelivered
 -- match writes nothing and a quest cannot be inflated by a retry. A player's progress is

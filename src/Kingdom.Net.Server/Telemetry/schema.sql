@@ -99,3 +99,10 @@ create index if not exists raw_event_session_idx on raw_event ((line->>'session_
 create index if not exists raw_event_account_idx on raw_event ((line->>'account_id'));
 create index if not exists raw_event_device_idx  on raw_event ((line->>'device'));
 create index if not exists raw_event_match_idx   on raw_event ((line->>'match_id'));
+
+-- Server-private: RLS on, no policies, so Supabase's Data API reads nothing. The drain connects as
+-- the owning role, which RLS does not apply to.
+alter table match enable row level security;
+alter table match_seat enable row level security;
+alter table card_seen enable row level security;
+alter table raw_event enable row level security;
