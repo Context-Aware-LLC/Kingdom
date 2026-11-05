@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Kingdom.Core.Collection;
+using Kingdom.Net.Client.Auth;
 using UnityEngine;
 
 namespace Kingdom.Session
@@ -231,6 +232,7 @@ namespace Kingdom.Session
                 case LocalAccountRoster.BindingPlan.SwitchToExisting:
                     if (target!.Id == Active.Id) return Active;
                     Debug.Log($"[DeviceAccounts] this identity owns account '{target.Id}'; switching to it.");
+                    CarrySession(Active.Id, target.Id, authUserId);
                     SwitchTo(target.Id);
                     return Active;
 
@@ -247,9 +249,35 @@ namespace Kingdom.Session
                     Store().Save(minted);
                     Debug.Log($"[DeviceAccounts] no account on this device belongs to the signed-in " +
                               $"identity; minted '{minted.Id}'.");
+                    CarrySession(Active.Id, minted.Id, authUserId);
                     SwitchTo(minted.Id);
                     return Active;
             }
+        }
+
+        /// <summary>
+        /// Move the session that just signed in from the account it was stored under to the one the
+        /// identity is switching to.
+        ///
+        /// <para><b>The sign-in loop this closes (2026-11-05).</b> The session is stored per local
+        /// account (<see cref="PlayerPrefsAuthSessionStore"/>), against whichever account was active
+        /// when it was saved — and a sign-in saves BEFORE it binds. With more than one identity on a
+        /// device the bind then switches to a different account, whose own slot is empty or holds a
+        /// signed-out or OTHER identity's session. The menu reads that slot, finds no sign-in, and
+        /// sends the player back to the sign-in screen; every route loops. Where the other slot held
+        /// another identity, each boot bound to that one and switched back, so it never settled.</para>
+        ///
+        /// <para>Only the session of the identity being bound moves, and it leaves the source slot,
+        /// which belongs to somebody else.</para>
+        /// </summary>
+        private static void CarrySession(string fromScope, string toScope, string authUserId)
+        {
+            var from = new PlayerPrefsAuthSessionStore(fromScope);
+            AuthSession session = from.Load();
+            if (session == null || session.UserId != authUserId) return;
+            new PlayerPrefsAuthSessionStore(toScope).Save(session);
+            from.Clear();
+            Debug.Log($"[DeviceAccounts] carried the sign-in from account '{fromScope}' to '{toScope}'.");
         }
 
         /// <summary>
