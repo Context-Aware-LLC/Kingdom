@@ -96,8 +96,8 @@ namespace Kingdom.Presentation
     /// reads only the first line must still know what to do on the screen underneath.</para>
     ///
     /// <para><b>Teach only a verb the player can perform.</b> An entry describing something that is
-    /// not wired is worse than no entry. Gem bundles are the one store verb with no route today, so
-    /// no copy here sends anyone to buy Gems.</para>
+    /// not wired is worse than no entry. Gem bundles have been buyable since 2026-10-29, which is
+    /// why the store card may mention Gems.</para>
     ///
     /// <para><b>A trigger returns a SEQUENCE.</b> <see cref="TidbitTrigger.PackVaultGiftComplete"/>
     /// fires shards and then store, back to back.</para>

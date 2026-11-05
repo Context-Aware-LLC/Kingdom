@@ -122,9 +122,9 @@ namespace Kingdom.Presentation
             SetCreateError("");
             ShowView(CreateView.Picker);
 
-            // THE ONE TIDBIT THAT SHIPS (spec §4, slice 4). It fires BEFORE the first pick, not
-            // after, because it explains the choice this screen is about to ask for — the two tail
-            // tidbits sit after the gift for the mirror-image reason, and are still held.
+            // This screen's tidbit (spec §4, slice 4) fires BEFORE the first pick, not after,
+            // because it explains the choice this screen is about to ask for — the vault's two
+            // tail tidbits sit after the gift for the mirror-image reason.
             //
             // Deliberately below the two early returns above: a player looking at "Collection
             // unavailable" has a problem to read, not a lesson. FirstRunTidbit itself decides

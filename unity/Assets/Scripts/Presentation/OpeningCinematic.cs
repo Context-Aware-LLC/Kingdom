@@ -29,13 +29,28 @@ namespace Kingdom.Presentation
     /// <see cref="VideoPlayer"/> URL-source setup this used for StreamingAssets works unchanged
     /// once it is pointed at <see cref="Application.persistentDataPath"/> instead.</para>
     ///
-    /// <para>The film intentionally plays on every process launch for now. When it becomes a
-    /// first-player-launch beat, put that policy in <see cref="ShouldPlay"/> and leave the playback
-    /// lifecycle here unchanged.</para>
+    /// <para><b>The film plays once per device</b> (2026-11-05). <see cref="ShouldPlay"/> reads
+    /// <see cref="SeenKey"/>, which is written the moment the film starts playing, so a skip during
+    /// the splash, a failed download or a prepare timeout leaves it unseen and the next launch tries
+    /// again. The flag is per device, not per account: this runs before the first scene, ahead of
+    /// the identity bind that <c>FirstRunMarkers</c> is scoped by, and a second account on the same
+    /// phone has already seen the film.</para>
+    ///
+    /// <para><b>The Herald's opening line follows the film</b> (Sam, 2026-11-05): on the launch the
+    /// film plays, <c>vo/vo_herald_intro</c> starts when the sequence ends, whether by the last frame
+    /// or by a skip. It is spoken over whatever is revealed underneath, the menu or AccountCreate
+    /// (a new install is usually routed there while the film runs), and survives that scene change.
+    /// It is not on the film's own audio track: the hosted cut (2026-09-27) predates the Herald's
+    /// recordings.</para>
     /// </summary>
     public sealed class OpeningCinematic : MonoBehaviour
     {
         private const string CacheFileName = "intro.mp4";
+
+        /// <summary>PlayerPrefs, so device-scoped. Set when the film starts playing.</summary>
+        private const string SeenKey = "kingdom.opening.seen";
+
+        private const string NarrationAddress = "vo/vo_herald_intro";
 
         /// <summary>Bucket/object path under Supabase Storage's public object endpoint. NOT
         /// "Kingdom" anything (Sam, 2026-09-27) -- that is the internal codename, not the
@@ -92,9 +107,9 @@ namespace Kingdom.Presentation
             _instance = host.AddComponent<OpeningCinematic>();
         }
 
-        // Every-launch behavior is deliberate for the current milestone. This method is the sole
-        // future seam for a FirstRunMarkers-backed policy; playback itself must not own identity.
-        private static bool ShouldPlay() => true;
+        // The sole play policy; playback itself must not own identity. See the class summary for
+        // why this is a device flag rather than a FirstRunMarkers entry.
+        private static bool ShouldPlay() => PlayerPrefs.GetInt(SeenKey, 0) == 0;
 
         private void Awake()
         {
@@ -307,6 +322,7 @@ namespace Kingdom.Presentation
             if (_player != null) _player.Stop();
             if (_picture != null) _picture.enabled = false;
             if (_splash != null) _splash.enabled = false;
+            Narrate();
             StartCoroutine(HoldUntilReleased());
         }
 
@@ -359,6 +375,20 @@ namespace Kingdom.Presentation
             if (_splash != null) _splash.enabled = false;
             _picture.enabled = true;
             player.Play();
+
+            PlayerPrefs.SetInt(SeenKey, 1);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>The Herald's opening line, once the film that played this launch has ended or
+        /// been skipped. Its host outlives this screen and the scene change underneath it, and
+        /// removes itself when the line is done.</summary>
+        private void Narrate()
+        {
+            if (!_prepared) return;
+            var voice = NarratorVoice.Create();
+            DontDestroyOnLoad(voice.gameObject);
+            voice.Play(NarrationAddress, closeWhenDone: true);
         }
 
         private void OnFinished(VideoPlayer _) => Complete();
@@ -377,6 +407,7 @@ namespace Kingdom.Presentation
             _active = false;
 
             if (_player != null) _player.Stop();
+            Narrate();
             Destroy(gameObject);
         }
 
