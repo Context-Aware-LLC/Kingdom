@@ -275,6 +275,16 @@
     margin-right: -56px;
     border-radius: var(--space-2);
 }
+/* The starter cards: the multi-pack reveal's rarity plates (packreveal.uss), sized for this stage.
+ * Qualified so it outranks .reveal-list__panel's percentage width. */
+.main-menu .mm-gift-piece {
+    width: 280px;
+    min-height: 140px;
+    margin: 0 var(--space-3);
+    transition-property: translate, scale, opacity;
+    transition-duration: 0.65s;
+    transition-timing-function: ease-in-cubic;
+}
 .mm-gift-icon--shards {
     background-image: url("/Assets/Art/UI/Crafting/Currency/craft-shard-cyan-v1.png");
 }

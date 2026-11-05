@@ -435,7 +435,7 @@ namespace Kingdom.Presentation
 
                 CollectionSnapshot shelf = _shelf;
                 bool wallet = shelf != null && shelf.HasAuthoritativeWallet;
-                var beats = new[]
+                var beats = new System.Collections.Generic.List<StarterGiftPresentation.Beat>
                 {
                     new StarterGiftPresentation.Beat(
                         Loc.Get("menu_gift_shards"),
@@ -447,13 +447,18 @@ namespace Kingdom.Presentation
                         Loc.Format("menu_gift_amount", OnboardingGrant.StarterGoldCount),
                         1, "mm-gift-icon--gold", null, _root.Q<VisualElement>("gold-wallet"),
                         () => { if (wallet && _goldBalance != null) _goldBalance.text = WalletDisplay.IconAmount(shelf.Wallet.Gold); }),
+                };
+                // Before the packs (Sam, 2026-11-04): the cards granted outright, on the multi-pack
+                // reveal's rarity plates, into Collection.
+                StarterGiftPresentation.Beat cards = StarterCardsBeat();
+                if (cards != null) beats.Add(cards);
+                beats.Add(
                     new StarterGiftPresentation.Beat(
                         Loc.Get("menu_gift_packs"),
                         Loc.Format("menu_gift_amount", _starterPacks),
                         (int)Math.Min(_starterPacks, OnboardingGrant.StarterPackCount),
                         "mm-gift-icon--pack", packArt, _root.Q<VisualElement>(VaultButton),
-                        () => RenderVaultEntry(shelf)),
-                };
+                        () => RenderVaultEntry(shelf)));
                 StarterGiftPresentation.Play(_root, beats, () =>
                 {
                     if (this == null) return;
@@ -462,6 +467,64 @@ namespace Kingdom.Presentation
                     GuideTo(VaultButton);
                 });
             });
+        }
+
+        /// <summary>
+        /// The card half of the grant — one of every Pendingham common and rare
+        /// (<see cref="OnboardingGrant.CardGrant"/>) — as one plate per rarity, built from the
+        /// multi-pack reveal's own <c>reveal-list</c> classes (packreveal.uss), counted the way that
+        /// reveal counts commons. Null when the card data cannot be read: the beat is skipped, the
+        /// cards are still owned.
+        /// </summary>
+        private StarterGiftPresentation.Beat StarterCardsBeat()
+        {
+            int commons = 0, rares = 0;
+            try
+            {
+                Kingdom.Core.Contracts.ICardDatabase db = CardDatabaseLoader.Load();
+                foreach (int id in OnboardingGrant.CardGrant(db))
+                {
+                    if (!db.TryGet(id, out Kingdom.Core.Cards.CardDefinition card)) continue;
+                    if (card.Rarity == Kingdom.Core.Contracts.Rarity.COMMON) commons++;
+                    else if (card.Rarity == Kingdom.Core.Contracts.Rarity.RARE) rares++;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MainMenu] starter cards not presented ({ex.GetType().Name}: {ex.Message}).");
+                return null;
+            }
+            if (commons + rares == 0) return null;
+
+            var plates = new System.Collections.Generic.List<VisualElement>(2);
+            if (commons > 0) plates.Add(RarityPlate(Kingdom.Core.Contracts.Rarity.COMMON, commons));
+            if (rares > 0) plates.Add(RarityPlate(Kingdom.Core.Contracts.Rarity.RARE, rares));
+            return new StarterGiftPresentation.Beat(
+                Loc.Get("menu_gift_cards"),
+                Loc.Format("menu_gift_cards_amount", commons + rares),
+                plates, _root.Q<VisualElement>(CollectionButton), onLanded: null);
+        }
+
+        private static VisualElement RarityPlate(Kingdom.Core.Contracts.Rarity rarity, int count)
+        {
+            var panel = new VisualElement { pickingMode = PickingMode.Ignore };
+            panel.AddToClassList("reveal-list__panel");
+            panel.AddToClassList(CardClassTokens.RarityToken(rarity, "reveal-list__panel--"));
+
+            var header = new VisualElement { pickingMode = PickingMode.Ignore };
+            header.AddToClassList("reveal-list__header");
+            var heading = new Label(GameTerms.Rarity(rarity)) { pickingMode = PickingMode.Ignore };
+            heading.AddToClassList("reveal-list__rarity");
+            header.Add(heading);
+            panel.Add(header);
+
+            var body = new VisualElement { pickingMode = PickingMode.Ignore };
+            body.AddToClassList("reveal-list__body");
+            var total = new Label(Loc.Plural("pack_reveal_card_count", count, count)) { pickingMode = PickingMode.Ignore };
+            total.AddToClassList("reveal-list__common-count");
+            body.Add(total);
+            panel.Add(body);
+            return panel;
         }
 
         /// <summary>Bootstrap (identity/account) is done. Reveal the menu once the boot plate has

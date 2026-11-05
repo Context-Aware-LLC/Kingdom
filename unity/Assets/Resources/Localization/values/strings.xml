@@ -663,13 +663,17 @@
     <!-- First-run tip card. Title. The very first card a new account sees, on the main menu, before the starter supplies are shown. -->
     <string name="tidbit_grant_title">A Royal Grant</string>
     <!-- First-run tip card. Body. Sam's wording (2026-11-04). 'His Majesty' = the King. -->
-    <string name="tidbit_grant_body">His Majesty and the Queen wish for you to become a great hero that brings glory to the kingdom.\n\nIn order that you may do so they are granting you some supplies.</string>
+    <string name="tidbit_grant_body">His Majesty and the Queen wish for you to become a great hero that brings glory to the kingdom.\n\nIn order that you may do so they are granting you some supplies.\n\nDon\'t do as so many have done and squander this at the pub.</string>
     <!-- Main menu, starter grant presentation: the amount shown over a granted item. %1$d = how many. -->
     <string name="menu_gift_amount">+%1$d</string>
     <!-- Main menu, starter grant presentation: caption under the granted crafting shards. -->
     <string name="menu_gift_shards">Shards</string>
     <!-- Main menu, starter grant presentation: caption under the granted gold. -->
     <string name="menu_gift_gold">Gold</string>
+    <!-- Main menu, starter grant presentation: the amount over the granted cards. %1$d = how many. -->
+    <string name="menu_gift_cards_amount">+%1$d cards</string>
+    <!-- Main menu, starter grant presentation: caption under the granted cards. Pendingham = the launch set. -->
+    <string name="menu_gift_cards">One of every Pendingham common and rare</string>
     <!-- Main menu, starter grant presentation: caption under the granted starter packs. -->
     <string name="menu_gift_packs">Starter Packs</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Deck roster arrival. 'nine' = the deck limit. -->

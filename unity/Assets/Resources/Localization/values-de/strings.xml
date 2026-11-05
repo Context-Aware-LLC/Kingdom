@@ -378,11 +378,13 @@
     <string name="tidbit_menu_title">Das Königreich, will erkundet werden.\n</string>
     <string name="tidbit_menu_body">\nGeh auf Quests, bestaune deine Sammlung oder zieh in die glorreiche Schlacht\n\nDas sind die Freuden des Königreichslebens schlechthin.</string>
     <string name="tidbit_grant_title">Eine königliche Gabe</string>
-    <string name="tidbit_grant_body">Seine Majestät und die Königin wünschen, dass du ein großer Held wirst, der dem Königreich Ruhm bringt.\n\nDamit dir das gelingt, gewähren sie dir einige Vorräte.</string>
+    <string name="tidbit_grant_body">Seine Majestät und die Königin wünschen, dass du ein großer Held wirst, der dem Königreich Ruhm bringt.\n\nDamit dir das gelingt, gewähren sie dir einige Vorräte.\n\nTu nicht, was so viele vor dir getan haben, und verprasse das alles im Wirtshaus.</string>
     <string name="menu_gift_amount">+%1$d</string>
     <string name="menu_gift_shards">Splitter</string>
     <string name="menu_gift_gold">Gold</string>
     <string name="menu_gift_packs">Starterpacks</string>
+    <string name="menu_gift_cards_amount">+%1$d Karten</string>
+    <string name="menu_gift_cards">Je eine von jeder gewöhnlichen und seltenen Pendingham-Karte</string>
     <string name="tidbit_decks_title">Deine Decks</string>
     <string name="tidbit_decks_body">Tippe auf das \'+\', um ein Deck zu erstellen. Tippe einmal auf ein Deck für Optionen, zweimal, um es zu bearbeiten.\n\nDer Rat hat beschlossen, dass dir nicht mehr als neun zustehen.\n\nNeun ist das Limit. Nicht 8 und nicht 10. Weil der Rat es so will, darum.</string>
     <string name="tidbit_match_pick_title">Wähle ein Deck</string>

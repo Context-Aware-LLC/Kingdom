@@ -95,6 +95,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a29dc9e104c24ee39bd5213845ab8d97
+    m_Address: vo/vo_herald_tidbit_grant
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1060b6a14a83ca24695a2039abc62eba
     m_Address: vo/vo_tidecaller_burn_1
     m_ReadOnly: 0

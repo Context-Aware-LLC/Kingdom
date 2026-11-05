@@ -9,7 +9,8 @@ namespace Kingdom.Presentation
     /// The starter grant, shown on the main menu's empty right side once the royal-grant tidbit has
     /// rolled shut (Sam, 2026-11-04): each item appears with its amount, holds, then shrinks and
     /// flies into the menu control it now lives behind — shards to Collection, gold to the gold total,
-    /// packs to the vault.
+    /// the starter cards (one of every common and rare, on the multi-pack reveal's rarity plates) to
+    /// Collection, packs to the vault.
     ///
     /// <para><b>Presentation only.</b> The server granted everything before the menu was read
     /// (<c>OnboardingGrantService</c>); this shows what arrived. The host decides what each landing
@@ -46,6 +47,16 @@ namespace Kingdom.Presentation
                 OnLanded = onLanded;
             }
 
+            /// <summary>A beat whose items are built by the host — the starter cards' rarity plates,
+            /// which are the multi-pack reveal's own containers. Each piece flies on its own.</summary>
+            public Beat(string caption, string amount, IReadOnlyList<VisualElement> pieces,
+                VisualElement target, Action onLanded)
+                : this(caption, amount, pieces?.Count ?? 1, null, null, target, onLanded)
+            {
+                Pieces = pieces;
+            }
+
+            public IReadOnlyList<VisualElement> Pieces { get; }
             public string Caption { get; }
             public string Amount { get; }
             public int Copies { get; }
@@ -133,6 +144,14 @@ namespace Kingdom.Presentation
 
         private static VisualElement BuildItem(Beat beat, int copy)
         {
+            if (beat.Pieces != null && copy < beat.Pieces.Count && beat.Pieces[copy] != null)
+            {
+                VisualElement piece = beat.Pieces[copy];
+                piece.pickingMode = PickingMode.Ignore;
+                piece.AddToClassList("mm-gift-piece");
+                return piece;
+            }
+
             var item = new VisualElement { pickingMode = PickingMode.Ignore };
             item.AddToClassList("mm-gift-item");
             if (beat.Copies > 1)

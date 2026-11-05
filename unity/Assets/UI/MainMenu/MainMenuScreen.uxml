@@ -2,6 +2,7 @@
     <Style src="project://database/Assets/UI/Common/theme.uss?fileID=7433441132597879392&amp;guid=3131d0e26db176f4fa42842abbfea4d0&amp;type=3#theme"/>
     <Style src="project://database/Assets/UI/MainMenu/mainmenu.uss?fileID=7433441132597879392&amp;guid=a7ebbdf5907b4c844915adc374612cc8&amp;type=3#mainmenu"/>
     <Style src="project://database/Assets/UI/Common/tidbit.uss?fileID=7433441132597879392&amp;guid=59a3d1cad3c148f488a43eafde7ad1ee&amp;type=3#tidbit"/>
+    <Style src="project://database/Assets/UI/PackReveal/packreveal.uss?fileID=7433441132597879392&amp;guid=a201f4cb62914110a1d96762b261bb3d&amp;type=3#packreveal"/>
     <ui:VisualElement name="root" class="emb-root main-menu mm-root--hidden mm-root--entering">
         <ui:VisualElement name="scrim" picking-mode="Ignore" class="mm-scrim emb-bleed" style="background-image: none;"/>
         <ui:VisualElement name="top-rail" class="mm-top-rail emb-edge">
