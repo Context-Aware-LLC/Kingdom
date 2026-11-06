@@ -489,7 +489,9 @@
     min-width: 0;
     margin-right: var(--space-3);
     padding: var(--space-3) var(--space-4);
-    background-color: rgba(12, 16, 22, 0.28);
+    /* Darker backing so the title and quip read over a bright backdrop; still translucent so the
+       backdrop shows through (Sam, 2026-11-04). */
+    background-color: rgba(12, 16, 22, 0.6);
     border-radius: var(--space-2);
 }
 /* The first-run quest lesson lights the cards (MainMenuController.LightQuests). The border is

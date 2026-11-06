@@ -46,7 +46,7 @@ namespace Kingdom.Core.Tests.Presentation
                 Assert.That(styles, Does.Contain(".mm-top-rail"));
                 Assert.That(styles, Does.Contain(".mm-quest-list").And.Contain("flex-direction: row;"));
                 Assert.That(styles, Does.Contain(".mm-quest-row"));
-                Assert.That(styles, Does.Contain("background-color: rgba(12, 16, 22, 0.28);"),
+                Assert.That(styles, Does.Contain("background-color: rgba(12, 16, 22, 0.6);"),
                     "Quest cards should preserve the backdrop instead of rebuilding the old panel.");
                 Assert.That(styles, Does.Contain(".mm-quest-progress"));
                 Assert.That(styles, Does.Contain("icon_currency_gold.png"));
