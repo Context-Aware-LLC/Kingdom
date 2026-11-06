@@ -90,7 +90,7 @@ namespace Kingdom.Presentation
         public event System.Action OnFadedOut;
 
         /// <summary>The boot plate, and the default for every caller that does not ask for another.</summary>
-        public const string DefaultPlate = "LoadingPlate_Master";
+        public const string DefaultPlate = IntroPlate;
         public const string IntroPlate = "LoadingPlate_VerdantWatering";
         public const string CollectionPlate = "LoadingPlate_ClockwrightCollection";
         public const string ReturnPlate = "LoadingPlate_GravekeepDog";
