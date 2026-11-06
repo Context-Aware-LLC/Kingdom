@@ -124,14 +124,14 @@ namespace Kingdom.Editor
                 entry.SetAddress(address);
             }
 
-            var bgGroup = GetGroup(settings, "Backgrounds");
-            AddFolderAssets(settings, bgGroup, "Assets/Art/Backgrounds", "backgrounds", "t:Texture2D");
+            BackgroundAddressables.Synchronize(settings);
+            SyncedGroups.Add(BackgroundVariantPolicy.Group(BackgroundTier.DesktopTablet));
+            SyncedGroups.Add(BackgroundVariantPolicy.Group(BackgroundTier.Mobile));
             // Assets/Art/Loading was a staging folder: of its ten textures exactly three were
             // ever loaded (the orbs), and the other seven only looked live because this scan
             // registered the folder wholesale. Orbs now have their own root; the rest went to
-            // art-pipeline/junk/. Backgrounds is scanned recursively and addresses by FILE NAME,
-            // so Backgrounds/Loading/ and Backgrounds/Versus/ need no entry of their own and
-            // keep the addresses they already had.
+            // art-pipeline/junk/. Backgrounds now have explicit tier-qualified registrations;
+            // do not scan their authoring originals back into a third shipping bundle.
             var orbsGroup = GetGroup(settings, "Orbs");
             AddFolderAssets(settings, orbsGroup, "Assets/Art/Orbs", "orbs", "t:Texture2D");
             var fontsGroup = GetGroup(settings, "Fonts");

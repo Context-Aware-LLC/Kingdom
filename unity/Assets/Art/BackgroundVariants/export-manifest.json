@@ -1,0 +1,496 @@
+{
+  "resampler": "Pillow Lanczos",
+  "tiers": {
+    "DesktopTablet": [
+      2560,
+      1440
+    ],
+    "Mobile": [
+      2048,
+      1152
+    ]
+  },
+  "backgrounds": [
+    {
+      "key": "CharacterRoster_Backdrop",
+      "source": "unity/Assets/Art/Backgrounds/CharacterRoster_Backdrop.png",
+      "source_size": [
+        2048,
+        1152
+      ],
+      "source_sha256": "f86fed7de5a98a6e19351a7e44c31aacd11a89204175bb984dfb6897f2a8dee0",
+      "crop": [
+        0,
+        0,
+        2048,
+        1152
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/CharacterRoster_Backdrop.png",
+          "sha256": "1572eaf9d680d20b7dc6a7d515dd3cd26b1df595e78a9843a8da6eff76cf5da8",
+          "bytes": 6199928
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/CharacterRoster_Backdrop.png",
+          "sha256": "b75ed6ba3ee07eccc73ab6862f00e38ad421130b937337e0446214cd74ae66d0",
+          "bytes": 4307174
+        }
+      ]
+    },
+    {
+      "key": "CollectionPlate_Vault",
+      "source": "unity/Assets/Art/Backgrounds/CollectionPlate_Vault.png",
+      "source_size": [
+        2048,
+        1152
+      ],
+      "source_sha256": "11564cef1509de7e8013b72ee0325d1a78973e5b075305e8069f3070f4e5e1be",
+      "crop": [
+        0,
+        0,
+        2048,
+        1152
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/CollectionPlate_Vault.png",
+          "sha256": "8d609714e71587db2a99631bcee4c54d9b6c466300d152acc1ff4d932076a133",
+          "bytes": 6074086
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/CollectionPlate_Vault.png",
+          "sha256": "65ef8e82645feb5c0bc0d8d121c1d4b2b6df642728dd0532fe5be0ac7fe5cd98",
+          "bytes": 4220632
+        }
+      ]
+    },
+    {
+      "key": "PackVault_AncientCache_Backdrop",
+      "source": "unity/Assets/Art/Backgrounds/PackVault_AncientCache_Backdrop.png",
+      "source_size": [
+        2048,
+        1152
+      ],
+      "source_sha256": "2e5d417ba09548013b36373f43aa120e3660c650e48d957a1700ed758fc33ac8",
+      "crop": [
+        0,
+        0,
+        2048,
+        1152
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/PackVault_AncientCache_Backdrop.png",
+          "sha256": "280c359bd2e79df741310b7fefdb8cb983297c9ffbefdad523c39783420bd470",
+          "bytes": 6351769
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/PackVault_AncientCache_Backdrop.png",
+          "sha256": "10512e76be757a3e0482148cea2c266e4ec0e4a856bb243dabe8405fbc592b09",
+          "bytes": 4398565
+        }
+      ]
+    },
+    {
+      "key": "Login_Backdrop",
+      "source": "unity/Assets/Art/Backgrounds/Login_Backdrop.png",
+      "source_size": [
+        1425,
+        820
+      ],
+      "source_sha256": "af4385fd60f076c64f9e533c07c8d8f79b4b1e84b02440d53933281e31800224",
+      "crop": [
+        0,
+        9,
+        1424,
+        810
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/Login_Backdrop.png",
+          "sha256": "9dc9f6efbf70ad1092903613ffc0f7c36dd48cd989d2dc45227a872061d2266f",
+          "bytes": 6269251
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/Login_Backdrop.png",
+          "sha256": "668ab9c86c1286ef0482dcc28a9f374ef379785828511538707b9e0f5aa423c2",
+          "bytes": 4430252
+        }
+      ]
+    },
+    {
+      "key": "UpdateGate_Backdrop",
+      "source": "unity/Assets/Art/Backgrounds/UpdateGate_Backdrop.png",
+      "source_size": [
+        1528,
+        829
+      ],
+      "source_sha256": "246ab9f0e9ddf8167f7a6e332cbd2a2bfb766a0acb777a5480dd8a54bad4e3c2",
+      "crop": [
+        28,
+        0,
+        1500,
+        828
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/UpdateGate_Backdrop.png",
+          "sha256": "bdc88c357c2126b97d3fd4cae6aa880d7eea765948d5fec3de34ccf2f9d0fd7e",
+          "bytes": 6429869
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/UpdateGate_Backdrop.png",
+          "sha256": "f31df3901bcbaf40fbfb401fad23952bdf762e857f5141a2514a1e5420ced998",
+          "bytes": 4535859
+        }
+      ]
+    },
+    {
+      "key": "MainMenu_Backdrop",
+      "source": "art-pipeline/backgrounds/regenerated-2026-11-06/main-menu-wide-castle-v2.png",
+      "source_size": [
+        1664,
+        936
+      ],
+      "source_sha256": "7a4eb122613f0c3007af44dde79f5ef68648fe692f57171d566b720516cbcd6b",
+      "crop": [
+        0,
+        0,
+        1664,
+        936
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/MainMenu_Backdrop.png",
+          "sha256": "b360919f7daf76c4b6ff8f97221d066ccda8ae9d6f93f5fb7ea689d58511e819",
+          "bytes": 7375151
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/MainMenu_Backdrop.png",
+          "sha256": "f063f4cae27e3db6d7d5c777ed6ddc61b1034269e411d487ce2a84c905f5b2cf",
+          "bytes": 5128407
+        }
+      ]
+    },
+    {
+      "key": "RoyalCouncilHall_Backdrop",
+      "source": "art-pipeline/backgrounds/regenerated-2026-11-06/royal-council-hall-regenerated-v2.png",
+      "source_size": [
+        1664,
+        936
+      ],
+      "source_sha256": "6154ba99fce52a154cd95b26d64f0d43b58e01efe74806a11692474b5d90a1e6",
+      "crop": [
+        0,
+        0,
+        1664,
+        936
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/RoyalCouncilHall_Backdrop.png",
+          "sha256": "5dbba6c099a84f0c38476aa4aead34868b2d382a4b2be1f955464f0e7c047887",
+          "bytes": 7404129
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/RoyalCouncilHall_Backdrop.png",
+          "sha256": "29feb7c6a9384f82669ba6e5e4a679055e04b12db7ba5b468f173ff9bf22b933",
+          "bytes": 5149208
+        }
+      ]
+    },
+    {
+      "key": "LoadingPlate_TempestBarber",
+      "source": "unity/Assets/Art/Backgrounds/Loading/LoadingPlate_TempestBarber.png",
+      "source_size": [
+        1664,
+        936
+      ],
+      "source_sha256": "79de654528931b388bf11d467078b8cdbd71669e2597eafa55cbb3da5db6ba33",
+      "crop": [
+        0,
+        0,
+        1664,
+        936
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/LoadingPlate_TempestBarber.png",
+          "sha256": "df6839431b11c4fa0cece97c7ac9ef57cf769a5e2c02911f9041b2e3bf50b464",
+          "bytes": 7431677
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/LoadingPlate_TempestBarber.png",
+          "sha256": "4c62355f42eda142c5e2928ebe981b0edf239b6903df7502cabfbcc429d462e7",
+          "bytes": 5173149
+        }
+      ]
+    },
+    {
+      "key": "LoadingPlate_ClockwrightBreakfast",
+      "source": "art-pipeline/backgrounds/regenerated-2026-11-06/clockwright-breakfast-16x9-v2.png",
+      "source_size": [
+        1664,
+        936
+      ],
+      "source_sha256": "41ad7139cb4f2c2e11268138db160f57a8dc13c7d935895264c650ed17963ffb",
+      "crop": [
+        0,
+        0,
+        1664,
+        936
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/LoadingPlate_ClockwrightBreakfast.png",
+          "sha256": "08242322c55568620ee11950b5dba3f02e82d1225e180e428b6c2157b4a4bf9e",
+          "bytes": 6702784
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/LoadingPlate_ClockwrightBreakfast.png",
+          "sha256": "ae247f11b7a829e6afe1b7c8907d6f219f4f2215bee9567cd34e59b667b0d2db",
+          "bytes": 4709588
+        }
+      ]
+    },
+    {
+      "key": "LoadingPlate_ClockwrightCollection",
+      "source": "art-pipeline/backgrounds/regenerated-2026-11-06/clockwright-collection-16x9-v2.png",
+      "source_size": [
+        1664,
+        936
+      ],
+      "source_sha256": "b6a9d7c6fd2709b194935e0aad1a5e1ec84cb6ea9efd2d6d37535f3540f15408",
+      "crop": [
+        0,
+        0,
+        1664,
+        936
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/LoadingPlate_ClockwrightCollection.png",
+          "sha256": "d8204211764fa54ee7bb84fdc858d06c02dae11dd1c3c47c3937c11a6652e9d9",
+          "bytes": 7429070
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/LoadingPlate_ClockwrightCollection.png",
+          "sha256": "5437a6529cdf2c22afbd4da038f6e4a39d034df35a7cc8fcbe667aac6ec5e092",
+          "bytes": 5175636
+        }
+      ]
+    },
+    {
+      "key": "LoadingPlate_GravekeepDog",
+      "source": "art-pipeline/backgrounds/regenerated-2026-11-06/gravekeep-dog-16x9-v2.png",
+      "source_size": [
+        1664,
+        936
+      ],
+      "source_sha256": "6f3ea94a1cac901e4511fc58c6209b38272e36f72a0cf783591e4d07f6a4c83a",
+      "crop": [
+        0,
+        0,
+        1664,
+        936
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/LoadingPlate_GravekeepDog.png",
+          "sha256": "bdb7d832a5ab1e5bf5ccf9d48e2b1ffad4bc33a75eaf6cbf237b02c2e3d58a03",
+          "bytes": 7188622
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/LoadingPlate_GravekeepDog.png",
+          "sha256": "c2425dd2e791fa7242134d6ee55cb20df5493d71b2e3eb8f883edf53ea9b5c04",
+          "bytes": 5019885
+        }
+      ]
+    },
+    {
+      "key": "LoadingPlate_VerdantWatering",
+      "source": "art-pipeline/backgrounds/regenerated-2026-11-06/verdant-watering-16x9-v2.png",
+      "source_size": [
+        1664,
+        936
+      ],
+      "source_sha256": "868d1fa037c8626937a269d0d7768a3cc497ff70d0df4e4749895e7819cc3b1c",
+      "crop": [
+        0,
+        0,
+        1664,
+        936
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/LoadingPlate_VerdantWatering.png",
+          "sha256": "999db02bb0c6b33c2727cd85bb4000bf38d6f5f606b2909ba54054753f9cd441",
+          "bytes": 7800840
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/LoadingPlate_VerdantWatering.png",
+          "sha256": "21d75a9d959b0bc8c174d6a507238ffcfb145156c14c9af98a87d36506c0369d",
+          "bytes": 5405602
+        }
+      ]
+    },
+    {
+      "key": "VersusPlate_Causeway",
+      "source": "art-pipeline/backgrounds/regenerated-2026-11-06/versus-causeway-16x9-v2.png",
+      "source_size": [
+        1664,
+        936
+      ],
+      "source_sha256": "a20b1a8f7fc43d0b341c8fcc54910d8a221b52711aebf2acd87ac823194891d4",
+      "crop": [
+        0,
+        0,
+        1664,
+        936
+      ],
+      "outputs": [
+        {
+          "tier": "DesktopTablet",
+          "size": [
+            2560,
+            1440
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/DesktopTablet/VersusPlate_Causeway.png",
+          "sha256": "ad66fcf722f69711f52d150b6b20d6ee925d1c5677ff8cdd2086f3d5ecd44a72",
+          "bytes": 6362379
+        },
+        {
+          "tier": "Mobile",
+          "size": [
+            2048,
+            1152
+          ],
+          "path": "unity/Assets/Art/BackgroundVariants/Mobile/VersusPlate_Causeway.png",
+          "sha256": "0b435726094955fe972b7ae4c262f69b4c9abbc767b72fa92887c24717f5a0c0",
+          "bytes": 4478081
+        }
+      ]
+    }
+  ]
+}

@@ -10,7 +10,8 @@
 .pack-vault-screen {
     flex-grow: 1;
     background-color: var(--surface-0);
-    background-image: url("/Assets/Art/Backgrounds/PackVault_AncientCache_Backdrop.png");
+    /* BackgroundArt supplies the device's resolution tier. */
+    background-image: none;
     -unity-background-scale-mode: scale-and-crop;
 }
 

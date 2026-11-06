@@ -23,7 +23,8 @@
 .main-menu {
     flex-grow: 1;
     background-color: var(--surface-0);
-    background-image: url("/Assets/Art/Backgrounds/MainMenu_Backdrop.png");
+    /* BackgroundArt supplies the device's resolution tier. */
+    background-image: none;
     -unity-background-scale-mode: scale-and-crop;
     align-items: center;
     justify-content: center;
@@ -999,7 +1000,8 @@
  * hides the menu completely, and the panel goes translucent so the scene reads through it. */
 .mm-modal--gate {
     background-color: var(--surface-0);
-    background-image: url("/Assets/Art/Backgrounds/UpdateGate_Backdrop.png");
+    /* BackgroundArt supplies the device's resolution tier. */
+    background-image: none;
     -unity-background-scale-mode: scale-and-crop;
 }
 .mm-modal--gate .mm-modal__panel {
@@ -1292,7 +1294,8 @@
  * Continue on the name step. */
 .account-create-screen {
     background-color: var(--surface-0);
-    background-image: url("/Assets/Art/Backgrounds/Login_Backdrop.png");
+    /* BackgroundArt supplies the device's resolution tier. */
+    background-image: none;
     -unity-background-scale-mode: scale-and-crop;
 }
 /* The plate hugs its content (flex-grow 0) so the backdrop shows below it. 0.6 is where Sam

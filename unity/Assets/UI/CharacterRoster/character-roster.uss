@@ -11,7 +11,8 @@
  * there is no `.roster-header` any more either. */
 .character-roster {
     flex-grow: 1;
-    background-image: url("/Assets/Art/Backgrounds/CharacterRoster_Backdrop.png");
+    /* BackgroundArt supplies the device's resolution tier. */
+    background-image: none;
     -unity-background-scale-mode: scale-and-crop;
     padding-top: var(--space-2);
     padding-bottom: var(--space-2);

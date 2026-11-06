@@ -321,7 +321,8 @@
     flex-grow: 1;
     overflow: hidden;
     background-color: var(--surface-0);
-    background-image: url("/Assets/Art/Backgrounds/CollectionPlate_Vault.png");
+    /* BackgroundArt supplies the device's resolution tier. */
+    background-image: none;
     -unity-background-scale-mode: scale-and-crop;
     /* The wall spends its full short axis: no bottom framing. The controls are an overlay and
      * never consume flow space. (A screen-class run once stepped a padding-bottom in here; its

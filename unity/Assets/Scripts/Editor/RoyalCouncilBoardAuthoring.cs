@@ -55,8 +55,6 @@ namespace Kingdom.Editor
                 var board = root.AddComponent<RoyalCouncilBoard>();
                 var serialized = new SerializedObject(board);
                 serialized.FindProperty("glassMaterial").objectReferenceValue = glass;
-                serialized.FindProperty("backdrop").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(
-                    "Assets/Art/Backgrounds/RoyalCouncilHall_Backdrop.png");
                 serialized.ApplyModifiedPropertiesWithoutUndo();
                 var model = UnityEngine.Object.Instantiate(source, root.transform);
                 model.name = "Royal Council Model";

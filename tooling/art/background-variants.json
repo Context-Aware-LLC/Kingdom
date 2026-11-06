@@ -1,0 +1,17 @@
+{
+  "backgrounds": [
+    { "key": "CharacterRoster_Backdrop", "source": "unity/Assets/Art/Backgrounds/CharacterRoster_Backdrop.png" },
+    { "key": "CollectionPlate_Vault", "source": "unity/Assets/Art/Backgrounds/CollectionPlate_Vault.png" },
+    { "key": "PackVault_AncientCache_Backdrop", "source": "unity/Assets/Art/Backgrounds/PackVault_AncientCache_Backdrop.png" },
+    { "key": "Login_Backdrop", "source": "unity/Assets/Art/Backgrounds/Login_Backdrop.png", "expected_source_size": [1425, 820], "crop": [0, 9, 1424, 810] },
+    { "key": "UpdateGate_Backdrop", "source": "unity/Assets/Art/Backgrounds/UpdateGate_Backdrop.png", "expected_source_size": [1528, 829], "crop": [28, 0, 1500, 828] },
+    { "key": "MainMenu_Backdrop", "source": "art-pipeline/backgrounds/regenerated-2026-11-06/main-menu-wide-castle-v2.png" },
+    { "key": "RoyalCouncilHall_Backdrop", "source": "art-pipeline/backgrounds/regenerated-2026-11-06/royal-council-hall-regenerated-v2.png" },
+    { "key": "LoadingPlate_TempestBarber", "source": "unity/Assets/Art/Backgrounds/Loading/LoadingPlate_TempestBarber.png" },
+    { "key": "LoadingPlate_ClockwrightBreakfast", "source": "art-pipeline/backgrounds/regenerated-2026-11-06/clockwright-breakfast-16x9-v2.png" },
+    { "key": "LoadingPlate_ClockwrightCollection", "source": "art-pipeline/backgrounds/regenerated-2026-11-06/clockwright-collection-16x9-v2.png" },
+    { "key": "LoadingPlate_GravekeepDog", "source": "art-pipeline/backgrounds/regenerated-2026-11-06/gravekeep-dog-16x9-v2.png" },
+    { "key": "LoadingPlate_VerdantWatering", "source": "art-pipeline/backgrounds/regenerated-2026-11-06/verdant-watering-16x9-v2.png" },
+    { "key": "VersusPlate_Causeway", "source": "art-pipeline/backgrounds/regenerated-2026-11-06/versus-causeway-16x9-v2.png" }
+  ]
+}

@@ -146,6 +146,7 @@ namespace Kingdom.Presentation
                 return false;
             }
             UiLocalizer.Attach(root);
+            BackgroundArt.BindTree(root);
 
             // Nearly opaque: nothing behind this is reachable, so it must not look dismissible.
             root.Q("modal")?.AddToClassList("mm-modal--gate");

@@ -176,6 +176,7 @@ namespace Kingdom.Presentation
                 return;
             }
             UiLocalizer.Attach(_root);
+            BackgroundArt.BindTree(_root);
 
             // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).
             MatchSettingsController.Mount();

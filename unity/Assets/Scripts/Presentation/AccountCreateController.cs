@@ -62,6 +62,7 @@ namespace Kingdom.Presentation
                 return;
             }
             UiLocalizer.Attach(_root);
+            BackgroundArt.BindTree(_root);
 
             _signInView = _root.Q<VisualElement>("signin-view");
             _nameView = _root.Q<VisualElement>("name-view");

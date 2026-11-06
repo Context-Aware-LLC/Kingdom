@@ -86,7 +86,8 @@
     align-items: stretch;
     justify-content: flex-start;
     background-color: var(--surface-0);
-    background-image: url("/Assets/Art/Backgrounds/CollectionPlate_Vault.png");
+    /* BackgroundArt supplies the device's resolution tier. */
+    background-image: none;
     -unity-background-scale-mode: scale-and-crop;
     /* No padding here either, and this is the block that actually mattered. The
        element carries .emb-bleed, whose `padding: var(--edge-safe)` comes from

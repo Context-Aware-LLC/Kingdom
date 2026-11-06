@@ -146,8 +146,7 @@ namespace Kingdom.Presentation
         public static void Prewarm(string plateName = DefaultPlate, string orbName = null)
         {
             string resolvedPlate = string.IsNullOrWhiteSpace(plateName) ? DefaultPlate : plateName;
-            LoadAsset<Texture2D>($"Assets/Art/Backgrounds/Loading/{resolvedPlate}.png",
-                $"backgrounds/{resolvedPlate}");
+            BackgroundArt.LoadTexture(resolvedPlate);
             if (!string.IsNullOrWhiteSpace(orbName))
                 LoadAsset<Texture2D>($"Assets/Art/Orbs/{orbName}.png", $"orbs/{orbName}");
             LoadAsset<Sprite>("Assets/Art/UI/Loading_Wordmark_KingdomOfBadIdeas.svg",
@@ -246,14 +245,9 @@ namespace Kingdom.Presentation
 
             // ── Plate — SpriteRenderer so the default sprite material honors alpha
             //    (MatchEndBanner precedent; primitives' Default-Material strips in URP builds).
-            // Lives under Art/Backgrounds/: CardArtPostprocessor keys import settings off the
-            // folder, and only Backgrounds treats a full-screen plate correctly (4096 desktop /
-            // 2048 mobile, mips off). It once sat in Art/Loading/ and silently imported at
-            // Unity's 2048 default — a 5040-wide master shown at 2048. Art/Loading is now gone.
-            // The Loading/ subfolder is organisational only: the background lane matches at any
-            // depth, and AddressablesSetup addresses by file name, so the address is unchanged.
-            var plateTex = LoadAsset<Texture2D>(
-                $"Assets/Art/Backgrounds/Loading/{_plateName}.png", $"backgrounds/{_plateName}");
+            // BackgroundArt shares the device-tier choice with UI backgrounds and the board hall.
+            // The exported 16:9 image is fitted above the footer by LayoutIllustration below.
+            var plateTex = BackgroundArt.LoadTexture(_plateName);
             if (plateTex != null)
             {
                 var go = new GameObject("Plate");

@@ -169,6 +169,7 @@ namespace Kingdom.Presentation
                 return;
             }
             UiLocalizer.Attach(_root);
+            BackgroundArt.BindTree(_root);
 
             Wire("btn-find-game", OnFindGame);
             Wire("btn-collection", OnCollection);

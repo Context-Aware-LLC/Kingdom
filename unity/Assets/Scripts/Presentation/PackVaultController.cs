@@ -212,6 +212,7 @@ namespace Kingdom.Presentation
                 return;
             }
             UiLocalizer.Attach(root);
+            BackgroundArt.BindTree(root);
             _root = root;
 
             // Top-level destination — same corner settings gear as the main menu (Sam, 2026-09-05).

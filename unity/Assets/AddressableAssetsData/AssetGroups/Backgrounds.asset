@@ -13,63 +13,10 @@ MonoBehaviour:
   m_Name: Backgrounds
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Backgrounds
+  m_IncludeInBuild: 0
+  m_IncludeInBuildMigrated: 1
   m_GUID: 59d3fa19fe00332478e72f70d653c62f
-  m_SerializeEntries:
-  - m_GUID: 6609efbbacf74ec8adbb821ff00db4fa
-    m_Address: backgrounds/LoadingPlate_ClockwrightCollection
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 59df114afb9444e48a5eb75f3db8a94c
-    m_Address: backgrounds/LoadingPlate_GravekeepDog
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ed5c0d8ec740456ba4fbdf63d1b33e19
-    m_Address: backgrounds/LoadingPlate_TempestBarber
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4b854b10c6924568999d302358daad21
-    m_Address: backgrounds/LoadingPlate_VerdantWatering
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 921209fefe614c05adc7b0a779e9bc82
-    m_Address: backgrounds/LoadingPlate_ClockwrightBreakfast
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5da2ef8319e798049a984e5df953bc3c
-    m_Address: backgrounds/MainMenu_Backdrop
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 96d7a20afa5c4284b9b9d29525208531
-    m_Address: backgrounds/PackVault_AncientCache_Backdrop
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 9a283eda404745e4ae925067cad7f027
-    m_Address: backgrounds/Login_Backdrop
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d500f4dcb3094b8384dfd7de8668d770
-    m_Address: backgrounds/CharacterRoster_Backdrop
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f5faf20d654764b46a4a98052737144b
-    m_Address: backgrounds/CollectionPlate_Vault
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f6344702e38a7834196ed6a8b35ecb22
-    m_Address: backgrounds/VersusPlate_Causeway
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 70b1a1e4c09ab9d4489969ef752be0ca, type: 2}
   m_SchemaSet:

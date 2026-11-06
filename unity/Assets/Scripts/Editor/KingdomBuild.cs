@@ -498,6 +498,7 @@ namespace Kingdom.Editor
         private static void BuildAddressables(bool clean = true)
         {
             RequireSavedScenes();
+            BackgroundAddressables.Run();
 
             if (clean) AddressableAssetSettings.CleanPlayerContent();
             AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult contentResult);

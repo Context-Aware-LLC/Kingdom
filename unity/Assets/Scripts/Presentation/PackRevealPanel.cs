@@ -87,6 +87,7 @@ namespace Kingdom.Presentation
             if (root == null) throw new ArgumentNullException(nameof(root));
 
             _overlay = root.Q<VisualElement>("reveal-overlay");
+            BackgroundArt.Bind(_overlay, "PackVault_AncientCache_Backdrop");
             _cardRow = root.Q<VisualElement>("reveal-cards");
             _title = root.Q<Label>("reveal-title");
             _summary = root.Q<Label>("reveal-summary");

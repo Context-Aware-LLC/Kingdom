@@ -53,17 +53,15 @@ namespace Kingdom.Presentation
 
         // ── Slot geometry as fractions of screen height (spec §4/§5).
         //    The plate is centred and height-scaled, so these land on the painted frames at any aspect.
-        private const float PlateAspect      = 1915f / 821f;
-        // Measured from the approved sunlit Kingdom plate (2026-10-21), retaining the Causeway
-        // asset address. The painted apertures are slightly irregular and independently centred:
-        // left (559,262), right (1345,263) on the 1915×821 source. Ø440 covers the parchment
-        // openings through the mask's feather while leaving the decorative gold rims visible.
-        private const float MedallionDiaFrac  = 440f / 821f;
-        private const float LeftMedallionXFrac  = (559f - 957.5f) / 821f;
-        private const float RightMedallionXFrac = (1345f - 957.5f) / 821f;
-        private const float LeftMedallionYFrac  = (410.5f - 262f) / 821f;
-        private const float RightMedallionYFrac = (410.5f - 263f) / 821f;
-        private const float OrbYFrac            = (410.5f - 262.5f) / 821f;
+        // Measured on Sam's 1664×936 crop of the regenerated Causeway (2026-11-06).
+        // Both exported tiers preserve these normalized positions. The 454px mask includes
+        // its feather and covers the parchment just inside the decorative gold rims.
+        private const float MedallionDiaFrac  = 454f / 936f;
+        private const float LeftMedallionXFrac  = (418f - 832f) / 936f;
+        private const float RightMedallionXFrac = (1246f - 832f) / 936f;
+        private const float LeftMedallionYFrac  = (468f - 312f) / 936f;
+        private const float RightMedallionYFrac = (468f - 312f) / 936f;
+        private const float OrbYFrac            = (468f - 312f) / 936f;
         private const float OrbDiaFrac       = 400f / 2160f;    // Ø400 ≈ 18.5%
         private const float NameplateYFrac   = -390f / 2160f;   // canvas 1470 — clears the frame's bottom lip
         private const float ClassYFrac       = -520f / 2160f;   // canvas 1600
@@ -116,6 +114,7 @@ namespace Kingdom.Presentation
         private static readonly int UnderlaySoftness = Shader.PropertyToID("_UnderlaySoftness");
 
         private SpriteRenderer _plate;
+        private SpriteRenderer _matte;
         private Material _orbMat;                       // instanced — _Fade is per-overlay
         private readonly System.Collections.Generic.List<Material> _medallionMats = new();
         private readonly System.Collections.Generic.List<TextMeshPro> _texts = new();
@@ -191,11 +190,23 @@ namespace Kingdom.Presentation
                 ? cam.orthographicSize * 2f
                 : 2f * dist * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad);
 
+            // Fit the complete composition on 4:3 tablets as well as wide phones. A cover crop
+            // would cut through the outer edges of both painted portrait apertures on tablets.
+            var matteObject = new GameObject("Versus Matte");
+            matteObject.transform.SetParent(transform, false);
+            _matte = matteObject.AddComponent<SpriteRenderer>();
+            Texture2D white = Texture2D.whiteTexture;
+            _matte.sprite = Sprite.Create(white, new Rect(0, 0, white.width, white.height),
+                new Vector2(0.5f, 0.5f), white.width);
+            _matte.transform.localScale = new Vector3(h * cam.aspect, h, 1f);
+            _matte.sortingOrder = SortBase - 1;
+            _matte.color = new Color(0.035f, 0.025f, 0.045f, 0f);
+            h *= Mathf.Min(1f, cam.aspect / (16f / 9f));
+
             // ── Plate — class-neutral landscape with both frames painted in. SpriteRenderer so the
-            //    default sprite material honors alpha (LoadingOverlay precedent). In Art/Backgrounds/
-            //    so CardArtPostprocessor imports it full-res (4096/2048), not the 2048 default.
-            var plateTex = LoadAsset<Texture2D>(
-                "Assets/Art/Backgrounds/Versus/VersusPlate_Causeway.png", "backgrounds/VersusPlate_Causeway");
+            //    default sprite material honors alpha (LoadingOverlay precedent). Both delivery
+            //    tiers share the same composition and normalized aperture measurements above.
+            var plateTex = BackgroundArt.LoadTexture("VersusPlate_Causeway");
             if (plateTex != null)
             {
                 var pgo = new GameObject("Plate");
@@ -374,6 +385,7 @@ namespace Kingdom.Presentation
             float a = reveal * fadeOut;
 
             if (_plate != null) _plate.color = new Color(1f, 1f, 1f, a);
+            if (_matte != null) _matte.color = new Color(0.035f, 0.025f, 0.045f, a);
             if (_orbMat != null) _orbMat.SetFloat(FadeId, a);
             foreach (var m in _medallionMats) m.SetFloat(FadeId, a);
             foreach (var tmp in _texts)
@@ -395,6 +407,8 @@ namespace Kingdom.Presentation
         private void OnDestroy()
         {
             _destroyed = true;
+            if (_plate != null && _plate.sprite != null) Destroy(_plate.sprite);
+            if (_matte != null && _matte.sprite != null) Destroy(_matte.sprite);
             if (_orbMat != null) Destroy(_orbMat);
             foreach (var m in _medallionMats) if (m != null) Destroy(m);
         }

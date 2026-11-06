@@ -96,6 +96,7 @@ namespace Kingdom.Presentation
                 return;
             }
             UiLocalizer.Attach(_root);
+            BackgroundArt.BindTree(_root);
 
             CacheElements();
             Wire();

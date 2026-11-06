@@ -29,6 +29,7 @@ namespace Kingdom.Editor
         const string HeroRoot = "Assets/Art/Hero/";
         const string PackArtRoot = "Assets/Art/Shop/Packs/";
         const string BackgroundsRoot = "Assets/Art/Backgrounds/";
+        const string BackgroundVariantsRoot = "Assets/Art/BackgroundVariants/";
         const string OrbsRoot = "Assets/Art/Orbs/";
         const string UiRoot = "Assets/Art/UI/";
         const string VfxRoot = "Assets/Art/VFX/Textures/";
@@ -89,6 +90,12 @@ namespace Kingdom.Editor
                 return;
             }
 
+            if (path.StartsWith(BackgroundVariantsRoot))
+            {
+                ApplyBackgroundVariant(importer, path.StartsWith(BackgroundVariantsRoot + "DesktopTablet/"));
+                return;
+            }
+
             string leaf = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(path)) ?? "";
             if (LeafTreatments.TryGetValue(leaf, out var treatment))
             {
@@ -131,6 +138,20 @@ namespace Kingdom.Editor
             SetPlatform(importer, "Standalone", 4096, TextureImporterFormat.BC7);
             SetPlatform(importer, "Android", 2048, TextureImporterFormat.ASTC_6x6);
             SetPlatform(importer, "iPhone", 2048, TextureImporterFormat.ASTC_6x6);
+        }
+
+        // Both tiers ship on handheld platforms: iPads and Android tablets need the 2560 export
+        // intact. The cap is a power of two, while NPOTScale.None keeps the actual 16:9 dimensions.
+        static void ApplyBackgroundVariant(TextureImporter importer, bool desktopTablet)
+        {
+            ApplySpriteCommon(importer);
+            importer.npotScale = TextureImporterNPOTScale.None;
+            importer.mipmapEnabled = false;
+            int cap = desktopTablet ? 4096 : 2048;
+            importer.maxTextureSize = cap;
+            SetPlatform(importer, "Standalone", cap, TextureImporterFormat.BC7);
+            SetPlatform(importer, "Android", cap, TextureImporterFormat.ASTC_6x6);
+            SetPlatform(importer, "iPhone", cap, TextureImporterFormat.ASTC_6x6);
         }
 
         // Orbs (Assets/Art/Orbs/): the elemental sphere composited into the CENTRE of a loading

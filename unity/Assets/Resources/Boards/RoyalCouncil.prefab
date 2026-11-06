@@ -6970,7 +6970,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Kingdom.Presentation::Kingdom.Presentation.RoyalCouncilBoard
   glassMaterial: {fileID: 2100000, guid: 2e59627541ec5e249a21a37fee6a87a9, type: 2}
-  backdrop: {fileID: 21300000, guid: 0fc1f4585e274511989555be5389d5ac, type: 3}
 --- !u!1 &8394318470608492417
 GameObject:
   m_ObjectHideFlags: 0
