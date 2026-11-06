@@ -1,6 +1,8 @@
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Kingdom.Core.Collection;
 using Kingdom.Net.Client.Auth;
 using Kingdom.Net.Client.Tests.Auth;
 using Kingdom.Net.Client.Collection;
@@ -24,14 +26,45 @@ namespace Kingdom.Net.Client.Tests.Collection
         private static HttpCollectionGateway Gateway(FakeAuthHttp http)
             => new HttpCollectionGateway(Base, http);
 
-        [TestCase("known")]
-        [TestCase("unconstrained")]
-        public async Task Cosmetic_ownership_is_numeric_and_independent_of_gameplay_ownership(string ownership)
+        private static OwnedCardCounts Owned(params (int id, int copies)[] rows)
         {
+            var counts = new OwnedCardCounts();
+            foreach (var row in rows) counts.Set(row.id, row.copies);
+            return counts;
+        }
+
+        private static string CardsJson(OwnedCardCounts counts)
+        {
+            var sb = new StringBuilder("{");
+            bool first = true;
+            foreach (var row in counts.Entries())
+            {
+                if (!first) sb.Append(',');
+                first = false;
+                sb.Append('"').Append(row.Key).Append("\":").Append(row.Value);
+            }
+            return sb.Append('}').ToString();
+        }
+
+        /// <summary>A list-rule body whose digest honestly matches its cards.</summary>
+        private static string ListBody(OwnedCardCounts counts, string tail = "", string packs = "{}")
+            => "{\"ownership\":\"known\",\"rule\":\"list\",\"digest\":\"" +
+               OwnershipRecord.List(counts).Digest + "\",\"cardsUnchanged\":false,\"cards\":" +
+               CardsJson(counts) + ",\"packs\":" + packs + tail + "}";
+
+        private static string AllAtLimitBody(string tail = "", string packs = "{}")
+            => "{\"ownership\":\"known\",\"rule\":\"all-at-limit\",\"digest\":\"" +
+               OwnershipRecord.AllAtLimit.Digest + "\",\"cardsUnchanged\":false,\"packs\":" +
+               packs + tail + "}";
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task Cosmetic_ownership_is_numeric_and_independent_of_gameplay_ownership(bool allAtLimit)
+        {
+            string tail = ",\"cardBacks\":{\"1\":1,\"2\":0,\"3\":-1,\"gravekeep_allover\":1}";
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"" + ownership + "\",\"cards\":{},\"packs\":{}," +
-                "\"cardBacks\":{\"1\":1,\"2\":0,\"3\":-1,\"gravekeep_allover\":1}}");
-            var result = await Gateway(http).FetchAsync("jwt");
+                allAtLimit ? AllAtLimitBody(tail) : ListBody(Owned(), tail));
+            var result = await Gateway(http).FetchAsync("jwt", null);
             Assert.That(result.OwnsCardBack(1), Is.True);
             Assert.That(result.OwnsCardBack(2), Is.False);
             Assert.That(result.OwnsCardBack(3), Is.False);
@@ -42,9 +75,8 @@ namespace Kingdom.Net.Client.Tests.Collection
         [TestCase(",\"cardBacks\":null")]
         public async Task Missing_cosmetic_ownership_never_unlocks_even_for_superusers(string field)
         {
-            var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"unconstrained\",\"packs\":{}" + field + "}");
-            var result = await Gateway(http).FetchAsync("jwt");
+            var http = new FakeAuthHttp().Reply(200, AllAtLimitBody(field));
+            var result = await Gateway(http).FetchAsync("jwt", null);
             Assert.That(result.CardBacks, Is.Null);
             Assert.That(result.OwnsCardBack(1), Is.False);
         }
@@ -54,9 +86,9 @@ namespace Kingdom.Net.Client.Tests.Collection
         [Test]
         public async Task The_fetch_is_a_get_carrying_the_bearer()
         {
-            var http = new FakeAuthHttp().Reply(200, "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}}");
+            var http = new FakeAuthHttp().Reply(200, ListBody(Owned()));
 
-            await Gateway(http).FetchAsync("jwt-token");
+            await Gateway(http).FetchAsync("jwt-token", null);
 
             Assert.That(http.Requests[0].Url, Is.EqualTo("https://emberfall.fly.dev/collection"));
             // Null body is how the fake records a GET — a POST with an empty body would reach the same
@@ -71,7 +103,7 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             var http = new FakeAuthHttp();
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Unauthenticated));
             Assert.That(snapshot.ShouldReplaceCache, Is.False);
@@ -83,7 +115,7 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             var http = new FakeAuthHttp();
 
-            CollectionSnapshot snapshot = await new HttpCollectionGateway("", http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await new HttpCollectionGateway("", http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Unavailable));
             Assert.That(http.Requests, Is.Empty);
@@ -94,18 +126,16 @@ namespace Kingdom.Net.Client.Tests.Collection
         [Test]
         public async Task A_known_collection_comes_back_as_counts()
         {
-            var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"playerId\":\"abc\",\"packs\":{}," +
-                "\"cards\":{\"1001\":2,\"1042\":1}," +
-                "\"wallet\":{\"gold\":150,\"gems\":0,\"shards\":40}}");
+            var http = new FakeAuthHttp().Reply(200, ListBody(Owned((1001, 2), (1042, 1)),
+                ",\"playerId\":\"abc\",\"wallet\":{\"gold\":150,\"gems\":0,\"shards\":40}"));
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
             Assert.That(snapshot.ShouldReplaceCache, Is.True);
-            Assert.That(snapshot.Cards!.CopiesOwned(1001), Is.EqualTo(2));
-            Assert.That(snapshot.Cards!.CopiesOwned(1042), Is.EqualTo(1));
-            Assert.That(snapshot.Cards!.CopiesOwned(9999), Is.EqualTo(0));
+            Assert.That(snapshot.Record!.Counts!.CopiesOwned(1001), Is.EqualTo(2));
+            Assert.That(snapshot.Record!.Counts!.CopiesOwned(1042), Is.EqualTo(1));
+            Assert.That(snapshot.Record!.Counts!.CopiesOwned(9999), Is.EqualTo(0));
             Assert.That(snapshot.Wallet.Gold, Is.EqualTo(150));
             Assert.That(snapshot.Wallet.Shards, Is.EqualTo(40));
         }
@@ -115,13 +145,13 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             // The load-bearing one. "known" with no cards means this player owns nothing, and it MUST
             // be written — that is what makes their decks read as drafts instead of silently legal.
-            var http = new FakeAuthHttp().Reply(200, "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}}");
+            var http = new FakeAuthHttp().Reply(200, ListBody(Owned()));
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
             Assert.That(snapshot.ShouldReplaceCache, Is.True);
-            Assert.That(snapshot.Cards!.RecordedCards, Is.EqualTo(0));
+            Assert.That(snapshot.Record!.Counts!.RecordedCards, Is.EqualTo(0));
         }
 
         [Test]
@@ -129,58 +159,159 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             // Same posture as LedgerOwnedCounts server-side: a row written under a future or foreign
             // item shape must not take the rest of the collection with it.
+            string digest = OwnershipRecord.List(Owned((1001, 2), (1099, 1))).Digest;
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"packs\":{},\"cards\":{\"1001\":2,\"not-a-card\":3,\"1042\":\"x\",\"1077\":-4,\"1099\":1}}");
+                "{\"ownership\":\"known\",\"rule\":\"list\",\"digest\":\"" + digest + "\"," +
+                "\"cardsUnchanged\":false,\"packs\":{}," +
+                "\"cards\":{\"1001\":2,\"not-a-card\":3,\"1042\":\"x\",\"1077\":-4,\"1099\":1}}");
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
-            Assert.That(snapshot.Cards!.CopiesOwned(1001), Is.EqualTo(2));
-            Assert.That(snapshot.Cards!.CopiesOwned(1099), Is.EqualTo(1));
+            Assert.That(snapshot.Record!.Counts!.CopiesOwned(1001), Is.EqualTo(2));
+            Assert.That(snapshot.Record!.Counts!.CopiesOwned(1099), Is.EqualTo(1));
             // A negative balance is a ledger bug; zero is the honest projection of it, and a negative
             // copy count would make DeckValidator's copy-limit arithmetic nonsense.
-            Assert.That(snapshot.Cards!.CopiesOwned(1077), Is.EqualTo(0));
-            Assert.That(snapshot.Cards!.RecordedCards, Is.EqualTo(2));
+            Assert.That(snapshot.Record!.Counts!.CopiesOwned(1077), Is.EqualTo(0));
+            Assert.That(snapshot.Record!.Counts!.RecordedCards, Is.EqualTo(2));
         }
 
         // ── The answers that must NOT be cached ─────────────────────────────────────────
 
         [Test]
-        public async Task A_superuser_is_unconstrained_and_writes_nothing()
+        public async Task Parses_AllAtLimit()
         {
-            // There is no list to cache and inventing an empty one would undeck Sam's own account.
-            // Leaving the device with no record is what produces the full pool.
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"unconstrained\",\"cards\":{},\"packs\":{},\"wallet\":{\"gold\":0,\"gems\":0,\"shards\":0}}");
+                AllAtLimitBody(",\"wallet\":{\"gold\":0,\"gems\":0,\"shards\":0}"));
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
-            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Unconstrained));
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
+            Assert.That(snapshot.ShouldReplaceCache, Is.True);
+            Assert.That(snapshot.Record, Is.SameAs(OwnershipRecord.AllAtLimit));
+        }
+
+        [Test]
+        public async Task An_AllAtLimit_body_with_the_wrong_digest_is_malformed()
+        {
+            string wrong = OwnershipRecord.List(Owned()).Digest;
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"rule\":\"all-at-limit\",\"digest\":\"" + wrong +
+                "\",\"cardsUnchanged\":false,\"packs\":{}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Malformed));
+        }
+
+        [Test]
+        public async Task Parses_List_And_VerifiesDigest()
+        {
+            // A proxy that rewrote the list must not be cached under the server's digest.
+            string digest = OwnershipRecord.List(Owned((1001, 2))).Digest;
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"rule\":\"list\",\"digest\":\"" + digest +
+                "\",\"cardsUnchanged\":false,\"packs\":{},\"cards\":{\"1001\":3}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Malformed));
             Assert.That(snapshot.ShouldReplaceCache, Is.False);
-            Assert.That(snapshot.Cards, Is.Null);
+        }
+
+        [Test]
+        public async Task CardsUnchanged_IsSynced_WithNoRecord_AndShouldNotReplaceCache()
+        {
+            string digest = OwnershipRecord.List(Owned((1001, 2))).Digest;
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"rule\":\"list\",\"digest\":\"" + digest +
+                "\",\"cardsUnchanged\":true,\"packs\":{\"pack.pendingham.starter\":2}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", digest);
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
+            Assert.That(snapshot.CardsUnchanged, Is.True);
+            Assert.That(snapshot.Record, Is.Null);
+            Assert.That(snapshot.ShouldReplaceCache, Is.False);
+            Assert.That(snapshot.HasAuthoritativePacks, Is.True);
+            Assert.That(snapshot.PackCount("pack.pendingham.starter"), Is.EqualTo(2));
+        }
+
+        [Test]
+        public async Task CardsUnchanged_WithoutAWellFormedDigest_IsMalformed()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"rule\":\"list\",\"digest\":\"ABC\"," +
+                "\"cardsUnchanged\":true,\"packs\":{}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Malformed));
+        }
+
+        [Test]
+        public async Task UnknownRule_IsMalformed()
+        {
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"rule\":\"everything\",\"digest\":\"" +
+                OwnershipRecord.AllAtLimit.Digest + "\",\"cardsUnchanged\":false,\"packs\":{}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
+
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Malformed));
+        }
+
+        [Test]
+        public async Task The_retired_unconstrained_word_is_not_an_ownership_answer()
+        {
+            var http = new FakeAuthHttp().Reply(200, "{\"ownership\":\"unconstrained\",\"packs\":{}}");
+
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
+
+            Assert.That(snapshot.ShouldReplaceCache, Is.False);
+            Assert.That(snapshot.Record, Is.Null);
+        }
+
+        [Test]
+        public async Task SendsDigestHeader_WhenGiven()
+        {
+            string digest = OwnershipRecord.AllAtLimit.Digest;
+            var http = new FakeAuthHttp().Reply(200, AllAtLimitBody());
+
+            await Gateway(http).FetchAsync("jwt", digest);
+
+            Assert.That(http.Requests[0].Headers.Any(
+                h => h.Key == "Kingdom-Ownership-Digest" && h.Value == digest), Is.True);
+        }
+
+        [Test]
+        public async Task OmitsDigestHeader_WhenNull()
+        {
+            var http = new FakeAuthHttp().Reply(200, AllAtLimitBody());
+
+            await Gateway(http).FetchAsync("jwt", null);
+
+            Assert.That(http.Requests[0].Headers.Any(h => h.Key == "Kingdom-Ownership-Digest"), Is.False);
         }
 
         [Test]
         public async Task Only_successful_collection_answers_carry_an_authoritative_wallet()
         {
             CollectionSnapshot known = await Gateway(new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}," +
-                "\"wallet\":{\"gold\":60,\"gems\":2,\"shards\":4}}"))
-                .FetchAsync("jwt");
+                ListBody(Owned(), ",\"wallet\":{\"gold\":60,\"gems\":2,\"shards\":4}")))
+                .FetchAsync("jwt", null);
             CollectionSnapshot unconstrained = await Gateway(new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"unconstrained\",\"packs\":{}," +
-                "\"wallet\":{\"gold\":60,\"gems\":2,\"shards\":4}}"))
-                .FetchAsync("jwt");
+                AllAtLimitBody(",\"wallet\":{\"gold\":60,\"gems\":2,\"shards\":4}")))
+                .FetchAsync("jwt", null);
             CollectionSnapshot offline = await Gateway(new FakeAuthHttp()
                 .ReplyTransportFailure("no route to host"))
-                .FetchAsync("jwt");
+                .FetchAsync("jwt", null);
             CollectionSnapshot missingWallet = await Gateway(new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}}"))
-                .FetchAsync("jwt");
+                ListBody(Owned())))
+                .FetchAsync("jwt", null);
             CollectionSnapshot partialWallet = await Gateway(new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"cards\":{},\"packs\":{}," +
-                "\"wallet\":{\"gold\":60,\"gems\":2}}"))
-                .FetchAsync("jwt");
+                ListBody(Owned(), ",\"wallet\":{\"gold\":60,\"gems\":2}")))
+                .FetchAsync("jwt", null);
 
             Assert.Multiple(() =>
             {
@@ -203,11 +334,11 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             var http = new FakeAuthHttp().ReplyTransportFailure("no route to host");
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Offline));
             Assert.That(snapshot.ShouldReplaceCache, Is.False);
-            Assert.That(snapshot.Cards, Is.Null);
+            Assert.That(snapshot.Record, Is.Null);
             Assert.That(http.Requests.Count, Is.EqualTo(1));
         }
 
@@ -216,14 +347,14 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             var http = new FakeAuthHttp()
                 .ReplyTransportFailure("Request timeout")
-                .Reply(200, "{\"ownership\":\"known\",\"cards\":{\"1001\":2},\"packs\":{}}");
+                .Reply(200, ListBody(Owned((1001, 2))));
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(http.Requests.Count, Is.EqualTo(2));
             Assert.That(http.Requests.All(r => r.Verb == "GET" && r.Url == Base + "/collection"), Is.True);
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
-            Assert.That(snapshot.Cards!.CopiesOwned(1001), Is.EqualTo(2));
+            Assert.That(snapshot.Record!.Counts!.CopiesOwned(1001), Is.EqualTo(2));
         }
 
         [Test]
@@ -233,7 +364,7 @@ namespace Kingdom.Net.Client.Tests.Collection
                 .ReplyTransportFailure("Request timeout")
                 .ReplyTransportFailure("Request timeout");
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(http.Requests.Count, Is.EqualTo(2));
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Offline));
@@ -247,7 +378,7 @@ namespace Kingdom.Net.Client.Tests.Collection
             var http = new FakeAuthHttp().ReplyTransportFailure("Request timeout");
             cancellation.Cancel();
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", cancellation.Token);
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null, cancellation.Token);
 
             Assert.That(http.Requests.Count, Is.LessThanOrEqualTo(1));
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Offline));
@@ -256,8 +387,8 @@ namespace Kingdom.Net.Client.Tests.Collection
         [Test]
         public async Task A_rejected_token_and_a_server_without_a_ledger_are_told_apart()
         {
-            var rejected = await Gateway(new FakeAuthHttp().Reply(401, "{}")).FetchAsync("jwt");
-            var noLedger = await Gateway(new FakeAuthHttp().Reply(503, "{}")).FetchAsync("jwt");
+            var rejected = await Gateway(new FakeAuthHttp().Reply(401, "{}")).FetchAsync("jwt", null);
+            var noLedger = await Gateway(new FakeAuthHttp().Reply(503, "{}")).FetchAsync("jwt", null);
 
             Assert.That(rejected.Status, Is.EqualTo(CollectionSyncStatus.Unauthenticated));
             Assert.That(noLedger.Status, Is.EqualTo(CollectionSyncStatus.Unavailable));
@@ -275,11 +406,11 @@ namespace Kingdom.Net.Client.Tests.Collection
         [Test]
         public async Task A_five_hundred_is_a_fault_not_a_server_without_an_economy()
         {
-            var faulted = await Gateway(new FakeAuthHttp().Reply(500, "")).FetchAsync("jwt");
+            var faulted = await Gateway(new FakeAuthHttp().Reply(500, "")).FetchAsync("jwt", null);
 
             Assert.That(faulted.Status, Is.EqualTo(CollectionSyncStatus.Offline));
             Assert.That(faulted.ShouldReplaceCache, Is.False);
-            Assert.That(faulted.Cards, Is.Null);
+            Assert.That(faulted.Record, Is.Null);
         }
 
         [Test]
@@ -290,7 +421,7 @@ namespace Kingdom.Net.Client.Tests.Collection
             // change or a captive-portal login page returning 200.
             var http = new FakeAuthHttp().Reply(200, "{\"cards\":{\"1001\":2}}");
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Malformed));
             Assert.That(snapshot.ShouldReplaceCache, Is.False);
@@ -301,7 +432,7 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             var http = new FakeAuthHttp().Reply(200, "<html>captive portal</html>");
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Malformed));
             Assert.That(snapshot.ShouldReplaceCache, Is.False);
@@ -313,10 +444,9 @@ namespace Kingdom.Net.Client.Tests.Collection
         public async Task Unopened_packs_come_back_with_the_collection()
         {
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"cards\":{}," +
-                "\"packs\":{\"pack.pendingham.starter\":5,\"pack.pendingham\":1}}");
+                ListBody(Owned(), "", "{\"pack.pendingham.starter\":5,\"pack.pendingham\":1}"));
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
             Assert.That(snapshot.PackCount("pack.pendingham.starter"), Is.EqualTo(5));
@@ -328,16 +458,16 @@ namespace Kingdom.Net.Client.Tests.Collection
         [Test]
         public async Task A_superuser_still_gets_their_packs()
         {
-            // Unlike the cards, which are deliberately absent. The gift is developed on a superuser
-            // account, so one that could not see its own starter packs would make the whole first-run
-            // flow untestable on the only device it is built on.
+            // The gift is developed on a superuser account, so one that could not see its own
+            // starter packs would make the whole first-run flow untestable on the only device it is
+            // built on.
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"unconstrained\",\"packs\":{\"pack.pendingham.starter\":5}}");
+                AllAtLimitBody("", "{\"pack.pendingham.starter\":5}"));
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
-            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Unconstrained));
-            Assert.That(snapshot.Cards, Is.Null);
+            Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
+            Assert.That(snapshot.Record, Is.SameAs(OwnershipRecord.AllAtLimit));
             Assert.That(snapshot.PackCount("pack.pendingham.starter"), Is.EqualTo(5));
         }
 
@@ -349,9 +479,12 @@ namespace Kingdom.Net.Client.Tests.Collection
             // arrive as the same absence and route the first run differently: one is a proxy or a
             // server change, the other is a finished gift. Silently reading the first as the second
             // is how five granted packs go missing with nothing reporting a fault.
-            var http = new FakeAuthHttp().Reply(200, "{\"ownership\":\"known\",\"cards\":{\"1001\":2}}");
+            string digest = OwnershipRecord.List(Owned((1001, 2))).Digest;
+            var http = new FakeAuthHttp().Reply(200,
+                "{\"ownership\":\"known\",\"rule\":\"list\",\"digest\":\"" + digest +
+                "\",\"cardsUnchanged\":false,\"cards\":{\"1001\":2}}");
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Malformed));
             Assert.That(snapshot.ShouldReplaceCache, Is.False);
@@ -362,10 +495,9 @@ namespace Kingdom.Net.Client.Tests.Collection
         {
             // The other half of the pair: present and empty means the shelf is genuinely bare, which
             // is what every launch after the gift looks like.
-            var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"cards\":{\"1001\":2},\"packs\":{}}");
+            var http = new FakeAuthHttp().Reply(200, ListBody(Owned((1001, 2))));
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
             Assert.That(snapshot.Packs, Is.Empty);
@@ -375,10 +507,9 @@ namespace Kingdom.Net.Client.Tests.Collection
         public async Task A_pack_row_that_does_not_parse_costs_only_that_row()
         {
             var http = new FakeAuthHttp().Reply(200,
-                "{\"ownership\":\"known\",\"cards\":{}," +
-                "\"packs\":{\"pack.pendingham.starter\":3,\"pack.broken\":\"x\",\"pack.spent\":0}}");
+                ListBody(Owned(), "", "{\"pack.pendingham.starter\":3,\"pack.broken\":\"x\",\"pack.spent\":0}"));
 
-            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt");
+            CollectionSnapshot snapshot = await Gateway(http).FetchAsync("jwt", null);
 
             Assert.That(snapshot.Status, Is.EqualTo(CollectionSyncStatus.Synced));
             Assert.That(snapshot.PackCount("pack.pendingham.starter"), Is.EqualTo(3));
