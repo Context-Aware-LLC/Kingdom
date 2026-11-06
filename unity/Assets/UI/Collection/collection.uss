@@ -330,13 +330,9 @@
     padding: 0 var(--space-6) 0;
 }
 
-/* Owned vs All is runtime state: CollectionController is the only writer of the visible modifier. */
+/* Owned / Unowned is always shown (Sam, 2026-11-06); CollectionScopeToggle lights the chips. */
 .col-scope {
-    display: none;
     flex-direction: row;
-}
-.col-scope--on {
-    display: flex;
 }
 
 .col-button {

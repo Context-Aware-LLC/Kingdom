@@ -22,23 +22,19 @@ namespace Kingdom.Presentation
     /// doorway. It requests that the drawer open after the Collection shell is live; it does not
     /// decide the screen's shape. It is consumed once.</para>
     ///
-    /// <para><b>It shows what you own when the account knows, and the whole pool when it doesn't.</b>
-    /// Ownership has three states, not two:</para>
+    /// <para><b>Every visit arrives on Owned, lit, by any route</b> (Sam, 2026-11-06), and the
+    /// Owned/Unowned toggle (#146) is always in the Filters drawer. What "owned" means depends on the
+    /// record:</para>
     ///
     /// <list type="bullet">
-    /// <item>No ownership record (<see cref="PlayerAccount.OwnedCards"/> returns null) — nobody has told
-    /// this account what it owns. The wall shows the full collectible pool and the scope toggle stays
-    /// hidden. True for a machine that has never synced (<see cref="Session.CollectionGateway"/>,
-    /// landed 2026-09-01) — a stale build predating that sync will never leave this state.</item>
-    /// <item>A record, scoped to it — the wall shows only cards with at least one copy, and Owned is
-    /// highlighted. This is the default the moment a grant path writes that record.</item>
-    /// <item>A record, showing everything anyway — the Owned/Unowned toggle (#146). Same wall as the first
-    /// state, with All highlighted, from a completely different reason.</item>
+    /// <item>No ownership record (<see cref="PlayerAccount.OwnedCards"/> returns null) — a superuser,
+    /// whom the server answers Unconstrained, or a machine that has never synced. Every card counts
+    /// as owned, the reading <see cref="DeckValidator"/> and the tile treatment already give an absent
+    /// record, so Owned is the full pool and Unowned alone is empty.</item>
+    /// <item>A record — Owned is only cards with at least one copy, Unowned the rest.</item>
     /// </list>
     ///
-    /// <para><b>So the player-facing copy rule holds in two of the three:</b> do not describe this
-    /// screen as a collection of owned cards while it is showing the pool. When ownership is known,
-    /// the scope toggle is the visible source of truth for which pool the player is viewing.</para>
+    /// <para>The toggle is the visible source of truth for which pool the player is viewing.</para>
     ///
     /// <para><b>The toggle is a scope, not a facet</b>, which is why it is not a chip on
     /// <see cref="CardQueryBar"/>: the bar's chips are generated from the card enums and filter a pool,
@@ -252,8 +248,6 @@ namespace Kingdom.Presentation
             BotDecks = BotDeckEditing.Enabled;
 #endif
             LoadOwnership();
-            // Before the first BuildPool, which asks the scope — see SetOwnershipRecord.
-            _scope.SetOwnershipRecord(_owned != null);
 
             _collectionList = _root.Q<ListView>("collection-list");
             if (_collectionList == null)
@@ -467,8 +461,8 @@ namespace Kingdom.Presentation
         /// <c>min(MaxCopies, copies owned)</c>. Removing it from the pool instead would make a card
         /// you nearly own invisible, and #150 wants it dimmed.</para>
         ///
-        /// <para><b>At rest</b> — every card this account owns a copy of, or, when it has no ownership
-        /// record or the player has asked for All (#146), every collectible card in the game.</para>
+        /// <para><b>At rest</b> — whichever halves of the game the scope (#146) has lit, where a card
+        /// with no ownership record behind it counts as owned.</para>
         ///
         /// <para>A card recorded at 0 copies is NOT owned. Zero is a real recorded value — every copy
         /// dusted, or a refund — and it is exactly the case a truthiness check on "is it in the
@@ -486,7 +480,8 @@ namespace Kingdom.Presentation
             foreach (var def in _db.AllCollectible())
             {
                 if (EditingDeck && !_deck.AllowsClass(def.Class)) continue;
-                if (_owned != null && !_scope.Includes(_owned.CopiesOwned(def.Id) > 0)) continue;
+                // No record counts every card as owned — see the class summary.
+                if (!_scope.Includes(_owned == null || _owned.CopiesOwned(def.Id) > 0)) continue;
 
                 _pool.Add(def);
                 available.Add(def.Class);
@@ -792,15 +787,18 @@ namespace Kingdom.Presentation
         /// want here: the set under the cursor is not the set that was there.</para></summary>
         private void WireScopeToggle()
         {
-            _scope.Changed += () =>
-            {
-                BuildPool();
-                _wall.SetPool(_pool);     // keeps the wall's current filter and sort
-                UpdateWallLabels();
-            };
-            _scope.Bind(_root.Q<VisualElement>("scope-row"),
-                        _root.Q<Button>("scope-owned"),
-                        _root.Q<Button>("scope-unowned"));
+            // -= first: OnEnable can run again on this controller, and a second subscription
+            // would rebuild the pool twice per tap.
+            _scope.Changed -= OnScopeChanged;
+            _scope.Changed += OnScopeChanged;
+            _scope.Bind(_root.Q<Button>("scope-owned"), _root.Q<Button>("scope-unowned"));
+        }
+
+        private void OnScopeChanged()
+        {
+            BuildPool();
+            _wall.SetPool(_pool);     // keeps the wall's current filter and sort
+            UpdateWallLabels();
         }
 
         // ---- Right-side deck drawer (NOR-210) -----------------------------------------------
@@ -1308,7 +1306,6 @@ namespace Kingdom.Presentation
             if (ct.IsCancellationRequested || !ReferenceEquals(_account, PlayerAccount.Local)) return false;
             if (status != CollectionSyncStatus.Synced && status != CollectionSyncStatus.Unconstrained) return false;
             LoadOwnership();
-            _scope.SetOwnershipRecord(_owned != null);
             BuildPool();
             _wall.SetPool(_pool);
             ApplyQuery();
@@ -1719,10 +1716,9 @@ namespace Kingdom.Presentation
             // cannot get past: an account that owns nothing has an empty pool with no filter set, and
             // "Nothing matches those filters" would send them tapping Reset forever.
             //
-            // Those messages point at the toggle, and can: OwnedOnly and UnownedOnly are true only
-            // when a record exists, which is the same condition that puts the scope row on screen.
-            // An empty pool with both halves on is a broken card database rather than a state a
-            // player can reach, so it keeps the filter text.
+            // Those messages point at the toggle, which is always in the Filters drawer. An empty
+            // pool with both halves on is a broken card database rather than a state a player can
+            // reach, so it keeps the filter text.
             if (_emptyLabel != null)
             {
                 _emptyLabel.text = _pool.Count != 0 ? Loc.Get("collection_collection_empty")
