@@ -148,8 +148,8 @@ namespace Kingdom.Net.Server.Tests
         [Test]
         public void Validate_Runs_L6_When_An_Ownership_Source_Is_Supplied()
         {
-            // NOR-313: the seam MatchGate threads through AccountOwnedCounts.For. The SAME legal deck is
-            // accepted with no source (today's full-pool null) and rejected once an ownership source that
+            // NOR-313: the seam MatchGate threads through AccountOwnedCounts.ForAsync. The SAME legal deck is
+            // accepted with no source (null, a tooling seat) and rejected once an ownership source that
             // holds nothing is supplied — that flip is L6 actually reaching the submission path.
             var msg = LegalSubmission(CardClass.GRAVEKEEP, CardClass.VERDANT);
             Assert.That(DeckSubmission.Validate(msg, Db).Accepted, Is.True,

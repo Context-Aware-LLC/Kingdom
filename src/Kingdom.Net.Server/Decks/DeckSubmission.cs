@@ -82,8 +82,8 @@ namespace Kingdom.Net.Server.Decks
         /// <para><paramref name="owned"/> is the submitting account's ownership source for L6 (NOR-313).
         /// Null — the default, and what a caller with no account context passes — leaves L6 unenforced
         /// exactly as before; a real source constrains the submission to cards the account holds. The
-        /// caller resolves it through <c>AccountOwnedCounts.For</c>, which keeps a superuser account
-        /// unconstrained by construction.</para></summary>
+        /// caller resolves it through <c>AccountOwnedCounts.ForAsync</c>, which gives a superuser the
+        /// all-at-limit record: checked like anyone else, owning every pool card.</para></summary>
         public static DeckSubmissionResult Validate(SubmitDeckMsg msg, ICardDatabase db,
                                                     IOwnedCardCounts? owned = null)
         {

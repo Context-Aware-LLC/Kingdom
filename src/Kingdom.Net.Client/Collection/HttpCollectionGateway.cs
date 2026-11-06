@@ -163,7 +163,7 @@ namespace Kingdom.Net.Client.Collection
     /// <para><b>What this makes true.</b> A player who uninstalls, reinstalls and signs back in has
     /// always reached the right identity — the entitlement ledger is keyed on the authenticated
     /// <c>player_id</c> and never lost a row. What was missing was any path from that ledger to the
-    /// device: the collection screen read local disk, found nothing, and rendered the full pool. This
+    /// device: the collection screen read local disk, found nothing, and had no way to ask the server. This
     /// is that path.</para>
     ///
     /// <para><b>It never throws and it never partially succeeds.</b> Every failure is a status the

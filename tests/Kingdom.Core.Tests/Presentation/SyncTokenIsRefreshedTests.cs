@@ -22,8 +22,8 @@ namespace Kingdom.Core.Tests.Presentation
     /// outcome into a status and take the "keep whatever this device already had" branch by design,
     /// which is correct — but it means an expired token and a healthy launch are indistinguishable
     /// from inside this screen. The consequence arrives in a different screen, minutes later, as a
-    /// deck built from an unconstrained pool and a socket the gate closes with
-    /// <c>deck rejected: You don't own X</c>. Nothing between those two points can assert anything.
+    /// Collection stuck on collection_not_synced, or one that never reflects a
+    /// purchase. Nothing between those two points can assert anything.
     /// What CAN be checked cheaply is that no call site reads a token off a stored session, so that
     /// is what this checks.</para>
     ///

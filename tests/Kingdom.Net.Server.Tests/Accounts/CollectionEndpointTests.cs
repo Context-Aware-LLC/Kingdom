@@ -18,7 +18,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
     ///
     /// <para><b>The three answers this endpoint can give are the whole test surface</b>, because the
     /// client acts on them irreversibly: <c>known</c> is written over the device's ownership record,
-    /// while <c>unconstrained</c> and <c>unavailable</c> must leave it alone. Serve "unavailable" as
+    /// while <c>unavailable</c> must leave it alone. Serve "unavailable" as
     /// an empty "known" and every deck on that device becomes a draft; serve a real empty collection
     /// as "unavailable" and ownership is unenforceable. Neither mistake produces an error anywhere.</para>
     /// </summary>

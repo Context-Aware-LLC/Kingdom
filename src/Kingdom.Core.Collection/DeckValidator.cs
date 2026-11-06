@@ -39,7 +39,7 @@ namespace Kingdom.Core.Collection
 
         /// <summary>
         /// The card is a draft or retired row (#398, #86): resolvable, but not in the live pool, so
-        /// it cannot be in a deck. This is what keeps an "owns everything" superuser account from
+        /// it cannot be in a deck. This is what keeps a superuser account, whose at-limit record owns every pool card, from
         /// building a deck out of an unreleased set — ownership says yes to every id.
         /// </summary>
         L7_NotPublished,
@@ -88,12 +88,12 @@ namespace Kingdom.Core.Collection
     /// wire fields so that the shapes lined up, which meant the pairing being validated and the
     /// pairing the deck would be played with were two objects that happened to agree.</para>
     ///
-    /// <para><b>L6 is opt-in at the call, and a null ownership source is the game as it ships today.</b>
-    /// Every entry point here takes an optional <see cref="IOwnedCardCounts"/>; null means "ownership is
-    /// unknown, do not constrain", which is the full-pool alpha L1-L5 were written under. That is not a
-    /// convenience default — it is the difference between an account nobody has granted cards to yet and
-    /// an account that owns nothing, and <see cref="IOwnedCardStore"/> is where the distinction is
-    /// persisted. Pass a real source and L6 applies with no other change.</para>
+    /// <para><b>L6 is opt-in at the call, and a null ownership source is for callers with no account.</b>
+    /// Every entry point here takes an optional <see cref="IOwnedCardCounts"/>; null means "do not
+    /// constrain", which is what a test, a bot or a tooling seat passes. A player's device never does: with
+    /// no verified record (<see cref="IOwnedCardStore"/> loads null) it asks the server and refuses to
+    /// build or queue meanwhile. That is the difference between an account whose ownership is unknown and
+    /// one that owns nothing. Pass a real source and L6 applies with no other change.</para>
     /// </summary>
     public static class DeckValidator
     {

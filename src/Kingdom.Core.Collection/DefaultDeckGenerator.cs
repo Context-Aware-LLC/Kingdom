@@ -41,10 +41,11 @@ namespace Kingdom.Core.Collection
     /// because the generator validates L1–L5 only. The error arrived at the queue as a closed
     /// socket reading "deck rejected: You don't own Repair Drone."</para>
     ///
-    /// <para><b>A null <paramref name="owned"/> still means "do not constrain"</b>, the same reading
-    /// <see cref="IOwnedCardStore"/> and <see cref="DeckValidator"/> L6 give it — a test, a bot and
-    /// a soak run all generate against no ownership record and must keep getting the whole pool.
-    /// Every real player-facing call site passes one.</para>
+    /// <para><b>A null <paramref name="owned"/> means "do not constrain"</b>, the reading
+    /// <see cref="DeckValidator"/> L6 gives it — a test, a bot and a soak run all generate against no
+    /// ownership source and must keep getting the whole pool. Every real player-facing call site passes
+    /// one; a device with no verified record (<see cref="IOwnedCardStore"/> loads null) refuses to generate
+    /// instead of passing null.</para>
     /// </summary>
     public static class DefaultDeckGenerator
     {

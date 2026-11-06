@@ -94,7 +94,7 @@ namespace Kingdom.Core.Tests.Presentation
         /// subsequent launch, which is the normal case, binding and both syncs simply did not
         /// happen. Measured on a device 2026-09-02: a launch with a restored session produced no
         /// <c>[SignIn]</c>, <c>[Roster]</c> or <c>[Collection]</c> line at all, the collection wall
-        /// rendered the full pool off an absent ownership record, and the server's roster stayed on
+        /// had no ownership record to show, and the server's roster stayed on
         /// the server.</para>
         ///
         /// <para><b>It fails silently, which is why it is pinned in source.</b> Exactly like the

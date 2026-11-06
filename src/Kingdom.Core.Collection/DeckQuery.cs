@@ -63,7 +63,7 @@ namespace Kingdom.Core.Collection
         /// The switcher's draft badge and the queue gate have to be the same sentence, so the row
         /// cannot be allowed to judge a deck by a rule the gate does not apply — a deck badged ready
         /// that match-join then refuses is precisely the disagreement this query exists to prevent.
-        /// Null is the full-pool alpha, exactly as everywhere else.</para>
+        /// Null leaves L6 unenforced, exactly as everywhere else in the core; the device never passes it (it passes its verified record or refuses first).</para>
         /// </summary>
         public static IReadOnlyList<DeckSummary> ForAccount(IEnumerable<DeckList> decks, ICardDatabase db,
                                                             IOwnedCardCounts? owned = null)

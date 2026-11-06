@@ -108,8 +108,8 @@ namespace Kingdom.Net.Server.Accounts
     /// player owns since 2026-09-01, keyed on the authenticated <c>player_id</c>, and the client could
     /// not read a byte of it: <c>CollectionController</c> and <c>CharacterRosterController</c> both go
     /// to <c>JsonOwnedCardStore</c> on local disk. So a player who uninstalled, reinstalled and signed
-    /// back into the right identity landed on an empty local scope — which renders as <i>owns
-    /// everything</i>, because a missing record means "unknown, do not constrain". The account was
+    /// back into the right identity landed on an empty local scope — a device with no verified record
+    /// and nothing to ask. The account was
     /// never lost; there was simply no wire from it to the screen. This is that wire.
     /// Spec: <c>docs/dev-docs/specs/card-ownership.md</c>, slice 3.</para>
     ///

@@ -46,7 +46,7 @@ namespace Kingdom.Core.Collection
     /// that lands it lands here, once, and both call sites move with it.</para>
     ///
     /// <para><b>It landed (NOR-238), and it landed exactly there.</b> Every entry point below now takes
-    /// an optional <see cref="IOwnedCardCounts"/>; null is the full-pool alpha and enforces L1-L5 as
+    /// an optional <see cref="IOwnedCardCounts"/>; null (a caller with no account, never a player's device) enforces L1-L5 as
     /// before. Nothing else in the client had to learn what L6 is.</para>
     ///
     /// <para><b>Still computed fresh, still never stored.</b> A deck whose cards stop being owned — a

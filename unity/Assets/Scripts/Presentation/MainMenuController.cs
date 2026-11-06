@@ -218,8 +218,8 @@ namespace Kingdom.Presentation
         /// <c>SignInGateController.Succeed</c> was the one caller of the binding and of both
         /// gateways, and it runs only when the gate was shown — that is, on the first launch after
         /// installing, and never again. Every subsequent launch, which is the normal case, restored
-        /// nothing: no collection, so the wall rendered the full pool from an absent ownership
-        /// record; no roster, so the server's decks stayed on the server. Measured on
+        /// nothing: no collection, so the device kept whatever record it had, or none and a
+        /// Collection stuck on its retry state; no roster, so the server's decks stayed on the server. Measured on
         /// a device 2026-09-02 — a launch with a restored session produced no <c>[SignIn]</c>,
         /// <c>[Roster]</c> or <c>[Collection]</c> line at all.</para>
         ///
@@ -288,9 +288,9 @@ namespace Kingdom.Presentation
                     // this method exists to serve, a returning player's, it is usually expired.
                     // Both routes then answer 401, both syncs take the "keep whatever this device
                     // already had" branch, and the failure surfaces nowhere near here: the ownership
-                    // record stays absent, absent means "do not constrain", the wall and the deck
-                    // builder offer the full pool, and the socket closes at the queue with
-                    // "deck rejected: You don't own X" — because CONNECT refreshes and this did not.
+                    // record stays stale or absent, and the player sees a stale collection or
+                    // collection_not_synced instead of the current one — because CONNECT refreshes and
+                    // this did not.
                     // Measured 2026-09-03: GET /collection and GET /roster both 401 at boot, then
                     // `[auth] authenticated` on the /ws hello eleven minutes later, same identity.
                     // TokenForConnectAsync is the one accessor that answers a token the server will
