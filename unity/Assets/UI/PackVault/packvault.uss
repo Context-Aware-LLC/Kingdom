@@ -273,7 +273,10 @@
 }
 
 /* The vertical hold rail occupies the rack's rightmost 18%. A pack held over it counts up; a
- * pack dropped on it goes home, as from anywhere but the stage. It is a line over the backdrop, not a panel. */
+ * pack dropped on it goes home, as from anywhere but the stage. The element is the HIT ZONE and
+ * stays transparent; what the player sees is the bronze rod inside it, bracketed top and bottom,
+ * built from plain boxes because USS has no gradient. A shine stripe stands in for the shading.
+ * A rail sprite would replace the rod's body and shine with one 9-sliced background-image. */
 .vault-rail {
     width: 18%;
     flex-grow: 1;
@@ -281,14 +284,73 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding-top: 56px;
+    padding-bottom: 56px;
     background-color: rgba(0, 0, 0, 0);
-    border-left-width: 4px;
-    border-color: rgba(120, 86, 48, 0.82);
 }
 
-.vault-rail--armed {
+.vault-rail__rod {
+    width: 20px;
+    flex-grow: 1;
+    border-width: 2px;
+    border-color: rgba(38, 24, 12, 0.95);
+    border-radius: 10px;
+    background-color: rgb(150, 106, 56);
+}
+
+/* The highlight down the rod's left side, which is what makes a flat bar read as round. */
+.vault-rail__shine {
+    position: absolute;
+    left: 3px;
+    top: 10px;
+    bottom: 10px;
+    width: 4px;
+    border-radius: 2px;
+    background-color: rgba(255, 224, 166, 0.55);
+}
+
+/* The brackets that hold the rod to the wall, centred on its two ends and painted over them. */
+.vault-rail__mount {
+    position: absolute;
+    left: 50%;
+    width: 52px;
+    height: 22px;
+    translate: -50% 0;
+    align-items: center;
+    justify-content: center;
+    border-width: 2px;
+    border-color: rgba(38, 24, 12, 0.95);
+    border-radius: 6px;
+    background-color: rgb(102, 70, 38);
+}
+
+.vault-rail__mount--top {
+    top: -12px;
+}
+
+.vault-rail__mount--bottom {
+    bottom: -12px;
+}
+
+.vault-rail__rivet {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: rgb(196, 152, 92);
+}
+
+/* A pack held over it: the rod catches the light. */
+.vault-rail--armed .vault-rail__rod {
     border-color: var(--accent);
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgb(196, 146, 78);
+}
+
+.vault-rail--armed .vault-rail__shine {
+    background-color: rgba(255, 240, 210, 0.85);
+}
+
+.vault-rail--armed .vault-rail__mount {
+    border-color: var(--accent);
 }
 
 .vault-rail--hidden {
