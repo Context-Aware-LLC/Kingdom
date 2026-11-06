@@ -393,21 +393,6 @@ namespace Kingdom.Review
             if (_boardRoot != null) DestroyImmediate(_boardRoot);
             _stateSinks.Clear();
 
-            // THE BACKDROP LIVES UNDER THE BOARD; THE THING THAT SIZES IT LIVES ON THE CAMERA.
-            // ProceduralBoardSetup creates a BoardBackdrop under itself and then attaches a
-            // SafeAreaCamera to Camera.main — outside this hierarchy, and only when one is absent.
-            // SafeAreaCamera scales the plate in Awake and thereafter only when the screen changes,
-            // which it never does here. So a surviving component silently keeps sizing a plate that
-            // was destroyed with the last board, and every rebuild after the first paints a
-            // backdrop that no longer fills the view (Sam, watching it step, 2026-09-08).
-            // Dropping it makes ProceduralBoardSetup re-add it, and its Awake bind the new plate.
-            Camera main = Camera.main;
-            if (main != null)
-            {
-                var safeArea = main.GetComponent<SafeAreaCamera>();
-                if (safeArea != null) DestroyImmediate(safeArea);
-            }
-
             _boardRoot = new GameObject("BoardRoot");
             _boardRoot.transform.SetParent(transform, false);
 
@@ -444,15 +429,6 @@ namespace Kingdom.Review
             _inputRouter.SetHeroPlates(localPlate, remotePlate);
             _board.SetHeroPlates(actor, localPlate, opponent, remotePlate);
 
-            if (_anchors.Tabletop == null)
-            {
-                var endTurn = new GameObject("EndTurnButton").AddComponent<EndTurnButtonView>();
-                endTurn.transform.SetParent(_boardRoot.transform, false);
-                endTurn.transform.position = new Vector3(6.3f, 0f, 0f);
-                endTurn.Init(actor, _inputRouter);
-                _stateSinks.Add(endTurn.OnStateUpdated);
-            }
-
             var mulligan = new GameObject("MulliganConfirmButton").AddComponent<MulliganConfirmButtonView>();
             mulligan.transform.SetParent(_boardRoot.transform, false);
             mulligan.transform.position = MulliganConfirmButtonView.BoardPosition;
@@ -488,21 +464,6 @@ namespace Kingdom.Review
                 _stateSinks.Add(sockets.OnStateUpdated);
             }
 
-            Transform mana = _anchors.ManaTrayAnchor(playerId);
-            if (mana != null && _anchors.Tabletop == null)
-            {
-                var tray = new GameObject($"ManaTray_{playerId}").AddComponent<ManaTrayView>();
-                tray.Init(playerId, mana, _anchors.IsLocalPlayer(playerId));
-                _stateSinks.Add(tray.OnStateUpdated);
-            }
-
-            Transform deck = _anchors.AnchorFor(playerId, Zone.Deck, 0);
-            if (deck != null && _anchors.Tabletop == null)
-            {
-                var pile = new GameObject($"DeckPile_{playerId}").AddComponent<DeckPileView>();
-                pile.Init(playerId, deck, _anchors.IsLocalPlayer(playerId));
-                _stateSinks.Add(pile.OnStateUpdated);
-            }
             return plate;
         }
 

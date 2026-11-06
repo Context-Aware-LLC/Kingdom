@@ -40,23 +40,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 219109eb46af05442ac9af088774fa78
-    m_Address: backgrounds/LoadingPlate_Master
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 46ef259f579a7474c9f6b20c6d4bb3c7
-    m_Address: backgrounds/LoadingPlate_TempestStonewarden
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5da2ef8319e798049a984e5df953bc3c
     m_Address: backgrounds/MainMenu_Backdrop
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6aa859aff7ea454daa3d528a9b64d860
-    m_Address: backgrounds/LoadingPlate_NightveilClockwright
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -70,23 +55,8 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ae3f473153bbea1479ecae4a5d7aa266
-    m_Address: backgrounds/BoardPlate_Master
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: afd1abb4b9600f34e82e2660ec03ed1f
-    m_Address: backgrounds/LoadingPlate_VerdantGravekeep
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d500f4dcb3094b8384dfd7de8668d770
     m_Address: backgrounds/CharacterRoster_Backdrop
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ddc0e70167504c75905e055cdcbb2abd
-    m_Address: backgrounds/CraftingForge_Backdrop
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

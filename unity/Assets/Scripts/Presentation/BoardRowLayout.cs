@@ -6,7 +6,7 @@ namespace Kingdom.Presentation
     // leftmost anchors (Sam, 2026-08-09: "everything's jammed up against the left... we could
     // center the playing field and spread things out").
     //
-    // ProceduralBoardSetup.BuildSeat lays out all 7 board anchors at fixed
+    // RoyalCouncilBoard.BuildSeat lays out all 7 board anchors at fixed
     // x = (i - 3) * SlotSpacing, spanning the whole row regardless of how many minions are on the
     // board — that span is right for a full board, but BoardAnchors.AnchorFor indexes it with the
     // PACKED position (0, 1, 2, ...), so 2 minions always land on the two leftmost anchors. This
@@ -31,7 +31,7 @@ namespace Kingdom.Presentation
     // being stranded at a stale centered position from before it went empty.
     //
     // Only x is touched. Each anchor's y (seat side) and z were already correct at construction
-    // (ProceduralBoardSetup.BuildSeat) and never depend on count, so there is nothing to re-derive
+    // (RoyalCouncilBoard.BuildSeat) and never depend on count, so there is nothing to re-derive
     // for them — touching them here would risk drifting from that construction over time.
     public static class BoardRowLayout
     {

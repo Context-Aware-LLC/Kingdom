@@ -218,11 +218,6 @@ ELEMENT_INTERNAL = {
         'parents both to .col-filter-ribbon__chevron inside the #query-toggle Button, and '
         'their offsets are against that 22x12 box. Font-independent by design — the glyph '
         'they replace was a missing character',
-    'craft-illustration-scrim':
-        'the scrim over the craft modal\'s backdrop illustration; '
-        'CollectionScreen.uxml:121 parents it to #craft-modal, which already spends '
-        '--edge-safe on all four sides (see TOKEN_EXCEPTIONS above). Clearing the edge '
-        'twice would inset it from an inset',
 }
 
 # These controls inherit their coordinate origin from a protected parent. Each

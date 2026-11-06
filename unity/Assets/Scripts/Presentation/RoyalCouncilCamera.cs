@@ -13,6 +13,7 @@ namespace Kingdom.Presentation
         private SpriteRenderer _backdrop;
         private int _width, _height;
         private Rect _safe;
+        private bool _logged;
 
         private void Awake() { _camera = GetComponent<Camera>(); Apply(); }
         private void Update()
@@ -25,6 +26,13 @@ namespace Kingdom.Presentation
             _width = Screen.width; _height = Screen.height; _safe = Screen.safeArea;
             Fit(_camera, _safe, _width, _height);
             FitBackdrop();
+            if (!_logged && _width > 0 && _height > 0)
+            {
+                _logged = true;
+                Debug.Log($"[RoyalCouncilCamera] screen {_width}x{_height} "
+                    + $"safeArea x{_safe.x:F0} y{_safe.y:F0} w{_safe.width:F0} h{_safe.height:F0} "
+                    + $"perspective fov {_camera.fieldOfView:F2}");
+            }
         }
 
         public void SetBackdrop(Sprite sprite)

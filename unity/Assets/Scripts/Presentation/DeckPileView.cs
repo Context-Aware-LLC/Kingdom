@@ -44,7 +44,7 @@ namespace Kingdom.Presentation
             uiSprites ??= new AddressableUiSpriteProvider();
 #endif
 
-            // P0 is the near/lower seat after BoardBackdrop has registered the artwork anchors.
+            // Local ownership selects the near/lower seat's artwork.
             // Each sprite already contains its tray-specific foreshortening and shadow, so the
             // runtime transform must stay flat and unrotated.
             // Both refined-table anchors are measured at their tray centres; the old

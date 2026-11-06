@@ -21,9 +21,6 @@ namespace Kingdom.Presentation
     // Seat 1 is this layout point-reflected through the origin, exactly as §1.1 specifies:
     // (x, y, rot) -> (-x, -y, rot). A point reflection is a 180° rotation, so each card's
     // own tilt is unchanged by it.
-    // Public, not internal: DeckPilePreview (Kingdom.Editor, across an asmdef boundary) solves
-    // the REAL fan to place the draw flight's destination. A preview that guessed where a hand
-    // slot is would be judging the animation against a made-up target.
     public static class HandFanLayout
     {
         // The fan owns x -3.0 .. +3.0. This was widened from 5.0 to 6.0 after the redesigned
@@ -31,56 +28,9 @@ namespace Kingdom.Presentation
         // Fan width and mana-orb size are ONE budget — every unit taken here comes out of the rail.
         internal const float Footprint = 6.0f;
 
-        // A CARD IN HAND IS DRAWN LARGER THAN THE SAME CARD ON THE BOARD (EF-062 / NOR-244).
-        //
-        // WHY. Before NOR-244 a hand card was drawn at the board card's size, which was then
-        // 137.3 x 193.7 px on every 1080p phone — 52% of the 265 px collection
-        // tile EF-050's 1.6x acuity margin was measured against. Re-measured at that true size,
-        // rules text at BodyEmFloor (the common case: anything longer than one short line
-        // auto-shrinks to it) reaches only 0.74x the recognition threshold. NO TYPEFACE CHOICE BUYS
-        // BACK A FACTOR OF 1.35 — ONLY SIZE DOES, which is why EF-062 raised this as a finding
-        // rather than re-opening the font ticket.
-        //
-        // WHY THE RATIO IS 1.436-ISH AND NOT 1.35. 1/0.74 = 1.348 clears threshold at the AUTHORED
-        // camera only.
-        // SafeAreaCamera raises orthographicSize to lift the board off the Android gesture bar,
-        // shrinking everything on screen by 6.1% (24 dp gesture bar) to 12.2% (48 dp three-button
-        // bar). 1.348 / 0.939 = 1.436 holds 1.0x through the gesture-bar case, the modern default.
-        // The 48 dp case lands at 0.94x — a KNOWN, QUANTIFIED RESIDUAL, not an oversight: closing
-        // it needs 1.54x, which drives the hand up into the board row.
-        //
-        // Run `python tooling/scripts/device_layout.py` and read §5 and §6 of the stdout. Those
-        // numbers are derived from THIS constant; the ones in this comment are a copy and can rot.
-        //
-        // Public, for the same reason Apply() is: DeckPilePreview (Kingdom.Editor, across an
-        // asmdef boundary) draws the draw-flight's destination card, and a preview that guessed the
-        // size of a hand slot would be judging the animation against a made-up target.
-        //
-        // WHY 1.20 AND NOT 1.44 (#234 + 2026-08-29 readability pass). THIS IS NOT A REDUCTION IN
-        // THE SIZE OF A CARD IN HAND. The multiplicand has now moved three times:
-        // BoardController.CardW/CardH grew by 1/0.9, then 1.08, then 1.08 again, and this fell by
-        // the inverse factor each time to hold the product where it was. HandCardW/H below remain
-        // 1.6848 x 2.3760 — every number in the block above still describes the card this
-        // produces. What changed is the board card.
-        //
-        // So the hand:board RATIO is 1.111 now, down from 1.44. The gap keeps closing from the
-        // board end because the hand end is pinned by an acuity solve.
-        //
-        // THE HAND WAS ASKED TO GROW ON 2026-08-31 AND COULD NOT. Not for want of room on screen —
-        // measured against the live perspective rig the worst-sag card still sits 93 px above the
-        // bottom edge at 1.15x. It is DeviceLayout.SelfCheck assertion 7 that refuses, and that
-        // assertion bounds the band against DesignHalfHeight 4.6, the ORTHOGRAPHIC half-height, on
-        // a camera that has been perspective since f121a591. Fix the guard first; see
-        // BoardController.CardW.
-        //
-        // RETIREMENT TRIGGER: this constant is the hand's whole legibility budget, and since #234 it
-        // is one number spread over two files. Moving it, BoardController.CardW/CardH, or
-        // FrameRarityCatalog.BodyEmFloor invalidates DeviceLayout.SelfCheck's band-clearance
-        // assertion and CentreY's solve below — re-solve CentreY in the same commit. NOT
-        // device_layout.py: it reads `orthographic size` from the scene YAML and reports a camera
-        // the game does not use. Moving THIS without the compensating move on CardW/CardH (or the
-        // reverse) resizes the card in hand, which is the one thing the #234 change was built not
-        // to do.
+        // RestScale and BoardController.CardW/CardH jointly set the reference hand size.
+        // Changing either changes the drawn card. Review the resulting hand against the
+        // Royal Council camera and its playable-content check.
         public const float RestScale = 1.111111f;  // 1.20 / 1.08; hand stays 1.6848 x 2.376
 
         // The card's DRAWN size in hand. Every card-relative number below derives from these and
@@ -155,7 +105,7 @@ namespace Kingdom.Presentation
         // colliders on purpose (see DragTargetingModel.DropPoint).
         //
         // Local seat only, which is all this is ever asked about: the local player is always the
-        // un-mirrored bottom seat (ProceduralBoardSetup.BuildSeat, P0Sign -1).
+        // un-mirrored bottom seat (the local seat).
         internal const float TopEdgeY   = -CentreY + HandCardH * 0.5f;   // -2.372
 
         // Hand cards step TOWARD the camera as the index rises, so a later card wins the raycast
@@ -196,7 +146,7 @@ namespace Kingdom.Presentation
                 float x    = topX + halfH * Mathf.Sin(rot * Mathf.Deg2Rad);
                 float y    = -(centerY + Sag * t * t);
 
-                // Anchors are authored in world space (ProceduralBoardSetup.MakeAnchor), so
+                // Anchors are authored in world space by the board layout, so
                 // stay in world space here rather than mixing conventions.
                 slots[i].position = mirrored
                     ? new Vector3(-x, -y, depth - ZStep * index)

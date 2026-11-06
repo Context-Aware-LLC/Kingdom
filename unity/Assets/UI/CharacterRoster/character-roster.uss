@@ -755,7 +755,7 @@
 
 /* THE FULL-PLATE ART WASH WAS TRIED AND CUT, and the reason is worth keeping because it is the
  * obvious thing to reach for again. Each plate carried its own hero art full-bleed at 0.22 under a
- * flat scrim — the .craft-illustration/.craft-illustration-scrim shape. Rendered at 2400x1080 on
+ * flat scrim (the craft modal's old backdrop shape, itself cut 2026-11-06). Rendered at 2400x1080 on
  * 2026-09-02 it failed on two counts a mock-up would not show:
  *
  *   1. A 1124x212 plate is a 5:1 letterbox, so the wash is a CROP THROUGH THE MIDDLE of a square

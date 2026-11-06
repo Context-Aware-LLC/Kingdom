@@ -58,9 +58,7 @@ namespace Kingdom.Presentation
 
         /// <summary>
         /// Poses the card at normalised progress <paramref name="k"/> (0 = on the pile, 1 = in
-        /// slot). Public so DeckPilePreview can render the flight as a strip without play mode:
-        /// the preview drives THIS, so what it shows is the shipping curve rather than a second
-        /// copy of the easing that could quietly drift from it.
+        /// slot). Callers sampling an animation use the same curve as normal playback.
         /// </summary>
         public void SampleAt(float k)
         {
