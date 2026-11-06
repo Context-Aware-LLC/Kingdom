@@ -330,6 +330,8 @@
     <string name="collection_empty_owns_nothing">You don\'t own any cards yet — turn on Unowned to see the game.</string>
     <!-- Collection empty state with Unowned-only filter. -->
     <string name="collection_empty_owns_everything">You own every card here.</string>
+    <!-- Collection state when this device holds no verified ownership record; a Retry button sits under it. -->
+    <string name="collection_not_synced">We couldn\'t load your collection. Check your connection and try again.</string>
     <!-- Joke line under a version-mismatch error. Lighthearted, faux-medieval bureaucracy tone. -->
     <string name="connection_joke_update">The Crown has issued a new decree, and yours is out of date.</string>
     <!-- Connection overlay plain line. -->

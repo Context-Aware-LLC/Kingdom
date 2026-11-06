@@ -14,13 +14,11 @@ namespace Kingdom.Presentation
     /// <see cref="CardQueryBar.Reset"/> deliberately leaves it alone: resetting the filters should
     /// not silently move you between your collection and the game.</para>
     ///
-    /// <para><b>Always on screen, whatever the ownership record says</b> (Sam, 2026-11-06). It used
-    /// to hide when the account had no record, which is every superuser (the server answers
-    /// Unconstrained and writes nothing) and every device that has not synced yet, and it could not
-    /// appear mid-visit when a craft refresh wrote one — so the row came and went by route. This
-    /// control does not know about the record at all now: the caller decides what "owned" means
-    /// for a card, and with no record that is every card, the same reading the deck validator and
-    /// the tile treatment already give an absent record.</para>
+    /// <para><b>Always on screen, whatever the ownership record says</b> (Sam, 2026-11-06), so the
+    /// row never comes and goes by route. This control does not know about the record at all: the
+    /// caller decides what "owned" means for a card. A superuser's all-at-limit record owns every
+    /// card; a device with no verified record shows the Collection's retry state over an empty
+    /// wall, where the toggle has nothing to scope.</para>
     ///
     /// <para><b>Two independent chips, never both off</b> (Sam, 2026-10-05). Owned alone is your
     /// collection, Unowned alone is what you are shopping for, and both together is the game —

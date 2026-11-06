@@ -420,7 +420,7 @@ namespace Kingdom.Presentation
             // would call these decks drafts, so an L6 failure walked straight past this line and came
             // back as a closed socket reading "deck rejected: You don't own X." A client gate that is
             // laxer than the server's is not a gate.
-            QueueCheck queue = QueueEligibility.Check(deck, db, account.OwnedCards());
+            QueueCheck queue = QueueEligibility.Check(deck, db, account.OwnedCards(db));
             if (!queue.IsEligible)
                 throw new InvalidOperationException("The selected deck is no longer queue ready: " + queue.Reason);
 

@@ -135,40 +135,45 @@ namespace Kingdom.Session
         public IReadOnlyList<DeckList> Decks() => _decks.LoadAll();
 
         /// <summary>
-        /// What this account owns, per card id — the L6 input — or <b>null when it has no ownership
-        /// record at all</b>, which is every account on every machine until something grants cards.
+        /// What this account owns, per card id — the L6 input — resolved against
+        /// <paramref name="db"/>, or <b>null when this device holds no verified ownership record</b>:
+        /// it never synced, the file predates the digest, or it no longer matches its own digest.
         ///
-        /// <para>Null is not "owns nothing" and callers must not treat it as such: it means ownership is
-        /// unknown, and every L6 consumer takes it to mean "do not constrain", which is the full-pool
-        /// alpha the game runs today. Pass the result straight through to <see cref="DeckValidator"/>,
-        /// <see cref="QueueEligibility"/> or <c>DeckQuery</c> rather than substituting an empty
-        /// <c>OwnedCardCounts</c> for it — an empty record asserts the player owns nothing, which would
-        /// turn every deck on the device into a draft. <see cref="IOwnedCardStore"/> carries the full
-        /// rationale.</para>
+        /// <para>Null is not "owns nothing" and it is not "owns everything": it means <i>ask the
+        /// server</i>. A superuser is not null — the server sends the all-at-limit record, which
+        /// resolves to every pool-eligible card at its rarity limit. Screens that show ownership
+        /// (the Collection) show a retry state on null; never substitute an empty
+        /// <c>OwnedCardCounts</c> for it, which asserts the player owns nothing and turns every deck
+        /// on the device into a draft. <see cref="IOwnedCardStore"/> carries the full rationale.</para>
         ///
         /// <para>Fresh off disk on every call, like the roster: ownership changes underneath a screen
         /// whenever a pack is opened, and this is a few kilobytes.</para>
         /// </summary>
-        public IOwnedCardCounts? OwnedCards() => _ownedCards.Load();
+        public IOwnedCardCounts? OwnedCards(ICardDatabase db) => _ownedCards.Load()?.Resolve(db);
+
+        /// <summary>The digest of this device's verified ownership record, or null when it holds none.
+        /// What <see cref="CollectionGateway"/> sends so the server can answer "unchanged" instead of
+        /// resending the cards.</summary>
+        public string? OwnershipDigest() => _ownedCards.Load()?.Digest;
 
         /// <summary>
         /// Replace this account's ownership record with what the server just said it owns.
         ///
-        /// <para><b>Only <see cref="CollectionGateway"/> may call this, and only on a Synced answer.</b>
-        /// Since 2026-09-01 this file is a CACHE of the entitlement ledger, not the record — so the
-        /// only legitimate writer is the one holding a server answer. Writing an empty record from any
-        /// other source asserts "this player owns nothing" and turns every deck on the device into a
-        /// draft; the local game has no way to know that, which is why there is no other caller and no
-        /// convenience overload that mints one.</para>
+        /// <para><b>Only <see cref="CollectionGateway"/> may call this, and only on a Synced answer
+        /// that carried a record.</b> This file is a CACHE of the entitlement ledger, not the record —
+        /// so the only legitimate writer is the one holding a server answer whose digest it verified.
+        /// Writing an empty list from any other source asserts "this player owns nothing" and turns
+        /// every deck on the device into a draft; the local game has no way to know that, which is why
+        /// there is no other caller and no convenience overload that mints one.</para>
         ///
-        /// <para>An empty <paramref name="owned"/> is legal and meaningful — the server does say
-        /// "you own nothing" — which is exactly why the caller, not this method, decides whether the
-        /// answer was real. See <see cref="IOwnedCardStore"/> for the absent/empty distinction.</para>
+        /// <para>An empty list is legal and meaningful — the server does say "you own nothing" —
+        /// which is exactly why the caller, not this method, decides whether the answer was real. See
+        /// <see cref="IOwnedCardStore"/> for the absent/empty distinction.</para>
         /// </summary>
-        public void SaveOwnedCards(OwnedCardCounts owned)
+        public void SaveOwnership(OwnershipRecord record)
         {
-            if (owned == null) throw new ArgumentNullException(nameof(owned));
-            _ownedCards.Save(owned);
+            if (record == null) throw new ArgumentNullException(nameof(record));
+            _ownedCards.Save(record);
         }
 
         /// <summary>
@@ -179,7 +184,7 @@ namespace Kingdom.Session
         /// same rule (NOR-238). It changes nothing until this account has a record.</para>
         /// </summary>
         public IReadOnlyList<DeckSummary> DeckRows(ICardDatabase db)
-            => DeckQuery.ForAccount(_decks.LoadAll(), db, OwnedCards());
+            => DeckQuery.ForAccount(_decks.LoadAll(), db, OwnedCards(db));
 
         /// <summary>
         /// Whether a generated deck can be offered for a pairing at all — a pool too thin for a legal
@@ -232,7 +237,7 @@ namespace Kingdom.Session
         {
             string deckId = NewId();
             return DeckCreation.Prepare(db, new DeterministicRandom(SeedFrom(deckId)),
-                deckId, name, primary, secondary, kind, OwnedCards());
+                deckId, name, primary, secondary, kind, OwnedCards(db));
         }
 
         // ── Writes: the server first, then the cache ────────────────────────────────────
@@ -256,7 +261,7 @@ namespace Kingdom.Session
         /// Replace this account's whole roster with what the server just said it is.
         ///
         /// <para><b>Only <see cref="RosterGateway"/> may call this, and only on a Known answer</b> —
-        /// the same rule, for the same reason, as <see cref="SaveOwnedCards"/>. Since the login
+        /// the same rule, for the same reason, as <see cref="SaveOwnership"/>. Since the login
         /// handshake landed, <c>decks.json</c> is a CACHE of the server-side player data store, not
         /// the record. There is no offline mode, so there is no
         /// merge and no last-write-wins: a Known answer replaces, and every other answer leaves the

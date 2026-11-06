@@ -194,7 +194,7 @@ namespace Kingdom.Presentation
             {
                 _account = PlayerAccount.Local;
                 _db = CardDatabaseLoader.Load();
-                _owned = _account.OwnedCards();
+                _owned = _account.OwnedCards(_db);
             }
             catch (Exception ex)
             {
@@ -440,7 +440,7 @@ namespace Kingdom.Presentation
             _deckModalConfirm?.SetEnabled(false);
             try
             {
-                var snapshot = await CollectionGateway.FetchAsync(RosterGateway.AccessToken);
+                var snapshot = await CollectionGateway.FetchAsync(RosterGateway.AccessToken, deviceDigest: null);
                 if (!isActiveAndEnabled || request != _deckRequestVersion ||
                     !ReferenceEquals(account, PlayerAccount.Local)) return;
                 _cardBackOwnership = snapshot;

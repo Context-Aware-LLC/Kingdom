@@ -19,12 +19,13 @@ namespace Kingdom.Session
     /// lost; there was no wire from the ledger to the screen. This is the client end of that wire
     /// (spec <c>docs/dev-docs/specs/card-ownership.md</c>, slice 3).</para>
     ///
-    /// <para><b><c>owned-cards.json</c> is a CACHE now, not the record.</b> The record is the ledger.
-    /// The three states the file can be in are unchanged and still mean what they always did —
-    /// absent is "unknown, do not constrain", present-and-empty is "owns nothing" — which is why
-    /// <see cref="SyncAsync"/> writes on exactly one outcome and leaves the file untouched on every
-    /// other. Writing an empty record because the network was down is the one bug in this file worth
-    /// guarding: it turns every deck on the device into a draft and looks like a server decision.</para>
+    /// <para><b><c>owned-cards.json</c> is a CACHE, not the record.</b> The record is the ledger.
+    /// Absent (or failing its own digest) is "ask the server", present-and-empty is "owns nothing",
+    /// all-at-limit is a superuser — which is why <see cref="SyncAsync"/> writes on exactly one
+    /// outcome, a Synced answer carrying a verified record, and leaves the file untouched on every
+    /// other, including the server confirming the device's digest is current. Writing an empty
+    /// record because the network was down is the one bug in this file worth guarding: it turns
+    /// every deck on the device into a draft and looks like a server decision.</para>
     ///
     /// <para><b>Composed on first touch, like <see cref="AuthGateway"/>, and invalidated with it.</b>
     /// The write lands in <c>PlayerAccount.Local</c>, which is scoped to the signed-in local account,
@@ -81,25 +82,34 @@ namespace Kingdom.Session
             string accessToken, CancellationToken cancellationToken = default)
         {
             PlayerAccount account = PlayerAccount.Local;
-            CollectionSnapshot snapshot = await FetchAsync(accessToken, cancellationToken);
+            // The digest of the record this device already holds, so an unchanged collection costs
+            // the server a comparison rather than the whole card list. Null when it holds none.
+            string deviceDigest = account.OwnershipDigest();
+            CollectionSnapshot snapshot = await FetchAsync(accessToken, deviceDigest, cancellationToken);
             if (cancellationToken.IsCancellationRequested || !ReferenceEquals(account, PlayerAccount.Local))
                 return CollectionSnapshot.Failed(
                     CollectionSyncStatus.Unauthenticated,
                     "the active account changed while its collection was loading");
 
-            if (!snapshot.ShouldReplaceCache)
+            if (snapshot.Status == CollectionSyncStatus.Synced && snapshot.CardsUnchanged)
             {
-                // Deliberately not a warning for Unconstrained: a superuser having no cached list
-                // is the correct outcome, not a degraded one.
-                if (snapshot.Status != CollectionSyncStatus.Unconstrained)
-                    Debug.LogWarning($"[Collection] not synced ({snapshot.Status}): {snapshot.Detail}. " +
-                                     "Keeping whatever this device already had.");
+                // The server vouched for the record already on disk: nothing to write.
+                Debug.Log("[Collection] synced: this device's ownership record is current.");
                 return snapshot;
             }
 
-            account.SaveOwnedCards(snapshot.Cards);
-            Debug.Log($"[Collection] synced {snapshot.Cards.RecordedCards} card row(s) " +
-                      $"for the signed-in account.");
+            if (!snapshot.ShouldReplaceCache || snapshot.Record == null)
+            {
+                Debug.LogWarning($"[Collection] not synced ({snapshot.Status}): {snapshot.Detail}. " +
+                                 "Keeping whatever this device already had.");
+                return snapshot;
+            }
+
+            account.SaveOwnership(snapshot.Record);
+            Debug.Log(snapshot.Record.Rule == OwnershipRule.AllAtLimit
+                ? "[Collection] synced: the signed-in account owns every card at its limit."
+                : $"[Collection] synced {snapshot.Record.Counts.RecordedCards} card row(s) " +
+                  "for the signed-in account.");
             return snapshot;
         }
 
@@ -120,13 +130,18 @@ namespace Kingdom.Session
         ///
         /// <para>Never throws — same contract as <see cref="SyncAsync"/>, and now the single place
         /// that keeps it.</para>
+        ///
+        /// <para><paramref name="deviceDigest"/> is the digest of the record the device holds, sent so
+        /// the server may answer "unchanged". <b>A read-only caller passes null</b>: it never writes
+        /// the cache, so it needs the cards rather than a confirmation of a record it will not
+        /// read.</para>
         /// </summary>
         public static async Task<CollectionSnapshot> FetchAsync(
-            string accessToken, CancellationToken cancellationToken = default)
+            string accessToken, string deviceDigest, CancellationToken cancellationToken = default)
         {
             try
             {
-                return await Gateway.FetchAsync(accessToken, cancellationToken);
+                return await Gateway.FetchAsync(accessToken, deviceDigest, cancellationToken);
             }
             catch (Exception ex)
             {

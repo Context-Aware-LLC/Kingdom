@@ -63,13 +63,13 @@ namespace Kingdom.Editor
                 var build = typeof(CharacterRosterController).GetMethod("BuildCardBackGrid",
                     BindingFlags.NonPublic | BindingFlags.Instance);
 
-                Set(controller, "_cardBackOwnership", CollectionSnapshot.Unconstrained(default,
+                Set(controller, "_cardBackOwnership", CollectionSnapshot.Synced(OwnershipRecord.AllAtLimit, default,
                     cardBacks: new Dictionary<int, long> { [CardBackDefinitions.DefaultId] = 1 }));
                 build.Invoke(controller, null);
                 Require(grid.childCount == 1 && save.enabledSelf, "Owned back must be selectable.");
                 Require(grid[0].Q<Label>() == null, "Artwork must remain free of captions.");
 
-                Set(controller, "_cardBackOwnership", CollectionSnapshot.Unconstrained(default,
+                Set(controller, "_cardBackOwnership", CollectionSnapshot.Synced(OwnershipRecord.AllAtLimit, default,
                     cardBacks: new Dictionary<int, long>
                     {
                         [CardBackDefinitions.DefaultId] = 1,
@@ -78,7 +78,7 @@ namespace Kingdom.Editor
                 build.Invoke(controller, null);
                 Require(grid.childCount == 2 && save.enabledSelf, "A won back must be offered beside the default, and no other.");
 
-                Set(controller, "_cardBackOwnership", CollectionSnapshot.Unconstrained(default,
+                Set(controller, "_cardBackOwnership", CollectionSnapshot.Synced(OwnershipRecord.AllAtLimit, default,
                     cardBacks: new Dictionary<int, long>()));
                 build.Invoke(controller, null);
                 Require(grid.childCount == 0 && !save.enabledSelf, "Unowned backs must not be offered, even to a superuser.");

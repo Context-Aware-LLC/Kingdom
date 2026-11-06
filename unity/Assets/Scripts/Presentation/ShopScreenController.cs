@@ -78,7 +78,7 @@ namespace Kingdom.Presentation
             {
                 string accessToken = await AuthGateway.TokenForConnectAsync();
                 if (string.IsNullOrEmpty(accessToken)) return;
-                var snapshot = await CollectionGateway.FetchAsync(accessToken);
+                var snapshot = await CollectionGateway.FetchAsync(accessToken, deviceDigest: null);
                 if (isActiveAndEnabled && ReferenceEquals(_shop, shop) && !shop.HasShopSnapshot)
                     shop.RenderCollectionWallet(snapshot);
             }

@@ -443,7 +443,7 @@ namespace Kingdom.Presentation
 
             bool offersChoice = _account != null && _account.OffersStarterChoice();
             bool canGenerate = _account != null
-                               && PlayerAccount.CanCreate(primary, secondary, _db, _account.OwnedCards());
+                               && PlayerAccount.CanCreate(primary, secondary, _db, _account.OwnedCards(_db));
 
             Show(_createBlank, offersChoice);
             _createGenerated?.SetEnabled(canGenerate);

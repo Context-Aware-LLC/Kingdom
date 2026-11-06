@@ -36,7 +36,7 @@ namespace Kingdom.Core.Tests.Presentation
                 Assert.That(styles, Does.Contain("/Assets/Art/UI/Icons/icon_currency_gems.png"));
                 Assert.That(File.Exists(Path.Combine(assets, "Art", "UI", "Icons", "icon_currency_gold.png")), Is.True);
                 Assert.That(File.Exists(Path.Combine(assets, "Art", "UI", "Icons", "icon_currency_gems.png")), Is.True);
-                Assert.That(screen, Does.Contain("CollectionGateway.FetchAsync(accessToken)"));
+                Assert.That(screen, Does.Contain("CollectionGateway.FetchAsync(accessToken, deviceDigest: null)"));
                 Assert.That(screen, Does.Contain("AuthGateway.TokenForConnectAsync()"));
                 Assert.That(panel, Does.Contain("using Kingdom.Net.Client.Collection;"),
                     "CollectionSnapshot is declared in the client collection namespace, not Core.Collection.");

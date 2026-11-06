@@ -669,6 +669,18 @@
     display: flex;
 }
 
+/* The Retry under the no-record message. CollectionController shows it only while this device holds
+ * no verified ownership record. */
+.col-retry {
+    align-self: center;
+    min-width: 200px;
+    margin-top: var(--space-6);
+    display: none;
+}
+.col-retry--on {
+    display: flex;
+}
+
 /* ---------- Persistent collection shell (NOR-210) ---------- */
 .collection .db-collection {
     flex-grow: 1;

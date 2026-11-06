@@ -369,10 +369,9 @@ namespace Kingdom.Presentation
 
                 switch (snapshot.Status)
                 {
-                    // Both statuses carry real pack balances — a superuser has no card list to
-                    // enumerate and does still hold packs, and the gift is developed on one.
+                    // Synced carries real pack balances for every account, a superuser's included
+                    // (the gift is developed on one).
                     case CollectionSyncStatus.Synced:
-                    case CollectionSyncStatus.Unconstrained:
                         // Unbusy BEFORE the render, so the rack is drawn live.
                         SetBusy(false);
                         RenderRack(snapshot.Packs);

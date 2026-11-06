@@ -23,15 +23,19 @@ namespace Kingdom.Presentation
     /// decide the screen's shape. It is consumed once.</para>
     ///
     /// <para><b>Every visit arrives on Owned, lit, by any route</b> (Sam, 2026-11-06), and the
-    /// Owned/Unowned toggle (#146) is always in the Filters drawer. What "owned" means depends on the
+    /// Owned/Unowned toggle (#146) is always in the Filters drawer. What the wall shows depends on the
     /// record:</para>
     ///
     /// <list type="bullet">
-    /// <item>No ownership record (<see cref="PlayerAccount.OwnedCards"/> returns null) — a superuser,
-    /// whom the server answers Unconstrained, or a machine that has never synced. Every card counts
-    /// as owned, the reading <see cref="DeckValidator"/> and the tile treatment already give an absent
-    /// record, so Owned is the full pool and Unowned alone is empty.</item>
-    /// <item>A record — Owned is only cards with at least one copy, Unowned the rest.</item>
+    /// <item>A record — Owned is only cards with at least one copy, Unowned the rest. A superuser
+    /// has one too: the all-at-limit record, every pool-eligible card at its rarity limit, so Owned
+    /// is the whole pool with a Legendary at one.</item>
+    /// <item>No verified record (<see cref="PlayerAccount.OwnedCards"/> returns null) — this device
+    /// never synced, or its file no longer matches its digest. Nobody knows what this account owns,
+    /// so the wall is empty under <c>collection_not_synced</c> with a Retry that runs the same sync
+    /// a craft does, and the deck builder does not open. Showing the full pool here instead is the
+    /// illegible failure CLAUDE.md describes: cards the player does not own, refused later at
+    /// match-join.</item>
     /// </list>
     ///
     /// <para>The toggle is the visible source of truth for which pool the player is viewing.</para>
@@ -79,15 +83,21 @@ namespace Kingdom.Presentation
         private DeckList _deck;
 
         /// <summary>
-        /// This account's ownership record, or null when it has none — the full-pool alpha, which is
-        /// every machine until a grant path writes one. Read once per visit: nothing opens a pack from
-        /// inside this screen, so it cannot change while it is up.
+        /// This account's resolved ownership record, or null when the device holds no verified one —
+        /// the retry state (see the class summary). Read on entry and again after every sync this
+        /// screen runs (a craft, a spares reduce, the Retry).
         /// </summary>
         private IOwnedCardCounts _owned;
 
+        /// <summary>True while there is no record to show, which is the retry state.</summary>
+        private bool NoRecord => _owned == null;
+
+        /// <summary>The Retry under <c>collection_not_synced</c>. Shown only in the retry state.</summary>
+        private Button _syncRetryButton;
+        private bool _syncRetrying;
+
         /// <summary>Which pool the browse wall is showing, and the control that says so.
-        /// See <see cref="CollectionScopeToggle"/> — it owns the scope, the two chips, and the
-        /// three-state ownership rule.</summary>
+        /// See <see cref="CollectionScopeToggle"/> — it owns the scope and the two chips.</summary>
         private readonly CollectionScopeToggle _scope = new CollectionScopeToggle();
 
         /// <summary>The class filter — the nine-tab strip. See <see cref="CollectionClassAxis"/>.</summary>
@@ -391,6 +401,12 @@ namespace Kingdom.Presentation
             string pendingDeck = PendingDeckId;
             PendingDeckId = "";
             if (string.IsNullOrEmpty(pendingDeck)) return;
+            if (NoRecord)
+            {
+                // Consumed all the same: a retry that succeeds must not spring a drawer open later.
+                Debug.LogWarning($"[Collection] no ownership record; not opening deck '{pendingDeck}'.");
+                return;
+            }
 
             DeckList deck = FindDeck(DeckRows(), pendingDeck);
             if (deck == null)
@@ -429,26 +445,24 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>
-        /// This account's ownership record, or null. Never fatal to this screen: a browse surface that
-        /// refuses to open because an ownership file is unreadable helps nobody, and the gates that
-        /// matter — <see cref="DeckValidator"/> L6 here, and the server at match-join — read the same
-        /// store and still refuse. Logged as an error rather than swallowed, because the visible symptom
-        /// of the fallback is a screen that looks completely normal.
+        /// This account's resolved ownership record, or null. Never fatal to this screen: an
+        /// unreadable ownership file lands on the retry state, whose sync rewrites the file.
+        /// Logged as an error rather than swallowed, so the cause is on record beside the symptom.
         /// </summary>
         private void LoadOwnership()
         {
-            // A bot owns nothing and needs nothing: its pool is the whole game.
-            if (BotDecks) { _owned = null; return; }
+            // A bot owns nothing and needs nothing: its pool is the whole game, every card at its
+            // limit. Never null, which would put the dev editor on the retry state.
+            if (BotDecks) { _owned = new AtLimitOwnedCounts(_db); return; }
             try
             {
-                _owned = _account.OwnedCards();
+                _owned = _account.OwnedCards(_db);
             }
             catch (Exception ex)
             {
                 _owned = null;
                 Debug.LogError($"[Collection] could not read this account's card ownership " +
-                               $"({ex.GetType().Name}: {ex.Message}); showing the full card pool instead " +
-                               "of your collection.");
+                               $"({ex.GetType().Name}: {ex.Message}); showing the retry state.");
             }
         }
 
@@ -461,8 +475,10 @@ namespace Kingdom.Presentation
         /// <c>min(MaxCopies, copies owned)</c>. Removing it from the pool instead would make a card
         /// you nearly own invisible, and #150 wants it dimmed.</para>
         ///
-        /// <para><b>At rest</b> — whichever halves of the game the scope (#146) has lit, where a card
-        /// with no ownership record behind it counts as owned.</para>
+        /// <para><b>At rest</b> — whichever halves of the game the scope (#146) has lit.</para>
+        ///
+        /// <para><b>No record, no pool.</b> The wall is empty under the retry state rather than
+        /// guessing what this account owns — see the class summary.</para>
         ///
         /// <para>A card recorded at 0 copies is NOT owned. Zero is a real recorded value — every copy
         /// dusted, or a refund — and it is exactly the case a truthiness check on "is it in the
@@ -477,11 +493,15 @@ namespace Kingdom.Presentation
         {
             _pool.Clear();
             var available = new HashSet<CardClass>();
+            if (NoRecord)
+            {
+                _classAxis.SetAvailable(available);
+                return;
+            }
             foreach (var def in _db.AllCollectible())
             {
                 if (EditingDeck && !_deck.AllowsClass(def.Class)) continue;
-                // No record counts every card as owned — see the class summary.
-                if (!_scope.Includes(_owned == null || _owned.CopiesOwned(def.Id) > 0)) continue;
+                if (!_scope.Includes(_owned.CopiesOwned(def.Id) > 0)) continue;
 
                 _pool.Add(def);
                 available.Add(def.Class);
@@ -499,6 +519,7 @@ namespace Kingdom.Presentation
         {
             _plate           = _root.Q<VisualElement>("root");
             _emptyLabel      = _root.Q<Label>("collection-empty");
+            _syncRetryButton = _root.Q<Button>("collection-retry");
             _deckList        = _root.Q<ListView>("deck-list");
             _curve           = _root.Q<VisualElement>("curve-strip");
             _deckCountLabel  = _root.Q<Label>("count-label");
@@ -804,6 +825,10 @@ namespace Kingdom.Presentation
         // ---- Right-side deck drawer (NOR-210) -----------------------------------------------
         private void OpenDeckDrawer()
         {
+            // The deck builder never opens without a record: every copy limit it draws would be a
+            // guess. The Decks button stays enabled on purpose — the first-run guide can light it,
+            // and a disabled lit button takes no tap, which would hold the spotlight forever.
+            if (NoRecord) return;
             if (_drawer == null)
             {
                 Debug.LogError("[Collection] 'deck-drawer' is missing from CollectionScreen.uxml.");
@@ -915,7 +940,7 @@ namespace Kingdom.Presentation
 
         private void OpenDeckEditor(DeckList deck)
         {
-            if (deck == null) return;
+            if (deck == null || NoRecord) return;   // see OpenDeckDrawer
             _deckDrag?.Cancel();
             if (EditingDeck)
             {
@@ -1304,13 +1329,42 @@ namespace Kingdom.Presentation
         {
             CollectionSyncStatus status = await CollectionGateway.SyncAsync(accessToken, ct);
             if (ct.IsCancellationRequested || !ReferenceEquals(_account, PlayerAccount.Local)) return false;
-            if (status != CollectionSyncStatus.Synced && status != CollectionSyncStatus.Unconstrained) return false;
+            if (status != CollectionSyncStatus.Synced) return false;
             LoadOwnership();
             BuildPool();
             _wall.SetPool(_pool);
             ApplyQuery();
             Refresh();
             return true;
+        }
+
+        /// <summary>The retry state's button: the same sync a craft runs. A failure leaves the
+        /// state on screen for another tap; a success rebuilds the wall from the new record.</summary>
+        private async void RetryCollectionSync()
+        {
+            if (_syncRetrying || _craftCancel == null) return;
+            _syncRetrying = true;
+            _syncRetryButton?.SetEnabled(false);
+            CancellationToken ct = _craftCancel.Token;
+            try
+            {
+                string accessToken = await AuthGateway.TokenForConnectAsync();
+                if (this == null || !isActiveAndEnabled || ct.IsCancellationRequested) return;
+                await RefreshCraftCollection(accessToken, ct);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[Collection] retry sync failed: {ex.GetType().Name}");
+            }
+            finally
+            {
+                _syncRetrying = false;
+                if (this != null)
+                {
+                    _syncRetryButton?.SetEnabled(true);
+                    if (_wall != null) UpdateWallLabels();
+                }
+            }
         }
 
         private async void CommitCraft(CardDefinition def, bool render, int count = 1)
@@ -1538,6 +1592,7 @@ namespace Kingdom.Presentation
                 SetQueryDrawerOpen(!_queryDrawerOpen));
             _queryScrim?.RegisterCallback<ClickEvent>(_ => SetQueryDrawerOpen(false));
             _root.Q<Button>("decks-button")?.RegisterCallback<ClickEvent>(_ => OpenDeckDrawer());
+            _syncRetryButton?.RegisterCallback<ClickEvent>(_ => RetryCollectionSync());
             _root.Q<Button>("back-button")?.RegisterCallback<ClickEvent>(_ => HandleBack());
             // No more "Close" button in the drawer header (Sam, 2026-09-07) -- an outside tap does it.
             _deckDrawerScrim?.RegisterCallback<ClickEvent>(_ => CloseDeckDrawer());
@@ -1719,9 +1774,14 @@ namespace Kingdom.Presentation
             // Those messages point at the toggle, which is always in the Filters drawer. An empty
             // pool with both halves on is a broken card database rather than a state a player can
             // reach, so it keeps the filter text.
+            //
+            // And a third, which outranks both: no record at all. Neither the filters nor the toggle
+            // can help there, only a sync can, so it says so and offers one.
+            _syncRetryButton?.EnableInClassList("col-retry--on", NoRecord);
             if (_emptyLabel != null)
             {
-                _emptyLabel.text = _pool.Count != 0 ? Loc.Get("collection_collection_empty")
+                _emptyLabel.text = NoRecord ? Loc.Get("collection_not_synced")
+                    : _pool.Count != 0 ? Loc.Get("collection_collection_empty")
                     : OwnedOnly ? Loc.Get("collection_empty_owns_nothing")
                     : _scope.UnownedOnly ? Loc.Get("collection_empty_owns_everything")
                     : Loc.Get("collection_collection_empty");

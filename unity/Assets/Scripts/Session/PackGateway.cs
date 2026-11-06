@@ -78,7 +78,7 @@ namespace Kingdom.Session
         /// </summary>
         public static Task<CollectionSnapshot> ReadShelfAsync(
             string accessToken, CancellationToken cancellationToken = default)
-            => CollectionGateway.FetchAsync(accessToken, cancellationToken);
+            => CollectionGateway.FetchAsync(accessToken, deviceDigest: null, cancellationToken);
 
         /// <summary>
         /// Open one pack on the named line.
