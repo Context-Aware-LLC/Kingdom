@@ -100,6 +100,8 @@ namespace Kingdom.Presentation
         /// <summary>The guided button's soft brightness pulse.</summary>
         private IVisualElementScheduledItem _guidePulse;
         private IVisualElementScheduledItem _questPulse;
+        /// <summary>The dim around the guided destination (<see cref="GuideSpotlight"/>).</summary>
+        private GuideSpotlight _spotlight;
 
         /// <summary>How long the quest row is lit on its own before the store lesson opens over it.</summary>
         private const int QuestHighlightMs = 2400;
@@ -346,6 +348,8 @@ namespace Kingdom.Presentation
             _leaderboardRequest?.Dispose();
             _leaderboardRequest = null;
             _signIn?.Close();
+            _spotlight?.Hide();
+            _spotlight = null; // it lives in this tree; OnEnable builds a new one
         }
 
         /// <summary>
@@ -735,11 +739,19 @@ namespace Kingdom.Presentation
             var button = _root.Q<Button>(target);
             if (button == null) return;
             button.AddToClassList("mm-button--guide");
+            // The rest of the screen dims around the destination, badge and all, and a ring
+            // breathes around it with the button (Sam, 2026-11-06).
+            _spotlight ??= new GuideSpotlight(_root);
+            _spotlight.Show(_root.Q<VisualElement>(live) ?? button);
             // USS does the easing (transition on .mm-button--guide); this only flips the bright class
             // each half period, the same pattern the vault's entrance uses. The schedule is owned by
             // the element, so a scene change drops it with the panel.
             _guidePulse = button.schedule
-                .Execute(() => button.ToggleInClassList("mm-button--guide-bright"))
+                .Execute(() =>
+                {
+                    button.ToggleInClassList("mm-button--guide-bright");
+                    _spotlight?.SetBright(button.ClassListContains("mm-button--guide-bright"));
+                })
                 .Every(GuidePulseHalfMs);
         }
 
@@ -748,6 +760,7 @@ namespace Kingdom.Presentation
         {
             _guidePulse?.Pause();
             _guidePulse = null;
+            _spotlight?.Hide();
             if (_guideTarget == null) return;
 
             foreach (string name in GuideLockableElements)
@@ -774,6 +787,7 @@ namespace Kingdom.Presentation
             if (_guideTarget != CollectionButton) return;
             _guideTarget = null;
             _guidePulse?.Pause();
+            _spotlight?.Hide();
             try
             {
                 FirstRunMarkers.Mark(FirstRunMarkers.CollectionGuideDone);
