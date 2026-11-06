@@ -693,7 +693,7 @@
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Title. Collection arrival. Render/Reduce/Decks are UI verbs; rarity names should match rarity_* keys. -->
     <string name="tidbit_collection_title">The Collection</string>
     <!-- First-run tip card. Instruction first, joke second; keep the line breaks (\n). Lighthearted tone. Body. Collection arrival. Render/Reduce/Decks are UI verbs; rarity names should match rarity_* keys. -->
-    <string name="tidbit_collection_body">Every card you own is here. So are the cards you wish you owned.\n\nTap one to Render a copy, or to Reduce a spare into shards.\n\nCards come in 4 different rarities: \nCommon - Pink, Rare - Blue, Epic - Purple, Legendary - Red.\n\nThe Decks button shows you the thing it says. Don\'t over think it.</string>
+    <string name="tidbit_collection_body">Every card you own is here. So are the cards you wish you owned.\n\nTap once to see the crafting options, Render a new copy or Reduce a spare into shards.\n\nCards come in 4 different rarities: \nCommon - Pink, Rare - Blue, Epic - Purple, Legendary - Red.\n\nThe Decks button shows you the thing it says. Don\'t over think it.</string>
     <!-- Collection, Filters lit. Blank until written (Sam, 2026-11-05). -->
     <string name="tidbit_filters_title">Filters</string>
     <string name="tidbit_filters_body"></string>
