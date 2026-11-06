@@ -20,7 +20,7 @@
 // if the rail is ever resized.
 //
 // Transparent, ZWrite Off: the sockets are round, so the corners of every cell
-// must let BoardBackdrop (z +5, sortingOrder -1000) through. An opaque quad
+// must let the background imagery through. An opaque quad
 // would punch a black rectangle over the board plate.
 Shader "Kingdom/SG_ManaFill"
 {

@@ -610,13 +610,6 @@ namespace Kingdom.Presentation
                 table.OnAuthorityStateUpdated(_view.Current);
                 _view.OnTurnTimer += table.OnTurnTimer;
             }
-            if (boardAnchors != null && table == null)
-            {
-                CreateManaTray(localId, boardAnchors);
-                CreateManaTray(remoteId, boardAnchors);
-                CreateDeckPile(localId, boardAnchors);
-                CreateDeckPile(remoteId, boardAnchors);
-            }
 
             // ── Hero plates — class rides the projected snapshot (state-sync §5.2 PUBLIC), no MatchSetup. ─
             if (boardAnchors != null)
@@ -630,33 +623,7 @@ namespace Kingdom.Presentation
                 boardController?.SetHeroPlates(localId, localPlate, remoteId, remotePlate);
             }
 
-            // ── End-turn button (was hot-seat-only; found missing at b3 §14 step 4) ──
-            if (inputRouter != null && table == null)
-            {
-                var endTurnGo = new GameObject("EndTurnButton");
-                endTurnGo.transform.position = EndTurnButtonView.BoardPosition;
-                BoardBackdrop.RegisterArtworkAnchor(
-                    endTurnGo.transform, EndTurnButtonView.ArtworkUv);
-                var endTurn = endTurnGo.AddComponent<EndTurnButtonView>();
-                endTurn.Init(localId, inputRouter);
-                matchRunner.OnStateUpdated += endTurn.OnStateUpdated;
-            }
-
-            // ── Visible turn clock (E2 minimal slice; C-G1-2a) ──────────────────────
-            // Binds to the seam's OnTurnTimer (main-thread-marshaled by MainThreadMatchSession).
-            // Server-driven: the turn clock is a server timer, so it exists only on this path.
-            // (It is why the deleted in-process hot-seat boot never had one.) The Royal Council
-            // board gives the clock its own crown-fuse medallion on the left.
-            if (table == null)
-            {
-                var clockGo = new GameObject("TurnClock");
-                clockGo.transform.position = TurnClockView.BoardPosition;
-                BoardBackdrop.RegisterArtworkAnchor(clockGo.transform, TurnClockView.ArtworkUv);
-                var turnClock = clockGo.AddComponent<TurnClockView>();
-                turnClock.Init();
-                _view.OnTurnTimer += turnClock.OnTurnTimer;
-                matchRunner.OnStateUpdated += turnClock.OnStateUpdated;
-            }
+            // The Royal Council board owns the physical end-turn control and turn clock.
             // Same signal, same marshaling: the rope LINE lands when the clock goes red.
             _view.OnTurnTimer += heroVoice.OnTurnTimer;
 
@@ -857,26 +824,6 @@ namespace Kingdom.Presentation
             view.Init(playerId, power, weapon, db, artProvider);
             // boardController.Initialize ran above, so its reveal controller exists by now.
             if (boardController != null) view.AttachReveal(boardController.RevealController);
-            matchRunner.OnStateUpdated += view.OnStateUpdated;
-        }
-
-        private void CreateManaTray(PlayerId playerId, BoardAnchors anchors)
-        {
-            Transform anchor = anchors.ManaTrayAnchor(playerId);
-            if (anchor == null) return;
-            var go   = new GameObject($"ManaTray_{playerId}");
-            var view = go.AddComponent<ManaTrayView>();
-            view.Init(playerId, anchor, anchors.IsLocalPlayer(playerId));
-            matchRunner.OnStateUpdated += view.OnStateUpdated;
-        }
-
-        private void CreateDeckPile(PlayerId playerId, BoardAnchors anchors)
-        {
-            Transform anchor = anchors.AnchorFor(playerId, Core.Contracts.Zone.Deck, 0);
-            if (anchor == null) return;
-            var go   = new GameObject($"DeckPile_{playerId}");
-            var view = go.AddComponent<DeckPileView>();
-            view.Init(playerId, anchor, anchors.IsLocalPlayer(playerId));
             matchRunner.OnStateUpdated += view.OnStateUpdated;
         }
 

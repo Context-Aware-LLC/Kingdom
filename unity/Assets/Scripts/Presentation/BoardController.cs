@@ -18,40 +18,8 @@ namespace Kingdom.Presentation
     {
         [SerializeField] private BoardAnchors boardAnchors;
 
-        // Runtime card visual dimensions (world units). Internal, not private: HandFanLayout
-        // derives the fan pitch from CardW, and a second copy of this number has already gone
-        // stale once (the §1.1 pitch table was written against an assumed 1.3 × 1.8).
-        //
-        // #234 and the 2026-08-29 readability pass: THE BOARD CARD GREW AND THE HAND DID NOT MOVE.
-        //
-        // Sam, 2026-08-21: "the ones on the board are not big enough". They were 137.3 x 193.7 px
-        // on a 1080p phone — 52% of the 265 px collection tile EF-050's acuity margin was measured
-        // against — while a card in hand was 1.44x that. The complaint is about the BOARD end of
-        // that ratio, so the ratio is what moved: 1.17/0.9 = 1.30 and 1.65/0.9 = 1.8333, with
-        // HandFanLayout.RestScale first fell 1.44 -> 1.296 (= 1.44 x 0.9), then 1.296 -> 1.20
-        // for this follow-up 1.08x board growth, to hold HandCardW/H at
-        // 1.6848 x 2.3760, the exact values they had before. A card in hand is unchanged to five
-        // decimal places, so EF-062 §5, the CentreY solve, TopEdgeY, MaxPitch, Sag and
-        // DeviceLayout's band-clearance assertion are all untouched by this — deliberately, because
-        // that solve is the hand's whole legibility budget and re-opening it was not the ask.
-        //
-        // 2026-08-31, Sam: "improve readability of cards in play and in hand". A THIRD 1.08 growth
-        // of the board card, paid for by BulwarkRowOffset (0.40 -> 0.28) and RowY (1.4633 -> 1.41)
-        // rather than by the hand, which is held at 1.6848 x 2.3760 for the third pass running.
-        //
-        // WHY THE HAND DID NOT GROW, THOUGH IT WAS ASKED FOR. DeviceLayout.SelfCheck assertion 7
-        // bounds the hand's rules band against DesignHalfHeight 4.6 — the ORTHOGRAPHIC half-height.
-        // The shipping camera has been PERSPECTIVE since f121a591 (BoardCameraRig.Configure sets
-        // orthographic = false), so that assertion, and all of device_layout.py, model a camera
-        // that no longer runs. Measured against the real rig a larger hand is fine; measured
-        // against the guard it fails. The guard is the thing to fix, and re-deriving the vertical
-        // model for a perspective camera is not a change to bury inside a sizing tweak.
-        //
-        // RETIREMENT TRIGGER: these two and RestScale are one number in two places now. Moving
-        // either without the compensating move on the other resizes the card in hand. `device_layout.py`
-        // is NOT the check to re-run — it reads `orthographic size` out of the scene YAML and
-        // reports a camera the game does not use. Measure against BoardCameraRig instead, and
-        // re-solve HandFanLayout.CentreY if the hand card's height moved.
+        // Runtime card dimensions also determine HandFanLayout.HandCardW/HandCardH.
+        // Review a size change against the Royal Council camera and playable-content check.
         internal const float CardW = 1.51632f;  // 1.404 * 1.08
         internal const float CardH = 2.13840f;  // 1.98  * 1.08; keeps the 1.17:1.65 aspect
 
@@ -63,8 +31,6 @@ namespace Kingdom.Presentation
         // the step gave way. It is still 13% of the card's height and still the whole of the Taunt
         // front-row visual language — a smaller step, not an absent one. Below about 0.20 the two
         // rows stop reading as two rows, so this is close to spent.
-        // Internal, not private: DeviceLayout.SelfCheck asserts the lane this leaves at the
-        // centreline, the same reason ProceduralBoardSetup.HeroX and DeckX are internal.
         internal const float BulwarkRowOffset = 0.28f;
         internal const string BulwarkEffectSpriteKey = "effect_bulwark_shields";
         internal const string ShroudSmokeLeftSpriteKey = "effect_shroud_smoke_left";
@@ -83,9 +49,7 @@ namespace Kingdom.Presentation
         // WHERE THE STAT ROW SITS, as a fraction of CardH below the card's centre. The lowest thing
         // a minion carries, so it is the line the hand fan must not cover — the fan draws in FRONT
         // of the board row and tucks under it on purpose (see HandFanLayout.CentreY), which is only
-        // safe while it stops above this. Hoisted out of the four call sites below by #234 so
-        // DeviceLayout.SelfCheck can assert against the number the layout actually uses rather than
-        // a copy of it.
+        // safe while it stops above this. All stat placements share this fraction.
         internal const float StatRowFrac = 0.42f;
 
         // Hand cards draw above board content and below the match-end banner (sortingOrder 100).

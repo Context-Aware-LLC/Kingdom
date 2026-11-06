@@ -55,11 +55,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ae3f473153bbea1479ecae4a5d7aa266
-    m_Address: backgrounds/BoardPlate_Master
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d500f4dcb3094b8384dfd7de8668d770
     m_Address: backgrounds/CharacterRoster_Backdrop
     m_ReadOnly: 0

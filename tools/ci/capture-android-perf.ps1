@@ -230,15 +230,15 @@ try {
     }
 }
 
-$evidenceLog = @($allLog | Select-String -Pattern 'EF-064-PERF|\[SafeAreaCamera\]')
+$evidenceLog = @($allLog | Select-String -Pattern 'EF-064-PERF|\[RoyalCouncilCamera\]')
 $logPath = Join-Path $OutDir 'device-log.txt'
 [System.IO.File]::WriteAllLines(
     $logPath,
     [string[]]@($evidenceLog | ForEach-Object { $_.Line }),
     [System.Text.UTF8Encoding]::new($false))
 
-if (-not ($evidenceLog | Where-Object { $_.Line.Contains('[SafeAreaCamera]') })) {
-    throw 'No SafeAreaCamera device evidence was logged. The capture did not reach a board scene.'
+if (-not ($evidenceLog | Where-Object { $_.Line.Contains('[RoyalCouncilCamera]') })) {
+    throw 'No RoyalCouncilCamera device evidence was logged. The capture did not reach a board scene.'
 }
 
 $captureNames = @(

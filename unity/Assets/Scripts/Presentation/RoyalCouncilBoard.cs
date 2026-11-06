@@ -111,7 +111,6 @@ namespace Kingdom.Presentation
             Camera camera = Camera.main;
             if (camera != null)
             {
-                if (camera.TryGetComponent(out SafeAreaCamera old)) old.enabled = false;
                 if (!camera.TryGetComponent<RoyalCouncilCamera>(out var rig)) rig = camera.gameObject.AddComponent<RoyalCouncilCamera>();
                 rig.SetBackdrop(backdrop);
             }
