@@ -11,12 +11,11 @@ namespace Kingdom.Session
     /// The game's one <see cref="HttpCollectionGateway"/>, and the only place a server answer is
     /// allowed to overwrite this device's ownership record.
     ///
-    /// <para><b>What this makes true.</b> The entitlement ledger has been the authority on what a
-    /// player owns since 2026-09-01, keyed on the authenticated <c>player_id</c>, and nothing on the
-    /// client could read it — <c>CollectionController</c> and <c>CharacterRosterController</c> both go
-    /// to local disk. So a player who uninstalled, reinstalled and signed back into the right identity
-    /// landed on an empty local scope, which renders as <i>owns everything</i>. Their cards were never
-    /// lost; there was no wire from the ledger to the screen. This is the client end of that wire
+    /// <para><b>What this makes true.</b> The entitlement ledger is the authority on what a player
+    /// owns, keyed on the authenticated <c>player_id</c>, and the screens read only local disk. So a
+    /// player who reinstalls and signs back into the right identity lands on an empty local scope
+    /// until this pulls the ledger down; until then the Collection shows its retry state and the
+    /// deck and queue gates refuse. This is the client end of the wire from the ledger to the screen
     /// (spec <c>docs/dev-docs/specs/card-ownership.md</c>, slice 3).</para>
     ///
     /// <para><b><c>owned-cards.json</c> is a CACHE, not the record.</b> The record is the ledger.

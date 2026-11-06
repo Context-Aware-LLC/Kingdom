@@ -139,6 +139,12 @@ namespace Kingdom.Presentation
             {
                 selectedDeck = ConsumeSelectedDeck(db, out _rematchDeckId);
             }
+            catch (OwnershipUnknownException ex)
+            {
+                Debug.LogError($"[NetworkedGameBootstrap] not queueing: {ex.Message}");
+                BootFailed(Loc.Get("collection_not_synced"));
+                yield break;
+            }
             catch (Exception ex)
             {
                 Debug.LogError($"[NetworkedGameBootstrap] selected deck unavailable: {ex.Message}");
@@ -420,7 +426,11 @@ namespace Kingdom.Presentation
             // would call these decks drafts, so an L6 failure walked straight past this line and came
             // back as a closed socket reading "deck rejected: You don't own X." A client gate that is
             // laxer than the server's is not a gate.
-            QueueCheck queue = QueueEligibility.Check(deck, db, account.OwnedCards(db));
+            //
+            // And never with NO record: the core reads null as "do not constrain", which would send
+            // the whole pool to a server that refuses it. Boot shows collection_not_synced for this.
+            IOwnedCardCounts owned = account.OwnedCards(db) ?? throw new OwnershipUnknownException();
+            QueueCheck queue = QueueEligibility.Check(deck, db, owned);
             if (!queue.IsEligible)
                 throw new InvalidOperationException("The selected deck is no longer queue ready: " + queue.Reason);
 

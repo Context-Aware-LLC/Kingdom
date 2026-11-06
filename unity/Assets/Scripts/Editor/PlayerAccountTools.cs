@@ -160,6 +160,15 @@ namespace Kingdom.Editor
                 if (!Check(log, !PlayerAccount.CanCreate(primary, primary, db),
                            "a class cannot be paired with itself")) return;
 
+                // A scratch account has no ownership record, and creation must refuse rather than
+                // generate from the whole pool. Then give it the superuser record, the one any
+                // pairing can fill, the way a sync would (CollectionGateway is the real writer).
+                bool refused = false;
+                try { account.PrepareDeck(db, "Ashen Vow", primary, secondary, StarterDeck.Generated); }
+                catch (OwnershipUnknownException) { refused = true; }
+                if (!Check(log, refused, "with no ownership record, creation refuses")) return;
+                account.SaveOwnership(OwnershipRecord.AllAtLimit);
+
                 DeckList created = account.PrepareDeck(db, "Ashen Vow", primary, secondary,
                                                        StarterDeck.Generated);
                 if (!Check(log, account.Decks().Count == 0,
@@ -169,7 +178,7 @@ namespace Kingdom.Editor
                 log.AppendLine($"    deck id = {created.Id}");
                 if (!Check(log, !string.IsNullOrEmpty(created.Id), "creation minted an id")) return;
 
-                IReadOnlyList<DeckSummary> rows = account.DeckRows(db);
+                IReadOnlyList<DeckSummary> rows = account.DeckRows(db, "no ownership record");
                 if (!Check(log, rows.Count == 1, "the account holds exactly the deck just made")) return;
                 DeckSummary row = rows[0];
                 log.AppendLine($"    starter deck = {row.TotalCount}/30, " +

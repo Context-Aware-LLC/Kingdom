@@ -441,9 +441,22 @@ namespace Kingdom.Presentation
                 _confirmSummary.text = Loc.Format("deck_create_confirm_summary",
                     CardClassTokens.Label(primary), CardClassTokens.Label(secondary));
 
+            // No verified record refuses creation outright: the core would read null as "owns
+            // everything" and generate a deck from cards the player may not have.
+            IOwnedCardCounts owned = _account?.OwnedCards(_db);
+            bool noRecord = _account != null && owned == null;
+            _createBlank?.SetEnabled(!noRecord);
+            if (noRecord)
+            {
+                _createGenerated?.SetEnabled(false);
+                if (_starterNote != null) _starterNote.text = "";
+                SetCreateError(Loc.Get("collection_not_synced"));
+                return;
+            }
+
             bool offersChoice = _account != null && _account.OffersStarterChoice();
             bool canGenerate = _account != null
-                               && PlayerAccount.CanCreate(primary, secondary, _db, _account.OwnedCards(_db));
+                               && PlayerAccount.CanCreate(primary, secondary, _db, owned);
 
             Show(_createBlank, offersChoice);
             _createGenerated?.SetEnabled(canGenerate);
@@ -533,6 +546,12 @@ namespace Kingdom.Presentation
                     Debug.LogWarning($"[DeckCreate] could not arm the quest lesson ({ex.GetType().Name}: {ex.Message}).");
                 }
                 OpenDeckForEdit(created.Id);
+            }
+            catch (OwnershipUnknownException ex)
+            {
+                // Reachable despite RefreshConfirm: the record can fail its digest under an open screen.
+                Debug.LogError($"[DeckCreate] deck creation refused: {ex.Message}");
+                SetCreateError(Loc.Get("collection_not_synced"));
             }
             catch (DeckGenerationException ex)
             {

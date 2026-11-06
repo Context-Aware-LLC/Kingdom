@@ -121,7 +121,9 @@ namespace Kingdom.Presentation
         /// screen must pass it: without it L6 never evaluates, so a deck that stopped being
         /// ownable (a card dusted, an account restored) would keep its gold "queue ready" border
         /// here while match-join refuses it — the exact disagreement DeckQuery.ForAccount's own
-        /// doc comment says this screen must not produce.</summary>
+        /// doc comment says this screen must not produce. Null means no verified record, and the
+        /// core reads null as "do not constrain", so a null here refuses the queue instead of
+        /// reaching a Check.</summary>
         private IOwnedCardCounts _owned;
         private IUiSpriteProvider _uiSprites;
         private IArtProvider _art;
@@ -631,7 +633,7 @@ namespace Kingdom.Presentation
             IReadOnlyList<DeckSummary> rows;
             try
             {
-                rows = _account.DeckRows(_db);
+                rows = _account.DeckRows(_db, Loc.Get("collection_not_synced"));
             }
             catch (Exception ex)
             {
@@ -1088,6 +1090,16 @@ namespace Kingdom.Presentation
                 return;
             }
 
+            // No verified record refuses here rather than passing null, which the core reads as
+            // "do not constrain" and which match-join would then refuse.
+            if (_owned == null)
+            {
+                ClearPick();
+                RebuildRoster();
+                SetStatus(Loc.Get("collection_not_synced"), isError: true);
+                return;
+            }
+
             QueueCheck queue = QueueEligibility.Check(deck, _db, _owned);
             if (!queue.IsEligible)
             {
@@ -1136,7 +1148,7 @@ namespace Kingdom.Presentation
                 if (d.Id == deckId) { deck = d; break; }
             if (deck == null) return;
 
-            if (!QueueEligibility.Check(deck, _db, _owned).IsEligible) return;
+            if (_owned == null || !QueueEligibility.Check(deck, _db, _owned).IsEligible) return;
 
             _pickedDeckId = deck.Id;
         }

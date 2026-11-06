@@ -181,10 +181,26 @@ namespace Kingdom.Session
         /// (<see cref="DeckQuery.ForAccount"/>). One disk read.
         ///
         /// <para>Ownership rides along so the switcher's draft badge and the queue gate answer with the
-        /// same rule (NOR-238). It changes nothing until this account has a record.</para>
+        /// same rule (NOR-238).</para>
+        ///
+        /// <para><b>With no verified record, every row is a draft</b> carrying
+        /// <paramref name="noRecordReason"/> (the caller's localized <c>collection_not_synced</c>).
+        /// The core reads a null record as "do not constrain", which here would gild every deck
+        /// queue-ready and let the refusal arrive at match-join instead.</para>
         /// </summary>
-        public IReadOnlyList<DeckSummary> DeckRows(ICardDatabase db)
-            => DeckQuery.ForAccount(_decks.LoadAll(), db, OwnedCards(db));
+        public IReadOnlyList<DeckSummary> DeckRows(ICardDatabase db, string noRecordReason)
+        {
+            IOwnedCardCounts? owned = OwnedCards(db);
+            IReadOnlyList<DeckList> decks = _decks.LoadAll();
+            if (owned != null) return DeckQuery.ForAccount(decks, db, owned);
+
+            var refused = new QueueCheck(new DeckValidation(false,
+                new[] { new DeckViolation(DeckRule.L6_Ownership, noRecordReason ?? "") }));
+            var rows = new List<DeckSummary>(decks.Count);
+            foreach (DeckList deck in decks)
+                if (deck != null) rows.Add(new DeckSummary(deck, refused));   // as ForAccount does
+            return rows;
+        }
 
         /// <summary>
         /// Whether a generated deck can be offered for a pairing at all — a pool too thin for a legal
@@ -232,12 +248,16 @@ namespace Kingdom.Session
         /// </summary>
         /// <exception cref="ArgumentException">The pairing is invalid (see <see cref="DeckList.IsValidPairing"/>).</exception>
         /// <exception cref="DeckGenerationException">Generated was asked for and the pool cannot supply a legal 30.</exception>
+        /// <exception cref="OwnershipUnknownException">This device holds no verified ownership
+        /// record. The core would read that as "owns everything" and generate from the whole
+        /// pool.</exception>
         public DeckList PrepareDeck(ICardDatabase db, string name, CardClass primary, CardClass secondary,
                                     StarterDeck kind)
         {
+            IOwnedCardCounts owned = OwnedCards(db) ?? throw new OwnershipUnknownException();
             string deckId = NewId();
             return DeckCreation.Prepare(db, new DeterministicRandom(SeedFrom(deckId)),
-                deckId, name, primary, secondary, kind, OwnedCards(db));
+                deckId, name, primary, secondary, kind, owned);
         }
 
         // ── Writes: the server first, then the cache ────────────────────────────────────
@@ -319,5 +339,16 @@ namespace Kingdom.Session
             }
             return hash;
         }
+    }
+
+    /// <summary>
+    /// This device holds no verified ownership record, so an ownership-gated action is refused
+    /// rather than run against the whole pool. Callers show <c>collection_not_synced</c>; the
+    /// message here is for the log.
+    /// </summary>
+    public sealed class OwnershipUnknownException : InvalidOperationException
+    {
+        public OwnershipUnknownException()
+            : base("This device holds no verified ownership record; sync the collection first.") { }
     }
 }

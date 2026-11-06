@@ -433,7 +433,7 @@ namespace Kingdom.Presentation
 #if UNITY_EDITOR
             if (BotDecks) return BotDeckEditing.DeckRows(_db);
 #endif
-            return _account.DeckRows(_db);
+            return _account.DeckRows(_db, Loc.Get("collection_not_synced"));
         }
 
         private static DeckList FindDeck(IReadOnlyList<DeckSummary> decks, string deckId)
@@ -1354,7 +1354,7 @@ namespace Kingdom.Presentation
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[Collection] retry sync failed: {ex.GetType().Name}");
+                Debug.LogWarning($"[Collection] retry sync failed: {ex.GetType().Name}: {ex.Message}");
             }
             finally
             {
