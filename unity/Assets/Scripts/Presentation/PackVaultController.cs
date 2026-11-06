@@ -460,8 +460,8 @@ namespace Kingdom.Presentation
                 ShowBanner(false);
                 SetStageHint(false);
                 SetStatus(Loc.Get("vault_no_packs"));
-                // The tail of the gift (spec §4, slice 4): what to do with the cards, then where
-                // more come from. Both verbs have routes now, which is what held these back.
+                // The tail of the gift (spec §4, slice 4). Its one card, "shards", is parked in
+                // TidbitCatalog until it moves after the first match, so this shows nothing today.
                 if (_openedAPack) _tidbit?.Show(TidbitTrigger.PackVaultGiftComplete);
                 return;
             }

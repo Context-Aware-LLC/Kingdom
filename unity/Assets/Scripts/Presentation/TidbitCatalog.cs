@@ -127,7 +127,12 @@ namespace Kingdom.Presentation
             new Tidbit("filters", TidbitTrigger.FiltersHighlighted, "tidbit_filters_title", "tidbit_filters_body", "tidbit_filters"),
             new Tidbit("deck-editor", TidbitTrigger.DeckEditorArrival, "tidbit_deck_editor_title", "tidbit_deck_editor_body", "tidbit_deck_editor", "vo/vo_herald_tidbit_deck_editor"),
             new Tidbit("vault", TidbitTrigger.PackVaultArrival, "tidbit_vault_title", "tidbit_vault_body", "tidbit_vault", "vo/vo_herald_tidbit_vault"),
-            new Tidbit("shards", TidbitTrigger.PackVaultGiftComplete, "tidbit_shards_title", "tidbit_shards_body", "tidbit_shards", "vo/vo_herald_tidbit_shards"),
+            // PARKED, not retired (Sam, 2026-11-06): "Entering The Kingdom." moves out of the vault
+            // to one of the last tidbits after the player's FIRST MATCH, placed when the first-run
+            // audit reaches that point. Its copy, art and Herald recording all still ship; re-home
+            // it by giving it a post-first-match trigger. PackVaultGiftComplete is empty meanwhile,
+            // which both hosts treat as "carry on".
+            // new Tidbit("shards", TidbitTrigger.PackVaultGiftComplete, "tidbit_shards_title", "tidbit_shards_body", "tidbit_shards", "vo/vo_herald_tidbit_shards"),
             new Tidbit("store", TidbitTrigger.QuestsHighlighted, "tidbit_store_title", "tidbit_store_body", "tidbit_store", "vo/vo_herald_tidbit_store"),
             new Tidbit("shop", TidbitTrigger.ShopArrival, "tidbit_shop_title", "tidbit_shop_body", "tidbit_shop", "vo/vo_herald_tidbit_shop"),
         };
