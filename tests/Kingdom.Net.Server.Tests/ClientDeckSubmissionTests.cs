@@ -179,12 +179,28 @@ namespace Kingdom.Net.Server.Tests
             var lines = LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT);
             int idx = lines.FindIndex(l => Db.TryGet(l.CardId, out var d) && d.Rarity == Rarity.COMMON);
             Assert.That(idx, Is.GreaterThanOrEqualTo(0), "the generated deck holds a common");
+            // Keep the deck at 30 cards so the size rule cannot be what refuses it: take the extra
+            // copies back out of other lines.
+            int extra = 3 - lines[idx].Count;
             lines[idx] = new DeckCardLine(lines[idx].CardId, 3);
+            for (int k = 0; k < lines.Count && extra > 0; k++)
+            {
+                if (k == idx) continue;
+                int take = Math.Min(extra, lines[k].Count);
+                lines[k] = new DeckCardLine(lines[k].CardId, lines[k].Count - take);
+                extra -= take;
+            }
+            lines.RemoveAll(l => l.Count == 0);
+            Assert.That(extra, Is.EqualTo(0));
+            idx = lines.FindIndex(l => l.Count == 3);
             var msg = new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
 
             var result = DeckSubmission.Validate(msg, Db, new AtLimitOwnedCounts(Db));
 
             Assert.That(result.Accepted, Is.False);
+            // At-limit owns 2, so L6 refuses a third copy too; assert the copy-cap sentence ("Only 2 of
+            // X.") is among the reasons, so this proves L2 fired and not merely that L6 did.
+            Assert.That(result.Reason, Does.Contain("Only 2 of"), "the L2 copy-cap rule must be named");
         }
 
         // ── Over real sockets ─────────────────────────────────────────────────────

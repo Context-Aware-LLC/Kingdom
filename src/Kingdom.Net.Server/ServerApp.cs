@@ -1452,54 +1452,7 @@ namespace Kingdom.Net.Server
 
                 context.Response.Headers["Cache-Control"] = "no-store";
 
-                // The card list is an OBJECT keyed by card id, not an array of pairs: the client's
-                // reader (AuthJson.TryReadNestedObject) reads a flat object of scalars and skips
-                // nested structure whole, so an array of {id, copies} would decode to nothing.
-                var cards = new Dictionary<string, long>(result.Cards.Count);
-                foreach (var row in result.Cards)
-                    cards[row.Key.ToString(CultureInfo.InvariantCulture)] = row.Value;
-
-                bool sendCards = !result.CardsUnchanged && result.Record?.Rule == OwnershipRule.List;
-
-                // Unopened packs, by line — an OBJECT keyed by pack id for exactly the reason above,
-                // and NOT the array of {id, count} the spec draft drew: this client reader cannot see
-                // inside an array. The spec was corrected to match rather than the other way round.
-                //
-                // Always present under "known", including when empty. The client
-                // treats a missing `packs` as Malformed, because a body that has lost the field and a
-                // player who has opened everything must not be the same answer — the first is a
-                // captive portal, the second is a finished gift.
-                var packs = new Dictionary<string, long>(result.Packs.Count);
-                foreach (var row in result.Packs)
-                    packs[row.Key] = row.Value;
-
-                // A dictionary, not an anonymous type, so rule/digest/cards are ABSENT (not null)
-                // when they do not apply. The client reads a flat object and a null is not a value.
-                var body = new Dictionary<string, object?>
-                {
-                    // "known" | "unauthenticated" | "unavailable" - the client branches on this
-                    // string, never on the card count, because an empty collection and an unknown
-                    // one are different answers that would otherwise look identical.
-                    ["ownership"] = result.Status.ToString().ToLowerInvariant(),
-                    ["playerId"] = result.PlayerId,
-                    ["cardBacks"] = result.CardBacks,
-                    ["cardsUnchanged"] = result.CardsUnchanged,
-                    ["packs"] = packs,
-                    ["wallet"] = new
-                    {
-                        gold = result.Wallet.Gold,
-                        gems = result.Wallet.Gems,
-                        shards = result.Wallet.Shards,
-                    },
-                };
-                if (result.Record is not null)
-                {
-                    // "list" | "all-at-limit" - how a known record says what is owned.
-                    body["rule"] = result.Record.Rule == OwnershipRule.AllAtLimit ? "all-at-limit" : "list";
-                    body["digest"] = result.Record.Digest;
-                }
-                // Present iff the device's digest differs and the rule is a list.
-                if (sendCards) body["cards"] = cards;
+                var body = CollectionEndpoint.ToBody(result);
 
                 return Results.Json(body, statusCode: result.HttpStatus);
             });

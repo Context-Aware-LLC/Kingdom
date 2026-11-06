@@ -336,9 +336,13 @@ namespace Kingdom.Core.Collection
                 foreach (var el in rows.EnumerateArray())
                 {
                     int cardId = ReqCardId(el, "id", OwnedCardsProperty, i);
-                    int copies = el.TryGetProperty("copies", out var n) && n.ValueKind == JsonValueKind.Number
-                        ? n.GetInt32()
-                        : 0;
+                    int copies = 0;
+                    if (el.TryGetProperty("copies", out var n) && n.ValueKind == JsonValueKind.Number)
+                    {
+                        if (!n.TryGetInt32(out copies))
+                            throw new CollectionFormatException(
+                                $"Collection file '{OwnedCardsProperty}[{i}]' has a 'copies' that is not a whole number.");
+                    }
                     owned.Set(cardId, copies < 0 ? 0 : copies);
                     i++;
                 }

@@ -196,6 +196,65 @@ namespace Kingdom.Core.Tests.Collection
                 "A file that is not JSON is damage, not a missing record; it must say so.");
         }
 
+        private void WriteRaw(string text)
+        {
+            string path = CollectionPaths.OwnedCards(_root, "device-token");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllText(path, text);
+        }
+
+        [Test]
+        public void A_NonInteger_Count_Throws_CollectionFormatException_Not_FormatException()
+        {
+            string digest = OwnershipRecord.List(new OwnedCardCounts()).Digest;
+            WriteRaw($"{{ \"schemaVersion\": 1, \"rule\": \"list\", \"digest\": \"{digest}\", " +
+                     $"\"ownedCards\": [ {{ \"id\": {FixtureCard.Id("card-a")}, \"copies\": 1.5 }} ] }}");
+
+            Assert.Throws<CollectionFormatException>(() => Store().Load());
+        }
+
+        [Test]
+        public void An_Unknown_Rule_Loads_As_Null()
+        {
+            string digest = OwnershipRecord.List(new OwnedCardCounts()).Digest;
+            WriteRaw($"{{ \"schemaVersion\": 1, \"rule\": \"mystery\", \"digest\": \"{digest}\", \"ownedCards\": [] }}");
+
+            Assert.That(Store().Load(), Is.Null);
+        }
+
+        [TestCase("abc")]
+        [TestCase("")]
+        public void A_Wrong_Length_Digest_Loads_As_Null(string digest)
+        {
+            WriteRaw($"{{ \"schemaVersion\": 1, \"rule\": \"list\", \"digest\": \"{digest}\", \"ownedCards\": [] }}");
+
+            Assert.That(Store().Load(), Is.Null);
+        }
+
+        [Test]
+        public void An_Uppercase_Digest_Loads_As_Null()
+        {
+            string digest = OwnershipRecord.List(new OwnedCardCounts()).Digest.ToUpperInvariant();
+            WriteRaw($"{{ \"schemaVersion\": 1, \"rule\": \"list\", \"digest\": \"{digest}\", \"ownedCards\": [] }}");
+
+            Assert.That(Store().Load(), Is.Null, "the digest is lowercase hex; anything else is not ours");
+        }
+
+        [Test]
+        public void A_Tampered_AllAtLimit_File_Loads_As_Null()
+        {
+            Store().Save(OwnershipRecord.AllAtLimit);
+            string path = Store().FilePath;
+            string text = File.ReadAllText(path);
+            string good = OwnershipRecord.AllAtLimit.Digest;
+            string flipped = (good[0] == 'a' ? "b" : "a") + good.Substring(1);
+            string tampered = text.Replace(good, flipped);
+            Assert.That(tampered, Is.Not.EqualTo(text), "the tamper must actually change the file");
+            File.WriteAllText(path, tampered);
+
+            Assert.That(Store().Load(), Is.Null, "an all-at-limit file whose digest is not the rule's must not verify");
+        }
+
         [Test]
         public void A_Negative_Count_Clamps_To_Zero()
         {

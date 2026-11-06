@@ -90,6 +90,10 @@ namespace Kingdom.Net.Server.Accounts
             Packs = packs ?? Array.Empty<KeyValuePair<string, long>>();
         }
 
+        /// <summary>True iff the response carries the card list: the device's digest differs and the
+        /// rule is a list. An all-at-limit record has nothing to enumerate.</summary>
+        public bool SendsCards => !CardsUnchanged && Record?.Rule == OwnershipRule.List;
+
         /// <summary>The HTTP status this maps to, kept beside the enum so a new member cannot be added
         /// without deciding one.</summary>
         public int HttpStatus => Status switch
@@ -133,6 +137,54 @@ namespace Kingdom.Net.Server.Accounts
     /// </summary>
     public static class CollectionEndpoint
     {
+        /// <summary>
+        /// The JSON body of <c>GET /collection</c>. A dictionary, not an anonymous type, so
+        /// rule/digest/cards are ABSENT (not null) when they do not apply: the client reads a flat
+        /// object and a null is not a value.
+        /// </summary>
+        public static Dictionary<string, object?> ToBody(CollectionResult result)
+        {
+            // The card list is an OBJECT keyed by card id, not an array of pairs: the client's
+            // reader (AuthJson.TryReadNestedObject) reads a flat object of scalars and skips
+            // nested structure whole, so an array of {id, copies} would decode to nothing.
+            var cards = new Dictionary<string, long>(result.Cards.Count);
+            foreach (var row in result.Cards)
+                cards[row.Key.ToString(System.Globalization.CultureInfo.InvariantCulture)] = row.Value;
+
+            // Unopened packs, by line - an OBJECT keyed by pack id for exactly the reason above.
+            // Always present under "known", including when empty: the client treats a missing
+            // `packs` as Malformed, because a body that has lost the field and a player who has
+            // opened everything must not be the same answer.
+            var packs = new Dictionary<string, long>(result.Packs.Count);
+            foreach (var row in result.Packs)
+                packs[row.Key] = row.Value;
+
+            var body = new Dictionary<string, object?>
+            {
+                // "known" | "unauthenticated" | "unavailable" - the client branches on this
+                // string, never on the card count.
+                ["ownership"] = result.Status.ToString().ToLowerInvariant(),
+                ["playerId"] = result.PlayerId,
+                ["cardBacks"] = result.CardBacks,
+                ["cardsUnchanged"] = result.CardsUnchanged,
+                ["packs"] = packs,
+                ["wallet"] = new
+                {
+                    gold = result.Wallet.Gold,
+                    gems = result.Wallet.Gems,
+                    shards = result.Wallet.Shards,
+                },
+            };
+            if (result.Record is not null)
+            {
+                // "list" | "all-at-limit" - how a known record says what is owned.
+                body["rule"] = result.Record.Rule == OwnershipRule.AllAtLimit ? "all-at-limit" : "list";
+                body["digest"] = result.Record.Digest;
+            }
+            if (result.SendsCards) body["cards"] = cards;
+            return body;
+        }
+
         /// <summary>
         /// Resolve the bearer token to an account and project its collection.
         ///

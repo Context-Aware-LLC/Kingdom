@@ -83,7 +83,20 @@ namespace Kingdom.Session
             PlayerAccount account = PlayerAccount.Local;
             // The digest of the record this device already holds, so an unchanged collection costs
             // the server a comparison rather than the whole card list. Null when it holds none.
-            string deviceDigest = account.OwnershipDigest();
+            string deviceDigest;
+            try
+            {
+                deviceDigest = account.OwnershipDigest();
+            }
+            catch (Exception ex) when (!(ex is OperationCanceledException))
+            {
+                // A damaged ownership file must not wedge the sync: with no header the server sends
+                // the full list and a Synced answer overwrites the file. Type and message only; the
+                // file's contents are never logged.
+                Debug.LogWarning($"[Collection] ownership record unreadable ({ex.GetType().Name}: {ex.Message}); " +
+                                 "syncing without a digest so the server's answer replaces it.");
+                deviceDigest = null;
+            }
             CollectionSnapshot snapshot = await FetchAsync(accessToken, deviceDigest, cancellationToken);
             if (cancellationToken.IsCancellationRequested || !ReferenceEquals(account, PlayerAccount.Local))
                 return CollectionSnapshot.Failed(

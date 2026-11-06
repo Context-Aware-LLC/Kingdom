@@ -569,6 +569,64 @@ namespace Kingdom.Net.Server.Tests.Accounts
             Assert.That(result.Packs, Is.Empty);
         }
 
+        // -- The wire body ----------------------------------------------------------------
+
+        private static System.Text.Json.JsonElement Body(CollectionResult result)
+            => System.Text.Json.JsonSerializer.SerializeToElement(CollectionEndpoint.ToBody(result));
+
+        [Test]
+        public async Task ToBody_List_Changed_CarriesRuleDigestAndCards()
+        {
+            var (store, ledger, record) = await StandardWithCardsAsync();
+            var result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger, economy: null, onboarding: null);
+
+            var body = Body(result);
+
+            Assert.That(body.GetProperty("rule").GetString(), Is.EqualTo("list"));
+            Assert.That(body.GetProperty("digest").GetString(), Is.EqualTo(record.Digest));
+            Assert.That(body.GetProperty("cardsUnchanged").GetBoolean(), Is.False);
+            Assert.That(body.GetProperty("cards").GetProperty("1001").GetInt64(), Is.EqualTo(2));
+            Assert.That(body.TryGetProperty("packs", out _), Is.True);
+            Assert.That(body.GetProperty("wallet").TryGetProperty("gold", out _), Is.True);
+        }
+
+        [Test]
+        public async Task ToBody_List_Unchanged_OmitsCards_KeepsPacksAndWallet()
+        {
+            var (store, ledger, record) = await StandardWithCardsAsync();
+            var result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger, economy: null, onboarding: null,
+                deviceDigest: record.Digest);
+
+            var body = Body(result);
+
+            Assert.That(body.GetProperty("rule").GetString(), Is.EqualTo("list"));
+            Assert.That(body.GetProperty("cardsUnchanged").GetBoolean(), Is.True);
+            Assert.That(body.TryGetProperty("cards", out _), Is.False, "cards is ABSENT, not null");
+            Assert.That(body.TryGetProperty("packs", out _), Is.True);
+            Assert.That(body.TryGetProperty("wallet", out _), Is.True);
+        }
+
+        [Test]
+        public async Task ToBody_Superuser_IsAllAtLimit_WithNoCards()
+        {
+            var store = new InMemoryAccountStore(new FixedTime());
+            Account account = await store.ResolveOrCreateAsync(
+                "supabase", CredentialHash.Of(Subject), "sam@example.com");
+            await store.SetKindAsync(account.PlayerId, AccountKind.Superuser);
+            var result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, new InMemoryEntitlementLedger(), economy: null, onboarding: null);
+
+            var body = Body(result);
+
+            Assert.That(body.GetProperty("rule").GetString(), Is.EqualTo("all-at-limit"));
+            Assert.That(body.GetProperty("digest").GetString(), Is.EqualTo(OwnershipRecord.AllAtLimit.Digest));
+            Assert.That(body.TryGetProperty("cards", out _), Is.False);
+            Assert.That(body.TryGetProperty("packs", out _), Is.True);
+            Assert.That(body.TryGetProperty("wallet", out _), Is.True);
+        }
+
         /// <summary>A ledger whose grants and history work and whose balance sweep does not — the one
         /// fault shape that isolates the pack read.</summary>
         private sealed class ThrowsOnBalances : IEntitlementLedger
