@@ -244,10 +244,9 @@ namespace Kingdom.Core.Collection
     ///
     /// <para><b>The one store whose Load can return null, and it must stay that way.</b> Every sibling
     /// here turns a missing file into an empty-but-valid value, because "no decks" and "no profile"
-    /// are the same statement as "none stored". Ownership is not: an absent file means nobody has ever
-    /// told this account what it owns, while an empty file means it owns nothing and every deck it holds
-    /// is a draft. Collapsing the two would make the first launch after L6 landed lock every player out
-    /// of the queue. <see cref="IOwnedCardStore"/> carries the full rationale.</para>
+    /// are the same statement as "none stored". Ownership is not: null means this device has no
+    /// verified record and must ask the server, while an empty list means the server says the account
+    /// owns nothing. <see cref="IOwnedCardStore"/> carries the full rationale.</para>
     /// </summary>
     public sealed class JsonOwnedCardStore : IOwnedCardStore
     {
@@ -266,15 +265,15 @@ namespace Kingdom.Core.Collection
         public string FilePath => _filePath;
 
         /// <summary>
-        /// The stored record, or null when this account has never had one. An unreadable file still
-        /// throws <see cref="CollectionFormatException"/> rather than reading as absent: "unknown"
-        /// unlocks the full pool, and silently unlocking it off the back of a corrupt file is the
-        /// entitlement bypass this store exists to prevent.
+        /// The stored record, or null when this device has no verified one: never written, written
+        /// before the digest existed, or edited since (its digest no longer matches its rows). Null
+        /// means ask the server, not "unconstrained". A file that is not readable JSON still throws
+        /// <see cref="CollectionFormatException"/>, because that is damage rather than absence.
         /// </summary>
-        public OwnedCardCounts? Load()
+        public OwnershipRecord? Load()
         {
             string? json = JsonStoreFile.ReadOrNull(_filePath);
-            return json == null ? null : CollectionJson.ReadOwnedCards(json);
+            return json == null ? null : CollectionJson.ReadOwnership(json);
         }
 
         /// <summary>
@@ -282,10 +281,10 @@ namespace Kingdom.Core.Collection
         /// projection of a grant history the client does not hold, so a merge would preserve rows the
         /// authority has since revoked — a dusted card would stay owned forever.
         /// </summary>
-        public void Save(OwnedCardCounts owned)
+        public void Save(OwnershipRecord record)
         {
-            if (owned == null) throw new ArgumentNullException(nameof(owned));
-            JsonStoreFile.Write(_filePath, CollectionJson.WriteOwnedCards(owned));
+            if (record == null) throw new ArgumentNullException(nameof(record));
+            JsonStoreFile.Write(_filePath, CollectionJson.WriteOwnership(record));
         }
     }
 

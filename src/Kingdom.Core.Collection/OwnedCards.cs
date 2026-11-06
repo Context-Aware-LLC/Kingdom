@@ -62,52 +62,31 @@ namespace Kingdom.Core.Collection
     }
 
     /// <summary>
-    /// The one ownership record for an identity scope — what this account owns, per card id.
+    /// The one ownership record for an identity scope — what this account owns, as an
+    /// <see cref="OwnershipRecord"/> carrying its rule and digest.
     ///
-    /// <para><b>Load returns null on a device that has no record, and that null is the whole design.</b>
-    /// It is not an error and it is not "owns nothing": it means <i>ownership is unknown here</i>, which
-    /// is the state every account is in until something grants it cards. Every consumer of L6 —
-    /// <see cref="DeckValidator.Validate(DeckList, Kingdom.Core.Contracts.ICardDatabase, IOwnedCardCounts)"/>,
-    /// <see cref="DeckValidator.CanAdd(DeckList, Kingdom.Core.Cards.CardDefinition, IOwnedCardCounts)"/>,
-    /// the collection wall — takes a null ownership source to mean "do not constrain", which is exactly
-    /// the full-pool alpha the game runs today. An <i>empty but present</i> record is a different thing
-    /// and means what it says: this player owns nothing, and every deck they hold is a draft.</para>
+    /// <para><b>Load returns null when this device has no verified record, and that null is the whole
+    /// design.</b> It means <i>ask the server</i>: the file was never written, predates the digest, or
+    /// no longer matches its own digest. It is not "owns nothing" and it is not "do not constrain". An
+    /// <i>empty list</i> record is a different thing and means what it says: the server told this device
+    /// the account owns nothing.</para>
     ///
-    /// <para><b>The once-only key for the starter grant no longer lives here</b> (2026-09-01; spec
-    /// <c>docs/dev-docs/specs/card-ownership.md</c>, slice 1). It used to be this record's absence:
-    /// a client-side <c>IsDue</c> read the null and the Save that followed marked the account granted.
-    /// With the server's entitlement ledger as the authority, the key is the ledger transaction id
-    /// <c>signup:{playerId}</c> — a replay writes nothing, so the grant is attempted on every account
-    /// resolve and lands exactly once. That <c>IsDue</c> was deleted with slice 3, which is what its
-    /// own retirement trigger asked for: once the client mirrors the server's projection, a
-    /// grant-shaped check sitting in this assembly with no caller is a trap, not a leftover.</para>
-    ///
-    /// <para><b>What DOES still live here is this record's own null,</b> and slice 3 sharpened rather
-    /// than weakened it. The file is a CACHE of the ledger now, written only by
-    /// <c>CollectionGateway</c> and only on an answer the server actually gave — so absent still means
-    /// "never synced, do not constrain", and present-and-empty still means "the server says you own
-    /// nothing". Every failure to reach the server leaves the file untouched, precisely so those two
-    /// never blur.</para>
-    ///
-    /// <para>The distinction that key was drawing survives and is stronger for the move.
-    /// <i>Granted then spent</i> is still never re-granted, now because the ledger keeps the original
-    /// grant rows forever: a balance falling to zero cannot be mistaken for never having received one,
-    /// and no convention about empty-versus-absent files has to be honoured by every future writer.
-    /// <b>What has NOT changed is this record's own null</b> — it still means "ownership unknown, do
-    /// not constrain", every consumer still depends on that, and it is the reason a client that has
-    /// never synced shows the full pool rather than an empty collection.</para>
+    /// <para>The file is a CACHE of the server's ledger, written only on an answer the server actually
+    /// gave. Every failure to reach the server leaves it untouched, so absent and present-and-empty
+    /// never blur. The starter grant's once-only key lives in the ledger (<c>signup:{playerId}</c>),
+    /// not here.</para>
     ///
     /// <para><b>No Delete.</b> Same shape as <see cref="IProfileStore"/> and for the same reason: there
     /// is one record per scope, so there is nothing to enumerate, and clearing it is a Save of an empty
-    /// one — which, per the paragraph above, is a real and very different statement from having none.</para>
+    /// list — which, per the paragraph above, is a real and very different statement from having none.</para>
     /// </summary>
     public interface IOwnedCardStore
     {
-        /// <summary>This account's ownership record, or null when it has never had one.</summary>
-        OwnedCardCounts? Load();
+        /// <summary>This device's verified ownership record, or null when it has none.</summary>
+        OwnershipRecord? Load();
 
-        /// <summary>Write the record. Writing an empty one asserts "owns nothing", not "unknown".</summary>
-        void Save(OwnedCardCounts owned);
+        /// <summary>Write the record. Writing an empty list asserts "owns nothing", not "unknown".</summary>
+        void Save(OwnershipRecord record);
     }
 
     /// <summary>
