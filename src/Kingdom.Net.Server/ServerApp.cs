@@ -1442,9 +1442,13 @@ namespace Kingdom.Net.Server
                     header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
                     bearer = header.Substring("Bearer ".Length).Trim();
 
+                // Client-authored; decides only whether the card list is sent. The endpoint
+                // validates the shape. Never log it (security.md, Current controls).
+                string? deviceDigest = context.Request.Headers["Kingdom-Ownership-Digest"];
+
                 CollectionResult result = await CollectionEndpoint.ReadAsync(
                     bearer, cfg.TokenVerifier, cfg.AccountStore, cfg.EntitlementLedger,
-                    economy, onboarding, context.RequestAborted);
+                    economy, onboarding, deviceDigest, context.RequestAborted);
 
                 context.Response.Headers["Cache-Control"] = "no-store";
 
@@ -1455,11 +1459,13 @@ namespace Kingdom.Net.Server
                 foreach (var row in result.Cards)
                     cards[row.Key.ToString(CultureInfo.InvariantCulture)] = row.Value;
 
+                bool sendCards = !result.CardsUnchanged && result.Record?.Rule == OwnershipRule.List;
+
                 // Unopened packs, by line — an OBJECT keyed by pack id for exactly the reason above,
                 // and NOT the array of {id, count} the spec draft drew: this client reader cannot see
                 // inside an array. The spec was corrected to match rather than the other way round.
                 //
-                // Always present under "known" and "unconstrained", including when empty. The client
+                // Always present under "known", including when empty. The client
                 // treats a missing `packs` as Malformed, because a body that has lost the field and a
                 // player who has opened everything must not be the same answer — the first is a
                 // captive portal, the second is a finished gift.
@@ -1467,23 +1473,35 @@ namespace Kingdom.Net.Server
                 foreach (var row in result.Packs)
                     packs[row.Key] = row.Value;
 
-                return Results.Json(new
+                // A dictionary, not an anonymous type, so rule/digest/cards are ABSENT (not null)
+                // when they do not apply. The client reads a flat object and a null is not a value.
+                var body = new Dictionary<string, object?>
                 {
-                    // "known" | "unconstrained" | "unauthenticated" | "unavailable" — the client
-                    // branches on this string, never on the card count, because an empty collection
-                    // and an unknown one are different answers that would otherwise look identical.
-                    ownership = result.Status.ToString().ToLowerInvariant(),
-                    playerId = result.PlayerId,
-                    cardBacks = result.CardBacks,
-                    cards,
-                    packs,
-                    wallet = new
+                    // "known" | "unauthenticated" | "unavailable" - the client branches on this
+                    // string, never on the card count, because an empty collection and an unknown
+                    // one are different answers that would otherwise look identical.
+                    ["ownership"] = result.Status.ToString().ToLowerInvariant(),
+                    ["playerId"] = result.PlayerId,
+                    ["cardBacks"] = result.CardBacks,
+                    ["cardsUnchanged"] = result.CardsUnchanged,
+                    ["packs"] = packs,
+                    ["wallet"] = new
                     {
                         gold = result.Wallet.Gold,
                         gems = result.Wallet.Gems,
                         shards = result.Wallet.Shards,
                     },
-                }, statusCode: result.HttpStatus);
+                };
+                if (result.Record is not null)
+                {
+                    // "list" | "all-at-limit" - how a known record says what is owned.
+                    body["rule"] = result.Record.Rule == OwnershipRule.AllAtLimit ? "all-at-limit" : "list";
+                    body["digest"] = result.Record.Digest;
+                }
+                // Present iff the device's digest differs and the rule is a list.
+                if (sendCards) body["cards"] = cards;
+
+                return Results.Json(body, statusCode: result.HttpStatus);
             });
 
             // Shop prices and wallet come from the server. A purchase only grants an unopened pack;

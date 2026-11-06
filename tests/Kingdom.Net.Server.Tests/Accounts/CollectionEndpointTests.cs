@@ -237,7 +237,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
         }
 
         [Test]
-        public async Task A_superuser_is_unconstrained_and_no_card_list_is_served()
+        public async Task Superuser_IsKnown_AllAtLimit_WithConstantDigest()
         {
             var store = new InMemoryAccountStore(new FixedTime());
             Account account = await store.ResolveOrCreateAsync(
@@ -248,10 +248,113 @@ namespace Kingdom.Net.Server.Tests.Accounts
                 Token, Accepts(), store, new InMemoryEntitlementLedger(),
                 economy: null, onboarding: null);
 
-            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Unconstrained));
-            // Empty because there is nothing to enumerate — NOT because they own nothing. The status
-            // is what stops the client caching this as an empty collection.
+            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Known));
+            Assert.That(result.Record!.Rule, Is.EqualTo(OwnershipRule.AllAtLimit));
+            Assert.That(result.Record.Digest, Is.EqualTo(OwnershipRecord.AllAtLimit.Digest),
+                "the digest names the rule, not a card list, so it never moves");
+            // Empty because there is nothing to enumerate - the rule is what says they own everything.
             Assert.That(result.Cards, Is.Empty);
+        }
+
+        // -- The digest handshake ---------------------------------------------------------
+
+        private static async Task<(InMemoryAccountStore Store, InMemoryEntitlementLedger Ledger, OwnershipRecord Record)>
+            StandardWithCardsAsync()
+        {
+            var ledger = new InMemoryEntitlementLedger();
+            var store = new InMemoryAccountStore(new FixedTime());
+            Account account = await store.ResolveOrCreateAsync(
+                "supabase", CredentialHash.Of(Subject), "player@example.com");
+            await ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, CardItem(1001), 2, "test", "txn-cards-1", Now));
+            await ledger.GrantAsync(new EntitlementGrant(
+                account.PlayerId, EconomyItems.Gold, 150, "test", "txn-gold-1", Now));
+            var counts = await LedgerOwnedCounts.LoadAsync(ledger, account.PlayerId);
+            return (store, ledger, OwnershipRecord.List(counts));
+        }
+
+        [Test]
+        public async Task Known_NoDeviceDigest_SendsCardsAndDigest()
+        {
+            var (store, ledger, record) = await StandardWithCardsAsync();
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger, economy: null, onboarding: null);
+
+            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Known));
+            Assert.That(result.Record!.Rule, Is.EqualTo(OwnershipRule.List));
+            Assert.That(result.Record.Digest, Is.EqualTo(record.Digest));
+            Assert.That(result.CardsUnchanged, Is.False);
+            Assert.That(result.Cards, Is.EqualTo(new[] { new KeyValuePair<int, int>(1001, 2) }));
+        }
+
+        [Test]
+        public async Task Known_MatchingDigest_OmitsCards_StillSendsPacksAndWallet()
+        {
+            var (store, ledger, record) = await StandardWithCardsAsync();
+            string starter = OnboardingGrant.StarterPack().Id;
+            Account account = (await store.FindByPlayerIdAsync(
+                (await CollectionEndpoint.ReadAsync(Token, Accepts(), store, ledger, null, null)).PlayerId))!;
+            await ledger.GrantAsync(new EntitlementGrant(account.PlayerId, starter, 3, "test", "txn-packs", Now));
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger,
+                new EconomyService(ledger, new FixedTime()), onboarding: null,
+                deviceDigest: record.Digest);
+
+            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Known));
+            Assert.That(result.CardsUnchanged, Is.True);
+            Assert.That(result.Cards, Is.Empty);
+            Assert.That(result.Wallet.Gold, Is.EqualTo(150));
+            Assert.That(result.Packs, Is.EqualTo(new[] { new KeyValuePair<string, long>(starter, 3) }));
+        }
+
+        [Test]
+        public async Task Known_StaleDigest_SendsCards()
+        {
+            var (store, ledger, _) = await StandardWithCardsAsync();
+            string stale = OwnershipRecord.List(new OwnedCardCounts()).Digest;
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, ledger, economy: null, onboarding: null, deviceDigest: stale);
+
+            Assert.That(result.CardsUnchanged, Is.False);
+            Assert.That(result.Cards, Is.EqualTo(new[] { new KeyValuePair<int, int>(1001, 2) }));
+        }
+
+        [Test]
+        public async Task Superuser_MatchingDigest_IsUnchanged()
+        {
+            var store = new InMemoryAccountStore(new FixedTime());
+            Account account = await store.ResolveOrCreateAsync(
+                "supabase", CredentialHash.Of(Subject), "sam@example.com");
+            await store.SetKindAsync(account.PlayerId, AccountKind.Superuser);
+
+            CollectionResult result = await CollectionEndpoint.ReadAsync(
+                Token, Accepts(), store, new InMemoryEntitlementLedger(), null, null,
+                deviceDigest: OwnershipRecord.AllAtLimit.Digest);
+
+            Assert.That(result.CardsUnchanged, Is.True);
+        }
+
+        [Test]
+        public async Task MalformedDigestHeader_TreatedAsAbsent()
+        {
+            var (store, ledger, record) = await StandardWithCardsAsync();
+            string[] bad =
+            {
+                "ABC",
+                record.Digest.ToUpperInvariant(),
+                record.Digest.Substring(0, 63) + "\n",
+            };
+            foreach (string header in bad)
+            {
+                CollectionResult result = await CollectionEndpoint.ReadAsync(
+                    Token, Accepts(), store, ledger, economy: null, onboarding: null, deviceDigest: header);
+
+                Assert.That(result.CardsUnchanged, Is.False, "malformed header must not match");
+                Assert.That(result.Cards, Is.Not.Empty, "malformed header must still send the cards");
+            }
         }
 
         [Test]
@@ -433,7 +536,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             CollectionResult result = await CollectionEndpoint.ReadAsync(
                 Token, Accepts(), store, ledger, economy: null, onboarding: null);
 
-            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Unconstrained));
+            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Known));
             Assert.That(result.Cards, Is.Empty);
             Assert.That(result.Packs, Is.EqualTo(new[]
             {
@@ -462,7 +565,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             CollectionResult result = await CollectionEndpoint.ReadAsync(
                 Token, Accepts(), store, ledger, economy: null, onboarding: null);
 
-            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Unconstrained));
+            Assert.That(result.Status, Is.EqualTo(CollectionResultStatus.Known));
             Assert.That(result.Packs, Is.Empty);
         }
 

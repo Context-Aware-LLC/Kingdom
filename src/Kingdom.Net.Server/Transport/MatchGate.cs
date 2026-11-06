@@ -485,7 +485,7 @@ namespace Kingdom.Net.Server.Transport
                     return;
                 }
                 var outcome = DeckSubmission.Validate(
-                    deckMsg, _db, await AccountOwnedCounts.ForAsync(deckOwnerAccount, _entitlementLedger, ct));
+                    deckMsg, _db, await AccountOwnedCounts.ForAsync(deckOwnerAccount, _entitlementLedger, _db, ct));
                 if (!outcome.Accepted)
                 {
                     Console.Error.WriteLine("[gate] refused player_id={0}: deck rejected: {1}",

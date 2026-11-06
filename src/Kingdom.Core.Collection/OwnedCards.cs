@@ -90,24 +90,6 @@ namespace Kingdom.Core.Collection
     }
 
     /// <summary>
-    /// Every card, unlimited copies — L6 passes for any id without a ledger, a collection file, or a
-    /// pack ever opened. For an account whose identity IS "owns everything" (a superuser: a bot
-    /// opponent, an internal/QA identity) rather than one that merely hasn't been constrained yet.
-    ///
-    /// <para>Deliberately distinct from passing <c>owned: null</c>. Null means "unknown, do not
-    /// constrain" — the day a real ownership source exists for that account, L6 starts applying. This
-    /// type means the account is never meant to be constrained, no matter what else lands.</para>
-    /// </summary>
-    public sealed class AllCardsOwnedCounts : IOwnedCardCounts
-    {
-        public static readonly AllCardsOwnedCounts Instance = new AllCardsOwnedCounts();
-
-        private AllCardsOwnedCounts() { }
-
-        public int CopiesOwned(int cardId) => int.MaxValue;
-    }
-
-    /// <summary>
     /// Every pool-eligible card at its rarity limit — what a superuser owns, expressed as ownership
     /// rather than as "unconstrained". Resolved against a database, so a card added later is covered
     /// with no change to the record that names this rule. A token or non-published row is owned 0 times.

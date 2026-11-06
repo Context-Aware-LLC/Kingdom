@@ -2,7 +2,9 @@ using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
 using Kingdom.Net.Server.Accounts;
+using Kingdom.Net.Server.Tests.Support;
 
 namespace Kingdom.Net.Server.Tests.Accounts
 {
@@ -17,8 +19,8 @@ namespace Kingdom.Net.Server.Tests.Accounts
     ///
     /// <para>The three states that must stay distinct are the whole point of this fixture: <b>null</b>
     /// (unknown — a tokenless tooling seat, or a box with no economy), <b>an empty projection</b> (a real account that
-    /// owns nothing), and <b><c>AllCardsOwnedCounts</c></b> (an identity never meant to be
-    /// constrained). Collapsing any two of them either locks legitimate players out of their decks or
+    /// owns nothing), and <b><c>AtLimitOwnedCounts</c></b> (an identity that owns every pool-eligible
+    /// card at its rarity limit). Collapsing any two of them either locks legitimate players out of their decks or
     /// hands everyone every card.</para>
     /// </summary>
     [TestFixture]
@@ -107,6 +109,8 @@ namespace Kingdom.Net.Server.Tests.Accounts
             Assert.That(owned.RecordedCards, Is.EqualTo(1));
         }
 
+        private static ICardDatabase Db => SessionHarness.Db;
+
         // ── AccountOwnedCounts: the three states ─────────────────────────────────────────────
 
         [Test]
@@ -115,22 +119,22 @@ namespace Kingdom.Net.Server.Tests.Accounts
             var account = new Account("su", "google", "h", DateTimeOffset.UnixEpoch,
                                       Kind: AccountKind.Superuser);
 
-            var result = await AccountOwnedCounts.ForAsync(account, new InMemoryEntitlementLedger());
+            var result = await AccountOwnedCounts.ForAsync(account, new InMemoryEntitlementLedger(), Db);
 
-            Assert.That(result, Is.SameAs(AllCardsOwnedCounts.Instance));
+            Assert.That(result, Is.TypeOf<AtLimitOwnedCounts>());
         }
 
         [Test]
         public async Task No_Account_Is_Unknown_Rather_Than_Empty()
         {
-            Assert.That(await AccountOwnedCounts.ForAsync(null, new InMemoryEntitlementLedger()),
+            Assert.That(await AccountOwnedCounts.ForAsync(null, new InMemoryEntitlementLedger(), Db),
                 Is.Null, "a tokenless seat's ownership is unknown; treating it as empty undecks the player");
         }
 
         [Test]
         public async Task No_Ledger_Is_Unknown_So_A_Dev_Box_Is_Not_Constrained()
         {
-            Assert.That(await AccountOwnedCounts.ForAsync(Standard(), null),
+            Assert.That(await AccountOwnedCounts.ForAsync(Standard(), null, Db),
                 Is.Null, "a box with no economy configured must not start refusing decks");
         }
 
@@ -144,7 +148,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
             var ledger = new InMemoryEntitlementLedger();
             await Grant(ledger, CardItem(3), 2, "t1");
 
-            var result = await AccountOwnedCounts.ForAsync(Standard(), ledger);
+            var result = await AccountOwnedCounts.ForAsync(Standard(), ledger, Db);
 
             Assert.That(result, Is.Not.Null);
             Assert.That(result!.CopiesOwned(3), Is.EqualTo(2));
@@ -159,7 +163,7 @@ namespace Kingdom.Net.Server.Tests.Accounts
         [Test]
         public async Task An_Ungranted_Standard_Account_Projects_Empty_Not_Null()
         {
-            var result = await AccountOwnedCounts.ForAsync(Standard(), new InMemoryEntitlementLedger());
+            var result = await AccountOwnedCounts.ForAsync(Standard(), new InMemoryEntitlementLedger(), Db);
 
             Assert.That(result, Is.Not.Null);
             Assert.That(result!.CopiesOwned(1), Is.Zero);

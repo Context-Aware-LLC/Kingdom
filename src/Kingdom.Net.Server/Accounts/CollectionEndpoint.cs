@@ -9,18 +9,15 @@ namespace Kingdom.Net.Server.Accounts
 {
     /// <summary>
     /// What <c>GET /collection</c> answers with. Three shapes, and the client's whole offline story
-    /// depends on it being able to tell them apart.
+    /// depends on it being able to tell them apart. A superuser is <see cref="Known"/> too: their
+    /// record's rule is <see cref="OwnershipRule.AllAtLimit"/> rather than a list.
     /// </summary>
     public enum CollectionResultStatus
     {
-        /// <summary>The ledger was read. <see cref="CollectionResult.Cards"/> is this player's
-        /// collection — <b>possibly empty, which is a real answer</b> meaning they own nothing.</summary>
+        /// <summary>Ownership was read. <see cref="CollectionResult.Record"/> says what the player owns
+        /// — a list that is <b>possibly empty, which is a real answer</b> meaning they own nothing, or
+        /// the all-at-limit rule for a superuser.</summary>
         Known,
-
-        /// <summary>This identity is never meant to be constrained (a <see cref="AccountKind.Superuser"/>
-        /// — a bot, or Sam's own account). Not "owns everything as a list": there is no list, and the
-        /// client must not cache one. See <see cref="AllCardsOwnedCounts"/>.</summary>
-        Unconstrained,
 
         /// <summary>No bearer token, or one Supabase refused. 401.</summary>
         Unauthenticated,
@@ -36,8 +33,17 @@ namespace Kingdom.Net.Server.Accounts
     {
         public CollectionResultStatus Status { get; }
 
-        /// <summary>Empty unless <see cref="Status"/> is <see cref="CollectionResultStatus.Known"/>.</summary>
+        /// <summary>The card list to send: empty unless the record is a list the device does not
+        /// already hold (<see cref="CardsUnchanged"/> false).</summary>
         public IReadOnlyList<KeyValuePair<int, int>> Cards { get; }
+
+        /// <summary>What the player owns; non-null exactly when <see cref="Status"/> is
+        /// <see cref="CollectionResultStatus.Known"/>.</summary>
+        public OwnershipRecord? Record { get; }
+
+        /// <summary>True when the device's digest matched <see cref="Record"/>, so the card list is
+        /// not sent.</summary>
+        public bool CardsUnchanged { get; }
 
         /// <summary>
         /// Unopened packs the player holds, by pack line — the balance of every item
@@ -49,11 +55,10 @@ namespace Kingdom.Net.Server.Accounts
         /// quits still lands on the rest next launch, without needing the menu entry that is waiting
         /// on the main-menu overhaul.</para>
         ///
-        /// <para><b>Populated for <see cref="CollectionResultStatus.Unconstrained"/> as well as
-        /// <see cref="CollectionResultStatus.Known"/></b>, unlike <see cref="Cards"/>. A superuser has
-        /// no card list because there is nothing to enumerate — but their packs are real ledger rows
-        /// with a real balance, and Sam's own account being unable to open its starter packs would
-        /// make the gift untestable on the one device it is developed on.</para>
+        /// <para><b>Always live, never gated by the digest.</b> A superuser has no card list because
+        /// there is nothing to enumerate — but their packs are real ledger rows with a real balance,
+        /// and Sam's own account being unable to open its starter packs would make the gift untestable
+        /// on the one device it is developed on.</para>
         /// </summary>
         public IReadOnlyList<KeyValuePair<string, long>> Packs { get; }
 
@@ -71,9 +76,13 @@ namespace Kingdom.Net.Server.Accounts
                                 WalletBalances wallet = default,
                                 string playerId = "",
                                 IReadOnlyList<KeyValuePair<string, long>>? packs = null,
-                                IReadOnlyDictionary<int, long>? cardBacks = null)
+                                IReadOnlyDictionary<int, long>? cardBacks = null,
+                                OwnershipRecord? record = null,
+                                bool cardsUnchanged = false)
         {
             Status = status;
+            Record = record;
+            CardsUnchanged = cardsUnchanged;
             CardBacks = cardBacks;
             Cards = cards ?? Array.Empty<KeyValuePair<int, int>>();
             Wallet = wallet;
@@ -86,7 +95,6 @@ namespace Kingdom.Net.Server.Accounts
         public int HttpStatus => Status switch
         {
             CollectionResultStatus.Known => 200,
-            CollectionResultStatus.Unconstrained => 200,
             CollectionResultStatus.Unauthenticated => 401,
             CollectionResultStatus.Unavailable => 503,
             _ => 500,
@@ -131,6 +139,10 @@ namespace Kingdom.Net.Server.Accounts
         /// <para>Takes its collaborators rather than reading configuration, so the whole route is
         /// exercised by the dotnet suite without Kestrel — the HTTP mapping in <c>ServerApp</c> is
         /// then only a status code and a JSON writer.</para>
+        ///
+        /// <para><paramref name="deviceDigest"/> is the client-authored <c>Kingdom-Ownership-Digest</c>
+        /// header, raw. It decides only whether the card list is sent; anything that is not 64
+        /// lowercase hex is treated as absent.</para>
         /// </summary>
         public static async Task<CollectionResult> ReadAsync(
             string? bearerToken,
@@ -139,6 +151,7 @@ namespace Kingdom.Net.Server.Accounts
             IEntitlementLedger? ledger,
             EconomyService? economy,
             OnboardingGrantService? onboarding,
+            string? deviceDigest = null,
             CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(bearerToken))
@@ -216,33 +229,35 @@ namespace Kingdom.Net.Server.Accounts
                     account.PlayerId, ex.Message);
             }
 
-            IOwnedCardCounts? owned = await AccountOwnedCounts.ForAsync(account, ledger, ct)
-                .ConfigureAwait(false);
+            // A superuser is a rule, not a list; everyone else is the ledger projected to counts.
+            // The ledger is non-null here (checked above) and the account is resolved, so this is the
+            // same split AccountOwnedCounts.ForAsync makes for L6, without needing a card database.
+            OwnershipRecord record = account.Kind == AccountKind.Superuser
+                ? OwnershipRecord.AllAtLimit
+                : OwnershipRecord.List(
+                    await LedgerOwnedCounts.LoadAsync(ledger, account.PlayerId, ct).ConfigureAwait(false));
 
-            // ForAsync returns AllCardsOwnedCounts for a superuser and never enumerates it — there is
-            // nothing to enumerate. Saying so explicitly is what stops the client caching an empty
-            // list for Sam's own account and undecking him.
             IReadOnlyList<KeyValuePair<string, long>> packs =
                 await PacksOf(ledger, account, ct).ConfigureAwait(false);
 
-            if (owned is AllCardsOwnedCounts)
-                return new CollectionResult(CollectionResultStatus.Unconstrained,
-                    wallet: await WalletOf(economy, account, ct).ConfigureAwait(false),
-                    playerId: account.PlayerId,
-                    packs: packs, cardBacks: cardBacks);
+            // SECURITY (docs/dev-docs/quality/security.md, Current controls): the digest header is
+            // client-authored. It decides ONLY whether the card list is sent. Never read ownership
+            // from it, and never treat a match as evidence of ownership - L6 at MatchGate reads the
+            // ledger. Ignored unless 64 lowercase hex; never log its value.
+            bool unchanged = OwnershipDigest.IsWellFormed(deviceDigest) &&
+                             string.Equals(deviceDigest, record.Digest, StringComparison.Ordinal);
 
-            // Null here means the ledger is configured but ForAsync still declined — today only when
-            // the account is null, which cannot happen on this path. Treated as Unavailable rather
-            // than as an empty collection, because "unknown" must never be served as "owns nothing".
-            if (owned is not OwnedCardCounts counts)
-                return new CollectionResult(CollectionResultStatus.Unavailable);
+            IReadOnlyList<KeyValuePair<int, int>> cards =
+                record.Rule == OwnershipRule.List && !unchanged
+                    ? record.Counts!.Entries()
+                    : Array.Empty<KeyValuePair<int, int>>();
 
             return new CollectionResult(
                 CollectionResultStatus.Known,
-                counts.Entries(),
+                cards,
                 await WalletOf(economy, account, ct).ConfigureAwait(false),
                 account.PlayerId,
-                packs, cardBacks);
+                packs, cardBacks, record, unchanged);
         }
 
         /// <summary>

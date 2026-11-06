@@ -162,13 +162,29 @@ namespace Kingdom.Net.Server.Tests
         }
 
         [Test]
-        public void Validate_Accepts_Under_The_Superuser_All_Cards_Source()
+        public void Validate_Accepts_A_Legal_Deck_Under_The_Superuser_At_Limit_Source()
         {
-            // AccountOwnedCounts.For hands a superuser AllCardsOwnedCounts.Instance; L6 runs but every card
-            // is owned, so a legal deck still passes. This is the bot/QA "unconstrained by construction" path.
+            // AccountOwnedCounts.ForAsync hands a superuser AtLimitOwnedCounts: L6 runs and every card
+            // is owned up to its rarity limit, so a legal deck passes.
             var msg = LegalSubmission(CardClass.GRAVEKEEP, CardClass.VERDANT);
-            var result = DeckSubmission.Validate(msg, Db, AllCardsOwnedCounts.Instance);
+            var result = DeckSubmission.Validate(msg, Db, new AtLimitOwnedCounts(Db));
             Assert.That(result.Accepted, Is.True, result.Reason);
+        }
+
+        [Test]
+        public void Validate_Refuses_Three_Copies_Of_A_Common_Under_The_Superuser_At_Limit_Source()
+        {
+            // The superuser cap moved from int.MaxValue to the rarity limit; L2 refuses a third copy
+            // exactly as it does for everyone.
+            var lines = LegalLines(CardClass.GRAVEKEEP, CardClass.VERDANT);
+            int idx = lines.FindIndex(l => Db.TryGet(l.CardId, out var d) && d.Rarity == Rarity.COMMON);
+            Assert.That(idx, Is.GreaterThanOrEqualTo(0), "the generated deck holds a common");
+            lines[idx] = new DeckCardLine(lines[idx].CardId, 3);
+            var msg = new SubmitDeckMsg(CardClass.GRAVEKEEP, CardClass.VERDANT, lines);
+
+            var result = DeckSubmission.Validate(msg, Db, new AtLimitOwnedCounts(Db));
+
+            Assert.That(result.Accepted, Is.False);
         }
 
         // ── Over real sockets ─────────────────────────────────────────────────────

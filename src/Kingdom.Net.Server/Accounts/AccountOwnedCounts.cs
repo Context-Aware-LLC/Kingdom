@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
 
 namespace Kingdom.Net.Server.Accounts
 {
@@ -12,8 +13,8 @@ namespace Kingdom.Net.Server.Accounts
     ///
     /// <para><b>Three distinct answers, and collapsing any two of them is a real bug:</b> null means
     /// ownership is UNKNOWN and nothing may be constrained; an empty projection means a real account
-    /// that owns nothing, whose every deck is a draft; and <see cref="AllCardsOwnedCounts"/> means an
-    /// identity that is never meant to be constrained at all. Reading "unknown" as "empty" undecks
+    /// that owns nothing, whose every deck is a draft; and <see cref="AtLimitOwnedCounts"/> means an
+    /// identity that owns every pool-eligible card at its rarity limit. Reading "unknown" as "empty" undecks
     /// every legitimate player on a box with no economy configured; reading "empty" as "unknown" makes
     /// ownership unenforceable by omission.</para>
     /// </summary>
@@ -23,9 +24,9 @@ namespace Kingdom.Net.Server.Accounts
         /// The submitting account's ownership source for L6.
         ///
         /// <list type="bullet">
-        ///   <item><b><see cref="AccountKind.Superuser"/></b> → <see cref="AllCardsOwnedCounts"/>. A bot
-        ///     opponent or an internal/QA identity: never constrained, whatever the ledger says, and
-        ///     the ledger is not even consulted.</item>
+        ///   <item><b><see cref="AccountKind.Superuser"/></b> → <see cref="AtLimitOwnedCounts"/>. A bot
+        ///     opponent or an internal/QA identity: owns every card at its rarity limit, whatever the
+        ///     ledger says, and the ledger is not even consulted.</item>
         ///   <item><b>No account</b> → null. Every seat resolved without the account store: a tokenless
         ///     tooling seat (<c>ServerOptions.AllowTokenlessMatches</c>, never on a booted server),
         ///     or a signed-in connect on a dev box with no
@@ -42,10 +43,11 @@ namespace Kingdom.Net.Server.Accounts
         /// </summary>
         public static async Task<IOwnedCardCounts?> ForAsync(Account? account,
                                                              IEntitlementLedger? ledger,
+                                                             ICardDatabase db,
                                                              CancellationToken ct = default)
         {
             if (account is null) return null;
-            if (account.Kind == AccountKind.Superuser) return AllCardsOwnedCounts.Instance;
+            if (account.Kind == AccountKind.Superuser) return new AtLimitOwnedCounts(db);
             if (ledger is null) return null;
 
             return await LedgerOwnedCounts.LoadAsync(ledger, account.PlayerId, ct).ConfigureAwait(false);
