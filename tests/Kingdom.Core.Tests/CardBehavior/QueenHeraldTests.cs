@@ -71,7 +71,7 @@ namespace Kingdom.Core.Tests.CardBehavior
             Assert.That(_db.AllCollectible().Select(c => c.Id), Does.Not.Contain(id));
             var deck = new DeckList(CardClass.GRAVEKEEP, CardClass.CLOCKWRIGHT) { Id = "test", Name = "test" };
             deck.Entries.Add(new DeckEntry(id, 1));
-            Assert.That(DeckValidator.Validate(deck, _db, AllCardsOwnedCounts.Instance).Violations.Select(v => v.Rule),
+            Assert.That(DeckValidator.Validate(deck, _db, new AtLimitOwnedCounts(_db)).Violations.Select(v => v.Rule),
                 Does.Contain(DeckRule.L7_NotPublished));
             var editable = EditableCard.FromDefinition(card);
             Assert.That(CardTextGenerator.Generate(editable.ToDefinition(), _db), Is.EqualTo(card.Text));

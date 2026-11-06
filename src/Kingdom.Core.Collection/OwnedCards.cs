@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Kingdom.Core.Contracts;
 
 namespace Kingdom.Core.Collection
 {
@@ -125,5 +126,21 @@ namespace Kingdom.Core.Collection
         private AllCardsOwnedCounts() { }
 
         public int CopiesOwned(int cardId) => int.MaxValue;
+    }
+
+    /// <summary>
+    /// Every pool-eligible card at its rarity limit — what a superuser owns, expressed as ownership
+    /// rather than as "unconstrained". Resolved against a database, so a card added later is covered
+    /// with no change to the record that names this rule. A token or non-published row is owned 0 times.
+    /// </summary>
+    public sealed class AtLimitOwnedCounts : IOwnedCardCounts
+    {
+        private readonly ICardDatabase _db;
+
+        public AtLimitOwnedCounts(ICardDatabase db)
+            => _db = db ?? throw new ArgumentNullException(nameof(db));
+
+        public int CopiesOwned(int cardId)
+            => _db.TryGet(cardId, out var def) && def.PoolEligible ? DeckValidator.MaxCopies(def.Rarity) : 0;
     }
 }

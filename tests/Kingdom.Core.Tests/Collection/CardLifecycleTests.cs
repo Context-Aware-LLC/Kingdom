@@ -62,7 +62,7 @@ namespace Kingdom.Core.Tests.Collection
             var deck = new DeckList(CardClass.GRAVEKEEP, CardClass.VERDANT) { Id = "d", Name = "d" };
             deck.Entries.Add(new DeckEntry(probe.Id, 1));
 
-            DeckValidation result = DeckValidator.Validate(deck, db, AllCardsOwnedCounts.Instance);
+            DeckValidation result = DeckValidator.Validate(deck, db, new AtLimitOwnedCounts(db));
 
             Assert.That(result.Violations.Select(v => v.Rule), Does.Contain(DeckRule.L7_NotPublished));
         }
