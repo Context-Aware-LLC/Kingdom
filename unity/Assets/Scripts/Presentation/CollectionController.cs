@@ -311,8 +311,76 @@ namespace Kingdom.Presentation
                 if (_tidbit == null || _queryToggleButton == null
                     || FirstRunMarkers.Has(FirstRunMarkers.Tidbit("filters"))) return;
                 Light(_queryToggleButton);
+                ShowSpotlight(_queryToggleButton);
                 _filtersLesson = true;
             });
+        }
+
+        private VisualElement _spotlight, _spotlightTop, _spotlightBottom, _spotlightLeft,
+            _spotlightRight, _spotlightRing;
+        /// <summary>The button the spotlight leaves uncovered; null while it is down.</summary>
+        private VisualElement _spotlit;
+        /// <summary>How far the ring stands off the lit button, in layout px.</summary>
+        private const float SpotlightRingPad = 5f;
+
+        /// <summary>Dim the whole screen except <paramref name="target"/> and ring it, so a player
+        /// held to one button can see which (Sam, 2026-11-06). The input gate is separate
+        /// (<see cref="GateLessonInput"/>); this is only what the player sees.</summary>
+        private void ShowSpotlight(VisualElement target)
+        {
+            HideSpotlight();
+            if (_spotlight == null || target == null) return;
+            _spotlit = target;
+            target.RegisterCallback<GeometryChangedEvent>(OnSpotlightGeometry);
+            _spotlight.RegisterCallback<GeometryChangedEvent>(OnSpotlightGeometry);
+            _spotlight.AddToClassList("col-spotlight--shown");
+            PlaceSpotlight();
+            // A frame later, so the opacity transition starts from the displayed state.
+            _spotlight.schedule.Execute(() =>
+            {
+                if (_spotlit != null) _spotlight.AddToClassList("col-spotlight--lit");
+            });
+        }
+
+        private void HideSpotlight()
+        {
+            if (_spotlit != null) _spotlit.UnregisterCallback<GeometryChangedEvent>(OnSpotlightGeometry);
+            _spotlit = null;
+            if (_spotlight == null) return;
+            _spotlight.UnregisterCallback<GeometryChangedEvent>(OnSpotlightGeometry);
+            _spotlight.RemoveFromClassList("col-spotlight--lit");
+            _spotlight.RemoveFromClassList("col-spotlight--shown");
+            _spotlightRing?.RemoveFromClassList("col-spotlight__ring--bright");
+        }
+
+        private void OnSpotlightGeometry(GeometryChangedEvent _) => PlaceSpotlight();
+
+        /// <summary>Size the four shades around the lit button's rect, in the spotlight's own space.
+        /// Before the first layout the rects are NaN; the geometry callbacks place it once they are not.</summary>
+        private void PlaceSpotlight()
+        {
+            if (_spotlit == null || _spotlight == null) return;
+            Rect hole = _spotlight.WorldToLocal(_spotlit.worldBound);
+            float w = _spotlight.layout.width, h = _spotlight.layout.height;
+            if (float.IsNaN(hole.x) || float.IsNaN(hole.y) || float.IsNaN(w) || float.IsNaN(h)) return;
+
+            float x0 = Mathf.Clamp(hole.xMin, 0f, w), x1 = Mathf.Clamp(hole.xMax, 0f, w);
+            float y0 = Mathf.Clamp(hole.yMin, 0f, h), y1 = Mathf.Clamp(hole.yMax, 0f, h);
+            PlaceShade(_spotlightTop, 0f, 0f, w, y0);
+            PlaceShade(_spotlightBottom, 0f, y1, w, h - y1);
+            PlaceShade(_spotlightLeft, 0f, y0, x0, y1 - y0);
+            PlaceShade(_spotlightRight, x1, y0, w - x1, y1 - y0);
+            PlaceShade(_spotlightRing, hole.xMin - SpotlightRingPad, hole.yMin - SpotlightRingPad,
+                hole.width + 2f * SpotlightRingPad, hole.height + 2f * SpotlightRingPad);
+        }
+
+        private static void PlaceShade(VisualElement shade, float x, float y, float width, float height)
+        {
+            if (shade == null) return;
+            shade.style.left = x;
+            shade.style.top = y;
+            shade.style.width = Mathf.Max(0f, width);
+            shade.style.height = Mathf.Max(0f, height);
         }
 
         /// <summary>The breath a guided button takes, as on the main menu; the same 1.1s.</summary>
@@ -349,6 +417,7 @@ namespace Kingdom.Presentation
         {
             bool filters = _filtersLesson && _guided == _queryToggleButton;
             _filtersLesson = false;
+            HideSpotlight();
             Light(null);
             if (filters)
                 _tidbit?.Show(TidbitTrigger.FiltersHighlighted, () => Light(_decksButton));
@@ -371,7 +440,14 @@ namespace Kingdom.Presentation
             button.AddToClassList("col-guide");
             button.RegisterCallback<ClickEvent>(OnGuidedTapped);
             _guidePulse = button.schedule
-                .Execute(() => button.ToggleInClassList("col-guide--bright"))
+                .Execute(() =>
+                {
+                    button.ToggleInClassList("col-guide--bright");
+                    // The spotlight's ring breathes with the button it rings.
+                    if (_spotlit == button)
+                        _spotlightRing?.EnableInClassList("col-spotlight__ring--bright",
+                            button.ClassListContains("col-guide--bright"));
+                })
                 .Every(GuidePulseHalfMs);
         }
 
@@ -515,6 +591,12 @@ namespace Kingdom.Presentation
             _decksButton         = _root.Q<Button>("decks-button");
             _deckSaveFailed      = _root.Q<VisualElement>("deck-save-failed");
             _deckSaveError       = _root.Q<Label>("deck-save-error");
+            _spotlight           = _root.Q<VisualElement>("col-spotlight");
+            _spotlightTop        = _root.Q<VisualElement>("col-spotlight-top");
+            _spotlightBottom     = _root.Q<VisualElement>("col-spotlight-bottom");
+            _spotlightLeft       = _root.Q<VisualElement>("col-spotlight-left");
+            _spotlightRight      = _root.Q<VisualElement>("col-spotlight-right");
+            _spotlightRing       = _root.Q<VisualElement>("col-spotlight-ring");
         }
 
         // The real card, baked to a texture — one card front implementation
@@ -638,6 +720,7 @@ namespace Kingdom.Presentation
             // Got it button, so the old one must stop answering it.
             _tidbit?.Cancel();
             _tidbit = null;
+            HideSpotlight();
             CancelDeckHold();
             HideDeckCardPreview();
             _root?.UnregisterCallback<PointerDownEvent>(OnDeckTouchDown, TrickleDown.TrickleDown);

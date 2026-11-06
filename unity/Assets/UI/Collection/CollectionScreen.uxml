@@ -182,6 +182,16 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
+        <!-- SPOTLIGHT: the first-run guide's dim, driven by CollectionController.ShowSpotlight. Four
+             shades are placed around the guided button and leave it uncovered, so it alone stays
+             lit and tappable; the ring outlines the gap. Under the tidbit, over everything else. -->
+        <ui:VisualElement name="col-spotlight" picking-mode="Ignore" class="col-spotlight">
+            <ui:VisualElement name="col-spotlight-top" class="col-spotlight__shade"/>
+            <ui:VisualElement name="col-spotlight-bottom" class="col-spotlight__shade"/>
+            <ui:VisualElement name="col-spotlight-left" class="col-spotlight__shade"/>
+            <ui:VisualElement name="col-spotlight-right" class="col-spotlight__shade"/>
+            <ui:VisualElement name="col-spotlight-ring" picking-mode="Ignore" class="col-spotlight__ring"/>
+        </ui:VisualElement>
         <!-- TIDBIT: the first-look card, driven by FirstRunTidbit (#403). LAST CHILD ON PURPOSE:
              UI Toolkit has no z-index, so document order is the only thing putting this over
              everything else on the screen. It starts hidden in the markup AND FirstRunTidbit
