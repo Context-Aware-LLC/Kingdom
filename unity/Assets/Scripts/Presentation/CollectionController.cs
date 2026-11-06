@@ -291,6 +291,7 @@ namespace Kingdom.Presentation
             // state the player actually arrives in. It sits under the loading plate with the rest
             // of the tree and is revealed with it.
             _tidbit = new FirstRunTidbit(_root);
+            WireLessonGate();
             OfferFirstLook();
         }
 
@@ -301,26 +302,57 @@ namespace Kingdom.Presentation
         {
             if (_tidbit == null || _tidbit.IsShowing) return;
             if (EditingDeck) { _tidbit.Show(TidbitTrigger.DeckEditorArrival); return; }
-            // The collection's lesson, then the Filters lit with their own lesson, then the Decks
-            // button lit until it is tapped (Sam, 2026-11-05). A lesson already seen is skipped,
+            // The collection's lesson, then the Filters lit with everything else refusing input
+            // until the player taps it; the tap opens the drawer and its lesson opens over it, and
+            // the Decks button is lit after (Sam, 2026-11-05). A lesson already seen is skipped,
             // and the lights come on only for one still to be read.
             _tidbit.Show(TidbitTrigger.CollectionArrival, () =>
             {
-                if (_tidbit == null || FirstRunMarkers.Has(FirstRunMarkers.Tidbit("filters"))) return;
+                if (_tidbit == null || _queryToggleButton == null
+                    || FirstRunMarkers.Has(FirstRunMarkers.Tidbit("filters"))) return;
                 Light(_queryToggleButton);
-                _root.schedule.Execute(() => _tidbit?.Show(TidbitTrigger.FiltersHighlighted, () =>
-                {
-                    Light(_decksButton);
-                })).ExecuteLater(GuideLeadMs);
+                _filtersLesson = true;
             });
         }
 
         /// <summary>The breath a guided button takes, as on the main menu; the same 1.1s.</summary>
         private const int GuidePulseHalfMs = 1100;
-        /// <summary>How long a button is lit on its own before its lesson opens over it.</summary>
-        private const int GuideLeadMs = 1600;
         private Button _guided;
         private IVisualElementScheduledItem _guidePulse;
+        /// <summary>True while the Filters button is lit and is the only thing that takes input.</summary>
+        private bool _filtersLesson;
+
+        /// <summary>Refuses every pointer and wheel event outside the Filters button while
+        /// <see cref="_filtersLesson"/> holds. Caught on the way down, so nothing below the root
+        /// sees it; the Back gesture is refused in <see cref="HandleBack"/>.</summary>
+        private void WireLessonGate()
+        {
+            _root.RegisterCallback<PointerDownEvent>(GateLessonInput, TrickleDown.TrickleDown);
+            _root.RegisterCallback<PointerUpEvent>(GateLessonInput, TrickleDown.TrickleDown);
+            _root.RegisterCallback<PointerMoveEvent>(GateLessonInput, TrickleDown.TrickleDown);
+            _root.RegisterCallback<ClickEvent>(GateLessonInput, TrickleDown.TrickleDown);
+            _root.RegisterCallback<WheelEvent>(GateLessonInput, TrickleDown.TrickleDown);
+            _root.RegisterCallback<NavigationSubmitEvent>(GateLessonInput, TrickleDown.TrickleDown);
+        }
+
+        private void GateLessonInput(EventBase evt)
+        {
+            if (!_filtersLesson) return;
+            if (evt.target is VisualElement ve && _queryToggleButton != null
+                && (ve == _queryToggleButton || _queryToggleButton.Contains(ve))) return;
+            evt.StopImmediatePropagation();
+        }
+
+        /// <summary>The lit button was tapped. For the Filters lesson its own handler has just
+        /// opened the drawer, so the lesson opens over it and the Decks button is lit after.</summary>
+        private void OnGuidedTapped(ClickEvent _)
+        {
+            bool filters = _filtersLesson && _guided == _queryToggleButton;
+            _filtersLesson = false;
+            Light(null);
+            if (filters)
+                _tidbit?.Show(TidbitTrigger.FiltersHighlighted, () => Light(_decksButton));
+        }
 
         /// <summary>Pulse <paramref name="button"/> until it is tapped or another is lit; null
         /// puts the light out.</summary>
@@ -332,18 +364,16 @@ namespace Kingdom.Presentation
             {
                 _guided.RemoveFromClassList("col-guide");
                 _guided.RemoveFromClassList("col-guide--bright");
-                _guided.UnregisterCallback<ClickEvent>(PutOutLight);
+                _guided.UnregisterCallback<ClickEvent>(OnGuidedTapped);
             }
             _guided = button;
             if (button == null) return;
             button.AddToClassList("col-guide");
-            button.RegisterCallback<ClickEvent>(PutOutLight);
+            button.RegisterCallback<ClickEvent>(OnGuidedTapped);
             _guidePulse = button.schedule
                 .Execute(() => button.ToggleInClassList("col-guide--bright"))
                 .Every(GuidePulseHalfMs);
         }
-
-        private void PutOutLight(ClickEvent _) => Light(null);
 
         /// <summary>
         /// Consume the roster handoff after the Collection shell is fully live. A broken id leaves
@@ -1511,6 +1541,7 @@ namespace Kingdom.Presentation
 
         private void HandleBack()
         {
+            if (_filtersLesson) return;
             if (_queryDrawerOpen)
             {
                 SetQueryDrawerOpen(false);
