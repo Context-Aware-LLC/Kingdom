@@ -6,7 +6,10 @@ using Kingdom.Core.Contracts;
 namespace Kingdom.Net.Server.Accounts
 {
     /// <summary>
-    /// The one place an <see cref="Account"/> becomes an <see cref="IOwnedCardCounts"/> for L6.
+    /// The one place an <see cref="Account"/> becomes what it owns: <see cref="RecordForAsync"/> makes
+    /// the decision (superuser, ledger, or unknown) and <see cref="ForAsync"/> maps it to an
+    /// <see cref="IOwnedCardCounts"/> for L6. <c>GET /collection</c> serves the same record to the
+    /// client, so the screen and the gate cannot disagree.
     /// <c>MatchGate</c> threads the result into <c>DeckSubmission.Validate</c> → <c>QueueEligibility.Check</c>
     /// on the match-join path (NOR-313), so an illegal deck is refused at the handshake and no card the
     /// player does not own reaches match state.
@@ -46,11 +49,25 @@ namespace Kingdom.Net.Server.Accounts
                                                              ICardDatabase db,
                                                              CancellationToken ct = default)
         {
+            OwnershipRecord? record = await RecordForAsync(account, ledger, ct).ConfigureAwait(false);
+            return record?.Resolve(db);
+        }
+
+        /// <summary>
+        /// The account's ownership as a record, or null when it is UNKNOWN (no account, or no ledger).
+        /// The single decision behind both <see cref="ForAsync"/> (the L6 gate) and
+        /// <c>GET /collection</c> (the client's copy); see <see cref="ForAsync"/> for what each case means.
+        /// </summary>
+        public static async Task<OwnershipRecord?> RecordForAsync(Account? account,
+                                                                  IEntitlementLedger? ledger,
+                                                                  CancellationToken ct = default)
+        {
             if (account is null) return null;
-            if (account.Kind == AccountKind.Superuser) return new AtLimitOwnedCounts(db);
+            if (account.Kind == AccountKind.Superuser) return OwnershipRecord.AllAtLimit;
             if (ledger is null) return null;
 
-            return await LedgerOwnedCounts.LoadAsync(ledger, account.PlayerId, ct).ConfigureAwait(false);
+            return OwnershipRecord.List(
+                await LedgerOwnedCounts.LoadAsync(ledger, account.PlayerId, ct).ConfigureAwait(false));
         }
     }
 }

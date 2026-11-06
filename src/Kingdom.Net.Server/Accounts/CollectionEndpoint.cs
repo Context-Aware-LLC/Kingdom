@@ -229,13 +229,13 @@ namespace Kingdom.Net.Server.Accounts
                     account.PlayerId, ex.Message);
             }
 
-            // A superuser is a rule, not a list; everyone else is the ledger projected to counts.
-            // The ledger is non-null here (checked above) and the account is resolved, so this is the
-            // same split AccountOwnedCounts.ForAsync makes for L6, without needing a card database.
-            OwnershipRecord record = account.Kind == AccountKind.Superuser
-                ? OwnershipRecord.AllAtLimit
-                : OwnershipRecord.List(
-                    await LedgerOwnedCounts.LoadAsync(ledger, account.PlayerId, ct).ConfigureAwait(false));
+            // The one ownership decision, shared with the L6 gate. The ledger is non-null here
+            // (checked above) and the account is resolved, so null is not expected; if it ever is,
+            // "unknown" must not be served as "owns nothing".
+            OwnershipRecord? record = await AccountOwnedCounts.RecordForAsync(account, ledger, ct)
+                .ConfigureAwait(false);
+            if (record is null)
+                return new CollectionResult(CollectionResultStatus.Unavailable);
 
             IReadOnlyList<KeyValuePair<string, long>> packs =
                 await PacksOf(ledger, account, ct).ConfigureAwait(false);

@@ -44,8 +44,8 @@ create table if not exists account (
 -- schema landed; idempotent on existing tables. Null on accounts created before this column.
 alter table account add column if not exists email text;
 
--- Account standing — 'standard' | 'superuser'. Superuser bypasses L6 card-ownership legality (see
--- AtLimitOwnedCounts) for bot/QA identities. Never set through ResolveOrCreateAsync's client-facing
+-- Account standing — 'standard' | 'superuser'. A superuser is checked by L6 like anyone else and owns
+-- every pool card at its rarity limit (see AtLimitOwnedCounts) - bot/QA identities. Never set through ResolveOrCreateAsync's client-facing
 -- credential path — only through SetKindAsync, an operator-side call. Defaults every existing and
 -- new row to 'standard', same idempotent-alter posture as email above.
 alter table account add column if not exists kind text not null default 'standard';

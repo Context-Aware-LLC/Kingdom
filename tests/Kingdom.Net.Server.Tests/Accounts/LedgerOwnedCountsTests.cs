@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Kingdom.Core.Collection;
@@ -122,6 +123,36 @@ namespace Kingdom.Net.Server.Tests.Accounts
             var result = await AccountOwnedCounts.ForAsync(account, new InMemoryEntitlementLedger(), Db);
 
             Assert.That(result, Is.TypeOf<AtLimitOwnedCounts>());
+        }
+
+        [Test]
+        public async Task ForAsync_Is_RecordForAsync_Resolved_For_Both_Account_Kinds()
+        {
+            // Pins the gate's view and the client's view to one decision.
+            var ledger = new InMemoryEntitlementLedger();
+            await Grant(ledger, CardItem(3), 2, "t1");
+            var su = new Account("su", "google", "h", DateTimeOffset.UnixEpoch, Kind: AccountKind.Superuser);
+            int sampled = 0;
+            foreach (Account account in new[] { su, Standard() })
+            {
+                var record = await AccountOwnedCounts.RecordForAsync(account, ledger);
+                var viaRecord = record!.Resolve(Db);
+                var viaFor = await AccountOwnedCounts.ForAsync(account, ledger, Db);
+                foreach (var def in Db.AllCollectible().Take(25))
+                {
+                    Assert.That(viaFor!.CopiesOwned(def.Id), Is.EqualTo(viaRecord.CopiesOwned(def.Id)));
+                    sampled++;
+                }
+                Assert.That(viaFor!.CopiesOwned(3), Is.EqualTo(viaRecord.CopiesOwned(3)));
+            }
+            Assert.That(sampled, Is.GreaterThan(0));
+        }
+
+        [Test]
+        public async Task RecordForAsync_Is_Null_When_Ownership_Is_Unknown()
+        {
+            Assert.That(await AccountOwnedCounts.RecordForAsync(null, new InMemoryEntitlementLedger()), Is.Null);
+            Assert.That(await AccountOwnedCounts.RecordForAsync(Standard(), null), Is.Null);
         }
 
         [Test]
