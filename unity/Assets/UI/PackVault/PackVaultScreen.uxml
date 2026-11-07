@@ -18,17 +18,9 @@
             <ui:VisualElement name="vault-rack" class="vault-rack">
                 <ui:VisualElement name="vault-rack-slots" class="vault-rack__slots"/>
                 <!-- vault-rail is the HIT ZONE (PackRackDrag tests its worldBound); the rod inside
-                     it is drawing only, so every piece ignores picking. -->
+                     it is drawing only, so it ignores picking. -->
                 <ui:VisualElement name="vault-rail" class="vault-rail vault-rail--hidden">
-                    <ui:VisualElement class="vault-rail__rod" picking-mode="Ignore">
-                        <ui:VisualElement class="vault-rail__shine" picking-mode="Ignore"/>
-                        <ui:VisualElement class="vault-rail__mount vault-rail__mount--top" picking-mode="Ignore">
-                            <ui:VisualElement class="vault-rail__rivet" picking-mode="Ignore"/>
-                        </ui:VisualElement>
-                        <ui:VisualElement class="vault-rail__mount vault-rail__mount--bottom" picking-mode="Ignore">
-                            <ui:VisualElement class="vault-rail__rivet" picking-mode="Ignore"/>
-                        </ui:VisualElement>
-                    </ui:VisualElement>
+                    <ui:VisualElement class="vault-rail__rod" picking-mode="Ignore"/>
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="vault-main" class="vault-main">
