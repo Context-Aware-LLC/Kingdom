@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 23ab41f6234409d49b3009f8a973e5c8
+guid: 945fedf26c4b400a9b7ffb3669aada3d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4703219482350674464
-    second: pack-vault-rail_0
+      213: 4983634227248578859
+    second: pack-vault-rail-cap_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -34,7 +34,7 @@ TextureImporter:
   cubemapConvolution: 0
   seamlessCubemap: 0
   textureFormat: 1
-  maxTextureSize: 2048
+  maxTextureSize: 256
   textureSettings:
     serializedVersion: 2
     filterMode: 1
@@ -53,7 +53,7 @@ TextureImporter:
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
-  spriteGenerateFallbackPhysicsShape: 1
+  spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
   alphaIsTransparency: 1
   spriteTessellationMethod: 0
@@ -74,10 +74,10 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 2048
+    maxTextureSize: 256
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 1
+    textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -128,13 +128,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: pack-vault-rail_0
+      name: pack-vault-rail-cap_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 256
-        height: 384
+        width: 73
+        height: 109
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -143,8 +143,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0ed9acdaccecabeb0800000000000000
-      internalID: -4703219482350674464
+      spriteID: ae79530748314365b5488a12cbde8426
+      internalID: 4983634227248578859
       vertices: []
       indices: 
       edges: []
@@ -153,7 +153,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 54783ae7d2c24c939661cd39c527ffb1
     internalID: 0
     vertices: []
     indices: 

@@ -286,29 +286,43 @@
     background-color: rgba(0, 0, 0, 0);
 }
 
-/* The rod sprite (2026-11-06): finial and wall bracket in the top 107 texture px, then a plain
- * shaft that runs off the bottom of the texture. The top is the only slice, so the shaft stretches
- * to any height. Width and slice-scale move TOGETHER: 200 / 256 = 0.78125 keeps the finial round,
- * and the element is wider than the ~80px rail column because three quarters of the texture is
- * transparent margin. The negative margin cancels .vault-shell's 104px Back footprint so the shaft
- * runs off the bottom of the screen instead of stopping in mid-air; Back draws over it.
+/* The rod (2026-11-06): a fixed CAP (finial, wall bracket, a little shaft) over a SHAFT element
+ * that repeats a 120-row tile down whatever height is left. Both were cut from one sheet whose
+ * source lives in art-pipeline/ui-chrome; the cap's last row is the tile's true predecessor and the
+ * tile wraps without a seam, so the join is invisible. Cap and tile are both 73 texture px wide
+ * with the shaft at the same columns, and everything is drawn at 0.8 (73 → 58, 120 → 96, 109 → 87):
+ * change one number and change all four, or the shaft steps sideways at the join.
+ * The negative margin cancels .vault-shell's 104px Back footprint so the shaft runs off the bottom
+ * of the screen instead of stopping in mid-air; Back draws over it.
  * Idle is tinted down so armed can brighten it: a tint only multiplies. */
 .vault-rail__rod {
-    width: 200px;
+    width: 58px;
     flex-grow: 1;
     flex-shrink: 0;
     margin-bottom: -104px;
-    background-image: url("/Assets/Art/UI/Chrome/pack-vault-rail-spherical-256.png");
-    -unity-slice-left: 0;
-    -unity-slice-right: 0;
-    -unity-slice-top: 107;
-    -unity-slice-bottom: 0;
-    -unity-slice-scale: 0.78125px;
+}
+
+.vault-rail__cap {
+    height: 87px;
+    flex-shrink: 0;
+    background-image: url("/Assets/Art/UI/Chrome/pack-vault-rail-cap.png");
+    -unity-background-scale-mode: stretch-to-fill;
+    -unity-background-image-tint-color: rgb(200, 200, 200);
+}
+
+.vault-rail__shaft {
+    flex-grow: 1;
+    background-image: url("/Assets/Art/UI/Chrome/pack-vault-rail-shaft.png");
+    background-size: 58px 96px;
+    background-repeat: no-repeat repeat;
+    background-position-x: center;
+    background-position-y: top;
     -unity-background-image-tint-color: rgb(200, 200, 200);
 }
 
 /* A pack held over it: the rod catches the light. */
-.vault-rail--armed .vault-rail__rod {
+.vault-rail--armed .vault-rail__cap,
+.vault-rail--armed .vault-rail__shaft {
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 
