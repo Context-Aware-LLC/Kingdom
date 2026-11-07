@@ -35,7 +35,8 @@ Material:
     - _Intensity: 1
     - _Progress: 1
     - _PulseAmp: 0.35
-    - _PulseRate: 0.35
+    - _LoadingTime: 0
+    - _Heartbeat: 0.5
     - _RimBoost: 0.5
     - _SwirlAmount: 0.6
     - _SwirlFalloff: 1.6

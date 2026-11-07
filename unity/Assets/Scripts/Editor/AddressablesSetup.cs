@@ -57,6 +57,9 @@ namespace Kingdom.Editor
             SyncedGroups.Clear();
 
             var uiCore = GetGroup(settings, "UI_Core");
+            // Archived art must not remain in the always-loaded UI group after regeneration.
+            foreach (var entry in new List<AddressableAssetEntry>(uiCore.entries))
+                if (string.IsNullOrEmpty(entry.AssetPath)) settings.RemoveAssetEntry(entry.guid);
             AddFolderSprites(settings, uiCore, "Assets/Art/UI", "ui");
             AddFolderSprites(settings, uiCore, CardBackCatalog.ArtFolder, "ui");
             AddFolderAssets(settings, uiCore, "Assets/Materials", "materials", "t:Material");
@@ -127,13 +130,15 @@ namespace Kingdom.Editor
             BackgroundAddressables.Synchronize(settings);
             SyncedGroups.Add(BackgroundVariantPolicy.Group(BackgroundTier.DesktopTablet));
             SyncedGroups.Add(BackgroundVariantPolicy.Group(BackgroundTier.Mobile));
-            // Assets/Art/Loading was a staging folder: of its ten textures exactly three were
-            // ever loaded (the orbs), and the other seven only looked live because this scan
-            // registered the folder wholesale. Orbs now have their own root; the rest went to
-            // art-pipeline/junk/. Backgrounds now have explicit tier-qualified registrations;
-            // do not scan their authoring originals back into a third shipping bundle.
+            // StormGlass is the only loading orb. An explicit entry prevents spare exports from
+            // silently joining the player bundles when this setup is rerun.
             var orbsGroup = GetGroup(settings, "Orbs");
-            AddFolderAssets(settings, orbsGroup, "Assets/Art/Orbs", "orbs", "t:Texture2D");
+            foreach (var entry in new List<AddressableAssetEntry>(orbsGroup.entries))
+                settings.RemoveAssetEntry(entry.guid);
+            string loadingOrbGuid = AssetDatabase.AssetPathToGUID(LoadingIndicator.AssetPath);
+            if (!string.IsNullOrEmpty(loadingOrbGuid))
+                settings.CreateOrMoveEntry(loadingOrbGuid, orbsGroup).SetAddress(LoadingIndicator.Address);
+            else Debug.LogError($"[AddressablesSetup] loading indicator missing: {LoadingIndicator.AssetPath}");
             var fontsGroup = GetGroup(settings, "Fonts");
             AddFolderAssets(settings, fontsGroup, "Assets/Art/Fonts", "fonts", "t:TMP_FontAsset");
             var soundEffectsGroup = GetGroup(settings, "SoundEffects");

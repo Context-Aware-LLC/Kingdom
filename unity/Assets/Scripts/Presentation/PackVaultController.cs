@@ -100,7 +100,6 @@ namespace Kingdom.Presentation
         private const int EntranceBannerMs = 60;
         private const int EntranceFirstSlotMs = 220;
         private const int EntranceSlotStepMs = 90;
-        private const float LoadingDegreesPerSecond = 36f;
 
         /// <summary>The starter-pack line the onboarding grant hands over. Opening the last of these is
         /// the end of the gift, whichever face the vault is wearing.
@@ -238,10 +237,7 @@ namespace Kingdom.Presentation
             _loadingIcon = root.Q<VisualElement>("vault-loading-icon");
             if (_loadingIcon != null)
             {
-                _loadingTick = _loadingIcon.schedule.Execute(() =>
-                    _loadingIcon.style.rotate = new Rotate(new Angle(
-                        Time.realtimeSinceStartup * LoadingDegreesPerSecond % 360f)))
-                    .Every(16);
+                _loadingTick = LoadingIndicator.Schedule(_loadingIcon);
                 _loadingTick.Pause();
             }
             _banner = root.Q<VisualElement>("vault-banner");

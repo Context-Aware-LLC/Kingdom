@@ -1018,16 +1018,8 @@
     color: rgb(255, 250, 240);
     font-size: var(--type-h2);
 }
-/* The waiting state's burning crown: a three-frame strip, one frame wide, so the image is 300% of
- * the box and UpdateGateOverlay steps background-position-x through 0%, 50% and 100%. */
-.mm-gate__fuse {
-    width: 220px;
-    height: 220px;
-    align-self: center;
+.mm-gate__loading {
     margin-bottom: var(--space-4);
-    background-image: url("/Assets/Art/UI/Loading/crown_logo_long_fuse_burn_3frame.png");
-    background-size: 300% 100%;
-    background-repeat: no-repeat;
 }
 
 /* ---------- Blocking modal: failed boot and forced update (ConnectionFailedScreen.uxml) ----------

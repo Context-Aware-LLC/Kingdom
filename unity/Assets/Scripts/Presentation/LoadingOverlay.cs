@@ -47,9 +47,7 @@ namespace Kingdom.Presentation
         private static readonly Color ErrorTint = new Color(1.00f, 0.55f, 0.45f);
         private static readonly Color IllustrationMatte = new Color(0.96f, 0.92f, 0.82f);
 
-        private static readonly int FadeId     = Shader.PropertyToID("_Fade");
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
-        private static readonly int MainTexId = Shader.PropertyToID("_MainTex");
 
         // Addressables.LoadAssetAsync(...).WaitForCompletion is intentionally confined to a
         // prewarmable cache. Collection primes its next plate while the menu's boot cover is still
@@ -62,10 +60,10 @@ namespace Kingdom.Presentation
         private SpriteRenderer _plate;
         private SpriteRenderer _matte;
         private Transform _orbRoot;
+        private Vector3 _orbScale;
         private bool _illustrated;
         private float _layoutAspect;
         private string _plateName = DefaultPlate;
-        private string _orbName;                  // null = keep M_LoadingOrb's own _MainTex
         private Material _orbMat;                 // instanced — _Fade/_Progress are per-overlay
         private SpriteRenderer _wordmark;
         private Transform _wordmarkRoot;
@@ -108,14 +106,7 @@ namespace Kingdom.Presentation
         /// name. Register new PNGs and their .meta GUIDs in the Backgrounds Addressables group
         /// (AddressablesSetup can regenerate it), then name the plate here. Anything missing falls back
         /// to skipping the plate, not to a broken screen.</param>
-        /// <param name="orbName">File name (no extension) of an orb under
-        /// <c>Assets/Art/Orbs/</c> to swap onto the orb material's <c>_MainTex</c>, so a plate can
-        /// be shown with the orb authored to go with it. <b>Null or empty keeps the orb the
-        /// material already carries</b> — which is what every existing caller gets, so the boot
-        /// overlay is byte-identical to before. <c>VersusOverlay</c> does the same swap for its
-        /// per-match variant; this is that mechanism, reached by name instead of by index.</param>
-        public static LoadingOverlay Create(Camera cam, string plateName = DefaultPlate,
-                                            string orbName = null)
+        public static LoadingOverlay Create(Camera cam, string plateName = DefaultPlate)
         {
             if (cam == null)
             {
@@ -133,7 +124,6 @@ namespace Kingdom.Presentation
             overlay._illustrated = overlay._plateName == IntroPlate
                 || overlay._plateName == CollectionPlate || overlay._plateName == ReturnPlate
                 || overlay._plateName == MatchPlate || overlay._plateName == GatesPlate;
-            overlay._orbName = string.IsNullOrWhiteSpace(orbName) ? null : orbName;
             overlay.Build(cam, dist);
             return overlay;
         }
@@ -143,12 +133,10 @@ namespace Kingdom.Presentation
         /// already on screen. The created renderers are still per-transition; only immutable source
         /// assets and the shared orb material are warmed here.
         /// </summary>
-        public static void Prewarm(string plateName = DefaultPlate, string orbName = null)
+        public static void Prewarm(string plateName = DefaultPlate)
         {
             string resolvedPlate = string.IsNullOrWhiteSpace(plateName) ? DefaultPlate : plateName;
             BackgroundArt.LoadTexture(resolvedPlate);
-            if (!string.IsNullOrWhiteSpace(orbName))
-                LoadAsset<Texture2D>($"Assets/Art/Orbs/{orbName}.png", $"orbs/{orbName}");
             LoadAsset<Sprite>("Assets/Art/UI/Loading_Wordmark_KingdomOfBadIdeas.svg",
                 "ui/Loading_Wordmark_KingdomOfBadIdeas");
             MaterialCatalog.Get("M_LoadingOrb");
@@ -259,7 +247,7 @@ namespace Kingdom.Presentation
                 _plate.sortingOrder = 300;
             }
 
-            // ── Orb — quad + instanced M_LoadingOrb (motion lives in the shader).
+            // ── StormGlass — the same main-thread heartbeat as the UI loading screens.
             var orbShared = MaterialCatalog.Get("M_LoadingOrb");
             if (orbShared != null)
             {
@@ -269,22 +257,10 @@ namespace Kingdom.Presentation
                 quad.transform.SetParent(transform, false);
                 _orbRoot = quad.transform;
                 float dia = OrbDiaFrac * h;
-                quad.transform.localScale = new Vector3(dia, dia, 1f);
+                _orbScale = new Vector3(dia, dia, 1f);
+                quad.transform.localScale = _orbScale;
                 var rend = quad.GetComponent<MeshRenderer>();
                 _orbMat = new Material(orbShared);
-
-                // Only when asked. Setting _MainTex unconditionally — even to the same texture the
-                // material already holds — would make every caller's orb depend on this lookup
-                // succeeding, and a missing file would then blank the boot orb rather than leave it
-                // alone. A null here means "the material is already right".
-                if (_orbName != null)
-                {
-                    var orbTex = LoadAsset<Texture2D>(
-                        $"Assets/Art/Orbs/{_orbName}.png", $"orbs/{_orbName}");
-                    if (orbTex != null) _orbMat.SetTexture(MainTexId, orbTex);
-                    else Debug.LogWarning($"[LoadingOverlay] orb '{_orbName}' did not load; "
-                                          + "showing the material's default orb.");
-                }
 
                 rend.sharedMaterial = _orbMat;
                 rend.sortingOrder = 310;
@@ -292,7 +268,7 @@ namespace Kingdom.Presentation
 
             // ── Wordmark — authored vector outlines with the approved 60° arc already in
             //    the geometry. This keeps the brand mark independent of TMP layout/font state
-            //    and makes the composition scale as one stable unit around the Confluence orb.
+            //    and makes the composition scale as one stable unit around StormGlass.
             var wordmarkSprite = LoadAsset<Sprite>(
                 "Assets/Art/UI/Loading_Wordmark_KingdomOfBadIdeas.svg",
                 "ui/Loading_Wordmark_KingdomOfBadIdeas");
@@ -359,7 +335,8 @@ namespace Kingdom.Presentation
             if (_orbRoot != null)
             {
                 _orbRoot.localPosition = new Vector3(0.44f * footerWidth, footerY, -0.01f);
-                _orbRoot.localScale = new Vector3(0.09f * h, 0.09f * h, 1f);
+                _orbScale = new Vector3(0.09f * h, 0.09f * h, 1f);
+                _orbRoot.localScale = _orbScale;
             }
             if (_wordmarkRoot != null)
             {
@@ -394,7 +371,7 @@ namespace Kingdom.Presentation
             if (_plate != null) _plate.color = new Color(1f, 1f, 1f, fade);
             if (_matte != null) _matte.color = new Color(
                 IllustrationMatte.r, IllustrationMatte.g, IllustrationMatte.b, fade);
-            if (_orbMat != null) _orbMat.SetFloat(FadeId, fade);
+            LoadingIndicator.UpdateWorld(_orbMat, _orbRoot, _orbScale, fade);
             if (_wordmark != null)
             {
                 _wordmark.color = new Color(1f, 1f, 1f, enter * fade);

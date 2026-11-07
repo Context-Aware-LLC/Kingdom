@@ -1,6 +1,17 @@
 /* The settings overlay (gear + panel) is styled entirely in settings.uss. */
 @import url("/Assets/UI/Common/settings.uss");
 
+/* Shared loading heartbeat; LoadingIndicator advances its scale/opacity on the main thread. */
+.loading-indicator {
+    width: 220px;
+    height: 220px;
+    flex-shrink: 0;
+    align-self: center;
+    background-image: url("/Assets/Art/Orbs/Orb_StormGlass.png");
+    -unity-background-scale-mode: scale-to-fit;
+    background-repeat: no-repeat;
+}
+
 /* ================================================================================================
  * WHAT ONE AUTHORED PIXEL IS. Read this before trusting any number in any sheet in this project.
  *

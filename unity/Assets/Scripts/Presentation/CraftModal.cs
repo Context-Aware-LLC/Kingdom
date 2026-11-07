@@ -117,9 +117,7 @@ namespace Kingdom.Presentation
             _loadingIcon = rootPlate.Q<VisualElement>("craft-loading-icon");
             if (_loadingIcon != null)
             {
-                _loadingTick = _loadingIcon.schedule.Execute(() =>
-                    _loadingIcon.style.rotate = new Rotate(new Angle(Time.realtimeSinceStartup * 36f % 360f)))
-                    .Every(16);
+                _loadingTick = LoadingIndicator.Schedule(_loadingIcon);
                 _loadingTick.Pause();
             }
             _retry?.RegisterCallback<ClickEvent>(_ => RefreshRequested?.Invoke(_card));

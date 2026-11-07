@@ -6,8 +6,8 @@ using UnityEngine;
 namespace Kingdom.Presentation
 {
     /// <summary>
-    /// World-space hero portrait for one player. The authored ember frame is the face; hero art
-    /// is clipped to its transparent oval opening. Created procedurally by
+    /// World-space hero portrait for one player, clipped to the Royal Council portrait fixture.
+    /// Created procedurally by
     /// NetworkedGameBootstrap — one per player.
     /// </summary>
     public sealed class HeroPlateView : MonoBehaviour
@@ -23,8 +23,7 @@ namespace Kingdom.Presentation
         // Armor reads as steel beside the Health it shields.
         private static readonly Color ArmorInk = new Color(0.78f, 0.82f, 0.88f);
 
-        // hero-frame.png is 1024x1536, so this keeps its native 2:3 aspect. Royal Council's
-        // painted portrait fixtures have more room than the old board anchors; grow the complete
+        // Royal Council's portrait fixtures have more room than the old board anchors; grow the complete
         // composition together so art, HP label and ClickableHero collider stay registered.
         private const float FixtureScale = 1.50f;
         private static readonly Quaternion EnemyFixtureRotation =
@@ -35,8 +34,6 @@ namespace Kingdom.Presentation
         private const float PortraitH = 2.133f * FixtureScale;
         private static readonly Vector3 PortraitCentre = new Vector3(0f, -0.02f, -0.01f);
         private static readonly Vector3 TabletopPortraitCentre = new Vector3(0f, 0f, -0.01f);
-        private const string FrameSpriteKey = "hero-frame";
-        private const int FrameOrder = 8;
         private const int PortraitOrder = 9;
         private const int TextOrder = 10;
         private const int OvalSegments = 64;
@@ -47,7 +44,6 @@ namespace Kingdom.Presentation
         private bool _targetFocused;
         private bool _frosted;
 
-        private Renderer     _plate;
         private Renderer     _portrait;
         private TextMeshPro  _hpLabel;
         private TextMeshPro  _attackLabel;
@@ -88,12 +84,9 @@ namespace Kingdom.Presentation
             uiSprites ??= new AddressableUiSpriteProvider();
 #endif
 
-            // The clipped portrait fills the export's transparent opening. Its geometry sits a
-            // hair nearer the camera, so stray near-transparent pixels cannot haze the artwork.
+            // The clipped portrait sits inside the board's physical frame.
             _uiSprites = uiSprites;
-            if (!_tabletop) _plate = MakeFrame(transform, uiSprites?.Get(FrameSpriteKey));
             _portrait = MakePortrait(transform, _tabletop);
-            if (_tabletop) _plate = _portrait;
             _portrait.gameObject.SetActive(false);
             artProvider?.LoadArt($"hero_{heroClass.ToString().ToLowerInvariant()}", SetPortrait);
 
@@ -251,7 +244,7 @@ namespace Kingdom.Presentation
 
         private void ApplyPlateTint()
         {
-            Tint(_plate, _selected   ? SelectedTint
+            Tint(_portrait, _selected   ? SelectedTint
                        : _targetFocused ? SelectedTint
                        : _targetable ? TargetableTint
                        : _frosted     ? FrostedTint
@@ -259,28 +252,6 @@ namespace Kingdom.Presentation
         }
 
         // ── Build helpers ───────────────────────────────────────────────────────
-
-        private static SpriteRenderer MakeFrame(Transform parent, Sprite sprite)
-        {
-            var go = new GameObject("Frame");
-            go.transform.SetParent(parent, false);
-            go.transform.localPosition = Vector3.zero;
-
-            var sr = go.AddComponent<SpriteRenderer>();
-            // Per-texture material: see SpriteMaterials.
-            SpriteMaterials.Set(sr, sprite);
-            sr.sortingOrder = FrameOrder;
-            if (sprite != null)
-            {
-                Vector2 native = sprite.bounds.size;
-                go.transform.localScale = new Vector3(PlateW / native.x, PlateH / native.y, 1f);
-            }
-            else
-            {
-                Debug.LogWarning($"[HeroPlateView] no UI sprite '{FrameSpriteKey}' — hero frame renders empty.");
-            }
-            return sr;
-        }
 
         private static Renderer MakePortrait(Transform parent, bool tabletop = false)
         {

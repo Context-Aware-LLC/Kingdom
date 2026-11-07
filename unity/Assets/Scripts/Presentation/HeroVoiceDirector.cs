@@ -43,7 +43,7 @@ namespace Kingdom.Presentation
         /// <summary>
         /// Client-side rope window, deliberately owned here rather than read off the server's
         /// <c>ServerOptions.RopeMs</c>: the line should land when the player SEES the clock go red,
-        /// which <see cref="TurnClockView"/> does on its own copy of this number. All three are 15s
+        /// which <see cref="RoyalCouncilHourglass"/> does on its own copy of this number. All three are 15s
         /// (Sam, 2026-10-10 — the two client ones were 10s, against a published 15); move them
         /// together. The server's rope broadcast is a
         /// second <c>TurnTimerMsg</c> carrying the SAME deadline as the arm, so it cannot be told
@@ -80,7 +80,7 @@ namespace Kingdom.Presentation
         /// <param name="heroClass">The local hero's class — <c>NEUTRAL</c> disables the director,
         /// since NEUTRAL is not pairable and no hero can be one.</param>
         /// <param name="nowMs">Unix-epoch millisecond source; defaults to the wall clock. Injectable
-        /// for the same reason <see cref="TurnClockView"/> injects it.</param>
+        /// so the voice timing can be verified without waiting on the wall clock.</param>
         public void Init(CardClass heroClass, PlayerId localPlayer, int localSeat, Func<long> nowMs = null)
         {
             _localPlayer = localPlayer;
@@ -178,7 +178,7 @@ namespace Kingdom.Presentation
         }
 
         /// <summary>Bind to <see cref="IMatchSession.OnTurnTimer"/> — already main-thread-marshaled
-        /// by the networked decorator, as <see cref="TurnClockView.OnTurnTimer"/> relies on too.</summary>
+        /// by the networked decorator, as the board's hourglass relies on too.</summary>
         public void OnTurnTimer(TurnTimer t)
         {
             if (_player == null || t == null || _ended) return;

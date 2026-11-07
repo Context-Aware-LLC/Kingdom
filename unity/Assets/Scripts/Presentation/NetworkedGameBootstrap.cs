@@ -501,8 +501,7 @@ namespace Kingdom.Presentation
             // a name the peer can claim, because the server reserves it.
             _versus = VersusOverlay.Create(Camera.main, VersusOverlay.Data.For(
                 localClass,  AuthGateway.DisplayNameOr(Loc.Get("common_you")),
-                remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? Loc.Get("common_opponent") : _net.OpponentName,
-                s0.Id.Value), artProvider);
+                remoteClass, string.IsNullOrEmpty(_net.OpponentName) ? Loc.Get("common_opponent") : _net.OpponentName), artProvider);
             // The two heroes trade a line over the versus screen and on into the mulligan.
             VersusBanter.Create(Camera.main, localClass, remoteClass);
             // Carry the narration across the handover rather than letting the line blink empty —
@@ -899,6 +898,7 @@ namespace Kingdom.Presentation
 
             var title = root.Q<Label>("title");
             if (title != null) title.text = Loc.Get("connection_court_full_title");
+            root.Q("panel")?.Insert(0, LoadingIndicator.Create());
 
             var reason = root.Q<Label>("reason");
             if (reason != null)
@@ -952,6 +952,7 @@ namespace Kingdom.Presentation
 
             var title = root.Q<Label>("title");
             if (title != null) title.text = Loc.Get("connection_reconnecting_title");
+            root.Q("panel")?.Insert(0, LoadingIndicator.Create());
 
             var reason = root.Q<Label>("reason");
             if (reason != null)

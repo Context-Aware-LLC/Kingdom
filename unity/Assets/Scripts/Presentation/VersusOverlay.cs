@@ -32,18 +32,14 @@ namespace Kingdom.Presentation
         {
             public CardClass LocalClass, RemoteClass;
             public string LocalName, RemoteName;
-            public int OrbVariant;   // 0..2, from OrbVariantForMatch(matchId)
-
-            /// <summary>The normal construction: names as given, orb derived from the match id so
-            /// both clients land on the same variant (spec §4.2).</summary>
+            /// <summary>The two players shown over the shared StormGlass loading indicator.</summary>
             public static Data For(CardClass localClass, string localName,
-                                   CardClass remoteClass, string remoteName, string matchId) => new Data
+                                   CardClass remoteClass, string remoteName) => new Data
             {
                 LocalClass  = localClass,
                 RemoteClass = remoteClass,
                 LocalName   = localName,
                 RemoteName  = remoteName,
-                OrbVariant  = OrbVariantForMatch(matchId),
             };
         }
 
@@ -101,8 +97,6 @@ namespace Kingdom.Presentation
         private static readonly Color StatusTint = new Color(0.20f, 0.16f, 0.11f);
         private static readonly Color ErrorTint  = new Color(0.65f, 0.10f, 0.07f);
 
-        private static readonly string[] OrbNames = { "StormGlass", "Confluence", "HollowCore" };
-
         private static readonly int FadeId    = Shader.PropertyToID("_Fade");
         private static readonly int MainTexId = Shader.PropertyToID("_MainTex");
         private static readonly int ShaderUtilOutlineColor = Shader.PropertyToID("_OutlineColor");
@@ -116,6 +110,8 @@ namespace Kingdom.Presentation
         private SpriteRenderer _plate;
         private SpriteRenderer _matte;
         private Material _orbMat;                       // instanced — _Fade is per-overlay
+        private Transform _orbRoot;
+        private Vector3 _orbScale;
         private readonly System.Collections.Generic.List<Material> _medallionMats = new();
         private readonly System.Collections.Generic.List<TextMeshPro> _texts = new();
         private TextMeshPro _status;
@@ -126,20 +122,6 @@ namespace Kingdom.Presentation
         private bool _failed;
         private float _fadeOutT = -1f;
         private bool _destroyed;
-
-        /// <summary>Deterministic orb pick from the match id — both clients must land on the same
-        /// variant (spec §4.2: a per-client roll would show the two players different orbs). Stable
-        /// FNV-1a rather than string.GetHashCode, which is not guaranteed stable across runtimes.</summary>
-        public static int OrbVariantForMatch(string matchId)
-        {
-            if (string.IsNullOrEmpty(matchId)) return 0;
-            unchecked
-            {
-                uint h = 2166136261u;
-                foreach (char ch in matchId) { h ^= ch; h *= 16777619u; }
-                return (int)(h % (uint)OrbNames.Length);
-            }
-        }
 
         /// <summary>Build the rig under <paramref name="cam"/>. Null camera → null (skipped, boot unaffected).</summary>
         public static VersusOverlay Create(Camera cam, Data data, IArtProvider artProvider = null)
@@ -224,8 +206,7 @@ namespace Kingdom.Presentation
             BuildMedallion(data.LocalClass,  LeftMedallionXFrac * h,  LeftMedallionYFrac * h,  medDia, h, "MedallionLocal");
             BuildMedallion(data.RemoteClass, RightMedallionXFrac * h, RightMedallionYFrac * h, medDia, h, "MedallionRemote");
 
-            // ── Clash orb — the one live element, level with the medallion centres. Instanced
-            //    M_LoadingOrb with the per-match variant swapped onto _MainTex.
+            // ── StormGlass heartbeat, level with the medallion centres.
             var orbShared = MaterialCatalog.Get("M_LoadingOrb");
             if (orbShared != null)
             {
@@ -235,13 +216,10 @@ namespace Kingdom.Presentation
                 quad.transform.SetParent(transform, false);
                 quad.transform.localPosition = new Vector3(0f, OrbYFrac * h, -0.01f);
                 float od = OrbDiaFrac * h;
-                quad.transform.localScale = new Vector3(od, od, 1f);
+                _orbRoot = quad.transform;
+                _orbScale = new Vector3(od, od, 1f);
+                quad.transform.localScale = _orbScale;
                 _orbMat = new Material(orbShared);
-
-                int v = Mathf.Clamp(data.OrbVariant, 0, OrbNames.Length - 1);
-                var orbTex = LoadAsset<Texture2D>(
-                    $"Assets/Art/Orbs/Orb_{OrbNames[v]}.png", $"orbs/Orb_{OrbNames[v]}");
-                if (orbTex != null) _orbMat.SetTexture(MainTexId, orbTex);
 
                 quad.GetComponent<MeshRenderer>().sharedMaterial = _orbMat;
                 quad.GetComponent<MeshRenderer>().sortingOrder = SortBase + 10;
@@ -386,7 +364,7 @@ namespace Kingdom.Presentation
 
             if (_plate != null) _plate.color = new Color(1f, 1f, 1f, a);
             if (_matte != null) _matte.color = new Color(0.035f, 0.025f, 0.045f, a);
-            if (_orbMat != null) _orbMat.SetFloat(FadeId, a);
+            LoadingIndicator.UpdateWorld(_orbMat, _orbRoot, _orbScale, a);
             foreach (var m in _medallionMats) m.SetFloat(FadeId, a);
             foreach (var tmp in _texts)
             {
@@ -413,17 +391,5 @@ namespace Kingdom.Presentation
             foreach (var m in _medallionMats) if (m != null) Destroy(m);
         }
 
-        private static T LoadAsset<T>(string editorPath, string address) where T : Object
-        {
-#if UNITY_EDITOR
-            var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<T>(editorPath);
-#else
-            var handle = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<T>(address);
-            var asset = handle.WaitForCompletion();
-#endif
-            if (asset == null)
-                Debug.LogWarning($"[VersusOverlay] asset '{address}' not found — element skipped.");
-            return asset;
-        }
     }
 }

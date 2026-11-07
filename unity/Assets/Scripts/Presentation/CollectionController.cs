@@ -192,7 +192,7 @@ namespace Kingdom.Presentation
         /// </summary>
         public static void PrewarmNextLoadingPlate()
         {
-            LoadingOverlay.Prewarm(LoadingOverlay.CollectionPlate, "Orb_Shadowgear");
+            LoadingOverlay.Prewarm(LoadingOverlay.CollectionPlate);
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace Kingdom.Presentation
         {
             if (_pendingLoadingTransition != null) return _pendingLoadingTransition;
             LoadingOverlay loading = LoadingOverlay.Create(camera,
-                LoadingOverlay.CollectionPlate, "Orb_Shadowgear");
+                LoadingOverlay.CollectionPlate);
             if (loading == null) return null;
             loading.PreserveAcrossSceneLoad();
             _pendingLoadingTransition = loading;
@@ -590,7 +590,7 @@ namespace Kingdom.Presentation
             if (_loading == null)
             {
                 _loading = LoadingOverlay.Create(Camera.main,
-                    LoadingOverlay.CollectionPlate, "Orb_Shadowgear");
+                    LoadingOverlay.CollectionPlate);
             }
             if (_loading == null) return;   // no camera: the wall just paints in as it bakes
             _loading.OnFadedOut += RevealScreen;

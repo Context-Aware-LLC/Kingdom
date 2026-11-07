@@ -1,6 +1,6 @@
 // SG_LoadingOrb — the loading-screen mana orb (the "heartbeat" indicator).
 //
-// Renders Art/Loading/Orb_StormGlass.png with live interior motion so a static
+// Renders Art/Orbs/Orb_StormGlass.png with live interior motion so a static
 // orb reads as a hang (hist-docs/source-snapshots/2026-07-31-pre-reorganization/techart/loading-screen-plate.md §4 orb well, §5 anchoring).
 // Authored as hand-HLSL per the SG_ManaFill precedent: the motion is UV-space
 // resampling of the baked art — differential rotation (the storm core spins
@@ -20,7 +20,8 @@ Shader "Kingdom/SG_LoadingOrb"
         _SwirlFalloff("Swirl Falloff (core->rim)", Range(0.5, 4)) = 1.6
         _ChurnStrength ("Churn Strength (UV)", Range(0, 0.05)) = 0.012
         _ChurnScale  ("Churn Scale", Range(1, 16)) = 6
-        _PulseRate   ("Pulse Rate (Hz)", Range(0.1, 3)) = 0.8
+        _LoadingTime ("Main Thread Loading Time", Float) = 0
+        _Heartbeat   ("Main Thread Heartbeat", Range(0, 1)) = 0.5
         _PulseAmp    ("Pulse Amplitude", Range(0, 1)) = 0.35
         _RimBoost    ("Rim Boost", Range(0, 2)) = 0.5
         _Progress    ("Load Progress", Range(0, 1)) = 1
@@ -64,7 +65,8 @@ Shader "Kingdom/SG_LoadingOrb"
                 float  _SwirlFalloff;
                 float  _ChurnStrength;
                 float  _ChurnScale;
-                float  _PulseRate;
+                float  _LoadingTime;
+                float  _Heartbeat;
                 float  _PulseAmp;
                 float  _RimBoost;
                 float  _Progress;
@@ -102,9 +104,8 @@ Shader "Kingdom/SG_LoadingOrb"
 
             half4 frag (Varyings IN) : SV_Target
             {
-                float  t     = _Time.y;
-                float  pulse = 0.5 + 0.5 * sin(TWO_PI * _PulseRate * t);
-                pulse = pulse * pulse * (3.0 - 2.0 * pulse); // eased heartbeat
+                float t = _LoadingTime;
+                float pulse = _Heartbeat;
 
                 // Centered disc space. r=0 core, r=1 glass edge.
                 float2 c = IN.uv * 2.0 - 1.0;

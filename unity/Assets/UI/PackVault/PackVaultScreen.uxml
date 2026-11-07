@@ -43,7 +43,7 @@
             </ui:VisualElement>
         </ui:VisualElement>
         <!-- A direct child of the full-screen root so absolute zero-edge positioning centers the
-             seal in the viewport rather than in the stage column beside the rack. -->
+             loading indicator in the viewport rather than in the stage column beside the rack. -->
         <ui:VisualElement name="vault-loading" picking-mode="Ignore" class="vault-loading vault-loading--hidden">
             <ui:VisualElement name="vault-loading-icon" picking-mode="Ignore" class="vault-loading__icon"/>
         </ui:VisualElement>

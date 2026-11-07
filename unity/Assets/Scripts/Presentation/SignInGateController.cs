@@ -93,6 +93,7 @@ namespace Kingdom.Presentation
 
         private readonly VisualElement _modal;
         private readonly Label _title;
+        private VisualElement _restoreIndicator;
         private readonly Label _help;
         private readonly TextField _emailField;
         private readonly TextField _passwordField;
@@ -719,6 +720,16 @@ namespace Kingdom.Presentation
         {
             if (_modal == null) return;
             VisualElement header = _title?.parent;
+            if (label != null && _restoreIndicator == null && header != null)
+            {
+                _restoreIndicator = LoadingIndicator.Create();
+                header.Insert(0, _restoreIndicator);
+            }
+            else if (label == null)
+            {
+                _restoreIndicator?.RemoveFromHierarchy();
+                _restoreIndicator = null;
+            }
             foreach (VisualElement line in _modal.Children())
                 Display(line, label == null || line == header);
             Display(_help, label == null);

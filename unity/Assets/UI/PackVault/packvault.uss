@@ -254,8 +254,6 @@
     height: 400px;
     flex-shrink: 0;
     translate: 34px -50px;
-    background-image: url("/Assets/Art/UI/PackVault/vault-loading-cache-seal.png");
-    -unity-background-scale-mode: scale-to-fit;
 }
 
 .vault-loading--hidden {

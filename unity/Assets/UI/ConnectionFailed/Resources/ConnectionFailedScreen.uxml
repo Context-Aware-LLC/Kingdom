@@ -12,7 +12,7 @@
 
   UpdateGateOverlay builds from this same tree: it rewrites the title and the reason, removes
   Back, and turns Retry into its one button; its waiting state removes the whole
-  .mm-modal__actions row and puts a burning crown at the top of #panel. So does NetworkedGameBootstrap.ShowCourtFull (the server is at
+  .mm-modal__actions row and puts the StormGlass heartbeat at the top of #panel. NetworkedGameBootstrap.ShowCourtFull (the server is at
   capacity): it removes Retry and relabels Back "Leave the queue". Renaming an element or the
   .mm-modal__actions class here breaks all three.
 

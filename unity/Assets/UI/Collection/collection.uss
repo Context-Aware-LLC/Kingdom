@@ -1370,8 +1370,6 @@
     width: 70%;
     height: 70%;
     flex-shrink: 0;
-    background-image: url("/Assets/Art/UI/Crafting/craft-loading-alchemy-ring-v1.png");
-    -unity-background-scale-mode: scale-to-fit;
 }
 .craft-modal--loading .craft-head,
 .craft-modal--loading .craft-body {

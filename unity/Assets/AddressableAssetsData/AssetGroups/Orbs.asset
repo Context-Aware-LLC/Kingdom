@@ -15,33 +15,8 @@ MonoBehaviour:
   m_GroupName: Orbs
   m_GUID: 9ae4db3a692af9840882f5bcae139731
   m_SerializeEntries:
-  - m_GUID: 29f4ca7f3b19034409b54c21cc86ea09
-    m_Address: orbs/Orb_Lifeblight
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 86f26d0fb45d3375d68b613f0db8a6f1
-    m_Address: orbs/Orb_HollowCore
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c51e55360bdb5cf4ba23e40ea3617ee8
-    m_Address: orbs/Orb_Stormstone
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c857dcb326f61144faa2c3beb7db0398
     m_Address: orbs/Orb_StormGlass
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f43636b00cd242c0bb3feb016a55844e
-    m_Address: orbs/Orb_Shadowgear
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fd32bfdb1876a80d68581925d03a30f4
-    m_Address: orbs/Orb_Confluence
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

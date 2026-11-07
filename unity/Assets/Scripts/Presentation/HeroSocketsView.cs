@@ -69,7 +69,6 @@ namespace Kingdom.Presentation
         // crosswise. Sam's 2026-09-03 re-cut fixed the art, and the two files were overwritten in
         // place (guids, and therefore the Addressables entries, preserved).
         private const string PowerFrameKey = "hero-power";
-        private const string WeaponFrameKey = "weapon-frame";
 
         // WHERE THE WEAPON NUMERALS GO: attack at the ring's bottom-left, durability at its
         // bottom-right, large and outlined, over bare rim (Sam, 2026-09-30: "move it to the bottom
@@ -142,7 +141,6 @@ namespace Kingdom.Presentation
         private Renderer       _powerArt;
         private TextMeshPro    _powerCost;
         private GameObject     _weaponRoot;
-        private SpriteRenderer _weaponRing;
         private Renderer       _weaponArt;
         private TextMeshPro    _weaponAttack, _weaponDurability;
 
@@ -204,7 +202,6 @@ namespace Kingdom.Presentation
                 _weaponRoot.transform.localPosition = Vector3.zero;
 
                 Transform wt = _weaponRoot.transform;
-                _weaponRing = MakeFrame(wt, "WeaponFrame", uiSprites, WeaponFrameKey);
                 _weaponArt = MakeSocketArt(wt, "WeaponArt", SocketDiameter,
                                             WeaponApertureOffset);
 
@@ -212,7 +209,6 @@ namespace Kingdom.Presentation
                 _weaponDurability = MakeStat(wt, "Durability", WeaponDuraAt, DuraText,   WeaponDigitEmFrac);
                 if (_tabletop)
                 {
-                    _weaponRing.enabled = false;
                     FitTableArt(_weaponArt);
                     FitTableDigit(_weaponAttack, new Vector3(-0.32f, -0.3f, -0.18f));
                     FitTableDigit(_weaponDurability, new Vector3(0.32f, -0.3f, -0.18f));
