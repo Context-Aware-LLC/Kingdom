@@ -495,7 +495,10 @@ namespace Kingdom.Editor
             }
         }
 
-        private static void BuildAddressables(bool clean = true)
+        [MenuItem("Kingdom/Build/Background Content (active platform)")]
+        public static void BuildBackgroundContent() => BuildAddressables(clean: false, requirePublished: false);
+
+        private static void BuildAddressables(bool clean = true, bool requirePublished = true)
         {
             RequireSavedScenes();
             BackgroundAddressables.Run();
@@ -505,6 +508,8 @@ namespace Kingdom.Editor
             if (!string.IsNullOrEmpty(contentResult.Error))
                 throw new BuildFailedException(
                     $"[KingdomBuild] Addressables content build FAILED: {contentResult.Error}");
+            RemoteBackgroundContent.WriteManifest(contentResult);
+            if (requirePublished) RemoteBackgroundContent.RequirePublished();
             Debug.Log($"[KingdomBuild] Addressables content built ({contentResult.Duration:F1}s)");
         }
 

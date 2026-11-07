@@ -115,6 +115,7 @@ unity/Assets/Unity.VisualScripting.Generated/
 # Addressables build output. AddressableAssetsData/AssetGroups/*.asset is TRACKED source —
 # the group definitions and their addresses — so only the generated members are listed.
 /ServerData
+/unity/ServerData/
 unity/Assets/StreamingAssets/aa*
 unity/Assets/AddressableAssetsData/link.xml*
 unity/Assets/Addressables_Temp*

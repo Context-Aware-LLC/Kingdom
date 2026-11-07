@@ -188,17 +188,17 @@ namespace Kingdom.Presentation
             // ── Plate — class-neutral landscape with both frames painted in. SpriteRenderer so the
             //    default sprite material honors alpha (LoadingOverlay precedent). Both delivery
             //    tiers share the same composition and normalized aperture measurements above.
-            var plateTex = BackgroundArt.LoadTexture("VersusPlate_Causeway");
-            if (plateTex != null)
+            var pgo = new GameObject("Plate");
+            pgo.transform.SetParent(transform, false);
+            _plate = pgo.AddComponent<SpriteRenderer>();
+            _plate.sortingOrder = SortBase;
+            BackgroundArt.LoadTextureAsync("VersusPlate_Causeway", texture =>
             {
-                var pgo = new GameObject("Plate");
-                pgo.transform.SetParent(transform, false);
-                _plate = pgo.AddComponent<SpriteRenderer>();
-                _plate.sprite = Sprite.Create(plateTex,
-                    new Rect(0, 0, plateTex.width, plateTex.height),
-                    new Vector2(0.5f, 0.5f), pixelsPerUnit: plateTex.height / h);
-                _plate.sortingOrder = SortBase;
-            }
+                if (this == null || _plate == null || texture == null) return;
+                if (_plate.sprite != null) Destroy(_plate.sprite);
+                _plate.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f), pixelsPerUnit: texture.height / h);
+            });
 
             // ── Hero medallions — portraits masked to the painted apertures. Local LEFT, remote
             //    RIGHT (this screen's own convention; the board's local-at-bottom rule doesn't apply).

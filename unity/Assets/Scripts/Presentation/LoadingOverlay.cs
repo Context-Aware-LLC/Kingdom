@@ -11,7 +11,7 @@ namespace Kingdom.Presentation
     /// startup (MainMenu) and menu→match boot (Board/BoardNetworked) with the same rig.
     ///
     /// Reveal choreography (trigger ruling, Sam 2026-07-19):
-    ///   frame 0        — plate + orb visible (no trigger; authored into existence in Awake)
+    ///   frame 0        — cover + orb visible; the bundled plate fills in as its async load finishes
     ///   +wordmarkDelay — wordmark fades/settles in (pure timing, no game signal)
     ///   on demand      — status line appears when the tracked work begins (SetStatus;
     ///                    placeholder text until the progress/tip design pass)
@@ -49,12 +49,8 @@ namespace Kingdom.Presentation
 
         private static readonly int ProgressId = Shader.PropertyToID("_Progress");
 
-        // Addressables.LoadAssetAsync(...).WaitForCompletion is intentionally confined to a
-        // prewarmable cache. Collection primes its next plate while the menu's boot cover is still
-        // visible, so clicking Collection never starts a blocking bundle read before the transition
-        // has painted. These assets are global presentation furniture and already remained resident
-        // for the process lifetime because their Addressables handles were never released; making
-        // that lifetime explicit avoids repeating WaitForCompletion and gives prewarm real meaning.
+        // Local presentation furniture only (wordmark). BackgroundArt loads/prewarms the plates
+        // asynchronously; a remote background never participates in these synchronous reads.
         private static readonly Dictionary<string, Object> AssetCache = new();
 
         private SpriteRenderer _plate;
@@ -136,7 +132,7 @@ namespace Kingdom.Presentation
         public static void Prewarm(string plateName = DefaultPlate)
         {
             string resolvedPlate = string.IsNullOrWhiteSpace(plateName) ? DefaultPlate : plateName;
-            BackgroundArt.LoadTexture(resolvedPlate);
+            BackgroundArt.Prewarm(resolvedPlate);
             LoadAsset<Sprite>("Assets/Art/UI/Loading_Wordmark_KingdomOfBadIdeas.svg",
                 "ui/Loading_Wordmark_KingdomOfBadIdeas");
             MaterialCatalog.Get("M_LoadingOrb");
@@ -235,17 +231,10 @@ namespace Kingdom.Presentation
             //    (MatchEndBanner precedent; primitives' Default-Material strips in URP builds).
             // BackgroundArt shares the device-tier choice with UI backgrounds and the board hall.
             // The exported 16:9 image is fitted above the footer by LayoutIllustration below.
-            var plateTex = BackgroundArt.LoadTexture(_plateName);
-            if (plateTex != null)
-            {
-                var go = new GameObject("Plate");
-                go.transform.SetParent(transform, false);
-                _plate = go.AddComponent<SpriteRenderer>();
-                _plate.sprite = Sprite.Create(plateTex,
-                    new Rect(0, 0, plateTex.width, plateTex.height),
-                    new Vector2(0.5f, 0.5f), pixelsPerUnit: plateTex.height / h);
-                _plate.sortingOrder = 300;
-            }
+            var plateGo = new GameObject("Plate");
+            plateGo.transform.SetParent(transform, false);
+            _plate = plateGo.AddComponent<SpriteRenderer>();
+            _plate.sortingOrder = 300;
 
             // ── StormGlass — the same main-thread heartbeat as the UI loading screens.
             var orbShared = MaterialCatalog.Get("M_LoadingOrb");
@@ -314,6 +303,14 @@ namespace Kingdom.Presentation
                 _status.textWrappingMode = TextWrappingModes.Normal;
                 LayoutIllustration(cam);
             }
+            BackgroundArt.LoadTextureAsync(_plateName, texture =>
+            {
+                if (this == null || _plate == null || texture == null) return;
+                if (_plate.sprite != null) Destroy(_plate.sprite);
+                _plate.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f), pixelsPerUnit: texture.height / h);
+                if (_illustrated && cam != null) LayoutIllustration(cam);
+            });
         }
 
         private void LayoutIllustration(Camera cam)
@@ -323,7 +320,7 @@ namespace Kingdom.Presentation
             _layoutAspect = cam.aspect;
             if (_matte != null)
                 _matte.transform.localScale = new Vector3(h * cam.aspect, h, 1f);
-            if (_plate != null)
+            if (_plate != null && _plate.sprite != null)
             {
                 float aspect = _plate.sprite.rect.width / _plate.sprite.rect.height;
                 float scale = Mathf.Min(0.84f, cam.aspect / aspect);

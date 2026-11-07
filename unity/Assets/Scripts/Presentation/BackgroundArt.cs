@@ -1,22 +1,30 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.Networking;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.UIElements;
 
 namespace Kingdom.Presentation
 {
     /// <summary>
-    /// Loads only the device's background tier. Handles are retained for the app session so a
+    /// Shows bundled mobile art, then upgrades larger devices from the remote content cache.
+    /// Handles are retained for the app session so a
     /// screen transition never invalidates a texture still painted by another screen/overlay.
-    /// Both groups are local packed content; no network is needed to display sign-in or update art.
+    /// No network is needed to display sign-in or update art. Phones never request remote art.
     /// </summary>
     public static class BackgroundArt
     {
-        private static readonly Dictionary<string, AsyncOperationHandle<Texture2D>> Handles = new();
+        private static readonly List<AsyncOperationHandle<Texture2D>> Handles = new();
         private static readonly Dictionary<string, Texture2D> EditorTextures = new();
-        private static readonly Dictionary<string, Sprite> Sprites = new();
+        private static readonly Dictionary<Texture2D, Sprite> Sprites = new();
+        private static BackgroundLoadSequence<Texture2D> _loads;
+        private static int _generation;
         private static BackgroundTier? _tier;
 
         public static BackgroundTier Tier => _tier ??= DetectTier();
@@ -53,52 +61,102 @@ namespace Kingdom.Presentation
             return tier;
         }
 
-        public static Texture2D LoadTexture(string key)
+        /// <summary>May call ready twice: offline fallback, then the larger cached/downloaded art.</summary>
+        public static async void LoadTextureAsync(string key, Action<Texture2D> ready)
         {
-#if UNITY_EDITOR
-            return LoadEditorTexture(key);
-#else
-            var handle = Handle(key);
-            var texture = handle.WaitForCompletion();
-            return handle.Status == AsyncOperationStatus.Succeeded ? texture : null;
-#endif
-        }
-
-        public static void LoadTextureAsync(string key, Action<Texture2D> ready)
-        {
-#if UNITY_EDITOR
-            ready(LoadEditorTexture(key));
-#else
-            var handle = Handle(key);
-            if (handle.IsDone)
-                ready(handle.Status == AsyncOperationStatus.Succeeded ? handle.Result : null);
-            else
-                handle.Completed += completed => ready(completed.Status == AsyncOperationStatus.Succeeded ? completed.Result : null);
-#endif
-        }
-
-        public static Sprite LoadSprite(string key)
-        {
-            if (Sprites.TryGetValue(key, out Sprite sprite)) return sprite;
-            Texture2D texture = LoadTexture(key);
-            if (texture == null) return null;
-            sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
-            Sprites.Add(key, sprite);
-            return sprite;
-        }
-
-        private static AsyncOperationHandle<Texture2D> Handle(string key)
-        {
-            string address = BackgroundVariantPolicy.Address(Tier, key);
-            if (Handles.TryGetValue(address, out var handle)) return handle;
-            handle = Addressables.LoadAssetAsync<Texture2D>(address);
-            Handles.Add(address, handle);
-            handle.Completed += completed =>
+            int generation = _generation;
+            try
             {
-                if (completed.Status != AsyncOperationStatus.Succeeded)
-                    Debug.LogError($"[BackgroundArt] Could not load '{address}': {completed.OperationException}");
-            };
-            return handle;
+#if UNITY_EDITOR
+                ready(LoadEditorTexture(key));
+                await Task.CompletedTask;
+#else
+                _loads ??= new BackgroundLoadSequence<Texture2D>(LoadAssetAsync, () => Time.realtimeSinceStartupAsDouble);
+                await _loads.LoadAsync(key, Tier, texture =>
+                {
+                    if (generation == _generation) ready(texture);
+                });
+#endif
+            }
+            catch (Exception error) { Debug.LogException(error); }
+        }
+
+        public static void Prewarm(string key) => LoadTextureAsync(key, _ => { });
+
+        public static void LoadSpriteAsync(string key, Action<Sprite> ready)
+        {
+            LoadTextureAsync(key, texture =>
+            {
+                if (texture == null) return;
+                if (!Sprites.TryGetValue(texture, out Sprite sprite))
+                {
+                    sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+                    Sprites.Add(texture, sprite);
+                }
+                ready(sprite);
+            });
+        }
+
+        private static async Task<Texture2D> LoadAssetAsync(BackgroundTier tier, string key)
+        {
+            string address = BackgroundVariantPolicy.Address(tier, key);
+            int generation = _generation;
+            try
+            {
+                if (tier == BackgroundTier.DesktopTablet) await CacheRemoteBundlesAsync(address);
+                if (generation != _generation) return null;
+                var handle = Addressables.LoadAssetAsync<Texture2D>(address);
+                Handles.Add(handle);
+                try { return await handle.Task; }
+                catch
+                {
+                    if (generation == _generation && Handles.Remove(handle) && handle.IsValid()) Addressables.Release(handle);
+                    throw;
+                }
+            }
+            catch (Exception error)
+            {
+                Debug.LogWarning($"[BackgroundArt] '{address}' unavailable; keeping the local fallback. {error.Message}");
+                return null;
+            }
+        }
+
+        private static async Task CacheRemoteBundlesAsync(string address)
+        {
+            // Other loaders still use WaitForCompletion for LOCAL sprites/materials. An active
+            // remote Addressables operation would make those calls wait for the network too.
+            // Fill Unity's standard bundle cache outside ResourceManager, then let Addressables
+            // load from that cache. Hash, cache key and CRC match AssetBundleProvider exactly.
+            var locations = Addressables.LoadResourceLocationsAsync(address, typeof(Texture2D));
+            try
+            {
+                var roots = await locations.Task;
+                if (roots.Count == 0) throw new IOException($"No catalog entry for {address}");
+                var visited = new HashSet<IResourceLocation>();
+                foreach (var root in roots) await CacheDependenciesAsync(root, visited);
+            }
+            finally { if (locations.IsValid()) Addressables.Release(locations); }
+        }
+
+        private static async Task CacheDependenciesAsync(IResourceLocation location, HashSet<IResourceLocation> visited)
+        {
+            if (!visited.Add(location)) return;
+            if (location.HasDependencies)
+                foreach (var dependency in location.Dependencies) await CacheDependenciesAsync(dependency, visited);
+            if (!(location.Data is AssetBundleRequestOptions options)) return;
+            string url = Addressables.ResourceManager.TransformInternalId(location);
+            if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return;
+            var cached = new CachedAssetBundle(options.BundleName, Hash128.Parse(options.Hash));
+            if (Caching.IsVersionCached(cached)) return;
+            using var request = UnityWebRequestAssetBundle.GetAssetBundle(url, cached, options.Crc);
+            request.timeout = 20;
+            ((DownloadHandlerAssetBundle)request.downloadHandler).autoLoadAssetBundle = false;
+            var completion = new TaskCompletionSource<bool>();
+            var operation = request.SendWebRequest();
+            operation.completed += _ => completion.TrySetResult(true);
+            await completion.Task;
+            if (request.result != UnityWebRequest.Result.Success)
+                throw new IOException($"Background download failed: {request.error}");
         }
 
 #if UNITY_EDITOR
@@ -116,9 +174,13 @@ namespace Kingdom.Presentation
         public static void Bind(VisualElement element, string key)
         {
             if (element == null) return;
+            // A download must not retain an entire screen after it has been discarded. Allow
+            // pre-attach bindings too: controllers call BindTree before inserting cloned UXML.
+            var weak = new WeakReference<VisualElement>(element);
             LoadTextureAsync(key, texture =>
             {
-                if (texture != null) element.style.backgroundImage = Background.FromTexture2D(texture);
+                if (texture != null && weak.TryGetTarget(out var target))
+                    target.style.backgroundImage = Background.FromTexture2D(texture);
             });
         }
 
@@ -144,13 +206,15 @@ namespace Kingdom.Presentation
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset()
         {
+            _generation++;
             foreach (Sprite sprite in Sprites.Values)
                 if (sprite != null) UnityEngine.Object.Destroy(sprite);
-            foreach (var handle in Handles.Values)
+            foreach (var handle in Handles)
                 if (handle.IsValid()) Addressables.Release(handle);
             Sprites.Clear();
             Handles.Clear();
             EditorTextures.Clear();
+            _loads = null;
             _tier = null;
         }
     }

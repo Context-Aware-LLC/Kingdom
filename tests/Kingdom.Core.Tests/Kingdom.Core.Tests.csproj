@@ -68,6 +68,8 @@
              Link="Presentation\MatchOpeningDeal.cs" />
     <Compile Include="..\..\unity\Assets\Scripts\Presentation\BackgroundVariantPolicy.cs"
              Link="Presentation\BackgroundVariantPolicy.cs" />
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\BackgroundLoadSequence.cs"
+             Link="Presentation\BackgroundLoadSequence.cs" />
     <Compile Include="..\..\unity\Assets\Scripts\Presentation\TablePropRules.cs"
              Link="Presentation\TablePropRules.cs" />
     <!-- Unity-free authoring model/writer: compile and round-trip them without launching Unity. -->

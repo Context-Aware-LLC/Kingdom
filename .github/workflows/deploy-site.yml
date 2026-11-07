@@ -36,6 +36,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Check game asset serving
+        run: node --test tests/game-assets.test.mjs
+
       - name: Upload version
         run: |
           npx --yes wrangler@4 deploy | tee deploy.log

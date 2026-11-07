@@ -20,6 +20,26 @@ namespace Kingdom.Core.Tests.Presentation
                     yield return new TestCaseData(tier, key);
         }
 
+        [TestCase(BackgroundTier.Mobile, "Local", 0)]
+        [TestCase(BackgroundTier.DesktopTablet, "Remote", 1)]
+        public void Delivery_groups_keep_large_art_out_of_the_installed_app(BackgroundTier tier, string location, int bundleMode)
+        {
+            string data = Path.Combine(RepoPaths.RepoRoot, "unity", "Assets", "AddressableAssetsData");
+            string settings = File.ReadAllText(Path.Combine(data, "AddressableAssetSettings.asset"));
+            string schema = File.ReadAllText(Path.Combine(data, "AssetGroups", "Schemas",
+                BackgroundVariantPolicy.Group(tier) + "_BundledAssetGroupSchema.asset"));
+            foreach (string path in new[] { "BuildPath", "LoadPath" })
+            {
+                string id = Regex.Match(settings, $@"- m_Id: ([a-f0-9]+)\r?\n\s+m_Name: {location}\.{path}\r?\n").Groups[1].Value;
+                Assert.That(id, Has.Length.EqualTo(32));
+                Assert.That(schema, Does.Match($@"m_{path}:\r?\n\s+m_Id: {id}\r?\n"));
+            }
+            Assert.That(schema, Does.Contain($"m_BundleMode: {bundleMode}"));
+            Assert.That(schema, Does.Contain("m_UseAssetBundleCache: 1"));
+            Assert.That(settings, Does.Contain("m_BuildRemoteCatalog: 0"), "Boot must use the embedded catalog offline.");
+            Assert.That(settings, Does.Contain("https://kingdomofbadideas.com/game-assets/backgrounds/v1/[BuildTarget]"));
+        }
+
         // Check the actual delivered PNG and GUID/address pairing for every device tier. Editor
         // AssetDatabase loading alone would hide an absent or incorrectly registered player asset.
         [TestCaseSource(nameof(Variants))]
