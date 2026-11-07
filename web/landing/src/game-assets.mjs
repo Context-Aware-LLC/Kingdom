@@ -32,22 +32,25 @@ export async function gameAsset(request, env, ctx, cache = globalThis.caches?.de
         return failure(503);
     }
     if (!object) return failure(404);
+    // R2 also reports a full-object range when no partial response was requested.
+    // Only a ranged GET is a 206; full responses must stay cacheable as 200.
+    const partial = request.method === "GET" && range && object.range;
     const headers = new Headers({
         "content-type": "application/octet-stream",
-        "content-length": String(object.range?.length ?? object.size),
+        "content-length": String(partial?.length ?? object.size),
         "cache-control": "public, max-age=31536000, immutable",
         etag: object.httpEtag,
         "accept-ranges": "bytes",
         "access-control-allow-origin": "*",
         "x-content-type-options": "nosniff",
     });
-    if (object.range)
+    if (partial)
         headers.set(
             "content-range",
-            `bytes ${object.range.offset}-${object.range.offset + object.range.length - 1}/${object.size}`,
+            `bytes ${partial.offset}-${partial.offset + partial.length - 1}/${object.size}`,
         );
     const response = new Response(request.method === "HEAD" ? null : object.body, {
-        status: object.range ? 206 : 200,
+        status: partial ? 206 : 200,
         headers,
     });
     if (!range && request.method === "GET" && cache && ctx)

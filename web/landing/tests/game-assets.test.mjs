@@ -6,7 +6,7 @@ const key =
     "backgrounds/v1/Android/backgrounds_desktoptablet_assets_login_" + "a".repeat(32) + ".bundle";
 const url = "https://kingdomofbadideas.com/game-assets/" + key;
 const body = new Uint8Array([1, 2, 3, 4]);
-const object = () => ({ size: 4, body, httpEtag: '"hash"' });
+const object = () => ({ size: 4, body, httpEtag: '"hash"', range: { offset: 0, length: 4 } });
 
 test("serves bytes with immutable caching and exact bucket key", async () => {
     const env = {
@@ -19,6 +19,7 @@ test("serves bytes with immutable caching and exact bucket key", async () => {
     };
     const response = await gameAsset(new Request(url), env, null, null);
     assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-range"), null);
     assert.match(response.headers.get("cache-control"), /immutable/);
     assert.deepEqual(new Uint8Array(await response.arrayBuffer()), body);
 });
@@ -33,6 +34,8 @@ test("HEAD reports length without reading the object body", async () => {
         },
     };
     const response = await gameAsset(new Request(url, { method: "HEAD" }), env, null, null);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-range"), null);
     assert.equal(response.headers.get("content-length"), "4");
     assert.equal(await response.text(), "");
 });
