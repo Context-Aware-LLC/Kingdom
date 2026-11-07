@@ -60,6 +60,13 @@
 
                 <!-- Account view (#385). Every row opens the website in the system browser. -->
                 <ui:VisualElement name="view-account" class="ms-view ms-hidden">
+                    <!-- Who is signed in (Sam, 2026-11-06): name, email, registration date. Hidden
+                         with no session; each line is hidden while it has nothing to say. -->
+                    <ui:VisualElement name="account-info" class="ms-account" style="display: none;">
+                        <ui:Label name="account-name" text="" class="ms-title" />
+                        <ui:Label name="account-email" text="" class="ms-account__line" />
+                        <ui:Label name="account-registered" text="" class="ms-account__line" />
+                    </ui:VisualElement>
                     <!-- Hidden unless signed in: a password is set on the signed-in identity. -->
                     <ui:Button name="btn-set-password" text="Set a password" class="ms-item" style="display: none;" />
                     <ui:Button name="btn-privacy" text="Privacy Policy" class="ms-item" />

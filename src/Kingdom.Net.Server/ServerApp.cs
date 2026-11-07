@@ -1135,6 +1135,30 @@ namespace Kingdom.Net.Server
                 }, statusCode: result.HttpStatus);
             });
 
+            // GET /account — what the settings Account view shows: email and registration date.
+            // Read-only, unlike /session; see AccountEndpoint. Cache-Control: no-store, per-identity.
+            app.MapGet("/account", async (HttpContext context) =>
+            {
+                string? bearer = null;
+                string? header = context.Request.Headers["Authorization"];
+                if (!string.IsNullOrEmpty(header) &&
+                    header!.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                    bearer = header.Substring("Bearer ".Length).Trim();
+
+                AccountReadResult result = await AccountEndpoint.ReadAsync(
+                    bearer, cfg.TokenVerifier, cfg.AccountStore, context.RequestAborted);
+
+                context.Response.Headers["Cache-Control"] = "no-store";
+
+                return Results.Json(new
+                {
+                    status = result.Status.ToString().ToLowerInvariant(),
+                    email = result.Email ?? "",
+                    // ISO 8601 UTC, or "" when there is no answer. Empty, never a default date.
+                    createdAt = result.CreatedAt?.UtcDateTime.ToString("o") ?? "",
+                }, statusCode: result.HttpStatus);
+            });
+
             // GET /quests — the player's active quests and their progress
             // (dev-docs/specs/daily-quests.md §8). There is deliberately no verb that moves
             // progress: the server is the only thing that may, so the surface is read-only by

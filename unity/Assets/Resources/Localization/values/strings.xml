@@ -165,6 +165,7 @@
     <string name="settings_password_saving">Saving…</string>
     <string name="settings_password_saved">Saved. Use it next time you sign in.</string>
     <string name="settings_password_failed">Could not save it. Try again.</string>
+    <string name="settings_account_registered">Member since %1$s</string>
     <string name="match_settings_confirm_subtitle">This counts as a loss.</string>
     <string name="pack_vault_vault_banner_title">A gift to start you off</string>
     <string name="pack_vault_vault_banner_body">Open them and keep everything inside.</string>

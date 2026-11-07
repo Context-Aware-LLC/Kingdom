@@ -121,6 +121,7 @@
     <string name="settings_password_saving">Wird gespeichert …</string>
     <string name="settings_password_saved">Gespeichert. Nutze es bei der nächsten Anmeldung.</string>
     <string name="settings_password_failed">Konnte nicht gespeichert werden. Versuch es noch mal.</string>
+    <string name="settings_account_registered">Dabei seit %1$s</string>
     <string name="match_settings_confirm_subtitle">Das zählt als Niederlage.</string>
     <string name="pack_vault_vault_banner_title">Ein Geschenk für den Anfang</string>
     <string name="pack_vault_vault_banner_body">Öffne sie und behalte alles, was drin ist.</string>

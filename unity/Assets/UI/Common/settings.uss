@@ -248,6 +248,20 @@
     color: rgba(169, 177, 187, 0.85);
 }
 /* A space when empty, so the buttons below hold still when a message appears. */
+/* The Account view's header: who is signed in. */
+.ms-root .ms-account {
+    margin-bottom: var(--space-6);
+}
+.ms-root .ms-account .ms-title {
+    margin-bottom: var(--space-2);
+}
+.ms-root .ms-account__line {
+    font-size: var(--type-body);
+    color: var(--ink-2);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
 .ms-root .ms-status {
     font-size: var(--type-body);
     color: var(--ink-2);

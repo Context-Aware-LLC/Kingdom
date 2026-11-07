@@ -190,7 +190,86 @@ namespace Kingdom.Presentation
 
         private void ShowMenu() => ShowOnly(_viewMenu);
 
-        private void ShowAccount() => ShowOnly(_viewAccount);
+        private void ShowAccount()
+        {
+            ShowOnly(_viewAccount);
+            FillAccountInfo();
+        }
+
+        // ── Account info (Sam, 2026-11-06) ──────────────────────────────────────────────
+
+        private int _accountInfoVersion;
+
+        /// <summary>
+        /// Name and email come off the stored session and show at once; the registration date is
+        /// the server's, so it arrives a beat later from <c>GET /account</c> and is simply left out
+        /// when that read fails. Hidden with no session: there is nobody to describe.
+        /// </summary>
+        private async void FillAccountInfo()
+        {
+            var info = _viewAccount?.Q<VisualElement>("account-info");
+            if (info == null) return;
+            var name = info.Q<Label>("account-name");
+            var email = info.Q<Label>("account-email");
+            var registered = info.Q<Label>("account-registered");
+
+            string displayName = "", address = "";
+            bool signedIn;
+            try
+            {
+                signedIn = AuthGateway.IsSignedIn;
+                if (signedIn)
+                {
+                    displayName = AuthGateway.DisplayName ?? "";
+                    address = AuthGateway.SignedInEmail ?? "";
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MatchSettings] could not read the session ({ex.GetType().Name}); " +
+                                 "hiding the account details.");
+                signedIn = false;
+            }
+
+            info.style.display = signedIn ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!signedIn) return;
+            SetLine(name, displayName);
+            SetLine(email, address);
+            SetLine(registered, "");
+
+            int version = ++_accountInfoVersion;
+            AccountInfoResponse reply = null;
+            try
+            {
+                string token = await AuthGateway.TokenForConnectAsync();
+                reply = await AccountInfoApi.FetchAsync(CollectionGateway.BaseUrl, token);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[MatchSettings] account read failed: {ex.GetType().Name}: {ex.Message}");
+            }
+            if (this == null || version != _accountInfoVersion) return;
+
+            if (address.Length == 0 && !string.IsNullOrEmpty(reply?.email)) SetLine(email, reply.email);
+            DateTime? since = reply?.RegisteredUtc;
+            if (since.HasValue)
+                SetLine(registered, Loc.Format("settings_account_registered",
+                    since.Value.ToLocalTime().ToString("d MMM yyyy", LanguageCulture())));
+        }
+
+        private static void SetLine(Label label, string text)
+        {
+            if (label == null) return;
+            label.text = text ?? "";
+            label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
+        /// <summary>The month name follows the game's language, not the phone's.</summary>
+        private static System.Globalization.CultureInfo LanguageCulture()
+        {
+            try { return System.Globalization.CultureInfo.GetCultureInfo(Loc.Language); }
+            catch (Exception) { return System.Globalization.CultureInfo.InvariantCulture; }
+        }
 
         /// <summary>
         /// Fill the shared confirm view and show it. <paramref name="danger"/> is the red treatment —
