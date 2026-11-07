@@ -100,6 +100,10 @@ ROOT_CLASS = 'emb-root'
 # "the classes did not fit" is the excuse that would otherwise swallow every
 # element someone could not be bothered to tag.
 TOKEN_EXCEPTIONS = {
+    'mm-gift-stage':
+        'StarterGiftPresentation parents this staging area to the main-menu root; its left '
+        'edge starts at the menu midpoint, while its right edge spends the shared safe token. '
+        'The top and bottom remain inset within the screen, so an all-sides margin is unnecessary',
     'match-bar':
         'transparent bottom rail bounded by the two safe edges; centering its button within '
         'that rail preserves the screen center without shifting it by an extra margin',

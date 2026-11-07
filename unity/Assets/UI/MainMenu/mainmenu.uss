@@ -235,7 +235,7 @@
 .mm-gift-stage {
     position: absolute;
     left: 50%;
-    right: 4%;
+    right: var(--edge-safe);
     top: 18%;
     bottom: 14%;
     align-items: center;

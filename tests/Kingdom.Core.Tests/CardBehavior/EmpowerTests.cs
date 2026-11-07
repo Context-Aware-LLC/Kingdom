@@ -122,7 +122,9 @@ namespace Kingdom.Core.Tests.CardBehavior
             GameState s = State();
             s.Players[0].Weapon = new CardInstance(s.NextInstanceId(), Club.Id, s.Players[0].Id)
             {
-                Zone = Zone.Weapon, CurrentAttack = 2, CurrentDurability = 2,
+                Zone = Zone.Weapon,
+                CurrentAttack = 2,
+                CurrentDurability = 2,
             };
 
             Press(s, db, s.Players[0].Hero.Id);
