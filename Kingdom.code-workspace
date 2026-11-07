@@ -3,6 +3,9 @@
 		{
 			"name": "tcg-hearthlike",
 			"path": "."
+		},
+		{
+			"path": "../kingdom-training"
 		}
 	],
 	"settings": {
