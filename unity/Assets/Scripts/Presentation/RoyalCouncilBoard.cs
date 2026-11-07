@@ -111,7 +111,10 @@ namespace Kingdom.Presentation
             if (camera != null)
             {
                 if (!camera.TryGetComponent<RoyalCouncilCamera>(out var rig)) rig = camera.gameObject.AddComponent<RoyalCouncilCamera>();
-                rig.SetBackdrop(BackgroundArt.LoadSprite("RoyalCouncilHall_Backdrop"));
+                BackgroundArt.LoadSpriteAsync("RoyalCouncilHall_Backdrop", sprite =>
+                {
+                    if (this != null && rig != null) rig.SetBackdrop(sprite);
+                });
             }
         }
 

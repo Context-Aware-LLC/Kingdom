@@ -144,6 +144,11 @@ jobs:
         shell: pwsh
         run: ./tools/ci/test-android-build-support.ps1
 
+      - name: Background publication and hosting
+        run: |
+          python3 -m unittest discover -s tests/python -p test_publish_background_content.py
+          node --test web/landing/tests/game-assets.test.mjs
+
       # ── Stage 1 — Lint (BLOCKING) ───────────────────────────────────────────────
       #
       # The rebaseline guard that stood here went with the golden replay fixtures on

@@ -2,6 +2,8 @@
 // owns /api/* and the friend link, /f/*. Early Access pre-registration is double opt-in: the form stores the
 // address unconfirmed and mails a confirm link; only a confirmed row counts as a sign-up.
 
+import { gameAsset } from "./game-assets.mjs";
+
 const CONSENT_VERSION = "2026-09-30";
 const RESEND_COOLDOWN_MS = 10 * 60 * 1000;
 const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
@@ -217,8 +219,9 @@ async function friendInvite(request, url, env) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/game-assets/")) return gameAsset(request, env, ctx);
     if (url.pathname.startsWith("/f/") && request.method === "GET") return friendInvite(request, url, env);
     if (url.pathname === "/friend" || url.pathname === "/friend.html") return notFound(url, env);
     if (url.pathname === "/api/preregister" && request.method === "POST") return preregister(request, env);

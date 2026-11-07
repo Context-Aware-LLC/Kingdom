@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Kingdom.Editor
 {
-    /// <summary>Two independent local bundles per platform, selected by BackgroundArt at runtime.</summary>
+    /// <summary>Mobile ships locally; desktop/tablet backgrounds are cached on demand.</summary>
     public static class BackgroundAddressables
     {
         [MenuItem("Kingdom/Regenerate/Background Variant Groups")]
@@ -45,6 +45,17 @@ namespace Kingdom.Editor
                 }
             }
 
+            foreach (string profile in settings.profileSettings.GetAllProfileNames())
+            {
+                string id = settings.profileSettings.GetProfileId(profile);
+                settings.profileSettings.SetValue(id, AddressableAssetSettings.kRemoteBuildPath, "ServerData/Backgrounds/v1/[BuildTarget]");
+                settings.profileSettings.SetValue(id, AddressableAssetSettings.kRemoteLoadPath,
+                    "https://kingdomofbadideas.com/game-assets/backgrounds/v1/[BuildTarget]");
+            }
+            // Embed the catalog so startup is offline and older app versions keep their exact
+            // hashed bundle URLs. Art updates ship with an app update; remote catalogs are not used.
+            settings.BuildRemoteCatalog = false;
+
             foreach (BackgroundTier tier in Enum.GetValues(typeof(BackgroundTier)))
             {
                 string groupName = BackgroundVariantPolicy.Group(tier);
@@ -52,9 +63,15 @@ namespace Kingdom.Editor
                     typeof(BundledAssetGroupSchema), typeof(ContentUpdateGroupSchema));
                 var schema = group.GetSchema<BundledAssetGroupSchema>();
                 group.IncludeInBuild = true;
-                schema.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackTogether;
-                schema.BuildPath.SetVariableByName(settings, AddressableAssetSettings.kLocalBuildPath);
-                schema.LoadPath.SetVariableByName(settings, AddressableAssetSettings.kLocalLoadPath);
+                bool remote = tier == BackgroundTier.DesktopTablet;
+                schema.BundleMode = remote ? BundledAssetGroupSchema.BundlePackingMode.PackSeparately
+                    : BundledAssetGroupSchema.BundlePackingMode.PackTogether;
+                schema.BuildPath.SetVariableByName(settings, remote ? AddressableAssetSettings.kRemoteBuildPath : AddressableAssetSettings.kLocalBuildPath);
+                schema.LoadPath.SetVariableByName(settings, remote ? AddressableAssetSettings.kRemoteLoadPath : AddressableAssetSettings.kLocalLoadPath);
+                schema.BundleNaming = BundledAssetGroupSchema.BundleNamingStyle.AppendHash;
+                schema.UseAssetBundleCache = true;
+                schema.UseAssetBundleCrc = true;
+                schema.Timeout = remote ? 20 : 0;
                 foreach (var stale in group.entries.ToArray()) settings.RemoveAssetEntry(stale.guid);
                 foreach (string key in BackgroundVariantPolicy.Keys)
                 {

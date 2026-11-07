@@ -96,6 +96,13 @@ Invoke-Stage 'Android build harness' {
     pwsh -NoProfile -File tools/ci/test-android-build-support.ps1
 }
 
+Invoke-Stage 'Background publication' {
+    python -m unittest discover -s tests/python -p test_publish_background_content.py
+}
+Invoke-Stage 'Background hosting' {
+    node --test web/landing/tests/game-assets.test.mjs
+}
+
 if (-not $Quick) {
     Invoke-Stage 'Stage 1 · Lint (dotnet format)' {
         dotnet format Kingdom.slnx --verify-no-changes --no-restore
