@@ -283,38 +283,48 @@
     flex-direction: column;
     align-items: center;
     padding-top: 56px;
+    padding-bottom: 56px;
     background-color: rgba(0, 0, 0, 0);
 }
 
-/* The rod (2026-11-06): a fixed CAP (finial, wall bracket, a little shaft) over a SHAFT element
- * that repeats a 120-row tile down whatever height is left. Both were cut from one sheet whose
- * source lives in art-pipeline/ui-chrome; the cap's last row is the tile's true predecessor and the
- * tile wraps without a seam, so the join is invisible. Cap and tile are both 73 texture px wide
- * with the shaft at the same columns, and everything is drawn at 0.8 (73 → 58, 120 → 96, 109 → 87):
- * change one number and change all four, or the shaft steps sideways at the join.
- * The negative margin cancels .vault-shell's 104px Back footprint so the shaft runs off the bottom
- * of the screen instead of stopping in mid-air; Back draws over it.
+/* The rod (2026-11-06): a fixed CAP (finial, wall bracket, a little shaft), a SHAFT element that
+ * repeats a 120-row tile down whatever height is left, and a FOOT that mirrors the cap. All three
+ * come from one sheet whose source lives in art-pipeline/ui-chrome. The cap's last row is the
+ * tile's true predecessor and the tile wraps without a seam. `round` fits a whole number of tiles
+ * (stretching each a little) so no partial tile meets the foot: a cut at an arbitrary row would
+ * show as a line. The foot is the cap flipped for its shape but carries the unflipped ball's
+ * shading, so both balls are lit from above.
+ * Cap, tile and foot are 73 texture px wide with the shaft at the same columns, and everything is
+ * drawn at 0.8 (73 → 58, 120 → 96, 109 → 87): change one number and change them all, or the shaft
+ * steps sideways at a join.
  * Idle is tinted down so armed can brighten it: a tint only multiplies. */
 .vault-rail__rod {
     width: 58px;
     flex-grow: 1;
     flex-shrink: 0;
-    margin-bottom: -104px;
+}
+
+.vault-rail__cap,
+.vault-rail__foot {
+    height: 87px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: stretch-to-fill;
+    -unity-background-image-tint-color: rgb(200, 200, 200);
 }
 
 .vault-rail__cap {
-    height: 87px;
-    flex-shrink: 0;
     background-image: url("/Assets/Art/UI/Chrome/pack-vault-rail-cap.png");
-    -unity-background-scale-mode: stretch-to-fill;
-    -unity-background-image-tint-color: rgb(200, 200, 200);
+}
+
+.vault-rail__foot {
+    background-image: url("/Assets/Art/UI/Chrome/pack-vault-rail-foot.png");
 }
 
 .vault-rail__shaft {
     flex-grow: 1;
     background-image: url("/Assets/Art/UI/Chrome/pack-vault-rail-shaft.png");
     background-size: 58px 96px;
-    background-repeat: no-repeat repeat;
+    background-repeat: no-repeat round;
     background-position-x: center;
     background-position-y: top;
     -unity-background-image-tint-color: rgb(200, 200, 200);
@@ -322,7 +332,8 @@
 
 /* A pack held over it: the rod catches the light. */
 .vault-rail--armed .vault-rail__cap,
-.vault-rail--armed .vault-rail__shaft {
+.vault-rail--armed .vault-rail__shaft,
+.vault-rail--armed .vault-rail__foot {
     -unity-background-image-tint-color: rgb(255, 255, 255);
 }
 

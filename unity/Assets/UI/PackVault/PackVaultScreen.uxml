@@ -23,6 +23,7 @@
                     <ui:VisualElement class="vault-rail__rod" picking-mode="Ignore">
                         <ui:VisualElement class="vault-rail__cap" picking-mode="Ignore"/>
                         <ui:VisualElement class="vault-rail__shaft" picking-mode="Ignore"/>
+                        <ui:VisualElement class="vault-rail__foot" picking-mode="Ignore"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
