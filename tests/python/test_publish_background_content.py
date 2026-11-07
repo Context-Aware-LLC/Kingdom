@@ -74,6 +74,13 @@ class BackgroundPublicationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "refusing to overwrite"):
                 publisher.remote_matches("https://example.com/bundle", self.manifest["bundles"][0])
 
+    def test_public_verification_identifies_the_publisher_to_cloudflare(self):
+        bundle = self.manifest["bundles"][0]
+        with patch.object(publisher.urllib.request, "urlopen", return_value=io.BytesIO(b"bundle 0")) as get:
+            self.assertTrue(publisher.remote_matches(self.manifest["baseUrl"] + "/" + bundle["file"], bundle))
+        request = get.call_args.args[0]
+        self.assertTrue(request.get_header("User-agent").startswith("KingdomOfBadIdeas-ContentPublisher/"))
+
 
 if __name__ == "__main__":
     unittest.main()

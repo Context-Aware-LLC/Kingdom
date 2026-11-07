@@ -4,8 +4,8 @@ name: Deploy kingdomofbadideas.com
 # master. `wrangler deploy` here only UPLOADS a version (the config has no workers.dev or route
 # targets), so the second step promotes it; skipping that step ships nothing.
 #
-# Needs the repo secret CLOUDFLARE_API_TOKEN: a token scoped to the Workers Scripts edit
-# permission on the one account, nothing else. The built pages are committed, so this job never
+# Needs the repo secret CLOUDFLARE_API_TOKEN: a token scoped to Workers Scripts edit and
+# Workers R2 Storage edit on the one account. The built pages are committed, so this job never
 # touches Unity or the card data (see web/landing/scripts/build-gallery.py to regenerate them).
 
 on:
