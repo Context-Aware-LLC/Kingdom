@@ -227,6 +227,53 @@ namespace Kingdom.Core.Tests.Presentation
         }
 
         [Test]
+        public void Swing_that_breaks_a_weapon_still_sounds_like_it_and_the_next_is_fists()
+        {
+            CardDefinition knife = Weapon(1001, "Coldsnap Knife");
+            var router = new CardSoundCueRouter(new TestDatabase(knife));
+            GameState state = State();
+            InstanceId heroId = state.Players[0].Hero.Id;
+            var held = new CardInstance(new InstanceId(4), knife.Id, P0) { Zone = Zone.Board };
+            state.Players[0].Weapon = held;
+            router.Capture(state);
+
+            // The breaking swing: the snapshot already shows the slot empty, the events follow.
+            state.Players[0].Weapon = null;
+            router.Capture(state);
+            IReadOnlyList<string> breaking = router.Route(new GameEvent(
+                GameEventKind.AttackDeclared, 1, heroId, null, null, EventFlags.None));
+            router.Route(new GameEvent(
+                GameEventKind.CardDestroyed, 2, held.Id, null, null, EventFlags.None));
+
+            IReadOnlyList<string> later = router.Route(new GameEvent(
+                GameEventKind.AttackDeclared, 3, heroId, null, null, EventFlags.None));
+
+            Assert.That(breaking, Is.EqualTo(new[] { "weapon_swift_attack" }));
+            Assert.That(later, Is.EqualTo(new[] { "weapon_blunt_attack" }));
+        }
+
+        [Test]
+        public void Weapon_returned_to_hand_no_longer_sounds_the_heros_swing()
+        {
+            CardDefinition knife = Weapon(1001, "Coldsnap Knife");
+            var router = new CardSoundCueRouter(new TestDatabase(knife));
+            GameState state = State();
+            var held = new CardInstance(new InstanceId(4), knife.Id, P0) { Zone = Zone.Board };
+            state.Players[0].Weapon = held;
+            router.Capture(state);
+
+            state.Players[0].Weapon = null;
+            held.Zone = Zone.Hand;
+            state.Players[0].Hand.Add(held);
+            router.Capture(state);
+            IReadOnlyList<string> sounds = router.Route(new GameEvent(
+                GameEventKind.AttackDeclared, 1, state.Players[0].Hero.Id, null, null,
+                EventFlags.None));
+
+            Assert.That(sounds, Is.EqualTo(new[] { "weapon_blunt_attack" }));
+        }
+
+        [Test]
         public void The_default_never_reaches_observers()
         {
             // The observer paths run once per carrier on the board. If a default leaked into them

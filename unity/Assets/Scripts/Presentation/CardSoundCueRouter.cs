@@ -13,7 +13,12 @@ namespace Kingdom.Presentation
         private readonly ICardDatabase _database;
         private readonly Dictionary<InstanceId, CardSnapshot> _cards = new();
         private readonly Dictionary<InstanceId, HeroSnapshot> _heroes = new();
-        private readonly Dictionary<InstanceId, int> _lastWeaponByHero = new();
+        // Outlives the weapon on purpose: the swing that breaks a weapon is routed AFTER the
+        // snapshot that already shows the slot empty, and must still sound like that weapon. The
+        // entry dies when the weapon actually leaves -- its CardDestroyed, or a snapshot that finds
+        // it in a hand or another hero's slot -- so a later unarmed swing is fists, not a ghost.
+        private readonly Dictionary<InstanceId, CardSnapshot> _lastWeaponByHero = new();
+        private readonly HashSet<InstanceId> _displacedWeapons = new();
         private readonly Dictionary<PlayerId, int> _seatByPlayer = new();
         private readonly List<CarrierSnapshot>[] _carriers =
             { new List<CarrierSnapshot>(), new List<CarrierSnapshot>() };
@@ -36,6 +41,7 @@ namespace Kingdom.Presentation
             _seatByPlayer.Clear();
             _carriers[0].Clear();
             _carriers[1].Clear();
+            _displacedWeapons.Clear();
 
             for (int seat = 0; seat < state.Players.Length; seat++)
             {
@@ -44,11 +50,17 @@ namespace Kingdom.Presentation
                 int? weaponDefinitionId = player.Weapon?.DefinitionId;
                 _heroes[player.Hero.Id] = new HeroSnapshot(
                     player.Id, player.Hero.HeroPowerId, weaponDefinitionId);
-                if (weaponDefinitionId.HasValue)
-                    _lastWeaponByHero[player.Hero.Id] = weaponDefinitionId.Value;
+                if (player.Weapon != null)
+                {
+                    CardInstance held = player.Weapon;
+                    _lastWeaponByHero[player.Hero.Id] = new CardSnapshot(
+                        held.Id, held.Controller, held.DefinitionId, held.IsSilenced);
+                    _displacedWeapons.Add(held.Id);   // displaced from any OTHER hero holding it
+                }
 
                 CaptureZone(player.Deck);
                 CaptureZone(player.Hand);
+                for (int i = 0; i < player.Hand.Count; i++) _displacedWeapons.Add(player.Hand[i].Id);
                 CaptureZone(player.Graveyard);
 
                 for (int i = 0; i < player.Board.Count; i++)
@@ -67,6 +79,16 @@ namespace Kingdom.Presentation
                         weapon.Id, weapon.Controller, weapon.DefinitionId, weapon.IsSilenced));
                 }
             }
+
+            // A remembered weapon that was bounced to a hand or stolen into the other slot is gone
+            // from this hero. A broken one sits in the graveyard and is NOT dropped here; its
+            // CardDestroyed does that, after the swing that broke it has been routed.
+            var unarmed = new List<InstanceId>();
+            foreach (KeyValuePair<InstanceId, CardSnapshot> entry in _lastWeaponByHero)
+                if (_heroes.TryGetValue(entry.Key, out HeroSnapshot hero) &&
+                    !hero.WeaponDefinitionId.HasValue && _displacedWeapons.Contains(entry.Value.Id))
+                    unarmed.Add(entry.Key);
+            foreach (InstanceId heroId in unarmed) _lastWeaponByHero.Remove(heroId);
         }
 
         public IReadOnlyList<string> Route(GameEvent matchEvent)
@@ -97,8 +119,8 @@ namespace Kingdom.Presentation
                     if (TryHero(matchEvent.Source, out HeroSnapshot equipHero))
                     {
                         int weaponId = equipHero.WeaponDefinitionId ??
-                            (_lastWeaponByHero.TryGetValue(matchEvent.Source.GetValueOrDefault(), out int prior)
-                                ? prior
+                            (_lastWeaponByHero.TryGetValue(matchEvent.Source.GetValueOrDefault(), out CardSnapshot prior)
+                                ? prior.DefinitionId
                                 : 0);
                         if (weaponId > 0 && _database.TryGet(weaponId, out CardDefinition weapon))
                             AppendActor(sounds, weapon, Trigger.ON_PLAY);
@@ -119,15 +141,12 @@ namespace Kingdom.Presentation
                     }
                     else if (TryHero(matchEvent.Source, out HeroSnapshot attackHero))
                     {
-                        if (_lastWeaponByHero.TryGetValue(matchEvent.Source.GetValueOrDefault(), out int weaponId) &&
-                            _database.TryGet(weaponId, out CardDefinition attackingWeapon))
+                        if (_lastWeaponByHero.TryGetValue(matchEvent.Source.GetValueOrDefault(), out CardSnapshot held) &&
+                            _database.TryGet(held.DefinitionId, out CardDefinition attackingWeapon))
                             AppendActor(sounds, attackingWeapon, Trigger.ON_ATTACK);
                         else
                             // A hero swinging with no weapon (VERDANT's Empower) hits with its
-                            // fists, which is the blunt clip. KNOWN GAP: a hero whose weapon broke
-                            // earlier in the match still resolves that last weapon here, because
-                            // the map deliberately outlives the weapon so the swing that breaks it
-                            // keeps its sound.
+                            // fists, which is the blunt clip.
                             sounds.Add(WeaponBluntAttack);
                     }
                     break;
@@ -142,6 +161,7 @@ namespace Kingdom.Presentation
 
                 case GameEventKind.CardDestroyed:
                     AppendCard(sounds, matchEvent.Source, Trigger.ON_DEATH);
+                    ForgetWeapon(matchEvent.Source);
                     break;
 
                 case GameEventKind.CardSummoned:
@@ -169,6 +189,15 @@ namespace Kingdom.Presentation
                     break;
             }
             return sounds;
+        }
+
+        private void ForgetWeapon(InstanceId? destroyed)
+        {
+            if (!destroyed.HasValue) return;
+            InstanceId? holder = null;
+            foreach (KeyValuePair<InstanceId, CardSnapshot> entry in _lastWeaponByHero)
+                if (entry.Value.Id == destroyed.Value) holder = entry.Key;
+            if (holder.HasValue) _lastWeaponByHero.Remove(holder.Value);
         }
 
         private void AppendCard(List<string> sounds, InstanceId? instance, Trigger trigger)
