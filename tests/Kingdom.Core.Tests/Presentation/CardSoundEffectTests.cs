@@ -173,6 +173,60 @@ namespace Kingdom.Core.Tests.Presentation
         }
 
         [Test]
+        public void Nightveil_hero_power_uses_its_stealth_swipe()
+        {
+            CardDefinition power = HeroPower(1001, CardClass.NIGHTVEIL);
+            var database = new TestDatabase(power);
+            GameState state = State();
+            state.Players[0].Hero.HeroPowerId = power.Id;
+
+            var router = new CardSoundCueRouter(database);
+            router.Capture(state);
+            IReadOnlyList<string> sounds = router.Route(new GameEvent(
+                GameEventKind.HeroPowerUsed, 1, state.Players[0].Hero.Id, null, null,
+                EventFlags.None));
+
+            Assert.That(sounds, Is.EqualTo(new[] { "nightveil_hero_power" }));
+        }
+
+        [TestCase("Grave Maul", "weapon_blunt_attack")]
+        [TestCase("Smithy Hammer", "weapon_blunt_attack")]
+        [TestCase("Scorch Blade", "weapon_blade_attack")]
+        [TestCase("Mainspring Halberd", "weapon_blade_attack")]
+        [TestCase("Shadow Blade", "weapon_swift_attack")]
+        [TestCase("Coldsnap Knife", "weapon_swift_attack")]
+        [TestCase("Deepfrost Spear", "weapon_swift_attack")]
+        public void Armed_hero_attack_plays_its_weapon_types_swing(string weaponName, string expected)
+        {
+            CardDefinition weapon = Weapon(1001, weaponName);
+            var database = new TestDatabase(weapon);
+            GameState state = State();
+            state.Players[0].Weapon =
+                new CardInstance(new InstanceId(4), weapon.Id, P0) { Zone = Zone.Board };
+
+            var router = new CardSoundCueRouter(database);
+            router.Capture(state);
+            IReadOnlyList<string> sounds = router.Route(new GameEvent(
+                GameEventKind.AttackDeclared, 1, state.Players[0].Hero.Id, null, null,
+                EventFlags.None));
+
+            Assert.That(sounds, Is.EqualTo(new[] { expected }));
+        }
+
+        [Test]
+        public void Unarmed_hero_attack_plays_the_blunt_swing()
+        {
+            var router = new CardSoundCueRouter(new TestDatabase());
+            GameState state = State();
+            router.Capture(state);
+            IReadOnlyList<string> sounds = router.Route(new GameEvent(
+                GameEventKind.AttackDeclared, 1, state.Players[0].Hero.Id, null, null,
+                EventFlags.None));
+
+            Assert.That(sounds, Is.EqualTo(new[] { "weapon_blunt_attack" }));
+        }
+
+        [Test]
         public void The_default_never_reaches_observers()
         {
             // The observer paths run once per carrier on the board. If a default leaked into them
@@ -244,14 +298,17 @@ namespace Kingdom.Core.Tests.Presentation
             // so the orphan check stays about NEW mistakes rather than re-reporting a known one.
             var wanted = new List<string>
             {
-                "hero_power_activate", "clockwright_hero_power", "spell_cast_1",
+                "hero_power_activate", "clockwright_hero_power", "nightveil_hero_power",
+                "spell_cast_1", "weapon_blunt_attack", "weapon_blade_attack", "weapon_swift_attack",
             };
             foreach (CardClass cardClass in Enum.GetValues(typeof(CardClass)))
                 wanted.Add(cardClass.ToString().ToLowerInvariant() + "_spell_cast");
 
             var present = new HashSet<string>();
             if (Directory.Exists(sfx))
-                foreach (string file in Directory.GetFiles(sfx))
+                // Recursive: the class casts live in per-class subfolders, and the address is the
+                // bare filename (AddressablesSetup), so a subfolder never changes what routes.
+                foreach (string file in Directory.GetFiles(sfx, "*", SearchOption.AllDirectories))
                 {
                     string stem = Path.GetFileNameWithoutExtension(file);
                     if (Path.GetExtension(file) is ".wav" or ".mp3") present.Add(stem);
@@ -333,6 +390,12 @@ namespace Kingdom.Core.Tests.Presentation
                 null, null, null, cardClass, Rarity.COMMON,
                 Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(), "", "sound_power",
                 SetId.CORE, false, null, "", soundEffects: Array.Empty<CardSoundEffect>());
+
+        private static CardDefinition Weapon(int id, string name) =>
+            new CardDefinition(id, "sound_weapon_" + id, name, CardType.WEAPON, 2,
+                2, null, 2, CardClass.NEUTRAL, Rarity.COMMON,
+                Array.Empty<Keyword>(), Array.Empty<RuleDefinition>(), "", "sound_weapon",
+                SetId.CORE, true, null, "", soundEffects: Array.Empty<CardSoundEffect>());
 
         private sealed class TestDatabase : ICardDatabase
         {

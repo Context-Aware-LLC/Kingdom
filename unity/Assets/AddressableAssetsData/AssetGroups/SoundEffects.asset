@@ -25,6 +25,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f3825d286e121e4498ccca8ef00336c
+    m_Address: sfx/nightveil_hero_power_2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 169b903189270224394a426c09d767c9
     m_Address: sfx/nightveil_spell_cast
     m_ReadOnly: 0
@@ -57,6 +62,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 46737e8978a6a3a49b99332ed5625c32
     m_Address: sfx/stonewarden_spell_cast
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 491f8c445dade62478314c775f6170ac
+    m_Address: sfx/weapon_swift_attack_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -110,8 +120,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7df6d5049dd5bdb44ad829a5085257ca
+    m_Address: sfx/nightveil_hero_power
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 862175c806a3e8e45b0e40eb0979974c
     m_Address: sfx/stone_summon
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 871d8e238fe105245a1e9d474ec55289
+    m_Address: sfx/weapon_blunt_attack_2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -220,6 +240,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dcc3636820b532948aa36a283b750ac1
+    m_Address: sfx/weapon_blunt_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: deada2fd8241f724e987bfa64f6139d8
+    m_Address: sfx/weapon_blade_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e015ca48601467648a049ac6f478a533
     m_Address: sfx/undead_summon
     m_ReadOnly: 0
@@ -260,6 +290,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f109b09a5ec60ef439a6d8df1d9fcf15
+    m_Address: sfx/weapon_swift_attack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f2b782af50597384c947bf2fb85bf340
     m_Address: sfx/drake_summon
     m_ReadOnly: 0
@@ -296,3 +331,6 @@ MonoBehaviour:
     m_Schemas:
     - {fileID: 11400000, guid: b35f4b203bd5ef948b03a338dec10f49, type: 2}
     - {fileID: 11400000, guid: 3bad2608fa606044bbef7c608c1a552b, type: 2}
+    m_SchemaDisplayOrder: []
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

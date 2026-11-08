@@ -128,13 +128,19 @@ folding it into `tide_summon` costs little.
 | stem | trigger | prompt |
 |---|---|---|
 | `weapon_equip` | `ON_PLAY` | A weapon being drawn and readied: steel sliding from a leather sheath, then a firm grip creak. |
-| `weapon_swing` | `ON_ATTACK` | A weapon swung hard through air: a sharp fast whoosh ending in a solid metallic strike. |
+| `weapon_blunt_attack` | `ON_ATTACK` | A heavy blunt melee hit: a dull deep thud with a meaty low-end impact, no metal ring. Mauls, hammers, and an unarmed hero. |
+| `weapon_blade_attack` | `ON_ATTACK` | Two steel swords clashing: a bright ringing clang, then blade grinding along blade. Swords, cleavers, polearms; the default. |
+| `weapon_swift_attack` | `ON_ATTACK` | A stealthy dagger swipe: a very fast, thin, sharp whoosh ending in a soft clean cut. Knives, spears, whips, NIGHTVEIL's blades. |
+
+Weapon type is read off the card name by `CardSoundCueRouter.WeaponAttackStem` (2026-11-07);
+there is no type field.
 
 ## Hero powers (8 cards)
 
 | stem | trigger | prompt |
 |---|---|---|
 | `hero_power_activate` | `ON_CAST` | A hero ability activating: a short confident magical surge with a bright metallic accent, decisive and clean. |
+| `nightveil_hero_power` | `ON_CAST` | Backstab. Reuses the `weapon_swift_attack` takes (2026-11-07). |
 
 ## Turn boundaries
 
@@ -150,20 +156,10 @@ See the warning below.
 
 ## Wiring, and the thing that will bite
 
-**There is no fallback.** `CardSoundCueRouter.Append` emits only the `soundEffects[]` rows
-present on a card definition. A card with no row is silent — generating `attack_blade_light`
-does not make 190 minions play it. Each card needs its own row pointing at the shared stem.
-
-That is 293 cards × 1–3 rows, and the Unity authoring window owns those files. Two ways out:
-
-1. **Author the rows** — correct, but a lot of clicking, and it is the only option that needs
-   no code change.
-2. **Add a fallback to the router** — a type/class-keyed default consulted when a card has no
-   row for that trigger. Bespoke sounds stay as explicit rows and override it. This is a small
-   change in one file and turns 293 edits into ~20.
-
-Option 2 is the recommendation. It also makes the shared library actually shared, rather than
-293 copies of the same string.
+**The router falls back to the shared library for the card that acted.**
+`CardSoundCueRouter.DefaultSoundId` supplies a stem when a card has no `soundEffects[]` row for
+the trigger; an authored row overrides it. A stem gets a default only once its clip exists, so a
+stem in this file with no case there is silent.
 
 **`ON_TURN_START` / `ON_TURN_END` fire per observing carrier, not once per turn** —
 `AppendTurnObservers` walks every carrier on both sides. A turn chime authored onto many cards

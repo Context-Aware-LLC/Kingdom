@@ -117,11 +117,18 @@ namespace Kingdom.Presentation
                     {
                         AppendActor(sounds, attackerDefinition, Trigger.ON_ATTACK);
                     }
-                    else if (TryHero(matchEvent.Source, out HeroSnapshot attackHero) &&
-                             _lastWeaponByHero.TryGetValue(matchEvent.Source.GetValueOrDefault(), out int weaponId) &&
-                             _database.TryGet(weaponId, out CardDefinition attackingWeapon))
+                    else if (TryHero(matchEvent.Source, out HeroSnapshot attackHero))
                     {
-                        AppendActor(sounds, attackingWeapon, Trigger.ON_ATTACK);
+                        if (_lastWeaponByHero.TryGetValue(matchEvent.Source.GetValueOrDefault(), out int weaponId) &&
+                            _database.TryGet(weaponId, out CardDefinition attackingWeapon))
+                            AppendActor(sounds, attackingWeapon, Trigger.ON_ATTACK);
+                        else
+                            // A hero swinging with no weapon (VERDANT's Empower) hits with its
+                            // fists, which is the blunt clip. KNOWN GAP: a hero whose weapon broke
+                            // earlier in the match still resolves that last weapon here, because
+                            // the map deliberately outlives the weapon so the swing that breaks it
+                            // keeps its sound.
+                            sounds.Add(WeaponBluntAttack);
                     }
                     break;
 
@@ -227,8 +234,9 @@ namespace Kingdom.Presentation
         /// </summary>
         /// <remarks>
         /// <para><b>Phase 1 and the summons of <c>tooling/sfx/sound-library.md</c> are here</b> — the nine
-        /// class casts, the hero power, and the art-keyed minion summons. The remaining phase-2
-        /// stems (attacks, deaths, weapons) are deliberately ABSENT rather than written ahead: a default naming a
+        /// class casts, the hero power, the art-keyed minion summons, and the weapon-keyed hero
+        /// attacks. The remaining phase-2 stems (minion attacks, deaths) are deliberately ABSENT
+        /// rather than written ahead: a default naming a
         /// clip that does not exist is silence plus an Addressables warning on every such event,
         /// which reads exactly like a broken router.</para>
         ///
@@ -249,6 +257,9 @@ namespace Kingdom.Presentation
                 // which also explains why three archetypes deliberately resolve to nothing.
                 return MinionSummonArchetypes.Resolve(definition);
 
+            if (trigger == Trigger.ON_ATTACK && definition.Type == CardType.WEAPON)
+                return WeaponAttackStem(definition);
+
             if (trigger != Trigger.ON_CAST) return string.Empty;
             switch (definition.Type)
             {
@@ -268,11 +279,44 @@ namespace Kingdom.Presentation
                     switch (definition.Class)
                     {
                         case CardClass.CLOCKWRIGHT: return "clockwright_hero_power";
+                        // Backstab is a knife in the dark, not a surge (Sam, 2026-11-07).
+                        case CardClass.NIGHTVEIL: return "nightveil_hero_power";
                         default: return "hero_power_activate";
                     }
                 default:
                     return string.Empty;
             }
+        }
+
+        private const string WeaponBluntAttack = "weapon_blunt_attack";
+        private const string WeaponBladeAttack = "weapon_blade_attack";
+        private const string WeaponSwiftAttack = "weapon_swift_attack";
+
+        /// <summary>
+        /// A weapon's swing, keyed on what KIND of weapon its name says it is (Sam, 2026-11-07):
+        /// a dull bash for hammers and mauls, a metal clang for swords and polearms, a fast thin
+        /// swipe for knives, spears and the rogue blades. Matched on name like
+        /// <see cref="MinionSummonArchetypes"/>, so a new weapon is classified without an edit.
+        /// </summary>
+        /// <remarks>Ordered, first match wins: <c>shadow</c> and <c>toxin</c> sit above the
+        /// generic <c>blade</c>, because NIGHTVEIL's blades are daggers. Anything unmatched clangs.</remarks>
+        private static string WeaponAttackStem(CardDefinition definition)
+        {
+            string subject = ((definition.Name ?? string.Empty) + " " +
+                              (definition.Handle ?? string.Empty)).ToLowerInvariant();
+            if (ContainsAny(subject, "shadow", "toxin", "knife", "dagger", "quill",
+                    "lance", "spear", "vine", "whip"))
+                return WeaponSwiftAttack;
+            if (ContainsAny(subject, "maul", "hammer", "mace", "club", "flail"))
+                return WeaponBluntAttack;
+            return WeaponBladeAttack;
+        }
+
+        private static bool ContainsAny(string subject, params string[] words)
+        {
+            for (int i = 0; i < words.Length; i++)
+                if (subject.Contains(words[i])) return true;
+            return false;
         }
 
         private static void Append(List<string> sounds, CardDefinition definition, Trigger trigger)
