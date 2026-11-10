@@ -42,6 +42,8 @@
          changes do not require launching the Unity editor to verify. -->
     <Compile Include="..\..\unity\Assets\Scripts\Presentation\DragTargetingModel.cs"
              Link="Presentation\DragTargetingModel.cs" />
+    <Compile Include="..\..\unity\Assets\Scripts\Presentation\InFlightAttacks.cs"
+             Link="Presentation\InFlightAttacks.cs" />
     <Compile Include="..\..\unity\Assets\Scripts\Session\HeroPowerBeat.cs"
              Link="Session\HeroPowerBeat.cs" />
     <!-- #139: placement is solved from the drop's x, so the gesture model needs the row's

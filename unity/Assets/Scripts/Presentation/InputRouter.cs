@@ -116,8 +116,16 @@ namespace Kingdom.Presentation
 
         private readonly Dictionary<InstanceId, InFlightPlay> _inFlight = new Dictionary<InstanceId, InFlightPlay>();
 
+        // Swings get the same hold: the mirror shows an unspent attack until the snapshot lands.
+        private readonly InFlightAttacks _attacksInFlight = new InFlightAttacks();
+
         private void OnAuthorityRejected(PlayerIntent intent)
         {
+            if (intent is AttackIntent attack)
+            {
+                _attacksInFlight.Release(attack.Attacker);
+                return;
+            }
             if (intent is not PlayCardIntent play || !_inFlight.TryGetValue(play.Card, out InFlightPlay waiting))
                 return;
             _inFlight.Remove(play.Card);
@@ -229,6 +237,7 @@ namespace Kingdom.Presentation
             if (_p0Input != null) _p0Input.InFlightRejected -= OnAuthorityRejected;
             if (p0Input != null) p0Input.InFlightRejected += OnAuthorityRejected;
             _inFlight.Clear();
+            _attacksInFlight.Clear();
             _p0Id      = p0Id;
             _p0Input   = p0Input;
             _validator = validator;
@@ -244,6 +253,7 @@ namespace Kingdom.Presentation
             _currentState = state;
             if (_model != null) _model.State = state;
             PruneInFlight(state);
+            _attacksInFlight.Prune(state, _p0Id);
 
             // Mulligan toss selection lives only while our seat is still deciding; once the phase
             // passes or our confirm lands, clear marks from any presenters that survived the redraw
@@ -349,6 +359,7 @@ namespace Kingdom.Presentation
             DragSource src = _model.BeginSource(subject);
             if (src.Kind == DragSourceKind.None) return;
             if (src.Kind == DragSourceKind.HandCard && _inFlight.ContainsKey(src.Id)) return;
+            if (src.Kind == DragSourceKind.Attacker && _attacksInFlight.Contains(src.Id)) return;
 
             _source          = src;
             _sourcePresenter = presenter;
@@ -550,6 +561,8 @@ namespace Kingdom.Presentation
             bool submitted = Submit(intent);
             if (submitted && intent is PlayCardIntent play)
                 _inFlight[play.Card] = new InFlightPlay(_sourceTransform, _sourceRestLocalPos, _sourceRestLocalRot);
+            if (submitted && intent is AttackIntent attack)
+                _attacksInFlight.Mark(attack.Attacker, _currentState, _p0Id);
             CancelGesture(restoreVisual: !submitted);
             return submitted;
         }
