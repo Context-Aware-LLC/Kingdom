@@ -1,7 +1,7 @@
 # Third-party notices
 
 Kingdom of Bad Ideas includes, or is built with, the third-party components below. Each one stays
-under its own licence. The licence for this repository's own code and assets is in `LICENSE`.
+under its own licence. What covers this repository's own code, art and models is in `LICENSING.md`.
 
 ## Vendored in this repository
 
