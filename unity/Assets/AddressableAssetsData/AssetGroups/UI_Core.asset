@@ -320,11 +320,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7d2bdda4a7e9fa649999f62f86e9d5bb
-    m_Address: characters/RoyalHeraldAnnouncer
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7e1032a6a8b919e489d8370dd510b362
     m_Address: materials/M_LoadingOrb
     m_ReadOnly: 0

@@ -28,7 +28,7 @@ namespace Kingdom.Editor
         private static readonly string[] KnownPrefixes =
         {
             "backgrounds/", "fonts/", "orbs/", "cards/",
-            "ui/", "card_art/", "materials/", "characters/",
+            "ui/", "card_art/", "materials/",
         };
 
         // Matches a non-interpolated string literal whose payload starts with a known
@@ -38,7 +38,7 @@ namespace Kingdom.Editor
         // '{', '/', and whitespace are excluded from each name word to reject interpolation
         // holes, multi-segment file paths, and long prose respectively.
         private static readonly Regex AddressLiteral = new Regex(
-            @"(?<!\$)""((?:backgrounds|fonts|orbs|cards|ui|card_art|materials|characters)/[^""\{\s/]+(?:\s[^""\{\s/]+)?)""",
+            @"(?<!\$)""((?:backgrounds|fonts|orbs|cards|ui|card_art|materials)/[^""\{\s/]+(?:\s[^""\{\s/]+)?)""",
             RegexOptions.Compiled);
 
         private static readonly Regex LineComment  = new Regex(@"//[^\n]*", RegexOptions.Compiled);

@@ -41,11 +41,6 @@ namespace Kingdom.Presentation
     {
         private const string HiddenClass = "tidbit-overlay--hidden";
         private const int StampDelayMs = 120;
-        // Off (Sam, 2026-11-02): the Herald's 3D figure looked terrible beside the scroll. His
-        // voice lines still play; only the figure is withheld, so the scroll keeps its centred
-        // layout. Readonly rather than const so the guarded call is not flagged unreachable.
-        // RETIREMENT TRIGGER: when the Herald model is redone, set this true and delete this note.
-        private static readonly bool ShowsHerald = false;
 
         private readonly VisualElement _overlay;
         private readonly VisualElement _card;
@@ -54,9 +49,6 @@ namespace Kingdom.Presentation
         private readonly Label _title;
         private readonly Label _body;
         private readonly IUiSpriteProvider _sprites;
-        private readonly VisualElement _presentation;
-        private readonly VisualElement _narratorSlot;
-        private NarratorPortrait _narrator;
         private NarratorVoice _voice;
 
         private readonly List<Tidbit> _queue = new List<Tidbit>();
@@ -86,22 +78,6 @@ namespace Kingdom.Presentation
             if (done != null) done.clicked += Advance;
 
             if (_card != null && _card.parent != null) _scroll = new ProclamationScroll(_card);
-
-            if (_scroll != null && _overlay != null)
-            {
-                _presentation = _overlay.Q<VisualElement>("tidbit-presentation");
-                if (_presentation == null)
-                {
-                    _presentation = new VisualElement { name = "tidbit-presentation" };
-                    _presentation.AddToClassList("tidbit-presentation");
-                    _narratorSlot = new VisualElement { name = "tidbit-narrator", pickingMode = PickingMode.Ignore };
-                    _narratorSlot.AddToClassList("tidbit-narrator");
-                    _overlay.Insert(_overlay.IndexOf(_scroll.Root), _presentation);
-                    _presentation.Add(_narratorSlot);
-                    _presentation.Add(_scroll.Root);
-                }
-                else _narratorSlot = _presentation.Q<VisualElement>("tidbit-narrator");
-            }
             _overlay?.RegisterCallback<DetachFromPanelEvent>(_ => Cancel());
 
             // Hidden regardless of what the markup said — a host that forgets the hidden class would
@@ -149,11 +125,6 @@ namespace Kingdom.Presentation
             _overlay.RemoveFromClassList(HiddenClass);
             IsShowing = true;
             _voice = NarratorVoice.Create();
-            if (ShowsHerald && _narratorSlot != null && _narrator == null)
-                _narrator = NarratorPortrait.Show(_narratorSlot, NarratorPortrait.HeraldAddress, visible =>
-                {
-                    _presentation.EnableInClassList("tidbit-presentation--narrated", IsShowing && visible);
-                });
             if (_scroll != null) _scroll.Open(PresentLine);
             else PresentLine();
             return true;
@@ -257,9 +228,6 @@ namespace Kingdom.Presentation
             IsShowing = false;
             if (_voice != null) _voice.Close();
             _voice = null;
-            if (_narrator != null) _narrator.Close();
-            _narrator = null;
-            _presentation?.RemoveFromClassList("tidbit-presentation--narrated");
             _scroll?.Stop();
             SealStamp.Clear(_scroll?.Root);
             _overlay?.AddToClassList(HiddenClass);

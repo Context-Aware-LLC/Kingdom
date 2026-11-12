@@ -41,37 +41,6 @@
     align-items: center;
 }
 
-/* The Herald joins a successfully loaded lesson. Before loading (or if it fails),
-   the scroll keeps its original centred layout. The character never receives input. */
-.tidbit-presentation {
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-}
-
-.tidbit-narrator {
-    display: none;
-}
-
-.tidbit-presentation--narrated {
-    width: 90%;
-    height: 84%;
-    flex-direction: row;
-}
-
-.tidbit-presentation--narrated .tidbit-narrator {
-    display: flex;
-    width: 28%;
-    height: 100%;
-    flex-shrink: 0;
-}
-
-.tidbit-presentation--narrated .tidbit-scroll {
-    width: 64%;
-    max-width: 64%;
-    margin-left: 4%;
-}
-
 /* Its width is the unfurl: FirstRunTidbit drives it from 0 to the wrapper's width. flex-shrink 0
    on it and on the card, because a shrinkable flex child with overflow: hidden deletes its
    children outright in UI Toolkit. */
