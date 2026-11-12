@@ -334,7 +334,3 @@ jobs:
           name: emberfall-gate-evidence
           path: artifacts/
           if-no-files-found: ignore
-
-
-      - name: Unity - Builder
-        uses: game-ci/unity-builder@v6.0.0
