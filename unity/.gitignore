@@ -112,3 +112,7 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Unity Version Control (Plastic) workspace metadata: it names the cloud repo and carries the owner's
+# email address. Local only (2026-11-12).
+/.plastic/
