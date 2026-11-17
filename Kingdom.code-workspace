@@ -42,6 +42,7 @@
 				"expiresOn": 0
 			}
 		],
-		"markdown.validate.enabled": true
+		"markdown.validate.enabled": true,
+		"powershell.cwd": "tcg-hearthlike"
 	}
 }
