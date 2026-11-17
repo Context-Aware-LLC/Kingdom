@@ -327,8 +327,8 @@
   },
   "194": {
     "name": "Gletscherecho",
-    "text": "{label:freeze:imp} deinen Helden und beschwöre eine exakte Kopie eines Dieners, der 5 oder weniger kostet.",
-    "src": "cdc67fe8221d2add"
+    "text": "{label:freeze:imp} deinen Helden und beschwöre eine exakte Kopie eines Dieners, der 4 oder weniger kostet.",
+    "src": "ba9cc87db53027c4"
   },
   "195": {
     "name": "Tiefer Kanal",
