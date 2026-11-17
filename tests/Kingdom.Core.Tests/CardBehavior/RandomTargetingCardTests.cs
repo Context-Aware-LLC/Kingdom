@@ -93,15 +93,33 @@ namespace Kingdom.Core.Tests.CardBehavior
 
         // Death Mark's random Venom grant was cut 2026-08-25 (Sam, the Nightveil Venom pass) and
         // its test went with it: the card is "Destroy a minion." now, and no row in the corpus
-        // pairs a random selection with GRANT_KEYWORD any more. Random MODIFY_STATS is still
-        // covered by Stomp below, random DAMAGE by Chain Lightning and Chain Spark above.
+        // pairs a random selection with GRANT_KEYWORD any more. Random MODIFY_STATS is covered by
+        // Memorial Wisp's Toll below (Stomp lost its random buff 2026-11-16, Sam's stage-1 edits),
+        // random DAMAGE by Chain Lightning and Chain Spark above.
 
         [Test]
-        public void Stomp_Hits_All_Enemies_Then_Buffs_One_Random_Friendly_Minion()
+        public void MemorialWisp_Toll_Buffs_One_Random_Friendly_Minion()
         {
             var state = State(seed: 13);
+            CardInstance wisp = Board(state, 0, ShippedCards.Id("grave_memorial_wisp"), health: 1);
             CardInstance allyA = Board(state, 0, ShippedCards.Id("neutral_stoneback_sentry"));
             CardInstance allyB = Board(state, 0, ShippedCards.Id("neutral_stoneback_sentry"));
+            CardInstance bolt = Hand(state, ShippedCards.Id("ember_flame_bolt"));
+
+            var result = new CommandProcessor(_db).Execute(state, Play(state, bolt, wisp.Id));
+
+            Assert.That(result.Accepted, Is.True);
+            Assert.That(wisp.Zone, Is.EqualTo(Zone.Graveyard));
+            // A buffed minion's max health is recomputed from its printed 4, so exactly one reads 6.
+            Assert.That(new[] { allyA.MaxHealth, allyB.MaxHealth }.OrderBy(x => x),
+                Is.EqualTo(new[] { 6, 10 }));
+        }
+
+        [Test]
+        public void Stomp_Hits_Every_Enemy_Minion_And_No_Friendly_One()
+        {
+            var state = State(seed: 13);
+            CardInstance ally = Board(state, 0, ShippedCards.Id("neutral_stoneback_sentry"));
             CardInstance enemyA = Board(state, 1, ShippedCards.Id("neutral_stoneback_sentry"));
             CardInstance enemyB = Board(state, 1, ShippedCards.Id("neutral_stoneback_sentry"));
             CardInstance spell = Hand(state, ShippedCards.Id("warden_stomp"));
@@ -110,8 +128,7 @@ namespace Kingdom.Core.Tests.CardBehavior
 
             Assert.That(result.Accepted, Is.True);
             Assert.That(new[] { enemyA.CurrentHealth, enemyB.CurrentHealth }, Is.EqualTo(new[] { 8, 8 }));
-            Assert.That(new[] { allyA.MaxHealth, allyB.MaxHealth }.OrderBy(x => x),
-                Is.EqualTo(new[] { 6, 10 }));
+            Assert.That(new[] { ally.CurrentHealth, ally.MaxHealth }, Is.EqualTo(new[] { 10, 10 }));
         }
 
         [TestCase("storm_crackle", 4)]

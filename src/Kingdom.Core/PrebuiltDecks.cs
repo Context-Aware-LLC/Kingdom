@@ -52,7 +52,7 @@ namespace Kingdom.Core
             1010,        1010,
             1011,         1011,
             1013,         1013,
-            1018,
+            1127,
         };
 
         public static IReadOnlyList<int> TidecallerDeck() => new int[]
@@ -77,7 +77,7 @@ namespace Kingdom.Core
             1007,          1007,
             1017,        1017,
             1013,        1013,
-            1018,
+            1127,
         };
     }
 }

@@ -61,8 +61,8 @@
   },
   "55": {
     "name": "Triebfederhellebarde",
-    "text": "{label:attack}: Beschwöre ein {card:1059}.",
-    "src": "dec6c18f8c27f5a7"
+    "text": "{label:attack}: Beschwöre eine {card:1131}.",
+    "src": "de026379b2e34742"
   },
   "56": {
     "name": "Schattenklinge",
@@ -102,8 +102,8 @@
   },
   "63": {
     "name": "Orkanhammer",
-    "text": "{label:attack}: {kw:backdraft} 1.",
-    "src": "e7fabedae931a552"
+    "text": "{kw:arcane_surge}.",
+    "src": "33a30b41d01f1988"
   },
   "64": {
     "name": "Giftklinge",
@@ -212,8 +212,8 @@
   },
   "171": {
     "name": "Generalüberholung",
-    "text": "Gib allen befreundeten {tribe:construct:plural:dat} +2/+2.",
-    "src": "3b6f3c7dc74e5ed0"
+    "text": "Gib allen befreundeten {tribe:construct:plural:dat} +1/+1.",
+    "src": "17af8a724b1979e6"
   },
   "172": {
     "name": "Zeitrückspuler",
@@ -277,8 +277,8 @@
   },
   "184": {
     "name": "Stampfen",
-    "text": "Verursache {dmg:2} Schaden an allen feindlichen Dienern und gib einem zufälligen befreundeten Diener +1/+2.",
-    "src": "48dbd83a97d0ddc2"
+    "text": "Verursache {dmg:2} Schaden an allen feindlichen Dienern.",
+    "src": "1e7afabe49723c23"
   },
   "185": {
     "name": "Blitzschlag",
@@ -287,13 +287,13 @@
   },
   "186": {
     "name": "Kettenblitz",
-    "text": "{kw:rekindle}. Verursache je {dmg:3}, {dmg:2} und {dmg:1} Schaden an einem zufälligen Feind.",
-    "src": "99285a8d77fc9fb9"
+    "text": "Verursache je {dmg:3}, {dmg:2} und {dmg:1} Schaden an einem zufälligen Feind.",
+    "src": "863700857485f743"
   },
   "187": {
     "name": "Knistern",
-    "text": "{kw:backdraft} 1 und verursache {dmg:4} Schaden an einem zufälligen Feind.",
-    "src": "7493479a7fb4dea3"
+    "text": "Verursache {dmg:4} Schaden an einem zufälligen Feind.",
+    "src": "1efd4617a5329a1d"
   },
   "188": {
     "name": "Statischer Schlag",
@@ -346,9 +346,9 @@
     "src": "c9e3c8eceb356e12"
   },
   "198": {
-    "name": "Urheilung",
-    "text": "Gib einem befreundeten Diener +4/+4 und {kw:overwhelm}.",
-    "src": "b9a6bf5c733e3d41"
+    "name": "Urkraft",
+    "text": "Gib einem befreundeten Diener +3/+3 und {kw:overwhelm}.",
+    "src": "01089b8ed92624d6"
   },
   "199": {
     "name": "Dornenschwarm",
@@ -366,9 +366,9 @@
     "src": "4f28d5e65446794f"
   },
   "202": {
-    "name": "Neuentfachte Flamme",
+    "name": "Geschürte Flamme",
     "text": "Verursache {dmg:3} Schaden an einem Charakter; ein befreundeter Diener erhält +3/+0.",
-    "src": "9ec52641c241bae9"
+    "src": "ca842e91617908fb"
   },
   "203": {
     "name": "Gebündelter Pyroklasmus",
@@ -387,13 +387,13 @@
   },
   "206": {
     "name": "Tiefseebündnis",
-    "text": "{kw:drown:imp} alle Feinde und stelle 2 Leben aller befreundeten Charaktere wieder her.",
-    "src": "3dfbd9463b34db5f"
+    "text": "Gib allen befreundeten Dienern +1/+1 und stelle 3 Leben aller befreundeten Charaktere wieder her.",
+    "src": "1d4cec25e9429110"
   },
   "207": {
     "name": "Letzte Ehre",
-    "text": "Opfere einen befreundeten Diener: Übernimm die Kontrolle über einen feindlichen Diener, der 5 oder weniger kostet.",
-    "src": "a5986e1e0179b719"
+    "text": "Opfere einen befreundeten Diener: Übernimm die Kontrolle über einen feindlichen Diener, der 3 oder weniger kostet.",
+    "src": "d432d219c316bb77"
   },
   "208": {
     "name": "Trauerpakt",
@@ -427,13 +427,13 @@
   },
   "214": {
     "name": "Fließband",
-    "text": "Beschwöre drei {card:1059:plural} und gib allen befreundeten {tribe:construct:plural:dat} +1/+1.",
-    "src": "498ff46d67621b8a"
+    "text": "Beschwöre zwei {card:1131:plural} und gib allen befreundeten {tribe:construct:plural:dat} +1/+1.",
+    "src": "ef72eb27ed1ed2b1"
   },
   "215": {
     "name": "Upgrade-Protokoll",
-    "text": "Gib einem befreundeten Diener +5/+5.",
-    "src": "d1914362ee0073ce"
+    "text": "Gib einem befreundeten Diener +4/+4.",
+    "src": "faaacd21a3b132d8"
   },
   "216": {
     "name": "Todgeweiht",
@@ -491,9 +491,9 @@
     "src": "2d54a4ab2dfe2b77"
   },
   "227": {
-    "name": "Giftpeitsche",
+    "name": "Gnadenstoß",
     "text": "Vernichte einen beschädigten feindlichen Diener und verursache {dmg:2} Schaden am feindlichen Helden.",
-    "src": "032fe8502f4d9373"
+    "src": "26ce378233176a1e"
   },
   "228": {
     "name": "Schuttwurf",
@@ -512,8 +512,8 @@
   },
   "231": {
     "name": "Brechungsmodul",
-    "text": "Gib einem befreundeten Diener +1/+0 und beschwöre eine exakte Kopie eines befreundeten Dieners.",
-    "src": "730ac33a95787ef2"
+    "text": "Beschwöre eine exakte Kopie eines befreundeten Dieners, der 4 oder weniger kostet.",
+    "src": "9066d96fe7097afd"
   },
   "232": {
     "name": "Ausschlachten",
@@ -552,8 +552,8 @@
   },
   "1006": {
     "name": "Wellenrufer",
-    "text": "Gib einem feindlichen Diener -1/-2.",
-    "src": "39aeb1c9fec7ce76"
+    "text": "Belege einen Diener mit {kw:silence}.",
+    "src": "95a5dca7302c7f58"
   },
   "1007": {
     "name": "Steinposten",
@@ -587,9 +587,9 @@
     "src": "1ef217dc04139f40"
   },
   "1013": {
-    "name": "Ägistempler",
+    "name": "Templer der Wacht",
     "text": "{kw:aegis}.",
-    "src": "946677ab867acc7d"
+    "src": "4e0b529df82866b6"
   },
   "1014": {
     "name": "Schleierpirscher",
@@ -598,8 +598,8 @@
   },
   "1015": {
     "name": "Hainheiler",
-    "text": "Beschwöre ein {card:1050} und gib allen befreundeten {tribe:beast:plural} +1/+1.",
-    "src": "91d1ed08d55ae752"
+    "text": "Gib allen befreundeten {tribe:beast:plural} +1/+1.",
+    "src": "114061e810415d1d"
   },
   "1016": {
     "name": "Lichtbogenadept",
@@ -698,8 +698,8 @@
   },
   "1035": {
     "name": "Siegeltorwächter",
-    "text": "{label:toll}: Beschwöre einen {card:1049}.",
-    "src": "089198976ae3c2da"
+    "text": "{kw:bulwark}. {label:toll}: Beschwöre einen {card:1049}.",
+    "src": "089fff15f7ae6938"
   },
   "1036": {
     "name": "Dornrückenjunges",
@@ -778,9 +778,9 @@
     "src": "87f6ce5acb6e9c04"
   },
   "1051": {
-    "name": "Schlackenpanzer",
+    "name": "Schlackenkoloss",
     "text": "{kw:bulwark}.",
-    "src": "ca933699e5302b17"
+    "src": "3d14f47d4746c36d"
   },
   "1052": {
     "name": "Schmiedeherz-Koloss",
@@ -789,8 +789,8 @@
   },
   "1053": {
     "name": "Gletscherleviathan",
-    "text": "Verursache {dmg:3} Schaden an allen feindlichen Dienern.",
-    "src": "b10c936976b9c4e0"
+    "text": "{kw:drown:imp} alle feindlichen Diener.",
+    "src": "8c8610a898cce2b3"
   },
   "1054": {
     "name": "Aschenfall-Lindwurm",
@@ -809,8 +809,8 @@
   },
   "1057": {
     "name": "Ertrunkener Titan",
-    "text": "Schicke einen Diener auf die Hand seines Besitzers zurück.",
-    "src": "5695bcba5222d891"
+    "text": "{kw:drown:imp} einen feindlichen Diener.",
+    "src": "7c02d2891f379152"
   },
   "1058": {
     "name": "Hohlschalenwärter",
@@ -840,13 +840,13 @@
   },
   "1063": {
     "name": "Sprungfeder",
-    "text": "{kw:skirmish}, {kw:frost}.",
-    "src": "e4ad77b0dc668f20"
+    "text": "{kw:frost}.",
+    "src": "b62aa658e58b6d42"
   },
   "1064": {
     "name": "Montagedrohne",
-    "text": "Beschwöre ein {card:1059}.",
-    "src": "a7f6478a40517ce9"
+    "text": "Beschwöre eine {card:1131}.",
+    "src": "845725bebd1ef5d0"
   },
   "1065": {
     "name": "Übertakter",
@@ -860,8 +860,8 @@
   },
   "1067": {
     "name": "Modularer Pirscher",
-    "text": "Beschwöre ein {card:1059}.",
-    "src": "b559ec94c628fa93"
+    "text": "Beschwöre eine {card:1131}.",
+    "src": "1a9a3bdcd51734e6"
   },
   "1068": {
     "name": "Chrono-Konstrukt",
@@ -992,9 +992,9 @@
     "src": "d785aaa831bcd2a6"
   },
   "1093": {
-    "name": "Doppelschlagfalke",
+    "name": "Scherenschwingenfalke",
     "text": "{kw:doublestrike}.",
-    "src": "e6cb53eb7a55fd89"
+    "src": "ffcc3987ec76f8e5"
   },
   "1094": {
     "name": "Lebenskrallen-Fledermaus",
@@ -1007,9 +1007,9 @@
     "src": "9821911b8485d2f0"
   },
   "1096": {
-    "name": "Eisenpanzer-Bollwerk",
+    "name": "Eisenpanzer-Bastion",
     "text": "{kw:aegis}, {kw:bulwark}.",
-    "src": "a21a9748136ea66d"
+    "src": "023785c43c3b7dad"
   },
   "1097": {
     "name": "Seelenwiedergänger",
@@ -1047,9 +1047,9 @@
     "src": "b8b57cddea48f37c"
   },
   "1104": {
-    "name": "Vorhutdrache",
+    "name": "Speerspitzendrache",
     "text": "{kw:vanguard}. {label:attack}: Verursache {dmg:2} Schaden am feindlichen Helden.",
-    "src": "22b6cf71223c6760"
+    "src": "2e576266dc681db3"
   },
   "1105": {
     "name": "Magmakernwärter",
@@ -1108,8 +1108,8 @@
   },
   "1116": {
     "name": "Wächter der Dämmerung",
-    "text": "{kw:frost}. Opfere einen befreundeten Diener: Stelle 10 Leben deines Helden wieder her.",
-    "src": "ad8ed46410d01edd"
+    "text": "Opfere einen befreundeten Diener: Stelle 10 Leben deines Helden wieder her.",
+    "src": "893f8f5649e2e07d"
   },
   "1117": {
     "name": "Giftdorn",
@@ -1142,9 +1142,9 @@
     "src": "7a2b4d34f2c400fb"
   },
   "1123": {
-    "name": "Restauriertes Bollwerk",
+    "name": "Geflickter Golem",
     "text": "{kw:bulwark}.",
-    "src": "a692e21006a859dc"
+    "src": "b69cdf6a0d68be9b"
   },
   "1124": {
     "name": "Geborgener Golem",
@@ -1168,9 +1168,9 @@
     "src": "578ac6450f7aa8a0"
   },
   "1128": {
-    "name": "Rekrut der Vorhut",
+    "name": "Eifriger Rekrut",
     "text": "{kw:skirmish}.",
-    "src": "86527bee09526167"
+    "src": "0dd0204b79dd5d47"
   },
   "1129": {
     "name": "Glutbeckenwart",
@@ -1184,6 +1184,7 @@
   },
   "1131": {
     "name": "Mechanische Essenz",
+    "plural": "Mechanische Essenzen",
     "text": "Erhalte zu Beginn deines Zuges +1/+1.",
     "src": "7de2039b664491c0"
   },
@@ -1209,8 +1210,8 @@
   },
   "1136": {
     "name": "Setzlingswache",
-    "text": "{kw:aegis}. {label:toll}: Gib einem zufälligen befreundeten Diener +2/+2.",
-    "src": "b2203f52dc97761b"
+    "text": "{kw:bulwark}. {label:toll}: Gib einem zufälligen befreundeten Diener +2/+2.",
+    "src": "53a477ce3d2af86e"
   },
   "1137": {
     "name": "Feuerhauptmann",
@@ -1224,8 +1225,8 @@
   },
   "1139": {
     "name": "Prophet der Flut",
-    "text": "{kw:vanguard}.",
-    "src": "3934789f21722032"
+    "text": "{label:toll}: {kw:drown:imp} alle feindlichen Diener.",
+    "src": "631770f0c789dd9f"
   },
   "1140": {
     "name": "Salzküstenspäher",
@@ -1310,8 +1311,8 @@
   },
   "1156": {
     "name": "Bauplanarchiv",
-    "text": "Beschwöre ein {card:1059}.",
-    "src": "6fc492b45ddea778"
+    "text": "Beschwöre eine {card:1131}.",
+    "src": "d2e158edba3a510d"
   },
   "1157": {
     "name": "Runderneuerter Automat",
@@ -1410,8 +1411,8 @@
   },
   "1176": {
     "name": "Vael, Herold des Sturms",
-    "text": "{kw:doublestrike}. Verursache {dmg:2} Schaden an allen Feinden.",
-    "src": "51d930112dad5329"
+    "text": "{kw:doublestrike}. Verursache {dmg:1} Schaden an allen Feinden.",
+    "src": "8395a42f9d214268"
   },
   "1177": {
     "name": "Knisterwichtel",
@@ -1480,8 +1481,8 @@
   },
   "1190": {
     "name": "Meistertüftler",
-    "text": "Beschwöre zwei {card:1059:plural} und ziehe eine Karte.",
-    "src": "6bdd1cda104446d5"
+    "text": "Beschwöre eine {card:1131} und ziehe eine Karte.",
+    "src": "5b7ede9f7ff9a607"
   },
   "1191": {
     "name": "Schemen",
@@ -1496,8 +1497,8 @@
   },
   "1193": {
     "name": "Stiller Schnitter",
-    "text": "{label:toll}: Belege 2 zufällige feindliche Diener mit {kw:silence}.",
-    "src": "805e17a0f7a08e82"
+    "text": "{kw:lifedrain}.",
+    "src": "053220b64d28e334"
   },
   "1194": {
     "name": "Königlicher Herold",

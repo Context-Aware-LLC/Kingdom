@@ -65,7 +65,8 @@ def load():
     rows = []
     for f in sorted(glob.glob(str(CARD_DIR / "*.cards.json"))):
         rows += json.loads(pathlib.Path(f).read_text(encoding="utf-8"))
-    return [r for r in rows if r.get("collectible")]
+    # A DRAFT or RETIRED row is out of every pool, so it occupies no slot (CardDefinition.PoolEligible).
+    return [r for r in rows if r.get("collectible") and r.get("lifecycle", "PUBLISHED") == "PUBLISHED"]
 
 
 def is_board(action):

@@ -301,7 +301,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4b1e6e7f23f633d41949fc6fec633990
-    m_Address: card_art/neutral_throneless_king
+    m_Address: card_art/grave_throneless_king
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
