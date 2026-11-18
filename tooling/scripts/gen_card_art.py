@@ -33,7 +33,7 @@ something needs deleting, I'll delete it myself." Numbering always continues pas
 disk. `--to-unity` is the one path that writes a fixed destination, so it copies the outgoing
 image aside first — see `preserve_promoted`.
 
-Keys come from the environment only: OPENAI_API_KEY. --dry-run needs none.
+The key is OPENAI_API_KEY, from the environment or else the repo-root .env. --dry-run needs none.
 
 Usage:
   gen_card_art.py [options]
@@ -70,6 +70,22 @@ for _stream in (sys.stdout, sys.stderr):
         pass
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
+
+
+def key_from_dotenv():
+    """The key from the repo-root .env (gitignored), when the environment has none.
+
+    The environment alone was not enough: a Windows user variable is inherited only by processes
+    started after it was set, so a terminal inside an editor that was already open never sees it.
+    """
+    path = REPO / ".env"
+    if not path.is_file():
+        return None
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        name, sep, value = line.strip().removeprefix("export ").partition("=")
+        if sep and name.strip() == ENV_KEY:
+            return value.strip().strip("'\"") or None
+    return None
 OUT = REPO / "art-pipeline" / "card-art"
 CARD_DATA = REPO / "unity" / "Assets" / "CardData"
 SEEDS_DIR = REPO / "tooling" / "card-art-seeds"
@@ -617,12 +633,12 @@ def main() -> int:
     if not require_explicit_selection(cards, candidates, selected):
         return 2
 
-    key = os.environ.get(ENV_KEY)
+    key = os.environ.get(ENV_KEY) or key_from_dotenv()
     if not key:
         print(f"{ENV_KEY} is not set — required to generate ({MODEL}).\n"
-              f"  Set it in the environment, e.g. PowerShell:\n"
-              f"    [Environment]::SetEnvironmentVariable('{ENV_KEY}', '<key>', 'User')\n"
-              f"  then start a NEW shell. --dry-run needs no key at all.",
+              f"  Put it in the repo-root .env as {ENV_KEY}=<key>, or in the environment.\n"
+              f"  A Windows user variable reaches only processes started AFTER it was set, so\n"
+              f"  an editor open since then must be fully restarted. --dry-run needs no key.",
               file=sys.stderr)
         return 2
 
