@@ -525,6 +525,24 @@
     "text": "Verursache {dmg:2} Schaden an einem Charakter; ein befreundeter Diener erhält +2/+1.",
     "src": "8c25b6f3696a71fa"
   },
+  "234": {
+    "name": "Erloschene Garantie",
+    "text": "{label:unearth:imp} eine Karte und vernichte einen Diener.",
+    "flavor": "Es wurde zur Prüfung geöffnet. Die Prüfung ergab, dass es geöffnet worden war.",
+    "src": "2a93996424dac487"
+  },
+  "235": {
+    "name": "Zeugenumsiedlung",
+    "text": "Gib einem befreundeten Diener {kw:shroud} und ziehe eine Karte.",
+    "flavor": "Ein neuer Name, ein neues Dorf und derselbe Hut.",
+    "src": "e27986161aba3a4b"
+  },
+  "236": {
+    "name": "Bergungsrecht",
+    "text": "Übernimm die Kontrolle über einen beschädigten feindlichen Diener.",
+    "flavor": "Nach Pendinghamer Seerecht gehört alles, was feucht aufgefunden wird, demjenigen, der es befeuchtet hat.",
+    "src": "a0ff7b6687efd674"
+  },
   "1001": {
     "name": "Glutrekrut",
     "text": "{kw:skirmish}.",
@@ -1509,5 +1527,23 @@
     "name": "Königin Belle Idee",
     "text": "{label:aura}: Der erste andere befreundete Diener, der pro Zug tödlichen Schaden erleidet, überlebt mit 1 Leben.",
     "src": "1cfcddc42f077436"
+  },
+  "1196": {
+    "name": "Winddrachen-Enthusiast",
+    "text": "{label:attack}: Verursache {dmg:1} Schaden an einem zufälligen Feind.",
+    "flavor": "Elfmal getroffen. Er nennt die Ergebnisse vielversprechend.",
+    "src": "27e1524fe6cb73f1"
+  },
+  "1197": {
+    "name": "Zugelassener Giftmischer",
+    "text": "Gib einem befreundeten Diener {kw:venom}.",
+    "flavor": "Die Zulassung verlangt zwei Referenzen. Keine muss am Leben sein.",
+    "src": "5108246c8be93943"
+  },
+  "1198": {
+    "name": "Königlicher Vorkoster",
+    "text": "{label:toll}: Beschwöre ein {card:1182}.",
+    "flavor": "Die Stelle ist immer frei.",
+    "src": "19b3752e70353cd6"
   }
 }

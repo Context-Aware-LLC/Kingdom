@@ -57,6 +57,10 @@ are bookkeeping, not breakage.
 a class-token or set-folder finding it needs no Unity Editor to fix, so there is no reason to
 downgrade it to advisory. CI and rebake_card_data.py both pass it.
 
+A `lifecycle: DRAFT` row with no png is listed as awaiting art and never fails the run: the card is
+in no pool, and drafting a row ahead of its art is what the lifecycle is for. Publishing it makes
+the missing file blocking again.
+
 Pass --fail-missing-only to restrict the exit-1 condition to artIds with no matching file on disk
 (useful in CI when class-token mismatches are pre-existing and need Unity-Editor intervention to
 fix properly — renaming a PNG without the Editor mints a new guid and orphans the Addressables
@@ -162,7 +166,7 @@ def main():
         paths.setdefault(png.stem, []).append(png)
 
     referenced = {c["artId"] for _, c in all_rows}
-    misplaced, missing = [], []
+    misplaced, missing, awaiting = [], [], []
     for file_name, card in all_rows:
         art, set_id = card["artId"], card.get("setId", "CORE")
         # A row's art belongs under its own setId, with no exception. The 2026-08-08 rule
@@ -174,7 +178,11 @@ def main():
         expected_folder = set_id
         folders = on_disk.get(art)
         if not folders:
-            missing.append((card["id"], set_id, art))
+            # A DRAFT row is a card being designed: it is in no pool, no deck and no pack, so
+            # nothing can ask for its art, and the lifecycle exists so a card can be drafted
+            # into the JSON before its art is made. Publishing the row makes this blocking.
+            draft = card.get("lifecycle") == "DRAFT"
+            (awaiting if draft else missing).append((card["id"], set_id, art))
         elif expected_folder not in folders:
             misplaced.append((card["id"], set_id, art, ", ".join(sorted(folders))))
 
@@ -215,6 +223,14 @@ def main():
         print(f"{'card id':<36} {'set':<11} artId")
         print("-" * 90)
         for row in sorted(missing):
+            print(f"{row[0]:<36} {row[1]:<11} {row[2]}")
+
+    if awaiting:
+        print()
+        print("DRAFT ROWS AWAITING ART — not blocking until the row is published")
+        print(f"{'card id':<36} {'set':<11} artId")
+        print("-" * 90)
+        for row in sorted(awaiting):
             print(f"{row[0]:<36} {row[1]:<11} {row[2]}")
 
     if orphans:

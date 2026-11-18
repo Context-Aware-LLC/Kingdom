@@ -125,6 +125,24 @@
     "background": "A cool desaturated steel-blue foundry corridor fading into pale smoke, so the warm distortion and sparks remain the sole focal energy.",
     "notes": "Show heat through refraction and a restrained spark crest, not a fireball, explosion, lava flood, caster, enemy, or text-like pattern."
   },
+  "234": {
+    "subject": "A small polished-brass construct lies neatly disassembled on a dark oiled-steel workbench: every gear, mainspring and plate set out in tidy rows by size, like a jeweller's tray, with its arc-blue lens core still faintly lit at the centre of the arrangement. Two gloved hands set down the last screw with great care. Beside the empty chest casing sits a parchment-amber wax seal snapped cleanly in two.",
+    "perspective": "High three-quarter view looking down onto the workbench, the whole laid-out arrangement and both hands inside the middle 70%.",
+    "background": "Cool pale blue-grey morning light from a tall workshop window falling across the bench, kept soft and uncluttered so the warm brass rows read crisply against it.",
+    "notes": "The joke is the tidiness: this is a careful, official dismantling, not a wreck. One gear sits apart from the rows, plainly left over. No text or symbol on the seal or on any paper, no explosion, smoke, sparks, tools in mid-swing, or sad face on the construct."
+  },
+  "235": {
+    "subject": "A single cloaked figure in shadow-black and midnight purple-grey steps through a cottage doorway carrying one small bundle, already dissolving into soft shadow-smoke from the shoulders back. On their head sits a conspicuously jaunty wide-brimmed hat with one toxic lime-green feather, entirely solid, sharp and unhidden.",
+    "perspective": "Eye-level three-quarter view from the lane, the figure mid-step in the doorway with the hat near the centre of the frame.",
+    "background": "A bright sunlit village lane in warm gold and patched-linen cream, whitewashed cottage wall, wildflowers by the step. In the distance one cheerful villager waves directly at the hat.",
+    "notes": "The disguise is perfect except for the hat, and the picture must make the hat the most visible thing in it. One figure only. No visible face, no blades, no signpost or lettering, no second cloaked figure."
+  },
+  "236": {
+    "subject": "A calm column of deep-teal seawater rises from a tide pool in the shape of a patient cupped hand, lifting a dented, dripping suit of armour clear of the ground, seen from behind with its arms hanging. Seafoam runs out of the dents. A single pale moon-silver shell hangs from its ankle on a cord, like a claim tag.",
+    "perspective": "Low three-quarter view from the quayside, the water hand and the lifted armour centred and filling the middle of the frame.",
+    "background": "A warm sunlit sandstone harbour quay in ochre and gold, coiled rope and a stack of crates, clear afternoon sky. A row of other damp, tagged objects waits in an orderly line along the wall.",
+    "notes": "Cold, patient and eerie-calm: the water takes the thing the way a clerk takes a parcel. Nothing written on the shell tag. No crashing wave, tentacles, ship, storm, drowning struggle or frightened face."
+  },
   "1038": {
     "subject": "A hulking four-limbed shape woven entirely out of thick living roots and packed dark earth, with no face — just a dense knot where a head would be, and a chest cavity glowing faint honey-gold from the sap inside it. It is walking forward with real weight behind it, one root-fist already through a low drystone wall that is coming apart ahead of it, clods and small stones spraying out at knee height.",
     "perspective": "Frontal three-quarter view at chest height, the whole striding silhouette centred, the breaking wall kept low in the frame so nothing competes with the body.",
@@ -412,5 +430,17 @@
     "perspective": "Low, ground-level, side-on — emphasize speed and horizontal motion, not height.",
     "background": "An open stretch of pale blue-grey dawn mist over chalky ground, cool and understated, with no dense green foliage behind the beast. The spare, high-key setting cleanly separates the warm russet-root and fern-gold body.",
     "notes": "Palette priority: pale blue-grey and chalk background; warm russet, fern-gold, and muted olive subject; a faint honey-gold healing glow trails from its footfalls. Restore 2 Health to your hero on play, so the glow stays small and easy to miss, not a spectacle."
+  },
+  "1196": {
+    "subject": "A wiry, soot-smudged villager in charcoal patched leathers and a storm-silver scarf stands braced on a hilltop with both gloved hands on a kite string, hair standing straight up. The kite above is small and much-mended, tipped with a little copper weathercock. One thin electric gold-white arc runs down the string to the gloves. The expression is earnest and quietly pleased.",
+    "perspective": "Medium three-quarter view from slightly below, the villager in the lower centre and the taut string leading the eye up to the kite.",
+    "background": "A clear, warm peach-and-gold afternoon sky over green hills, with one small private stormcloud-black cloud parked directly above the kite and nowhere else. A neat stack of singed earlier kites leans against a fence post.",
+    "notes": "Human-scale and modest: one thin bolt, not a storm. This is a hobbyist, not a mage. No key on the string, no staff, robes, glowing eyes, armour, or screaming face."
+  },
+  "1197": {
+    "subject": "A neat, courteous apothecary in shadow-black and midnight purple-grey with a pale bone-white apron pours tea from a blade-silver teapot into a single cup with complete professional care. The stream of tea is a faint toxic lime-green. Behind one shoulder hangs a small framed certificate with a wax seal, slightly crooked.",
+    "perspective": "Eye-level medium three-quarter portrait across a small round table, the teapot, the stream and the cup at the centre.",
+    "background": "A bright ivory-and-gold Pendingham tea room with a sunny window and a lace cloth, warm and spotless. On the table beside the cup, one potted plant has wilted completely.",
+    "notes": "Calm and respectable: a licensed professional at work. The certificate is blank, with no lettering. No skulls, bubbling cauldron, hood, dagger, dripping fangs or sinister grin."
   }
 }

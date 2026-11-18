@@ -4,8 +4,8 @@
     "unity/Assets/CardData/Pendingham.cards.json",
     "unity/Assets/CardData/Rekindling.cards.json"
   ],
-  "totalCards": 300,
-  "corpusDigest": "9c3b843628a438a6",
+  "totalCards": 306,
+  "corpusDigest": "3ed5db2b261edd01",
   "classes": [
     "CLOCKWRIGHT",
     "EMBERWARD",
@@ -24,10 +24,10 @@
     "HERO_POWER"
   ],
   "corpus": {
-    "total": 300,
+    "total": 306,
     "typeSplit": {
-      "MINION": 195,
-      "SPELL": 83,
+      "MINION": 198,
+      "SPELL": 86,
       "WEAPON": 14,
       "HERO_POWER": 8
     },
@@ -47,10 +47,10 @@
       "FROST": 5
     },
     "selectorFrequency": {
-      "ANY_FRIENDLY_MINION": 69,
-      "ANY_ENEMY": 28,
-      "ANY_MINION": 25,
-      "ANY_ENEMY_MINION": 23,
+      "ANY_FRIENDLY_MINION": 71,
+      "ANY_ENEMY": 29,
+      "ANY_MINION": 26,
+      "ANY_ENEMY_MINION": 24,
       "FRIENDLY_HERO": 18,
       "ENEMY_HERO": 11,
       "ANY_CHARACTER": 9,
@@ -63,32 +63,32 @@
     "actionFrequency": {
       "DAMAGE_SINGLE": 36,
       "DAMAGE_AOE": 21,
-      "REMOVAL": 12,
+      "REMOVAL": 13,
       "BOUNCE": 10,
-      "DAMAGE_RANDOM": 8,
+      "DAMAGE_RANDOM": 9,
       "SILENCE": 2
     },
     "costDistribution": {
       "0": 5,
       "1": 33,
-      "2": 76,
-      "3": 72,
-      "4": 50,
-      "5": 22,
+      "2": 78,
+      "3": 73,
+      "4": 51,
+      "5": 23,
       "6": 23,
-      "7": 13,
+      "7": 14,
       "8": 4,
       "9": 2
     },
     "rarityBreakdown": {
-      "COMMON": 132,
-      "RARE": 98,
-      "EPIC": 51,
+      "COMMON": 133,
+      "RARE": 101,
+      "EPIC": 53,
       "LEGENDARY": 19
     },
     "tribeBreakdown": {
       "CONSTRUCT": 46,
-      "HUMAN": 42,
+      "HUMAN": 45,
       "UNDEAD": 23,
       "BEAST": 22,
       "ELEMENTAL": 22,
@@ -98,12 +98,12 @@
       "MERFOLK": 4,
       "CATFOLK": 1
     },
-    "minionCount": 195,
+    "minionCount": 198,
     "attackDistribution": {
       "0": 3,
-      "1": 31,
-      "2": 53,
-      "3": 41,
+      "1": 32,
+      "2": 54,
+      "3": 42,
       "4": 22,
       "5": 28,
       "6": 9,
@@ -114,7 +114,7 @@
     "healthDistribution": {
       "1": 18,
       "2": 45,
-      "3": 33,
+      "3": 36,
       "4": 41,
       "5": 27,
       "6": 20,
@@ -126,10 +126,10 @@
   },
   "byClass": {
     "CLOCKWRIGHT": {
-      "total": 32,
+      "total": 33,
       "typeSplit": {
         "MINION": 20,
-        "SPELL": 10,
+        "SPELL": 11,
         "WEAPON": 1,
         "HERO_POWER": 1
       },
@@ -143,21 +143,21 @@
       },
       "selectorFrequency": {
         "ANY_FRIENDLY_MINION": 10,
-        "ANY_MINION": 4,
+        "ANY_MINION": 5,
         "ANY_CHARACTER": 1,
         "SELF": 1
       },
       "actionFrequency": {
         "BOUNCE": 3,
         "DAMAGE_SINGLE": 2,
-        "REMOVAL": 1
+        "REMOVAL": 2
       },
       "costDistribution": {
         "1": 3,
         "2": 9,
         "3": 7,
         "4": 7,
-        "5": 2,
+        "5": 3,
         "6": 2,
         "7": 1,
         "8": 1
@@ -165,7 +165,7 @@
       "rarityBreakdown": {
         "COMMON": 13,
         "RARE": 11,
-        "EPIC": 6,
+        "EPIC": 7,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -402,10 +402,10 @@
       }
     },
     "NIGHTVEIL": {
-      "total": 32,
+      "total": 35,
       "typeSplit": {
-        "MINION": 18,
-        "SPELL": 11,
+        "MINION": 20,
+        "SPELL": 12,
         "WEAPON": 2,
         "HERO_POWER": 1
       },
@@ -419,8 +419,8 @@
         "LIFEDRAIN": 1
       },
       "selectorFrequency": {
+        "ANY_FRIENDLY_MINION": 8,
         "ANY_ENEMY_MINION": 7,
-        "ANY_FRIENDLY_MINION": 6,
         "ANY_MINION": 5,
         "ENEMY_HERO": 3,
         "ANY_ENEMY": 1,
@@ -434,36 +434,36 @@
       },
       "costDistribution": {
         "1": 3,
-        "2": 8,
-        "3": 9,
-        "4": 6,
+        "2": 9,
+        "3": 10,
+        "4": 7,
         "5": 4,
         "6": 2
       },
       "rarityBreakdown": {
-        "COMMON": 12,
-        "RARE": 11,
+        "COMMON": 13,
+        "RARE": 13,
         "EPIC": 7,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
-        "HUMAN": 8,
+        "HUMAN": 10,
         "BEAST": 4,
         "SPIRIT": 4,
         "CONSTRUCT": 1
       },
-      "minionCount": 18,
+      "minionCount": 20,
       "attackDistribution": {
         "1": 3,
-        "2": 4,
-        "3": 4,
+        "2": 5,
+        "3": 5,
         "4": 3,
         "5": 4
       },
       "healthDistribution": {
         "1": 1,
         "2": 6,
-        "3": 3,
+        "3": 5,
         "4": 3,
         "5": 5
       }
@@ -541,9 +541,9 @@
       }
     },
     "TEMPEST": {
-      "total": 31,
+      "total": 32,
       "typeSplit": {
-        "MINION": 15,
+        "MINION": 16,
         "SPELL": 13,
         "WEAPON": 2,
         "HERO_POWER": 1
@@ -558,7 +558,7 @@
         "VANGUARD": 1
       },
       "selectorFrequency": {
-        "ANY_ENEMY": 15,
+        "ANY_ENEMY": 16,
         "ANY_ENEMY_MINION": 4,
         "ANY_FRIENDLY_MINION": 2,
         "ENEMY_HERO": 2,
@@ -566,13 +566,13 @@
       },
       "actionFrequency": {
         "DAMAGE_AOE": 9,
-        "DAMAGE_RANDOM": 8,
+        "DAMAGE_RANDOM": 9,
         "DAMAGE_SINGLE": 5
       },
       "costDistribution": {
         "0": 1,
         "1": 6,
-        "2": 10,
+        "2": 11,
         "3": 7,
         "4": 2,
         "5": 2,
@@ -581,19 +581,20 @@
       },
       "rarityBreakdown": {
         "COMMON": 12,
-        "RARE": 11,
+        "RARE": 12,
         "EPIC": 6,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
         "ELEMENTAL": 9,
-        "HUMAN": 3,
+        "HUMAN": 4,
         "BEAST": 1,
         "CONSTRUCT": 1,
         "SPIRIT": 1
       },
-      "minionCount": 15,
+      "minionCount": 16,
       "attackDistribution": {
+        "1": 1,
         "2": 6,
         "3": 3,
         "4": 1,
@@ -603,16 +604,16 @@
       "healthDistribution": {
         "1": 4,
         "2": 4,
-        "3": 2,
+        "3": 3,
         "4": 2,
         "6": 3
       }
     },
     "TIDECALLER": {
-      "total": 34,
+      "total": 35,
       "typeSplit": {
         "MINION": 20,
-        "SPELL": 11,
+        "SPELL": 12,
         "WEAPON": 2,
         "HERO_POWER": 1
       },
@@ -627,7 +628,7 @@
         "VENOM": 1
       },
       "selectorFrequency": {
-        "ANY_ENEMY_MINION": 7,
+        "ANY_ENEMY_MINION": 8,
         "ANY_MINION": 7,
         "ANY_ENEMY": 6,
         "ANY_FRIENDLY_MINION": 4,
@@ -649,13 +650,13 @@
         "4": 4,
         "5": 4,
         "6": 3,
-        "7": 2,
+        "7": 3,
         "8": 1
       },
       "rarityBreakdown": {
         "COMMON": 14,
         "RARE": 13,
-        "EPIC": 5,
+        "EPIC": 6,
         "LEGENDARY": 2
       },
       "tribeBreakdown": {
@@ -2945,6 +2946,29 @@
       "sourceFile": "Pendingham.cards.json"
     },
     {
+      "id": 234,
+      "name": "Voided Warranty",
+      "type": "SPELL",
+      "cost": 5,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "CLOCKWRIGHT",
+      "rarity": "EPIC",
+      "keywords": [],
+      "selectors": [
+        "ANY_MINION"
+      ],
+      "actionTags": [
+        "REMOVAL"
+      ],
+      "tribe": null,
+      "setId": "PENDINGHAM",
+      "collectible": true,
+      "artId": "clock_voided_warranty",
+      "sourceFile": "Pendingham.cards.json"
+    },
+    {
       "id": 1069,
       "name": "The Great Mechanism",
       "type": "MINION",
@@ -3119,6 +3143,27 @@
       "sourceFile": "Pendingham.cards.json"
     },
     {
+      "id": 1197,
+      "name": "Licensed Poisoner",
+      "type": "MINION",
+      "cost": 3,
+      "attack": 2,
+      "health": 3,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION"
+      ],
+      "actionTags": [],
+      "tribe": "HUMAN",
+      "setId": "PENDINGHAM",
+      "collectible": true,
+      "artId": "night_licensed_poisoner",
+      "sourceFile": "Pendingham.cards.json"
+    },
+    {
       "id": 56,
       "name": "Shadow Blade",
       "type": "WEAPON",
@@ -3180,6 +3225,27 @@
       "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "night_fade_out",
+      "sourceFile": "Pendingham.cards.json"
+    },
+    {
+      "id": 235,
+      "name": "Witness Relocation",
+      "type": "SPELL",
+      "cost": 2,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_FRIENDLY_MINION"
+      ],
+      "actionTags": [],
+      "tribe": null,
+      "setId": "PENDINGHAM",
+      "collectible": true,
+      "artId": "night_witness_relocation",
       "sourceFile": "Pendingham.cards.json"
     },
     {
@@ -3762,6 +3828,29 @@
       "setId": "PENDINGHAM",
       "collectible": true,
       "artId": "storm_static_shock",
+      "sourceFile": "Pendingham.cards.json"
+    },
+    {
+      "id": 1196,
+      "name": "Kite Enthusiast",
+      "type": "MINION",
+      "cost": 2,
+      "attack": 1,
+      "health": 3,
+      "durability": null,
+      "class": "TEMPEST",
+      "rarity": "RARE",
+      "keywords": [],
+      "selectors": [
+        "ANY_ENEMY"
+      ],
+      "actionTags": [
+        "DAMAGE_RANDOM"
+      ],
+      "tribe": "HUMAN",
+      "setId": "PENDINGHAM",
+      "collectible": true,
+      "artId": "storm_kite_enthusiast",
       "sourceFile": "Pendingham.cards.json"
     },
     {
@@ -4513,6 +4602,27 @@
       "sourceFile": "Pendingham.cards.json"
     },
     {
+      "id": 236,
+      "name": "Salvage Rights",
+      "type": "SPELL",
+      "cost": 7,
+      "attack": null,
+      "health": null,
+      "durability": null,
+      "class": "TIDECALLER",
+      "rarity": "EPIC",
+      "keywords": [],
+      "selectors": [
+        "ANY_ENEMY_MINION"
+      ],
+      "actionTags": [],
+      "tribe": null,
+      "setId": "PENDINGHAM",
+      "collectible": true,
+      "artId": "tide_salvage_rights",
+      "sourceFile": "Pendingham.cards.json"
+    },
+    {
       "id": 61,
       "name": "Coldsnap Knife",
       "type": "WEAPON",
@@ -4898,6 +5008,25 @@
       "setId": "REKINDLING",
       "collectible": true,
       "artId": "night_salvaged_golem",
+      "sourceFile": "Rekindling.cards.json"
+    },
+    {
+      "id": 1198,
+      "name": "Royal Food Taster",
+      "type": "MINION",
+      "cost": 4,
+      "attack": 3,
+      "health": 3,
+      "durability": null,
+      "class": "NIGHTVEIL",
+      "rarity": "COMMON",
+      "keywords": [],
+      "selectors": [],
+      "actionTags": [],
+      "tribe": "HUMAN",
+      "setId": "REKINDLING",
+      "collectible": true,
+      "artId": "night_royal_food_taster",
       "sourceFile": "Rekindling.cards.json"
     },
     {
