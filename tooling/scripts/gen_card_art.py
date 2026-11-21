@@ -1,17 +1,11 @@
 """Generate card illustrations from the reviewed seed corpus.
 
-SINGLE PROVIDER: gpt-image-2. The two-provider gemini/openai split, its fallback policy
-and its per-provider style blocks were removed 2026-09-05 (Sam) — they described a process
-nobody runs any more. Anything you find elsewhere that still mentions a provider choice for
-card art is stale.
+SINGLE PROVIDER: gpt-image-2.
 
 ONE PROMPT COMPOSER IN THIS REPO, and it is not this file. `gen_card_prompt_briefs.compose_brief`
 builds the prompt: delivery, composition, subject/background opposition, world tone, style,
-the scale clause and the negative prompt, from the spec doc and the descriptor files. This
-script used to carry a second, subtly different copy of all of that — a copy whose own docstring
-admitted it was "intentionally NOT a verbatim mirror" — plus a third composition path reading
-`docs/design/card-drafts-*.md`, a directory that stopped existing at the 2026-07-31 docs
-reorganisation. Both are gone. If the prompt is wrong, fix it in `gen_card_prompt_briefs.py`
+the scale clause and the negative prompt, from the spec doc and the descriptor files.
+If the prompt is wrong, fix it in `gen_card_prompt_briefs.py`
 or in the docs it parses; there is nowhere else it can be wrong.
 
 WHERE THE DIRECTION COMES FROM. `tooling/card-art-seeds/<setId>.json`, keyed by the row's
