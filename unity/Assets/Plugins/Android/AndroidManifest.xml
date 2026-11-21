@@ -20,7 +20,7 @@
      So: to change anything Unity owns, change it in PlayerSettings. Editing it here is inert and
      reads as if it worked. Diff this file against that generated one after any Android build.
 
-     There are exactly THREE deliberate deviations from that base. Anything else is drift:
+     There are exactly FOUR deliberate deviations from that base. Anything else is drift:
        1. The second and third intent-filters below: the emberfall://auth deep link (NOR-246),
           ADDITIVE and confirmed present in the built manifest, and emberfall://friend (#424, the
           shared friend link), the same kind and UNVERIFIED against a built manifest.
@@ -32,8 +32,10 @@
        3. android:allowBackup="false" on <application>, which the base does not set at all
           (2026-08-29). The reason is on the tag itself. Additive, so it should survive — but it
           post-dates the last build and is UNVERIFIED against a built manifest.
+       4. The android.hardware.screen.landscape <uses-feature required="false"> (2026-11-21).
+          ADDITIVE; the reason is on the line itself. UNVERIFIED against a built manifest.
      Regenerate this base by re-running an Android build if the Unity/Android Gradle version ever
-     changes and this drifts from what Unity would generate on its own — and re-apply all three
+     changes and this drifts from what Unity would generate on its own — and re-apply all four
      deviations above by hand when you do. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
   <uses-permission android:name="android.permission.INTERNET" />
@@ -42,6 +44,12 @@
   <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
   <uses-feature android:name="android.hardware.touchscreen.multitouch" android:required="false" />
   <uses-feature android:name="android.hardware.touchscreen.multitouch.distinct" android:required="false" />
+  <!-- The FOURTH deliberate deviation (2026-11-21). A landscape screenOrientation makes Google Play
+       IMPLY android.hardware.screen.landscape as REQUIRED even though no manifest line names it, and
+       Play Console then reports phones and tablets that cannot install the app. Declaring it
+       optional removes that filter; the activity still asks for landscape. Confirm in the built
+       bundle with bundletool's dump manifest, xpath /manifest/uses-feature. -->
+  <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
   <!-- allowBackup=false is the THIRD deliberate deviation from Unity's base (2026-08-29).
        Unset, Android defaults it ON, and Auto Backup covers getExternalFilesDir() — which is
        exactly where the collection lives. A reinstall then RESTORES a save from the Google
