@@ -1,8 +1,9 @@
 # Build profile — Kingdom of Bad Ideas (Android)
 
-Read by the global `build` skill (`~/.claude/skills/build/SKILL.md`). Detail on modes, Sentry
-jobs and the naming contract: [android-builds.md](../docs/dev-docs/operations/android-builds.md)
-(lives in the docs repo; see CLAUDE.md on the junction).
+Read by the global `build` skill (`~/.claude/skills/build/SKILL.md`). **Also read
+[android-builds.md](../docs/dev-docs/operations/android-builds.md) before choosing flags or
+publishing files**: it holds the full modes, Sentry-job and naming contract this profile
+summarises (it lives in the docs repo; see CLAUDE.md on the junction).
 
 Another platform or output requested → establish that target first; never substitute Android.
 
@@ -17,10 +18,13 @@ Every command runs from the build checkout: `pwsh tools/ci/build-android.ps1 <ar
 | Performance capture | `-PerfCapture -DeferSymbolUpload` | `unity/Builds/Android/Kingdom.apk` | debug | no | ask |
 | Google Play release | `-PlayRelease -DeferSymbolUpload` | `unity/Builds/Android/KingdomOfBadIdeas.aab` | upload key `kobi-upload` | yes | only if the request mentions a phone |
 
+`Install?` values follow the global skill: Play is `if requested`; the three APK purposes are
+`ask`.
+
 Recommend the quick phone check for ordinary visual/gameplay iteration. Bare `release` is
 ambiguous between release-like phone test and Play; ask. `-Fast` is unsuitable for performance
-numbers. Perf capture needs a checkout with no uncommitted changes. Add `-Clean` only when asked
-or cache corruption is evidenced. Timeout 60 min (`-TimeoutMinutes N`).
+numbers. Perf capture needs a checkout with no uncommitted changes. Recovery option: `-Clean`,
+only when asked or cache corruption is evidenced. Timeout 60 min (`-TimeoutMinutes N`).
 
 A Play bundle plus a phone install means both deliverables: the AAB, and an APK set or universal
 APK generated from it with bundletool (`Phone/Play/`).
@@ -33,8 +37,9 @@ APK generated from it with bundletool (`Phone/Play/`).
 - Point it at the commit being built: `git -C C:\claude-editor fetch` then
   `checkout --detach <commit>`, and confirm it actually contains the requested changes.
 - No `Unity.exe` running on that path and no `unity/Temp/UnityLockfile`.
-- Play builds: `KINGDOM_UPLOAD_KEYSTORE_PASS` must be set (the harness checks it before Unity
-  launches).
+- Play builds: `KINGDOM_UPLOAD_KEYSTORE_PASS` must be set. Unset, the harness falls back to
+  `Read-Host`, which hangs a background run; check it before launching. A wrong value is
+  refused before Unity launches.
 
 ## Verification
 
@@ -92,7 +97,8 @@ APK generated from it with bundletool (`Phone/Play/`).
 ## Version floor
 
 `unity/ProjectSettings/ProjectSettings.asset`: `bundleVersion` and `AndroidBundleVersionCode`.
-`StoreVersionBump` bumps them on every Play build, failed attempts included. Copy the two lines
+`StoreVersionBump` bumps them on every Play build, failed attempts included, so a failed Play
+build still has its floor committed. Copy the two lines
 (and only those; the shared seat's file also carries keystore/IL2CPP collateral) into the
 operator checkout, commit on master by explicit path
 (`Version floor X (N): spent by the Play AAB built from <commit>`), push. Never roll a spent
@@ -101,8 +107,9 @@ floor back.
 ## After the build
 
 - Sentry: `-DeferSymbolUpload` leaves a job beside `unity/Builds/SymbolUploads/<id>/job.json` in
-  the build checkout; report `status.json`'s state. Retry once from the job
-  (`pwsh tools/ci/upload-android-symbols.ps1 -Job <job.json>`), never by rebuilding.
+  the build checkout; report `status.json`'s state. Retry a transient failure once from the job
+  (`pwsh tools/ci/upload-android-symbols.ps1 -Job <job.json>`), never by rebuilding; report an
+  auth or repeated failure with the job path. Leave queued and failed jobs in place.
 - Shared seat release: record then revert Unity's collateral (`git -C C:\claude-editor checkout -- unity`;
   `git status` shows ~15 tracked files, some line-ending only). Move generated untracked files
   (`unity/Assets/AddressableAssetsData/iOS.meta`,
@@ -111,3 +118,16 @@ floor back.
   to VACANT with a one-paragraph purpose line, previous block kept below as `PRIOR:`.
 - Do not leave unversioned `Kingdom.apk` / `Kingdom-fast.apk` / `KingdomOfBadIdeas.aab` beside
   delivered sets in the operator checkout.
+
+## Traps
+
+Each is detailed in the section named.
+
+- Unset keystore password → `Read-Host` hangs a background build (Preconditions).
+- `keytool -printcert` without `-keystore` exits 1 after printing (Verification).
+- A manifest edit in `Plugins/Android/AndroidManifest.xml` that Unity overwrites reads as done
+  (Verification).
+- Gradle's native symbol table output can be days stale in a successful build (Delivery).
+- A Unity multiplayer scenario rewrites `productName`; never commit it changed (After the build).
+- `git diff --name-only` on the seat lists fewer files than `git status` (line-ending-only
+  changes); record collateral from `git status --porcelain` (After the build).
