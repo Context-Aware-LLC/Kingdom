@@ -3,6 +3,11 @@
 All notable changes to Kingdom of Bad Ideas are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.0.24] - 2026-11-21
+
+### Fixed
+- The game can now be installed on more phones and tablets from Google Play.
+
 ## [0.0.23] - 2026-11-21
 
 ### Added
