@@ -6,9 +6,10 @@ may narrow an agent's scope or forbid publishing; when they do, follow the stric
 ## Project build command
 
 For `/build`, `$build`, or a request to produce a Kingdom game build, read and follow
-`.agents/skills/build/SKILL.md`. It owns the purpose/type question and the standard delivery
-workflow. Treat `/build` as this project's conversational alias; Codex's skill selector uses
-`$build`. Claude Code also has a project-local `/build` entry point.
+`.agents/skills/build/SKILL.md`. It points at the global build skill, which owns the
+purpose/type question and the delivery workflow, and at `.claude/build-profile.md`, which holds
+everything Kingdom-specific. Treat `/build` as this project's conversational alias; Codex's skill
+selector uses `$build`. Claude Code answers `/build` with the same global skill (2026-11-21).
 
 ## Private docs are a junction, not part of this repo
 
