@@ -50,15 +50,23 @@ namespace Kingdom.Net.Server.Decks
         public readonly SeatDeck Seat;
         public readonly string Reason;
 
-        private DeckSubmissionResult(bool accepted, SeatDeck seat, string reason)
+        /// <summary>The refusal as the close frame carries it: <see cref="Reason"/> with the
+        /// validator's issue code in front (<see cref="DeckRefusalText"/>), so the client can say it
+        /// in the player's language. Equal to <see cref="Reason"/> for a refusal no rule raised.</summary>
+        public readonly string WireReason;
+
+        private DeckSubmissionResult(bool accepted, SeatDeck seat, string reason, string wireReason)
         {
             Accepted = accepted;
             Seat = seat;
             Reason = reason;
+            WireReason = wireReason;
         }
 
-        public static DeckSubmissionResult Ok(SeatDeck seat) => new DeckSubmissionResult(true, seat, "");
-        public static DeckSubmissionResult Rejected(string reason) => new DeckSubmissionResult(false, default, reason);
+        public static DeckSubmissionResult Ok(SeatDeck seat) => new DeckSubmissionResult(true, seat, "", "");
+        public static DeckSubmissionResult Rejected(string reason) => new DeckSubmissionResult(false, default, reason, reason);
+        public static DeckSubmissionResult Rejected(DeckViolation violation) =>
+            new DeckSubmissionResult(false, default, violation.Message, DeckRefusalText.Encode(violation));
     }
 
     /// <summary>
@@ -116,7 +124,7 @@ namespace Kingdom.Net.Server.Decks
             foreach (var id in order) deck.Entries.Add(new DeckEntry(id, summed[id]));
 
             var check = QueueEligibility.Check(deck, db, owned);
-            if (!check.IsEligible) return DeckSubmissionResult.Rejected(check.Reason);
+            if (!check.IsEligible) return DeckSubmissionResult.Rejected(check.Validation.Violations[0]);
 
             // Expand to the pre-shuffle ordered list MatchSetup wants (BeginMatch shuffles with the seed,
             // so this order feeds determinism, not fairness). The hero — and its hero power — is the

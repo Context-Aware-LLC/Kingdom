@@ -726,4 +726,23 @@
     <string name="quest_long_game_quip">Der Rat hat sich den Nachmittag freigehalten.</string>
     <string name="quest_minion_hunter_title">Zerstöre 50 Diener</string>
     <string name="quest_minion_hunter_quip">Die Grabhüter erwarten Besuch.</string>
+    <string name="deck_issue_off_class_short">%1$s gehört zu keiner Klasse dieses Decks.</string>
+    <string name="auth_error_otp_expired">Der Code ist abgelaufen oder falsch. Fordere einen neuen an.</string>
+    <string name="auth_error_invalid_credentials">E-Mail-Adresse und Passwort passen nicht zusammen.</string>
+    <string name="auth_error_weak_password">Das Passwort ist zu schwach. Versuch ein längeres.</string>
+    <string name="auth_error_same_password">Das ist bereits dein Passwort.</string>
+    <string name="auth_error_over_email_send_rate_limit">Zu viele E-Mails verschickt. Warte ein paar Minuten und versuch es noch einmal.</string>
+    <string name="auth_error_over_request_rate_limit">Zu viele Versuche. Warte eine Minute und versuch es noch einmal.</string>
+    <string name="auth_error_email_address_invalid">Diese E-Mail-Adresse sieht nicht richtig aus.</string>
+    <string name="auth_error_validation_failed">Diese E-Mail-Adresse sieht nicht richtig aus.</string>
+    <string name="auth_error_reauthentication_needed">Melde dich erneut an und versuch es dann noch einmal.</string>
+    <string name="auth_error_flow_state_expired">Die Anmeldung hat zu lange gedauert. Fang noch einmal an.</string>
+    <string name="auth_error_flow_state_not_found">Die Anmeldung hat zu lange gedauert. Fang noch einmal an.</string>
+    <string name="auth_error_bad_code_verifier">Dieser Anmeldelink gehört zu einem anderen Versuch. Fang noch einmal an.</string>
+    <string name="auth_error_user_banned">Mit diesem Konto ist keine Anmeldung möglich. Wende dich an den Support.</string>
+    <string name="auth_error_email_missing">Gib deine E-Mail-Adresse ein.</string>
+    <string name="auth_error_code_missing">Gib den sechsstelligen Code aus der E-Mail ein.</string>
+    <string name="auth_error_password_missing">Gib ein Passwort ein.</string>
+    <string name="auth_error_not_signed_in">Du bist nicht angemeldet.</string>
+    <string name="auth_error_name_missing">Gib einen Namen ein.</string>
 </resources>

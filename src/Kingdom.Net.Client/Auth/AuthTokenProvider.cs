@@ -129,7 +129,7 @@ namespace Kingdom.Net.Client.Auth
             {
                 AuthSession session = Current;
                 if (!session.IsPresent)
-                    return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+                    return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.", "not_signed_in");
 
                 // Another caller may have refreshed while this one waited on the lock.
                 if (!force && !session.NeedsRefresh(_clock.NowMs, _refreshSkewMs))
@@ -278,7 +278,7 @@ namespace Kingdom.Net.Client.Auth
         public async Task<AuthResult> SetPasswordAsync(string password, CancellationToken cancellationToken = default)
         {
             AuthSession session = Current;
-            if (!session.IsPresent) return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+            if (!session.IsPresent) return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.", "not_signed_in");
             if (session.NeedsRefresh(_clock.NowMs, _refreshSkewMs))
             {
                 AuthResult refreshed = await RefreshAsync(cancellationToken).ConfigureAwait(false);
@@ -325,7 +325,7 @@ namespace Kingdom.Net.Client.Auth
         public async Task<AuthResult> SetDisplayNameAsync(string displayName, CancellationToken cancellationToken = default)
         {
             AuthSession session = Current;
-            if (!session.IsPresent) return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+            if (!session.IsPresent) return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.", "not_signed_in");
 
             // No ConfigureAwait(false): the refresh below ends in Adopt(), a Unity PlayerPrefs write
             // — see the note on Adopt for why these awaits keep the caller's synchronization context.

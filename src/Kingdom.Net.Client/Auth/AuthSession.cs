@@ -157,13 +157,19 @@ namespace Kingdom.Net.Client.Auth
         /// Never contains a token: only the error fields of an error body are read into it.</summary>
         public string Detail { get; }
 
+        /// <summary>Supabase's machine-readable reason (<c>error_code</c>, else <c>error</c>), e.g.
+        /// <c>otp_expired</c> or <c>weak_password</c>: what a client words in the player's language.
+        /// Empty when Supabase sent none.</summary>
+        public string Code { get; }
+
         public AuthSession Session { get; }
 
-        private AuthResult(bool ok, AuthFailure failure, string detail, AuthSession session)
+        private AuthResult(bool ok, AuthFailure failure, string detail, AuthSession session, string code = "")
         {
             Ok = ok;
             Failure = failure;
             Detail = detail ?? "";
+            Code = code ?? "";
             Session = session ?? AuthSession.None;
         }
 
@@ -176,7 +182,7 @@ namespace Kingdom.Net.Client.Auth
         public static AuthResult Accepted()
             => new AuthResult(true, AuthFailure.None, "", AuthSession.None);
 
-        public static AuthResult Failed(AuthFailure failure, string detail = "")
-            => new AuthResult(false, failure, detail, AuthSession.None);
+        public static AuthResult Failed(AuthFailure failure, string detail = "", string code = "")
+            => new AuthResult(false, failure, detail, AuthSession.None, code);
     }
 }

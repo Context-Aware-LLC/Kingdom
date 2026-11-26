@@ -1,3 +1,5 @@
+using Kingdom.Core.Collection;
+using Kingdom.Core.Contracts;
 using Kingdom.Net.Client;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -102,16 +104,27 @@ namespace Kingdom.Presentation
         /// <summary>
         /// <paramref name="reachedServer"/> is whether the server got as far as seating this
         /// player. A drop with no reason before that is "can't reach"; after it, "lost".
+        ///
+        /// <para>A deck refusal carries the validator's issue code (<see cref="DeckRefusalText"/>);
+        /// with <paramref name="db"/> and the submitted <paramref name="deck"/> it is said in the
+        /// player's language and names the card as they see it. Without a code, the server's English
+        /// shows as it came.</para>
         /// </summary>
-        public static ConnectionFailureCopy For(DeadReason reason, string detail, bool reachedServer)
+        public static ConnectionFailureCopy For(DeadReason reason, string detail, bool reachedServer,
+                                                ICardDatabase db = null, DeckList deck = null)
         {
             if (!string.IsNullOrEmpty(detail))
             {
                 const string deckRejected = "deck rejected: ";
                 if (detail.StartsWith(deckRejected))
+                {
+                    string why = detail.Substring(deckRejected.Length);
+                    if (DeckRefusalText.TryDecode(why, out DeckViolation violation))
+                        why = RefusalText.Deck(violation, deck, db);
                     return new ConnectionFailureCopy(
-                        Loc.Format("connection_error_deck_rejected", detail.Substring(deckRejected.Length)),
+                        Loc.Format("connection_error_deck_rejected", why),
                         Loc.Get("connection_joke_deck_rejected"));
+                }
 
                 switch (detail)
                 {

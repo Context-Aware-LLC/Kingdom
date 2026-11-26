@@ -365,7 +365,9 @@ namespace Kingdom.Presentation
                     // rejected: ...", "server full", ...) when it sent one — falling every refusal
                     // back to the bare DeadReason bucket is exactly the bug that issue fixed.
                     ConnectionFailureCopy copy =
-                        ConnectionFailureCopy.For(net.DeadReason, net.DeadReasonDetail, reachedServer);
+                        ConnectionFailureCopy.For(net.DeadReason, net.DeadReasonDetail, reachedServer,
+                            db, selectedDeck == null ? null
+                                : new DeckList(selectedDeck.PrimaryClass, selectedDeck.SecondaryClass));
 
                     // A contract refusal is usually this build being out of date — a release landed
                     // while the app was open, after the menu's update gate had already passed. Ask the

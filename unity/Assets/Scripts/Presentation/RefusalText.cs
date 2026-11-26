@@ -1,6 +1,7 @@
 using Kingdom.Core.Cards;
 using Kingdom.Core.Collection;
 using Kingdom.Core.Contracts;
+using Kingdom.Net.Client.Auth;
 
 namespace Kingdom.Presentation
 {
@@ -34,7 +35,7 @@ namespace Kingdom.Presentation
                 case DeckIssue.TooManyCopies: return Loc.Format("deck_issue_too_many_copies", v.Amount, CardName(v.CardId, db));
                 case DeckIssue.OffClass:
                     return deck == null
-                        ? v.Message
+                        ? Loc.Format("deck_issue_off_class_short", CardName(v.CardId, db))
                         : Loc.Format("deck_issue_off_class", CardName(v.CardId, db),
                             GameTerms.Class(deck.PrimaryClass), GameTerms.Class(deck.SecondaryClass));
                 case DeckIssue.NotOwned: return Loc.Format("deck_issue_not_owned", CardName(v.CardId, db));
@@ -62,6 +63,29 @@ namespace Kingdom.Presentation
                         : Loc.Format("name_issue_reserved_court", check.Detail, court);
                 default: return check.Reason ?? "";
             }
+        }
+
+        /// <summary>
+        /// A failed sign-in call, said to the player. Supabase's error code picks an
+        /// <c>auth_error_&lt;code&gt;</c> row when one exists. Otherwise an English player reads
+        /// Supabase's own words, which are often the most specific thing available, and anyone else
+        /// reads <paramref name="fallback"/>, because those words are English. Offline is called out
+        /// by name: it is the failure a first-launch sign-in makes most likely.
+        /// </summary>
+        public static string SignIn(AuthResult result, string fallback)
+        {
+            switch (result.Failure)
+            {
+                case AuthFailure.Network: return Loc.Get("signin_error_offline");
+                case AuthFailure.NotConfigured: return Loc.Get("signin_error_not_configured");
+                // Supabase's own wording here is "Signups not allowed for otp", which is true and
+                // useless: it describes the request we made, not the thing the player got wrong.
+                case AuthFailure.NoSuchAccount: return Loc.Get("signin_error_no_account");
+                case AuthFailure.Malformed: return fallback;
+            }
+            string coded = string.IsNullOrEmpty(result.Code) ? null : Loc.Find("auth_error_" + result.Code);
+            if (coded != null) return coded;
+            return Loc.IsSource && !string.IsNullOrEmpty(result.Detail) ? result.Detail : fallback;
         }
 
         private static string CardName(int id, ICardDatabase db) =>

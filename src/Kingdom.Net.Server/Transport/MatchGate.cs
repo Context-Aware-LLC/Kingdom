@@ -490,7 +490,7 @@ namespace Kingdom.Net.Server.Transport
                 {
                     Console.Error.WriteLine("[gate] refused player_id={0}: deck rejected: {1}",
                                             account.Value, outcome.Reason);
-                    conn.Close(1008, CloseReason("deck rejected: " + outcome.Reason));
+                    conn.Close(1008, CloseReason("deck rejected: " + outcome.WireReason));
                     await conn.PumpTask;
                     return;
                 }

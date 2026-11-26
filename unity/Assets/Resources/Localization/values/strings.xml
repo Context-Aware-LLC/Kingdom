@@ -1185,4 +1185,27 @@
     <string name="quest_long_game_quip">The Council has cleared its afternoon.</string>
     <string name="quest_minion_hunter_title">Destroy 50 minions</string>
     <string name="quest_minion_hunter_quip">The Gravekeeps are expecting company.</string>
+    <!-- A deck refused at match-join, when the deck's classes are not at hand. %1$s = a card name. -->
+    <string name="deck_issue_off_class_short">%1$s isn\'t in this deck\'s classes.</string>
+    <!-- Sign-in failures by Supabase error code (auth_error_<code>, RefusalText.SignIn). A code with
+         no row shows Supabase's English to English players and the screen's fallback to everyone else. -->
+    <string name="auth_error_otp_expired">That code has expired or isn\'t right. Ask for a new one.</string>
+    <string name="auth_error_invalid_credentials">That email and password don\'t match.</string>
+    <string name="auth_error_weak_password">That password is too weak. Try a longer one.</string>
+    <string name="auth_error_same_password">That is already your password.</string>
+    <string name="auth_error_over_email_send_rate_limit">Too many emails sent. Wait a few minutes and try again.</string>
+    <string name="auth_error_over_request_rate_limit">Too many tries. Wait a minute and try again.</string>
+    <string name="auth_error_email_address_invalid">That email address doesn\'t look right.</string>
+    <string name="auth_error_validation_failed">That email address doesn\'t look right.</string>
+    <string name="auth_error_reauthentication_needed">Sign in again, then try that once more.</string>
+    <string name="auth_error_flow_state_expired">That sign-in took too long. Start again.</string>
+    <string name="auth_error_flow_state_not_found">That sign-in took too long. Start again.</string>
+    <string name="auth_error_bad_code_verifier">That sign-in link belongs to another attempt. Start again.</string>
+    <string name="auth_error_user_banned">This account can\'t sign in. Contact support.</string>
+    <!-- The client's own refusals, before anything is sent. -->
+    <string name="auth_error_email_missing">Enter your email address.</string>
+    <string name="auth_error_code_missing">Enter the six-digit code from the email.</string>
+    <string name="auth_error_password_missing">Enter a password.</string>
+    <string name="auth_error_not_signed_in">You\'re not signed in.</string>
+    <string name="auth_error_name_missing">Enter a name.</string>
 </resources>

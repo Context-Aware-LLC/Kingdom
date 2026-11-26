@@ -162,6 +162,24 @@ namespace Kingdom.Net.Server.Tests
         }
 
         [Test]
+        public void The_Wire_Reason_Carries_The_Issue_The_Client_Words()
+        {
+            // The close frame is what a German client has to work from; the code must survive it,
+            // and survive the 120-character cut MatchGate applies, which keeps the head of the text.
+            var msg = LegalSubmission(CardClass.GRAVEKEEP, CardClass.VERDANT);
+            var rejected = DeckSubmission.Validate(msg, Db, new OwnedCardCounts());
+
+            Assert.That(rejected.WireReason, Does.EndWith(rejected.Reason));
+            string cut = rejected.WireReason.Length <= 120 ? rejected.WireReason : rejected.WireReason.Substring(0, 117) + "...";
+            Assert.That(DeckRefusalText.TryDecode(cut, out DeckViolation decoded), Is.True, cut);
+            Assert.That(decoded.Issue, Is.EqualTo(DeckIssue.NotOwned));
+            Assert.That(Db.TryGet(decoded.CardId, out _), Is.True, "the code names a real card");
+
+            Assert.That(DeckRefusalText.TryDecode("No deck submitted.", out _), Is.False,
+                "a refusal no rule raised stays plain text");
+        }
+
+        [Test]
         public void Validate_Accepts_A_Legal_Deck_Under_The_Superuser_At_Limit_Source()
         {
             // AccountOwnedCounts.ForAsync hands a superuser AtLimitOwnedCounts: L6 runs and every card

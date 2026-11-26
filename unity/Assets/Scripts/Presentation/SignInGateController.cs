@@ -1129,22 +1129,7 @@ namespace Kingdom.Presentation
         /// sign-in makes most likely, and it is the one where Supabase's own wording — when there even
         /// is any — describes nothing the player did.</para>
         /// </summary>
-        private static string Explain(AuthResult result, string fallback)
-        {
-            switch (result.Failure)
-            {
-                case AuthFailure.Network:
-                    return Loc.Get("signin_error_offline");
-                case AuthFailure.NotConfigured:
-                    return Loc.Get("signin_error_not_configured");
-                case AuthFailure.NoSuchAccount:
-                    // Supabase's own wording here is "Signups not allowed for otp", which is true and
-                    // useless — it describes the request we made, not the thing the player got wrong.
-                    return Loc.Get("signin_error_no_account");
-                default:
-                    return string.IsNullOrEmpty(result.Detail) ? fallback : result.Detail;
-            }
-        }
+        private static string Explain(AuthResult result, string fallback) => RefusalText.SignIn(result, fallback);
 
         // ── Chrome ──────────────────────────────────────────────────────────────────────
 

@@ -540,8 +540,7 @@ namespace Kingdom.Presentation
                     return;
                 }
                 Debug.LogWarning($"[MatchSettings] SetPasswordAsync failed: {result.Failure} — {result.Detail}");
-                SetPasswordStatus(string.IsNullOrEmpty(result.Detail)
-                    ? Loc.Get("settings_password_failed") : result.Detail, true);
+                SetPasswordStatus(RefusalText.SignIn(result, Loc.Get("settings_password_failed")), true);
             }
             catch (Exception ex)
             {

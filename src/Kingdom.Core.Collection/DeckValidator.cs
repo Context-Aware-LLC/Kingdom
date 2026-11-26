@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Kingdom.Core.Cards;
 using Kingdom.Core.Contracts;
 
@@ -264,6 +266,43 @@ namespace Kingdom.Core.Collection
             }
 
             return new DeckValidation(violations.Count == 0, violations);
+        }
+    }
+
+    /// <summary>
+    /// A deck violation as text that survives a WebSocket close reason: <c>[Issue cardId amount]
+    /// English</c>. The server refuses a deck at match-join by closing with <c>"deck rejected: "</c>
+    /// plus this, and the client decodes it to say the refusal in the player's language, naming the
+    /// card it shows. The code comes FIRST because the close reason is cut to fit 123 bytes, and a
+    /// long card name must cost the English, never the code. A <see cref="DeckIssue.Custom"/>
+    /// violation travels as its bare message.
+    /// </summary>
+    public static class DeckRefusalText
+    {
+        public static string Encode(DeckViolation v) =>
+            v.Issue == DeckIssue.Custom
+                ? v.Message ?? ""
+                : "[" + v.Issue + " " + v.CardId.ToString(CultureInfo.InvariantCulture) + " "
+                  + v.Amount.ToString(CultureInfo.InvariantCulture) + "] " + v.Message;
+
+        /// <summary>Reads what <see cref="Encode"/> wrote. False for any other text, which the caller
+        /// shows as it is. The decoded violation's <see cref="DeckViolation.Rule"/> is not carried and
+        /// reads as its default; only the issue and its arguments cross.</summary>
+        public static bool TryDecode(string? text, out DeckViolation violation)
+        {
+            violation = default;
+            if (string.IsNullOrEmpty(text) || text![0] != '[') return false;
+            int close = text.IndexOf(']');
+            if (close < 0) return false;
+            string[] parts = text.Substring(1, close - 1).Split(' ');
+            if (parts.Length != 3
+                || !Enum.TryParse(parts[0], false, out DeckIssue issue) || issue == DeckIssue.Custom
+                || !int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out int cardId)
+                || !int.TryParse(parts[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out int amount))
+                return false;
+            string message = close + 1 < text.Length ? text.Substring(close + 1).TrimStart() : "";
+            violation = new DeckViolation(default, issue, message, cardId, amount);
+            return true;
         }
     }
 }

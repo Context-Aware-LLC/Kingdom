@@ -191,7 +191,7 @@ namespace Kingdom.Net.Client.Auth
             if (!IsConfigured)
                 return Nothing(AuthFailure.NotConfigured, "No Supabase project is configured.");
             if (string.IsNullOrWhiteSpace(email))
-                return Nothing(AuthFailure.Rejected, "Enter an email address.");
+                return Nothing(AuthFailure.Rejected, "Enter an email address.", "email_missing");
 
             string verifier = _verifierFactory();
             string body = AuthJson.ObjectWithRaw(
@@ -241,7 +241,7 @@ namespace Kingdom.Net.Client.Auth
         {
             if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
             if (string.IsNullOrWhiteSpace(email))
-                return AuthResult.Failed(AuthFailure.Rejected, "Enter an email address.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter an email address.", "email_missing");
 
             string body = AuthJson.ObjectWithRaw(
                 createUser ? "\"create_user\":true" : "\"create_user\":false",
@@ -300,11 +300,11 @@ namespace Kingdom.Net.Client.Auth
         {
             if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
             if (string.IsNullOrWhiteSpace(email))
-                return AuthResult.Failed(AuthFailure.Rejected, "Enter an email address.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter an email address.", "email_missing");
 
             string digits = EmailCode.Normalize(code);
             if (digits.Length != EmailCode.Length)
-                return AuthResult.Failed(AuthFailure.Rejected, "Enter the six-digit code from the email.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter the six-digit code from the email.", "code_missing");
 
             string body = AuthJson.Object(
                 AuthJson.Field("type", "email"),
@@ -428,9 +428,9 @@ namespace Kingdom.Net.Client.Auth
         {
             if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
             if (string.IsNullOrEmpty(email))
-                return AuthResult.Failed(AuthFailure.Rejected, "Enter your email address.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter your email address.", "email_missing");
             if (string.IsNullOrEmpty(password))
-                return AuthResult.Failed(AuthFailure.Rejected, "Enter your password.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter your password.", "password_missing");
 
             string body = AuthJson.Object(
                 AuthJson.Field("email", email),
@@ -470,9 +470,9 @@ namespace Kingdom.Net.Client.Auth
         {
             if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
             if (string.IsNullOrEmpty(accessToken))
-                return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.", "not_signed_in");
             if (string.IsNullOrEmpty(password))
-                return AuthResult.Failed(AuthFailure.Rejected, "Enter a password.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter a password.", "password_missing");
 
             string body = AuthJson.Object(AuthJson.Field("password", password));
 
@@ -514,9 +514,9 @@ namespace Kingdom.Net.Client.Auth
         {
             if (!IsConfigured) return AuthResult.Failed(AuthFailure.NotConfigured, "No Supabase project is configured.");
             if (string.IsNullOrEmpty(accessToken))
-                return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Not signed in.", "not_signed_in");
             if (string.IsNullOrEmpty(displayName))
-                return AuthResult.Failed(AuthFailure.Rejected, "Enter a name.");
+                return AuthResult.Failed(AuthFailure.Rejected, "Enter a name.", "name_missing");
 
             string body = AuthJson.ObjectWithRaw(
                 "\"data\":" + AuthJson.Object(AuthJson.Field(DisplayNameKey, displayName)));
@@ -599,7 +599,7 @@ namespace Kingdom.Net.Client.Auth
 
             string detail = Describe(response.Body);
             if (response.StatusCode >= 400 && response.StatusCode < 500)
-                return AuthResult.Failed(AuthFailure.Rejected, detail);
+                return AuthResult.Failed(AuthFailure.Rejected, detail, Code(response.Body));
 
             return AuthResult.Failed(
                 AuthFailure.Network,
@@ -620,8 +620,17 @@ namespace Kingdom.Net.Client.Auth
             return "";
         }
 
-        private static SignInStart Nothing(AuthFailure failure, string detail)
-            => new SignInStart(AuthResult.Failed(failure, detail), PendingSignIn.None);
+        /// <summary>Supabase's error code: <c>error_code</c> (GoTrue v2) or the OAuth-style <c>error</c>.</summary>
+        private static string Code(string body)
+        {
+            if (!AuthJson.TryReadTopLevel(body, out var fields)) return "";
+            if (AuthJson.TryString(fields, "error_code", out string code)) return code;
+            if (AuthJson.TryString(fields, "error", out string error)) return error;
+            return "";
+        }
+
+        private static SignInStart Nothing(AuthFailure failure, string detail, string code = "")
+            => new SignInStart(AuthResult.Failed(failure, detail, code), PendingSignIn.None);
 
         private IReadOnlyList<KeyValuePair<string, string>> Headers()
             => new[]

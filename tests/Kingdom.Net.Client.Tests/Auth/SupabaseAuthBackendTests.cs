@@ -206,6 +206,22 @@ namespace Kingdom.Net.Client.Tests.Auth
 
             Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
             Assert.That(result.Detail, Is.EqualTo("Invalid login credentials"));
+            Assert.That(result.Code, Is.EqualTo("invalid_grant"), "the OAuth-style field when there is no error_code");
+        }
+
+        [Test]
+        public async Task A_refusal_carries_Supabase_error_code_for_the_client_to_word()
+        {
+            // GoTrue v2's shape. The code is what a German screen is chosen by; the msg is English.
+            var http = new FakeAuthHttp().Reply(422,
+                "{\"code\":422,\"error_code\":\"weak_password\",\"msg\":\"Password should be at least 6 characters.\"}");
+            var backend = Backend(http, new FakeClock());
+
+            AuthResult result = await backend.SignInWithPasswordAsync("player@example.com", "abc");
+
+            Assert.That(result.Failure, Is.EqualTo(AuthFailure.Rejected));
+            Assert.That(result.Code, Is.EqualTo("weak_password"));
+            Assert.That(result.Detail, Is.EqualTo("Password should be at least 6 characters."));
         }
 
         [Test]

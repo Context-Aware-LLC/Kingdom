@@ -228,9 +228,7 @@ namespace Kingdom.Presentation
                     if (!result.Ok)
                     {
                         SetBusy(false);
-                        SetError(string.IsNullOrEmpty(result.Detail)
-                            ? Loc.Get("account_password_set_failed")
-                            : result.Detail);
+                        SetError(RefusalText.SignIn(result, Loc.Get("account_password_set_failed")));
                         return;
                     }
                 }
