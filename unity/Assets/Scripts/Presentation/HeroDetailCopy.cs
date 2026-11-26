@@ -1,57 +1,26 @@
-using System;
 using System.Collections.Generic;
 using Kingdom.Core.Contracts;
-using UnityEngine;
 
 namespace Kingdom.Presentation
 {
     /// <summary>
-    /// Presentation-layer traits copy for the character-creation detail overlay (NOR-281).
-    /// Loaded once from Resources on first access; each class has three trait bullets.
+    /// The trait bullets on the character-creation detail overlay (NOR-281), in the player's
+    /// language: <c>hero_trait_&lt;class&gt;_1</c>, <c>_2</c> and on until a row is missing
+    /// (values/heroes.xml). English is the source and the fallback, like every other table row.
     /// </summary>
     internal static class HeroDetailCopy
     {
-        private static Dictionary<CardClass, string[]> _traits;
-
         internal static string[] TraitsFor(CardClass heroClass)
         {
-            EnsureLoaded();
-            return _traits.TryGetValue(heroClass, out string[] t) ? t : Array.Empty<string>();
-        }
-
-        private static void EnsureLoaded()
-        {
-            if (_traits != null) return;
-            _traits = new Dictionary<CardClass, string[]>();
-
-            var asset = Resources.Load<TextAsset>("hero-detail");
-            if (asset == null)
+            var traits = new List<string>();
+            string prefix = "hero_trait_" + heroClass.ToString().ToLowerInvariant() + "_";
+            for (int n = 1; ; n++)
             {
-                Debug.LogWarning("[HeroDetailCopy] hero-detail.json not found in Resources — trait bullets will be empty.");
-                return;
+                string line = Loc.Find(prefix + n);
+                if (line == null) break;
+                traits.Add(line);
             }
-
-            var payload = JsonUtility.FromJson<Payload>(asset.text);
-            if (payload?.entries == null) return;
-
-            foreach (Entry e in payload.entries)
-            {
-                if (Enum.TryParse(e.heroClass, out CardClass c))
-                    _traits[c] = e.traits ?? Array.Empty<string>();
-            }
-        }
-
-        [Serializable]
-        internal class Payload
-        {
-            public Entry[] entries;
-        }
-
-        [Serializable]
-        internal class Entry
-        {
-            public string heroClass;
-            public string[] traits;
+            return traits.ToArray();
         }
     }
 }

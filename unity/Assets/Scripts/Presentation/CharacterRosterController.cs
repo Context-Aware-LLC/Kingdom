@@ -356,7 +356,7 @@ namespace Kingdom.Presentation
             Show(_deckSelectButton, choosing);
             if (choosing)
             {
-                _deckSelectButton.tooltip = summary.Queue.IsEligible ? "" : summary.Queue.Reason;
+                _deckSelectButton.tooltip = summary.Queue.IsEligible ? "" : RefusalText.Deck(summary.Queue, summary.Deck, _db);
                 RefreshDeckSelectButton();
             }
 
@@ -701,7 +701,7 @@ namespace Kingdom.Presentation
             string secondary = CardClassTokens.Label(deck.SecondaryClass);
             art.tooltip = summary.Queue.IsEligible
                 ? Loc.Format("deck_plate_tooltip_ready", deck.Name, primary, secondary, deck.TotalCount, DeckValidator.DeckSize)
-                : Loc.Format("deck_plate_tooltip_not_ready", deck.Name, primary, secondary, summary.Queue.Reason);
+                : Loc.Format("deck_plate_tooltip_not_ready", deck.Name, primary, secondary, RefusalText.Deck(summary.Queue, deck, _db));
             ShowcaseArt(deck, art);
             DeckClassPortrait.Mount(art, _uiSprites,
                 deck.PrimaryClass, deck.SecondaryClass,
@@ -1106,7 +1106,7 @@ namespace Kingdom.Presentation
             {
                 ClearPick();
                 RebuildRoster();
-                SetStatus(Loc.Format("deck_roster_error_not_queue_ready", deck.Name, queue.Reason), isError: true);
+                SetStatus(Loc.Format("deck_roster_error_not_queue_ready", deck.Name, RefusalText.Deck(queue, deck, _db)), isError: true);
                 return;
             }
 

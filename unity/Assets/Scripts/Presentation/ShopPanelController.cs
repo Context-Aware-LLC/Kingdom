@@ -117,7 +117,7 @@ namespace Kingdom.Presentation
                 _detailOdds.clicked += () =>
                 {
                     if (_detailOffer != null && !_detailClosing)
-                        _odds.Show(_detailOffer.PackId, ShortName(_detailOffer.DisplayName));
+                        _odds.Show(_detailOffer.PackId, PackName(_detailOffer.PackId, _detailOffer.DisplayName));
                 };
             _detailArt?.RegisterCallback<GeometryChangedEvent>(_ => FitDetailActionsToArt());
             _flow = gateway != null ? new ShopFlow(gateway) : null;
@@ -230,9 +230,13 @@ namespace Kingdom.Presentation
             catch (ShopPurchaseException ex)
             {
                 _purchaseUncertain = ex.OutcomeUnknown;
-                SetDetailError(ex.OutcomeUnknown
-                    ? Loc.Get("shop_purchase_uncertain")
-                    : ex.Message);
+                SetDetailError(ex.Decline switch
+                {
+                    ShopDecline.SignedOut => Loc.Get("shop_purchase_signed_out"),
+                    ShopDecline.InsufficientFunds => Loc.Get("shop_purchase_insufficient"),
+                    ShopDecline.Declined => Loc.Format("shop_purchase_declined", ex.StatusCode),
+                    _ => Loc.Get("shop_purchase_uncertain"),
+                });
                 UnityEngine.Debug.LogWarning($"[Shop] purchase declined: {ex.Message}");
             }
             catch (Exception ex)
@@ -349,7 +353,7 @@ namespace Kingdom.Presentation
                 // caption line under each row was what the absolute bottom-left Back button
                 // collided with, and "Pack" is redundant once the word is sitting on a row of pack
                 // art anyway. Added first so it lands left of the rail in the tile's row layout.
-                var name = new Label(ShortName(offer.DisplayName));
+                var name = new Label(PackName(offer.PackId, offer.DisplayName));
                 name.AddToClassList("shop-pack__name");
                 tile.Add(name);
 
@@ -800,6 +804,14 @@ namespace Kingdom.Presentation
             _detailShell.AddToClassList("pack-detail-shell--animating");
             _detailShell.style.translate = translate;
             _detailShell.style.scale = scale;
+        }
+
+        /// <summary>The pack's set, named in the player's language. The server's displayName is
+        /// English ("PENDINGHAM Pack"), so it is only the fallback for a pack this build does not know.</summary>
+        private static string PackName(string packId, string displayName)
+        {
+            BoosterPack pack = PackOddsPanel.Find(packId);
+            return pack != null ? GameTerms.Set(pack.Expansion) : ShortName(displayName);
         }
 
         /// <summary>The catalog's display names all end in " Pack" (e.g. "Pendingham Pack"); the

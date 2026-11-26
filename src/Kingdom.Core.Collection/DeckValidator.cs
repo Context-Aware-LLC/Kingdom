@@ -45,11 +45,52 @@ namespace Kingdom.Core.Collection
         L7_NotPublished,
     }
 
+    /// <summary>
+    /// What exactly a violation says, finer than its <see cref="DeckRule"/>: the code a client renders
+    /// in the player's language with <see cref="DeckViolation.CardId"/> and
+    /// <see cref="DeckViolation.Amount"/>. <see cref="Custom"/> means the message was written by the
+    /// caller, already in the player's language, and is shown as it is.
+    /// </summary>
+    public enum DeckIssue
+    {
+        Custom,
+        InvalidPairing,
+        /// <summary>Amount = cards to add.</summary>
+        AddCards,
+        /// <summary>Amount = cards to remove.</summary>
+        RemoveCards,
+        UnknownCard,
+        Retired,
+        Unreleased,
+        /// <summary>Amount = the copy cap.</summary>
+        TooManyCopies,
+        OffClass,
+        NotOwned,
+        /// <summary>Amount = copies owned.</summary>
+        OwnsFewer,
+    }
+
     public readonly struct DeckViolation
     {
         public readonly DeckRule Rule;
-        public readonly string Message;   // inline, non-blaming copy (§1 feedback table)
-        public DeckViolation(DeckRule rule, string message) { Rule = rule; Message = message; }
+        public readonly string Message;   // inline, non-blaming copy (§1 feedback table), English
+        public readonly DeckIssue Issue;
+        /// <summary>The card the violation names, or 0.</summary>
+        public readonly int CardId;
+        /// <summary>The number the violation names (see <see cref="DeckIssue"/>), or 0.</summary>
+        public readonly int Amount;
+
+        /// <summary>A violation whose <paramref name="message"/> the caller wrote for the player.</summary>
+        public DeckViolation(DeckRule rule, string message) : this(rule, DeckIssue.Custom, message) { }
+
+        public DeckViolation(DeckRule rule, DeckIssue issue, string message, int cardId = 0, int amount = 0)
+        {
+            Rule = rule;
+            Issue = issue;
+            Message = message;
+            CardId = cardId;
+            Amount = amount;
+        }
     }
 
     public readonly struct DeckValidation
@@ -160,7 +201,7 @@ namespace Kingdom.Core.Collection
             // from the wire, which is the whole reason it is a rule rather than an assumption.
             if (!deck.HasValidPairing)
             {
-                violations.Add(new DeckViolation(DeckRule.L5_PairingWellFormed,
+                violations.Add(new DeckViolation(DeckRule.L5_PairingWellFormed, DeckIssue.InvalidPairing,
                     $"Invalid class pairing {deck.PrimaryClass}/{deck.SecondaryClass}."));
                 return new DeckValidation(false, violations);
             }
@@ -168,39 +209,42 @@ namespace Kingdom.Core.Collection
             // L1 — deck size.
             int total = deck.TotalCount;
             if (total < DeckSize)
-                violations.Add(new DeckViolation(DeckRule.L1_Size, $"Add {DeckSize - total} more cards."));
+                violations.Add(new DeckViolation(DeckRule.L1_Size, DeckIssue.AddCards,
+                    $"Add {DeckSize - total} more cards.", amount: DeckSize - total));
             else if (total > DeckSize)
-                violations.Add(new DeckViolation(DeckRule.L1_Size, $"Remove {total - DeckSize} cards."));
+                violations.Add(new DeckViolation(DeckRule.L1_Size, DeckIssue.RemoveCards,
+                    $"Remove {total - DeckSize} cards.", amount: total - DeckSize));
 
             foreach (var entry in deck.Entries)
             {
                 if (!db.TryGet(entry.CardId, out var def))
                 {
                     // A card that vanished from the pool after a balance patch surfaces on open (§3).
-                    violations.Add(new DeckViolation(DeckRule.L4_ClassMembership,
-                        $"Unknown card '{entry.CardId}'."));
+                    violations.Add(new DeckViolation(DeckRule.L4_ClassMembership, DeckIssue.UnknownCard,
+                        $"Unknown card '{entry.CardId}'.", entry.CardId));
                     continue;
                 }
 
                 // L7 — lifecycle. A retired card in a saved deck reads "(retired)" and is fixable by
                 // the player (#86); a draft one should never have arrived.
                 if (def.Lifecycle != CardLifecycle.PUBLISHED)
-                    violations.Add(new DeckViolation(DeckRule.L7_NotPublished,
-                        def.Lifecycle == CardLifecycle.RETIRED
-                            ? $"{def.Name} (retired) can't be played any more."
-                            : $"{def.Name} isn't released yet."));
+                    violations.Add(def.Lifecycle == CardLifecycle.RETIRED
+                        ? new DeckViolation(DeckRule.L7_NotPublished, DeckIssue.Retired,
+                            $"{def.Name} (retired) can't be played any more.", def.Id)
+                        : new DeckViolation(DeckRule.L7_NotPublished, DeckIssue.Unreleased,
+                            $"{def.Name} isn't released yet.", def.Id));
 
                 // L2 / L3 — copy caps.
                 int max = MaxCopies(def.Rarity);
                 if (entry.Count > max)
                     violations.Add(new DeckViolation(
-                        max == 1 ? DeckRule.L3_LegendaryCap : DeckRule.L2_CopyCap,
-                        $"Only {max} of {def.Name}."));
+                        max == 1 ? DeckRule.L3_LegendaryCap : DeckRule.L2_CopyCap, DeckIssue.TooManyCopies,
+                        $"Only {max} of {def.Name}.", def.Id, max));
 
                 // L4 — class membership (either half of the pairing, or NEUTRAL).
                 if (!deck.AllowsClass(def.Class))
-                    violations.Add(new DeckViolation(DeckRule.L4_ClassMembership,
-                        $"{def.Name} is not a {deck.PrimaryClass}/{deck.SecondaryClass} card."));
+                    violations.Add(new DeckViolation(DeckRule.L4_ClassMembership, DeckIssue.OffClass,
+                        $"{def.Name} is not a {deck.PrimaryClass}/{deck.SecondaryClass} card.", def.Id));
 
                 // L6 — ownership. Reported independently of L2/L3: three copies of a common you own one
                 // of is over the format cap AND past what you hold, and both sentences are true. Folding
@@ -211,10 +255,11 @@ namespace Kingdom.Core.Collection
                     int have = owned.CopiesOwned(entry.CardId);
                     if (have < 0) have = 0;
                     if (entry.Count > have)
-                        violations.Add(new DeckViolation(DeckRule.L6_Ownership,
-                            have == 0
-                                ? $"You don't own {def.Name}."
-                                : $"You own {have} of {def.Name}."));
+                        violations.Add(have == 0
+                            ? new DeckViolation(DeckRule.L6_Ownership, DeckIssue.NotOwned,
+                                $"You don't own {def.Name}.", def.Id)
+                            : new DeckViolation(DeckRule.L6_Ownership, DeckIssue.OwnsFewer,
+                                $"You own {have} of {def.Name}.", def.Id, have));
                 }
             }
 

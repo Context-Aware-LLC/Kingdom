@@ -95,7 +95,7 @@ namespace Kingdom.Presentation
             row.AddToClassList("pack-odds-row");
             row.Add(Line(Loc.Get(rarityKey), "pack-odds-row__rarity"));
             // Permille to a percent without a float: 30 -> "3", 25 -> "2.5" (or "2,5").
-            string percent = (permille / 10m).ToString("0.#", CultureInfo.CurrentCulture);
+            string percent = (permille / 10m).ToString("0.#", Loc.Culture);
             row.Add(Line(Loc.Format("pack_odds_percent", percent), "pack-odds-row__chance"));
             table.Add(row);
         }

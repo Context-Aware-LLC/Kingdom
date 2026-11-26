@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hero traits (en): the bullets on the character-creation detail, hero_trait_<class>_<n>.
+     HeroDetailCopy reads _1, _2, _3 and on until a row is missing. -->
+<resources>
+    <string name="hero_trait_emberward_1">Plays fast and punishes slow opponents early</string>
+    <string name="hero_trait_emberward_2">Burn spells finish games from range when the board stalls</string>
+    <string name="hero_trait_emberward_3">Trades resources aggressively to stay ahead on tempo</string>
+    <string name="hero_trait_tidecaller_1">Builds persistent board presence from the hero power alone</string>
+    <string name="hero_trait_tidecaller_2">Frost spells lock down key minions while Wisps apply pressure</string>
+    <string name="hero_trait_tidecaller_3">Rewards patience: tempo accumulates over many turns</string>
+    <string name="hero_trait_gravekeep_1">Survives long enough to win through attrition</string>
+    <string name="hero_trait_gravekeep_2">Undead cards rise again or fuel death-trigger chains</string>
+    <string name="hero_trait_gravekeep_3">Excels in long games where life-total margins decide the match</string>
+    <string name="hero_trait_verdant_1">Sustains through punishment and grows the board simultaneously</string>
+    <string name="hero_trait_verdant_2">Nature minions are stubborn and hard to clear efficiently</string>
+    <string name="hero_trait_verdant_3">Rewards outlasting: the longer the game, the bigger the advantage</string>
+    <string name="hero_trait_clockwright_1">Draws through the deck to assemble powerful combinations</string>
+    <string name="hero_trait_clockwright_2">Mechanical constructs synergize with specific card sequences</string>
+    <string name="hero_trait_clockwright_3">Rewards tight sequencing and knowing your deck\'s key plays</string>
+    <string name="hero_trait_nightveil_1">Protects key pieces from removal and targeted spells</string>
+    <string name="hero_trait_nightveil_2">Shroud forces opponents to clear with area damage or ignore the threat</string>
+    <string name="hero_trait_nightveil_3">Winning the targeting game creates decisive board swings</string>
+    <string name="hero_trait_stonewarden_1">Every hero power activation places a 0/3 Bulwark blocker in front of the hero</string>
+    <string name="hero_trait_stonewarden_2">Stalls aggression while building toward high-value defensive plays</string>
+    <string name="hero_trait_stonewarden_3">Stone cards grind the opponent down through sheer durability</string>
+    <string name="hero_trait_tempest_1">Chips away at opposing boards with random but distributed damage</string>
+    <string name="hero_trait_tempest_2">Synergizes with token swarms: more targets means more ping value</string>
+    <string name="hero_trait_tempest_3">Punishes clustered small minions and snowballs from board control</string>
+</resources>

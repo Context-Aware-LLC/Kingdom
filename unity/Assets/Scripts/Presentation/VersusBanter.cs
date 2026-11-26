@@ -116,8 +116,12 @@ namespace Kingdom.Presentation
 
         private IEnumerator Speak(CardClass speaker, CardClass other, AudioClip clip)
         {
-            // Authored strings only, but the hero name is set bold, so rich text stays on.
-            _caption.text = $"<b>{VersusBanterLines.HeroName(speaker)}</b>  {VersusBanterLines.Lines[(speaker, other)]}";
+            // Authored strings only, but the hero name is set bold, so rich text stays on. The audio
+            // is English in every language; only the caption follows the player's (values/banter.xml,
+            // generated with VersusBanterLines from voice-lines.json).
+            string line = Loc.Find("banter_" + speaker.ToString().ToLowerInvariant() + "_" + other.ToString().ToLowerInvariant())
+                ?? VersusBanterLines.Lines[(speaker, other)];
+            _caption.text = $"<b>{VersusBanterLines.HeroName(speaker)}</b>  {line}";
             yield return FadeCaption(0f, 1f);
             float hold;
             if (clip != null)

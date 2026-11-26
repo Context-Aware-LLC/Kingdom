@@ -254,7 +254,7 @@ namespace Kingdom.Presentation
             DateTime? since = reply?.RegisteredUtc;
             if (since.HasValue)
                 SetLine(registered, Loc.Format("settings_account_registered",
-                    since.Value.ToLocalTime().ToString("d MMM yyyy", LanguageCulture())));
+                    Loc.Date(since.Value.ToLocalTime(), "format_date_short")));
         }
 
         private static void SetLine(Label label, string text)
@@ -262,13 +262,6 @@ namespace Kingdom.Presentation
             if (label == null) return;
             label.text = text ?? "";
             label.style.display = string.IsNullOrEmpty(text) ? DisplayStyle.None : DisplayStyle.Flex;
-        }
-
-        /// <summary>The month name follows the game's language, not the phone's.</summary>
-        private static System.Globalization.CultureInfo LanguageCulture()
-        {
-            try { return System.Globalization.CultureInfo.GetCultureInfo(Loc.Language); }
-            catch (Exception) { return System.Globalization.CultureInfo.InvariantCulture; }
         }
 
         /// <summary>

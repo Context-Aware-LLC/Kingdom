@@ -227,11 +227,11 @@ namespace Kingdom.Presentation
                 return box;
             }
 
-            text.Add(Line(entry.Text.Name, "ledger-entry__name"));
-            text.Add(Line(entry.Text.Plain, "ledger-entry__plain"));
-            text.Add(Line(entry.Text.Citation, "ledger-entry__citation"));
+            text.Add(Line(AchievementLoc.Name(entry.Text), "ledger-entry__name"));
+            text.Add(Line(AchievementLoc.Plain(entry.Text), "ledger-entry__plain"));
+            text.Add(Line(AchievementLoc.Citation(entry.Text), "ledger-entry__citation"));
             if (entry.EarnedAt is DateTimeOffset at)
-                text.Add(Line(Loc.Format("ledger_entry_date", at.ToLocalTime().ToString("d MMMM yyyy", CultureInfo.InvariantCulture)),
+                text.Add(Line(Loc.Format("ledger_entry_date", Loc.Date(at.ToLocalTime().DateTime, "format_date_long")),
                     "ledger-entry__date"));
             // The wax a past stamp left: a fixed tilt per entry, so turning back to a page does not
             // reshuffle every seal on it.

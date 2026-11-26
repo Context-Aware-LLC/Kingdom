@@ -193,9 +193,9 @@ namespace Kingdom.Presentation
             NameCheck check = PlayerName.Check(_nameField?.value ?? "");
             if (!check.IsValid)
             {
-                // The refusal reason is authored player-facing in PlayerName — rendered verbatim so
-                // there is one wording, not one per form.
-                SetError(check.Reason);
+                // The refusal is coded in PlayerName and worded here, in the player's language, so
+                // there is one wording per language, not one per form.
+                SetError(RefusalText.Name(check));
                 return;
             }
 

@@ -1106,6 +1106,29 @@ namespace Kingdom.Presentation
             _questStatus.RemoveFromClassList("mm-quest-status--hidden");
         }
 
+        /// <summary>Quest id prefixes that end in a class slug ("win-as-gravekeep").</summary>
+        private static readonly string[] ClassQuestPrefixes = { "win-as-", "play-as-", "cards-of-" };
+
+        /// <summary>
+        /// A quest's title or quip in the player's language, from its id: the server sends finished
+        /// English, but the id names the template and, for a class quest, the class
+        /// (QuestCatalog). <c>quest_&lt;template&gt;_title</c> takes the class name as %1$s. Null for an
+        /// id this build does not know, so the server's English shows instead.
+        /// </summary>
+        private static string QuestLine(QuestEntry quest, string part)
+        {
+            string id = quest.Id ?? "";
+            foreach (string prefix in ClassQuestPrefixes)
+            {
+                if (!id.StartsWith(prefix, StringComparison.Ordinal)) continue;
+                if (!Enum.TryParse(id.Substring(prefix.Length).ToUpperInvariant(), out Kingdom.Core.Contracts.CardClass c))
+                    return null;
+                string row = Loc.Find("quest_" + prefix.TrimEnd('-').Replace('-', '_') + "_" + part);
+                return row == null ? null : string.Format(Loc.Culture, row, GameTerms.Class(c));
+            }
+            return Loc.Find("quest_" + id.Replace('-', '_') + "_" + part);
+        }
+
         private static VisualElement BuildQuestRow(QuestEntry quest)
         {
             var row = new VisualElement();
@@ -1115,7 +1138,7 @@ namespace Kingdom.Presentation
             var heading = new VisualElement();
             heading.AddToClassList("mm-quest-row__heading");
 
-            var title = new Label(quest.Title);
+            var title = new Label(QuestLine(quest, "title") ?? quest.Title);
             title.AddToClassList("mm-quest-title");
             heading.Add(title);
 
@@ -1130,10 +1153,11 @@ namespace Kingdom.Presentation
             heading.Add(reward);
             row.Add(heading);
 
-            if (!string.IsNullOrEmpty(quest.Quip))
+            string quipText = QuestLine(quest, "quip") ?? quest.Quip;
+            if (!string.IsNullOrEmpty(quipText))
             {
                 // USS has no line-height, so the quip's two lines are tightened with the rich-text tag.
-                var quip = new Label("<line-height=85%>" + quest.Quip);
+                var quip = new Label("<line-height=85%>" + quipText);
                 quip.AddToClassList("mm-quest-quip");
                 row.Add(quip);
             }
@@ -1465,7 +1489,7 @@ namespace Kingdom.Presentation
             if (_leaderboardUpdated != null
                 && DateTimeOffset.TryParse(result.Response.generatedAtUtc, out DateTimeOffset generated))
                 _leaderboardUpdated.text = Loc.Format("leaderboard_footer_updated",
-                    $"{generated.ToLocalTime():h:mm tt}", entries.Length);
+                    Loc.Time(generated.ToLocalTime().DateTime), entries.Length);
         }
 
         /// <summary>

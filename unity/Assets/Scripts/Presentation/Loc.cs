@@ -26,7 +26,7 @@ namespace Kingdom.Presentation
         public const string Source = "en";
         private const string PrefsKey = "settings.language";
         private const string Root = "Localization/";
-        private static readonly string[] TableFiles = { "strings", "glossary" };
+        private static readonly string[] TableFiles = { "strings", "glossary", "achievements", "banter", "heroes" };
 
         private sealed class Table
         {
@@ -38,12 +38,37 @@ namespace Kingdom.Presentation
         private static Table _source;
         private static Table _active;
         private static string _language;
+        private static CultureInfo _culture;
 
         /// <summary>Raised after <see cref="SetLanguage"/> changes the active table.</summary>
         public static event Action LanguageChanged;
 
         /// <summary>The active language code, e.g. <c>en</c>, <c>de</c>, <c>pt-BR</c>.</summary>
         public static string Language { get { EnsureLoaded(); return _language; } }
+
+        /// <summary>
+        /// The culture of the GAME's language, not the phone's: month names, the 24-hour clock and
+        /// the decimal comma follow what the player reads. Every number, date and time a string shows
+        /// is formatted with this, and <see cref="Format"/> fills its slots with it.
+        /// </summary>
+        public static CultureInfo Culture
+        {
+            get
+            {
+                EnsureLoaded();
+                if (_culture != null) return _culture;
+                try { _culture = CultureInfo.GetCultureInfo(_language); }
+                catch (ArgumentException) { _culture = CultureInfo.InvariantCulture; } // CultureNotFoundException included
+                return _culture;
+            }
+        }
+
+        /// <summary>A date, in the pattern the active table gives <paramref name="patternKey"/>
+        /// (<c>format_date_long</c>, <c>format_date_short</c>) and the language's month names.</summary>
+        public static string Date(DateTime value, string patternKey) => value.ToString(Get(patternKey), Culture);
+
+        /// <summary>A clock time as the language writes it: 3:05 PM, 15:05.</summary>
+        public static string Time(DateTime value) => value.ToString("t", Culture);
 
         /// <summary>True while the player reads the source language, so callers can skip work.</summary>
         public static bool IsSource => Language == Source;
@@ -140,6 +165,7 @@ namespace Kingdom.Presentation
             if (table.Strings.Count == 0 && table.Plurals.Count == 0) { code = Source; table = _source; }
             _language = code;
             _active = table;
+            _culture = null;
         }
 
         private static bool Supported(string code) =>
@@ -194,7 +220,7 @@ namespace Kingdom.Presentation
         private static string Fill(string format, object[] args)
         {
             if (args == null || args.Length == 0) return format;
-            try { return string.Format(CultureInfo.CurrentCulture, format, args); }
+            try { return string.Format(Culture, format, args); }
             catch (FormatException) { return format; }
         }
     }

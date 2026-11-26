@@ -1117,4 +1117,72 @@
     <!-- The claim got no answer, but the server no longer offers it: it went through and will be delivered. -->
     <string name="king_prize_on_its_way">Your gift is on its way. The royal couriers will see to it.</string>
     <string name="king_prize_failed">His Majesty\'s clerks could not deliver it. Try again in a moment.</string>
+    <!-- ===== Formats, refusals and quests moved out of C# (2026-11-26) ===== -->
+    <!-- A .NET date pattern, not prose: d = day, MMMM = month name, MMM = short month name, yyyy = year. The Ledger's earned date. -->
+    <string name="format_date_long">d MMMM yyyy</string>
+    <!-- A .NET date pattern (see format_date_long). The account's registration date in Settings. -->
+    <string name="format_date_short">d MMM yyyy</string>
+    <!-- Deck refusals (DeckValidator's DeckIssue). Shown inline beside a deck that cannot be queued. -->
+    <string name="deck_issue_invalid_pairing">This deck\'s pair of classes isn\'t valid.</string>
+    <plurals name="deck_issue_add_cards">
+        <item quantity="one">Add %1$d more card.</item>
+        <item quantity="other">Add %1$d more cards.</item>
+    </plurals>
+    <plurals name="deck_issue_remove_cards">
+        <item quantity="one">Remove %1$d card.</item>
+        <item quantity="other">Remove %1$d cards.</item>
+    </plurals>
+    <string name="deck_issue_unknown_card">A card in this deck no longer exists.</string>
+    <!-- %1$s = a card name. -->
+    <string name="deck_issue_retired">%1$s (retired) can\'t be played any more.</string>
+    <string name="deck_issue_unreleased">%1$s isn\'t released yet.</string>
+    <!-- %1$d = the copy cap (1 or 2), %2$s = a card name. -->
+    <string name="deck_issue_too_many_copies">Only %1$d of %2$s.</string>
+    <!-- %1$s = a card name, %2$s and %3$s = the deck's two classes. -->
+    <string name="deck_issue_off_class">%1$s is not a %2$s or %3$s card.</string>
+    <string name="deck_issue_not_owned">You don\'t own %1$s.</string>
+    <!-- %1$d = copies owned, %2$s = a card name. -->
+    <string name="deck_issue_owns_fewer">You own %1$d of %2$s.</string>
+    <!-- Display-name refusals (PlayerName's NameProblem), under the name field. -->
+    <string name="name_issue_empty">Enter a name.</string>
+    <string name="name_issue_too_short">Names are at least %1$d characters long.</string>
+    <!-- The Herald reads every name aloud when a match starts. -->
+    <string name="name_issue_too_long">Names are at most %1$d characters long.\nThe Herald has to read it aloud.</string>
+    <string name="name_issue_invisible">That name contains characters that can\'t be displayed.</string>
+    <!-- %1$s = the refused character. -->
+    <string name="name_issue_bad_character">\'%1$s\' isn\'t allowed in a name.</string>
+    <string name="name_issue_no_letters">Names need at least one letter or number.</string>
+    <!-- %1$s = the name as typed. -->
+    <string name="name_issue_reserved">\'%1$s\' is reserved. Pick another name.</string>
+    <!-- %1$s = the name as typed, %2$s = one of the name_court_ lines. -->
+    <string name="name_issue_reserved_court">\'%1$s\' is reserved.\n%2$s</string>
+    <!-- Why a court title cannot be a player's name, in the court's voice. The King changes every Tuesday. -->
+    <string name="name_court_king">The position is filled until Tuesday.</string>
+    <string name="name_court_herald">He would only mispronounce it.</string>
+    <string name="name_court_jester">It is taken, and he is not amused.</string>
+    <!-- Pack purchase failures whose outcome is known (nothing was charged). -->
+    <string name="shop_purchase_signed_out">Sign in before buying a pack.</string>
+    <string name="shop_purchase_insufficient">Not enough currency for this pack.</string>
+    <!-- %1$d = an HTTP status code. -->
+    <string name="shop_purchase_declined">The server declined the purchase (%1$d).</string>
+    <!-- Daily quests: title, then the Council's quip. The server's QuestCatalog is the source and a
+         test holds these to it. %1$s = a class name. -->
+    <string name="quest_win_two_title">Win 2 matches</string>
+    <string name="quest_win_two_quip">Once could be luck. The Council suspects it was.</string>
+    <string name="quest_play_three_title">Play 3 matches</string>
+    <string name="quest_play_three_quip">Attendance will be taken.</string>
+    <string name="quest_win_as_title">Win a match as %1$s</string>
+    <string name="quest_win_as_quip">The Council has drafted a statement of support, in pencil.</string>
+    <string name="quest_play_as_title">Play 3 matches as %1$s</string>
+    <string name="quest_play_as_quip">Walk a mile in their boots. Return the boots.</string>
+    <string name="quest_cards_fifteen_title">Play 15 cards</string>
+    <string name="quest_cards_fifteen_quip">The Council requires evidence of ideas.</string>
+    <string name="quest_cards_of_title">Play 8 %1$s cards</string>
+    <string name="quest_cards_of_quip">The Council has asked for the full catalogue.</string>
+    <string name="quest_quick_win_title">Win a match by turn 10</string>
+    <string name="quest_quick_win_quip">The Council has another meeting at noon.</string>
+    <string name="quest_long_game_title">Win a match that runs past turn 15</string>
+    <string name="quest_long_game_quip">The Council has cleared its afternoon.</string>
+    <string name="quest_minion_hunter_title">Destroy 50 minions</string>
+    <string name="quest_minion_hunter_quip">The Gravekeeps are expecting company.</string>
 </resources>

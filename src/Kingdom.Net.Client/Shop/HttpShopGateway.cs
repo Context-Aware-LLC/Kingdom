@@ -8,12 +8,31 @@ using Kingdom.Net.Client.Auth;
 namespace Kingdom.Net.Client.Shop
 {
     /// <summary>A declined purchase is safe to try again; an uncertain response is not.</summary>
+    /// <summary>Why a purchase did not go through, for the client to say in the player's language.</summary>
+    public enum ShopDecline
+    {
+        /// <summary>The outcome is unknown: the purchase may have committed.</summary>
+        Unknown,
+        SignedOut,
+        InsufficientFunds,
+        /// <summary>The server refused it; <see cref="ShopPurchaseException.StatusCode"/> says how.</summary>
+        Declined,
+    }
+
     public sealed class ShopPurchaseException : Exception
     {
         public bool OutcomeUnknown { get; }
+        public ShopDecline Decline { get; }
+        /// <summary>The HTTP status behind <see cref="ShopDecline.Declined"/>, or 0.</summary>
+        public int StatusCode { get; }
 
-        public ShopPurchaseException(string message, bool outcomeUnknown) : base(message)
-            => OutcomeUnknown = outcomeUnknown;
+        /// <param name="message">English, for the log.</param>
+        public ShopPurchaseException(string message, ShopDecline decline, int statusCode = 0) : base(message)
+        {
+            Decline = decline;
+            OutcomeUnknown = decline == ShopDecline.Unknown;
+            StatusCode = statusCode;
+        }
     }
 
     /// <summary>Authenticated shop transport. The server owns prices, wallet and purchase outcomes.</summary>
@@ -49,7 +68,7 @@ namespace Kingdom.Net.Client.Shop
         {
             string token = await _token().ConfigureAwait(false);
             if (_baseUrl.Length == 0 || string.IsNullOrEmpty(token))
-                throw new ShopPurchaseException("Sign in before buying a pack.", false);
+                throw new ShopPurchaseException("Sign in before buying a pack.", ShopDecline.SignedOut);
 
             string body = AuthJson.ObjectWithRaw(
                 "\"quantity\":" + request.Quantity.ToString(System.Globalization.CultureInfo.InvariantCulture),
@@ -66,22 +85,23 @@ namespace Kingdom.Net.Client.Shop
                     Headers(token), cancellationToken).ConfigureAwait(false);
 
             if (response.IsTransportFailure)
-                throw new ShopPurchaseException("Purchase status is unknown.", true);
+                throw new ShopPurchaseException("Purchase status is unknown.", ShopDecline.Unknown);
             if (response.StatusCode == 409)
             {
                 bool insufficient = AuthJson.TryReadTopLevel(response.Body, out var declined) &&
                     AuthJson.TryString(declined, "status", out string reason) &&
                     reason.Equals("insufficientfunds", StringComparison.OrdinalIgnoreCase);
-                throw new ShopPurchaseException(insufficient
-                    ? "Not enough currency for this pack."
-                    : "Purchase status uncertain. Check Card Vault.", !insufficient);
+                throw insufficient
+                    ? new ShopPurchaseException("Not enough currency for this pack.", ShopDecline.InsufficientFunds)
+                    : new ShopPurchaseException("Purchase status uncertain. Check Card Vault.", ShopDecline.Unknown);
             }
             if (response.StatusCode == 401 || response.StatusCode == 400 ||
                 response.StatusCode == 503)
                 throw new ShopPurchaseException("The server declined the purchase (" +
-                    response.StatusCode.ToString(CultureInfo.InvariantCulture) + ").", false);
+                    response.StatusCode.ToString(CultureInfo.InvariantCulture) + ").",
+                    ShopDecline.Declined, response.StatusCode);
             if (!response.IsSuccess)
-                throw new ShopPurchaseException("Purchase status is unknown.", true);
+                throw new ShopPurchaseException("Purchase status is unknown.", ShopDecline.Unknown);
 
             if (!AuthJson.TryReadTopLevel(response.Body, out var fields) ||
                 !AuthJson.TryString(fields, "status", out string status) ||
@@ -91,7 +111,7 @@ namespace Kingdom.Net.Client.Shop
                 !string.Equals(packId, request.PackId, StringComparison.Ordinal) ||
                 !AuthJson.TryInt64(fields, "unopenedCount", out long unopened) || unopened < 0 ||
                 !TrySnapshot(response.Body, out ShopSnapshot? snapshot))
-                throw new ShopPurchaseException("Purchase succeeded but the receipt was unreadable.", true);
+                throw new ShopPurchaseException("Purchase succeeded but the receipt was unreadable.", ShopDecline.Unknown);
 
             return new PackPurchaseResult(snapshot!, packId, unopened);
         }

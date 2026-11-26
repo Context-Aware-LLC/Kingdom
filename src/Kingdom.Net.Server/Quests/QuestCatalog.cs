@@ -87,6 +87,12 @@ namespace Kingdom.Net.Server.Quests
         /// <summary>
         /// The templates, in a fixed order. The order is part of the derivation — reordering this
         /// array reassigns every player's quests — so append rather than insert.
+        ///
+        /// <para><b>The client does not show this English.</b> It renders a quest from its id out of
+        /// <c>quest_&lt;template&gt;_title</c>/<c>_quip</c> rows in
+        /// unity/Assets/Resources/Localization/values/strings.xml, so a new or reworded template needs
+        /// its rows there, and in each values-&lt;lang&gt;, in the same commit. QuestTextTableTests
+        /// fails on the English; nothing fails on a missing translation.</para>
         /// </summary>
         private static readonly Func<CardClass, QuestDefinition>[] Templates =
         {

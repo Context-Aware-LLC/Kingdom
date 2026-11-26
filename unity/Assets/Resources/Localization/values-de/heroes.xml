@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hero traits (de): first pass 2026-11-26, written in-house; terms come from glossary.xml. -->
+<resources>
+    <string name="hero_trait_emberward_1">Spielt schnell und bestraft langsame Gegner früh</string>
+    <string name="hero_trait_emberward_2">Brandzauber beenden Partien aus der Distanz, wenn das Spielfeld stockt</string>
+    <string name="hero_trait_emberward_3">Tauscht Ressourcen aggressiv, um beim Tempo vorn zu bleiben</string>
+    <string name="hero_trait_tidecaller_1">Baut allein mit der Heldenkraft eine dauerhafte Präsenz auf dem Spielfeld auf</string>
+    <string name="hero_trait_tidecaller_2">Frostzauber legen wichtige Diener lahm, während Irrlichter Druck machen</string>
+    <string name="hero_trait_tidecaller_3">Belohnt Geduld: Das Tempo baut sich über viele Züge auf</string>
+    <string name="hero_trait_gravekeep_1">Hält lange genug durch, um durch Zermürbung zu gewinnen</string>
+    <string name="hero_trait_gravekeep_2">Untote erheben sich erneut oder befeuern Ketten aus Totenglocken</string>
+    <string name="hero_trait_gravekeep_3">Glänzt in langen Partien, in denen ein knapper Vorsprung an Leben entscheidet</string>
+    <string name="hero_trait_verdant_1">Steckt Schaden weg und baut zugleich das Spielfeld aus</string>
+    <string name="hero_trait_verdant_2">Naturdiener sind zäh und lassen sich kaum effizient beseitigen</string>
+    <string name="hero_trait_verdant_3">Belohnt Ausdauer: Je länger die Partie, desto größer der Vorteil</string>
+    <string name="hero_trait_clockwright_1">Zieht sich durchs Deck, um starke Kombinationen zusammenzusetzen</string>
+    <string name="hero_trait_clockwright_2">Konstrukte entfalten Synergien mit bestimmten Kartenfolgen</string>
+    <string name="hero_trait_clockwright_3">Belohnt präzise Reihenfolgen und das Wissen um die Schlüsselzüge deines Decks</string>
+    <string name="hero_trait_nightveil_1">Schützt wichtige Diener vor Vernichtung und gezielten Zaubern</string>
+    <string name="hero_trait_nightveil_2">Schleier zwingt Gegner zu Flächenschaden, sonst müssen sie die Bedrohung ignorieren</string>
+    <string name="hero_trait_nightveil_3">Wer beim Anvisieren die Oberhand behält, dreht das Spielfeld entscheidend</string>
+    <string name="hero_trait_stonewarden_1">Jeder Einsatz der Heldenkraft stellt einen 0/3-Blocker mit Bollwerk vor den Helden</string>
+    <string name="hero_trait_stonewarden_2">Bremst Aggression aus und arbeitet auf starke defensive Züge hin</string>
+    <string name="hero_trait_stonewarden_3">Steinkarten zermürben den Gegner durch schiere Zähigkeit</string>
+    <string name="hero_trait_tempest_1">Zermürbt gegnerische Spielfelder mit zufälligem, gestreutem Schaden</string>
+    <string name="hero_trait_tempest_2">Passt zu Schwärmen kleiner Diener: Mehr Ziele heißt mehr Wert pro Treffer</string>
+    <string name="hero_trait_tempest_3">Bestraft Gruppen kleiner Diener und baut aus der Spielfeldkontrolle einen wachsenden Vorsprung auf</string>
+</resources>

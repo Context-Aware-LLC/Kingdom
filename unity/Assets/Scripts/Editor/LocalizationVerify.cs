@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using Kingdom.Core.Cards;
 using Kingdom.Core.Contracts;
+using Kingdom.Net.Protocol;
 using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +17,10 @@ namespace Kingdom.Editor
     /// the failure nobody sees in English: an enum member with no glossary row (it prints its key), a
     /// keyword whose English name drifted from the word the card body bolds, and a translation whose
     /// <c>%n$</c> slots do not match the English row (it prints the wrong value, or throws), and a
-    /// literal key the code asks for that English does not have (it prints the key).
+    /// literal key the code asks for that English does not have (it prints the key), and an
+    /// achievement row that drifted from <see cref="AchievementTexts"/>, its source. It also WARNS,
+    /// without failing, on every English row a translation lacks: such a row shows in English, and
+    /// 137 of them sat unnoticed in German until 2026-11-26.
     ///
     /// <para>Registered in <see cref="HeadlessVerify"/>.</para>
     /// </summary>
@@ -36,9 +40,11 @@ namespace Kingdom.Editor
                 PluralCategories,
                 TranslationsKeepTheirSlots,
                 EveryKeyTheCodeAsksForExists,
+                AchievementRowsMatchTheSource,
             };
             int failed = 0;
             foreach (Func<int> check in checks) failed += check();
+            ReportUntranslatedRows();
 
             if (failed > 0)
                 Debug.LogError($"[LocalizationVerify] {failed} check(s) FAILED.");
@@ -187,6 +193,58 @@ namespace Kingdom.Editor
                     if (!found) wrong.Add($"{Path.GetFileName(file)}: {m.Groups[1].Value} \"{key}\"");
                 }
             return wrong.Count == 0 ? 0 : Fail("EveryKeyTheCodeAsksForExists", string.Join("; ", wrong));
+        }
+
+        // AchievementTexts is the source (the server hands Play Console the same sentences); the
+        // table holds a copy so a translation has an English row to keep its slots against.
+        private static int AchievementRowsMatchTheSource()
+        {
+            Dictionary<string, string> table = ReadFolder(Path.Combine(TableRoot, "values"));
+            var wrong = new List<string>();
+            var expected = new HashSet<string>();
+            foreach (AchievementText text in AchievementTexts.All)
+            {
+                foreach ((string part, string source) in new[]
+                         { ("name", text.Name), ("plain", text.Plain), ("citation", text.Citation) })
+                {
+                    string key = AchievementLoc.Key(text.Id, part);
+                    expected.Add(key);
+                    if (!table.TryGetValue(key, out string row)) wrong.Add(key + ": no row");
+                    else if (AndroidStrings.Convert(row) != source) wrong.Add($"{key}: \"{row}\" is not \"{source}\"");
+                }
+            }
+            foreach (string key in table.Keys)
+                if (key.StartsWith("achievement_") && !expected.Contains(key)) wrong.Add(key + ": no such achievement");
+            return wrong.Count == 0 ? 0 : Fail("AchievementRowsMatchTheSource", string.Join("; ", wrong));
+        }
+
+        // Not a failure: an untranslated row reads English, which is the designed fallback. But it is
+        // invisible to anyone testing in English, so say how many there are every run.
+        private static void ReportUntranslatedRows()
+        {
+            var source = new HashSet<string>();
+            foreach (string file in Directory.GetFiles(Path.Combine(TableRoot, "values"), "*.xml"))
+            {
+                var doc = new XmlDocument();
+                doc.Load(file);
+                foreach (XmlNode node in doc.DocumentElement.ChildNodes)
+                    if (node is XmlElement el && (el.Name == "string" || el.Name == "plurals")
+                        && el.GetAttribute("translatable") != "false")
+                        source.Add(el.GetAttribute("name"));
+            }
+            foreach (string dir in Directory.GetDirectories(TableRoot, "values-*"))
+            {
+                var have = new HashSet<string>();
+                foreach (string key in ReadFolder(dir).Keys)
+                    have.Add(key.Split('#')[0]);
+                var missing = new SortedSet<string>();
+                foreach (string key in source)
+                    if (!have.Contains(key)) missing.Add(key);
+                string lang = Path.GetFileName(dir).Substring("values-".Length);
+                if (missing.Count == 0) Debug.Log($"[LocalizationVerify] {lang}: every row translated.");
+                else Debug.LogWarning($"[LocalizationVerify] {lang}: {missing.Count} rows show in English: " +
+                    string.Join(", ", missing));
+            }
         }
 
         private static bool IsTermKey(string key)

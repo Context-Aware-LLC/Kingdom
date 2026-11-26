@@ -53,6 +53,22 @@ namespace Kingdom.Core.Collection
         }
     }
 
+    /// <summary>Which rule refused a name: what a client renders in the player's language.</summary>
+    public enum NameProblem
+    {
+        None,
+        Empty,
+        TooShort,
+        TooLong,
+        Invisible,
+        /// <summary><see cref="NameCheck.Detail"/> holds the refused character.</summary>
+        BadCharacter,
+        NoLetters,
+        /// <summary><see cref="NameCheck.Detail"/> holds the name as normalized and
+        /// <see cref="NameCheck.Reserved"/> the reserved entry it matched.</summary>
+        Reserved,
+    }
+
     /// <summary>The verdict on a candidate display name: the cleaned-up value, or why it was refused.</summary>
     public readonly struct NameCheck
     {
@@ -73,15 +89,29 @@ namespace Kingdom.Core.Collection
         /// </summary>
         public readonly string Reason;
 
-        private NameCheck(bool valid, string normalized, string reason)
+        /// <summary>The rule behind <see cref="Reason"/>, so a client can say it in the player's
+        /// language. <see cref="Reason"/> stays the English sentence, for the server and the logs.</summary>
+        public readonly NameProblem Problem;
+
+        /// <summary>What the refusal quotes: the refused character, or the reserved name as normalized.</summary>
+        public readonly string Detail;
+
+        /// <summary>The reserved entry a <see cref="NameProblem.Reserved"/> name matched ("King").</summary>
+        public readonly string Reserved;
+
+        private NameCheck(bool valid, string normalized, string reason, NameProblem problem, string detail, string reserved)
         {
             IsValid = valid;
             Normalized = normalized;
             Reason = reason;
+            Problem = problem;
+            Detail = detail;
+            Reserved = reserved;
         }
 
-        internal static NameCheck Ok(string normalized) => new NameCheck(true, normalized, "");
-        internal static NameCheck Bad(string reason) => new NameCheck(false, "", reason);
+        internal static NameCheck Ok(string normalized) => new NameCheck(true, normalized, "", NameProblem.None, "", "");
+        internal static NameCheck Bad(NameProblem problem, string reason, string detail = "", string reserved = "")
+            => new NameCheck(false, "", reason, problem, detail, reserved);
     }
 
     /// <summary>
@@ -187,17 +217,17 @@ namespace Kingdom.Core.Collection
         /// </summary>
         public static NameCheck Check(string raw)
         {
-            if (raw == null) return NameCheck.Bad("Enter a name.");
+            if (raw == null) return NameCheck.Bad(NameProblem.Empty, "Enter a name.");
 
             string normalized = Normalize(raw);
-            if (normalized.Length == 0) return NameCheck.Bad("Enter a name.");
+            if (normalized.Length == 0) return NameCheck.Bad(NameProblem.Empty, "Enter a name.");
 
             // Length is measured on the normalized value, so "  Sam  " is three characters and not
             // seven — the player is judged on what gets stored, not on what they typed.
             if (normalized.Length < MinLength)
-                return NameCheck.Bad($"Names are at least {MinLength} characters long.");
+                return NameCheck.Bad(NameProblem.TooShort, $"Names are at least {MinLength} characters long.");
             if (normalized.Length > MaxLength)
-                return NameCheck.Bad($"Names are at most {MaxLength} characters long.\nThe Herald has to read it aloud.");
+                return NameCheck.Bad(NameProblem.TooLong, $"Names are at most {MaxLength} characters long.\nThe Herald has to read it aloud.");
 
             bool hasSubstance = false;
             foreach (char c in normalized)
@@ -235,17 +265,17 @@ namespace Kingdom.Core.Collection
                     case UnicodeCategory.OtherNotAssigned:
                     case UnicodeCategory.LineSeparator:
                     case UnicodeCategory.ParagraphSeparator:
-                        return NameCheck.Bad("That name contains characters that can't be displayed.");
+                        return NameCheck.Bad(NameProblem.Invisible, "That name contains characters that can't be displayed.");
 
                     default:
-                        return NameCheck.Bad($"'{c}' isn't allowed in a name.");
+                        return NameCheck.Bad(NameProblem.BadCharacter, $"'{c}' isn't allowed in a name.", c.ToString());
                 }
             }
 
             // "..." and "---" pass every rule above and are not names. Punctuation is a garnish on
             // something, so require the something.
             if (!hasSubstance)
-                return NameCheck.Bad("Names need at least one letter or number.");
+                return NameCheck.Bad(NameProblem.NoLetters, "Names need at least one letter or number.");
 
             // Last, because it is the only rule about MEANING rather than characters — and the only
             // one whose refusal is not about the name being unusable (VULN-002 §4.3).
@@ -253,9 +283,9 @@ namespace Kingdom.Core.Collection
             if (reservedAs != null)
             {
                 string? why = CourtReason(reservedAs);
-                return NameCheck.Bad(why == null
+                return NameCheck.Bad(NameProblem.Reserved, why == null
                     ? $"'{normalized}' is reserved. Pick another name."
-                    : $"'{normalized}' is reserved.\n{why}");
+                    : $"'{normalized}' is reserved.\n{why}", normalized, reservedAs);
             }
 
             return NameCheck.Ok(normalized);

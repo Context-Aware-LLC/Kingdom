@@ -564,8 +564,10 @@ namespace Kingdom.Presentation
             }
             catch (ArgumentException ex)
             {
+                // DeckCreation's ArgumentExceptions are caller errors written for a developer, and the
+                // only one a player could reach through this screen is the pairing.
                 Debug.LogError($"[DeckCreate] deck creation refused: {ex.Message}");
-                SetCreateError(ex.Message);
+                SetCreateError(Loc.Get("deck_issue_invalid_pairing"));
             }
             catch (Exception ex)
             {

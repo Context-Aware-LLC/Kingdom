@@ -180,7 +180,7 @@ namespace Kingdom.Presentation
                 if (text == null) continue;
                 known++;
                 if (known > MaxFindingsShown) continue;
-                VisualElement row = Row(text.Name, text.Citation);
+                VisualElement row = Row(AchievementLoc.Name(text), AchievementLoc.Citation(text));
                 row.AddToClassList("proc-finding");
                 _findings.Add(row);
                 _findingRows.Add(row);

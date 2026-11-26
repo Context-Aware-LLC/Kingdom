@@ -24,6 +24,11 @@ namespace Kingdom.Net.Protocol
     /// Every achievement's text, in the order the Ledger lists them. The server's
     /// <c>AchievementCatalog</c> pairs each id with the rule that earns it; an entry here with no
     /// rule there fails <c>AchievementTests</c>.
+    ///
+    /// <para><b>A copy lives in the Unity string table</b> (Resources/Localization/values/achievements.xml),
+    /// which is what the client shows and what a translation is checked against. Change a sentence
+    /// here and change it there, and in each values-&lt;lang&gt;, in the same commit;
+    /// <c>LocalizationVerify</c> fails on the English copy.</para>
     /// </summary>
     public static class AchievementTexts
     {
