@@ -499,6 +499,16 @@
     <string name="shop_purchase_uncertain">Kaufstatus unklar. Prüfe den Kartentresor, bevor du erneut kaufst.</string>
     <string name="shop_buy_button_gold">%1$s Gold</string>
     <string name="shop_gem_bundle_price_usd">%1$d,%2$s $</string>
+    <string name="pack_odds_button">Chancen ansehen</string>
+    <string name="pack_odds_intro">%1$d Karten, jede mit eigenem Seltenheitswurf:</string>
+    <string name="pack_odds_percent">%1$s %%</string>
+    <string name="pack_odds_rules_lead">Das Glück hat Grenzen, so will es der Rat:</string>
+    <string name="pack_odds_rule_rare_floor">In jedem Pack mindestens eine Seltene oder besser</string>
+    <string name="pack_odds_rule_epic">Eine Epische innerhalb von %1$d in Folge</string>
+    <string name="pack_odds_rule_first_legendary">Deine erste Legendäre innerhalb von %1$d</string>
+    <string name="pack_odds_rule_legendary">Danach eine weitere innerhalb von je %1$d</string>
+    <string name="pack_odds_rule_per_set">Jedes Set zählt für sich</string>
+    <string name="pack_odds_footer">Nie eine Legendäre, die du schon hast, und fehlende Karten kommen öfter. Gold oder Edelsteine, gleiche Chancen.</string>
     <string name="spares_summary_empty">Keine überzähligen Kopien</string>
     <string name="spares_note_empty">Hier ist nichts über das hinaus, was ein Deck spielen kann.</string>
     <string name="spares_summary_selected">%1$s aus %2$s</string>

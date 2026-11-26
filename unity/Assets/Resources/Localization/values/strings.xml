@@ -895,6 +895,23 @@
     <string name="shop_buy_button_gold">%1$s Gold</string>
     <!-- USD price of a gem bundle. %1$d = dollars, %2$s = cents, already two digits. Not yet read by code, which builds the price by hand; should become a locale currency format. -->
     <string name="shop_gem_bundle_price_usd">$%1$d.%2$s</string>
+    <!-- Pack odds (EF-080f): the link under the pack detail's buy buttons. Play requires odds before purchase. -->
+    <string name="pack_odds_button">See the odds</string>
+    <!-- Pack odds sheet, first line; the sheet's title is the set name. %1$d = cards per pack. -->
+    <string name="pack_odds_intro">%1$d cards, each rolling its own rarity:</string>
+    <!-- Pack odds: one rarity's chance per card. %1$s = number already formatted (60, 2.5). -->
+    <string name="pack_odds_percent">%1$s%%</string>
+    <!-- Pack odds: lead-in to the guarantee list. Lighthearted; the Council runs the kingdom. -->
+    <string name="pack_odds_rules_lead">Luck has limits, by order of the Council:</string>
+    <string name="pack_odds_rule_rare_floor">A Rare or better in every pack</string>
+    <!-- %1$d = packs; an Epic is guaranteed on that many in a row without one. -->
+    <string name="pack_odds_rule_epic">An Epic within any %1$d in a row</string>
+    <!-- %1$d = packs by which the first Legendary of a set is guaranteed. -->
+    <string name="pack_odds_rule_first_legendary">Your first Legendary within %1$d</string>
+    <!-- Follows pack_odds_rule_first_legendary; 'Another' = another Legendary. %1$d = packs in a row. -->
+    <string name="pack_odds_rule_legendary">Another within any %1$d after that</string>
+    <string name="pack_odds_rule_per_set">Each set keeps its own count</string>
+    <string name="pack_odds_footer">Never a Legendary you already own, and cards you lack turn up more often. Gold or Gems, same odds.</string>
     <!-- Spares panel summary when the player owns no surplus copies. -->
     <string name="spares_summary_empty">No spare copies</string>
     <!-- Spares panel note when there are no surplus copies. -->

@@ -767,3 +767,113 @@
 .pack-detail-actions .shop-pack__buy--gems {
     margin-left: 4px;
 }
+
+/* "See the odds" under the buy buttons (EF-080f). A text link, not a third chrome button: it must
+ * not compete with the two that spend. background-image none is the theme's opt-out from chrome. */
+.pack-detail-odds.unity-button {
+    align-self: center;
+    margin-top: var(--space-2);
+    min-height: 68px;
+    padding: 0 var(--space-6);
+    background-image: none;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--ink-2);
+    font-size: var(--type-label);
+}
+
+.pack-odds-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.72);
+}
+
+.pack-odds-overlay--hidden {
+    display: none;
+}
+
+/* Parchment, the same paper.png slices as the first-run tidbit (tidbit.uss carries the numbers). */
+.pack-odds-card {
+    flex-shrink: 0;
+    width: 62%;
+    background-color: rgba(0, 0, 0, 0);
+    background-image: url("/Assets/Art/UI/Surfaces/paper.png");
+    -unity-slice-left: 60;
+    -unity-slice-right: 72;
+    -unity-slice-top: 78;
+    -unity-slice-bottom: 92;
+    padding: 64px 96px 80px 96px;
+}
+
+.pack-odds-title {
+    font-size: var(--type-h1);
+    -unity-font-style: bold;
+    color: rgb(58, 36, 18);
+    margin-bottom: var(--space-2);
+}
+
+.pack-odds-intro,
+.pack-odds-rules__lead,
+.pack-odds-rule,
+.pack-odds-footer,
+.pack-odds-row__rarity,
+.pack-odds-row__chance {
+    font-size: var(--type-body);
+    color: rgb(84, 58, 34);
+    white-space: normal;
+}
+
+.pack-odds-intro {
+    margin-bottom: var(--space-3);
+}
+
+.pack-odds-columns {
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.pack-odds-table {
+    flex-shrink: 0;
+    width: 34%;
+    margin-right: var(--space-6);
+}
+
+.pack-odds-row {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: var(--space-1) 0;
+    border-bottom-width: 1px;
+    border-color: rgba(84, 58, 34, 0.25);
+}
+
+.pack-odds-row__chance {
+    -unity-font-style: bold;
+    -unity-text-align: middle-right;
+}
+
+/* flex-basis 0 with grow so the rules wrap in what the table leaves. No overflow: hidden here:
+ * on a shrinkable flex child it deletes the children (see tidbit.uss). */
+.pack-odds-rules {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.pack-odds-rules__lead {
+    -unity-font-style: bold;
+    margin-bottom: var(--space-1);
+}
+
+.pack-odds-rule {
+    margin-left: var(--space-4);
+    margin-bottom: var(--space-1);
+}
+
+.pack-odds-footer {
+    margin-top: var(--space-4);
+    font-size: var(--type-label);
+}

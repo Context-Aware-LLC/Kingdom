@@ -17,14 +17,14 @@ namespace Kingdom.Editor
             int failed = 0;
             foreach (int width in new[] { 2400, 1440 })
             {
-                foreach (string sample in new[] { "pack", "art gutter", "shell gutter", "quantity", "purchase", "scrim" })
+                foreach (string sample in new[] { "pack", "art gutter", "shell gutter", "quantity", "purchase", "odds", "scrim" })
                     Check(width, 1f, sample, ref failed);
             }
             // The same hit area must follow the shell during its translated/scaled flight.
             Check(2400, 0.65f, "pack", ref failed);
             Check(2400, 0.65f, "art gutter", ref failed);
             if (failed != 0) throw new InvalidOperationException($"Shop pack detail: {failed} click checks failed.");
-            Debug.Log("[ShopPackDetailVerify] ALL PASS (14 click checks)");
+            Debug.Log("[ShopPackDetailVerify] ALL PASS (16 click checks)");
         }
 
         private static void Check(int width, float scale, string sample, ref int failed)
@@ -37,10 +37,14 @@ namespace Kingdom.Editor
                 .GetField("_detailClosing", BindingFlags.Instance | BindingFlags.NonPublic)
                 .GetValue(fixture.Controller);
             bool quantityChanged = sample != "quantity" || fixture.Quantity.Q<Label>().text == "2";
-            bool passed = closing == shouldClose && quantityChanged;
+            // The odds link must open the sheet (EF-080f), fill all four rarity rows, and the sheet
+            // must fit the 1080-tall panel: a disclosure clipped off the screen is not disclosed.
+            string odds = sample == "odds" ? fixture.OddsProblem() : null;
+            bool passed = closing == shouldClose && quantityChanged && odds == null;
             if (!passed) failed++;
             Debug.Log($"[ShopPackDetailVerify] {(passed ? "PASS" : "FAIL")} {width}px scale={scale} {sample}: " +
-                $"closing={closing}, expected={shouldClose}, quantityChanged={quantityChanged}, point={point}");
+                $"closing={closing}, expected={shouldClose}, quantityChanged={quantityChanged}, point={point}" +
+                (odds != null ? $", odds: {odds}" : ""));
         }
 
         private sealed class Fixture : IDisposable
@@ -89,6 +93,7 @@ namespace Kingdom.Editor
                 _shell.style.translate = new Translate(scale == 1f ? 0 : -120, scale == 1f ? 0 : 45);
                 _actions.style.visibility = Visibility.Visible;
                 Quantity.style.visibility = Visibility.Visible;
+                Root.Q("pack-detail-odds").style.visibility = Visibility.Visible;
                 _panel.Pick(Vector2.zero);
                 _panel.Pick(Vector2.zero); // Include the purchase row's geometry callback.
                 if (!(_art.contentRect.height > 0) || !(_actions.worldBound.width > 0))
@@ -115,9 +120,27 @@ namespace Kingdom.Editor
                         return Quantity.Query<Button>().ToList().Last().worldBound.center;
                     case "purchase":
                         return _actions.Query<Button>().ToList().First().worldBound.center;
+                    case "odds":
+                        return Root.Q("pack-detail-odds").worldBound.center;
                     default:
                         return new Vector2(_shell.worldBound.xMax + 20, _art.worldBound.center.y);
                 }
+            }
+
+            /// <summary>Null when the odds sheet is open, complete and on screen.</summary>
+            public string OddsProblem()
+            {
+                var overlay = Root.Q("pack-odds-overlay");
+                if (overlay.ClassListContains("pack-odds-overlay--hidden")) return "sheet did not open";
+                _panel.Pick(Vector2.zero);
+                _panel.Pick(Vector2.zero);
+                int rows = Root.Query(className: "pack-odds-row").ToList().Count;
+                if (rows != 4) return $"{rows} rarity rows, not 4";
+                Rect card = Root.Q("pack-odds-card").worldBound;
+                Rect close = Root.Q("pack-odds-close").worldBound;
+                if (!(card.height > 0) || card.yMin < 0 || card.yMax > 1080) return $"card off screen {card}";
+                if (card.Overlaps(close)) return $"card {card} covers Back {close}";
+                return null;
             }
 
             public void Dispose()

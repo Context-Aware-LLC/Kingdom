@@ -53,6 +53,8 @@ namespace Kingdom.Presentation
         private WalletBalances? _detailWallet;
         private int _detailQuantity = 1;
         private readonly Label _detailError;
+        private readonly Button _detailOdds;
+        private readonly PackOddsPanel _odds;
         private VisualElement _detailOriginTile;
         private readonly ShopFlow _flow;
         private readonly IPackArtProvider _packArt;
@@ -107,6 +109,16 @@ namespace Kingdom.Presentation
                 _detailQuantityRow.Add(_detailQuantityLabel);
                 _detailQuantityRow.Add(more);
             }
+            // The odds sit beside the buy buttons because Play wants them seen before a purchase
+            // of a randomized item (EF-080f). See PackOddsPanel.
+            _odds = new PackOddsPanel(root);
+            _detailOdds = root.Q<Button>("pack-detail-odds");
+            if (_detailOdds != null)
+                _detailOdds.clicked += () =>
+                {
+                    if (_detailOffer != null && !_detailClosing)
+                        _odds.Show(_detailOffer.PackId, ShortName(_detailOffer.DisplayName));
+                };
             _detailArt?.RegisterCallback<GeometryChangedEvent>(_ => FitDetailActionsToArt());
             _flow = gateway != null ? new ShopFlow(gateway) : null;
             _gemRedeem = gateway as IGemRedeemGateway;
@@ -199,6 +211,7 @@ namespace Kingdom.Presentation
         {
             if (_detailActions != null) _detailActions.style.visibility = visibility;
             if (_detailQuantityRow != null) _detailQuantityRow.style.visibility = visibility;
+            if (_detailOdds != null) _detailOdds.style.visibility = visibility;
         }
 
         private async void Buy(string packId, ShopCurrency currency, int quantity)
@@ -489,6 +502,9 @@ namespace Kingdom.Presentation
             // title/note here -- deleted on purpose (Sam): the art and the two currency labels on
             // the buttons already say everything a pack tile needs to.
             SetActionsVisible(Visibility.Hidden);
+            if (_detailOdds != null)
+                _detailOdds.style.display = PackOddsPanel.Find(offer.PackId) != null
+                    ? DisplayStyle.Flex : DisplayStyle.None;
 
             // The wrapper actually tapped travels with the shell (Sam, 2026-09-07 follow-up).
             // Copy its resolved background and scaling so the purchase view keeps the same art.
@@ -548,7 +564,8 @@ namespace Kingdom.Presentation
         private void OnDetailClick(ClickEvent evt)
         {
             Vector2 point = evt.position;
-            if (ContainsVisiblePoint(_detailActions, point) || ContainsVisiblePoint(_detailQuantityRow, point))
+            if (ContainsVisiblePoint(_detailActions, point) || ContainsVisiblePoint(_detailQuantityRow, point) ||
+                ContainsVisiblePoint(_detailOdds, point))
             {
                 evt.StopPropagation();
                 return;
