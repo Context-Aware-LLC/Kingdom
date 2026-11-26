@@ -435,6 +435,7 @@
     <string name="match_result_reason_defeat">Der Rat hat davon abgeraten. Schriftlich.</string>
     <string name="match_result_reason_opponent_conceded">Aufgegeben. Eine seltene gute Idee.</string>
     <string name="match_result_reason_opponent_timeout">Zwei Züge verpasst. Der Rat erklärt sie für abwesend.</string>
+    <string name="match_result_reason_self_timeout">Zwei Züge verpasst. Der Rat erklärt dich für abwesend.</string>
     <string name="match_result_reason_victory">Der Rat behauptet schon, es sei seine Idee gewesen.</string>
     <string name="match_result_verdict_disconnected">VERTAGT</string>
     <string name="match_result_reason_disconnected">Der Kurierballon ist abgetrieben, bevor der Rat entscheiden konnte.</string>

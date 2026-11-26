@@ -267,12 +267,16 @@ namespace Kingdom.Presentation
 
             bool localWon = outcome == MatchOutcome.Player0Win && localSeat == 0
                             || outcome == MatchOutcome.Player1Win && localSeat == 1;
-            if (!localWon) return Loc.Get("match_result_reason_defeat");
+            // "Two" in both timeout lines is ServerOptions.IdleForfeitAutoTurns, which the wire does
+            // not carry. Change that option and both strings, English and German, change with it.
+            if (!localWon)
+                return reason == MatchEndReason.Timeout
+                    ? Loc.Get("match_result_reason_self_timeout")   // the server conceded for this seat (issue #4)
+                    : Loc.Get("match_result_reason_defeat");
 
             return reason switch
             {
                 MatchEndReason.Concede => Loc.Get("match_result_reason_opponent_conceded"),
-                // Two is ServerOptions.IdleForfeitAutoTurns, which the wire does not carry.
                 MatchEndReason.Timeout => Loc.Get("match_result_reason_opponent_timeout"),
                 _ => Loc.Get("match_result_reason_victory"),
             };

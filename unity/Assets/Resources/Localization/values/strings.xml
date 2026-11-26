@@ -776,6 +776,8 @@
     <string name="match_result_reason_opponent_conceded">They conceded. A rare good idea.</string>
     <!-- Line under VICTORY when the opponent forfeited by idling two turns. -->
     <string name="match_result_reason_opponent_timeout">They missed two turns. The Council has ruled them absent.</string>
+    <!-- Line under DEFEAT when the local player let two turns run out in a row, so the server conceded for them. Mirrors match_result_reason_opponent_timeout. -->
+    <string name="match_result_reason_self_timeout">You missed two turns. The Council has ruled you absent.</string>
     <!-- Line under VICTORY for a normal win. The council takes credit. -->
     <string name="match_result_reason_victory">The Council has already claimed it was their idea.</string>
     <!-- Large verdict when the connection ended before the match did, so the result is unknown. Not a win or a loss. All caps like the other verdicts. -->
