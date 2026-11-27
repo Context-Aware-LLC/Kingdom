@@ -130,6 +130,9 @@ namespace Kingdom.Core.Tests.Collection
         [TestCase("Hofnarr", "Jester")]
         [TestCase("Gegner", "Opponent")]
         [TestCase("Rat", "Council")]
+        [TestCase("Heraldo", "Herald")]
+        [TestCase("BUFÓN", "Jester")]
+        [TestCase("rival", "Opponent")]
         public void A_translated_reserved_name_is_refused_as_its_English_entry(string raw, string entry)
         {
             // The client words the refusal from Reserved, so "König" gets the King's court line.

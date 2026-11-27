@@ -1,0 +1,1548 @@
+{
+  "1": {
+    "name": "Saeta abrasadora",
+    "text": "Inflige {dmg:1} de daño, o {dmg:2} si tu héroe recibió daño este turno.",
+    "src": "641b533b1864b67c"
+  },
+  "2": {
+    "name": "Guarda de marea",
+    "text": "Invoca un {card:1024}.",
+    "src": "2bba30583f7903c5"
+  },
+  "3": {
+    "name": "Debilitar",
+    "text": "Otorga -1/-1 a un esbirro.",
+    "src": "bc8d3e4ce6054c6c"
+  },
+  "4": {
+    "name": "Potenciar",
+    "text": "Otorga +1/+1 a un esbirro aliado, u otorga a tu héroe +1 de {label:attack} este turno y 1 de Armadura.",
+    "src": "2ec15cc3ad27013e"
+  },
+  "5": {
+    "name": "Plano maestro",
+    "text": "Roba una carta.",
+    "src": "2d534eacf98ea9e6"
+  },
+  "6": {
+    "name": "Puñalada trapera",
+    "text": "Inflige {dmg:2} de daño al héroe enemigo y otorga +1/+0 a todos los esbirros aliados con {kw:shroud}.",
+    "src": "f007b59bcc91eafe"
+  },
+  "7": {
+    "name": "Muro de tierra",
+    "text": "Invoca una {card:1060}.",
+    "src": "db64c2b61838a569"
+  },
+  "8": {
+    "name": "Chispa en cadena",
+    "text": "Inflige {dmg:1} de daño dos veces a enemigos al azar.",
+    "src": "e2d355ea4f913adc"
+  },
+  "51": {
+    "name": "Lanza de ceniza",
+    "text": "{kw:arcane_surge}.",
+    "src": "5554ee106fdc70d9"
+  },
+  "52": {
+    "name": "Mazo sepulcral",
+    "text": "Activa el {label:toll} de un esbirro aliado. {label:toll}: Reanima un esbirro al azar de tu cementerio.",
+    "src": "ee86de015e71bfa9"
+  },
+  "53": {
+    "name": "Zarza aferradora",
+    "text": "{label:attack}: Restaura 2 de Salud a tu héroe.",
+    "src": "8ffa60d4697b6b4a"
+  },
+  "54": {
+    "name": "Pica gélida",
+    "text": "{kw:frost}.",
+    "src": "aed60f5e382666a3"
+  },
+  "55": {
+    "name": "Alabarda de cuerda",
+    "text": "{label:attack}: Invoca una {card:1131}.",
+    "src": "de026379b2e34742"
+  },
+  "56": {
+    "name": "Hoja sombría",
+    "text": "Roba una carta.",
+    "src": "4c7867646fbed023"
+  },
+  "57": {
+    "name": "Mazo del Guardatierra",
+    "text": "Otorga {kw:aegis} a un esbirro aliado.",
+    "src": "32e90e58e412d352"
+  },
+  "58": {
+    "name": "Hiendevendavales",
+    "text": "{label:attack}: {kw:backdraft} 2.",
+    "src": "2b5e5b49b750ab45"
+  },
+  "59": {
+    "name": "Pluma abrasadora",
+    "text": "",
+    "flavor": "¿Más poderosa que la espada?",
+    "src": "f3c864deedda4593"
+  },
+  "60": {
+    "name": "Hoja chamuscadora",
+    "text": "{label:attack}: Inflige {dmg:1} de daño al héroe enemigo.",
+    "src": "8a62f05c6bcae908"
+  },
+  "61": {
+    "name": "Navaja de helada",
+    "text": "{kw:frost}.",
+    "src": "ba8cc90cbdf64173"
+  },
+  "62": {
+    "name": "Martillo de fragua",
+    "text": "{label:attack}: Obtén 2 de Armadura.",
+    "src": "9dea96e26d9ec74c"
+  },
+  "63": {
+    "name": "Mazo de tempestad",
+    "text": "{kw:arcane_surge}.",
+    "src": "33a30b41d01f1988"
+  },
+  "64": {
+    "name": "Hoja tóxica",
+    "text": "{kw:venom}.",
+    "src": "1e13fbedd064ea33"
+  },
+  "151": {
+    "name": "Saeta de llamas",
+    "text": "Inflige {dmg:3} de daño a un esbirro.",
+    "src": "7d54fe000b5344e2"
+  },
+  "152": {
+    "name": "Onda de escarcha",
+    "text": "Inflige {dmg:2} de daño a todos los esbirros enemigos.",
+    "src": "83a10ef83f15be04"
+  },
+  "153": {
+    "name": "Chamuscar",
+    "text": "Inflige {dmg:3} de daño.",
+    "src": "1d1825a5aea89ad0"
+  },
+  "154": {
+    "name": "Doble llamarada",
+    "text": "Inflige {dmg:4} de daño a todos los enemigos.",
+    "src": "23473e4497412dd8"
+  },
+  "155": {
+    "name": "Atadura gélida",
+    "text": "{label:freeze:imp} a un enemigo y roba una carta.",
+    "src": "758f56844ac82bcb"
+  },
+  "156": {
+    "name": "Resaca",
+    "text": "Destruye un esbirro.",
+    "src": "768260aa46171aa5"
+  },
+  "157": {
+    "name": "Trato abisal de Maren",
+    "text": "Roba 2 cartas.",
+    "src": "916f62849946c998"
+  },
+  "158": {
+    "name": "La chispa",
+    "text": "Obtén 1 Cristal de maná solo este turno.",
+    "src": "a8a435003484f73a"
+  },
+  "159": {
+    "name": "Extremaunción",
+    "text": "Sacrifica un esbirro aliado: Roba 2 cartas.",
+    "src": "e909e32a8899aa96"
+  },
+  "160": {
+    "name": "Bendición de Sorrow",
+    "text": "Otorga {kw:rekindle} a un esbirro aliado.",
+    "src": "8911c16438f473a6"
+  },
+  "161": {
+    "name": "Coro de lamentos",
+    "text": "Inflige {dmg:4} de daño a todos los esbirros que no sean {tribe:undead:plural} y restaura 4 de Salud a tu héroe.",
+    "src": "0b1d4652ecc526f0"
+  },
+  "162": {
+    "name": "Rito del retoño",
+    "text": "Obtén 1 Cristal de maná vacío.",
+    "src": "b315b6dedc6f1ce9"
+  },
+  "163": {
+    "name": "Flor sanadora",
+    "text": "Otorga +2/+2 y {kw:venom} a un esbirro aliado.",
+    "src": "9fe53f1919d036ee"
+  },
+  "164": {
+    "name": "Oleada de savia",
+    "text": "Restaura 4 de Salud.",
+    "src": "33fce5016b9b5380"
+  },
+  "165": {
+    "name": "Floración salvaje",
+    "text": "Otorga +2/+2 y {kw:bulwark} a un esbirro aliado.",
+    "src": "c7cc69743e63a124"
+  },
+  "166": {
+    "name": "Petrificar",
+    "text": "Destruye un esbirro.",
+    "src": "b7b335bb45d85f82"
+  },
+  "167": {
+    "name": "Atizar las brasas",
+    "text": "Inflige {dmg:2} de daño a tu héroe y roba 2 cartas.",
+    "src": "df4732f12f3de472"
+  },
+  "168": {
+    "name": "Presión abisal",
+    "text": "Inflige {dmg:5} de daño a un esbirro.",
+    "src": "ac263ad7d442f79c"
+  },
+  "169": {
+    "name": "Látigo de escarcha",
+    "text": "Inflige {dmg:2} de daño a un esbirro.",
+    "src": "1a548c2e4970b395"
+  },
+  "170": {
+    "name": "Saeta veloz",
+    "text": "Inflige {dmg:2} de daño a un esbirro.",
+    "src": "59213be8f3009ef6"
+  },
+  "171": {
+    "name": "Ajuste de tuercas",
+    "text": "Otorga +1/+1 a todos los {tribe:construct:plural} aliados.",
+    "src": "17af8a724b1979e6"
+  },
+  "172": {
+    "name": "Rebobinador temporal",
+    "text": "Devuelve un esbirro a la mano de su dueño y roba una carta.",
+    "src": "fa6467efa12b7288"
+  },
+  "173": {
+    "name": "Retirada masiva",
+    "text": "Devuelve todos los esbirros a la mano.",
+    "src": "42821c8d52377379"
+  },
+  "174": {
+    "name": "Dardo sombrío",
+    "text": "Inflige {dmg:2} de daño a un esbirro.",
+    "src": "b54245090c286838"
+  },
+  "175": {
+    "name": "Rematar la faena",
+    "text": "Destruye un esbirro herido.",
+    "src": "b8f157acc59f1f1d"
+  },
+  "176": {
+    "name": "Acto de desaparición",
+    "text": "Otorga {kw:shroud} y +0/+1 a todos los esbirros aliados.",
+    "src": "77f81fd9e3612ba5"
+  },
+  "177": {
+    "name": "Mutis por el foro",
+    "text": "Devuelve un esbirro aliado a tu mano: Roba una carta.",
+    "src": "fcab5ae88b4e884a"
+  },
+  "178": {
+    "name": "Marca de muerte",
+    "text": "Destruye un esbirro.",
+    "src": "9b1d17366b53c0a6"
+  },
+  "179": {
+    "name": "Paso sombrío",
+    "text": "Devuelve todos los esbirros enemigos a la mano.",
+    "src": "dd03526941150849"
+  },
+  "180": {
+    "name": "Pedrada",
+    "text": "Inflige {dmg:3} de daño a un enemigo.",
+    "src": "75053766812e1031"
+  },
+  "181": {
+    "name": "Barrera de tierra",
+    "text": "Otorga +0/+3 a un esbirro aliado e inflige {dmg:3} de daño al héroe enemigo.",
+    "src": "a7a5219ad2eeab21"
+  },
+  "182": {
+    "name": "Lluvia de piedras",
+    "text": "Inflige {dmg:3} de daño a todos los enemigos.",
+    "src": "b7c67e64dc7b6a6b"
+  },
+  "183": {
+    "name": "Bendición terrenal",
+    "text": "Otorga +2/+0 a todos los esbirros aliados.",
+    "src": "19852052312445c3"
+  },
+  "184": {
+    "name": "Pisotón",
+    "text": "Inflige {dmg:2} de daño a todos los esbirros enemigos.",
+    "src": "1e7afabe49723c23"
+  },
+  "185": {
+    "name": "Rayo",
+    "text": "Inflige {dmg:3} de daño a un enemigo.",
+    "src": "e84a946e9457815f"
+  },
+  "186": {
+    "name": "Rayos en cadena",
+    "text": "Inflige {dmg:3}, {dmg:2} y {dmg:1} de daño, cada uno a un enemigo al azar.",
+    "src": "863700857485f743"
+  },
+  "187": {
+    "name": "Chisporroteo",
+    "text": "Inflige {dmg:4} de daño a un enemigo al azar.",
+    "src": "1efd4617a5329a1d"
+  },
+  "188": {
+    "name": "Calambrazo",
+    "text": "Inflige {dmg:3} de daño a un enemigo al azar.",
+    "src": "c1d56cd40b51ba23"
+  },
+  "189": {
+    "name": "Descarga estática",
+    "text": "{kw:backdraft} 1 e inflige {dmg:2} de daño a todos los esbirros enemigos.",
+    "src": "d9d2602dae45afd2"
+  },
+  "190": {
+    "name": "Huracán",
+    "text": "Otorga {kw:doublestrike} a todos los esbirros aliados.",
+    "src": "301f58863e463962"
+  },
+  "191": {
+    "name": "Tormenta eléctrica",
+    "text": "{kw:backdraft} 2 e inflige {dmg:3} de daño a todos los enemigos.",
+    "src": "fc0e27b328169c64"
+  },
+  "192": {
+    "name": "Andanada",
+    "text": "Inflige {dmg:5} de daño a un esbirro e inflige {dmg:2} de daño a tu héroe.",
+    "src": "7a8b29e6cd3281b3"
+  },
+  "193": {
+    "name": "Golpe de calor",
+    "text": "Inflige {dmg:2} de daño a todos los esbirros enemigos, inflige {dmg:2} de daño a tu héroe y roba una carta.",
+    "src": "330569773f0326ed"
+  },
+  "194": {
+    "name": "Eco glacial",
+    "text": "{label:freeze:imp} a tu héroe e invoca una copia exacta de un esbirro que cueste 4 o menos.",
+    "src": "ba9cc87db53027c4"
+  },
+  "195": {
+    "name": "Canal profundo",
+    "text": "Devuelve todos los esbirros enemigos a la mano.",
+    "src": "8f29fd5ddd41cde7"
+  },
+  "196": {
+    "name": "Horda de huesos",
+    "text": "Invoca tres {card:1191:plural}.",
+    "src": "940dcd0cd7db60c9"
+  },
+  "197": {
+    "name": "Tañido de difuntos",
+    "text": "Otorga +2/+2 a todos los esbirros aliados.",
+    "src": "c9e3c8eceb356e12"
+  },
+  "198": {
+    "name": "Poder primigenio",
+    "text": "Otorga +3/+3 y {kw:overwhelm} a un esbirro aliado.",
+    "src": "01089b8ed92624d6"
+  },
+  "199": {
+    "name": "Enjambre de espinas",
+    "text": "Inflige {dmg:3} de daño a todos los enemigos y restaura 4 de Salud a tu héroe.",
+    "src": "d60628a968a3e05a"
+  },
+  "200": {
+    "name": "Doble juego",
+    "text": "Otorga -2/-2 a todos los esbirros enemigos.",
+    "src": "658409d7175e8ecd"
+  },
+  "201": {
+    "name": "Fortaleza recuperada",
+    "text": "Otorga {kw:aegis} a todos los esbirros aliados.",
+    "src": "4f28d5e65446794f"
+  },
+  "202": {
+    "name": "Llama atizada",
+    "text": "Inflige {dmg:3} de daño a un personaje; un esbirro aliado obtiene +3/+0.",
+    "src": "ca842e91617908fb"
+  },
+  "203": {
+    "name": "Piroclasmo canalizado",
+    "text": "Inflige {dmg:6} de daño a 2 enemigos.",
+    "src": "d54b8fe2f80c418c"
+  },
+  "204": {
+    "name": "Remiendo canalizado",
+    "text": "Restaura 4 de Salud a un personaje aliado y otorga +1/+1 a un esbirro aliado.",
+    "src": "dec7dac1c5111967"
+  },
+  "205": {
+    "name": "Pacto costero",
+    "text": "Devuelve un esbirro a la mano de su dueño y otorga +1/+1 a un esbirro aliado.",
+    "src": "5a874d8ab21ecb9c"
+  },
+  "206": {
+    "name": "Alianza abisal",
+    "text": "Otorga +1/+1 a todos los esbirros aliados y restaura 3 de Salud a todos los personajes aliados.",
+    "src": "1d4cec25e9429110"
+  },
+  "207": {
+    "name": "Último honor",
+    "text": "Sacrifica un esbirro aliado: Toma el control de un esbirro enemigo que cueste 3 o menos.",
+    "src": "d432d219c316bb77"
+  },
+  "208": {
+    "name": "Pacto de luto",
+    "text": "Otorga {kw:rekindle} y +1/+1 a un esbirro aliado.",
+    "src": "0a5c23d896f09879"
+  },
+  "209": {
+    "name": "Renacer masivo",
+    "text": "Reanima 7 esbirros del cementerio que no sean {tribe:undead:plural}.",
+    "src": "47dabbd57cf33d33"
+  },
+  "210": {
+    "name": "Parra rebrotada",
+    "text": "Otorga +3/+3 a una {tribe:beast} aliada.",
+    "src": "fa4d3e7cdee133f5"
+  },
+  "211": {
+    "name": "Pacto floreciente",
+    "text": "Invoca dos {card:1050:plural}.",
+    "src": "84ef8c26a2fba02a"
+  },
+  "212": {
+    "name": "Oleada floral",
+    "text": "Otorga +1/+1 y {kw:overwhelm} a todos los esbirros aliados.",
+    "src": "cced7bad109cb804"
+  },
+  "213": {
+    "name": "Gambito del manitas",
+    "text": "Devuelve un esbirro aliado a tu mano: Roba una carta.",
+    "src": "8e0b9feefe33f0cb"
+  },
+  "214": {
+    "name": "Cadena de montaje",
+    "text": "Invoca dos {card:1131:plural} y otorga +1/+1 a todos los {tribe:construct:plural} aliados.",
+    "src": "ef72eb27ed1ed2b1"
+  },
+  "215": {
+    "name": "Protocolo de mejora",
+    "text": "Otorga +4/+4 a un esbirro aliado.",
+    "src": "faaacd21a3b132d8"
+  },
+  "216": {
+    "name": "Sentenciado",
+    "text": "Inflige {dmg:3} de daño a un enemigo.",
+    "src": "120ad6f8a1c8f857"
+  },
+  "217": {
+    "name": "Muerte por encargo",
+    "text": "Destruye un esbirro y roba una carta.",
+    "src": "9a990b7a61b18b21"
+  },
+  "218": {
+    "name": "Muralla de tierra",
+    "text": "Otorga +2/+1 y {kw:bulwark} a un esbirro aliado.",
+    "src": "a33f6efcb58e9c98"
+  },
+  "219": {
+    "name": "Cimientos de hierro",
+    "text": "Otorga +1/+1 y {kw:aegis} a todos los esbirros aliados.",
+    "src": "114c893e76828056"
+  },
+  "220": {
+    "name": "Látigo de rayos",
+    "text": "Inflige {dmg:2} de daño a todos los esbirros enemigos.",
+    "src": "29729b0c35b5540e"
+  },
+  "221": {
+    "name": "Golpe de trueno",
+    "text": "Inflige {dmg:3} de daño a un esbirro e inflige {dmg:1} de daño a todos los esbirros enemigos.",
+    "src": "9c0de9bb7215a09c"
+  },
+  "222": {
+    "name": "Pacto de la tormenta",
+    "text": "Inflige {dmg:3} de daño a todos los enemigos y otorga +1/+1 a todos los esbirros aliados.",
+    "src": "94cb878da86dca3c"
+  },
+  "223": {
+    "name": "Sobrecarga",
+    "text": "{kw:backdraft} 1, obtén 3 Cristales de maná solo este turno y roba una carta.",
+    "src": "1662d50b0fdde070"
+  },
+  "224": {
+    "name": "Arco voltaico",
+    "text": "Inflige {dmg:1} de daño a todos los esbirros enemigos.",
+    "src": "59ec3627a185c5c5"
+  },
+  "225": {
+    "name": "Furia de la tempestad",
+    "text": "{kw:backdraft} 2 e inflige {dmg:4} de daño a todos los enemigos.",
+    "src": "e0aa13a4be64cc5a"
+  },
+  "226": {
+    "name": "Desliz sombrío",
+    "text": "Devuelve un esbirro enemigo a la mano.",
+    "src": "2d54a4ab2dfe2b77"
+  },
+  "227": {
+    "name": "Golpe de gracia",
+    "text": "Destruye un esbirro enemigo herido e inflige {dmg:2} de daño al héroe enemigo.",
+    "src": "26ce378233176a1e"
+  },
+  "228": {
+    "name": "Lanzar escombros",
+    "text": "Inflige {dmg:1} de daño a todos los esbirros enemigos.",
+    "src": "1bcb03d37720fc1e"
+  },
+  "229": {
+    "name": "Voto del guardián",
+    "text": "Otorga +0/+2 y {kw:bulwark} a todos los esbirros aliados.",
+    "src": "aa396cdc53ff312b"
+  },
+  "230": {
+    "name": "Alijo de engranajes",
+    "text": "{label:unearth:imp} una carta y roba una carta.",
+    "src": "ac0a30a9f01943c3"
+  },
+  "231": {
+    "name": "Módulo de refracción",
+    "text": "Invoca una copia exacta de un esbirro aliado que cueste 4 o menos.",
+    "src": "9066d96fe7097afd"
+  },
+  "232": {
+    "name": "Desguace",
+    "text": "Destruye un esbirro herido.",
+    "src": "5a4d374ad824a4ec"
+  },
+  "233": {
+    "name": "Avivar",
+    "text": "Inflige {dmg:2} de daño a un personaje; un esbirro aliado obtiene +2/+1.",
+    "src": "8c25b6f3696a71fa"
+  },
+  "234": {
+    "name": "Garantía anulada",
+    "text": "{label:unearth:imp} una carta y destruye un esbirro.",
+    "flavor": "Lo abrieron para inspeccionarlo. La inspección halló que lo habían abierto.",
+    "src": "2a93996424dac487"
+  },
+  "235": {
+    "name": "Protección de testigos",
+    "text": "Otorga {kw:shroud} a un esbirro aliado y roba una carta.",
+    "flavor": "Nuevo nombre, nueva aldea y el mismo sombrero.",
+    "src": "e27986161aba3a4b"
+  },
+  "236": {
+    "name": "Derecho de rescate",
+    "text": "Toma el control de un esbirro enemigo herido.",
+    "flavor": "Según la ley marítima de Pendingham, todo lo que se encuentre mojado pertenece a quien lo mojó.",
+    "src": "a0ff7b6687efd674"
+  },
+  "1001": {
+    "name": "Recluta de brasas",
+    "text": "{kw:skirmish}.",
+    "src": "1cf889865c426885"
+  },
+  "1002": {
+    "name": "Fanático de brasas",
+    "text": "{kw:fervor}. Inflige {dmg:1} de daño a un personaje; un esbirro aliado obtiene +2/+0.",
+    "src": "c132b26c8b6feee1"
+  },
+  "1003": {
+    "name": "Draco de ceniza",
+    "text": "",
+    "src": "222d9256abea55a8"
+  },
+  "1004": {
+    "name": "Iniciado de marea",
+    "text": "{kw:arcane_surge}.",
+    "src": "34e3317999317914"
+  },
+  "1005": {
+    "name": "Oráculo de marea",
+    "text": "{kw:bulwark}.",
+    "src": "2be330ed1b4c6ad6"
+  },
+  "1006": {
+    "name": "Llamaolas",
+    "text": "{kw:silence:imp} a un esbirro.",
+    "src": "95a5dca7302c7f58"
+  },
+  "1007": {
+    "name": "Centinela de piedra",
+    "text": "{kw:bulwark}.",
+    "src": "f07f011477ed7dde"
+  },
+  "1008": {
+    "name": "Explorador errante",
+    "text": "Roba una carta.",
+    "src": "35360c5625b6a2c8"
+  },
+  "1009": {
+    "name": "Cachorro de brasa",
+    "text": "{kw:fervor}.",
+    "src": "4805fe3424400e18"
+  },
+  "1010": {
+    "name": "Tortuga centinela",
+    "text": "{kw:bulwark}.",
+    "flavor": "Tortugas hasta el fondo..",
+    "src": "8e80404f5752f407"
+  },
+  "1011": {
+    "name": "Acólito hueco",
+    "text": "Roba una carta.",
+    "src": "75ff790eb4e1e493"
+  },
+  "1012": {
+    "name": "Farolero de tumbas",
+    "text": "{label:toll}: Invoca un {card:1023}.",
+    "src": "1ef217dc04139f40"
+  },
+  "1013": {
+    "name": "Templario custodio",
+    "text": "{kw:aegis}.",
+    "src": "4e0b529df82866b6"
+  },
+  "1014": {
+    "name": "Acechavelos",
+    "text": "{kw:shroud}.",
+    "src": "1357cd78f6ce04bf"
+  },
+  "1015": {
+    "name": "Sanador del bosque",
+    "text": "Otorga +1/+1 a todas las {tribe:beast:plural} aliadas.",
+    "src": "114061e810415d1d"
+  },
+  "1016": {
+    "name": "Adepto voltaico",
+    "text": "{kw:arcane_surge}.",
+    "src": "bc7a507735fa19bb"
+  },
+  "1017": {
+    "name": "Sabueso óseo voraz",
+    "text": "{kw:skirmish}.",
+    "src": "19d38fc8b026c689"
+  },
+  "1018": {
+    "name": "Rey sin trono",
+    "text": "{kw:rekindle}. {label:aura}: Otorga +1/+1 a todos los demás {tribe:undead:plural} aliados.",
+    "src": "7c982d4d3e7d77d4"
+  },
+  "1019": {
+    "name": "Gólem recalentado",
+    "text": "{kw:backdraft} 1.",
+    "src": "364d3545ed7cfe25"
+  },
+  "1020": {
+    "name": "Ira de Pyra",
+    "text": "{kw:fervor}. Inflige {dmg:2} de daño a todos los enemigos.",
+    "src": "68670f6a06585621"
+  },
+  "1021": {
+    "name": "Sirena de marea hueca",
+    "text": "{kw:drown:imp} a todos los enemigos.",
+    "src": "e1f459e1cb2ac1af"
+  },
+  "1022": {
+    "name": "Fatuo del arrecife",
+    "text": "{kw:bulwark}.",
+    "src": "1c053fe8a64b38ac"
+  },
+  "1023": {
+    "name": "Fuego fatuo",
+    "text": "",
+    "src": "42824f147d965941"
+  },
+  "1024": {
+    "name": "Fatuo de marea",
+    "text": "{kw:bulwark}.",
+    "src": "ba8edbe89ec91f97"
+  },
+  "1025": {
+    "name": "Cría guardapuertas",
+    "text": "{kw:rekindle}.",
+    "src": "dd62456564946ace"
+  },
+  "1026": {
+    "name": "Vigía azabache",
+    "text": "{label:toll}: Invoca una {card:1191}.",
+    "src": "c94b51d1263a1a90"
+  },
+  "1027": {
+    "name": "Sacerdote osario",
+    "text": "Sacrifica un esbirro aliado: Invoca dos {card:1191:plural}.",
+    "src": "e806887f3505138a"
+  },
+  "1028": {
+    "name": "Archivista ceniciento",
+    "text": "{label:toll}: Roba una carta.",
+    "src": "d66e4fac76dcad54"
+  },
+  "1029": {
+    "name": "Custodio de tumbas",
+    "text": "{label:toll}: Invoca dos {card:1191:plural}.",
+    "src": "b42fd600a1af32ac"
+  },
+  "1030": {
+    "name": "Portero final",
+    "text": "{kw:lifedrain}, {kw:bulwark}, {kw:rekindle}.",
+    "src": "5a8094472c93b0c4"
+  },
+  "1031": {
+    "name": "Asolador de ceniza",
+    "text": "Sacrifica un esbirro aliado: Invoca dos {card:1191:plural} y roba una carta.",
+    "src": "f354ff6c1b4fd6c1"
+  },
+  "1032": {
+    "name": "Novicio campanero",
+    "text": "{label:toll}: Restaura 4 de Salud a tu héroe.",
+    "src": "a7c5698e5b740c22"
+  },
+  "1033": {
+    "name": "Polilla del réquiem",
+    "text": "{label:toll}: Restaura 2 de Salud a tu héroe.",
+    "src": "4400a257553014ee"
+  },
+  "1034": {
+    "name": "Aparecido encadenado",
+    "text": "Inflige {dmg:2} de daño al héroe enemigo.",
+    "src": "132be7f31ae86c92"
+  },
+  "1035": {
+    "name": "Guardián del portón",
+    "text": "{kw:bulwark}. {label:toll}: Invoca un {card:1049}.",
+    "src": "089fff15f7ae6938"
+  },
+  "1036": {
+    "name": "Cachorro lomoespino",
+    "text": "{kw:bulwark}.",
+    "src": "1fc8824edbe0ad5c"
+  },
+  "1037": {
+    "name": "Guardián zarzapiel",
+    "text": "{kw:lifedrain}.",
+    "src": "45a09115de3a3b34"
+  },
+  "1038": {
+    "name": "Coloso de raíz antigua",
+    "text": "",
+    "src": "5ff0eaa0cb25db23"
+  },
+  "1039": {
+    "name": "Vidente del dosel",
+    "text": "Roba una carta.",
+    "src": "98efb9002a44e422"
+  },
+  "1040": {
+    "name": "Anciano cortezahierro",
+    "text": "{kw:vanguard}.",
+    "src": "97434b46a6f98212"
+  },
+  "1041": {
+    "name": "Behemot raíz del mundo",
+    "text": "{kw:overwhelm}.",
+    "src": "a651eb4af5aa8178"
+  },
+  "1042": {
+    "name": "Ancestro de Thalen",
+    "text": "{kw:bulwark}, {kw:overwhelm}.",
+    "src": "064a85043eef2e81"
+  },
+  "1043": {
+    "name": "Tejerraíces",
+    "text": "Obtén 1 Cristal de maná vacío.",
+    "src": "f043177262deb7d8"
+  },
+  "1044": {
+    "name": "Ciervo musgoso",
+    "text": "Inflige {dmg:2} de daño a un esbirro.",
+    "src": "30f3d8d9cc383a1c"
+  },
+  "1045": {
+    "name": "Matrona espinosa",
+    "text": "Invoca dos {card:1050:plural}.",
+    "src": "e74e7fcb41c6e463"
+  },
+  "1046": {
+    "name": "Ramita guardacardos",
+    "text": "{kw:aegis}.",
+    "src": "c0a7971cc9c0df3a"
+  },
+  "1047": {
+    "name": "Aparecido atado",
+    "text": "{kw:bulwark}, {kw:rekindle}.",
+    "src": "1ebe9108b7e13e9d"
+  },
+  "1048": {
+    "name": "Carreta de cadáveres",
+    "text": "Invoca un {card:1023}.",
+    "src": "f6c9ac895e5db8b2"
+  },
+  "1049": {
+    "name": "Aparecido",
+    "text": "{kw:bulwark}.",
+    "src": "ff4c3a387bd1ec1d"
+  },
+  "1050": {
+    "name": "Cachorro espinoso",
+    "plural": "Cachorros espinosos",
+    "text": "{kw:doublestrike}.",
+    "src": "87f6ce5acb6e9c04"
+  },
+  "1051": {
+    "name": "Mole de escoria",
+    "text": "{kw:bulwark}.",
+    "src": "3d14f47d4746c36d"
+  },
+  "1052": {
+    "name": "Coloso de forja",
+    "text": "{kw:overwhelm}. {kw:backdraft} 2.",
+    "src": "2f83aa227114dcfb"
+  },
+  "1053": {
+    "name": "Leviatán glacial",
+    "text": "{kw:drown:imp} a todos los esbirros enemigos.",
+    "src": "8c8610a898cce2b3"
+  },
+  "1054": {
+    "name": "Sierpe de ceniza",
+    "text": "{kw:vanguard}, {kw:skirmish}.",
+    "src": "a7207af3e6ff55da"
+  },
+  "1055": {
+    "name": "Guardián del horno",
+    "text": "{kw:bulwark}, {kw:aegis}.",
+    "src": "9efe6e8e3041d4ac"
+  },
+  "1056": {
+    "name": "Bebebrasas",
+    "text": "{kw:lifedrain}.",
+    "src": "1c89c3bddaa75996"
+  },
+  "1057": {
+    "name": "Titán ahogado",
+    "text": "{kw:drown:imp} a un esbirro enemigo.",
+    "src": "7c02d2891f379152"
+  },
+  "1058": {
+    "name": "Guardián concha hueca",
+    "text": "{kw:bulwark}, {kw:rekindle}. {label:toll}: {kw:drown:imp} a un enemigo al azar.",
+    "src": "fa18ffe6f297284f"
+  },
+  "1059": {
+    "name": "Fatuo de engranajes",
+    "text": "{kw:bulwark}.",
+    "src": "e83b59edd8c9ee2e"
+  },
+  "1060": {
+    "name": "Esquirla de piedra",
+    "text": "{kw:bulwark}.",
+    "src": "ca66ff6a6ccbcf25"
+  },
+  "1061": {
+    "name": "Diablillo mecánico",
+    "text": "{label:unearth:imp} una carta.",
+    "src": "e93cdcb045bbddbb"
+  },
+  "1062": {
+    "name": "Armazón de bronce",
+    "text": "Roba una carta.",
+    "src": "18f0cf63e24ab89e"
+  },
+  "1063": {
+    "name": "Resorte",
+    "text": "{kw:frost}.",
+    "src": "b62aa658e58b6d42"
+  },
+  "1064": {
+    "name": "Dron ensamblador",
+    "text": "Invoca una {card:1131}.",
+    "src": "845725bebd1ef5d0"
+  },
+  "1065": {
+    "name": "Pasado de vueltas",
+    "text": "Otorga +1/+1 a todos los {tribe:construct:plural} aliados.",
+    "src": "4d119632b78dd4ec"
+  },
+  "1066": {
+    "name": "Tirador de cuerda",
+    "text": "Inflige {dmg:3} de daño.",
+    "src": "ae2f22e6802346aa"
+  },
+  "1067": {
+    "name": "Acechador modular",
+    "text": "Invoca una {card:1131}.",
+    "src": "1a9a3bdcd51734e6"
+  },
+  "1068": {
+    "name": "Constructo crono",
+    "text": "{kw:vanguard}, {kw:aegis}.",
+    "src": "1531044d4dc850df"
+  },
+  "1069": {
+    "name": "El Gran Mecanismo",
+    "text": "{kw:aegis}, {kw:vanguard}, {kw:overwhelm}.",
+    "tooltip": "El Gran Mecanismo",
+    "src": "759d3f0015062a86"
+  },
+  "1070": {
+    "name": "Fatuo acechante",
+    "text": "{kw:shroud}.",
+    "flavor": "¿¡Viste eso!?",
+    "src": "6838ea9449449e84"
+  },
+  "1071": {
+    "name": "Colmillo de víbora",
+    "text": "{kw:venom}, {kw:skirmish}.",
+    "src": "1d1112360b04c1e9"
+  },
+  "1072": {
+    "name": "Acechador sombrío",
+    "text": "{kw:shroud}.",
+    "src": "d3c2920016856d09"
+  },
+  "1073": {
+    "name": "Áspid venenoso",
+    "text": "{kw:venom}, {kw:vanguard}.",
+    "src": "c41d5ee346699f98"
+  },
+  "1074": {
+    "name": "Chillido del vacío",
+    "text": "Inflige {dmg:2} de daño a todos los esbirros enemigos.",
+    "src": "fbdb9e76935b622a"
+  },
+  "1075": {
+    "name": "Kira, Hoja de Sombras",
+    "text": "{kw:shroud}, {kw:skirmish}, {kw:vanguard}. {label:toll}: Inflige {dmg:4} de daño al héroe enemigo.",
+    "src": "9c5a07e87ae3894a"
+  },
+  "1076": {
+    "name": "Centinela guijarro",
+    "text": "{kw:bulwark}.",
+    "src": "9fbb119d781cac18"
+  },
+  "1077": {
+    "name": "Pielroca",
+    "text": "{kw:bulwark}.",
+    "src": "80301289cc358145"
+  },
+  "1078": {
+    "name": "Gólem de roca",
+    "text": "{kw:bulwark}.",
+    "src": "25738e366b96cd4b"
+  },
+  "1079": {
+    "name": "Guardián de granito",
+    "text": "{kw:aegis}.",
+    "src": "756a434a4eefa49c"
+  },
+  "1080": {
+    "name": "Monolito viviente",
+    "text": "{kw:overwhelm}.",
+    "src": "822904f4fcd85bd8"
+  },
+  "1081": {
+    "name": "Gólem de asedio",
+    "text": "{kw:vanguard}. Otorga +0/+2 a todos los esbirros aliados.",
+    "src": "50571a58d297a384"
+  },
+  "1082": {
+    "name": "Coloso de piedra",
+    "text": "{kw:overwhelm}.",
+    "src": "33ec7f59814ac333"
+  },
+  "1083": {
+    "name": "Duras, Monte de Hierro",
+    "text": "{kw:overwhelm}, {kw:skirmish}.",
+    "src": "c480dd6e3f1990c6"
+  },
+  "1084": {
+    "name": "Diablillo de chispas",
+    "text": "{kw:fervor}.",
+    "src": "aea8fd6bd58b7503"
+  },
+  "1085": {
+    "name": "Duende de ráfaga",
+    "text": "{kw:doublestrike}.",
+    "src": "ac86a6023a0a1139"
+  },
+  "1086": {
+    "name": "Jinete del viento",
+    "text": "{kw:skirmish}.",
+    "src": "41cde1e5af3aa02a"
+  },
+  "1087": {
+    "name": "Asaltante tormentoso",
+    "text": "{kw:skirmish}.",
+    "src": "61f3b96ebf889df0"
+  },
+  "1088": {
+    "name": "Pezuña de trueno",
+    "text": "{kw:overwhelm}.",
+    "src": "19a1bca58634a8a7"
+  },
+  "1089": {
+    "name": "Zael del Cielo Partido",
+    "text": "{kw:doublestrike}. Inflige {dmg:3} de daño al héroe enemigo.",
+    "flavor": "El cielo se partió en dos y se nos cayó encima al mismo tiempo..",
+    "src": "0556468640a57641"
+  },
+  "1090": {
+    "name": "Corredor del vendaval",
+    "text": "{kw:skirmish}.",
+    "src": "4c5989284dd3cead"
+  },
+  "1091": {
+    "name": "Víbora navaja",
+    "text": "{kw:venom}.",
+    "src": "be93da557605283a"
+  },
+  "1092": {
+    "name": "Duelista fantasma",
+    "text": "{kw:shroud}.",
+    "src": "d785aaa831bcd2a6"
+  },
+  "1093": {
+    "name": "Halcón alatijera",
+    "text": "{kw:doublestrike}.",
+    "src": "ffcc3987ec76f8e5"
+  },
+  "1094": {
+    "name": "Murciélago chupavidas",
+    "text": "{kw:skirmish}, {kw:lifedrain}.",
+    "src": "33100d0487a9a45a"
+  },
+  "1095": {
+    "name": "Guardahechizos",
+    "text": "{kw:arcane_surge}.",
+    "src": "9821911b8485d2f0"
+  },
+  "1096": {
+    "name": "Bastión acorazado",
+    "text": "{kw:aegis}, {kw:bulwark}.",
+    "src": "023785c43c3b7dad"
+  },
+  "1097": {
+    "name": "Aparecido ligado",
+    "text": "Roba una carta. {label:toll}: Invoca un {card:1023}.",
+    "src": "519adc2607a4916c"
+  },
+  "1098": {
+    "name": "Draco escamaveneno",
+    "text": "{kw:venom}.",
+    "src": "05dd275876f89ecf"
+  },
+  "1099": {
+    "name": "Constructo de duna",
+    "text": "Otorga +1/+1 a todos los esbirros aliados.",
+    "src": "6032885929d0dabb"
+  },
+  "1100": {
+    "name": "Reptador del pantano",
+    "text": "{kw:skirmish}.",
+    "src": "1e4a4ac54cfc28c6"
+  },
+  "1101": {
+    "name": "Alallama",
+    "text": "{kw:fervor}.",
+    "src": "a861254b1f077567"
+  },
+  "1102": {
+    "name": "Asaltante escaldado",
+    "text": "{kw:skirmish}. Inflige {dmg:1} de daño a un esbirro.",
+    "src": "4caf8584e7e09010"
+  },
+  "1103": {
+    "name": "Gólem placa de ceniza",
+    "text": "{kw:overwhelm}.",
+    "src": "b8b57cddea48f37c"
+  },
+  "1104": {
+    "name": "Draco punta de lanza",
+    "text": "{kw:vanguard}. {label:attack}: Inflige {dmg:2} de daño al héroe enemigo.",
+    "src": "2e576266dc681db3"
+  },
+  "1105": {
+    "name": "Guardián magmático",
+    "text": "{kw:bulwark}.",
+    "src": "d46cd07fa86f7b31"
+  },
+  "1106": {
+    "name": "Aletaveneno",
+    "text": "{kw:venom}.",
+    "src": "8fa5f6d09ec039ed"
+  },
+  "1107": {
+    "name": "Susurro gélido",
+    "text": "{kw:frost}.",
+    "src": "1824220b4fb8653c"
+  },
+  "1108": {
+    "name": "Cría escamahielo",
+    "text": "{kw:frost}.",
+    "src": "619bb16596a27661"
+  },
+  "1109": {
+    "name": "Heraldo coronahielo",
+    "text": "{kw:bulwark}. {label:freeze:imp} a un enemigo.",
+    "src": "a344ebbb289a8bfe"
+  },
+  "1110": {
+    "name": "Devorador abisal",
+    "text": "{kw:skirmish}. Devuelve un esbirro a la mano de su dueño.",
+    "src": "59a7c6f577cf9d3b"
+  },
+  "1111": {
+    "name": "Avatar de Maren",
+    "text": "{kw:aegis}, {kw:vanguard}. {label:attack}: {kw:drown:imp} a 2 enemigos al azar.",
+    "src": "0120c13b944b931e"
+  },
+  "1112": {
+    "name": "Tejemuerte",
+    "text": "{label:toll}: Roba una carta.",
+    "src": "14aeb1bef33023a4"
+  },
+  "1113": {
+    "name": "Lobo espectral",
+    "text": "{kw:skirmish}. {label:toll}: Restaura 2 de Salud a tu héroe. Inflige {dmg:2} de daño al héroe enemigo.",
+    "src": "d6001fa46e7ca516"
+  },
+  "1114": {
+    "name": "Centinela escudohueso",
+    "text": "{kw:bulwark}.",
+    "src": "c3e285a42637a769"
+  },
+  "1115": {
+    "name": "Portador de peste",
+    "text": "{kw:venom}.",
+    "src": "4be41fe5d7b1c106"
+  },
+  "1116": {
+    "name": "Guardián del ocaso",
+    "text": "Sacrifica un esbirro aliado: Restaura 10 de Salud a tu héroe.",
+    "src": "893f8f5649e2e07d"
+  },
+  "1117": {
+    "name": "Espinaveneno",
+    "text": "{kw:bulwark}, {kw:venom}.",
+    "src": "b1b2d914a895ff41"
+  },
+  "1118": {
+    "name": "Velocista enraizado",
+    "text": "{kw:skirmish}. Otorga +1/+1 a un esbirro aliado.",
+    "src": "da59cfd86e56b63b"
+  },
+  "1119": {
+    "name": "Orador de la gran raíz",
+    "text": "{kw:arcane_surge}.",
+    "src": "97b611a3e905f641"
+  },
+  "1120": {
+    "name": "Titán del mundo",
+    "text": "{kw:bulwark}, {kw:overwhelm}.",
+    "src": "db2df5ddc1435a80"
+  },
+  "1121": {
+    "name": "Explorador rescatado",
+    "text": "Restaura 1 de Salud a tu héroe.",
+    "src": "f6b04901a41e3ebd"
+  },
+  "1122": {
+    "name": "Mensajero aliado",
+    "text": "Roba una carta.",
+    "src": "7a2b4d34f2c400fb"
+  },
+  "1123": {
+    "name": "Gólem remendado",
+    "text": "{kw:bulwark}.",
+    "src": "b69cdf6a0d68be9b"
+  },
+  "1124": {
+    "name": "Gólem rescatado",
+    "text": "{kw:bulwark}.",
+    "src": "cc34afaf05ab4061"
+  },
+  "1125": {
+    "name": "Abanderado del alba",
+    "text": "Otorga +1/+1 a todos los esbirros aliados.",
+    "src": "a635e2f9adb7a839"
+  },
+  "1126": {
+    "name": "Guardián del puente",
+    "text": "{kw:bulwark}, {kw:lifedrain}.",
+    "src": "d97a357829e0798e"
+  },
+  "1127": {
+    "name": "Aric, Uno de Tantos",
+    "text": "Otorga +2/+2 a todos los esbirros aliados y restaura 5 de Salud a tu héroe.",
+    "flavor": "Primero entre iguales",
+    "src": "578ac6450f7aa8a0"
+  },
+  "1128": {
+    "name": "Recluta entusiasta",
+    "text": "{kw:skirmish}.",
+    "src": "0dd0204b79dd5d47"
+  },
+  "1129": {
+    "name": "Guardián del brasero",
+    "text": "{kw:arcane_surge}. Inflige {dmg:1} de daño a un personaje; si era tu héroe, roba una carta.",
+    "src": "18e38c9022af8a1b"
+  },
+  "1130": {
+    "name": "Guardián de la forja",
+    "text": "Inflige {dmg:2} de daño a un personaje; un esbirro aliado obtiene +2/+2.",
+    "src": "93fe7a70f7a92446"
+  },
+  "1131": {
+    "name": "Esencia mecánica",
+    "plural": "Esencias mecánicas",
+    "text": "Al inicio de tu turno, obtiene +1/+1.",
+    "src": "7de2039b664491c0"
+  },
+  "1132": {
+    "name": "Campana sin nombre",
+    "text": "{label:aura}: Otorga +1/+1 a todos los {tribe:construct:plural} aliados.",
+    "src": "25be05b29832d9fd"
+  },
+  "1133": {
+    "name": "Heraldo piedracorazón",
+    "text": "Al inicio de tu turno, restaura 2 de Salud a todos los personajes aliados.",
+    "src": "21b015e6900521d7"
+  },
+  "1134": {
+    "name": "Incendiario coaligado",
+    "text": "{kw:fervor}.",
+    "src": "1fe9484855a035ca"
+  },
+  "1135": {
+    "name": "Golpeador de forja",
+    "text": "Equipa un {card:62}.",
+    "src": "47f83a00a6723147"
+  },
+  "1136": {
+    "name": "Guardia retoño",
+    "text": "{kw:bulwark}. {label:toll}: Otorga +2/+2 a un esbirro aliado al azar.",
+    "src": "53a477ce3d2af86e"
+  },
+  "1137": {
+    "name": "Comandante de la pira",
+    "text": "Inflige {dmg:1} de daño a todos los esbirros enemigos y otorga +1/+1 a todos los esbirros aliados.",
+    "src": "2c96eb2f20796e87"
+  },
+  "1138": {
+    "name": "General Kira",
+    "text": "{kw:vanguard}. Inflige {dmg:3} de daño al héroe enemigo y otorga +1/+1 a todos los esbirros aliados.",
+    "src": "240fb7199c2dfb4b"
+  },
+  "1139": {
+    "name": "Profeta del diluvio",
+    "text": "{label:toll}: {kw:drown:imp} a todos los esbirros enemigos.",
+    "src": "631770f0c789dd9f"
+  },
+  "1140": {
+    "name": "Explorador salobre",
+    "text": "{kw:drown:imp} a un enemigo.",
+    "src": "515cf3f6d2a0bb62"
+  },
+  "1141": {
+    "name": "Rescatarrecifes",
+    "text": "{kw:bulwark}.",
+    "src": "4b88d1c738851804"
+  },
+  "1142": {
+    "name": "Emisario de la marea",
+    "text": "{kw:drown:imp} a 3 esbirros enemigos al azar.",
+    "src": "300f9114ac24acbc"
+  },
+  "1143": {
+    "name": "Mediador de Maren",
+    "text": "{kw:bulwark}. {kw:drown:imp} a todos los esbirros enemigos y otorga +1/+1 a todos los esbirros aliados.",
+    "src": "12981927adb3e148"
+  },
+  "1144": {
+    "name": "Fatuo conmemorativo",
+    "text": "{label:toll}: Otorga +2/+2 a un esbirro aliado al azar.",
+    "src": "6d6e681403895921"
+  },
+  "1145": {
+    "name": "Guardián de la tumba",
+    "text": "{kw:bulwark}.",
+    "src": "49eb9ddb00b4c4a3"
+  },
+  "1146": {
+    "name": "Constructor de tumbas",
+    "text": "Invoca una {card:1191}.",
+    "src": "4b5887d546978acc"
+  },
+  "1147": {
+    "name": "Campeón alzado",
+    "text": "{kw:rekindle}. Otorga +1/+1 a un esbirro aliado.",
+    "src": "73563121f6c144ce"
+  },
+  "1148": {
+    "name": "Guardián alzado",
+    "plural": "Guardianes alzados",
+    "text": "",
+    "src": "6e56e2587c01209c"
+  },
+  "1149": {
+    "name": "Cuidador Solen",
+    "text": "{kw:shroud}, {kw:lifedrain}. {label:toll}: Invoca dos {card:1148:plural}.",
+    "src": "42cd696ea7808c54"
+  },
+  "1150": {
+    "name": "Cuidador de brotes",
+    "text": "Otorga +1/+1 a un esbirro aliado.",
+    "src": "5048b8eb27185428"
+  },
+  "1151": {
+    "name": "Cachorro brotespina",
+    "text": "",
+    "src": "c84af599772e3b30"
+  },
+  "1152": {
+    "name": "Dríade frondosa",
+    "text": "Restaura 3 de Salud a tu héroe.",
+    "src": "e179221063ec7b62"
+  },
+  "1153": {
+    "name": "Campeón de raíces",
+    "text": "{kw:rekindle}. {label:toll}: Otorga +1/+1 a todos los esbirros aliados.",
+    "src": "ba07d0bec407fede"
+  },
+  "1154": {
+    "name": "Praxis, Semilla Nueva",
+    "text": "{kw:overwhelm}. Restaura 8 de Salud a tu héroe.",
+    "src": "ddc749300c2653cc"
+  },
+  "1155": {
+    "name": "Dron reparador",
+    "text": "Otorga +1/+1 a un esbirro aliado.",
+    "src": "ac612976d00f0e45"
+  },
+  "1156": {
+    "name": "Archivo de planos",
+    "text": "Invoca una {card:1131}.",
+    "src": "d2e158edba3a510d"
+  },
+  "1157": {
+    "name": "Autómata reconstruido",
+    "text": "{kw:bulwark}.",
+    "src": "b3b7bac18ae41971"
+  },
+  "1158": {
+    "name": "Constructor maestro",
+    "text": "Si controlas otro {tribe:construct}, invoca un {card:1158} y otorga +2/+2 a todos los {tribe:construct:plural} aliados.",
+    "src": "815ee62f4041fb35"
+  },
+  "1159": {
+    "name": "Cogsworth el Renovador",
+    "text": "Cada vez que invocas un esbirro, otorga +1/+1 a todos los esbirros aliados.",
+    "src": "8552a1b7681152ed"
+  },
+  "1160": {
+    "name": "Explorador sombrío",
+    "text": "{kw:shroud}, {kw:arcane_surge}.",
+    "src": "82bc76d4f2aa5d50"
+  },
+  "1161": {
+    "name": "Víbora de tinta",
+    "text": "{kw:venom}, {kw:shroud}.",
+    "src": "4feac43ae8dc9bd8"
+  },
+  "1162": {
+    "name": "Espía velado",
+    "text": "{kw:shroud}. Inflige {dmg:2} de daño a un esbirro.",
+    "src": "3905f3987cab333f"
+  },
+  "1163": {
+    "name": "Agente de la red",
+    "text": "{kw:shroud}. Otorga +1/+1 a todos los demás esbirros aliados con {kw:shroud}.",
+    "src": "8edd6eea40e67fb4"
+  },
+  "1164": {
+    "name": "Agente doble",
+    "text": "{kw:shroud}. Toma el control de un esbirro enemigo que cueste 4 o menos.",
+    "src": "cd987a57a8d3b838"
+  },
+  "1165": {
+    "name": "Seraphine, Susurradora",
+    "text": "{kw:shroud}. Otorga {kw:venom} a todos los esbirros aliados con {kw:shroud} y otorga +1/+1 a todos los esbirros aliados.",
+    "src": "427efbce0ab4117a"
+  },
+  "1166": {
+    "name": "Picapedrero",
+    "text": "{kw:bulwark}.",
+    "src": "01e858df57daa770"
+  },
+  "1167": {
+    "name": "Cantero",
+    "text": "{kw:rekindle}.",
+    "src": "c2114b38138e9be3"
+  },
+  "1168": {
+    "name": "Centinela peñasco",
+    "text": "{kw:bulwark}. Restaura 2 de Salud a tu héroe.",
+    "src": "f467d60a56df6c77"
+  },
+  "1169": {
+    "name": "Coloso fortificado",
+    "text": "{kw:overwhelm}.",
+    "src": "cac9ac49118342f8"
+  },
+  "1170": {
+    "name": "Muro irrompible",
+    "text": "{kw:bulwark}.",
+    "src": "c0716715cbcaaa6c"
+  },
+  "1171": {
+    "name": "Aldric el Fortificador",
+    "text": "{kw:aegis}. {label:aura}: Otorga +1/+2 a todos los esbirros aliados.",
+    "src": "89355f5badbbdc3e"
+  },
+  "1172": {
+    "name": "Fatuo estático",
+    "text": "Roba una carta.",
+    "src": "ad83b6af6aacf41c"
+  },
+  "1173": {
+    "name": "Llamacadenas",
+    "text": "Inflige {dmg:1} de daño a un enemigo.",
+    "src": "7f574003ffac390a"
+  },
+  "1174": {
+    "name": "Canalizatormentas",
+    "text": "{kw:arcane_surge}.",
+    "src": "7426d91a5eebdb1e"
+  },
+  "1175": {
+    "name": "Centinela voltaico",
+    "text": "{kw:bulwark}. {label:toll}: Inflige {dmg:2} de daño a todos los enemigos.",
+    "src": "9e17a446471826a2"
+  },
+  "1176": {
+    "name": "Vael, Heraldo Tormenta",
+    "text": "{kw:doublestrike}. Inflige {dmg:1} de daño a todos los enemigos.",
+    "src": "8395a42f9d214268"
+  },
+  "1177": {
+    "name": "Duende chispeante",
+    "text": "{kw:doublestrike}.",
+    "src": "0e52ca9a29d80c22"
+  },
+  "1178": {
+    "name": "Diablillo tormentoso",
+    "text": "Inflige {dmg:1} de daño a un enemigo al azar.",
+    "src": "f130998bc0ea02ae"
+  },
+  "1179": {
+    "name": "Jinete del rayo",
+    "text": "{kw:doublestrike}, {kw:fervor}. {label:toll}: {kw:backdraft} 1.",
+    "src": "7400f248e77e8265"
+  },
+  "1180": {
+    "name": "Heraldo del vendaval",
+    "text": "{kw:vanguard}. Inflige {dmg:2} de daño al héroe enemigo.",
+    "src": "51c5e81104428d20"
+  },
+  "1181": {
+    "name": "Diablillo del ocaso",
+    "text": "{kw:shroud}.",
+    "src": "6edbdea3feb2c998"
+  },
+  "1182": {
+    "name": "Fatuo venenoso",
+    "text": "{kw:venom}.",
+    "src": "6419011f8e4e0ea2"
+  },
+  "1183": {
+    "name": "Batidor sombrío",
+    "text": "{kw:shroud}. Devuelve un esbirro enemigo a la mano.",
+    "src": "c887274b263f14df"
+  },
+  "1184": {
+    "name": "Pícaro del anochecer",
+    "text": "{kw:shroud}. {label:toll}: Roba 2 cartas.",
+    "src": "1dd2699ec5f64c1c"
+  },
+  "1185": {
+    "name": "Soldado acorazado",
+    "text": "{kw:overwhelm}.",
+    "src": "3453ef4763c12a93"
+  },
+  "1186": {
+    "name": "Alcaide del fuerte",
+    "text": "{kw:bulwark}. {label:toll}: Restaura 3 de Salud a tu héroe.",
+    "src": "7b80f89bba6994c4"
+  },
+  "1187": {
+    "name": "Behemot de granito",
+    "text": "{kw:overwhelm}. Restaura 3 de Salud a tu héroe.",
+    "src": "e6c62884e1b85ba2"
+  },
+  "1188": {
+    "name": "Autómata con tictac",
+    "text": "{kw:skirmish}.",
+    "src": "bc2c3c7f7611648d"
+  },
+  "1189": {
+    "name": "Caballero de cuerda",
+    "text": "",
+    "src": "7f3f7c292fc83074"
+  },
+  "1190": {
+    "name": "Gran artífice",
+    "text": "Invoca una {card:1131} y roba una carta.",
+    "src": "5b7ede9f7ff9a607"
+  },
+  "1191": {
+    "name": "Sombra",
+    "plural": "Sombras",
+    "text": "",
+    "src": "aa985ab664a3177d"
+  },
+  "1192": {
+    "name": "Espectro chitón",
+    "text": "{kw:silence:imp} a un esbirro.",
+    "src": "6813a1f258f2bc5f"
+  },
+  "1193": {
+    "name": "Segador silencioso",
+    "text": "{kw:lifedrain}.",
+    "src": "053220b64d28e334"
+  },
+  "1194": {
+    "name": "Heraldo real",
+    "text": "El siguiente esbirro que juegues este turno activa dos veces su efecto al jugarse.",
+    "src": "a9b78ac3e9e42cf5"
+  },
+  "1195": {
+    "name": "Reina Bella Idea",
+    "text": "{label:aura}: Cada turno, el primero de tus otros esbirros aliados que reciba daño letal sobrevive con 1 de Salud.",
+    "src": "1cfcddc42f077436"
+  },
+  "1196": {
+    "name": "Entusiasta de cometas",
+    "text": "{label:attack}: Inflige {dmg:1} de daño a un enemigo al azar.",
+    "flavor": "Le cayó un rayo once veces. Dice que los resultados son prometedores.",
+    "src": "27e1524fe6cb73f1"
+  },
+  "1197": {
+    "name": "Envenenador titulado",
+    "text": "Otorga {kw:venom} a un esbirro aliado.",
+    "flavor": "La licencia exige dos referencias. Ninguna tiene que estar viva.",
+    "src": "5108246c8be93943"
+  },
+  "1198": {
+    "name": "Catador real",
+    "text": "{label:toll}: Invoca un {card:1182}.",
+    "flavor": "El puesto siempre está vacante.",
+    "src": "19b3752e70353cd6"
+  }
+}

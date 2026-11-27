@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hero traits (es-419): first pass 2026-11-27, written in-house; terms come from glossary.xml. -->
+<resources>
+    <string name="hero_trait_emberward_1">Juega rápido y castiga temprano a los rivales lentos</string>
+    <string name="hero_trait_emberward_2">Sus hechizos de quemadura cierran partidas a distancia cuando el campo se estanca</string>
+    <string name="hero_trait_emberward_3">Intercambia recursos con agresividad para ir por delante en tempo</string>
+    <string name="hero_trait_tidecaller_1">Construye una presencia duradera en el campo solo con su Poder de héroe</string>
+    <string name="hero_trait_tidecaller_2">Los hechizos de Escarcha inmovilizan esbirros clave mientras los fuegos fatuos presionan</string>
+    <string name="hero_trait_tidecaller_3">Premia la paciencia: el tempo se acumula a lo largo de muchos turnos</string>
+    <string name="hero_trait_gravekeep_1">Aguanta lo suficiente para ganar por desgaste</string>
+    <string name="hero_trait_gravekeep_2">Los No muertos vuelven a levantarse o alimentan cadenas de Réquiem</string>
+    <string name="hero_trait_gravekeep_3">Brilla en partidas largas donde un margen estrecho de Salud decide el resultado</string>
+    <string name="hero_trait_verdant_1">Aguanta el castigo y a la vez hace crecer su campo</string>
+    <string name="hero_trait_verdant_2">Sus esbirros de la naturaleza son tercos y difíciles de eliminar con eficiencia</string>
+    <string name="hero_trait_verdant_3">Premia la resistencia: cuanto más larga la partida, mayor la ventaja</string>
+    <string name="hero_trait_clockwright_1">Recorre el mazo robando cartas para armar combinaciones poderosas</string>
+    <string name="hero_trait_clockwright_2">Los Constructos mecánicos se potencian con secuencias de cartas concretas</string>
+    <string name="hero_trait_clockwright_3">Premia jugar en el orden preciso y conocer las jugadas clave de tu mazo</string>
+    <string name="hero_trait_nightveil_1">Protege a sus piezas clave de la eliminación y de los hechizos dirigidos</string>
+    <string name="hero_trait_nightveil_2">El Velo obliga a los rivales a limpiar con daño de área o a ignorar la amenaza</string>
+    <string name="hero_trait_nightveil_3">Ganar la batalla por los objetivos provoca vuelcos decisivos en el campo</string>
+    <string name="hero_trait_stonewarden_1">Cada uso del Poder de héroe coloca un bloqueador 0/3 con Baluarte frente al héroe</string>
+    <string name="hero_trait_stonewarden_2">Frena la agresión mientras prepara jugadas defensivas de gran valor</string>
+    <string name="hero_trait_stonewarden_3">Las cartas de piedra desgastan al rival a pura resistencia</string>
+    <string name="hero_trait_tempest_1">Desgasta los campos rivales con daño aleatorio pero repartido</string>
+    <string name="hero_trait_tempest_2">Combina con enjambres de esbirros pequeños: más objetivos, más valor por cada golpe</string>
+    <string name="hero_trait_tempest_3">Castiga a los grupos de esbirros pequeños y convierte el control del campo en una ventaja que no para de crecer</string>
+</resources>

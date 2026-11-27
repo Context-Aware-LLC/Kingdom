@@ -192,6 +192,12 @@ namespace Kingdom.Core.Collection
             ("Namenloser Spieler", "Unnamed player"), ("Königreich", "Kingdom"),
             ("König", "King"), ("Königin", "Queen"), ("Herold", "Herald"),
             ("Narr", "Jester"), ("Hofnarr", "Jester"), ("Rat", "Council"),
+            // Spanish (values-es-419): "Rival" is common_opponent there; "Oponente" is the word a
+            // player would reach for instead.
+            ("Tú", "You"), ("Rival", "Opponent"), ("Oponente", "Opponent"),
+            ("Rival IA", "AI Opponent"), ("Jugador sin nombre", "Unnamed player"),
+            ("Reino", "Kingdom"), ("Sistema", "SYSTEM"), ("Rey", "King"), ("Reina", "Queen"),
+            ("Heraldo", "Herald"), ("Bufón", "Jester"), ("Consejo", "Council"),
         };
 
         /// <summary>The second line of a court name's refusal. A name with none here refuses plainly.</summary>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kingdom of Bad Ideas: game vocabulary (es-419). First pass 2026-11-27, written in-house; review
+     before shipping. Every Spanish screen and card reuses these words, so change a term here, not per
+     string. Latin-American Spanish: informal "tú", "ustedes" for plural, never "vosotros". -->
+<resources>
+    <!-- ===== Keywords ===== -->
+    <string name="keyword_bulwark">Baluarte</string>
+    <string name="keyword_bulwark_desc">Los ataques enemigos tienen que pasar primero por este esbirro.</string>
+    <string name="keyword_fervor">Fervor</string>
+    <string name="keyword_fervor_desc">Puede atacar en el turno en que se juega, también al héroe.</string>
+    <string name="keyword_skirmish">Escaramuza</string>
+    <string name="keyword_skirmish_desc">Puede atacar en el turno en que se juega, pero no al héroe enemigo.</string>
+    <string name="keyword_aegis">Égida</string>
+    <string name="keyword_aegis_desc">Absorbe el siguiente golpe por completo y luego se rompe.</string>
+    <string name="keyword_lifedrain">Robo de vida</string>
+    <string name="keyword_lifedrain_desc">El daño que inflige también cura a tu héroe en la misma cantidad.</string>
+    <string name="keyword_doublestrike">Golpe doble</string>
+    <string name="keyword_doublestrike_desc">Puede atacar dos veces por turno.</string>
+    <string name="keyword_shroud">Velo</string>
+    <string name="keyword_shroud_desc">No puede ser atacado ni elegido como objetivo hasta que ataque.</string>
+    <string name="keyword_venom">Veneno</string>
+    <string name="keyword_venom_desc">Cualquier esbirro al que dañe queda destruido.</string>
+    <string name="keyword_arcane_surge">Oleada arcana</string>
+    <string name="keyword_arcane_surge_desc">Tus hechizos infligen 1 de daño más. Las copias se suman.</string>
+    <string name="keyword_silence">Silencio</string>
+    <string name="keyword_silence_imp">Silencia</string>
+    <string name="keyword_silence_desc">Le quita a un esbirro su texto, sus palabras clave y sus mejoras.</string>
+    <string name="keyword_frost">Escarcha</string>
+    <string name="keyword_frost_desc">Lo que reciba daño de esto pierde su siguiente ataque, héroes incluidos.</string>
+    <string name="keyword_backdraft">Contrafuego</string>
+    <string name="keyword_backdraft_desc">Bloquea esa cantidad de tu maná en tu siguiente turno.</string>
+    <string name="keyword_drown">Ahogar</string>
+    <string name="keyword_drown_imp">Ahoga</string>
+    <string name="keyword_drown_desc">Inflige la mitad de la Salud de este esbirro, redondeando hacia arriba (2 a un héroe). Ignora la Égida.</string>
+    <string name="keyword_rekindle">Reavivar</string>
+    <string name="keyword_rekindle_desc">La primera vez que muere, regresa a su lugar con 1 de Salud.</string>
+    <string name="keyword_overwhelm">Arrollar</string>
+    <string name="keyword_overwhelm_desc">El daño sobrante de su ataque pasa al héroe enemigo.</string>
+    <string name="keyword_vanguard">Vanguardia</string>
+    <string name="keyword_vanguard_desc">No recibe daño de vuelta cuando su ataque mata al defensor.</string>
+    <!-- ===== Timing labels and game verbs =====
+         A row with a suffix is a form a card template asks for by slot: {kw:drown:imp} reads
+         keyword_drown_imp, {label:freeze:imp} reads label_freeze_imp. The bare row is the name
+         (infinitive); _imp is the tú imperative a card's text starts with. -->
+    <string name="label_toll">Réquiem</string>
+    <string name="label_attack">Ataque</string>
+    <string name="label_damaged">Herido</string>
+    <string name="label_healed">Sanado</string>
+    <string name="label_turn_end">Fin de turno</string>
+    <string name="label_spell_cast">Hechizo lanzado</string>
+    <string name="label_aura">Aura</string>
+    <string name="label_unearth">Exhumar</string>
+    <string name="label_unearth_imp">Exhuma</string>
+    <string name="label_freeze">Congelar</string>
+    <string name="label_freeze_imp">Congela</string>
+    <string name="label_unfreeze">Descongelar</string>
+    <string name="label_unfreeze_imp">Descongela</string>
+    <!-- ===== Tribes =====
+         Gender matters to the words around a tribe: Bestia and Hada are feminine ("Bestias
+         aliadas"), the rest masculine ("No muertos aliados"). -->
+    <string name="tribe_beast">Bestia</string>
+    <string name="tribe_beast_plural">Bestias</string>
+    <string name="tribe_construct">Constructo</string>
+    <string name="tribe_construct_plural">Constructos</string>
+    <string name="tribe_undead">No muerto</string>
+    <string name="tribe_undead_plural">No muertos</string>
+    <string name="tribe_elemental">Elemental</string>
+    <string name="tribe_elemental_plural">Elementales</string>
+    <string name="tribe_dragon">Dragón</string>
+    <string name="tribe_dragon_plural">Dragones</string>
+    <string name="tribe_spirit">Espíritu</string>
+    <string name="tribe_spirit_plural">Espíritus</string>
+    <string name="tribe_human">Humano</string>
+    <string name="tribe_human_plural">Humanos</string>
+    <string name="tribe_fey">Hada</string>
+    <string name="tribe_fey_plural">Hadas</string>
+    <string name="tribe_merfolk">Tritón</string>
+    <string name="tribe_merfolk_plural">Tritones</string>
+    <string name="tribe_catfolk">Felino</string>
+    <string name="tribe_catfolk_plural">Felinos</string>
+    <!-- ===== Classes and their heroes ===== -->
+    <string name="class_emberward">Guardabrasas</string>
+    <string name="class_tidecaller">Llamamareas</string>
+    <string name="class_gravekeep">Guardatumbas</string>
+    <string name="class_verdant">Verdor</string>
+    <string name="class_clockwright">Relojero</string>
+    <string name="class_nightveil">Velonoche</string>
+    <string name="class_stonewarden">Guardapiedra</string>
+    <string name="class_tempest">Tempestad</string>
+    <string name="class_neutral">Neutral</string>
+    <string name="hero_emberward">Pyra</string>
+    <string name="hero_tidecaller">Maren</string>
+    <string name="hero_gravekeep">Sorrow</string>
+    <string name="hero_verdant">Thalen</string>
+    <string name="hero_clockwright">Fenwick</string>
+    <string name="hero_nightveil">Liss</string>
+    <string name="hero_stonewarden">Hodge</string>
+    <string name="hero_tempest">Cassian</string>
+    <!-- ===== Card types, rarities, sets ===== -->
+    <string name="type_minion">Esbirro</string>
+    <string name="type_spell">Hechizo</string>
+    <string name="type_weapon">Arma</string>
+    <string name="type_hero_power">Poder de héroe</string>
+    <!-- Rarities agree with "carta" (feminine). -->
+    <string name="rarity_common">Común</string>
+    <string name="rarity_rare">Rara</string>
+    <string name="rarity_epic">Épica</string>
+    <string name="rarity_legendary">Legendaria</string>
+    <string name="set_pendingham">Pendingham</string>
+    <string name="set_rekindling">Reavivamiento</string>
+    <!-- ===== Term base ===== -->
+    <string name="term_minion">esbirro</string>
+    <string name="term_hero">héroe</string>
+    <string name="term_character">personaje</string>
+    <string name="term_friendly">aliado</string>
+    <string name="term_enemy">enemigo</string>
+    <string name="term_damage">daño</string>
+    <string name="term_attack">Ataque</string>
+    <string name="term_health">Salud</string>
+    <string name="term_mana">Maná</string>
+    <string name="term_mana_crystal">Cristal de maná</string>
+    <string name="term_durability">Durabilidad</string>
+    <string name="term_spell_damage">Daño de hechizo</string>
+    <string name="term_card">carta</string>
+    <string name="term_hand">mano</string>
+    <string name="term_deck">mazo</string>
+    <string name="term_graveyard">cementerio</string>
+    <string name="term_summon">Invocar</string>
+    <string name="term_draw">Robar</string>
+    <string name="term_restore">Restaurar</string>
+    <string name="term_destroy">Destruir</string>
+    <string name="term_sacrifice">Sacrificar</string>
+    <string name="term_reanimate">Reanimar</string>
+</resources>
