@@ -171,13 +171,27 @@ namespace Kingdom.Core.Collection
         /// <c>AI Opponent</c> is the single-player one. <b>Add to this list in the same commit that
         /// teaches a screen a new placeholder</b>, or that placeholder is claimable the day it
         /// ships.</para>
+        ///
+        /// <para><b>Each language's words for these are reserved too</b>, because a German
+        /// nameplate reading <c>Gegner</c> is the same impersonation. A translation maps to its
+        /// English entry, which is what <see cref="NameCheck.Reserved"/> carries, so the refusal and
+        /// its court line are the same whichever spelling was typed. A new table under
+        /// <c>Resources/Localization/values-&lt;lang&gt;/</c> adds its rows here in the same commit.</para>
         /// </summary>
-        private static readonly string[] ReservedNames =
+        private static readonly (string Name, string Entry)[] ReservedNames =
         {
-            "You", "Opponent", "AI Opponent", "Unnamed player", "Kingdom", "SYSTEM",
+            ("You", "You"), ("Opponent", "Opponent"), ("AI Opponent", "AI Opponent"),
+            ("Unnamed player", "Unnamed player"), ("Kingdom", "Kingdom"), ("SYSTEM", "SYSTEM"),
             // The court. Not chrome, but the game's own cast: a nameplate reading "Herald" is the
             // game talking as surely as one reading SYSTEM. The refusal says why, in their voice.
-            "King", "Queen", "Herald", "Jester", "Council",
+            ("King", "King"), ("Queen", "Queen"), ("Herald", "Herald"), ("Jester", "Jester"),
+            ("Council", "Council"),
+            // German (values-de): common_you, common_opponent, leaderboard_unnamed_player, and the
+            // court as the German tables name it.
+            ("Du", "You"), ("Gegner", "Opponent"), ("KI-Gegner", "AI Opponent"),
+            ("Namenloser Spieler", "Unnamed player"), ("Königreich", "Kingdom"),
+            ("König", "King"), ("Königin", "Queen"), ("Herold", "Herald"),
+            ("Narr", "Jester"), ("Hofnarr", "Jester"), ("Rat", "Council"),
         };
 
         /// <summary>The second line of a court name's refusal. A name with none here refuses plainly.</summary>
@@ -199,14 +213,15 @@ namespace Kingdom.Core.Collection
         /// </summary>
         public static bool IsReserved(string candidate) => MatchReserved(candidate) != null;
 
-        /// <summary>The reserved entry <paramref name="candidate"/> collides with, or null.</summary>
+        /// <summary>The English reserved entry <paramref name="candidate"/> collides with, in any
+        /// language, or null.</summary>
         private static string? MatchReserved(string candidate)
         {
             if (string.IsNullOrEmpty(candidate)) return null;
             string normalized = Normalize(candidate);
-            foreach (string reserved in ReservedNames)
-                if (string.Equals(normalized, reserved, StringComparison.OrdinalIgnoreCase))
-                    return reserved;
+            foreach ((string name, string entry) in ReservedNames)
+                if (string.Equals(normalized, name, StringComparison.OrdinalIgnoreCase))
+                    return entry;
             return null;
         }
 

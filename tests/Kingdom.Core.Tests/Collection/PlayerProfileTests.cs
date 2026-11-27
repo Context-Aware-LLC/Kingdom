@@ -124,6 +124,20 @@ namespace Kingdom.Core.Tests.Collection
             Assert.That(check.Reason, Does.Contain("reserved").And.Contain(because));
         }
 
+        [TestCase("König", "King")]
+        [TestCase("KÖNIGIN", "Queen")]
+        [TestCase("herold", "Herald")]
+        [TestCase("Hofnarr", "Jester")]
+        [TestCase("Gegner", "Opponent")]
+        [TestCase("Rat", "Council")]
+        public void A_translated_reserved_name_is_refused_as_its_English_entry(string raw, string entry)
+        {
+            // The client words the refusal from Reserved, so "König" gets the King's court line.
+            var check = PlayerName.Check(raw);
+            Assert.That(check.Problem, Is.EqualTo(NameProblem.Reserved));
+            Assert.That(check.Reserved, Is.EqualTo(entry));
+        }
+
         [Test]
         public void A_reserved_word_INSIDE_a_name_is_still_allowed()
         {
