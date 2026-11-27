@@ -24,7 +24,8 @@ namespace Kingdom.Presentation
     public static class Loc
     {
         public const string Source = "en";
-        private const string PrefsKey = "settings.language";
+        /// <summary>The PlayerPrefs key holding the player's language pick.</summary>
+        public const string PrefsKey = "settings.language";
         private const string Root = "Localization/";
         private static readonly string[] TableFiles = { "strings", "glossary", "achievements", "banter", "heroes" };
 

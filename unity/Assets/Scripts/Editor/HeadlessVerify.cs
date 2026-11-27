@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Kingdom.Presentation;
 using UnityEditor;
 using UnityEngine;
 
@@ -26,6 +27,13 @@ namespace Kingdom.Editor
             // from running and is detected from the Editor log by the wrapper.
             // Do not call AssetDatabase.Refresh here: in -nographics mode it reserializes unrelated source
             // assets (including TMP font atlases). These checks are synchronous and do not use scaled time.
+            //
+            // The checks assert English copy, and the language pick is a PlayerPrefs value, which the
+            // Windows Editor keys by company and product name: every Editor of this project shares it,
+            // so picking German in one ran CardRevealVerify in German in another (2026-11-27). Pin
+            // English for the run and put the pick back after, so the run leaves it as it found it.
+            string pick = PlayerPrefs.HasKey(Loc.PrefsKey) ? PlayerPrefs.GetString(Loc.PrefsKey) : null;
+            Loc.SetLanguage(Loc.Source);
             var results = new[]
             {
                 RunCheck("A5WireVerify",         A5WireVerify.Run),
@@ -45,6 +53,9 @@ namespace Kingdom.Editor
                 RunCheck("HeraldVoiceVerify",     HeraldVoiceVerify.Run),
                 RunCheck("KingVerify",           KingVerify.Run),
             };
+            if (pick == null) PlayerPrefs.DeleteKey(Loc.PrefsKey);
+            else PlayerPrefs.SetString(Loc.PrefsKey, pick);
+            PlayerPrefs.Save();
 
             Debug.Log("[HeadlessVerify] ==============================");
             int failed = 0;
